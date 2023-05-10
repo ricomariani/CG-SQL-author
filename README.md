@@ -17,8 +17,8 @@ Please refer to our documentation to start using CG/SQL:
 
 Grammar Diagrams:
 
-- [Language Railroad Diagrams](https://htmlpreview.github.io/?https://github.com/ricomariani/CG-SQL-author/blob/main/diagrams/railroad_diagram.html)
-- [JSON Output Diagrams](https://htmlpreview.github.io/?https://github.com/ricomariani/CG-SQL-author/blob/main/diagrams/json_output_railroad_diagram.html)
+- [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/railroad_diagram.html)
+- [JSON Output Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
 
 
 For Contributors:

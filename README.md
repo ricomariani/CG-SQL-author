@@ -7,7 +7,8 @@ The full system also includes features for managing and upgrading schema, creati
 ## Getting Started
 
 Please refer to our documentation to start using CG/SQL:
-  [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
+
+- [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
 - [CG/SQL Language Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md)
 - [CG/SQL Internals](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md)
 - [Getting Started with CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/getting-started.md)

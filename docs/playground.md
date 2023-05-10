@@ -1,8 +1,4 @@
----
-id: playground
-title: CG/SQL Playground
-sidebar_label: Playground
----
+# CG/SQL Playground
 
 ## CQL Playground
 While we do not offer an interactive REPL environment, we have bootstrapped an environment to run simple CQL programs in the [`repl` folder of our repository](https://github.com/facebookincubator/CG-SQL/tree/main/sources/repl). You can run it by doing this from the CQL repository:

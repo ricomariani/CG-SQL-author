@@ -1,13 +1,7 @@
----
-id: getting-started
-title: Getting Started with CG/SQL
-sidebar_label: Getting Started
----
+# Getting Started with CG/SQL
 
 ## Building
-:::caution
-Please make sure you meet the [requirements](#requirements).
-:::
+caution: Please make sure you meet the [requirements](#requirements).
 
 Set your current directory to the CG/SQL [`sources`](https://github.com/facebookincubator/CG-SQL/tree/main/sources) directory, wherever that may be, then:
 
@@ -25,10 +19,10 @@ You might want to alias the location of `out/cql`. For example, by using the `al
 
 ## Next Steps
 
-- Go to the [first chapter of the CQL Guide](/cql-guide/ch01#getting-started) to write your first CQL program!
-The [second chapter](/cql-guide/ch02#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
-- [CGL Language Cheatsheet](/cql-guide/x6)
-- [CQL Playground](/docs/playground)
+- Go to the [first chapter of the CQL Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started) to write your first CQL program!
+The [second chapter](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
+- [CGL Language Cheatsheet](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-6-cql-in-20-minutes)
+- [CQL Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
 
 ## Requirements
 

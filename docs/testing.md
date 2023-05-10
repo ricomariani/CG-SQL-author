@@ -1,8 +1,4 @@
----
-id: testing
-title: Testing CG/SQL
-sidebar_label: Testing CG/SQL
----
+# Testing CG/SQL
 
 Run this command in the [/sources](https://github.com/facebookincubator/CG-SQL/tree/main/sources) directory:
 ```

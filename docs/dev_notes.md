@@ -1,9 +1,6 @@
----
-id: dev-notes
-title: Developer Notes on CQL Development
-sidebar_label: Developer Notes
----
-0. We have extensive documentation at [CQL Internals](/cql-guide/int01).
+# Developer Notes on CQL Development
+
+0. We have extensive documentation at [CQL Internals](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md)
 1. If you aren't good with `yacc`/`lex` you probably should do some homework before you start. CQL development is all about building and walking a syntax tree.  It's possible to make local changes without knowing the details but it can be hard to figure out where to make changes without context.
 2. CQL development is basically test driven, to create a new feature:
    1. Add the language feature to `test.sql`
@@ -22,7 +19,7 @@ sidebar_label: Developer Notes
    14. edit `cg_c.c` (or a different code gen if you're doing test helpers or some such) to support your new code
    15. cycle running `test.sh` until it passes
    16. accept each diff when you're happy with the new output
-   17. Add code that runs your new feature using run_test.sql
+   17. Add code that runs your new feature using `run_test.sql`
    18. Run `test.sh`, if your codegen was perfect it could pass; it probably won't at first
    19. fix your code until it's done; you shouldn't need to accept any more diffs at this point
    20. run `cov.sh` to confirm 100% coverage

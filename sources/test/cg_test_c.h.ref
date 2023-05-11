@@ -1484,26 +1484,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
-
-#ifndef result_set_type_decl_core_result_set
-#define result_set_type_decl_core_result_set 1
-cql_result_set_type_decl(core_result_set, core_result_set_ref);
-#endif
-extern cql_int32 core_get_x(core_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_string_ref _Nullable core_get_y(core_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_bool core_get_z_is_null(core_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int64 core_get_z_value(core_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 core_result_count(core_result_set_ref _Nonnull result_set);
-#define core_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
-#define core_row_equal(rs1, row1, rs2, row2) \
-cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
-  (cql_result_set_ref)(rs1), \
-  row1, \
-  (cql_result_set_ref)(rs2), \
-  row2)
-extern CQL_WARN_UNUSED cql_code core_fetch_results(sqlite3 *_Nonnull _db_, core_result_set_ref _Nullable *_Nonnull result_set, cql_int32 id_);
-
-// The statement ending at line XXXX
 #define CRC_simple_cursor_proc -6717012445748654937L
 
 extern cql_string_ref _Nonnull simple_cursor_proc_stored_procedure_name;
@@ -2310,33 +2290,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 extern void vault_sensitive_with_context_and_no_sensitive_columns_proc_set_encoding(cql_int32 col, cql_bool encode);
-
-// The statement ending at line XXXX
-
-#ifndef result_set_type_decl_frag_test_result_set
-#define result_set_type_decl_frag_test_result_set 1
-cql_result_set_type_decl(frag_test_result_set, frag_test_result_set_ref);
-#endif
-extern cql_int32 frag_test_get_id(frag_test_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 frag_test_result_count(frag_test_result_set_ref _Nonnull result_set);
-#define frag_test_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
-#define frag_test_row_equal(rs1, row1, rs2, row2) \
-cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
-  (cql_result_set_ref)(rs1), \
-  row1, \
-  (cql_result_set_ref)(rs2), \
-  row2)
-extern CQL_WARN_UNUSED cql_code frag_test_fetch_results(sqlite3 *_Nonnull _db_, frag_test_result_set_ref _Nullable *_Nonnull result_set);
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-//
-
-// The statement ending at line XXXX
-
-// The statement ending at line XXXX
-//
 
 // The statement ending at line XXXX
 extern CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Nullable *_Nonnull result);

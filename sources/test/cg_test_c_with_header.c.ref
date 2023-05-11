@@ -6327,21 +6327,6 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-@ATTRIBUTE(cql:base_fragment=core)
-CREATE PROC base_fragment (id_ INTEGER NOT NULL)
-BEGIN
-  WITH
-  core (x, y, z) AS (SELECT id, name, rate
-    FROM bar
-    WHERE id = id_)
-  SELECT *
-    FROM core;
-END;
-*/
-
-// The statement ending at line XXXX
-
-/*
 CREATE PROC simple_cursor_proc ()
 BEGIN
   DECLARE A_CURSOR CURSOR LIKE SELECT 1 AS id;
@@ -10091,52 +10076,6 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
-
-// The statement ending at line XXXX
-
-/*
-@ATTRIBUTE(cql:base_fragment=frag_test)
-CREATE PROC baseline ()
-BEGIN
-  WITH
-  frag_test (id) AS (SELECT 1 AS id)
-  SELECT *
-    FROM frag_test;
-END;
-*/
-
-// The statement ending at line XXXX
-
-/*
-@ATTRIBUTE(cql:extension_fragment=frag_test)
-@ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC ext ()
-BEGIN
-  WITH
-  frag_test (id) AS (SELECT 1 AS id),
-  ext (id, f2) AS (SELECT frag_test.*, f2
-    FROM frag_test
-    LEFT OUTER JOIN ext_test_table ON f1 = id)
-  SELECT *
-    FROM ext;
-END;
-*/
-
-// The statement ending at line XXXX
-
-/*
-@ATTRIBUTE(cql:extension_fragment=frag_test)
-CREATE PROC ext2 ()
-BEGIN
-  WITH
-  frag_test (id) AS (SELECT 1 AS id),
-  ext2 (id, f3) AS (SELECT frag_test.*, f3
-    FROM frag_test
-    LEFT OUTER JOIN ext_test_table ON f1 = id)
-  SELECT *
-    FROM ext2;
-END;
-*/
 
 // The statement ending at line XXXX
 

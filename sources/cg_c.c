@@ -3731,10 +3731,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
   int32_t c_prepared_statement_index_saved = c_prepared_statement_index;
   c_prepared_statement_index = 0;
 
-  // sets base_fragment_name as well for the current fragment
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
+  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
-  if (frag_type == FRAG_TYPE_SHARED || frag_type == FRAG_TYPE_EXTENSION) {
+  if (frag_type == FRAG_TYPE_SHARED) {
     // shared fragments produce no code at all, no header, nothing
     // extension fragments, same story
     // put a line marker in the header file in case we want a test suite that verifies that
@@ -3742,26 +3741,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
     if (options.test) {
       bprintf(cg_header_output, "\n// The statement ending at line %d\n//\n", ast->lineno);
     }
-
-    return;
-  }
-
-  if (frag_type == FRAG_TYPE_BASE) {
-    Contract(has_result_set(ast));
-    cg_proc_result_set(ast);
-
-    // Emit assembly_fetch_results, it has the same signature as the base only with a result set
-    // instead of a statement.
-
-    // Note we can do this prototype on an easy plan.  We know everything about the signature already
-    // from the base_fragment_name.  We also know that it is not an out union proc or an out proc
-    // because it's a fragment and we know it's a DML proc for the same reason.
-    // So we're on the easiest plan for sure.
-
-    CHARBUF_OPEN(temp);
-      cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, base_fragment_name, base_fragment_name, &temp);
-      bprintf(cg_header_output, "%s%s);\n", rt->symbol_visibility, temp.ptr);
-    CHARBUF_CLOSE(temp);
 
     return;
   }
@@ -4028,7 +4007,6 @@ static void cg_create_proc_stmt(ast_node *ast) {
   in_proc = false;
   use_encode = false;
   current_proc = NULL;
-  base_fragment_name = NULL;
 
   symtab_delete(encode_columns);
   encode_context_column = NULL;
@@ -7236,9 +7214,6 @@ static void cg_throw_stmt(ast_node *ast) {
 // global context (outside of any stored proc) they do not run, they
 // are considered declarations only.
 static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
-  // we're going to compute the fragment name if needed but we always start clean
-  base_fragment_name = NULL;
-
   // reset the temp stack
   stack_level = 0;
 
@@ -7506,8 +7481,6 @@ static void cg_proc_result_set_getter(function_info *info) {
   charbuf *h = info->headers;
   charbuf *d = info->defs;
 
-  Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
-
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
     "",
@@ -7526,19 +7499,8 @@ static void cg_proc_result_set_getter(function_info *info) {
   }
 
   bprintf(&func_decl, ")");
-
   bprintf(h, "%s%s;\n", rt->symbol_visibility, func_decl.ptr);
-
-  // base fragment will not generate any function bodies, this is left to the actual assembly fragment
-  // all we're doing here is generating the .h file so that you could call the getters
-  if (info->frag_type == FRAG_TYPE_BASE) {
-    goto cleanup;
-  }
-
   bprintf(d, "\n%s {\n", func_decl.ptr);
-
-  // Note that the special handling of assembly fragments is not needed for the non-inline-getters case
-  // because in that case all the getters are emitted into the defs section anyway.
 
   bprintf(d,
     "  %s *data = (%s *)%s((cql_result_set_ref)result_set);\n",
@@ -7570,8 +7532,6 @@ static void cg_proc_result_set_getter(function_info *info) {
 
   bprintf(d, "}\n");
 
-cleanup:
-
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(col_getter_sym);
 }
@@ -7592,10 +7552,7 @@ cleanup:
 static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 {
   charbuf *h = info->headers;
-  charbuf *d = info->defs;
   charbuf *out = NULL;
-
-  Invariant(info->frag_type != FRAG_TYPE_EXTENSION);
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
@@ -7620,32 +7577,10 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   // not set yet
   Invariant(!out);
 
-  if (info->frag_type == FRAG_TYPE_ASSEMBLY || info->frag_type == FRAG_TYPE_BASE) {
-    // In the assembly or base fragment case we emit only the prototype into the header file
-    // The body goes into the main section.  This is necessary because the extension fragments could be in other
-    // linkage units and they will try to call these getters.  So the linkage has to allow the extension getters
-    // to have access to the authoritative getters.  In the base case we're merely foreshadowing the actual
-    // definitions that will be created by the assembly but limited to the base columns.
-    // The body of the function will be emitted into the defs section (d).
-    bprintf(h, "\n%s%s;", rt->symbol_visibility, func_decl.ptr);
-
-    // in the base fragment case we only emit the prototype that the assembly will generate
-    // and no body... we're done at this point
-    if (info->frag_type == FRAG_TYPE_BASE) {
-      goto cleanup;
-    }
-
-    bprintf(d, "\n%s%s {\n", rt->symbol_visibility, func_decl.ptr);
-    out = d;
-  }
-  else {
-    // The inline body will all go into the header file in the normal case.
-    // Note it's ok for these to be static inline because they have a different name
-    // (they include the extension frag) so they don't conflict with the base/assembly frag names
-    // These guys just forward on to the assembly fragment
-    bprintf(h, "\nstatic inline %s {\n", func_decl.ptr);
-    out = h;
-  }
+  // The inline body will all go into the header file in the normal case.
+  // Note it's ok for these to be static inline because they have a different name
+  bprintf(h, "\nstatic inline %s {\n", func_decl.ptr);
+  out = h;
 
   // definitely set now
   Invariant(out);
@@ -7698,8 +7633,6 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   }
   bprintf(out, "((cql_result_set_ref)result_set, %s, %d)%s;\n", row, info->col_index, trailing_string);
   bprintf(out, "}\n");
-
-cleanup:
 
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(col_getter_sym);
@@ -7973,24 +7906,10 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
-  // sets base_fragment_name as well for the current fragment
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
-
-  Invariant(frag_type != FRAG_TYPE_EXTENSION);
+  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
   // register the proc name if there is a callback, the particular result type will do whatever it wants
   rt->register_proc_name && rt->register_proc_name(name);
-
-  if (frag_type == FRAG_TYPE_BASE) {
-    // When generating code for the base fragment we're only going to produce headers
-    // and those headers will be for what the eventual assembly fragment name will be
-    // that is the proc that will actually have the fetcher and so forth.  Note the name
-    // must match this is verifeid in semantic analysis.
-    name = base_fragment_name;
-
-    // note we did this AFTER registering the true name of this proc; this avoids
-    // confusing proc name listeners with potentially two copies of the same name
-  }
 
   charbuf *h = cg_header_output;
   charbuf *d = cg_declarations_output;
@@ -8020,40 +7939,35 @@ static void cg_proc_result_set(ast_node *ast) {
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = sptr->count;
 
-  // setting up perf index unless we are currently emitting an extension or base fragment
-  // which do not fetch result independently (the assembly query generates the fetcher)
-  if (frag_type != FRAG_TYPE_BASE) {
-    bprintf(h, "#define CRC_%s %lldL\n", proc_sym.ptr, (llint_t)crc_charbuf(&proc_sym));
+  // setting up perf index
+  bprintf(h, "#define CRC_%s %lldL\n", proc_sym.ptr, (llint_t)crc_charbuf(&proc_sym));
 
-    bprintf(d, "static int32_t %s;\n", perf_index.ptr);
+  bprintf(d, "static int32_t %s;\n", perf_index.ptr);
 
-    bprintf(h,
-            "\n%s%s _Nonnull %s;\n",
-            rt->symbol_visibility,
-            rt->cql_string_ref,
-            stored_proc_name_sym.ptr);
-    bprintf(d, "\n%s(%s, \"%s\");\n", rt->cql_string_proc_name, stored_proc_name_sym.ptr, name);
+  bprintf(h,
+          "\n%s%s _Nonnull %s;\n",
+          rt->symbol_visibility,
+          rt->cql_string_ref,
+          stored_proc_name_sym.ptr);
+  bprintf(d, "\n%s(%s, \"%s\");\n", rt->cql_string_proc_name, stored_proc_name_sym.ptr, name);
 
-    if (result_set_proc) {
-      // First build the struct we need
-      // As we walk the fields, construct the teardown operation needed
-      // to clean up that field and save it.
-      bprintf(d, "\ntypedef struct %s {\n", row_sym.ptr);
-      cg_fields_in_canonical_order(d, sptr);
-      bprintf(d, "} %s;\n", row_sym.ptr);
-    }
-
-    bprintf(h, "\n#define %s %d\n", data_types_count_sym.ptr, count);
-    bprintf(&data_types,
-            "\nuint8_t %s[%s] = {\n",
-            data_types_sym.ptr,
-            data_types_count_sym.ptr);
+  if (result_set_proc) {
+    // First build the struct we need
+    // As we walk the fields, construct the teardown operation needed
+    // to clean up that field and save it.
+    bprintf(d, "\ntypedef struct %s {\n", row_sym.ptr);
+    cg_fields_in_canonical_order(d, sptr);
+    bprintf(d, "} %s;\n", row_sym.ptr);
   }
 
+  bprintf(h, "\n#define %s %d\n", data_types_count_sym.ptr, count);
+  bprintf(&data_types,
+          "\nuint8_t %s[%s] = {\n",
+          data_types_sym.ptr,
+          data_types_count_sym.ptr);
+
   // If we are generating the typed getters, setup the function tables.
-  // Again, extension fragments and base fragments do not define the actual tables
-  // for the result that's done by the assembly fragment.
-  if (options.generate_type_getters && frag_type != FRAG_TYPE_BASE) {
+  if (options.generate_type_getters) {
     bprintf(h,
       "\n%suint8_t %s[%s];\n",
       rt->symbol_visibility,
@@ -8063,9 +7977,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bprintf(h, "\n");
 
-  // the base type emits this info, it's shared by all
-  // so extension fragments always have this arleady as do assembly fragments
-  if (frag_type == FRAG_TYPE_BASE || frag_type == FRAG_TYPE_NONE) {
+  if (frag_type == FRAG_TYPE_NONE) {
      cg_result_set_type_decl(h, result_set_sym.ptr, result_set_ref.ptr);
   }
 
@@ -8090,17 +8002,13 @@ static void cg_proc_result_set(ast_node *ast) {
     CSTR col = sptr->names[i];
     CSTR kind = sptr->kinds[i];
 
-    // Neither base fragments nor extension fragments declare the result data shape
-    // the assembly fragement does that, all columns will be known at that time.
-    if (frag_type != FRAG_TYPE_BASE) {
-      bprintf(&data_types, "  ");
-      bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
-      cg_data_type(&data_types, encode, sem_type);
-      bprintf(&data_types, ", // %s\n", col);
+    bprintf(&data_types, "  ");
+    bool_t encode = should_encode_col(col, sem_type, use_encode, encode_columns);
+    cg_data_type(&data_types, encode, sem_type);
+    bprintf(&data_types, ", // %s\n", col);
 
-      if (encode_context_column != NULL && !strcmp(col, encode_context_column)) {
-        encode_context_index = (int16_t)i;
-      }
+    if (encode_context_column != NULL && !strcmp(col, encode_context_column)) {
+      encode_context_index = (int16_t)i;
     }
 
     if (suppress_getters) {
@@ -8122,19 +8030,6 @@ static void cg_proc_result_set(ast_node *ast) {
       .frag_type = frag_type,
       .ret_kind = kind,
     };
-
-    // if the current row is equal or greater than the base query count
-    // is considered a private accesor since it belongs to the extension accessors
-    if (frag_type == FRAG_TYPE_ASSEMBLY) {
-      // we already know the base compiled with no errors
-      ast_node *base_proc = find_base_fragment(base_fragment_name);
-      Invariant(base_proc);
-      Invariant(base_proc->sem);
-      Invariant(base_proc->sem->sptr);
-
-      uint32_t col_count_for_base = base_proc->sem->sptr->count;
-      Invariant(col_count_for_base > 0);
-    }
 
     if (options.generate_type_getters) {
       if (col_is_nullable && !is_ref_type(sem_type)) {
@@ -8234,19 +8129,16 @@ static void cg_proc_result_set(ast_node *ast) {
 
   int32_t refs_count = refs_count_sptr(sptr);
 
-  // Skip generating reference and column offsets for extension and base fragments since they always
-  // delegate to assembly fragment for retrieving results with proper index
-  if (frag_type != FRAG_TYPE_BASE) {
-    bprintf(&data_types, "};\n");
-    bprintf(d, data_types.ptr);
+  // generate reference and column offsets
+  bprintf(&data_types, "};\n");
+  bprintf(d, data_types.ptr);
 
-    if (refs_count && !uses_out) {
-      // note: fetch procs have already emitted this.
-      cg_refs_offset(d, sptr, refs_offset_sym.ptr, row_sym.ptr);
-    }
-
-    cg_col_offsets(d, sptr, col_offsets_sym.ptr, row_sym.ptr);
+  if (refs_count && !uses_out) {
+    // note: fetch procs have already emitted this.
+    cg_refs_offset(d, sptr, refs_offset_sym.ptr, row_sym.ptr);
   }
+
+  cg_col_offsets(d, sptr, col_offsets_sym.ptr, row_sym.ptr);
 
   bool_t has_identity_columns = cg_identity_columns(h, d, name, misc_attrs, identity_columns_sym.ptr);
 
@@ -8268,150 +8160,143 @@ static void cg_proc_result_set(ast_node *ast) {
   bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
   bprintf(h, "%s%s;\n", rt->symbol_visibility, temp.ptr);
 
-  // the base fragment doesn't emit the row count symbol, this is done by the assembly; the base
-  // fragment only emits the header for it.  In fact the base fragment only emits headers in general.
+  // emit the row count symbol
+  bprintf(d, "\n%s {\n", temp.ptr);
+  bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
+  bprintf(d, "}\n");
 
-  if (frag_type != FRAG_TYPE_BASE) {
-    bprintf(d, "\n%s {\n", temp.ptr);
-    bprintf(d, "  return %s((cql_result_set_ref)result_set);\n", rt->cql_result_set_get_count);
-    bprintf(d, "}\n");
-  }
+  // Generate fetch result function
+  if (uses_out) {
+    // Emit foo_fetch_results, it has the same signature as foo only with a result set
+    // instead of a statement.
+    bclear(&temp);
+    cg_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, &temp);
 
-  // Skip generating fetch result function for base fragments since they always get
-  // results fetched through the assembly query
-  if (frag_type != FRAG_TYPE_BASE) {
-    if (uses_out) {
-      // Emit foo_fetch_results, it has the same signature as foo only with a result set
-      // instead of a statement.
-      bclear(&temp);
-      cg_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, &temp);
+    // ready for prototype and function begin now
+    bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
+    bprintf(d, "\n%s) {\n", temp.ptr);
 
-      // ready for prototype and function begin now
-      bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
-      bprintf(d, "\n%s) {\n", temp.ptr);
+    // emit profiling start signal
+    bprintf(d, "  cql_profile_start(CRC_%s, &%s);\n", proc_sym.ptr, perf_index.ptr);
 
-      // emit profiling start signal
-      bprintf(d, "  cql_profile_start(CRC_%s, &%s);\n", proc_sym.ptr, perf_index.ptr);
+    // one row result set from out parameter
 
-      // one row result set from out parameter
+    bprintf(d, "  *result_set = NULL;\n");
+    bprintf(d, "  %s *row = (%s *)calloc(1, sizeof(%s));\n", row_sym.ptr, row_sym.ptr, row_sym.ptr);
+    bprintf(d, "  ");
 
-      bprintf(d, "  *result_set = NULL;\n");
-      bprintf(d, "  %s *row = (%s *)calloc(1, sizeof(%s));\n", row_sym.ptr, row_sym.ptr, row_sym.ptr);
-      bprintf(d, "  ");
-
-      // optional db arg and return code
-      if (dml_proc) {
-        bprintf(d, "cql_code rc = %s(_db_, ", proc_sym.ptr);
-      }
-      else {
-        bprintf(d, "%s(", proc_sym.ptr);
-      }
-
-      if (params) {
-        cg_param_names(params, d);
-        bprintf(d, ", ");
-      }
-      bprintf(d, "row);\n");
-
-      fetch_result_info info = {
-          .dml_proc = dml_proc,
-          .use_stmt = false,
-          .data_types_sym = data_types_sym.ptr,
-          .col_offsets_sym = col_offsets_sym.ptr,
-          .refs_count = refs_count,
-          .refs_offset_sym = refs_offset_sym.ptr,
-          .has_identity_columns = has_identity_columns,
-          .identity_columns_sym = identity_columns_sym.ptr,
-          .row_sym = row_sym.ptr,
-          .proc_sym = proc_sym.ptr,
-          .perf_index = perf_index.ptr,
-          .misc_attrs = misc_attrs,
-          .indent = 2,
-          .encode_context_index = encode_context_index,
-      };
-
-      cg_fetch_info(&info, d);
-
-      if (dml_proc) {
-        bprintf(d, "  return ");
-      }
-      else {
-        bprintf(d, "  ");
-      }
-      bprintf(d, "cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);\n");
-      bprintf(d, "}\n\n");
-    }
-    else if (result_set_proc) {
-      // Emit foo_fetch_results, it has the same signature as foo only with a result set
-      // instead of a statement.
-      bclear(&temp);
-      cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, name, result_set_name, &temp);
-
-      // To create the rowset we make a byte buffer object.  That object lets us
-      // append row data to an in-memory stream.  Each row is fetched by binding
-      // to a row object.  We use cg_get_column to read the columns.  The row
-      // object of course has exactly the right type for each column.
-      bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
-      bprintf(d, "\n%s) {\n", temp.ptr);
-      bprintf(d, "  sqlite3_stmt *stmt = NULL;\n");
-
-      // emit profiling start signal
-      bprintf(d, "  cql_profile_start(CRC_%s, &%s);\n", proc_sym.ptr, perf_index.ptr);
-
-      // Invoke the base proc to get the statement
-      bprintf(d, "  cql_code rc = %s(_db_, &stmt", proc_sym.ptr);
-      if (params) {
-        bprintf(d, ", ");
-        cg_param_names(params, d);
-      }
-      bprintf(d, ");\n");
-
-      // Now read in in all the rows using this fetch information
-      fetch_result_info info = {
-          .dml_proc = true,
-          .use_stmt = true,
-          .data_types_sym = data_types_sym.ptr,
-          .col_offsets_sym = col_offsets_sym.ptr,
-          .refs_count = refs_count,
-          .refs_offset_sym = refs_offset_sym.ptr,
-          .has_identity_columns = has_identity_columns,
-          .identity_columns_sym = identity_columns_sym.ptr,
-          .row_sym = row_sym.ptr,
-          .proc_sym = proc_sym.ptr,
-          .perf_index = perf_index.ptr,
-          .misc_attrs = misc_attrs,
-          .indent = 2,
-          .encode_context_index = encode_context_index,
-      };
-
-      cg_fetch_info(&info, d);
-      bprintf(d, "  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);\n");
-      bprintf(d, "}\n\n");
+    // optional db arg and return code
+    if (dml_proc) {
+      bprintf(d, "cql_code rc = %s(_db_, ", proc_sym.ptr);
     }
     else {
-      // this is the only case left
-      Invariant(uses_out_union);
-
-      fetch_result_info info = {
-          .dml_proc = false,
-          .use_stmt = false,
-          .data_types_sym = data_types_sym.ptr,
-          .col_offsets_sym = col_offsets_sym.ptr,
-          .refs_count = refs_count,
-          .refs_offset_sym = refs_offset_sym.ptr,
-          .has_identity_columns = has_identity_columns,
-          .identity_columns_sym = identity_columns_sym.ptr,
-          .row_sym = row_sym.ptr,
-          .proc_sym = proc_sym.ptr,
-          .perf_index = perf_index.ptr,
-          .misc_attrs = misc_attrs,
-          .indent = 0,
-          .prefix = proc_sym.ptr,
-          .encode_context_index = encode_context_index,
-      };
-
-      cg_fetch_info(&info, d);
+      bprintf(d, "%s(", proc_sym.ptr);
     }
+
+    if (params) {
+      cg_param_names(params, d);
+      bprintf(d, ", ");
+    }
+    bprintf(d, "row);\n");
+
+    fetch_result_info info = {
+        .dml_proc = dml_proc,
+        .use_stmt = false,
+        .data_types_sym = data_types_sym.ptr,
+        .col_offsets_sym = col_offsets_sym.ptr,
+        .refs_count = refs_count,
+        .refs_offset_sym = refs_offset_sym.ptr,
+        .has_identity_columns = has_identity_columns,
+        .identity_columns_sym = identity_columns_sym.ptr,
+        .row_sym = row_sym.ptr,
+        .proc_sym = proc_sym.ptr,
+        .perf_index = perf_index.ptr,
+        .misc_attrs = misc_attrs,
+        .indent = 2,
+        .encode_context_index = encode_context_index,
+    };
+
+    cg_fetch_info(&info, d);
+
+    if (dml_proc) {
+      bprintf(d, "  return ");
+    }
+    else {
+      bprintf(d, "  ");
+    }
+    bprintf(d, "cql_one_row_result(&info, (char *)row, row->_has_row_, (cql_result_set_ref *)result_set);\n");
+    bprintf(d, "}\n\n");
+  }
+  else if (result_set_proc) {
+    // Emit foo_fetch_results, it has the same signature as foo only with a result set
+    // instead of a statement.
+    bclear(&temp);
+    cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, name, result_set_name, &temp);
+
+    // To create the rowset we make a byte buffer object.  That object lets us
+    // append row data to an in-memory stream.  Each row is fetched by binding
+    // to a row object.  We use cg_get_column to read the columns.  The row
+    // object of course has exactly the right type for each column.
+    bprintf(h, "%s%s);\n", rt->symbol_visibility, temp.ptr);
+    bprintf(d, "\n%s) {\n", temp.ptr);
+    bprintf(d, "  sqlite3_stmt *stmt = NULL;\n");
+
+    // emit profiling start signal
+    bprintf(d, "  cql_profile_start(CRC_%s, &%s);\n", proc_sym.ptr, perf_index.ptr);
+
+    // Invoke the base proc to get the statement
+    bprintf(d, "  cql_code rc = %s(_db_, &stmt", proc_sym.ptr);
+    if (params) {
+      bprintf(d, ", ");
+      cg_param_names(params, d);
+    }
+    bprintf(d, ");\n");
+
+    // Now read in in all the rows using this fetch information
+    fetch_result_info info = {
+        .dml_proc = true,
+        .use_stmt = true,
+        .data_types_sym = data_types_sym.ptr,
+        .col_offsets_sym = col_offsets_sym.ptr,
+        .refs_count = refs_count,
+        .refs_offset_sym = refs_offset_sym.ptr,
+        .has_identity_columns = has_identity_columns,
+        .identity_columns_sym = identity_columns_sym.ptr,
+        .row_sym = row_sym.ptr,
+        .proc_sym = proc_sym.ptr,
+        .perf_index = perf_index.ptr,
+        .misc_attrs = misc_attrs,
+        .indent = 2,
+        .encode_context_index = encode_context_index,
+    };
+
+    cg_fetch_info(&info, d);
+    bprintf(d, "  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);\n");
+    bprintf(d, "}\n\n");
+  }
+  else {
+    // this is the only case left
+    Invariant(uses_out_union);
+
+    fetch_result_info info = {
+        .dml_proc = false,
+        .use_stmt = false,
+        .data_types_sym = data_types_sym.ptr,
+        .col_offsets_sym = col_offsets_sym.ptr,
+        .refs_count = refs_count,
+        .refs_offset_sym = refs_offset_sym.ptr,
+        .has_identity_columns = has_identity_columns,
+        .identity_columns_sym = identity_columns_sym.ptr,
+        .row_sym = row_sym.ptr,
+        .proc_sym = proc_sym.ptr,
+        .perf_index = perf_index.ptr,
+        .misc_attrs = misc_attrs,
+        .indent = 0,
+        .prefix = proc_sym.ptr,
+        .encode_context_index = encode_context_index,
+    };
+
+    cg_fetch_info(&info, d);
   }
 
   if (generate_copy) {
@@ -8893,7 +8778,6 @@ cql_noexport void cg_c_cleanup() {
   SYMTAB_CLEANUP(text_pieces);
   SYMTAB_CLEANUP(emitted_proc_decls);
 
-  base_fragment_name = NULL;
   exports_output = NULL;
   error_target = NULL;
   cg_current_masks = NULL;

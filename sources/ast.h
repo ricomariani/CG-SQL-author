@@ -505,21 +505,6 @@ cql_noexport uint32_t find_backing_table_attr(ast_node *_Nonnull misc_attr_list)
 cql_noexport CSTR _Nullable get_named_string_attribute_value(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
 cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
 
-cql_noexport uint32_t find_base_fragment_attr(
-  ast_node *_Nonnull misc_attr_list,
-  find_ast_str_node_callback _Nullable callback,
-  void *_Nullable context);
-
-cql_noexport uint32_t find_extension_fragment_attr(
-  ast_node *_Nonnull misc_attr_list,
-  find_ast_str_node_callback _Nullable callback,
-  void *_Nullable context);
-
-cql_noexport uint32_t find_assembly_query_attr(
-  ast_node *_Nonnull misc_attr_list,
-  find_ast_str_node_callback _Nullable callback,
-  void *_Nullable context);
-
 cql_noexport uint32_t find_query_plan_branch(
   ast_node *_Nonnull list,
   find_ast_num_node_callback _Nonnull callback,
@@ -527,13 +512,9 @@ cql_noexport uint32_t find_query_plan_branch(
 );
 
 #define FRAG_TYPE_NONE 0
-#define FRAG_TYPE_BASE 1
-#define FRAG_TYPE_EXTENSION 2
-#define FRAG_TYPE_ASSEMBLY 3
-#define FRAG_TYPE_SHARED 4  // this type does not interoperate with base+extension+assembly
-#define FRAG_TYPE_MIXED 0xff  // more than one/ambiguous
+#define FRAG_TYPE_SHARED 1
 
-cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list, CSTR _Nullable *_Nullable base_name);
+cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list);
 cql_noexport uint32_t find_proc_frag_type(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_blob_storage(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_backing(ast_node *_Nonnull ast);

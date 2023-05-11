@@ -2176,7 +2176,6 @@ static void cg_lua_emit_fetch_results_prototype(
   bool_t dml_proc,
   ast_node *params,
   CSTR proc_name,
-  CSTR result_set_name,
   charbuf *decl)
 {
   CG_CHARBUF_OPEN_SYM(fetch_results_sym, proc_name, "_fetch_results");
@@ -2291,13 +2290,10 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   int32_t lua_prepared_statement_index_saved = lua_prepared_statement_index;
   lua_prepared_statement_index = 0;
 
-  // sets base_fragment_name as well for the current fragment
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
+  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
-  // these have already been ruled out
+  // shared frags have already been ruled out
   Invariant(frag_type != FRAG_TYPE_SHARED);
-  Invariant(frag_type != FRAG_TYPE_BASE);
-  Invariant(frag_type != FRAG_TYPE_EXTENSION);
 
   CHARBUF_OPEN(proc_fwd_ref);
   CHARBUF_OPEN(proc_contracts);
@@ -2493,7 +2489,6 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   lua_in_proc = false;
   use_encode = false;
   current_proc = NULL;
-  base_fragment_name = NULL;
 
   symtab_delete(encode_columns);
   symtab_delete(lua_named_temporaries);
@@ -4773,7 +4768,6 @@ static void cg_lua_throw_stmt(ast_node *ast) {
 // are considered declarations only.
 static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // we're going to compute the fragment name if needed but we always start clean
-  base_fragment_name = NULL;
 
   // reset the temp stack
   lua_stack_level = 0;
@@ -4783,12 +4777,9 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // is more of a mess.
 
   if (misc_attrs && is_ast_create_proc_stmt(stmt)) {
-    // only assembly fragments get any output
+    uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
-    // sets base_fragment_name as well for the current fragment
-    uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
-
-    if (frag_type == FRAG_TYPE_EXTENSION || frag_type == FRAG_TYPE_BASE || frag_type == FRAG_TYPE_SHARED) {
+    if (frag_type == FRAG_TYPE_SHARED) {
       return;
     }
   }
@@ -4981,19 +4972,12 @@ static void cg_lua_proc_result_set(ast_node *ast) {
 
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
-  // sets base_fragment_name as well for the current fragment
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
-
   // register the proc name if there is a callback, the particular result type will do whatever it wants
   rt->register_proc_name && rt->register_proc_name(name);
 
   charbuf *d = cg_declarations_output;
   charbuf *main_saved = cg_main_output;
   cg_main_output = d;
-
-  // name replacement such that extension fragment should always reference to
-  // base result set type instead of setting up their own
-  CSTR result_set_name = (frag_type == FRAG_TYPE_EXTENSION) ? base_fragment_name : name;
 
   CHARBUF_OPEN(data_types);
   CHARBUF_OPEN(result_set_create);
@@ -5009,71 +4993,69 @@ static void cg_lua_proc_result_set(ast_node *ast) {
   // but it is hiding the cql_result_set implementation detail from the API of the generated
   // code by providing a proc-scoped function for it with the typedef for the result set.
 
-  // Skip generating fetch result function for extension and fragments since they always get
-  // results fetched through the assembly query
-  if (frag_type != FRAG_TYPE_EXTENSION && frag_type != FRAG_TYPE_BASE) {
-    if (uses_out) {
-      // Emit foo_fetch_results, it has the same signature as foo only with a result set
-      // instead of a statement.
+  // Generate fetch result function
+  if (uses_out) {
+    // Emit foo_fetch_results, it has the same signature as foo only with a result set
+    // instead of a statement.
 
-      bprintf(d, "\n");
-      cg_lua_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, d);
+    bprintf(d, "\n");
+    cg_lua_emit_fetch_results_prototype(dml_proc, params, name, d);
 
-      bprintf(d, "  local result_set = nil\n");
+    bprintf(d, "  local result_set = nil\n");
 
-      CHARBUF_OPEN(args);
-      CHARBUF_OPEN(returns);
+    CHARBUF_OPEN(args);
+    CHARBUF_OPEN(returns);
 
-      // optional db arg and return code
-      if (dml_proc) {
-        bprintf(d, "  local _rc_\n");
-        bprintf(&args, "_db_");
-        bprintf(&returns, "_rc_, _result_");
-      }
-      else {
-        bprintf(&returns, "_result_");
-      }
-
-      if (params) {
-        cg_lua_params(params, &args, &returns);
-      }
-
-      bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
-      bprintf(d, "  ");
-      if (dml_proc) {
-        cg_lua_error_on_not_sqlite_ok();
-      }
-
-      bprintf(d, "result_set = { _result_ }\n");
-
-      bclear(&args);
-      bclear(&returns);
-
-      if (dml_proc) {
-        bprintf(&returns, "_rc_, result_set");
-      }
-      else {
-        bprintf(&returns, "result_set");
-      }
-
-      if (params) {
-        cg_lua_params(params, &args, &returns);
-      }
-
-      bprintf(d, "\n::cql_cleanup::\n");
-      bprintf(d, "  return %s\n", returns.ptr);
-      bprintf(d, "end\n\n");
-
-      CHARBUF_CLOSE(returns);
-      CHARBUF_CLOSE(args);
+    // optional db arg and return code
+    if (dml_proc) {
+      bprintf(d, "  local _rc_\n");
+      bprintf(&args, "_db_");
+      bprintf(&returns, "_rc_, _result_");
     }
-    else if (result_set_proc) {
+    else {
+      bprintf(&returns, "_result_");
+    }
+
+    if (params) {
+      cg_lua_params(params, &args, &returns);
+    }
+
+    bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
+    bprintf(d, "  ");
+    if (dml_proc) {
+      cg_lua_error_on_not_sqlite_ok();
+    }
+
+    bprintf(d, "result_set = { _result_ }\n");
+
+    bclear(&args);
+    bclear(&returns);
+
+    if (dml_proc) {
+      bprintf(&returns, "_rc_, result_set");
+    }
+    else {
+      bprintf(&returns, "result_set");
+    }
+
+    if (params) {
+      cg_lua_params(params, &args, &returns);
+    }
+
+    bprintf(d, "\n::cql_cleanup::\n");
+    bprintf(d, "  return %s\n", returns.ptr);
+    bprintf(d, "end\n\n");
+
+    CHARBUF_CLOSE(returns);
+    CHARBUF_CLOSE(args);
+  }
+  else if (result_set_proc) {
       // Emit foo_fetch_results, it has the same signature as foo only with a result set
       // instead of a statement.
       Invariant(dml_proc);
 
       bprintf(d, "\n");
-      cg_lua_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, d);
+      cg_lua_emit_fetch_results_prototype(dml_proc, params, name, d);
 
       bprintf(d, "  local result_set = nil\n");
       bprintf(d, "  local _rc_\n");
@@ -5116,7 +5098,6 @@ static void cg_lua_proc_result_set(ast_node *ast) {
       CHARBUF_CLOSE(returns);
       CHARBUF_CLOSE(args);
     }
-  }
 
   CHARBUF_CLOSE(fetch_results_sym);
   CHARBUF_CLOSE(result_count_sym);
@@ -5381,7 +5362,6 @@ cql_noexport void cg_lua_cleanup() {
 
   SYMTAB_CLEANUP(lua_named_temporaries);
 
-  base_fragment_name = NULL;
   lua_exports_output = NULL;
   lua_error_target = NULL;
   cg_lua_current_masks = NULL;

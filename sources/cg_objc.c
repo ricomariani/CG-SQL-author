@@ -25,13 +25,6 @@ cql_noexport void cg_objc_main(ast_node *head) {}
 #include "sem.h"
 #include "symtab.h"
 
-// Set up the buffer for extension header outputs if we are emitting for an extension
-// or assembly query since we will make decision on including it into codegen output
-// if we are emitting for extension only that needs different reference calls to assembly
-// query for referencing the aggregated resultset instead of regular calls from itself.
-// Otherwise this additional output will be abandoned at program exit anyway.
-static charbuf *objc_extension_header = NULL;
-
 static uint32_t objc_frag_type;
 
 // Whether a text column in the result set of a proc is encoded
@@ -42,8 +35,7 @@ static void cg_objc_proc_result_set_c_getter(
   charbuf *buffer,
   CSTR name,
   CSTR col_name,
-  CSTR sym_suffix,
-  bool_t is_private)
+  CSTR sym_suffix)
 {
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
@@ -83,25 +75,7 @@ static void cg_objc_proc_result_set_getter(
   CSTR value_convert_end = "";
   CSTR c_getter_suffix = "";
 
-  uint32_t col_count_for_base = 0;
-
   Invariant(objc_frag_type != FRAG_TYPE_SHARED);
-  Invariant(objc_frag_type != FRAG_TYPE_EXTENSION);
-
-  bool_t is_asm_frag = objc_frag_type == FRAG_TYPE_ASSEMBLY;
-
-  if (objc_frag_type != FRAG_TYPE_NONE) {
-    // we already know the base compiled with no errors
-    ast_node *base_proc = find_base_fragment(base_fragment_name);
-    Invariant(base_proc);
-    Invariant(base_proc->sem);
-    Invariant(base_proc->sem->sptr);
-
-    col_count_for_base = base_proc->sem->sptr->count;
-  }
-
-  bool_t is_private = col >= col_count_for_base && col_count_for_base > 0
-    && is_asm_frag;
 
   CHARBUF_OPEN(value);
 
@@ -116,7 +90,7 @@ static void cg_objc_proc_result_set_getter(
          bprintf(&value_convert_begin, "%s", "@(");
         value_convert_end = ")";
         c_getter_suffix = "_value";
-        cg_objc_proc_result_set_c_getter(fetch_proc, &value, name, col_name, "_is_null", is_private);
+        cg_objc_proc_result_set_c_getter(fetch_proc, &value, name, col_name, "_is_null");
         bprintf(&value, " ? nil : ");
         break;
       case SEM_TYPE_BLOB:
@@ -267,7 +241,6 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
 
   Invariant(objc_frag_type != FRAG_TYPE_SHARED);
-  Invariant(objc_frag_type != FRAG_TYPE_EXTENSION);
 
   bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
   CSTR c_result_set_name = name;
@@ -289,9 +262,6 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   bprintf(h, "@interface %s\n", classname);
   bprintf(h, "@end\n");
   bprintf(h, "#endif\n");
-
-  // Since the parent assembly query has already fetched the aggregated resultSet, we call to use that directly and
-  // skip setting up objc and c bridging for extension fragment specific result unless otherwise
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(objc_convert, "", objc_name.ptr, "_from_", c_name.ptr);
 
@@ -508,21 +478,10 @@ static void cg_objc_one_stmt(ast_node *stmt) {
 static void cg_objc_stmt_list(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    objc_frag_type = find_fragment_attr_type(misc_attrs, &base_fragment_name);
+    objc_frag_type = find_fragment_attr_type(misc_attrs);
 
     if (objc_frag_type == FRAG_TYPE_SHARED) {
       // shared fragments never create any code
-      continue;
-    }
-
-    if (objc_frag_type == FRAG_TYPE_EXTENSION) {
-      // extension fragments never create any code
-      continue;
-    }
-
-    if (objc_frag_type == FRAG_TYPE_BASE) {
-      // skipping the base fragment getters since generating in each extension
-      // will cause collisions including two fragments headers
       continue;
     }
 
@@ -570,11 +529,8 @@ cql_noexport void cg_objc_main(ast_node *head) {
 
   cg_objc_init();
 
-  CHARBUF_OPEN(extension_header);
   CHARBUF_OPEN(header_file);
   CHARBUF_OPEN(imports);
-
-  objc_extension_header = &extension_header;
 
   bprintf(&header_file, "%s", rt->header_prefix);
   bprintf(&header_file, "\n#import <%s>\n", options.objc_c_include_path);
@@ -596,10 +552,8 @@ cql_noexport void cg_objc_main(ast_node *head) {
 
   CHARBUF_CLOSE(imports);
   CHARBUF_CLOSE(header_file);
-  CHARBUF_CLOSE(extension_header);
 
   // reset globals so they don't interfere with leaksan
-  objc_extension_header = NULL;
   is_string_column_encoded = 0;
 }
 

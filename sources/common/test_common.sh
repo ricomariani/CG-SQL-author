@@ -303,51 +303,6 @@ code_gen_c_test() {
     failed
   fi
 
-  echo running codegen test for base query fragment
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_base_fragment_c.h" "${OUT_DIR}/cg_test_base_fragment_c.c" "${OUT_DIR}/cg_test_base_fragment_imports.ref" --in "${TEST_DIR}/cg_test_base_fragment.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_c.err"
-    failed
-  fi
-
-  echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_base_fragment.sql" "${OUT_DIR}/cg_test_base_fragment_c.c"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
-
-  echo running codegen test for extension query fragment
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_extension_fragment_c.h" "${OUT_DIR}/cg_test_extension_fragment_c.c" "${OUT_DIR}/cg_test_extension_fragment_imports.ref" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_c.err"
-    failed
-  fi
-
-  echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_extension_fragment.sql" "${OUT_DIR}/cg_test_extension_fragment_c.c"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
-
-  echo running codegen test for assembly query
-  if ! ${CQL} --generate_type_getters --test --cg "${OUT_DIR}/cg_test_assembly_query_c.h" "${OUT_DIR}/cg_test_assembly_query_c.c" "${OUT_DIR}/cg_test_assembly_query_imports.ref" --in "${TEST_DIR}/cg_test_assembly_query.sql" --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_c.err"
-    failed
-  fi
-
-  echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_assembly_query.sql" "${OUT_DIR}/cg_test_assembly_query_c.c"
-  then
-    echo "ERROR: failed c query fragment verification"
-    failed
-  fi
-
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_c.c
   on_diff_exit cg_test_c.h
@@ -360,12 +315,6 @@ code_gen_c_test() {
   on_diff_exit cg_test_c_with_type_getters.c
   on_diff_exit cg_test_c_with_type_getters.h
   on_diff_exit cg_test_exports.out
-  on_diff_exit cg_test_base_fragment_c.c
-  on_diff_exit cg_test_base_fragment_c.h
-  on_diff_exit cg_test_extension_fragment_c.c
-  on_diff_exit cg_test_extension_fragment_c.h
-  on_diff_exit cg_test_assembly_query_c.c
-  on_diff_exit cg_test_assembly_query_c.h
   on_diff_exit cg_test_c.err
 
   echo "  compiling code"
@@ -373,25 +322,6 @@ code_gen_c_test() {
   if ! do_make cg_test
   then
     echo CQL generated invalid C code
-    failed
-  fi
-
-  echo "  compiling query fragment code"
-  if ! do_make cg_test_base_fragment
-  then
-    echo CQL generated invalid C code for base query fragment
-    failed
-  fi
-
-  if ! do_make cg_test_extension_fragment
-  then
-    echo CQL generated invalid C code for extension query fragment
-    failed
-  fi
-
-  if ! do_make cg_test_assembly_query
-  then
-    echo CQL generated invalid C code for assembly query
     failed
   fi
 }
@@ -415,37 +345,10 @@ code_gen_objc_test() {
     failed
   fi
 
-  echo running objc codegen test for base query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_base_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_objc.err"
-    failed
-  fi
-
-  echo running objc codegen test for extension query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_objc.err"
-    failed
-  fi
-
-  echo running objc codegen test for assembly query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_objc.out" --objc_c_include_path Test/TestFile.h --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt objc 2>"${OUT_DIR}/cg_test_objc.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_objc.err"
-    failed
-  fi
-
   echo validating codegen
   echo "  computing diffs (empty if none)"
 
   on_diff_exit cg_test_objc.out
-  on_diff_exit cg_test_base_fragment_objc.out
-  on_diff_exit cg_test_extension_fragment_objc.out
-  on_diff_exit cg_test_assembly_query_objc.out
   on_diff_exit cg_test_objc.err
 }
 
@@ -899,9 +802,9 @@ misc_cases() {
   fi
 
   echo "  check that the objc_c_include_path argument is provided in arguments"
-  if ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_objc.out" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt objc 2>"${OUT_DIR}/c_include_needed.err"
+  if ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/c_include_needed.err"
   then
-    echo c_include is required for extension fragment
+    echo c_include is required for --rt objc 
     failed
   fi
 
@@ -986,35 +889,6 @@ json_schema_test() {
   echo "" >"${OUT_DIR}/__temp"
   json_validate "${OUT_DIR}/__temp"
 
-  echo running json codegen test for base query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_base_fragment_json.out" --in "${TEST_DIR}/cg_test_base_fragment.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_json.err"
-    failed
-  fi
-
-  json_validate "${TEST_DIR}/cg_test_base_fragment.sql"
-
-  echo running json codegen test for extension query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_extension_fragment_json.out" --in "${TEST_DIR}/cg_test_extension_fragment.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_json.err"
-    failed
-  fi
-
-  json_validate "${TEST_DIR}/cg_test_extension_fragment.sql"
-
-  echo running json codegen test for assembly query fragment
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_assembly_query_json.out" --in "${TEST_DIR}/cg_test_assembly_query.sql" --rt json_schema 2>"${OUT_DIR}/cg_test_json.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_json.err"
-    failed
-  fi
-
-  json_validate "${TEST_DIR}/cg_test_assembly_query.sql"
 
   echo validating json codegen
   echo "  computing diffs (empty if none)"

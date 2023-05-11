@@ -5682,6 +5682,7 @@ create table backed_table_with_defaults(
   pk2 integer default 2000,
   x int default 3000,
   y int default 4000,
+  z text default "foo",
   constraint pk primary key (pk1, pk2)
 );
 

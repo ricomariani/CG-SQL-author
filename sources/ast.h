@@ -233,8 +233,6 @@ cql_noexport ast_node *_Nonnull new_ast_str(const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_blob(const char *_Nonnull value);
 
-cql_noexport ast_node *_Nonnull copy_ast_tree(ast_node *_Nonnull node);
-
 cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);

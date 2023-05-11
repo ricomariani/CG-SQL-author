@@ -757,47 +757,6 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
   }
 }
 
-// Clone a ast tree by the given root ast_node.
-// The sems of all nodes are NULL in the new tree.
-cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
-  Contract(node);
-  ast_node *new_node = NULL;
-
-  // Note: ast_has_left includes the is_primitive check so it's safe to do on leaf nodes too
-  // even though they have no left/right at all.
-
-  ast_node *left_node = NULL;
-  ast_node *right_node = NULL;
-  if (ast_has_left(node)) {
-    left_node = copy_ast_tree(node->left);
-  }
-  if (ast_has_right(node)) {
-    right_node = copy_ast_tree(node->right);
-  }
-
-  AST_REWRITE_INFO_SET(node->lineno, node->filename);
-  if (is_ast_num(node)) {
-    EXTRACT_NUM_TYPE(num_type, node);
-    EXTRACT_NUM_VALUE(val, node);
-    new_node = new_ast_num(num_type, val);
-  } else if (is_ast_int(node)) {
-    EXTRACT_OPTION(value, node);
-    new_node = new_ast_opt(value);
-  } else if (is_ast_blob(node)) {
-    EXTRACT_BLOBTEXT(value, node);
-    new_node = new_ast_blob(value);
-  } else if (is_ast_str(node)) {
-    EXTRACT_STRING(value, node);
-    new_node = new_ast_str(value);
-  } else {
-    new_node = new_ast(node->type, left_node, right_node);
-  }
-  AST_REWRITE_INFO_RESET();
-
-  Invariant(new_node);
-  return new_node;
-}
-
 // Recursively finds table nodes, executing the callback for each that is found.  The
 // callback will not be executed more than once for the same table name.
 cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node *node) {

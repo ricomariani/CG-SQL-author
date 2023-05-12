@@ -9072,7 +9072,7 @@ not the full body of what was declared but its interface.  The schema informatio
 while the procedure information illuminates the code that was generated and how you might call it.
 
 
-## Chapter 14: CQL Query Fragments
+## Chapter 14: CQL Shared Fragments
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
@@ -9080,328 +9080,11 @@ while the procedure information illuminates the code that was generated and how 
 -- LICENSE file in the root directory of this source tree.
 -->
 
-:::caution
-CQL base fragments, extension fragments, and assembly fragments are now deprecated and will be removed. Please use [shared fragments](#shared-fragments) instead.
-:::
-
-CQL Query fragments are the most sophisticated rewrite CQL offers for productivity.  The idea is that a very large query
-can be represented in "fragments" that add columns or add rows based on the original "core" query.  The final query
-will be an assembled rewrite of all the fragments chained together.  Specifically, the motivation for this is that you
-can have a "core" query that fetches the essential columns for some UI design and then you can add query extension
-fragments that add new/additional columns for some new set of features.  The core and extended columns can be in their
-own fragment and they can be compiled independently.  The result of this is that any errors are in much smaller
-and easier to understand fragments rather than in some monster "fetch everything" query;  any given extension does not
-have to know all the details of all the other extensions and can take a limited dependency on even the core query.
-
-It's easiest to illustrate this with an example so let's begin there.
-
-Let's first start with this very simple schema:
-
-```sql
-create table my_table(
- id integer primary key,
- name text not null,
- rate real not null
-);
-
-create table added_rows(
- like my_table -- sugar to duplicate the columns of my_table
-);
-
-create table added_columns(
- id integer references my_table(id),
- data text
-);
-
-```
-Typically there would be a lot more columns but where you see `flag1` and `flag2` appear in fragments you can imagine any number
-of additional columns of any type.  So we can keep the examples simple.
-
-### Base Query Fragments
-
-The base fragment might look something like this:
-
-```sql
-@attribute(cql:base_fragment=base_frag)
-create proc base_frag_template(id_ integer not null)
-begin
-  with
-    base_frag(*) as (select * from my_table where my_table.id = id_)
-    select * from base_frag;
-end;
-```
-
-Here are the essential aspects:
-
-* the base fragment is given a name, it can be anything, probably something that describes the purpose of the fragments
-* the procedure name can be anything at all
-* the procedure must consist of exactly one `with...select` statement
-* the fragment name must be the one and only CTE in the select statement
-* you must select all the columns from the CTE
-
-Note the syntax helper `base_frag(*)` is just shorthand to avoid retyping all the column names of `my_table`.
-
-The interesting part is `(select * from my_table where my_table.id = id_)` which could have been any select statement
-of your choice. Everything else in the procedure must follow the designated format, and the format is enforced due to
-the presence of `@attribute(cql:base_fragment=base_frag)`.
-
-The point of putting everything on rails like this is that all base fragments will look the same and it will be clear how to transform any base fragment into the final query when it is assembled with its extensions.
-
-Note: the base fragment produces no codegen at all.  There is no `base_frag_template` procedure in the output.  This is just a template.  Also, the name of the procedure cannot be `base_frag` this name will be used by the assembly fragment later.  Really any descriptive unique name will do since the name does not appear in the output at all.
-
-### Extension Query Fragments
-
-#### Adding Columns
-
-The most common thing that an extension might want to do is add columns to the result.  There can be any number of such extensions in the final assembly.  Here's a simple example that adds one column.
-
-```sql
-@attribute(cql:extension_fragment=base_frag)
-create proc adds_columns(id_ integer not null)
-begin
-  with
-    base_frag(*) as (select 1 id, "name" name, 1.0 rate),
-    col_adder_frag(*) as (
-    select base_frag.*, added_columns.data
-      from base_frag
-      left outer join added_columns on base_frag.id = added_columns.id)
-  select * from col_adder_frag;
-end;
-```
-Again there are some important features to this extension and they are largely completely constrained, i.e. you must follow the pattern.
-
-* the attribute indicates `extension_fragment` and the name (here `base_frag`) must have been previously declared in a `base_fragment`
-* the procedure name can be any unique name other than `base_frag` - it corresponds to this particular extension's purpose
-* the procedure arguments must be identical to those in the base fragment
-* the first CTE must match the `base_fragment` attribute value, `base_frag` in this case
-* you do not need to repeat the full select statement for `base_frag`, any surrogate with the same column names and types will do
-  * the base fragment code might include a #define to make this easier
-    * e.g. `#define base_frags_core as base_frag(*) as (select 1 id, "name" name, 1.0 rate)`
-  * doing so will make maintenance easier if new columns are added to the base fragment
-* there must be exactly one additional CTE
-  * it may have any unique descriptive name you like
-  * it must begin with `select base_frags.*` with the appropriate CTE name matching the base fragment CTE
-  * it must add at least one column (or it would be uninteresting)
-  * it may not have any clause other than the first `from` (e.g. no `where`, `having`, `limit` etc.)
-    * if any of these were allowed they would remove or re-order rows in the base query which is not allowed
-    * the `from` clause often includes nested selects which have no restrictions
-  * it must select from the base fragment name and left outer join to wherever it likes to get optional additional columns
-    * because of this the additional column(s) will certainly be a nullable type in the projection
-* the final select must be of the form `select * from col_adder_frag` with the appropriate name
-* keeping all this in mind, the interesting bit happens here:  `left outer join added_columns on base_frag.id = added_columns.id`
-  * this is where you get the data for your additional column using values in the core columns
-
-This fragment can be (and should be) compiled in its own compiland while using `#include` to get the base fragment only.  This will result in code gen for the accessor functions for a piece of the overall query -- the part this extension knows about.  Importantly code that uses this extension's data does not need or want to know about any other extensions that may be present, thereby keeping
-dependencies under control.
-
-The C signatures generated would look like this:
-
-```c
-extern cql_int32 adds_columns_get_id(
-    base_frag_result_set_ref _Nonnull result_set,
-    cql_int32 row);
-
-extern cql_string_ref _Nonnull adds_columns_get_name(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_double adds_columns_get_rate(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_string_ref _Nullable adds_columns_get_data(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_int32 adds_columns_result_count(
-  base_frag_result_set_ref _Nonnull result_set);
-```
-
-Even if there were dozens of other extensions, the functions for reading those columns would not be declared in the header for
-this extension.  Any given extension "sees" only the core columns plus any columns it added.
-
-#### Adding Rows
-
-Query extensions also frequently want to add additional rows to the main result set, based on the data that is already present.
-
-The second form of extension allows for this; it is similarly locked in form.  Here is an example:
-
-```sql
-@attribute(cql:extension_fragment=base_frag)
-create proc adds_rows(id_ integer not null)
-begin
-  with
-    base_frag(*) as (select 1 id, "name" name, 1.0 rate),
-    row_adder_frag(*) as (
-    select * from base_frag
-    union all
-    select * from added_rows)
-  select * from row_adder_frag;
-end;
-```
-
-Let's review the features of this second template form:
-* there is a surrogate for the core query
-* there is a mandatory second CTE
-* the second CTE is a compound query with any number of branches, all `union all`
-* the first branch must be `select * from base_frag` (the base fragment) to ensure that the original rows remain
-  * this is also why all the branches must be `union all`
-* this form cannot add new columns
-* the extension CTE may not include `order by` or `limit` because that might reorder or remove rows of the base
-* any extensions of this form must come before those of the `left outer join` form for a given base fragment
-  * which ironically means `row_adder_frag` has to come before `col_adder_frag`
-* the usual restrictions are in place on compound selects (same type and number of columns) to ensure a consistent result
-* the final select after the CTE section must be exactly in the form `select * from row_adder_frag` which is the name of the one and only additional CTE with no other clauses or options
-  * in practice only the CTE will be used to create the final assembly, so even if you did change the final select to something else it would be moot
-
-The signatures generated for this will look something like so:
-
-```c
-extern cql_int32 adds_rows_get_id(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_string_ref _Nonnull adds_rows_get_name(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_double adds_rows_get_rate(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_int32 adds_rows_result_count(
-  base_frag_result_set_ref _Nonnull result_set);
-```
-
-which gives you access to the core columns.  Again this fragment can and should be compiled standalone with only the declaration
-for the base fragment in the same translation unit to get the cleanest possible output.  This is so that consumers of this
-extension do not "see" other extensions which may or may not be related and may or may not always be present.
-
-#### Assembling the Fragments
-
-With all the fragments independently declared they need to be unified to create one final query. This is where the
-major rewriting happens.  The `assembly_fragment` looks something like this:
-
-```sql
-@attribute(cql:assembly_fragment=base_frag)
-create proc base_frag(id_ integer not null)
-begin
-  with
-    base_frag(*) as (select 1 id, "name" name, 1.0 rate)
-    select * from base_frag;
-end;
-```
-
-It will always be as simple as this; all the complexity is in the fragments.
-
-* the `assembly_fragment` name must match the core fragment name
-* the procedure arguments must be identical to the base fragment arguments
-* the  procedure must have the same name as the assembly fragment (`base_frag` in this case)
-  * the code that was generated for the previous fragments anticipates this and makes reference to what will be generated here
-  * this is enforced
-* the assembled query is what you run to get the result set, this has real code behind it
-  * the other fragments only produce result set readers that call into the helper methods to get columns
-* there is a surrogate for the core fragment as usual
-* all of CTE section will ultimately be replaced with the fragments chained together
-* the final select should be of the form `select * from your_frags` but it can include ordering and/or filtering, this statement will be present in final codegen, the final order is usually defined here
-
-
-When compiling the assembly fragment, you should include the base, and all the other fragments, and the assembly template.  The presence of the assembly_fragment will cause codegen for the extension fragments to be suppressed. The assembly translation unit only contains the assembly query as formed from the fragments.
-
-Now let's look at how the query is rewritten, the process is pretty methodical.
-
-After rewriting the assembly looks like this:
-
-```sql
-CREATE PROC base_frag (id_ INTEGER NOT NULL)
-BEGIN
-  WITH
-  base_frag (id, name, rate) AS (SELECT *
-    FROM my_table
-    WHERE my_table.id = id_),
-  row_adder_frag (id, name, rate) AS (SELECT *
-    FROM base_frag
-  UNION ALL
-  SELECT *
-    FROM added_rows),
-  col_adder_frag (id, name, rate, data) AS (SELECT row_adder_frag.*, added_columns.data
-    FROM row_adder_frag
-    LEFT OUTER JOIN added_columns ON row_adder_frag.id = added_columns.id)
-  SELECT *
-    FROM col_adder_frag;
-END;
-```
-
-Let's dissect this part by part. Each CTE serves a purpose:
-
-* the core CTE was replaced by the CTE in the base_fragment, and it appears directly
-* next, the first extension was added as a CTE referring to the base fragment just as before
-  * recall that the first extension has to be `row_adder_frag`, as that type must come first
-  * looking at the chain you can see why it would be hard to write a correct fragment if it came after columns were added
-* next the second extension was added as a CTE
-  * all references to the base fragment were replaced with references to row_adder_frag
-  * the extra column names in the CTE were added such that all previous column names are introduced
-* this process continues until all extensions are exhausted
-* the final select statement reads all the columns from the last extension CTE and includes and ordering and so forth that was present in the assembly query
-
-The result of all this is a single query that gets all the various columns that were requested in all the extensions
-and all the `union all` operations play out as written.  The extensions are emitted in the order that they appear
-in the translation unit with the assembly, which again must have the row adding extensions first.
-
-This facility provides considerable ability to compose a large query, but each fragment can be independently checked for errors
-so that nobody ever has to debug the (possibly monstrous) overall result.  Fragments can be removed simply by
-excluding them from the final assembly (with e.g. #ifdefs, or build rules)
-
-With the rewrite of the assembly_fragment complete, the codegen for that procedure is the normal codegen for a procedure with a single select.
-
-As always, Java and Objective C codegen on these pieces will produce suitable wrappers for the C.
-
-The output code for the assembly fragment generates these reading functions:
-
-```c
-extern cql_int32 base_frag_get_id(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_string_ref _Nonnull base_frag_get_name(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_double base_frag_get_rate(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-// used by adds_columns_get_data() to read its data
-extern cql_string_ref _Nullable __PRIVATE__base_frag_get_data(
-  base_frag_result_set_ref _Nonnull result_set,
-  cql_int32 row);
-
-extern cql_int32 base_frag_result_count(
-  base_frag_result_set_ref _Nonnull result_set);
-```
-
-These are exactly what you would get for a normal query except that the pieces that came from extensions are marked `PRIVATE`.  Those methods should not be used directly but instead the methods generated for each extension proc should be used.
-
-Additionally, to create the result set, as usual.
-
-```c
-extern CQL_WARN_UNUSED cql_code base_frag_fetch_results(
-  sqlite3 *_Nonnull _db_,
-  base_frag_result_set_ref _Nullable *_Nonnull result_set,
-  cql_int32 id_);
-```
-
-With the combined set of methods you can create a variety of assembled queries from extensions in a fairly straightforward way.
-
-### Shared Fragments
-
-Shared fragments do not have the various restrictions that the "extension" style fragments have.  While extensions
-were created to allow a single query to be composed by authors that did not necessarily work with each other,
-and therefore they are full of restrictions on the shape, shared queries instead are designed to give you
-maximum flexibility in how the fragments are re-used.  You can think of them as being somewhat like a parameterized
-view, but the parameters are both value parameters and type parameters.  In Java or C#, a shared fragments might have
-had an invocation that looked something like this:  `my_fragment(1,2)<table1, table2>.  As with the other fragment types
-the common table expression (CTE) is the way that they plug in.
+Shared fragments allows you to reuse and compose SQL queires in a safe (type checked) and efficient manner. They are based on [Common Table Expressions (CTEs)](https://www.sqlite.org/lang_with.html), so some basic knowledge of that is recommended before using Shared Fragments.
+
+You can think of shared fragments as being somewhat like a parameterized
+view, but the parameters are both value parameters and type parameters. In Java or C#, a shared fragments might have
+had an invocation that looked something like this:  `my_fragment(1,2)<table1, table2>`.
 
 It's helpful to consider a real example:
 
@@ -10202,7 +9885,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Mar  3 21:02:20 PST 2023
+Snapshot as of Thu 11 May 2023 19:59:07 PDT
 
 ### Operators and Literals
 
@@ -10294,12 +9977,12 @@ opt_stmt_list:
   ;
 
 stmt_list:
-  stmt ';'
-  | stmt_list stmt ';'
+  stmt
+  | stmt_list stmt
   ;
 
 stmt:
-  misc_attrs any_stmt
+  misc_attrs any_stmt ';'
   ;
 
 any_stmt:
@@ -10575,6 +10258,11 @@ misc_attr_key:
   | name ':' name
   ;
 
+cql_attr_key:
+  name
+  | name ':' name
+  ;
+
 misc_attr_value_list:
   misc_attr_value
   | misc_attr_value ',' misc_attr_value_list
@@ -10592,6 +10280,8 @@ misc_attr_value:
 misc_attr:
   "@ATTRIBUTE" '(' misc_attr_key ')'
   | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'
+  | '[' '[' cql_attr_key ']' ']'
+  | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']'
   ;
 
 misc_attrs:
@@ -11508,6 +11198,7 @@ declare_interface_stmt:
 
 create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
+  | procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
   ;
 
 inout:
@@ -12025,9 +11716,6 @@ The complete list (as of this writing) is:
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
   * `cql:generate_copy` the code generation for the annotated procedure will produce a `[procedure_name]_copy` function that can make complete or partial copies of its result set.
-  * `cql:base_fragment=frag_name` used for base fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#base-query-fragments))
-  * `cql:extension_fragment=frag_name` used for extension fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#extension-query-fragments))
-  * `cql:assembly_fragment=frag_name` used for assembly fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#extension-query-fragments))
   * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#shared-fragments))
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
@@ -13572,7 +13260,7 @@ It's the declaration that's failing here, not the call.
 
 -----
 
-CQL0204 : Unused.
+CQL0204  Unused.
 
 -----
 
@@ -14056,9 +13744,7 @@ Either there is a typo in the name or the declaration is missing, or both...
 
 -----
 
-### CQL0251: fragment must end with exactly 'SELECT * FROM CTE'
-
-Query fragments have an exact prescription for their shape.  This prescription includes `select * from CTE` as the final query where CTE is the common table expression that they define.  This the error message includes the specific name that is required in this context.
+### CQL0251 Unused
 
 -----
 
@@ -14068,13 +13754,7 @@ An @PROC literal was used outside of any procedure.  It cannot be resolved if it
 
 -----
 
-### CQL0253: base fragment must have only a single CTE named the same as the fragment 'name'
-
-Query fragments have an exact prescription for their shape.  This prescription includes  `select * from CTE` where CTE is the single common table expression with the same name as the base query.
-
-This error says that the final select came from something other than the single CTE that is the base name or there was more than one CTE in the fragment.
-
-You can also get this error if you have an extension fragment but you accidentally marked it as a base fragment.
+### CQL0253 Unused
 
 -----
 
@@ -14084,17 +13764,11 @@ When authoring a schema migration script (a stored proc named in an `@create` or
 
 -----
 
-### CQL0255: fragment name is not a previously declared base fragment 'bad_fragment_name'
-
-In an extension or assembly fragment declaration, the specified base fragment name has not been previously defined and that is not allowed.
-
-Probably there is a typo, or the declarations are in the wrong order. The base fragment has to come first.
+### CQL0255 Unused
 
 -----
 
-### CQL0256: fragment name conflicts with existing base fragment 'NAME'
-
-Extension query fragment can only be created with a custom procedure name different from all existing base fragment names otherwise we throw this error.
+### CQL0256 Unused
 
 -----
 
@@ -14105,55 +13779,15 @@ are not allowed in this context.
 
 -----
 
-### CQL0258: extension fragment must add exactly one CTE; found extra named 'name'
-
-The extension fragment includes more than one additional CTE, it must have exactly one.
-
-In the following example, `ext2` is not valid,  you have to stop at `ext1`
-
-```sql
--- example bad extension fragment
-@attribute(cql:extension_fragment=core)
-create proc test_bad_extension_fragment_three()
-begin
-  with
-    core(x,y,z) as (select 1,nullable("a"),nullable(3L)),
-    ext1(x,y,z,a) as (select core.*, extra1.* from core left outer join extra1),
-    ext2(x,y,z,b) as (select core.*, extra2.* from core left outer join extra2)
-  select * from ext2;
-end;
-```
+### CQL0258 Unused
 
 -----
 
-### CQL0259: extension fragment CTE must select T.* from base CTE
-
-For the select expression in extension fragment, it must include all columns from the base table. This error indicates the select expression doesn't select from the base table. It should look like this
-```sql
-select core.*, ... from core
-```
-Here core is the name of its base table.
+### CQL0259 Unused
 
 -----
 
-### CQL0260: extension fragment CTE must be a simple left outer join from 'table_name'
-
-Extension fragments may add columns to the result, to do this without lose any rows you must always left outer join to the new data that you with to include.  There is a specific prescription for this.  It has
-to look like this:
-
-```sql
-@attribute(cql:extension_fragment=core)
-create proc an_extension()
-begin
-  with
-    core(x,y,z) as (select 1,nullable("a"),nullable(3L)),
-    ext1(x,y,z,a) as (select core.*, extra_column from core left outer join extra_stuff),
-  select * from ext1;
-end;
-```
-
-Here extension `ext1` is adding `extra_column` which came from `extra_stuff`.  There could have
-been any desired join condition or indeed any join expression at all but it has to begin with `from core left outer join` so that all the core columns will be present and now rows can be removed.
+### CQL0260 Unused
 
 -----
 
@@ -14206,29 +13840,23 @@ Usually there are constraints on the join also in the WHERE clause but there don
 
 -----
 
-### CQL0264: duplicate assembly fragments of base fragment
-For each base fragment, it only allows to exist one assembly fragment of that base fragment.
+### CQL0264 Unused
 
 -----
 
-### CQL0265: assembly fragment can only have one CTE
-Assembly fragment can only have one base table CTE.
+### CQL0265 Unused
 
 -----
 
-### CQL0266: extension fragment name conflicts with existing fragment
-Two or more extension fragments share the same name.
+### CQL0266 Unused
 
 -----
 
-### CQL0267: extension fragments of same base fragment share the same cte column
-Two or more extension fragments which have the same base fragments share the same name for one of their unique columns. E.g. the base table is `core(x,y)` and one extension table is `plugin_one(x,y,z)` and another is `plugin_two(x,y,z)`.
-Here, z in both extension fragments share the same name but may refer to different values.
+### CQL0267 Unused
 
 -----
 
-### CQL0268: extension/assembly fragment must have the CTE columns same as the base fragment
- Extension and assembly fragments have an exact prescription for their shape. For each extension and assembly fragment, the first CTE must be a stub for their base table. This error means this stub in extension/assembly fragment differs from the definition of the base table.
+### CQL0268 Unused
 
 -----
 
@@ -14442,11 +14070,11 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-### CQL0287: extension/assembly fragment must add stub "
+### CQL0287 Unused
 
 -----
 
-### CQL0288: extension/assembly fragment stub for base CTE column must be "
+### CQL0288 Unused
 
 -----
 
@@ -14456,9 +14084,7 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-### CQL0290: fragments can only have one statement in the statement list and it must be a WITH...SELECT
-
-All of the extendable query fragment types consist of a procedure with exactly one statement and that statement is a WITH...SELECT statement.  If you have more than one statement or some other type of statement you'll get this error.
+### CQL0290 Unused
 
 -----
 
@@ -14660,52 +14286,15 @@ All parameters of the built-In scalar CQL functions `char(...)` must be of type 
 
 -----
 
-### CQL0318: more than one fragment annotation on procedure 'procedure_name'
-
-The indicated procedure has several cql:*_fragment annotations such as cql:base_fragment and cql:extension_fragment.  You can have at most one of these.
-
-example:
-
-```sql
-@attribute(cql:assembly_fragment=foo)
-@attribute(cql:base_fragment=goo)
-create proc mixed_frag_types3(id_ integer)
-begin
-  ...
-end;
-```
+### CQL0318 Unused
 
 -----
 
-### CQL0319: name of the assembly procedure must match the name of the base fragment 'procedure_name'
-
-The name of the procedure that carries the assembly attribute (cql:assembly_fragment) has to match the name of the base fragment.  This is because the code that is generated for the extension fragments refers to some shared code that is generated in the assembly fragment.  If the assembly fragment were allowed to have a distinct name the linkage could never work.
-
-example:
-```sql
--- correct example
--- note: 'foo' must be a valid base fragment, declared elsewhere
-@attribute(cql:assembly_fragment=foo)
-create proc foo(id_ integer)
-begin
-  ...
-end;
-
--- incorrect example
-@attribute(cql:assembly_fragment=foo)
-create proc bar(id_ integer)
-begin
-  ...
-end;
-```
+### CQL0319 Unused
 
 -----
 
-### CQL0320: extension fragment CTE must have a FROM clause and no other top level clauses 'frag_name'
-
-In the extension fragment form that uses `LEFT OUTER JOIN` to add columns you cannot include top level restrictions/changes like `WHERE`, `ORDER BY`, `LIMIT` and so forth.  Any of these would remove or reorder the rows from the core fragment and that is not allowed, you can only add columns.  Hence you must have a `FROM` clause and you can have no other top level clauses.  You can use any clauses you like in a nested select to get your additional columns.
-
-Note: you could potentially add rows with a `LEFT OUTER JOIN` and a generous `ON` clause. That's allowed but not recommended. The `ON` clause can't be forbidden because it's essential in the normal case.
+### CQL0320 Unused
 
 -----
 
@@ -14717,13 +14306,7 @@ The reason for this is that both these types of objects are attached to a table 
 
 -----
 
-### CQL0322: fragment parameters must be exactly '[arguments]' 'procedure_name'
-
-The named procedure is an extension fragment or an assembly fragment. It must have exactly the same arguments as the base fragment.  These arguments are provided.
-
-Recall that the code for the procedure that does the select comes from the assembly fragment, so its arguments are in some sense the only ones that matter.  But the extension fragments are also allowed to use the arguments.  Of course we must ensure that the extension fragments do not use any arguments that aren't in the assembly, and so the only choice we have is to make sure the extensions conform to the base.  And so for that to work the assembly also has to conform to the base.  So the base fragment must define the args for all the other fragments.
-
-You could imagine a scheme where the extension fragments are allowed to use a subset of the parameters defined in the base but if that were the case you might have names that mean different things in different fragments and then you could get errors or different semantics when the fragments were assembled. To avoid all of these problems, and for simplicity, we demand that the arguments of all fragments match exactly.
+### CQL0322 Unused
 
 -----
 
@@ -14808,37 +14391,19 @@ the indicated tables. This marking doesn't make sense on other kinds of statemen
 
 -----
 
-### CQL0330: fragment must start with exactly 'SELECT * FROM CTE'
-
-Query fragments have an exact prescription for their shape.  This prescription includes `select * from CTE` in the
-first branch of the UNION ALL operator when using that form.  Here CTE
-is the common table expression that they define.  This the error message includes the
-specific name that is required in this context.
+### CQL0330 Unused
 
 -----
 
-### CQL0331: extension fragment CTE must have not have ORDER BY or LIMIT clauses 'frag_name'
-
-In the extension fragment form that uses `UNION ALL` to add rows you cannot include the top level operators `ORDER BY`, or `LIMIT`  Any of these would remove or reorder the rows from the core fragment and that is not allowed, you can only add new rows.
-You can use any clauses you like in a nested selects as they will not remove rows from the base query.
+### CQL0331 Unused
 
 -----
 
-### CQL0332: all extension fragments that use UNION ALL must come before those that use LEFT OUTER JOIN 'frag_name'
-
-Query fragments that add rows using the UNION ALL form have no way to refer columns that may have been added before
-them in the part of the query that adds rows (the second and subsequent branches of UNION ALL).  As a result,
-in order to get a assembled query that makes sense the row-adding form must always come before any columns
-were added.  Hence all of these fragments must come before any of the LEFT OUTER JOIN form.
-
-If you get this error, you should re-order your fragments such that the UNION ALL form comes before any
-LEFT OUTER JOIN fragments.  The offending fragment is named in the error.
+### CQL0332 Unused
 
 -----
 
-### CQL0333: all the compound operators in this CTE must be UNION ALL
-
-The compound operators in CTE must and always be an UNION ALL.
+### CQL0333 Unused
 
 -----
 
@@ -15238,11 +14803,11 @@ There is no need to write a select expression that always evaluates to NULL. Sim
 
 ----
 
-CQL 0375 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+CQL 0375  Unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 ----
 
-CQL 0376 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+CQL 0376  Unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 ----
 
@@ -15570,7 +15135,7 @@ the result when using 0 as the second argument is not well defined.  If you want
 
 ----
 
-CQL 0407 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+CQL 0407  Unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 ----
 
@@ -15599,7 +15164,7 @@ anyway): One should simply always initialize the variable.
 
 ----
 
-CQL 0410 : unused, this was added to prevent merge conflicts at the end on literally every checkin
+CQL 0410  Unused, this was added to prevent merge conflicts at the end on literally every checkin
 
 ----
 
@@ -16672,7 +16237,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Mar  3 21:02:20 PST 2023
+Snapshot as of Thu 11 May 2023 19:59:07 PDT
 
 ### Rules
 
@@ -17328,15 +16893,12 @@ declare_func: '{'
           '"name"' ':' STRING_LITERAL ','
           '"args"' ':' '[' opt_complex_args ']' ','
           opt_attributes
-          opt_return_type
+          return_type ','
           '"createsObject"' ':' BOOL_LITERAL
          '}'
   ;
 
-opt_return_type: | '"returnType"' ':' return_type ','
-  ;
-
-return_type: '{'
+return_type: '"returnType"' ':' '{'
           '"type"' ':' STRING_LITERAL ','
           opt_kind
           opt_is_sensitive

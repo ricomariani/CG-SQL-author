@@ -13,7 +13,7 @@ sidebar_label: "Appendix 2: CQL Grammar"
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Mar  3 21:02:20 PST 2023
+Snapshot as of Thu 11 May 2023 19:59:07 PDT
 
 ### Operators and Literals
 
@@ -105,12 +105,12 @@ opt_stmt_list:
   ;
 
 stmt_list:
-  stmt ';'
-  | stmt_list stmt ';'
+  stmt
+  | stmt_list stmt
   ;
 
 stmt:
-  misc_attrs any_stmt
+  misc_attrs any_stmt ';'
   ;
 
 any_stmt:
@@ -386,6 +386,11 @@ misc_attr_key:
   | name ':' name
   ;
 
+cql_attr_key:
+  name
+  | name ':' name
+  ;
+
 misc_attr_value_list:
   misc_attr_value
   | misc_attr_value ',' misc_attr_value_list
@@ -403,6 +408,8 @@ misc_attr_value:
 misc_attr:
   "@ATTRIBUTE" '(' misc_attr_key ')'
   | "@ATTRIBUTE" '(' misc_attr_key '=' misc_attr_value ')'
+  | '[' '[' cql_attr_key ']' ']'
+  | '[' '[' cql_attr_key  '=' misc_attr_value ']' ']'
   ;
 
 misc_attrs:
@@ -1319,6 +1326,7 @@ declare_interface_stmt:
 
 create_proc_stmt:
   "CREATE" procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
+  | procedure name '(' params ')' "BEGIN" opt_stmt_list "END"
   ;
 
 inout:

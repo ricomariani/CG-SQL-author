@@ -12,7 +12,7 @@ sidebar_label: "Appendix 5: JSON Schema Grammar"
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Mar  3 21:02:20 PST 2023
+Snapshot as of Thu 11 May 2023 19:59:07 PDT
 
 ### Rules
 
@@ -668,15 +668,12 @@ declare_func: '{'
           '"name"' ':' STRING_LITERAL ','
           '"args"' ':' '[' opt_complex_args ']' ','
           opt_attributes
-          opt_return_type
+          return_type ','
           '"createsObject"' ':' BOOL_LITERAL
          '}'
   ;
 
-opt_return_type: | '"returnType"' ':' return_type ','
-  ;
-
-return_type: '{'
+return_type: '"returnType"' ':' '{'
           '"type"' ':' STRING_LITERAL ','
           opt_kind
           opt_is_sensitive

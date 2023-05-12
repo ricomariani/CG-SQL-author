@@ -2715,7 +2715,24 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
 
       AST_REWRITE_INFO_SAVE();
         ast_reset_rewrite_info();
-        ast_node *def_value = copy_ast_tree(entry->val);
+        ast_node *_Nonnull node = entry->val;
+        ast_node *def_value;
+
+        Contract(is_ast_num(node) || is_ast_str(node));
+        
+        AST_REWRITE_INFO_SET(node->lineno, node->filename);
+        if (is_ast_num(node)) {
+          EXTRACT_NUM_TYPE(num_type, node);
+          EXTRACT_NUM_VALUE(val, node);
+          def_value = new_ast_num(num_type, val);
+        } else {
+          EXTRACT_STRING(value, node);
+          def_value = new_ast_str(value);
+        }
+        AST_REWRITE_INFO_RESET();
+        
+        Invariant(def_value);
+
       AST_REWRITE_INFO_RESTORE();
 
       // new args for a default arg

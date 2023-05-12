@@ -285,7 +285,6 @@ cql_noexport symtab *find_default_values(CSTR name);
 cql_noexport bool_t add_default_values(symtab *def_values, CSTR name);
 cql_noexport void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope);
 cql_noexport ast_node *find_enum(CSTR name);
-cql_noexport ast_node *find_base_fragment(CSTR name);
 cql_noexport ast_node *find_recreate_migrator(CSTR name);
 cql_noexport ast_node *find_constant_group(CSTR name);
 cql_noexport ast_node *find_variable_group(CSTR name);

@@ -21,14 +21,6 @@ copy_ref c_include_namespace_missing.err
 copy_ref cg_1_2.err
 copy_ref cg_extension_fragment_with_core_base_test_objc.out
 copy_ref cg_requires_file.err
-copy_ref cg_test_assembly_query_c.c
-copy_ref cg_test_assembly_query_c.h
-copy_ref cg_test_assembly_query_json.out
-copy_ref cg_test_assembly_query_objc.out
-copy_ref cg_test_base_fragment_c.c
-copy_ref cg_test_base_fragment_c.h
-copy_ref cg_test_base_fragment_json.h
-copy_ref cg_test_base_fragment_objc.out
 copy_ref cg_test_c.c
 copy_ref cg_test_c.h
 copy_ref cg_test_c.err

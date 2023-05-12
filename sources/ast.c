@@ -645,84 +645,17 @@ cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list)
   return find_attribute_str(misc_attr_list, NULL, NULL, "backed_by");
 }
 
-// Helper function to extract the base fragment node (if any) from the misc attributes
-// provided, and invoke the callback function.
-cql_noexport uint32_t find_base_fragment_attr(
-  ast_node *_Nonnull misc_attr_list,
-  find_ast_str_node_callback _Nullable callback,
-  void *_Nullable context)
-{
-  return find_attribute_str(misc_attr_list, callback, context, "base_fragment");
-}
-
-// Helper function to extract the extension fragment node (if any) from the misc attributes
-// provided, and invoke the callback function.
-cql_noexport uint32_t find_extension_fragment_attr(
-  ast_node *_Nonnull misc_attr_list,
-  find_ast_str_node_callback _Nullable callback,
-  void *_Nullable context)
-{
-  return find_attribute_str(misc_attr_list, callback, context, "extension_fragment");
-}
-
-// Helper function to extract the assembled fragment node (if any) from the misc attributes
-// provided, and invoke the callback function.
-cql_noexport uint32_t find_assembly_query_attr(
-  ast_node *_Nonnull misc_attr_list,
-  find_ast_str_node_callback _Nullable callback,
-  void *_Nullable context)
-{
-  return find_attribute_str(misc_attr_list, callback, context, "assembly_fragment");
-}
-
-// Keep record of the assembly query fragment for result set type reference if
-// we are presently emitting an extension fragment stored proc
-cql_data_defn ( CSTR base_fragment_name );
-
-// The name of the base fragment is used as part of the field getters names
-// we get it from the attribute associated with whichever fragment we're looking at
-// semantic rules ensure these are consistent.  The base fragment name basically
-// let's us tie together extensions so we know which ones are part of which query
-// and then we put those together.  This function is the callback used to harvest
-// the base fragment name from wherever we found it.  Each fragment has it.
-static void cg_set_base_fragment_name(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
-  if (_context) {
-    CSTR *base_name = (CSTR *)_context;
-    *base_name = name;
-  }
-}
-
-// Look for the assembly fragment annotations, return the type or MIXED if
-// there is no unique type. This is used to find cases where the same attribute
-// is present more than once or different/incompatible attributes are present
-cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list, CSTR *_Nullable base_name) {
+// Look for the shared fragment annotations
+cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list) {
   if (!misc_attr_list) {
-    base_fragment_name = NULL;
     return FRAG_TYPE_NONE;
-  }
 
-  uint32_t base = find_base_fragment_attr(misc_attr_list, cg_set_base_fragment_name, base_name);
-  uint32_t extension = find_extension_fragment_attr(misc_attr_list, cg_set_base_fragment_name, base_name);
-  uint32_t assembly = find_assembly_query_attr(misc_attr_list, cg_set_base_fragment_name, base_name);
-  uint32_t shared = find_shared_fragment_attr(misc_attr_list);
-
-  if (base + extension + assembly + shared > 1) {
-    return FRAG_TYPE_MIXED;
   }
-  if (base + extension + assembly + shared == 0) {
-    return FRAG_TYPE_NONE;
-  }
-  if (shared) {
+  if (find_shared_fragment_attr(misc_attr_list)) {
     return FRAG_TYPE_SHARED;
   }
-  if (base) {
-    return FRAG_TYPE_BASE;
-  }
-  if (extension) {
-    return FRAG_TYPE_EXTENSION;
-  }
-  Invariant(assembly);
-  return FRAG_TYPE_ASSEMBLY;
+
+  return FRAG_TYPE_NONE;
 }
 
 // helper to get the fragment type of a given procedure
@@ -730,7 +663,7 @@ cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  return find_fragment_attr_type(misc_attrs, NULL);
+  return find_fragment_attr_type(misc_attrs);
 }
 
 // helper to look for the blob storage attribute
@@ -822,47 +755,6 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
     print_ast(node->right, node, pad+2, 1);
     padbuffer[pad] = '\0';
   }
-}
-
-// Clone a ast tree by the given root ast_node.
-// The sems of all nodes are NULL in the new tree.
-cql_noexport ast_node *copy_ast_tree(ast_node *_Nonnull node) {
-  Contract(node);
-  ast_node *new_node = NULL;
-
-  // Note: ast_has_left includes the is_primitive check so it's safe to do on leaf nodes too
-  // even though they have no left/right at all.
-
-  ast_node *left_node = NULL;
-  ast_node *right_node = NULL;
-  if (ast_has_left(node)) {
-    left_node = copy_ast_tree(node->left);
-  }
-  if (ast_has_right(node)) {
-    right_node = copy_ast_tree(node->right);
-  }
-
-  AST_REWRITE_INFO_SET(node->lineno, node->filename);
-  if (is_ast_num(node)) {
-    EXTRACT_NUM_TYPE(num_type, node);
-    EXTRACT_NUM_VALUE(val, node);
-    new_node = new_ast_num(num_type, val);
-  } else if (is_ast_int(node)) {
-    EXTRACT_OPTION(value, node);
-    new_node = new_ast_opt(value);
-  } else if (is_ast_blob(node)) {
-    EXTRACT_BLOBTEXT(value, node);
-    new_node = new_ast_blob(value);
-  } else if (is_ast_str(node)) {
-    EXTRACT_STRING(value, node);
-    new_node = new_ast_str(value);
-  } else {
-    new_node = new_ast(node->type, left_node, right_node);
-  }
-  AST_REWRITE_INFO_RESET();
-
-  Invariant(new_node);
-  return new_node;
 }
 
 // Recursively finds table nodes, executing the callback for each that is found.  The

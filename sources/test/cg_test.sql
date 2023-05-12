@@ -2326,18 +2326,6 @@ begin
    select 1 a, 2 b;
 end;
 
--- TEST: base fragment attribute
--- there should be no proc codegen
--- - cql_code % base_fragment
--- - cleanup
-@attribute(cql:base_fragment=core)
-create proc base_fragment(id_ integer not null)
-begin
-with
-  core(x,y,z) as (select id,name,rate from bar where id = id_)
-select * from core;
-end;
-
 -- TEST: make sure that the name of the cursor is canonicalized
 -- There should be no references to the version with the wrong case
 -- + simple_cursor_proc_A_CURSOR_row A_CURSOR = { 0 };
@@ -3126,51 +3114,6 @@ end;
 create proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
 begin
  select * from vault_non_sensitive;
-end;
-
-create table ext_test_table (
-  f1 integer not null,
-  f2 integer not null @sensitive,
-  f3 integer not null
-);
-
--- TEST: define a base fragment, no output for this
--- - get
--- - set
--- - void
--- - return
-@attribute(cql:base_fragment=frag_test)
-create proc baseline()
-begin
-  with
-    frag_test(*) as (select 1 id)
-  select * from frag_test;
-end;
-
--- TEST: extension creates no getters
--- - ext_get_id
--- - get_f2_is_null
--- - get_f2_value
--- - result_count
-@attribute(cql:extension_fragment=frag_test)
-@attribute(cql:vault_sensitive)
-create proc ext()
-begin
-  with
-    frag_test(*) as (select 1 id),
-    ext(*) as (select frag_test.*, f2 from frag_test left outer join ext_test_table on f1 = id)
-  select * from ext;
-end;
-
--- TEST: another extension, this one should not include anything about f2, it doesn't "know" about that column
--- - f2
-@attribute(cql:extension_fragment=frag_test)
-create proc ext2()
-begin
-  with
-    frag_test(*) as (select 1 id),
-    ext2(*) as (select frag_test.*, f3 from frag_test left outer join ext_test_table on f1 = id)
-  select * from ext2;
 end;
 
 -- TEST: simple box operation

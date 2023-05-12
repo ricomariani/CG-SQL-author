@@ -53,9 +53,7 @@ The script will generate the output of `EXPLAIN QUERY PLAN` of the SQL statement
 ],
 ```
 
-:::info
 You might notice the above output has a lot of extraneous stuff, like what seems to be CSS styling in JSON format. This is something that will be addressed in the future. In the meantime, you can use [something like `jq`](https://stedolan.github.io/jq/) to filter stuff out. For example:
 ```bash
 $ ./go_query_plan.sh | jq '.[0][0][1:-1][] | {"query": .[0], "explain": .[2]}'
 ```
-:::

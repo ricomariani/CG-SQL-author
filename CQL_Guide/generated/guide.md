@@ -692,7 +692,7 @@ Which probably doesn't come up very often but it does illustrate several things:
 
 Note:
  * A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
- * Additional demo code is available in [Appendix 10](https://cgsql.dev/cql-guide/x10).
+ * Additional demo code is available in [Appendix 10](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example)
 
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
@@ -4301,7 +4301,7 @@ cc -o hello -I ${cgsql}/sources main.c hello.c ${cgsql}/sources/cqlrt.c -lsqlite
 ./hello
 ```
 
-Additional demo code is available in [Appendix 10](https://cgsql.dev/cql-guide/x10).
+Additional demo code is available in [Appendix 10](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example)
 
 ### Nested Result Sets (Parent/Child)
 
@@ -8055,14 +8055,15 @@ is often desirable and the maintenance is not too bad.  You just use the `use_my
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](/cql-guide/x1) for command line details.
+To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example)
+for command line details.
 
 ```bash
 cql --in input.sql --rt json_schema --cg out.json
 ```
 
 The output contains many different sections for the various types of entities that CQL can process.  There is a full description of
-the possible outputs available at https://cgsql.dev/json-diagram.
+the possible outputs available in [diagram form](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
 
 In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
 which are better described with the grammar above.

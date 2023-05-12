@@ -10,7 +10,9 @@ make clean
 make
 ```
 
-This compiles CQL and puts the result at `out/cql`. Now you can run it to show available command options (also [documented here](https://cgsql.dev/cql-guide/x1)):
+This compiles CQL and puts the result at `out/cql`. Now you can run it to show available command options (also
+[documented here](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-1-command-line-options):
+
 ```bash
 $ out/cql
 ```

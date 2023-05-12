@@ -1171,7 +1171,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>WITH RECURSIVE</code> actually provides a full lambda calculus so arbitrary computation is possible</li>
 <li>You can use <code>WITH RECURSIVE</code> to create table expressions that are sequences of numbers easily, with no reference to any real data</li>
 </ul>
-<p>Note: * A working version of this code can be found in the <code>sources/demo</code> directory of CG/SQL project. * Additional demo code is available in <a href="https://cgsql.dev/cql-guide/x10">Appendix 10</a>.</p>
+<p>Note: * A working version of this code can be found in the <code>sources/demo</code> directory of CG/SQL project. * Additional demo code is available in <a href="https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example">Appendix 10</a></p>
 <h2 id="chapter-3-expressions-literals-nullability-sensitivity">Chapter 3: Expressions, Literals, Nullability, Sensitivity</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -3413,7 +3413,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <a class="sourceLine" id="cb230-3" title="3"><span class="ex">cql</span> --in hello.sql --cg hello.h hello.c</a>
 <a class="sourceLine" id="cb230-4" title="4"><span class="fu">cc</span> -o hello -I <span class="va">${cgsql}</span>/sources main.c hello.c <span class="va">${cgsql}</span>/sources/cqlrt.c -lsqlite3</a>
 <a class="sourceLine" id="cb230-5" title="5"><span class="ex">./hello</span></a></code></pre></div>
-<p>Additional demo code is available in <a href="https://cgsql.dev/cql-guide/x10">Appendix 10</a>.</p>
+<p>Additional demo code is available in <a href="https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example">Appendix 10</a></p>
 <h3 id="nested-result-sets-parentchild">Nested Result Sets (Parent/Child)</h3>
 <p>There are many cases where you might want to nest one result set inside of another one. In order to do this ecomomically you must be able to run a parent query and a child query and then link the child rows to the parent rows. One way to do this is of course to run one query for each “child” but then you end up with <code>O(n)</code> child queries and if there are sub-children it would be <code>O(n*m)</code> and so forth. What you really want to do here is something more like a join, only without the cross-product part of the join. Many systems have such features, sometimes they are called “chaptered rowsets” but in any case there is a general need for such a thing.</p>
 <p>To reasonably support nested results sets the CQL language has to be extended a variety of ways, as discussed below.</p>
@@ -5777,9 +5777,9 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML. “Single-statement DML” refers to those stored procedures that consist of a single <code>insert</code>, <code>select</code>, <code>update</code>, or <code>delete</code>. Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable. Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)</p>
-<p>To use CQL in this fashion, the sequence will be something like the below. See <a href="/cql-guide/x1">Appendix 1</a> for command line details.</p>
+<p>To use CQL in this fashion, the sequence will be something like the below. See <a href="https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example">Appendix 1</a> for command line details.</p>
 <div class="sourceCode" id="cb390"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb390-1" title="1"><span class="ex">cql</span> --in input.sql --rt json_schema --cg out.json</a></code></pre></div>
-<p>The output contains many different sections for the various types of entities that CQL can process. There is a full description of the possible outputs available at https://cgsql.dev/json-diagram.</p>
+<p>The output contains many different sections for the various types of entities that CQL can process. There is a full description of the possible outputs available in <a href="https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html">diagram form</a></p>
 <p>In the balance of this chapter we’ll deal with the contents of the sections and their meaning rather than the specifics of the format, which are better described with the grammar above.</p>
 <h2 id="tables">Tables</h2>
 <p>The “tables” section has zero or more tables, each table is comprised of these fields:</p>

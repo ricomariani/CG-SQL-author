@@ -1703,7 +1703,7 @@ static bool_t sem_validate_object_ast_in_current_region(CSTR name,
                                              CSTR msg) {
   Contract(name);
   Contract(table_ast);
-  Contract(err_target && msg || !err_target && !msg);
+  Contract((err_target && msg) || (!err_target && !msg));
 
   // We're in a non-region therefore no validation needed because non-region stmt
   // can reference schema in any region.
@@ -1756,7 +1756,7 @@ ast_node *find_table_or_view_even_deleted(CSTR name) {
 // present.
 static ast_node *find_usable_table_or_view_even_deleted(CSTR name, ast_node *err_target, CSTR msg) {
   Contract(name);
-  Contract(err_target && msg || !err_target && !msg);
+  Contract((err_target && msg) || (!err_target && !msg));
 
   ast_node *table_ast = find_table_or_view_even_deleted(name);
   if (!table_ast) {
@@ -1777,7 +1777,7 @@ static ast_node *find_usable_table_or_view_even_deleted(CSTR name, ast_node *err
 // not found, reports an error using `err_target` and `msg`, if present.
 cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg) {
   Contract(name);
-  Contract(err_target && msg || !err_target && !msg);
+  Contract((err_target && msg) || (!err_target && !msg));
 
   ast_node *table_ast = find_usable_table_or_view_even_deleted(name, err_target, msg);
   if (!table_ast) {
@@ -10886,7 +10886,7 @@ static void sem_select_expr_list_con(ast_node *ast) {
 
   if (!error) {
     from_jptr = select_from_etc->sem->jptr;
-    Invariant(from_jptr && query_parts || !from_jptr && !query_parts);
+    Invariant((from_jptr && query_parts) || (!from_jptr && !query_parts));
 
     rewrite_select_expr_list(ast, from_jptr);
     error = is_error(ast);
@@ -21731,7 +21731,7 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 // improvements made in the TRY will be unset at the end of the procedure.
 //
 // A somewhat contrived example use case for this is as follows:
-//
+/*
 //   #define LOGGING_PROC_BEGIN \
 //     BEGIN \
 //       LET error_in_try := FALSE; \
@@ -21756,7 +21756,7 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 //       SET x := get_another_value_or_throw()
 //     END IF;
 //   LOGGING_PROC_END;
-//
+*/
 // As can be seen above, the main part of the procedure does, in fact, always
 // initialize x unless an exception occurs -- and, if it does, the handling
 // within LOGGING_PROC_END will take care of it. Our normal analyses cannot

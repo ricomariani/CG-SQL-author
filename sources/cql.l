@@ -329,9 +329,9 @@ CURSOR{sp}HAS{sp}ROW/{stop}  { return CURSOR_HAS_ROW; }
 
 <<EOF>>                      { if (cql_finish_stream()) yyterminate(); }
 
-0x{hex}+                     { char *s = Strdup(yytext); yylval.sval = s; return strtoll(s+2, NULL, 16) <= 0x7fffffff ? INTLIT: LONGLIT; }
+0x{hex}+                     { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
 0x{hex}+L                    { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
-{d}+                         { char *s = Strdup(yytext); yylval.sval = s; return atoll(s) <= 0x7fffffff ? INTLIT: LONGLIT; }
+{d}+                         { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
 {d}+L                        { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
 
 ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)? { yylval.sval = Strdup(yytext); return REALLIT; }

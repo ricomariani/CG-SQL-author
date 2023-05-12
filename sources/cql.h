@@ -177,14 +177,14 @@ typedef struct rtdata {
   bool_t generate_equality_macros;
 
   // Called for each proc name that is processed.
-  bool_t (*register_proc_name)(const char *proc_name);
+  void (*register_proc_name)(const char *proc_name);
 
   // Predicate function to determine whether to implicitly generate the copy function for a result set.
   // The cql:generate_copy attribute overrides the value, if specified.
   bool_t (*proc_should_generate_copy)(const char *proc_name);
 
   // Provides a chance to add some extra definitions to the result set type, specify if extra stuff needed.
-  bool_t (*result_set_type_decl_extra)(struct charbuf *output, CSTR sym, CSTR ref);
+  void (*result_set_type_decl_extra)(struct charbuf *output, CSTR sym, CSTR ref);
 
   // Prefix for public symbol.
   const char *symbol_prefix;

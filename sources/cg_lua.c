@@ -4973,7 +4973,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
   // register the proc name if there is a callback, the particular result type will do whatever it wants
-  rt->register_proc_name && rt->register_proc_name(name);
+  if (rt->register_proc_name) rt->register_proc_name(name);
 
   charbuf *d = cg_declarations_output;
   charbuf *main_saved = cg_main_output;

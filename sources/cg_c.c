@@ -439,7 +439,7 @@ static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
   bprintf(output, "cql_result_set_type_decl(%s, %s);\n", sym, ref);
 
   // if the result type needs extra type info, let it do so.
-  rt->result_set_type_decl_extra && rt->result_set_type_decl_extra(output, sym, ref);
+  if (rt->result_set_type_decl_extra) rt->result_set_type_decl_extra(output, sym, ref);
   bprintf(output, "#endif\n");
 }
 
@@ -7909,7 +7909,7 @@ static void cg_proc_result_set(ast_node *ast) {
   uint32_t frag_type = find_fragment_attr_type(misc_attrs);
 
   // register the proc name if there is a callback, the particular result type will do whatever it wants
-  rt->register_proc_name && rt->register_proc_name(name);
+  if (rt->register_proc_name) rt->register_proc_name(name);
 
   charbuf *h = cg_header_output;
   charbuf *d = cg_declarations_output;

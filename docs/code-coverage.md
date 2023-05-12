@@ -1,6 +1,7 @@
 # : Code Coverage CG/SQL
 
-Run this command in the [/sources](https://github.com/facebookincubator/CG-SQL/tree/main/sources) directory:
+Run this command in the `/sources` directory:
+
 ```
 ./cov.sh
 ```

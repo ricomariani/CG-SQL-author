@@ -3,7 +3,7 @@
 ## Building
 caution: Please make sure you meet the [requirements](#requirements).
 
-Set your current directory to the CG/SQL [`sources`](https://github.com/facebookincubator/CG-SQL/tree/main/sources) directory, wherever that may be, then:
+Set your current directory to the CG/SQL `sources` directory, wherever that may be, then:
 
 ```
 make clean

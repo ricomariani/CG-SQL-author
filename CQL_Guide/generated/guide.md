@@ -267,7 +267,7 @@ The above causes the C compiler to invoke only the pre-processor `-E` and to tre
 -- LICENSE file in the root directory of this source tree.
 -->
 The point of using CQL is to facilitate access to a SQLite database so we'll switch gears to a slightly more complicated setup.  We'll
-still keep things fairly simple but let's start to use some database features.  
+still keep things fairly simple but let's start to use some database features.
 
 >NOTE: it is not the intent of this tutorial to also be
 >a primer for the SQLite programming language which is so ably documented on https://sqlite.org/.
@@ -9884,7 +9884,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 13 23:48:21 PDT 2023
+Snapshot as of Sat May 13 23:54:49 PDT 2023
 
 ### Operators and Literals
 
@@ -13998,7 +13998,7 @@ If you're doing an UPSERT on table `T`, the columns listed in the conflict targe
 
 ### CQL0280: upsert statement requires a where clause if the insert clause uses select
 
-When the `INSERT` statement to which the UPSERT is attached takes its values from a `SELECT` statement, there is a potential parsing ambiguity. The SQLite parser might not be able to tell if the `ON` keyword is introducing the UPSERT or if it is the `ON` clause of a join. To work around this, the `SELECT` statement should always include a `WHERE` clause, even if that `WHERE` clause is just `WHERE 1` (always true).   
+When the `INSERT` statement to which the UPSERT is attached takes its values from a `SELECT` statement, there is a potential parsing ambiguity. The SQLite parser might not be able to tell if the `ON` keyword is introducing the UPSERT or if it is the `ON` clause of a join. To work around this, the `SELECT` statement should always include a `WHERE` clause, even if that `WHERE` clause is just `WHERE 1` (always true).
 
 >NOTE: The CQL parser doesn't have this ambiguity because it treats "ON CONFLICT" as a single token so this is CQL reporting that SQLite might have trouble with the query as written.
 
@@ -16238,7 +16238,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 13 23:48:21 PDT 2023
+Snapshot as of Sat May 13 23:54:49 PDT 2023
 
 ### Rules
 
@@ -18475,7 +18475,9 @@ The `FETCH` statement has many variations, all are useful at some time or anothe
 * `SWITCH`
 * `WHILE`
 
-These are your bread and butter and they will appear all over.  One tip: Use the `ALL VALUES` variant of switch whenever possible to ensure that you haven't missed any cases.
+These are your bread and butter and they will appear all over.
+
+>TIP: Use the `ALL VALUES` variant of switch whenever possible to ensure that you haven't missed any cases.
 
 ### Manual Control of Results
 

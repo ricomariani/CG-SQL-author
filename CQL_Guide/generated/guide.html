@@ -7243,7 +7243,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 13 23:48:21 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:54:49 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -11224,7 +11224,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 13 23:48:21 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:54:49 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -13219,7 +13219,10 @@ fetch C USING
 <li><code>SWITCH</code></li>
 <li><code>WHILE</code></li>
 </ul>
-<p>These are your bread and butter and they will appear all over. One tip: Use the <code>ALL VALUES</code> variant of switch whenever possible to ensure that you haven’t missed any cases.</p>
+<p>These are your bread and butter and they will appear all over.</p>
+<blockquote>
+<p>TIP: Use the <code>ALL VALUES</code> variant of switch whenever possible to ensure that you haven’t missed any cases.</p>
+</blockquote>
 <h3 id="manual-control-of-results">Manual Control of Results</h3>
 <ul>
 <li><code>OUT</code></li>

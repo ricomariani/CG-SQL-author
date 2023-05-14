@@ -7541,9 +7541,9 @@ upon startup.  This allows the upgrader to produce a complete difference.  The `
 is nothing more than a mapping between the name of some facet of the schema (like a table, a view,
 a column) and its last known verison info -- usually its CRC.
 
-* NOTE: this temp table predates the in-memory facets data structure so it could probably be removed
-  * the diff would have to work against the in-memory datastructure which is immutable hence just as good as a temp table
-  * look for a change like this soon
+>NOTE: this temp table predates the in-memory facets data structure so it could probably be removed.
+>The diff would have to work against the in-memory data structure which is immutable hence just as good as a temp table
+>look for a change like this soon.
 
 The remaining procedures are for testing facet state or `sqlite_master` state.  All of them get the
 usual global prefix.  For ease of discussion I will elide the prefix for the rest of this document.

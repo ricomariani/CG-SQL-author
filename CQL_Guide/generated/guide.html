@@ -1208,7 +1208,9 @@ CONCAT:         ||
 COLLATE:        COLLATE
 UNARY:          ~  -</code></pre>
 <p>The above rules are <strong>not</strong> the same as C’s operator precedence rules! Instead, CQL follows SQLite’s rules. Parentheses are emitted in the C output as needed to force that order.</p>
-<p><strong>NOTE:</strong> CQL emits minimal parentheses in all outputs. Different parentheses are often needed for SQL output as opposed to C output.</p>
+<blockquote>
+<p>NOTE: CQL emits minimal parentheses in all outputs. Different parentheses are often needed for SQL output as opposed to C output.</p>
+</blockquote>
 <h3 id="order-of-evaluation">Order of Evaluation</h3>
 <p>In contrast to C, CQL guarantees a left-to-right order of evaluation for arguments. This applies both to arguments provided to the operators mentioned in the previous section as well as arguments provided to procedures.</p>
 <h3 id="variables-columns-basic-types-and-nullability">Variables, Columns, Basic Types and Nullability</h3>
@@ -1428,15 +1430,19 @@ UNARY:          ~  -</code></pre>
 <ul>
 <li><p>The literal <code>NULL</code> is, of course, always assigned a nullable type. All other literals are nonnull.</p></li>
 <li><p>In general, the type of an expression involving an operator (e.g., <code>+</code>, <code>==</code>, <code>!=</code>, <code>~</code>, <code>LIKE</code>, et cetera) is nullable if any of its arguments are nullable. For example, <code>1 + NULL</code> is assigned the type <code>INTEGER</code>, implying nullability. <code>1 + 2</code>, however, is assigned the type <code>INTEGER NOT NULL</code>.</p></li>
-<li><p><code>IN</code> and <code>NOT IN</code> expressions are assigned a nullable type if and only if their left argument is nullable: The nullability of the right side is irrelevant. For example, <code>"foo" IN (a, b)</code> will always have the type <code>BOOL NOT NULL</code>, whereas <code>some_nullable IN (a, b)</code> will have the type <code>BOOL</code>.</p>
+<li><p><code>IN</code> and <code>NOT IN</code> expressions are assigned a nullable type if and only if their left argument is nullable: The nullability of the right side is irrelevant. For example, <code>"foo" IN (a, b)</code> will always have the type <code>BOOL NOT NULL</code>, whereas <code>some_nullable IN (a, b)</code> will have the type <code>BOOL</code>.</p></li>
+</ul>
+<blockquote>
+<p>NOTE: In CQL, the <code>IN</code> operator behaves like a series of equality tests (i.e., <code>==</code> tests, not <code>IS</code> tests), and <code>NOT IN</code> behaves symmetrically. SQLite has slightly different nullability rules for <code>IN</code> and <code>NOT IN</code>. <em>This is the one place where CQL has different evaluation rules from SQLite, by design.</em></p>
+</blockquote>
 <ul>
-<li><strong>NOTE:</strong> In CQL, the <code>IN</code> operator behaves like a series of equality tests (i.e., <code>==</code> tests, not <code>IS</code> tests), and <code>NOT IN</code> behaves symmetrically. SQLite has slightly different nullability rules for <code>IN</code> and <code>NOT IN</code>. <em>This is the one place where CQL has different evaluation rules from SQLite, by design.</em></li>
-</ul></li>
 <li><p>The result of <code>IS</code> and <code>IS NOT</code> is always of type <code>BOOL NOT NULL</code>, regardless of the nullability of either argument.</p></li>
-<li><p>For <code>CASE</code> expressions, the result is always of a nullable type if no <code>ELSE</code> clause is given. If an <code>ELSE</code> is given, the result is nullable if any of the <code>THEN</code> or <code>ELSE</code> expressions are nullable.</p>
+<li><p>For <code>CASE</code> expressions, the result is always of a nullable type if no <code>ELSE</code> clause is given. If an <code>ELSE</code> is given, the result is nullable if any of the <code>THEN</code> or <code>ELSE</code> expressions are nullable.</p></li>
+</ul>
+<blockquote>
+<p>NOTE: The SQL <code>CASE</code> construct is quite powerful: Unlike the C <code>switch</code> statement, it is actually an expression. In this sense, it is rather more like a highly generalized ternary <code>a ? b : c</code> operator than a C switch statement. There can be arbitrarily many conditions specified, each with their own result, and the conditions need not be constants; typically, they are not.</p>
+</blockquote>
 <ul>
-<li><strong>NOTE:</strong> The SQL <code>CASE</code> construct is quite powerful: Unlike the C <code>switch</code> statement, it is actually an expression. In this sense, it is rather more like a highly generalized ternary <code>a ? b : c</code> operator than a C switch statement. There can be arbitrarily many conditions specified, each with their own result, and the conditions need not be constants; typically, they are not.</li>
-</ul></li>
 <li><p><code>IFNULL</code> and <code>COALESCE</code> are assigned a <code>NOT NULL</code> type if one or more of their arguments are of a <code>NOT NULL</code> type.</p></li>
 <li><p>In most join operations, the nullability of each column participating in the join is preserved. However, in a <code>LEFT OUTER</code> join, the columns on the right side of the join are always considered nullable; in a <code>RIGHT OUTER</code> join, the columns on the left side of the join are considered nullable.</p></li>
 <li><p>As in most other languages, CQL does not perform evaluation of value-level expressions during type checking. There is one exception to this rule: An expression within a <code>const</code> is evaluated at compilation time, and if its result is then known to be nonnull, it will be given a <code>NOT NULL</code> type. For example, <code>const(NULL or 1)</code> is given the type <code>BOOL NOT NULL</code>, whereas merely <code>NULL or 1</code> has the type <code>BOOL</code>.</p></li>
@@ -1511,9 +1517,11 @@ UNARY:          ~  -</code></pre>
 <li><p><code>SET</code> statements:</p>
 <div class="sourceCode" id="cb62"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb62-1" title="1"><span class="kw">SET</span> a <span class="op">:=</span> <span class="dv">42</span>;</a>
 <a class="sourceLine" id="cb62-2" title="2"><span class="co">-- `a` is not null here</span></a></code></pre></div></li>
+</ul></li>
 </ul>
-<p><strong>NOTE:</strong> Assignment improvements from <code>FETCH</code> statements are not currently supported. This may change in a future version of CQL.</p></li>
-</ul>
+<blockquote>
+<p>NOTE: Assignment improvements from <code>FETCH</code> statements are not currently supported. This may change in a future version of CQL.</p>
+</blockquote>
 <p>There are several ways in which improvements can cease to be in effect:</p>
 <ul>
 <li><p>The scope of the improved variable or cursor field has ended:</p>
@@ -1595,7 +1603,9 @@ UNARY:          ~  -</code></pre>
 <div class="sourceCode" id="cb73"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb73-1" title="1"><span class="cf">IF</span> a <span class="op">&gt;</span> <span class="dv">42</span> <span class="cf">THEN</span></a>
 <a class="sourceLine" id="cb73-2" title="2">  <span class="co">-- `a` is nullable here</span></a>
 <a class="sourceLine" id="cb73-3" title="3"><span class="cf">END</span> <span class="cf">IF</span>;</a></code></pre></div>
-<p><strong>NOTE:</strong> This may change in a future version of CQL.</p></li>
+<blockquote>
+<p>NOTE: This may change in a future version of CQL.</p>
+</blockquote></li>
 <li><p>For multiple positive improvements to be applied from a single condition, they must be linked by <code>AND</code> expressions along the outer spine of the condition; uses of <code>IS NOT NULL</code> checks that occur as subexpressions within anything other than <code>AND</code> have no effect:</p>
 <div class="sourceCode" id="cb74"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb74-1" title="1"><span class="cf">IF</span></a>
 <a class="sourceLine" id="cb74-2" title="2">  (a <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> b <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span>)</a>
@@ -1830,7 +1840,9 @@ UNARY:          ~  -</code></pre>
 <li>Strings are compared based on their value (as with other comparisons) not their address</li>
 <li>Numerics are compared as usual with the usual promotion rules</li>
 </ul>
+<blockquote>
 <p>NOTE: CQL uses <code>strcmp</code> for string comparison. In SQL expressions the comparison happens in whatever way SQLite has been configured. Typically general purpose string comparison should be done with helper functions that deal with collation and other considerations. This is a very complex topic and CQL is largely silent on it.</p>
+</blockquote>
 <h4 id="bitwise-operators">Bitwise operators &lt;&lt;, &gt;&gt;, &amp;, |</h4>
 <p>These are the bit-manipulation operations. Their binding strength is VERY different than C so beware. And notably the <code>&amp;</code> operator has the same binding strength as the <code>|</code> operator so they bind left to right, which is utterly unlike most systems. Many parentheses are likely to be needed to get the usual “or of ands” patterns codified correctly. Likewise, the shift operators <code>&lt;&lt;</code> and <code>&gt;&gt;</code> are the same strength as <code>&amp;</code> and <code>|</code> which is very atypical. Consider:</p>
 <div class="sourceCode" id="cb86"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb86-1" title="1">x &amp; <span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">7</span>;    <span class="co">-- probably doesn&#39;t mean what you think (this is not ambiguous, it&#39;s well defined, but unlike C)</span></a>
@@ -4142,8 +4154,12 @@ result:
 <li>therefore tables with <code>@recreate</code> never have deprecated columns (since <code>@delete</code> isn’t allowed on their columns)</li>
 </ul></li>
 </ul>
+<blockquote>
 <p>NOTE: all annotations are suppressed from generated SQL. SQLite never sees them.</p>
+</blockquote>
+<blockquote>
 <p>NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema – it’s what you get if you disregard all <code>@delete</code> entirely (don’t delete) and then remove anything marked with <code>@create</code> directives.</p>
+</blockquote>
 <h3 id="allowable-changes">Allowable changes</h3>
 <p>Not all migrations are possible in a sensible fashion, therefore CQL enforces certain limitations:</p>
 <ul>
@@ -4327,7 +4343,9 @@ end;</code></pre>
 <a class="sourceLine" id="cb280-21" title="21">  name1 TEXT,</a>
 <a class="sourceLine" id="cb280-22" title="22">  name2 TEXT @CREATE(<span class="dv">4</span>)</a>
 <a class="sourceLine" id="cb280-23" title="23">) @CREATE(<span class="dv">3</span>) @DELETE(<span class="dv">5</span>);</a></code></pre></div>
+<blockquote>
 <p>NOTE: all the tables are emitted including all the annotations. This lets us do the maximum validation when we compile this script.</p>
+</blockquote>
 <div class="sourceCode" id="cb281"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb281-1" title="1"><span class="kw">CREATE</span> <span class="kw">VIEW</span> live_view <span class="kw">AS</span></a>
 <a class="sourceLine" id="cb281-2" title="2"><span class="kw">SELECT</span> <span class="op">*</span></a>
 <a class="sourceLine" id="cb281-3" title="3">  <span class="kw">FROM</span> foo;</a>
@@ -4361,7 +4379,9 @@ end;</code></pre>
 <a class="sourceLine" id="cb285-4" title="4">  version <span class="dt">LONG</span> <span class="dt">INTEGER</span> <span class="kw">NOT</span> <span class="kw">NULL</span></a>
 <a class="sourceLine" id="cb285-5" title="5">);</a></code></pre></div>
 <p>We will snapshot the facets table at the start of the run so that we can produce a summary of the changes at the end of the run. This table will hold that snapshot.</p>
+<blockquote>
 <p>NOTE: the prefix “test” was specified when this file was built so all the methods and tables begin with <code>test_</code>.</p>
+</blockquote>
 <h4 id="helper-procedures">Helper Procedures</h4>
 <div class="sourceCode" id="cb286"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb286-1" title="1"><span class="co">-- helper proc for testing for the presence of a column/type</span></a>
 <a class="sourceLine" id="cb286-2" title="2"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> test_check_column_exists(table_name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</a>
@@ -4469,7 +4489,10 @@ end;</code></pre>
 <a class="sourceLine" id="cb294-3" title="3"><span class="kw">DECLARE</span> proc CreateName2Proc() <span class="kw">USING</span> <span class="kw">TRANSACTION</span>;</a>
 <a class="sourceLine" id="cb294-4" title="4"><span class="kw">DECLARE</span> proc CreateId2Proc() <span class="kw">USING</span> <span class="kw">TRANSACTION</span>;</a>
 <a class="sourceLine" id="cb294-5" title="5"><span class="kw">DECLARE</span> proc DeleteRate2Proc() <span class="kw">USING</span> <span class="kw">TRANSACTION</span>;</a></code></pre></div>
-<p>The code below will refer to these migration procedures. We emit a declaration so that we can use the names in context. NOTE: <code>USING TRANSACTION</code> when applied to a proc declaration simply means the proc will access the database so it needs to be provided with a <code>sqlite3 *db</code> parameter.</p>
+<p>The code below will refer to these migration procedures. We emit a declaration so that we can use the names in context.</p>
+<blockquote>
+<p>NOTE: <code>USING TRANSACTION</code> when applied to a proc declaration simply means the proc will access the database so it needs to be provided with a <code>sqlite3 *db</code> parameter.</p>
+</blockquote>
 <h4 id="views">Views</h4>
 <div class="sourceCode" id="cb295"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb295-1" title="1"><span class="co">-- drop all the views we know</span></a>
 <a class="sourceLine" id="cb295-2" title="2"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> test_cql_drop_all_views()</a>
@@ -4490,7 +4513,9 @@ end;</code></pre>
 <a class="sourceLine" id="cb295-17" title="17">    <span class="kw">FROM</span> foo;</a>
 <a class="sourceLine" id="cb295-18" title="18"><span class="cf">END</span>;</a></code></pre></div>
 <p>View migration is done by dropping all views and putting all views back.</p>
+<blockquote>
 <p>NOTE: <code>dead_view</code> was not created, but we did try to drop it if it existed.</p>
+</blockquote>
 <h4 id="indices">Indices</h4>
 <div class="sourceCode" id="cb296"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb296-1" title="1"><span class="co">-- drop all the indices that are deleted or changing</span></a>
 <a class="sourceLine" id="cb296-2" title="2"><span class="kw">CREATE</span> <span class="kw">PROCEDURE</span> test_cql_drop_all_indices()</a>
@@ -5073,7 +5098,9 @@ Master Deployment 2
 <p>Now importantly, in this configuration, everything that follows the <code>@previous_schema</code> directive does not actually contribute to the declared schema. This means the <code>--rt schema</code> result type will not see it. Because of this, you can do your checking operation like so:</p>
 <div class="sourceCode" id="cb319"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb319-1" title="1"><span class="fu">cc</span> -E -x c prev_check.sql <span class="kw">|</span> <span class="ex">cql</span> --cg new_previous_schema.sql --rt schema</a></code></pre></div>
 <p>The above command will generate the schema in new_previous_schema and, if this command succeeds, it’s safe to replace the existing <code>previous.sql</code> with <code>new_previous_schema</code>.</p>
+<blockquote>
 <p>NOTE: you can bootstrap the above by leaving off the <code>@previous_schema</code> and what follows to get your first previous schema from the command above.</p>
+</blockquote>
 <p>Now, as you can imagine, comparing against the previous schema allows many more kinds of errors to be discovered. What follows is a large chunk of the CQL tests for this area taken from the test files themselves. For easy visibility I have brought each fragment of current and previous schema close to each other and I show the errors that are reported. We start with a valid fragment and go from there.</p>
 <h4 id="case-1-no-problemo">Case 1 : No problemo</h4>
 <div class="sourceCode" id="cb320"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb320-1" title="1"><span class="kw">create</span> <span class="kw">table</span> foo(</a>
@@ -5398,7 +5425,9 @@ Master Deployment 2
 <a class="sourceLine" id="cb359-10" title="10"></a>
 <a class="sourceLine" id="cb359-11" title="11">Error <span class="kw">at</span> sem_test_prev.sql<span class="ch">:142</span> : <span class="kw">in</span> str : <span class="kw">column</span> @delete <span class="kw">procedure</span> changed <span class="st">&#39;id2&#39;</span></a></code></pre></div>
 <p>You can’t change the <code>@delete</code> migration stored proc on columns.</p>
+<blockquote>
 <p>NOTE: in addition to these errors, there are many more that do not require the previous schema which are also checked (not shown here). These comprise things like making sure the delete version is greater than the create version on any item. There is a lot of sensibility checking that can happen without reference to the previous schema.</p>
+</blockquote>
 <h2 id="chapter-12-testability-features">Chapter 12: Testability Features</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -5734,7 +5763,9 @@ end;</code></pre>
 <p>Of course blindly inserting data doesn’t quite work. As you can see, the insert code used the foreign key references in the schema to figure out the necessary insert order and the primary key values for <code>foo</code> were automatically specified so that they could then be used again in <code>bar</code>.</p>
 <p>Lastly, the autotest attribute included explicit test values for the table <code>bar</code>, and in particular the <code>data</code> column has the value <code>'plugh'</code>. So the first row of data for table <code>bar</code> did not use dummy data for the <code>data</code> column but rather used <code>'plugh'</code>.</p>
 <p>In general, the <code>dummy_test</code> annotation can include any number of tables, and for each table you can specify any of the columns and you can have any number of tuples of values for those columns.</p>
+<blockquote>
 <p>NOTE: if you include primary key and/or foreign key columns among the explicit values, it’s up to you to ensure that they are valid combinations. SQLite will complain as usual if they are not, but the CQL compiler will simply emit the data you asked for.</p>
+</blockquote>
 <p>Generalizing the example a little bit, we could use the following:</p>
 <pre><code>(dummy_test, (foo, (name), (&#39;fred&#39;), (&#39;barney&#39;), (&#39;wilma&#39;), (&#39;betty&#39;)),
                         (bar, (id, data), (1, &#39;dino&#39;), (2, &#39;hopparoo&#39;))))</code></pre>
@@ -7056,7 +7087,9 @@ END;</code></pre>
 <li>the original string is recreated at runtime from the fragments and then executed</li>
 <li>comments show the original string inline for easier debugging and searching</li>
 </ul>
+<blockquote>
 <p>NOTE: different result types require a different number of output files with different meanings</p>
+</blockquote>
 <h3 id="test">–test</h3>
 <ul>
 <li>some of the output types can include extra diagnostics if <code>--test</code> is included</li>
@@ -7177,7 +7210,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 13 23:25:19 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:35:57 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -9403,7 +9436,9 @@ blob_update_val_stmt:
 <hr />
 <h3 id="cql0119-column-name-is-different-between-previous-and-current-schema-name">CQL0119: column name is different between previous and current schema ‘name’</h3>
 <p>Since there is no sqlite operation that allows for columns to be renamed, attempting to rename a column is not allowed.</p>
+<blockquote>
 <p>NOTE: you can also get this error if you remove a column entirely, or add a column in the middle of the list somewhere.</p>
+</blockquote>
 <p>Since columns (also) cannot be reordered during upgrade, CQL expects to find all the columns in exactly the same order in the previous and new schema. Any reordering, or deletion could easily look like an erroneous rename. New columns must appear at the end of any existing columns.</p>
 <hr />
 <h3 id="cql0120-column-type-is-different-between-previous-and-current-schema-name">CQL0120: column type is different between previous and current schema ‘name’</h3>
@@ -9507,31 +9542,43 @@ blob_update_val_stmt:
 <hr />
 <h3 id="cql0144-table-in-alter-statement-does-not-exist-table_name">CQL0144: table in alter statement does not exist ‘table_name’</h3>
 <p>In an <code>ALTER TABLE</code> statement, the table to be altered was not defined, or perhaps was marked with <code>@delete</code> and is no longer usable in the current schema version.</p>
+<blockquote>
 <p>NOTE: <code>ALTER TABLE</code> is typically not used directly; the automated schema upgrade script generation system uses it.</p>
+</blockquote>
 <hr />
 <h3 id="cql0145-version-annotations-not-valid-in-alter-statement-column_name">CQL0145: version annotations not valid in alter statement ‘column_name’</h3>
 <p>In an <code>ALTER TABLE</code> statement, the attributes on the column may not include <code>@create</code> or <code>@delete</code>. Those annotations go on the columns declaration in the corresponding <code>CREATE TABLE</code> statement.</p>
+<blockquote>
 <p>NOTE: <code>ALTER TABLE</code> is typically not used directly; the automated schema upgrade script generation system uses it.</p>
+</blockquote>
 <hr />
 <h3 id="cql0146-adding-an-auto-increment-column-is-not-allowed-column_name">CQL0146: adding an auto increment column is not allowed ‘column_name’</h3>
 <p>In an <code>ALTER TABLE</code> statement, the attributes on the column may not include <code>AUTOINCREMENT</code>. SQLite does not support the addition of new <code>AUTOINCREMENT</code> columns.</p>
+<blockquote>
 <p>NOTE: <code>ALTER TABLE</code> is typically not used directly; the automated schema upgrade script generation system uses it.</p>
+</blockquote>
 <hr />
 <h3 id="cql0147-adding-a-not-nullable-column-with-no-default-value-is-not-allowed-column_name">CQL0147: adding a not nullable column with no default value is not allowed ‘column_name’</h3>
 <p>In an <code>ALTER TABLE</code> statement the attributes on the named column must include a default value or else the column must be nullable. This is so that SQLite knows what value to put on existing rows when the column is added and also so that any existing insert statements will not suddenly all become invalid. If the column is nullable or has a default value then the existing insert statements that don’t specify the column will continue to work, using either NULL or the default.</p>
+<blockquote>
 <p>NOTE: <code>ALTER TABLE</code> is typically not used directly; the automated schema upgrade script generation system uses it.</p>
+</blockquote>
 <hr />
 <h3 id="cql0148-added-column-must-already-be-reflected-in-declared-schema-with-create-exact-name-match-required-column_name">CQL0148: added column must already be reflected in declared schema, with <code>@create</code>, exact name match required ‘column_name’</h3>
 <p>In CQL loose schema is a declaration, it does not actually create anything unless placed inside of a procedure. A column that is added with <code>ALTER TABLE</code> is not actually declared as part of the schema by the <code>ALTER</code>. Rather the schema declaration is expected to include any columns you plan to add. Normally the way this all happens is that you put <code>@create</code> notations on a column in the schema and the automatic schema upgrader then creates suitable <code>ALTER TABLE</code> statements to arrange for that column to be added. If you manually write an <code>ALTER TABLE</code> statement it isn’t allowed to add columns at whim; in some sense it must be creating the reality already described in the declaration. This is exactly what the automated schema upgrader does – it declares the end state and then alters the world to get to that state.</p>
 <p>It’s important to remember that from CQL’s perspective the schema is fixed for any given compilation, so runtime alterations to it are not really part of the type system. They can’t be. Even <code>DROP TABLE</code> does not remove the table from type system – it can’t – the most likely situation is that you are about to recreate that same table again for another iteration with the proc that creates it.</p>
 <p>This particular error is saying that the column you are trying to add does not exist in the declared schema.</p>
+<blockquote>
 <p>NOTE: <code>ALTER TABLE</code> is typically not used directly; the automated schema upgrade script generation system uses it.</p>
+</blockquote>
 <hr />
 <h3 id="cql0149-added-column-must-be-an-exact-match-for-the-column-type-declared-in-the-table-column_name">CQL0149: added column must be an exact match for the column type declared in the table ‘column_name’</h3>
 <p>In CQL loose schema is a declaration, it does not actually create anything unless placed inside of a procedure. A column that is added with <code>ALTER TABLE</code> is not actually declared as part of the schema by the <code>ALTER</code>. Rather the schema declaration is expected to include any columns you plan to add. Normally the way this all happens is that you put <code>@create</code> notations on a column in the schema and the automatic schema upgrader then creates suitable <code>ALTER TABLE</code> statements to arrange for that column to be added. If you manually write an <code>ALTER TABLE</code> statement it isn’t allowed to add columns at whim; in some sense it must be creating the reality already described in the declaration. This is exactly what the automated schema upgrader does – it declares the end state and then alters the world to get to that state.</p>
 <p>It’s important to remember that from CQL’s perspective the schema is fixed for any given compilation, so runtime alterations to it are not really part of the type system. They can’t be. Even <code>DROP TABLE</code> does not remove the table from type system – it can’t – the most likely situation is that you are about to recreate that same table again for another iteration with the proc that creates it.</p>
 <p>This particular error is saying that the column you are trying to add exists in the declared schema, but its definition is different than you have specified in the <code>ALTER TABLE</code> statement.</p>
+<blockquote>
 <p>NOTE: <code>ALTER TABLE</code> is typically not used directly; the automated schema upgrade script generation system uses it.</p>
+</blockquote>
 <hr />
 <h3 id="cql0150-expected-numeric-expression-in-if-predicate">CQL0150: expected numeric expression in IF predicate</h3>
 <p>In an <code>IF</code> statement the condition (predicate) must be a numeric. The body of the <code>IF</code> runs if the value is not null and not zero.</p>
@@ -11141,7 +11188,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 13 23:25:19 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:35:57 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -13445,7 +13492,9 @@ fetch C USING
 </ul>
 <p>Most amalgam functions are <code>static</code> to avoid name conflicts. You will want to create your own public functions such as <code>go_for_it</code> above that use the amalgam in all the ways you desire.</p>
 <p>You’ll want to avoid calling any internal functions other than <code>cql_main</code> because they are liable to change.</p>
+<blockquote>
 <p>NOTE: The amalgam is C code not C++ code. Do not attempt to use it inside of an <code>extern "C"</code> block in a C++ file. It won’t build. If you want a C++ API, expose the C functions you need and write a wrapper class.</p>
+</blockquote>
 <h3 id="cql-amalgam-options">CQL Amalgam Options</h3>
 <p>The amalgam includes the following useful <code>#ifdef</code> options to allow you to customize it.</p>
 <ul>

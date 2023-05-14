@@ -748,8 +748,8 @@ The above rules are **not** the same as C's operator precedence rules! Instead,
 CQL follows SQLite's rules. Parentheses are emitted in the C output as needed to
 force that order.
 
-**NOTE:** CQL emits minimal parentheses in all outputs. Different parentheses
-are often needed for SQL output as opposed to C output.
+>NOTE: CQL emits minimal parentheses in all outputs. Different parentheses
+>are often needed for SQL output as opposed to C output.
 
 ### Order of Evaluation
 
@@ -1134,11 +1134,11 @@ will hopefully be intuitive if you are familiar with SQL:
   irrelevant. For example, `"foo" IN (a, b)` will always have the type `BOOL NOT
   NULL`, whereas `some_nullable IN (a, b)` will have the type `BOOL`.
 
-  * **NOTE:** In CQL, the `IN` operator behaves like a series of equality tests
-    (i.e., `==` tests, not `IS` tests), and `NOT IN` behaves symmetrically.
-    SQLite has slightly different nullability rules for `IN` and `NOT IN`. *This
-    is the one place where CQL has different evaluation rules from SQLite, by
-    design.*
+>NOTE: In CQL, the `IN` operator behaves like a series of equality tests
+>(i.e., `==` tests, not `IS` tests), and `NOT IN` behaves symmetrically.
+>SQLite has slightly different nullability rules for `IN` and `NOT IN`. *This
+>is the one place where CQL has different evaluation rules from SQLite, by
+>design.*
 
 * The result of `IS` and `IS NOT` is always of type `BOOL NOT NULL`, regardless
   of the nullability of either argument.
@@ -1147,12 +1147,12 @@ will hopefully be intuitive if you are familiar with SQL:
   clause is given. If an `ELSE` is given, the result is nullable if any of the
   `THEN` or `ELSE` expressions are nullable.
 
-  * **NOTE:** The SQL `CASE` construct is quite powerful: Unlike the C `switch`
-    statement, it is actually an expression. In this sense, it is rather more
-    like a highly generalized ternary `a ? b : c` operator than a C switch
-    statement. There can be arbitrarily many conditions specified, each with
-    their own result, and the conditions need not be constants; typically, they
-    are not.
+>NOTE: The SQL `CASE` construct is quite powerful: Unlike the C `switch`
+>statement, it is actually an expression. In this sense, it is rather more
+>like a highly generalized ternary `a ? b : c` operator than a C switch
+>statement. There can be arbitrarily many conditions specified, each with
+>their own result, and the conditions need not be constants; typically, they
+>are not.
 
 * `IFNULL` and `COALESCE` are assigned a `NOT NULL` type if one or more of their
   arguments are of a `NOT NULL` type.
@@ -1281,8 +1281,8 @@ three kinds of improvements that are possible:
     -- `a` is not null here
     ```
 
-  **NOTE:** Assignment improvements from `FETCH` statements are not currently
-  supported. This may change in a future version of CQL.
+>NOTE: Assignment improvements from `FETCH` statements are not currently
+>supported. This may change in a future version of CQL.
 
 There are several ways in which improvements can cease to be in effect:
 
@@ -1408,8 +1408,7 @@ Here are some additional details to note regarding conditions:
     -- `a` is nullable here
   END IF;
   ```
-
-  **NOTE:** This may change in a future version of CQL.
+>NOTE: This may change in a future version of CQL.
 
 * For multiple positive improvements to be applied from a single condition, they
   must be linked by `AND` expressions along the outer spine of the condition;
@@ -1641,7 +1640,7 @@ These operators do the usual order comparison of their two operands.
 * Strings are compared based on their value (as with other comparisons) not their address
 * Numerics are compared as usual with the usual promotion rules
 
-NOTE: CQL uses `strcmp` for string comparison. In SQL expressions the comparison happens in whatever way SQLite has been configured. Typically general purpose string comparison should be done with helper functions that deal with collation and other considerations.  This is a very complex topic and CQL is largely silent on it.
+>NOTE: CQL uses `strcmp` for string comparison. In SQL expressions the comparison happens in whatever way SQLite has been configured. Typically general purpose string comparison should be done with helper functions that deal with collation and other considerations.  This is a very complex topic and CQL is largely silent on it.
 
 #### Bitwise operators <<, >>, &, |
 
@@ -5770,9 +5769,9 @@ In addition, if there is some data migration that needs to happen at a particula
 * no columns in a `@recreate` table may have `@create` or `@delete` (these aren't needed anyway)
    * therefore tables with `@recreate` never have deprecated columns (since `@delete` isn't allowed on their columns)
 
-NOTE: all annotations are suppressed from generated SQL.  SQLite never sees them.
+>NOTE: all annotations are suppressed from generated SQL.  SQLite never sees them.
 
-NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives.
+>NOTE: looking at the annotations it is possible to compute the logical schema at any version, especially the original schema -- it's what you get if you disregard all ```@delete``` entirely (don't delete) and then remove anything marked with ```@create``` directives.
 
 ### Allowable changes
 Not all migrations are possible in a sensible fashion, therefore CQL enforces certain limitations:
@@ -5979,7 +5978,7 @@ CREATE TABLE added_table(
 ) @CREATE(3) @DELETE(5);
 ```
 
-NOTE: all the tables are emitted including all the annotations.  This lets us do the maximum validation when we compile this script.
+>NOTE: all the tables are emitted including all the annotations.  This lets us do the maximum validation when we compile this script.
 
 ```sql
 CREATE VIEW live_view AS
@@ -6030,8 +6029,7 @@ CREATE TEMP TABLE test_cql_schema_facets_saved(
 We will snapshot the facets table at the start of the run so that we can produce a summary of the changes
 at the end of the run.  This table will hold that snapshot.
 
-NOTE: the prefix "test" was specified when this file was built so all the methods and tables begin with `test_`.
-
+>NOTE: the prefix "test" was specified when this file was built so all the methods and tables begin with `test_`.
 
 #### Helper Procedures
 ```sql
@@ -6181,7 +6179,8 @@ DECLARE proc CreateId2Proc() USING TRANSACTION;
 DECLARE proc DeleteRate2Proc() USING TRANSACTION;
 ```
 The code below will refer to these migration procedures.  We emit a declaration so that we can use the names in context.
-NOTE: `USING TRANSACTION` when applied to a proc declaration simply means the proc will access the database so it needs to be provided with a `sqlite3 *db` parameter.
+
+>NOTE: `USING TRANSACTION` when applied to a proc declaration simply means the proc will access the database so it needs to be provided with a `sqlite3 *db` parameter.
 
 
 #### Views
@@ -6207,7 +6206,7 @@ END;
 ```
 View migration is done by dropping all views and putting all views back.
 
-NOTE: `dead_view` was not created, but we did try to drop it if it existed.
+>NOTE: `dead_view` was not created, but we did try to drop it if it existed.
 
 #### Indices
 
@@ -7013,7 +7012,7 @@ cc -E -x c prev_check.sql | cql --cg new_previous_schema.sql --rt schema
 The above command will generate the schema in new_previous_schema and, if this command succeeds, it's safe to replace the existing
 `previous.sql` with `new_previous_schema`.
 
-NOTE: you can bootstrap the above by leaving off the `@previous_schema` and what follows to get your first previous schema from the command above.
+>NOTE: you can bootstrap the above by leaving off the `@previous_schema` and what follows to get your first previous schema from the command above.
 
 Now, as you can imagine, comparing against the previous schema allows many more kinds of errors to be discovered.
 What follows is a large chunk of the CQL tests for this area taken from the test files themselves.
@@ -7485,7 +7484,7 @@ Error at sem_test_prev.sql:142 : in str : column @delete procedure changed 'id2'
 
 You can't change the `@delete` migration stored proc on columns.
 
-NOTE: in addition to these errors, there are many more that do not require the previous schema which are also checked (not shown here).  These comprise things like making sure the delete version is greater than the create version on any item.  There is a lot of sensibility checking that can happen without reference to the previous schema.
+>NOTE: in addition to these errors, there are many more that do not require the previous schema which are also checked (not shown here).  These comprise things like making sure the delete version is greater than the create version on any item.  There is a lot of sensibility checking that can happen without reference to the previous schema.
 
 
 ## Chapter 12: Testability Features
@@ -7983,7 +7982,7 @@ Lastly, the autotest attribute included explicit test values for the table `bar`
 
 In general, the `dummy_test` annotation can include any number of tables, and for each table you can specify any of the columns and you can have any number of tuples of values for those columns.
 
-NOTE: if you include primary key and/or foreign key columns among the explicit values, it's up to you to ensure that they are valid combinations.  SQLite will complain as usual if they are not, but the CQL compiler will simply emit the data you asked for.
+>NOTE: if you include primary key and/or foreign key columns among the explicit values, it's up to you to ensure that they are valid combinations.  SQLite will complain as usual if they are not, but the CQL compiler will simply emit the data you asked for.
 
 Generalizing the example a little bit, we could use the following:
 
@@ -9773,7 +9772,7 @@ cql --in test.sql --nolines --cg foo.h foo.c
 * the original string is recreated at runtime from the fragments and then executed
 * comments show the original string inline for easier debugging and searching
 
-NOTE: different result types require a different number of output files with different meanings
+>NOTE: different result types require a different number of output files with different meanings
 
 ### --test
 * some of the output types can include extra diagnostics if `--test` is included
@@ -9883,7 +9882,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 13 23:25:19 PDT 2023
+Snapshot as of Sat May 13 23:35:57 PDT 2023
 
 ### Operators and Literals
 
@@ -12623,7 +12622,7 @@ The `@create` attribute can optional include a "migration proc" that is run when
 
 Since there is no sqlite operation that allows for columns to be renamed, attempting to rename a column is not allowed.
 
-NOTE: you can also get this error if you remove a column entirely, or add a column in the middle of the list somewhere.
+>NOTE: you can also get this error if you remove a column entirely, or add a column in the middle of the list somewhere.
 
 Since columns (also) cannot be reordered during upgrade, CQL expects to find all the columns in exactly the same order in the previous and new schema.  Any reordering, or deletion could easily look like an erroneous rename.  New columns must appear at the end of any existing columns.
 
@@ -12810,7 +12809,7 @@ In an `ALTER TABLE` statement, the table to be altered is actually a view.  This
 
 In an `ALTER TABLE` statement, the table to be altered was not defined, or perhaps was marked with `@delete` and is no longer usable in the current schema version.
 
-NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
+>NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
 
 -----
 
@@ -12818,7 +12817,7 @@ NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade
 
 In an `ALTER TABLE` statement, the attributes on the column may not include `@create` or `@delete`.  Those annotations go on the columns declaration in the corresponding `CREATE TABLE` statement.
 
-NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
+>NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
 
 -----
 
@@ -12826,7 +12825,7 @@ NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade
 
 In an `ALTER TABLE` statement, the attributes on the column may not include `AUTOINCREMENT`.  SQLite does not support the addition of new `AUTOINCREMENT` columns.
 
-NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
+>NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
 
 -----
 
@@ -12834,7 +12833,7 @@ NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade
 
 In an `ALTER TABLE` statement the attributes on the named column must include a default value or else the column must be nullable.  This is so that SQLite knows what value to put on existing rows when the column is added and also so that any existing insert statements will not suddenly all become invalid.  If the column is nullable or has a default value then the existing insert statements that don't specify the column will continue to work, using either NULL or the default.
 
-NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
+>NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
 
 -----
 
@@ -12846,7 +12845,7 @@ It's important to remember that from CQL's perspective the schema is fixed for a
 
 This particular error is saying that the column you are trying to add does not exist in the declared schema.
 
-NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
+>NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
 
 -----
 
@@ -12858,7 +12857,7 @@ It's important to remember that from CQL's perspective the schema is fixed for a
 
 This particular error is saying that the column you are trying to add exists in the declared schema, but its definition is different than you have specified in the `ALTER TABLE` statement.
 
-NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
+>NOTE: `ALTER TABLE` is typically not used directly; the automated schema upgrade script generation system uses it.
 
 -----
 
@@ -16235,7 +16234,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 13 23:25:19 PDT 2023
+Snapshot as of Sat May 13 23:35:57 PDT 2023
 
 ### Rules
 
@@ -18940,7 +18939,7 @@ Most amalgam functions are `static` to avoid name conflicts. You will want to cr
 
 You'll want to avoid calling any internal functions other than `cql_main` because they are liable to change.
 
-NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API, expose the C functions you need and write a wrapper class.
+>NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API, expose the C functions you need and write a wrapper class.
 
 ### CQL Amalgam Options
 

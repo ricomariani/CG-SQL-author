@@ -5507,13 +5507,9 @@ typedef struct cql_boxed_stmt {
 </ul>
 <h3 id="the-schema-helpers">The Schema Helpers</h3>
 <p>This bit generates the <code>facets</code> table, the full name is <code>your_global_proc_cql_schema_facets</code> where <code>your_global_proc</code> is the <code>--global_proc</code> argument. This is referred to simply as the <code>facets</code> table. There is an identical temporary table that is used to store the contents of the <code>facets</code> table upon startup. This allows the upgrader to produce a complete difference. The <code>facets</code> table is nothing more than a mapping between the name of some facet of the schema (like a table, a view, a column) and its last known verison info – usually its CRC.</p>
-<ul>
-<li>NOTE: this temp table predates the in-memory facets data structure so it could probably be removed
-<ul>
-<li>the diff would have to work against the in-memory datastructure which is immutable hence just as good as a temp table</li>
-<li>look for a change like this soon</li>
-</ul></li>
-</ul>
+<blockquote>
+<p>NOTE: this temp table predates the in-memory facets data structure so it could probably be removed. The diff would have to work against the in-memory data structure which is immutable hence just as good as a temp table look for a change like this soon.</p>
+</blockquote>
 <p>The remaining procedures are for testing facet state or <code>sqlite_master</code> state. All of them get the usual global prefix. For ease of discussion I will elide the prefix for the rest of this document.</p>
 <ul>
 <li><code>check_column_exists</code> : checks if the indicated column is present in <code>sqlite_master</code>

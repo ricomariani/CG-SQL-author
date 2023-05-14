@@ -165,9 +165,9 @@ The most basic types are the scalar or "unitary" types (as they are referred to 
 |`blob`      |n/a          | an immutable blob reference        |
 |`object`    |n/a          | an object reference                |
 
-Note: SQLite makes no distinction between integer storage and long integer storage, but the declarations
-tell CQL whether it should use the SQLite methods for binding and reading 64-bit or 32-bit quantities
-when using the variable or column so declared.
+>NOTE: SQLite makes no distinction between integer storage and long integer storage, but the declarations
+>tell CQL whether it should use the SQLite methods for binding and reading 64-bit or 32-bit quantities
+>when using the variable or column so declared.
 
 There will be more notes on these types later, but importantly, all keywords and names in CQL
 are case insensitive just like in the underlying SQL language.   Additionally all of the
@@ -267,9 +267,12 @@ The above causes the C compiler to invoke only the pre-processor `-E` and to tre
 -- LICENSE file in the root directory of this source tree.
 -->
 The point of using CQL is to facilitate access to a SQLite database so we'll switch gears to a slightly more complicated setup.  We'll
-still keep things fairly simple but let's start to use some database features.  Note: it is not the intent of this tutorial to also be
-a primer for the SQLite programming language which is so ably documented on https://sqlite.org/.  Please refer to that site for details
-on the meaning of the SQL statements used here if you are new to SQL.
+still keep things fairly simple but let's start to use some database features.  
+
+>NOTE: it is not the intent of this tutorial to also be
+>a primer for the SQLite programming language which is so ably documented on https://sqlite.org/.
+>Please refer to that site for details
+>on the meaning of the SQL statements used here if you are new to SQL.
 
 ### A Sample Program
 
@@ -689,9 +692,8 @@ Which probably doesn't come up very often but it does illustrate several things:
  * `WITH RECURSIVE` actually provides a full lambda calculus so arbitrary computation is possible
  * You can use `WITH RECURSIVE` to create table expressions that are sequences of numbers easily, with no reference to any real data
 
-Note:
- * A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
- * Additional demo code is available in [Appendix 10](#appendix-10-cql-working-example)
+A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
+Additional demo code is available in [Appendix 10](#appendix-10-cql-working-example)
 
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
@@ -891,7 +893,7 @@ The use of `NULL` always gives a nullable result however this literal is special
 whatever it is first combined with.   For instance `NULL + 1` results in a nullable integer.  Because `NULL` has no primitive type in some cases where type knowledge
 is required you might have to use the CAST() function to cast the NULL to a specific type such as `CAST(NULL as TEXT)`.   This construct guarantees type consistence in cases like `SELECT` from different sources combined with `UNION ALL`
 
-Note:  constructs like `CAST(NULL as TEXT)` are always rewritten to just `NULL` before going to SQLite as the cast is uninteresting except for the type information which SQLite doesn't need/use anyway.
+>NOTE: constructs like `CAST(NULL as TEXT)` are always rewritten to just `NULL` before going to SQLite as the cast is uninteresting except for the type information which SQLite doesn't need/use anyway.
 
 #### Other Considerations
 
@@ -3406,9 +3408,9 @@ we could just as easily have done something like this:
   set i := i + 1;
 ```
 
-Note: the CQL JSON output includes extra information about procedure arguments
-if they originated as part of a shape bundle do identify the shape source
-for tools that might need that information.
+>NOTE: the CQL JSON output includes extra information about procedure arguments
+>if they originated as part of a shape bundle do identify the shape source
+>for tools that might need that information.
 
 ### The COLUMNS/LIKE construct in the SELECT statement
 
@@ -3633,7 +3635,7 @@ Where `T` is the name of a shape. It can be a table name, or a view name, or it 
 T should be some kind of global name, something that could be accessed with `#include` in various places.
 Referring to the examples above, choices for `T` might be `shape_source` the table or `proc_that_returns_a_shape` the procedure.
 
-Note: it's always possible make a fake procedure that returns a result to sort of "typedef" a shape name.  e.g.
+>NOTE: it's always possible make a fake procedure that returns a result to sort of "typedef" a shape name.  e.g.
 
 ```sql
 declare proc my_shape() (id integer not null, name text);
@@ -4084,7 +4086,8 @@ using the `read_foo_get_b_is_null` function first to see if the boolean is null 
 to get the value.  Finally the string can be accessed with `read_foo_get_t`.  As you can see, there is a
 simple naming convention for each of the field readers.
 
-Note:  The compiler has runtime arrays that control naming conventions as well as using CamelCasing.  Additional customizations may be created by adding new runtime arrays into the CQL compiler.
+>NOTE: The compiler has runtime arrays that control naming conventions as well as using CamelCasing.
+>Additional customizations may be created by adding new runtime arrays into the CQL compiler.
 
 Finally, also part of the public interface, are these macros:
 
@@ -4685,10 +4688,10 @@ begin
 end;
 ```
 
-Note: Ordinary scalar functions may not use the database in any way. When they are invoked they will not
-be provided with the database pointer and so they will be unable to do any database operations.  To do
-database operations, use regular procedures.  You can create a function-like-procedure using the `out` convention
-discussed previously.
+>NOTE: Ordinary scalar functions may not use the database in any way. When they are invoked they will not
+>be provided with the database pointer and so they will be unable to do any database operations.  To do
+>database operations, use regular procedures.  You can create a function-like-procedure using the `out` convention
+>discussed previously.
 
 #### SQL Scalar Functions
 
@@ -4769,7 +4772,7 @@ This is also supported for SQL table-valued functions:
 declare select function table_valued_function no check (t text, i int);
 ```
 
-> Note: currently the `NO CHECK` clause is not supported for non SQL [Ordinary Scalar Functions](#Ordinary-Scalar-Functions).
+>NOTE: currently the `NO CHECK` clause is not supported for non SQL [Ordinary Scalar Functions](#Ordinary-Scalar-Functions).
 
 ### Notes on Builtin Functions
 
@@ -4958,11 +4961,11 @@ To validate `alter table add column` we check the following:
 * no auto-increment columns may be added
 * added columns must be either nullable or have a default value
 
-Note: Alter statements are typically used in the context of migration, so it's
-possible the table that is mentioned is condemned in a future version.  We still have to run
-the intervening upgrade steps so basically DDL gets to ignore the current deadness
-of the table as in context it might be "not dead yet".  This will be more obvious
-in the context of the schema maintenance features. (q.v.)
+>NOTE: Alter statements are typically used in the context of migration, so it's
+>possible the table that is mentioned is condemned in a future version.  We still have to run
+>the intervening upgrade steps so basically DDL gets to ignore the current deadness
+>of the table as in context it might be "not dead yet".  This will be more obvious
+>in the context of the schema maintenance features. (q.v.)
 
 #### The `DELETE` Statement
 The delete analyzer sets up a scope for the table being
@@ -5071,7 +5074,7 @@ should return.  It is exactly equivalent to:
   return; -- wouldn't actually be allowed inside of proc savepoint; see note below
 ```
 
-Note: to avoid errors, the loose `return` above is not actually allowed inside of `proc savepoint` -- you must use `rollback return` or `commit return`.
+>NOTE: to avoid errors, the loose `return` above is not actually allowed inside of `proc savepoint` -- you must use `rollback return` or `commit return`.
 
 #### The `COMMIT RETURN` Statement
 
@@ -5087,7 +5090,7 @@ Of course this isn't exactly a commit, in that there might be an outer savepoint
 still be rolled back, but it is commited at its level of nesting, if you will.  Or, equivalently, you can think of
 it as merging the savepoint into the transaction in flight.
 
-Note: to avoid errors, the loose `return` above is not actually allowed inside of `proc savepoint` and you must use `rollback return` or `commit return`.
+>NOTE: to avoid errors, the loose `return` above is not actually allowed inside of `proc savepoint` and you must use `rollback return` or `commit return`.
 
 #### The `CREATE VIRTUAL TABLE` Statement
 
@@ -5131,8 +5134,8 @@ becomes (to SQLite)
 CREATE VIRTUAL TABLE virt_table USING my_module;
 ```
 
-Note: empty arguments `USING my_module()` are not allowed in the SQLite docs but do seem to work in SQLite.
-We take the position that no args should be formatted with no parentheses, at least for now.
+>NOTE: empty arguments `USING my_module()` are not allowed in the SQLite docs but do seem to work in SQLite.
+>We take the position that no args should be formatted with no parentheses, at least for now.
 
 ##### Case 2 Example
 
@@ -5315,10 +5318,10 @@ have a structure type, rather than just "ok" (the normal signature for a proc).
 If the user is attempting to do the second case, cursor_name will be set and
 the appropriate verification happens here.
 
-Note:  Recursively calling fetch cursor is not really doable in general
-because at the point in the call we might not yet know that the method
-does in fact return a select.  You could make it work if you put the select
-before the recursive call.
+>NOTE:  Recursively calling fetch cursor is not really doable in general
+>because at the point in the call we might not yet know that the method
+>does in fact return a select.  You could make it work if you put the select
+>before the recursive call.
 
 Semantic rules:
  * for all cases each argument must be error-free (no internal type conflicts)
@@ -5459,11 +5462,11 @@ which places the named enumerations into the `.h` file associated with
 the current translation unit. If no enumerations are listed, all enums
 are emitted.
 
-Note: generated enum definitions are protected by `#ifndef X ... #endif` so multiple
-definitions are harmless and hence you can afford to use `@emit_enums`
-for the same enum in several translations units, if desired.
+>NOTE: generated enum definitions are protected by `#ifndef X ... #endif` so multiple
+>definitions are harmless and hence you can afford to use `@emit_enums`
+>for the same enum in several translations units, if desired.
 
-Note: Enumeration values also appear in the JSON output in their own section.
+>NOTE: Enumeration values also appear in the JSON output in their own section.
 
 #### The `@EMIT_CONSTANTS` Statement
 This statement is entirely analogous to the the `@EMIT_ENUMS` except that
@@ -5472,7 +5475,7 @@ into groups precisely so that they can be emitted in logical bundles (and
 to encourage keeping related constants together).  Placing `@EMIT_CONSTANTS`
 causes the C version of the named groups to go into the current `.h` file.
 
-Note: Global constants also appear in the JSON output in their own section.
+>NOTE: Global constants also appear in the JSON output in their own section.
 
 ### Important Program Fragments
 
@@ -6719,8 +6722,7 @@ create table BB(LIKE B);
 create table CC(LIKE C);
 @end_region;
 ```
-
-Note: this exception may end up causing maintenance problems and so it might be revisited in the future.
+>NOTE: this exception may end up causing maintenance problems and so it might be revisited in the future.
 
 #### Maintaining Schema in Pieces
 
@@ -9531,7 +9533,7 @@ The text for `remap` will appear three times in the generated SQL query but only
 * the fragment must consist of exactly one simple select statement
   * no `FROM`, `WHERE`, `HAVING`, etc. -- the result is an expression
 * the select list must have exactly one value
-  * Note: the expression can be a nested `SELECT` which could then have all the usual `SELECT` elements
+  * Note the expression can be a nested `SELECT` which could then have all the usual `SELECT` elements
 * the usual shared fragment rules apply, e.g. no out-parameters, exactly one statement, etc.
 
 
@@ -9882,7 +9884,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 13 23:35:57 PDT 2023
+Snapshot as of Sat May 13 23:48:21 PDT 2023
 
 ### Operators and Literals
 
@@ -11708,7 +11710,7 @@ The complete list (as of this writing) is:
     * Useful if you only indend to call the procedure from CQL.
     * Saves code generation and removes the possibility of C code using the result set or getters.
     * Implies `cql:suppress_getters`; since there is no result set, getters would be redundant.
-    * Note: an `OUT UNION` procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.
+    * an `OUT UNION` procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.
   * `cql:private` the annotated procedure will be static in the generated C
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
@@ -13996,7 +13998,9 @@ If you're doing an UPSERT on table `T`, the columns listed in the conflict targe
 
 ### CQL0280: upsert statement requires a where clause if the insert clause uses select
 
-When the `INSERT` statement to which the UPSERT is attached takes its values from a `SELECT` statement, there is a potential parsing ambiguity. The SQLite parser might not be able to tell if the `ON` keyword is introducing the UPSERT or if it is the `ON` clause of a join. To work around this, the `SELECT` statement should always include a `WHERE` clause, even if that `WHERE` clause is just `WHERE 1` (always true).   Note: The CQL parser doesn't have this ambiguity because it treats "ON CONFLICT" as a single token so this is CQL reporting that SQLite might have trouble with the query as written.
+When the `INSERT` statement to which the UPSERT is attached takes its values from a `SELECT` statement, there is a potential parsing ambiguity. The SQLite parser might not be able to tell if the `ON` keyword is introducing the UPSERT or if it is the `ON` clause of a join. To work around this, the `SELECT` statement should always include a `WHERE` clause, even if that `WHERE` clause is just `WHERE 1` (always true).   
+
+>NOTE: The CQL parser doesn't have this ambiguity because it treats "ON CONFLICT" as a single token so this is CQL reporting that SQLite might have trouble with the query as written.
 
 e.g:
 ```sql
@@ -16234,7 +16238,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 13 23:35:57 PDT 2023
+Snapshot as of Sat May 13 23:48:21 PDT 2023
 
 ### Rules
 
@@ -18590,8 +18594,8 @@ left join B_ on B_.id = A_.id
 where A_.id = 5;
 ```
 
-*Note:* I'll use the convention that `A_` is the fragment proc that could have generated the CTE `AA`,
-likewise with `B_` and so forth.
+>NOTE: I'll use the convention that `A_` is the fragment proc that could have generated the CTE `AA`,
+>likewise with `B_` and so forth.
 
 The above will expand into exactly what we had before and hence will have the exactly
 same good query plan.  Of course this is totally goofy, why make a fragment like that --

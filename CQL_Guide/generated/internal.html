@@ -853,7 +853,9 @@ AST(or)</code></pre>
 <a class="sourceLine" id="cb36-27" title="27"><span class="pp">#define SEM_TYPE_TVF              _64(0x400000000) </span><span class="co">// set if and only table node is a table valued function</span></a>
 <a class="sourceLine" id="cb36-28" title="28"><span class="pp">#define SEM_TYPE_IMPLICIT         _64(0x800000000) </span><span class="co">// set if and only the variable was declare implicitly (via declare out)</span></a>
 <a class="sourceLine" id="cb36-29" title="29"><span class="pp">#define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) </span><span class="co">// set if proc calls an out union proc for</span></a></code></pre></div>
-<p>Note: <code>_64(x)</code> expands to either a trailing <code>L</code> or a trailing <code>LL</code> depending on the bitness of the compiler, whichever yields an <code>int64_t</code>.</p>
+<blockquote>
+<p>NOTE: <code>_64(x)</code> expands to either a trailing <code>L</code> or a trailing <code>LL</code> depending on the bitness of the compiler, whichever yields an <code>int64_t</code>.</p>
+</blockquote>
 <p>Going over the meaning of all of the above is again beyond the scope of this document; some of the flags are very specialized and essentially the validation just requires a bit of storage in the tree to do its job so that storage is provided with a flag. However two flag bits are especially important and are computed almost everywhere <code>sem_t</code> is used. These are <code>SEM_TYPE_NOTNULL</code> and <code>SEM_TYPE_SENSITIVE</code>.</p>
 <ul>
 <li><code>SEM_TYPE_NOTNULL</code> indicates that the marked item is known to be <code>NOT NULL</code>, probably because it was declared as such, or directly derived from a not null item
@@ -1386,7 +1388,7 @@ AST(or)</code></pre>
 <div class="sourceCode" id="cb59"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb59-1" title="1"><span class="co">// The second workhorse of semantic analysis, given two types that</span></a>
 <a class="sourceLine" id="cb59-2" title="2"><span class="co">// are previously known to be compatible, it returns the smallest type</span></a>
 <a class="sourceLine" id="cb59-3" title="3"><span class="co">// that holds both.  If either is nullable, the result is nullable.</span></a>
-<a class="sourceLine" id="cb59-4" title="4"><span class="co">// Note: in the few cases where that isn&#39;t true, the normal algorithm for</span></a>
+<a class="sourceLine" id="cb59-4" title="4"><span class="co">// Note, in the few cases where that isn&#39;t true, the normal algorithm for</span></a>
 <a class="sourceLine" id="cb59-5" title="5"><span class="co">// nullability result must be overridden (see coalesce, for instance).</span></a>
 <a class="sourceLine" id="cb59-6" title="6"><span class="dt">static</span> sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {</a>
 <a class="sourceLine" id="cb59-7" title="7">  ... too much code ... summary below</a>
@@ -1482,7 +1484,9 @@ AST(or)</code></pre>
 <li><code>sem_numeric_expr</code> : verifies the loop expression is numeric</li>
 <li><code>sem_stmt_list</code> : recursively validates the body of the loop</li>
 </ul>
-<p>Note: the while expression is one of the loop constructs which means that <code>LEAVE</code> and <code>CONTINUE</code> are legal inside it. The <code>loop_depth</code> global tracks the fact that we are in a loop so that analysis for <code>LEAVE</code> and <code>CONTINUE</code> can report errors if we are not.</p>
+<blockquote>
+<p>NOTE: the while expression is one of the loop constructs which means that <code>LEAVE</code> and <code>CONTINUE</code> are legal inside it. The <code>loop_depth</code> global tracks the fact that we are in a loop so that analysis for <code>LEAVE</code> and <code>CONTINUE</code> can report errors if we are not.</p>
+</blockquote>
 <p>It’s not hard to imagine that <code>sem_stmt_list</code> will basically walk the AST, pulling out statements and dispatching them using the <code>STMT_INIT</code> tables previously discussed. You might land right back in <code>sem_while_stmt</code> for a nested <code>WHILE</code> – it’s turtles all the way down.</p>
 <p>If <code>SEM_EXPR_CONTEXT_NONE</code> is a mystery, don’t worry, it’s covered in the next section.</p>
 <h3 id="expression-contexts">Expression Contexts</h3>
@@ -2162,7 +2166,9 @@ AST(or)</code></pre>
 <li>set the <code>sptr</code> field using the discovered shape</li>
 </ul></li>
 </ul>
-<p>Note: <code>name_ast-&gt;sem</code> isn’t actually used for anything but it is helpful for debugging. If the AST is printed it shows the original unmodified semantic type which can be helpful.</p>
+<blockquote>
+<p>NOTE: <code>name_ast-&gt;sem</code> isn’t actually used for anything but it is helpful for debugging. If the AST is printed it shows the original unmodified semantic type which can be helpful.</p>
+</blockquote>
 <p>Briefly <code>sem_find_shape_def</code> does these steps:</p>
 <ul>
 <li>if the right of the <code>LIKE</code> refers to procedure arguments (e.g. C LIKE Foo ARGUMENTS), get the args of the named procedure and use them as a shape</li>
@@ -2465,7 +2471,9 @@ AST(or)</code></pre>
 </ul></li>
 </ul>
 <p>This isn’t everything but it should leave you well armed to begin your own exploration of <code>sem.c</code>.</p>
-<p>Note: details on unsub/resub are forthcoming. This code is under development.</p>
+<blockquote>
+<p>NOTE: details on unsub/resub are forthcoming. This code is under development.</p>
+</blockquote>
 <h2 id="part-3-c-code-generation">Part 3: C Code Generation</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -2569,7 +2577,9 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <a class="sourceLine" id="cb114-12" title="12">  EXPR_INIT(tilde, cg_unary, <span class="st">&quot;~&quot;</span>, C_EXPR_PRI_UNARY);</a>
 <a class="sourceLine" id="cb114-13" title="13">  EXPR_INIT(uminus, cg_unary, <span class="st">&quot;-&quot;</span>, C_EXPR_PRI_UNARY);</a></code></pre></div>
 <p>Most (not all) of the binary operators are handled with one function <code>cg_binary</code> and likewise most unary operators are handled with <code>cg_unary</code>.</p>
-<p>Note: the precedence constants are the <code>C_EXPR_PRI_*</code> flavor because, naturally, parentheses will be generated based on the C rules during C codegen. Importantly, the AST still, and always, authoritatively encodes the user-specified order of operations – there’s no change there. The only thing that changes is where parentheses are needed to get the desired result. Some parens may need to be added, and some that were present in the original text might no longer be needed.</p>
+<blockquote>
+<p>NOTE: the precedence constants are the <code>C_EXPR_PRI_*</code> flavor because, naturally, parentheses will be generated based on the C rules during C codegen. Importantly, the AST still, and always, authoritatively encodes the user-specified order of operations – there’s no change there. The only thing that changes is where parentheses are needed to get the desired result. Some parens may need to be added, and some that were present in the original text might no longer be needed.</p>
+</blockquote>
 <p>Here are some helpful examples:</p>
 <div class="sourceCode" id="cb115"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb115-1" title="1"><span class="kw">CREATE</span> PROC p ()</a>
 <a class="sourceLine" id="cb115-2" title="2"><span class="cf">BEGIN</span></a>
@@ -2651,7 +2661,9 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <a class="sourceLine" id="cb124-5" title="5">  cg_cleanup_output = &amp;proc_cleanup;</a></code></pre></div>
 <p>And of course the code puts the original values back when it’s done and then closes what it opened.</p>
 <p>This means that while processing a procedure the codegen that declares say scratch variables, which would go to <code>cg_scratch_vars_output</code>, is going to target the <code>proc_locals</code> buffer which will be emitted before the <code>proc_body</code>. By the time <code>cg_stmt_list</code> is invoked the <code>cg_main_output</code> variable will be pointing to the procedure body, thus any statements will go into there rather than being accumulated at the global level.</p>
-<p>Note: it’s possible to have code that is not in a procedure (see <a href="guide.md#--global_proc-name"><code>--global_proc</code></a>).</p>
+<blockquote>
+<p>NOTE: it’s possible to have code that is not in a procedure (see <a href="guide.md#--global_proc-name"><code>--global_proc</code></a>).</p>
+</blockquote>
 <p>In general, it’s very useful to have different buffers open at the same time. New local variables or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to <code>cg_cleanup_output</code> which will appear at the end of a procedure. The final steps of procedure codegen combines all of these pieces plus a little glue to make a working procedure.</p>
 <p>All codegen works like this – statements, expressions, all of it.</p>
 <p>One interesting but unexpected feature of <code>charbuf</code> is that it provides helper methods for indenting a buffer by whatever amount you like. This turns out to be invaluable in creating well formatted C code because of course we want (e.g.) the body of an <code>if</code> statement to be indented. CQL tries to create well formatted code that is readable by humans as much as possible.</p>
@@ -2788,7 +2800,9 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li><code>value</code>: <code>"_tmp_n_int_1"</code></li>
 </ul>
 <p>Meaning: if we want the value, use the text <code>"_tmp_n_int_1"</code> if we want to know if the variable is null, we use the text <code>"0"</code></p>
-<p>Note: many parts of <code>cg_c.c</code> special case an <code>is_null</code> value of <code>"0"</code> to make better code because such a thing is known to be not null at compile time.</p>
+<blockquote>
+<p>NOTE: many parts of <code>cg_c.c</code> special case an <code>is_null</code> value of <code>"0"</code> to make better code because such a thing is known to be not null at compile time.</p>
+</blockquote>
 <p>Now let’s suppose we ask for a scratch nullable integer, we get results like this:</p>
 <ul>
 <li><code>var</code>: <code>"_tmp_int_1"</code></li>
@@ -2855,7 +2869,9 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <p><code>is_null</code> and <code>value</code> are the chief outputs, and the caller will use these to create its own expression results with recursive logic. But the expression logic can also write into the statement stream, the cleanup stream, even into the header file stream, and as we’ll see, it does.</p>
 <p><code>pri</code> and <code>pri_new</code> work exactly like they did in the echoing code (see <a href="#part-1-lexing-parsing-and-the-ast">Part 1</a>) they are used to allow the code generator to decide if it needs to emit parentheses. But recall that the binding strengths now will be the C binding strengths NOT the SQL binding strengths (discussed above).</p>
 <p>Let’s look at one of the simplest operators: the <code>IS NULL</code> operator handled by <code>cg_expr_is_null</code></p>
-<p>Note: this code has a simpler signature because it’s actually part of codegen for <code>cg_expr_is</code> which has the general contract.</p>
+<blockquote>
+<p>NOTE: this code has a simpler signature because it’s actually part of codegen for <code>cg_expr_is</code> which has the general contract.</p>
+</blockquote>
 <div class="sourceCode" id="cb135"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb135-1" title="1"><span class="co">// The code-gen for is_null is one of the easiest.  The recursive call</span></a>
 <a class="sourceLine" id="cb135-2" title="2"><span class="co">// produces is_null as one of the outputs.  Use that.  Our is_null result</span></a>
 <a class="sourceLine" id="cb135-3" title="3"><span class="co">// is always zero because IS NULL is never, itself, null.</span></a>
@@ -2880,7 +2896,9 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <a class="sourceLine" id="cb135-22" title="22">  }</a>
 <a class="sourceLine" id="cb135-23" title="23">}</a></code></pre></div>
 <p>So walking through the above: * the result of <code>IS NULL</code> is never null, so we can immediately put “0” into the <code>is_null</code> buffer * if the operand is a not-null numeric type then the result of <code>IS NULL</code> is <code>0</code> * if the operand might actually be null then * use <code>CG_PUSH_EVAL</code> to recursively do codegen for it * copy its <code>expr_is_null</code> text into our <code>value</code> text</p>
-<p>Note: the code reveals one of the big CQL secrets – that not null reference variables can be null… C has the same issue with <code>_Nonnull</code> globals.</p>
+<blockquote>
+<p>NOTE: the code reveals one of the big CQL secrets – that not null reference variables can be null… C has the same issue with <code>_Nonnull</code> globals.</p>
+</blockquote>
 <p>Now let’s look at those helper macros, they are pretty simple:</p>
 <div class="sourceCode" id="cb136"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb136-1" title="1"><span class="co">// Make a temporary buffer for the evaluation results using the canonical</span></a>
 <a class="sourceLine" id="cb136-2" title="2"><span class="co">// naming convention.  This might exit having burned some stack slots</span></a>
@@ -3241,7 +3259,9 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li>the code never jumps back to an error label, so we’ll always know if the label was used before we need to emit it</li>
 </ul></li>
 </ul>
-<p>Note: every catch block captures the value of <code>_rc_</code> in a local variable whose name is in <code>rcthrown_current</code>. This captured value is the current failing result code accessible by <code>@RC</code> in CQL.</p>
+<blockquote>
+<p>NOTE: every catch block captures the value of <code>_rc_</code> in a local variable whose name is in <code>rcthrown_current</code>. This captured value is the current failing result code accessible by <code>@RC</code> in CQL.</p>
+</blockquote>
 <p>A catch block can therefore do stuff like:</p>
 <div class="sourceCode" id="cb157"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb157-1" title="1"><span class="cf">IF</span> @RC <span class="op">=</span> <span class="dv">1</span> <span class="cf">THEN</span></a>
 <a class="sourceLine" id="cb157-2" title="2">  THROW;</a>
@@ -6271,7 +6291,9 @@ typedef struct cql_boxed_stmt {
 <li>add the name</li>
 <li>done :D</li>
 </ul>
-<p>Note: The added name of course doesn’t have to be a table name, but it usually is.</p>
+<blockquote>
+<p>NOTE: The added name of course doesn’t have to be a table name, but it usually is.</p>
+</blockquote>
 <p>So we can see that <code>find_table_refs</code> will tell us the kind of thing it found and the name of the thing.</p>
 <p>When all this is done each kind of dependency is emitted if it exists, like so:</p>
 <div class="sourceCode" id="cb312"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb312-1" title="1">  <span class="cf">if</span> (used_views.used &gt; <span class="dv">1</span>) {</a>

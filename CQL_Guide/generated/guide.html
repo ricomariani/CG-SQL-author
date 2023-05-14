@@ -925,7 +925,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </tr>
 </tbody>
 </table>
-<p>Note: SQLite makes no distinction between integer storage and long integer storage, but the declarations tell CQL whether it should use the SQLite methods for binding and reading 64-bit or 32-bit quantities when using the variable or column so declared.</p>
+<blockquote>
+<p>NOTE: SQLite makes no distinction between integer storage and long integer storage, but the declarations tell CQL whether it should use the SQLite methods for binding and reading 64-bit or 32-bit quantities when using the variable or column so declared.</p>
+</blockquote>
 <p>There will be more notes on these types later, but importantly, all keywords and names in CQL are case insensitive just like in the underlying SQL language. Additionally all of the above may be combined with <code>not null</code> to indicate that a <code>null</code> value may not be stored in that variable (as in the example). When generating the C code, the case used in the declaration becomes the canonical case of the variable and all other cases are converted to that in the emitted code. As a result the C remains case sensitively correct.</p>
 <p>The size of the reference types is machine dependent, whatever the local pointer size is. The non-reference types use machine independent declarations like <code>int32_t</code> to get exactly the desired sizes in a portable fashion.</p>
 <p>All variables of a reference type are set to <code>NULL</code> when they are declared, including those that are declared <code>NOT NULL</code>. For this reason, all nonnull reference variables must be initialized (i.e., assigned a value) before anything is allowed to read from them. This is not the case for nonnull variables of a non-reference type, however: They are automatically assigned an initial value of 0, and thus may be read from at any point.</p>
@@ -973,7 +975,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-<p>The point of using CQL is to facilitate access to a SQLite database so we’ll switch gears to a slightly more complicated setup. We’ll still keep things fairly simple but let’s start to use some database features. Note: it is not the intent of this tutorial to also be a primer for the SQLite programming language which is so ably documented on https://sqlite.org/. Please refer to that site for details on the meaning of the SQL statements used here if you are new to SQL.</p>
+<p>The point of using CQL is to facilitate access to a SQLite database so we’ll switch gears to a slightly more complicated setup. We’ll still keep things fairly simple but let’s start to use some database features.</p>
+<blockquote>
+<p>NOTE: it is not the intent of this tutorial to also be a primer for the SQLite programming language which is so ably documented on https://sqlite.org/. Please refer to that site for details on the meaning of the SQL statements used here if you are new to SQL.</p>
+</blockquote>
 <h3 id="a-sample-program">A Sample Program</h3>
 <p>Suppose we have the following program:</p>
 <p>```sql title=“hello.sql” – needed to allow vararg calls to C functions declare procedure printf no check;</p>
@@ -1170,7 +1175,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><code>WITH RECURSIVE</code> actually provides a full lambda calculus so arbitrary computation is possible</li>
 <li>You can use <code>WITH RECURSIVE</code> to create table expressions that are sequences of numbers easily, with no reference to any real data</li>
 </ul>
-<p>Note: * A working version of this code can be found in the <code>sources/demo</code> directory of CG/SQL project. * Additional demo code is available in <a href="#appendix-10-cql-working-example">Appendix 10</a></p>
+<p>A working version of this code can be found in the <code>sources/demo</code> directory of CG/SQL project. Additional demo code is available in <a href="#appendix-10-cql-working-example">Appendix 10</a></p>
 <h2 id="chapter-3-expressions-literals-nullability-sensitivity">Chapter 3: Expressions, Literals, Nullability, Sensitivity</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -1308,7 +1313,9 @@ UNARY:          ~  -</code></pre>
 <a class="sourceLine" id="cb37-6" title="6">  0x10L          <span class="co">-- hex long integer</span></a></code></pre></div>
 <h4 id="the-null-literal">The NULL literal</h4>
 <p>The use of <code>NULL</code> always gives a nullable result however this literal is special in that it has no storage class. <code>NULL</code> is neither numeric nor string itself but rather mutates into whatever it is first combined with. For instance <code>NULL + 1</code> results in a nullable integer. Because <code>NULL</code> has no primitive type in some cases where type knowledge is required you might have to use the CAST() function to cast the NULL to a specific type such as <code>CAST(NULL as TEXT)</code>. This construct guarantees type consistence in cases like <code>SELECT</code> from different sources combined with <code>UNION ALL</code></p>
-<p>Note: constructs like <code>CAST(NULL as TEXT)</code> are always rewritten to just <code>NULL</code> before going to SQLite as the cast is uninteresting except for the type information which SQLite doesn’t need/use anyway.</p>
+<blockquote>
+<p>NOTE: constructs like <code>CAST(NULL as TEXT)</code> are always rewritten to just <code>NULL</code> before going to SQLite as the cast is uninteresting except for the type information which SQLite doesn’t need/use anyway.</p>
+</blockquote>
 <h4 id="other-considerations">Other Considerations</h4>
 <p>There are no boolean literals other than the integers <code>0</code> and <code>1</code>.</p>
 <p>The C pre-processor is often combined with CQL in which case the <code>_FILE_</code> and <code>_LINE_</code> directives may be used to create literals; they will be preprocessed into normal literals.</p>
@@ -2911,7 +2918,9 @@ UNARY:          ~  -</code></pre>
 <div class="sourceCode" id="cb181"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb181-1" title="1">  <span class="kw">set</span> P_id <span class="op">:=</span> printf(<span class="ot">&quot;id_%d&quot;</span>, i);</a>
 <a class="sourceLine" id="cb181-2" title="2">  <span class="kw">insert</span> <span class="kw">into</span> Person <span class="kw">from</span> P;</a>
 <a class="sourceLine" id="cb181-3" title="3">  <span class="kw">set</span> i <span class="op">:=</span> i <span class="op">+</span> <span class="dv">1</span>;</a></code></pre></div>
-<p>Note: the CQL JSON output includes extra information about procedure arguments if they originated as part of a shape bundle do identify the shape source for tools that might need that information.</p>
+<blockquote>
+<p>NOTE: the CQL JSON output includes extra information about procedure arguments if they originated as part of a shape bundle do identify the shape source for tools that might need that information.</p>
+</blockquote>
 <h3 id="the-columnslike-construct-in-the-select-statement">The COLUMNS/LIKE construct in the SELECT statement</h3>
 <p>The select list of a <code>SELECT</code> statement already has complex syntax and functionality, but it is a very interesting place to use shapes. To make it possible to use shape notations and not confuse them with standard SQL the <code>COLUMNS</code> construct was added to the language. This allows for a sugared syntax for extracting columns in bulk.</p>
 <p>The <code>COLUMNS</code> clause is like of a generalization of the <code>select T.*</code> with shape slicing and type-checking. The forms are discussed below:</p>
@@ -3009,7 +3018,9 @@ insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000
 <p>To make an object that can hold a cursor:</p>
 <div class="sourceCode" id="cb196"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb196-1" title="1"><span class="kw">declare</span> obj <span class="dt">object</span><span class="op">&lt;</span>T <span class="kw">cursor</span><span class="op">&gt;</span>;</a></code></pre></div>
 <p>Where <code>T</code> is the name of a shape. It can be a table name, or a view name, or it can be the name of the canonical procedure that returns the result. T should be some kind of global name, something that could be accessed with <code>#include</code> in various places. Referring to the examples above, choices for <code>T</code> might be <code>shape_source</code> the table or <code>proc_that_returns_a_shape</code> the procedure.</p>
-<p>Note: it’s always possible make a fake procedure that returns a result to sort of “typedef” a shape name. e.g.</p>
+<blockquote>
+<p>NOTE: it’s always possible make a fake procedure that returns a result to sort of “typedef” a shape name. e.g.</p>
+</blockquote>
 <div class="sourceCode" id="cb197"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb197-1" title="1"><span class="kw">declare</span> proc my_shape() (<span class="kw">id</span> <span class="dt">integer</span> <span class="kw">not</span> <span class="kw">null</span>, name text);</a></code></pre></div>
 <p>The procedure here <code>my_shape</code> doesn’t have to actually ever be created, in fact it’s better if it isn’t. It won’t ever be called; its hypothetical result is just being as a shape. This can be useful if you have several procedures like <code>proc_that_returns_a_shape</code> that all return results with the columns of <code>my_shape</code>.</p>
 <p>To create the boxed cursor, first declare the object variable that will hold it and then set object from the cursor. Note that in the following example the cursor <code>C</code> must have the shape defined by <code>my_shape</code> or an error is produced. The type of the object is crucial because, as we’ll see, during unboxing that type defines the shape of the unboxed cursor.</p>
@@ -3280,7 +3291,9 @@ insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000
 <a class="sourceLine" id="cb218-8" title="8">   read_foo_result_set_ref  _Nonnull result_set,</a>
 <a class="sourceLine" id="cb218-9" title="9">   cql_int32 row);</a></code></pre></div>
 <p>These let you read the <code>id</code> of a particular row, and get a <code>cql_int32</code> or you can read the nullable boolean, using the <code>read_foo_get_b_is_null</code> function first to see if the boolean is null and then <code>read_foo_get_b_value</code> to get the value. Finally the string can be accessed with <code>read_foo_get_t</code>. As you can see, there is a simple naming convention for each of the field readers.</p>
-<p>Note: The compiler has runtime arrays that control naming conventions as well as using CamelCasing. Additional customizations may be created by adding new runtime arrays into the CQL compiler.</p>
+<blockquote>
+<p>NOTE: The compiler has runtime arrays that control naming conventions as well as using CamelCasing. Additional customizations may be created by adding new runtime arrays into the CQL compiler.</p>
+</blockquote>
 <p>Finally, also part of the public interface, are these macros:</p>
 <div class="sourceCode" id="cb219"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb219-1" title="1"><span class="pp">#define read_foo_row_hash(result_set, row)</span></a>
 <a class="sourceLine" id="cb219-2" title="2"><span class="pp">#define read_foo_row_equal(rs1, row1, rs2, row2)</span></a></code></pre></div>
@@ -3624,7 +3637,9 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <a class="sourceLine" id="cb251-7" title="7">    <span class="kw">call</span> printf(<span class="ot">&quot;insanity has ensued\n&quot;</span>);</a>
 <a class="sourceLine" id="cb251-8" title="8">  <span class="cf">end</span> <span class="cf">if</span>;</a>
 <a class="sourceLine" id="cb251-9" title="9"><span class="cf">end</span>;</a></code></pre></div>
-<p>Note: Ordinary scalar functions may not use the database in any way. When they are invoked they will not be provided with the database pointer and so they will be unable to do any database operations. To do database operations, use regular procedures. You can create a function-like-procedure using the <code>out</code> convention discussed previously.</p>
+<blockquote>
+<p>NOTE: Ordinary scalar functions may not use the database in any way. When they are invoked they will not be provided with the database pointer and so they will be unable to do any database operations. To do database operations, use regular procedures. You can create a function-like-procedure using the <code>out</code> convention discussed previously.</p>
+</blockquote>
 <h4 id="sql-scalar-functions">SQL Scalar Functions</h4>
 <p>SQLite includes the ability to add new functions to its expressions using <code>sqlite3_create_function</code>. In order to use this function in CQL, you must also provide its prototype definition to the compiler. You can do so following this example:</p>
 <div class="sourceCode" id="cb252"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb252-1" title="1"><span class="kw">declare</span> <span class="kw">select</span> <span class="kw">function</span> strencode(t text <span class="kw">not</span> <span class="kw">null</span>) text <span class="kw">not</span> <span class="kw">null</span>;</a></code></pre></div>
@@ -3661,7 +3676,7 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>This is also supported for SQL table-valued functions:</p>
 <div class="sourceCode" id="cb257"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb257-1" title="1"><span class="kw">declare</span> <span class="kw">select</span> <span class="kw">function</span> table_valued_function <span class="kw">no</span> <span class="kw">check</span> (t text, i <span class="dt">int</span>);</a></code></pre></div>
 <blockquote>
-<p>Note: currently the <code>NO CHECK</code> clause is not supported for non SQL <a href="#Ordinary-Scalar-Functions">Ordinary Scalar Functions</a>.</p>
+<p>NOTE: currently the <code>NO CHECK</code> clause is not supported for non SQL <a href="#Ordinary-Scalar-Functions">Ordinary Scalar Functions</a>.</p>
 </blockquote>
 <h3 id="notes-on-builtin-functions">Notes on Builtin Functions</h3>
 <p>Some of the SQLite builtin functions are hard-coded; these are the functions that have semantics that are not readily captured with a simple prototype. Other SQLite functions can be declared with <code>declare select function ...</code> and then used.</p>
@@ -3760,7 +3775,9 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>CQL validates that <code>RAISE</code> is being used in the context of a trigger and that it has the correct arguments</p>
 <h4 id="the-alter-table-add-column-statement">The <code>ALTER TABLE ADD COLUMN</code> Statement</h4>
 <p>To validate <code>alter table add column</code> we check the following: * the table must exist and not be a view (in any version) * the column definition of the new column must be self-consistent * no auto-increment columns may be added * added columns must be either nullable or have a default value</p>
-<p>Note: Alter statements are typically used in the context of migration, so it’s possible the table that is mentioned is condemned in a future version. We still have to run the intervening upgrade steps so basically DDL gets to ignore the current deadness of the table as in context it might be “not dead yet”. This will be more obvious in the context of the schema maintenance features. (q.v.)</p>
+<blockquote>
+<p>NOTE: Alter statements are typically used in the context of migration, so it’s possible the table that is mentioned is condemned in a future version. We still have to run the intervening upgrade steps so basically DDL gets to ignore the current deadness of the table as in context it might be “not dead yet”. This will be more obvious in the context of the schema maintenance features. (q.v.)</p>
+</blockquote>
 <h4 id="the-delete-statement">The <code>DELETE</code> Statement</h4>
 <p>The delete analyzer sets up a scope for the table being deleted and then validates the WHERE clause, if present, against that scope. Additionally, we verify that the table actually was defined and is not a view.</p>
 <h4 id="the-update-statement">The <code>UPDATE</code> Statement</h4>
@@ -3821,13 +3838,17 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <div class="sourceCode" id="cb260"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb260-1" title="1">  <span class="kw">rollback</span> <span class="kw">transaction</span> <span class="kw">to</span> <span class="kw">savepoint</span> @proc;</a>
 <a class="sourceLine" id="cb260-2" title="2">  release <span class="kw">savepoint</span> @proc;</a>
 <a class="sourceLine" id="cb260-3" title="3">  <span class="kw">return</span>; <span class="co">-- wouldn&#39;t actually be allowed inside of proc savepoint; see note below</span></a></code></pre></div>
-<p>Note: to avoid errors, the loose <code>return</code> above is not actually allowed inside of <code>proc savepoint</code> – you must use <code>rollback return</code> or <code>commit return</code>.</p>
+<blockquote>
+<p>NOTE: to avoid errors, the loose <code>return</code> above is not actually allowed inside of <code>proc savepoint</code> – you must use <code>rollback return</code> or <code>commit return</code>.</p>
+</blockquote>
 <h4 id="the-commit-return-statement">The <code>COMMIT RETURN</code> Statement</h4>
 <p>This form may be used only inside of a <code>proc savepoint</code> block. It indicates that the savepoint should be released and then the procedure should return. It is exactly equivalent to:</p>
 <div class="sourceCode" id="cb261"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb261-1" title="1">  release <span class="kw">savepoint</span> @proc;</a>
 <a class="sourceLine" id="cb261-2" title="2">  <span class="kw">return</span>; <span class="co">-- wouldn&#39;t actually be allowed inside of proc savepoint; see note below</span></a></code></pre></div>
 <p>Of course this isn’t exactly a commit, in that there might be an outer savepoint or outer transaction that might still be rolled back, but it is commited at its level of nesting, if you will. Or, equivalently, you can think of it as merging the savepoint into the transaction in flight.</p>
-<p>Note: to avoid errors, the loose <code>return</code> above is not actually allowed inside of <code>proc savepoint</code> and you must use <code>rollback return</code> or <code>commit return</code>.</p>
+<blockquote>
+<p>NOTE: to avoid errors, the loose <code>return</code> above is not actually allowed inside of <code>proc savepoint</code> and you must use <code>rollback return</code> or <code>commit return</code>.</p>
+</blockquote>
 <h4 id="the-create-virtual-table-statement">The <code>CREATE VIRTUAL TABLE</code> Statement</h4>
 <p>The SQLite <code>CREATE VIRTUAL TABLE</code> form (https://sqlite.org/lang_createvtab.html) is problematic from CQL because:</p>
 <ul>
@@ -3853,7 +3874,9 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <a class="sourceLine" id="cb263-4" title="4">);</a></code></pre></div>
 <p>becomes (to SQLite)</p>
 <div class="sourceCode" id="cb264"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb264-1" title="1"><span class="kw">CREATE</span> VIRTUAL <span class="kw">TABLE</span> virt_table <span class="kw">USING</span> my_module;</a></code></pre></div>
-<p>Note: empty arguments <code>USING my_module()</code> are not allowed in the SQLite docs but do seem to work in SQLite. We take the position that no args should be formatted with no parentheses, at least for now.</p>
+<blockquote>
+<p>NOTE: empty arguments <code>USING my_module()</code> are not allowed in the SQLite docs but do seem to work in SQLite. We take the position that no args should be formatted with no parentheses, at least for now.</p>
+</blockquote>
 <h5 id="case-2-example">Case 2 Example</h5>
 <pre><code>create virtual table virt_table using my_module(foo, &#39;goo&#39;, (1.5, (bar, baz))) as (
   id integer not null,
@@ -3922,7 +3945,9 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <h4 id="the-call-statement">The <code>CALL</code> Statement</h4>
 <p>There are three ways that a call can happen: * signatures of procedures that we know in full: * call foo(); * declare cursor for call foo(); * some external call to some outside function we don’t know * e.g. call printf(‘hello, world’);</p>
 <p>The cursor form can be used if and only if the procedure has a loose select or a call to a procedure with a loose select. In that case, the procedure will have a structure type, rather than just “ok” (the normal signature for a proc). If the user is attempting to do the second case, cursor_name will be set and the appropriate verification happens here.</p>
-<p>Note: Recursively calling fetch cursor is not really doable in general because at the point in the call we might not yet know that the method does in fact return a select. You could make it work if you put the select before the recursive call.</p>
+<blockquote>
+<p>NOTE: Recursively calling fetch cursor is not really doable in general because at the point in the call we might not yet know that the method does in fact return a select. You could make it work if you put the select before the recursive call.</p>
+</blockquote>
 <p>Semantic rules: * for all cases each argument must be error-free (no internal type conflicts) * for known procs * the call has to have the correct number of arguments * if the formal is an out parameter the argument must be a variable * the type of the variable must be an exact type match for the formal * non-out parameters must be type-compatible, but exact match is not required</p>
 <h4 id="the-declare-out-call-statement">The <code>DECLARE OUT CALL</code> Statement</h4>
 <p>This form is syntactic sugar and corresponds to declaring any <code>OUT</code> parameters of the <code>CALL</code> portion that are not already declared as the exact type of the <code>OUT</code> parameter. This is intended to save you from declaring a lot of variables just so that you can use them as <code>OUT</code> arguments.</p>
@@ -3983,11 +4008,17 @@ if (C_._has_row_) cql_bytebuf_append(&amp;_rows_, (const void *)&amp;C_, sizeof(
 <p>Leaving a schema region puts you back in the default region. Here we check that we are in a schema region.</p>
 <h4 id="the-emit_enums-statement">The <code>@EMIT_ENUMS</code> Statement</h4>
 <p>Declared enumarations can be voluminous and it is undesirable for every emitted <code>.h</code> file to contain every enumeration. To avoid this problem you can emit enumeration values of your choice using <code>@emit_enums x, y, z</code> which places the named enumerations into the <code>.h</code> file associated with the current translation unit. If no enumerations are listed, all enums are emitted.</p>
-<p>Note: generated enum definitions are protected by <code>#ifndef X ... #endif</code> so multiple definitions are harmless and hence you can afford to use <code>@emit_enums</code> for the same enum in several translations units, if desired.</p>
-<p>Note: Enumeration values also appear in the JSON output in their own section.</p>
+<blockquote>
+<p>NOTE: generated enum definitions are protected by <code>#ifndef X ... #endif</code> so multiple definitions are harmless and hence you can afford to use <code>@emit_enums</code> for the same enum in several translations units, if desired.</p>
+</blockquote>
+<blockquote>
+<p>NOTE: Enumeration values also appear in the JSON output in their own section.</p>
+</blockquote>
 <h4 id="the-emit_constants-statement">The <code>@EMIT_CONSTANTS</code> Statement</h4>
 <p>This statement is entirely analogous to the the <code>@EMIT_ENUMS</code> except that the parameters are one or more constant groups. In fact constants are put into groups precisely so that they can be emitted in logical bundles (and to encourage keeping related constants together). Placing <code>@EMIT_CONSTANTS</code> causes the C version of the named groups to go into the current <code>.h</code> file.</p>
-<p>Note: Global constants also appear in the JSON output in their own section.</p>
+<blockquote>
+<p>NOTE: Global constants also appear in the JSON output in their own section.</p>
+</blockquote>
 <h3 id="important-program-fragments">Important Program Fragments</h3>
 <p>These items appear in a variety of places and are worthy of discussion. They are generally handled uniformly.</p>
 <h4 id="argument-lists">Argument Lists</h4>
@@ -4914,7 +4945,9 @@ end;</code></pre>
 <a class="sourceLine" id="cb310-8" title="8"><span class="kw">create</span> <span class="kw">table</span> BB(<span class="kw">LIKE</span> B);</a>
 <a class="sourceLine" id="cb310-9" title="9"><span class="kw">create</span> <span class="kw">table</span> CC(<span class="kw">LIKE</span> C);</a>
 <a class="sourceLine" id="cb310-10" title="10"><span class="ot">@end_region;</span></a></code></pre></div>
-<p>Note: this exception may end up causing maintenance problems and so it might be revisited in the future.</p>
+<blockquote>
+<p>NOTE: this exception may end up causing maintenance problems and so it might be revisited in the future.</p>
+</blockquote>
 <h4 id="maintaining-schema-in-pieces">Maintaining Schema in Pieces</h4>
 <p>When creating upgrade scripts, using the <code>--rt schema_upgrade</code> flags you can add region options <code>--include_regions a b c</code> and <code>--exclude_regions d e f</code> per the following:</p>
 <p>Included regions: * must be valid region names – the base types are walked to compute all the regions that are “in” * declarations are emitted in the upgrade for all of the “in” objects – “exclude” does not affect the declarations</p>
@@ -6937,7 +6970,7 @@ END;</code></pre>
 </ul></li>
 <li>the select list must have exactly one value
 <ul>
-<li>Note: the expression can be a nested <code>SELECT</code> which could then have all the usual <code>SELECT</code> elements</li>
+<li>Note the expression can be a nested <code>SELECT</code> which could then have all the usual <code>SELECT</code> elements</li>
 </ul></li>
 <li>the usual shared fragment rules apply, e.g. no out-parameters, exactly one statement, etc.</li>
 </ul>
@@ -7210,7 +7243,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 13 23:35:57 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:48:21 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -8986,7 +9019,7 @@ blob_update_val_stmt:
 <li>Useful if you only indend to call the procedure from CQL.</li>
 <li>Saves code generation and removes the possibility of C code using the result set or getters.</li>
 <li>Implies <code>cql:suppress_getters</code>; since there is no result set, getters would be redundant.</li>
-<li>Note: an <code>OUT UNION</code> procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.</li>
+<li>an <code>OUT UNION</code> procedure cannot have a suppressed result set since all such a procedure does is produce a result set. This attribute is ignored for out union procedures.</li>
 </ul></li>
 <li><code>cql:private</code> the annotated procedure will be static in the generated C
 <ul>
@@ -10176,7 +10209,10 @@ end;</code></pre>
 <p>If you’re doing an UPSERT on table <code>T</code>, the columns listed in the conflict target should be: - A primary key in <code>T</code> - A unique key in <code>T</code> - A group of unique key in <code>T</code> - A group of primary key in <code>T</code> - A unique index in <code>T</code></p>
 <hr />
 <h3 id="cql0280-upsert-statement-requires-a-where-clause-if-the-insert-clause-uses-select">CQL0280: upsert statement requires a where clause if the insert clause uses select</h3>
-<p>When the <code>INSERT</code> statement to which the UPSERT is attached takes its values from a <code>SELECT</code> statement, there is a potential parsing ambiguity. The SQLite parser might not be able to tell if the <code>ON</code> keyword is introducing the UPSERT or if it is the <code>ON</code> clause of a join. To work around this, the <code>SELECT</code> statement should always include a <code>WHERE</code> clause, even if that <code>WHERE</code> clause is just <code>WHERE 1</code> (always true). Note: The CQL parser doesn’t have this ambiguity because it treats “ON CONFLICT” as a single token so this is CQL reporting that SQLite might have trouble with the query as written.</p>
+<p>When the <code>INSERT</code> statement to which the UPSERT is attached takes its values from a <code>SELECT</code> statement, there is a potential parsing ambiguity. The SQLite parser might not be able to tell if the <code>ON</code> keyword is introducing the UPSERT or if it is the <code>ON</code> clause of a join. To work around this, the <code>SELECT</code> statement should always include a <code>WHERE</code> clause, even if that <code>WHERE</code> clause is just <code>WHERE 1</code> (always true).</p>
+<blockquote>
+<p>NOTE: The CQL parser doesn’t have this ambiguity because it treats “ON CONFLICT” as a single token so this is CQL reporting that SQLite might have trouble with the query as written.</p>
+</blockquote>
 <p>e.g:</p>
 <div class="sourceCode" id="cb509"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb509-1" title="1"><span class="kw">insert</span> <span class="kw">into</span> foo <span class="kw">select</span> <span class="kw">id</span> <span class="kw">from</span> bar <span class="kw">where</span> <span class="dv">1</span> <span class="kw">on</span> conflict(<span class="kw">id</span>) do <span class="kw">nothing</span>;</a></code></pre></div>
 <hr />
@@ -11188,7 +11224,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 13 23:35:57 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:48:21 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -13263,7 +13299,9 @@ fetch C USING
 <a class="sourceLine" id="cb603-17" title="17"><span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> A_</a>
 <a class="sourceLine" id="cb603-18" title="18"><span class="kw">left</span> <span class="kw">join</span> B_ <span class="kw">on</span> B_.<span class="kw">id</span> <span class="op">=</span> A_.<span class="kw">id</span></a>
 <a class="sourceLine" id="cb603-19" title="19"><span class="kw">where</span> A_.<span class="kw">id</span> <span class="op">=</span> <span class="dv">5</span>;</a></code></pre></div>
-<p><em>Note:</em> I’ll use the convention that <code>A_</code> is the fragment proc that could have generated the CTE <code>AA</code>, likewise with <code>B_</code> and so forth.</p>
+<blockquote>
+<p>NOTE: I’ll use the convention that <code>A_</code> is the fragment proc that could have generated the CTE <code>AA</code>, likewise with <code>B_</code> and so forth.</p>
+</blockquote>
 <p>The above will expand into exactly what we had before and hence will have the exactly same good query plan. Of course this is totally goofy, why make a fragment like that – it’s just more typing. Well now lets generalize the fragments just a bit.</p>
 <div class="sourceCode" id="cb604"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb604-1" title="1"><span class="ot">@attribute(cql:shared_fragment)</span></a>
 <a class="sourceLine" id="cb604-2" title="2"><span class="kw">create</span> proc A_(experiment bool <span class="kw">not</span> <span class="kw">null</span>)</a>

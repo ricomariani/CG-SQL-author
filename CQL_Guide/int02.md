@@ -208,7 +208,7 @@ The full list as of this writing is as follows:
 #define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for
 ```
 
-Note: `_64(x)` expands to either a trailing `L` or a trailing `LL` depending on the bitness of the compiler, whichever yields an `int64_t`.
+>NOTE: `_64(x)` expands to either a trailing `L` or a trailing `LL` depending on the bitness of the compiler, whichever yields an `int64_t`.
 
 Going over the meaning of all of the above is again beyond the scope of this document; some of the flags are very specialized and essentially the validation
 just requires a bit of storage in the tree to do its job so that storage is provided with a flag.  However two flag bits are especially important and
@@ -878,7 +878,7 @@ the result is `NULL`.
 // The second workhorse of semantic analysis, given two types that
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable, the result is nullable.
-// Note: in the few cases where that isn't true, the normal algorithm for
+// Note, in the few cases where that isn't true, the normal algorithm for
 // nullability result must be overridden (see coalesce, for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
   ... too much code ... summary below
@@ -1003,8 +1003,8 @@ static void sem_while_stmt(ast_node *ast) {
 * `sem_numeric_expr` : verifies the loop expression is numeric
 * `sem_stmt_list` : recursively validates the body of the loop
 
-Note: the while expression is one of the loop constructs which means that `LEAVE` and `CONTINUE` are legal inside it.
-The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
+>NOTE: the while expression is one of the loop constructs which means that `LEAVE` and `CONTINUE` are legal inside it.
+>The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
 
 It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.
 You might land right back in `sem_while_stmt` for a nested `WHILE` -- it's turtles all the way down.
@@ -2067,8 +2067,8 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 * `new_sem` : makes a new `sem_node` for the cursor variable with `SEM_TYPE_STRUCT`
   * set the `sptr` field using the discovered shape
 
-Note: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
-shows the original unmodified semantic type which can be helpful.
+>NOTE: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
+>shows the original unmodified semantic type which can be helpful.
 
 Briefly `sem_find_shape_def` does these steps:
 
@@ -2456,4 +2456,4 @@ as many semantic error checking functions, it is to showcase the key concepts sh
 
 This isn't everything but it should leave you well armed to begin your own exploration of `sem.c`.
 
-Note: details on unsub/resub are forthcoming.  This code is under development.
+>NOTE: details on unsub/resub are forthcoming.  This code is under development.

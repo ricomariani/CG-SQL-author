@@ -963,7 +963,7 @@ The full list as of this writing is as follows:
 #define SEM_TYPE_CALLS_OUT_UNION _64(0x1000000000) // set if proc calls an out union proc for
 ```
 
-Note: `_64(x)` expands to either a trailing `L` or a trailing `LL` depending on the bitness of the compiler, whichever yields an `int64_t`.
+>NOTE: `_64(x)` expands to either a trailing `L` or a trailing `LL` depending on the bitness of the compiler, whichever yields an `int64_t`.
 
 Going over the meaning of all of the above is again beyond the scope of this document; some of the flags are very specialized and essentially the validation
 just requires a bit of storage in the tree to do its job so that storage is provided with a flag.  However two flag bits are especially important and
@@ -1633,7 +1633,7 @@ the result is `NULL`.
 // The second workhorse of semantic analysis, given two types that
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable, the result is nullable.
-// Note: in the few cases where that isn't true, the normal algorithm for
+// Note, in the few cases where that isn't true, the normal algorithm for
 // nullability result must be overridden (see coalesce, for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
   ... too much code ... summary below
@@ -1758,8 +1758,8 @@ static void sem_while_stmt(ast_node *ast) {
 * `sem_numeric_expr` : verifies the loop expression is numeric
 * `sem_stmt_list` : recursively validates the body of the loop
 
-Note: the while expression is one of the loop constructs which means that `LEAVE` and `CONTINUE` are legal inside it.
-The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
+>NOTE: the while expression is one of the loop constructs which means that `LEAVE` and `CONTINUE` are legal inside it.
+>The `loop_depth` global tracks the fact that we are in a loop so that analysis for `LEAVE` and `CONTINUE` can report errors if we are not.
 
 It's not hard to imagine that `sem_stmt_list` will basically walk the AST, pulling out statements and dispatching them using the `STMT_INIT` tables previously discussed.
 You might land right back in `sem_while_stmt` for a nested `WHILE` -- it's turtles all the way down.
@@ -2822,8 +2822,8 @@ static void sem_declare_cursor_like_name(ast_node *ast) {
 * `new_sem` : makes a new `sem_node` for the cursor variable with `SEM_TYPE_STRUCT`
   * set the `sptr` field using the discovered shape
 
-Note: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
-shows the original unmodified semantic type which can be helpful.
+>NOTE: `name_ast->sem` isn't actually used for anything but it is helpful for debugging. If the AST is printed it
+>shows the original unmodified semantic type which can be helpful.
 
 Briefly `sem_find_shape_def` does these steps:
 
@@ -3211,7 +3211,7 @@ as many semantic error checking functions, it is to showcase the key concepts sh
 
 This isn't everything but it should leave you well armed to begin your own exploration of `sem.c`.
 
-Note: details on unsub/resub are forthcoming.  This code is under development.
+>NOTE: details on unsub/resub are forthcoming.  This code is under development.
 
 
 ## Part 3: C Code Generation
@@ -3365,11 +3365,11 @@ There is a lot of code sharing between AST types as you can see from this sample
 Most (not all) of the binary operators are handled with one function `cg_binary` and likewise
 most unary operators are handled with `cg_unary`.
 
-Note: the precedence constants are the `C_EXPR_PRI_*` flavor because, naturally, parentheses
-will be generated based on the C rules during C codegen.  Importantly, the AST still, and always,
-authoritatively encodes the user-specified order of operations -- there's no change there.  The
-only thing that changes is where parentheses are needed to get the desired result.  Some parens
-may need to be added, and some that were present in the original text might no longer be needed.
+>NOTE: the precedence constants are the `C_EXPR_PRI_*` flavor because, naturally, parentheses
+>will be generated based on the C rules during C codegen.  Importantly, the AST still, and always,
+>authoritatively encodes the user-specified order of operations -- there's no change there.  The
+>only thing that changes is where parentheses are needed to get the desired result.  Some parens
+>may need to be added, and some that were present in the original text might no longer be needed.
 
 Here are some helpful examples:
 
@@ -3513,7 +3513,7 @@ which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is inv
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
 will go into there rather than being accumulated at the global level.
 
-Note: it's possible to have code that is not in a procedure (see [`--global_proc`](guide.md#--global_proc-name)).
+>NOTE: it's possible to have code that is not in a procedure (see [`--global_proc`](guide.md#--global_proc-name)).
 
 In general, it's very useful to have different buffers open at the same time.  New local variables
 or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to
@@ -3718,8 +3718,8 @@ Suppose we ask for a scratch "not null integer", we get results like this:
 
 Meaning: if we want the value, use the text `"_tmp_n_int_1"` if we want to know if the variable is null, we use the text `"0"`
 
-Note: many parts of `cg_c.c` special case an `is_null` value of `"0"` to make better code because such a thing is known to
-be not null at compile time.
+>NOTE: many parts of `cg_c.c` special case an `is_null` value of `"0"` to make better code because such a thing is known to
+>be not null at compile time.
 
 Now let's suppose we ask for a scratch nullable integer, we get results like this:
 
@@ -3822,8 +3822,8 @@ now will be the C binding strengths NOT the SQL binding strengths (discussed abo
 
 Let's look at one of the simplest operators: the `IS NULL` operator handled by `cg_expr_is_null`
 
-Note: this code has a simpler signature because it's actually part of codegen for `cg_expr_is` which
-has the general contract.
+>NOTE: this code has a simpler signature because it's actually part of codegen for `cg_expr_is` which
+>has the general contract.
 
 ```c
 // The code-gen for is_null is one of the easiest.  The recursive call
@@ -3858,7 +3858,7 @@ So walking through the above:
   * use `CG_PUSH_EVAL` to recursively do codegen for it
   * copy its `expr_is_null` text into our `value` text
 
-Note: the code reveals one of the big CQL secrets -- that not null reference variables can be null...  C has the same issue with `_Nonnull` globals.
+>NOTE: the code reveals one of the big CQL secrets -- that not null reference variables can be null...  C has the same issue with `_Nonnull` globals.
 
 Now let's look at those helper macros, they are pretty simple:
 
@@ -4362,8 +4362,8 @@ static void cg_throw_stmt(ast_node *ast) {
   * if the label is not used it won't be emitted
   * the code never jumps back to an error label, so we'll always know if the label was used before we need to emit it
 
-Note: every catch block captures the value of `_rc_` in a local variable whose name is in `rcthrown_current`.
-This captured value is the current failing result code accessible by `@RC` in CQL.
+>NOTE: every catch block captures the value of `_rc_` in a local variable whose name is in `rcthrown_current`.
+>This captured value is the current failing result code accessible by `@RC` in CQL.
 
 A catch block can therefore do stuff like:
 
@@ -8527,7 +8527,7 @@ static void add_name_to_output(charbuf* output, CSTR table_name) {
 * add the name
 * done :D
 
-Note: The added name of course doesn't have to be a table name, but it usually is.
+>NOTE: The added name of course doesn't have to be a table name, but it usually is.
 
 So we can see that `find_table_refs` will tell us the kind of thing it found and the name of the thing.
 

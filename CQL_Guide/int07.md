@@ -597,7 +597,7 @@ static void add_name_to_output(charbuf* output, CSTR table_name) {
 * add the name
 * done :D
 
-Note: The added name of course doesn't have to be a table name, but it usually is.
+>NOTE: The added name of course doesn't have to be a table name, but it usually is.
 
 So we can see that `find_table_refs` will tell us the kind of thing it found and the name of the thing.
 

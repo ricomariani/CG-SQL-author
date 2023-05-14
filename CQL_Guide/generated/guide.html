@@ -5774,9 +5774,9 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML. “Single-statement DML” refers to those stored procedures that consist of a single <code>insert</code>, <code>select</code>, <code>update</code>, or <code>delete</code>. Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable. Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)</p>
-<p>To use CQL in this fashion, the sequence will be something like the below. See <a href="#appendix-10-cql-working-example">Appendix 1</a> for command line details.</p>
+<p>To use CQL in this fashion, the sequence will be something like the below. See <a href="#appendix-1-command-line-options">Appendix 1</a> for command line details.</p>
 <div class="sourceCode" id="cb390"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb390-1" title="1"><span class="ex">cql</span> --in input.sql --rt json_schema --cg out.json</a></code></pre></div>
-<p>The output contains many different sections for the various types of entities that CQL can process. There is a full description of the possible outputs available in <a href="../../diagrams/json_output_railroad_diagram.html">diagram form</a></p>
+<p>The output contains many different sections for the various types of entities that CQL can process. There is a full description of the possible outputs available in <a href="https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html">diagram form</a></p>
 <p>In the balance of this chapter we’ll deal with the contents of the sections and their meaning rather than the specifics of the format, which are better described with the grammar above.</p>
 <h2 id="tables">Tables</h2>
 <p>The “tables” section has zero or more tables, each table is comprised of these fields:</p>
@@ -7173,7 +7173,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 13 21:32:49 PDT 2023</p>
+<p>Snapshot as of Sat May 13 21:54:49 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -8957,10 +8957,10 @@ blob_update_val_stmt:
 <li>This attribute also implies <code>cql:suppress_result_set</code> since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.</li>
 </ul></li>
 <li><code>cql:generate_copy</code> the code generation for the annotated procedure will produce a <code>[procedure_name]_copy</code> function that can make complete or partial copies of its result set.</li>
-<li><code>cql:shared_fragment</code> is used to create shared fragments (See <a href="#cleanup-and-errors">Chapter 14</a>)</li>
+<li><code>cql:shared_fragment</code> is used to create shared fragments (See <a href="#chapter-14-cql-shared-fragments">Chapter 14</a></li>
 <li><code>cql:no_table_scan</code> for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)</li>
 <li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)</li>
-<li><code>cql:query_plan_branch=[integer]</code> is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an <code>IF</code> statement is used. (See <a href="#chapter-15-query-plan-generation">Chapter 15</a></li>
+<li><code>cql:query_plan_branch=[integer]</code> is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an <code>IF</code> statement is used. (See <a href="#chapter-15-query-plan-generation">Chapter 15</a>)</li>
 <li><code>cql:alias_of=[c_function_name]</code> are used on <a href="#ordinary-scalar-functions">function declarations</a> to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.</li>
 </ul>
 <h2 id="appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</h2>
@@ -11137,7 +11137,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 13 21:32:49 PDT 2023</p>
+<p>Snapshot as of Sat May 13 21:54:49 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -13767,7 +13767,7 @@ fetch C USING
 <p><code>cql_tripwire</code> is a slightly softer form of assert that should crash in debug builds but only log an error in production builds. It is generally used to enforce a new condition that may not always hold with the goal of eventually transitioning over to <code>cql_contract</code> or <code>cql_invariant</code> once logging has demonstrated that the tripwire is never hit. When a <code>fetch_results</code> method is called, a failure results in a call to <code>cql_log_database_error</code>. Presently the log format is very simple. The invocation looks like this:</p>
 <div class="sourceCode" id="cb628"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb628-1" title="1"> cql_log_database_error(info-&gt;db, <span class="st">&quot;cql&quot;</span>, <span class="st">&quot;database error&quot;</span>);</a></code></pre></div>
 <p>The logging facility is expected to send the message to wherever is appropriate for your environment. Additionally it will typically get the failing result code and error message from SQLite, however these are likely to be stale. Failed queries usually still require cleanup and so the SQLite error codes be lost because (e.g.) a <code>finalize</code> has happened, clearing the code. You can do better if, for instance, your runtime caches the results of recent failed <code>prepare</code> calls. In any case, what you log and where you log it is entirely up to you.</p>
-<p>The <code>cql_error_trace</code> macro is described in <a href="internal.md#cleanup-and-errors">Internals Chapter 3</a> It will typically invoke <code>printf</code> or <code>fprintf</code> or something like that to trace the origin of thrown exceptions and to get the error text from SQLite as soon as possible.</p>
+<p>The <code>cql_error_trace</code> macro is described in <a href="internal.md#cleanup-and-errors">Internals Part 3</a> It will typically invoke <code>printf</code> or <code>fprintf</code> or something like that to trace the origin of thrown exceptions and to get the error text from SQLite as soon as possible.</p>
 <p>An example might be:</p>
 <pre><code>#define cql_error_trace() fprintf(stderr, &quot;error %d in %s %s:%d\n&quot;, _rc_, _PROC_, __FILE__, __LINE_)</code></pre>
 <p>Typically the cost of all these diagnostics is too high to include in production code so this is turned on when debugging failures. But you can make that choice for yourself.</p>

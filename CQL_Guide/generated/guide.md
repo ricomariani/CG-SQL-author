@@ -8056,7 +8056,7 @@ is often desirable and the maintenance is not too bad.  You just use the `use_my
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](#appendix-10-cql-working-example)
+To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](#appendix-1-command-line-options)
 for command line details.
 
 ```bash
@@ -8064,7 +8064,7 @@ cql --in input.sql --rt json_schema --cg out.json
 ```
 
 The output contains many different sections for the various types of entities that CQL can process.  There is a full description of
-the possible outputs available in [diagram form](../../diagrams/json_output_railroad_diagram.html)
+the possible outputs available in [diagram form](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
 
 In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
 which are better described with the grammar above.
@@ -9887,7 +9887,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 13 21:32:49 PDT 2023
+Snapshot as of Sat May 13 21:54:49 PDT 2023
 
 ### Operators and Literals
 
@@ -11718,10 +11718,10 @@ The complete list (as of this writing) is:
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
   * `cql:generate_copy` the code generation for the annotated procedure will produce a `[procedure_name]_copy` function that can make complete or partial copies of its result set.
-  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](#cleanup-and-errors))
+  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](#chapter-14-cql-shared-fragments)
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
-  * `cql:query_plan_branch=[integer]` is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](#chapter-15-query-plan-generation)
+  * `cql:query_plan_branch=[integer]` is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](#chapter-15-query-plan-generation))
   * `cql:alias_of=[c_function_name]` are used on [function declarations](#ordinary-scalar-functions) to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.
 
 
@@ -16239,7 +16239,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 13 21:32:49 PDT 2023
+Snapshot as of Sat May 13 21:54:49 PDT 2023
 
 ### Rules
 
@@ -19453,7 +19453,7 @@ codes be lost because (e.g.) a `finalize` has happened, clearing the code. You c
 for instance, your runtime caches the results of recent failed `prepare` calls. In any case,
 what you log and where you log it is entirely up to you.
 
-The `cql_error_trace` macro is described in [Internals Chapter 3](internal.md#cleanup-and-errors)
+The `cql_error_trace` macro is described in [Internals Part 3](internal.md#cleanup-and-errors)
 It will typically invoke `printf` or `fprintf` or something like that to trace the origin of thrown
 exceptions and to get the error text from SQLite as soon as possible.
 

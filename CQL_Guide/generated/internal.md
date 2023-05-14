@@ -27,8 +27,9 @@ The grammar is a large subset of the SQLite dialect of SQL augmented with contro
 directives.  As a consequence, it's a useful asset in-and-of-itself. If you're looking for an
 economical SQL grammar, you could do a lot worse than start with the one CQL uses.  The grammar is
 of course in the usual `.y` format that bison consumes but it's also extracted into more readable
-versions for use in the [railroad diagram](../../diagrams/railroad_diagram.html) and the Guide documentation.
-Any of those sources would be a good starting place for a modest SQL project in need of a grammar.
+versions for use in the [railroad diagram](https://ricomariani.github.io/CG-SQL-author/diagrams/railroad_diagram.html)
+and the Guide documentation.  Any of those sources would be a good starting place for a modest SQL
+project in need of a grammar.
 
 ### Lexical Analysis
 

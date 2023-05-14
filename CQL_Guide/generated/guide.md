@@ -32,7 +32,7 @@ fewest runtime dependencies allowed for illustration.
 
 ### Getting Started
 
-Before starting this tutorial, make sure you have built the `cql` executable first in [Building CG/SQL](/docs/getting-started#building).
+Before starting this tutorial, make sure you have built the `cql` executable first in [Building CG/SQL](../../docs/getting-started.md)
 
 The "Hello World" program rendered in CQL looks like this:
 
@@ -48,7 +48,7 @@ end;
 
 This very nearly works exactly as written but we'll need a little bit of glue to wire it all up.
 
-First, assuming you have [built](/docs/getting-started#building) `cql`, you should have the power to do this:
+First, assuming you have [built](../../docs/getting-started#building) `cql`, you should have the power to do this:
 
 ```bash
 $ cql --in hello.sql --cg hello.h hello.c
@@ -67,7 +67,7 @@ void hello(void);
 The declaration of this function can be found in `hello.h`.
 
 
-> Note: hello.h tries to include [`cqlrt.h`](https://github.com/facebookincubator/CG-SQL/blob/main/sources/cqlrt.h). To
+> NOTE: `hello.h` tries to include `cqlrt.h`. To
 > avoid configuring include paths for the compiler, you might keep `cqlrt.h` in the same directory as the examples and
 > avoid that complication. Otherwise you must make arrangements for the compiler to be able to find `cqlrt.h` either by
 > adding it to an `INCLUDE` path or by adding some `-I` options to help the compiler find the source.
@@ -144,7 +144,7 @@ begin
 end;
 ```
 
-You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms [note you haven't used the second for of comment style yet]
+You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms
 are acceptable comment forms. Indeed, it's actually quite normal to pass CQL source through the C pre-processor before giving
 it to the CQL compiler, thereby gaining `#define` and `#include` as well as other pre-processing options
 like token pasting in addition to the aforementioned comment forms.  More on this later.
@@ -455,7 +455,7 @@ be an error.  We'll talk about more flexible ways to read from the database late
 
 At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
 CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
-working with local variables. [What about the other side?] Those expressions are compiled into C logic that emulates the behavior of SQLite
+working with local variables. Those expressions are compiled into C logic that emulates the behavior of SQLite
 on the data.  It provides complex expression constructs such as `IN` and `CASE` but it is ultimately evaluated by C
 execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by SQLite itself.
 To make this clearer let's change the example a little bit before we move on.
@@ -692,7 +692,7 @@ Which probably doesn't come up very often but it does illustrate several things:
 
 Note:
  * A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
- * Additional demo code is available in [Appendix 10](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example)
+ * Additional demo code is available in [Appendix 10](#appendix-10-cql-working-example)
 
 
 ## Chapter 3: Expressions, Literals, Nullability, Sensitivity
@@ -4111,7 +4111,7 @@ The essential parts are:
 
 First, a constant array that holds the data types for each column.
 
-```
+```C
 uint8_t read_foo_data_types[read_foo_data_types_count] = {
   CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // id
   CQL_DATA_TYPE_BOOL, // b
@@ -4128,7 +4128,8 @@ on the row.
 ```
 
 Lastly we need metadata to tell us count of columns and the offset of each column within the row.
-```
+
+```C
 static cql_uint16 read_foo_col_offsets[] = { 3,
   cql_offsetof(read_foo_row, id),
   cql_offsetof(read_foo_row, b),
@@ -4301,7 +4302,7 @@ cc -o hello -I ${cgsql}/sources main.c hello.c ${cgsql}/sources/cqlrt.c -lsqlite
 ./hello
 ```
 
-Additional demo code is available in [Appendix 10](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example)
+Additional demo code is available in [Appendix 10](#appendix-10-cql-working-example)
 
 ### Nested Result Sets (Parent/Child)
 
@@ -8055,7 +8056,7 @@ is often desirable and the maintenance is not too bad.  You just use the `use_my
 -->
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-10-cql-working-example)
+To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](#appendix-10-cql-working-example)
 for command line details.
 
 ```bash
@@ -8063,7 +8064,7 @@ cql --in input.sql --rt json_schema --cg out.json
 ```
 
 The output contains many different sections for the various types of entities that CQL can process.  There is a full description of
-the possible outputs available in [diagram form](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
+the possible outputs available in [diagram form](../../diagrams/json_output_railroad_diagram.html)
 
 In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
 which are better described with the grammar above.
@@ -9404,7 +9405,8 @@ Ultimately, from SQLite's perspective, all of these shared fragment forms result
 See Appendix 8 for an extensive section on best practices around fragments and common table expressions in general.
 
 :::tip
-If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `@attribute(cql:query_plan_branch=[integer])` to modify the behaviour. Read [Query Plan Generation](/cql-guide/ch15) for details.
+If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `@attribute(cql:query_plan_branch=[integer])` to modify the behaviour. Read
+[Query Plan Generation](#chapter-15-query-plan-generation) for details.
 :::
 
 ### Shared Fragments as Expressions
@@ -9573,7 +9575,7 @@ Generating query plans is inherently complicated. Any given stored procedure mig
 
 ## Query Plan Generation Compilation Steps
 :::tip
-The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](/docs/playground#query-plan-playground). The rest of the section explains how query plan generation works and some of its quirks.
+The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](../../docs/playground#query-plan-playground). The rest of the section explains how query plan generation works and some of its quirks.
 :::
 
 To execute query plans for a given CQL file, the following commands need to be run:
@@ -9600,9 +9602,9 @@ cc -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o go-qp-udf.o query_plan_test.o
 
 Contrary to what one might expect, rather than providing query plans directly, CQL uses `--rt query_plan` to generate a second CQL script that returns query plans for each SQL statement used.
 
-A separate command, `--rt udf` is required to generate any stubbed [user defined functions](/cql-guide/ch08) that are used in the original script. Afterwards, the generated query plan script, udf stubs needs to compiled like any CQL file and run by a "main" function that needs to be created separately.
+A separate command, `--rt udf` is required to generate any stubbed [user defined functions](#chapter-8-functions) that are used in the original script. Afterwards, the generated query plan script, udf stubs needs to compiled like any CQL file and run by a "main" function that needs to be created separately.
 
-The CQL repository provides the file [`query_plan_test.c`](https://github.com/facebookincubator/CG-SQL/blob/main/sources/query_plan_test.c) that can be used as the "main" function, otherwise you can make your own.
+The CQL repository provides the file [`query_plan_test.c`](../../sources/query_plan_test.c) that can be used as the "main" function, otherwise you can make your own.
 
 ::note
 When compiling the CQL file generated by `--rt query_plan`, the `--dev` flag is required.
@@ -9640,15 +9642,15 @@ WHERE my_table.id = nullable(1);
 ```
 
 #### User Defined Functions
-_Read [Functions](/cql-guide/ch08) on details about Function Types._
+_Read [Functions](#chapter-8-functions) on details about Function Types._
 
 Since the implementation of UDFs in a CQL file do not affect SQLite query plans, CQL's query plan script expects stubs generated by `cql --rt udf` to be used instead.
 
 #### Conditionals in Shared Fragments
-_Read [CQL Query Fragments](/cql-guide/ch14) on details about shared fragments_
+_Read [CQL Query Fragments](#chapter-14-cql-shared-fragments) on details about shared fragments_
 
 Only one branch of a conditional is chosen for query plan analysis. By default this will be the first branch, which is the initial `SELECT` statement following the `IF` conditional.
-The branch to analyze can be configured with the `cql:query_plan_branch` [@attribute](/cql-guide/x3).
+The branch to analyze can be configured with the `cql:query_plan_branch` [@attribute](#appendix-3-control-directives)
 
 Here's an example of `cql:query_plan_branch` being used:
 
@@ -9783,7 +9785,7 @@ NOTE: different result types require a different number of output files with dif
 
 ### --dev
 * some codegen features only make sense during development, this enables dev mode to turn those one
-** example: [explain query plan](/cql-guide/ch15)
+** example: [explain query plan](#chapter-15-query-plan-generation)
 
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
@@ -9834,7 +9836,7 @@ These are the various outputs the compiler can produce.
 
 #### --rt schema_upgrade
 * produces a CQL schema upgrade script which can then be compiled with CQL itself
-* see the chapter on schema upgrade/migration: [Chapter 10](https://cgsql.dev/cql-guide/ch10/)
+* see the chapter on schema upgrade/migration: [Chapter 10](#chapter-10-schema-management-features)
 * requires one output file (foo.sql)
 
 ##### --include_regions a b c
@@ -9860,7 +9862,7 @@ These are the various outputs the compiler can produce.
 #### --rt query_plan
 * produces CQL output which can be re-compiled by CQL as normal input
 * the output consists of a set of procedures that will emit all query plans for the DML that was in the input
-* see also `--rt udf` and [Chapter 15](/cql-guide/ch15)
+* see also `--rt udf` and [Chapter 15](#chapter-15-query-plan-generation)
 
 #### --rt stats
 * produces  a simple .csv file with node count information for AST nodes per procedure in the input
@@ -9870,7 +9872,7 @@ These are the various outputs the compiler can produce.
 * produces stub UDF implementations for all UDFS that were seen in the input
 * this output is suitable for use with `--rt query_plan` so that SQL with UDFs will run in a simple context
 * requires two output files (e.g. udfs.h and udfs.c)
-* See also [Chapter 15](/cql-guide/ch15)
+* See also [Chapter 15](#chapter-15-query-plan-generation)
 
 
 
@@ -9885,7 +9887,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu 11 May 2023 19:59:07 PDT
+Snapshot as of Sat May 13 21:32:49 PDT 2023
 
 ### Operators and Literals
 
@@ -11661,7 +11663,7 @@ The complete list (as of this writing) is:
 `@BEGIN_SCHEMA_REGION`
 `@END_SCHEMA_REGION`
 
- * These directives control the declaration of schema regions and allow you to place things into those regions -- see [Chapter 10](https://cgsql.dev/cql-guide/ch10)
+ * These directives control the declaration of schema regions and allow you to place things into those regions -- see [Chapter 10](#chapter-10-schema-management-features)
 
 `@SCHEMA_AD_HOC_MIGRATION`
  * Allows for the creation of a ad hoc migration step at a given schema version, (See Chapter 10)
@@ -11716,11 +11718,11 @@ The complete list (as of this writing) is:
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
   * `cql:generate_copy` the code generation for the annotated procedure will produce a `[procedure_name]_copy` function that can make complete or partial copies of its result set.
-  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](https://cgsql.dev/cql-guide/ch14#shared-fragments))
+  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](#cleanup-and-errors))
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
-  * `cql:query_plan_branch=[integer]` is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](/cql-guide/ch15))
-  * `cql:alias_of=[c_function_name]` are used on [function declarations](https://cgsql.dev/cql-guide/ch08/#ordinary-scalar-functions) to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.
+  * `cql:query_plan_branch=[integer]` is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](#chapter-15-query-plan-generation)
+  * `cql:alias_of=[c_function_name]` are used on [function declarations](#ordinary-scalar-functions) to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.
 
 
 
@@ -16212,7 +16214,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 ### CQL0499: alias_of attribute may only be added to a declare function statement
 
-`cql:alias_of` attributes may only be used in [`DECLARE FUNC` statements](https://cgsql.dev/cql-guide/ch08/#ordinary-scalar-functions) or [`DECLARE PROC` statements](https://cgsql.dev/cql-guide/ch06/#declaring-procedures-defined-elsewhere).
+`cql:alias_of` attributes may only be used in [`DECLARE FUNC` statements](#ordinary-scalar-functions) or [`DECLARE PROC` statements](#declaring-procedures-defined-elsewhere).
 
 ### CQL0500: alias_of attribute must be a non-empty string argument
 
@@ -16237,7 +16239,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu 11 May 2023 19:59:07 PDT
+Snapshot as of Sat May 13 21:32:49 PDT 2023
 
 ### Rules
 
@@ -19366,7 +19368,7 @@ in many environments only one thread is doing all the data access.  But if you p
 between threads this is something you'll want to address.  `CQLRT` is designed to be replacable.  In fact
 there is another version included in the distribution `cqlrt_cf` that is more friendly to iOS and CoreFoundation.
 This alternate version is an excellent demonstration of what is possible.  There are more details
-in [Internals Part 5: CQL Runtime](https://cgsql.dev/cql-guide/int05).
+in [Internals Part 5: CQL Runtime](internal.md#part-5-cql-runtime)
 
 #### Statement Caching
 
@@ -19451,7 +19453,7 @@ codes be lost because (e.g.) a `finalize` has happened, clearing the code. You c
 for instance, your runtime caches the results of recent failed `prepare` calls. In any case,
 what you log and where you log it is entirely up to you.
 
-The `cql_error_trace` macro is described in [Internals Chapter 3](https://cgsql.dev/cql-guide/int03#cleanup-and-errors).
+The `cql_error_trace` macro is described in [Internals Chapter 3](internal.md#cleanup-and-errors)
 It will typically invoke `printf` or `fprintf` or something like that to trace the origin of thrown
 exceptions and to get the error text from SQLite as soon as possible.
 

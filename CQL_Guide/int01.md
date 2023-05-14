@@ -12,7 +12,7 @@ sidebar_label: "Part 1: Lexing, Parsing, and the AST"
 ### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
-an adjunct to the [Guide proper](/cql-guide/ch01), which describes the language, and to a lesser extent
+an adjunct to the [Guide proper](guide.md), which describes the language, and to a lesser extent
 the code that the compiler generates.
 
 The actual code is heavily commented, so it's better to read the code to see the details
@@ -30,8 +30,8 @@ The grammar is a large subset of the SQLite dialect of SQL augmented with contro
 directives.  As a consequence, it's a useful asset in-and-of-itself. If you're looking for an
 economical SQL grammar, you could do a lot worse than start with the one CQL uses.  The grammar is
 of course in the usual `.y` format that bison consumes but it's also extracted into more readable
-versions for use in the [railroad diagram](/program-diagram) and the Guide documentation.  Any of those sources would be
-a good starting place for a modest SQL project in need of a grammar.
+versions for use in the [railroad diagram](../../diagrams/railroad_diagram.html) and the Guide documentation.
+Any of those sources would be a good starting place for a modest SQL project in need of a grammar.
 
 ### Lexical Analysis
 

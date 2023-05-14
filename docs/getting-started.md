@@ -11,7 +11,7 @@ make
 ```
 
 This compiles CQL and puts the result at `out/cql`. Now you can run it to show available command options (also
-[documented here](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-1-command-line-options):
+[documented here](../CQL_Guide/generated/guide.md#appendix-1-command-line-options):
 
 ```bash
 $ out/cql
@@ -21,10 +21,10 @@ You might want to alias the location of `out/cql`. For example, by using the `al
 
 ## Next Steps
 
-- Go to the [first chapter of the CQL Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started) to write your first CQL program!
-The [second chapter](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
-- [CGL Language Cheatsheet](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#appendix-6-cql-in-20-minutes)
-- [CQL Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
+- Go to the [first chapter of the CQL Guide](../CQL_Guide/generated/guide.md#getting-started) to write your first CQL program!
+The [second chapter](../CQL_Guide/generated/guide.md#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
+- [CGL Language Cheatsheet](../CQL_Guide/generated/guide.md#appendix-6-cql-in-20-minutes)
+- [CQL Playground](playground.md)
 
 ## Requirements
 

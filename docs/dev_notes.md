@@ -1,6 +1,6 @@
 # Developer Notes on CQL Development
 
-0. We have extensive documentation at [CQL Internals](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md)
+0. We have extensive documentation at [CQL Internals](../CQL_Guide/generated/internal.md)
 1. If you aren't good with `yacc`/`lex` you probably should do some homework before you start. CQL development is all about building and walking a syntax tree.  It's possible to make local changes without knowing the details but it can be hard to figure out where to make changes without context.
 2. CQL development is basically test driven, to create a new feature:
    1. Add the language feature to `test.sql`

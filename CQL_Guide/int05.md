@@ -426,7 +426,7 @@ making such changes would make the C output a little bit more `CF` idiomatic. Th
 exercise could probably be completed in just a few minutes by interested readers.
 
 The `make.sh` file in the `sources/cqlrt_cf` directory illustrates how to get CQL to use
-this new runtime.  The demo itself is a simple port of the code in [Appendix 10](https://cgsql.dev/cql-guide/x10).
+this new runtime.  The demo itself is a simple port of the code in [Appendix 10](guide.md#appendix-10-cql-working-example).
 
 ### Recap
 

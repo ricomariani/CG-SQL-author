@@ -320,7 +320,7 @@ for non-trivial examples those pictures are so large as to be unreadable whereas
 remains readable even up to several hundred lines of output. The text is also readily searchable, and diffable.
 The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.
 
-We'll discuss semantic analysis in [Part 2](https://cgsql.dev/cql-guide/int02).
+We'll discuss semantic analysis in [Part 2](#part-2-semantic-analysis)
 
 ### AST definitions
 
@@ -807,7 +807,7 @@ talk about how errors are created, recorded, and reported.
 
 ### Decorated AST examples
 
-Recalling the AST output from [Part 1](https://cgsql.dev/cql-guide/int01), this is what that same tree
+Recalling the AST output from [Part 1](#part-1-lexing-parsing-and-the-ast), this is what that same tree
 looks like with semantic information attached:
 
 ```
@@ -922,7 +922,7 @@ These break into a few categories:
 * `PENDING` is used sometimes while a type computation is in progress
   * this type doesn't appear in the AST, but has its own unique value so as to not conflict with any others
 * `REGION` is used to identify AST fragments that correspond to schema regions
-   * see [Chapter 10](https://cgsql.dev/cql-guide/ch10) of the Guide for more information on regions
+   * see [Chapter 10](guide.md#chapter-10-schema-management-features) of the Guide for more information on regions
 * `CORE` is the mask for the core parts, `0xf` would do the job but for easy reading in the debugger we use `0xff`
   * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong
 
@@ -2683,7 +2683,7 @@ typedef struct sem_struct {
 
 The structure is nothing more than an array of names, types and kinds with a count.  But it creates the notion of
 what's usually called a "shape" in the codebase. Shapes can be used in a variety of ways as is described in
-[Chapter 5](https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms) of the CQL Guide. But before we get
+[Chapter 5](guide.md#reshaping-data-cursor-like-forms) of the CQL Guide. But before we get
 into shapes, let's look at an example of how a structure type is created.
 
 The code that follows is the back end of `sem_create_table_stmt`.  At this point the bulk of the analysis is
@@ -2765,7 +2765,7 @@ of the arguments of a procedure and use them like a shape. All of these things a
 
 There are many cases where you want to be able to capture or re-use something with a known shape and you don't
 want to have to fully re-declare the thing.  CQL uses the `LIKE` construct to do these sorts of things.  This is
-more fully explained in [Chapter 5](https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms) of the Guide,
+more fully explained in [Chapter 5](guide.md#reshaping-data-cursor-like-forms) of the Guide,
 but for now let's look at two different cases that are of interest.
 
 First, a cursor:
@@ -2952,7 +2952,7 @@ By way of example, you'll see these two patterns in the code:
 ### Schema Regions
 
 We touched briefly on schema regions earlier in this section.  The purpose and language for regions
-is described more fully in [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) of the Guide.
+is described more fully in [Chapter 10](guide.md#schema-regions) of the Guide.
 In this section we'll deal with how they are implemented and what you should expect to see in the code.
 
 When a region declaration is found this method is used:
@@ -3262,7 +3262,7 @@ a discussion of each of the essential kinds of code generation that we have to d
 Once semantic analysis is done, all of the code generators have the same contract: they
 have a main function like `cg_c_main` for the C code generator.  It gets the root of
 the AST and it can use the public interface of the semantic analyzer to get additional
-information.  See [Part 2](https://cgsql.dev/cql-guide/int02) for those details.
+information.  See [Part 2](#part-2-semantic-analysis) for those details.
 
 ```c
 // Main entry point for code-gen.  This will set up the buffers for the global
@@ -3513,7 +3513,7 @@ which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is inv
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
 will go into there rather than being accumulated at the global level.
 
-Note: it's possible to have code that is not in a procedure (see [`--global_proc`](https://cgsql.dev/cql-guide/x1#--global_proc-name)).
+Note: it's possible to have code that is not in a procedure (see [`--global_proc`](guide.md#--global_proc-name)).
 
 In general, it's very useful to have different buffers open at the same time.  New local variables
 or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to
@@ -3816,7 +3816,7 @@ This particular generator is going to produce `"NULL"` for the `value` and `"1"`
 with recursive logic.  But the expression logic can also write into the statement stream, the cleanup stream,
 even into the header file stream, and as we'll see, it does.
 
-`pri` and `pri_new` work exactly like they did in the echoing code (see [Part 1](https://cgsql.dev/cql-guide/int01)),
+`pri` and `pri_new` work exactly like they did in the echoing code (see [Part 1](#part-1-lexing-parsing-and-the-ast))
 they are used to allow the code generator to decide if it needs to emit parentheses.  But recall that the binding strengths
 now will be the C binding strengths NOT the SQL binding strengths (discussed above).
 
@@ -4422,7 +4422,7 @@ Let's review that in some detail:
 
 * the second string "b" is a C formatted string literal
   * SQLite doesn't support this format or its escapes, therefore
-  * as discussed in [Part 1](https://cgsql.dev/cql-guide/int01), it is decoded to plain text, then re-encoded as a SQL escaped string
+  * as discussed in [Part 1](#part-1-lexing-parsing-and-the-ast), it is decoded to plain text, then re-encoded as a SQL escaped string
   * internal newlines do not require escaping in SQL, they are in the string as the newline character not '\n' or anything like that
     * to be completely precise the byte value 0x0a is in the string unescaped
   * internal single quotes don't require escaping in C, these have to be doubled in a SQL string
@@ -4610,7 +4610,7 @@ The core of this function looks like this:
 ```
 
 It's set up the callbacks for variables and it calls the echoing function on the buffer.  We've
-talked about `gen_statement_with_callbacks` in  [Part 1](https://cgsql.dev/cql-guide/int01).
+talked about `gen_statement_with_callbacks` in  [Part 1](#part-1-lexing-parsing-and-the-ast).
 
 Let's take a look at that callback function:
 
@@ -5434,7 +5434,7 @@ That last flag indicates that there is no statement for this cursor, it's just v
 `SEM_TYPE_HAS_SHAPE_STORAGE` -- if they had no statement and no storage they would be -- nothing.
 
 Value cursors are enormously helpful and there is sugar for loading them from all kinds of sources with a shape.
-These forms are described more properly in [Chapter 5](https://cgsql.dev/cql-guide/ch05) of the Guide but they
+These forms are described more properly in [Chapter 5](guide.md#chapter-5-types-of-cursors-shapes-out-and-out-union-and-fetch) of the Guide but they
 all end up going through the general form, making the codegen considerably simpler. There are many examples where the semantic
 analyzer rewrites a sugar form to a canonical form to keep the codegen from forking into dozens of special cases
 and most of them have to do with shapes and cursors.
@@ -6406,7 +6406,7 @@ end;
 ```
 
 This test is verifying one of the optimizations that we talked about in
-[Part 3](https://cgsql.dev/cql-guide/int03#result-variables).
+[Part 3](#result-variables).
 In many cases temporary variables for results (such as function calls) can be elided.
 
 * `- cql_int32 _tmp_int_0 = 0;` : verifies that this temporary is NOT created
@@ -6615,7 +6615,7 @@ of the upgraders.  Before we get into that there is a preliminary topic:
 In order to ensure that it is possible to create an upgrader, CQL provides features to validate
 the current schema against the previous schema ensuring that nothing has been done that would
 make an upgrader impossible. This is more fully discussed in
-[Chapter 11](https://cgsql.dev/cql-guide/ch11) of the Guide.
+[Chapter 11](guide.md#chapter-11-previous-schema-validation) of the Guide.
 
 "Previous Schema" validation is a form of semantic check and so its testing happens as
 described above. Importantly, as with the other back-end passes the schema upgrader does
@@ -6805,9 +6805,9 @@ for the varios versions includes all the supported transitions such as
 creating and deleting tables and columns, and recreating views, indicies, and triggers.
 
 All of the possible transitions are more fully discussed in
-[Chapter 10](https://cgsql.dev/cql-guide/ch10) of the Guide which pairs nicely
+[Chapter 10](guide.md#chapter-10-schema-management-features) of the Guide which pairs nicely
 with the previous schema validions discussed in
-[Chapter 11](https://cgsql.dev/cql-guide/ch11).
+[Chapter 11](guide.md#chapter-11-previous-schema-validation).
 
 ### Testing the `#line` directives produced by CQL
 
@@ -7252,7 +7252,7 @@ making such changes would make the C output a little bit more `CF` idiomatic. Th
 exercise could probably be completed in just a few minutes by interested readers.
 
 The `make.sh` file in the `sources/cqlrt_cf` directory illustrates how to get CQL to use
-this new runtime.  The demo itself is a simple port of the code in [Appendix 10](https://cgsql.dev/cql-guide/x10).
+this new runtime.  The demo itself is a simple port of the code in [Appendix 10](guide.md#appendix-10-cql-working-example).
 
 ### Recap
 
@@ -7298,8 +7298,8 @@ of the schema to the current version.  Because of the limitations of SQL in gene
 SQLite in particular, not all transforms are possible; so additionally the system must correctly
 detect and prevent upgrades that cannot be safely performed.
 
-The full set of schema attributes and their meaning is described in [Chapter 10](https://cgsql.dev/cql-guide/ch10)
-and the full set of validations is described in [Chapter 11](https://cgsql.dev/cql-guide/ch11).  Briefly the
+The full set of schema attributes and their meaning is described in [Chapter 10](guide.md#chapter-10-schema-management-features)
+and the full set of validations is described in [Chapter 11](guide.md#chapter-11-previous-schema-validation).  Briefly the
 directives are:
 
 * `@create(n)`: indicates a table/column is to be created at version `n`.
@@ -7915,7 +7915,7 @@ There is nothing left but to `CHARBUF_CLOSE` the interim buffers we created.
 At present `cg_schema.c` accomplishes a lot and is fairly light at only 1313 lines (at present).
 It is able to do so because it can leverage heavy lifting done in the semantic analysis phase
 and schema generation that can be done like all other SQL generation by the echoing code
-discussed in [Part 1](https://cgsql.dev/cql-guide/int01).
+discussed in [Part 1](#part-1-lexing-parsing-and-the-ast).
 
 Topics covered included:
 
@@ -7949,8 +7949,9 @@ this, we'll illustrate the key strategies used to extract the data and format th
 
 ## JSON Schema
 
-The JSON schema is described in [Chapter 13](https://cgsql.dev/cql-guide/ch13) of the Guide and there
-is a nice diagram of its [grammar](https://cgsql.dev/json-diagram) for reference.  So, we won't be
+The JSON schema is described in [Chapter 13](guide.md#chapter-13-json-output) of the Guide and there
+is a nice diagram of its [grammar](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
+for reference.  So, we won't be
 discussing all the details of the output.  Instead we're going to go over the theory of how the
 JSON generator works. It is structured very much like the other code generators but it happens
 to produce a JSON file.  It's call the "JSON Schema" because most of the content is a description
@@ -8208,7 +8209,7 @@ static void cg_json_test_details(charbuf *output, ast_node *ast, ast_node *misc_
 All of the JSON fragments have the usual test pattern "The statement ending at line nnn".
 This means that the normal validator will be able to find comments in the test file
 and associate them with json parts.  The testing strategies are discussed in
-[Part 4]((https://cgsql.dev/cql-guide/int04).
+[Part 4](#part-4-testing).
 
 In addition, while in test mode, we also emit the original statement that caused
 this JSON fragment to be created. This allows the test patterns to cross check
@@ -8283,7 +8284,7 @@ The next fragment emits two optional pieces that are present in many types of ob
   * `cg_json_emit_region_info` emits two things:
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
-    * see [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) for more info on regions and deployment regions
+    * see [Chapter 10](guide.md#schema-regions) for more info on regions and deployment regions
 
 * if there are any miscellaneous attributes they are emitted
   * we'll use `cg_json_misc_attrs` as our general formatting example when we get to that
@@ -8660,7 +8661,7 @@ so that when reading the source you will have an idea how it all hangs together.
 
 ## Test Helpers
 
-The testability features are described in [Chapter 12](https://cgsql.dev/cql-guide/ch12) of the Guide
+The testability features are described in [Chapter 12](guide.md#chapter-12-testability-features) of the Guide
 So, we won't be discussing all the details of what can be created.  Instead we're going to go over
 the theory of how the generator works. This generator is somewhat different than others in that
 it only concerns itself with procedures and only those that have been suitably annotated --
@@ -8837,7 +8838,7 @@ by far and we'll save it for last, let's dispense with the easy stuff.
 All of these are a very simple template.  The language includes just the right features
 to emit these procedures as nearly constant strings. The `LIKE` construct was literally
 designed to make these patterns super simple.  You can see all the patterns
-in [Chapter 12](https://cgsql.dev/cql-guide/ch12) but let's look at the code for
+in [Chapter 12](guide.md#chapter-12-testability-features) but let's look at the code for
 the first one.  This is "dummy table".
 
 ```c
@@ -8884,7 +8885,7 @@ that we'll need it by setting a flag in `helper_flags`.
 The code for `close_foo` is even simpler if that's possible.  The great thing is
 all need to know the columns of `foo` has been removed from the test helper.  The
 CQL compiler handles this as a matter of course and it is generally useful.
-See [Chapter 5](https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms)
+See [Chapter 5](guide.md#reshaping-data-cursor-like-forms)
 for more examples.
 
 All the others are equally simple and use similar tricks.  These were the first
@@ -8926,7 +8927,7 @@ Dummy test will produce the following:
   * FK relationships are obeyed
   * user data may be specified in an attribute and that data will be used in preference to auto-generated data
 
-These are more fully discussed in [Chapter 12](https://cgsql.dev/cql-guide/ch12#generalized-dummy-test-pattern).
+These are more fully discussed in [Chapter 12](guide.md#generalized-dummy-test-pattern).
 
 #### Building the Trigger and Index mappings
 
@@ -9018,7 +9019,7 @@ walk and the general steps for prosecution go something like this:
  * any given table/view and hence trigger is only visited once
 
 The net of all this, the "found items", is a list of all the tables and views that the procedure uses, directly
-or indirectly.  As discussed in [Chapter 12](https://cgsql.dev/cql-guide/ch12#generalized-dummy-test-pattern)
+or indirectly.  As discussed in [Chapter 12](guide.md#generalized-dummy-test-pattern)
 this walk does not include tables and views used by procedures that `your_proc` calls.
 
 To get the dependencies in the correct order, the tables have been walked following the foreign key chain and all

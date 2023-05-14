@@ -19,8 +19,9 @@ this, we'll illustrate the key strategies used to extract the data and format th
 
 ## JSON Schema
 
-The JSON schema is described in [Chapter 13](https://cgsql.dev/cql-guide/ch13) of the Guide and there
-is a nice diagram of its [grammar](https://cgsql.dev/json-diagram) for reference.  So, we won't be
+The JSON schema is described in [Chapter 13](guide.md#chapter-13-json-output) of the Guide and there
+is a nice diagram of its [grammar](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
+for reference.  So, we won't be
 discussing all the details of the output.  Instead we're going to go over the theory of how the
 JSON generator works. It is structured very much like the other code generators but it happens
 to produce a JSON file.  It's call the "JSON Schema" because most of the content is a description
@@ -278,7 +279,7 @@ static void cg_json_test_details(charbuf *output, ast_node *ast, ast_node *misc_
 All of the JSON fragments have the usual test pattern "The statement ending at line nnn".
 This means that the normal validator will be able to find comments in the test file
 and associate them with json parts.  The testing strategies are discussed in
-[Part 4]((https://cgsql.dev/cql-guide/int04).
+[Part 4](#part-4-testing).
 
 In addition, while in test mode, we also emit the original statement that caused
 this JSON fragment to be created. This allows the test patterns to cross check
@@ -353,7 +354,7 @@ The next fragment emits two optional pieces that are present in many types of ob
   * `cg_json_emit_region_info` emits two things:
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
-    * see [Chapter 10](https://cgsql.dev/cql-guide/ch10#schema-regions) for more info on regions and deployment regions
+    * see [Chapter 10](guide.md#schema-regions) for more info on regions and deployment regions
 
 * if there are any miscellaneous attributes they are emitted
   * we'll use `cg_json_misc_attrs` as our general formatting example when we get to that

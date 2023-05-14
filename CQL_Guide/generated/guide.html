@@ -7173,7 +7173,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 13 21:54:49 PDT 2023</p>
+<p>Snapshot as of Sat May 13 22:21:29 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -8957,7 +8957,7 @@ blob_update_val_stmt:
 <li>This attribute also implies <code>cql:suppress_result_set</code> since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.</li>
 </ul></li>
 <li><code>cql:generate_copy</code> the code generation for the annotated procedure will produce a <code>[procedure_name]_copy</code> function that can make complete or partial copies of its result set.</li>
-<li><code>cql:shared_fragment</code> is used to create shared fragments (See <a href="#chapter-14-cql-shared-fragments">Chapter 14</a></li>
+<li><code>cql:shared_fragment</code> is used to create shared fragments (See <a href="#chapter-14-cql-shared-fragments">Chapter 14</a>)</li>
 <li><code>cql:no_table_scan</code> for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)</li>
 <li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)</li>
 <li><code>cql:query_plan_branch=[integer]</code> is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an <code>IF</code> statement is used. (See <a href="#chapter-15-query-plan-generation">Chapter 15</a>)</li>
@@ -11137,7 +11137,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 13 21:54:49 PDT 2023</p>
+<p>Snapshot as of Sat May 13 22:21:29 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

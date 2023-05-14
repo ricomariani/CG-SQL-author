@@ -422,7 +422,7 @@ LIMIT 3;
 <p>As you can see the trees rapidly get more complex. The <code>SELECT</code> statement has many optional pieces and so the AST actually has places in its skeleton where these could go but are absent (e.g. <code>GROUP BY</code>, <code>HAVING</code>, <code>ORDER BY</code>, and <code>OFFSET</code> are all missing).</p>
 <p>The shape of the AST is largely self-evident from the above, but you can easily cross check it against what’s in <code>cql.y</code> for details and then look at <code>gen_sql.c</code> for decoding tips (discussed below).</p>
 <p>The compiler can produce these diagrams in ‘dot’ format which makes pretty pictures, but the reality is that for non-trivial examples those pictures are so large as to be unreadable whereas the simple text format remains readable even up to several hundred lines of output. The text is also readily searchable, and diffable. The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.</p>
-<p>We’ll discuss semantic analysis in <a href="https://cgsql.dev/cql-guide/int02">Part 2</a>.</p>
+<p>We’ll discuss semantic analysis in <a href="#part-2-semantic-analysis">Part 2</a></p>
 <h3 id="ast-definitions">AST definitions</h3>
 <p><code>ast.h</code> defines all the tree types mentioned above. There are helper methods to create AST nodes with type safety. It includes helper functions for the various leaf types mentioned above but also for the various “normal” types. These are specified using the AST macros <code>AST</code>, <code>AST1</code>, and <code>AST0</code>.</p>
 <p>Examples:</p>
@@ -758,7 +758,7 @@ AST(or)</code></pre>
 </ul>
 <p>There are several hundred possible errors, and no attempt will be made to cover them all here but we will talk about how errors are created, recorded, and reported.</p>
 <h3 id="decorated-ast-examples">Decorated AST examples</h3>
-<p>Recalling the AST output from <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>, this is what that same tree looks like with semantic information attached:</p>
+<p>Recalling the AST output from <a href="#part-1-lexing-parsing-and-the-ast">Part 1</a>, this is what that same tree looks like with semantic information attached:</p>
 <pre><code>LET X := 1 + 3;
 
   {let_stmt}: X: integer notnull variable
@@ -821,7 +821,7 @@ AST(or)</code></pre>
 <a class="sourceLine" id="cb35-16" title="16"><span class="pp">#define SEM_TYPE_CORE 0xff      </span><span class="co">// bit mask for the core types</span></a>
 <a class="sourceLine" id="cb35-17" title="17"></a>
 <a class="sourceLine" id="cb35-18" title="18"><span class="pp">#define SEM_TYPE_MAX_UNITARY (SEM_TYPE_OBJECT+1) </span><span class="co">// the last unitary type</span></a></code></pre></div>
-<p>These break into a few categories: * <code>NULL</code> to <code>OBJECT</code> are the “unitary” types – these are the types that a single simple variable can be * a column can be any of these except <code>OBJECT</code> or <code>NULL</code> * the <code>NULL</code> type comes only from the <code>NULL</code> literal which has no type * instances of, say, a <code>TEXT</code> column might have a <code>NULL</code> value but they are known to be <code>TEXT</code> * <code>STRUCT</code> indicates that the object has many fields, like a table, or a cursor * <code>JOIN</code> indicates that the object is the concatenation of many <code>STRUCT</code> types * e.g. <code>T1 inner join T2</code> is a <code>JOIN</code> type with <code>T1</code> and <code>T2</code> being the parts * a <code>JOIN</code> could be flattened to <code>STRUCT</code>, but this is typically not done * the type of a <code>SELECT</code> statement will be a <code>STRUCT</code> representing the expressions that were selected * those expressions in turn used columns from the <code>JOIN</code> that was the <code>FROM</code> clause * <code>ERROR</code> indicates that the subtree had an error * the error will have been already reported * the error type generally cascades up the AST to the root * <code>OK</code> indicates that there is no type information but there was no problem * e.g. a correct <code>IF</code> statement will resolve to simply <code>OK</code> (no error) * <code>PENDING</code> is used sometimes while a type computation is in progress * this type doesn’t appear in the AST, but has its own unique value so as to not conflict with any others * <code>REGION</code> is used to identify AST fragments that correspond to schema regions * see <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide for more information on regions * <code>CORE</code> is the mask for the core parts, <code>0xf</code> would do the job but for easy reading in the debugger we use <code>0xff</code> * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong</p>
+<p>These break into a few categories: * <code>NULL</code> to <code>OBJECT</code> are the “unitary” types – these are the types that a single simple variable can be * a column can be any of these except <code>OBJECT</code> or <code>NULL</code> * the <code>NULL</code> type comes only from the <code>NULL</code> literal which has no type * instances of, say, a <code>TEXT</code> column might have a <code>NULL</code> value but they are known to be <code>TEXT</code> * <code>STRUCT</code> indicates that the object has many fields, like a table, or a cursor * <code>JOIN</code> indicates that the object is the concatenation of many <code>STRUCT</code> types * e.g. <code>T1 inner join T2</code> is a <code>JOIN</code> type with <code>T1</code> and <code>T2</code> being the parts * a <code>JOIN</code> could be flattened to <code>STRUCT</code>, but this is typically not done * the type of a <code>SELECT</code> statement will be a <code>STRUCT</code> representing the expressions that were selected * those expressions in turn used columns from the <code>JOIN</code> that was the <code>FROM</code> clause * <code>ERROR</code> indicates that the subtree had an error * the error will have been already reported * the error type generally cascades up the AST to the root * <code>OK</code> indicates that there is no type information but there was no problem * e.g. a correct <code>IF</code> statement will resolve to simply <code>OK</code> (no error) * <code>PENDING</code> is used sometimes while a type computation is in progress * this type doesn’t appear in the AST, but has its own unique value so as to not conflict with any others * <code>REGION</code> is used to identify AST fragments that correspond to schema regions * see <a href="guide.md#chapter-10-schema-management-features">Chapter 10</a> of the Guide for more information on regions * <code>CORE</code> is the mask for the core parts, <code>0xf</code> would do the job but for easy reading in the debugger we use <code>0xff</code> * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong</p>
 <p>The core type can be modified by various flags. The flags, in principle, can be combined in any way but in practice many combinations make no sense. For instance, <code>HAS_DEFAULT</code> is for table columns and <code>CREATE_FUNC</code> is for function declarations. There is no one object that could require both of these.</p>
 <p>The full list as of this writing is as follows:</p>
 <div class="sourceCode" id="cb36"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb36-1" title="1"><span class="pp">#define SEM_TYPE_NOTNULL               _64(0x0100) </span><span class="co">// set if and only if null is not possible</span></a>
@@ -2040,7 +2040,7 @@ AST(or)</code></pre>
 <a class="sourceLine" id="cb88-7" title="7">  CSTR *kinds;                    <span class="co">// the &quot;kind&quot; text of each column, if any, e.g. integer&lt;foo&gt; foo is the kind</span></a>
 <a class="sourceLine" id="cb88-8" title="8">  sem_t *semtypes;                <span class="co">// typecode for each field</span></a>
 <a class="sourceLine" id="cb88-9" title="9">} sem_struct;</a></code></pre></div>
-<p>The structure is nothing more than an array of names, types and kinds with a count. But it creates the notion of what’s usually called a “shape” in the codebase. Shapes can be used in a variety of ways as is described in <a href="https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms">Chapter 5</a> of the CQL Guide. But before we get into shapes, let’s look at an example of how a structure type is created.</p>
+<p>The structure is nothing more than an array of names, types and kinds with a count. But it creates the notion of what’s usually called a “shape” in the codebase. Shapes can be used in a variety of ways as is described in <a href="guide.md#reshaping-data-cursor-like-forms">Chapter 5</a> of the CQL Guide. But before we get into shapes, let’s look at an example of how a structure type is created.</p>
 <p>The code that follows is the back end of <code>sem_create_table_stmt</code>. At this point the bulk of the analysis is done and the columns all have their types. We’re about to build the struct type for the table. Let’s see how that goes.</p>
 <div class="sourceCode" id="cb89"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb89-1" title="1">  <span class="co">// now create a struct type with the correct number of columns</span></a>
 <a class="sourceLine" id="cb89-2" title="2">  <span class="co">// the types have already been computed so all we have to do is</span></a>
@@ -2113,7 +2113,7 @@ AST(or)</code></pre>
 </ul>
 <p>Structure types often come from the shape of a table, but other things can create a structure type. For instance, the columns of a view, or any select statement, are also described by a structure type and are therefore valid “shapes”. The return type of a procedure usually comes from a <code>SELECT</code> statement, so the procedure too can be the source of a shape. The arguments of a procedure form a shape. The fields of a cursor form a shape. You can even have a named subset of the arguments of a procedure and use them like a shape. All of these things are described by structure types.</p>
 <h4 id="shapes-and-the-like-construct">Shapes and the LIKE construct</h4>
-<p>There are many cases where you want to be able to capture or re-use something with a known shape and you don’t want to have to fully re-declare the thing. CQL uses the <code>LIKE</code> construct to do these sorts of things. This is more fully explained in <a href="https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms">Chapter 5</a> of the Guide, but for now let’s look at two different cases that are of interest.</p>
+<p>There are many cases where you want to be able to capture or re-use something with a known shape and you don’t want to have to fully re-declare the thing. CQL uses the <code>LIKE</code> construct to do these sorts of things. This is more fully explained in <a href="guide.md#reshaping-data-cursor-like-forms">Chapter 5</a> of the Guide, but for now let’s look at two different cases that are of interest.</p>
 <p>First, a cursor:</p>
 <pre><code>DECLARE C CURSOR LIKE Foo;  -- Foo something with a shape</code></pre>
 <p>So, in the above, Foo could be a table, a view, a procedure with a result, another cursor, and so forth.</p>
@@ -2247,7 +2247,7 @@ AST(or)</code></pre>
 </ul></li>
 </ul>
 <h3 id="schema-regions">Schema Regions</h3>
-<p>We touched briefly on schema regions earlier in this section. The purpose and language for regions is described more fully in <a href="https://cgsql.dev/cql-guide/ch10#schema-regions">Chapter 10</a> of the Guide. In this section we’ll deal with how they are implemented and what you should expect to see in the code.</p>
+<p>We touched briefly on schema regions earlier in this section. The purpose and language for regions is described more fully in <a href="guide.md#schema-regions">Chapter 10</a> of the Guide. In this section we’ll deal with how they are implemented and what you should expect to see in the code.</p>
 <p>When a region declaration is found this method is used:</p>
 <div class="sourceCode" id="cb99"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb99-1" title="1"><span class="co">// A schema region is an partitioning of the schema such that it</span></a>
 <a class="sourceLine" id="cb99-2" title="2"><span class="co">// only uses objects in the same partition or one of its declared</span></a>
@@ -2512,7 +2512,7 @@ AST(or)</code></pre>
 </ul>
 <p>There are some very important building blocks used to solve these problems: we will start with those, then move to a discussion of each of the essential kinds of code generation that we have to do to get working programs.</p>
 <h3 id="launching-the-code-generator">Launching the Code Generator</h3>
-<p>Once semantic analysis is done, all of the code generators have the same contract: they have a main function like <code>cg_c_main</code> for the C code generator. It gets the root of the AST and it can use the public interface of the semantic analyzer to get additional information. See <a href="https://cgsql.dev/cql-guide/int02">Part 2</a> for those details.</p>
+<p>Once semantic analysis is done, all of the code generators have the same contract: they have a main function like <code>cg_c_main</code> for the C code generator. It gets the root of the AST and it can use the public interface of the semantic analyzer to get additional information. See <a href="#part-2-semantic-analysis">Part 2</a> for those details.</p>
 <div class="sourceCode" id="cb107"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb107-1" title="1"><span class="co">// Main entry point for code-gen.  This will set up the buffers for the global</span></a>
 <a class="sourceLine" id="cb107-2" title="2"><span class="co">// variables and any loose calls or DML.  Any code that needs to run in the</span></a>
 <a class="sourceLine" id="cb107-3" title="3"><span class="co">// global scope will be added to the global_proc.  This is the only codegen</span></a>
@@ -2651,7 +2651,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <a class="sourceLine" id="cb124-5" title="5">  cg_cleanup_output = &amp;proc_cleanup;</a></code></pre></div>
 <p>And of course the code puts the original values back when it’s done and then closes what it opened.</p>
 <p>This means that while processing a procedure the codegen that declares say scratch variables, which would go to <code>cg_scratch_vars_output</code>, is going to target the <code>proc_locals</code> buffer which will be emitted before the <code>proc_body</code>. By the time <code>cg_stmt_list</code> is invoked the <code>cg_main_output</code> variable will be pointing to the procedure body, thus any statements will go into there rather than being accumulated at the global level.</p>
-<p>Note: it’s possible to have code that is not in a procedure (see <a href="https://cgsql.dev/cql-guide/x1#--global_proc-name"><code>--global_proc</code></a>).</p>
+<p>Note: it’s possible to have code that is not in a procedure (see <a href="guide.md#--global_proc-name"><code>--global_proc</code></a>).</p>
 <p>In general, it’s very useful to have different buffers open at the same time. New local variables or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to <code>cg_cleanup_output</code> which will appear at the end of a procedure. The final steps of procedure codegen combines all of these pieces plus a little glue to make a working procedure.</p>
 <p>All codegen works like this – statements, expressions, all of it.</p>
 <p>One interesting but unexpected feature of <code>charbuf</code> is that it provides helper methods for indenting a buffer by whatever amount you like. This turns out to be invaluable in creating well formatted C code because of course we want (e.g.) the body of an <code>if</code> statement to be indented. CQL tries to create well formatted code that is readable by humans as much as possible.</p>
@@ -2853,7 +2853,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 </ul>
 <p>This particular generator is going to produce <code>"NULL"</code> for the <code>value</code> and <code>"1"</code> for the <code>is_null</code> expression.</p>
 <p><code>is_null</code> and <code>value</code> are the chief outputs, and the caller will use these to create its own expression results with recursive logic. But the expression logic can also write into the statement stream, the cleanup stream, even into the header file stream, and as we’ll see, it does.</p>
-<p><code>pri</code> and <code>pri_new</code> work exactly like they did in the echoing code (see <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>), they are used to allow the code generator to decide if it needs to emit parentheses. But recall that the binding strengths now will be the C binding strengths NOT the SQL binding strengths (discussed above).</p>
+<p><code>pri</code> and <code>pri_new</code> work exactly like they did in the echoing code (see <a href="#part-1-lexing-parsing-and-the-ast">Part 1</a>) they are used to allow the code generator to decide if it needs to emit parentheses. But recall that the binding strengths now will be the C binding strengths NOT the SQL binding strengths (discussed above).</p>
 <p>Let’s look at one of the simplest operators: the <code>IS NULL</code> operator handled by <code>cg_expr_is_null</code></p>
 <p>Note: this code has a simpler signature because it’s actually part of codegen for <code>cg_expr_is</code> which has the general contract.</p>
 <div class="sourceCode" id="cb135"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb135-1" title="1"><span class="co">// The code-gen for is_null is one of the easiest.  The recursive call</span></a>
@@ -3274,7 +3274,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <li>the second string “b” is a C formatted string literal
 <ul>
 <li>SQLite doesn’t support this format or its escapes, therefore</li>
-<li>as discussed in <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>, it is decoded to plain text, then re-encoded as a SQL escaped string</li>
+<li>as discussed in <a href="#part-1-lexing-parsing-and-the-ast">Part 1</a>, it is decoded to plain text, then re-encoded as a SQL escaped string</li>
 <li>internal newlines do not require escaping in SQL, they are in the string as the newline character not ‘’ or anything like that
 <ul>
 <li>to be completely precise the byte value 0x0a is in the string unescaped</li>
@@ -3418,7 +3418,7 @@ static void cg_std_dml_exec_stmt(ast_node *ast) {
 <a class="sourceLine" id="cb167-7" title="7">  CHARBUF_OPEN(temp);</a>
 <a class="sourceLine" id="cb167-8" title="8">  gen_set_output_buffer(&amp;temp);</a>
 <a class="sourceLine" id="cb167-9" title="9">  gen_statement_with_callbacks(stmt, &amp;callbacks);</a></code></pre></div>
-<p>It’s set up the callbacks for variables and it calls the echoing function on the buffer. We’ve talked about <code>gen_statement_with_callbacks</code> in <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>.</p>
+<p>It’s set up the callbacks for variables and it calls the echoing function on the buffer. We’ve talked about <code>gen_statement_with_callbacks</code> in <a href="#part-1-lexing-parsing-and-the-ast">Part 1</a>.</p>
 <p>Let’s take a look at that callback function:</p>
 <pre><code>// This is the callback method handed to the gen_ method that creates SQL for us
 // it will call us every time it finds a variable that needs to be bound.  That
@@ -3982,7 +3982,7 @@ cql_cleanup:
 <pre><code>{declare_cursor_like_name}: D: select: { x: text notnull, y: integer notnull }
    variable shape_storage value_cursor</code></pre>
 <p>meaning <code>D</code> has the flags <code>SEM_TYPE_STRUCT</code>, <code>SEM_TYPE_VARIABLE</code>, <code>SEM_TYPE_HAS_SHAPE_STORAGE</code>, and <code>SEM_TYPE_VALUE_CURSOR</code>. That last flag indicates that there is no statement for this cursor, it’s just values. And all such cursors must have <code>SEM_TYPE_HAS_SHAPE_STORAGE</code> – if they had no statement and no storage they would be – nothing.</p>
-<p>Value cursors are enormously helpful and there is sugar for loading them from all kinds of sources with a shape. These forms are described more properly in <a href="https://cgsql.dev/cql-guide/ch05">Chapter 5</a> of the Guide but they all end up going through the general form, making the codegen considerably simpler. There are many examples where the semantic analyzer rewrites a sugar form to a canonical form to keep the codegen from forking into dozens of special cases and most of them have to do with shapes and cursors.</p>
+<p>Value cursors are enormously helpful and there is sugar for loading them from all kinds of sources with a shape. These forms are described more properly in <a href="guide.md#chapter-5-types-of-cursors-shapes-out-and-out-union-and-fetch">Chapter 5</a> of the Guide but they all end up going through the general form, making the codegen considerably simpler. There are many examples where the semantic analyzer rewrites a sugar form to a canonical form to keep the codegen from forking into dozens of special cases and most of them have to do with shapes and cursors.</p>
 <h3 id="returning-value-cursors">Returning Value Cursors</h3>
 <p>Let’s look at an example that is similar to the previous one:</p>
 <div class="sourceCode" id="cb212"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb212-1" title="1"><span class="ot">@ATTRIBUTE(cql:private)</span></a>
@@ -4770,7 +4770,7 @@ CREATE TABLE with_kind(
 <a class="sourceLine" id="cb243-7" title="7"><span class="cf">begin</span></a>
 <a class="sourceLine" id="cb243-8" title="8">  <span class="kw">set</span> o <span class="op">:=</span> <span class="fu">coalesce</span>(i, <span class="op">-</span><span class="dv">1</span>);</a>
 <a class="sourceLine" id="cb243-9" title="9"><span class="cf">end</span>;</a></code></pre></div>
-<p>This test is verifying one of the optimizations that we talked about in <a href="https://cgsql.dev/cql-guide/int03#result-variables">Part 3</a>. In many cases temporary variables for results (such as function calls) can be elided.</p>
+<p>This test is verifying one of the optimizations that we talked about in <a href="#result-variables">Part 3</a>. In many cases temporary variables for results (such as function calls) can be elided.</p>
 <ul>
 <li><code>- cql_int32 _tmp_int_0 = 0;</code> : verifies that this temporary is NOT created</li>
 <li><code>- cql_int32 _tmp_int_1 = 0;</code> : likewise</li>
@@ -4959,7 +4959,7 @@ END_TEST(arithmetic)</code></pre>
 <h3 id="schema-upgrade-testing">Schema Upgrade Testing</h3>
 <p>The schema upgrade tester is quite a bit different than the others and relies heavily on execution of the upgraders. Before we get into that there is a preliminary topic:</p>
 <h4 id="previous-schema-validation">“Previous Schema” Validation</h4>
-<p>In order to ensure that it is possible to create an upgrader, CQL provides features to validate the current schema against the previous schema ensuring that nothing has been done that would make an upgrader impossible. This is more fully discussed in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a> of the Guide.</p>
+<p>In order to ensure that it is possible to create an upgrader, CQL provides features to validate the current schema against the previous schema ensuring that nothing has been done that would make an upgrader impossible. This is more fully discussed in <a href="guide.md#chapter-11-previous-schema-validation">Chapter 11</a> of the Guide.</p>
 <p>“Previous Schema” validation is a form of semantic check and so its testing happens as described above. Importantly, as with the other back-end passes the schema upgrader does not have to concern itself with error cases as they are already ruled out. The upgrader itself will be the subject of Part 5.</p>
 <h4 id="packing-list">Packing List</h4>
 <p>The test assets for upgrade tests are found in the <code>upgrade</code> directory and consist of * <code>SchemaPersistentV0.sql</code> : baseline version of the test schema * <code>SchemaPersistentV1.sql</code> : v1 of the test schema * <code>SchemaPersistentV2.sql</code> : v2 of the test schema * <code>SchemaPersistentV3.sql</code> : v3 of the test schema * <code>downgrade_test.c</code> : a test that simulates attemping to go backwards in schema versions * <code>upgrade_test.c</code> : the C harness that launches the upgraders and fires the tests * <code>upgrade_test.sh</code> : the shell script that makes all this happen * <code>upgrade_validate.sql</code> : some simple code that sanity checks the recorded schema version against tables in it * used to ensure that the schema we are on is the schema we think we are on, not to validate all facets of it * also renders the contents of <code>sqlite_master</code> in a canonical form</p>
@@ -5102,7 +5102,7 @@ Upgrade from nothing to v3, then to v3 -- must match direct update to v3</code><
 <li>the test test fails if the error is no correctly reported</li>
 </ul>
 <p>The combination of testing reference outputs plus testing these many invariants at various stages results in a powerful integration test. The actual schema for the varios versions includes all the supported transitions such as creating and deleting tables and columns, and recreating views, indicies, and triggers.</p>
-<p>All of the possible transitions are more fully discussed in <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> of the Guide which pairs nicely with the previous schema validions discussed in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a>.</p>
+<p>All of the possible transitions are more fully discussed in <a href="guide.md#chapter-10-schema-management-features">Chapter 10</a> of the Guide which pairs nicely with the previous schema validions discussed in <a href="guide.md#chapter-11-previous-schema-validation">Chapter 11</a>.</p>
 <h3 id="testing-the-line-directives-produced-by-cql">Testing the <code>#line</code> directives produced by CQL</h3>
 <p>[An additional section should be added for the code that verifies the source line number mappings even though this is a pretty exotic case.]</p>
 <h3 id="summary">Summary</h3>
@@ -5355,7 +5355,7 @@ typedef struct cql_boxed_stmt {
 <li>generate <code>SInt32 an_integer</code> instead of <code>cql_int32 an_integer</code></li>
 </ul>
 <p>Even though <code>cqlrt_cf</code> is already mapping <code>cql_int32</code> to something compatible with <code>CF</code>, making such changes would make the C output a little bit more <code>CF</code> idiomatic. This educational exercise could probably be completed in just a few minutes by interested readers.</p>
-<p>The <code>make.sh</code> file in the <code>sources/cqlrt_cf</code> directory illustrates how to get CQL to use this new runtime. The demo itself is a simple port of the code in <a href="https://cgsql.dev/cql-guide/x10">Appendix 10</a>.</p>
+<p>The <code>make.sh</code> file in the <code>sources/cqlrt_cf</code> directory illustrates how to get CQL to use this new runtime. The demo itself is a simple port of the code in <a href="guide.md#appendix-10-cql-working-example">Appendix 10</a>.</p>
 <h3 id="recap-2">Recap</h3>
 <p>The CQL runtime, <code>cqlrt.c</code>, is intended to be replaced. The version that ships with the distribution is a simple, portable implementation that is single threaded. Serious users of CQL will likely want to replace the default version of the runtime with something more tuned to their use case.</p>
 <p>Topics covered included:</p>
@@ -5381,7 +5381,7 @@ typedef struct cql_boxed_stmt {
 <p>Part 6 continues with a discussion of the essentials of schema management in the CQL compiler. As in the previous parts, the goal here is not to go over every detail of the system but rather to give a sense of how schema management happens in general – the core strategies and implementation choices – so that when reading the management code you will have an idea how it all hangs together. To accomplish this, various key data structures will be explained in detail and accompanied by examples of their use.</p>
 <h2 id="schema-management">Schema Management</h2>
 <p>The primary goal of the schema management features of the CQL compiler is to provide the ability to create a “schema upgrader” that can move a given user’s database from a previous version of the schema to the current version. Because of the limitations of SQL in general, and SQLite in particular, not all transforms are possible; so additionally the system must correctly detect and prevent upgrades that cannot be safely performed.</p>
-<p>The full set of schema attributes and their meaning is described in <a href="https://cgsql.dev/cql-guide/ch10">Chapter 10</a> and the full set of validations is described in <a href="https://cgsql.dev/cql-guide/ch11">Chapter 11</a>. Briefly the directives are:</p>
+<p>The full set of schema attributes and their meaning is described in <a href="guide.md#chapter-10-schema-management-features">Chapter 10</a> and the full set of validations is described in <a href="guide.md#chapter-11-previous-schema-validation">Chapter 11</a>. Briefly the directives are:</p>
 <ul>
 <li><code>@create(n)</code>: indicates a table/column is to be created at version <code>n</code>.</li>
 <li><code>@delete(n)</code>: indicates a table/column is to be deleted at version <code>n</code>.</li>
@@ -5826,7 +5826,7 @@ typedef struct cql_boxed_stmt {
 <a class="sourceLine" id="cb293-8" title="8">  CHARBUF_CLOSE(output_file);</a></code></pre></div>
 <p>There is nothing left but to <code>CHARBUF_CLOSE</code> the interim buffers we created.</p>
 <h3 id="recap-3">Recap</h3>
-<p>At present <code>cg_schema.c</code> accomplishes a lot and is fairly light at only 1313 lines (at present). It is able to do so because it can leverage heavy lifting done in the semantic analysis phase and schema generation that can be done like all other SQL generation by the echoing code discussed in <a href="https://cgsql.dev/cql-guide/int01">Part 1</a>.</p>
+<p>At present <code>cg_schema.c</code> accomplishes a lot and is fairly light at only 1313 lines (at present). It is able to do so because it can leverage heavy lifting done in the semantic analysis phase and schema generation that can be done like all other SQL generation by the echoing code discussed in <a href="#part-1-lexing-parsing-and-the-ast">Part 1</a>.</p>
 <p>Topics covered included:</p>
 <ul>
 <li>the essential sources of schema information from the semantic pass</li>
@@ -5848,7 +5848,7 @@ typedef struct cql_boxed_stmt {
 <h3 id="preface-6">Preface</h3>
 <p>Part 7 continues with a discussion of the JSON generation code. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how JSON creation works in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together. To accomplish this, we’ll illustrate the key strategies used to extract the data and format the JSON.</p>
 <h2 id="json-schema">JSON Schema</h2>
-<p>The JSON schema is described in <a href="https://cgsql.dev/cql-guide/ch13">Chapter 13</a> of the Guide and there is a nice diagram of its <a href="https://cgsql.dev/json-diagram">grammar</a> for reference. So, we won’t be discussing all the details of the output. Instead we’re going to go over the theory of how the JSON generator works. It is structured very much like the other code generators but it happens to produce a JSON file. It’s call the “JSON Schema” because most of the content is a description of the database schema in JSON form. As such it’s almost entirely just a simple walk of the AST in the correct order. The only really tricky bit is the extra dependency analysis on the AST. This allows us to emit usage information in the output for downstream tools to use as needed.</p>
+<p>The JSON schema is described in <a href="guide.md#chapter-13-json-output">Chapter 13</a> of the Guide and there is a nice diagram of its <a href="https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html">grammar</a> for reference. So, we won’t be discussing all the details of the output. Instead we’re going to go over the theory of how the JSON generator works. It is structured very much like the other code generators but it happens to produce a JSON file. It’s call the “JSON Schema” because most of the content is a description of the database schema in JSON form. As such it’s almost entirely just a simple walk of the AST in the correct order. The only really tricky bit is the extra dependency analysis on the AST. This allows us to emit usage information in the output for downstream tools to use as needed.</p>
 <p>We’ll cover these topics:</p>
 <ul>
 <li>walking the AST</li>
@@ -6042,7 +6042,7 @@ typedef struct cql_boxed_stmt {
 <a class="sourceLine" id="cb300-11" title="11">    bprintf(output, <span class="st">&quot;</span><span class="sc">\n\n</span><span class="st">&quot;</span>);</a>
 <a class="sourceLine" id="cb300-12" title="12">  }</a>
 <a class="sourceLine" id="cb300-13" title="13">}</a></code></pre></div>
-<p>All of the JSON fragments have the usual test pattern “The statement ending at line nnn”. This means that the normal validator will be able to find comments in the test file and associate them with json parts. The testing strategies are discussed in [Part 4]((https://cgsql.dev/cql-guide/int04).</p>
+<p>All of the JSON fragments have the usual test pattern “The statement ending at line nnn”. This means that the normal validator will be able to find comments in the test file and associate them with json parts. The testing strategies are discussed in <a href="#part-4-testing">Part 4</a>.</p>
 <p>In addition, while in test mode, we also emit the original statement that caused this JSON fragment to be created. This allows the test patterns to cross check the input and output and also makes the test output more readable for humans.</p>
 <p>Note that in test mode the JSON is effectively corrupted by the test output as it is not well-formed JSON in any way. So use of –test is strictly for validation only.</p>
 <h4 id="view-basics">View Basics</h4>
@@ -6109,7 +6109,7 @@ typedef struct cql_boxed_stmt {
 <ul>
 <li>the view’s region</li>
 <li>the “deployment region” of that region if any (regions are contained in deployable groups)</li>
-<li>see <a href="https://cgsql.dev/cql-guide/ch10#schema-regions">Chapter 10</a> for more info on regions and deployment regions</li>
+<li>see <a href="guide.md#schema-regions">Chapter 10</a> for more info on regions and deployment regions</li>
 </ul></li>
 </ul></li>
 <li>if there are any miscellaneous attributes they are emitted
@@ -6346,7 +6346,7 @@ typedef struct cql_boxed_stmt {
 <h3 id="preface-7">Preface</h3>
 <p>Part 8 continues with a discussion of the Test Helper generation code. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how helpers are created in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together.</p>
 <h2 id="test-helpers">Test Helpers</h2>
-<p>The testability features are described in <a href="https://cgsql.dev/cql-guide/ch12">Chapter 12</a> of the Guide So, we won’t be discussing all the details of what can be created. Instead we’re going to go over the theory of how the generator works. This generator is somewhat different than others in that it only concerns itself with procedures and only those that have been suitably annotated – there are large parts of the tree that are of no interest to the test helper logic, including, importantly the body of procedures. Only the signature matters. As we’ll see there is a fairly large family of generators that are like this.</p>
+<p>The testability features are described in <a href="guide.md#chapter-12-testability-features">Chapter 12</a> of the Guide So, we won’t be discussing all the details of what can be created. Instead we’re going to go over the theory of how the generator works. This generator is somewhat different than others in that it only concerns itself with procedures and only those that have been suitably annotated – there are large parts of the tree that are of no interest to the test helper logic, including, importantly the body of procedures. Only the signature matters. As we’ll see there is a fairly large family of generators that are like this.</p>
 <p>We’ll have one section for every kind of output, but really only the <code>dummy_test</code> helper is worthy of detailed discussion the others, as we’ll see, are very simple.</p>
 <h3 id="initialization">Initialization</h3>
 <p>The generator is wired like the others with a suitable main, this one is pretty simple:</p>
@@ -6478,7 +6478,7 @@ typedef struct cql_boxed_stmt {
 <a class="sourceLine" id="cb319-27" title="27">}</a></code></pre></div>
 <p>Most of these options are very simple indeed. <code>cg_test_helpers_dummy_test</code> is the trickiest by far and we’ll save it for last, let’s dispense with the easy stuff.</p>
 <h3 id="dummy-table-dummy-insert-dummy-select-dummy-result-set">Dummy Table, Dummy Insert, Dummy Select, Dummy Result Set</h3>
-<p>All of these are a very simple template. The language includes just the right features to emit these procedures as nearly constant strings. The <code>LIKE</code> construct was literally designed to make these patterns super simple. You can see all the patterns in <a href="https://cgsql.dev/cql-guide/ch12">Chapter 12</a> but let’s look at the code for the first one. This is “dummy table”.</p>
+<p>All of these are a very simple template. The language includes just the right features to emit these procedures as nearly constant strings. The <code>LIKE</code> construct was literally designed to make these patterns super simple. You can see all the patterns in <a href="guide.md#chapter-12-testability-features">Chapter 12</a> but let’s look at the code for the first one. This is “dummy table”.</p>
 <div class="sourceCode" id="cb320"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb320-1" title="1"><span class="co">// Emit an open proc which creates a temp table in the form of the original proc</span></a>
 <a class="sourceLine" id="cb320-2" title="2"><span class="co">// Emit a close proc which drops the temp table</span></a>
 <a class="sourceLine" id="cb320-3" title="3"><span class="dt">static</span> <span class="dt">void</span> cg_test_helpers_dummy_table(CSTR name) {</a>
@@ -6499,7 +6499,7 @@ typedef struct cql_boxed_stmt {
 <div class="sourceCode" id="cb321"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb321-1" title="1"><span class="kw">CREATE</span> TEMP <span class="kw">TABLE</span> test_foo(<span class="kw">LIKE</span> foo);</a></code></pre></div>
 <p>Is universal, no matter the result shape of <code>foo</code> you get a table with those columns.</p>
 <p>For this to work we need to emit a declaration of <code>foo</code> before this code. However, since we have the full definition of <code>foo</code> handy that is no problem. We remember that we’ll need it by setting a flag in <code>helper_flags</code>.</p>
-<p>The code for <code>close_foo</code> is even simpler if that’s possible. The great thing is all need to know the columns of <code>foo</code> has been removed from the test helper. The CQL compiler handles this as a matter of course and it is generally useful. See <a href="https://cgsql.dev/cql-guide/ch05#reshaping-data-cursor-like-forms">Chapter 5</a> for more examples.</p>
+<p>The code for <code>close_foo</code> is even simpler if that’s possible. The great thing is all need to know the columns of <code>foo</code> has been removed from the test helper. The CQL compiler handles this as a matter of course and it is generally useful. See <a href="guide.md#reshaping-data-cursor-like-forms">Chapter 5</a> for more examples.</p>
 <p>All the others are equally simple and use similar tricks. These were the first test helpers. They’re actually not that popular because they are so easy to create yourself anyway.</p>
 <h3 id="dummy-test">Dummy Test</h3>
 <p>The dummy test code emitter is non-trivial. Let’s quickly review the things it has to do and then we can go over how each of these is accomplished. Assuming we have an procedure <code>your_proc</code> that has been annotated like this:</p>
@@ -6545,7 +6545,7 @@ typedef struct cql_boxed_stmt {
 <li>user data may be specified in an attribute and that data will be used in preference to auto-generated data</li>
 </ul></li>
 </ul>
-<p>These are more fully discussed in <a href="https://cgsql.dev/cql-guide/ch12#generalized-dummy-test-pattern">Chapter 12</a>.</p>
+<p>These are more fully discussed in <a href="guide.md#generalized-dummy-test-pattern">Chapter 12</a>.</p>
 <h4 id="building-the-trigger-and-index-mappings">Building the Trigger and Index mappings</h4>
 <p>In order to know which indices and triggers we might need we have to be able to map from the tables/views in <code>your_proc</code> to the indices. To set up for this a general purpose reverse mapping is created. We’ll look at the triggers version. The indices version is nearly identical.</p>
 <div class="sourceCode" id="cb323"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb323-1" title="1"><span class="co">// Walk through all triggers and create a dictionnary of triggers per tables.</span></a>
@@ -6617,7 +6617,7 @@ typedef struct cql_boxed_stmt {
 <li>if any found item has triggers, the trigger body is walked, any tables/views mentioned there become additional found items</li>
 <li>any given table/view and hence trigger is only visited once</li>
 </ul>
-<p>The net of all this, the “found items”, is a list of all the tables and views that the procedure uses, directly or indirectly. As discussed in <a href="https://cgsql.dev/cql-guide/ch12#generalized-dummy-test-pattern">Chapter 12</a> this walk does not include tables and views used by procedures that <code>your_proc</code> calls.</p>
+<p>The net of all this, the “found items”, is a list of all the tables and views that the procedure uses, directly or indirectly. As discussed in <a href="guide.md#generalized-dummy-test-pattern">Chapter 12</a> this walk does not include tables and views used by procedures that <code>your_proc</code> calls.</p>
 <p>To get the dependencies in the correct order, the tables have been walked following the foreign key chain and all views go after all tables. The views are stitched together. The business of diving into views/tables/triggers and maintainence of the found items is done by the callback function <code>found_table_or_view</code>. The actual source is more descriptive comments than code but the code is included here as it is brief.</p>
 <div class="sourceCode" id="cb325"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb325-1" title="1"><span class="co">// comments elided for brevity, the why of all this is described in the code</span></a>
 <a class="sourceLine" id="cb325-2" title="2"><span class="dt">static</span> <span class="dt">void</span> found_table_or_view(</a>

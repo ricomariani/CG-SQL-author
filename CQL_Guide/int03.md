@@ -50,7 +50,7 @@ a discussion of each of the essential kinds of code generation that we have to d
 Once semantic analysis is done, all of the code generators have the same contract: they
 have a main function like `cg_c_main` for the C code generator.  It gets the root of
 the AST and it can use the public interface of the semantic analyzer to get additional
-information.  See [Part 2](https://cgsql.dev/cql-guide/int02) for those details.
+information.  See [Part 2](#part-2-semantic-analysis) for those details.
 
 ```c
 // Main entry point for code-gen.  This will set up the buffers for the global
@@ -301,7 +301,7 @@ which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is inv
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
 will go into there rather than being accumulated at the global level.
 
-Note: it's possible to have code that is not in a procedure (see [`--global_proc`](https://cgsql.dev/cql-guide/x1#--global_proc-name)).
+Note: it's possible to have code that is not in a procedure (see [`--global_proc`](guide.md#--global_proc-name)).
 
 In general, it's very useful to have different buffers open at the same time.  New local variables
 or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to
@@ -604,7 +604,7 @@ This particular generator is going to produce `"NULL"` for the `value` and `"1"`
 with recursive logic.  But the expression logic can also write into the statement stream, the cleanup stream,
 even into the header file stream, and as we'll see, it does.
 
-`pri` and `pri_new` work exactly like they did in the echoing code (see [Part 1](https://cgsql.dev/cql-guide/int01)),
+`pri` and `pri_new` work exactly like they did in the echoing code (see [Part 1](#part-1-lexing-parsing-and-the-ast))
 they are used to allow the code generator to decide if it needs to emit parentheses.  But recall that the binding strengths
 now will be the C binding strengths NOT the SQL binding strengths (discussed above).
 
@@ -1210,7 +1210,7 @@ Let's review that in some detail:
 
 * the second string "b" is a C formatted string literal
   * SQLite doesn't support this format or its escapes, therefore
-  * as discussed in [Part 1](https://cgsql.dev/cql-guide/int01), it is decoded to plain text, then re-encoded as a SQL escaped string
+  * as discussed in [Part 1](#part-1-lexing-parsing-and-the-ast), it is decoded to plain text, then re-encoded as a SQL escaped string
   * internal newlines do not require escaping in SQL, they are in the string as the newline character not '\n' or anything like that
     * to be completely precise the byte value 0x0a is in the string unescaped
   * internal single quotes don't require escaping in C, these have to be doubled in a SQL string
@@ -1398,7 +1398,7 @@ The core of this function looks like this:
 ```
 
 It's set up the callbacks for variables and it calls the echoing function on the buffer.  We've
-talked about `gen_statement_with_callbacks` in  [Part 1](https://cgsql.dev/cql-guide/int01).
+talked about `gen_statement_with_callbacks` in  [Part 1](#part-1-lexing-parsing-and-the-ast).
 
 Let's take a look at that callback function:
 
@@ -2222,7 +2222,7 @@ That last flag indicates that there is no statement for this cursor, it's just v
 `SEM_TYPE_HAS_SHAPE_STORAGE` -- if they had no statement and no storage they would be -- nothing.
 
 Value cursors are enormously helpful and there is sugar for loading them from all kinds of sources with a shape.
-These forms are described more properly in [Chapter 5](https://cgsql.dev/cql-guide/ch05) of the Guide but they
+These forms are described more properly in [Chapter 5](guide.md#chapter-5-types-of-cursors-shapes-out-and-out-union-and-fetch) of the Guide but they
 all end up going through the general form, making the codegen considerably simpler. There are many examples where the semantic
 analyzer rewrites a sugar form to a canonical form to keep the codegen from forking into dozens of special cases
 and most of them have to do with shapes and cursors.

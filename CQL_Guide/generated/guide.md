@@ -9887,7 +9887,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 13 21:54:49 PDT 2023
+Snapshot as of Sat May 13 22:21:29 PDT 2023
 
 ### Operators and Literals
 
@@ -11718,7 +11718,7 @@ The complete list (as of this writing) is:
     * Because the generated function is `static` it cannot be called from other modules and therefore will not go in any CQL exports file (that would be moot since you couldn't call it).
     * This attribute also implies `cql:suppress_result_set` since only CQL code in the same translation unit could possibly call it and hence the result set procedure is useless to other C code.
   * `cql:generate_copy` the code generation for the annotated procedure will produce a `[procedure_name]_copy` function that can make complete or partial copies of its result set.
-  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](#chapter-14-cql-shared-fragments)
+  * `cql:shared_fragment` is used to create shared fragments (See [Chapter 14](#chapter-14-cql-shared-fragments))
   * `cql:no_table_scan` for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)
   * `cql:autotest=([many forms])` declares various autotest features (See Chapter 12)
   * `cql:query_plan_branch=[integer]` is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an `IF` statement is used. (See [Chapter 15](#chapter-15-query-plan-generation))
@@ -16239,7 +16239,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 13 21:54:49 PDT 2023
+Snapshot as of Sat May 13 22:21:29 PDT 2023
 
 ### Rules
 

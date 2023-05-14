@@ -323,7 +323,7 @@ for non-trivial examples those pictures are so large as to be unreadable whereas
 remains readable even up to several hundred lines of output. The text is also readily searchable, and diffable.
 The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.
 
-We'll discuss semantic analysis in [Part 2](https://cgsql.dev/cql-guide/int02).
+We'll discuss semantic analysis in [Part 2](#part-2-semantic-analysis)
 
 ### AST definitions
 

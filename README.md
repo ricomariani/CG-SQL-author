@@ -15,6 +15,10 @@ Please refer to our documentation to start using CG/SQL:
 - [Writing a Hello World Program](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started)
 - [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
 
+Wiki:
+
+- [Wiki Home](https://github.com/ricomariani/CG-SQL-author/wiki/Home)
+
 Grammar Diagrams:
 
 - [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/railroad_diagram.html)

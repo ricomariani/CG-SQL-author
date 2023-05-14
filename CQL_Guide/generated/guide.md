@@ -24,11 +24,10 @@ checks, error checks, and the other miscellany needed to use SQLite correctly.
 CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations
 are allowed on which data.  Strict type checking is much more reasonable given CQL's compiled programming model.
 
-:::note
-CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this
-content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the
-fewest runtime dependencies allowed for illustration.
-:::
+>NOTE:
+>CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this
+>content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the
+>fewest runtime dependencies allowed for illustration.
 
 ### Getting Started
 
@@ -67,10 +66,10 @@ void hello(void);
 The declaration of this function can be found in `hello.h`.
 
 
-> NOTE: `hello.h` tries to include `cqlrt.h`. To
-> avoid configuring include paths for the compiler, you might keep `cqlrt.h` in the same directory as the examples and
-> avoid that complication. Otherwise you must make arrangements for the compiler to be able to find `cqlrt.h` either by
-> adding it to an `INCLUDE` path or by adding some `-I` options to help the compiler find the source.
+>NOTE: `hello.h` tries to include `cqlrt.h`. To
+>avoid configuring include paths for the compiler, you might keep `cqlrt.h` in the same directory as the examples and
+>avoid that complication. Otherwise you must make arrangements for the compiler to be able to find `cqlrt.h` either by
+>adding it to an `INCLUDE` path or by adding some `-I` options to help the compiler find the source.
 
 That `hello` function is not quite adequate to get a running program, which brings us to the next step in
 getting things running.  Typically you have some kind of client program that will execute the procedures you
@@ -230,8 +229,8 @@ some parentheses because they are not needed in the C order even though they wer
 The `printf` call operates as before, with the `fahr` and `celsius` variables being passed on to the C runtime library
 for formatting, unchanged.
 
-NOTE: when calling unknown foreign functions like `printf` string literals are simply passed right through unchanged
-as C string literals. No CQL string object is created.
+>NOTE: when calling unknown foreign functions like `printf` string literals are simply passed right through unchanged
+>as C string literals. No CQL string object is created.
 
 ### Basic Conversion Rules
 
@@ -6911,11 +6910,10 @@ The compiler ensures that the directives are valid and stay valid.
   * The deletion or unsubscription must have happened at a version <= _version_
 * _table_ is marked unsubscribed for purposes of further analysis
 
-:::caution
-The legacy form `@unsub`(_version_, _table_) is supported but deprecated, and will soon be an error.  The _version_ is ignored.
-The legacy `@resub` directive is now an error;  Resubscription is accomplished by simply removing the relevant `@unsub`
-directive(s).
-:::
+>CAUTION:
+>The legacy form `@unsub`(_version_, _table_) is supported but deprecated, and will soon be an error.  The _version_ is ignored.
+>The legacy `@resub` directive is now an error;  Resubscription is accomplished by simply removing the relevant `@unsub`
+>directive(s).
 
 #### Previous Schema validations for @unsub
 
@@ -9404,10 +9402,9 @@ Ultimately, from SQLite's perspective, all of these shared fragment forms result
 
 See Appendix 8 for an extensive section on best practices around fragments and common table expressions in general.
 
-:::tip
-If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `@attribute(cql:query_plan_branch=[integer])` to modify the behaviour. Read
-[Query Plan Generation](#chapter-15-query-plan-generation) for details.
-:::
+>TIP:
+>If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `@attribute(cql:query_plan_branch=[integer])` to modify the behaviour. Read
+>[Query Plan Generation](#chapter-15-query-plan-generation) for details.
 
 ### Shared Fragments as Expressions
 
@@ -9574,9 +9571,9 @@ CQL offers a way to run SQLite's [`EXPLAIN QUERY PLAN` command](https://www.sqli
 Generating query plans is inherently complicated. Any given stored procedure might include many SQL statements, each of which has a plan. To get the plans, those statements must be executed in the appropriate mode. In order for them to execute, whatever tables, views, and user-defined functions they use must exist. The statements can have any number of parameters, those have to be swapped out because they might come from anywhere. When run in `--rt query_plan` mode, the compiler accomplishes all of this by analyzing the original code and creating entirely new code. Running this new code creates the schema and, with the appropriate transforms, runs all the SQL statements in the original to give us the query plans. The process requires many steps as we'll see below.
 
 ## Query Plan Generation Compilation Steps
-:::tip
-The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](../../docs/playground#query-plan-playground). The rest of the section explains how query plan generation works and some of its quirks.
-:::
+>TIP:
+>The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](../../docs/playground#query-plan-playground).
+>The rest of the section explains how query plan generation works and some of its quirks.
 
 To execute query plans for a given CQL file, the following commands need to be run:
 
@@ -9606,9 +9603,8 @@ A separate command, `--rt udf` is required to generate any stubbed [user defined
 
 The CQL repository provides the file [`query_plan_test.c`](../../sources/query_plan_test.c) that can be used as the "main" function, otherwise you can make your own.
 
-::note
-When compiling the CQL file generated by `--rt query_plan`, the `--dev` flag is required.
-:::
+>NOTE:
+>When compiling the CQL file generated by `--rt query_plan`, the `--dev` flag is required.
 
 ### Special Handling of CQL features in Query Plan Generation
 CQL's query planner generator modifies the usage of the following features to allow SQLite run `EXPLAIN QUERY PLAN` successfully:
@@ -9887,7 +9883,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 13 22:21:29 PDT 2023
+Snapshot as of Sat May 13 23:25:19 PDT 2023
 
 ### Operators and Literals
 
@@ -16239,7 +16235,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 13 22:21:29 PDT 2023
+Snapshot as of Sat May 13 23:25:19 PDT 2023
 
 ### Rules
 

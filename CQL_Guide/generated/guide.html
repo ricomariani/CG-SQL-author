@@ -808,9 +808,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>CQL simplifies this situation by providing a high level SQL language not unlike the stored procedure forms that are available in client/server SQL solutions and lowering that language to “The C you could have written to do that job using the normal SQLite interfaces.”</p>
 <p>As a result, the C generated is generally very approachable but now the source language does not suffer from brittleness due to query or table changes and CQL always generates correct column indices, nullability checks, error checks, and the other miscellany needed to use SQLite correctly.</p>
 <p>CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations are allowed on which data. Strict type checking is much more reasonable given CQL’s compiled programming model.</p>
-<div class="note">
-<p>CQL was created to help solve problems in the building of Meta Platforms’s Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the fewest runtime dependencies allowed for illustration.</p>
-</div>
+<blockquote>
+<p>NOTE: CQL was created to help solve problems in the building of Meta Platforms’s Messenger application, but this content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the fewest runtime dependencies allowed for illustration.</p>
+</blockquote>
 <h3 id="getting-started">Getting Started</h3>
 <p>Before starting this tutorial, make sure you have built the <code>cql</code> executable first in <a href="../../docs/getting-started.md">Building CG/SQL</a></p>
 <p>The “Hello World” program rendered in CQL looks like this:</p>
@@ -948,7 +948,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>This computes the celsuis and then prints it out, moving on to the next entry in the table.</p>
 <p>Importantly, the CQL compiler uses the normal SQLite order of operations, which is NOT the C order of operations. As a result, the compiler may need to add parentheses in the C output to get the correct order; or it may remove some parentheses because they are not needed in the C order even though they were in the SQL order.</p>
 <p>The <code>printf</code> call operates as before, with the <code>fahr</code> and <code>celsius</code> variables being passed on to the C runtime library for formatting, unchanged.</p>
+<blockquote>
 <p>NOTE: when calling unknown foreign functions like <code>printf</code> string literals are simply passed right through unchanged as C string literals. No CQL string object is created.</p>
+</blockquote>
 <h3 id="basic-conversion-rules">Basic Conversion Rules</h3>
 <p>As a rule, CQL does not perform its own conversions, leaving that instead to the C compiler. An exception to this is that boolean expressions are normalized to a 0 or 1 result before they are stored.</p>
 <p>However, even with no explicit conversions, there are compatibility checks to ensure that letting the C compiler do the conversions will result in something sensible. The following list summarizes the essential facts/rules as they might be applied when performing a <code>+</code> operation.</p>
@@ -5001,9 +5003,9 @@ Master Deployment 2
 </ul></li>
 <li><em>table</em> is marked unsubscribed for purposes of further analysis</li>
 </ul>
-<div class="caution">
-<p>The legacy form <code>@unsub</code>(<em>version</em>, <em>table</em>) is supported but deprecated, and will soon be an error. The <em>version</em> is ignored. The legacy <code>@resub</code> directive is now an error; Resubscription is accomplished by simply removing the relevant <code>@unsub</code> directive(s).</p>
-</div>
+<blockquote>
+<p>CAUTION: The legacy form <code>@unsub</code>(<em>version</em>, <em>table</em>) is supported but deprecated, and will soon be an error. The <em>version</em> is ignored. The legacy <code>@resub</code> directive is now an error; Resubscription is accomplished by simply removing the relevant <code>@unsub</code> directive(s).</p>
+</blockquote>
 <h4 id="previous-schema-validations-for-unsub">Previous Schema validations for <span class="citation" data-cites="unsub">@unsub</span></h4>
 <p>Unsubscriptions may be removed when they are no longer desired in order to resubscribe as long as this results in a valid chain of foreign keys.</p>
 <p>These validations are sufficient to guarantee a constistent logical history for unsubscriptions.</p>
@@ -6831,9 +6833,9 @@ END;</code></pre>
 <p>With this additional flexibility a wide variety of SQL statements can be constructed economically and maintainability. Importantly, consumers of the fragments need not deal with all these various alternate possibilities but they can readily create their own useful combinations out of building blocks.</p>
 <p>Ultimately, from SQLite’s perspective, all of these shared fragment forms result in nothing more complicated than a chain of CTE expressions.</p>
 <p>See Appendix 8 for an extensive section on best practices around fragments and common table expressions in general.</p>
-<div class="tip">
-<p>If you use CQL’s query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use <code>@attribute(cql:query_plan_branch=[integer])</code> to modify the behaviour. Read <a href="#chapter-15-query-plan-generation">Query Plan Generation</a> for details.</p>
-</div>
+<blockquote>
+<p>TIP: If you use CQL’s query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use <code>@attribute(cql:query_plan_branch=[integer])</code> to modify the behaviour. Read <a href="#chapter-15-query-plan-generation">Query Plan Generation</a> for details.</p>
+</blockquote>
 <h3 id="shared-fragments-as-expressions">Shared Fragments as Expressions</h3>
 <p>The shared fragment system also has the ability to create re-usable expression-style fragments giving you something like SQL inline functions. These do come with some performance cost so they should be used for larger fragments. In many systems a simple shared fragment would not compete well with an equivalent <code>#define</code>. Expression fragments shine when:</p>
 <ul>
@@ -6919,9 +6921,9 @@ END;</code></pre>
 <p>CQL offers a way to run SQLite’s <a href="https://www.sqlite.org/eqp.html"><code>EXPLAIN QUERY PLAN</code> command</a> for all the SQL statements used in a CQL file using a set of special compilation steps.</p>
 <p>Generating query plans is inherently complicated. Any given stored procedure might include many SQL statements, each of which has a plan. To get the plans, those statements must be executed in the appropriate mode. In order for them to execute, whatever tables, views, and user-defined functions they use must exist. The statements can have any number of parameters, those have to be swapped out because they might come from anywhere. When run in <code>--rt query_plan</code> mode, the compiler accomplishes all of this by analyzing the original code and creating entirely new code. Running this new code creates the schema and, with the appropriate transforms, runs all the SQL statements in the original to give us the query plans. The process requires many steps as we’ll see below.</p>
 <h2 id="query-plan-generation-compilation-steps">Query Plan Generation Compilation Steps</h2>
-<div class="tip">
-<p>The following steps are used in <code>./repl/go_query_plan.sh</code>, you can <a href="../../docs/playground#query-plan-playground">run it to get a quick demonstration of this feature in action</a>. The rest of the section explains how query plan generation works and some of its quirks.</p>
-</div>
+<blockquote>
+<p>TIP: The following steps are used in <code>./repl/go_query_plan.sh</code>, you can <a href="../../docs/playground#query-plan-playground">run it to get a quick demonstration of this feature in action</a>. The rest of the section explains how query plan generation works and some of its quirks.</p>
+</blockquote>
 <p>To execute query plans for a given CQL file, the following commands need to be run:</p>
 <div class="sourceCode" id="cb445"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb445-1" title="1"><span class="va">CQL_FILE=</span> <span class="co"># The CQL file to compile</span></a>
 <a class="sourceLine" id="cb445-2" title="2"><span class="va">CQL_ROOT_DIR=</span> <span class="co"># Path to cql directory</span></a>
@@ -6943,7 +6945,9 @@ END;</code></pre>
 <p>Contrary to what one might expect, rather than providing query plans directly, CQL uses <code>--rt query_plan</code> to generate a second CQL script that returns query plans for each SQL statement used.</p>
 <p>A separate command, <code>--rt udf</code> is required to generate any stubbed <a href="#chapter-8-functions">user defined functions</a> that are used in the original script. Afterwards, the generated query plan script, udf stubs needs to compiled like any CQL file and run by a “main” function that needs to be created separately.</p>
 <p>The CQL repository provides the file <a href="../../sources/query_plan_test.c"><code>query_plan_test.c</code></a> that can be used as the “main” function, otherwise you can make your own.</p>
-<p>::note When compiling the CQL file generated by <code>--rt query_plan</code>, the <code>--dev</code> flag is required. :::</p>
+<blockquote>
+<p>NOTE: When compiling the CQL file generated by <code>--rt query_plan</code>, the <code>--dev</code> flag is required.</p>
+</blockquote>
 <h3 id="special-handling-of-cql-features-in-query-plan-generation">Special Handling of CQL features in Query Plan Generation</h3>
 <p>CQL’s query planner generator modifies the usage of the following features to allow SQLite run <code>EXPLAIN QUERY PLAN</code> successfully:</p>
 <ul>
@@ -7173,7 +7177,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 13 22:21:29 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:25:19 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -11137,7 +11141,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 13 22:21:29 PDT 2023</p>
+<p>Snapshot as of Sat May 13 23:25:19 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

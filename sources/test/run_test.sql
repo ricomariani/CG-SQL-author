@@ -5607,8 +5607,6 @@ END_TEST(normalize_bool_on_call)
 -- cg_common.c to be 32 bits by masking the high bits off.  This is
 -- not something we can ship.
 
-#ifndef LUA_RUN_TEST
-
 BEGIN_TEST(blob_funcs)
   let b := (select bcreateval(112233, 0, 1234, 1, 1, 5678, 1));
   EXPECT(112233 == (select bgetkey_type(b)));
@@ -5711,8 +5709,6 @@ BEGIN_TEST(backed_tables_default_values)
   fetch C;
   EXPECT(NOT C);
 END_TEST(backed_tables_default_values)
-
-#endif
 
 END_SUITE()
 

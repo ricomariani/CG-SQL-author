@@ -95,14 +95,8 @@ end
 
 function bgetval_type(context, b)
   t = str_unpack(b)
-
-  -- We can't enable the run test that uses this stuff
-  -- because we have no way to return an int64 without
-  -- losing fidelity.  But the test passes if you
-  -- hack the hash codes to be only 32 bits.  Best we
-  -- can do for now.  luasqlite3 needs support for 64
-  -- bits... hopefully that will come soon.
-  context:result_int(t)
+  -- note: result(t) allows int64 results as well as int
+  context:result(t)
 end
 
 function bgetval(context, b, offs)
@@ -112,7 +106,8 @@ function bgetval(context, b, offs)
   if offs == 0 then r = v1 end
   if offs == 1 then r = v2 end
   if offs == 2 then r = v3 end
-  context:result_int(r)
+  -- note: result(t) allows int64 results as well as int
+  context:result(r)
 end
 
 function rscount(context, rsid)
@@ -132,7 +127,7 @@ function rscol(context, rsid, rownum, colnum)
   end
 
   result = row[k]
-  context:result_int(result)
+  context:result(result)
 end
 
 function _cql_init_extensions(db)

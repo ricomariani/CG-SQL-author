@@ -33,11 +33,12 @@ The script will generate the output of `EXPLAIN QUERY PLAN` of the SQL statement
 
 ```json
 {
-"alerts" : [
+"alerts" : {
 
-],
+},
 "plans" : [
   {
+   "id" : 1,
    "query" : "INSERT INTO my_table(str) VALUES(\"Hello from CQL.\"), (\"Edit as you please.\")",
    "stats" : [
       ["SCAN", 1]
@@ -45,6 +46,7 @@ The script will generate the output of `EXPLAIN QUERY PLAN` of the SQL statement
    "plan" : "QUERY PLAN\n|..SCAN 2 CONSTANT ROWS"
   },
   {
+   "id" : 2,
    "query" : "SELECT *\n  FROM my_table",
    "stats" : [
       ["SCAN", 1]

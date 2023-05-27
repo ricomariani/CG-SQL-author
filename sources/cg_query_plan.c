@@ -489,7 +489,7 @@ static void emit_print_sql_statement_proc(charbuf *output) {
           "BEGIN\n"
           "  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;\n"
           "  FETCH C;\n"
-          "  CALL printf(\"  \\\"%s\\\",\\n\", C.sql);\n"
+          "  CALL printf(\"   \\\"query\\\" : \\\"%s\\\",\\n\", C.sql);\n"
           "END;\n"
   );
 }
@@ -532,20 +532,23 @@ static void emit_print_query_violation_proc(charbuf *output) {
           "  BEGIN\n"
           "    CALL populate_table_scan_alert_table(C.table_name);\n"
           "  END;\n\n"
-          "  LET count := (SELECT COUNT(*) FROM table_scan_alert UNION ALL SELECT COUNT(*) FROM b_tree_alert);\n"
-          "  IF count > 0 THEN \n"
-          "    CALL printf(\"[\\\"Alert\\\"],\\n\");\n"
-          "    DECLARE C2 CURSOR FOR\n"
-          "      SELECT 'TABLE SCAN VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert\n"
-          "      UNION ALL\n"
-          "      SELECT 'TEMP B-TREE VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;\n"
-          "    LOOP FETCH C2\n"
-          "    BEGIN\n"
-          "      CALL printf(\"[{\\\"value\\\": \\\"%s\", C2.key);\n"
+          "  LET first := true;\n"
+          "  CALL printf(\"\\\"alerts\\\" : [\\n\");\n"
+          "  DECLARE C2 CURSOR FOR\n"
+          "    SELECT 'TABLE SCAN VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert\n"
+          "    UNION ALL\n"
+          "    SELECT 'TEMP B-TREE VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;\n"
+          "  LOOP FETCH C2\n"
+          "  BEGIN\n"
+          "    IF C2.info_list IS NOT NULL THEN\n"
+          "      CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
+          "      CALL printf(\"  {\\\"value\\\": \\\"%s\", C2.key);\n"
           "      CALL printf(\"%s\", C2.info_list);\n"
-          "      CALL printf(\"\\\", \\\"style\\\": {\\\"fontSize\\\": 14, \\\"color\\\": \\\"red\\\", \\\"fontWeight\\\": \\\"bold\\\"}}],\\n\");\n"
-          "    END;\n"
-          "  END IF;\n"
+          "      CALL printf(\"\\\" }\");\n"
+          "      SET first := false;\n"
+          "    END IF;\n"
+          "  END;\n"
+          "  CALL printf(\"\\n],\\n\");\n"
           "END;\n"
   );
 }
@@ -555,7 +558,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
           "%s",
           "CREATE PROC print_query_plan_stat(id_ integer not null)\n"
           "BEGIN\n"
-          "  CALL printf(\"  [\\n\");\n"
+          "  CALL printf(\"   \\\"stats\\\" : [\\n\");\n"
           "  DECLARE Ca CURSOR FOR\n"
           "  WITH\n"
           "    scan(name, count, priority) AS (\n"
@@ -593,16 +596,8 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
           "        WHERE zdetail LIKE '%execute scalar%' AND sql_id = id_\n"
           "    )\n"
           "  SELECT \n"
-          "   CASE name\n"
-          "     WHEN 'SCAN' THEN '{\"value\": \"' || name || '\", \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}'\n"
-          "     WHEN 'TEMP B-TREE' THEN '{\"value\": \"' || name || '\", \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}'\n"
-          "     ELSE '\"' || name || '\"'\n"
-          "   END name,\n"
-          "   CASE name\n"
-          "     WHEN 'SCAN' THEN '{\"value\": ' || count || ', \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}'\n"
-          "     WHEN 'TEMP B-TREE' THEN '{\"value\": ' || count || ', \"style\": {\"fontSize\": 14, \"color\": \"red\", \"fontWeight\": \"bold\"}}'\n"
-          "     ELSE '' || count\n"
-          "   END value\n"
+          "   '\"' || name || '\"' name,\n"
+          "   count value\n"
           "   FROM (\n"
           "   SELECT * FROM scan\n"
           "   UNION ALL\n"
@@ -617,13 +612,14 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
           "   SELECT * FROM execute_scalar\n"
           "  )\n"
           "  WHERE count > 0 ORDER BY priority ASC, count DESC;\n"
-          "  CALL printf(\"    [],\\n\");\n"
+          "  LET first := true;\n"
           "  LOOP FETCH Ca\n"
           "  BEGIN\n"
-          "    CALL printf(\"    [%s, %s],\\n\", Ca.name, Ca.value);\n"
+          "    CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
+          "    CALL printf(\"      [%s, %d]\", Ca.name, Ca.value);\n"
+          "    SET first := false;\n"
           "  END;\n"
-          "  CALL printf(\"    []\\n\");\n"
-          "  CALL printf(\"  ],\\n\");\n"
+          "  CALL printf(\"\\n    ],\\n\");\n"
           "END;\n"
   );
 }
@@ -633,24 +629,25 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
           "%s",
           "CREATE PROC print_query_plan_graph(id_ integer not null)\n"
           "BEGIN\n"
-          "  CALL printf(\"  \\\"\");\n"
           "  DECLARE C CURSOR FOR\n"
           "  WITH RECURSIVE\n"
           "    plan_chain(iselectid,  zdetail, level) AS (\n"
-          "     SELECT 0 as  iselectid, '?' as  zdetail, 0 as level\n"
+          "     SELECT 0 as  iselectid, 'QUERY PLAN' as  zdetail, 0 as level\n"
           "     UNION ALL\n"
           "     SELECT plan_temp.iselectid, plan_temp.zdetail, plan_chain.level+1 as level\n"
           "      FROM plan_temp JOIN plan_chain ON plan_temp.iorder=plan_chain.iselectid WHERE plan_temp.sql_id = id_\n"
           "     ORDER BY 3 DESC\n"
           "    )\n"
           "    SELECT\n"
-          "     substr('                              ', 1, max(level - 1, 0)*4) ||\n"
-          "     substr('|.............................', 1, min(level, 1)*4) ||\n"
+          "     level,\n"
+          "     substr('                              ', 1, max(level - 1, 0)*3) ||\n"
+          "     substr('|.............................', 1, min(level, 1)*3) ||\n"
           "     zdetail as graph_line FROM plan_chain;\n"
           "\n"
+          "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
           "  LOOP FETCH C\n"
           "  BEGIN\n"
-          "    CALL printf(\"\\\\n%s\", C.graph_line);\n"
+          "    CALL printf(\"\%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
           "  END;\n"
           "  CALL printf(\"\\\"\\n\");\n"
           "END;\n"
@@ -661,11 +658,11 @@ static void emit_print_query_plan(charbuf *output) {
   bprintf(output,
           "CREATE PROC print_query_plan(sql_id integer not null)\n"
           "BEGIN\n"
-          "  CALL printf(\"[\\n\");\n"
+          "  CALL printf(\"  {\\n\");\n"
           "  CALL print_sql_statement(sql_id);\n"
           "  CALL print_query_plan_stat(sql_id);\n"
           "  CALL print_query_plan_graph(sql_id);\n"
-          "  CALL printf(\"],\\n\");\n"
+          "  CALL printf(\"  }\");\n"
           "END;\n"
   );
 }
@@ -791,24 +788,22 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
     bprintf(&output_buf, "  END CATCH;\n");
   }
 
-  bprintf(&output_buf, "  CALL printf(\"[\\n\");\n");
+  bprintf(&output_buf, "  CALL printf(\"{\\n\");\n");
 
   if (sql_stmt_count) {
     bprintf(&output_buf, "  CALL print_query_violation();\n");
   }
 
-  bprintf(&output_buf, "  CALL printf(\"[\\n\");\n");
-  bprintf(&output_buf, "  CALL printf(\"[\\n\");\n");
-  bprintf(&output_buf, "  CALL printf(\"[\\\"Query\\\", \\\"Stat\\\", \\\"Graph\\\"],\\n\");\n");
-  for (int32_t i = 1; i <= sql_stmt_count; i++) {
-    bprintf(&output_buf, "  CALL print_query_plan(%d);\n", i);
-  }
-  bprintf(&output_buf, "  CALL printf(\"[]\\n\");\n");
-  bprintf(&output_buf, "  CALL printf(\"]\\n\");\n");
-  bprintf(&output_buf, "  CALL printf(\"],\\n\");\n");
-
-  bprintf(&output_buf, "  CALL printf(\"[]\\n\");\n");
-  bprintf(&output_buf, "  CALL printf(\"]\");\n");
+  bprintf(&output_buf, "  CALL printf(\"\\\"plans\\\" : [\\n\");\n");
+  bprintf(&output_buf, "  LET q := 1;\n");
+  bprintf(&output_buf, "  WHILE q <= %d\n", sql_stmt_count);
+  bprintf(&output_buf, "  BEGIN\n");
+  bprintf(&output_buf, "    CALL printf(\"%%s\", IIF(q == 1, \"\", \",\\n\"));\n");
+  bprintf(&output_buf, "    CALL print_query_plan(q);\n");
+  bprintf(&output_buf, "    SET q := q + 1;\n");
+  bprintf(&output_buf, "  END;\n");
+  bprintf(&output_buf, "  CALL printf(\"\\n]\\n\");\n");
+  bprintf(&output_buf, "  CALL printf(\"}\");\n");
 
   bprintf(&output_buf, "END;\n");
 

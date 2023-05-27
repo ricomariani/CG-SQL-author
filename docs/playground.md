@@ -32,32 +32,46 @@ $ ./go_query_plan.sh
 The script will generate the output of `EXPLAIN QUERY PLAN` of the SQL statements used in `go.sql`.
 
 ```json
-["Query", "Stat", "Graph"],
-[
-  "INSERT INTO my_table(str) VALUES(\"Hello from CQL.\"), (\"Edit as you please.\")",
-  [
-    [],
-    [{"value": "SCAN", "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}, {"value": 1, "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}],
-    []
-  ],
-  "\n?\n|...SCAN 2 CONSTANT ROWS"
+{
+"alerts" : [
+
 ],
-[
-  "SELECT *\n  FROM my_table",
-  [
-    [],
-    [{"value": "SCAN", "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}, {"value": 1, "style": {"fontSize": 14, "color": "red", "fontWeight": "bold"}}],
-    []
-  ],
-  "\n?\n|...SCAN TABLE my_table"
-],
+"plans" : [
+  {
+   "query" : "INSERT INTO my_table(str) VALUES(\"Hello from CQL.\"), (\"Edit as you please.\")",
+   "stats" : [
+      ["SCAN", 1]
+    ],
+   "plan" : "QUERY PLAN\n|..SCAN 2 CONSTANT ROWS"
+  },
+  {
+   "query" : "SELECT *\n  FROM my_table",
+   "stats" : [
+      ["SCAN", 1]
+    ],
+   "plan" : "QUERY PLAN\n|..SCAN TABLE my_table"
+  }
+]
+}
 ```
 
-You might notice the above output has a lot of extraneous stuff, like what seems to be CSS styling in JSON format. This is something that will be addressed in the future. In the meantime, you can use
-something like [`jq`](https://stedolan.github.io/jq/) to filter stuff out. For example:
+You can use something like [`jq`](https://stedolan.github.io/jq/) to filter the parts you want. For example:
 
 ```bash
-$ ./go_query_plan.sh | jq '.[0][0][1:-1][] | {"query": .[0], "explain": .[2]}'
+$ ./go_query_plan.sh | jq '.plans[] | {query:.query, plan:.plan}'
+```
+
+Which would yield:
+
+```
+{
+  "query": "INSERT INTO my_table(str) VALUES(\"Hello from CQL.\"), (\"Edit as you please.\")",
+  "plan": "QUERY PLAN\n|..SCAN 2 CONSTANT ROWS"
+}
+{
+  "query": "SELECT *\n  FROM my_table",
+  "plan": "QUERY PLAN\n|..SCAN TABLE my_table"
+}
 ```
 
 ## Fully Online Playground

@@ -30,8 +30,8 @@ $CQL --in $CQL_FILE --rt udf --cg go-qp-udf.h go-qp-udf.c
 
 # Compile and link CQL artifacts, with a main C file query_plan_test.c
 $CQL --in go-qp.sql --cg go-qp.h go-qp.c --dev
-cc -I$CQL_ROOT_DIR -I. -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c go-qp-udf.c
-cc -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o go-qp-udf.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
+cc -g -I$CQL_ROOT_DIR -I. -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c go-qp-udf.c
+cc -g -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o go-qp-udf.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
 
 # Run and generate query plans
 ./go_query_plan

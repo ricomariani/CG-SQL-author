@@ -533,22 +533,21 @@ BEGIN
   END;
 
   LET first := true;
-  CALL printf("\"alerts\" : [\n");
+  CALL printf("\"alerts\" : {\n");
   DECLARE C2 CURSOR FOR
-    SELECT 'TABLE SCAN VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert
+    SELECT 'tableScanViolation' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert
     UNION ALL
-    SELECT 'TEMP B-TREE VIOLATION:  ' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;
+    SELECT 'tempBTreeViolation' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;
   LOOP FETCH C2
   BEGIN
     IF C2.info_list IS NOT NULL THEN
       CALL printf("%s", IIF(first, "", ",\n"));
-      CALL printf("  {\"value\": \"%s", C2.key);
-      CALL printf("%s", C2.info_list);
-      CALL printf("\" }");
+      CALL printf("  \"%s\" : ", C2.key);
+      CALL printf("\"%s\"", C2.info_list);
       SET first := false;
     END IF;
   END;
-  CALL printf("\n],\n");
+  CALL printf("\n},\n");
 END;
 
 CREATE PROC print_sql_statement(sql_id integer not null)
@@ -652,6 +651,7 @@ END;
 CREATE PROC print_query_plan(sql_id integer not null)
 BEGIN
   CALL printf("  {\n");
+  CALL printf("   \"id\" : %d,\n", sql_id);
   CALL print_sql_statement(sql_id);
   CALL print_query_plan_stat(sql_id);
   CALL print_query_plan_graph(sql_id);

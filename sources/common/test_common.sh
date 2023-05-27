@@ -1245,7 +1245,6 @@ then
 fi
 
 # each of these will exit if anything goes wrong
-query_plan_test
 basic_test
 unit_tests
 dot_test

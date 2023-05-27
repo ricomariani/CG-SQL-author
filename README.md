@@ -23,6 +23,7 @@ Grammar Diagrams:
 
 - [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/railroad_diagram.html)
 - [JSON Output Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
+- [Query Plan Output Diagram](https://ricomariani.github.io/CG-SQL-author/diagrams/query_plan_railroad_diagram.html)
 
 
 For Contributors:

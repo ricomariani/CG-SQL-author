@@ -1,0 +1,16 @@
+query_json ::= '{''"alerts"' ':' '{' alerts? '}' "," '"plans"' ':' '[' plans? ']' '}'
+
+alerts ::= alert (',' alerts ) *
+
+alert ::= '"tableScanViolation"' ':' violationString
+alert ::= '"tempBTreeViolation"' ':' violationString
+
+plans ::= plan
+plans ::= plan ',' plans
+
+plan ::= '{' '"id"' ':' number ',' '"query"' ':' sqlString ',' '"stats"' ':' '[' stats? ']' ',' '"plan"' ':' planString '}'
+
+stats ::= stat
+stats ::= stat  ',' stats
+
+stat ::= '[' statName ',' number ']'

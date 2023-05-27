@@ -1,6 +1,7 @@
 query_json ::= '{''"alerts"' ':' '{' alerts? '}' "," '"plans"' ':' '[' plans? ']' '}'
 
-alerts ::= alert (',' alerts ) *
+alerts ::= alert
+alerts ::= alert ',' alerts
 
 alert ::= '"tableScanViolation"' ':' violationString
 alert ::= '"tempBTreeViolation"' ':' violationString

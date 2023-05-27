@@ -55,6 +55,9 @@ java -jar ${RR}/rr.war -out:cql.xhtml "${CQL_SOURCES}/out/cql_rr.txt"
 echo "...JSON grammar"
 java -jar ${RR}/rr.war -out:json.xhtml "${GRAMMAR_DOCS}/json_grammar.txt"
 
+echo "...QUERY PLAN grammar"
+java -jar ${RR}/rr.war -out:qp.xhtml "${GRAMMAR_DOCS}/query_plan_grammar.txt"
+
 echo "fixing headers and rewriting xhtml to html in CQL diagram"
 
 cat >cql.html <<EOF
@@ -86,15 +89,32 @@ cat >json.html <<EOF
 EOF
 sed -f rr-replacements.txt <json.xhtml >>json.html
 
+echo "fixing headers and rewriting xhtml to html in QUERY PLAN diagram"
+
+cat >qp.html <<EOF
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+--
+-- @generated
+-->
+EOF
+sed -f rr-replacements.txt <qp.xhtml >>qp.html
+
 echo "placing output in the pickup directory"
 
 mv cql.html "${DIAGRAMS}/railroad_diagram.html"
 mv json.html "${DIAGRAMS}/json_output_railroad_diagram.html"
+mv qp.html "${DIAGRAMS}/query_plan_railroad_diagram.html"
 
 echo "cleaning up"
 
 rm cql.xhtml
 rm json.xhtml
+rm qp.xhtml
 
 echo "running diagram font changes"
 

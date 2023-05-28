@@ -9613,10 +9613,17 @@ CQL's query planner generator modifies the usage of the following features to al
 - Variables
 - User Defined Functions
 - Conditionals in Shared Fragments
+- [Virtual Tables](https://sqlite.org/vtab.html)
+- [Table-Valued Funcxtions](https://sqlite.org/vtab.html#tabfunc2)
 
-:::caution
-Generating query plans of CQL files that use table valued functions, or [virtual tables](https://sqlite.org/vtab.html#:~:text=2.-,Table%2Dvalued%20functions,columns%20of%20the%20virtual%20table.) is not supported.
-:::
+> CAUTION:
+> Generating query plans for CQL files that use table valued functions, or virtual tables
+> results in the creation of similarly named "normal" tables which will be using in the query instead
+> of the virtual table or table -valued function.
+> This means that the query plan output won't be quite right, especially if these items had complex interiors
+> with nested SQLite queries, but it also means the code that generates
+> the query plans does not need to have all of your native bindings for the relevant modules and functions
+> which make it possible to actually run the queries out of context in a standalone build.
 
 #### Variables
 Variables used in SQL statements are stubbed into constants. The exact value varies depending on the type of the variable, but it is always equivalent to some form of `"1"`.
@@ -9884,7 +9891,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat May 27 11:52:36 PDT 2023
+Snapshot as of Sun May 28 11:34:39 PDT 2023
 
 ### Operators and Literals
 
@@ -16238,7 +16245,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat May 27 11:52:36 PDT 2023
+Snapshot as of Sun May 28 11:34:39 PDT 2023
 
 ### Rules
 

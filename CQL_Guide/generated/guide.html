@@ -7018,10 +7018,12 @@ END;</code></pre>
 <li>Variables</li>
 <li>User Defined Functions</li>
 <li>Conditionals in Shared Fragments</li>
+<li><a href="https://sqlite.org/vtab.html">Virtual Tables</a></li>
+<li><a href="https://sqlite.org/vtab.html#tabfunc2">Table-Valued Funcxtions</a></li>
 </ul>
-<div class="caution">
-<p>Generating query plans of CQL files that use table valued functions, or <a href="https://sqlite.org/vtab.html#:~:text=2.-,Table%2Dvalued%20functions,columns%20of%20the%20virtual%20table.">virtual tables</a> is not supported.</p>
-</div>
+<blockquote>
+<p>CAUTION: Generating query plans for CQL files that use table valued functions, or virtual tables results in the creation of similarly named “normal” tables which will be using in the query instead of the virtual table or table -valued function. This means that the query plan output won’t be quite right, especially if these items had complex interiors with nested SQLite queries, but it also means the code that generates the query plans does not need to have all of your native bindings for the relevant modules and functions which make it possible to actually run the queries out of context in a standalone build.</p>
+</blockquote>
 <h4 id="variables">Variables</h4>
 <p>Variables used in SQL statements are stubbed into constants. The exact value varies depending on the type of the variable, but it is always equivalent to some form of <code>"1"</code>.</p>
 <p><code>sql title="original.sql" ... SELECT * FROM my_table WHERE id = x; ...</code></p>
@@ -7243,7 +7245,7 @@ END;</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat May 27 11:52:36 PDT 2023</p>
+<p>Snapshot as of Sun May 28 11:34:39 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -11224,7 +11226,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -- LICENSE file in the root directory of this source tree.
 -->
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat May 27 11:52:36 PDT 2023</p>
+<p>Snapshot as of Sun May 28 11:34:39 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

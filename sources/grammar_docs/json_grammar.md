@@ -1,18 +1,14 @@
----
-id: x5
-title: "Appendix 5: JSON Schema Grammar"
-sidebar_label: "Appendix 5: JSON Schema Grammar"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 5: JSON Schema Grammar
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun May 28 11:34:39 PDT 2023
+Snapshot as of Mon May 29 00:05:56 PDT 2023
 
 ### Rules
 

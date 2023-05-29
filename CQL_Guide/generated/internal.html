@@ -203,13 +203,13 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </ul>
 </nav>
 <!--- @generated -->
-<h2 id="part-1-lexing-parsing-and-the-ast">Part 1: Lexing, Parsing, and the AST</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-1-lexing-parsing-and-the-ast">Part 1: Lexing, Parsing, and the AST</h2>
 <h3 id="preface">Preface</h3>
 <p>The following is a summary of the implementation theory of the CQL compiler. This is an adjunct to the <a href="guide.md">Guide proper</a>, which describes the language, and to a lesser extent the code that the compiler generates.</p>
 <p>The actual code is heavily commented, so it’s better to read the code to see the details of how any particular operation happens rather than try to guess from the language specification or from this overview. However, some things, like general principles, really are nowhere (or everywhere) in the codebase and it’s important to understand how things hang together.</p>
@@ -685,12 +685,12 @@ AST(or)</code></pre>
 <ul>
 <li><code>EXTRACT_NOTNULL(cond_action, ast-&gt;left);</code>
 <ul>
-<li>read ast-&gt;left, assert that it is of type <code>cond_action</code>, it must not be NULL</li>
+<li>read <code>ast-&gt;left</code>, assert that it is of type <code>cond_action</code>, it must not be NULL</li>
 <li>declare a local variable named <code>cond_action</code> to hold the result</li>
 </ul></li>
 <li><code>EXTRACT_NOTNULL(if_alt, ast-&gt;right);</code>
 <ul>
-<li>read ast-&gt;right, assert that it is of type <code>if_alt</code>, it must not be NULL</li>
+<li>read <code>ast-&gt;right</code>, assert that it is of type <code>if_alt</code>, it must not be NULL</li>
 <li>declare a local variable named <code>if_alt</code> to hold the result</li>
 </ul></li>
 <li><code>EXTRACT(elseif, if_alt-&gt;left);</code>
@@ -710,17 +710,17 @@ AST(or)</code></pre>
 <li><code>EXTRACT_NAMED_NOTNULL</code> : like the <code>NAMED</code> variant</li>
 <li><code>EXTRACT_ANY</code> : if the tree type is not known (e.g. <code>expr-&gt;left</code> could be any expression type)</li>
 <li><code>EXTRACT_ANY_NOTNULL</code> : as above but not optional</li>
-<li><code>EXTRACT_NUM_TYPE</code> : extracts the num_type field from a numeric AST node</li>
+<li><code>EXTRACT_NUM_TYPE</code> : extracts the <code>num_type</code> field from a numeric AST node</li>
 </ul>
 <p>The <code>ANY</code> variants are usually re-dispatched with something like <code>gen_expr</code> that uses the name table again (and that will check the type) or else the extracted value is checked with ad hoc logic immediately after extraction if it’s perhaps one of two or three variations. In all cases the idea is to force a failure very quickly. <code>gen_root_expr()</code> for instance in the <code>if_cond</code> example will fail immediately if the node it gets is not an expression type.</p>
 <p>Because of the clear use of <code>EXTRACT</code>, the <code>gen_</code> family of functions are often the best/fastest way to understand the shape of the AST. You can dump a few samples and look at the <code>gen_</code> function and quickly see exactly what the options are authoritatively. As a result it’s very normal to paste the extraction code from a <code>gen_</code> function into a new/needed semantic analysis or code-generation function.</p>
-<h2 id="part-2-semantic-analysis">Part 2: Semantic Analysis</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-2-semantic-analysis">Part 2: Semantic Analysis</h2>
 <h3 id="preface-1">Preface</h3>
 <p>Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler. As in the previous sections, the goal here is not to go over every single rule but rather to give a sense of how semantic analysis happens in general – the core strategies and implementation choices – so that when reading the code you will have an idea of how smaller pieces fit into the whole. To accomplish this, various key data structures will be explained in detail and selected examples of their use are included.</p>
 <h2 id="semantic-analysis">Semantic Analysis</h2>
@@ -2474,13 +2474,13 @@ AST(or)</code></pre>
 <blockquote>
 <p>NOTE: details on unsub/resub are forthcoming. This code is under development.</p>
 </blockquote>
-<h2 id="part-3-c-code-generation">Part 3: C Code Generation</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-3-c-code-generation">Part 3: C Code Generation</h2>
 <h3 id="preface-2">Preface</h3>
 <p>Part 3 continues with a discussion of the essentials of the C code generation pass of the CQL compiler. As in the previous sections, the goal here is not to go over every detail of code generation but rather to give a sense of how codegen happens in general – the core strategies and implementation choices – so that when reading the code you will have an idea how smaller pieces would fit into the whole. To accomplish this, various key data structures will be explained in detail as well as selected examples of their use.</p>
 <h2 id="c-code-generation">C Code Generation</h2>
@@ -4523,13 +4523,13 @@ cql_cleanup:
 <li>the use of <code>charbuf</code> to create and assemble fragments</li>
 </ul>
 <p>As with the other parts, this is not a complete discussion of the code but a useful survey that should give readers enough context to understand <code>cg_c.c</code> and the runtime helpers in <code>cqlrt.c</code> and <code>cqlrt_common.c</code>. Good luck in your personal exploration!</p>
-<h2 id="part-4-testing">Part 4: Testing</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-4-testing">Part 4: Testing</h2>
 <h3 id="preface-3">Preface</h3>
 <p>Part 4 continues with a discussion of the essentials testing frameworks for the CQL compiler. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how testing happens in general – the core strategies and implementation choices – so that when reading the tests you will have an idea how it all hangs together. To accomplish this, various key tools will be explained in detail as well as selected examples of their use.</p>
 <h2 id="testing">Testing</h2>
@@ -5128,13 +5128,13 @@ Upgrade from nothing to v3, then to v3 -- must match direct update to v3</code><
 <h3 id="summary">Summary</h3>
 <p>While there are a few more isolated verifications that happen in <code>test.sh</code> and of course there is the plumbing necessary to let <code>cov.sh</code> use the test script to create coverage reports, the above forms make up the vast majority of the test patterns.</p>
 <p>Generally, the test files are designed to hold as many tests as can reasonably fit with the gating factor being cases where different flags are necessary. There are two different stages were many different tiny input files are used to create trivial failures like missing command line arguments and such. But those cases are all just looking for simple error text and a failure code, so they should be self-evident. With so many options, many such baby tests are needed.</p>
-<h2 id="part-5-cql-runtime">Part 5: CQL Runtime</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-5-cql-runtime">Part 5: CQL Runtime</h2>
 <h3 id="preface-4">Preface</h3>
 <p>Part 5 continues with a discussion of the essentials of the CQL Runtime. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how the runtime works in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together. To accomplish this, we’ll illustrate the key pieces that can be customized and we’ll discuss some interesting cases.</p>
 <h2 id="cql-runtime">CQL Runtime</h2>
@@ -5390,13 +5390,13 @@ typedef struct cql_boxed_stmt {
 <li>the <code>cqlrt_cf</code> runtime</li>
 </ul>
 <p>As with the other parts, no attempt was made to cover every detail. That is best done by reading the source code.</p>
-<h2 id="part-6-schema-management">Part 6: Schema Management</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-6-schema-management">Part 6: Schema Management</h2>
 <h3 id="preface-5">Preface</h3>
 <p>Part 6 continues with a discussion of the essentials of schema management in the CQL compiler. As in the previous parts, the goal here is not to go over every detail of the system but rather to give a sense of how schema management happens in general – the core strategies and implementation choices – so that when reading the management code you will have an idea how it all hangs together. To accomplish this, various key data structures will be explained in detail and accompanied by examples of their use.</p>
 <h2 id="schema-management">Schema Management</h2>
@@ -5854,13 +5854,13 @@ typedef struct cql_boxed_stmt {
 <li>how all of these are wired together starting from the upgrader’s “main”</li>
 </ul>
 <p>As with the other parts, no attempt was made to cover every function in detail. That is best done by reading the source code. But there is overall structure here and an understanding of the basic principles is helpful before diving into the source code.</p>
-<h2 id="part-7-json-generation">Part 7: JSON Generation</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-7-json-generation">Part 7: JSON Generation</h2>
 <h3 id="preface-6">Preface</h3>
 <p>Part 7 continues with a discussion of the JSON generation code. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how JSON creation works in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together. To accomplish this, we’ll illustrate the key strategies used to extract the data and format the JSON.</p>
 <h2 id="json-schema">JSON Schema</h2>
@@ -6354,13 +6354,13 @@ typedef struct cql_boxed_stmt {
 <li>a tour of the dependency emitter</li>
 </ul>
 <p>As with the other parts, no attempt was made to cover every function in detail. That is best done by reading the source code. But there is overall structure here and an understanding of the basic principles is helpful before diving into the source code.</p>
-<h2 id="part-8-test-helpers">Part 8: Test Helpers</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="part-8-test-helpers">Part 8: Test Helpers</h2>
 <h3 id="preface-7">Preface</h3>
 <p>Part 8 continues with a discussion of the Test Helper generation code. As in the previous sections, the goal here is not to go over every detail but rather to give a sense of how helpers are created in general – the core strategies and implementation choices – so that when reading the source you will have an idea how it all hangs together.</p>
 <h2 id="test-helpers">Test Helpers</h2>

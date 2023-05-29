@@ -29,17 +29,13 @@ awk <json.txt 'BEGIN {FS="\n"; RS=""} {gsub("\n","",$0); print }' | \
 echo "railroad diagram format in json_grammar.txt (paste into https://www.bottlecaps.de/rr/ui)"
 
 cat <<EOF >json_grammar.md
----
-id: x5
-title: "Appendix 5: JSON Schema Grammar"
-sidebar_label: "Appendix 5: JSON Schema Grammar"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 5: JSON Schema Grammar
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 

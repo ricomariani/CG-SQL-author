@@ -1,11 +1,12 @@
 <!--- @generated -->
-## Part 1: Lexing, Parsing, and the AST
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 1: Lexing, Parsing, and the AST
+
 ### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
@@ -727,10 +728,10 @@ this rock solid, so CQL never compromises on 100% code coverage.  The most commo
 example:
 
 * `EXTRACT_NOTNULL(cond_action, ast->left);`
-  * read ast->left, assert that it is of type `cond_action`, it must not be NULL
+  * read `ast->left`, assert that it is of type `cond_action`, it must not be NULL
   * declare a local variable named `cond_action` to hold the result
 * `EXTRACT_NOTNULL(if_alt, ast->right);`
-  * read ast->right, assert that it is of type `if_alt`, it must not be NULL
+  * read `ast->right`, assert that it is of type `if_alt`, it must not be NULL
   * declare a local variable named `if_alt` to hold the result
 * `EXTRACT(elseif, if_alt->left);`
   * read `if_alt->left`, assert that it is either NULL or else of type `elseif`
@@ -745,7 +746,7 @@ Other options:
   * `EXTRACT_NAMED_NOTNULL` : like the `NAMED` variant
   * `EXTRACT_ANY` : if the tree type is not known (e.g. `expr->left` could be any expression type)
   * `EXTRACT_ANY_NOTNULL` : as above but not optional
-  * `EXTRACT_NUM_TYPE` : extracts the num_type field from a numeric AST node
+  * `EXTRACT_NUM_TYPE` : extracts the `num_type` field from a numeric AST node
 
 The `ANY` variants are usually re-dispatched with something like `gen_expr` that uses the name table again (and that will check the type) or
 else the extracted value is checked with ad hoc logic immediately after extraction if it's perhaps one of two or three variations.
@@ -757,13 +758,14 @@ You can dump a few samples and look at the `gen_` function and quickly see exact
 it's very normal to paste the extraction code from a `gen_` function into a new/needed semantic analysis or code-generation function.
 
 
-## Part 2: Semantic Analysis
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 2: Semantic Analysis
+
 ### Preface
 
 Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler.
@@ -3214,13 +3216,14 @@ This isn't everything but it should leave you well armed to begin your own explo
 >NOTE: details on unsub/resub are forthcoming.  This code is under development.
 
 
-## Part 3: C Code Generation
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 3: C Code Generation
+
 ### Preface
 
 Part 3 continues with a discussion of the essentials of the C code generation pass of the CQL compiler.
@@ -6052,13 +6055,14 @@ should give readers enough context to understand `cg_c.c` and the runtime helper
 and `cqlrt_common.c`.  Good luck in your personal exploration!
 
 
-## Part 4: Testing
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 4: Testing
+
 ### Preface
 
 Part 4 continues with a discussion of the essentials testing frameworks for the CQL compiler.
@@ -6828,13 +6832,14 @@ text and a failure code, so they should be self-evident.  With so many options, 
 such baby tests are needed.
 
 
-## Part 5: CQL Runtime
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 5: CQL Runtime
+
 ### Preface
 
 Part 5 continues with a discussion of the essentials of the CQL Runtime.
@@ -7275,13 +7280,14 @@ As with the other parts, no attempt was made to cover every detail.  That is
 best done by reading the source code.
 
 
-## Part 6: Schema Management
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 6: Schema Management
+
 ### Preface
 
 Part 6 continues with a discussion of the essentials of schema management in the CQL compiler.
@@ -7932,13 +7938,14 @@ best done by reading the source code. But there is overall structure here and an
 of the basic principles is helpful before diving into the source code.
 
 
-## Part 7: JSON Generation
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 7: JSON Generation
+
 ### Preface
 
 Part 7 continues with a discussion of the JSON generation code.
@@ -8645,13 +8652,14 @@ best done by reading the source code. But there is overall structure here and an
 of the basic principles is helpful before diving into the source code.
 
 
-## Part 8: Test Helpers
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 8: Test Helpers
+
 ### Preface
 
 Part 8 continues with a discussion of the Test Helper  generation code.

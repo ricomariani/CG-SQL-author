@@ -116,10 +116,4 @@ rm cql.xhtml
 rm json.xhtml
 rm qp.xhtml
 
-echo "running diagram font changes"
-
-cd "${DIAGRAMS}"
-
-./format_diagrams.sh
-
 echo "done"

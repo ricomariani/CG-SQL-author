@@ -9681,16 +9681,17 @@ SELECT 20 b;
 Setting `cql:query_plan_branch=1` selects the second branch. Providing `cql:query_plan_branch=2` instead would yield the `ELSE` clause `SELECT 30 b`. `cql:query_plan_branch=0` would yield `SELECT 10 b`, which is the same as the default behaviour.
 
 
-## Appendix 1: Command Line Options
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 1: Command Line Options
+
 CQL has a variety of command line (CLI) options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
 
-* note CQL is often used after the c pre-processor is run so this kind of invocation is typical:
+>NOTE: CQL is often used after the c pre-processor is run so this kind of invocation is typical:
 
 ```
 cc -E -x c foo.sql | cql [args]
@@ -9880,18 +9881,18 @@ These are the various outputs the compiler can produce.
 
 
 
-## Appendix 2: CQL Grammar
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 2: CQL Grammar
 
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun May 28 11:34:39 PDT 2023
+Snapshot as of Mon May 29 00:05:56 PDT 2023
 
 ### Operators and Literals
 
@@ -11635,13 +11636,14 @@ blob_update_val_stmt:
 
 
 
-## Appendix 3: Control Directives
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 3: Control Directives
+
 The control directives are those statements that begin with `@` and they are distinguished from other statements because they influence the compiler rather than the program logic.  Some of these are of great importance and discussed elsewhere.
 
 The complete list (as of this writing) is:
@@ -11730,13 +11732,14 @@ The complete list (as of this writing) is:
 
 
 
-## Appendix 4: CQL Error Codes
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 4: CQL Error Codes
+
 ### CQL0001: operands must be an integer type, not real
 
 integer math operators like << >> & and | are not compatible with real-valued arguments
@@ -16235,17 +16238,17 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 
 
-## Appendix 5: JSON Schema Grammar
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 5: JSON Schema Grammar
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun May 28 11:34:39 PDT 2023
+Snapshot as of Mon May 29 00:05:56 PDT 2023
 
 ### Rules
 
@@ -17025,13 +17028,13 @@ ad_hoc_migration: '{'
 
 
 
-## Appendix 6: CQL In 20 Minutes
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 6: CQL In 20 Minutes
 
 What follows is a series of examples intended to illustrate the most important features of
 the CQL language. This appendix was significantly influenced by a similar article on Python
@@ -17932,13 +17935,13 @@ If you've read this far you know more than most now.  :)
 
 
 
-## Appendix 7: CQL Anti-patterns
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 7: CQL Anti-patterns
 
 These are a few of the antipatterns I've seen while travelling through various CQL source files.  They are in various categories.
 
@@ -17967,20 +17970,20 @@ DECLARE v LONG NOT NULL;
 SET v := 1;
 ```
 
-better
+better:
 
 ```sql
 LET v := 1L;  -- long literals have the L suffix like in C
 ```
 
-Similarly
+Similarly:
 
 ```sql
 DECLARE v REAL NOT NULL;
 SET v := 1;
 ```
 
-better
+better:
 
 ```sql
 LET v := 1.0; -- use scientific notation or add .0 to make a real literal
@@ -18006,7 +18009,7 @@ UNION ALL
   FROM bar
 ```
 
-Better
+Better [at some point, redundant casts actually started generating errors.]
 
 ```sql
   SELECT
@@ -18202,17 +18205,17 @@ Better:
 
 
 
-## Appendix 8: CQL Best Practices
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 8: CQL Best Practices
 
-This is a brief discussion of every statement type and some general best practices for that statement.
-The statements are in mostly alphabetical order except related statements were moved up in the order
-to make logical groups.
+This is a brief discussion of every statement type and some general best practices for that statement. 
+The statements are in mostly alphabetical order except related statements were
+moved up in the order to make logical groups.
 
 Refer also to Appendix 7: CQL Anti-patterns.
 
@@ -18254,7 +18257,6 @@ In any case this directive should not appear in normal code.  It should be part 
 Transactions do not nest and most procedures do not know the context in which they will be called, so the vast majority of
 procedures will not and should not actually start transactions.  You can only do this if you know, somehow, for sure, that
 the procedure in question is somehow a "top level" procedure.  So generally, don't use these statements.
-
 
 ### Savepoints
 
@@ -18754,9 +18756,10 @@ with (call AB_())
 select * from AB_ where AB_.id = 5;
 ```
 
-For brevity I didn't include the possibility of using IF and such.  Another option
-that makes the same good query plan.  We can generalize `AB_` so that it doesn't know
-where the base data is coming from and can be used in more cases.
+For brevity we haven't included the possibility of using conditional fragments (i.e. `IF` statements) 
+the same good query plan could be generated in that way.  
+
+We can generalize `AB_` so that it doesn't know where the base data is coming from and can be used in more cases.
 
 
 ```sql
@@ -18781,9 +18784,9 @@ select * from AB_ where AB_.id = 5;
 ```
 
 Again this results in a nice straight chain of CTEs and even though the where
-clause is last the A table is constrained properly.
+clause is last the `A` table is constrained properly.
 
-It's important not to fork the chain... if you do that then whatever
+It's important not to fork the chain in the query plan, if that happens then whatever
 came before the fork must be materialized for use in both branches.
 That can be quite bad because then the filtering might come after the
 materialization.  This is an example that is quite bad.
@@ -18811,10 +18814,10 @@ QUERY PLAN
 \--SEARCH SUBQUERY 3 USING AUTOMATIC COVERING INDEX (id=?)
 ```
 
-Things have gone way of the rails here. As you can see `A` is now
+Things have gone poorly here. As you can see `A` is now
 scanned twice. and there are many more joins.  We could make this
-a lot better by moving the A condition all the way up into the first
-CTE.  With fragments that would just mean creating something like
+a lot better by moving the `A` condition all the way up into the first
+CTE.  With fragments that would just mean creating something like:
 
 ```sql
 @attribute(cql:shared_fragment)
@@ -18859,9 +18862,9 @@ So the most important things are:
 
 These few rules will go far in helping you to create shapes.
 
-One last thing, without shared fragments, if you wanted to create a large 10 way join or something you had to type that
-join into your file and it would be very much in your face.  Now that join might be hidden from you in a nice easy-to-use
-fragment.  Which you might then decide you want to use 3 times... And now with a tiny amount of code you have 30 joins.
+One last thing, without shared fragments, if you wanted to create a large join the normal way, maybe 10 tables or so, then you have
+to type that join into your file and it would be very much in your face.  Shared fragments might hide that join from you in a nice easy-to-use
+fragment.  Which you might then decide you want to use the fragment 3 times... And now with a tiny amount of code you have 30 joins.
 
 The thing is shared fragments make it easy to generate a lot of SQL.  It's not bad that shared fragments make things easy,
 but with great power comes great responsibility, so give a care as to what it is you are assembling.  Understanding
@@ -18869,13 +18872,13 @@ your fragments, especially any big ones, will help you to create great code.
 
 
 
-## Appendix 9: Using the CQL Amalgam
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 9: Using the CQL Amalgam
 
 This is a brief discussion of the CQL Amalgam and its normal usage patterns.
 
@@ -19194,13 +19197,13 @@ A thread-safe version would require extensive modifications.
 
 
 
-## Appendix 10: CQL Working Example
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 10: CQL Working Example
 
 This is a working example that shows all of the basic DML statements and the call patterns
 to access them. The code also includes the various helpers you can use to convert C types to
@@ -19354,13 +19357,13 @@ the result set. The rowid is of course the database rowid.
 
 
 
-## Appendix 11: Production Considerations
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Appendix 11: Production Considerations
 
 ### Production Considerations
 

@@ -7038,17 +7038,17 @@ END;</code></pre>
 <p><code>sql title="original.sql" @attribute(cql:shared_fragment) @attribute(cql:query_plan_branch=1) CREATE PROC frag2(y int) BEGIN   IF y == 2 THEN     SELECT 10 b;   ELSE IF y == -1 THEN     SELECT 20 b;   ELSE     SELECT 30 b;   END IF; END;</code></p>
 <p><code>sql title="query_plan.sql" EXPLAIN QUERY PLAN SELECT 20 b;</code></p>
 <p>Setting <code>cql:query_plan_branch=1</code> selects the second branch. Providing <code>cql:query_plan_branch=2</code> instead would yield the <code>ELSE</code> clause <code>SELECT 30 b</code>. <code>cql:query_plan_branch=0</code> would yield <code>SELECT 10 b</code>, which is the same as the default behaviour.</p>
-<h2 id="appendix-1-command-line-options">Appendix 1: Command Line Options</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-1-command-line-options">Appendix 1: Command Line Options</h2>
 <p>CQL has a variety of command line (CLI) options but many of them are only interesting for cql development. Nonetheless this is a comprehensive list:</p>
-<ul>
-<li>note CQL is often used after the c pre-processor is run so this kind of invocation is typical:</li>
-</ul>
+<blockquote>
+<p>NOTE: CQL is often used after the c pre-processor is run so this kind of invocation is typical:</p>
+</blockquote>
 <pre><code>cc -E -x c foo.sql | cql [args]</code></pre>
 <h3 id="with-no-options">With No Options</h3>
 <ul>
@@ -7237,15 +7237,15 @@ END;</code></pre>
 <li>requires two output files (e.g. udfs.h and udfs.c)</li>
 <li>See also <a href="#chapter-15-query-plan-generation">Chapter 15</a></li>
 </ul>
-<h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sun May 28 11:34:39 PDT 2023</p>
+<p>Snapshot as of Mon May 29 00:05:56 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -8973,13 +8973,13 @@ blob_update_val_stmt:
   &quot;@BLOB_UPDATE_VAL&quot; name opt_use_offset
   ;
 </code></pre>
-<h2 id="appendix-3-control-directives">Appendix 3: Control Directives</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-3-control-directives">Appendix 3: Control Directives</h2>
 <p>The control directives are those statements that begin with <code>@</code> and they are distinguished from other statements because they influence the compiler rather than the program logic. Some of these are of great importance and discussed elsewhere.</p>
 <p>The complete list (as of this writing) is:</p>
 <p><code>@ENFORCE_STRICT</code> <code>@ENFORCE_NORMAL</code></p>
@@ -9035,13 +9035,13 @@ blob_update_val_stmt:
 <li><code>cql:query_plan_branch=[integer]</code> is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an <code>IF</code> statement is used. (See <a href="#chapter-15-query-plan-generation">Chapter 15</a>)</li>
 <li><code>cql:alias_of=[c_function_name]</code> are used on <a href="#ordinary-scalar-functions">function declarations</a> to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.</li>
 </ul>
-<h2 id="appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</h2>
 <h3 id="cql0001-operands-must-be-an-integer-type-not-real">CQL0001: operands must be an integer type, not real</h3>
 <p>integer math operators like &lt;&lt; &gt;&gt; &amp; and | are not compatible with real-valued arguments</p>
 <hr />
@@ -11218,15 +11218,15 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 <div class="sourceCode" id="cb573"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb573-1" title="1"><span class="ot">@attribute(cql:alias_of=foo)</span></a>
 <a class="sourceLine" id="cb573-2" title="2"><span class="kw">declare</span> <span class="kw">function</span> bar() <span class="dt">int</span></a></code></pre></div>
 <p>All subsequent calls to <code>bar()</code> in CQL will call the <code>foo()</code> function.</p>
-<h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sun May 28 11:34:39 PDT 2023</p>
+<p>Snapshot as of Mon May 29 00:05:56 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -11999,13 +11999,13 @@ ad_hoc_migration: &#39;{&#39;
                   &#39;}&#39;
   ;
 </code></pre>
-<h2 id="appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-6-cql-in-20-minutes">Appendix 6: CQL In 20 Minutes</h2>
 <p>What follows is a series of examples intended to illustrate the most important features of the CQL language. This appendix was significantly influenced by a similar article on Python at https://learnxinyminutes.com/docs/python/</p>
 <p>Also of interest: * http://sqlite.org * https://learnxinyminutes.com/docs/sql</p>
 <p>And with no further delay, CQL in 20 minutes…</p>
@@ -12892,13 +12892,13 @@ declare C cursor like foo;
 fetch C USING
     1 a, 2 b, 3 c, null d, null e, 5 f, null g;</code></pre>
 <p>If you’ve read this far you know more than most now. :)</p>
-<h2 id="appendix-7-cql-anti-patterns">Appendix 7: CQL Anti-patterns</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-7-cql-anti-patterns">Appendix 7: CQL Anti-patterns</h2>
 <p>These are a few of the antipatterns I’ve seen while travelling through various CQL source files. They are in various categories.</p>
 <p>Refer also to Appendix 8: CQL Best Practices.</p>
 <h3 id="common-schema">Common Schema</h3>
@@ -12915,12 +12915,12 @@ fetch C USING
 <h3 id="declarations">Declarations</h3>
 <div class="sourceCode" id="cb577"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb577-1" title="1"><span class="kw">DECLARE</span> v <span class="dt">LONG</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</a>
 <a class="sourceLine" id="cb577-2" title="2"><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</a></code></pre></div>
-<p>better</p>
+<p>better:</p>
 <div class="sourceCode" id="cb578"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb578-1" title="1">LET v <span class="op">:=</span> 1L;  <span class="co">-- long literals have the L suffix like in C</span></a></code></pre></div>
-<p>Similarly</p>
+<p>Similarly:</p>
 <div class="sourceCode" id="cb579"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb579-1" title="1"><span class="kw">DECLARE</span> v <span class="dt">REAL</span> <span class="kw">NOT</span> <span class="kw">NULL</span>;</a>
 <a class="sourceLine" id="cb579-2" title="2"><span class="kw">SET</span> v <span class="op">:=</span> <span class="dv">1</span>;</a></code></pre></div>
-<p>better</p>
+<p>better:</p>
 <div class="sourceCode" id="cb580"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb580-1" title="1">LET v <span class="op">:=</span> <span class="fl">1.0</span>; <span class="co">-- use scientific notation or add .0 to make a real literal</span></a></code></pre></div>
 <h3 id="casts">Casts</h3>
 <p>Redundant casts fatten the code and don’t really add anything to readability. Sometimems it’s necessary to cast NULL to a particular type so that you can be sure that generated result set has the right data type, but most of the casts below are not necessary.</p>
@@ -12935,7 +12935,7 @@ fetch C USING
 <a class="sourceLine" id="cb581-9" title="9">    <span class="fu">CAST</span>(<span class="kw">NULL</span> <span class="kw">as</span> TEXT) <span class="kw">as</span> name,</a>
 <a class="sourceLine" id="cb581-10" title="10">    <span class="fu">CAST</span>(bar.rate <span class="kw">as</span> <span class="dt">REAL</span>) <span class="kw">as</span> rate</a>
 <a class="sourceLine" id="cb581-11" title="11">  <span class="kw">FROM</span> bar</a></code></pre></div>
-<p>Better</p>
+<p>Better [at some point, redundant casts actually started generating errors.]</p>
 <div class="sourceCode" id="cb582"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb582-1" title="1">  <span class="kw">SELECT</span></a>
 <a class="sourceLine" id="cb582-2" title="2">    foo.<span class="kw">id</span>,</a>
 <a class="sourceLine" id="cb582-3" title="3">    foo.name,</a>
@@ -13043,13 +13043,13 @@ fetch C USING
 <a class="sourceLine" id="cb598-4" title="4">  <span class="kw">FROM</span> foo</a>
 <a class="sourceLine" id="cb598-5" title="5">  <span class="kw">INNER</span> <span class="kw">JOIN</span> bar <span class="kw">ON</span> foo.<span class="kw">id</span> <span class="op">=</span> bar.<span class="kw">id</span></a>
 <a class="sourceLine" id="cb598-6" title="6">  <span class="kw">WHERE</span> bar.rate <span class="op">&gt;</span> <span class="dv">5</span>;</a></code></pre></div>
-<h2 id="appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-8-cql-best-practices">Appendix 8: CQL Best Practices</h2>
 <p>This is a brief discussion of every statement type and some general best practices for that statement. The statements are in mostly alphabetical order except related statements were moved up in the order to make logical groups.</p>
 <p>Refer also to Appendix 7: CQL Anti-patterns.</p>
 <h3 id="data-definition-language-ddl">Data Definition Language (DDL)</h3>
@@ -13410,7 +13410,8 @@ fetch C USING
 <a class="sourceLine" id="cb609-14" title="14"></a>
 <a class="sourceLine" id="cb609-15" title="15"><span class="kw">with</span> (<span class="kw">call</span> AB_())</a>
 <a class="sourceLine" id="cb609-16" title="16"><span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> AB_ <span class="kw">where</span> AB_.<span class="kw">id</span> <span class="op">=</span> <span class="dv">5</span>;</a></code></pre></div>
-<p>For brevity I didn’t include the possibility of using IF and such. Another option that makes the same good query plan. We can generalize <code>AB_</code> so that it doesn’t know where the base data is coming from and can be used in more cases.</p>
+<p>For brevity we haven’t included the possibility of using conditional fragments (i.e. <code>IF</code> statements) the same good query plan could be generated in that way.</p>
+<p>We can generalize <code>AB_</code> so that it doesn’t know where the base data is coming from and can be used in more cases.</p>
 <div class="sourceCode" id="cb610"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb610-1" title="1"><span class="ot">@attribute(cql:shared_fragment)</span></a>
 <a class="sourceLine" id="cb610-2" title="2"><span class="kw">create</span> proc A_()</a>
 <a class="sourceLine" id="cb610-3" title="3"><span class="cf">begin</span></a>
@@ -13429,8 +13430,8 @@ fetch C USING
 <a class="sourceLine" id="cb610-16" title="16">(<span class="kw">call</span> A_())</a>
 <a class="sourceLine" id="cb610-17" title="17">(<span class="kw">call</span> AB_() <span class="kw">using</span> A_ <span class="kw">as</span> <span class="kw">source</span>)</a>
 <a class="sourceLine" id="cb610-18" title="18"><span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> AB_ <span class="kw">where</span> AB_.<span class="kw">id</span> <span class="op">=</span> <span class="dv">5</span>;</a></code></pre></div>
-<p>Again this results in a nice straight chain of CTEs and even though the where clause is last the A table is constrained properly.</p>
-<p>It’s important not to fork the chain… if you do that then whatever came before the fork must be materialized for use in both branches. That can be quite bad because then the filtering might come after the materialization. This is an example that is quite bad.</p>
+<p>Again this results in a nice straight chain of CTEs and even though the where clause is last the <code>A</code> table is constrained properly.</p>
+<p>It’s important not to fork the chain in the query plan, if that happens then whatever came before the fork must be materialized for use in both branches. That can be quite bad because then the filtering might come after the materialization. This is an example that is quite bad.</p>
 <div class="sourceCode" id="cb611"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb611-1" title="1"><span class="kw">explain</span> <span class="kw">query</span> <span class="kw">plan</span></a>
 <a class="sourceLine" id="cb611-2" title="2"><span class="kw">with</span></a>
 <a class="sourceLine" id="cb611-3" title="3">  AA(<span class="kw">id</span>, this) <span class="kw">as</span> (<span class="kw">select</span> <span class="op">*</span> <span class="kw">from</span> A),</a>
@@ -13451,7 +13452,7 @@ fetch C USING
 <a class="sourceLine" id="cb611-18" title="18">|<span class="co">--SEARCH TABLE A USING INTEGER PRIMARY KEY (rowid=?)</span></a>
 <a class="sourceLine" id="cb611-19" title="19">|<span class="co">--SCAN SUBQUERY 2</span></a>
 <a class="sourceLine" id="cb611-20" title="20">\<span class="co">--SEARCH SUBQUERY 3 USING AUTOMATIC COVERING INDEX (id=?)</span></a></code></pre></div>
-<p>Things have gone way of the rails here. As you can see <code>A</code> is now scanned twice. and there are many more joins. We could make this a lot better by moving the A condition all the way up into the first CTE. With fragments that would just mean creating something like</p>
+<p>Things have gone poorly here. As you can see <code>A</code> is now scanned twice. and there are many more joins. We could make this a lot better by moving the <code>A</code> condition all the way up into the first CTE. With fragments that would just mean creating something like:</p>
 <div class="sourceCode" id="cb612"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb612-1" title="1"><span class="ot">@attribute(cql:shared_fragment)</span></a>
 <a class="sourceLine" id="cb612-2" title="2"><span class="kw">create</span> proc A_(id_)</a>
 <a class="sourceLine" id="cb612-3" title="3"><span class="cf">begin</span></a>
@@ -13480,15 +13481,15 @@ fetch C USING
 <li>If you do need to fork in your CTE chain, because of your desired shape, be sure to move as many filters as you can further upstream so that by the time you materialize only a very small number of rows need to be materialiized.</li>
 </ul>
 <p>These few rules will go far in helping you to create shapes.</p>
-<p>One last thing, without shared fragments, if you wanted to create a large 10 way join or something you had to type that join into your file and it would be very much in your face. Now that join might be hidden from you in a nice easy-to-use fragment. Which you might then decide you want to use 3 times… And now with a tiny amount of code you have 30 joins.</p>
+<p>One last thing, without shared fragments, if you wanted to create a large join the normal way, maybe 10 tables or so, then you have to type that join into your file and it would be very much in your face. Shared fragments might hide that join from you in a nice easy-to-use fragment. Which you might then decide you want to use the fragment 3 times… And now with a tiny amount of code you have 30 joins.</p>
 <p>The thing is shared fragments make it easy to generate a lot of SQL. It’s not bad that shared fragments make things easy, but with great power comes great responsibility, so give a care as to what it is you are assembling. Understanding your fragments, especially any big ones, will help you to create great code.</p>
-<h2 id="appendix-9-using-the-cql-amalgam">Appendix 9: Using the CQL Amalgam</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-9-using-the-cql-amalgam">Appendix 9: Using the CQL Amalgam</h2>
 <p>This is a brief discussion of the CQL Amalgam and its normal usage patterns.</p>
 <h3 id="building-the-amalgam">Building the Amalgam</h3>
 <p>The amalgam has to include the results of bison and flex, so a normal build must run first. The simplest way to build it starting from the <code>sources</code> directory is:</p>
@@ -13687,13 +13688,13 @@ fetch C USING
 <p>The amalgam will use malloc/calloc for its allocations and it is designed to release all memory it has allocated when cql_main returns control to you, even in the face of error.</p>
 <p>Internal compilation errors result in an <code>assert</code> failure leading to an abort. This is not supposed to ever happen but there can always be bugs. Normal errors just prevent later phases of the compiler from running so you might not see file output, but rather just error output. In all cases things should be cleaned up.</p>
 <p>The compiler can be called repeatedly with no troubles; it re-initializes on each use. The compiler is not multi-threaded so if there is threading you should use some mutex arrangement to keep it safe. A thread-safe version would require extensive modifications.</p>
-<h2 id="appendix-10-cql-working-example">Appendix 10: CQL Working Example</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-10-cql-working-example">Appendix 10: CQL Working Example</h2>
 <p>This is a working example that shows all of the basic DML statements and the call patterns to access them. The code also includes the various helpers you can use to convert C types to CQL types.</p>
 <h4 id="todo.sql"><code>todo.sql</code></h4>
 <div class="sourceCode" id="cb622"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb622-1" title="1"><span class="co">-- This is a simple schema for keeping track of tasks and whether or not they have been completed</span></a>
@@ -13823,13 +13824,13 @@ fetch C USING
 <pre><code>% ./todo
 0: rowid:1 Buy milk (done)
 1: rowid:3 Write code (not done)</code></pre>
-<h2 id="appendix-11-production-considerations">Appendix 11: Production Considerations</h2>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+<h2 id="appendix-11-production-considerations">Appendix 11: Production Considerations</h2>
 <h3 id="production-considerations">Production Considerations</h3>
 <p>This system as it appears in the sources here is designed to get some basic SQLite scenarios working but the runtime systems that are packaged here are basic, if only for clarity. There are some important things you should think about improving or customizing for your production environment. Here’s a brief list.</p>
 <h4 id="concurrency">Concurrency</h4>

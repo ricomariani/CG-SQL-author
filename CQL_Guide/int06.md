@@ -1,14 +1,11 @@
----
-id: int06
-title: "Part 6: Schema Management"
-sidebar_label: "Part 6: Schema Management"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 6: Schema Management
+
 ### Preface
 
 Part 6 continues with a discussion of the essentials of schema management in the CQL compiler.

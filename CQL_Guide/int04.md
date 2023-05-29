@@ -1,14 +1,11 @@
----
-id: int04
-title: "Part 4: Testing"
-sidebar_label: "Part 4: Testing"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 4: Testing
+
 ### Preface
 
 Part 4 continues with a discussion of the essentials testing frameworks for the CQL compiler.

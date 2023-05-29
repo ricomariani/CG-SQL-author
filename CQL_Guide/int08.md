@@ -1,14 +1,11 @@
----
-id: int08
-title: "Part 8: Test Helpers"
-sidebar_label: "Part 8: Test Helpers"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 8: Test Helpers
+
 ### Preface
 
 Part 8 continues with a discussion of the Test Helper  generation code.

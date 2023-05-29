@@ -1,14 +1,11 @@
----
-id: int02
-title: "Part 2: Semantic Analysis"
-sidebar_label: "Part 2: Semantic Analysis"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 2: Semantic Analysis
+
 ### Preface
 
 Part 2 continues with a discussion of the essentials of the semantic analysis pass of the CQL compiler.

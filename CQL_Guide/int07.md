@@ -1,14 +1,11 @@
----
-id: int07
-title: "Part 7: JSON Generation"
-sidebar_label: "Part 7: JSON Generation"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 7: JSON Generation
+
 ### Preface
 
 Part 7 continues with a discussion of the JSON generation code.

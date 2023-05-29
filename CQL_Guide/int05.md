@@ -1,14 +1,11 @@
----
-id: int05
-title: "Part 5: CQL Runtime"
-sidebar_label: "Part 5: CQL Runtime"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 5: CQL Runtime
+
 ### Preface
 
 Part 5 continues with a discussion of the essentials of the CQL Runtime.

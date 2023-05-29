@@ -1,14 +1,11 @@
----
-id: int01
-title: "Part 1: Lexing, Parsing, and the AST"
-sidebar_label: "Part 1: Lexing, Parsing, and the AST"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 1: Lexing, Parsing, and the AST
+
 ### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
@@ -730,10 +727,10 @@ this rock solid, so CQL never compromises on 100% code coverage.  The most commo
 example:
 
 * `EXTRACT_NOTNULL(cond_action, ast->left);`
-  * read ast->left, assert that it is of type `cond_action`, it must not be NULL
+  * read `ast->left`, assert that it is of type `cond_action`, it must not be NULL
   * declare a local variable named `cond_action` to hold the result
 * `EXTRACT_NOTNULL(if_alt, ast->right);`
-  * read ast->right, assert that it is of type `if_alt`, it must not be NULL
+  * read `ast->right`, assert that it is of type `if_alt`, it must not be NULL
   * declare a local variable named `if_alt` to hold the result
 * `EXTRACT(elseif, if_alt->left);`
   * read `if_alt->left`, assert that it is either NULL or else of type `elseif`
@@ -748,7 +745,7 @@ Other options:
   * `EXTRACT_NAMED_NOTNULL` : like the `NAMED` variant
   * `EXTRACT_ANY` : if the tree type is not known (e.g. `expr->left` could be any expression type)
   * `EXTRACT_ANY_NOTNULL` : as above but not optional
-  * `EXTRACT_NUM_TYPE` : extracts the num_type field from a numeric AST node
+  * `EXTRACT_NUM_TYPE` : extracts the `num_type` field from a numeric AST node
 
 The `ANY` variants are usually re-dispatched with something like `gen_expr` that uses the name table again (and that will check the type) or
 else the extracted value is checked with ad hoc logic immediately after extraction if it's perhaps one of two or three variations.

@@ -1,14 +1,11 @@
----
-id: int03
-title: "Part 3: C Code Generation"
-sidebar_label: "Part 3: C Code Generation"
----
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Part 3: C Code Generation
+
 ### Preface
 
 Part 3 continues with a discussion of the essentials of the C code generation pass of the CQL compiler.

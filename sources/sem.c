@@ -1109,6 +1109,10 @@ cql_noexport bool_t is_nullable(sem_t sem_type) {
   return !(sem_type & SEM_TYPE_NOTNULL);
 }
 
+cql_noexport bool_t is_inferred_notnull(sem_t sem_type) {
+  return !!(sem_type & SEM_TYPE_INFERRED_NOTNULL);
+}
+
 cql_noexport bool_t is_sensitive(sem_t sem_type) {
   return !!(sem_type & SEM_TYPE_SENSITIVE);
 }

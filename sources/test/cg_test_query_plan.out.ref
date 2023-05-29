@@ -135,14 +135,14 @@ END;
 CREATE PROC populate_query_plan_1()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT *\\n  FROM t1\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = nullable(1)\\nUNION\\nSELECT id\\n  FROM t3)\\nORDER BY name ASC";
+  SET stmt := "SELECT *\\n  FROM t1\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\nORDER BY name ASC";
   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT *
     FROM t1
     WHERE name = 'Nelly' AND id IN (SELECT id
     FROM t2
-    WHERE id = nullable(1)
+    WHERE id = 1
   UNION
   SELECT id
     FROM t3)
@@ -156,12 +156,12 @@ END;
 CREATE PROC populate_query_plan_2()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT is_declare_func_wall(id)\\n  FROM t4\\n  WHERE data = nullable(cast('1' as blob))";
+  SET stmt := "SELECT is_declare_func_wall(id)\\n  FROM t4\\n  WHERE data = cast('1' as blob)";
   INSERT INTO sql_temp(id, sql) VALUES(2, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT is_declare_func_wall(id)
     FROM t4
-    WHERE data = nullable(cast('1' as blob));
+    WHERE data = cast('1' as blob);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(2, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -171,12 +171,12 @@ END;
 CREATE PROC populate_query_plan_3()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "UPDATE t1\\nSET id = 1,\\nname = nullable('1')\\n  WHERE name IN (SELECT NAME\\n  FROM t3)";
+  SET stmt := "UPDATE t1\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT NAME\\n  FROM t3)";
   INSERT INTO sql_temp(id, sql) VALUES(3, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   UPDATE t1
   SET id = 1,
-  name = nullable('1')
+  name = '1'
     WHERE name IN (SELECT NAME
     FROM t3);
   LOOP FETCH C
@@ -553,6 +553,26 @@ BEGIN
   END;
 END;
 
+@attribute(cql:shared_fragment)
+CREATE PROC notnull_int_frag (v INTEGER NOT NULL)
+BEGIN
+SELECT 1 AS val;
+END;
+
+CREATE PROC populate_query_plan_26()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT *\\n  FROM (CALL notnull_int_frag(1))";
+  INSERT INTO sql_temp(id, sql) VALUES(26, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM (CALL notnull_int_frag(1));
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(26, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
@@ -895,11 +915,18 @@ BEGIN
     CALL printf("failed populating query 25\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_26();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 26\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 25
+  WHILE q <= 26
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

@@ -360,3 +360,15 @@ begin
   let b1 := true;
   let bool_to_int_cast := (select cast(b1 as int));
 end;
+
+@attribute(cql:shared_fragment)
+proc notnull_int_frag(v integer not null) BEGIN
+  select v val;
+end;
+
+proc use_inferred_notnull()
+begin
+  declare v integer;
+  set v := 1; -- v is now not null, inferred
+  select * from (call notnull_int_frag(v));
+end;

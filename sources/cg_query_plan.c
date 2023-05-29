@@ -109,7 +109,9 @@ static bool_t variables_callback(
 {
   sem_t sem_type = ast->sem->sem_type;
 
-  if (is_nullable(sem_type)) {
+  bool_t nullable = is_nullable(sem_type) && !is_inferred_notnull(sem_type);
+
+  if (nullable) {
     bprintf(output, "nullable(");
   }
 
@@ -136,7 +138,7 @@ static bool_t variables_callback(
     bprintf(output, "cast('1' as blob)");
   }
 
-  if (is_nullable(sem_type)) {
+  if (nullable) {
     bprintf(output, ")");
   }
 

@@ -976,7 +976,7 @@ static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
 static bool_t is_num_int_in_range(ast_node *ast, int64_t lower, int64_t upper) {
   // any non-integer type is out;  can't be "real" or "null" in particular which are
   // usually considered numeric compat but not here.  This is an index.
-  if (!is_integer(ast->sem->sem_type)) {
+  if (!is_any_int(ast->sem->sem_type)) {
     return false;
   }
 
@@ -1236,7 +1236,11 @@ cql_noexport bool_t is_text(sem_t sem_type) {
   return core_type_of(sem_type) == SEM_TYPE_TEXT;
 }
 
-cql_noexport bool_t is_integer(sem_t sem_type) {
+cql_noexport bool_t is_long(sem_t sem_type) {
+  return core_type_of(sem_type) == SEM_TYPE_LONG_INTEGER;
+}
+
+cql_noexport bool_t is_any_int(sem_t sem_type) {
   return core_type_of(sem_type) == SEM_TYPE_INTEGER || core_type_of(sem_type) == SEM_TYPE_LONG_INTEGER;
 }
 
@@ -8181,7 +8185,7 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
     arg = first_arg(arg_list);
     sem_t sem_type = arg->sem->sem_type;
 
-    if (!is_integer(sem_type)) {
+    if (!is_any_int(sem_type)) {
       report_error(ast, "CQL0317: char function arguments must be integer", name);
       record_error(ast);
       return;
@@ -20722,7 +20726,7 @@ static void sem_switch_stmt(ast_node *ast) {
   }
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
-  if (!is_integer(core_type) || is_nullable(expr->sem->sem_type)) {
+  if (!is_any_int(core_type) || is_nullable(expr->sem->sem_type)) {
     report_error(expr, "CQL0381: case expression must be a not-null integral type", NULL);
     record_error(ast);
     goto cleanup;

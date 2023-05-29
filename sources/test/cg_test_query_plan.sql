@@ -58,7 +58,12 @@
 -- + @attribute(cql:backed_by=backing)
 -- + CREATE TABLE backed(
 -- + SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
+-- + SELECT CAST(1L AS INTEGER);
+-- + SELECT CAST(1.0 AS INTEGER);
+-- + SELECT CAST(1 AS REAL);
+-- + SELECT CAST(true AS INTEGER);
 -- - Error
+
 @attribute(cql:no_table_scan)
 create table t1(id int primary key, name text);
 @attribute(cql:no_table_scan)
@@ -341,4 +346,17 @@ create index backing_index on backing(bgetkey_type(k));
 create proc read_from_backed_table()
 begin
   select * from backed where name = 'x';
+end;
+
+-- proc to test various constant types and ensure they convert correctly
+proc constant_types()
+begin
+  let l1 := 1L;
+  let long_to_int_cast := (select cast(l1 as int));
+  let r1 := 1.0;
+  let real_to_int_cast := (select cast(r1 as int));
+  let i1 := 1;
+  let int_to_real_cast := (select cast(i1 as real));
+  let b1 := true;
+  let bool_to_int_cast := (select cast(b1 as int));
 end;

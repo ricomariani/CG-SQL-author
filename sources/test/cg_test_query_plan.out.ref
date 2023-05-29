@@ -501,6 +501,58 @@ BEGIN
   END;
 END;
 
+CREATE PROC populate_query_plan_22()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT CAST(1L AS INTEGER)";
+  INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT CAST(1L AS INTEGER);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(22, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_23()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT CAST(1.0 AS INTEGER)";
+  INSERT INTO sql_temp(id, sql) VALUES(23, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT CAST(1.0 AS INTEGER);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(23, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_24()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT CAST(1 AS REAL)";
+  INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT CAST(1 AS REAL);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(24, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_25()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT CAST(true AS INTEGER)";
+  INSERT INTO sql_temp(id, sql) VALUES(25, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT CAST(true AS INTEGER);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(25, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
@@ -815,11 +867,39 @@ BEGIN
     CALL printf("failed populating query 21\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_22();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 22\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_23();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 23\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_24();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 24\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_25();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 25\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 21
+  WHILE q <= 25
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

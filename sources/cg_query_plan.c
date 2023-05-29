@@ -113,7 +113,16 @@ static bool_t variables_callback(
     bprintf(output, "nullable(");
   }
 
-  if (is_numeric(sem_type)) {
+  if (is_bool(sem_type)) {
+    bprintf(output, "true");
+  }
+  else if (is_long(sem_type)) {
+    bprintf(output, "1L");
+  }
+  else if (is_real(sem_type)) {
+    bprintf(output, "1.0");
+  }
+  else if (is_numeric(sem_type)) {
     bprintf(output, "1");
   }
   else if (is_text(sem_type)) {

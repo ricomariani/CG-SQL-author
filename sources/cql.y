@@ -498,6 +498,8 @@ explain_target: select_stmt
   | delete_stmt
   | with_delete_stmt
   | with_insert_stmt
+  | with_update_stmt
+  | with_upsert_stmt
   | insert_stmt
   | upsert_stmt
   | drop_table_stmt

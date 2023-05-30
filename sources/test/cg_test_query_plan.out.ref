@@ -189,12 +189,16 @@ END;
 CREATE PROC populate_query_plan_4()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DELETE FROM t1 WHERE name IN (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (name))";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1 AS id, 'Irene' AS name)\\nUPDATE t1\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT name\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(4, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DELETE FROM t1 WHERE name IN (SELECT t2.name
-    FROM t2
-    INNER JOIN t3 USING (name));
+  WITH
+  some_cte (id, name) AS (SELECT 1 AS id, 'Irene' AS name)
+  UPDATE t1
+  SET id = 1,
+  name = '1'
+    WHERE name IN (SELECT name
+    FROM some_cte);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(4, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -204,15 +208,12 @@ END;
 CREATE PROC populate_query_plan_5()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nDELETE FROM t1 WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
+  SET stmt := "DELETE FROM t1 WHERE name IN (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (name))";
   INSERT INTO sql_temp(id, sql) VALUES(5, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  WITH
-  some_cte (name) AS (SELECT t2.name
+  DELETE FROM t1 WHERE name IN (SELECT t2.name
     FROM t2
-    INNER JOIN t3 USING (id))
-  DELETE FROM t1 WHERE name NOT IN (SELECT *
-    FROM some_cte);
+    INNER JOIN t3 USING (name));
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(5, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -222,14 +223,15 @@ END;
 CREATE PROC populate_query_plan_6()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "INSERT INTO t1(id, name) SELECT *\\n  FROM t2\\nUNION ALL\\nSELECT *\\n  FROM t3";
+  SET stmt := "WITH\\nsome_cte (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nDELETE FROM t1 WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(6, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  INSERT INTO t1(id, name) SELECT *
+  WITH
+  some_cte (name) AS (SELECT t2.name
     FROM t2
-  UNION ALL
-  SELECT *
-    FROM t3;
+    INNER JOIN t3 USING (id))
+  DELETE FROM t1 WHERE name NOT IN (SELECT *
+    FROM some_cte);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(6, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -239,13 +241,14 @@ END;
 CREATE PROC populate_query_plan_7()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1, 'x')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM some_cte";
+  SET stmt := "INSERT INTO t1(id, name) SELECT *\\n  FROM t2\\nUNION ALL\\nSELECT *\\n  FROM t3";
   INSERT INTO sql_temp(id, sql) VALUES(7, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  WITH
-  some_cte (id, name) AS (SELECT 1, 'x')
   INSERT INTO t1(id, name) SELECT *
-    FROM some_cte;
+    FROM t2
+  UNION ALL
+  SELECT *
+    FROM t3;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(7, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -255,10 +258,13 @@ END;
 CREATE PROC populate_query_plan_8()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "BEGIN";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1, 'x')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(8, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  BEGIN;
+  WITH
+  some_cte (id, name) AS (SELECT 1, 'x')
+  INSERT INTO t1(id, name) SELECT *
+    FROM some_cte;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(8, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -268,12 +274,10 @@ END;
 CREATE PROC populate_query_plan_9()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "INSERT INTO t1(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  SET stmt := "BEGIN";
   INSERT INTO sql_temp(id, sql) VALUES(9, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  INSERT INTO t1(id, name) VALUES(1, 'Irene')
-  ON CONFLICT (id) DO UPDATE
-  SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
+  BEGIN;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(9, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -283,10 +287,12 @@ END;
 CREATE PROC populate_query_plan_10()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "COMMIT";
+  SET stmt := "INSERT INTO t1(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  COMMIT;
+  INSERT INTO t1(id, name) VALUES(1, 'Irene')
+  ON CONFLICT (id) DO UPDATE
+  SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(10, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -296,10 +302,16 @@ END;
 CREATE PROC populate_query_plan_11()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DROP TABLE IF EXISTS t1";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1, 'Irene')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM some_cte\\n  WHERE id = 1\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(11, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DROP TABLE IF EXISTS t1;
+  WITH
+  some_cte (id, name) AS (SELECT 1, 'Irene')
+  INSERT INTO t1(id, name) SELECT *
+    FROM some_cte
+    WHERE id = 1
+  ON CONFLICT (id) DO UPDATE
+  SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(11, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -309,10 +321,10 @@ END;
 CREATE PROC populate_query_plan_12()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DROP VIEW my_view";
+  SET stmt := "COMMIT";
   INSERT INTO sql_temp(id, sql) VALUES(12, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DROP VIEW my_view;
+  COMMIT;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(12, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -322,10 +334,10 @@ END;
 CREATE PROC populate_query_plan_13()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DROP INDEX it1";
+  SET stmt := "DROP TABLE IF EXISTS t1";
   INSERT INTO sql_temp(id, sql) VALUES(13, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DROP INDEX it1;
+  DROP TABLE IF EXISTS t1;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(13, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -335,15 +347,10 @@ END;
 CREATE PROC populate_query_plan_14()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nSELECT *\\n  FROM some_cte";
+  SET stmt := "DROP VIEW my_view";
   INSERT INTO sql_temp(id, sql) VALUES(14, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  WITH
-  some_cte (name) AS (SELECT t2.name
-    FROM t2
-    INNER JOIN t3 USING (id))
-  SELECT *
-    FROM some_cte;
+  DROP VIEW my_view;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(14, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -353,11 +360,10 @@ END;
 CREATE PROC populate_query_plan_15()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT array_num_at(ptr(cast('1' as object)), id) AS idx\\n  FROM t1";
+  SET stmt := "DROP INDEX it1";
   INSERT INTO sql_temp(id, sql) VALUES(15, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT array_num_at(ptr(cast('1' as object)), id) AS idx
-    FROM t1;
+  DROP INDEX it1;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(15, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -367,12 +373,15 @@ END;
 CREATE PROC populate_query_plan_16()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT *\\n  FROM scan_ok";
+  SET stmt := "WITH\\nsome_cte (name) AS (SELECT t2.name\\n  FROM t2\\n  INNER JOIN t3 USING (id))\\nSELECT *\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(16, stmt);
-  INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(16, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  some_cte (name) AS (SELECT t2.name
+    FROM t2
+    INNER JOIN t3 USING (id))
   SELECT *
-    FROM scan_ok;
+    FROM some_cte;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(16, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -382,12 +391,11 @@ END;
 CREATE PROC populate_query_plan_17()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n_foo";
+  SET stmt := "SELECT array_num_at(ptr(cast('1' as object)), id) AS idx\\n  FROM t1";
   INSERT INTO sql_temp(id, sql) VALUES(17, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT 1 AS n
-    FROM foo_,
-  _foo;
+  SELECT array_num_at(ptr(cast('1' as object)), id) AS idx
+    FROM t1;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(17, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -397,13 +405,43 @@ END;
 CREATE PROC populate_query_plan_18()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT ifnull(nullable(1), 42) AS nullable_result";
+  SET stmt := "SELECT *\\n  FROM scan_ok";
   INSERT INTO sql_temp(id, sql) VALUES(18, stmt);
+  INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(18, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM scan_ok;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(18, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_19()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n_foo";
+  INSERT INTO sql_temp(id, sql) VALUES(19, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT 1 AS n
+    FROM foo_,
+  _foo;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(19, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_20()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT ifnull(nullable(1), 42) AS nullable_result";
+  INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT ifnull(nullable(1), 42) AS nullable_result;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(18, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(20, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -430,11 +468,11 @@ SELECT CAST(tok AS LONG_INT) AS id
   FROM toks;
 END;
 
-CREATE PROC populate_query_plan_19()
+CREATE PROC populate_query_plan_21()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
   SET stmt := "WITH\\nI (id) AS (CALL ids_from_string('1')),\\nE (id) AS (CALL ids_from_string('1'))\\nSELECT C.*\\n  FROM C\\n  WHERE C.id IN (SELECT *\\n  FROM I) AND C.id NOT IN (SELECT *\\n  FROM E)";
-  INSERT INTO sql_temp(id, sql) VALUES(19, stmt);
+  INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
   I (id) AS (CALL ids_from_string('1')),
@@ -446,7 +484,7 @@ BEGIN
     FROM E);
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(19, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -486,45 +524,15 @@ BEGIN
 SELECT 1 AS a;
 END;
 
-CREATE PROC populate_query_plan_20()
+CREATE PROC populate_query_plan_22()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
   SET stmt := "SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table AS two";
-  INSERT INTO sql_temp(id, sql) VALUES(20, stmt);
+  INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_
     FROM select_virtual_table AS one,
   select_virtual_table AS two;
-  LOOP FETCH C
-  BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(20, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
-CREATE PROC populate_query_plan_21()
-BEGIN
-  DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
-  INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  WITH
-  backed (rowid, id, name) AS (CALL _backed())
-  SELECT *
-    FROM backed
-    WHERE name = 'x';
-  LOOP FETCH C
-  BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
-  END;
-END;
-
-CREATE PROC populate_query_plan_22()
-BEGIN
-  DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(1L AS INTEGER)";
-  INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
-  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1L AS INTEGER);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(22, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -534,10 +542,14 @@ END;
 CREATE PROC populate_query_plan_23()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(1.0 AS INTEGER)";
+  SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
   INSERT INTO sql_temp(id, sql) VALUES(23, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1.0 AS INTEGER);
+  WITH
+  backed (rowid, id, name) AS (CALL _backed())
+  SELECT *
+    FROM backed
+    WHERE name = 'x';
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(23, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -547,10 +559,10 @@ END;
 CREATE PROC populate_query_plan_24()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(1 AS REAL)";
+  SET stmt := "SELECT CAST(1L AS INTEGER)";
   INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1 AS REAL);
+  SELECT CAST(1L AS INTEGER);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(24, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -560,30 +572,23 @@ END;
 CREATE PROC populate_query_plan_25()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(true AS INTEGER)";
+  SET stmt := "SELECT CAST(1.0 AS INTEGER)";
   INSERT INTO sql_temp(id, sql) VALUES(25, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(true AS INTEGER);
+  SELECT CAST(1.0 AS INTEGER);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(25, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
-@attribute(cql:shared_fragment)
-CREATE PROC notnull_int_frag (v INTEGER NOT NULL)
-BEGIN
-SELECT 1 AS val;
-END;
-
 CREATE PROC populate_query_plan_26()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT *\\n  FROM (CALL notnull_int_frag(1))";
+  SET stmt := "SELECT CAST(1 AS REAL)";
   INSERT INTO sql_temp(id, sql) VALUES(26, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT *
-    FROM (CALL notnull_int_frag(1));
+  SELECT CAST(1 AS REAL);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(26, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -593,14 +598,47 @@ END;
 CREATE PROC populate_query_plan_27()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  SET stmt := "SELECT CAST(true AS INTEGER)";
   INSERT INTO sql_temp(id, sql) VALUES(27, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT CAST(true AS INTEGER);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(27, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC notnull_int_frag (v INTEGER NOT NULL)
+BEGIN
+SELECT 1 AS val;
+END;
+
+CREATE PROC populate_query_plan_28()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT *\\n  FROM (CALL notnull_int_frag(1))";
+  INSERT INTO sql_temp(id, sql) VALUES(28, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM (CALL notnull_int_frag(1));
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(28, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_29()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  INSERT INTO sql_temp(id, sql) VALUES(29, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*
     FROM (CALL notnull_int_frag(1 + 1)) AS T1;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(27, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(29, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -960,11 +998,25 @@ BEGIN
     CALL printf("failed populating query 27\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_28();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 28\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_29();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 29\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 27
+  WHILE q <= 29
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

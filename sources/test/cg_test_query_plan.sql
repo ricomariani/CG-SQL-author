@@ -134,6 +134,11 @@ select is_declare_func_wall(id) from t4 where data = data_var;
 -- UPDATE stmt
 update t1 set id = 1, name = label_var where name in (select NAME from t3);
 
+-- [WITH ... UPDATE] stmt
+with
+  some_cte(id, name) as (select 1 id, 'Irene' name)
+update t1 set id = 1, name = label_var where name in (select name from some_cte);
+
 -- DELETE stmt
 delete from t1
   where name in (
@@ -160,6 +165,10 @@ begin transaction;
 
 -- UPSERT stmt
 insert into t1(id, name) values(1, 'Irene') on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
+
+-- [WITH...UPSERT] stmt
+with some_cte(id, name) as (select 1, 'Irene')
+insert into t1(id, name) select * from some_cte where id = 1 on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
 
 -- COMMIT stmt
 commit transaction;

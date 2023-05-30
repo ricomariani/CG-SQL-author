@@ -777,10 +777,12 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   STMT_INIT_EXPL(select_stmt);
   STMT_INIT_EXPL(with_select_stmt);
   STMT_INIT_EXPL(with_insert_stmt);
+  STMT_INIT_EXPL(with_update_stmt);
   STMT_INIT_EXPL(update_stmt);
   STMT_INIT_EXPL(delete_stmt);
   STMT_INIT_EXPL(with_delete_stmt);
   STMT_INIT_EXPL(insert_stmt);
+  STMT_INIT_EXPL(with_upsert_stmt);
   STMT_INIT_EXPL(upsert_stmt);
   STMT_INIT_EXPL(drop_table_stmt);
   STMT_INIT_EXPL(drop_view_stmt);

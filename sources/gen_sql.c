@@ -1519,17 +1519,15 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
       gen_arg_list(arg_list);
       return;
     }
+  }
 
-    bool_t has_inline_func_callback = gen_callbacks && gen_callbacks->inline_func_callback;
+  bool_t has_func_callback = gen_callbacks && gen_callbacks->func_callback;
 
-    if (has_inline_func_callback) {
-      if (ast->left && ast->left->sem && (ast->left->sem->sem_type & SEM_TYPE_INLINE_CALL)) {
-        bool_t handled = gen_callbacks->inline_func_callback(ast, gen_callbacks->inline_func_context, output);
+  if (has_func_callback) {
+    bool_t handled = gen_callbacks->func_callback(ast, gen_callbacks->func_context, output);
 
-        if (handled) {
-          return;
-        }
-      }
+    if (handled) {
+      return;
     }
   }
 

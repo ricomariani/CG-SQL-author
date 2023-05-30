@@ -265,6 +265,8 @@ cql_noexport bool_t is_autotest_dummy_select(CSTR name);
 cql_noexport bool_t is_autotest_dummy_result_set(CSTR name);
 cql_noexport bool_t is_autotest_dummy_test(CSTR name);
 cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table, CSTR column_name);
+cql_noexport bool_t is_inline_func_call(ast_node *call_ast);
+
 cql_noexport CSTR sem_get_name(ast_node *ast);
 cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);
 

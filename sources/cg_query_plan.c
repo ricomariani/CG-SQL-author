@@ -46,7 +46,7 @@ static gen_sql_callbacks *cg_qp_callbacks = NULL;
 // create statement of that table to avoid sqlite error.
 //
 // @see cg_qp_create_virtual_table_stmt()
-static bool_t table_function_callback(
+static bool_t qp_table_function_callback(
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
   charbuf *_Nonnull output)
@@ -95,20 +95,13 @@ static bool_t table_function_callback(
   return true;
 }
 
-// When generating the query plan report there will be no actual
-// variable values to use in the query.  To get around this
-// we replace all variable references with a type-correct version
-// of the constant "1".  This gives us a pretty good query plan
-// even if there are parameters in the real query.
-// Note: if the SQLite query processor were much more fancy this
-// wouldn't work at all. Constants matter.
-static bool_t variables_callback(
-  struct ast_node *_Nonnull ast,
-  void *_Nullable context,
-  charbuf *_Nonnull output)
+// emit a constant '1' in the appropriate type format for the expression
+// this is used to replaced variables in queries with something that sqlite can
+// evaluate so that the entire stream leading to the variable doesn't have
+// to go into the output.  This is also used to replace native function calls
+// that occur in query fragments.
+static void qp_emit_constant_one(sem_t sem_type, charbuf *output) 
 {
-  sem_t sem_type = ast->sem->sem_type;
-
   bool_t nullable = is_nullable(sem_type) && !is_inferred_notnull(sem_type);
 
   if (nullable) {
@@ -141,8 +134,58 @@ static bool_t variables_callback(
   if (nullable) {
     bprintf(output, ")");
   }
+}
 
+// When generating the query plan report there will be no actual
+// variable values to use in the query.  To get around this
+// we replace all variable references with a type-correct version
+// of the constant "1".  This gives us a pretty good query plan
+// even if there are parameters in the real query.
+// Note: if the SQLite query processor were much more fancy this
+// wouldn't work at all. Constants matter.
+static bool_t qp_variables_callback(
+  struct ast_node *_Nonnull ast,
+  void *_Nullable context,
+  charbuf *_Nonnull output)
+{
+  qp_emit_constant_one(ast->sem->sem_type, output);
   return true;
+}
+
+// replace calls to native procedures or native functions with a constant
+// just like we do with local variables.  This means we don't need native functions
+// note that we leave select functions alone.
+static bool_t qp_func_callback(
+  struct ast_node *_Nonnull ast,
+  void *_Nullable context,
+  charbuf *_Nonnull output)
+{
+  Contract(is_ast_call(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  // shared expression fragment will be inline expanded
+  // we don't have to replace it
+  if (is_inline_func_call(ast)) {
+    return false;
+  }
+
+  ast_node *func = find_func(name);
+
+  // note: ast_declare_select_func_stmt does NOT match, they stay
+  if (func && is_ast_declare_func_stmt(func)) {
+    qp_emit_constant_one(ast->sem->sem_type, output);
+    return true;
+  }
+
+  // any inline proc call is proc as func except shared fragment
+  // which we checked above
+  ast_node *proc = find_proc(name);
+  if (proc) {
+    qp_emit_constant_one(ast->sem->sem_type, output);
+    return true;
+  }
+
+  return false;
 }
 
 // For shared fragments with conditionals, choose one branch and discard the conditional.
@@ -737,8 +780,9 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_no_annotations;
-  callbacks.variables_callback = &variables_callback;
-  callbacks.table_function_callback = &table_function_callback;
+  callbacks.variables_callback = qp_variables_callback;
+  callbacks.table_function_callback = qp_table_function_callback;
+  callbacks.func_callback = qp_func_callback;
   cg_qp_callbacks = &callbacks;
 
   cg_qp_stmt_list(head);

@@ -1057,6 +1057,11 @@ cql_noexport bool_t is_table_not_physical(ast_node *table_ast) {
   return is_table_blob_storage(table_ast) || is_table_backed(table_ast);
 }
 
+cql_noexport bool_t is_inline_func_call(ast_node *call_ast) {
+  Contract(is_ast_call(call_ast));
+  return call_ast->left && call_ast->left->sem && (call_ast->left->sem->sem_type & SEM_TYPE_INLINE_CALL);
+}
+
 // Note: this returns the flag not a bool.
 static sem_t not_nullable_flag(sem_t sem_type) {
   return sem_type & SEM_TYPE_NOTNULL;

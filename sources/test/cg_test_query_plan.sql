@@ -372,3 +372,16 @@ begin
   set v := 1; -- v is now not null, inferred
   select * from (call notnull_int_frag(v));
 end;
+
+declare function foo() int not null;
+declare select function stuff() int not null;
+
+proc a_proc(out v int not null)
+begin
+  set v := foo();
+end;
+
+proc use_frag_with_native_args()
+begin
+  select stuff() x, notnull_int_frag(1) y, T1.* from (call notnull_int_frag(foo() + a_proc())) T1;
+end;

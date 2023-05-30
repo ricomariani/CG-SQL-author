@@ -22,6 +22,7 @@ DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
 DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
+DECLARE SELECT FUNC stuff () INTEGER NOT NULL;
 
 CREATE PROC create_schema()
 BEGIN
@@ -573,6 +574,20 @@ BEGIN
   END;
 END;
 
+CREATE PROC populate_query_plan_27()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  INSERT INTO sql_temp(id, sql) VALUES(27, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*
+    FROM (CALL notnull_int_frag(1 + 1)) AS T1;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(27, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
 
 CREATE PROC populate_table_scan_alert_table(table_ text not null)
 BEGIN
@@ -922,11 +937,18 @@ BEGIN
     CALL printf("failed populating query 26\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_27();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 27\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 26
+  WHILE q <= 27
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

@@ -4740,6 +4740,10 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  if (!is_inline_func_call(call_ast)) {
+    return false;
+  }
+
   // flush what we have so far
   cg_emit_one_frag(buffer);
 
@@ -5037,6 +5041,10 @@ static bool_t cg_note_inline_func(ast_node *call_ast, void *context, charbuf *bu
   EXTRACT_STRING(proc_name, call_ast->left);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
 
+  if (!is_inline_func_call(call_ast)) {
+    return false;
+  }
+
   ast_node *ast = find_proc(proc_name);
 
   Contract(is_ast_create_proc_stmt(ast));
@@ -5068,7 +5076,7 @@ static void cg_classify_fragments(ast_node *stmt) {
   init_gen_sql_callbacks(&callbacks);
   callbacks.cte_proc_callback = cg_search_conditionals_call_in_cte;
   callbacks.variables_callback = cg_note_variable_exists;
-  callbacks.inline_func_callback = cg_note_inline_func;
+  callbacks.func_callback = cg_note_inline_func;
   gen_statement_with_callbacks(stmt, &callbacks);
   CHARBUF_CLOSE(sql);
 }
@@ -5133,7 +5141,7 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
   callbacks.cte_proc_callback = cg_call_in_cte;
   callbacks.cte_suppress_callback = cg_suppress_cte;
   callbacks.table_rename_callback = cg_table_rename;
-  callbacks.inline_func_callback = cg_inline_func;
+  callbacks.func_callback = cg_inline_func;
 
   CHARBUF_OPEN(sql);
   gen_set_output_buffer(&sql);

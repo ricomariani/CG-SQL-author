@@ -524,15 +524,22 @@ BEGIN
 SELECT 1 AS a;
 END;
 
+@attribute(cql:shared_fragment)
+CREATE PROC frag (v INTEGER NOT NULL)
+BEGIN
+SELECT 1 AS val;
+END;
+
 CREATE PROC populate_query_plan_22()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table AS two";
+  SET stmt := "WITH\\nfrag (val) AS (CALL frag(1))\\nSELECT *\\n  FROM frag";
   INSERT INTO sql_temp(id, sql) VALUES(22, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_
-    FROM select_virtual_table AS one,
-  select_virtual_table AS two;
+  WITH
+  frag (val) AS (CALL frag(1))
+  SELECT *
+    FROM frag;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(22, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -542,14 +549,13 @@ END;
 CREATE PROC populate_query_plan_23()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
+  SET stmt := "WITH\\nfrag (val) AS (CALL frag(1))\\nSELECT *\\n  FROM frag";
   INSERT INTO sql_temp(id, sql) VALUES(23, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
-  backed (rowid, id, name) AS (CALL _backed())
+  frag (val) AS (CALL frag(1))
   SELECT *
-    FROM backed
-    WHERE name = 'x';
+    FROM frag;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(23, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -559,10 +565,12 @@ END;
 CREATE PROC populate_query_plan_24()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(1L AS INTEGER)";
+  SET stmt := "SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table AS two";
   INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1L AS INTEGER);
+  SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_
+    FROM select_virtual_table AS one,
+  select_virtual_table AS two;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(24, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -572,10 +580,14 @@ END;
 CREATE PROC populate_query_plan_25()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(1.0 AS INTEGER)";
+  SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
   INSERT INTO sql_temp(id, sql) VALUES(25, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1.0 AS INTEGER);
+  WITH
+  backed (rowid, id, name) AS (CALL _backed())
+  SELECT *
+    FROM backed
+    WHERE name = 'x';
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(25, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -585,10 +597,10 @@ END;
 CREATE PROC populate_query_plan_26()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(1 AS REAL)";
+  SET stmt := "SELECT CAST(1L AS INTEGER)";
   INSERT INTO sql_temp(id, sql) VALUES(26, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(1 AS REAL);
+  SELECT CAST(1L AS INTEGER);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(26, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -598,30 +610,23 @@ END;
 CREATE PROC populate_query_plan_27()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT CAST(true AS INTEGER)";
+  SET stmt := "SELECT CAST(1.0 AS INTEGER)";
   INSERT INTO sql_temp(id, sql) VALUES(27, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT CAST(true AS INTEGER);
+  SELECT CAST(1.0 AS INTEGER);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(27, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
-@attribute(cql:shared_fragment)
-CREATE PROC notnull_int_frag (v INTEGER NOT NULL)
-BEGIN
-SELECT 1 AS val;
-END;
-
 CREATE PROC populate_query_plan_28()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT *\\n  FROM (CALL notnull_int_frag(1))";
+  SET stmt := "SELECT CAST(1 AS REAL)";
   INSERT INTO sql_temp(id, sql) VALUES(28, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT *
-    FROM (CALL notnull_int_frag(1));
+  SELECT CAST(1 AS REAL);
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(28, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -631,14 +636,47 @@ END;
 CREATE PROC populate_query_plan_29()
 BEGIN
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  SET stmt := "SELECT CAST(true AS INTEGER)";
   INSERT INTO sql_temp(id, sql) VALUES(29, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT CAST(true AS INTEGER);
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(29, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC notnull_int_frag (v INTEGER NOT NULL)
+BEGIN
+SELECT 1 AS val;
+END;
+
+CREATE PROC populate_query_plan_30()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT *\\n  FROM (CALL notnull_int_frag(1))";
+  INSERT INTO sql_temp(id, sql) VALUES(30, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM (CALL notnull_int_frag(1));
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(30, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_31()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  SET stmt := "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*\\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1";
+  INSERT INTO sql_temp(id, sql) VALUES(31, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*
     FROM (CALL notnull_int_frag(1 + 1)) AS T1;
   LOOP FETCH C
   BEGIN
-    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(29, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(31, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -1012,11 +1050,25 @@ BEGIN
     CALL printf("failed populating query 29\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_30();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 30\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_31();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 31\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 29
+  WHILE q <= 31
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

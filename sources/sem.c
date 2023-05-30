@@ -5667,7 +5667,11 @@ static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR 
   ast_node *var = (ast_node *)entry->val;
 
   if (ast) {
-    ast->sem = var->sem;
+    ast->sem = new_sem(var->sem->sem_type);
+    ast->sem->name = var->sem->name;
+    ast->sem->kind = var->sem->kind;
+    // Needed for cursors.
+    ast->sem->sptr = var->sem->sptr;
   }
 
   *type_ptr = &var->sem->sem_type;
@@ -5699,7 +5703,11 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
 
   if (param) {
     if (ast) {
-      ast->sem = param->sem;
+      ast->sem = new_sem(param->sem->sem_type);
+      ast->sem->name = param->sem->name;
+      ast->sem->kind = param->sem->kind;
+      // Needed for cursors.
+      ast->sem->sptr = param->sem->sptr;
     }
 
     *type_ptr = &param->sem->sem_type;

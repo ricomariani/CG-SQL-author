@@ -52947,7 +52947,7 @@ END;
                 | | {name ARGUMENTS}
                 | | {name b}
                 | {expr_list}
-                  | {dot}: x: integer notnull variable out was_set
+                  | {dot}: x: integer notnull variable out
                     | {name ARGUMENTS}
                     | {name x}
 
@@ -53049,7 +53049,7 @@ END;
                 | | {name ARGUMENTS}
                 | | {name b}
                 | {expr_list}
-                  | {dot}: x: integer notnull variable out was_set
+                  | {dot}: x: integer notnull variable out
                     | {name ARGUMENTS}
                     | {name x}
 
@@ -69442,7 +69442,7 @@ END;
       | {call_stmt}: ok
         | {name requires_out_text_notnull}: ok
         | {expr_list}: ok
-          | {dot}: t: text notnull variable init_required out was_set
+          | {dot}: t: text notnull variable init_required out
             | {name ARGUMENTS}
             | {name t}
 
@@ -83933,7 +83933,7 @@ END;
       |   | | {call_arg_list}
       |   |   | {call_filter_clause}
       |   |   | {arg_list}: ok
-      |   |     | {dot}: a_: integer variable in
+      |   |     | {dot}: a_: integer inferred_notnull variable in
       |   |       | {name LOCALS}
       |   |       | {name a}
       |   | {expr_list}
@@ -83942,7 +83942,7 @@ END;
       |     | | {call_arg_list}
       |     |   | {call_filter_clause}
       |     |   | {arg_list}: ok
-      |     |     | {dot}: b: integer variable
+      |     |     | {dot}: b: integer inferred_notnull variable
       |     |       | {name LOCALS}
       |     |       | {name b}
       |     | {expr_list}
@@ -83951,7 +83951,7 @@ END;
       |         | {call_arg_list}
       |           | {call_filter_clause}
       |           | {arg_list}: ok
-      |             | {dot}: c_: integer variable
+      |             | {dot}: c_: integer inferred_notnull variable
       |               | {name LOCALS}
       |               | {name c}
       | {call_stmt}: ok
@@ -83962,7 +83962,7 @@ END;
       |   | | {call_arg_list}
       |   |   | {call_filter_clause}
       |   |   | {arg_list}: ok
-      |   |     | {dot}: a_: integer variable in
+      |   |     | {dot}: a_: integer inferred_notnull variable in
       |   |       | {name LOCALS}
       |   |       | {name a_}
       |   | {expr_list}
@@ -83971,7 +83971,7 @@ END;
       |     | | {call_arg_list}
       |     |   | {call_filter_clause}
       |     |   | {arg_list}: ok
-      |     |     | {dot}: b: integer variable
+      |     |     | {dot}: b: integer inferred_notnull variable
       |     |       | {name LOCALS}
       |     |       | {name b}
       |     | {expr_list}
@@ -83980,7 +83980,7 @@ END;
       |         | {call_arg_list}
       |           | {call_filter_clause}
       |           | {arg_list}: ok
-      |             | {dot}: c_: integer variable
+      |             | {dot}: c_: integer inferred_notnull variable
       |               | {name LOCALS}
       |               | {name c_}
       | {call_stmt}: ok
@@ -83991,7 +83991,7 @@ END;
           | | {call_arg_list}
           |   | {call_filter_clause}
           |   | {arg_list}: ok
-          |     | {dot}: a_: integer variable in
+          |     | {dot}: a_: integer inferred_notnull variable in
           |       | {name LOCALS}
           |       | {name a}
           | {expr_list}
@@ -84000,7 +84000,7 @@ END;
             | | {call_arg_list}
             |   | {call_filter_clause}
             |   | {arg_list}: ok
-            |     | {dot}: b: integer variable
+            |     | {dot}: b: integer inferred_notnull variable
             |       | {name LOCALS}
             |       | {name b}
             | {expr_list}
@@ -84009,7 +84009,7 @@ END;
                 | {call_arg_list}
                   | {call_filter_clause}
                   | {arg_list}: ok
-                    | {dot}: c_: integer variable
+                    | {dot}: c_: integer inferred_notnull variable
                       | {name LOCALS}
                       | {name c}
 

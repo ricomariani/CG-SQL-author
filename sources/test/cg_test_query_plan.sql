@@ -314,6 +314,28 @@ CREATE PROC frag_with_select_nothing() BEGIN
   END IF;
 END;
 
+@attribute(cql:shared_fragment)
+CREATE PROC frag(v integer not null) BEGIN
+  select v val;
+END;
+
+CREATE PROC use_frag_locals() BEGIN
+  let v := nullable(1);
+  if v is not null then
+    with
+      (call frag(from locals))
+    select * from frag;
+  end if;
+END;
+
+CREATE PROC use_frag_arguments(v integer) BEGIN
+  if v is not null then
+    with
+      (call frag(from arguments))
+    select * from frag;
+  end if;
+END;
+
 -- proc call a virtual table
 CREATE PROC call_virtual_table()
 BEGIN

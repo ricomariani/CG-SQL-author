@@ -238,8 +238,18 @@ static bool_t if_stmt_callback(
   // So we can enforce there's only a single select statement
   Contract(is_ast_stmt_list(stmt_list));
   Contract(!stmt_list->right);
-  EXTRACT_NOTNULL(select_stmt, stmt_list->left);
-  gen_one_stmt(select_stmt);
+  EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
+
+  if (is_ast_select_nothing_stmt(stmt)) {
+    // If the selected branch contains SELECT NOTHING,
+    // select a different branch instead for query plan generation.
+    Contract(branch_to_keep_index > 1);
+    branch_to_keep_index = 1;
+    return if_stmt_callback(ast, (void *) &branch_to_keep_index, output);
+  }
+
+  Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
+  gen_one_stmt(stmt);
 
   return true;
 }

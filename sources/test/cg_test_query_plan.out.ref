@@ -470,6 +470,22 @@ BEGIN
 SELECT 100 AS c;
 END;
 
+@attribute(cql:shared_fragment)
+CREATE PROC frag_with_select ()
+BEGIN
+WITH
+cte (a) AS (SELECT 1 AS a)
+SELECT *
+  FROM cte;
+END;
+
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=2)
+CREATE PROC frag_with_select_nothing ()
+BEGIN
+SELECT 1 AS a;
+END;
+
 CREATE PROC populate_query_plan_20()
 BEGIN
   DECLARE stmt TEXT NOT NULL;

@@ -152,9 +152,20 @@ static bool_t qp_variables_callback(
   return true;
 }
 
-// replace calls to native procedures or native functions with a constant
+// Here we replace calls to native procedures or native functions with a constant
 // just like we do with local variables.  This means we don't need native functions
-// note that we leave select functions alone.
+// in the generated binary for the query plan helper and we won't try to call them
+// in the wrong context.  These kinds of calls can only happen in the context
+// of shared fragment arguments which are evaluated before execution of the query
+// in the native context (i.e. SQLite sees them only as variables).  The QP output
+// code has to match this by removing the native call.  It wouldn't be part of the
+// plan anyway.
+//
+// Note that we leave "select functions" alone (i.e. declared UDFs) they are
+// handled by generating a stub UDF for sqlite.  See the docs on --rt udf for
+// more details there.  We also do not touch shared fragment expressions, in those
+// cases the sproc body will be inlined as usual so there is no need to replace
+// the call with a constant.
 static bool_t qp_func_callback(
   struct ast_node *_Nonnull ast,
   void *_Nullable context,

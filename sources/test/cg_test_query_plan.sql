@@ -284,6 +284,27 @@ BEGIN
   END IF;
 END;
 
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=1)
+CREATE PROC frag_with_select() BEGIN
+  IF TRUE THEN
+    WITH cte(a) AS (SELECT 1 a)
+    SELECT * FROM cte;
+  ELSE
+    SELECT 2 a;
+  END IF;
+END;
+
+@attribute(cql:shared_fragment)
+@attribute(cql:query_plan_branch=2)
+CREATE PROC frag_with_select_nothing() BEGIN
+  IF TRUE THEN
+    SELECT 1 a;
+  ELSE
+    SELECT NOTHING;
+  END IF;
+END;
+
 -- proc call a virtual table
 CREATE PROC call_virtual_table()
 BEGIN

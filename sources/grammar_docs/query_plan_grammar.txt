@@ -9,9 +9,14 @@ alert ::= '"tempBTreeViolation"' ':' violationString
 plans ::= plan
 plans ::= plan ',' plans
 
-plan ::= '{' '"id"' ':' number ',' '"query"' ':' sqlString ',' '"stats"' ':' '[' stats? ']' ',' '"plan"' ':' planString '}'
+plan ::= '{' '"id"' ':' number ',' '"query"' ':' sqlString ',' '"stats"' ':' '{' stats? '}' ',' '"plan"' ':' planString '}'
 
 stats ::= stat
 stats ::= stat  ',' stats
 
-stat ::= '[' statName ',' number ']'
+stat ::= '"scan"' ':' number
+stat ::= '"tempBTree"' ':' number
+stat ::= '"compoundSubquery"' ':' number
+stat ::= '"executeScalar"' ':' number
+stat ::= '"search"' ':' number
+stat ::= '"searchUsingCovering"' ':' number

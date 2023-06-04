@@ -884,16 +884,31 @@ END;
 
 CREATE PROC print_query_plan_stat(id_ integer not null)
 BEGIN
-  CALL printf("   \"stats\" : [\n");
+  CALL printf("   \"stats\" : {\n");
   DECLARE Ca CURSOR FOR
   WITH
     scan(name, count, priority) AS (
-      SELECT 'SCAN', COUNT(*), 0 
+      SELECT 'scan', COUNT(*), 0 
         FROM plan_temp 
         WHERE zdetail LIKE '%scan%' AND sql_id = id_
     ),
+    b_tree(name, count, priority) AS (
+      SELECT 'tempBTree', COUNT(*), 1 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_
+    ),
+    compound_subqueries(name, count, priority) AS (
+      SELECT 'compoundSubquery', COUNT(*), 2 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%compound subqueries%' AND sql_id = id_
+    ),
+    execute_scalar(name, count, priority) AS (
+      SELECT 'executeScalar', COUNT(*), 3 
+        FROM plan_temp 
+        WHERE zdetail LIKE '%execute scalar%' AND sql_id = id_
+    ),
     search(name, count, priority) AS (
-      SELECT 'SEARCH', COUNT(*), 4 
+      SELECT 'search', COUNT(*), 4 
         FROM plan_temp 
         WHERE zdetail LIKE '%search%' AND iselectid NOT IN (
           SELECT iselectid 
@@ -902,24 +917,9 @@ BEGIN
         ) AND sql_id = id_
     ),
     search_fast(name, count, priority) AS (
-      SELECT 'SEARCH USING COVERING', COUNT(*), 5 
+      SELECT 'searchUsingCovering', COUNT(*), 5 
         FROM plan_temp 
         WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_
-    ),
-    b_tree(name, count, priority) AS (
-      SELECT 'TEMP B-TREE', COUNT(*), 1 
-        FROM plan_temp 
-        WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_
-    ),
-    compound_subqueries(name, count, priority) AS (
-      SELECT 'COMPOUND SUBQUERIES', COUNT(*), 2 
-        FROM plan_temp 
-        WHERE zdetail LIKE '%compound subqueries%' AND sql_id = id_
-    ),
-    execute_scalar(name, count, priority) AS (
-      SELECT 'EXECUTE SCALAR', COUNT(*), 3 
-        FROM plan_temp 
-        WHERE zdetail LIKE '%execute scalar%' AND sql_id = id_
     )
   SELECT 
    '"' || name || '"' name,
@@ -942,10 +942,10 @@ BEGIN
   LOOP FETCH Ca
   BEGIN
     CALL printf("%s", IIF(first, "", ",\n"));
-    CALL printf("      [%s, %d]", Ca.name, Ca.value);
+    CALL printf("      %s : %d", Ca.name, Ca.value);
     SET first := false;
   END;
-  CALL printf("\n    ],\n");
+  CALL printf("\n    },\n");
 END;
 
 CREATE PROC print_query_plan_graph(id_ integer not null)

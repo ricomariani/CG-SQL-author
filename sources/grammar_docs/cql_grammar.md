@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon May 29 00:05:56 PDT 2023
+Snapshot as of Sun Jun  4 01:08:08 PDT 2023
 
 ### Operators and Literals
 
@@ -217,6 +217,8 @@ explain_target: select_stmt
   | delete_stmt
   | with_delete_stmt
   | with_insert_stmt
+  | with_update_stmt
+  | with_upsert_stmt
   | insert_stmt
   | upsert_stmt
   | drop_table_stmt

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Mon May 29 00:05:56 2023
+// Snapshot as of Sun Jun  4 01:08:08 2023
 
 
 const PREC = {
@@ -31,7 +31,7 @@ module.exports = grammar({
     explain_stmt: $ => seq($.EXPLAIN, optional($.opt_query_plan), $.explain_target),
     QUERY_PLAN: $ => prec.left(1, seq(CI('query'), CI('plan'))),
     opt_query_plan: $ => $.QUERY_PLAN,
-    explain_target: $ => choice($.select_stmt, $.update_stmt, $.delete_stmt, $.with_delete_stmt, $.with_insert_stmt, $.insert_stmt, $.upsert_stmt, $.drop_table_stmt, $.drop_view_stmt, $.drop_index_stmt, $.drop_trigger_stmt, $.begin_trans_stmt, $.commit_trans_stmt),
+    explain_target: $ => choice($.select_stmt, $.update_stmt, $.delete_stmt, $.with_delete_stmt, $.with_insert_stmt, $.with_update_stmt, $.with_upsert_stmt, $.insert_stmt, $.upsert_stmt, $.drop_table_stmt, $.drop_view_stmt, $.drop_index_stmt, $.drop_trigger_stmt, $.begin_trans_stmt, $.commit_trans_stmt),
     previous_schema_stmt: $ => $.AT_PREVIOUS_SCHEMA,
     schema_upgrade_script_stmt: $ => $.AT_SCHEMA_UPGRADE_SCRIPT,
     schema_upgrade_version_stmt: $ => seq($.AT_SCHEMA_UPGRADE_VERSION, '(', $.INT_LIT, ')'),

@@ -7245,7 +7245,7 @@ END;</code></pre>
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon May 29 00:05:56 PDT 2023</p>
+<p>Snapshot as of Sun Jun 4 01:08:08 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -7441,6 +7441,8 @@ explain_target: select_stmt
   | delete_stmt
   | with_delete_stmt
   | with_insert_stmt
+  | with_update_stmt
+  | with_upsert_stmt
   | insert_stmt
   | upsert_stmt
   | drop_table_stmt
@@ -11226,7 +11228,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon May 29 00:05:56 PDT 2023</p>
+<p>Snapshot as of Sun Jun 4 01:08:08 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

@@ -193,7 +193,7 @@ with
   select * from some_cte;
 
 -- Object type in stmt
--- + SELECT array_num_at(ptr(cast('1' as object)), id) AS idx
+-- + SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx
 create proc read_object(sync_group_ids_ object not null)
 begin
   select array_num_at(ptr(sync_group_ids_), id) as idx from t1;
@@ -437,3 +437,33 @@ proc use_frag_with_native_args()
 begin
   select stuff() x, notnull_int_frag(1) y, T1.* from (call notnull_int_frag(foo() + a_proc())) T1;
 end;
+
+declare function external_blob_func() blob;
+
+[[shared_fragment]]
+proc simple_blob_fragment(x blob)
+begin
+  select 1 xx;
+end;
+
+-- + LET query_plan_trivial_object := trivial_object();
+-- + LET query_plan_trivial_blob := trivial_blob();
+-- + SET stmt := "SELECT *\\n  FROM (CALL simple_blob_fragment(nullable(query_plan_trivial_blob)))";
+proc blob_frag_user()
+BEGIN
+  select * from (call simple_blob_fragment(external_blob_func()));
+END;
+
+declare function external_object_func() object;
+
+[[shared_fragment]]
+proc simple_object_fragment(x object)
+begin
+  select 1 xx;
+end;
+
+-- + SET stmt := "SELECT *\\n  FROM (CALL simple_object_fragment(nullable(query_plan_trivial_object)))";
+proc object_frag_user()
+BEGIN
+  select * from (call simple_object_fragment(external_object_func()));
+END;

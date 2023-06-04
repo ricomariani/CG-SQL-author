@@ -124,11 +124,11 @@ static void qp_emit_constant_one(sem_t sem_type, charbuf *output)
     bprintf(output, "'1'");
   }
   else if (is_object(sem_type)) {
-    bprintf(output, "cast('1' as object)");
+    bprintf(output, "query_plan_trivial_object");
   }
   else {
     Contract(is_blob(sem_type));
-    bprintf(output, "cast('1' as blob)");
+    bprintf(output, "query_plan_trivial_blob");
   }
 
   if (nullable) {
@@ -278,6 +278,8 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // string sql statement. It gave a better look to the code gen but that does not work
   // for query plan use case because we want to keep '\n' in the string statement because
   // we re-use that statement later to print it in Diff or the terminal.
+  bprintf(&body, "LET query_plan_trivial_object := trivial_object();\n");
+  bprintf(&body, "LET query_plan_trivial_blob := trivial_blob();\n\n");
   bprintf(&body, "SET stmt := %s;\n", cstr_sql2.ptr);
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
   if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
@@ -798,8 +800,6 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   backed_tables = &backed_tables_buf;
   CHARBUF_OPEN(output_buf);
 
-  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
-
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_no_annotations;
@@ -810,14 +810,26 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   cg_qp_stmt_list(head);
 
+  bprintf(&output_buf, rt->source_prefix);
+  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
+  bprintf(&output_buf, "proc trivial_object()\n");
+  bprintf(&output_buf, "begin\n");
+  bprintf(&output_buf, "  select 1 x;\n");
+  bprintf(&output_buf, "end;\n");
+
+  bprintf(&output_buf, "proc trivial_blob(out result blob not null)\n");
+  bprintf(&output_buf, "begin\n");
+  bprintf(&output_buf, "  set result := (select x'41');\n");
+  bprintf(&output_buf, "end;");
+
   if (sql_stmt_count) {
-    bprintf(&output_buf, rt->source_prefix);
     if (options.test) {
       while (head->right) {
         head = head->right;
       }
       bprintf(&output_buf, "-- The statement ending at line %d\n\n", head->left->lineno);
     }
+
     cg_qp_emit_declare_func(&output_buf);
     bprintf(&output_buf, "\n");
     cg_qp_emit_create_schema_proc(&output_buf);

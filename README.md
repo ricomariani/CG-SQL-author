@@ -30,7 +30,7 @@ For Contributors:
 - [Contributing](https://github.com/ricomariani/CG-SQL-author/blob/main/CONTRIBUTING.md)
 - [Typical Dev Cycle](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/dev_notes.md)
 - [Testing CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/testing.md)
-- [Code Coverage](https://cgsql.dev/docs/code-coverag://github.com/ricomariani/CG-SQL-author/blob/main/docs/code-coverage.md)
+- [Code Coverage](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/code-coverage.md)
 
 ## Licensing
 

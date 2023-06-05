@@ -1,13 +1,16 @@
 
 DECLARE PROC printf NO CHECK;
+
 proc trivial_object()
 begin
   select 1 x;
 end;
+
 proc trivial_blob(out result blob not null)
 begin
   set result := (select x'41');
-end;-- The statement ending at line XXXX
+end;
+-- The statement ending at line XXXX
 
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
@@ -792,11 +795,11 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  SET stmt := "SELECT *\\n  FROM (CALL simple_blob_fragment(nullable(query_plan_trivial_blob)))";
+  SET stmt := "SELECT *\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
   INSERT INTO sql_temp(id, sql) VALUES(32, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT *
-    FROM (CALL simple_blob_fragment(nullable(query_plan_trivial_blob)));
+    FROM (CALL simple_blob_fragment(nullable(trivial_blob())));
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(32, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -815,11 +818,11 @@ BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
 
-  SET stmt := "SELECT *\\n  FROM (CALL simple_object_fragment(nullable(query_plan_trivial_object)))";
+  SET stmt := "SELECT *\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
   INSERT INTO sql_temp(id, sql) VALUES(33, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT *
-    FROM (CALL simple_object_fragment(nullable(query_plan_trivial_object)));
+    FROM (CALL simple_object_fragment(nullable(trivial_object())));
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(33, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -892,6 +895,36 @@ BEGIN
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(36, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC object_frag (o OBJECT)
+BEGIN
+SELECT 1 AS x;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC outer_frag ()
+BEGIN
+SELECT *
+  FROM (CALL object_frag(nullable(trivial_object())));
+END;
+
+CREATE PROC populate_query_plan_37()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  SET stmt := "SELECT *\\n  FROM (CALL outer_frag())";
+  INSERT INTO sql_temp(id, sql) VALUES(37, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT *
+    FROM (CALL outer_frag());
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(37, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -1314,11 +1347,18 @@ BEGIN
     CALL printf("failed populating query 36\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_37();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 37\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 36
+  WHILE q <= 37
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

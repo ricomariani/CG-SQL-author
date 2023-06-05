@@ -100,7 +100,7 @@ static bool_t qp_table_function_callback(
 // evaluate so that the entire stream leading to the variable doesn't have
 // to go into the output.  This is also used to replace native function calls
 // that occur in query fragments.
-static void qp_emit_constant_one(sem_t sem_type, charbuf *output) 
+static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf *output) 
 {
   bool_t nullable = is_nullable(sem_type) && !is_inferred_notnull(sem_type);
 
@@ -124,11 +124,21 @@ static void qp_emit_constant_one(sem_t sem_type, charbuf *output)
     bprintf(output, "'1'");
   }
   else if (is_object(sem_type)) {
-    bprintf(output, "query_plan_trivial_object");
+    if (native_context) {
+       bprintf(output, "trivial_object()");
+    }
+    else {
+       bprintf(output, "query_plan_trivial_object");
+    }
   }
   else {
     Contract(is_blob(sem_type));
-    bprintf(output, "query_plan_trivial_blob");
+    if (native_context) {
+       bprintf(output, "trivial_blob()");
+    }
+    else {
+      bprintf(output, "query_plan_trivial_blob");
+    }
   }
 
   if (nullable) {
@@ -148,7 +158,7 @@ static bool_t qp_variables_callback(
   void *_Nullable context,
   charbuf *_Nonnull output)
 {
-  qp_emit_constant_one(ast->sem->sem_type, output);
+  qp_emit_constant_one(false, ast->sem->sem_type, output);
   return true;
 }
 
@@ -184,7 +194,7 @@ static bool_t qp_func_callback(
 
   // note: ast_declare_select_func_stmt does NOT match, they stay
   if (func && is_ast_declare_func_stmt(func)) {
-    qp_emit_constant_one(ast->sem->sem_type, output);
+    qp_emit_constant_one(true, ast->sem->sem_type, output);
     return true;
   }
 
@@ -192,7 +202,7 @@ static bool_t qp_func_callback(
   // which we checked above
   ast_node *proc = find_proc(name);
   if (proc) {
-    qp_emit_constant_one(ast->sem->sem_type, output);
+    qp_emit_constant_one(true, ast->sem->sem_type, output);
     return true;
   }
 
@@ -822,16 +832,16 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   cg_qp_stmt_list(head);
 
   bprintf(&output_buf, rt->source_prefix);
-  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
+  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n\n");
   bprintf(&output_buf, "proc trivial_object()\n");
   bprintf(&output_buf, "begin\n");
   bprintf(&output_buf, "  select 1 x;\n");
-  bprintf(&output_buf, "end;\n");
+  bprintf(&output_buf, "end;\n\n");
 
   bprintf(&output_buf, "proc trivial_blob(out result blob not null)\n");
   bprintf(&output_buf, "begin\n");
   bprintf(&output_buf, "  set result := (select x'41');\n");
-  bprintf(&output_buf, "end;");
+  bprintf(&output_buf, "end;\n");
 
   if (sql_stmt_count) {
     if (options.test) {

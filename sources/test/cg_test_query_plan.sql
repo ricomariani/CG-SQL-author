@@ -448,7 +448,7 @@ end;
 
 -- + LET query_plan_trivial_object := trivial_object();
 -- + LET query_plan_trivial_blob := trivial_blob();
--- + SET stmt := "SELECT *\\n  FROM (CALL simple_blob_fragment(nullable(query_plan_trivial_blob)))";
+-- + SET stmt := "SELECT *\\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))";
 proc blob_frag_user()
 BEGIN
   select * from (call simple_blob_fragment(external_blob_func()));
@@ -462,7 +462,7 @@ begin
   select 1 xx;
 end;
 
--- + SET stmt := "SELECT *\\n  FROM (CALL simple_object_fragment(nullable(query_plan_trivial_object)))";
+-- + SET stmt := "SELECT *\\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))";
 proc object_frag_user()
 BEGIN
   select * from (call simple_object_fragment(external_object_func()));
@@ -493,4 +493,23 @@ end;
 
 proc qp_use_no_frag(foo blob) begin
   select foo foo;
+end;
+
+declare function my_object_func() object;
+
+[[shared_fragment]]
+proc object_frag(o object)
+begin
+  select 1 x;
+end;
+
+[[shared_fragment]]
+proc outer_frag()
+begin
+  select * from (call object_frag(my_object_func()));
+end;
+
+proc do_something()
+begin
+  select * from (call outer_frag());
 end;

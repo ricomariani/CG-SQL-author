@@ -388,6 +388,14 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
     cg_qp_callbacks->if_stmt_callback = &if_stmt_callback;
     cg_qp_callbacks->if_stmt_context = &if_stmt_branch_context;
 
+    // inside of a shared fragment, variables do not need to be remapped at all
+    // they are only formals anyway.  Only the variables of "real" stored procs 
+    // need to be remapped.  If there are internal variables in blobs they will
+    // flow from the outer variables.  This has the important side-effect of 
+    // making it so that no native call occurs inside the shared fragment in a sql context.
+    gen_sql_callback _Nullable variables_callback_saved = cg_qp_callbacks->variables_callback;
+    cg_qp_callbacks->variables_callback = NULL;
+
     bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
 
     if (if_stmt_branch_context > 1) {
@@ -397,6 +405,9 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
     gen_set_output_buffer(query_plans);
     gen_statement_with_callbacks(ast, cg_qp_callbacks);
     bprintf(query_plans, ";\n\n");
+
+    // put the variables callback back in place
+    cg_qp_callbacks->variables_callback = variables_callback_saved;
 
     // Don't apply callback outside of shared fragments
     cg_qp_callbacks->if_stmt_callback = NULL;

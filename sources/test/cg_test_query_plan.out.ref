@@ -516,7 +516,7 @@ END;
 CREATE PROC split_commas (str TEXT)
 BEGIN
 WITH
-splitter (tok, rest) AS (SELECT "", IFNULL(nullable('1') || ",", "")
+splitter (tok, rest) AS (SELECT "", IFNULL(str || ",", "")
 UNION ALL
 SELECT substr(rest, 1, instr(rest, ",") - 1), substr(rest, instr(rest, ",") + 1)
   FROM splitter
@@ -530,7 +530,7 @@ END;
 CREATE PROC ids_from_string (str TEXT)
 BEGIN
 WITH
-toks (tok) AS (CALL split_commas(nullable('1')))
+toks (tok) AS (CALL split_commas(str))
 SELECT CAST(tok AS LONG_INT) AS id
   FROM toks;
 END;
@@ -597,7 +597,7 @@ END;
 @attribute(cql:shared_fragment)
 CREATE PROC frag (v INTEGER NOT NULL)
 BEGIN
-SELECT 1 AS val;
+SELECT v AS val;
 END;
 
 CREATE PROC populate_query_plan_22()
@@ -743,7 +743,7 @@ END;
 @attribute(cql:shared_fragment)
 CREATE PROC notnull_int_frag (v INTEGER NOT NULL)
 BEGIN
-SELECT 1 AS val;
+SELECT v AS val;
 END;
 
 CREATE PROC populate_query_plan_30()
@@ -823,6 +823,75 @@ BEGIN
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(33, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC qp_take_inner_blob (foo BLOB)
+BEGIN
+SELECT foo AS inner_a;
+END;
+
+@attribute(cql:shared_fragment)
+CREATE PROC qp_take_blob (foo BLOB)
+BEGIN
+WITH
+qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(LOCALS.foo))
+SELECT *
+  FROM qp_take_inner_blob;
+END;
+
+CREATE PROC populate_query_plan_34()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  SET stmt := "WITH\\nqp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))\\nSELECT *\\n  FROM qp_take_blob";
+  INSERT INTO sql_temp(id, sql) VALUES(34, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  qp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))
+  SELECT *
+    FROM qp_take_blob;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(34, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_35()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  SET stmt := "WITH\\nqp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))\\nSELECT *\\n  FROM qp_take_inner_blob";
+  INSERT INTO sql_temp(id, sql) VALUES(35, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  WITH
+  qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))
+  SELECT *
+    FROM qp_take_inner_blob;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(35, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+  END;
+END;
+
+CREATE PROC populate_query_plan_36()
+BEGIN
+  DECLARE stmt TEXT NOT NULL;
+  LET query_plan_trivial_object := trivial_object();
+  LET query_plan_trivial_blob := trivial_blob();
+
+  SET stmt := "SELECT nullable(query_plan_trivial_blob) AS foo";
+  INSERT INTO sql_temp(id, sql) VALUES(36, stmt);
+  DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+  SELECT nullable(query_plan_trivial_blob) AS foo;
+  LOOP FETCH C
+  BEGIN
+    INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(36, C.iselectid, C.iorder, C.ifrom, C.zdetail);
   END;
 END;
 
@@ -1224,11 +1293,32 @@ BEGIN
     CALL printf("failed populating query 33\n");
     THROW;
   END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_34();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 34\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_35();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 35\n");
+    THROW;
+  END CATCH;
+  BEGIN TRY
+    CALL populate_query_plan_36();
+  END TRY;
+  BEGIN CATCH
+    CALL printf("failed populating query 36\n");
+    THROW;
+  END CATCH;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");
   LET q := 1;
-  WHILE q <= 33
+  WHILE q <= 36
   BEGIN
     CALL printf("%s", IIF(q == 1, "", ",\n"));
     CALL print_query_plan(q);

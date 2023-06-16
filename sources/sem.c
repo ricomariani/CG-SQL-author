@@ -9441,6 +9441,30 @@ bool_t is_no_clause_simple_select(ast_node *select_stmt) {
   return false;
 }
 
+static bool_t find_shared_cte_with_args(ast_node *cte_body, void *context, charbuf *buffer) {
+  EXTRACT_NOTNULL(call_stmt, cte_body->left);
+  EXTRACT(expr_list, call_stmt->right);
+  *(bool_t*)context = expr_list != NULL;  
+
+  return false;
+}
+
+static bool_t has_nested_shared_cte_with_args(ast_node *stmt) {
+  Contract(is_ast_select_stmt(stmt));
+  bool_t found_nested_shared_cte_with_args = false;
+
+  CHARBUF_OPEN(sql);
+  gen_set_output_buffer(&sql);
+  gen_sql_callbacks callbacks;
+  init_gen_sql_callbacks(&callbacks);
+  callbacks.cte_proc_context = &found_nested_shared_cte_with_args;
+  callbacks.cte_proc_callback = find_shared_cte_with_args;
+  gen_statement_with_callbacks(stmt, &callbacks);
+  CHARBUF_CLOSE(sql);
+
+  return found_nested_shared_cte_with_args;
+}
+
 // validate shared fragment call:
 //  * target has no errors
 //  * target is a shared fragment
@@ -9481,6 +9505,12 @@ static void sem_validate_expression_fragment(ast_node *ast, ast_node *proc) {
 
   if (!is_no_clause_simple_select(select_stmt)) {
     report_error(ast, "CQL0450: a shared fragment used like a function must be a simple SELECT with no FROM clause", proc_name);
+    record_error(ast);
+    return;
+  }
+
+  if (has_nested_shared_cte_with_args(select_stmt)) {
+    report_error(ast, "CQL0467: a shared fragment used like a function cannot nest fragments that use arguments", proc_name);
     record_error(ast);
     return;
   }

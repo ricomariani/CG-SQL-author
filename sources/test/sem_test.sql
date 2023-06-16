@@ -20334,6 +20334,66 @@ begin
   select 1 where inline_frag(2) filter (where 1);
 end;
 
+@attribute(cql:shared_fragment)
+create proc no_args_frag()
+begin
+  select 1 x, 2 y, 3.0 z;
+end;
+
+@attribute(cql:shared_fragment)
+create proc nested_expression_fragment(x integer not null, y integer not null)
+begin
+  select (
+    with
+      (call no_args_frag())
+    select f.x from no_args_frag f
+  ) val;
+end;
+
+-- TEST: Using an expression fragment with nested fragment.
+-- + {create_proc_stmt}: use_nested_expression_fragment: { val: integer } dml_proc
+-- - error:
+create proc use_nested_expression_fragment()
+begin
+  select nested_expression_fragment(1, 2) val;
+end;
+
+@attribute(cql:shared_fragment)
+create proc nested_expression_fragment_with_args1(x integer not null, y integer not null)
+begin
+  select (
+    with
+      (call a_shared_frag(*))
+    select f.x from a_shared_frag f
+  ) val;
+end;
+
+
+-- TEST: Using an expression fragment that contains a fragment with args fails
+-- + error: % a shared fragment used like a function cannot nest fragments that use arguments 'nested_expression_fragment_with_args1'
+-- +1 error:
+create proc use_nested_expression_fragment_with_args1()
+begin
+  select nested_expression_fragment_with_args1(1, 2) val;
+end;
+
+@attribute(cql:shared_fragment)
+create proc nested_expression_fragment_with_args2(x integer not null, y integer not null)
+begin
+  select (
+    select f.x from  (call a_shared_frag(*)) f
+  ) val;
+end;
+
+
+-- TEST: Using an expression fragment that contains a fragment in a FROM clause with args fails
+-- + error: % a shared fragment used like a function cannot nest fragments that use arguments 'nested_expression_fragment_with_args2'
+-- +1 error:
+create proc use_nested_expression_fragment_with_args2()
+begin
+  select nested_expression_fragment_with_args2(1, 2) val;
+end;
+
 create table Shape_xy (x int, y int);
 create table Shape_uv (u text, v text);
 create table Shape_uvxy (like Shape_xy, like Shape_uv);

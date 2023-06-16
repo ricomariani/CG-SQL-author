@@ -75896,6 +75896,416 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call i
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC no_args_frag ()
+BEGIN
+  SELECT 1 AS x, 2 AS y, 3.0 AS z;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {name no_args_frag}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          | | {select_core}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     | | {select_expr}: x: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name x}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: y: integer notnull
+          |     |   | | {int 2}: integer notnull
+          |     |   | | {opt_as_alias}
+          |     |   |   | {name y}
+          |     |   | {select_expr_list}
+          |     |     | {select_expr}: z: real notnull
+          |     |       | {dbl 3.0}: real notnull
+          |     |       | {opt_as_alias}
+          |     |         | {name z}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC nested_expression_fragment (x INTEGER NOT NULL, y INTEGER NOT NULL)
+BEGIN
+  SELECT ( WITH
+  no_args_frag (x, y, z) AS (CALL no_args_frag())
+  SELECT f.x
+    FROM no_args_frag AS f ) AS val;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: nested_expression_fragment: { val: integer } dml_proc
+    | {name nested_expression_fragment}: nested_expression_fragment: { val: integer } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer notnull variable in
+      | | | {param_detail}: x: integer notnull variable in
+      | |   | {name x}: x: integer notnull variable in
+      | |   | {notnull}: integer notnull
+      | |     | {type_int}: integer
+      | | {params}
+      |   | {param}: y: integer notnull variable in
+      |     | {param_detail}: y: integer notnull variable in
+      |       | {name y}: y: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { val: integer }
+          | {select_core_list}: select: { val: integer }
+          | | {select_core}: select: { val: integer }
+          |   | {select_expr_list_con}: select: { val: integer }
+          |     | {select_expr_list}: select: { val: integer }
+          |     | | {select_expr}: val: integer
+          |     |   | {with_select_stmt}: x: integer
+          |     |   | | {with}
+          |     |   | | | {cte_tables}: ok
+          |     |   | |   | {cte_table}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |   | |     | {cte_decl}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |   | |     | | {name no_args_frag}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |     | | {name_list}
+          |     |   | |     |   | {name x}
+          |     |   | |     |   | {name_list}
+          |     |   | |     |     | {name y}
+          |     |   | |     |     | {name_list}
+          |     |   | |     |       | {name z}
+          |     |   | |     | {shared_cte}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |       | {call_stmt}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |         | {name no_args_frag}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | | {select_stmt}: select: { x: integer notnull }
+          |     |   |   | {select_core_list}: select: { x: integer notnull }
+          |     |   |   | | {select_core}: select: { x: integer notnull }
+          |     |   |   |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |   |   |     | {select_expr_list}: select: { x: integer notnull }
+          |     |   |   |     | | {select_expr}: x: integer notnull
+          |     |   |   |     |   | {dot}: x: integer notnull
+          |     |   |   |     |     | {name f}
+          |     |   |   |     |     | {name x}
+          |     |   |   |     | {select_from_etc}: TABLE { f: no_args_frag }
+          |     |   |   |       | {table_or_subquery_list}: TABLE { f: no_args_frag }
+          |     |   |   |       | | {table_or_subquery}: TABLE { f: no_args_frag }
+          |     |   |   |       |   | {name no_args_frag}: TABLE { f: no_args_frag }
+          |     |   |   |       |   | {opt_as_alias}
+          |     |   |   |       |     | {name f}
+          |     |   |   |       | {select_where}
+          |     |   |   |         | {select_groupby}
+          |     |   |   |           | {select_having}
+          |     |   |   | {select_orderby}
+          |     |   |     | {select_limit}
+          |     |   |       | {select_offset}
+          |     |   | {opt_as_alias}
+          |     |     | {name val}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC use_nested_expression_fragment ()
+BEGIN
+  SELECT nested_expression_fragment(1, 2) AS val;
+END;
+
+  {create_proc_stmt}: use_nested_expression_fragment: { val: integer } dml_proc
+  | {name use_nested_expression_fragment}: use_nested_expression_fragment: { val: integer } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { val: integer }
+        | {select_core_list}: select: { val: integer }
+        | | {select_core}: select: { val: integer }
+        |   | {select_expr_list_con}: select: { val: integer }
+        |     | {select_expr_list}: select: { val: integer }
+        |     | | {select_expr}: val: integer
+        |     |   | {call}: integer
+        |     |   | | {name nested_expression_fragment}: integer inline_call
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {int 1}: integer notnull
+        |     |   |     | {arg_list}
+        |     |   |       | {int 2}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name val}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC nested_expression_fragment_with_args1 (x INTEGER NOT NULL, y INTEGER NOT NULL)
+BEGIN
+  SELECT ( WITH
+  a_shared_frag (x, y, z) AS (CALL a_shared_frag(LOCALS.x, LOCALS.y))
+  SELECT f.x
+    FROM a_shared_frag AS f ) AS val;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: nested_expression_fragment_with_args1: { val: integer } dml_proc
+    | {name nested_expression_fragment_with_args1}: nested_expression_fragment_with_args1: { val: integer } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer notnull variable in
+      | | | {param_detail}: x: integer notnull variable in
+      | |   | {name x}: x: integer notnull variable in
+      | |   | {notnull}: integer notnull
+      | |     | {type_int}: integer
+      | | {params}
+      |   | {param}: y: integer notnull variable in
+      |     | {param_detail}: y: integer notnull variable in
+      |       | {name y}: y: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { val: integer }
+          | {select_core_list}: select: { val: integer }
+          | | {select_core}: select: { val: integer }
+          |   | {select_expr_list_con}: select: { val: integer }
+          |     | {select_expr_list}: select: { val: integer }
+          |     | | {select_expr}: val: integer
+          |     |   | {with_select_stmt}: x: integer
+          |     |   | | {with}
+          |     |   | | | {cte_tables}: ok
+          |     |   | |   | {cte_table}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |   | |     | {cte_decl}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull }
+          |     |   | |     | | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |     | | {name_list}
+          |     |   | |     |   | {name x}
+          |     |   | |     |   | {name_list}
+          |     |   | |     |     | {name y}
+          |     |   | |     |     | {name_list}
+          |     |   | |     |       | {name z}
+          |     |   | |     | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |       | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |         | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |         | {expr_list}: ok
+          |     |   | |           | {dot}: x: integer notnull variable in
+          |     |   | |           | | {name LOCALS}
+          |     |   | |           | | {name x}
+          |     |   | |           | {expr_list}
+          |     |   | |             | {dot}: y: integer notnull variable in
+          |     |   | |               | {name LOCALS}
+          |     |   | |               | {name y}
+          |     |   | | {select_stmt}: select: { x: integer notnull }
+          |     |   |   | {select_core_list}: select: { x: integer notnull }
+          |     |   |   | | {select_core}: select: { x: integer notnull }
+          |     |   |   |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |   |   |     | {select_expr_list}: select: { x: integer notnull }
+          |     |   |   |     | | {select_expr}: x: integer notnull
+          |     |   |   |     |   | {dot}: x: integer notnull
+          |     |   |   |     |     | {name f}
+          |     |   |   |     |     | {name x}
+          |     |   |   |     | {select_from_etc}: TABLE { f: a_shared_frag }
+          |     |   |   |       | {table_or_subquery_list}: TABLE { f: a_shared_frag }
+          |     |   |   |       | | {table_or_subquery}: TABLE { f: a_shared_frag }
+          |     |   |   |       |   | {name a_shared_frag}: TABLE { f: a_shared_frag }
+          |     |   |   |       |   | {opt_as_alias}
+          |     |   |   |       |     | {name f}
+          |     |   |   |       | {select_where}
+          |     |   |   |         | {select_groupby}
+          |     |   |   |           | {select_having}
+          |     |   |   | {select_orderby}
+          |     |   |     | {select_limit}
+          |     |   |       | {select_offset}
+          |     |   | {opt_as_alias}
+          |     |     | {name val}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC use_nested_expression_fragment_with_args1 ()
+BEGIN
+  SELECT nested_expression_fragment_with_args1(1, 2) AS val;
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0467: a shared fragment used like a function cannot nest fragments that use arguments 'nested_expression_fragment_with_args1'
+
+  {create_proc_stmt}: err
+  | {name use_nested_expression_fragment_with_args1}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name nested_expression_fragment_with_args1}
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {int 1}
+        |     |   |     | {arg_list}
+        |     |   |       | {int 2}
+        |     |   | {opt_as_alias}
+        |     |     | {name val}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:shared_fragment)
+CREATE PROC nested_expression_fragment_with_args2 (x INTEGER NOT NULL, y INTEGER NOT NULL)
+BEGIN
+  SELECT ( SELECT f.x
+    FROM (CALL a_shared_frag(LOCALS.x, LOCALS.y)) AS f ) AS val;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name shared_fragment}
+  | {create_proc_stmt}: nested_expression_fragment_with_args2: { val: integer } dml_proc
+    | {name nested_expression_fragment_with_args2}: nested_expression_fragment_with_args2: { val: integer } dml_proc
+    | {proc_params_stmts}
+      | {params}: ok
+      | | {param}: x: integer notnull variable in
+      | | | {param_detail}: x: integer notnull variable in
+      | |   | {name x}: x: integer notnull variable in
+      | |   | {notnull}: integer notnull
+      | |     | {type_int}: integer
+      | | {params}
+      |   | {param}: y: integer notnull variable in
+      |     | {param_detail}: y: integer notnull variable in
+      |       | {name y}: y: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {stmt_list}: ok
+        | {select_stmt}: select: { val: integer }
+          | {select_core_list}: select: { val: integer }
+          | | {select_core}: select: { val: integer }
+          |   | {select_expr_list_con}: select: { val: integer }
+          |     | {select_expr_list}: select: { val: integer }
+          |     | | {select_expr}: val: integer
+          |     |   | {select_stmt}: x: integer
+          |     |   | | {select_core_list}: select: { x: integer notnull }
+          |     |   | | | {select_core}: select: { x: integer notnull }
+          |     |   | |   | {select_expr_list_con}: select: { x: integer notnull }
+          |     |   | |     | {select_expr_list}: select: { x: integer notnull }
+          |     |   | |     | | {select_expr}: x: integer notnull
+          |     |   | |     |   | {dot}: x: integer notnull
+          |     |   | |     |     | {name f}
+          |     |   | |     |     | {name x}
+          |     |   | |     | {select_from_etc}: TABLE { f: a_shared_frag }
+          |     |   | |       | {table_or_subquery_list}: TABLE { f: a_shared_frag }
+          |     |   | |       | | {table_or_subquery}: TABLE { f: a_shared_frag }
+          |     |   | |       |   | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |       |   | | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |       |   |   | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |       |   |   | {expr_list}: ok
+          |     |   | |       |   |     | {dot}: x: integer notnull variable in
+          |     |   | |       |   |     | | {name LOCALS}
+          |     |   | |       |   |     | | {name x}
+          |     |   | |       |   |     | {expr_list}
+          |     |   | |       |   |       | {dot}: y: integer notnull variable in
+          |     |   | |       |   |         | {name LOCALS}
+          |     |   | |       |   |         | {name y}
+          |     |   | |       |   | {opt_as_alias}
+          |     |   | |       |     | {name f}
+          |     |   | |       | {select_where}
+          |     |   | |         | {select_groupby}
+          |     |   | |           | {select_having}
+          |     |   | | {select_orderby}
+          |     |   |   | {select_limit}
+          |     |   |     | {select_offset}
+          |     |   | {opt_as_alias}
+          |     |     | {name val}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC use_nested_expression_fragment_with_args2 ()
+BEGIN
+  SELECT nested_expression_fragment_with_args2(1, 2) AS val;
+END;
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0467: a shared fragment used like a function cannot nest fragments that use arguments 'nested_expression_fragment_with_args2'
+
+  {create_proc_stmt}: err
+  | {name use_nested_expression_fragment_with_args2}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {select_stmt}: err
+        | {select_core_list}: err
+        | | {select_core}: err
+        |   | {select_expr_list_con}: err
+        |     | {select_expr_list}: err
+        |     | | {select_expr}: err
+        |     |   | {call}: err
+        |     |   | | {name nested_expression_fragment_with_args2}
+        |     |   | | {call_arg_list}
+        |     |   |   | {call_filter_clause}
+        |     |   |   | {arg_list}: ok
+        |     |   |     | {int 1}
+        |     |   |     | {arg_list}
+        |     |   |       | {int 2}
+        |     |   | {opt_as_alias}
+        |     |     | {name val}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE TABLE Shape_xy(
   x INTEGER,
   y INTEGER

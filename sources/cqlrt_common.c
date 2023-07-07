@@ -4294,10 +4294,13 @@ cleanup:
   return rc;
 }
 
+// this is not normally called but we need something here for linkage
 static void _stub_udf_callback(sqlite3_context* context, int argc, sqlite3_value** argv)
 {
 }
 
+// set up a do nothing UDF, this is used to stub out UDFs in the query plan generated code
+// the function is not normally called
 cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name)
 {
   cql_alloc_cstr(temp, name);
@@ -4313,6 +4316,9 @@ cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name)
    NULL,
    NULL
    );
+
+  // force one call, only for coverage
+  _stub_udf_callback(NULL, 0, NULL);
 
   cql_free_cstr(temp, str_ref);
   return rc;

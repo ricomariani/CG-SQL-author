@@ -403,4 +403,6 @@ CQL_EXPORT cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, con
 
 cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes, cql_bool *_Nonnull result);
 
+cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name);
+
 CQL_EXTERN_C_END

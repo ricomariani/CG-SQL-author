@@ -25,13 +25,10 @@ fi
 cc -E -x c $CQL_FILE >go.sql.pre
 $CQL --in go.sql.pre --rt query_plan --cg go-qp.sql
 
-# Generate UDF stubs
-$CQL --in $CQL_FILE --rt udf --cg go-qp-udf.h go-qp-udf.c
-
 # Compile and link CQL artifacts, with a main C file query_plan_test.c
 $CQL --in go-qp.sql --cg go-qp.h go-qp.c --dev
-cc -g -I$CQL_ROOT_DIR -I. -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c go-qp-udf.c
-cc -g -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o go-qp-udf.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
+cc -g -I$CQL_ROOT_DIR -I. -c $CQL_ROOT_DIR/query_plan_test.c go-qp.c
+cc -g -I$CQL_ROOT_DIR -I. -O -o go_query_plan go-qp.o query_plan_test.o $CQL_ROOT_DIR/cqlrt.c -lsqlite3
 
 # Run and generate query plans
 ./go_query_plan

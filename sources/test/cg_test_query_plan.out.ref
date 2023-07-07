@@ -1,5 +1,6 @@
 
 DECLARE PROC printf NO CHECK;
+DECLARE PROC cql_create_udf_stub(name TEXT NOT NULL) USING TRANSACTION;
 
 proc trivial_object()
 begin
@@ -36,6 +37,19 @@ DECLARE SELECT FUNC stuff () INTEGER NOT NULL;
 
 CREATE PROC create_schema()
 BEGIN
+  call cql_create_udf_stub("is_declare_func_enabled");
+  call cql_create_udf_stub("is_declare_func_wall");
+  call cql_create_udf_stub("array_num_at");
+  call cql_create_udf_stub("select_virtual_table");
+  call cql_create_udf_stub("bgetkey_type");
+  call cql_create_udf_stub("bgetval_type");
+  call cql_create_udf_stub("bgetkey");
+  call cql_create_udf_stub("bgetval");
+  call cql_create_udf_stub("bcreatekey");
+  call cql_create_udf_stub("bcreateval");
+  call cql_create_udf_stub("bupdatekey");
+  call cql_create_udf_stub("bupdateval");
+  call cql_create_udf_stub("stuff");
   CREATE TABLE t1(
     id INTEGER PRIMARY KEY,
     name TEXT

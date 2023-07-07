@@ -18,8 +18,6 @@ int main(int argc, char **argv) {
 
   rc = sqlite3_open(":memory:", &db);
 
-  create_udf(db);
-
   if (rc == SQLITE_OK) {
     rc = query_plan(db);
   }

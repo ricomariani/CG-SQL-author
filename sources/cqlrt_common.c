@@ -4293,3 +4293,27 @@ cleanup:
   cql_object_release(deleteList);
   return rc;
 }
+
+static void _stub_udf_callback(sqlite3_context* context, int argc, sqlite3_value** argv)
+{
+}
+
+cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name)
+{
+  cql_alloc_cstr(temp, name);
+
+  cql_code rc = sqlite3_create_function_v2(
+   db,
+   temp,
+   -1, // stub function takes any number of args
+   SQLITE_UTF8 | SQLITE_DETERMINISTIC,
+   NULL,
+   &_stub_udf_callback,
+   NULL,
+   NULL,
+   NULL
+   );
+
+  cql_free_cstr(temp, str_ref);
+  return rc;
+}

@@ -46,7 +46,7 @@ $O/.hgignore:
 OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebuf.o $O/charbuf.o \
           $O/cg_common.o $O/cg_c.o $O/cg_objc.o $O/symtab.o $O/compat.o \
           $O/cg_schema.o $O/crc64xz.o $O/sha256.o $O/cg_json_schema.o $O/cg_test_helpers.o $O/encoders.o \
-          $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/cg_udf.o $O/rt.o $O/eval.o \
+          $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/rt.o $O/eval.o \
           $O/rewrite.o $O/printf.o $O/flow.o $O/cg_stats.o $O/cg_lua.o
 
 OBJECTS+=$(ADDITIONAL_OBJECTS)
@@ -130,8 +130,6 @@ $O/cg_test_helpers.o: cg_test_helpers.c cg_test_helpers.h cg_common.h sem.h char
 
 $O/cg_query_plan.o: cg_query_plan.c cg_query_plan.h cg_common.h ast.h sem.h charbuf.h list.h cql.h ast.h
 
-$O/cg_udf.o: cg_udf.c cg_udf.h cg_common.h ast.h sem.h charbuf.h list.h cql.h
-
 $O/cg_stats.o: cg_stats.c cg_stats.h ast.h
 
 $O/eval.o: eval.c eval.h
@@ -184,8 +182,6 @@ $O/query_plan_test.o: query_plan_test.c
 
 $O/query_plan.o: $O/query_plan.c
 
-$O/udf.o: $O/udf.c
-
 $O/test_helpers.o: $O/test_helpers.c
 
 $O/test_helpers_test.o: test_helpers_test.c
@@ -233,8 +229,8 @@ upgrade_test: $(UPGRADE_OBJS) $O/upgrade_test.o $O/upgrade_validate.o $O/downgra
 	$(CC) $(CFLAGS) -o $O/upgrade4 $O/cqlrt_mocked.o $O/upgrade_validate.o $O/generated_upgrade4.o $O/upgrade_test.o $(SQLITE_LINK)
 	$(CC) $(CFLAGS) -o $O/downgrade_test $O/cqlrt_mocked.o $O/generated_upgrade1.o $O/downgrade_test.o $(SQLITE_LINK)
 
-query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o
-	$(CC) $(CFLAGS) -o $O/query_plan_test $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $O/udf.o $(SQLITE_LINK)
+query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o
+	$(CC) $(CFLAGS) -o $O/query_plan_test $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $(SQLITE_LINK)
 
 test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o
 	$(CC) $(CFLAGS) -o $O/test_helpers_test $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o $(SQLITE_LINK)

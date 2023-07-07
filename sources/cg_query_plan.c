@@ -538,10 +538,28 @@ static void cg_qp_emit_declare_func(charbuf *output) {
   }
 }
 
+static void cg_qp_emit_udf_stubs(charbuf *output) {
+  for (list_item *item = all_functions_list; item; item = item->next) {
+    EXTRACT_ANY_NOTNULL(any_func, item->ast);
+    bool_t is_select_func =
+      is_ast_declare_select_func_stmt(any_func) ||
+      is_ast_declare_select_func_no_check_stmt(any_func);
+
+    Contract(is_select_func  || is_ast_declare_func_stmt(any_func));
+
+    if (is_select_func) {
+      EXTRACT_STRING(name, any_func->left);
+
+      bprintf(output, "  call cql_create_udf_stub(\"%s\");\n", name);
+    }
+  }
+}
+
 static void cg_qp_emit_create_schema_proc(charbuf *output) {
   bprintf(output,
     "CREATE PROC create_schema()\n"
     "BEGIN\n");
+  cg_qp_emit_udf_stubs(output);
   bindent(output, schema_stmts, 2);
   bprintf(output,
     "  CREATE TABLE sql_temp(\n"
@@ -832,7 +850,9 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   cg_qp_stmt_list(head);
 
   bprintf(&output_buf, rt->source_prefix);
-  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n\n");
+  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
+  bprintf(&output_buf, "DECLARE PROC cql_create_udf_stub(name TEXT NOT NULL) USING TRANSACTION;\n\n");
+
   bprintf(&output_buf, "proc trivial_object()\n");
   bprintf(&output_buf, "begin\n");
   bprintf(&output_buf, "  select 1 x;\n");

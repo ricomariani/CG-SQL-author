@@ -6,7 +6,6 @@
  */
 
 DECLARE PROC printf NO CHECK;
-DECLARE SELECT FUNCTION googoo(x integer) integer;
 
 CREATE PROC make_schema ()
 BEGIN
@@ -23,8 +22,6 @@ BEGIN
     values
      ("Hello from CQL."),
      ("Edit as you please.");
-
-  let q := (select googoo(1) x);
 
   declare C cursor for select * from my_table;
   loop fetch C

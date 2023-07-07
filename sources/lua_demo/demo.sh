@@ -35,6 +35,12 @@ $O/cql --in t6.sql --cg $O/x.l --rt lua
 echo demo
 $O/cql --in demo.sql --cg $O/x.l --rt lua
 (cd $O ; lua $O/x.l)
+echo query plan
+$O/cql --in qp.sql --cg $O/qp_gen.sql --rt query_plan
+$O/cql --in $O/qp_gen.sql --cg $O/x.l --rt lua --dev
+echo "function printf(...) io.write(cql_printf(...)) end" >> $O/x.l
+echo "query_plan(sqlite3.open_memory())" >> $O/x.l
+(cd $O ; lua $O/x.l)
 
 echo ""
 echo "run test (NOTE: some exception spam is normal, the tests throwing exceptions on purpose)"

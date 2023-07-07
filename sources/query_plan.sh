@@ -49,14 +49,6 @@ then
     failed
 fi
 
-# build any udfs needed
-if ! ${CQL} --test --dev --cg "out/udf.h" "out/udf.c" --in "out/cg_test_query_plan.out" --rt udf 2>"out/udf.err"
-then
-    echo "CQL codegen udf return error"
-    cat "out/udf.err"
-    failed
-fi
-
 # build query plan c code
 if ! ${CQL} --test --dev --cg "out/query_plan.h" "out/query_plan.c" --in "out/cg_test_query_plan.out" 2>"out/query_plan_print.err"
 then

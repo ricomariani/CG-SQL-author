@@ -1044,19 +1044,6 @@ query_plan_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_query_plan.out
 
-  echo validate udf test
-  if ! ${CQL} --test --dev --cg "${OUT_DIR}/udf.h" "${OUT_DIR}/udf.c" --in "${OUT_DIR}/cg_test_query_plan.out" --rt udf 2>"${OUT_DIR}/udf.err"
-  then
-    echo "ERROR:"
-    cat "${OUT_DIR}/udf.err"
-    failed
-  fi
-
-  echo validating udf codegen
-  echo "  computing diffs (empty if none)"
-  on_diff_exit udf.c
-  on_diff_exit udf.h
-
   echo build query plan c code
   if ! ${CQL} --test --dev --cg "${OUT_DIR}/query_plan.h" "${OUT_DIR}/query_plan.c" --in "${OUT_DIR}/cg_test_query_plan.out" 2>"${OUT_DIR}/query_plan_print.err"
   then

@@ -938,3 +938,16 @@ function cql_rebuild_recreate_group(db, tables, indices, deletes)
   -- returning result = false (because we went with recreate plan)
   return rc, false
 end
+
+function cql_udf_stub(context)
+end
+
+function cql_create_udf_stub(db, name)
+  -- make a stub udf function that does nothing
+  db:create_function(name, -1, cql_udf_stub)
+  rc = db:errcode()
+  if rc ~= sqlite3.OK then
+    cql_error_trace(rc, db)
+  end
+  return rc
+end

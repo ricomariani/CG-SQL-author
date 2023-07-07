@@ -15,7 +15,6 @@
 #include "cg_schema.h"
 #include "cg_stats.h"
 #include "cg_test_helpers.h"
-#include "cg_udf.h"
 #include "rt.h"
 
 // These are the various result types we can produce
@@ -241,21 +240,6 @@ static rtdata rt_query_plan = {
     RT_SIGNSRC("--") "\n",
 };
 
-static rtdata rt_udf = {
-  .name = "udf",
-  .code_generator = &cg_udf_main,
-  .required_file_names_count = 2,
-  .header_prefix =
-    RT_IP_NOTICE("//")
-    RT_SIGNSRC("//")
-    "#pragma once\n\n",
-  .source_prefix =
-    RT_IP_NOTICE("//")
-    RT_SIGNSRC("//") "\n",
-  .cqlrt_template = "#include \"%s\"\n\n",
-  .cqlrt = "cqlrt.h",
-};
-
 static rtdata rt_stats = {
   .name = "stats",
   .code_generator = &cg_stats_main,
@@ -273,7 +257,6 @@ static rtdata *(rt_all[]) = {
   &rt_json_schema,
   &rt_test_helpers,
   &rt_query_plan,
-  &rt_udf,
   &rt_stats,
   RT_EXTRAS
   NULL,

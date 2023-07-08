@@ -172,8 +172,8 @@ static bool_t qp_variables_callback(
 // plan anyway.
 //
 // Note that we leave "select functions" alone (i.e. declared UDFs) they are
-// handled by generating a stub UDF for sqlite.  See the docs on --rt udf for
-// more details there.  We also do not touch shared fragment expressions, in those
+// handled by generating a stub UDF for sqlite.  See also cg_qp_emit_udf_stubs.
+// We also do not touch shared fragment expressions, in those
 // cases the sproc body will be inlined as usual so there is no need to replace
 // the call with a constant.
 static bool_t qp_func_callback(
@@ -538,6 +538,10 @@ static void cg_qp_emit_declare_func(charbuf *output) {
   }
 }
 
+// Generate a call to create a no-op stub for each declared UDF that we saw.
+// The stub isn't actually called in the context of query plan creation
+// so it doesn't have to do anything.  The runtime helper cql_create_udf_stub
+// handles the particulars.
 static void cg_qp_emit_udf_stubs(charbuf *output) {
   for (list_item *item = all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
@@ -549,12 +553,14 @@ static void cg_qp_emit_udf_stubs(charbuf *output) {
 
     if (is_select_func) {
       EXTRACT_STRING(name, any_func->left);
-
       bprintf(output, "  call cql_create_udf_stub(\"%s\");\n", name);
     }
   }
 }
 
+// Generate the schema required by the procedures in this translation unit
+// plus the standard schema for query plan storage and emit any UDF stubs
+// at this time as well.  See above for the UDF stub code.
 static void cg_qp_emit_create_schema_proc(charbuf *output) {
   bprintf(output,
     "CREATE PROC create_schema()\n"

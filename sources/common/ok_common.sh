@@ -83,8 +83,6 @@ copy_ref sem_test_prev.out
 copy_ref sem_test_prev.err
 copy_ref simple_error.err
 copy_ref test.out
-copy_ref udf.c
-copy_ref udf.h
 copy_ref unsupported_in_dasm.err
 copy_ref unwriteable.err
 copy_ref write_fail.err

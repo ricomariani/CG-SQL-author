@@ -9,7 +9,6 @@
 #include "cqlrt.h"
 
 extern cql_code query_plan(sqlite3 *_Nonnull _db_);
-extern void create_udf(sqlite3 *_Nonnull _db_);
 
 int main(int argc, char **argv) {
   // Setup database

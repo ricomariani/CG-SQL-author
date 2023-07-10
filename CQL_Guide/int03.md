@@ -2030,7 +2030,7 @@ over the `sqlite3_stmt *` that SQLite provides to us.  This process can be done 
 simple example:
 
 ```SQL
-@ATTRIBUTE(cql:private)
+[[private]]
 CREATE PROC q ()
 BEGIN
   SELECT "1" AS x, 2 AS y;
@@ -2119,7 +2119,7 @@ DECLARE PROC q () (x TEXT NOT NULL, y INTEGER NOT NULL);
 This is a procedure that takes no arguments and returns a result with the indicated shape.
 
 CQL can generate this declaration for you if you add `--generate_exports` to the command line.  Note
-that in this case `q` was marked with `@attribute(cql:private)` which caused `q` to be `static`
+that in this case `q` was marked with `[[private]]` which caused `q` to be `static`
 in the output. Hence it can't be called outside this translation unit and `--generate_exports`
 won't provide the declaration.
 
@@ -2365,7 +2365,7 @@ as they can easily hold mock rows based on any kind of computation.
 ### Result Sets
 
 In addition to returning a single row into a value cursor, or returning a statement to consume with a statement cursor,
-it's possible to generate a result set.  So far the samples have included `@attribute(cql:private)` to suppress that
+it's possible to generate a result set.  So far the samples have included `[[private]]` to suppress that
 code.  This pattern is intended to let regular C code access the data so `private` suppresses it.
 
 Let's consider a simple example, this example returns only one row but the mechanism works for any number of rows,
@@ -2609,7 +2609,7 @@ BEGIN
 END;
 ```
 
-The original example had `@attribute(cql:private)` to suppress the result set, but normally a one-row result is
+The original example had `[[private]]` to suppress the result set, but normally a one-row result is
 is generated from such a method.  The C API is almost identical.  However, there count is always 0 or 1.
 
 The getters do not have the row number:

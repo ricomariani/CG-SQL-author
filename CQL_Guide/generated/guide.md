@@ -1,11 +1,12 @@
 <!--- @generated -->
-## Chapter 1: Introduction
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 1: Introduction
+
 CQL was designed as a precompiled addition to the SQLite runtime system.  SQLite lacks
 stored procedures, but has a rich C runtime interface that allows you to create any kind
 of control flow mixed with any SQL operations that you might need.  However, SQLite's programming
@@ -259,13 +260,14 @@ $ cc -x c -E your_program.sql | cql --cg your_program.h your_program.c
 The above causes the C compiler to invoke only the pre-processor `-E` and to treat the input as though it were C code `-x c` even though it is in a `.sql` file. Later examples will assume that you have configured CQL to be used with the C pre-processor as above.
 
 
-## Chapter 2: Using Data
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 2: Using Data
+
 The point of using CQL is to facilitate access to a SQLite database so we'll switch gears to a slightly more complicated setup.  We'll
 still keep things fairly simple but let's start to use some database features.
 
@@ -696,13 +698,14 @@ A working version of this code can be found in the `sources/demo` directory of C
 Additional demo code is available in [Appendix 10](#appendix-10-cql-working-example)
 
 
-## Chapter 3: Expressions, Literals, Nullability, Sensitivity
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 3: Expressions, Literals, Nullability, Sensitivity
+
 Until this point we've only discussed simple kinds of expressions as well as variables and table columns marked with `NOT NULL`. These are indeed the easiest types for CQL to work with as they tend to correspond most directly to the types known to C.  However,
 SQL provides for many more types of expressions as well as nullable types and these require handling in any language that purports to be like SQL.
 
@@ -2120,13 +2123,14 @@ cql_cleanup:
 ```
 
 
-## Chapter 4: Procedures, Functions, and Control Flow
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 4: Procedures, Functions, and Control Flow
+
 All kinds of control flow happens in the context of some procedure. Though we've already introduced examples of procedures let's
 now go over some of the additional aspects we have not yet illustrated.
 
@@ -2495,13 +2499,14 @@ Any failures can be caught with `try/catch` as usual.
 This feature is really only syntatic sugar for the "awkward" form above, but it does allow for slightly better generated C code.
 
 
-## Chapter 5: Types of Cursors, Shapes, OUT and OUT UNION, and FETCH
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 5: Types of Cursors, Shapes, OUT and OUT UNION, and FETCH
+
 In the previous chapters we have used cursor variables without fully discussing them.
 Most of the uses are fairly self-evident but a more exhaustive discussion is also useful.
 
@@ -3710,13 +3715,14 @@ Summarizing, the main reason for using the boxing patterns is to allow for stand
 Boxing isn’t the usual pattern at all and returning cursors in a box, while possible, should be avoided in favor of the simpler patterns, if only because then then lifetime management is very simple in all those cases.
 
 
-## Chapter 6: Calling Procedures Defined Elsewhere
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 6: Calling Procedures Defined Elsewhere
+
 CQL generally doesn't see the whole world in one compilation.
 In this way it's a lot more like, say, the C compiler than it is like, say, Java
 or C# or something like that.  This means several things:
@@ -3981,13 +3987,14 @@ These combinations allow for pretty general composition of stored procedures
 so long as they are not recombined with SQLite statements.
 
 
-## Chapter 7: CQL Result Sets
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 7: CQL Result Sets
+
 Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
 result set feature of CQL is to create a C interface to SQLite data.  Because of this
 there are a lot of essential details that require looking carefully at the generated C code.  Appendix 2
@@ -4625,13 +4632,14 @@ of column getters is adjusted to be a `child_result_set_ref` instead of just `cq
 where `child` is the name of the child procedure.
 
 
-## Chapter 8: Functions
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 8: Functions
+
 CQL stored procs have a very simple contract so it is easy to declare procedures and then implement them in regular C; the C functions just have to conform to the contract.  However, CQL procedures have their own calling conventions and this makes it very inconvenient to use external code that is not doing database things and wants to return values.  Even a random number generator or something would be difficult to use because it could not be called in the context of an expression.  To allow for this CQL adds declared functions
 
 In another example of the two-headed nature of CQL, there are two ways to declare functions.  As we have already
@@ -4840,13 +4848,14 @@ Special Functions
 binding object variables, so passing memory addresses is the best we can do on all versions.
 
 
-## Chapter 9: Statements Summary and Error Checking
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 9: Statements Summary and Error Checking
+
 The following is a brief discussion of the major statement types and the semantic rules that CQL enforces for each of the statements.  A detailed discussion of SQL statements (the bulk of these) is beyond the scope of this document and you should refer to the SQLite documentation for most details.  However, in many cases CQL does provide additional enforcement and it is helpful to describe the basic checking that happens for each fragment of CQL.  A much
 more authoritative list of the things CQL checks for can be inferred from the error documentation.  "Tricky" errors have examples and suggested remediation.
 
@@ -5378,6 +5387,46 @@ then we set the output type of the procedure we're in accordingly.
 The program's control/ the overall meaning of the program / or may give the compiler specific directives
 as to how the program should be compiled.
 
+#### the `@ATTRIBUTE` Notation
+
+Zero or more miscellaneous attributes can be added to any statement, or any column definition.  See the `misc_attrs` node in the grammar for the exact placement.  Each attribute notation has the general form:
+
+* `@attribute`(_namespace_ : _attribute-name_ ) or
+* `@attribute`(_namespace_ : _attribute-name_ = _attribute-value_) 
+
+The _namespace_ portion is optional and attributes with special meaning to the compiler are all in the `cql:` namespace.  e.g. @attribute(cql:private).  This form is so common that the special abbreviation `[[foo]]`` can be used instead of `@attribute(cql:foo)`.
+
+* The _attribute-name_ can be any valid name
+* Each _attribute-value_ can be:
+  * any literal
+  * an array of _attribute-values_
+
+Since the _attribute-values_ can nest it's possible to represent arbitrarily complex data types in an attribute.  You can even represent a LISP program.
+
+By convention, CQL lets you define "global" attributes by applying them to a global variable of type `object`
+ending with the suffix "database".
+
+The main usage of global attributes is as a way to propagate configurations into the JSON output (q.v.).
+
+Examples:
+
+```sql
+-- "global" attributes
+@attribute(attribute_1 = "value_1")
+@attribute(attribute_2 = "value_2")
+declare database object;
+
+-- cql:private marking on a method to make it private, using simplified syntax
+[[private]]
+proc foo()
+begin
+end;
+```
+
+
+
+
+
 #### The `@ECHO` Statement
 Echo is valid in any top level contexts.
 
@@ -5717,13 +5766,14 @@ Now in CQL, the `*` and `T.*` forms are automatically expanded; SQLite doesn't s
 In fact, only the `select *` form could possibly be different, so in most cases this ends up being moot anyway.  Typically, you don't need to use `*` in the presence of joins because of name duplication and ambiguity of the column names of the result set.  CQL's automatic expansion means you have a much better idea exactly what columns you will get - those that were present in the schema you declared.
 
 
-## Chapter 10: Schema Management Features
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 10: Schema Management Features
+
 CQL has a lot of schema knowledge already and so it's well positioned to think about schema upgrades and versioning.
 
 It seemed essential to be able to record changes to the schema over time so CQL got an understanding of versioning.  This lets you do things like:
@@ -6924,13 +6974,14 @@ chain of foreign keys.
 These validations are sufficient to guarantee a constistent logical history for unsubscriptions.
 
 
-## Chapter 11: Previous Schema Validation
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 11: Previous Schema Validation
+
 As we saw in the previous chapter, CQL includes powerful schema management tools for creating automatic
 upgrade scripts for your databases.  However, not all schema alterations are possible after-the-fact
 and so CQL also includes schema comparison tools to help you avoid problems as you version your schema over time.
@@ -7489,13 +7540,14 @@ You can't change the `@delete` migration stored proc on columns.
 >NOTE: in addition to these errors, there are many more that do not require the previous schema which are also checked (not shown here).  These comprise things like making sure the delete version is greater than the create version on any item.  There is a lot of sensibility checking that can happen without reference to the previous schema.
 
 
-## Chapter 12: Testability Features
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 12: Testability Features
+
 CQL includes a number of features to make it easier to create what you might call "Test" procedures.  These primarily are concerned with loading up the database with dummy data, and/or validating the result of normal procedures that query the database.  There are several interesting language features in these dimensions.
 
 ### Dummy Data
@@ -7695,7 +7747,7 @@ The attributes dummy_table, dummy_insert, and dummy_select can be used together 
 
 Example:
 
-To create a dummy row set for `sample_proc`, add the cql:autotest attribute with dummy_table, dummy_insert, and dummy_select values.
+To create a dummy row set for `sample_proc`, add the `[[autotest]]` attribute with dummy_table, dummy_insert, and dummy_select values.
 
 ```sql
 create table foo(
@@ -7703,7 +7755,7 @@ create table foo(
   name text not null
 );
 
-@attribute(cql:autotest=(dummy_table, dummy_insert, dummy_select))
+[[autotest=(dummy_table, dummy_insert, dummy_select)]]
 create proc sample_proc(foo int)
 begin
   select * from Foo;
@@ -7771,7 +7823,7 @@ In the case that only a single row of data needs to be faked, the dummy_result_s
 Example:
 
 ```sql
-@attribute(cql:autotest=(dummy_result_set))
+[[autotest=(dummy_result_set]])
 create proc sample_proc()
 begin
   select id from Foo;
@@ -7827,13 +7879,13 @@ begin
   delete from foo where name = 'this is so bogus';
 end;
 
-@attribute(cql:autotest=(
+[[autotest=(
   dummy_table,
   dummy_insert,
   dummy_select,
   dummy_result_set,
   (dummy_test, (bar, (data), ('plugh'))))
-)
+]]
 create proc the_subject()
 begin
   select * from bar;
@@ -8034,7 +8086,7 @@ a dummy procedure that explicitly uses all of the desired tables.  This is signi
 the schema manually and still gets you triggers and indices automatically.  Something like this:
 
 ```sql
-@attribute(cql:autotest=(dummy_test))
+[[autotest=(dummy_test]])
 create proc use_my_stuff()
 begin
   let x := select 1 from t1, t2, t3, t4, t5, t6, etc..;
@@ -8046,13 +8098,14 @@ Using this approach you can have one set of test helpers for an entire unit rath
 is often desirable and the maintenance is not too bad.  You just use the `use_my_stuff` test helpers everywhere.
 
 
-## Chapter 13: JSON Output
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 13: JSON Output
+
 To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
 
 To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](#appendix-1-command-line-options)
@@ -8177,6 +8230,7 @@ Each attribute is a name and value pair:
 * **name** : any string
   * attribute names are often compound like "cql:shared_fragment"
   * they are otherwise simple identifiers
+  * if the ``[[attribute]]`` form is used, it is expanded into the normal `cql:attribute` form in the output
 * **value** : any _attribute value_
 
 Each _attribute value_ can be:
@@ -8184,19 +8238,18 @@ Each _attribute value_ can be:
 * any literal
 * an array of _attribute values_
 
-Since the _attribute values_ can nest its possible to represent arbitrarily complex data types in an attribute.  You can even represent a LISP program.
+Since the _attribute values_ can nest it's possible to represent arbitrarily complex data types in an attribute. 
 
 ### Global attributes
 
 While the most common use case for attributes is to be attached to other entities (e.g., tables, columns), CQL also lets you define
-"global" attributes, which are included in the top level `attributes` section of the JSON output. To specify global attributes you can
-declare a variable ending with the suffix "database" and attach attributes to it. CQL will merge together all the attributes
-from all the variables ending with "database" and place them in the `attributes` section of the JSON output.
+"global" attributes, which are included in the top level `attributes` section of the JSON output. To specify global attributes you 
+declare a variable of type `object` ending with the suffix `database` and attach attributes to it. CQL will merge together all the attributes
+from all the variables ending with `database` and place them in the `attributes` section of the JSON output.
 
-The main usage of global attributes is as a way to propagate configurations across an entire CQL build. You can, for instance,
-include these attributes in some root file that you `#include` in the rest of your CQL code, and by doing this these attributes
-will be visible everywhere else.
-
+Global attributes give you a way to add global configuration information into the CQL JSON output. You can, for instance,
+include these attributes in some root file that you `#include` in the rest of your CQL code, and by doing this,
+these attributes will be visible in any generated JSON for those files.
 
 Example:
 
@@ -9072,13 +9125,13 @@ not the full body of what was declared but its interface.  The schema informatio
 while the procedure information illuminates the code that was generated and how you might call it.
 
 
-## Chapter 14: CQL Shared Fragments
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
+## Chapter 14: CQL Shared Fragments
 
 Shared fragments allows you to reuse and compose SQL queires in a safe (type checked) and efficient manner. They are based on [Common Table Expressions (CTEs)](https://www.sqlite.org/lang_with.html), so some basic knowledge of that is recommended before using Shared Fragments.
 
@@ -9124,8 +9177,8 @@ and the natural way to create a select statement that is bindable in CQL is the 
 looks like this:
 
 ```sql
-@attribute(cql:shared_fragment)
-CREATE PROC split_text(value TEXT)
+[[shared_fragment]]
+PROC split_text(value TEXT)
 BEGIN
   WITH RECURSIVE
     splitter(tok,rest) AS (
@@ -9143,7 +9196,7 @@ BEGIN
 END;
 ```
 
-The introductory attribute `@attribute(cql:shared_fragment)` indicates that the procedure is to produce
+The introductory attribute `[[shared_fragment]]` indicates that the procedure is to produce
 no code, but rather will be inlined as a CTE in other locations.  To use it, we introduce the ability
 to call a procedure as part of a CTE declaration.  Like so:
 
@@ -9157,7 +9210,7 @@ Once the fragment has been defined, the statement above could appear anywhere, a
 text `'x,y,z'` need not be constant.  For instance:
 
 ```sql
-CREATE PROC print_parts(value TEXT)
+PROC print_parts(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
@@ -9175,8 +9228,8 @@ Fragments are also composable, so for instance, we might also want some shared c
 extracts comma separated numbers.  We could do this:
 
 ```sql
-@attribute(cql:shared_fragment)
-CREATE PROC ids_from_string(value TEXT)
+[[shared_fragment]]
+PROC ids_from_string(value TEXT)
 BEGIN
   WITH
     result(v) as (CALL split_text(value))
@@ -9187,7 +9240,7 @@ END;
 Now we could write:
 
 ```sql
-CREATE PROC print_ids(value TEXT)
+PROC print_ids(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
@@ -9206,7 +9259,7 @@ way is necessary.  For instance, here's a silly but illustrative example:
 
 ```sql
 /* This is a bit silly */
-CREATE PROC print_common_ids(value TEXT)
+PROC print_common_ids(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
@@ -9236,8 +9289,8 @@ might want these features in a variety of contexts, maybe not just starting from
 We can rewrite the fragment in a "generic" way like so:
 
 ```sql
-@attribute(cql:shared_fragment)
-CREATE PROC ids_from_string_table()
+[[shared_fragment]]
+PROC ids_from_string_table()
 BEGIN
   WITH
     source(v) LIKE (select "x" v)
@@ -9254,7 +9307,7 @@ Now when the fragment is invoked, you provide the actual data source (some table
 that parameter takes the role of "values".  Here's a full example:
 
 ```sql
-CREATE PROC print_ids(value TEXT)
+PROC print_ids(value TEXT)
 BEGIN
   DECLARE C CURSOR FOR
     WITH
@@ -9272,8 +9325,8 @@ END;
 We could actually rewrite the previous simple id fragment as follows:
 
 ```sql
-@attribute(cql:shared_fragment)
-CREATE PROC ids_from_string(value TEXT)
+[[shared_fragment]]
+PROC ids_from_string(value TEXT)
 BEGIN
   WITH
     tokens(v) as (CALL split_text(value))
@@ -9286,8 +9339,8 @@ And actually we have a convenient name we could use for the shape we need so
 we could have used the shape syntax to define `ids_from_string_table`.
 
 ```sql
-@attribute(cql:shared_fragment)
-CREATE PROC ids_from_string_table()
+[[shared_fragment]]
+PROC ids_from_string_table()
 BEGIN
   WITH
     source(*) LIKE split_text
@@ -9362,8 +9415,8 @@ And of course there is no possibility to share the common parts of the text of t
 However, conditional shared fragments allow forms like this:
 
 ```sql
-@attribute(cql:shared_fragment)
-CREATE PROC ids_from_string(val TEXT)
+[[shared_fragment]]
+PROC ids_from_string(val TEXT)
 BEGIN
   IF val IS NULL OR val IS '' THEN
     SELECT 0 id WHERE 0; -- empty result
@@ -9375,6 +9428,8 @@ BEGIN
   END IF;
 END;
 ```
+
+>NOTE: This appendix uses the more modern form `[[foo]]` instead of the equivalent `@attribute(cql:foo)`
 
 Now we can do something like:
 
@@ -9404,7 +9459,7 @@ Ultimately, from SQLite's perspective, all of these shared fragment forms result
 See Appendix 8 for an extensive section on best practices around fragments and common table expressions in general.
 
 >TIP:
->If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `@attribute(cql:query_plan_branch=[integer])` to modify the behaviour. Read
+>If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `[[query_plan_branch={an_integer}]]` to modify the behavior. Read
 >[Query Plan Generation](#chapter-15-query-plan-generation) for details.
 
 ### Shared Fragments as Expressions
@@ -9427,8 +9482,8 @@ An expression fragment is basically a normal shared fragment with no top-level `
 
 ```sql
 -- this isn't very exciting because regular max would do the job
-@attribute(cql:shared_fragment)
-create proc max_func(x integer, y integer)
+[[shared_fragment]]
+proc max_func(x integer, y integer)
 begin
   select case when x >= y then x else y end;
 end;
@@ -9493,8 +9548,8 @@ select (
 Expression fragments can nest, so you could write:
 
 ```sql
-@attribute(cql:shared_fragment)
-create proc max3_func(x integer, y integer, z integer)
+[[shared_fragment]]
+proc max3_func(x integer, y integer, z integer)
 begin
   select max_func(x, max_func(y, z));
 end;
@@ -9507,8 +9562,8 @@ and shared this way:
 
 ```sql
 -- this sort of thing happens all the time
-@attribute(cql:shared_fragment)
-create proc remap(x integer not null)
+[[shared_fragment]]
+proc remap(x integer not null)
 begin
    select case x
      when 1 then 1001
@@ -9566,7 +9621,14 @@ But, this gets to be a worse idea as such macros grow.  For larger cases, C and 
 CQL provides expression fragments.
 
 
-## Chapter 15: Query Plan Generation
+<!---
+-- Copyright (c) Meta Platforms, Inc. and affiliates.
+--
+-- This source code is licensed under the MIT license found in the
+-- LICENSE file in the root directory of this source tree.
+-->
+Chapter 15: Query Plan Generation
+
 CQL offers a way to run SQLite's [`EXPLAIN QUERY PLAN` command](https://www.sqlite.org/eqp.html) for all the SQL statements used in a CQL file using a set of special compilation steps.
 
 Generating query plans is inherently complicated. Any given stored procedure might include many SQL statements, each of which has a plan. To get the plans, those statements must be executed in the appropriate mode. In order for them to execute, whatever tables, views, and user-defined functions they use must exist. The statements can have any number of parameters, those have to be swapped out because they might come from anywhere. When run in `--rt query_plan` mode, the compiler accomplishes all of this by analyzing the original code and creating entirely new code. Running this new code creates the schema and, with the appropriate transforms, runs all the SQL statements in the original to give us the query plans. The process requires many steps as we'll see below.
@@ -9654,8 +9716,8 @@ The branch to analyze can be configured with the `cql:query_plan_branch` [@attri
 Here's an example of `cql:query_plan_branch` being used:
 
 ```sql title="original.sql"
-@attribute(cql:shared_fragment)
-@attribute(cql:query_plan_branch=1)
+[[shared_fragment]]
+[[query_plan_branch=1]]
 CREATE PROC frag2(y int)
 BEGIN
   IF y == 2 THEN
@@ -9880,7 +9942,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Jul  8 16:16:59 PDT 2023
+Snapshot as of Mon Jul 10 14:02:27 PDT 2023
 
 ### Operators and Literals
 
@@ -16255,7 +16317,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Jul  8 16:16:59 PDT 2023
+Snapshot as of Mon Jul 10 14:02:28 PDT 2023
 
 ### Rules
 
@@ -18590,13 +18652,13 @@ as was the CTE `BB`.  We get *exactly* the same query plan.  Now this means that
 inner expressions like `select * from A` could have been fragments such as:
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc A_()
 begin
   select * from A;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc B_()
 begin
   select * from B;
@@ -18619,7 +18681,7 @@ same good query plan.  Of course this is totally goofy, why make a fragment like
 it's just more typing.  Well now lets generalize the fragments just a bit.
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc A_(experiment bool not null)
 begin
   -- data source might come from somewhere else due to an experiment
@@ -18630,7 +18692,7 @@ begin
   end if;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc B_()
 begin
   -- we don't actually refer to "B" if the filter is null
@@ -18713,7 +18775,7 @@ QUERY PLAN
 In terms of fragments the anti-pattern is this.
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc B_()
 begin
   select B.* from A left join B on B.id = A.id;
@@ -18744,13 +18806,13 @@ each depending on the previous one results in a excellent data flow.
 In terms of fragments this is now:
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc A_()
 begin
   select * from A;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc AB_()
 begin
   with
@@ -18769,13 +18831,13 @@ We can generalize `AB_` so that it doesn't know where the base data is coming fr
 
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc A_()
 begin
   select * from A;
 end;
 
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc AB_()
 begin
   with
@@ -18826,7 +18888,7 @@ a lot better by moving the `A` condition all the way up into the first
 CTE.  With fragments that would just mean creating something like:
 
 ```sql
-@attribute(cql:shared_fragment)
+[[shared_fragment]]
 create proc A_(id_)
 begin
   select * from A where A.id = id_;

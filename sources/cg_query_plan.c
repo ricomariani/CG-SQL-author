@@ -264,33 +264,53 @@ static bool_t if_stmt_callback(
   return true;
 }
 
+// Emits an explain query plan statement for the given statement node
+// the node could be any kind of DML including the select part of
+// a nested select expression like:  let x:= (select etc.);
 static void cg_qp_explain_query_stmt(ast_node *stmt) {
   sql_stmt_count++;
   CHARBUF_OPEN(proc);
   CHARBUF_OPEN(body);
   CHARBUF_OPEN(sql);
-  CHARBUF_OPEN(cstr_sql);
-  CHARBUF_OPEN(cstr_sql2);
+  CHARBUF_OPEN(json_str_sql);
+  CHARBUF_OPEN(c_str_sql);
 
   gen_set_output_buffer(&sql);
   gen_statement_with_callbacks(stmt, cg_qp_callbacks);
-  cg_encode_json_string_literal(sql.ptr, &cstr_sql);
-  // Encode the encoded special character to be able retain the special characteres in the
-  // json string output
-  bprintf(&cstr_sql2, "\"");
-  for (int32_t i = 1; i < cstr_sql.used - 2; i++) {
-    cg_encode_char_as_json_string_literal(cstr_sql.ptr[i], &cstr_sql2);
+
+  // the generated statement has to be encoded in different ways, it will go out directly
+  // as an explain statement starting from the basic string computed above.  However,
+  // we also want to store the text of the statement as a string.  So we have to quote
+  // the statement.  That's all fine and well but actually the text we want is for the
+  // JSON output we will create.  So we have to JSON encode the sql and then quote
+  // the JSON as a C string.
+  cg_encode_json_string_literal(sql.ptr, &json_str_sql);
+
+  // Now that we have the JSON string we need all of that in a C string, including the
+  // quotes. So we use the single character helper to build a buffer with new quotes.  Note 
+  // that C string encoding is slightly differen than JSON, there are small escape differences.
+  // So we're going to be quote careful to C encode the JSON encoding.  It's double encoded.
+  // Howeve, there won't *be* any control characters to encode at this point because the JSON
+  // encoding already removed them all.  We're doing json encoding followed by C encoding because
+  // that's technically what we need but actually JSON encoding followed by another
+  // round of JSON encoding necessarily produces the same output. This code once did two JSON
+  // encodings it was only pedantically wrong.
+  bprintf(&c_str_sql, "\"");
+  for (int32_t i = 1; i < json_str_sql.used - 2; i++) {
+    // json_str_sql can have no control characters, but it might have quotes and backslashes
+    cg_encode_char_as_c_string_literal(json_str_sql.ptr[i], &c_str_sql);
   }
-  bprintf(&cstr_sql2, "\"");
+  bprintf(&c_str_sql, "\"");
   bprintf(&body, "DECLARE stmt TEXT NOT NULL;\n");
-  // Storing the string statement in a variable prevents codegen from stripping the '\n'
-  // We strip '\n' when formatting the one line string sql statement to a multiline c
-  // string sql statement. It gave a better look to the code gen but that does not work
-  // for query plan use case because we want to keep '\n' in the string statement because
-  // we re-use that statement later to print it in Diff or the terminal.
+
   bprintf(&body, "LET query_plan_trivial_object := trivial_object();\n");
   bprintf(&body, "LET query_plan_trivial_blob := trivial_blob();\n\n");
-  bprintf(&body, "SET stmt := %s;\n", cstr_sql2.ptr);
+
+  // The properly stringified literal can now be safely stored in a local variable with no loss.
+  // The C encoded will be unescaped when it is compiled and the JSON goes directly to the output
+  // so that we correctly generate a JSON fragment as a result of running this code.  The JSON
+  // string has escaped any quotes etc. that were in the original SQL.
+  bprintf(&body, "SET stmt := %s;\n", c_str_sql.ptr);
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
   if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
     bprintf(
@@ -314,13 +334,15 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
 
   bprintf(query_plans, "%s", proc.ptr);
 
-  CHARBUF_CLOSE(cstr_sql2);
-  CHARBUF_CLOSE(cstr_sql);
+  CHARBUF_CLOSE(c_str_sql);
+  CHARBUF_CLOSE(json_str_sql);
   CHARBUF_CLOSE(sql);
   CHARBUF_CLOSE(body);
   CHARBUF_CLOSE(proc);
 }
 
+// Emit a necessary piece of schema, preserve the backing table attributes if they are applicable.
+// This code runs for all kinds of DDL.
 static void cg_qp_sql_stmt(ast_node *ast) {
   if (ast->sem->delete_version <= 0) {
     charbuf *out = schema_stmts;
@@ -340,6 +362,8 @@ static void cg_qp_sql_stmt(ast_node *ast) {
   }
 }
 
+// We're assembling a simple string that has the tables that we are allowed to table scan without
+// generating a warning in the JSON output. This is basically a simple allow list.
 static void cg_qp_ok_table_scan_callback(
     CSTR _Nonnull name,
     ast_node* _Nonnull misc_attr_value,
@@ -351,11 +375,15 @@ static void cg_qp_ok_table_scan_callback(
   if (ok_table_scan_buf->used > 1) {
     bprintf(ok_table_scan_buf, ",");
   }
-  // the "#" around the table_name are used as delimiter of the
-  // table_name's word to later find tables that are ok to scan.
+  // The "#" around the table name are used as delimiter of the
+  // to later find tables that are ok to scan.
+  // This simplifies the whole-word match we need later.
   bprintf(ok_table_scan_buf, "#%s#", table_name);
 }
 
+// If we're processing a conditional fragment and there is an annotation
+// that tells us which branch of the fragment to use then store it.
+// Otherwise we'll analyze the first branch.
 static void cg_qp_query_plan_branch_callback(
   CSTR _Nonnull name,
   ast_node* _Nonnull misc_attr_value,
@@ -368,6 +396,8 @@ static void cg_qp_query_plan_branch_callback(
 
   Contract(result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL);
   eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
+
+  // the context had the integer that holds the branch number
   *(int64_t*)context = result.int64_value;
 }
 
@@ -462,6 +492,9 @@ static void cg_qp_create_virtual_table_stmt(ast_node *node) {
   cg_qp_sql_stmt(create_table_stmt);
 }
 
+// We're going to recurse the entire AST looking for matching node types
+// These correspond to the nodes we care about for QP.  That's pretty much
+// only DDL and query statements.  Most other things we keep digging in.
 static void cg_qp_one_stmt(ast_node *stmt) {
   if (!stmt || is_primitive(stmt)) {
     return;
@@ -476,6 +509,7 @@ static void cg_qp_one_stmt(ast_node *stmt) {
   }
 }
 
+// This is where we walk the root statement list.
 static void cg_qp_stmt_list(ast_node *head) {
   Contract(is_ast_stmt_list(head));
   for (ast_node *stmt = head; stmt; stmt = stmt->right) {
@@ -483,6 +517,8 @@ static void cg_qp_stmt_list(ast_node *head) {
   }
 }
 
+// Emit a procedure to load up the no_table_scan table with an insert statement.
+// We use the multi-value form of insert to load all the rows we need.
 static void emit_populate_no_table_scan_proc(charbuf *output) {
   CHARBUF_OPEN(no_scan_tables_buf);
 
@@ -496,9 +532,9 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
         EXTRACT_STRING(name, name_ast);
         if (exists_attribute_str(misc_attrs, "no_table_scan")) {
           if (no_scan_tables_buf.used > 1) {
-            bprintf(&no_scan_tables_buf, "\n  UNION  ");
+            bprintf(&no_scan_tables_buf, ",\n");
           }
-          bprintf(&no_scan_tables_buf, "SELECT \"%s\"", name);
+          bprintf(&no_scan_tables_buf, "    (\"%s\")", name);
         }
       }
     }
@@ -507,13 +543,14 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
   bprintf(output, "CREATE PROC populate_no_table_scan()\n"
                   "BEGIN\n");
   if (no_scan_tables_buf.used > 1) {
-    bprintf(output, "  INSERT OR IGNORE INTO no_table_scan(table_name) %s;\n", no_scan_tables_buf.ptr);
+    bprintf(output, "  INSERT OR IGNORE INTO no_table_scan(table_name) VALUES\n%s;\n", no_scan_tables_buf.ptr);
   }
   bprintf(output, "END;\n");
 
   CHARBUF_CLOSE(no_scan_tables_buf);
 }
 
+// Emit function declarations for "declare select function"
 static void cg_qp_emit_declare_func(charbuf *output) {
   // Emit declare functions because it may be needed for schema and query validation
   gen_set_output_buffer(output);
@@ -522,10 +559,9 @@ static void cg_qp_emit_declare_func(charbuf *output) {
     bool_t is_select_func =
       is_ast_declare_select_func_stmt(any_func) ||
       is_ast_declare_select_func_no_check_stmt(any_func);
-    Contract(is_select_func  || is_ast_declare_func_stmt(any_func));
+    Contract(is_select_func || is_ast_declare_func_stmt(any_func));
 
     if (is_select_func) {
-
       EXTRACT_MISC_ATTRS(any_func, misc_attrs);
       bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
       if (deterministic) {

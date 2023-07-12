@@ -151,10 +151,11 @@ CREATE TABLE backed(
 
 CREATE PROC populate_no_table_scan()
 BEGIN
-  INSERT OR IGNORE INTO no_table_scan(table_name) SELECT "t1"
-  UNION  SELECT "t2"
-  UNION  SELECT "scan_ok"
-  UNION  SELECT "foo";
+  INSERT OR IGNORE INTO no_table_scan(table_name) VALUES
+    ("t1"),
+    ("t2"),
+    ("scan_ok"),
+    ("foo");
 END;
 
 CREATE PROC populate_query_plan_1()

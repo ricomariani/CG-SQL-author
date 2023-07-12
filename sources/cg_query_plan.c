@@ -375,9 +375,8 @@ static void cg_qp_ok_table_scan_callback(
   if (ok_table_scan_buf->used > 1) {
     bprintf(ok_table_scan_buf, ",");
   }
-  // The "#" around the table name are used as delimiter of the
-  // to later find tables that are ok to scan.
-  // This simplifies the whole-word match we need later.
+  // The "#" around the name make it easier to do a whole-word
+  // match on the table name later
   bprintf(ok_table_scan_buf, "#%s#", table_name);
 }
 

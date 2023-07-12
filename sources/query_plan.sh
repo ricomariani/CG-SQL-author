@@ -70,4 +70,6 @@ fi
 
 # Run query plan in c. It will output the query plan.
 # Nothing else should be output in this script otherwise it'll break the formatted text
+# add | jq -r .plans[].plan if you just want to see the plan
 "./out/query_plan_test"
+

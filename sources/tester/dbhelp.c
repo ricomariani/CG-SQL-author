@@ -55,6 +55,8 @@ END;
 #define _PROC_ "dbhelp_setup"
 CQL_WARN_UNUSED cql_code dbhelp_setup(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
   _rc_ = cql_exec(_db_,
     "CREATE TABLE test_output( "
       "line INTEGER NOT NULL, "
@@ -76,6 +78,7 @@ CQL_WARN_UNUSED cql_code dbhelp_setup(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   return _rc_;
 }
 #undef _PROC_
@@ -101,6 +104,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
   cql_contract_argument_notnull((void *)prev, 2);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
   *prev = 0; // set out arg to non-garbage
@@ -125,6 +129,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
   catch_end_1:;
   _rc_ = SQLITE_OK;
 
+  cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
@@ -144,6 +149,7 @@ CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_
   cql_contract_argument_notnull((void *)data, 2);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -158,6 +164,7 @@ CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
@@ -177,6 +184,7 @@ CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 lin
   cql_contract_argument_notnull((void *)data, 2);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -191,6 +199,7 @@ CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 lin
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
@@ -224,6 +233,7 @@ typedef struct dbhelp_dump_line_C_row {
 #define dbhelp_dump_line_C_refs_offset cql_offsetof(dbhelp_dump_line_C_row, data) // count = 1
 CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line_) {
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
   dbhelp_dump_line_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_line_C_refs_offset };
 
@@ -249,6 +259,7 @@ CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   return _rc_;
@@ -277,6 +288,7 @@ CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
   cql_contract_argument_notnull((void *)found, 4);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
   *search_line = 0; // set out arg to non-garbage
@@ -308,6 +320,7 @@ CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
@@ -341,6 +354,7 @@ typedef struct dbhelp_dump_source_C_row {
 #define dbhelp_dump_source_C_refs_offset cql_offsetof(dbhelp_dump_source_C_row, data) // count = 1
 CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2) {
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
   dbhelp_dump_source_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_source_C_refs_offset };
 
@@ -367,6 +381,7 @@ CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 li
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   return _rc_;
@@ -442,6 +457,8 @@ CQL_WARN_UNUSED cql_code dbhelp_source_fetch_results(sqlite3 *_Nonnull _db_, dbh
 CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
   *_result_stmt = NULL;
+  cql_error_prepare();
+
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT line, data "
       "FROM source_input");
@@ -449,6 +466,7 @@ CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nu
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
   return _rc_;
 }

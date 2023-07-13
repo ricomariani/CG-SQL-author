@@ -329,6 +329,10 @@ CQL_EXPORT void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetc
 #define cql_sqlite3_finalize(stmt) sqlite3_finalize((stmt))
 #endif // cql_sqlite3_finalize
 
+// The indicated cql_bytebuf has in it exactly the raw row data that we need for a rowset
+// we've accumulated it one row at a time.  It becomes the guts of a result set with the
+// given metadata.  The incoming "return" code tells the helper if it needs to tear down
+// because a failure is in progress so it's an input.
 CQL_EXPORT void cql_results_from_data(
   cql_code rc,
   cql_bytebuf *_Nonnull buffer,
@@ -365,6 +369,12 @@ CQL_EXPORT cql_int64 cql_facet_find(cql_object_ref _Nullable  facets, cql_string
 CQL_EXPORT cql_object_ref _Nonnull _cql_generic_object_create(void *_Nonnull data,  void (*_Nonnull finalize)(void *_Nonnull));
 CQL_EXPORT void *_Nonnull _cql_generic_object_get_data(cql_object_ref _Nonnull obj);
 
+// Allows for the partioning of a result set by the key columns.  This lets us
+// stream over a child result set, hash it by the key columns and then lash
+// each part of the result to the parent.  The rows could be in any order.
+// The dynamic cursor for the key defines the partitioning columns and the
+// value is the full child row.  When the partition is extracted the accumulated
+// matching rows are provided.  Once extraction begins no more rows can be added.
 CQL_EXPORT cql_object_ref _Nonnull cql_partition_create(void);
 
 CQL_EXPORT cql_bool cql_partition_cursor(
@@ -376,6 +386,8 @@ CQL_EXPORT cql_object_ref _Nonnull cql_extract_partition(
   cql_object_ref _Nonnull obj,
   cql_dynamic_cursor *_Nonnull key);
 
+// String dictionary helpers, a simple hash table wrapper with
+// very basic dictionary functions.  Used by lots of things.
 CQL_EXPORT cql_object_ref _Nonnull cql_string_dictionary_create(void);
 
 CQL_EXPORT cql_bool cql_string_dictionary_add(
@@ -387,6 +399,7 @@ CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
+// String list helpers
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
 CQL_EXPORT void cql_string_list_add_string(cql_object_ref _Nullable list, cql_string_ref _Nonnull string);
 CQL_EXPORT int32_t cql_string_list_get_count(cql_object_ref _Nullable list);
@@ -399,10 +412,28 @@ CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_,
 // Boxing interface (uses generic objects to hold a statement)
 CQL_EXPORT cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
 CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
+
+// String literals can be stored in a compressed format using the --compress option
+// and the cql_compressed primitive.  This helper function gives us a normal string
+// from the compressed fragments.  Note that --compress also makes fragments for the text
+// of SQL statements.
 CQL_EXPORT cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_Nonnull frags);
 
-cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes, cql_bool *_Nonnull result);
+// A recreate group can possibly be updated if all we did is add a new table to it.  If we have to do
+// something more complicated then we have to drop the whole thing and and rebuild it from scratch.
+// This code handles the fallback case.
+cql_code cql_rebuild_recreate_group(
+  sqlite3 *_Nonnull db,
+  cql_string_ref _Nonnull tables,
+  cql_string_ref _Nonnull indices,
+  cql_string_ref _Nonnull deletes,
+  cql_bool *_Nonnull result);
 
+// When emitting code for to generate a query plan we cannot expect that code to run
+// in a context where all the UDFs that were mentioned are actually initialized. This
+// turns out to be ok because UDFS won't affect the plan anyway.  This code creates
+// a stub UDF that does nothing so that the code compiles as written allowing a
+// plan to be created.  The query plan code calls this function once for each required UDF.
 cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name);
 
 CQL_EXTERN_C_END

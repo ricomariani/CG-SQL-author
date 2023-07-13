@@ -4295,7 +4295,10 @@ cleanup:
 }
 
 // this is not normally called but we need something here for linkage
-static void _stub_udf_callback(sqlite3_context* context, int argc, sqlite3_value** argv)
+static void _stub_udf_callback(
+   sqlite3_context _Nullable * context,
+   int argc,
+   sqlite3_value _Nullable* _Nullable *argv)
 {
 }
 

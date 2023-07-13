@@ -16,7 +16,17 @@ source common/test_helpers.sh || exit 1
 
 while [ "$1" != "" ]
 do
-  if [ "$1" == "--coverage" ]
+  if [ "$1" == "--use_gcc" ]
+  then
+     CC=gcc
+     export CC
+     shift 1
+  elif [ "$1" == "--use_clang" ]
+  then
+     CC=clang
+     export CC
+     shift 1
+  elif [ "$1" == "--coverage" ]
   then
      MAKE_COVERAGE_ARGS="COVERAGE=1"
      TEST_COVERAGE_ARGS="--coverage"

@@ -10,8 +10,9 @@ COV_EXTRA_ARGS=""
 source common/cov_common.sh || exit 1
 
 OUT_DIR="out"
+GCOVR=gcovr
 
-if ! coverage gcovr
+if ! coverage $@
 then
   echo "A coverage step failed, aborting"
   exit 1

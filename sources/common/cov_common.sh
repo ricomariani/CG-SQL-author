@@ -11,7 +11,7 @@ OUT_DIR="out"
 coverage() {
   rm -f *.gcov
 
-  if ! ./test.sh --coverage
+  if ! ./test.sh --coverage $@
   then
     echo "you can't run coverage until the tests all pass"
     return 1
@@ -25,7 +25,7 @@ coverage() {
   fi
 
   echo generating ${OUT_DIR}/report.html
-  if ! "$@" \
+  if ! "${GCOVR}" \
             -g -k \
             --html \
             --html-details \
@@ -51,7 +51,7 @@ coverage() {
   fi
 
   echo generating ${OUT_DIR}/report.txt
-  if ! "$@" \
+  if ! "${GCOVR}" \
               -g -k \
               -o ${OUT_DIR}/report.txt \
               ${COV_EXTRA_ARGS} \

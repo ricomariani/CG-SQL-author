@@ -14,6 +14,7 @@ Please refer to our documentation to start using CG/SQL:
 - [Getting Started with CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/getting-started.md)
 - [Writing a Hello World Program](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started)
 - [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
+- [Examples](https://github.com/ricomariani/CG-SQL-author/wiki/Examples)
 
 Wiki:
 

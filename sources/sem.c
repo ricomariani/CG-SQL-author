@@ -9516,8 +9516,7 @@ static void sem_validate_expression_fragment(ast_node *ast, ast_node *proc) {
   EXTRACT(stmt_list, proc_params_stmts->right);
 
   // check if we are calling a shared fragment
-  uint32_t frag_type = find_proc_frag_type(proc);
-  if (frag_type != FRAG_TYPE_SHARED) {
+  if (!is_proc_shared_fragment(proc)) {
     report_error(ast,
       "CQL0224: a function call to a procedure inside SQL may call "
       "only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
@@ -11454,11 +11453,7 @@ static void sem_select_nothing_stmt(ast_node *ast) {
 
   if (!current_proc) goto error;
 
-  EXTRACT_MISC_ATTRS(current_proc, misc_attrs);
-
-  if (!misc_attrs) goto error;
-
-  if (!find_shared_fragment_attr(misc_attrs)) goto error;
+  if (!is_proc_shared_fragment(current_proc)) goto error;
 
   if (!ast->parent) goto error;
 
@@ -12234,8 +12229,7 @@ static void sem_shared_cte(ast_node *cte_body) {
   EXTRACT_ANY_NOTNULL(proc_name_ast, call_stmt->left);
   EXTRACT_STRING(proc_name, proc_name_ast);
   ast_node *proc_stmt = find_proc(proc_name);
-  uint32_t frag_type = find_proc_frag_type(proc_stmt);
-  if (frag_type != FRAG_TYPE_SHARED) {
+  if (!is_proc_shared_fragment(proc_stmt)) {
     report_error(proc_name_ast, "CQL0224: a CALL statement inside SQL may call only a shared fragment i.e. @attribute(cql:shared_fragment)", proc_name);
     record_error(cte_body);
     goto cleanup;
@@ -18580,7 +18574,7 @@ static void sem_inside_create_proc_stmt(ast_node *ast) {
   ast->sem = new_sem(SEM_TYPE_OK);
 
   if (!stmt_list) {
-    if (find_proc_frag_type(ast) != FRAG_TYPE_NONE) {
+    if (is_proc_shared_fragment(ast)) {
       report_error(ast, "CQL0440: fragments may not have an empty body", proc_name);
       goto error;
     }
@@ -18877,8 +18871,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
     goto cleanup;
   }
 
-  uint32_t frag_type = find_proc_frag_type(ast);
-  in_shared_fragment = frag_type == FRAG_TYPE_SHARED;
+  in_shared_fragment = is_proc_shared_fragment(ast);
 
   Invariant(!locals);
   Invariant(!local_types);
@@ -19015,7 +19008,7 @@ static void sem_create_proc_stmt(ast_node *ast) {
       goto cleanup;
     }
 
-    if (frag_type == FRAG_TYPE_SHARED) {
+    if (is_proc_shared_fragment(ast)) {
       sem_shared_fragment(misc_attrs, ast);
       if (is_error(ast)) {
         goto cleanup;
@@ -21393,7 +21386,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
   if (proc_stmt &&
     is_ast_create_proc_stmt(proc_stmt) &&
-    find_proc_frag_type(proc_stmt) == FRAG_TYPE_SHARED &&
+    is_proc_shared_fragment(proc_stmt) &&
     !is_ast_shared_cte(ast->parent)) {
       report_error(ast, "CQL0434: shared fragments may not be called outside of a SQL statement", name);
       record_error(ast);

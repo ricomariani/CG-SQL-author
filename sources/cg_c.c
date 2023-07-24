@@ -3731,9 +3731,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   int32_t c_prepared_statement_index_saved = c_prepared_statement_index;
   c_prepared_statement_index = 0;
 
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
-
-  if (frag_type == FRAG_TYPE_SHARED) {
+  if (is_proc_shared_fragment(ast)) {
     // shared fragments produce no code at all, no header, nothing
     // extension fragments, same story
     // put a line marker in the header file in case we want a test suite that verifies that
@@ -7470,7 +7468,6 @@ typedef struct function_info {
   CSTR row_struct_type;
   CSTR sym_suffix;
   CSTR value_suffix;
-  uint32_t frag_type;
 } function_info;
 
 // Using the information above we emit a column getter.  The essence of this
@@ -7914,8 +7911,6 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
-
   // register the proc name if there is a callback, the particular result type will do whatever it wants
   if (rt->register_proc_name) rt->register_proc_name(name);
 
@@ -7985,7 +7980,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bprintf(h, "\n");
 
-  if (frag_type == FRAG_TYPE_NONE) {
+  if (!is_proc_shared_fragment(ast)) {
      cg_result_set_type_decl(h, result_set_sym.ptr, result_set_ref.ptr);
   }
 
@@ -8032,7 +8027,6 @@ static void cg_proc_result_set(ast_node *ast) {
       .uses_out = uses_out,
       .result_set_ref_type = result_set_ref.ptr,
       .row_struct_type = row_sym.ptr,
-      .frag_type = frag_type,
       .ret_kind = kind,
     };
 

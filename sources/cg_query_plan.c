@@ -418,8 +418,7 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
   Contract(current_procedure_name == NULL);
   Contract(current_ok_table_scan == NULL);
 
-  uint32_t frag_type = find_proc_frag_type(ast);
-  if (frag_type == FRAG_TYPE_SHARED) {
+  if (is_proc_shared_fragment(ast)) {
     EXTRACT_MISC_ATTRS(ast, misc_attrs);
     int64_t if_stmt_branch_context = 1;
     find_query_plan_branch(misc_attrs, cg_qp_query_plan_branch_callback, (void *) &if_stmt_branch_context);

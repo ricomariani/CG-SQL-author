@@ -621,12 +621,6 @@ cql_noexport uint32_t find_cql_alias_of(
   return find_attribute_str(misc_attr_list, callback, context, "alias_of");
 }
 
-// Helper function to extract the shared fragment node (if any) from the misc attributes
-cql_noexport uint32_t find_shared_fragment_attr(ast_node *_Nonnull misc_attr_list)
-{
-  return find_named_attr(misc_attr_list, "shared_fragment");
-}
-
 // Helper function to extract the blob storage node (if any) from the misc attributes
 cql_noexport bool_t find_blob_storage_attr(ast_node *_Nonnull misc_attr_list)
 {
@@ -645,25 +639,12 @@ cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list)
   return find_attribute_str(misc_attr_list, NULL, NULL, "backed_by");
 }
 
-// Look for the shared fragment annotations
-cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list) {
-  if (!misc_attr_list) {
-    return FRAG_TYPE_NONE;
+// helper to search for the indicated misc attribute on a procedure
+cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull proc_stmt) {
+  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
+  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
-  }
-  if (find_shared_fragment_attr(misc_attr_list)) {
-    return FRAG_TYPE_SHARED;
-  }
-
-  return FRAG_TYPE_NONE;
-}
-
-// helper to get the fragment type of a given procedure
-cql_noexport uint32_t find_proc_frag_type(ast_node *ast) {
-  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
-  EXTRACT_MISC_ATTRS(ast, misc_attrs);
-
-  return find_fragment_attr_type(misc_attrs);
+  return misc_attrs && exists_attribute_str(misc_attrs, "shared_fragment");
 }
 
 // helper to look for the blob storage attribute

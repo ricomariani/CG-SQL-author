@@ -496,7 +496,6 @@ cql_noexport uint32_t exists_attribute_str(
   ast_node *_Nullable misc_attr_list,
   const char *_Nonnull attribute_name);
 
-cql_noexport uint32_t find_shared_fragment_attr(ast_node *_Nonnull misc_attr_list);
 cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list);
 cql_noexport uint32_t find_backing_table_attr(ast_node *_Nonnull misc_attr_list);
 
@@ -509,14 +508,10 @@ cql_noexport uint32_t find_query_plan_branch(
   void *_Nullable context
 );
 
-#define FRAG_TYPE_NONE 0
-#define FRAG_TYPE_SHARED 1
-
-cql_noexport uint32_t find_fragment_attr_type(ast_node *_Nullable misc_attr_list);
-cql_noexport uint32_t find_proc_frag_type(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_blob_storage(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_backing(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_backed(ast_node *_Nonnull ast);
+cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull ast);
 
 // Callback whenever a misc_attr node is found in find_misc_attrs().
 typedef void (*find_ast_misc_attr_callback)(

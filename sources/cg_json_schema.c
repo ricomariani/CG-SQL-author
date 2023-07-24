@@ -2332,8 +2332,7 @@ static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
 
   // shared fragments are invisible to the JSON or anything else, they have
   // no external interface.
-  uint32_t frag_type = find_proc_frag_type(ast);
-  if (frag_type == FRAG_TYPE_SHARED)  {
+  if (is_proc_shared_fragment(ast)) {
     return;
   }
 

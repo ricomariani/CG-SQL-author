@@ -25,8 +25,6 @@ cql_noexport void cg_objc_main(ast_node *head) {}
 #include "sem.h"
 #include "symtab.h"
 
-static uint32_t objc_frag_type;
-
 // Whether a text column in the result set of a proc is encoded
 static bool_t is_string_column_encoded = 0;
 
@@ -74,8 +72,6 @@ static void cg_objc_proc_result_set_getter(
   CHARBUF_OPEN(value_convert_begin);
   CSTR value_convert_end = "";
   CSTR c_getter_suffix = "";
-
-  Invariant(objc_frag_type != FRAG_TYPE_SHARED);
 
   CHARBUF_OPEN(value);
 
@@ -236,8 +232,6 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   Invariant(!encode_columns);
   encode_columns = symtab_new();
   init_encode_info(misc_attrs, &use_encode, &encode_context_column, encode_columns);
-
-  Invariant(objc_frag_type != FRAG_TYPE_SHARED);
 
   bool_t custom_type_for_encoded_column = !!exists_attribute_str(misc_attrs, "custom_type_for_encoded_column");
   CSTR c_result_set_name = name;
@@ -475,9 +469,7 @@ static void cg_objc_one_stmt(ast_node *stmt) {
 static void cg_objc_stmt_list(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
-    objc_frag_type = find_fragment_attr_type(misc_attrs);
-
-    if (objc_frag_type == FRAG_TYPE_SHARED) {
+    if (is_ast_create_proc_stmt(stmt) && is_proc_shared_fragment(stmt)) {
       // shared fragments never create any code
       continue;
     }

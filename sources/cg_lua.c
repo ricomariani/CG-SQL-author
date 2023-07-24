@@ -2290,10 +2290,8 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   int32_t lua_prepared_statement_index_saved = lua_prepared_statement_index;
   lua_prepared_statement_index = 0;
 
-  uint32_t frag_type = find_fragment_attr_type(misc_attrs);
-
   // shared frags have already been ruled out
-  Invariant(frag_type != FRAG_TYPE_SHARED);
+  Invariant(!is_proc_shared_fragment(ast));
 
   CHARBUF_OPEN(proc_fwd_ref);
   CHARBUF_OPEN(proc_contracts);
@@ -4784,12 +4782,8 @@ static void cg_lua_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // so that we don't generate the comments or anything for them.  Testing later
   // is more of a mess.
 
-  if (misc_attrs && is_ast_create_proc_stmt(stmt)) {
-    uint32_t frag_type = find_fragment_attr_type(misc_attrs);
-
-    if (frag_type == FRAG_TYPE_SHARED) {
-      return;
-    }
+  if (is_ast_create_proc_stmt(stmt) && is_proc_shared_fragment(stmt)) {
+    return;
   }
 
   symtab_entry *entry = symtab_find(cg_stmts, stmt->type);

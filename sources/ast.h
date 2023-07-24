@@ -511,7 +511,6 @@ cql_noexport uint32_t find_query_plan_branch(
 cql_noexport bool_t is_table_blob_storage(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_backing(ast_node *_Nonnull ast);
 cql_noexport bool_t is_table_backed(ast_node *_Nonnull ast);
-cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull ast);
 
 // Callback whenever a misc_attr node is found in find_misc_attrs().
 typedef void (*find_ast_misc_attr_callback)(

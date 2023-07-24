@@ -1376,6 +1376,14 @@ cql_noexport bool_t is_proc_emit_setters(ast_node *_Nonnull proc_stmt) {
   return misc_attrs && exists_attribute_str(misc_attrs, "emit_setters");
 }
 
+// helper to search for the indicated misc attribute on a procedure
+cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull proc_stmt) {
+  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
+  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
+
+  return misc_attrs && exists_attribute_str(misc_attrs, "shared_fragment");
+}
+
 // Detect if column name is sensitive in result set
 bool_t is_sensitive_column_in_result_set(CSTR name) {
   sem_struct *sptr = current_proc->sem->sptr;

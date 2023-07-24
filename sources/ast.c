@@ -639,14 +639,6 @@ cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list)
   return find_attribute_str(misc_attr_list, NULL, NULL, "backed_by");
 }
 
-// helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull proc_stmt) {
-  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
-  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
-
-  return misc_attrs && exists_attribute_str(misc_attrs, "shared_fragment");
-}
-
 // helper to look for the blob storage attribute
 cql_noexport bool_t is_table_blob_storage(ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));

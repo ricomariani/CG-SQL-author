@@ -3117,6 +3117,12 @@ static void sem_data_type_column(ast_node *ast) {
         record_error(ast);
         return;
       }
+
+      if (is_set && (is_proc_private(like_target) || is_proc_suppress_result_set(like_target))) {
+        report_error(ast, "CQL0091: object<T SET> has a T that is not a public procedure with a result set", kind);
+        record_error(ast);
+	return;
+      }
     }
   }
 }

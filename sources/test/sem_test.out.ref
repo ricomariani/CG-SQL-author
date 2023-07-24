@@ -86486,3 +86486,121 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute mus
       | {notnull}
         | {type_int}
 
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:private)
+CREATE PROC invalid_child_proc ()
+BEGIN
+  SELECT 1 AS x, 2 AS y;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name private}
+  | {create_proc_stmt}: invalid_child_proc: { x: integer notnull, y: integer notnull } dml_proc
+    | {name invalid_child_proc}: invalid_child_proc: { x: integer notnull, y: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { x: integer notnull, y: integer notnull }
+          | {select_core_list}: select: { x: integer notnull, y: integer notnull }
+          | | {select_core}: select: { x: integer notnull, y: integer notnull }
+          |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull }
+          |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull }
+          |     | | {select_expr}: x: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name x}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: y: integer notnull
+          |     |     | {int 2}: integer notnull
+          |     |     | {opt_as_alias}
+          |     |       | {name y}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:suppress_result_set)
+CREATE PROC invalid_child_proc_2 ()
+BEGIN
+  SELECT 1 AS x, 2 AS y;
+END;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name suppress_result_set}
+  | {create_proc_stmt}: invalid_child_proc_2: { x: integer notnull, y: integer notnull } dml_proc
+    | {name invalid_child_proc_2}: invalid_child_proc_2: { x: integer notnull, y: integer notnull } dml_proc
+    | {proc_params_stmts}
+      | {stmt_list}: ok
+        | {select_stmt}: select: { x: integer notnull, y: integer notnull }
+          | {select_core_list}: select: { x: integer notnull, y: integer notnull }
+          | | {select_core}: select: { x: integer notnull, y: integer notnull }
+          |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull }
+          |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull }
+          |     | | {select_expr}: x: integer notnull
+          |     | | | {int 1}: integer notnull
+          |     | | | {opt_as_alias}
+          |     | |   | {name x}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}: y: integer notnull
+          |     |     | {int 2}: integer notnull
+          |     |     | {opt_as_alias}
+          |     |       | {name y}
+          |     | {select_from_etc}: ok
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC use_invalid_result_set ()
+BEGIN
+  DECLARE x OBJECT<invalid_child_proc SET>;
+END;
+
+test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc SET'
+
+  {create_proc_stmt}: err
+  | {name use_invalid_result_set}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: err
+        | {name_list}
+        | | {name x}
+        | {type_object}: err
+          | {name invalid_child_proc SET}
+
+The statement ending at line XXXX
+
+CREATE PROC use_invalid_result_set2 ()
+BEGIN
+  DECLARE x OBJECT<invalid_child_proc_2 SET>;
+END;
+
+test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc_2 SET'
+
+  {create_proc_stmt}: err
+  | {name use_invalid_result_set2}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: err
+        | {name_list}
+        | | {name x}
+        | {type_object}: err
+          | {name invalid_child_proc_2 SET}
+

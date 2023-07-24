@@ -22872,3 +22872,35 @@ declare select function foobaz(x int not null) int not null;
 -- +1 error:
 @attribute(cql:alias_of)
 declare function an_alias_func_bad(x int not null) int not null;
+
+-- setup for invalid child test, private proc
+-- this ok so far
+[[private]]
+proc invalid_child_proc()
+begin
+   select 1 x, 2 y;
+end;
+
+-- setup for invalid child test, suppressed result set
+-- this ok so far
+[[suppress_result_set]]
+proc invalid_child_proc_2()
+begin
+   select 1 x, 2 y;
+end;
+
+-- TEST: cannot use the above proc as a result set because it's private
+-- + Error: % object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc SET'
+-- +1 Error
+proc use_invalid_result_set()
+begin
+  declare x object<invalid_child_proc set>;
+end;
+
+-- TEST: cannot use the above proc as a result set because it's private
+-- + Error: % object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc_2 SET'
+-- +1 Error
+proc use_invalid_result_set2()
+begin
+  declare x object<invalid_child_proc_2 set>;
+end;

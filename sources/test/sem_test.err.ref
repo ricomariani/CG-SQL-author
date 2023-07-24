@@ -1649,4 +1649,6 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0497: FROM clause not suppo
 test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may only be added to a declare function or declare proc statement
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
+test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc SET'
+test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc_2 SET'
 semantic errors present; no code gen.

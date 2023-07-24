@@ -9942,7 +9942,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Jul 10 14:02:27 PDT 2023
+Snapshot as of Mon Jul 24 14:37:04 PDT 2023
 
 ### Operators and Literals
 
@@ -12498,8 +12498,11 @@ The most likely source of this problem is that there is a typo in the indicated 
 
 -----
 
-CQL0091: -- generalized so that this is not an error anymore
+### CQL0091: `object<T SET>` has a T that is not a public procedure with a result set, 'name'
 
+The data type `object<T SET>` refers to the shape of a result set of a particular procedure.  In this case the indicated procedure name was tagged with either the `cql:private` attribute or the `cql:suppress_result_set` attribute.  
+
+Either of these attributes will make it impossible to actually use this result set type.  They must be removed.
 
 -----
 
@@ -16317,7 +16320,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Jul 10 14:02:28 PDT 2023
+Snapshot as of Mon Jul 24 14:37:05 PDT 2023
 
 ### Rules
 

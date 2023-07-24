@@ -3624,7 +3624,7 @@ static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t for
     name = n;
   }
 
-  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t private_proc = is_proc_private(ast);
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
@@ -7897,8 +7897,8 @@ static void cg_proc_result_set(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  bool_t suppress_result_set = misc_attrs && exists_attribute_str(misc_attrs, "suppress_result_set");
-  bool_t is_private = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t suppress_result_set = is_proc_result_set_suppressed(ast);
+  bool_t is_private = is_proc_private(ast);
 
   bool_t uses_out_union = has_out_union_stmt_result(ast);
 

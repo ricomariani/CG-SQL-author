@@ -1344,6 +1344,22 @@ cql_noexport bool_t sem_is_str_name(ast_node *ast) {
   return false;
 }
 
+// helper to search for the indicated misc attribute on a procedure
+cql_noexport bool_t is_proc_private(ast_node *_Nonnull proc_stmt) {
+  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
+  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
+
+  return misc_attrs && exists_attribute_str(misc_attrs, "private");
+}
+
+// helper to search for the indicated misc attribute on a procedure
+cql_noexport bool_t is_proc_result_set_suppressed(ast_node *_Nonnull proc_stmt) {
+  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
+  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
+
+  return misc_attrs && exists_attribute_str(misc_attrs, "suppress_result_set");
+}
+
 // Detect if column name is sensitive in result set
 bool_t is_sensitive_column_in_result_set(CSTR name) {
   sem_struct *sptr = current_proc->sem->sptr;

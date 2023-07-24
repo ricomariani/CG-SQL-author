@@ -1353,11 +1353,27 @@ cql_noexport bool_t is_proc_private(ast_node *_Nonnull proc_stmt) {
 }
 
 // helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_result_set_suppressed(ast_node *_Nonnull proc_stmt) {
+cql_noexport bool_t is_proc_suppress_result_set(ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
   EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
   return misc_attrs && exists_attribute_str(misc_attrs, "suppress_result_set");
+}
+
+// helper to search for the indicated misc attribute on a procedure
+cql_noexport bool_t is_proc_suppress_getters(ast_node *_Nonnull proc_stmt) {
+  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
+  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
+
+  return misc_attrs && exists_attribute_str(misc_attrs, "suppress_getters");
+}
+
+// helper to search for the indicated misc attribute on a procedure
+cql_noexport bool_t is_proc_emit_setters(ast_node *_Nonnull proc_stmt) {
+  Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
+  EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
+
+  return misc_attrs && exists_attribute_str(misc_attrs, "emit_setters");
 }
 
 // Detect if column name is sensitive in result set

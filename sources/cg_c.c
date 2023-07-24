@@ -3720,7 +3720,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   EXTRACT(stmt_list, proc_params_stmts->right);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t private_proc = is_proc_private(ast);
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
   bool_t result_set_proc = has_result_set(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
@@ -4105,7 +4105,7 @@ static void cg_declare_proc_stmt(ast_node *ast) {
 
   current_proc = ast;
 
-  bool_t private_proc = misc_attrs && exists_attribute_str(misc_attrs, "private");
+  bool_t private_proc = is_proc_private(ast);
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   bool_t out_union_proc = has_out_union_stmt_result(ast);
   bool_t has_result_proc = has_result_set(ast) ;
@@ -7897,7 +7897,7 @@ static void cg_proc_result_set(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  bool_t suppress_result_set = is_proc_result_set_suppressed(ast);
+  bool_t suppress_result_set = is_proc_suppress_result_set(ast);
   bool_t is_private = is_proc_private(ast);
 
   bool_t uses_out_union = has_out_union_stmt_result(ast);
@@ -7990,19 +7990,16 @@ static void cg_proc_result_set(ast_node *ast) {
   }
 
   // we may not want the getters, at all.
-  bool_t suppress_getters = false;
-
-  if (misc_attrs) {
-    suppress_getters =
-      exists_attribute_str(misc_attrs, "suppress_getters") ||
-      exists_attribute_str(misc_attrs, "private") ||            // private implies suppress result set
-      exists_attribute_str(misc_attrs, "suppress_result_set");  // and suppress result set implies suppress getters
-  }
+  //  * suppress_getters explicitly specified
+  //  * private implies suppress result set s
+  //  * suppress result set implies suppress getters
+  bool_t suppress_getters = is_proc_suppress_getters(ast) || is_private || suppress_result_set;
 
   // the index of the encode context column, -1 represents not found
   int16_t encode_context_index = -1;
+
   // we may want the setters.
-  bool_t emit_setters = misc_attrs && exists_attribute_str(misc_attrs, "emit_setters");
+  bool_t emit_setters = is_proc_emit_setters(ast);
 
   // For each field emit the _get_field method
   for (int32_t i = 0; i < count; i++) {

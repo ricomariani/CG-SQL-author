@@ -225,10 +225,7 @@ static void cg_objc_proc_result_set(ast_node *ast) {
   // if getters are suppressed the entire class is moot
   // if result set is suppressed the entire class is moot
   // private implies result set suppressed so also moot
-  bool_t suppressed =
-    exists_attribute_str(misc_attrs, "suppress_getters") ||
-    exists_attribute_str(misc_attrs, "suppress_result_set") ||
-    exists_attribute_str(misc_attrs, "private");
+  bool_t suppressed = is_proc_suppress_getters(ast) || is_proc_suppress_result_set(ast) || is_proc_private(ast);
 
   if (suppressed) {
     return;

@@ -4962,7 +4962,7 @@ static void cg_lua_proc_result_set(ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT_STRING(name, ast->left);
 
-  bool_t suppress_result_set = is_proc_result_set_suppressed(ast);
+  bool_t suppress_result_set = is_proc_suppress_result_set(ast);
   bool_t is_private = is_proc_private(ast);
 
   bool_t uses_out_union = has_out_union_stmt_result(ast);

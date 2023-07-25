@@ -6,7 +6,7 @@ The full system also includes features for managing and upgrading schema, creati
 
 ## Getting Started
 
-Please refer to our documentation to start using CG/SQL:
+### Essential Documentation
 
 - [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
 - [CG/SQL Language Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md)
@@ -16,22 +16,24 @@ Please refer to our documentation to start using CG/SQL:
 - [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
 - [Examples](https://github.com/ricomariani/CG-SQL-author/wiki/Examples)
 
-Wiki:
-
+### Wiki
 - [Wiki Home](https://github.com/ricomariani/CG-SQL-author/wiki/Home)
 
-Grammar Diagrams:
-
+### Grammar Diagrams
 - [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/railroad_diagram.html)
 - [JSON Output Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
 - [Query Plan Output Diagram](https://ricomariani.github.io/CG-SQL-author/diagrams/query_plan_railroad_diagram.html)
 
-
-For Contributors:
+### For Contributors
 - [Contributing](https://github.com/ricomariani/CG-SQL-author/blob/main/CONTRIBUTING.md)
 - [Typical Dev Cycle](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/dev_notes.md)
 - [Testing CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/testing.md)
 - [Code Coverage](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/code-coverage.md)
+
+### Notes and Archived Resources
+- [Latest Updates Blog](CG-SQL-Blog)
+- [Why an Author's Cut](CG-SQL-Author's-Cut)
+- [All the old Blogs](CG-SQL-Blog-Archive)
 
 ## Licensing
 

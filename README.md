@@ -31,9 +31,9 @@ The full system also includes features for managing and upgrading schema, creati
 - [Code Coverage](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/code-coverage.md)
 
 ### Notes and Archived Resources
-- [Latest Updates Blog](CG-SQL-Blog)
-- [Why an Author's Cut](CG-SQL-Author's-Cut)
-- [All the old Blogs](CG-SQL-Blog-Archive)
+- [Latest Updates Blog](https://github.com/ricomariani/CG-SQL-author/wiki/CG-SQL-Blog)
+- [Why an Author's Cut](https://github.com/ricomariani/CG-SQL-author/wiki/CG-SQL-Author's-Cut)
+- [All the old Blogs](https://github.com/ricomariani/CG-SQL-author/wiki/CG-SQL-Blog-Archive)
 
 ## Licensing
 

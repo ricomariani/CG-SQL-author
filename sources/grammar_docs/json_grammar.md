@@ -8,7 +8,7 @@
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Jul 24 14:37:05 PDT 2023
+Snapshot as of Wed Jul 26 22:16:37 PDT 2023
 
 ### Rules
 

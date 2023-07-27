@@ -164,6 +164,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#encoding-of-sensitive-columns">Encoding of Sensitive Columns</a></li>
 <li><a href="#the-common-headers">The Common Headers</a></li>
 <li><a href="#the-cqlrt_cf-runtime">The <code>cqlrt_cf</code> Runtime</a></li>
+<li><a href="#the-cqlrt.lua-runtime">The <code>cqlrt.lua</code> Runtime</a></li>
 <li><a href="#recap-2">Recap</a></li>
 </ul></li>
 <li><a href="#part-6-schema-management">Part 6: Schema Management</a><ul>
@@ -3900,7 +3901,7 @@ cql_cleanup:
 <p>All of this is actually very easy for the code-generator. The semantic analysis phase knows if the cursor needs shape storage. And it also recognizes when a variable reference like <code>C.x</code> happens, the variable references are re-written in the AST so that the code-generator doesn’t even have to know there was a cursor reference, from its perspective the variable IS <code>C.x</code> (which it sort of is). The code generator does have to create the storage for the cursor but it knows it should do so because the cursor variable is marked with <code>SEM_TYPE_HAS_SHAPE_STORAGE</code>. A cursor without this marking only gets its statement (but not always as we’ll see later) and its <code>_cursor_has_row_</code> hidden variable.</p>
 <h3 id="flowing-sqlite-statements-between-procedures">Flowing SQLite Statements Between Procedures</h3>
 <p>Earlier we saw that we can get a cursor from a SQLite <code>SELECT</code> statement. The cursor is used to iterate over the <code>sqlite3_stmt *</code> that SQLite provides to us. This process can be done between procedures. Here’s a simple example:</p>
-<div class="sourceCode" id="cb199"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb199-1" title="1"><span class="ot">@ATTRIBUTE(cql:private)</span></a>
+<div class="sourceCode" id="cb199"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb199-1" title="1">[[<span class="kw">private</span>]]</a>
 <a class="sourceLine" id="cb199-2" title="2"><span class="kw">CREATE</span> PROC q ()</a>
 <a class="sourceLine" id="cb199-3" title="3"><span class="cf">BEGIN</span></a>
 <a class="sourceLine" id="cb199-4" title="4">  <span class="kw">SELECT</span> <span class="ot">&quot;1&quot;</span> <span class="kw">AS</span> x, <span class="dv">2</span> <span class="kw">AS</span> y;</a>
@@ -3958,7 +3959,7 @@ cql_cleanup:
 <p>If q was in some other module, it could be declared with:</p>
 <div class="sourceCode" id="cb203"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb203-1" title="1"><span class="kw">DECLARE</span> PROC q () (x TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>, y <span class="dt">INTEGER</span> <span class="kw">NOT</span> <span class="kw">NULL</span>);</a></code></pre></div>
 <p>This is a procedure that takes no arguments and returns a result with the indicated shape.</p>
-<p>CQL can generate this declaration for you if you add <code>--generate_exports</code> to the command line. Note that in this case <code>q</code> was marked with <code>@attribute(cql:private)</code> which caused <code>q</code> to be <code>static</code> in the output. Hence it can’t be called outside this translation unit and <code>--generate_exports</code> won’t provide the declaration.</p>
+<p>CQL can generate this declaration for you if you add <code>--generate_exports</code> to the command line. Note that in this case <code>q</code> was marked with <code>[[private]]</code> which caused <code>q</code> to be <code>static</code> in the output. Hence it can’t be called outside this translation unit and <code>--generate_exports</code> won’t provide the declaration.</p>
 <p>If the private annotation were removed, the full exports for this file would be:</p>
 <div class="sourceCode" id="cb204"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb204-1" title="1"><span class="kw">DECLARE</span> PROC q () (x TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>, y <span class="dt">INTEGER</span> <span class="kw">NOT</span> <span class="kw">NULL</span>);</a>
 <a class="sourceLine" id="cb204-2" title="2"><span class="kw">DECLARE</span> PROC p () <span class="kw">USING</span> <span class="kw">TRANSACTION</span>;</a></code></pre></div>
@@ -4144,7 +4145,7 @@ cql_cleanup:
 </ul>
 <p>So with just normal value cursor codegen we can pretty easily create a situation where procedures can move structures from one to another. As we saw, the source of value cursors may or may not be the database. Value cursors are frequently invaluable in test code as they can easily hold mock rows based on any kind of computation.</p>
 <h3 id="result-sets">Result Sets</h3>
-<p>In addition to returning a single row into a value cursor, or returning a statement to consume with a statement cursor, it’s possible to generate a result set. So far the samples have included <code>@attribute(cql:private)</code> to suppress that code. This pattern is intended to let regular C code access the data so <code>private</code> suppresses it.</p>
+<p>In addition to returning a single row into a value cursor, or returning a statement to consume with a statement cursor, it’s possible to generate a result set. So far the samples have included <code>[[private]]</code> to suppress that code. This pattern is intended to let regular C code access the data so <code>private</code> suppresses it.</p>
 <p>Let’s consider a simple example, this example returns only one row but the mechanism works for any number of rows, we’re just using this form because it’s what we’ve used so far and its simple. Let’s begin:</p>
 <div class="sourceCode" id="cb215"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb215-1" title="1"><span class="kw">CREATE</span> PROC p ()</a>
 <a class="sourceLine" id="cb215-2" title="2"><span class="cf">BEGIN</span></a>
@@ -4345,7 +4346,7 @@ cql_cleanup:
 <a class="sourceLine" id="cb225-6" title="6">   <span class="dv">3</span> y;</a>
 <a class="sourceLine" id="cb225-7" title="7">  <span class="kw">OUT</span> C;</a>
 <a class="sourceLine" id="cb225-8" title="8"><span class="cf">END</span>;</a></code></pre></div>
-<p>The original example had <code>@attribute(cql:private)</code> to suppress the result set, but normally a one-row result is is generated from such a method. The C API is almost identical. However, there count is always 0 or 1.</p>
+<p>The original example had <code>[[private]]</code> to suppress the result set, but normally a one-row result is is generated from such a method. The C API is almost identical. However, there count is always 0 or 1.</p>
 <p>The getters do not have the row number:</p>
 <div class="sourceCode" id="cb226"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb226-1" title="1"><span class="kw">extern</span> cql_string_ref _Nonnull q_get_x(q_result_set_ref _Nonnull result_set);</a>
 <a class="sourceLine" id="cb226-2" title="2"><span class="kw">extern</span> cql_int32 q_get_y(q_result_set_ref _Nonnull result_set);</a></code></pre></div>
@@ -5376,6 +5377,8 @@ typedef struct cql_boxed_stmt {
 </ul>
 <p>Even though <code>cqlrt_cf</code> is already mapping <code>cql_int32</code> to something compatible with <code>CF</code>, making such changes would make the C output a little bit more <code>CF</code> idiomatic. This educational exercise could probably be completed in just a few minutes by interested readers.</p>
 <p>The <code>make.sh</code> file in the <code>sources/cqlrt_cf</code> directory illustrates how to get CQL to use this new runtime. The demo itself is a simple port of the code in <a href="guide.md#appendix-10-cql-working-example">Appendix 10</a>.</p>
+<h3 id="the-cqlrt.lua-runtime">The <code>cqlrt.lua</code> Runtime</h3>
+<p>Obviously even the generic functions of <code>cqlrt_common.c</code> are not applicable to Lua. The included <code>cqlrt.lua</code> runtime provides methods that are isomorphic to the ones in the C runtime, usually even with identical names. It has made fairly simple choices about how to encode a result set. How to profile (it doesn’t) and other such things. These choices can be changed by replacing <code>cqlrt.lua</code> in your environment.</p>
 <h3 id="recap-2">Recap</h3>
 <p>The CQL runtime, <code>cqlrt.c</code>, is intended to be replaced. The version that ships with the distribution is a simple, portable implementation that is single threaded. Serious users of CQL will likely want to replace the default version of the runtime with something more tuned to their use case.</p>
 <p>Topics covered included:</p>

@@ -425,6 +425,14 @@ exercise could probably be completed in just a few minutes by interested readers
 The `make.sh` file in the `sources/cqlrt_cf` directory illustrates how to get CQL to use
 this new runtime.  The demo itself is a simple port of the code in [Appendix 10](guide.md#appendix-10-cql-working-example).
 
+### The `cqlrt.lua` Runtime
+
+Obviously even the generic functions of `cqlrt_common.c` are not applicable to Lua. The included
+`cqlrt.lua` runtime provides methods that are isomorphic to the ones in the C runtime, usually
+even with identical names.  It has made fairly simple choices about how to encode a result
+set.  How to profile (it doesn't) and other such things.  These choices can be changed by
+replacing `cqlrt.lua` in your environment.
+
 ### Recap
 
 The CQL runtime, `cqlrt.c`, is intended to be replaced.  The version that ships with the distribution

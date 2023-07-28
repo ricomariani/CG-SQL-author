@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jul 26 22:16:37 PDT 2023
+Snapshot as of Thu Jul 27 18:46:22 PDT 2023
 
 ### Operators and Literals
 

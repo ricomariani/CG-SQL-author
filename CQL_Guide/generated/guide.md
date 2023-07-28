@@ -9942,7 +9942,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Jul 26 22:16:37 PDT 2023
+Snapshot as of Thu Jul 27 18:46:22 PDT 2023
 
 ### Operators and Literals
 
@@ -15333,12 +15333,14 @@ Fewer arguments were provided to the function than its format string indicates
 are necessary. The most likely cause for this problem is that an argument was
 accidentally omitted.
 
+-----
 
 ### CQL0424: procedure with INOUT parameter used as function 'procedure_name'
 
 If a procedure has an `INOUT` parameter, it cannot be used as a function: It may
 only be called via a `CALL` statement.
 
+-----
 
 ### CQL0425: procedure with non-trailing OUT parameter used as function 'procedure_name'
 
@@ -15653,6 +15655,7 @@ A shared fragment may consist of just one SELECT statement (including WITH...SEL
 or it can be an IF/ELSE statement that has a series of compatible select statements.
 There are no other valid options.
 
+-----
 
 ### CQL0442: shared fragments with conditionals must include an else clause 'procedure_name'
 
@@ -15679,6 +15682,7 @@ ELSE
 END IF;
 ```
 
+-----
 
 ### CQL0443: shared fragments with conditionals must have exactly one SELECT or WITH...SELECT in each statement list 'procedure_name'
 
@@ -15686,6 +15690,7 @@ In a shared fragment with conditionals the top level statement is an "IF".  All 
 the IF must have exactly one valid select statement.  This error indicates that a statement list has the wrong number
 or type of statement.
 
+-----
 
 ### CQL0444: this use of the named shared fragment is not legal because of name conflict 'procedure_name'
 
@@ -15706,12 +15711,14 @@ Renaming it in the innermost procedure might also be wise if that procedure is u
 
 It is wise to name the CTEs in shared fragments such that they are unlikely to eclipse outer CTEs that will be needed as table parameters.
 
+-----
 
 ### CQL0445: @attribute(cql:try_is_proc_body) accepts no values
 
 The attribute `cql:try_is_proc_body` cannot be used with any values (e.g.,
 `cql:try_is_proc_body=(...)`).
 
+-----
 
 ### CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
 
@@ -15720,12 +15727,14 @@ block contains what should be considered to be the true body of the procedure.
 As it makes no sense for a procedure to have multiple bodies,
 `cql:try_is_proc_body` must appear only once within any given procedure.
 
+-----
 
 ### CQL0447: virtual table 'table' claims to be eponymous but its module name 'module' differs from its table name
 
 By definition, an eponymous virtual table has the same name as its module.  If you use the @eponymous notation
 on a virtual table, you must also make the module and table name match.
 
+-----
 
 ### CQL0448: table was marked @delete but it needs to be marked @recreate @delete 'table'
 
@@ -15749,6 +15758,7 @@ create table dropping_this
 This error indicates that the `@recreate(optional_group)` annotation was removed.  You should
 put it back.
 
+-----
 
 ### CQL0449: unsubscribe does not make sense on non-physical tables 'table_name'
 
@@ -15770,6 +15780,7 @@ Additional constraints:
 * the target has no select clauses other than the select list, e.g. no FROM, WHERE, LIMIT etc.
 * the target returns exactly one column, i.e. it's just one SQL expression
 
+-----
 
 ### CQL0451: procedure as function call is not compatible with DISTINCT or filter clauses
 
@@ -15783,6 +15794,7 @@ select sum(...) filter(where ...) over (...)
 
 These options are not valid when calling a procedure as a function and so they generate errors if used.
 
+-----
 
 ### CQL0452: function may not be used in SQL because it is not supported on old versions of SQLite 'function'
 
@@ -15790,6 +15802,7 @@ Due to an enabled enforcement (e.g., `@enforce_strict sign function;`), the
 indicated function may not be used within SQL because it is not supported on old
 versions of SQLite.
 
+-----
 
 ### CQL0453: blob type is not a valid table 'table_name'
 
@@ -15805,6 +15818,7 @@ DECLARE blob_var blob<table_name>
 
 But the named table `table_name` is not a table.
 
+-----
 
 ### CQL0454: cursor was not declared for storage 'cursor_name'
 
@@ -15817,6 +15831,7 @@ The indicated cursor was either not fetched at all, or else is using only
 the `fetch into` form so it does not have storage that could be used to
 create a blob.
 
+-----
 
 ### CQL0455: blob variable must have a type kind for type safety, 'blob_name'
 
@@ -15838,6 +15853,7 @@ DECLARE blob_name blob<table_name>;
 
 Where `table_name` is a suitable table.
 
+-----
 
 ### CQL0456: blob type is a view, not a table 'view_name'
 
@@ -15853,6 +15869,7 @@ DECLARE blob_var blob<view_name>
 
 Where the named type `view_name` is a view, not a table.
 
+-----
 
 ### CQL0457: the indicated table is not marked with @attribute(cql:blob_storage) 'table_name'
 
@@ -15872,6 +15889,7 @@ This attribute is necessary so that CQL can enforce additional rules on the tabl
 to ensure that it is viable for blob storage.  For instance, the table can have no
 primary key, no foreign keys, and may not be used in normal SQL statements.
 
+-----
 
 ### CQL0458: the indicated table may only be used for blob storage 'table_name'
 
@@ -15884,6 +15902,7 @@ The `CREATE TABLE` construct is used to declare a blob storage type because it's
 natural way to define a structure in SQL and also because the usual versioning rules are
 helpful for such tables.  But otherwise, blob storage isn't really a table at all.
 
+-----
 
 ### CQL0459: table is not suitable for use as blob storage: [reason] 'table_name'
 
@@ -15903,6 +15922,7 @@ For instance:
 This error indicates that one of these items is present. The specific cause
 is included in the text of the message.
 
+-----
 
 ### CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'cursor.field'
 
@@ -15969,12 +15989,14 @@ if not c throw;
 call requires_text_notnull(c.x);
 ```
 
+-----
 
 ### CQL0461: fetch from blob operand is not a blob
 
 The blob operand in the form `FETCH [cursor] FROM BLOB [blob]`
 must be a blob.  The given expression is of some other type.
 
+-----
 
 ### CQL0462: group declared variables must be top level 'name'
 
@@ -15982,6 +16004,7 @@ A `DECLARE GROUP` statement for the named enum is happening inside of a procedur
 
 To correct this, move the declaration outside of the procedure.
 
+-----
 
 #### CQL0463: variable definitions do not match in group 'name'
 
@@ -15989,6 +16012,7 @@ The two described `DECLARE GROUP` statements have the same name but they are not
 
 The error output contains the full text of both declarations to compare.
 
+-----
 
 ### CQL0464: group not found 'group_name'
 
@@ -15996,14 +16020,17 @@ The indicated name was used in a context where a variable group name was expecte
 
 Perhaps the group was not included (missing an #include) or else there is a typo.
 
+-----
 
 ### CQL0465 avaiable for re-use
 
+-----
 
 ### CQL0466: the table/view named in an @unsub directive does not exist 'name'
 
 The indicated name is not a valid table or view.
 
+-----
 
 ### CQL0467: a shared fragment used like a function cannot nest fragments that use arguments
 
@@ -16024,6 +16051,7 @@ end;
 
 However the nested fragment(s) cannot take any arguments. The inner fragment must be moved outside to allow the fragment be used like a sql function.
 
+-----
 
 ### CQL0468: @attribute(cql:shared_fragment) may only be placed on a CREATE PROC statement 'proc_name'
 
@@ -16055,24 +16083,29 @@ begin
 end;
 ```
 
+-----
 
 ### CQL0469: table/view is already deleted 'name'
 
 In an @unsub directive, the indicated table/view has already been deleted. It can no longer
 be managed via subscriptions.
 
+-----
 
 ### CQL0470 available for re-use
 
+-----
 
 ### CQL0471 available for re-use
 
+-----
 
 ### CQL0472: table/view is already unsubscribed 'name'
 
 In an @unsub directive, the indicated table/view has already been unsubscribed. It doesn't need
 another unsubscription.
 
+-----
 
 ### CQL0473: @unsub is invalid because the table/view is still used by 'name'
 
@@ -16082,15 +16115,19 @@ in order to safely @unsub the present table/view.  All such dependencies  will b
 some of those might, in turn, have the same issue.  In short, a whole subtree has to
 be removed in order to do this operation safely.
 
+-----
 
 ### CQL0474 available for re-use
 
+-----
 
 ### CQL0475 available for re-use
 
+-----
 
 ### CQL0476 available for re-use
 
+-----
 
 ### CQL0477: interface name conflicts with func name 'name'
 
@@ -16320,7 +16357,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Jul 26 22:16:37 PDT 2023
+Snapshot as of Thu Jul 27 18:46:22 PDT 2023
 
 ### Rules
 

@@ -7682,6 +7682,7 @@ so we'll include this one in full.
   bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
   bprintf(&preamble, "  END CATCH;\n");
   bprintf(&preamble, "END;\n\n");
+```
 
 ### The Main Upgrader
 

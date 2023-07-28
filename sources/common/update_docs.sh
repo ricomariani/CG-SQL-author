@@ -5,13 +5,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-RR=~/rr-1.63-java8
+RR=~/rr-2.0-java11
 
 rr_missing() {
   echo "This tool needs the railroad diagram JAR from bottlecaps"
-  echo "Download it from https://www.bottlecaps.de/rr/download/rr-1.63-java8.zip"
-  echo "put it in your home directory under rr-1.63-java8"
-  echo "Or if you have it into a custom folder use -r flag to provide that path. e.g: ./update_docs.sh -r ~/rr-1.63-java8"
+  echo "Download it from https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip"
+  echo "put it in your home directory under rr-2.0-java11.  The rr.war file should be in that folder."
+  echo "If you have it into a custom folder use -r flag to provide that path. e.g: ./update_docs.sh -r ~/rr-2.0-java11"
+  echo "Older versions can still work (use the -r flag) but of course the JVM must match"
   exit 1
 }
 

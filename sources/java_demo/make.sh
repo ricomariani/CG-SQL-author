@@ -12,6 +12,7 @@ then
   echo "JAVA_HOME must be set to your JDK dir"
   echo  "e.g. JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-10.0.1.jdk/Contents/Home"
   echo  "e.g. JAVA_HOME=/lib/jvm/java-16-openjdk-amd64/"
+  echo  "e.g. JAVA_HOME=/lib/jvm/java-1.19.0-openjdk-amd64/"
   exit 1
 fi
 

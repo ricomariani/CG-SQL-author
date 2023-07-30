@@ -110,7 +110,8 @@ typedef long long llint_t;
 #define CQL_BLOB_TYPE_STRING 4  // string field in a blob
 #define CQL_BLOB_TYPE_BLOB   5  // blob field in a blob
 #define CQL_BLOB_TYPE_ENTITY 6  // Reserved in case object support is needed; Currently unused.
-#define CQL_BLOB_TYPE_NULL 0x80 // If this bit is set then the stored value is null, the allocated space should be ignored
+#define CQL_BLOB_TYPE_DIRTY 0x40 // temp status in the blob indicating the column has been updated, this is not durable
+#define CQL_BLOB_TYPE_NULL  0x80 // If this bit is set then the stored value is null, the allocated space should be ignored
 
 // This is the general shape for cursor metadata, it can describe the contents of any cursor
 // this is useful for generic cursor functions like "hash"
@@ -454,5 +455,6 @@ cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name)
 void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 void bgetkey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 void bgetkey_type(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
+void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 
 CQL_EXTERN_C_END

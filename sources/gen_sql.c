@@ -1326,23 +1326,33 @@ static void gen_cql_blob_get(ast_node *ast) {
   }
 }
 
-#define BLOB_TYPE_BOOL   0
-#define BLOB_TYPE_INT32  1
-#define BLOB_TYPE_INT64  2
-#define BLOB_TYPE_FLOAT  3
-#define BLOB_TYPE_STRING 4
-#define BLOB_TYPE_BLOB   5
-#define BLOB_TYPE_ENTITY 6
+// These align directly with the sem types but they are offset by 1
+// Note that these should never change because we expect there are
+// backing tables with these values in them.
+#define CQL_BLOB_TYPE_BOOL   0
+#define CQL_BLOB_TYPE_INT32  1
+#define CQL_BLOB_TYPE_INT64  2
+#define CQL_BLOB_TYPE_FLOAT  3
+#define CQL_BLOB_TYPE_STRING 4
+#define CQL_BLOB_TYPE_BLOB   5
+#define CQL_BLOB_TYPE_ENTITY 6  // this is reserved for future use
 
+// This effectively subtracts one but it makes it clear there is a mapping
+// The output values of this mapping should never change, we have to assume
+// there are blobs "out there" that have these values hard coded in them
+// for column type info.  That is allowed and even expected.  
+// In contrast, the sem_type values could be reordered, and have been.
+// If they are, then this mapping must "fix" that so that the new sem_type ordering
+// (which is not fixed forever) matches the blob column types (which is fixed).
 static int32_t sem_type_to_blob_type[] = {
    -1, // NULL
-  BLOB_TYPE_BOOL,
-  BLOB_TYPE_INT32,
-  BLOB_TYPE_INT64,
-  BLOB_TYPE_FLOAT,
-  BLOB_TYPE_STRING,
-  BLOB_TYPE_BLOB,
-  BLOB_TYPE_ENTITY
+  CQL_BLOB_TYPE_BOOL,
+  CQL_BLOB_TYPE_INT32,
+  CQL_BLOB_TYPE_INT64,
+  CQL_BLOB_TYPE_FLOAT,
+  CQL_BLOB_TYPE_STRING,
+  CQL_BLOB_TYPE_BLOB,
+  CQL_BLOB_TYPE_ENTITY
 };
 
 static void gen_cql_blob_create(ast_node *ast) {

@@ -97,6 +97,21 @@ typedef long long llint_t;
 #define CQL_DATA_TYPE_NOT_NULL  0x80    // set if and only if null is not possible
 #define CQL_CORE_DATA_TYPE_OF(type) ((type) & CQL_DATA_TYPE_CORE)
 
+
+// These are the types of blob fields we can create with the standard bcreatekey or bcreateval
+// these correspond 1:1 with the SEM_TYPE so they need to stay in sync.  In fact these can
+// never change because this is an external format.
+// The first 4 types are fixed length encoded in an int64_t
+
+#define CQL_BLOB_TYPE_BOOL   0  // always big endian format in the blob
+#define CQL_BLOB_TYPE_INT32  1  // always big endian format in the blob
+#define CQL_BLOB_TYPE_INT64  2  // always big endian format in the blob
+#define CQL_BLOB_TYPE_FLOAT  3  // always IEEE 754 "double" (8 bytes) format in the blob
+#define CQL_BLOB_TYPE_STRING 4  // string field in a blob
+#define CQL_BLOB_TYPE_BLOB   5  // blob field in a blob
+#define CQL_BLOB_TYPE_ENTITY 6  // Reserved in case object support is needed; Currently unused.
+#define CQL_BLOB_TYPE_NULL 0x80 // If this bit is set then the stored value is null, the allocated space should be ignored
+
 // This is the general shape for cursor metadata, it can describe the contents of any cursor
 // this is useful for generic cursor functions like "hash"
 typedef struct cql_dynamic_cursor {
@@ -435,5 +450,9 @@ cql_code cql_rebuild_recreate_group(
 // a stub UDF that does nothing so that the code compiles as written allowing a
 // plan to be created.  The query plan code calls this function once for each required UDF.
 cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name);
+
+void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
+void bgetkey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
+void bgetkey_type(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 
 CQL_EXTERN_C_END

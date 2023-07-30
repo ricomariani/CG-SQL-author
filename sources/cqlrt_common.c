@@ -4323,3 +4323,274 @@ cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name)
   cql_free_cstr(temp, str_ref);
   return rc;
 }
+
+// Note that we can't use memory access on the value because it might be little endian
+static void cql_write_big_endian_int16(uint8_t *_Nonnull b, uint16_t val) {
+  b[0] = (uint8_t)(val >> 8);
+  b[1] = (uint8_t)(val & 0xff);
+}
+
+// Note that we can't use memory access on the value because it might be little endian
+static void cql_write_big_endian_int32(uint8_t *_Nonnull b, uint32_t val) {
+  cql_write_big_endian_int16(b,   (uint16_t)(val >> 16));
+  cql_write_big_endian_int16(b+2, (uint16_t)val & 0xffff);
+}
+
+// Note that we can't use memory access on the value because it might be little endian
+static void cql_write_big_endian_int64(uint8_t *_Nonnull b, uint64_t val) {
+  cql_write_big_endian_int32(b,   (uint32_t)(val >> 32));
+  cql_write_big_endian_int32(b+4, (uint32_t)val & 0xffffffff);
+}
+
+// Returns a blob with the given integers in place
+void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+
+  // if there is an even number of args or there is not at least one column specified
+  // then we are outta here with a big fat null blob.
+  if (argc < 3 || argc % 2 == 0) {
+    goto cql_error;
+  }
+
+  // argv[0] must be the record type and it must be an integer
+  if (sqlite3_value_type(argv[0]) != SQLITE_INTEGER) {
+    goto cql_error;
+  }
+  int64_t rtype = sqlite3_value_int64(argv[0]);
+
+  // type and value for each argument
+  // plus the 
+  int32_t ccols = (argc - 1)  / 2;
+  cql_invariant(ccols >= 1);
+
+  int64_t variable_space_needed = 0;
+
+  for (int icol = 0; icol < ccols; icol++) {
+    int32_t index = icol * 2 + 1;
+    if (sqlite3_value_type(argv[icol]) != SQLITE_INTEGER) {
+      goto cql_error;
+    }
+    int64_t ctype = sqlite3_value_int64(argv[index + 1]);
+    int64_t atype = sqlite3_value_type(argv[index]);
+
+    switch (ctype) {
+      // these three are fixed length and stored in an int64
+      // the value provided must be an integer
+      case CQL_BLOB_TYPE_BOOL:    // always big endian format in the blob
+      case CQL_BLOB_TYPE_INT32:   // always big endian format in the blob
+      case CQL_BLOB_TYPE_INT64:   // always big endian format in the blob
+        if (atype != SQLITE_INTEGER) {
+          goto cql_error;
+        }
+        break;
+
+      case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
+        if (atype != SQLITE_FLOAT) {
+          goto cql_error;
+        }
+        break;
+
+      case CQL_BLOB_TYPE_STRING:  // string field in a blob
+        if (atype != SQLITE3_TEXT) {
+          goto cql_error;
+        }
+        variable_space_needed += sqlite3_value_bytes(argv[icol]) + 1;
+        break;
+
+      case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
+        if (atype != SQLITE_BLOB) {
+          goto cql_error;
+        }
+        variable_space_needed += sqlite3_value_bytes(argv[icol]);
+        break;
+      default:
+        goto cql_error;
+    }
+  }
+
+  int64_t total_bytes = sizeof(int64_t) * 2 + ccols * sizeof(int64_t) + ccols * sizeof(uint8_t) + variable_space_needed;
+  
+  // we don't support records this big, they are insane already
+  cql_contract(total_bytes == (int32_t)total_bytes);
+
+  uint8_t *b = sqlite3_malloc((int32_t)total_bytes);
+  cql_contract(b != NULL);
+
+  cql_write_big_endian_int64(b, (uint64_t)rtype);
+  cql_write_big_endian_int64(b+8, (uint64_t)ccols);
+
+  // int64: type
+  // int64: column count
+  // int64: fixed storage for each column
+  // int8: column type for each column
+  uint64_t storage_offset = sizeof(int64_t) * 2;
+  uint64_t type_offset = storage_offset + sizeof(int64_t) * ccols;  
+  uint64_t variable_offset = type_offset + ccols;
+
+  for (int icol = 0; icol < ccols; icol++) {
+    int32_t index = icol * 2 + 1;
+    int64_t ctype = sqlite3_value_int64(argv[index + 1]);
+    b[type_offset++] = (uint8_t)ctype;
+  
+    switch (ctype) {
+      // these three are fixed length and stored in an int64
+      // the value provided must be an integer
+      case CQL_BLOB_TYPE_BOOL: 
+      {
+        int64_t val = sqlite3_value_int64(argv[index]);
+        cql_write_big_endian_int64(b + storage_offset, (uint64_t)!!val);
+        break;
+      }
+
+      case CQL_BLOB_TYPE_INT64: 
+      case CQL_BLOB_TYPE_INT32: 
+      {
+        int64_t val = sqlite3_value_int64(argv[index]);
+        cql_write_big_endian_int64(b + storage_offset, (uint64_t)val);
+        break;
+      }
+
+      case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
+      {
+        double val = sqlite3_value_double(argv[index]);
+        *(double *)(b + storage_offset) = val;
+        break;
+      }
+
+      case CQL_BLOB_TYPE_STRING:  // string field in a blob
+      {
+        const unsigned char *val = sqlite3_value_text(argv[index]);
+        int32_t len = sqlite3_value_bytes(argv[icol]);
+        uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
+        cql_write_big_endian_int64(b + storage_offset, info);
+
+        memcpy(b + variable_offset, val, len + 1);  // known length does not include trailing null
+        variable_offset += len + 1;
+        break;
+      }
+
+      case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
+      {
+        const void *val = sqlite3_value_blob(argv[index]);
+        int32_t len = sqlite3_value_bytes(argv[icol]);
+        uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
+        cql_write_big_endian_int64(b + storage_offset, info);
+
+        memcpy(b + variable_offset, val, len);
+        variable_offset += len;
+        break;
+      }
+    }    
+
+    storage_offset += sizeof(int64_t);
+  }
+
+  sqlite3_result_blob(context, b, total_bytes, sqlite3_free);
+  return;
+
+cql_error:
+  sqlite3_result_null(context);  
+}
+
+static uint64_t cql_read_big_endian_int64(const uint8_t *_Nonnull b) {
+  uint64_t val = b[0];
+  val = (val << 8) | b[1];
+  val = (val << 8) | b[2];
+  val = (val << 8) | b[3];
+  val = (val << 8) | b[4];
+  val = (val << 8) | b[5];
+  val = (val << 8) | b[6];
+  val = (val << 8) | b[7];
+  return val;
+}
+
+// Returns the indicated column from the blob using the type info in the blob
+void bgetkey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+  cql_contract(argc == 2);
+
+  if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
+    goto cql_error;
+  }
+
+  if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+    goto cql_error;
+  }
+  
+  int64_t icol = sqlite3_value_int64(argv[1]);  
+  const uint8_t *b = (const uint8_t *)sqlite3_value_blob(argv[0]);
+
+  uint64_t ccols = cql_read_big_endian_int64(b + 8);
+
+  if (icol > ccols) {
+    goto cql_error;
+  }
+
+  uint64_t storage_offset = sizeof(int64_t) * 2;
+  uint64_t type_offset = storage_offset + sizeof(int64_t) * ccols;
+
+  uint8_t ctype = b[type_offset + icol];
+
+  switch (ctype) {
+    // these three are fixed length and stored in an int64
+    // the value provided must be an integer
+    case CQL_BLOB_TYPE_BOOL: 
+    {
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      sqlite3_result_int64(context, !!val);
+      return;
+    }
+
+    case CQL_BLOB_TYPE_INT32: 
+    case CQL_BLOB_TYPE_INT64: 
+    {
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      sqlite3_result_int64(context, (int64_t)val);
+      return;
+    }
+
+    case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
+    {
+      double val = *(const double *)(b + storage_offset + icol * sizeof(uint64_t));
+      sqlite3_result_double(context, val);
+      return;
+    }
+
+    case CQL_BLOB_TYPE_STRING:  // string field in a blob
+    {
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      uint32_t len = val & 0xffffffff;
+      uint32_t offset = val >> 32;
+      const char *text = (const char *)b + offset;
+      sqlite3_result_text(context, text, len, SQLITE_TRANSIENT);
+      return;
+    }
+
+    case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
+    {
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      uint32_t len = val & 0xffffffff;
+      uint32_t offset = val >> 32;
+      const uint8_t *data = b + offset;
+      sqlite3_result_blob(context, data, len, SQLITE_TRANSIENT);
+      return;
+    }
+  }    
+
+cql_error:
+  sqlite3_result_null(context);  
+}
+
+// Returns the record type from a key blob
+void bgetkey_type(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+  cql_contract(argc == 1);
+  if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
+    goto cql_error;
+  }
+
+  const uint8_t *b = (const uint8_t *)sqlite3_value_blob(argv[0]);
+  uint64_t rtype = cql_read_big_endian_int64(b);
+  sqlite3_result_int64(context, rtype);
+  return;
+
+cql_error:
+  sqlite3_result_null(context);  
+}

@@ -176,28 +176,6 @@ static void bupdatekey(sqlite3_context *context, int32_t argc, sqlite3_value **a
   sqlite3_result_blob(context, b, sizeof(*b), SQLITE_TRANSIENT);
 }
 
-// Returns a blob with the given integers in place
-static void bcreatekey(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
-  if (argc < 1) {
-    sqlite3_result_null(context);
-  }
-
-  test_blob b = {
-    .type = sqlite3_value_int64(argv[0])
-  };
-
-  if (argc > 2) {
-    b.int1 = sqlite3_value_int64(argv[1]);
-  }
-  if (argc > 4) {
-    b.int2 = sqlite3_value_int64(argv[3]);
-  }
-  if (argc > 6) {
-    b.int3 = sqlite3_value_int64(argv[5]);
-  }
-  sqlite3_result_blob(context, &b, sizeof(b), SQLITE_TRANSIENT);
-}
-
 // Create a value store, note that some offsets be missing
 static void bcreateval(sqlite3_context *context, int32_t argc, sqlite3_value **argv) {
   if (argc < 1) {
@@ -246,7 +224,7 @@ cql_code _cql_init_extensions(sqlite3 *db) {
     return rc;
   }
 
-  rc = sqlite3_create_function_v2(db, "bgetkey_type", 1, SQLITE_UTF8, 0, bgetval_type, NULL, NULL, NULL);
+  rc = sqlite3_create_function_v2(db, "bgetkey_type", 1, SQLITE_UTF8, 0, bgetkey_type, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }
@@ -256,7 +234,7 @@ cql_code _cql_init_extensions(sqlite3 *db) {
     return rc;
   }
 
-  rc = sqlite3_create_function_v2(db, "bgetkey", 2, SQLITE_UTF8, 0, bgetval, NULL, NULL, NULL);
+  rc = sqlite3_create_function_v2(db, "bgetkey", 2, SQLITE_UTF8, 0, bgetkey, NULL, NULL, NULL);
   if (rc != SQLITE_OK) {
     return rc;
   }

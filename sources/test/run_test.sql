@@ -5609,7 +5609,7 @@ END_TEST(normalize_bool_on_call)
 
 BEGIN_TEST(blob_funcs)
   let b := (select bcreateval(112233, 0, 1234, 1, 1, 5678, 1));
-  EXPECT(112233 == (select bgetkey_type(b)));
+  EXPECT(112233 == (select bgetval_type(b)));
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(5678 == (select bgetval(b,1)));
 
@@ -5617,7 +5617,7 @@ BEGIN_TEST(blob_funcs)
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
 
-  set b := (select bupdatekey(b, 0, 2345));
+  set b := (select bupdateval(b, 0, 2345, 1));
   EXPECT(2345 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
 END_TEST(blob_funcs)

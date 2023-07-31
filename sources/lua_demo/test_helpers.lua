@@ -124,6 +124,18 @@ function bcreatekey(context, rtype, ...)
   t.rtype = rtype
   t.cols = math.floor(#args / 2)
 
+  if type(rtype) ~= 'number' then
+    goto err_exit
+  end
+
+  if #args == 0 then
+    goto err_exit
+  end
+
+  if #args % 2 ~= 0 then
+    goto err_exit
+  end
+
   i = 1
   icol = 0
   while i + 1 <= #args
@@ -131,8 +143,17 @@ function bcreatekey(context, rtype, ...)
     ctype = args[i+1]
     val = args[i]
 
+    if type(ctype) ~= 'number' then
+      goto err_exit
+    end
+
+    if ctype < CQL_BLOB_TYPE_BOOL or ctype >= CQL_BLOB_TYPE_ENTITY then
+      goto err_exit
+    end
+
     if ctype == CQL_BLOB_TYPE_BOOL then
-      val = cql_normalize_bool_to_int(val) -- normalize booleans
+       -- normalize booleans
+      val = cql_normalize_bool_to_int(val)
     end
 
      t["t"..icol] = ctype
@@ -141,8 +162,13 @@ function bcreatekey(context, rtype, ...)
      icol = icol + 1
   end
 
-  local r = serialize(t)
-  context:result_blob(r)
+  context:result_blob(serialize(t))
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
 end
 
 function bgetkey(context, b, i)

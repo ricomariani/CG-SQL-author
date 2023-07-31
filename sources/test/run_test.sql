@@ -5664,6 +5664,23 @@ BEGIN_TEST(blob_key_funcs)
   EXPECT((select cast(bgetkey(b,1) as text) == 'h'));
 END_TEST(blob_key_funcs)
 
+BEGIN_TEST(blob_key_func_errors)
+  -- not enough args
+  EXPECT((select bcreatekey(112233) IS NULL));
+
+  -- args have the wrong parity (it should be pairs)
+  EXPECT((select bcreatekey(112233, 1) IS NULL));
+
+  -- the first arg should be an int64
+  EXPECT((select bcreatekey('112233', 1, 1) IS NULL));
+
+  -- the arg type should be a small integer
+  EXPECT((select bcreatekey(112233, 1, 'error') IS NULL));
+
+  -- the arg type should be a small integer
+  EXPECT((select bcreatekey(112233, 1000, 99) IS NULL));
+END_TEST(blob_key_func_errors)
+
 BEGIN_TEST(blob_val_funcs)
   let b := (select bcreateval(112233, 0, 1234, CQL_BLOB_TYPE_INT32, 1, 5678, CQL_BLOB_TYPE_INT32));
   EXPECT(112233 == (select bgetval_type(b)));

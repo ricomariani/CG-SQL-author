@@ -27,6 +27,55 @@ function str_pack(a,b,c,d)
   return tostring(a)..","..tostring(b)..","..tostring(c)..","..tostring(d)
 end
 
+-- this is a standard serializer courtesy of From: Tony Finch <dot@...>
+-- http://lua-users.org/lists/lua-l/2009-11/msg00533.html
+-- (publicly posted as a code sample)
+--
+local szt = {}
+
+local function char(c) return ("\\%3d"):format(c:byte()) end
+local function szstr(s) return ('"%s"'):format(s:gsub("[^ !#-~]", char)) end
+local function szfun(f) return "loadstring"..szstr(string.dump(f)) end
+local function szany(...) return szt[type(...)](...) end
+
+local function sztbl(t,code,var)
+  for k,v in pairs(t) do
+    local ks = szany(k,code,var)
+    local vs = szany(v,code,var)
+    code[#code+1] = ("%s[%s]=%s"):format(var[t],ks,vs)
+  end
+  return "{}"
+end
+
+local function memo(sz)
+  return function(d,code,var)
+    if var[d] == nil then
+      var[1] = var[1] + 1
+      var[d] = ("_[%d]"):format(var[1])
+      local index = #code+1
+      code[index] = "" -- reserve place during recursion
+      code[index] = ("%s=%s"):format(var[d],sz(d,code,var))
+    end
+    return var[d]
+  end
+end
+
+szt["nil"]      = tostring
+szt["boolean"]  = tostring
+szt["number"]   = tostring
+szt["string"]   = szstr
+szt["function"] = memo(szfun)
+szt["table"]    = memo(sztbl)
+
+function serialize(d)
+  local code = { "local _ = {}" }
+  local value = szany(d,code,{0})
+  code[#code+1] = "return "..value
+  if #code == 2 then return code[2]
+  else return table.concat(code, "\n")
+  end
+end
+
 function bcreateval(context, t, ...)
   local vals = {0, 0, 0}
   local args = {...}
@@ -59,37 +108,71 @@ function bupdateval(context, b, ...)
   context:result_blob(r)
 end
 
-function bcreatekey(context, t, ...)
-  local vals = {0, 0, 0}
+function cql_normalize_bool_to_int(val)
+  if val == nil then return nil end
+  if val == false then return 0 end
+  if val == true then return 1 end
+  if val ~= 0 then return 1 end
+  return 0
+end
+
+function bcreatekey(context, rtype, ...)
   local args = {...}
   local i = 0
   local off = 1
-  while i + 2 <= #args
+  local t = {}
+  t.rtype = rtype
+  t.cols = math.floor(#args / 2)
+
+  i = 1
+  icol = 0
+  while i + 1 <= #args
   do
-     local val = args[i+1]
-     vals[off] = val
-     i = i  + 2
-     off = off + 1
+    ctype = args[i+1]
+    val = args[i]
+
+    if ctype == CQL_BLOB_TYPE_BOOL then
+      val = cql_normalize_bool_to_int(val) -- normalize booleans
+    end
+
+     t["t"..icol] = ctype
+     t["v"..icol] = val
+     i = i + 2
+     icol = icol + 1
   end
 
-  local r = str_pack(t, vals[1], vals[2], vals[3])
+  local r = serialize(t)
   context:result_blob(r)
 end
 
+function bgetkey(context, b, i)
+ local t = load(b)()
+ context:result(t["v"..i])
+end
+
+function bgetkey_type(context, b)
+ local t = load(b)()
+ context:result(t.rtype)
+end
+
 function bupdatekey(context, b, ...)
-  local t, v1, v2, v3
-  t, v1, v2, v3 = str_unpack(b)
-  local vals = {v1, v2, v3}
   local args = {...}
-  local i = 0
-  while i + 2 <= #args
+  local t = load(b)()
+  local i = 1
+  while i + 1 <= #args
   do
-     local off = args[i+1]
-     local val = args[i+2]
-     vals[off+1] = val
-     i = i  + 2
+    local icol = args[i]
+    ctype = t["t"..icol] 
+    val = args[i+1]
+
+    if ctype == CQL_BLOB_TYPE_BOOL then
+      val = cql_normalize_bool_to_int(val) -- normalize booleans
+    end
+
+    t["v"..icol] = val
+    i = i + 2
   end
-  local r = str_pack(t, vals[1], vals[2], vals[3])
+  local r = serialize(t)
   context:result_blob(r)
 end
 
@@ -138,9 +221,9 @@ function _cql_init_extensions(db)
   db:create_function("bcreateval", -1, bcreateval)
   db:create_function("bcreatekey", -1, bcreatekey)
   db:create_function("bgetval_type", 1, bgetval_type)
-  db:create_function("bgetkey_type", 1, bgetval_type)
+  db:create_function("bgetkey_type", 1, bgetkey_type)
   db:create_function("bgetval", 2, bgetval)
-  db:create_function("bgetkey", 2, bgetval)
+  db:create_function("bgetkey", 2, bgetkey)
   return sqlite3.OK
 end
 

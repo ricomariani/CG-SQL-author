@@ -35,6 +35,14 @@ CQL_DATATYPE_STRING = string.byte("s", 1)
 CQL_DATATYPE_BLOB = string.byte("b", 1)
 CQL_DATATYPE_OBJECT = string.byte("o", 1)
 
+CQL_BLOB_TYPE_BOOL   = 0  -- always big endian format in the blob
+CQL_BLOB_TYPE_INT32  = 1  -- always big endian format in the blob
+CQL_BLOB_TYPE_INT64  = 2  -- always big endian format in the blob
+CQL_BLOB_TYPE_FLOAT  = 3  -- always IEEE 754 "double" (8 bytes) format in the blob
+CQL_BLOB_TYPE_STRING = 4  -- string field in a blob
+CQL_BLOB_TYPE_BLOB   = 5  -- blob field in a blob
+CQL_BLOB_TYPE_ENTITY = 6  -- Reserved in case object support is needed; Currently unused.
+
 -- each statment can have optional data associated with it
 cql_stmt_data = {}
 cql_stmt_meta = {}

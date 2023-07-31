@@ -124,14 +124,17 @@ function bcreatekey(context, rtype, ...)
   t.rtype = rtype
   t.cols = math.floor(#args / 2)
 
+  -- if the record type is not numeric then exit
   if type(rtype) ~= 'number' then
     goto err_exit
   end
 
+  -- if too few args then exit
   if #args == 0 then
     goto err_exit
   end
 
+  -- if the parity of the arguments is wrong, exit
   if #args % 2 ~= 0 then
     goto err_exit
   end
@@ -143,17 +146,31 @@ function bcreatekey(context, rtype, ...)
     ctype = args[i+1]
     val = args[i]
 
+    -- if the column type is not a number, exit
     if type(ctype) ~= 'number' then
       goto err_exit
     end
 
+    -- if the column type is out of range, exit
     if ctype < CQL_BLOB_TYPE_BOOL or ctype >= CQL_BLOB_TYPE_ENTITY then
       goto err_exit
     end
 
+    -- sanity check type of value against arg type
+    local is_number = type(val) == 'number'
+    if ctype == CQL_BLOB_TYPE_BLOB or ctype == CQL_BLOB_TYPE_STRING then
+      if is_number then
+        goto err_exit
+      end
+    else
+      if not is_number then
+        goto err_exit
+      end
+    end
+
     if ctype == CQL_BLOB_TYPE_BOOL then
-       -- normalize booleans
-      val = cql_normalize_bool_to_int(val)
+      -- normalize booleans
+     val = cql_normalize_bool_to_int(val)
     end
 
      t["t"..icol] = ctype

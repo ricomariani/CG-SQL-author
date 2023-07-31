@@ -5679,6 +5679,24 @@ BEGIN_TEST(blob_key_func_errors)
 
   -- the arg type should be a small integer
   EXPECT((select bcreatekey(112233, 1000, 99) IS NULL));
+
+  -- the value doesn't match the blob type -- int32
+  EXPECT((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_BOOL) IS NULL));
+
+  -- the value doesn't match the blob type -- int32
+  EXPECT((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_INT32) IS NULL));
+
+  -- the value doesn't match the blob type -- int64
+  EXPECT((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_INT64) IS NULL));
+
+  -- the value doesn't match the blob type -- float
+  EXPECT((select bcreatekey(112233, 'xxx', CQL_BLOB_TYPE_FLOAT) IS NULL));
+
+  -- the value doesn't match the blob type -- string
+  EXPECT((select bcreatekey(112233, 1, CQL_BLOB_TYPE_STRING) IS NULL));
+
+  -- the value doesn't match the blob type -- blob
+  EXPECT((select bcreatekey(112233, 1, CQL_BLOB_TYPE_BLOB) IS NULL));
 END_TEST(blob_key_func_errors)
 
 BEGIN_TEST(blob_val_funcs)

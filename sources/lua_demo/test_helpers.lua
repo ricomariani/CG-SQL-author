@@ -27,9 +27,9 @@ function str_pack(a,b,c,d)
   return tostring(a)..","..tostring(b)..","..tostring(c)..","..tostring(d)
 end
 
--- this is a standard serializer courtesy of From: Tony Finch <dot@...>
+-- this is a standard serializer courtesy of Tony Finch
 -- http://lua-users.org/lists/lua-l/2009-11/msg00533.html
--- (publicly posted as a code sample)
+-- it was publicly posted as a code sample
 --
 local szt = {}
 
@@ -75,6 +75,8 @@ function serialize(d)
   else return table.concat(code, "\n")
   end
 end
+
+-- this is the end of the serializer sample code
 
 function bcreateval(context, t, ...)
   local vals = {0, 0, 0}

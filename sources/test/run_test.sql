@@ -28,6 +28,13 @@
 @blob_update_key bupdatekey offset;
 @blob_update_val bupdateval offset;
 
+#define CQL_BLOB_TYPE_BOOL   0
+#define CQL_BLOB_TYPE_INT32  1
+#define CQL_BLOB_TYPE_INT64  2
+#define CQL_BLOB_TYPE_FLOAT  3
+#define CQL_BLOB_TYPE_STRING 4
+#define CQL_BLOB_TYPE_BLOB   5 
+
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
 declare select function bgetkey(b blob, iarg integer) long;
@@ -5595,32 +5602,82 @@ BEGIN_TEST(normalize_bool_on_call)
   call take_bool_not_null(0, false);
 END_TEST(normalize_bool_on_call)
 
+BEGIN_TEST(blob_key_funcs)
+  let b := (select bcreatekey(112233, 1234, CQL_BLOB_TYPE_INT32, 5678, CQL_BLOB_TYPE_INT32));
+  EXPECT(112233 == (select bgetkey_type(b)));
+  EXPECT(1234 == (select bgetkey(b,0)));
+  EXPECT(5678 == (select bgetkey(b,1)));
 
--- This test code works in LUA but only if you force the type hash codes
--- to be 32 bits.  There is no context:result_int64 in luasqlite3 and
--- so you either use the integer version and lose 32 bits or else you
--- use the number version and get floating point round off which also
--- results in test failures.  The floating point bugs are especially
--- hard to notice because the type codes are often approximately correct!
---
--- You can test the codegen with LUA if you adjust the hash code in
--- cg_common.c to be 32 bits by masking the high bits off.  This is
--- not something we can ship.
+  set b := (select bupdatekey(b, 1, 3456));
+  EXPECT(1234 == (select bgetkey(b,0)));
+  EXPECT(3456 == (select bgetkey(b,1)));
 
-BEGIN_TEST(blob_funcs)
-  let b := (select bcreateval(112233, 0, 1234, 1, 1, 5678, 1));
+  set b := (select bupdatekey(b, 0, 2345));
+  EXPECT(2345 == (select bgetkey(b,0)));
+  EXPECT(3456 == (select bgetkey(b,1)));
+
+  -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
+  -- ad hoc calls to these functions aren't the normal way they are used 
+  set b := (select bcreatekey(112234, 2, CQL_BLOB_TYPE_BOOL, 5.5, CQL_BLOB_TYPE_FLOAT));
+  EXPECT(112234 == (select bgetkey_type(b)));
+  EXPECT((select bgetkey(b,0) == 1));
+  EXPECT((select bgetkey(b,1) == 5.5));
+
+  set b := (select bupdatekey(b, 0, 0));
+  EXPECT((select bgetkey(b,0) == 0));
+
+  set b := (select bupdatekey(b, 0, 1, 1, 3.25));
+  EXPECT((select bgetkey(b,0) == 1));
+  EXPECT((select bgetkey(b,1) == 3.25));
+
+  -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
+  -- ad hoc calls to these functions aren't the normal way they are used 
+  set b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64)); 
+  EXPECT(112235 == (select bgetkey_type(b)));
+  EXPECT((select bgetkey(b,0) == 0x12345678912L));
+  EXPECT((select bgetkey(b,1) == 0x87654321876L));
+
+  set b := (select bupdatekey(b, 0, 0xabcdef01234));
+  EXPECT((select bgetkey(b,0) == 0xabcdef01234));
+
+  -- cheese the return type with casts to work around the fixed type of bgetkey
+  set b := (select bcreatekey(112236,  x'313233', CQL_BLOB_TYPE_BLOB, 'hello', CQL_BLOB_TYPE_STRING)); 
+  EXPECT(112236 == (select bgetkey_type(b)));
+  EXPECT((select cast(bgetkey(b,0) as blob) == x'313233'));
+  EXPECT((select cast(bgetkey(b,1) as text) == 'hello'));
+
+  set b := (select bupdatekey(b, 0, x'4546474849'));
+  EXPECT((select cast(bgetkey(b,0) as blob) == x'4546474849'));
+
+  set b := (select bupdatekey(b, 0, x'fe'));
+  EXPECT((select cast(bgetkey(b,0) as blob) == x'fe'));
+
+  set b := (select bupdatekey(b, 0, x''));
+  EXPECT((select cast(bgetkey(b,0) as blob) == x''));
+
+  set b := (select bupdatekey(b, 1, 'garbonzo'));
+  EXPECT((select cast(bgetkey(b,1) as text) == 'garbonzo'));
+  EXPECT((select cast(bgetkey(b,0) as blob) == x''));
+
+  set b := (select bupdatekey(b, 0, x'4546474849', 1, 'h'));
+  EXPECT((select cast(bgetkey(b,0) as blob) == x'4546474849'));
+  EXPECT((select cast(bgetkey(b,1) as text) == 'h'));
+END_TEST(blob_key_funcs)
+
+BEGIN_TEST(blob_val_funcs)
+  let b := (select bcreateval(112233, 0, 1234, CQL_BLOB_TYPE_INT32, 1, 5678, CQL_BLOB_TYPE_INT32));
   EXPECT(112233 == (select bgetval_type(b)));
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(5678 == (select bgetval(b,1)));
 
-  set b := (select bupdateval(b, 1, 3456, 1));
+  set b := (select bupdateval(b, 1, 3456, CQL_BLOB_TYPE_INT32));
   EXPECT(1234 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
 
-  set b := (select bupdateval(b, 0, 2345, 1));
+  set b := (select bupdateval(b, 0, 2345, CQL_BLOB_TYPE_INT32));
   EXPECT(2345 == (select bgetval(b,0)));
   EXPECT(3456 == (select bgetval(b,1)));
-END_TEST(blob_funcs)
+END_TEST(blob_val_funcs)
 
 BEGIN_TEST(backed_tables)
   -- seed some data
@@ -5672,7 +5729,7 @@ BEGIN_TEST(backed_tables)
   -- insert a row with only key and no value
   insert into backed2(id) values(1);
   EXPECT(1 == (select id from backed2));
-END_TEST(blob_funcs)
+END_TEST(backed_tables)
 
 @attribute(cql:backed_by=backing)
 create table backed_table_with_defaults(

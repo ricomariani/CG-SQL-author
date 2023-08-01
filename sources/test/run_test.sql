@@ -5708,8 +5708,44 @@ BEGIN_TEST(blob_getkey_func_errors)
 
   -- second arg is negative
   EXPECT((select bgetkey(b, -1) IS NULL));
-
 END_TEST(blob_getkey_func_errors)
+
+
+BEGIN_TEST(blob_updatekey_func_errors)
+  -- a test blob
+  let b := (select bcreatekey(112235,
+       false, CQL_BLOB_TYPE_BOOL,
+       0x12345678912L, CQL_BLOB_TYPE_INT64, 
+       1.5, CQL_BLOB_TYPE_FLOAT,
+       'abc', CQL_BLOB_TYPE_STRING,
+       x'4546474849', CQL_BLOB_TYPE_BLOB
+       )); 
+
+  -- not enough args
+  EXPECT((select bupdatekey(112233) IS NULL));
+
+  -- args have the wrong parity (it should be pairs)
+  EXPECT((select bupdatekey(112233, 1) IS NULL));
+
+  -- the first arg should be a blob
+  EXPECT((select bupdatekey(1234, 1, 1) IS NULL));
+
+  -- the column index should be a small integer
+  EXPECT((select bupdatekey(b, 'error', 1) IS NULL));
+
+  -- the column index must be in range
+  EXPECT((select bupdatekey(b, 5, 1234) IS NULL));
+
+  -- the column index must be in range
+  EXPECT((select bupdatekey(b, -1, 1234) IS NULL));
+
+  -- the value doesn't match the blob type 
+  EXPECT((select bupdatekey(b, 0, 'xxx') IS NULL));
+  EXPECT((select bupdatekey(b, 1, 'xxx') IS NULL));
+  EXPECT((select bupdatekey(b, 2, 'xxx') IS NULL));
+  EXPECT((select bupdatekey(b, 3, 5.0) IS NULL));
+  EXPECT((select bupdatekey(b, 4, 5.0) IS NULL));
+END_TEST(blob_updatekey_func_errors)
 
 BEGIN_TEST(blob_val_funcs)
   let b := (select bcreateval(112233, 0, 1234, CQL_BLOB_TYPE_INT32, 1, 5678, CQL_BLOB_TYPE_INT32));

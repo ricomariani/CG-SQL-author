@@ -118,6 +118,8 @@ function cql_normalize_bool_to_int(val)
   return 0
 end
 
+cql_required_val_type = {}
+
 function bcreatekey(context, rtype, ...)
   local args = {...}
   local i = 0
@@ -159,15 +161,8 @@ function bcreatekey(context, rtype, ...)
     end
 
     -- sanity check type of value against arg type
-    local is_number = type(val) == 'number'
-    if ctype == CQL_BLOB_TYPE_BLOB or ctype == CQL_BLOB_TYPE_STRING then
-      if is_number then
-        goto err_exit
-      end
-    else
-      if not is_number then
-        goto err_exit
-      end
+    if cql_required_val_type[ctype] ~= type(val) then
+      goto err_exit
     end
 
     if ctype == CQL_BLOB_TYPE_BOOL then
@@ -241,11 +236,21 @@ function bupdatekey(context, b, ...)
   -- note this is not safe generally, it's ok for test code but
   -- you want something that can't be hijacked in real code
   t = load(b)()
+  cols = t.cols
   while i + 1 <= #args
   do
     local icol = args[i]
+    if type(icol) ~= 'number' or icol < 0 or icol >= cols then
+      goto err_exit
+    end
+
     ctype = t["t"..icol] 
     val = args[i+1]
+
+    -- sanity check type of value against arg type
+    if cql_required_val_type[ctype] ~= type(val) then
+      goto err_exit
+    end
 
     if ctype == CQL_BLOB_TYPE_BOOL then
       val = cql_normalize_bool_to_int(val) -- normalize booleans
@@ -301,6 +306,16 @@ function rscol(context, rsid, rownum, colnum)
 end
 
 function _cql_init_extensions(db)
+  -- defer initialization until after these constants are defined in cqlrt.lua
+  cql_required_val_type = {
+    [CQL_BLOB_TYPE_BOOL] = 'number',
+    [CQL_BLOB_TYPE_INT32] = 'number',
+    [CQL_BLOB_TYPE_INT64] = 'number',
+    [CQL_BLOB_TYPE_FLOAT] = 'number',
+    [CQL_BLOB_TYPE_STRING] = 'string',
+    [CQL_BLOB_TYPE_BLOB] = 'string'
+  }
+  
   db:create_function("rscount", 1, rscount)
   db:create_function("rscol", 3, rscol)
   db:create_function("bupdateval", -1, bupdateval)

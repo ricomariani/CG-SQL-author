@@ -5664,7 +5664,7 @@ BEGIN_TEST(blob_key_funcs)
   EXPECT((select cast(bgetkey(b,1) as text) == 'h'));
 END_TEST(blob_key_funcs)
 
-BEGIN_TEST(blob_key_func_errors)
+BEGIN_TEST(blob_createkey_func_errors)
   -- not enough args
   EXPECT((select bcreatekey(112233) IS NULL));
 
@@ -5697,7 +5697,19 @@ BEGIN_TEST(blob_key_func_errors)
 
   -- the value doesn't match the blob type -- blob
   EXPECT((select bcreatekey(112233, 1, CQL_BLOB_TYPE_BLOB) IS NULL));
-END_TEST(blob_key_func_errors)
+END_TEST(blob_createkey_func_errors)
+
+BEGIN_TEST(blob_getkey_func_errors)
+  -- a test blob
+  let b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64)); 
+
+  -- second arg is too big  only (0, 1) are valid
+  EXPECT((select bgetkey(b, 2) IS NULL));
+
+  -- second arg is negative
+  EXPECT((select bgetkey(b, -1) IS NULL));
+
+END_TEST(blob_getkey_func_errors)
 
 BEGIN_TEST(blob_val_funcs)
   let b := (select bcreateval(112233, 0, 1234, CQL_BLOB_TYPE_INT32, 1, 5678, CQL_BLOB_TYPE_INT32));

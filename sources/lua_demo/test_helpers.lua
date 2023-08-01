@@ -191,19 +191,56 @@ function bcreatekey(context, rtype, ...)
 end
 
 function bgetkey(context, b, i)
- local t = load(b)()
+ local t
+
+ if type(b) ~= "string" or type(i) ~= "number" then
+  goto err_exit
+ end
+
+ -- note this is not safe generally, it's ok for test code but
+ -- you want something that can't be hijacked in real code
+ t = load(b)()
+
+ if i < 0 or i >= t.cols then
+  goto err_exit
+ end
+
  context:result(t["v"..i])
+ goto done
+
+::err_exit::
+  context:result_null();
+
+  ::done::
 end
 
 function bgetkey_type(context, b)
- local t = load(b)()
- context:result(t.rtype)
+  local t
+
+  if type(b) ~= "string" then
+    goto err_exit
+  end
+  t = load(b)()
+  context:result(t.rtype)
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
 end
 
 function bupdatekey(context, b, ...)
   local args = {...}
-  local t = load(b)()
+  local t
   local i = 1
+  if type(b) ~= "string" then
+    goto err_exit
+  end
+
+  -- note this is not safe generally, it's ok for test code but
+  -- you want something that can't be hijacked in real code
+  t = load(b)()
   while i + 1 <= #args
   do
     local icol = args[i]
@@ -217,8 +254,13 @@ function bupdatekey(context, b, ...)
     t["v"..icol] = val
     i = i + 2
   end
-  local r = serialize(t)
-  context:result_blob(r)
+  context:result_blob(serialize(t))
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
 end
 
 function bgetval_type(context, b)

@@ -4505,22 +4505,17 @@ static uint64_t cql_read_big_endian_int64(const uint8_t *_Nonnull b) {
 
 // Returns the indicated column from the blob using the type info in the blob
 void bgetkey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+  // these are enforced at compile time
   cql_contract(argc == 2);
+  cql_contract(sqlite3_value_type(argv[0]) == SQLITE_BLOB);
+  cql_contract(sqlite3_value_type(argv[1]) == SQLITE_INTEGER);
 
-  if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-    goto cql_error;
-  }
-
-  if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
-    goto cql_error;
-  }
-  
   int64_t icol = sqlite3_value_int64(argv[1]);  
   const uint8_t *b = (const uint8_t *)sqlite3_value_blob(argv[0]);
 
   uint64_t ccols = cql_read_big_endian_int64(b + 8);
 
-  if (icol > ccols) {
+  if (icol < 0 || icol >= ccols) {
     goto cql_error;
   }
 
@@ -4581,18 +4576,13 @@ cql_error:
 
 // Returns the record type from a key blob
 void bgetkey_type(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv) {
+  // these are enforced at compile time
   cql_contract(argc == 1);
-  if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-    goto cql_error;
-  }
+  cql_contract(sqlite3_value_type(argv[0]) == SQLITE_BLOB);
 
   const uint8_t *b = (const uint8_t *)sqlite3_value_blob(argv[0]);
   uint64_t rtype = cql_read_big_endian_int64(b);
   sqlite3_result_int64(context, rtype);
-  return;
-
-cql_error:
-  sqlite3_result_null(context);  
 }
 
 // Returns the indicated column from the blob using the type info in the blob
@@ -4636,7 +4626,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     int64_t icol = sqlite3_value_int64(argv[index]);
     uint8_t ctype = b[type_offset + icol];
 
-    if (icol < 0 || icol > ccols || (ctype & CQL_BLOB_TYPE_DIRTY)) {
+    if (icol < 0 || icol >= ccols || (ctype & CQL_BLOB_TYPE_DIRTY)) {
       goto cql_error;
     }
 

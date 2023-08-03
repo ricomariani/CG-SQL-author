@@ -4376,39 +4376,41 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     if (sqlite3_value_type(argv[index + 1]) != SQLITE_INTEGER) {
       goto cql_error;
     }
-    int64_t ctype = sqlite3_value_int64(field_type_arg);
-    int64_t atype = sqlite3_value_type(field_value_arg);
 
-    switch (ctype) {
+    int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
+    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL:    // always big endian format in the blob
       case CQL_BLOB_TYPE_INT32:   // always big endian format in the blob
       case CQL_BLOB_TYPE_INT64:   // always big endian format in the blob
-        if (atype != SQLITE_INTEGER) {
+        if (field_value_type != SQLITE_INTEGER) {
           goto cql_error;
         }
         break;
 
       case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
-        if (atype != SQLITE_FLOAT) {
+        if (field_value_type != SQLITE_FLOAT) {
           goto cql_error;
         }
         break;
 
       case CQL_BLOB_TYPE_STRING:  // string field in a blob
-        if (atype != SQLITE3_TEXT) {
+        if (field_value_type != SQLITE3_TEXT) {
           goto cql_error;
         }
         variable_space_adjustment += sqlite3_value_bytes(field_value_arg) + 1;
         break;
 
       case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
-        if (atype != SQLITE_BLOB) {
+        if (field_value_type != SQLITE_BLOB) {
           goto cql_error;
         }
         variable_space_adjustment += sqlite3_value_bytes(field_value_arg);
         break;
+
       default:
         goto cql_error;
     }
@@ -4441,10 +4443,10 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
 
-    int64_t ctype = sqlite3_value_int64(field_type_arg);
-    b[type_offset++] = (uint8_t)ctype;
+    int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
+    b[type_offset++] = (uint8_t)blob_column_type;
   
-    switch (ctype) {
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL: 
@@ -4538,9 +4540,9 @@ void bgetkey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
   uint64_t storage_offset = sizeof(int64_t) * 2;
   uint64_t type_offset = storage_offset + sizeof(int64_t) * ccols;
 
-  uint8_t ctype = b[type_offset + icol];
+  uint8_t blob_column_type = b[type_offset + icol];
 
-  switch (ctype) {
+  switch (blob_column_type) {
     // these three are fixed length and stored in an int64
     // the value provided must be an integer
     case CQL_BLOB_TYPE_BOOL: 
@@ -4647,24 +4649,24 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       goto cql_error;
     }
 
-    int64_t atype = sqlite3_value_type(field_value_arg);
+    int64_t field_value_type = sqlite3_value_type(field_value_arg);
     int64_t icol = sqlite3_value_int64(field_index_arg);
-    uint8_t ctype = b[type_offset + icol];
+    uint8_t blob_column_type = b[type_offset + icol];
 
-    if (icol < 0 || icol >= ccols || (ctype & CQL_BLOB_TYPE_DIRTY)) {
+    if (icol < 0 || icol >= ccols || (blob_column_type & CQL_BLOB_TYPE_DIRTY)) {
       goto cql_error;
     }
 
-    b[type_offset + icol] = ctype | CQL_BLOB_TYPE_DIRTY;    
+    b[type_offset + icol] = blob_column_type | CQL_BLOB_TYPE_DIRTY;    
 
-    switch (ctype) {
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL:    // always big endian format in the blob
       case CQL_BLOB_TYPE_INT32:   // always big endian format in the blob
       case CQL_BLOB_TYPE_INT64:   // always big endian format in the blob
       {
-        if (atype != SQLITE_INTEGER) {
+        if (field_value_type != SQLITE_INTEGER) {
           goto cql_error;
         }
         break;
@@ -4672,7 +4674,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
       {
-        if (atype != SQLITE_FLOAT) {
+        if (field_value_type != SQLITE_FLOAT) {
           goto cql_error;
         }
         break;
@@ -4680,7 +4682,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       case CQL_BLOB_TYPE_STRING:  // string field in a blob
       {
-        if (atype != SQLITE3_TEXT) {
+        if (field_value_type != SQLITE3_TEXT) {
           goto cql_error;
         }
  
@@ -4692,7 +4694,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
       {
-        if (atype != SQLITE_BLOB) {
+        if (field_value_type != SQLITE_BLOB) {
           goto cql_error;
         }
 
@@ -4721,10 +4723,10 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     sqlite3_value *field_value_arg = argv[index + 1];
 
     int64_t icol = sqlite3_value_int64(field_index_arg);
-    uint8_t ctype = b[type_offset + icol] & ~CQL_BLOB_TYPE_DIRTY;
-    result[type_offset + icol] = ctype;
+    uint8_t blob_column_type = b[type_offset + icol] & ~CQL_BLOB_TYPE_DIRTY;
+    result[type_offset + icol] = blob_column_type;
   
-    switch (ctype) {
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL: 
@@ -4779,11 +4781,11 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // any fixed length items that did not change were handled already using
   // the memcpy
   for (int icol = 0; icol < ccols; icol++) {
-    uint8_t ctype = b[type_offset + icol];
+    uint8_t blob_column_type = b[type_offset + icol];
 
     // this will only match CLEAN variable length fields, the dirty fields
     // have already been taken care of
-    switch (ctype) {
+    switch (blob_column_type) {
       case CQL_BLOB_TYPE_STRING:  // string field in a blob
       {
         uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
@@ -4840,19 +4842,15 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // the number of args must be a multiple of 3 plus 1
   // and there must be at least 4
   if (argc < 1 || argc % 3 != 1) {
-    cql_contract(false);
     goto cql_error;
   }
 
   // argv[0] must be the record type and it must be an integer
   if (sqlite3_value_type(argv[0]) != SQLITE_INTEGER) {
-    cql_contract(false);
     goto cql_error;
   }
   int64_t rtype = sqlite3_value_int64(argv[0]);
 
-  // type and value for each argument
-  // plus the 
   int32_t ccols = (argc - 1)  / 3;
   cql_invariant(ccols >= 0);
 
@@ -4865,52 +4863,49 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     sqlite3_value *field_type_arg = argv[index + 2];
 
     if (sqlite3_value_type(field_type_arg) != SQLITE_INTEGER) {
-      cql_contract(false);
       goto cql_error;
     }
-    if (sqlite3_value_type(field_id_arg) != SQLITE_INTEGER) {
-      cql_contract(false);
-      goto cql_error;
-    }
-    int64_t ctype = sqlite3_value_int64(field_type_arg);
-    int64_t atype = sqlite3_value_type(field_value_arg);
     
-    switch (ctype) {
+    if (sqlite3_value_type(field_id_arg) != SQLITE_INTEGER) {
+      goto cql_error;
+    }
+
+    int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
+    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+
+    // todo: if field_value_type is SQLITE_NULL then ignore this column
+    
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL:    // always big endian format in the blob
       case CQL_BLOB_TYPE_INT32:   // always big endian format in the blob
       case CQL_BLOB_TYPE_INT64:   // always big endian format in the blob
-        if (atype != SQLITE_INTEGER) {
-          cql_contract(false);
+        if (field_value_type != SQLITE_INTEGER) {
           goto cql_error;
         }
         break;
 
       case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
-        if (atype != SQLITE_FLOAT) {
-          cql_contract(false);
+        if (field_value_type != SQLITE_FLOAT) {
           goto cql_error;
         }
         break;
 
       case CQL_BLOB_TYPE_STRING:  // string field in a blob
-        if (atype != SQLITE3_TEXT) {
-          cql_contract(false);
+        if (field_value_type != SQLITE3_TEXT) {
           goto cql_error;
         }
         variable_space_adjustment += sqlite3_value_bytes(field_value_arg) + 1;
         break;
 
       case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
-        if (atype != SQLITE_BLOB) {
-          cql_contract(false);
+        if (field_value_type != SQLITE_BLOB) {
           goto cql_error;
         }
         variable_space_adjustment += sqlite3_value_bytes(field_value_arg);
         break;
       default:
-        cql_contract(false);
         goto cql_error;
     }
   }
@@ -4947,14 +4942,14 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
 
-    int64_t ctype = sqlite3_value_int64(field_type_arg);
-    b[type_offset++] = (uint8_t)ctype;
+    int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
+    b[type_offset++] = (uint8_t)blob_column_type;
 
     int64_t field_code = sqlite3_value_int64(field_id_arg);
     cql_write_big_endian_int64(b + field_codes_offset, field_code);
     field_codes_offset  += sizeof(int64_t);
   
-    switch (ctype) {
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL: 
@@ -5054,13 +5049,12 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
   }
 
   if (icol >= ccols) {
-    cql_contract(false);
     goto cql_error;
   }
 
-  uint8_t ctype = b[type_offset + icol];
+  uint8_t blob_column_type = b[type_offset + icol];
 
-  switch (ctype) {
+  switch (blob_column_type) {
     // these three are fixed length and stored in an int64
     // the value provided must be an integer
     case CQL_BLOB_TYPE_BOOL: 
@@ -5139,12 +5133,10 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // the number of args must be a multiple of 3 plus 1
   // and there must be at least 4
   if (argc < 4 || argc % 3 != 1) {
-    cql_contract(false);
     goto cql_error;
   }
 
   if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-    cql_contract(false);
     goto cql_error;
   }
 
@@ -5182,7 +5174,6 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     sqlite3_value *field_type_arg = argv[index + 2];
 
     if (sqlite3_value_type(field_id_arg) != SQLITE_INTEGER) {
-      cql_contract(false);
       goto cql_error;
     }
 
@@ -5196,30 +5187,30 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       }    
     }
 
+    // todo: if the field doesn't exist then add it, it's not an error
     if (icol >= ccols) {
-      cql_contract(false);
       goto cql_error;
     }
       
-    int64_t atype = sqlite3_value_type(field_value_arg);
-    uint8_t ctype = b[type_offset + icol];
+    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+    uint8_t blob_column_type = b[type_offset + icol];
 
-    if (icol >= ccols || (ctype & CQL_BLOB_TYPE_DIRTY)) {
-      cql_contract(false);
+    // todo: if field_value_type is SQLITE_NULL then remove this column from the record
+
+    if (blob_column_type & CQL_BLOB_TYPE_DIRTY) {
       goto cql_error;
     }
 
-    b[type_offset + icol] = ctype | CQL_BLOB_TYPE_DIRTY;    
+    b[type_offset + icol] = blob_column_type | CQL_BLOB_TYPE_DIRTY;   
 
-    switch (ctype) {
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL:    // always big endian format in the blob
       case CQL_BLOB_TYPE_INT32:   // always big endian format in the blob
       case CQL_BLOB_TYPE_INT64:   // always big endian format in the blob
       {
-        if (atype != SQLITE_INTEGER) {
-          cql_contract(false);
+        if (field_value_type != SQLITE_INTEGER) {
           goto cql_error;          
         }
         break;
@@ -5227,8 +5218,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
       {
-        if (atype != SQLITE_FLOAT) {
-          cql_contract(false);
+        if (field_value_type != SQLITE_FLOAT) {
           goto cql_error;
         }
         break;
@@ -5236,8 +5226,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       case CQL_BLOB_TYPE_STRING:  // string field in a blob
       {
-        if (atype != SQLITE3_TEXT) {
-          cql_contract(false);
+        if (field_value_type != SQLITE3_TEXT) {
           goto cql_error;
         }
  
@@ -5249,8 +5238,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
       {
-        if (atype != SQLITE_BLOB) {
-          cql_contract(false);
+        if (field_value_type != SQLITE_BLOB) {
           goto cql_error;
         }
 
@@ -5291,12 +5279,11 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     cql_contract(icol < ccols);
       
-    int64_t atype = sqlite3_value_type(field_value_arg);
-
-    uint8_t ctype = b[type_offset + icol] & ~CQL_BLOB_TYPE_DIRTY;
-    result[type_offset + icol] = ctype;
+    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+    uint8_t blob_column_type = b[type_offset + icol] & ~CQL_BLOB_TYPE_DIRTY;
+    result[type_offset + icol] = blob_column_type;
   
-    switch (ctype) {
+    switch (blob_column_type) {
       // these three are fixed length and stored in an int64
       // the value provided must be an integer
       case CQL_BLOB_TYPE_BOOL: 
@@ -5351,11 +5338,11 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // any fixed length items that did not change were handled already using
   // the memcpy
   for (int icol = 0; icol < ccols; icol++) {
-    uint8_t ctype = b[type_offset + icol];
+    uint8_t blob_column_type = b[type_offset + icol];
 
     // this will only match CLEAN variable length fields, the dirty fields
     // have already been taken care of
-    switch (ctype) {
+    switch (blob_column_type) {
       case CQL_BLOB_TYPE_STRING:  // string field in a blob
       {
         uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));

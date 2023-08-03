@@ -38,7 +38,7 @@
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
 declare select function bgetkey(b blob, iarg integer) long;
-declare select function bgetval(b blob, iarg integer) long;
+declare select function bgetval(b blob, iarg long) long;
 declare select function bcreateval no check blob;
 declare select function bcreatekey no check blob;
 declare select function bupdateval no check blob;
@@ -5748,18 +5748,21 @@ BEGIN_TEST(blob_updatekey_func_errors)
 END_TEST(blob_updatekey_func_errors)
 
 BEGIN_TEST(blob_val_funcs)
-  let b := (select bcreateval(112233, 0, 1234, CQL_BLOB_TYPE_INT32, 1, 5678, CQL_BLOB_TYPE_INT32));
+  let k1 := 123412341234; 
+  let k2 := 123412341235; 
+  let b := (select bcreateval(112233, k1, 1234, CQL_BLOB_TYPE_INT32, k2, 5678, CQL_BLOB_TYPE_INT32));
+
   EXPECT(112233 == (select bgetval_type(b)));
-  EXPECT(1234 == (select bgetval(b,0)));
-  EXPECT(5678 == (select bgetval(b,1)));
+  EXPECT(1234 == (select bgetval(b, k1)));
+  EXPECT(5678 == (select bgetval(b, k2)));
 
-  set b := (select bupdateval(b, 1, 3456, CQL_BLOB_TYPE_INT32));
-  EXPECT(1234 == (select bgetval(b,0)));
-  EXPECT(3456 == (select bgetval(b,1)));
+  set b := (select bupdateval(b, k2, 3456, CQL_BLOB_TYPE_INT32));
+  EXPECT(1234 == (select bgetval(b,k1)));
+  EXPECT(3456 == (select bgetval(b,k2)));
 
-  set b := (select bupdateval(b, 0, 2345, CQL_BLOB_TYPE_INT32));
-  EXPECT(2345 == (select bgetval(b,0)));
-  EXPECT(3456 == (select bgetval(b,1)));
+  set b := (select bupdateval(b, k1, 2345, CQL_BLOB_TYPE_INT32));
+  EXPECT(2345 == (select bgetval(b,k1)));
+  EXPECT(3456 == (select bgetval(b,k2)));
 END_TEST(blob_val_funcs)
 
 BEGIN_TEST(backed_tables)

@@ -4835,8 +4835,8 @@ cleanup:
 // test if the incoming argument is compatible with blob field type
 // report the variable size of the incoming arg if there is any variable size
 static cql_bool bcompare_blobtype_vs_argtype(
-  sqlite3_value *_Nonnull field_value_arg, 
-  int8_t blob_column_type, 
+  sqlite3_value *_Nonnull field_value_arg,
+  int8_t blob_column_type,
   int64_t *_Nonnull variable_size)
 {
   *variable_size = 0;
@@ -4853,7 +4853,7 @@ static cql_bool bcompare_blobtype_vs_argtype(
     break;
 
   // always IEEE 754 "double" (8 bytes) format in the blob
-  case CQL_BLOB_TYPE_FLOAT:  
+  case CQL_BLOB_TYPE_FLOAT:
     if (field_value_type != SQLITE_FLOAT) {
       return false;
     }
@@ -4968,7 +4968,7 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   uint64_t storage_offset = field_ids_offset + field_ids_size;
   uint64_t type_codes_offset = storage_offset + storage_size;
   uint64_t variable_offset = type_codes_offset + type_codes_size;
- 
+
   for (int32_t ispec = 0; ispec < colspecs; ispec++) {
     int32_t index = ispec * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
@@ -4982,7 +4982,7 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     if (field_value_type == SQLITE_NULL) {
       // don't increase actual columns, this item may as well be absent
       continue;
-    }    
+    }
 
     int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
     b[type_codes_offset++] = (uint8_t)blob_column_type;
@@ -5084,8 +5084,8 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
 
   int32_t icol;
   for (icol = 0; icol < ccols; icol++) {
-    int64_t stored_code = (int64_t)cql_read_big_endian_int64(b + field_ids_offset + icol * sizeof(int64_t));
-    if (stored_code == field_id) {
+    int64_t stored_field_id = (int64_t)cql_read_big_endian_int64(b + field_ids_offset + icol * sizeof(int64_t));
+    if (stored_field_id == field_id) {
       break;
     }
   }
@@ -5204,12 +5204,19 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   uint64_t type_codes_offset = storage_offset + storage_size;
   uint64_t variable_offset = type_codes_offset + type_codes_size;
   uint64_t variable_size = original_bytes - variable_offset;
- 
+
   int32_t updates = (argc - 1) / 3;
 
   int64_t variable_space_adjustment = 0;
   int32_t col_adjustment = 0;
 
+  // In the first pass we're going to go over the arguments, we're going to figure out how many columns
+  // are going to be added/removed and we're going to figure out how much more/less variable storage we need.
+  // At this time we will check all the arguments for compatability with any already stored values and
+  // for consistency.
+  //   * no duplicate field ids
+  //   * stored field id must match provided field id if there is a stored field id
+  //   * data type of field_value_arg (the provided value) must be compatible with value of field_type_arg (the provided type)
   for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
     int32_t index = iupdate * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
@@ -5224,8 +5231,8 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     int32_t icol_original;
     for (icol_original = 0; icol_original < ccols_original; icol_original++) {
-      int64_t stored_code = (int64_t)cql_read_big_endian_int64(b + field_ids_offset + icol_original * sizeof(int64_t));
-      if (stored_code == field_id) {
+      int64_t stored_field_id = (int64_t)cql_read_big_endian_int64(b + field_ids_offset + icol_original * sizeof(int64_t));
+      if (stored_field_id == field_id) {
         break;
       }
     }
@@ -5329,6 +5336,10 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   uint8_t *result = sqlite3_malloc((int32_t)new_total_bytes);
   cql_contract(result != NULL);
 
+  // In the second pass we use the provided arguments to update the storage.
+  // We copy them over just like we would in bcreateval, making a new
+  // group of arrays of field ids, storage, and types.  When this is done
+  // we have consumed the arguments.
   for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
     int32_t index = iupdate * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
@@ -5400,9 +5411,10 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     new_storage_offset += sizeof(int64_t);
   }
 
-  // now we have to copy over the variable length items that did not change
-  // any fixed length items that did not change were handled already using
-  // the memcpy
+  // In the final pass, we go over all of the columns that were not updated.  These columns
+  // are copied into the new blob to create the final output.  We can do this more
+  // economically in most cases because the stored values are already big endian encoded.
+  // We do have to recode the offset of all the variable length items.
   for (int32_t icol = 0; icol < ccols_original; icol++) {
     uint8_t blob_column_type = b[type_codes_offset + icol];
     int64_t data_offset = storage_offset + icol * sizeof(int64_t);
@@ -5463,6 +5475,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     new_type_codes_offset++;
   }
 
+  // finally write out the header and return the result
   uint64_t rtype = cql_read_big_endian_int64(b);
   cql_write_big_endian_int64(result, rtype);
   cql_write_big_endian_int64(result+8, (uint64_t)ccols_new);

@@ -43,7 +43,10 @@ echo "query_plan(sqlite3.open_memory())" >> $O/x.l
 (cd $O ; lua $O/x.l)
 
 echo ""
-echo "run test (NOTE: some exception spam is normal, the tests throwing exceptions on purpose)"
+echo "run test"
+echo "--------"
+echo ""
+echo "NOTE: some exception spam is normal, the tests throwing exceptions on purpose;  there are 9."
 echo ""
 
 ./run_test.sh

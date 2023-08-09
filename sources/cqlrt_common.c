@@ -2677,7 +2677,7 @@ static cql_hashtab_entry *_Nullable cql_hashtab_find(
   }
 }
 
-// These are CQL friendly versions of the hashtable for a string to int map, these signatures are directly callable from CQL
+// These are CQL friendly versions of the hashtable for a string to integer map, these signatures are directly callable from CQL
 
 static void cql_no_op_retain_release(void *_Nullable context, cql_int64 data) {
 }
@@ -4368,7 +4368,7 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
   int64_t variable_space_adjustment = 0;
 
-  for (int icol = 0; icol < ccols; icol++) {
+  for (int32_t icol = 0; icol < ccols; icol++) {
     int32_t index = icol * 2 + 1;
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
@@ -4438,7 +4438,7 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   uint64_t type_offset = storage_offset + storage_size;
   uint64_t variable_offset = type_offset + type_codes_size;
 
-  for (int icol = 0; icol < ccols; icol++) {
+  for (int32_t icol = 0; icol < ccols; icol++) {
     int32_t index = icol * 2 + 1;
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
@@ -4780,7 +4780,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // now we have to copy over the variable length items that did not change
   // any fixed length items that did not change were handled already using
   // the memcpy
-  for (int icol = 0; icol < ccols; icol++) {
+  for (int32_t icol = 0; icol < ccols; icol++) {
     uint8_t blob_column_type = b[type_offset + icol];
 
     // this will only match CLEAN variable length fields, the dirty fields
@@ -4851,13 +4851,15 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   }
   int64_t rtype = sqlite3_value_int64(argv[0]);
 
-  int32_t ccols = (argc - 1)  / 3;
-  cql_invariant(ccols >= 0);
+  int32_t colspecs = (argc - 1)  / 3;
+  cql_invariant(colspecs >= 0);
 
   int64_t variable_space_adjustment = 0;
 
-  for (int icol = 0; icol < ccols; icol++) {
-    int32_t index = icol * 3 + 1;
+  int32_t actual_cols = 0;
+
+  for (int32_t ispec = 0; ispec < colspecs; ispec++) {
+    int32_t index = ispec * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
@@ -4873,7 +4875,12 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
     int64_t field_value_type = sqlite3_value_type(field_value_arg);
 
-    // todo: if field_value_type is SQLITE_NULL then ignore this column
+    // if field_value_type is SQLITE_NULL then ignore this column
+    // there is no need to store nulls, an absent column will do
+    if (field_value_type == SQLITE_NULL) {
+      // don't increase actual columns, this item may as well be absent
+      continue;
+    }
 
     switch (blob_column_type) {
       // these three are fixed length and stored in an int64
@@ -4908,12 +4915,15 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       default:
         goto cql_error;
     }
+
+    // validated column discovered
+    actual_cols++;
   }
 
   int64_t header_size = sizeof(int64_t) * 2;
-  int64_t type_codes_size = ccols * sizeof(int8_t);
-  int64_t field_codes_size = ccols * sizeof(int64_t);
-  int64_t storage_size = ccols * sizeof(int64_t);
+  int64_t type_codes_size = actual_cols * sizeof(int8_t);
+  int64_t field_codes_size = actual_cols * sizeof(int64_t);
+  int64_t storage_size = actual_cols * sizeof(int64_t);
   int64_t total_bytes = sizeof(int64_t) * 2 + type_codes_size + field_codes_size + storage_size + variable_space_adjustment;
 
   // we don't support records this big, they are insane already
@@ -4923,7 +4933,7 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   cql_contract(b != NULL);
 
   cql_write_big_endian_int64(b, (uint64_t)rtype);
-  cql_write_big_endian_int64(b+8, (uint64_t)ccols);
+  cql_write_big_endian_int64(b+8, (uint64_t)actual_cols);
 
   // int64: type
   // int64: column count
@@ -4935,12 +4945,21 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   uint64_t storage_offset = field_codes_offset + field_codes_size;
   uint64_t type_offset = storage_offset + storage_size;
   uint64_t variable_offset = type_offset + type_codes_size;
-
-  for (int icol = 0; icol < ccols; icol++) {
-    int32_t index = icol * 3 + 1;
+ 
+  for (int32_t ispec = 0; ispec < colspecs; ispec++) {
+    int32_t index = ispec * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
     sqlite3_value *field_value_arg = argv[index + 1];
     sqlite3_value *field_type_arg = argv[index + 2];
+
+    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+
+    // if field_value_type is SQLITE_NULL then ignore this column
+    // there is no need to store nulls, an absent column will do
+    if (field_value_type == SQLITE_NULL) {
+      // don't increase actual columns, this item may as well be absent
+      continue;
+    }    
 
     int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
     b[type_offset++] = (uint8_t)blob_column_type;
@@ -5040,7 +5059,7 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
   uint64_t type_offset = storage_offset + storage_size;
   uint64_t variable_offset = type_offset + type_codes_size;
 
-  int icol;
+  int32_t icol;
   for (icol = 0; icol < ccols; icol++) {
     int64_t stored_code = (int64_t)cql_read_big_endian_int64(b + field_codes_offset + icol * sizeof(int64_t));
     if (stored_code == fcode) {
@@ -5179,7 +5198,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     int64_t fcode = sqlite3_value_int64(field_id_arg);
 
-    int icol;
+    int32_t icol;
     for (icol = 0; icol < ccols; icol++) {
       int64_t stored_code = (int64_t)cql_read_big_endian_int64(b + field_codes_offset + icol * sizeof(int64_t));
       if (stored_code == fcode) {
@@ -5269,7 +5288,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     int64_t fcode = sqlite3_value_int64(field_id_arg);
 
-    int icol;
+    int32_t icol;
     for (icol = 0; icol < ccols; icol++) {
       int64_t stored_code = (int64_t)cql_read_big_endian_int64(b + field_codes_offset + icol * sizeof(int64_t));
       if (stored_code == fcode) {
@@ -5337,7 +5356,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // now we have to copy over the variable length items that did not change
   // any fixed length items that did not change were handled already using
   // the memcpy
-  for (int icol = 0; icol < ccols; icol++) {
+  for (int32_t icol = 0; icol < ccols; icol++) {
     uint8_t blob_column_type = b[type_offset + icol];
 
     // this will only match CLEAN variable length fields, the dirty fields

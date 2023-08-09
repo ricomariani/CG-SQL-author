@@ -5809,6 +5809,11 @@ BEGIN_TEST(blob_val_funcs)
   set b := (select bupdateval(b, k1, x'4546474849', CQL_BLOB_TYPE_BLOB, k2, 'h', CQL_BLOB_TYPE_STRING));
   EXPECT((select cast(bgetval(b,k1) as blob) == x'4546474849'));
   EXPECT((select cast(bgetval(b,k2) as text) == 'h'));
+
+  set b := (select bcreateval(112234, k1, NULL, CQL_BLOB_TYPE_BOOL, k2, 5.5, CQL_BLOB_TYPE_FLOAT));
+  EXPECT(112234 == (select bgetval_type(b)));
+  EXPECT((select bgetval(b, k1) IS NULL));  /* missing column */
+  EXPECT((select bgetval(b, k2) == 5.5));
 END_TEST(blob_val_funcs)
 
 BEGIN_TEST(blob_createval_func_errors)

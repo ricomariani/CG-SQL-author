@@ -5756,26 +5756,32 @@ BEGIN_TEST(blob_val_funcs)
   EXPECT(5678 == (select bgetval(b, k2)));
 
   set b := (select bupdateval(b, k2, 3456, CQL_BLOB_TYPE_INT32));
-  EXPECT(1234 == (select bgetval(b,k1)));
-  EXPECT(3456 == (select bgetval(b,k2)));
+
+  EXPECT(b is not null);
+  EXPECT((select bgetval_type(b)) == 112233);
+  EXPECT((select bgetval(b, k1)) is not null);
+  EXPECT((select bgetval(b, k2)) is not null);
+
+  EXPECT(1234 == (select bgetval(b, k1)));
+  EXPECT(3456 == (select bgetval(b, k2)));
 
   set b := (select bupdateval(b, k1, 2345, CQL_BLOB_TYPE_INT32));
-  EXPECT(2345 == (select bgetval(b,k1)));
-  EXPECT(3456 == (select bgetval(b,k2)));
+  EXPECT(2345 == (select bgetval(b, k1)));
+  EXPECT(3456 == (select bgetval(b, k2)));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
   -- ad hoc calls to these functions aren't the normal way they are used
   set b := (select bcreateval(112234, k1, 2, CQL_BLOB_TYPE_BOOL, k2, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT(112234 == (select bgetval_type(b)));
-  EXPECT((select bgetval(b,k1) == 1));
-  EXPECT((select bgetval(b,k2) == 5.5));
+  EXPECT((select bgetval(b, k1) == 1));
+  EXPECT((select bgetval(b, k2) == 5.5));
 
   set b := (select bupdateval(b, k1, 0, CQL_BLOB_TYPE_BOOL));
-  EXPECT((select bgetval(b,k1) == 0));
+  EXPECT((select bgetval(b, k1) == 0));
 
   set b := (select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k2, 3.25, CQL_BLOB_TYPE_FLOAT));
-  EXPECT((select bgetval(b,k1) == 1));
-  EXPECT((select bgetval(b,k2) == 3.25));
+  EXPECT((select bgetval(b, k1) == 1));
+  EXPECT((select bgetval(b, k2) == 3.25));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetval here
   -- ad hoc calls to these functions aren't the normal way they are used
@@ -5785,30 +5791,30 @@ BEGIN_TEST(blob_val_funcs)
   EXPECT((select bgetval(b, k2) == 0x87654321876L));
 
   set b := (select bupdateval(b, k1, 0xabcdef01234, CQL_BLOB_TYPE_INT64));
-  EXPECT((select bgetval(b,k1) == 0xabcdef01234));
+  EXPECT((select bgetval(b, k1) == 0xabcdef01234));
 
   -- cheese the return type with casts to work around the fixed type of bgetval
   set b := (select bcreateval(112236,  k1, x'313233', CQL_BLOB_TYPE_BLOB, k2, 'hello', CQL_BLOB_TYPE_STRING));
   EXPECT(112236 == (select bgetkey_type(b)));
-  EXPECT((select cast(bgetval(b,k1) as blob) == x'313233'));
-  EXPECT((select cast(bgetval(b,k2) as text) == 'hello'));
+  EXPECT((select cast(bgetval(b, k1) as blob) == x'313233'));
+  EXPECT((select cast(bgetval(b, k2) as text) == 'hello'));
 
   set b := (select bupdateval(b, k1, x'4546474849', CQL_BLOB_TYPE_BLOB));
-  EXPECT((select cast(bgetval(b,k1) as blob) == x'4546474849'));
+  EXPECT((select cast(bgetval(b, k1) as blob) == x'4546474849'));
 
   set b := (select bupdateval(b, k1, x'fe', CQL_BLOB_TYPE_BLOB));
-  EXPECT((select cast(bgetval(b,k1) as blob) == x'fe'));
+  EXPECT((select cast(bgetval(b, k1) as blob) == x'fe'));
 
   set b := (select bupdateval(b, k1, x'', CQL_BLOB_TYPE_BLOB));
-  EXPECT((select cast(bgetval(b,k1) as blob) == x''));
+  EXPECT((select cast(bgetval(b, k1) as blob) == x''));
 
   set b := (select bupdateval(b, k2, 'garbonzo', CQL_BLOB_TYPE_STRING));
-  EXPECT((select cast(bgetval(b,k2) as text) == 'garbonzo'));
-  EXPECT((select cast(bgetval(b,k1) as blob) == x''));
+  EXPECT((select cast(bgetval(b, k2) as text) == 'garbonzo'));
+  EXPECT((select cast(bgetval(b, k1) as blob) == x''));
 
   set b := (select bupdateval(b, k1, x'4546474849', CQL_BLOB_TYPE_BLOB, k2, 'h', CQL_BLOB_TYPE_STRING));
-  EXPECT((select cast(bgetval(b,k1) as blob) == x'4546474849'));
-  EXPECT((select cast(bgetval(b,k2) as text) == 'h'));
+  EXPECT((select cast(bgetval(b, k1) as blob) == x'4546474849'));
+  EXPECT((select cast(bgetval(b, k2) as text) == 'h'));
 
   set b := (select bcreateval(112234, k1, NULL, CQL_BLOB_TYPE_BOOL, k2, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT(112234 == (select bgetval_type(b)));
@@ -5868,6 +5874,113 @@ BEGIN_TEST(blob_getval_func_errors)
   EXPECT((select bgetval(b, 1111) IS NULL));
 END_TEST(blob_getval_func_errors)
 
+BEGIN_TEST(blob_updateval_null_cases)
+  let k1 := 123412341234;
+  let k2 := 123412341235;
+  let k3 := 123412341236;
+  let k4 := 123412341237;
+  let k5 := 123412341238;
+  let k6 := 123412341239;
+
+  -- a test blob
+  let b := (select bcreateval(
+       112235,
+       k1, false, CQL_BLOB_TYPE_BOOL,
+       k2, 0x12345678912L, CQL_BLOB_TYPE_INT64,
+       k3, 1.5, CQL_BLOB_TYPE_FLOAT,
+       k4, 'abc', CQL_BLOB_TYPE_STRING,
+       k5, x'4546474849', CQL_BLOB_TYPE_BLOB
+       ));
+
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select cast(bgetval(b, k1) as bool) == false));
+  EXPECT((select bgetval(b, k2) == 0x12345678912L));
+  EXPECT((select cast(bgetval(b, k3) as real) == 1.5));
+  EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+  EXPECT((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+  EXPECT((select bgetval(b, k6) IS NULL));
+
+  -- adding a new field id adds a field...
+  set b := (select bupdateval(b, k6, 1.1, CQL_BLOB_TYPE_FLOAT));
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select cast(bgetval(b, k6) as real) == 1.1));
+  EXPECT((select cast(bgetval(b, k1) as bool) == false));
+  EXPECT((select bgetval(b, k2) == 0x12345678912L));
+  EXPECT((select cast(bgetval(b, k3) as real) == 1.5));
+  EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+  EXPECT((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+
+  -- remove the field k6
+  set b := (select bupdateval(b, k6, NULL, CQL_BLOB_TYPE_FLOAT));
+
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select bgetval(b, k6) IS NULL));
+  EXPECT((select cast(bgetval(b, k1) as bool) == false));
+  EXPECT((select bgetval(b, k2) == 0x12345678912L));
+  EXPECT((select cast(bgetval(b, k3) as real) == 1.5));
+  EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+  EXPECT((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+
+  -- remove the field k6 again (removing a not present field)
+  set b := (select bupdateval(b, k6, NULL, CQL_BLOB_TYPE_FLOAT));
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select bgetval(b, k6) IS NULL));
+  EXPECT((select cast(bgetval(b, k1) as bool) == false));
+  EXPECT((select bgetval(b, k2) == 0x12345678912L));
+  EXPECT((select cast(bgetval(b, k3) as real) == 1.5));
+  EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+  EXPECT((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+
+  -- remove several fields
+  set b := (select bupdateval(
+       b,
+       k1, NULL, CQL_BLOB_TYPE_BOOL,
+       k2, 0x12345678912L, CQL_BLOB_TYPE_INT64,
+       k3, NULL, CQL_BLOB_TYPE_FLOAT,
+       k4, 'abc', CQL_BLOB_TYPE_STRING,
+       k5, NULL, CQL_BLOB_TYPE_BLOB
+       ));
+
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select bgetval(b, k1) IS NULL));
+  EXPECT((select bgetval(b, k3) IS NULL));
+  EXPECT((select bgetval(b, k5) IS NULL));
+  EXPECT((select bgetval(b, k6) IS NULL));
+  EXPECT((select bgetval(b, k2) == 0x12345678912L));
+  EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+
+  -- remove all remaining fields
+  set b := (select bupdateval(
+       b,
+       k1, NULL, CQL_BLOB_TYPE_BOOL,
+       k2, NULL, CQL_BLOB_TYPE_INT64,
+       k4, NULL, CQL_BLOB_TYPE_STRING,
+       ));
+
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select bgetval(b, k1) IS NULL));
+  EXPECT((select bgetval(b, k2) IS NULL));
+  EXPECT((select bgetval(b, k3) IS NULL));
+  EXPECT((select bgetval(b, k4) IS NULL));
+  EXPECT((select bgetval(b, k5) IS NULL));
+  EXPECT((select bgetval(b, k6) IS NULL));
+
+  -- put some fields back
+  set b := (select bupdateval(
+       b,
+       k2, 0x12345678912L, CQL_BLOB_TYPE_INT64,
+       k4, 'abc', CQL_BLOB_TYPE_STRING,
+       ));
+
+  EXPECT((select bgetval_type(b) == 112235));
+  EXPECT((select bgetval(b, k1) IS NULL));
+  EXPECT((select bgetval(b, k3) IS NULL));
+  EXPECT((select bgetval(b, k5) IS NULL));
+  EXPECT((select bgetval(b, k6) IS NULL));
+  EXPECT((select bgetval(b, k2) == 0x12345678912L));
+  EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+END_TEST(blob_updateval_null_cases)
+
 BEGIN_TEST(blob_updateval_func_errors)
   -- a test blob
   let k1 := 123412341234;
@@ -5875,6 +5988,7 @@ BEGIN_TEST(blob_updateval_func_errors)
   let k3 := 123412341236;
   let k4 := 123412341237;
   let k5 := 123412341238;
+  let k6 := 123412341239;
 
   let b := (select bcreateval(112235,
        k1, false, CQL_BLOB_TYPE_BOOL,
@@ -5899,15 +6013,15 @@ BEGIN_TEST(blob_updateval_func_errors)
   -- duplicate field id is an error
   EXPECT((select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k1, 1, CQL_BLOB_TYPE_BOOL) IS NULL));
 
-  -- the field id must be valid
-  EXPECT((select bupdateval(b, k5+1, 1.1, CQL_BLOB_TYPE_FLOAT) IS NULL));
-
-  -- the value doesn't match the blob type
+    -- the value doesn't match the blob type
   EXPECT((select bupdateval(b, k1, 'xxx', CQL_BLOB_TYPE_BOOL) IS NULL));
   EXPECT((select bupdateval(b, k2, 'xxx', CQL_BLOB_TYPE_INT64) IS NULL));
   EXPECT((select bupdateval(b, k3, 'xxx', CQL_BLOB_TYPE_FLOAT) IS NULL));
   EXPECT((select bupdateval(b, k4, 5.0, CQL_BLOB_TYPE_STRING) IS NULL));
   EXPECT((select bupdateval(b, k5, 5.0, CQL_BLOB_TYPE_BLOB) IS NULL));
+
+  -- adding a new column but the types are not compatible
+  EXPECT((select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k6, 'xxx', CQL_BLOB_TYPE_BOOL) IS NULL));
 END_TEST(blob_updateval_func_errors)
 
 BEGIN_TEST(backed_tables)

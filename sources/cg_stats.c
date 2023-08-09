@@ -42,7 +42,7 @@ static void cg_stats_accumulate(ast_node *node) {
       entry->val = (void *)val;
     }
   }
-  
+
   // Check the left and right nodes.
   if (ast_has_left(node)) {
     cg_stats_accumulate(node->left);
@@ -80,7 +80,7 @@ static void cg_stats_create_proc_stmt(ast_node *ast) {
 static void cg_stats_stmt_list(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT(stmt, ast);
-    
+
     if (is_ast_create_proc_stmt(stmt)) {
       cg_stats_create_proc_stmt(stmt);
     }

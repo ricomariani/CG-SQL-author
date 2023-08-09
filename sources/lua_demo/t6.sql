@@ -44,10 +44,10 @@ begin
   call expect(min_l1 + max_l0 == -1);
   call expect(min_l2 + max_l0 == -1);
   call expect(min_l3 + max_l0 == -1);
-  call expect(-9223372036854775808 + 9223372036854775807  == -1); 
-  call expect(9223372036854775807 + -9223372036854775808  == -1); 
-  call expect(0x7fffffffffffffff + 0x8000000000000000  == -1); 
-  call expect(0x8000000000000000 + 0x7fffffffffffffff   == -1); 
+  call expect(-9223372036854775808 + 9223372036854775807  == -1);
+  call expect(9223372036854775807 + -9223372036854775808  == -1);
+  call expect(0x7fffffffffffffff + 0x8000000000000000  == -1);
+  call expect(0x8000000000000000 + 0x7fffffffffffffff   == -1);
 
 
   declare z real not null;
@@ -58,14 +58,14 @@ begin
 
   -- if you don't do the constants just write you get errors
   -- here we expect the error to illustrate the problem
-  -- we can never generate the literal -9223372036854775808 
+  -- we can never generate the literal -9223372036854775808
   -- if we do it gets converted to a float
 
   @echo lua, "\n-- this code gen would be wrong, note the expect says ~=\n";
   @echo lua, "-- we should expect == here but min_long will be rounded\n";
   @echo lua, "-- we must generate (-9223372036854775807-1) as above\n";
   @echo lua, "expect(-1 ~= -9223372036854775808 + 9223372036854775807)\n";
-  
+
 end;
 
 @echo lua, "go(sqlite3.open_memory())\n";

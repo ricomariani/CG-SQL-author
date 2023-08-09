@@ -55,12 +55,12 @@ begin
 
   declare x integer;
 
-  set x :=  coalesce( case 
-             when  1 
+  set x :=  coalesce( case
+             when  1
            then 200
          when 2
    then 300
-    end, 
+    end,
     3000);
 end;
 

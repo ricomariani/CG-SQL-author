@@ -17,7 +17,7 @@ begin
    else set z := 7;
    end;
 
-   while 1 
+   while 1
    begin
      while 2
      begin

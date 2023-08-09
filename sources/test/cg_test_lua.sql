@@ -2145,7 +2145,7 @@ end;
 -- +    "SELECT 1, 2")
 -- + function simple_identity_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "II", { "id", "data" })
--- TODO, idendity was only interesting for partial compare on the rowset
+-- TODO, identity was only interesting for partial compare on the rowset
 -- this really doesn't make much sense in the LUA world but some thinking
 -- could be needed here.
 @attribute(cql:identity=(id))

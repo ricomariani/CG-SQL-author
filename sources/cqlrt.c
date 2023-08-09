@@ -432,7 +432,7 @@ cql_object_ref cql_copy_encoder(sqlite3* db) {
 }
 
 // The cql common runtime is allowed to create objects of its own choosing
-// beyond the standard ones.  It specifies it's own finalizer.  This is 
+// beyond the standard ones.  It specifies it's own finalizer.  This is
 // the finalizer for such a generic object.  When the ref count goes to
 // zero the provided method is called, whatever it may be.  Note that
 // the built in types like result set predate this functionality and

@@ -9490,7 +9490,7 @@ bool_t is_no_clause_simple_select(ast_node *select_stmt) {
 static bool_t find_shared_cte_with_args(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(expr_list, call_stmt->right);
-  *(bool_t *)context |= expr_list != NULL;  
+  *(bool_t *)context |= expr_list != NULL;
 
   return false;
 }

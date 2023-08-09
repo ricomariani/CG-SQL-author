@@ -5392,7 +5392,7 @@ as to how the program should be compiled.
 Zero or more miscellaneous attributes can be added to any statement, or any column definition.  See the `misc_attrs` node in the grammar for the exact placement.  Each attribute notation has the general form:
 
 * `@attribute`(_namespace_ : _attribute-name_ ) or
-* `@attribute`(_namespace_ : _attribute-name_ = _attribute-value_) 
+* `@attribute`(_namespace_ : _attribute-name_ = _attribute-value_)
 
 The _namespace_ portion is optional and attributes with special meaning to the compiler are all in the `cql:` namespace.  e.g. @attribute(cql:private).  This form is so common that the special abbreviation `[[foo]]`` can be used instead of `@attribute(cql:foo)`.
 
@@ -8238,12 +8238,12 @@ Each _attribute value_ can be:
 * any literal
 * an array of _attribute values_
 
-Since the _attribute values_ can nest it's possible to represent arbitrarily complex data types in an attribute. 
+Since the _attribute values_ can nest it's possible to represent arbitrarily complex data types in an attribute.
 
 ### Global attributes
 
 While the most common use case for attributes is to be attached to other entities (e.g., tables, columns), CQL also lets you define
-"global" attributes, which are included in the top level `attributes` section of the JSON output. To specify global attributes you 
+"global" attributes, which are included in the top level `attributes` section of the JSON output. To specify global attributes you
 declare a variable of type `object` ending with the suffix `database` and attach attributes to it. CQL will merge together all the attributes
 from all the variables ending with `database` and place them in the `attributes` section of the JSON output.
 
@@ -12500,7 +12500,7 @@ The most likely source of this problem is that there is a typo in the indicated 
 
 ### CQL0091: `object<T SET>` has a T that is not a public procedure with a result set, 'name'
 
-The data type `object<T SET>` refers to the shape of a result set of a particular procedure.  In this case the indicated procedure name was tagged with either the `cql:private` attribute or the `cql:suppress_result_set` attribute.  
+The data type `object<T SET>` refers to the shape of a result set of a particular procedure.  In this case the indicated procedure name was tagged with either the `cql:private` attribute or the `cql:suppress_result_set` attribute.
 
 Either of these attributes will make it impossible to actually use this result set type.  They must be removed.
 
@@ -18322,7 +18322,7 @@ Better:
 -->
 ## Appendix 8: CQL Best Practices
 
-This is a brief discussion of every statement type and some general best practices for that statement. 
+This is a brief discussion of every statement type and some general best practices for that statement.
 The statements are in mostly alphabetical order except related statements were
 moved up in the order to make logical groups.
 
@@ -18864,8 +18864,8 @@ with (call AB_())
 select * from AB_ where AB_.id = 5;
 ```
 
-For brevity we haven't included the possibility of using conditional fragments (i.e. `IF` statements) 
-the same good query plan could be generated in that way.  
+For brevity we haven't included the possibility of using conditional fragments (i.e. `IF` statements)
+the same good query plan could be generated in that way.
 
 We can generalize `AB_` so that it doesn't know where the base data is coming from and can be used in more cases.
 

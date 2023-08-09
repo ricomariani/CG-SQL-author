@@ -33,7 +33,7 @@
 #define CQL_BLOB_TYPE_INT64  2
 #define CQL_BLOB_TYPE_FLOAT  3
 #define CQL_BLOB_TYPE_STRING 4
-#define CQL_BLOB_TYPE_BLOB   5 
+#define CQL_BLOB_TYPE_BLOB   5
 
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
@@ -5617,7 +5617,7 @@ BEGIN_TEST(blob_key_funcs)
   EXPECT(3456 == (select bgetkey(b,1)));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
-  -- ad hoc calls to these functions aren't the normal way they are used 
+  -- ad hoc calls to these functions aren't the normal way they are used
   set b := (select bcreatekey(112234, 2, CQL_BLOB_TYPE_BOOL, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT(112234 == (select bgetkey_type(b)));
   EXPECT((select bgetkey(b,0) == 1));
@@ -5631,8 +5631,8 @@ BEGIN_TEST(blob_key_funcs)
   EXPECT((select bgetkey(b,1) == 3.25));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
-  -- ad hoc calls to these functions aren't the normal way they are used 
-  set b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64)); 
+  -- ad hoc calls to these functions aren't the normal way they are used
+  set b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64));
   EXPECT(112235 == (select bgetkey_type(b)));
   EXPECT((select bgetkey(b,0) == 0x12345678912L));
   EXPECT((select bgetkey(b,1) == 0x87654321876L));
@@ -5641,7 +5641,7 @@ BEGIN_TEST(blob_key_funcs)
   EXPECT((select bgetkey(b,0) == 0xabcdef01234));
 
   -- cheese the return type with casts to work around the fixed type of bgetkey
-  set b := (select bcreatekey(112236,  x'313233', CQL_BLOB_TYPE_BLOB, 'hello', CQL_BLOB_TYPE_STRING)); 
+  set b := (select bcreatekey(112236,  x'313233', CQL_BLOB_TYPE_BLOB, 'hello', CQL_BLOB_TYPE_STRING));
   EXPECT(112236 == (select bgetkey_type(b)));
   EXPECT((select cast(bgetkey(b,0) as blob) == x'313233'));
   EXPECT((select cast(bgetkey(b,1) as text) == 'hello'));
@@ -5701,7 +5701,7 @@ END_TEST(blob_createkey_func_errors)
 
 BEGIN_TEST(blob_getkey_func_errors)
   -- a test blob
-  let b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64)); 
+  let b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64));
 
   -- second arg is too big  only (0, 1) are valid
   EXPECT((select bgetkey(b, 2) IS NULL));
@@ -5714,11 +5714,11 @@ BEGIN_TEST(blob_updatekey_func_errors)
   -- a test blob
   let b := (select bcreatekey(112235,
        false, CQL_BLOB_TYPE_BOOL,
-       0x12345678912L, CQL_BLOB_TYPE_INT64, 
+       0x12345678912L, CQL_BLOB_TYPE_INT64,
        1.5, CQL_BLOB_TYPE_FLOAT,
        'abc', CQL_BLOB_TYPE_STRING,
        x'4546474849', CQL_BLOB_TYPE_BLOB
-       )); 
+       ));
 
   -- not enough args
   EXPECT((select bupdatekey(112233) IS NULL));
@@ -5738,7 +5738,7 @@ BEGIN_TEST(blob_updatekey_func_errors)
   -- the column index must be in range
   EXPECT((select bupdatekey(b, -1, 1234) IS NULL));
 
-  -- the value doesn't match the blob type 
+  -- the value doesn't match the blob type
   EXPECT((select bupdatekey(b, 0, 'xxx') IS NULL));
   EXPECT((select bupdatekey(b, 1, 'xxx') IS NULL));
   EXPECT((select bupdatekey(b, 2, 'xxx') IS NULL));
@@ -5747,8 +5747,8 @@ BEGIN_TEST(blob_updatekey_func_errors)
 END_TEST(blob_updatekey_func_errors)
 
 BEGIN_TEST(blob_val_funcs)
-  let k1 := 123412341234; 
-  let k2 := 123412341235; 
+  let k1 := 123412341234;
+  let k2 := 123412341235;
   let b := (select bcreateval(112233, k1, 1234, CQL_BLOB_TYPE_INT32, k2, 5678, CQL_BLOB_TYPE_INT32));
 
   EXPECT(112233 == (select bgetval_type(b)));
@@ -5764,7 +5764,7 @@ BEGIN_TEST(blob_val_funcs)
   EXPECT(3456 == (select bgetval(b,k2)));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
-  -- ad hoc calls to these functions aren't the normal way they are used 
+  -- ad hoc calls to these functions aren't the normal way they are used
   set b := (select bcreateval(112234, k1, 2, CQL_BLOB_TYPE_BOOL, k2, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT(112234 == (select bgetval_type(b)));
   EXPECT((select bgetval(b,k1) == 1));
@@ -5778,8 +5778,8 @@ BEGIN_TEST(blob_val_funcs)
   EXPECT((select bgetval(b,k2) == 3.25));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetval here
-  -- ad hoc calls to these functions aren't the normal way they are used 
-  set b := (select bcreateval(112235, k1, 0x12345678912L, CQL_BLOB_TYPE_INT64, k2, 0x87654321876L, CQL_BLOB_TYPE_INT64)); 
+  -- ad hoc calls to these functions aren't the normal way they are used
+  set b := (select bcreateval(112235, k1, 0x12345678912L, CQL_BLOB_TYPE_INT64, k2, 0x87654321876L, CQL_BLOB_TYPE_INT64));
   EXPECT(112235 == (select bgetval_type(b)));
   EXPECT((select bgetval(b, k1) == 0x12345678912L));
   EXPECT((select bgetval(b, k2) == 0x87654321876L));
@@ -5788,7 +5788,7 @@ BEGIN_TEST(blob_val_funcs)
   EXPECT((select bgetval(b,k1) == 0xabcdef01234));
 
   -- cheese the return type with casts to work around the fixed type of bgetval
-  set b := (select bcreateval(112236,  k1, x'313233', CQL_BLOB_TYPE_BLOB, k2, 'hello', CQL_BLOB_TYPE_STRING)); 
+  set b := (select bcreateval(112236,  k1, x'313233', CQL_BLOB_TYPE_BLOB, k2, 'hello', CQL_BLOB_TYPE_STRING));
   EXPECT(112236 == (select bgetkey_type(b)));
   EXPECT((select cast(bgetval(b,k1) as blob) == x'313233'));
   EXPECT((select cast(bgetval(b,k2) as text) == 'hello'));
@@ -5812,8 +5812,8 @@ BEGIN_TEST(blob_val_funcs)
 END_TEST(blob_val_funcs)
 
 BEGIN_TEST(blob_createval_func_errors)
-  let k1 := 123412341234; 
-  
+  let k1 := 123412341234;
+
   -- not enough argsss
   EXPECT((select bcreateval() IS NULL));
 
@@ -5855,8 +5855,8 @@ BEGIN_TEST(blob_createval_func_errors)
 END_TEST(blob_createval_func_errors)
 
 BEGIN_TEST(blob_getval_func_errors)
-  let k1 := 123412341234; 
-  let k2 := 123412341235; 
+  let k1 := 123412341234;
+  let k2 := 123412341235;
   let b := (select bcreateval(112233, k1, 1234, CQL_BLOB_TYPE_INT32, k2, 5678, CQL_BLOB_TYPE_INT32));
 
   -- second arg is is not a valid key
@@ -5865,19 +5865,19 @@ END_TEST(blob_getval_func_errors)
 
 BEGIN_TEST(blob_updateval_func_errors)
   -- a test blob
-  let k1 := 123412341234; 
-  let k2 := 123412341235; 
-  let k3 := 123412341236; 
-  let k4 := 123412341237; 
-  let k5 := 123412341238; 
+  let k1 := 123412341234;
+  let k2 := 123412341235;
+  let k3 := 123412341236;
+  let k4 := 123412341237;
+  let k5 := 123412341238;
 
   let b := (select bcreateval(112235,
        k1, false, CQL_BLOB_TYPE_BOOL,
-       k2, 0x12345678912L, CQL_BLOB_TYPE_INT64, 
+       k2, 0x12345678912L, CQL_BLOB_TYPE_INT64,
        k3, 1.5, CQL_BLOB_TYPE_FLOAT,
        k4, 'abc', CQL_BLOB_TYPE_STRING,
        k5, x'4546474849', CQL_BLOB_TYPE_BLOB
-       )); 
+       ));
 
   -- not enough args
   EXPECT((select bupdateval(112233) IS NULL));
@@ -5897,7 +5897,7 @@ BEGIN_TEST(blob_updateval_func_errors)
   -- the field id must be valid
   EXPECT((select bupdateval(b, k5+1, 1.1, CQL_BLOB_TYPE_FLOAT) IS NULL));
 
-  -- the value doesn't match the blob type 
+  -- the value doesn't match the blob type
   EXPECT((select bupdateval(b, k1, 'xxx', CQL_BLOB_TYPE_BOOL) IS NULL));
   EXPECT((select bupdateval(b, k2, 'xxx', CQL_BLOB_TYPE_INT64) IS NULL));
   EXPECT((select bupdateval(b, k3, 'xxx', CQL_BLOB_TYPE_FLOAT) IS NULL));

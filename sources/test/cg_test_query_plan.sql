@@ -473,14 +473,14 @@ END;
 proc qp_take_inner_blob(foo blob) begin
   select foo inner_a;
 end;
- 
+
 -- + (CALL qp_take_inner_blob(LOCALS.foo))
 [[shared_fragment]]
 create proc qp_take_blob(foo blob) begin
   with (call qp_take_inner_blob(*))
   select * from qp_take_inner_blob;
 end;
- 
+
 proc qp_use_frag(foo blob) begin
   with (call qp_take_blob(*))
   select * from qp_take_blob;

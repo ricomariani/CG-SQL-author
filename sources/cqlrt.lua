@@ -917,7 +917,7 @@ function cql_rebuild_recreate_group(db, tables, indices, deletes)
   local rc = sqlite3.OK
   -- these are deleted or unsubscribed tables
   -- note that tables in the list are in create order, so we reverse to get drop order
-  for i = #deleteList, 1, -1 do 
+  for i = #deleteList, 1, -1 do
     rc = cql_exec(db, deleteList[i])
     if rc ~= sqlite3.OK then return rc end
   end

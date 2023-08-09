@@ -2719,7 +2719,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
         ast_node *def_value;
 
         Contract(is_ast_num(node) || is_ast_str(node));
-        
+
         AST_REWRITE_INFO_SET(node->lineno, node->filename);
         if (is_ast_num(node)) {
           EXTRACT_NUM_TYPE(num_type, node);
@@ -2730,7 +2730,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
           def_value = new_ast_str(value);
         }
         AST_REWRITE_INFO_RESET();
-        
+
         Invariant(def_value);
 
       AST_REWRITE_INFO_RESTORE();

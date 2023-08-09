@@ -244,7 +244,7 @@ function bupdatekey(context, b, ...)
       goto err_exit
     end
 
-    ctype = t["t"..icol] 
+    ctype = t["t"..icol]
     val = args[i+1]
 
     -- sanity check type of value against arg type
@@ -315,7 +315,7 @@ function _cql_init_extensions(db)
     [CQL_BLOB_TYPE_STRING] = 'string',
     [CQL_BLOB_TYPE_BLOB] = 'string'
   }
-  
+
   db:create_function("rscount", 1, rscount)
   db:create_function("rscol", 3, rscol)
   db:create_function("bupdateval", -1, bupdateval)

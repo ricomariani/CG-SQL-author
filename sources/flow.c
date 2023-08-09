@@ -275,7 +275,7 @@ cql_noexport void flow_unset_flag_for_type(sem_t flag, sem_t *type) {
   *type &= sem_not(flag);
 
   record_in_history(&current_context->history, type, flag, FLOW_HISTORY_DELTA_UNSET);
- 
+
   // If we're within a jump context, record the unset there too so we can
   // re-unset it later. We can skip this if the current context is a jump
   // context as the unset was just recorded in its history above directly.
@@ -570,7 +570,7 @@ cql_noexport void flow_set_context_always_jumps(bool_t always_jumps) {
     // Knowledge that the current context always jumps is only useful if the
     // current context is a branch context.
     return;
-  } 
+  }
 
   current_context->branch.always_jumps = always_jumps;
 }
@@ -580,7 +580,7 @@ cql_noexport void flow_set_context_always_jumps(bool_t always_jumps) {
 cql_noexport void _flow_pop_context_branch() {
   Contract(current_context);
   Contract(current_context->kind == FLOW_CONTEXT_KIND_BRANCH);
-  
+
   Invariant(current_context->parent);
   Invariant(current_context->parent->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 

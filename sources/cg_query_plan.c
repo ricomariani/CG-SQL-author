@@ -100,7 +100,7 @@ static bool_t qp_table_function_callback(
 // evaluate so that the entire stream leading to the variable doesn't have
 // to go into the output.  This is also used to replace native function calls
 // that occur in query fragments.
-static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf *output) 
+static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf *output)
 {
   bool_t nullable = is_nullable(sem_type) && !is_inferred_notnull(sem_type);
 
@@ -287,7 +287,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   cg_encode_json_string_literal(sql.ptr, &json_str_sql);
 
   // Now that we have the JSON string we need all of that in a C string, including the
-  // quotes. So we use the single character helper to build a buffer with new quotes.  Note 
+  // quotes. So we use the single character helper to build a buffer with new quotes.  Note
   // that C string encoding is slightly differen than JSON, there are small escape differences.
   // So we're going to be quote careful to C encode the JSON encoding.  It's double encoded.
   // Howeve, there won't *be* any control characters to encode at this point because the JSON
@@ -427,9 +427,9 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
     cg_qp_callbacks->if_stmt_context = &if_stmt_branch_context;
 
     // inside of a shared fragment, variables do not need to be remapped at all
-    // they are only formals anyway.  Only the variables of "real" stored procs 
+    // they are only formals anyway.  Only the variables of "real" stored procs
     // need to be remapped.  If there are internal variables in blobs they will
-    // flow from the outer variables.  This has the important side-effect of 
+    // flow from the outer variables.  This has the important side-effect of
     // making it so that no native call occurs inside the shared fragment in a sql context.
     gen_sql_callback _Nullable variables_callback_saved = cg_qp_callbacks->variables_callback;
     cg_qp_callbacks->variables_callback = NULL;

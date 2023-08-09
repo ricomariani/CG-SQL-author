@@ -198,7 +198,7 @@ static void cg_objc_proc_result_set_getter(
   }
 
   bprintf(output, "{\n");
-  
+
   bprintf(output, "  %s cResultSet = %s(resultSet);\n", c_result_set_ref, c_convert);
   bprintf(output, "  return %s;\n", value.ptr);
   bprintf(output, "}\n");
@@ -498,7 +498,7 @@ cql_noexport void cg_objc_main(ast_node *head) {
   // we hard code it to these normalized options.  This also means we don't test every combo
   // but really this only affects the symbol string building and that is heavily tested in
   // other places.  Previously we used sed to normalize.
-  
+
   if (options.test) {
     // make a new rt in the pool so we can safely mutate it without affecting
     // subsequent runs in the amalgam case.

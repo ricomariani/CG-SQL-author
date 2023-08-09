@@ -730,7 +730,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     EXTRACT_ANY_NOTNULL(table_or_view, item->ast);
     Invariant(is_ast_create_table_stmt(table_or_view) || is_ast_create_view_stmt(table_or_view));
     CSTR table_name = get_table_or_view_name(table_or_view);
-   
+
     // backed tables are not to be dropped, they don't exist physically
     if (!is_backed(table_or_view->sem->sem_type)) {
       bprintf(&gen_drop_tables, "DROP %s IF EXISTS %s;\n", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW", table_name);
@@ -835,7 +835,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   if (gen_declare_backed.used > 1) {
     bprintf(cg_th_procs, "\n%s", gen_declare_backed.ptr);
   }
-  
+
 
   // Create the triggers proc.
   //

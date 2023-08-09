@@ -9,7 +9,7 @@
 
 #pragma once
 
-// no need to free this list anymore minipool will do it for 
+// no need to free this list anymore minipool will do it for
 // you automatically at the end of a CQL run.
 // @see minipool
 typedef struct list_item {

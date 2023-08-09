@@ -16,7 +16,7 @@
 // more.  The old CQL strategy was to just let exit clean up everything since we were only
 // an executable and we can't free the tree until we're exiting anyway.  However there is some
 // desire to use CQL in library form now which means it has to be able to do a compile and
-// then end up clean.  To help with this we make these ultra-dumb pools that simply keep 
+// then end up clean.  To help with this we make these ultra-dumb pools that simply keep
 // the allocated items together.  This means that we don't have to do zillions of seperate free
 // calls when we're exiting.  It also helps with locality and fragmentation in the client.
 // It's dumb as rocks.
@@ -48,14 +48,14 @@ cql_noexport void minipool_close(minipool **head) {
 // Get needed memory; if the memory is not available then
 // we allocate a new block and thread it into the list.  Note
 // that this is different than the other CQL helper bytebuf.
-// This allocation never moves bytes or copies bytes.  Once 
+// This allocation never moves bytes or copies bytes.  Once
 // you get memory it is valid until you close the buffer.
 // Bytebuf cannot hold pointers because the structure moves when it
 // grows and it is one continuous allocation so it's only for byte streams.
 // Minipool doesn't move objects around so pointers remain valid.
 cql_noexport void *minipool_alloc(minipool *pool, uint32_t needed) {
   void *result;
- 
+
   // for alignment, all allocs will be on a 8 byte boundary
   needed += 7;
   needed &= u32_not(7);

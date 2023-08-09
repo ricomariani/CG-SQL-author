@@ -1340,7 +1340,7 @@ static void gen_cql_blob_get(ast_node *ast) {
 // This effectively subtracts one but it makes it clear there is a mapping
 // The output values of this mapping should never change, we have to assume
 // there are blobs "out there" that have these values hard coded in them
-// for column type info.  That is allowed and even expected.  
+// for column type info.  That is allowed and even expected.
 // In contrast, the sem_type values could be reordered, and have been.
 // If they are, then this mapping must "fix" that so that the new sem_type ordering
 // (which is not fixed forever) matches the blob column types (which is fixed).

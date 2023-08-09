@@ -804,7 +804,7 @@ misc_cases() {
   echo "  check that the objc_c_include_path argument is provided in arguments"
   if ${CQL} --test --cg "${OUT_DIR}/cg_test_objc.out" --in "${TEST_DIR}/cg_test.sql" --rt objc 2>"${OUT_DIR}/c_include_needed.err"
   then
-    echo c_include is required for --rt objc 
+    echo c_include is required for --rt objc
     failed
   fi
 

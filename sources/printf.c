@@ -197,7 +197,7 @@ static void printf_set_width(printf_iterator *iterator, printf_width width) {
     case PRINTF_WIDTH_NUMERIC:
       break;
     case PRINTF_WIDTH_STAR:
-      break; 
+      break;
   }
 
   iterator->width = width;

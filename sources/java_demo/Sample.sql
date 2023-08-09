@@ -7,7 +7,7 @@
 
 -- Any kind of child result set will do the job for this test
 -- note that with the json based code generation you can have
--- as many procs per file as you like. 
+-- as many procs per file as you like.
 create proc Child(i integer not null)
 begin
   declare C cursor like (x integer not null, y text not null);
@@ -46,10 +46,10 @@ begin
      * your sqlite is very old you won't have that and we don't want the
      * JNI test to fail just because of a printf
      */
-    insert into my_data using 
+    insert into my_data using
       "name_"||i AS name,
-      i AS age, 
-      i AS thing, 
+      i AS age,
+      i AS thing,
       cast("blob_"||i as blob) AS bytes,
       "code_1"||i AS key1,
       "code_2"||i AS key2;

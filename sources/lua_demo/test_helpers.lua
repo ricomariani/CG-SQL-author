@@ -7,26 +7,6 @@ LICENSE file in the root directory of this source tree.
 
 -- TESTING METHODS --
 
--- this is better done with string.pack but this is human
--- readable and therefore easier to debug and it works just
--- as well for the test case
-
-function str_unpack(str)
-  local data = {}
-  for w in str:gmatch("([^,]+)") do table.insert(data, w) end
-  for i = 1, 4
-  do
-    if data[i] == nil then data[i] = "0" end
-    data[i] = tonumber(data[i])
-  end
-
-  return data[1], data[2], data[3], data[4]
-end
-
-function str_pack(a,b,c,d)
-  return tostring(a)..","..tostring(b)..","..tostring(c)..","..tostring(d)
-end
-
 -- this is a standard serializer courtesy of Tony Finch
 -- http://lua-users.org/lists/lua-l/2009-11/msg00533.html
 -- it was publicly posted as a code sample
@@ -74,40 +54,6 @@ function serialize(d)
   if #code == 2 then return code[2]
   else return table.concat(code, "\n")
   end
-end
-
--- this is the end of the serializer sample code
-
-function bcreateval(context, t, ...)
-  local vals = {0, 0, 0}
-  local args = {...}
-  local i = 0
-  while i + 3 <= #args
-  do
-     local off = args[i+1]
-     local val = args[i+2]
-     vals[off+1] = val
-     i = i  + 3
-  end
-  local r = str_pack(t, vals[1], vals[2], vals[3])
-  context:result_blob(r);
-end
-
-function bupdateval(context, b, ...)
-  local t, v1, v2, v3
-  t, v1, v2, v3 = str_unpack(b)
-  local vals = {v1, v2, v3}
-  local args = {...}
-  local i = 0
-  while i + 3 <= #args
-  do
-     local off = args[i+1]
-     local val = args[i+2]
-     vals[off+1] = val
-     i = i  + 3
-  end
-  local r = str_pack(t, vals[1], vals[2], vals[3])
-  context:result_blob(r)
 end
 
 function cql_normalize_bool_to_int(val)
@@ -268,22 +214,160 @@ function bupdatekey(context, b, ...)
 ::done::
 end
 
-function bgetval_type(context, b)
-  t = str_unpack(b)
-  -- note: result(t) allows int64 results as well as int
-  context:result(t)
+function bcreateval(context, rtype, ...)
+  local args = {...}
+  local i = 0
+  local off = 1
+  local t = {}
+  t.rtype = rtype
+  t.cols = math.floor(#args / 3)
+
+  -- if the record type is not numeric then exit
+  if type(rtype) ~= 'number' then
+    goto err_exit
+  end
+
+  -- if the parity of the arguments is wrong, exit
+  if #args % 3 ~= 0 then
+    goto err_exit
+  end
+
+  i = 1
+  while i + 2 <= #args
+  do
+    ctype = args[i+2]
+    val = args[i+1]
+    id = args[i]
+
+    -- if the column type is not a number, exit
+    if type(ctype) ~= 'number' or type(id) ~= 'number' then
+      goto err_exit
+    end
+
+    -- if the column type is out of range, exit
+    if ctype < CQL_BLOB_TYPE_BOOL or ctype >= CQL_BLOB_TYPE_ENTITY then
+      goto err_exit
+    end
+
+    -- sanity check type of value against arg type
+    if val ~= nil and cql_required_val_type[ctype] ~= type(val) then
+      goto err_exit
+    end
+
+    if ctype == CQL_BLOB_TYPE_BOOL then
+      -- normalize booleans
+     val = cql_normalize_bool_to_int(val)
+    end
+
+     t["t"..id] = ctype
+     t["v"..id] = val
+     i = i + 3
+  end
+
+  context:result_blob(serialize(t))
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
+end
+function bgetval(context, b, id)
+  local t
+
+  if type(b) ~= "string" or type(id) ~= "number" then
+    goto err_exit
+  end
+
+  -- note this is not safe generally, it's ok for test code but
+  -- you want something that can't be hijacked in real code
+  t = load(b)()
+  context:result(t["v"..id])
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
 end
 
-function bgetval(context, b, offs)
-  local t, v1, v2, v3
-  t, v1, v2, v3 = str_unpack(b)
-  local r = 0
-  if offs == 0 then r = v1 end
-  if offs == 1 then r = v2 end
-  if offs == 2 then r = v3 end
-  -- note: result(t) allows int64 results as well as int
-  context:result(r)
+function bgetval_type(context, b)
+  local t
+
+  if type(b) ~= "string" then
+    goto err_exit
+  end
+
+  t = load(b)()
+  context:result(t.rtype)
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
 end
+
+function bupdateval(context, b, ...)
+  local args = {...}
+  local t
+  local i = 1
+  local already_updated = {}
+
+  if type(b) ~= "string" then
+    goto err_exit
+  end
+
+  -- note this is not safe generally, it's ok for test code but
+  -- you want something that can't be hijacked in real code
+  t = load(b)()
+  cols = t.cols
+  while i + 2 <= #args
+  do
+    local id = args[i]
+    local val = args[i+1]
+    local newtype = args[i+2]
+
+    if already_updated[id] ~= nil then
+      goto err_exit
+    end
+
+    already_updated[id] = 1
+
+    if type(id) ~= 'number' or type(newtype) ~= 'number' then
+      goto err_exit
+    end
+
+    stored_type = t["t"..id]
+
+    -- if there is an existing type then it must match
+    if stored_type ~= nil and stored_type ~= newtype then
+      goto err_exit
+    end
+
+    -- sanity check type of value against arg type
+    if val ~= nil and cql_required_val_type[newtype] ~= type(val) then
+      goto err_exit
+    end
+
+    if ctype == CQL_BLOB_TYPE_BOOL then
+      val = cql_normalize_bool_to_int(val) -- normalize booleans
+    end
+
+    t["t"..id] = newtype
+    t["v"..id] = val
+    i = i + 3
+  end
+
+  context:result_blob(serialize(t))
+  goto done
+
+::err_exit::
+  context:result_null();
+
+::done::
+end
+
 
 function rscount(context, rsid)
   local rs = cql_get_aux_value_for_id(rsid)

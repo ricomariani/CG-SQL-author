@@ -10,8 +10,20 @@ DIR="$( dirname -- "$0"; )"
 cd "${DIR}/.."
 
 lua_demo/prepare_run_test.sh
-lua out/run_test.lua
+lua out/run_test.lua | tee out/run_test_lua.out
 
+echo "verifying test output"
+
+if ! diff lua_demo/run_test_lua.ref out/run_test_lua.out
+then
+  echo diff lua_demo/run_test_lua.ref out/run_test_lua.out
+  echo failed
+  exit 1
+fi
+
+echo "no differences found"
+
+echo ""
 echo "schema upgrade test"
 
 schema_upgrade() {
@@ -30,7 +42,7 @@ schema_diff() {
   fi
 }
 
-echo no diffs means success
+echo "test will terminate on any unexpected schema difference"
 
 rm -f out/*.db
 
@@ -65,3 +77,7 @@ do
 
   done
 done
+
+echo "no differences found"
+echo ""
+echo "all tests complete"

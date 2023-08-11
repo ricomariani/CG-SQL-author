@@ -66,11 +66,31 @@ end
 
 cql_required_val_type = {}
 
+CQL_BLOB_MAGIC = 0x524d3030
+
+function cql_load_blob(b)
+  if type(b) ~= "string" then
+    return {}
+  end
+
+  -- note this is not safe generally, it's ok for test code but
+  -- you want something that can't be hijacked in real code
+  local f = load(b)
+
+  if f == nil then
+    return {}
+  end
+
+  return f();
+end
+
 function bcreatekey(context, rtype, ...)
   local args = {...}
   local i = 0
   local off = 1
   local t = {}
+
+  t.magic = CQL_BLOB_MAGIC
   t.rtype = rtype
   t.cols = math.floor(#args / 2)
 
@@ -132,56 +152,34 @@ function bcreatekey(context, rtype, ...)
 end
 
 function bgetkey(context, b, i)
- local t
-
- if type(b) ~= "string" or type(i) ~= "number" then
-  goto err_exit
- end
-
- -- note this is not safe generally, it's ok for test code but
- -- you want something that can't be hijacked in real code
- t = load(b)()
-
- if i < 0 or i >= t.cols then
-  goto err_exit
- end
-
- context:result(t["v"..i])
- goto done
-
-::err_exit::
-  context:result_null();
-
-  ::done::
+  local t = cql_load_blob(b)
+  if t.magic ~= CQL_BLOB_MAGIC or type(i) ~= 'number' then
+    context:result_null();
+  else
+    context:result(t["v"..i])
+  end
 end
 
 function bgetkey_type(context, b)
-  local t
+  local t = cql_load_blob(b)
 
-  if type(b) ~= "string" then
-    goto err_exit
+  if t.magic ~= CQL_BLOB_MAGIC then
+    context:result_null();
+  else
+    context:result(t.rtype)
   end
-  t = load(b)()
-  context:result(t.rtype)
-  goto done
-
-::err_exit::
-  context:result_null();
-
-::done::
 end
 
 function bupdatekey(context, b, ...)
   local args = {...}
-  local t
   local i = 1
-  if type(b) ~= "string" then
+  local t = cql_load_blob(b)
+  local already_updated = {}
+
+  if t.magic ~= CQL_BLOB_MAGIC then
     goto err_exit
   end
 
-  -- note this is not safe generally, it's ok for test code but
-  -- you want something that can't be hijacked in real code
-  t = load(b)()
   cols = t.cols
   while i + 1 <= #args
   do
@@ -192,6 +190,11 @@ function bupdatekey(context, b, ...)
 
     ctype = t["t"..icol]
     val = args[i+1]
+
+    if already_updated[icol] ~= nil then
+      goto err_exit
+    end
+    already_updated[icol] = 1
 
     -- sanity check type of value against arg type
     if cql_required_val_type[ctype] ~= type(val) then
@@ -219,6 +222,7 @@ function bcreateval(context, rtype, ...)
   local i = 0
   local off = 1
   local t = {}
+  t.magic = CQL_BLOB_MAGIC
   t.rtype = rtype
   t.cols = math.floor(#args / 3)
 
@@ -273,54 +277,36 @@ function bcreateval(context, rtype, ...)
 ::done::
 end
 function bgetval(context, b, id)
-  local t
+  local t = cql_load_blob(b)
 
-  if type(b) ~= "string" or type(id) ~= "number" then
-    goto err_exit
+  if t.magic ~= CQL_BLOB_MAGIC or type(id) ~= 'number' then
+    context:result_null();
+  else
+    context:result(t["v"..id])
   end
-
-  -- note this is not safe generally, it's ok for test code but
-  -- you want something that can't be hijacked in real code
-  t = load(b)()
-  context:result(t["v"..id])
-  goto done
-
-::err_exit::
-  context:result_null();
-
-::done::
 end
 
 function bgetval_type(context, b)
-  local t
+  local t = cql_load_blob(b)
 
-  if type(b) ~= "string" then
-    goto err_exit
+  if t.magic ~= CQL_BLOB_MAGIC then
+    context:result_null();
+  else
+    context:result(t.rtype)
   end
-
-  t = load(b)()
-  context:result(t.rtype)
-  goto done
-
-::err_exit::
-  context:result_null();
-
-::done::
 end
 
 function bupdateval(context, b, ...)
   local args = {...}
-  local t
   local i = 1
   local already_updated = {}
 
-  if type(b) ~= "string" then
+  local t = cql_load_blob(b)
+
+  if t.magic ~= CQL_BLOB_MAGIC then
     goto err_exit
   end
 
-  -- note this is not safe generally, it's ok for test code but
-  -- you want something that can't be hijacked in real code
-  t = load(b)()
   cols = t.cols
   while i + 2 <= #args
   do

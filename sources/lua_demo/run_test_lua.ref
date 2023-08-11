@@ -7,5 +7,5 @@ err: 	101	db info:	101	no more rows available
 err: 	101	thrown exception
 err: 	1	db info:	1	table foo already exists
 err: 	19	db info:	19	UNIQUE constraint failed: foo.id
-145 tests executed. 145 passed, 0 failed.  0 expectations failed of 10042.
+145 tests executed. 145 passed, 0 failed.  0 expectations failed of 10049.
 exit code	0

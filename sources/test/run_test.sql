@@ -5708,6 +5708,12 @@ BEGIN_TEST(blob_getkey_func_errors)
 
   -- second arg is negative
   EXPECT((select bgetkey(b, -1) IS NULL));
+
+  -- the blob isn't a real encoded blob
+  EXPECT((select bgetkey(x'0000000000000000000000000000', 0) IS NULL));
+
+  -- the blob isn't a real encoded blob
+  EXPECT((select bgetkey_type(x'0000000000000000000000000000') IS NULL));
 END_TEST(blob_getkey_func_errors)
 
 BEGIN_TEST(blob_updatekey_func_errors)
@@ -5729,6 +5735,9 @@ BEGIN_TEST(blob_updatekey_func_errors)
   -- the first arg should be a blob
   EXPECT((select bupdatekey(1234, 1, 1) IS NULL));
 
+  -- the first arg should be a blob in the standard format
+  EXPECT((select bupdatekey(x'0000000000000000000000000000', 1, 1) IS NULL));
+
   -- the column index should be a small integer
   EXPECT((select bupdatekey(b, 'error', 1) IS NULL));
 
@@ -5744,6 +5753,9 @@ BEGIN_TEST(blob_updatekey_func_errors)
   EXPECT((select bupdatekey(b, 2, 'xxx') IS NULL));
   EXPECT((select bupdatekey(b, 3, 5.0) IS NULL));
   EXPECT((select bupdatekey(b, 4, 5.0) IS NULL));
+
+  -- can't update the same field twice (setting bool to false twice)
+  EXPECT((select bupdatekey(b, 0, 0, 0, 0) IS NULL));
 END_TEST(blob_updatekey_func_errors)
 
 BEGIN_TEST(blob_val_funcs)
@@ -5979,6 +5991,12 @@ BEGIN_TEST(blob_updateval_null_cases)
   EXPECT((select bgetval(b, k6) IS NULL));
   EXPECT((select bgetval(b, k2) == 0x12345678912L));
   EXPECT((select cast(bgetval(b, k4) as text) == 'abc'));
+
+  -- the blob isn't a real encoded blob
+  EXPECT((select bgetval(x'0000000000000000000000000000', k1) IS NULL));
+
+  -- the blob isn't a real encoded blob
+  EXPECT((select bgetval_type(x'0000000000000000000000000000') IS NULL));
 END_TEST(blob_updateval_null_cases)
 
 BEGIN_TEST(blob_updateval_func_errors)
@@ -6022,6 +6040,9 @@ BEGIN_TEST(blob_updateval_func_errors)
 
   -- adding a new column but the types are not compatible
   EXPECT((select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k6, 'xxx', CQL_BLOB_TYPE_BOOL) IS NULL));
+
+  -- the first arg should be a blob in the standard format
+  EXPECT((select bupdateval(x'0000000000000000000000000000', k1, 0, CQL_BLOB_TYPE_BOOL) IS NULL));
 END_TEST(blob_updateval_func_errors)
 
 BEGIN_TEST(backed_tables)

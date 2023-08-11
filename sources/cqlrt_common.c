@@ -4387,8 +4387,8 @@ static void cql_write_blob_header(uint8_t *_Nonnull blob, const cql_blob_header 
 
 typedef struct cql_key_blob_shape {
   int64_t header_size;
-  int64_t type_codes_size;
   int64_t storage_size;
+  int64_t type_codes_size;
   int64_t variable_size;
   int64_t total_bytes;
   uint64_t storage_offset;
@@ -4441,7 +4441,7 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   int32_t ccols = (argc - 1)  / 2;
   cql_invariant(ccols >= 1);
 
-  int64_t variable_space = 0;
+  int64_t variable_size = 0;
 
   for (int32_t icol = 0; icol < ccols; icol++) {
     int32_t index = icol * 2 + 1;
@@ -4461,11 +4461,11 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       goto cql_error;
     }
 
-    variable_space += field_variable_size;
+    variable_size += field_variable_size;
   }
 
   cql_key_blob_shape shape;
-  cql_compute_key_blob_shape(&shape, ccols, variable_space);
+  cql_compute_key_blob_shape(&shape, ccols, variable_size);
   uint64_t storage_offset = shape.storage_offset;
   uint64_t type_codes_offset = shape.type_codes_offset;
   uint64_t variable_offset = shape.variable_offset;
@@ -4680,7 +4680,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
   int32_t updates = (argc - 1) / 2;
 
-  int64_t variable_space_adjustment = 0;
+  int64_t variable_size_adjustment = 0;
 
   for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
     int32_t index = iupdate * 2 + 1;
@@ -4709,12 +4709,12 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     b[type_code_offset] = blob_column_type | CQL_BLOB_TYPE_DIRTY;
 
-    int64_t variable_size = 0;
-    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &variable_size);
+    int64_t field_variable_size = 0;
+    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size);
     if (!compat) {
       goto cql_error;
     }
-    variable_space_adjustment += variable_size;
+    variable_size_adjustment += field_variable_size;
 
     // subtract the existing variable length from the adjustment (if there is any)
     switch (blob_column_type) {
@@ -4722,7 +4722,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       {
         uint64_t val = cql_read_big_endian_int64(b + storage_offset);
         uint32_t len = val & 0xffffffff;
-        variable_space_adjustment -= (int64_t)len + 1;
+        variable_size_adjustment -= (int64_t)len + 1;
         break;
       }
 
@@ -4730,13 +4730,13 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       {
         uint64_t val = cql_read_big_endian_int64(b + storage_offset);
         uint32_t len = val & 0xffffffff;
-        variable_space_adjustment -= (int64_t)len;
+        variable_size_adjustment -= (int64_t)len;
       }
     }
   }
 
   // adjust for change in length of variable length payload
-  int64_t total_bytes = original_bytes + variable_space_adjustment;
+  int64_t total_bytes = original_bytes + variable_size_adjustment;
 
   // we don't support records this big, they are insane already
   cql_contract(total_bytes == (int32_t)total_bytes);
@@ -4923,6 +4923,42 @@ static cql_bool bcompare_blobtype_vs_argtype(
   return true;
 }
 
+typedef struct cql_val_blob_shape {
+  int64_t header_size;
+  int64_t field_ids_size;
+  int64_t storage_size;
+  int64_t type_codes_size;
+  int64_t variable_size;
+  int64_t total_bytes;
+  int64_t field_ids_offset;
+  uint64_t storage_offset;
+  uint64_t type_codes_offset;
+  uint64_t variable_offset;
+} cql_val_blob_shape;
+
+// blob_header: magic number, record type, column count
+// int64: field ids for each column
+// int64: fixed storage for each column
+// int8: column type for each column
+// bytes: variable storage for strings and blobs
+static void cql_compute_val_blob_shape(cql_val_blob_shape *_Nonnull shape, int64_t ccols, int64_t variable_size)
+{
+  shape->header_size = sizeof(cql_blob_header);
+  shape->field_ids_size = ccols * sizeof(int64_t);
+  shape->storage_size = ccols * sizeof(int64_t);
+  shape->type_codes_size = ccols * sizeof(int8_t);
+  shape->variable_size = variable_size;
+  shape->total_bytes = shape->header_size + shape->field_ids_size + shape->type_codes_size + shape->storage_size + variable_size;
+
+  // we don't support records this big, they are insane already
+  cql_contract(shape->total_bytes == (int32_t)shape->total_bytes);
+
+  shape->field_ids_offset = shape->header_size;
+  shape->storage_offset = shape->field_ids_offset + shape->field_ids_size;
+  shape->type_codes_offset = shape->storage_offset + shape->storage_size;
+  shape->variable_offset = shape->type_codes_offset + shape->type_codes_size;
+}
+
 // returns a blob with the given items in value format
 // bcreateval(
 //    record_code,
@@ -4945,8 +4981,7 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   int32_t colspecs = (argc - 1)  / 3;
   cql_invariant(colspecs >= 0);
 
-  int64_t variable_space_adjustment = 0;
-
+  int64_t variable_size = 0;
   int32_t actual_cols = 0;
 
   for (int32_t ispec = 0; ispec < colspecs; ispec++) {
@@ -4973,27 +5008,21 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       continue;
     }
 
-    int64_t variable_size = 0;
-    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &variable_size);
+    int64_t field_variable_size = 0;
+    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size );
     if (!compat) {
       goto cql_error;
     }
-    variable_space_adjustment += variable_size;
+    variable_size += field_variable_size ;
 
     // validated column discovered
     actual_cols++;
   }
 
-  int64_t header_size = sizeof(cql_blob_header);
-  int64_t type_codes_size = actual_cols * sizeof(int8_t);
-  int64_t field_ids_size = actual_cols * sizeof(int64_t);
-  int64_t storage_size = actual_cols * sizeof(int64_t);
-  int64_t total_bytes = sizeof(int64_t) * 2 + type_codes_size + field_ids_size + storage_size + variable_space_adjustment;
+  cql_val_blob_shape shape;
+  cql_compute_val_blob_shape(&shape, actual_cols, variable_size);
 
-  // we don't support records this big, they are insane already
-  cql_contract(total_bytes == (int32_t)total_bytes);
-
-  uint8_t *b = sqlite3_malloc((int32_t)total_bytes);
+  uint8_t *b = sqlite3_malloc((int32_t)shape.total_bytes);
   cql_contract(b != NULL);
 
   cql_blob_header header;
@@ -5003,16 +5032,10 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
   cql_write_blob_header(b, &header);
 
-  // int64: type
-  // int64: column count
-  // int64: field codes for each column
-  // int64: column count
-  // int64: fixed storage for each column
-  // int8: column type for each column
-  uint64_t field_ids_offset = header_size;
-  uint64_t storage_offset = field_ids_offset + field_ids_size;
-  uint64_t type_codes_offset = storage_offset + storage_size;
-  uint64_t variable_offset = type_codes_offset + type_codes_size;
+  uint64_t field_ids_offset = shape.field_ids_offset;
+  uint64_t storage_offset = shape.storage_offset;
+  uint64_t type_codes_offset = shape.type_codes_offset;
+  uint64_t variable_offset = shape.variable_offset;
 
   for (int32_t ispec = 0; ispec < colspecs; ispec++) {
     int32_t index = ispec * 3 + 1;
@@ -5089,7 +5112,7 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     storage_offset += sizeof(int64_t);
   }
 
-  sqlite3_result_blob(context, b, total_bytes, sqlite3_free);
+  sqlite3_result_blob(context, b, shape.total_bytes, sqlite3_free);
   return;
 
 cql_error:
@@ -5116,44 +5139,34 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
     goto cql_error;
   }
 
-  int64_t ccols = header.column_count;
-  int64_t header_size = sizeof(cql_blob_header);
-  int64_t type_codes_size = ccols * sizeof(int8_t);
-  int64_t field_ids_size = ccols * sizeof(int64_t);
-  int64_t storage_size = ccols * sizeof(int64_t);
-  int64_t total_bytes = sizeof(int64_t) * 2 + type_codes_size + field_ids_size + storage_size;
-
-  // int64: type
-  // int64: column count
-  // int64: field codes for each column
-  // int64: column count
-  // int64: fixed storage for each column
-  // int8: column type for each column
-  uint64_t field_ids_offset = header_size;
-  uint64_t storage_offset = field_ids_offset + field_ids_size;
-  uint64_t type_codes_offset = storage_offset + storage_size;
-  uint64_t variable_offset = type_codes_offset + type_codes_size;
+  cql_val_blob_shape shape;
+  cql_compute_val_blob_shape(&shape, header.column_count, 0);
 
   int32_t icol;
-  for (icol = 0; icol < ccols; icol++) {
-    int64_t stored_field_id = (int64_t)cql_read_big_endian_int64(b + field_ids_offset + icol * sizeof(int64_t));
+  for (icol = 0; icol < header.column_count; icol++) {
+    uint64_t field_id_offset = shape.field_ids_offset + icol * sizeof(uint64_t);
+    int64_t stored_field_id = (int64_t)cql_read_big_endian_int64(b + field_id_offset);
     if (stored_field_id == field_id) {
       break;
     }
   }
 
-  if (icol >= ccols) {
+  if (icol >= header.column_count) {
+    // field not found, the error path will return null as expected
     goto cql_error;
   }
 
-  uint8_t blob_column_type = b[type_codes_offset + icol];
+  uint64_t type_code_offset = shape.type_codes_offset + icol * sizeof(uint8_t);
+  uint64_t storage_offset = shape.storage_offset + icol * sizeof(uint64_t);
+
+  uint8_t blob_column_type = b[type_code_offset];
 
   switch (blob_column_type) {
     // these three are fixed length and stored in an int64
     // the value provided must be an integer
     case CQL_BLOB_TYPE_BOOL:
     {
-      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset);
       sqlite3_result_int64(context, !!val);
       return;
     }
@@ -5161,21 +5174,21 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
     case CQL_BLOB_TYPE_INT32:
     case CQL_BLOB_TYPE_INT64:
     {
-      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset);
       sqlite3_result_int64(context, (int64_t)val);
       return;
     }
 
     case CQL_BLOB_TYPE_FLOAT:   // always IEEE 754 "double" (8 bytes) format in the blob
     {
-      double val = *(const double *)(b + storage_offset + icol * sizeof(uint64_t));
+      double val = *(const double *)(b + storage_offset);
       sqlite3_result_double(context, val);
       return;
     }
 
     case CQL_BLOB_TYPE_STRING:  // string field in a blob
     {
-      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset);
       uint32_t len = val & 0xffffffff;
       uint32_t offset = val >> 32;
       const char *text = (const char *)b + offset;
@@ -5185,7 +5198,7 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
 
     case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
     {
-      uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol * sizeof(uint64_t));
+      uint64_t val = cql_read_big_endian_int64(b + storage_offset);
       uint32_t len = val & 0xffffffff;
       uint32_t offset = val >> 32;
       const uint8_t *data = b + offset;
@@ -5256,25 +5269,12 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
   uint64_t ccols_original = header.column_count;
 
-  // int64: type
-  // int64: column count
-  // int64: field codes for each column
-  // int64: column count
-  // int64: fixed storage for each column
-  // int8: column type for each column
-  int64_t header_size = sizeof(cql_blob_header);
-  int64_t type_codes_size = ccols_original * sizeof(int8_t);
-  int64_t field_ids_size = ccols_original * sizeof(int64_t);
-  int64_t storage_size = ccols_original * sizeof(int64_t);
-  uint64_t field_ids_offset = header_size;
-  uint64_t storage_offset = field_ids_offset + field_ids_size;
-  uint64_t type_codes_offset = storage_offset + storage_size;
-  uint64_t variable_offset = type_codes_offset + type_codes_size;
-  uint64_t variable_size = original_bytes - variable_offset;
+  cql_val_blob_shape original_shape;
+  cql_compute_val_blob_shape(&original_shape, header.column_count, 0);
+  original_shape.total_bytes = original_bytes;
+  original_shape.variable_size = original_bytes - original_shape.variable_offset;
 
-  int32_t updates = (argc - 1) / 3;
-
-  int64_t variable_space_adjustment = 0;
+  int64_t variable_size_adjustment = 0;
   int32_t col_adjustment = 0;
 
   // In the first pass we're going to go over the arguments, we're going to figure out how many columns
@@ -5284,6 +5284,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   //   * no duplicate field ids
   //   * stored field id must match provided field id if there is a stored field id
   //   * data type of field_value_arg (the provided value) must be compatible with value of field_type_arg (the provided type)
+  int32_t updates = (argc - 1) / 3;
   for (int32_t iupdate = 0; iupdate < updates; iupdate++) {
     int32_t index = iupdate * 3 + 1;
     sqlite3_value *field_id_arg = argv[index];
@@ -5298,7 +5299,8 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     int32_t icol_original;
     for (icol_original = 0; icol_original < ccols_original; icol_original++) {
-      int64_t stored_field_id = (int64_t)cql_read_big_endian_int64(b + field_ids_offset + icol_original * sizeof(int64_t));
+      uint64_t field_id_offset = original_shape.field_ids_offset + icol_original * sizeof(uint64_t);
+      int64_t stored_field_id = (int64_t)cql_read_big_endian_int64(b + field_id_offset);
       if (stored_field_id == field_id) {
         break;
       }
@@ -5315,14 +5317,14 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
         // we'll need a new column now (unless the types don't match)
         col_adjustment++;
 
-        int64_t variable_size = 0;
-        cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &variable_size);
+        int64_t field_variable_size = 0;
+        cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size);
         if (!compat) {
           goto cql_error;
         }
 
         // this column is missing so it needs the full variable size whatever that is
-        variable_space_adjustment += variable_size;
+        variable_size_adjustment += field_variable_size;
       }
 
       // move on to the next column specification, this is a new column
@@ -5331,7 +5333,10 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     cql_contract(icol_original < ccols_original);
 
-    uint8_t stored_blob_column_type = b[type_codes_offset + icol_original];
+    uint64_t type_code_offset = original_shape.type_codes_offset + icol_original * sizeof(uint8_t);
+    uint64_t storage_offset = original_shape.storage_offset + icol_original * sizeof(uint64_t);
+
+    uint8_t stored_blob_column_type = b[type_code_offset];
 
     // this will fail if the type is changed or if it was already altered by adding CQL_BLOB_TYPE_DIRTY
     if (blob_column_type != stored_blob_column_type) {
@@ -5341,7 +5346,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     // Marking this dirty will cause an error if we try to update it twice and will cause us to not copy
     // the value in the second pass.  We use the arg value rather then the previous value for changed
     // fields.
-    b[type_codes_offset + icol_original] = blob_column_type | CQL_BLOB_TYPE_DIRTY;
+    b[type_code_offset] = blob_column_type | CQL_BLOB_TYPE_DIRTY;
 
     int64_t variable_size_new = 0;
     int64_t variable_size_stored = 0;
@@ -5355,7 +5360,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       switch (blob_column_type) {
         case CQL_BLOB_TYPE_STRING:  // string field in a blob
         {
-          uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol_original * sizeof(uint64_t));
+          uint64_t val = cql_read_big_endian_int64(b + storage_offset);
           uint32_t len = val & 0xffffffff;
           variable_size_stored = (int64_t)len + 1;
           break;
@@ -5363,7 +5368,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
         case CQL_BLOB_TYPE_BLOB:    // blob field in a blob
         {
-          uint64_t val = cql_read_big_endian_int64(b + storage_offset + icol_original * sizeof(uint64_t));
+          uint64_t val = cql_read_big_endian_int64(b + storage_offset);
           uint32_t len = val & 0xffffffff;
           variable_size_stored = (int64_t)len;
         }
@@ -5374,33 +5379,20 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       col_adjustment--;
     }
 
-    variable_space_adjustment += variable_size_new - variable_size_stored;
+    variable_size_adjustment += variable_size_new - variable_size_stored;
   }
 
-  // int64: type
-  // int64: column count
-  // int64: field codes for each column
-  // int64: column count
-  // int64: fixed storage for each column
-  // int8: column type for each column
   int64_t ccols_new = ccols_original + col_adjustment;
-  int64_t new_header_size = sizeof(int64_t) * 2;
-  int64_t new_type_codes_size = ccols_new * sizeof(int8_t);
-  int64_t new_field_ids_size = ccols_new * sizeof(int64_t);
-  int64_t new_storage_size = ccols_new * sizeof(int64_t);
-  int64_t new_variable_size = variable_size + variable_space_adjustment;
-  uint64_t new_field_ids_offset = new_header_size;
-  uint64_t new_storage_offset = new_field_ids_offset + new_field_ids_size;
-  uint64_t new_type_codes_offset = new_storage_offset + new_storage_size;
-  uint64_t new_variable_offset = new_type_codes_offset + new_type_codes_size;
+  int64_t new_variable_size = original_shape.variable_size + variable_size_adjustment;
 
-  // adjust for change in length of variable length payload
-  int64_t new_total_bytes = new_variable_size + new_variable_offset;
+  cql_val_blob_shape new_shape;
+  cql_compute_val_blob_shape(&new_shape, ccols_new, new_variable_size);
+  uint64_t new_field_ids_offset = new_shape.field_ids_offset;
+  uint64_t new_storage_offset = new_shape.storage_offset;
+  uint64_t new_type_codes_offset = new_shape.type_codes_offset;
+  uint64_t new_variable_offset = new_shape.variable_offset;
 
-  // we don't support records this big, they are insane already
-  cql_contract(new_total_bytes == (int32_t)new_total_bytes);
-
-  uint8_t *result = sqlite3_malloc((int32_t)new_total_bytes);
+  uint8_t *result = sqlite3_malloc((int32_t)new_shape.total_bytes);
   cql_contract(result != NULL);
 
   // In the second pass we use the provided arguments to update the storage.
@@ -5483,9 +5475,9 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // economically in most cases because the stored values are already big endian encoded.
   // We do have to recode the offset of all the variable length items.
   for (int32_t icol = 0; icol < ccols_original; icol++) {
-    uint8_t blob_column_type = b[type_codes_offset + icol];
-    int64_t data_offset = storage_offset + icol * sizeof(int64_t);
-    int64_t field_id_offset = field_ids_offset + icol * sizeof(int64_t);
+    uint8_t blob_column_type = b[original_shape.type_codes_offset + icol];
+    int64_t data_offset = original_shape.storage_offset + icol * sizeof(int64_t);
+    int64_t field_id_offset = original_shape.field_ids_offset + icol * sizeof(int64_t);
 
     // this will only match CLEAN fields. New or dirty fields have already been taken care of
     switch (blob_column_type) {
@@ -5535,7 +5527,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
         continue;  // do not store a field that is null or was updated
     }
 
-    result[new_type_codes_offset] = b[type_codes_offset + icol];
+    result[new_type_codes_offset] = blob_column_type;
     memcpy(result + new_field_ids_offset, b  + field_id_offset, sizeof(int64_t));
     new_storage_offset += sizeof(int64_t);
     new_field_ids_offset += sizeof(int64_t);
@@ -5546,7 +5538,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   header.column_count = ccols_new;
   cql_write_blob_header(result, &header);
 
-  sqlite3_result_blob(context, result, new_total_bytes, sqlite3_free);
+  sqlite3_result_blob(context, result, new_shape.total_bytes, sqlite3_free);
   goto cleanup;
 
 cql_error:

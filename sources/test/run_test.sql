@@ -10,7 +10,7 @@
 -- use this for both normal eval and SQLite eval
 #define EXPECT_SQL_TOO(x) EXPECT(x); EXPECT((select x))
 
-/* Useful code for getting more verbose errors
+/* Useful code for getting more verbose errors 
 @echo c,"#undef cql_error_trace\n";
 @echo c,'#define cql_error_trace() \
   fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
@@ -5807,7 +5807,7 @@ BEGIN_TEST(blob_val_funcs)
 
   -- cheese the return type with casts to work around the fixed type of bgetval
   set b := (select bcreateval(112236,  k1, x'313233', CQL_BLOB_TYPE_BLOB, k2, 'hello', CQL_BLOB_TYPE_STRING));
-  EXPECT(112236 == (select bgetkey_type(b)));
+  EXPECT(112236 == (select bgetval_type(b)));
   EXPECT((select cast(bgetval(b, k1) as blob) == x'313233'));
   EXPECT((select cast(bgetval(b, k2) as text) == 'hello'));
 
@@ -6132,6 +6132,144 @@ BEGIN_TEST(backed_tables_default_values)
   fetch C;
   EXPECT(NOT C);
 END_TEST(backed_tables_default_values)
+
+
+-- the backing table was defined above already
+[[backed_by=backing]]
+create table mixed_backed(
+  id integer not null primary key,
+  name text,
+  code long int,
+  flag bool,
+  rate real,
+  bl blob
+);
+
+create procedure load_mixed_backed()
+begin
+  delete from mixed_backed;
+  insert into mixed_backed values (1, "a name", 12, 1, 5.0, cast("blob1" as blob));
+  insert into mixed_backed values (2, "another name", 14, 3, 7.0, cast("blob2" as blob));
+end;
+
+-- test readback of two rows
+BEGIN_TEST(read_mixed_backed)
+  call load_mixed_backed();
+
+  declare C cursor for select * from mixed_backed;
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.id == 1);
+  EXPECT(C.name == "a name");
+  EXPECT(C.code == 12);
+  EXPECT(C.flag == 1);
+  EXPECT(C.rate == 5);
+  EXPECT(string_from_blob(C.bl) == "blob1");
+
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.id == 2);
+  EXPECT(C.name == "another name");
+  EXPECT(C.code == 14);
+  EXPECT(C.flag == 1);
+  EXPECT(C.rate == 7);
+  EXPECT(string_from_blob(C.bl) == "blob2");
+
+  fetch C;
+  EXPECT(not C);
+END_TEST(read_mixed_backed)
+
+-- now attempt a mutation
+BEGIN_TEST(mutate_mixed_backed)
+  declare new_code long integer;
+  declare code_ long integer;
+  set new_code := 88;
+  declare id_ integer;
+  set id_ := 2;  -- either works
+
+  call load_mixed_backed();
+
+  update mixed_backed set code = new_code where id = id_;
+  declare updated_cursor cursor for select code from mixed_backed where id = id_;
+  fetch updated_cursor into code_;
+  close updated_cursor;
+  EXPECT(code_ == new_code);
+END_TEST(mutate_mixed_backed)
+
+[[backed_by=backing]]
+create table compound_backed(
+  id1 text,
+  id2 text,
+  val real,
+  primary key (id1, id2)
+);
+
+ -- We're going to make sure that the key blob stays in canonical form
+ -- no matter how we update it.  This is a bit tricky for variable fields
+ -- which have to stay in a fixed order so this test exercises that.
+BEGIN_TEST(mutate_compound_backed_key)
+  insert into compound_backed values('foo', 'bar', 1);
+  insert into compound_backed values('goo', 'bar', 2);
+  insert into compound_backed values('foo', 'stew', 3);
+
+  -- this should conflict (the net key blob must be the same as the one for val == 1)
+  let caught := false;
+  begin try
+    update compound_backed set id1 = 'foo' where val = 2;
+  end try;
+  begin catch
+    set caught := true;
+  end catch;
+
+  EXPECT(caught);
+
+  -- this should conflict (the net key blob must be the same as the one for val == 1)
+  set caught := false;
+  begin try
+    update compound_backed set id2 = 'bar' where val = 3;
+  end try;
+  begin catch
+    set caught := true;
+  end catch;
+
+  EXPECT(caught);
+
+  -- these are safe
+  update compound_backed set id1 = 'zoo' where val = 1;
+  update compound_backed set id1 = 'foo' where val = 2;
+
+  -- this should conflict (the net key blob must be the same as the one for val == 2)
+  set caught := false;
+  begin try
+    update compound_backed set id1 = 'foo' where val = 1;
+  end try;
+  begin catch
+    set caught := true;
+  end catch;
+
+  declare C cursor for select * from compound_backed order by val;
+
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.id1 == 'zoo');
+  EXPECT(C.id2 == 'bar');
+  EXPECT(C.val == 1);
+
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.id1 == 'foo');
+  EXPECT(C.id2 == 'bar');
+  EXPECT(C.val == 2);
+
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.id1 == 'foo');
+  EXPECT(C.id2 == 'stew');
+  EXPECT(C.val == 3);
+
+  fetch C;
+  EXPECT(NOT C);
+END_TEST(mutate_compound_backed_key)
 
 END_SUITE()
 

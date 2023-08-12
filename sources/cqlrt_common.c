@@ -23,7 +23,7 @@
 #endif // TARGET_OS_WIN32
 #endif // STACK_BYTES_ALLLOC
 
-static cql_bool bcompare_blobtype_vs_argtype(
+static cql_bool cql_blobtype_vs_argtype_compat(
   sqlite3_value *_Nonnull field_value_arg,
   int8_t blob_column_type,
   int64_t *_Nonnull variable_size);
@@ -4469,7 +4469,7 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     int64_t field_value_type = sqlite3_value_type(field_value_arg);
 
     int64_t field_variable_size = 0;
-    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size);
+    cql_bool compat = cql_blobtype_vs_argtype_compat(field_value_arg, blob_column_type, &field_variable_size);
     if (!compat) {
       goto cql_error;
     }
@@ -4778,7 +4778,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
     // Ensure the data provided is compatible with the stored type
     int64_t field_variable_size = 0;
-    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size);
+    cql_bool compat = cql_blobtype_vs_argtype_compat(field_value_arg, blob_column_type, &field_variable_size);
     if (!compat) {
       goto cql_error;
     }
@@ -4998,7 +4998,7 @@ cleanup:
 
 // test if the incoming argument is compatible with blob field type
 // report the variable size of the incoming arg if there is any variable size
-static cql_bool bcompare_blobtype_vs_argtype(
+static cql_bool cql_blobtype_vs_argtype_compat(
   sqlite3_value *_Nonnull field_value_arg,
   int8_t blob_column_type,
   int64_t *_Nonnull variable_size)
@@ -5018,7 +5018,7 @@ static cql_bool bcompare_blobtype_vs_argtype(
 
   // Always IEEE 754 "double" (8 bytes) format in the blob.
   case CQL_BLOB_TYPE_FLOAT:
-    if (field_value_type != SQLITE_FLOAT) {
+    if (field_value_type != SQLITE_FLOAT && field_value_type != SQLITE_INTEGER) {
       return false;
     }
     break;
@@ -5149,7 +5149,7 @@ void bcreateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     }
 
     int64_t field_variable_size = 0;
-    cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size );
+    cql_bool compat = cql_blobtype_vs_argtype_compat(field_value_arg, blob_column_type, &field_variable_size );
     if (!compat) {
       goto cql_error;
     }
@@ -5496,7 +5496,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
         // Since the value is not null, we'll be adding this column.
         // Accordingly, the update arg value must be compatible with the column type provided.
         int64_t field_variable_size = 0;
-        cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &field_variable_size);
+        cql_bool compat = cql_blobtype_vs_argtype_compat(field_value_arg, blob_column_type, &field_variable_size);
         if (!compat) {
           goto cql_error;
         }
@@ -5533,7 +5533,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     // If the provided value is not null then we are actually replacing a column.
     // No column count adjustment is needed.
     if (field_value_type != SQLITE_NULL) {
-      cql_bool compat = bcompare_blobtype_vs_argtype(field_value_arg, blob_column_type, &variable_size_new);
+      cql_bool compat = cql_blobtype_vs_argtype_compat(field_value_arg, blob_column_type, &variable_size_new);
       if (!compat) {
         goto cql_error;
       }

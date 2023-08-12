@@ -7,55 +7,6 @@ LICENSE file in the root directory of this source tree.
 
 -- TESTING METHODS --
 
--- this is a standard serializer courtesy of Tony Finch
--- http://lua-users.org/lists/lua-l/2009-11/msg00533.html
--- it was publicly posted as a code sample
---
-local szt = {}
-
-local function char(c) return ("\\%3d"):format(c:byte()) end
-local function szstr(s) return ('"%s"'):format(s:gsub("[^ !#-~]", char)) end
-local function szfun(f) return "loadstring"..szstr(string.dump(f)) end
-local function szany(...) return szt[type(...)](...) end
-
-local function sztbl(t,code,var)
-  for k,v in pairs(t) do
-    local ks = szany(k,code,var)
-    local vs = szany(v,code,var)
-    code[#code+1] = ("%s[%s]=%s"):format(var[t],ks,vs)
-  end
-  return "{}"
-end
-
-local function memo(sz)
-  return function(d,code,var)
-    if var[d] == nil then
-      var[1] = var[1] + 1
-      var[d] = ("_[%d]"):format(var[1])
-      local index = #code+1
-      code[index] = "" -- reserve place during recursion
-      code[index] = ("%s=%s"):format(var[d],sz(d,code,var))
-    end
-    return var[d]
-  end
-end
-
-szt["nil"]      = tostring
-szt["boolean"]  = tostring
-szt["number"]   = tostring
-szt["string"]   = szstr
-szt["function"] = memo(szfun)
-szt["table"]    = memo(sztbl)
-
-function serialize(d)
-  local code = { "local _ = {}" }
-  local value = szany(d,code,{0})
-  code[#code+1] = "return "..value
-  if #code == 2 then return code[2]
-  else return table.concat(code, "\n")
-  end
-end
-
 function cql_normalize_bool_to_int(val)
   if val == nil then return nil end
   if val == false then return 0 end
@@ -68,20 +19,120 @@ cql_required_val_type = {}
 
 CQL_BLOB_MAGIC = 0x524d3030
 
-function cql_load_blob(b)
-  if type(b) ~= "string" then
-    return {}
+function cql_serialize_key_blob(t)
+  result = string.pack(">I8I4I4", t.rtype, t.magic, t.cols)
+
+  i = 0
+  cols = t.cols
+  while i < cols
+  do
+    code = t["t"..i]
+    val = t["v"..i]
+    if code == CQL_BLOB_TYPE_BOOL or code == CQL_BLOB_TYPE_INT32 or code == CQL_BLOB_TYPE_INT64 then
+       result = result..string.pack(">I1I8", code, val)
+    elseif code == CQL_BLOB_TYPE_FLOAT then
+        result = result..string.pack(">I1d", code, val)
+    else
+      -- CQL_BLOB_TYPE_STRING or t == CQL_BLOB_TYPE_BLOB then
+      result = result..string.pack(">I1s4", code, val)
+    end
+    i = i + 1
+  end
+  return result;
+end
+
+function cql_deserialize_key_blob(b)
+  t = {}
+  -- check minimum size for the header
+  if type(b) ~= 'string' or string.len(b) < 16 then
+    return t
   end
 
-  -- note this is not safe generally, it's ok for test code but
-  -- you want something that can't be hijacked in real code
-  local f = load(b)
+  rtype, magic, cols, pos = string.unpack(">I8I4I4", b)
+  t.rtype = rtype
+  t.magic = magic
+  t.cols = cols
 
-  if f == nil then
-    return {}
+  if magic ~= CQL_BLOB_MAGIC then
+    return t
   end
 
-  return f();
+  i = 0
+  while i < cols
+  do
+    code, pos = string.unpack(">I1", b, pos)
+    if code == CQL_BLOB_TYPE_BOOL or code == CQL_BLOB_TYPE_INT32 or code == CQL_BLOB_TYPE_INT64 then
+      val, pos = string.unpack(">I8", b, pos)
+    elseif code == CQL_BLOB_TYPE_FLOAT then
+      val, pos = string.unpack(">d", b, pos)
+    else
+      val, pos = string.unpack(">s4", b, pos)
+    end
+
+    t["v"..i] = val
+    t["t"..i] = code
+    i = i + 1
+  end
+
+  return t
+end
+
+function cql_serialize_val_blob(t)
+  result = string.pack(">I8I4I4", t.rtype, t.magic, t.cols)
+
+  for k,v in pairs(t) do
+    if string.sub(k, 1, 1) == 't'  then
+      id = tonumber(string.sub(k, 2))
+      code = v
+      val = t["v"..id]
+      if code == CQL_BLOB_TYPE_BOOL or code == CQL_BLOB_TYPE_INT32 or code == CQL_BLOB_TYPE_INT64 then
+        result = result..string.pack(">I1>I8>I8", code, id, val)
+      elseif code == CQL_BLOB_TYPE_FLOAT then
+        result = result..string.pack(">I1>I8d", code, id, val)
+      else
+        -- CQL_BLOB_TYPE_STRING or t == CQL_BLOB_TYPE_BLOB then
+        result = result..string.pack(">I1>I8s4", code, id, val)
+      end
+    end
+  end
+
+  return result;
+end
+
+function cql_deserialize_val_blob(b)
+  t = {}
+  -- check minimum size for the header
+  if type(b) ~= 'string' or string.len(b) < 16 then
+    return t
+  end
+
+  rtype, magic, cols, pos = string.unpack(">I8I4I4", b)
+  t.rtype = rtype
+  t.magic = magic
+  t.cols = cols
+
+  if magic ~= CQL_BLOB_MAGIC then
+    return t
+  end
+
+  i = 0
+  while i < cols
+  do
+    code, pos = string.unpack(">I1", b, pos)
+    if code == CQL_BLOB_TYPE_BOOL or code == CQL_BLOB_TYPE_INT32 or code == CQL_BLOB_TYPE_INT64 then
+      id, val, pos = string.unpack(">I8>I8", b, pos)
+    elseif code == CQL_BLOB_TYPE_FLOAT then
+      id, val, pos = string.unpack(">I8d", b, pos)
+    else
+      id, val, pos = string.unpack(">I8s4", b, pos)
+    end
+
+    t["v"..id] = val
+    t["t"..id] = code
+    i = i + 1
+  end
+
+  return t
 end
 
 function bcreatekey(context, rtype, ...)
@@ -142,7 +193,7 @@ function bcreatekey(context, rtype, ...)
      icol = icol + 1
   end
 
-  context:result_blob(serialize(t))
+  context:result_blob(cql_serialize_key_blob(t))
   goto done
 
 ::err_exit::
@@ -152,7 +203,7 @@ function bcreatekey(context, rtype, ...)
 end
 
 function bgetkey(context, b, i)
-  local t = cql_load_blob(b)
+  local t = cql_deserialize_key_blob(b)
   if t.magic ~= CQL_BLOB_MAGIC or type(i) ~= 'number' then
     context:result_null();
   else
@@ -161,8 +212,7 @@ function bgetkey(context, b, i)
 end
 
 function bgetkey_type(context, b)
-  local t = cql_load_blob(b)
-
+  local t = cql_deserialize_key_blob(b)
   if t.magic ~= CQL_BLOB_MAGIC then
     context:result_null();
   else
@@ -173,7 +223,7 @@ end
 function bupdatekey(context, b, ...)
   local args = {...}
   local i = 1
-  local t = cql_load_blob(b)
+  local t = cql_deserialize_key_blob(b)
   local already_updated = {}
 
   if t.magic ~= CQL_BLOB_MAGIC then
@@ -208,7 +258,7 @@ function bupdatekey(context, b, ...)
     t["v"..icol] = val
     i = i + 2
   end
-  context:result_blob(serialize(t))
+  context:result_blob(cql_serialize_key_blob(t))
   goto done
 
 ::err_exit::
@@ -224,7 +274,8 @@ function bcreateval(context, rtype, ...)
   local t = {}
   t.magic = CQL_BLOB_MAGIC
   t.rtype = rtype
-  t.cols = math.floor(#args / 3)
+
+  cols = 0
 
   -- if the record type is not numeric then exit
   if type(rtype) ~= 'number' then
@@ -263,12 +314,17 @@ function bcreateval(context, rtype, ...)
      val = cql_normalize_bool_to_int(val)
     end
 
-     t["t"..id] = ctype
-     t["v"..id] = val
-     i = i + 3
+    if val ~= nil then
+      t["t"..id] = ctype
+      t["v"..id] = val
+      cols = cols + 1
+    end
+    i = i + 3
   end
 
-  context:result_blob(serialize(t))
+  t.cols = cols
+
+  context:result_blob(cql_serialize_val_blob(t))
   goto done
 
 ::err_exit::
@@ -277,7 +333,7 @@ function bcreateval(context, rtype, ...)
 ::done::
 end
 function bgetval(context, b, id)
-  local t = cql_load_blob(b)
+  local t = cql_deserialize_val_blob(b)
 
   if t.magic ~= CQL_BLOB_MAGIC or type(id) ~= 'number' then
     context:result_null();
@@ -287,7 +343,7 @@ function bgetval(context, b, id)
 end
 
 function bgetval_type(context, b)
-  local t = cql_load_blob(b)
+  local t = cql_deserialize_val_blob(b)
 
   if t.magic ~= CQL_BLOB_MAGIC then
     context:result_null();
@@ -301,7 +357,7 @@ function bupdateval(context, b, ...)
   local i = 1
   local already_updated = {}
 
-  local t = cql_load_blob(b)
+  local t = cql_deserialize_val_blob(b)
 
   if t.magic ~= CQL_BLOB_MAGIC then
     goto err_exit
@@ -340,12 +396,21 @@ function bupdateval(context, b, ...)
       val = cql_normalize_bool_to_int(val) -- normalize booleans
     end
 
-    t["t"..id] = newtype
+    if stored_type == nil and val ~= nil then
+      cols = cols + 1
+      t["t"..id] = newtype
+    elseif stored_type ~= nil and val == nil then
+      cols = cols - 1
+      t["t"..id] = nil
+    end
+
     t["v"..id] = val
+
     i = i + 3
   end
+  t.cols = cols
 
-  context:result_blob(serialize(t))
+  context:result_blob(cql_serialize_val_blob(t))
   goto done
 
 ::err_exit::

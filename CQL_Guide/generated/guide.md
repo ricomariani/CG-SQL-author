@@ -36,7 +36,7 @@ Before starting this tutorial, make sure you have built the `cql` executable fir
 
 The "Hello World" program rendered in CQL looks like this:
 
-```sql title="hello.sql"
+```sql
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
@@ -58,7 +58,7 @@ This will produce the C output files `hello.c` and `hello.h` which can be readil
 
 However, hello.c will not have a `main` -- rather it will have a function like this:
 
-```c title="hello.c"
+```c
 ...
 void hello(void);
 ...
@@ -78,7 +78,7 @@ create in CQL.  Let's create a simple one in a file we'll creatively name `main.
 
 A very simple CQL main might look like this:
 
-```c title="main.c"
+```c
 #include <stdlib.h>
 #include "hello.h"
 int main(int argc, char **argv)
@@ -280,7 +280,7 @@ still keep things fairly simple but let's start to use some database features.
 
 Suppose we have the following program:
 
-```sql title="hello.sql"
+```sql
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
@@ -309,7 +309,7 @@ return code.
 
 A new minimal `main` program might look something like this:
 
-```c title="main.c"
+```c
 #include <stdlib.h>
 #include <sqlite3.h>
 
@@ -333,7 +333,7 @@ int main(int argc, char **argv)
 
 If we re-run CQL and look in the `hello.h` output file we'll see that the declaration of the `hello` function is now:
 
-```c title="hello.h"
+```c
 ...
 extern CQL_WARN_UNUSED cql_code hello(sqlite3 *_Nonnull _db_);
 ...
@@ -370,7 +370,7 @@ created when the procedure is executed.
 
 We need to change our program a tiny bit.
 
-```sql title="hello.sql"
+```sql
 -- needed to allow vararg calls to C functions
 declare procedure printf no check;
 
@@ -9627,13 +9627,13 @@ CQL provides expression fragments.
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-Chapter 15: Query Plan Generation
+## Chapter 15: Query Plan Generation
 
 CQL offers a way to run SQLite's [`EXPLAIN QUERY PLAN` command](https://www.sqlite.org/eqp.html) for all the SQL statements used in a CQL file using a set of special compilation steps.
 
 Generating query plans is inherently complicated. Any given stored procedure might include many SQL statements, each of which has a plan. To get the plans, those statements must be executed in the appropriate mode. In order for them to execute, whatever tables, views, and user-defined functions they use must exist. The statements can have any number of parameters, those have to be swapped out because they might come from anywhere. When run in `--rt query_plan` mode, the compiler accomplishes all of this by analyzing the original code and creating entirely new code. Running this new code creates the schema and, with the appropriate transforms, runs all the SQL statements in the original to give us the query plans. The process requires many steps as we'll see below.
 
-## Query Plan Generation Compilation Steps
+### Query Plan Generation Compilation Steps
 >TIP:
 >The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](../../docs/playground#query-plan-playground).
 >The rest of the section explains how query plan generation works and some of its quirks.
@@ -9685,7 +9685,7 @@ CQL's query planner generator modifies the usage of the following features to al
 #### Variables
 Variables used in SQL statements are stubbed into constants. The exact value varies depending on the type of the variable, but it is always equivalent to some form of `"1"`.
 
-```sql title="original.sql"
+```sql
 ...
 SELECT *
 FROM my_table
@@ -9693,7 +9693,7 @@ WHERE id = x;
 ...
 ```
 
-```sql title="query_plan.sql"
+```sql
 ...
 EXPLAIN QUERY PLAN
 SELECT *
@@ -9715,7 +9715,7 @@ The branch to analyze can be configured with the `cql:query_plan_branch` [@attri
 
 Here's an example of `cql:query_plan_branch` being used:
 
-```sql title="original.sql"
+```sql
 [[shared_fragment]]
 [[query_plan_branch=1]]
 CREATE PROC frag2(y int)
@@ -9730,7 +9730,7 @@ BEGIN
 END;
 ```
 
-```sql title="query_plan.sql"
+```sql
 EXPLAIN QUERY PLAN
 SELECT 20 b;
 ```
@@ -9942,7 +9942,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Jul 28 14:52:47 PDT 2023
+Snapshot as of Sat Aug 12 01:52:30 PDT 2023
 
 ### Operators and Literals
 
@@ -16357,7 +16357,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Jul 28 14:52:47 PDT 2023
+Snapshot as of Sat Aug 12 01:52:30 PDT 2023
 
 ### Rules
 

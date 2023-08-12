@@ -4869,52 +4869,44 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
         break;
       }
 
-      // String field is stored in the variable space.
-      // The int64 storage encodes the length and offset.
-      // Length does not include the trailing null.
+      // It's important that the variable storage always be written
+      // in column order so that there is one canonical key blob
+      // for any combination of key values. This is so that the PK
+      // constraint on the key blob can do its job.  If we reorder
+      // the fields so that the result looks different than it would
+      // have if we hade used bcreatekey then there is the possibiliity
+      // of duplicate keys in the storage and updates might not update
+      // the row we intended.
       case CQL_BLOB_TYPE_STRING:
-      {
-        const unsigned char *val = sqlite3_value_text(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
-        uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
-        cql_write_big_endian_int64(result + storage_offset, info);
-
-        memcpy(result + variable_offset, val, len + 1);  // known length does not include trailing null
-        variable_offset += len + 1;
-        break;
-      }
-
-      // Blob field is stored in the variable space.
-      // The int64 storage encodes the length and offset.
       case CQL_BLOB_TYPE_BLOB:
       {
-        const void *val = sqlite3_value_blob(field_value_arg);
-        int32_t len = sqlite3_value_bytes(field_value_arg);
-        uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
-        cql_write_big_endian_int64(result + storage_offset, info);
-
-        memcpy(result + variable_offset, val, len);
-        variable_offset += len;
+        // Record the source of the blob or string and that's it
+        // we will copy later in the correct order.  We only
+        // need the arg index so we can get it from argv later.
+        *(uint64_t *)(result + storage_offset) = (uint64_t)index + 1;
         break;
       }
     }
   }
 
-  // In the third pass, we have to copy over the variable length items that
-  // did not change. Any fixed length items that did not change were handled
-  // already using the memcpy of the fixed second above.
+  // In the third pass, we have to copy over the variable length items.  We
+  // do this in column order, so that the resulting variable blob section
+  // is in the same order as it would be after a blob create even if the
+  // arguments in the update case are in a different order, or partly
+  // specified.
   for (int32_t icol = 0; icol < header.column_count; icol++) {
     uint64_t storage_offset = shape.storage_offset + icol * sizeof(int64_t);
     uint64_t type_code_offset = shape.type_codes_offset + icol * sizeof(int8_t);
 
     uint8_t blob_column_type = b[type_code_offset];
 
-    // This will only match CLEAN variable length fields, the dirty fields
-    // have already been taken care of and have their dirty bit set.
+    // We have to copy the dirty and clean columns in their original order.
     switch (blob_column_type) {
       // String field is stored in the variable space.
       // The int64 storage encodes the length and offset.
       // Length does not include the trailing null.
+      // In this case we copy the variable data from the original stored data
+      // i.e. this data is unchanged.
       case CQL_BLOB_TYPE_STRING:
       {
         uint64_t val = cql_read_big_endian_int64(b + storage_offset);
@@ -4933,6 +4925,8 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
       // Blob field is stored in the variable space.
       // The int64 storage encodes the length and offset.
+      // In this case we copy the variable data from the original stored data
+      // i.e. this data is unchanged.
       case CQL_BLOB_TYPE_BLOB:
       {
         uint64_t val = cql_read_big_endian_int64(b + storage_offset);
@@ -4945,6 +4939,45 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
         // copy existing blob
         memcpy(result + variable_offset, data, len);  //  length  includes trailing null
+        variable_offset += len;
+        break;
+      }
+
+      // String field is stored in the variable space.
+      // The int64 storage encodes the length and offset.
+      // Length does not include the trailing null.
+      // In this case we copy the variable data from argv
+      case CQL_BLOB_TYPE_STRING | CQL_BLOB_TYPE_DIRTY:
+      {
+        // we previously stashed the index of the argument we need here
+        uint64_t iarg = *(int64_t *)(result + storage_offset);
+        sqlite3_value *field_value_arg = argv[iarg];
+
+        const unsigned char *val = sqlite3_value_text(field_value_arg);
+        int32_t len = sqlite3_value_bytes(field_value_arg);
+        uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
+        cql_write_big_endian_int64(result + storage_offset, info);
+
+        memcpy(result + variable_offset, val, len + 1);  // known length does not include trailing null
+        variable_offset += len + 1;
+        break;
+      }
+
+      // Blob field is stored in the variable space.
+      // The int64 storage encodes the length and offset.
+      // In this case we copy the variable data from argv
+      case CQL_BLOB_TYPE_BLOB | CQL_BLOB_TYPE_DIRTY:
+      {
+        // we previously stashed the index of the argument we need here
+        uint64_t iarg = *(int64_t *)(result + storage_offset);
+        sqlite3_value *field_value_arg = argv[iarg];
+
+        const void *val = sqlite3_value_blob(field_value_arg);
+        int32_t len = sqlite3_value_bytes(field_value_arg);
+        uint64_t info = (uint64_t)(variable_offset << 32) | (uint64_t)len;
+        cql_write_big_endian_int64(result + storage_offset, info);
+
+        memcpy(result + variable_offset, val, len);
         variable_offset += len;
         break;
       }

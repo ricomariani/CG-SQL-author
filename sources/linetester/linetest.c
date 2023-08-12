@@ -15,6 +15,14 @@
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#pragma clang diagnostic ignored "-Wunused-function"
+extern cql_object_ref _Nonnull cql_partition_create(void);
+extern cql_bool cql_partition_cursor(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key, cql_dynamic_cursor *_Nonnull value);
+extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key);
+extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
+extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
+extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
 cql_string_literal(_literal_1_exp_dump, "exp");
 cql_string_literal(_literal_2_act_dump, "act");
 
@@ -49,6 +57,8 @@ END;
 #define _PROC_ "linetest_setup"
 CQL_WARN_UNUSED cql_code linetest_setup(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
   _rc_ = cql_exec(_db_,
     "CREATE TABLE linedata( "
       "source TEXT NOT NULL, "
@@ -69,6 +79,7 @@ CQL_WARN_UNUSED cql_code linetest_setup(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   return _rc_;
 }
 #undef _PROC_
@@ -90,6 +101,7 @@ CQL_WARN_UNUSED cql_code linetest_add(sqlite3 *_Nonnull _db_, cql_string_ref _No
   cql_contract_argument_notnull((void *)data_, 4);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *_temp_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -115,6 +127,7 @@ CQL_WARN_UNUSED cql_code linetest_add(sqlite3 *_Nonnull _db_, cql_string_ref _No
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&_temp_stmt);
   return _rc_;
 }
@@ -150,6 +163,7 @@ typedef struct linetest_dump_C_row {
 #define linetest_dump_C_refs_offset cql_offsetof(linetest_dump_C_row, source) // count = 3
 CQL_WARN_UNUSED cql_code linetest_dump(sqlite3 *_Nonnull _db_) {
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
   linetest_dump_C_row C = { ._refs_count_ = 3, ._refs_offset_ = linetest_dump_C_refs_offset };
 
@@ -179,6 +193,7 @@ CQL_WARN_UNUSED cql_code linetest_dump(sqlite3 *_Nonnull _db_) {
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   return _rc_;
@@ -219,6 +234,7 @@ CQL_WARN_UNUSED cql_code dump_proc_records(sqlite3 *_Nonnull _db_, cql_string_re
   cql_contract_argument_notnull((void *)procname_, 2);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
   dump_proc_records_C_row C = { ._refs_count_ = 3, ._refs_offset_ = dump_proc_records_C_refs_offset };
 
@@ -248,6 +264,7 @@ CQL_WARN_UNUSED cql_code dump_proc_records(sqlite3 *_Nonnull _db_, cql_string_re
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
   return _rc_;
@@ -272,6 +289,8 @@ CQL_WARN_UNUSED cql_code dump(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull pr
   cql_contract_argument_notnull((void *)procname, 1);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
   cql_alloc_cstr(_cstr_5, procname);
   printf("%s: difference encountered\n", _cstr_5);
   cql_free_cstr(_cstr_5, procname);
@@ -284,6 +303,7 @@ CQL_WARN_UNUSED cql_code dump(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull pr
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   return _rc_;
 }
 #undef _PROC_
@@ -384,6 +404,7 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
   cql_contract_argument_notnull((void *)errors, 3);
 
   cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
   sqlite3_stmt *p_stmt = NULL;
   compare_lines_p_row p = { ._refs_count_ = 1, ._refs_offset_ = compare_lines_p_refs_offset };
   sqlite3_stmt *actual_stmt = NULL;
@@ -441,7 +462,7 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &expected.physical_line);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     for (;;) {
-    if (!(actual._has_row_ && expected._has_row_)) break;
+      if (!(actual._has_row_ && expected._has_row_)) break;
       *compares = (*compares) + 1;
       if (actual.line != expected.line || cql_string_compare(actual.data, expected.data) != 0) {
         _rc_ = dump(_db_, p.procname);
@@ -499,6 +520,7 @@ CQL_WARN_UNUSED cql_code compare_lines(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnu
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
+  cql_error_report();
   cql_finalize_stmt(&p_stmt);
   cql_teardown_row(p);
   cql_finalize_stmt(&actual_stmt);

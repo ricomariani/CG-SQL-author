@@ -9,8 +9,8 @@ The full system also includes features for managing and upgrading schema, creati
 ### Essential Documentation
 
 - [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
-- [CG/SQL Language Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md)
-- [CG/SQL Internals](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md)
+- [CG/SQL Language Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md) ([HTML Version](https://ricomariani.github.io/CG-SQL-author/CQL_Guide/generated/guide.html))
+- [CG/SQL Internals](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md) ([HTML Version](https://ricomariani.github.io/CG-SQL-author/CQL_Guide/generated/internal.html))
 - [Getting Started with CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/getting-started.md)
 - [Writing a Hello World Program](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started)
 - [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)

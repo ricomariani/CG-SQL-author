@@ -17,12 +17,22 @@
 #define E(x) _E(x, x)
 #define SQL_E(x) _E(SQLITE_OK == (x), x)
 
+static int sqlite_trace_callback(unsigned type, void* ctx, void* p, void* x) {
+  switch (type) {
+    case SQLITE_TRACE_PROFILE:
+      fprintf(stderr, "[SQLite] Statement: %s, Execution Time: %lld ns\n", sqlite3_sql((sqlite3_stmt*)p), *((sqlite3_int64*)x));
+      break;
+  }
+  return 0;
+}
+
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv) {
   printf("CQL Mini App Thingy\n");
 
   sqlite3 *db = NULL;
   SQL_E(sqlite3_open(":memory:", &db));
+  sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
 
   SQL_E(go(db));
   return 0;

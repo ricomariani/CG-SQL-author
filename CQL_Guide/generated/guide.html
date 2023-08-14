@@ -7346,7 +7346,7 @@ END;</code></pre>
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sun Aug 13 18:50:59 PDT 2023</p>
+<p>Snapshot as of Sun Aug 13 18:54:04 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -9148,7 +9148,7 @@ blob_update_val_stmt:
 <li><code>cql:try_is_proc_body</code> (See <a href="https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md#initialization-improvements">Initialization Improvements</a>), this indicates that the annotated try block should be considered the entire body of the procedure for intialization purposes. In particular, it ensures that all parameters of the current procedure have been initialized by the end of the `TRY`` and prevents this check from happening again at the end of the procedure. This is needed is that for various reasons sometimes we need to wrap certain stored procedures in a try/catch such that custom error handling or logging can be implemented. In doing so, however, they can break our normal assumptions about things like initialization of OUT parameters in the errant case and that must be ok.</li>
 <li><code>cql:vault_sensitive</code> or <code>cql:vault_sensitive([columns]...)</code> <code>cql:vault_sensitive(context, [columns]...)</code> these forms indicate that <code>@sensitive</code> columns should get additional encoding. These columns are marked with <code>CQL_DATA_TYPE_ENCODED</code> in the result set metadata. This causes <code>cql_copy_encoder</code> to be called to make an abstract encoder from a database instance and then functions like <code>cql_encode_text</code> to be called to encode each column. To make sure of these attributes you will need a custom <code>cqlrt.c</code> with suitable encodings for your application.</li>
 <li><code>cql:from_recreate</code> is used to mark tables that transitioned from <code>@recreate</code> to <code>@create</code></li>
-<li><code>cql:module_must_not_be_deleted_see_docs_for_CQL0392</code> must be added to an <code>@delete</code> attribute on a virtual table to remind the developer that the module for the virtual table must never be deleted elsewise database upgrades will fail. See [<code>CQL0392</code>(#cql0392-when-deleting-a-virtual-table-you-must-specify-deletenn-cqlmodule_must_not_be_deleted_see_docs_for_cql0392-as-a-reminder-not-to-delete-the-module-for-this-virtual-table)</li>
+<li><code>cql:module_must_not_be_deleted_see_docs_for_CQL0392</code> must be added to an <code>@delete</code> attribute on a virtual table to remind the developer that the module for the virtual table must never be deleted elsewise database upgrades will fail. See <a href="#cql0392-when-deleting-a-virtual-table-you-must-specify-deletenn-cqlmodule_must_not_be_deleted_see_docs_for_cql0392-as-a-reminder-not-to-delete-the-module-for-this-virtual-table"><code>CQL0392</code></a></li>
 </ul>
 <h3 id="deprecated-attributes">Deprecated attributes</h3>
 <ul>
@@ -11397,7 +11397,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sun Aug 13 18:50:59 PDT 2023</p>
+<p>Snapshot as of Sun Aug 13 18:54:04 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

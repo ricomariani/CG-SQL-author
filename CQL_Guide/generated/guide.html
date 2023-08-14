@@ -7160,7 +7160,7 @@ END;</code></pre>
 <p>There are two large features that involve complex uses of blobs that are supported in the default runtime. These are Blob Storage and Backed Tables, the latter of which uses key and value blobs for generic schema.</p>
 <h3 id="blob-storage">Blob Storage</h3>
 <p>The general idea here is that you might want to take arbitrary data that is in a cursor, which is to say any database shape at all, and convert it into a single blob. You could use this blob to store composite data in a single column in the database or to send your data over some kind of wire transport in a generic fashion. The idea of blob storage is to provide a reslient way to do this that is platform neutral (i.e. you can store the blob on one system and recover it on another system with different endian order). Blob storage allows limited extension of the blob shape over time, allowing you to add new nullable columns at the end of your shape and still recover your data from older blobs.</p>
-<h4 id="defining-a-shape-for-blob-storage">Defining a shape for blob storage</h4>
+<h4 id="defining-a-shape-for-blob-storage">Defining a shape for Blob Storage</h4>
 <p>In SQL/CQL, the main way you define structures, especially those that you want to maintain, is with tables. Hence we introduce notation like this:</p>
 <div class="sourceCode" id="cb458"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb458-1" title="1"><span class="ot">@attribute(cql:blob_storage)</span></a>
 <a class="sourceLine" id="cb458-2" title="2"><span class="kw">create</span> <span class="kw">table</span> news_info(</a>
@@ -7180,14 +7180,14 @@ END;</code></pre>
 <p>Note: schema versions move forward globally in the schema, not locally in one table; this implies there are versions 1-5 elsewhere, not shown.</p>
 </blockquote>
 <p>Additionally, since the storage is not backed by SQLite and therefore lacks its constraint system, default values and constraints are not allowed in a table marked with <code>cql:blob_storage</code>; it’s just data. Similarly, triggers, views, and indices may not use the table marked as blob storage. It isn’t really a table.</p>
-<h4 id="what-variables-or-columns-can-hold-blob-storage">What variables or columns can hold blob storage?</h4>
+<h4 id="declaring-blob-storage">Declaring Blob Storage</h4>
 <p>Blob storage goes in a blob field, but recall CQL has discriminated types so we can use a form like this:</p>
 <div class="sourceCode" id="cb460"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb460-1" title="1"><span class="kw">create</span> <span class="kw">table</span> info(</a>
 <a class="sourceLine" id="cb460-2" title="2">  <span class="kw">id</span> <span class="dt">long</span> <span class="kw">primary</span> <span class="kw">key</span>,</a>
 <a class="sourceLine" id="cb460-3" title="3">  news_info <span class="dt">blob</span><span class="op">&lt;</span>news_info<span class="op">&gt;</span></a>
 <a class="sourceLine" id="cb460-4" title="4">);</a></code></pre></div>
 <p>From a SQL perspective <code>news_info</code> is just a blob, you can only apply blob operations to it in the context of a query. This means <code>WHERE</code> clauses that partially constraint the blob contents are not generally possible (though you could do it if you write suitable UDFs and <a href="#backed_tables">Backed Tables</a> actually generalize this if generic schema support is what is desired). Blob storage is really about moving the whole blob around so it’s apprpropriate when you want to crack the blob in code, and not so much in database operations.</p>
-<h4 id="how-do-i-make-one-of-these-blobs">How do I make one of these blobs?</h4>
+<h4 id="creating-blobs-with-blob-storage">Creating Blobs with Blob Storage</h4>
 <p>You can use the <code>SET</code> statement on a variable of type <code>blob&lt;news_info&gt;</code> starting from any cursor that has shape <code>news_info</code> like so:</p>
 <div class="sourceCode" id="cb461"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb461-1" title="1"><span class="kw">create</span> proc make_blob(<span class="kw">like</span> news_info, <span class="kw">out</span> result <span class="dt">blob</span><span class="op">&lt;</span>news_info<span class="op">&gt;</span>)</a>
 <a class="sourceLine" id="cb461-2" title="2"><span class="cf">begin</span></a>
@@ -7211,7 +7211,7 @@ Of course any of the usual cursor building forms can be used to power your blob 
 <a class="sourceLine" id="cb462-9" title="9"><span class="cf">END</span>;</a></code></pre></div>
 <p>There are <em>many</em> cursor fetch forms, including dummy data forms and other interesting bits of sugar.<br />
 You can fetch a cursor from arguments, from other cursors, and even combinations. Because cursors are the source of new blobs, any of these data acquistion forms are viable and convenient sources of data.</p>
-<h4 id="how-do-i-unpack-one-of-these-blobs">How do I unpack one of these blobs?</h4>
+<h4 id="unpacking-blob-storage">Unpacking Blob Storage</h4>
 <p>Again, the normal way that you work with records in CQL is by creating suitable cursors. Such cursors can be economically accessed on a field-by-field basis. What we need is a way to easily recreate a cursor from a blob so we can read the data values. To do this use this form:</p>
 <div class="sourceCode" id="cb463"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb463-1" title="1"><span class="co">-- get the blob from somewhere (b will be of type blob&lt;news_info&gt;)</span></a>
 <a class="sourceLine" id="cb463-2" title="2">let b <span class="op">:=</span> (<span class="kw">select</span> news_info <span class="kw">from</span> info <span class="kw">where</span> <span class="kw">id</span> <span class="op">=</span> id_ <span class="cf">if</span> <span class="kw">nothing</span> <span class="kw">null</span>);</a>
@@ -7224,7 +7224,7 @@ You can fetch a cursor from arguments, from other cursors, and even combinations
 <a class="sourceLine" id="cb463-9" title="9"><span class="co">-- now use c.who, c.what, etc.</span></a></code></pre></div>
 <p>On the data is loaded in a cursor is very economical to access on a field-by-field basis, and, since the deserialization of the blob happened all at once, that is also economical. &gt;NOTE: The runtime cannot assume that the blob is well formed, it could be coming from anywhere. For secure-code reasons it must assume the is “hostile”. Hence the decoding validates the shape, internal lengths, and so forth. Therefore there are many ways it might fail.</p>
 <p>Once you have the cursor you can do any of the usual data operations; you could even make new blobs with different combinations by slicing the cursor fields using the <code>LIKE</code> operator. You can return the cursor with <code>OUT</code>, or <code>OUT UNION</code>, or pass the blob fields as arguments to functions using the <code>FROM</code> forms. The cracked blob is fully usable for all the usual CQL things you might need to do.</p>
-<h4 id="what-is-the-representation-of-one-of-these-blobs">What is the representation of one of these blobs?</h4>
+<h4 id="blob-storage-representation">Blob Storage Representation</h4>
 <p>The blob data must be able to evolve over time, so each blob has to be self-describing. We must also be able to throw an exception if an incorrect or invalid blob is used when loading a cursor, so the blob has to contain the following:</p>
 <ul>
 <li>the number of columns in the blob data type when it was created</li>
@@ -7244,7 +7244,7 @@ You can fetch a cursor from arguments, from other cursors, and even combinations
 <li>Nested blobs are stored inline, with a length prefix encoded like any other int</li>
 <li>Floating point is stored in IEEE 754 format which is already highly portable</li>
 </ul>
-<h4 id="customization">Customization</h4>
+<h4 id="blob-storage-customization">Blob Storage Customization</h4>
 <p>As with many other features, it’s possible to replace the (de)serialization with code of your choice by supplying your own runtime methods.</p>
 <p>Storage types that are going to be persisted in the database or go over a wire-protocol should be managed like schema with the usual validation rules. On the other hand, formats that will be used only transiently in memory can be changed at whim from version to version. As mentioned above, the design specifically considers cases where a new client discovers an old-format blob (with fewer columns) and, the reverse, cases where an old client recieves a datagram from a new client with too many columns. Any customizations should consider these same cases.</p>
 <h4 id="blob-storage-example">Blob Storage Example</h4>
@@ -7357,7 +7357,7 @@ At present it is signficantly restricted. It has to have exactly two columns, bo
 <a class="sourceLine" id="cb466-11" title="11">  name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span></a>
 <a class="sourceLine" id="cb466-12" title="12">);</a></code></pre></div>
 <p>The <code>backed_by</code> attribute indicates that the table we’re about to define is not really going to be its own table.<br />
-As a result, you will not be able to (e.g.) <code>DROP</code> the table or <code>CREATE INDEX</code> or <code>CREATE TRIGGER</code> on it, and there will be no schema upgrade for it should you request one with <code>--rt schema_upgrade</code>. The table may not contain constraints as there would be no way to enforce them. But as compensation for these restrictions it can be changed freely and has no physical schema cost associated with it.</p>
+As a result, you will not be able to (e.g.) <code>DROP</code> the table or <code>CREATE INDEX</code> or <code>CREATE TRIGGER</code> on it, and there will be no schema upgrade for it should you request one with <code>--rt schema_upgrade</code>. The table may not contain constraints as there would be no way to enforce them, but they may have default values. As compensation for these restrictions, backed tables can be changed freely and have no associated physical schema cost. &gt;NOTE: Adding new not null columns creatives effectively a new backed table, any previous data will seem “lost”. See below.</p>
 <h4 id="reading-data-from-backed-tables">Reading Data From Backed Tables</h4>
 <p>To understand how reading works, imagine that we had a VIEW for each backed table which simply reads the blobs out of the backing store and then extracts the backed columns using some blob extraction functions. This would work, but then we’d be trading view schema for table schema so the schema savings we’re trying to achieve would be lost.</p>
 <p>We can’t use an actual VIEW but CQL already has something very “view like” – the shared fragment structure. So what we do instead of views is to automatically create a shared fragment just like the view we could have made. The shared fragment looks like this:</p>
@@ -7819,7 +7819,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Mon Aug 14 15:13:50 PDT 2023</p>
+<p>Snapshot as of Mon Aug 14 15:31:35 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -11870,7 +11870,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Mon Aug 14 15:13:50 PDT 2023</p>
+<p>Snapshot as of Mon Aug 14 15:31:35 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

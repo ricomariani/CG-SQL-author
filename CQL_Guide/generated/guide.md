@@ -9752,7 +9752,7 @@ There are two large features that involve complex uses of blobs that are support
 
 The general idea here is that you might want to take arbitrary data that is in a cursor, which is to say any database shape at all, and convert it into a single blob.  You could use this blob to store composite data in a single column in the database or to send your data over some kind of wire transport in a generic fashion.  The idea of blob storage is to provide a reslient way to do this that is platform neutral (i.e. you can store the blob on one system and recover it on another system with different endian order).  Blob storage allows limited extension of the blob shape over time, allowing you to add new nullable columns at the end of your shape and still recover your data from older blobs.
 
-#### Defining a shape for blob storage
+#### Defining a shape for Blob Storage
 In SQL/CQL, the main way you define structures, especially those that you want to maintain, is with tables.  Hence we introduce notation like this:
 
 ```sql
@@ -9782,7 +9782,7 @@ create table news_info(
 
 Additionally, since the storage is not backed by SQLite and therefore lacks its constraint system, default values and constraints are not allowed in a table marked with `cql:blob_storage`; it's just data. Similarly, triggers, views, and indices may not use the table marked as blob storage. It isn't really a table.
 
-#### What variables or columns can hold blob storage?
+#### Declaring Blob Storage
 
 Blob storage goes in a blob field, but recall CQL has discriminated types so we can use a form like this:
 
@@ -9795,7 +9795,7 @@ create table info(
 
 From a SQL perspective `news_info` is just a blob, you can only apply blob operations to it in the context of a query.  This means `WHERE` clauses that partially constraint the blob contents are not generally possible (though you could do it if you write suitable UDFs and [Backed Tables](#backed_tables) actually generalize this if generic schema support is what is desired).  Blob storage is really about moving the whole blob around so it's apprpropriate when you want to crack the blob in code, and not so much in database operations.
 
-#### How do I make one of these blobs?
+#### Creating Blobs with Blob Storage
 
 You can use the `SET` statement on a variable of type `blob<news_info>` starting from any cursor that has shape `news_info` like so:
 
@@ -9830,7 +9830,7 @@ There are *many* cursor fetch forms, including dummy data forms and other intere
 You can fetch a cursor from arguments, from other cursors, and even combinations.  Because cursors
 are the source of new blobs,  any of these data acquistion forms are viable and convenient sources of data.
 
-#### How do I unpack one of these blobs?
+#### Unpacking Blob Storage
 
 Again, the normal way that you work with records in CQL is by creating suitable cursors. Such cursors can be economically accessed on a field-by-field basis. What we need is a way to easily recreate a cursor from a blob
 so we can read the data values. To do this use this form:
@@ -9853,7 +9853,7 @@ since the deserialization of the blob happened all at once, that is also economi
 
 Once you have the cursor you can do any of the usual data operations; you could even make new blobs with different combinations by slicing the cursor fields using the `LIKE` operator.  You can return the cursor with `OUT`, or `OUT UNION`, or pass the blob fields as arguments to functions using the `FROM` forms. The cracked blob is fully usable for all the usual CQL things you might need to do.
 
-#### What is the representation of one of these blobs?
+#### Blob Storage Representation
 
 The blob data must be able to evolve over time, so each blob has to be self-describing.  We must also be able to throw an exception if an incorrect or invalid blob is used when loading a cursor, so the blob has to contain the following:
 
@@ -9873,7 +9873,7 @@ The blob data must be able to evolve over time, so each blob has to be self-desc
 * Floating point is stored in IEEE 754 format which is already highly portable
 
 
-#### Customization
+#### Blob Storage Customization
 
 As with many other features, it's possible to replace the (de)serialization with code of your choice by supplying your own runtime methods. 
 
@@ -10029,11 +10029,12 @@ CREATE TABLE backed2(
 );
 ```
 
-
 The `backed_by` attribute indicates that the table we're about to define is not really going to be its own table.  
 As a result, you will not be able to (e.g.) `DROP` the table or `CREATE INDEX` or `CREATE TRIGGER` on it, and there
 will be no schema upgrade for it should you request one with `--rt schema_upgrade`.  The table may not contain
-constraints as there would be no way to enforce them.  But as compensation for these restrictions it can be changed freely and has no physical schema cost associated with it.
+constraints as there would be no way to enforce them, but they may have default values.  As compensation for
+these restrictions, backed tables can be changed freely and have no associated physical schema cost.
+>NOTE: Adding new not null columns creatives effectively a new backed table, any previous data will seem "lost".  See below.
 
 #### Reading Data From Backed Tables
 
@@ -10684,7 +10685,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Aug 14 15:13:50 PDT 2023
+Snapshot as of Mon Aug 14 15:31:35 PDT 2023
 
 ### Operators and Literals
 
@@ -17115,7 +17116,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Aug 14 15:13:50 PDT 2023
+Snapshot as of Mon Aug 14 15:31:35 PDT 2023
 
 ### Rules
 

@@ -32,7 +32,10 @@ int main(int argc, char **argv) {
 
   sqlite3 *db = NULL;
   SQL_E(sqlite3_open(":memory:", &db));
-  sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
+
+  if (argc >= 2 && strcmp(argv[1], "-vvv") == 0) {
+    sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
+  }
 
   SQL_E(go(db));
   return 0;

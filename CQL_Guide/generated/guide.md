@@ -9942,7 +9942,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Aug 13 18:47:58 PDT 2023
+Snapshot as of Sun Aug 13 18:50:59 PDT 2023
 
 ### Operators and Literals
 
@@ -11790,7 +11790,7 @@ The complete list (as of this writing) is:
   * `cql:implements=[interface]` interfaces may be declared with `declare interface` and are basically a normal CQL shape.  This annotation specifies that the annotated procedure has all the needed columns to encode the indicated shape.  It may be used more than once to indicate several shapes are supported.  The requirements are validated by the compiler but they do not affect code generation at all other than the JSON file (see [Chapter 13](#chapter-13-json-output)). The intent here is to allow downstream code generators like you might have for Java and Objective C to incorporate the interface into the signature of result sets and define the interface as needed.  The C and Lua output do not have any such notions.  The present Objective C output (`--rt objc`) doesn't support interfaces  and is likely to be replace by a python equivalent based on the JSON output that does.  Generally, `--rt objc` was a mistake as was `--rt java``, but the latter has been removed.  Interfaces are highly useful even without codegen just for declarative purposes.
   * `cql:java_package=[a name]` this is not used by the compiler but it can be handy to apply to various items to give java code generators a hint where the code should go or where it comes from.  Any support for this needs to be in the your java code generator.  A sample is in the `java_demo` directory.
   * `cql:try_is_proc_body` (See [Initialization Improvements](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md#initialization-improvements)), this indicates that the annotated try block should be considered the entire body of the procedure for intialization purposes.  In particular, it ensures that all parameters of the current procedure have been initialized by the end of the `TRY`` and prevents this check from happening again at the end of the procedure. This is needed is that for various reasons sometimes we need to wrap certain stored procedures in a try/catch such that custom error handling or logging can be implemented. In doing so, however, they can break our normal assumptions about things like initialization of OUT parameters in the errant case and that must be ok.
-  * `cql:vault_senstive` or `cql:vault_senstive([columns]...)` `cql:vault_senstive(context, [columns]...)` these forms indicate that `@sensitive` columns should get additional encoding. These columns are marked with `CQL_DATA_TYPE_ENCODED` in the result set metadata.  This causes `cql_copy_encoder` to be called to make an abstract encoder from a database instance and then functions like `cql_encode_text` to be called to encode each column.  To make sure of these attributes you will need a custom `cqlrt.c` with suitable encodings for your application.
+  * `cql:vault_sensitive` or `cql:vault_sensitive([columns]...)` `cql:vault_sensitive(context, [columns]...)` these forms indicate that `@sensitive` columns should get additional encoding. These columns are marked with `CQL_DATA_TYPE_ENCODED` in the result set metadata.  This causes `cql_copy_encoder` to be called to make an abstract encoder from a database instance and then functions like `cql_encode_text` to be called to encode each column.  To make sure of these attributes you will need a custom `cqlrt.c` with suitable encodings for your application.
   * `cql:from_recreate` is used to mark tables that transitioned from `@recreate` to `@create`
   * `cql:module_must_not_be_deleted_see_docs_for_CQL0392` must be added to an `@delete` attribute on a virtual table to remind the developer that the module for the virtual table must never be deleted elsewise database upgrades will fail.  See [`CQL0392`(#cql0392-when-deleting-a-virtual-table-you-must-specify-deletenn-cqlmodule_must_not_be_deleted_see_docs_for_cql0392-as-a-reminder-not-to-delete-the-module-for-this-virtual-table)
 
@@ -16373,7 +16373,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Aug 13 18:47:58 PDT 2023
+Snapshot as of Sun Aug 13 18:50:59 PDT 2023
 
 ### Rules
 

@@ -250,7 +250,9 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#statementtype-keywords">Statement/Type Keywords</a></li>
 <li><a href="#rules">Rules</a></li>
 </ul></li>
-<li><a href="#appendix-3-control-directives">Appendix 3: Control Directives</a></li>
+<li><a href="#appendix-3-control-directives">Appendix 3: Control Directives</a><ul>
+<li><a href="#deprecated-attributes">Deprecated attributes</a></li>
+</ul></li>
 <li><a href="#appendix-4-cql-error-codes">Appendix 4: CQL Error Codes</a><ul>
 <li><a href="#cql0001-operands-must-be-an-integer-type-not-real">CQL0001: operands must be an integer type, not real</a></li>
 <li><a href="#cql0002-left-operand-cannot-be-an-object-in-operator">CQL0002: left operand cannot be an object in ‘operator’</a></li>
@@ -7344,7 +7346,7 @@ END;</code></pre>
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat Aug 12 01:52:30 PDT 2023</p>
+<p>Snapshot as of Sun Aug 13 18:47:58 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -9108,7 +9110,7 @@ blob_update_val_stmt:
 <p><code>@SCHEMA_UPGRADE_SCRIPT</code> * CQL emits a schema upgrade script as part of its upgrade features, this script declares tables in their final form but also creates the same tables as they existed when they were first created * this directive instructs CQL to ignore the incompatible creations, the first declaration controls * the idea here is that the upgrade script is in the business of getting you to the finish line in an orderly fashion and some of the interim steps are just not all the way there yet * note that the upgrade script recapitulates the version history, it does not take you directly to the finish line, this is so that all instances get to the same place the same way (and this fleshes out any bugs in migration)</p>
 <p><code>@DUMMY_NULLABLES</code> <code>@DUMMY_DEFAULTS</code> <code>@DUMMY_SEED</code> * these control the creation of dummy data for <code>insert</code> and <code>fetch</code> statements (See Chapters 5 and 12)</p>
 <p><code>@FILE</code> * a string literal that corresponds to the current file name with a prefix stripped (to remove build lab junk in the path)</p>
-<p><code>@ATTRIBUTE</code> * the main purpose of <code>@attribute</code> is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate * the nested nature of attribute values is sufficiently flexible than you could encode an arbitrary LISP program in an attribute, so really anything you might need to express is possible * there are a number of attributes known to the compiler which I list below (complete as of this writing)</p>
+<p><code>@ATTRIBUTE</code> * the main purpose of <code>@attribute</code> is to appear in the JSON output so that it can control later codegen stages in whatever way you deem appropriate * the nested nature of attribute values is sufficiently flexible than you could encode an arbitrary LISP program in an attribute, so really anything you might need to express is possible * there are a number of attributes known to the compiler which are listed below (complete as of this writing)</p>
 <ul>
 <li><code>cql:autodrop=(table1, table2, ...)</code> when present the indicated tables, which must be temp tables, are dropped when the results of the procedure have been fetched into a rowset</li>
 <li><code>cql:identity=(column1, column2, ...)</code> the indicated columns are used to create a row comparator for the rowset corresponding to the procedure, this appears in a C macro of the form <code>procedure_name_row_same(rowset1, row1, rowset2, row2)</code></li>
@@ -9117,6 +9119,7 @@ blob_update_val_stmt:
 <li>Useful if you only indend to call the procedure from CQL.</li>
 <li>Saves code generation and removes the possibility of C code using the getters.</li>
 </ul></li>
+<li><code>cql:emit_setters</code> the annotated procedure should emit setter functions so that result set columns can be mutated, this can be quite useful for business logic but it is more costly</li>
 <li><code>cql:suppress_result_set</code> the annotated procedure should not emit its related “fetch results” function.
 <ul>
 <li>Useful if you only indend to call the procedure from CQL.</li>
@@ -9131,10 +9134,26 @@ blob_update_val_stmt:
 </ul></li>
 <li><code>cql:generate_copy</code> the code generation for the annotated procedure will produce a <code>[procedure_name]_copy</code> function that can make complete or partial copies of its result set.</li>
 <li><code>cql:shared_fragment</code> is used to create shared fragments (See <a href="#chapter-14-cql-shared-fragments">Chapter 14</a>)</li>
-<li><code>cql:no_table_scan</code> for query plan processing, indicates that the table in question should never be table scanned in any plan (for better diagnostics)</li>
-<li><code>cql:autotest=([many forms])</code> declares various autotest features (See Chapter 12)</li>
+<li><code>cql:no_table_scan</code> for query plan processing, indicates that attributed table should never be table scanned in any plan (for better diagnostics)</li>
+<li><code>cql:ok_table_scan=([t1], [t2], ...)</code> indicates that the attributed procedure scans the indicated tables and that’s not a problem. This helps to suppress errors in expensive search functions that are known to scan big tables.</li>
+<li><code>cql:autotest=([many forms])</code> declares various autotest features (See <a href="#chapter-12-testability-features">Chapter 12</a>)</li>
 <li><code>cql:query_plan_branch=[integer]</code> is used by the query plan generator to determine which conditional branch to use in query plan analysis when a shared fragment that contains an <code>IF</code> statement is used. (See <a href="#chapter-15-query-plan-generation">Chapter 15</a>)</li>
 <li><code>cql:alias_of=[c_function_name]</code> are used on <a href="#ordinary-scalar-functions">function declarations</a> to declare a function or procedure in CQL that calls a function of a different name. This is intended to used for aliasing native (C) functions. Both the aliased function name and the original function name may be declared in CQL at the same time. Note that the compiler does not enforce any consistency in typing between the original and aliased functions.</li>
+<li><code>cql:backing_table</code> used to define a key value store table (docs need, there is only a brief wiki article)</li>
+<li><code>cql:backed_by=[a_backing_table]</code> specifies that the attributed table should have its data stored in the specified backing table, (docs needed, there is only a brief wiki article)</li>
+<li><code>cql:blob_storage</code> the attributed table isn’t really a physical table, it specifies the layout of a serializable blob, see this <a href="https://github.com/ricomariani/CG-SQL-author/wiki/CG-SQL-Blog-Archive#introducing-blob-storage-20220317">introductory article</a></li>
+<li><code>cql:deterministic</code> when applied to a `declare select function`` indicates that the function is determinisitic and hence ok to use in indices.</li>
+<li><code>cql:implements=[interface]</code> interfaces may be declared with <code>declare interface</code> and are basically a normal CQL shape. This annotation specifies that the annotated procedure has all the needed columns to encode the indicated shape. It may be used more than once to indicate several shapes are supported. The requirements are validated by the compiler but they do not affect code generation at all other than the JSON file (see <a href="#chapter-13-json-output">Chapter 13</a>). The intent here is to allow downstream code generators like you might have for Java and Objective C to incorporate the interface into the signature of result sets and define the interface as needed. The C and Lua output do not have any such notions. The present Objective C output (<code>--rt objc</code>) doesn’t support interfaces and is likely to be replace by a python equivalent based on the JSON output that does. Generally, <code>--rt objc</code> was a mistake as was `–rt java``, but the latter has been removed. Interfaces are highly useful even without codegen just for declarative purposes.</li>
+<li><code>cql:java_package=[a name]</code> this is not used by the compiler but it can be handy to apply to various items to give java code generators a hint where the code should go or where it comes from. Any support for this needs to be in the your java code generator. A sample is in the <code>java_demo</code> directory.</li>
+<li><code>cql:try_is_proc_body</code> (See <a href="https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md#initialization-improvements">Initialization Improvements</a>), this indicates that the annotated try block should be considered the entire body of the procedure for intialization purposes. In particular, it ensures that all parameters of the current procedure have been initialized by the end of the `TRY`` and prevents this check from happening again at the end of the procedure. This is needed is that for various reasons sometimes we need to wrap certain stored procedures in a try/catch such that custom error handling or logging can be implemented. In doing so, however, they can break our normal assumptions about things like initialization of OUT parameters in the errant case and that must be ok.</li>
+<li><code>cql:vault_senstive</code> or <code>cql:vault_senstive([columns]...)</code> <code>cql:vault_senstive(context, [columns]...)</code> these forms indicate that <code>@sensitive</code> columns should get additional encoding. These columns are marked with <code>CQL_DATA_TYPE_ENCODED</code> in the result set metadata. This causes <code>cql_copy_encoder</code> to be called to make an abstract encoder from a database instance and then functions like <code>cql_encode_text</code> to be called to encode each column. To make sure of these attributes you will need a custom <code>cqlrt.c</code> with suitable encodings for your application.</li>
+<li><code>cql:from_recreate</code> is used to mark tables that transitioned from <code>@recreate</code> to <code>@create</code></li>
+<li><code>cql:module_must_not_be_deleted_see_docs_for_CQL0392</code> must be added to an <code>@delete</code> attribute on a virtual table to remind the developer that the module for the virtual table must never be deleted elsewise database upgrades will fail. See [<code>CQL0392</code>(#cql0392-when-deleting-a-virtual-table-you-must-specify-deletenn-cqlmodule_must_not_be_deleted_see_docs_for_cql0392-as-a-reminder-not-to-delete-the-module-for-this-virtual-table)</li>
+</ul>
+<h3 id="deprecated-attributes">Deprecated attributes</h3>
+<ul>
+<li><code>cql:alt_prefix=prefix</code> this may be applied to a procedure definition or declaration to override the prefix found in <code>rt_common.c</code>, this is really only interesting if there is a prefix in the first place so the default configuration of <code>rt_common.c</code> doesn’t make this very interesting. However it is possible to change <code>.symbol_prefix</code> (Meta does) and having done so you might want to change it to something else.</li>
+<li><code>cql:custom_type_for_encoded_column</code> the objective C output has the option of using different type for strings that have been encoded because they are sensitive. This attribute is placed on a procedure and it causes all strings in result sets to be declared with <code>cql_string_ref_encode</code> from the objc result type. The type is ocnfigured with <code>RT_STRING_ENCODE</code> which is <code>cql_string_ref_encode</code> by default. This is deprecated because the entire <code>--rt objc</code> feature is slated for destruction to be replaced with python that processes the JSON like the Java case.</li>
 </ul>
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -11378,7 +11397,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat Aug 12 01:52:30 PDT 2023</p>
+<p>Snapshot as of Sun Aug 13 18:47:58 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

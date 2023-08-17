@@ -10491,19 +10491,20 @@ If you want to refer to your blob functions in your own code, such as for indice
 
 ### Introduction
 
-The general idea of "vaulted" values is that some fields in your database might contain sensitive data.  It could be
+The general idea of "vaulted" values is that some fields in your database might contain sensitive data and you
+might not want to make this data visible to all the code in your whole project.  The data could be
 sensitive for a number of reasons, maybe it's PII, or maybe it's confidential for some other reason.  The idea
-here is that you can't very well limit access to this data in a layer like CQL can provide because it's likely
-that the accessing functions are in the business of processing this data.  For instance in Meta's Messenger
-application, the body of messages, the "text" if you will, is _highly_ sensitive, it might contain extremely
-valuable information like phone numbers, sell orders, literally anything.  And yet the Messenger application
-is _in the business_ of displaying this data, this is literally _what it does_.  However, sensitive data is
-supposed to be handled in certain very specific ways and it shouldn't be appearing just willy nilly.  For instance
-sensitive data should never appear in debug logs.
+here is that you can't very well limit access to this data in a lower layer like CQL can provide because it's likely
+that the functions accessing the data at this layer are in the business of processing this data.  For instance in Meta's
+Messenger application, the body of messages, the "text" if you will, is _highly_ sensitive, it might contain extremely
+valuable information like phone numbers, medical information, literally anything.  And yet the Messenger application
+is _in the business_ of displaying this data; this is literally _what it does_.  However, sensitive data is
+supposed to be handled in certain very specific ways in certain very specific places. It shouldn't be appearing
+just willy nilly. For instance sensitive data should never appear in debug logs.
 
-In fact, in any given application, there there is tons of code that simply passes the data along and never looks at it.
-This is in some sense what we want, most places just flow data to where it needs to go and only when it is actually needed,
-for instance to draw some pixels on the screen do we crack the data.  We can search our codebase carefully for these
+In fact, in any given application, there there is typically a lot of code that simply passes the data along and never looks
+at it. This is in some sense what we want, most places just flow data to where it needs to go and only when it is actually
+needed, for instance to draw some pixels on the screen, do we crack the data.  We can search our codebase carefully for these
 "cracking" operations and indeed we can limit them with compilation tools to certain places.  All of this is in the
 name of avoiding mistakes.
 
@@ -10906,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Aug 17 16:43:14 PDT 2023
+Snapshot as of Thu Aug 17 16:51:33 PDT 2023
 
 ### Operators and Literals
 
@@ -17337,7 +17338,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Aug 17 16:43:14 PDT 2023
+Snapshot as of Thu Aug 17 16:51:34 PDT 2023
 
 ### Rules
 

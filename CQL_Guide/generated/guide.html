@@ -7633,8 +7633,8 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="chapter-17-vault-sensitive-encoding-for-privacy">Chapter 17: Vault Sensitive – Encoding for Privacy</h2>
 <h3 id="introduction">Introduction</h3>
-<p>The general idea of “vaulted” values is that some fields in your database might contain sensitive data. It could be sensitive for a number of reasons, maybe it’s PII, or maybe it’s confidential for some other reason. The idea here is that you can’t very well limit access to this data in a layer like CQL can provide because it’s likely that the accessing functions are in the business of processing this data. For instance in Meta’s Messenger application, the body of messages, the “text” if you will, is <em>highly</em> sensitive, it might contain extremely valuable information like phone numbers, sell orders, literally anything. And yet the Messenger application is <em>in the business</em> of displaying this data, this is literally <em>what it does</em>. However, sensitive data is supposed to be handled in certain very specific ways and it shouldn’t be appearing just willy nilly. For instance sensitive data should never appear in debug logs.</p>
-<p>In fact, in any given application, there there is tons of code that simply passes the data along and never looks at it. This is in some sense what we want, most places just flow data to where it needs to go and only when it is actually needed, for instance to draw some pixels on the screen do we crack the data. We can search our codebase carefully for these “cracking” operations and indeed we can limit them with compilation tools to certain places. All of this is in the name of avoiding mistakes.</p>
+<p>The general idea of “vaulted” values is that some fields in your database might contain sensitive data and you might not want to make this data visible to all the code in your whole project. The data could be sensitive for a number of reasons, maybe it’s PII, or maybe it’s confidential for some other reason. The idea here is that you can’t very well limit access to this data in a lower layer like CQL can provide because it’s likely that the functions accessing the data at this layer are in the business of processing this data. For instance in Meta’s Messenger application, the body of messages, the “text” if you will, is <em>highly</em> sensitive, it might contain extremely valuable information like phone numbers, medical information, literally anything. And yet the Messenger application is <em>in the business</em> of displaying this data; this is literally <em>what it does</em>. However, sensitive data is supposed to be handled in certain very specific ways in certain very specific places. It shouldn’t be appearing just willy nilly. For instance sensitive data should never appear in debug logs.</p>
+<p>In fact, in any given application, there there is typically a lot of code that simply passes the data along and never looks at it. This is in some sense what we want, most places just flow data to where it needs to go and only when it is actually needed, for instance to draw some pixels on the screen, do we crack the data. We can search our codebase carefully for these “cracking” operations and indeed we can limit them with compilation tools to certain places. All of this is in the name of avoiding mistakes.</p>
 <p>It’s not perfect, but it adds a level of resistance and discoverability that is useful for highly sensitive data.</p>
 <h3 id="basics-of-operation">Basics of Operation</h3>
 <p>The normal situation is that the presentation layer of your application uses various stored procedures to create result sets full of the data that it needs to get the job done. It passes these around to its various layers. It may extract some fields and pass those around, maybe row by row. The idea is that some of the values in the result set, the sensitive ones, are not the real values, they are proxies. The reason the attribute that drives all this is called “vault_sensitive” is because it imagines the (optional) existence of a “vault” that stores the real value of sensitive items and instead offers a proxy value that is useless. For instance the vaulted value of a text message might be the next available vaulted message number, “12”. It’s still a string. It flows like a string. All the places that thing text is a string get a string but the actual string is useless.</p>
@@ -7952,7 +7952,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Thu Aug 17 16:43:14 PDT 2023</p>
+<p>Snapshot as of Thu Aug 17 16:51:33 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -12003,7 +12003,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Thu Aug 17 16:43:14 PDT 2023</p>
+<p>Snapshot as of Thu Aug 17 16:51:34 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

@@ -23,4 +23,4 @@ echo "${CQL} ready"
 cc -E -x c go.sql >go.sql.pre
 $CQL --in go.sql.pre --cg go.h go.c
 cc -g -I.. -I. -o go go.c ../cqlrt.c main.c -lsqlite3
-./go
+./go $@

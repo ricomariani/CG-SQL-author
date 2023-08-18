@@ -9,6 +9,14 @@
 #include "charbuf.h"
 
 cql_data_defn( int32_t charbuf_open_count );
+cql_data_defn( pending_charbuf *__charbufs_in_flight; )
+
+cql_noexport void release_open_charbufs() {
+  while (__charbufs_in_flight) {
+    bclose(__charbufs_in_flight->buf);
+    __charbufs_in_flight = __charbufs_in_flight->prev;
+  }
+}
 
 cql_noexport void bopen(charbuf* b) {
   b->max = CHARBUF_INTERNAL_SIZE;

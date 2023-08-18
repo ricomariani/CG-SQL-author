@@ -20,11 +20,18 @@ typedef struct charbuf
   char internal[CHARBUF_INTERNAL_SIZE];
 } charbuf;
 
+typedef struct pending_charbuf {
+  charbuf *buf;
+  struct pending_charbuf *prev;
+} pending_charbuf;
+
 cql_data_decl( int32_t charbuf_open_count );
+cql_data_decl( pending_charbuf *__charbufs_in_flight );
 
 cql_noexport void bopen(charbuf* b);
 cql_noexport void bclose(charbuf *b);
 cql_noexport void bclear(charbuf *b);
+cql_noexport void release_open_charbufs(void);
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args);
 cql_noexport void bprintf(charbuf *b, const char *format, ...);
 cql_noexport CSTR dup_printf(const char *format, ...);
@@ -35,11 +42,16 @@ cql_noexport bool_t breadline(charbuf *output, CSTR *data);
 #define CHARBUF_OPEN(x) \
   int32_t __saved_charbuf_count##x = charbuf_open_count; \
   charbuf x; \
+  pending_charbuf pending_charbuf_##x; \
+  pending_charbuf_##x.prev = __charbufs_in_flight; \
+  pending_charbuf_##x.buf = &x; \
+  __charbufs_in_flight = &pending_charbuf_##x; \
   bopen(&x)
 
 #define CHARBUF_CLOSE(x) \
   bclose(&x); \
-  Invariant(__saved_charbuf_count##x == charbuf_open_count)
+  Invariant(__saved_charbuf_count##x == charbuf_open_count); \
+  __charbufs_in_flight = __charbufs_in_flight->prev \
 
 // These helpers push a buffer and use it for the output temporarily.
 // When the buffer is finished (at END_INDENT) bindent is used to

@@ -30,6 +30,10 @@ ifdef CGSQL_GCC
 CFLAGS += -std=c99
 endif
 
+ifdef CGSQL_ASAN
+CFLAGS += -fsanitize=address
+endif
+
 ifdef COVERAGE
 CFLAGS+=-O0 --coverage
 endif

@@ -2590,7 +2590,7 @@ int cql_main(int argc, char **argv) {
 // Use the longjmp buffer with the indicated code, see the comments above
 // for why this has to be this way.  Note we do this in one line so that
 // we don't get bogus code coverage errors for not covering the trialing brace
-void cql_cleanup_and_exit(int32_t code) { exit_code = code; longjmp(for_exit, 1); }
+void cql_cleanup_and_exit(int32_t code) { release_open_charbufs(); exit_code = code;  longjmp(for_exit, 1); }
 
 static void cql_exit_on_parse_errors() {
   cql_error("Parse errors found, no further passes will run.\n");

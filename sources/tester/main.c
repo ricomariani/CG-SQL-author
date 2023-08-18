@@ -130,8 +130,9 @@ int main(int argc, char **argv) {
 
     cql_string_ref ref = cql_string_ref_new(buffer);
 
-    if (line == 0) continue;
-    E(dbhelp_add(db, line, ref));
+    if (line != 0) {
+      E(dbhelp_add(db, line, ref));
+    }
 
     cql_string_release(ref);
   }

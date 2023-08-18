@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-CREATE VIRTUAL TABLE test_virtual_table_A using test_module as (
+CREATE VIRTUAL TABLE @eponymous test_virtual_table_A using test_virtual_table_A as (
   name text
 );
 

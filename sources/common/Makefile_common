@@ -13,7 +13,7 @@ T=test
 CQL_DIR=./
 
 ifdef SQLITE_PATH
-SQLITE_OBJ=$O/sqlite3-all.o
+SQLITE_OBJ=$O/sqlite3.o
 SQLITE_LINK=$(SQLITE_OBJ)
 CFLAGS+=-I$(SQLITE_PATH)
 else
@@ -148,7 +148,7 @@ $O/symtab.o: symtab.c symtab.h bytebuf.h
 
 $O/minipool.o: minipool.c minipool.h
 
-$O/sqlite3-all.o: $(SQLITE_PATH)/sqlite3-all.c
+$O/sqlite3.o: $(SQLITE_PATH)/sqlite3.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:

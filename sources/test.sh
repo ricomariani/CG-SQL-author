@@ -16,7 +16,12 @@ source common/test_helpers.sh || exit 1
 
 while [ "$1" != "" ]
 do
-  if [ "$1" == "--use_gcc" ]
+  if [ "$1" == "--use_asan" ]
+  then
+     CGSQL_ASAN=1
+     export CGSQL_ASAN
+     shift 1
+  elif [ "$1" == "--use_gcc" ]
   then
      CC=gcc
      export CC

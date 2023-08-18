@@ -18,16 +18,26 @@
 
 #include "upgrade_validate.h"
 
+
+#ifdef ENABLE_TRACING
+// note this seems to cause some leaks, this is probably not exactly right.
+static int sqlite_trace_callback(unsigned type, void* ctx, void* p, void* x) {
+  switch (type) {
+    case SQLITE_TRACE_PROFILE:
+      fprintf(stderr, "[SQLite] Statement: %s, Execution Time: %lld ns\n", sqlite3_sql((sqlite3_stmt*)p), *((sqlite3_int64*)x));
+      break;
+  }
+  return 0;
+}
+#endif
+
+int sqlite3_series_init(sqlite3 *db);
+
 cql_code pre_validate(sqlite3* db, cql_int64 *version) {
   cql_string_ref facet = cql_string_ref_new("cql_schema_version");
   int rv = test_cql_get_facet_version(db, facet, version);
   cql_string_release(facet);
   return rv;
-}
-
-static cql_code _vtab_create(sqlite3 *db, void *pAux, int argc, const char *const *argv, sqlite3_vtab **ppVTab, char **outErrorString)
-{
-  return SQLITE_OK;
 }
 
 static cql_code _vtab_connect(sqlite3 *db, void *aux, int argc, const char *const *argv, sqlite3_vtab **outVtable, char **outErrorString)
@@ -50,18 +60,21 @@ cql_code create_test_module(sqlite3 *db)
   // does not need to be created in the schema.
   static sqlite3_module module = {
     .iVersion = 0,
-    .xCreate = _vtab_create,
     .xDestroy = _vtab_destroy,
     .xConnect = _vtab_connect,
     .xDisconnect = _vtab_disconnect,
   };
 
-  return sqlite3_create_module(db, "test_module", &module, NULL);
+  return sqlite3_create_module(db, "test_virtual_table_A", &module, 0);
 }
-
 
 cql_code upgrade(sqlite3* db, bool should_use_virtual) {
   cql_code rv;
+
+#ifdef ENABLE_TRACING
+  sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
+#endif
+
 
   if (begin_transaction(db)) {
     fprintf(stderr, "failed to begin transaction\n");
@@ -70,9 +83,9 @@ cql_code upgrade(sqlite3* db, bool should_use_virtual) {
   if (should_use_virtual) {
     rv = create_test_module(db);
     if (rv != SQLITE_OK) {
-      fprintf(stderr, "failed sqlite3_create_module for test_module\n");
-      return rv;
-    }
+      fprintf(stderr, "failed sqlite3_create_module for test module\n");
+    return rv;
+  }
 
     test_result_set_ref result_set;
     rv = test_fetch_results(db, &result_set);
@@ -182,7 +195,12 @@ int main(int argc, char *argv[]) {
     return SQLITE_ERROR;
   }
 
-  if (sqlite3_close_v2(db)) {
+  if (sqlite3_drop_modules(db, NULL)) {
+     fprintf(stderr, "Unable to drop modules.\n");
+     return SQLITE_ERROR;
+  }
+
+  if (sqlite3_close_v2(db)) {   
     fprintf(stderr, "Unable to close DB.\n");
     return SQLITE_ERROR;
   }

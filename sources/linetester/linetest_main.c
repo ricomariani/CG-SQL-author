@@ -83,13 +83,15 @@ void read_file(FILE *input, const char *source) {
       continue;
     }
 
+    if (!proc) continue;
+
     cql_string_ref ref = cql_string_ref_new(buffer);
 
-    if (!proc) continue;
     E(linetest_add(db, name, proc, line, ref, physical_line));
 
     cql_string_release(ref);
   }
+  cql_string_release(name);
 }
 
 int main(int argc, char **argv) {

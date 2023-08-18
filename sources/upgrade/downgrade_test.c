@@ -37,6 +37,7 @@ int validate(sqlite3* db, test_result_set_ref result_set) {
     cql_string_release(expected_facet);
     return SQLITE_ERROR;
   }
+  cql_string_release(expected_facet);
   const char* sql = "DROP VIEW test_view";
   if (sqlite3_exec(db, sql, NULL, NULL, NULL) != SQLITE_OK) {
     printf("Expected 'test_view' to remain in the DB\n");

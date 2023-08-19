@@ -49,18 +49,22 @@ begin
   end catch;
 end;
 
--- add a row to the results table
+-- add a row to the output table (test_output)
+-- this comes from the test output/results file
 create procedure dbhelp_add(line integer not null, data text not null)
 begin
   insert into test_output values (line, data);
 end;
 
+-- add a row to the input table (source_input)
+-- these comes from the test/input .sql file
 create procedure dbhelp_add_source(line integer not null, data text not null)
 begin
   insert into source_input values (line, data);
 end;
 
-create procedure dbhelp_dump_line(line_ integer not null)
+-- dump all the output lines that were associated with the given input line
+create procedure dbhelp_dump_output(line_ integer not null)
 begin
   declare C cursor for select * from test_output where line = line_;
   loop fetch C
@@ -73,10 +77,22 @@ end;
 -- search the results of that statement for the indicated pattern
 create proc dbhelp_find(line_ integer not null, pattern text not null, out search_line integer not null, out found integer not null)
 begin
+  /* the pattern match line is before the statement that generates the output like so:
+
+     1:  -- TEST : something
+     2:  -- + foo                           <-- we have this line number, e.g. 2
+     3:  -- - bar
+     4:  select something where something;  <-- we need this line number, e.g. 4
+
+     We need to find the number of a line in the test output that has been charged to an input line greater than the one we are on.
+  */
   set search_line := (select line from test_output where line >= line_ limit 1);
+
+  -- once we have it, search for matches on that line and return the number we found
   set found := (select count(*) from test_output where line = search_line and data like pattern);
 end;
 
+-- dump all of the input lines starting from line1 up to but not including line2
 create procedure dbhelp_dump_source(line1 integer not null, line2 integer not null)
 begin
   declare C cursor for select * from source_input where line > line1 and line <= line2;
@@ -86,7 +102,8 @@ begin
   end;
 end;
 
+-- make a rowset with all of the input lines
 create procedure dbhelp_source()
 begin
- select * from source_input;
+  select * from source_input;
 end;

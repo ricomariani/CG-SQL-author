@@ -15,22 +15,22 @@ extern CQL_WARN_UNUSED cql_code dbhelp_setup(sqlite3 *_Nonnull _db_);
 // Generated from dbhelp.sql:50
 extern CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_int32 *_Nonnull prev);
 
-// Generated from dbhelp.sql:56
+// Generated from dbhelp.sql:57
 extern CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data);
 
-// Generated from dbhelp.sql:61
+// Generated from dbhelp.sql:64
 extern CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data);
 
-// Generated from dbhelp.sql:70
-extern CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line_);
+// Generated from dbhelp.sql:74
+extern CQL_WARN_UNUSED cql_code dbhelp_dump_output(sqlite3 *_Nonnull _db_, cql_int32 line_);
 
-// Generated from dbhelp.sql:78
+// Generated from dbhelp.sql:93
 extern CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found);
 
-// Generated from dbhelp.sql:87
+// Generated from dbhelp.sql:103
 extern CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2);
 
-// Generated from dbhelp.sql:92
+// Generated from dbhelp.sql:109
 #define CRC_dbhelp_source -2582919431962037637L
 
 extern cql_string_ref _Nonnull dbhelp_source_stored_procedure_name;

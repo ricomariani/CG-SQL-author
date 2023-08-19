@@ -135,7 +135,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:56
+// Generated from dbhelp.sql:57
 
 /*
 CREATE PROC dbhelp_add (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -170,7 +170,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:61
+// Generated from dbhelp.sql:64
 
 /*
 CREATE PROC dbhelp_add_source (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -205,10 +205,10 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:70
+// Generated from dbhelp.sql:74
 
 /*
-CREATE PROC dbhelp_dump_line (line_ INTEGER NOT NULL)
+CREATE PROC dbhelp_dump_output (line_ INTEGER NOT NULL)
 BEGIN
   DECLARE C CURSOR FOR SELECT *
     FROM test_output
@@ -220,22 +220,22 @@ BEGIN
 END;
 */
 
-#define _PROC_ "dbhelp_dump_line"
+#define _PROC_ "dbhelp_dump_output"
 
-typedef struct dbhelp_dump_line_C_row {
+typedef struct dbhelp_dump_output_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
   cql_uint16 _refs_offset_;
   cql_int32 line;
   cql_string_ref _Nonnull data;
-} dbhelp_dump_line_C_row;
+} dbhelp_dump_output_C_row;
 
-#define dbhelp_dump_line_C_refs_offset cql_offsetof(dbhelp_dump_line_C_row, data) // count = 1
-CQL_WARN_UNUSED cql_code dbhelp_dump_line(sqlite3 *_Nonnull _db_, cql_int32 line_) {
+#define dbhelp_dump_output_C_refs_offset cql_offsetof(dbhelp_dump_output_C_row, data) // count = 1
+CQL_WARN_UNUSED cql_code dbhelp_dump_output(sqlite3 *_Nonnull _db_, cql_int32 line_) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
-  dbhelp_dump_line_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_line_C_refs_offset };
+  dbhelp_dump_output_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dbhelp_dump_output_C_refs_offset };
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT line, data "
@@ -266,7 +266,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:78
+// Generated from dbhelp.sql:93
 
 /*
 CREATE PROC dbhelp_find (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
@@ -326,7 +326,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:87
+// Generated from dbhelp.sql:103
 
 /*
 CREATE PROC dbhelp_dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL)
@@ -388,7 +388,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:92
+// Generated from dbhelp.sql:109
 
 /*
 CREATE PROC dbhelp_source ()

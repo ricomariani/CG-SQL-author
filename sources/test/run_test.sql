@@ -4302,6 +4302,42 @@ BEGIN_TEST(inline_proc)
 
 END_TEST(inline_proc)
 
+proc make_xy()
+begin
+  create table xy (
+    x integer,
+    y integer
+  );
+end;
+
+[[shared_fragment]]
+proc transformer()
+begin
+  with 
+     source(*) like xy
+     select source.x + 1 x, source.y + 20 y from source;
+end;
+
+BEGIN_TEST(rename_tables_in_dot)
+  call make_xy();
+  insert into xy values (1,2), (2,3);
+
+  declare C cursor for 
+    with T(*) as (call transformer() using xy as source)
+    select T.* from T;
+
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.x == 2);
+  EXPECT(C.y == 22);
+  fetch C;
+  EXPECT(C);
+  EXPECT(C.x == 3);
+  EXPECT(C.y == 23);
+  fetch C;
+  EXPECT(NOT C);
+END_TEST(rename_tables_in_dot)
+
 declare proc alltypes_nullable() (
   t bool,
   f bool,

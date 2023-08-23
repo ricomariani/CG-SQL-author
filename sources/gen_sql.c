@@ -1022,12 +1022,41 @@ static void gen_expr_null(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 
 static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_dot(ast));
+  EXTRACT_STRING(left, ast->left);
+  EXTRACT_STRING(right, ast->right);
+
   if (eval_variables_callback(ast)) {
     return;
   }
 
-  EXTRACT_STRING(left, ast->left);
-  EXTRACT_STRING(right, ast->right);
+  bool_t has_table_rename_callback = gen_callbacks && gen_callbacks->table_rename_callback;
+  bool_t handled = false;
+
+  if (has_table_rename_callback) {
+    handled = gen_callbacks->table_rename_callback(ast->left, gen_callbacks->table_rename_context, output);
+  }
+
+  if (handled) {
+    // the scope name has already been written by table_rename_callback
+    // this is a case like:
+    //
+    // [[shared_fragment]]
+    // proc transformer()
+    // begin
+    //   with 
+    //   source(*) like xy
+    //   select source.x + 1 x, source.y + 20 y from source;
+    // end;
+    //
+    // with T(x,y) as (call transformer() using xy as source) select T.* from T;
+    //
+    // In the above source.x must become xy.x and source.y must become xy.y
+    //
+    // At this point the correct table name is already in the stream, so left is
+    // now useless. So we just throw it away.
+
+    left = "";
+  }
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // simple case if SEM is not available

@@ -10676,8 +10676,8 @@ cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode
 
 There are similar functions in the runtime like `cql_encode_double` with a similar signature.
 
-The default encodings are very lame and only useful for testing.  Like many things in `cqlrt.c` you should [replace them](./internal.html#part-5-cql-runtime)
-with something appropriate for your environment.  See the section on [encoding sensitive columns](./internal.html#encoding-of-sensitive-columns).
+The default encodings are very lame and only useful for testing.  Like many things in `cqlrt.c` you should [replace them](../internal.md#part-5-cql-runtime)
+with something appropriate for your environment.  See the section on [encoding sensitive columns](../internal.md#encoding-of-sensitive-columns).
 
 Even very simple encoders can help avoid mistakes because they force the use of the decoder and that usage gives you a "code smell" to look for.
 Some sections of code, maybe even most sections, have no business decoding anything.  And even the super-lame "just add '#'" strategy in the defeault
@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Aug 26 16:04:57 PDT 2023
+Snapshot as of Sun Aug 27 02:08:55 PDT 2023
 
 ### Operators and Literals
 
@@ -17338,7 +17338,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Aug 26 16:04:57 PDT 2023
+Snapshot as of Sun Aug 27 02:08:56 PDT 2023
 
 ### Rules
 

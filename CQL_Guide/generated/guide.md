@@ -8121,7 +8121,7 @@ the possible outputs available in [diagram form](https://ricomariani.github.io/C
 In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
 which are better described with the grammar above.
 
-## Tables
+### Tables
 
 The "tables" section has zero or more tables, each table is comprised of these fields:
 
@@ -8211,14 +8211,14 @@ generates:
     }
 ```
 
-## Region Information
+### Region Information
 
 Region Information can appear on many entities, it consists of two optional elements:
 
 * **region** : optional, the name of the region in which the entity was defined
 * **deployedInRegion** : optional, the deployment region in which that region is located
 
-## Attributes
+### Attributes
 
 Miscellaneous attributes can be present on virtual every kind of entity.  They are optional.  The root node
 introduces the attributes:
@@ -8283,7 +8283,7 @@ Generates:
     }
 ```
 
-## Foreign Keys
+### Foreign Keys
 
 Foreign keys appear only in tables, the list of keys contains zero or more entries of this form:
 
@@ -8295,7 +8295,7 @@ Foreign keys appear only in tables, the list of keys contains zero or more entri
 * **onDelete** : the ON DELETE action (e.g. "CASCADE", "NO ACTION", etc.)
 * **isDeferred** : boolean, indicating the deferred or not deferred setting for this foreign key
 
-## Unique Keys
+### Unique Keys
 
 Unique keys appear only in tables, the list of keys contains zero or more entries of this form:
 
@@ -8304,7 +8304,7 @@ Unique keys appear only in tables, the list of keys contains zero or more entrie
 * **sortOrders**: a list of corresponding sort orders for the columns
 
 
-## Check Expressions
+### Check Expressions
 
 Check Expressions appear only in tables, the list of keys contains zero or more entries of this form:
 
@@ -8318,7 +8318,7 @@ then the check expression is not fully known until that procedure runs and some 
 at run time.  This is an extraordinary choice but technically possible.
 
 
-## Columns
+### Columns
 
 Columns are themselves rather complex, there are 1 or more of them in each table.  The table will have
 a list of records of this form:
@@ -8341,7 +8341,7 @@ a list of records of this form:
 * **isAutoIncrement** : true if the column was marked with AUTOINCREMENT
 
 
-## Virtual Tables
+### Virtual Tables
 
 The "virtualTables" section is very similar to the "tables" section with zero or more virtual table entries.
 Virtual table entries are the same as table entries with the following additions:
@@ -8354,7 +8354,7 @@ The JSON schema for these items was designed to be as similar as possible so tha
 with possibly a few extra tests of the isVirtual field.
 
 
-## Views
+### Views
 
 The views section contains the list of all views in the schema, it is zero or more view entires of this form.
 
@@ -8407,7 +8407,7 @@ Generates:
     }
 ```
 
-## Projections
+### Projections
 
 A projection defines the output shape of something that can return a table-like value such as a view or a procedure.
 
@@ -8419,7 +8419,7 @@ The projection consists of a list of one or more _projected columns_, each of wh
 * **isSensitive** : optional, true if the result is sensitive (e.g. PII or something like that)
 * **isNotNull** : true if the result is known to be not null
 
-## Dependencies
+### Dependencies
 
 The dependencies section appears in many entities, it indicates things that were used by the object and how they were used.
 Most of the fields are optional, some fields are impossible in some contexts (e.g. inserts can happen inside of views).
@@ -8432,7 +8432,7 @@ Most of the fields are optional, some fields are impossible in some contexts (e.
 * **usesViews** : optional, a list of views which were accessed (these are recursively visited to get to tables)
 * **usesTables** : the list of tables that were used in any way at all by the current entity (i.e. the union of the previous table sections)
 
-## Indices
+### Indices
 
 The indices section contains the list of all indices in the schema, it is zero or more view entires of this form:
 
@@ -8471,7 +8471,7 @@ Generates:
 
 ```
 
-## Procedures
+### Procedures
 
 The next several sections:
 
@@ -8489,7 +8489,7 @@ all procedures.  This is is basically the contents of the "general" section whic
 body of which little can be said.
 
 
-### Queries
+#### Queries
 
 The queries section corresponds to the stored procedures that are a single SELECT statement with no fragments.
 
@@ -8549,7 +8549,7 @@ Generates:
     }
 ```
 
-### Procedure Arguments
+#### Procedure Arguments
 
 Procedure arguments have several generalities that don't come up very often but are important to describe.  The argument list
 of a procedure is 0 or more arguments of the form:
@@ -8620,7 +8620,7 @@ The JSON is often used to generate glue code to call procedures from different l
 you want to codegen something other normal arguments in your code.
 
 
-### General Inserts
+#### General Inserts
 
 The general insert section corresponds to the stored procedures that are a single INSERT statement with no fragments.
 The fields of a general insert record are:
@@ -8674,7 +8674,7 @@ Generates:
     }
 ```
 
-### Simple Inserts
+#### Simple Inserts
 
 The vanilla inserts section can be used for procedures that just insert a single row.  This is a
 very common case and if the JSON is being used to drive custom code generation it is useful
@@ -8736,7 +8736,7 @@ Generates:
     }
 ```
 
-### Updates
+#### Updates
 
 The updates section corresponds to the stored procedures that are a single UPDATE statement with no fragments. The
 fields of an update record are:
@@ -8792,7 +8792,7 @@ Generates:
 ```
 
 
-### Deletes
+#### Deletes
 
 The deletes section corresponds to the stored procedures that are a single DELETE statement with no fragments. The
 fields of a delete record are exactly the same as those of update.  Those are the basic fields needed to bind any
@@ -8830,7 +8830,7 @@ Generates:
     }
 ```
 
-### General
+#### General
 
 And finally the section for procedures that were encountered that are not one of the simple prepared statement forms.  The principle reasons for being in this category are:
 * the procedure has out arguments
@@ -8911,7 +8911,7 @@ The complex form of the arguments allows for an optional "binding"
 
 Note that atypical binding forces procedures into the "general" section.
 
-## Interfaces
+### Interfaces
 
 * **name** : the name of the procedure
 * **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
@@ -8941,7 +8941,7 @@ Generates:
     }
 ```
 
-## Procecdure Declarations
+### Procecdure Declarations
 The `declareProcs` section contains a list of procedure declaractions. Each declaration is of the form:
 
 * **name** : the name of the procedure
@@ -8950,7 +8950,7 @@ The `declareProcs` section contains a list of procedure declaractions. Each decl
 * **projection** : An array of projections. See [the section on projections](#projections)
 * **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
 
-## Function Declarations
+### Function Declarations
 
 The `declareFuncs` section contains a list of function declarations, Each declaration is of the form:
 
@@ -8967,7 +8967,7 @@ The `declareFuncs` section contains a list of function declarations, Each declar
 * **isSensitive** : optional, true if the result is sensitive (e.g. PII)
 * **isNotNull** : true if the result is known to be not null
 
-## Regions
+### Regions
 
 The regions section contains a list of all the region definitions.  Each region is of the form:
 
@@ -8981,7 +8981,7 @@ The regions section contains a list of all the region definitions.  Each region 
 
 There are more details on regions and the meaning of these terms in Chapter 10.
 
-## Ad Hoc Migrations
+### Ad Hoc Migrations
 
 This section lists all of the declared ad hoc migrations.  Each entry is of the form:
 
@@ -8996,7 +8996,7 @@ Exactly one of:
 
 There are more details on ad hoc migrations in Chapter 10.
 
-## Enums
+### Enums
 
 This section list all the enumeration types and values.  Each entry is of the form:
 
@@ -9036,7 +9036,7 @@ Generates:
     }
 ````
 
-## Constant Groups
+### Constant Groups
 
 This section list all the constant groups and values.  Each entry is of the form:
 
@@ -9091,7 +9091,7 @@ Generates:
     }
 ```
 
-## Subscriptions
+### Subscriptions
 
 This section list all the schema subscriptions in order of appearance.  Each entry is of the form:
 
@@ -9118,7 +9118,7 @@ Generates:
     }
 ```
 
-## Summary
+### Summary
 
 These sections general provide all the information about everything that was declared in a translation unit.  Typically
 not the full body of what was declared but its interface.  The schema information provide the core type and context
@@ -9793,7 +9793,7 @@ create table info(
 );
 ```
 
-From a SQL perspective `news_info` is just a blob, you can only apply blob operations to it in the context of a query.  This means `WHERE` clauses that partially constraint the blob contents are not generally possible (though you could do it if you write suitable UDFs and [Backed Tables](#backed_tables) actually generalize this if generic schema support is what is desired).  Blob storage is really about moving the whole blob around so it's apprpropriate when you want to crack the blob in code, and not so much in database operations.
+From a SQL perspective `news_info` is just a blob, you can only apply blob operations to it in the context of a query.  This means `WHERE` clauses that partially constraint the blob contents are not generally possible (though you could do it if you write suitable UDFs and [Backed Tables](#backed-tables) actually generalize this if generic schema support is what is desired).  Blob storage is really about moving the whole blob around so it's apprpropriate when you want to crack the blob in code, and not so much in database operations.
 
 #### Creating Blobs with Blob Storage
 
@@ -10676,8 +10676,8 @@ cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode
 
 There are similar functions in the runtime like `cql_encode_double` with a similar signature.
 
-The default encodings are very lame and only useful for testing.  Like many things in `cqlrt.c` you should [replace them](../internal.md#part-5-cql-runtime)
-with something appropriate for your environment.  See the section on [encoding sensitive columns](../internal.md#encoding-of-sensitive-columns).
+The default encodings are very lame and only useful for testing.  Like many things in `cqlrt.c` you should [replace them](./internal.html#part-5-cql-runtime)
+with something appropriate for your environment.  See the section on [encoding sensitive columns](./internal.html#encoding-of-sensitive-columns).
 
 Even very simple encoders can help avoid mistakes because they force the use of the decoder and that usage gives you a "code smell" to look for.
 Some sections of code, maybe even most sections, have no business decoding anything.  And even the super-lame "just add '#'" strategy in the defeault
@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Thu Aug 17 16:51:33 PDT 2023
+Snapshot as of Sat Aug 26 16:04:57 PDT 2023
 
 ### Operators and Literals
 
@@ -17338,7 +17338,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Thu Aug 17 16:51:34 PDT 2023
+Snapshot as of Sat Aug 26 16:04:57 PDT 2023
 
 ### Rules
 

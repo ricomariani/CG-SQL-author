@@ -6,16 +6,7 @@
  */
 
 #include "cqlrt.h"
-#include "go.h"
-
-// super cheesy error handling
-#define _E(c, x) if (!(c)) { \
-  printf("!" #x "%s:%d\n", __FILE__, __LINE__); \
-  goto error; \
-}
-
-#define E(x) _E(x, x)
-#define SQL_E(x) _E(SQLITE_OK == (x), x)
+#include EXAMPLE_HEADER_NAME
 
 static int sqlite_trace_callback(unsigned type, void* ctx, void* p, void* x) {
   switch (type) {
@@ -28,18 +19,17 @@ static int sqlite_trace_callback(unsigned type, void* ctx, void* p, void* x) {
 
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv) {
-  printf("CQL Mini App Thingy\n");
-
   sqlite3 *db = NULL;
-  SQL_E(sqlite3_open(":memory:", &db));
-
+  sqlite3_open(":memory:", &db);
+  
   if (argc >= 2 && strcmp(argv[1], "-vvv") == 0) {
     sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL);
   }
 
-  SQL_E(go(db));
-  return 0;
+  if (!(SQLITE_OK == entrypoint(db))) {
+    printf("The call to the entrypoint procedure failed %s:%d\n", __FILE__, __LINE__);
+    return 1;
+  }
 
-error:
-  return 1;
+  return 0;
 }

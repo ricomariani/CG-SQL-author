@@ -1,0 +1,109 @@
+# CQL Playground
+
+Use the [`./playground.sh`](playground.sh) cli command to run examples or your own small experiments.
+
+Get some general help:
+
+```sh
+./playground.sh --help
+```
+
+## For first-timers
+
+The playground only requires a working cql compiler but some cool
+optional features might require optional dependencies.
+
+Check your setup and get a quick feedback on how to get ready:
+```sh
+./playground.sh hello
+```
+
+Your pick:
+```sh
+./playground.sh run examples/hello_world.sql
+./playground.sh run examples/mandelbrot.sql
+```
+
+## Common usage
+
+### Build
+
+```sh
+# Build all outputs for every examples
+./playground.sh build-everything
+# or its canonical version:
+./playground.sh build all_outputs examples/*
+
+# Build every outputs for given example(s):
+./playground.sh build all_outputs examples/hello_world.sql
+
+# Builds given output(s) for given example(s)
+./playground.sh build c lua examples/hello_world.sql examples/mandelbrot.sql
+```
+To rebuild on file change use `--watch` (Requires extra dependencies)
+
+### Run
+
+If the output does not exist, it will automatically try to rebuild it.
+
+```sh
+# Runs the given example (defaults to the output)
+./playground.sh run examples/hello_world.sql
+./playground.sh run lua examples/hello_world.sql
+
+# Runs given output(s) for given example(s)
+./playground.sh run c lua examples/hello_world.sql examples/mandelbrot.sql
+
+# Runs every outputs for given example(s):
+./playground.sh run all_outputs examples/hello_world.sql
+```
+
+To force the rebuild use `--rebuild`
+To rebuild on file change use `--watch`
+
+## Resources
+
+### Examples
+Examples have been crafted to quickly get you running and gain a deeper understanding of CGL.
+Practice is the best way to learn. Edit them and create new ones!
+
+  - **examples/hello_world.sql** — A welcoming "Hello World" example
+  - **examples/crud.sql** — Showcasing the most common operations
+  - **examples/cql_in_20_minutes.sql** — Learn CQL in 20 minutes
+  - **examples/mandelbrot.sql** — Showcasing the seamless integration of sophisticated SQLite instructions into a CQL procedure
+  - **examples/repl.sql** — An empty canvas for your own experiments
+  - **examples/parent_child_result_set.sql** — Parent/Child result set
+  - **examples/parent_child_with_no_result_set.sql** — Parent/Child with no result set
+  - **examples/rowset_with_embedded_objets.sql** — Rowset with embedded objects
+
+### Outputs
+Multiple outputs are available. They all serve a wide range of different purposes.
+
+  - **c** (includes binary) [DEFAULT] — The compilation of the default C client embedding the C standard compilation (.c and .h) of the sql file
+  - **lua** — The compilation of the default Lua client embedding the Lua compilation of the sql file (.lua)
+  - **ast** — The internal AST
+  - **ast_dot** — The internal AST using dot format
+  - **objc** — The Objective-C wrappers
+  - **java** — The Java wrappers
+  - **json_schema** — A JSON output for codegen tools
+  - **schema** — The canonical schema
+  - **schema_upgrade** — A CQL schema upgrade script
+  - **query_plan** — The query plan for every DML statement
+  - **stats** — A simple .csv file with AST node count information per procedure
+  - **all_outputs** — All outputs
+
+### Clients
+Small applications showcasing how to use the CGL compiled code
+
+#### Default Clients
+They all call the conventional `entryproint()` procedure implemented in all examples
+
+  - default_client.c — A minimal C application wrapping the main procedure call
+  - default_client.lua — A minimal Lua application wrapping the main procedure call
+
+#### Adhoc Clients
+Some demonstrations are atypical and requires different runtimes to cater for specific purposes.
+
+  - adhoc_client_crud_data_access.c — An Adhoc C client for the `crud.sql` example which
+  demonstrates 2-way communication between C and the stored procedure using
+  auto-generated helper functions.

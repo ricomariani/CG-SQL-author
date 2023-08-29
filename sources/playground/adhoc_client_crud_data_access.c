@@ -6,7 +6,7 @@
  */
 
 #include "cqlrt.h"
-#include "demo.h"
+#include EXAMPLE_HEADER_NAME
 
 // super cheesy error handling
 #define _E(c, x) if (!(c)) { \
@@ -77,9 +77,7 @@ int main(int argc, char **argv) {
   cql_result_set_release(result_set);
   cql_result_set_release(result_set_copy);
 
-  SQL_E(mandelbrot(db));
   return 0;
-
 error:
   return 1;
 }

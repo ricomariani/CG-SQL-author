@@ -12,9 +12,12 @@ cd "${DIR}/.."
 lua_demo/prepare_run_test.sh
 lua out/run_test.lua | tee out/run_test_lua.out
 
+#-- this number changes all the time, don't check for it
+grep -v "tests executed[.]" out/run_test_lua.out >out/run_test_lua.clean
+
 echo "verifying test output"
 
-if ! diff lua_demo/run_test_lua.ref out/run_test_lua.out
+if ! diff lua_demo/run_test_lua.ref out/run_test_lua.clean
 then
   echo diff lua_demo/run_test_lua.ref out/run_test_lua.out
   echo failed

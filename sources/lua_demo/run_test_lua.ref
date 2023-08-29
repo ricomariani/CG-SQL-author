@@ -10,5 +10,4 @@ err: 	19	db info:	19	UNIQUE constraint failed: foo.id
 err: 	19	db info:	19	UNIQUE constraint failed: backing.k
 err: 	19	db info:	19	UNIQUE constraint failed: backing.k
 err: 	19	db info:	19	UNIQUE constraint failed: backing.k
-148 tests executed. 148 passed, 0 failed.  0 expectations failed of 10080.
 exit code	0

@@ -1,11 +1,11 @@
 # CQL Playground
 
-Use the [`./playground.sh`](playground.sh) cli command to run examples or your own small experiments.
+Use the [`./play.sh`](play.sh) cli command to run examples or your own small experiments.
 
 Get some general help:
 
 ```sh
-./playground.sh --help
+./play.sh --help
 ```
 
 ## For first-timers
@@ -15,13 +15,13 @@ optional features might require optional dependencies.
 
 Check your setup and get a quick feedback on how to get ready:
 ```sh
-./playground.sh hello
+./play.sh hello
 ```
 
 Your pick:
 ```sh
-./playground.sh run examples/hello_world.sql
-./playground.sh run examples/mandelbrot.sql
+./play.sh run examples/hello_world.sql
+./play.sh run examples/mandelbrot.sql
 ```
 
 ## Common usage
@@ -30,15 +30,15 @@ Your pick:
 
 ```sh
 # Build all outputs for every examples
-./playground.sh build-everything
+./play.sh build-everything
 # or its canonical version:
-./playground.sh build all_outputs examples/*
+./play.sh build all_outputs examples/*
 
 # Build every outputs for given example(s):
-./playground.sh build all_outputs examples/hello_world.sql
+./play.sh build all_outputs examples/hello_world.sql
 
 # Builds given output(s) for given example(s)
-./playground.sh build c lua examples/hello_world.sql examples/mandelbrot.sql
+./play.sh build c lua examples/hello_world.sql examples/mandelbrot.sql
 ```
 To rebuild on file change use `--watch` (Requires extra dependencies)
 
@@ -48,14 +48,14 @@ If the output does not exist, it will automatically try to rebuild it.
 
 ```sh
 # Runs the given example (defaults to the output)
-./playground.sh run examples/hello_world.sql
-./playground.sh run lua examples/hello_world.sql
+./play.sh run examples/hello_world.sql
+./play.sh run lua examples/hello_world.sql
 
 # Runs given output(s) for given example(s)
-./playground.sh run c lua examples/hello_world.sql examples/mandelbrot.sql
+./play.sh run c lua examples/hello_world.sql examples/mandelbrot.sql
 
 # Runs every outputs for given example(s):
-./playground.sh run all_outputs examples/hello_world.sql
+./play.sh run all_outputs examples/hello_world.sql
 ```
 
 To force the rebuild use `--rebuild`

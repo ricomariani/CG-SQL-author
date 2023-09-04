@@ -64,7 +64,7 @@ To rebuild on file change use `--watch`
 ## Resources
 
 ### Examples
-Examples have been crafted to quickly get you running and gain a deeper understanding of CGL.
+Examples have been crafted to quickly get you running and gain a deeper understanding of CQL.
 Practice is the best way to learn. Edit them and create new ones!
 
   - **examples/hello_world.sql** — A welcoming "Hello World" example
@@ -93,7 +93,7 @@ Multiple outputs are available. They all serve a wide range of different purpose
   - **all_outputs** — All outputs
 
 ### Clients
-Small applications showcasing how to use the CGL compiled code
+Small applications showcasing how to use the CQL compiled code
 
 #### Default Clients
 They all call the conventional `entryproint()` procedure implemented in all examples

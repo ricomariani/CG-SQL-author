@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
   char *filepath = SQLITE_FILE_PATH_ABSOLUTE;
 
-  printf("Database: %s\n", filepath);
+  printf("Database Path: %s\n\n", filepath);
 
   SQL_E(sqlite3_open(filepath, &db), "SQLite failed to open the database")
   #ifdef ENABLE_SQLITE_STATEMENT_TRACING

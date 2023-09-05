@@ -256,13 +256,17 @@ do_build() {
     source="$source" \
     example_name="$example_name" \
     OUT="./$SCRIPT_OUT_DIR_RELATIVE/$example_name" \
-    $targets
+    $targets gitignore
 O=$(OUT)
 
 TO_PASCAL_CASE = $(shell echo $(1) | awk 'BEGIN {FS="[^a-zA-Z0-9]+"; OFS="";} {for (i=1; i<=NF; i++) $$i=toupper(substr($$i, 1, 1)) tolower(substr($$i, 2));} {print}')
 
-.PHONY: preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png
-all_outputs:    preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png
+.PHONY:      gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png
+all_outputs: gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png
+
+gitignore: $O/.gitignore
+$O/.gitignore:
+> @echo '*' > $O/.gitignore
 
 preprocessed: $O/$(example_name).pre.sql
 $O/$(example_name).pre.sql: $(source)

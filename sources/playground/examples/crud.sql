@@ -50,7 +50,7 @@ begin
   declare C cursor for call get_mixed(50);
   loop fetch C
   begin
-     call printf("%d %s %lld %lld %f\n", C.id, C.name, C.code, C.flag, C.rate);
+     call printf("%d %s %lld %d %f\n", C.id, C.name, C.code, C.flag, C.rate);
   end;
 end;
 

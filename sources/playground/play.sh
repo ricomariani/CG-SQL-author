@@ -427,7 +427,7 @@ do_run() {
         c)                       execute "The 'c' output"                       "$example_output_dir_relative/$example_name" ;;
         objc)                    execute "The 'objc' output"                    "$example_output_dir_relative/objc/$example_name" ;;
         java)                    execute "The 'java' output"                    "cat $example_output_dir_relative/$example_name.java" ;;
-        lua)                     execute "The 'lua' output"                     "echo \"$ (cd $example_output_dir_relative/ ; lua $example_name.lua)\"" ;;
+        lua)                     execute "The 'lua' output"                     "(cd $example_output_dir_relative/ ; lua $example_name.lua)" ;;
         query_plan)              execute "The 'query_plan' output"              "$example_output_dir_relative/query_plan" ;;
         schema_upgrade)          execute "The 'schema_upgrade' output"          "cat $example_output_dir_relative/schema_upgrade.sql" ;;
         cql_json_schema)         execute "The 'cql_json_schema' output"         "cat $example_output_dir_relative/cql_json_schema.json" ;;

@@ -60,7 +60,7 @@ After which I was able to do the normal installations.
 For the coverage build you need
 * gcovr
 
-And if you want to do the AST visualizations in PNG form you need
+And if you want to do the AST visualizations in PDF form you need
 * graphviz
 
 ## Options

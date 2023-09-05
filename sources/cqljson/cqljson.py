@@ -60,7 +60,7 @@ def usage():
             "  cql --in your_file.sql --rt json_schema --cg output.json\n"
             "\n"
             "To process a .dot file use a command like:\n"
-            "  dot x.dot -Tpng -o x.png\n"
+            "  dot x.dot -Tpdf -o x.pdf\n"
         )
     )
 

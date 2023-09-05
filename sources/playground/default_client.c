@@ -77,7 +77,12 @@ int main(int argc, char **argv) {
   SQL_E(__CALL_ENTRYPOINT__(db), "The call to the main entrypoint() procedure failed");
 
   SQL_E(sqlite3_close_v2(db));
+
   return 0;
 error:
+  if (db) {
+    sqlite3_close_v2(db);
+  }
+
   return 1;
 }

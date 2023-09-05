@@ -97,7 +97,13 @@ int main(int argc, char **argv) {
   cql_result_set_release(result_set);
   cql_result_set_release(result_set_copy);
 
+  SQL_E(sqlite3_close_v2(db));
+
   return 0;
 error:
+  if (db) {
+    sqlite3_close_v2(db);
+  }
+
   return 1;
 }

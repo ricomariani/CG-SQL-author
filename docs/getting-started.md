@@ -23,7 +23,7 @@ You might want to alias the location of `out/cql`. For example, by using the `al
 
 - Go to the [first chapter of the CQL Guide](../CQL_Guide/generated/guide.md#getting-started) to write your first CQL program!
 The [second chapter](../CQL_Guide/generated/guide.md#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
-- [CGL Language Cheatsheet](../CQL_Guide/generated/guide.md#appendix-6-cql-in-20-minutes)
+- [CQL Language Cheatsheet](../CQL_Guide/generated/guide.md#appendix-6-cql-in-20-minutes)
 - [CQL Playground](playground.md)
 
 ## Requirements

@@ -29,7 +29,7 @@ def usage():
         (
             "Usage:\n"
             "\n"
-            "--table_diagram input.json [universe]> tables.dot\n"
+            "--table_diagram input.json [universe] > tables.dot\n"
             "   creates a .dot file for a table diagram\n"
             "\n"
             "--region_diagram input.json > regions.dot\n"

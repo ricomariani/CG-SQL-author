@@ -14,13 +14,13 @@ BEGIN
   );
 END;
 
-CREATE PROC go ()
+CREATE PROC entrypoint ()
 BEGIN
   call make_schema();
 
   insert into my_table
     values
-     ("Hello from CQL."),
+     ("Hello World — from CQL."),
      ("Edit as you please.");
 
   declare C cursor for select * from my_table;

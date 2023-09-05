@@ -79,18 +79,27 @@ Practice is the best way to learn. Edit them and create new ones!
 ### Outputs
 Multiple outputs are available. They all serve a wide range of different purposes.
 
-  - **c** (includes binary) [DEFAULT] — The compilation of the default C client embedding the C standard compilation (.c and .h) of the sql file
-  - **lua** — The compilation of the default Lua client embedding the Lua compilation of the sql file (.lua)
-  - **ast** — The internal AST
-  - **ast_dot** — The internal AST using dot format
-  - **objc** — The Objective-C wrappers
-  - **java** — The Java wrappers
-  - **json_schema** — A JSON output for codegen tools
-  - **schema** — The canonical schema
-  - **schema_upgrade** — A CQL schema upgrade script
-  - **query_plan** — The query plan for every DML statement
-  - **stats** — A simple .csv file with AST node count information per procedure
-  - **all_outputs** — All outputs
+- **c** (includes binary) [DEFAULT] — The compilation of the default C client embedding the C standard compilation (.c and .h) of the sql file
+- **lua** — The compilation of the default Lua client embedding the Lua compilation of the sql file (.lua)
+- **objc** — The Objective-C wrappers
+- **java** — The Java wrappers
+- **schema** — The canonical schema
+- **schema_upgrade** — A CQL schema upgrade script
+- **query_plan** — The query plan for every DML statement
+- **stats** — A simple .csv file with AST node count information per procedure
+- **ast** — The internal AST
+- **ast_dot** — The internal AST using dot format
+- **ast_dot_png** — The internal AST using dot format as PNG image
+- **preprocessed** — The preprocessed version of the sql file
+- **cql_json_schema** — A JSON output for codegen tools
+- **cql_sql_schema** - A normalized version of the cql_json_schema (.sql)
+- **table_diagram_dot** — Table Diagram
+- **table_diagram_dot_png** — Table Diagram as PNG image
+- **region_diagram_dot** — Region Diagram
+- **region_diagram_dot_png** — Region Diagram as PNG image
+- **erd_dot** - Entity Relationship Diagram
+- **erd_dot_png** - Entity Relationship Diagram as PNG image
+- **all_outputs** — All outputs
 
 ### Clients
 Small applications showcasing how to use the CQL compiled code

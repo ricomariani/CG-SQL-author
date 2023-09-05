@@ -5,8 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include "cqlrt.h"
-#include EXAMPLE_HEADER_NAME
+// The cqlrt is dynamically injected using --cqlrt
+
+// Dynamic include defined and resolved by ./play.sh based the example procedure chosen to embed
+#include HEADER_FILE_FOR_SPECIFIC_EXAMPLE
+
+#ifndef SQLITE_FILE_PATH
+  #define SQLITE_FILE_PATH ":memory:"
+#endif
+
+#ifndef CQL_TRACING_ENABLED
+#define cql_error_trace()
+#else
+#define cql_error_trace() \
+  fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
+#endif
 
 // super cheesy error handling
 #define _E(c, x) if (!(c)) { \
@@ -37,10 +50,17 @@ static void print_result_set(const char *label, get_mixed_result_set_ref result_
 }
 
 int main(int argc, char **argv) {
-  printf("CQL data access demo:  creating and reading from a table\n");
+  printf("CQL data access demo: creating and reading from a table\n");
 
   sqlite3 *db = NULL;
-  SQL_E(sqlite3_open(":memory:", &db));
+
+  char *filepath = SQLITE_FILE_PATH;
+
+  SQL_E(sqlite3_open(SQLITE_FILE_PATH, &db));
+
+  #ifdef ENABLE_SQLITE_STATEMENT_TRACING
+    SQL_E(sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL));
+  #endif
 
   get_mixed_result_set_ref result_set;
   get_mixed_result_set_ref result_set_copy;

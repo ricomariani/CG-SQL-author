@@ -280,7 +280,7 @@ $O/$(example_name): $O/$(example_name).c
 > if grep -q "entrypoint(void)" $O/$(example_name).h; then \
     FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \
-cc $$FLAGS --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf $O/$(example_name).dSYM
+cc $$FLAGS --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf "$O/$(example_name).dSYM"
 
 objc: $O/$(example_name).pre.sql
 > mkdir -p $O/objc
@@ -300,7 +300,7 @@ else \
     $(CQL) --dev --in $O/query_plan.sql --cg $O/query_plan.h $O/query_plan.c; \
     cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.c -o $O/query_plan.o; \
     cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $(CQL_ROOT_DIR)/query_plan_test.c -o $O/query_plan_test.o; \
-    cc --debug --optimize -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.o $O/query_plan_test.o $(CQL_ROOT_DIR)/cqlrt.c --output $O/query_plan -lsqlite3 && rm -rf $O/query_plan.dSYM; \
+    cc --debug --optimize -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.o $O/query_plan_test.o $(CQL_ROOT_DIR)/cqlrt.c --output $O/query_plan -lsqlite3 && rm -rf "$O/query_plan.dSYM"; \
 fi
 $O/cqlrt.lua:
 > cp $(CQL_ROOT_DIR)/cqlrt.lua $O/cqlrt.lua
@@ -502,7 +502,7 @@ watch() {
 
 clean() {
     if [[ "$SCRIPT_OUT_DIR" == "$SCRIPT_DIR_RELATIVE/out" ]]; then
-        execute "Cleaning all generated files" "rm -rf $SCRIPT_OUT_DIR/*"
+        execute "Cleaning all generated files" "rm -rf \"$SCRIPT_DIR_RELATIVE/out\""
         echo -e "Playground: Done"
         exit 0
     fi
@@ -511,7 +511,7 @@ clean() {
 
     echo "ERROR: Clean yourself" | theme
     echo "Double-check and run the following command:"
-    echo "COMMAND: rm -rf $SCRIPT_OUT_DIR/*" | theme
+    echo "COMMAND: rm -rf \"$SCRIPT_OUT_DIR/*\"" | theme
 
     exit 1
 }

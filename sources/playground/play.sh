@@ -87,6 +87,14 @@ Options:
         Show this help message
     -v, -vv, -vvv
         Control verbosity level
+
+Sample Usage:
+    ./play.sh run c examples/repl.sql
+    ./play.sh run c examples/crud.sql
+    ./play.sh run query_plan examples/crud.sql
+    ./play.sh run lua examples/crud.sql
+    ./play.sh run c examples/mandelbrot.sql
+    ./play.sh run c lua query_plan examples/mandelbrot.sql
 EOF
 
     exit $exit_code;

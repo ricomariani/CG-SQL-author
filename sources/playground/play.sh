@@ -5,12 +5,12 @@
 readonly CLI_NAME=${0##*/}
 readonly SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 readonly SCRIPT_DIR_RELATIVE=$(dirname "$0")
-SCRIPT_OUT_DIR_RELATIVE=$SCRIPT_DIR_RELATIVE/out
 readonly CQL_ROOT_DIR=$SCRIPT_DIR_RELATIVE/..
 readonly CQL=$CQL_ROOT_DIR/out/cql
 
 tty -s <&1 && IS_TTY=true || IS_TTY=false
 VERBOSITY_LEVEL=$([ "$IS_TTY" = "true" ] && echo 3 || echo 0)
+SCRIPT_OUT_DIR=$SCRIPT_DIR_RELATIVE/out
 DEFAULT_C_CLIENT=${DEFAULT_C_CLIENT:-$SCRIPT_DIR_RELATIVE/default_client.c}
 DEFAULT_LUA_CLIENT=${DEFAULT_LUA_CLIENT:-$SCRIPT_DIR_RELATIVE/default_client.lua}
 SQLITE_FILE_PATH_ABSOLUTE=${SQLITE_FILE_PATH_ABSOLUTE:-:memory:}
@@ -202,7 +202,7 @@ build() {
     done
 
     if [[ $VERBOSITY_LEVEL -ge 3 ]]; then
-        execute "Listing all output folders" "ls -d $SCRIPT_OUT_DIR_RELATIVE/*/"
+        execute "Listing all output folders" "ls -d $SCRIPT_OUT_DIR/*/"
     fi
 }
 
@@ -213,7 +213,7 @@ do_build() {
 
     local resolved_sqlite_file_path_absolute="$SQLITE_FILE_PATH_ABSOLUTE"
 
-    mkdir -p "$SCRIPT_OUT_DIR_RELATIVE/$example_name"
+    mkdir -p "$SCRIPT_OUT_DIR/$example_name"
     echo_vv -e "Building \`$example_name\` outputs ($source)\n" | theme
 
     if [[ $force_rebuild == true ]]; then
@@ -227,14 +227,14 @@ do_build() {
     fi
 
     if [[ $CLONE_SQLITE_DATABASE == true ]]; then
-        resolved_sqlite_file_path_absolute=$(readlink -f "$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)")
+        resolved_sqlite_file_path_absolute=$(readlink -f "$SCRIPT_OUT_DIR/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)")
 
         cp "$SQLITE_FILE_PATH_ABSOLUTE" "$resolved_sqlite_file_path_absolute"
 
         echo_vvv -e "INFO: The SQLite database was cloned into the output directory and used as the database for the example\n" | theme
     else
         # Cleanup previously generated database file to avoid confusion
-        rm -f "$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)"
+        rm -f "$SCRIPT_OUT_DIR/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)"
     fi
 
     if [[ $SQLITE_FILE_PATH_ABSOLUTE != ":memory:" ]]; then
@@ -255,7 +255,7 @@ do_build() {
     dot_is_ready="$(is_dependency_satisfied dot && echo true || echo false)" \
     source="$source" \
     example_name="$example_name" \
-    OUT="./$SCRIPT_OUT_DIR_RELATIVE/$example_name" \
+    OUT="$SCRIPT_OUT_DIR/$example_name" \
     $targets gitignore
 O=$(OUT)
 
@@ -389,7 +389,7 @@ endif
 EOF
 
     if [[ $VERBOSITY_LEVEL -ge 3 ]]; then
-        execute "Listing the output files for '$example_name'" "ls $SCRIPT_OUT_DIR_RELATIVE/$example_name/*"
+        execute "Listing the output files for '$example_name'" "ls $SCRIPT_OUT_DIR/$example_name/*"
     fi
 }
 
@@ -418,7 +418,7 @@ do_run() {
     local example_name=$1
     local target=$2
 
-    local example_output_dir_relative="$SCRIPT_OUT_DIR_RELATIVE/$example_name"
+    local example_output_dir_relative="$SCRIPT_OUT_DIR/$example_name"
 
     case "$target" in
         preprocessed)            execute "The 'preprocessed' output"            "cat $example_output_dir_relative/$example_name.sql.pre" ;;
@@ -471,7 +471,7 @@ Related Files
         $source
 
     The compiled binary
-        $SCRIPT_OUT_DIR_RELATIVE/$example_name/$example_name
+        $SCRIPT_OUT_DIR/$example_name/$example_name
 
 Executing the demonstration
 " | theme
@@ -501,8 +501,19 @@ watch() {
 }
 
 clean() {
-    execute "Clean all generated files" "rm -rf $SCRIPT_OUT_DIR_RELATIVE/*"
-    echo -e "\nPlayground: Done"
+    if [[ "$SCRIPT_OUT_DIR" == "$SCRIPT_DIR_RELATIVE/out" ]]; then
+        execute "Cleaning all generated files" "rm -rf $SCRIPT_OUT_DIR/*"
+        echo -e "Playground: Done"
+        exit 0
+    fi
+
+    # Below is a safety net to avoid deleting the wrong directory
+
+    echo "ERROR: Clean yourself" | theme
+    echo "Double-check and run the following command:"
+    echo "COMMAND: rm -rf $SCRIPT_OUT_DIR/*" | theme
+
+    exit 1
 }
 
 # Utils
@@ -668,15 +679,10 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
 
-            case $2 in
-                # @TODO fix on macos: realpath: illegal option -- -
-                /*) SCRIPT_OUT_DIR_RELATIVE=$(realpath --relative-to="$SCRIPT_DIR_RELATIVE" "$2") ;;
-                *)  SCRIPT_OUT_DIR_RELATIVE="$SCRIPT_DIR_RELATIVE/$2" ;;
-            esac
+            SCRIPT_OUT_DIR="$2"
 
-            if [[ ! -d "$SCRIPT_OUT_DIR_RELATIVE" ]]; then
-                echo -e "ERROR: The path provided for --out-dir is not a directory: $SCRIPT_OUT_DIR_RELATIVE" | theme
-                exit 1
+            if [[ ! -d "$SCRIPT_OUT_DIR" ]]; then
+                mkdir -p "$SCRIPT_OUT_DIR"
             fi
 
             shift

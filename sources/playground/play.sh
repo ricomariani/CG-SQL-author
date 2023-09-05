@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit -o nounset -o pipefail
+
 # Globals
 
 readonly CLI_NAME=${0##*/}

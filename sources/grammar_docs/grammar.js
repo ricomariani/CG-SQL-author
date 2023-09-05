@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Sun Aug 27 02:08:55 2023
+// Snapshot as of Tue Sep  5 14:58:06 2023
 
 
 const PREC = {
@@ -105,7 +105,9 @@ module.exports = grammar({
     const_expr: $ => seq($.CONST, '(', $.expr, ')'),
     any_literal: $ => choice($.str_literal, $.num_literal, $.NULL, seq($.AT_FILE, '(', $.str_literal, ')'), $.AT_PROC, $.BLOB_LIT),
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
-    call: $ => choice(seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.name, '(', $.DISTINCT, optional($.arg_list), ')', optional($.opt_filter_clause)), seq($.basic_expr, ':', $.name, '(', optional($.arg_list), ')')),
+    opt_distinct: $ => choice($.empty, $.DISTINCT),
+    simple_call: $ => seq($.name, '(', $.opt_distinct, optional($.arg_list), ')', optional($.opt_filter_clause)),
+    call: $ => choice($.simple_call, seq($.basic_expr, ':', $.simple_call)),
     basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')')),
     IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
     IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),
@@ -144,7 +146,7 @@ module.exports = grammar({
     select_core: $ => choice(seq($.SELECT, optional($.select_opts), $.select_expr_list, optional($.opt_from_query_parts), optional($.opt_where), optional($.opt_groupby), optional($.opt_having), optional($.opt_select_window)), seq($.VALUES, $.values)),
     UNION_ALL: $ => prec.left(1, seq(CI('union'), CI('all'))),
     compound_operator: $ => choice($.UNION, $.UNION_ALL, $.INTERSECT, $.EXCEPT),
-    window_func_inv: $ => seq($.name, '(', optional($.arg_list), ')', optional($.opt_filter_clause), $.OVER, $.window_name_or_defn),
+    window_func_inv: $ => seq($.simple_call, $.OVER, $.window_name_or_defn),
     opt_filter_clause: $ => seq($.FILTER, '(', optional($.opt_where), ')'),
     window_name_or_defn: $ => choice($.window_defn, $.name),
     window_defn: $ => seq('(', optional($.opt_partition_by), optional($.opt_orderby), optional($.opt_frame_spec), ')'),

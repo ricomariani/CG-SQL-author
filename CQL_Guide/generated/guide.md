@@ -10907,13 +10907,14 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sun Aug 27 02:08:55 PDT 2023
+Snapshot as of Tue Sep  5 14:58:06 PDT 2023
 
 ### Operators and Literals
 
 These are in order of priority lowest to highest
 
 ```
+':'
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
 ":="
 "OR"
@@ -11546,10 +11547,17 @@ raise_expr:
   | "RAISE" '(' "FAIL" ','  expr ')'
   ;
 
+opt_distinct: /*empty*/
+  | "DISTINCT"
+  ;
+
+simple_call:
+  name '(' opt_distinct arg_list ')' opt_filter_clause
+  ;
+
 call:
-  name '(' arg_list ')' opt_filter_clause
-  | name '(' "DISTINCT" arg_list ')' opt_filter_clause
-  | basic_expr ':' name '(' arg_list ')'
+  simple_call
+  | basic_expr ':' simple_call
   ;
 
 basic_expr:
@@ -11753,7 +11761,7 @@ compound_operator:
   ;
 
 window_func_inv:
-  name '(' arg_list ')' opt_filter_clause "OVER" window_name_or_defn
+  simple_call "OVER" window_name_or_defn
   ;
 
 opt_filter_clause:
@@ -17338,7 +17346,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sun Aug 27 02:08:56 PDT 2023
+Snapshot as of Tue Sep  5 14:58:07 PDT 2023
 
 ### Rules
 

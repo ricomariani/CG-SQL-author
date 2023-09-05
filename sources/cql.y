@@ -101,6 +101,13 @@ void yyrestart(FILE *);
 #define YY_ERROR_ON_COLUMNS(x) \
   if (x) yyerror("Cursor columns not allowed in this form.")
 
+// In window_func_inv the 'distinct' keyword may not be part of the call
+// e.g. count(distinct x) is not a valid form for window functions.  We
+// unify these trees to avoid shift reduce conflicts and to clean up the grammar.
+// so there is one call form.  However it means an explicit error check
+#define YY_ERROR_ON_DISTINCT(x) \
+  if (x) yyerror("DISTINCT not valid in this context.")
+
 // We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
 // to see it during semantic analysis, but it cannot be allowed to appear in a
 // program. It would be unsafe if it could: It coerces a value from a nullable
@@ -158,6 +165,7 @@ static void cql_reset_globals(void);
 // you can match the language with those but the precedence of NOT is wrong
 // so order of operations will be subtlely off.  There are now tests for this.
 
+%left ':'
 %left UNION_ALL UNION INTERSECT EXCEPT
 %right ASSIGN
 %left OR
@@ -260,7 +268,7 @@ static void cql_reset_globals(void);
 %type <aval> table_or_subquery table_or_subquery_list query_parts table_function opt_from_query_parts
 %type <aval> opt_join_cond join_cond join_clause join_target join_target_list
 %type <aval> basic_update_stmt with_update_stmt update_stmt update_cursor_stmt update_entry update_list upsert_stmt conflict_target
-%type <aval> declare_schema_region_stmt declare_deployable_region_stmt call with_upsert_stmt
+%type <aval> declare_schema_region_stmt declare_deployable_region_stmt call opt_distinct simple_call with_upsert_stmt
 %type <aval> begin_schema_region_stmt end_schema_region_stmt schema_ad_hoc_migration_stmt region_list region_spec
 %type <aval> schema_unsub_stmt
 
@@ -997,28 +1005,21 @@ raise_expr:
   | RAISE '(' FAIL ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_FAIL), $expr); }
   ;
 
+opt_distinct: /*empty*/ { $opt_distinct = NULL; }
+  | DISTINCT { $opt_distinct = new_ast_distinct(); }
+  ;
+
+simple_call:
+  name '(' opt_distinct arg_list ')' opt_filter_clause  {
+      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
+      struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
+      struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
+      $simple_call = new_ast_call($name, call_arg_list); }
+  ;
+
 call:
-  name '(' arg_list ')' opt_filter_clause  {
-      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      struct ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, $opt_filter_clause);
-      struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
-      $call = new_ast_call($name, call_arg_list);
-  }
-  | name '(' DISTINCT arg_list ')' opt_filter_clause  {
-      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      struct ast_node *call_filter_clause = new_ast_call_filter_clause(new_ast_distinct(), $opt_filter_clause);
-      struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
-      $call = new_ast_call($name, call_arg_list);
-  }
-  | basic_expr ':' name '(' arg_list ')' {
-      $call = new_ast_reverse_apply(
-        $basic_expr,
-        new_ast_call(
-          $name,
-          new_ast_call_arg_list(
-            new_ast_call_filter_clause(NULL, NULL),
-            $arg_list)));
-  }
+  simple_call { $call = $simple_call; }
+  | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
   ;
 
 basic_expr:
@@ -1255,11 +1256,13 @@ compound_operator:
   ;
 
 window_func_inv:
-  name '(' arg_list ')' opt_filter_clause OVER window_name_or_defn  {
-    struct ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, $opt_filter_clause);
-    struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
-    struct ast_node *win_func_call = new_ast_call($name, call_arg_list);
-    $window_func_inv = new_ast_window_func_inv(win_func_call, $window_name_or_defn);
+  simple_call OVER window_name_or_defn  {
+    EXTRACT(call, $simple_call);
+    EXTRACT_NOTNULL(call_arg_list, call->right);
+    EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
+    EXTRACT(distinct, call_filter_clause->left);
+    YY_ERROR_ON_DISTINCT(distinct);
+    $window_func_inv = new_ast_window_func_inv($simple_call, $window_name_or_defn);
   }
   ;
 

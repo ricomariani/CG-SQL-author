@@ -13,7 +13,7 @@ tty -s <&1 && IS_TTY=true || IS_TTY=false
 VERBOSITY_LEVEL=$([ "$IS_TTY" = "true" ] && echo 3 || echo 0)
 DEFAULT_C_CLIENT=${DEFAULT_C_CLIENT:-$SCRIPT_DIR_RELATIVE/default_client.c}
 DEFAULT_LUA_CLIENT=${DEFAULT_LUA_CLIENT:-$SCRIPT_DIR_RELATIVE/default_client.lua}
-SQLITE_FILE_PATH=${SQLITE_FILE_PATH:-:memory:}
+SQLITE_FILE_PATH_ABSOLUTE=${SQLITE_FILE_PATH_ABSOLUTE:-:memory:}
 CLONE_SQLITE_DATABASE=false
 
 # Commands
@@ -74,7 +74,7 @@ Options:
     --out-dir <path>
         The directory where the outputs will be generated (Default: "$SCRIPT_DIR_RELATIVE/out")
     --db-path <path>
-        The sqlite database to use (Default: "$SQLITE_FILE_PATH")
+        The sqlite database to use (Default: "$SQLITE_FILE_PATH_ABSOLUTE")
     --db-path-clone <path>
         The sqlite database is copied into the out directory and used as the database for the example
     --watch
@@ -211,6 +211,8 @@ do_build() {
     local source=$2
     local targets=$3
 
+    local resolved_sqlite_file_path_absolute="$SQLITE_FILE_PATH_ABSOLUTE"
+
     mkdir -p "$SCRIPT_OUT_DIR_RELATIVE/$example_name"
     echo_vv -e "Building \`$example_name\` outputs ($source)\n" | theme
 
@@ -225,16 +227,18 @@ do_build() {
     fi
 
     if [[ $CLONE_SQLITE_DATABASE == true ]]; then
-        cp "$SQLITE_FILE_PATH" "$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH)"
-        SQLITE_FILE_PATH="$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH)"
+        resolved_sqlite_file_path_absolute=$(readlink -f "$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)")
+
+        cp "$SQLITE_FILE_PATH_ABSOLUTE" "$resolved_sqlite_file_path_absolute"
 
         echo_vvv -e "INFO: The SQLite database was cloned into the output directory and used as the database for the example\n" | theme
     else
-        rm -f "$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH)"
+        # Cleanup previously generated database file to avoid confusion
+        rm -f "$SCRIPT_OUT_DIR_RELATIVE/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)"
     fi
 
-    if [[ $SQLITE_FILE_PATH != ":memory:" ]]; then
-        echo_vv -e "NOTE: SQLITE Database Path: $SQLITE_FILE_PATH\n" | theme
+    if [[ $SQLITE_FILE_PATH_ABSOLUTE != ":memory:" ]]; then
+        echo_vv -e "NOTE: SQLITE Database Path: $resolved_sqlite_file_path_absolute\n" | theme
     fi
 
     # The file is static: `'EOF'` disables variable expansion
@@ -243,7 +247,7 @@ do_build() {
     <<'EOF' cat | sed -E 's/(^> )/\t/g' | tee ./out/Makefile | make \
     $MAKE_FLAGS \
     --makefile - \
-    SQLITE_FILE_PATH="$SQLITE_FILE_PATH" \
+    SQLITE_FILE_PATH_ABSOLUTE="$resolved_sqlite_file_path_absolute" \
     CQL_ROOT_DIR="$CQL_ROOT_DIR" \
     CQL="$CQL" \
     SCRIPT_DIR_RELATIVE="$SCRIPT_DIR_RELATIVE" \
@@ -251,7 +255,7 @@ do_build() {
     dot_is_ready="$(is_dependency_satisfied dot && echo true || echo false)" \
     source="$source" \
     example_name="$example_name" \
-    OUT="./out/$example_name" \
+    OUT="./$SCRIPT_OUT_DIR_RELATIVE/$example_name" \
     $targets
 O=$(OUT)
 
@@ -272,7 +276,7 @@ $O/$(example_name): $O/$(example_name).c
 > if grep -q "entrypoint(void)" $O/$(example_name).h; then \
     FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \
-cc $$FLAGS --debug -DSQLITE_FILE_PATH="\"$(SQLITE_FILE_PATH)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf $O/$(example_name).dSYM
+cc $$FLAGS --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf $O/$(example_name).dSYM
 
 objc: $O/$(example_name).pre.sql
 > mkdir -p $O/objc
@@ -281,7 +285,7 @@ objc: $O/$(example_name).pre.sql
 > if grep -q "entrypoint(void)" $O/objc/$(example_name).h; then \
     FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \
-cc $$FLAGS -x objective-c --debug -DSQLITE_FILE_PATH="\"$(SQLITE_FILE_PATH)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O/objc -I$(CQL_ROOT_DIR)/cqlrt_cf -I$(CQL_ROOT_DIR) -I$(SCRIPT_DIR_RELATIVE) $O/objc/$(example_name).c $(SCRIPT_DIR_RELATIVE)/default_client.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlholder.m --output $O/objc/$(example_name) -lsqlite3 -framework Foundation -fobjc-arc
+cc $$FLAGS -x objective-c --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O/objc -I$(CQL_ROOT_DIR)/cqlrt_cf -I$(CQL_ROOT_DIR) -I$(SCRIPT_DIR_RELATIVE) $O/objc/$(example_name).c $(SCRIPT_DIR_RELATIVE)/default_client.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlholder.m --output $O/objc/$(example_name) -lsqlite3 -framework Foundation -fobjc-arc
 
 query_plan: $O/$(example_name).pre.sql
 > if grep -q "entrypoint(void)" $O/$(example_name).h; then \
@@ -632,26 +636,46 @@ while [[ $# -gt 0 ]]; do
         --watch) watch=true ;;
 
         --db-path|--db-path-clone)
-            if [[ -f "$2" ]]; then
-                SQLITE_FILE_PATH="$2"
-                if [[ $1 == "--db-path-clone" ]]; then
-                    CLONE_SQLITE_DATABASE=true
-                fi
-                shift
-            else
-                echo -e "ERROR: The path provided for --db-path is not a file" | theme
+            if [[ -z "${2-}" ]]; then
+                echo -e "ERROR: You must provide a path to a database for --db-path[-clone]" | theme
                 exit 1
             fi
+
+            case $2 in
+                /*) SQLITE_FILE_PATH_ABSOLUTE="$2" ;;
+                *)  SQLITE_FILE_PATH_ABSOLUTE="$SCRIPT_DIR/$2" ;;
+            esac
+
+            if [[ ! -f "$SQLITE_FILE_PATH_ABSOLUTE" ]]; then
+                echo -e "ERROR: The path provided for --db-path[-clone] is not a file" | theme
+                exit 1
+            fi
+
+            if [[ $1 == "--db-path-clone" ]]; then
+                CLONE_SQLITE_DATABASE=true
+            fi
+
+            shift
             ;;
 
         --out-dir)
             if [[ -z "${2-}" ]]; then
                 echo -e "ERROR: You must provide a path for --out-dir" | theme
                 exit 1
-            else
-                SCRIPT_OUT_DIR_RELATIVE="$2"
-                shift
             fi
+
+            case $2 in
+                # @TODO fix on macos: realpath: illegal option -- -
+                /*) SCRIPT_OUT_DIR_RELATIVE=$(realpath --relative-to="$SCRIPT_DIR_RELATIVE" "$2") ;;
+                *)  SCRIPT_OUT_DIR_RELATIVE="$SCRIPT_DIR_RELATIVE/$2" ;;
+            esac
+
+            if [[ ! -d "$SCRIPT_OUT_DIR_RELATIVE" ]]; then
+                echo -e "ERROR: The path provided for --out-dir is not a directory: $SCRIPT_OUT_DIR_RELATIVE" | theme
+                exit 1
+            fi
+
+            shift
             ;;
 
         -vvv)       VERBOSITY_LEVEL=3 ;;

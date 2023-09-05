@@ -10,8 +10,8 @@
 // Dynamic include defined and resolved by ./play.sh based the example procedure chosen to embed
 #include HEADER_FILE_FOR_SPECIFIC_EXAMPLE
 
-#ifndef SQLITE_FILE_PATH
-  #define SQLITE_FILE_PATH ":memory:"
+#ifndef SQLITE_FILE_PATH_ABSOLUTE
+  #define SQLITE_FILE_PATH_ABSOLUTE ":memory:"
 #endif
 
 #ifndef CQL_TRACING_ENABLED
@@ -54,9 +54,9 @@ int main(int argc, char **argv) {
 
   sqlite3 *db = NULL;
 
-  char *filepath = SQLITE_FILE_PATH;
+  char *filepath = SQLITE_FILE_PATH_ABSOLUTE;
 
-  SQL_E(sqlite3_open(SQLITE_FILE_PATH, &db));
+  SQL_E(sqlite3_open(SQLITE_FILE_PATH_ABSOLUTE, &db));
 
   #ifdef ENABLE_SQLITE_STATEMENT_TRACING
     SQL_E(sqlite3_trace_v2(db, SQLITE_TRACE_PROFILE, sqlite_trace_callback, NULL));

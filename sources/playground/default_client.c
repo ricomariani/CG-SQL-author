@@ -17,8 +17,8 @@
 // Header file for the CQL Runtime (cqlrt) dynamically included using the CQL compiler --cqlrt flag. Defaults to:
 // #include "cqlrt.h"
 
-#ifndef SQLITE_FILE_PATH
-  #define SQLITE_FILE_PATH ":memory:"
+#ifndef SQLITE_FILE_PATH_ABSOLUTE
+  #define SQLITE_FILE_PATH_ABSOLUTE ":memory:"
 #endif
 
 #ifdef ENABLE_SQLITE_ERROR_TRACING
@@ -65,7 +65,7 @@ static int sqlite_trace_callback(unsigned type, void* ctx, void* p, void* x) {
 int main(int argc, char **argv) {
   sqlite3 *db = NULL;
 
-  char *filepath = SQLITE_FILE_PATH;
+  char *filepath = SQLITE_FILE_PATH_ABSOLUTE;
 
   printf("Database: %s\n", filepath);
 

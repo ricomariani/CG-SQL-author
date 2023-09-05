@@ -57,16 +57,16 @@ Arguments:
         stats — A simple .csv file with AST node count information per procedure
         ast — The internal AST
         ast_dot — The internal AST using dot format
-        ast_dot_png — The internal AST using dot format as PNG image
+        ast_dot_pdf — The internal AST using dot format as pdf image
         preprocessed — The preprocessed version of the sql file
         cql_json_schema — A JSON output for codegen tools
         cql_sql_schema — A normalized version of the cql_json_schema (.sql)
         table_diagram_dot — Table Diagram
-        table_diagram_dot_png — Table Diagram as PNG image
+        table_diagram_dot_pdf — Table Diagram as pdf image
         region_diagram_dot — Region Diagram
-        region_diagram_dot_png — Region Diagram as PNG image
+        region_diagram_dot_pdf — Region Diagram as pdf image
         erd_dot — Entity Relationship Diagram
-        erd_dot_png — Entity Relationship Diagram as PNG image
+        erd_dot_pdf — Entity Relationship Diagram as pdf image
         all_outputs — All outputs
 
     Examples (<path_to_example_list>)
@@ -155,7 +155,7 @@ Optional Dependencies
             echo "WARNING: Dot was not found.
         Install it with: \`brew install graphviz\` (MacOS) or \`sudo apt-get install graphviz\` (Linux)"
         )
-        Dot is used to generate png output from the AST Dot output. Only useful for debugging the AST.
+        Dot is used to generate pdf output from the AST Dot output. Only useful for debugging the AST.
     Java
         $($java_ready && \
             echo "SUCCESS: Java is ready (JAVA_HOME: ${JAVA_HOME:-Undefined})" || \
@@ -271,8 +271,8 @@ O=$(OUT)
 
 TO_PASCAL_CASE = $(shell echo $(1) | awk 'BEGIN {FS="[^a-zA-Z0-9]+"; OFS="";} {for (i=1; i<=NF; i++) $$i=toupper(substr($$i, 1, 1)) tolower(substr($$i, 2));} {print}')
 
-.PHONY:      gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png
-all_outputs: gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png
+.PHONY:      gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf
+all_outputs: gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf
 
 gitignore: $O/.gitignore
 $O/.gitignore:
@@ -364,37 +364,37 @@ $O/$(example_name).java: $O/cql_json_schema.json
 > $(CQL_ROOT_DIR)/java_demo/cqljava.py $O/cql_json_schema.json --package $(example_name) --class $(call TO_PASCAL_CASE, $(example_name)) > $O/$(example_name).java
 
 ifeq ($(dot_is_ready),true)
-ast_dot_png: $O/ast.dot.png
-$O/ast.dot.png: $O/ast.dot
-> dot $O/ast.dot -Tpng -o $O/ast.dot.png
+ast_dot_pdf: $O/ast.dot.pdf
+$O/ast.dot.pdf: $O/ast.dot
+> dot $O/ast.dot -Tpdf -o $O/ast.dot.pdf
 
-table_diagram_dot_png: $O/table_diagram.dot.png
-$O/table_diagram.dot.png: $O/table_diagram.dot
-> dot $O/table_diagram.dot -Tpng -o $O/table_diagram.dot.png
+table_diagram_dot_pdf: $O/table_diagram.dot.pdf
+$O/table_diagram.dot.pdf: $O/table_diagram.dot
+> dot $O/table_diagram.dot -Tpdf -o $O/table_diagram.dot.pdf
 
-region_diagram_dot_png: $O/region_diagram.dot.png
-$O/region_diagram.dot.png: $O/region_diagram.dot
-> dot $O/region_diagram.dot -Tpng -o $O/region_diagram.dot.png
+region_diagram_dot_pdf: $O/region_diagram.dot.pdf
+$O/region_diagram.dot.pdf: $O/region_diagram.dot
+> dot $O/region_diagram.dot -Tpdf -o $O/region_diagram.dot.pdf
 
-erd_dot_png: $O/erd.dot.png
-$O/erd.dot.png: $O/erd.dot
-> dot $O/erd.dot -Tpng -o $O/erd.dot.png
+erd_dot_pdf: $O/erd.dot.pdf
+$O/erd.dot.pdf: $O/erd.dot
+> dot $O/erd.dot -Tpdf -o $O/erd.dot.pdf
 else
-ast_dot_png: $O/ast.dot.png
-$O/ast.dot.png: $O/ast.dot
-> @echo "You need to install dot to generate $O/ast.dot.png"
+ast_dot_pdf: $O/ast.dot.pdf
+$O/ast.dot.pdf: $O/ast.dot
+> @echo "You need to install dot to generate $O/ast.dot.pdf"
 
-table_diagram_dot_png: $O/table_diagram.dot.png
-$O/table_diagram.dot.png: $O/table_diagram.dot
-> @echo "You need to install dot to generate $O/table_diagram.dot.png"
+table_diagram_dot_pdf: $O/table_diagram.dot.pdf
+$O/table_diagram.dot.pdf: $O/table_diagram.dot
+> @echo "You need to install dot to generate $O/table_diagram.dot.pdf"
 
-region_diagram_dot_png: $O/region_diagram.dot.png
-$O/region_diagram.dot.png: $O/region_diagram.dot
-> @echo "You need to install dot to generate $O/region_diagram.dot.png"
+region_diagram_dot_pdf: $O/region_diagram.dot.pdf
+$O/region_diagram.dot.pdf: $O/region_diagram.dot
+> @echo "You need to install dot to generate $O/region_diagram.dot.pdf"
 
-erd_dot_png: $O/erd.dot.png
-$O/erd.dot.png: $O/erd.dot
-> @echo "You need to install dot to generate $O/erd.dot.png"
+erd_dot_pdf: $O/erd.dot.pdf
+$O/erd.dot.pdf: $O/erd.dot
+> @echo "You need to install dot to generate $O/erd.dot.pdf"
 endif
 EOF
 
@@ -415,7 +415,7 @@ run() {
         echo_vv -e "Running \`$example_name\` outputs ($source)\n" | theme
 
         if [[ $targets == "all_outputs" ]]; then
-            targets="c lua objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_png table_diagram_dot_png region_diagram_dot_png erd_dot_png"
+            targets="c lua objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf"
         fi
 
         for out_type in $targets; do
@@ -441,16 +441,16 @@ do_run() {
         cql_json_schema)         execute "The 'cql_json_schema' output"         "cat $example_output_dir_relative/cql_json_schema.json" ;;
         cql_sql_schema)          execute "The 'cql_sql_schema' output"          "cat $example_output_dir_relative/cql_sql_schema.sql" ;;
         table_diagram_dot)       execute "The 'table_diagram_dot' output"       "cat $example_output_dir_relative/table_diagram.dot" ;;
-        table_diagram_dot_png)   execute "The 'table_diagram_dot_png' output"   "echo \"$ open $example_output_dir_relative/table_diagram.dot.png\"" ;;
+        table_diagram_dot_pdf)   execute "The 'table_diagram_dot_pdf' output"   "echo \"$ open $example_output_dir_relative/table_diagram.dot.pdf\"" ;;
         region_diagram_dot)      execute "The 'region_diagram_dot' output"      "cat $example_output_dir_relative/region_diagram.dot" ;;
-        region_diagram_dot_png)  execute "The 'region_diagram_dot_png' output"  "echo \"$ open $example_output_dir_relative/region_diagram.dot.png\"" ;;
+        region_diagram_dot_pdf)  execute "The 'region_diagram_dot_pdf' output"  "echo \"$ open $example_output_dir_relative/region_diagram.dot.pdf\"" ;;
         erd_dot)                 execute "The 'erd_dot' output"                 "cat $example_output_dir_relative/erd.dot" ;;
-        erd_dot_png)             execute "The 'erd_dot_png' output"             "echo \"$ open $example_output_dir_relative/erd.dot.png\"" ;;
+        erd_dot_pdf)             execute "The 'erd_dot_pdf' output"             "echo \"$ open $example_output_dir_relative/erd.dot.pdf\"" ;;
         schema)                  execute "The 'schema' output"                  "cat $example_output_dir_relative/schema.sql" ;;
         stats)                   execute "The 'stats' output"                   "cat $example_output_dir_relative/stats.csv" ;;
         ast)                     execute "The 'ast' output"                     "cat $example_output_dir_relative/ast.txt" ;;
         ast_dot)                 execute "The 'ast_dot' output"                 "cat $example_output_dir_relative/ast.dot" ;;
-        ast_dot_png)             execute "The 'ast_dot_png' output"             "echo \"$ open $example_output_dir_relative/ast.dot.png\"" ;;
+        ast_dot_pdf)             execute "The 'ast_dot_pdf' output"             "echo \"$ open $example_output_dir_relative/ast.dot.pdf\"" ;;
         *)
             echo "ERROR: Unknown target: $target" | theme
             exit 1
@@ -647,8 +647,8 @@ while [[ $# -gt 0 ]]; do
         run-data-access-demo) sub_command="run_data_access_demo" ;;
 
         preprocessed|c|lua|objc|java|schema|schema_upgrade|query_plan|stats|ast|ast_dot| \
-        cql_json_schema|cql_sql_schema|table_diagram_dot|table_diagram_dot_png| \
-        region_diagram_dot|region_diagram_dot_png|erd_dot|erd_dot_png)
+        cql_json_schema|cql_sql_schema|table_diagram_dot|table_diagram_dot_pdf| \
+        region_diagram_dot|region_diagram_dot_pdf|erd_dot|erd_dot_pdf)
             if [[ $targets != "all_outputs" ]] && [[ ! $targets =~ (^|[[:space:]])$1($|[[:space:]]) ]]; then
                 targets="$targets $1"
             fi

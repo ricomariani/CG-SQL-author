@@ -89,16 +89,16 @@ Multiple outputs are available. They all serve a wide range of different purpose
 - **stats** — A simple .csv file with AST node count information per procedure
 - **ast** — The internal AST
 - **ast_dot** — The internal AST using dot format
-- **ast_dot_png** — The internal AST using dot format as PNG image
+- **ast_dot_pdf** — The internal AST using dot format as pdf image
 - **preprocessed** — The preprocessed version of the sql file
 - **cql_json_schema** — A JSON output for codegen tools
 - **cql_sql_schema** - A normalized version of the cql_json_schema (.sql)
 - **table_diagram_dot** — Table Diagram
-- **table_diagram_dot_png** — Table Diagram as PNG image
+- **table_diagram_dot_pdf** — Table Diagram as pdf image
 - **region_diagram_dot** — Region Diagram
-- **region_diagram_dot_png** — Region Diagram as PNG image
+- **region_diagram_dot_pdf** — Region Diagram as pdf image
 - **erd_dot** - Entity Relationship Diagram
-- **erd_dot_png** - Entity Relationship Diagram as PNG image
+- **erd_dot_pdf** - Entity Relationship Diagram as pdf image
 - **all_outputs** — All outputs
 
 ### Clients

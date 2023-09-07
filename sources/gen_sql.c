@@ -4904,6 +4904,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(type_check_expr, gen_expr_type_check, "TYPE_CHECK", EXPR_PRI_ROOT);
   EXPR_INIT(concat, gen_concat, "||", EXPR_PRI_CONCAT);
   EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
+  EXPR_INIT(reverse_apply_typed, gen_binary_no_spaces, "::", EXPR_PRI_REVERSE_APPLY);
 }
 
 cql_export void gen_cleanup() {

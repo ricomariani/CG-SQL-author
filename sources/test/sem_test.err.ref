@@ -1651,4 +1651,5 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
 test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc SET'
 test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc_2 SET'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bogus'
 semantic errors present; no code gen.

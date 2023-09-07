@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep  5 14:58:06 PDT 2023
+Snapshot as of Wed Sep  6 18:43:46 PDT 2023
 
 ### Operators and Literals
 
@@ -660,6 +660,7 @@ simple_call:
 call:
   simple_call
   | basic_expr ':' simple_call
+  | basic_expr ':' ':' simple_call
   ;
 
 basic_expr:

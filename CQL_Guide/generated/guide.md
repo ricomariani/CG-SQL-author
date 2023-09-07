@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep  5 14:58:06 PDT 2023
+Snapshot as of Wed Sep  6 18:43:46 PDT 2023
 
 ### Operators and Literals
 
@@ -11558,6 +11558,7 @@ simple_call:
 call:
   simple_call
   | basic_expr ':' simple_call
+  | basic_expr ':' ':' simple_call
   ;
 
 basic_expr:
@@ -17346,7 +17347,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep  5 14:58:07 PDT 2023
+Snapshot as of Wed Sep  6 18:43:47 PDT 2023
 
 ### Rules
 

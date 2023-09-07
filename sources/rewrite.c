@@ -957,11 +957,30 @@ cleanup:
   symtab_delete(used_names);
 }
 
+// These are the :: suffixes for types
+static CSTR _Nonnull rewrite_type_suffix(sem_t core_type) {
+   CSTR result = "";
+    switch (core_type) {
+     case SEM_TYPE_NULL: result = "null"; break;
+     case SEM_TYPE_BOOL: result = "bool"; break;
+     case SEM_TYPE_INTEGER:  result = "int"; break;
+     case SEM_TYPE_LONG_INTEGER: result = "long"; break;
+     case SEM_TYPE_REAL:  result = "real"; break;
+     case SEM_TYPE_TEXT:  result = "text"; break;
+     case SEM_TYPE_BLOB:  result = "blob"; break;
+     case SEM_TYPE_OBJECT: result = "object"; break;
+     case SEM_TYPE_STRUCT: result = "cursor"; break;
+  };
+  // Only the above are possible
+  Contract(result[0]);
+  return result;
+}
+
 // Walk through the ast and grab the arg list as well as the function name.
 // Create a new call node using these two and the argument passed in
 // prior to the ':' symbol.
-cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
-  Contract(is_ast_reverse_apply(head));
+cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
+  Contract(is_ast_reverse_apply(head) || is_ast_reverse_apply_typed(head));
   EXTRACT_ANY_NOTNULL(argument, head->left);
   EXTRACT_NOTNULL(call, head->right);
   EXTRACT_ANY_NOTNULL(function_name, call->left);
@@ -970,6 +989,13 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
   EXTRACT(arg_list, call_arg_list->right);
 
   AST_REWRITE_INFO_SET(head->lineno, head->filename);
+
+  // This is the version that adds the type
+  if (!strcmp(op, "::")) {
+    EXTRACT_STRING(name, function_name);
+    sem_t sem_type = core_type_of(argument->sem->sem_type);
+    function_name = new_ast_str(dup_printf("%s_%s", name, rewrite_type_suffix(sem_type)));
+  }
 
   ast_node* new_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL),
                                 new_ast_arg_list(argument, arg_list));

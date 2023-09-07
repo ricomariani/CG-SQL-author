@@ -1020,6 +1020,7 @@ simple_call:
 call:
   simple_call { $call = $simple_call; }
   | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
+  | basic_expr ':' ':' simple_call { $call = new_ast_reverse_apply_typed($basic_expr, $simple_call); }
   ;
 
 basic_expr:

@@ -177,6 +177,7 @@ static void sem_fetch_stmt(ast_node *ast);
 static void sem_fetch_values_stmt(ast_node *ast);
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
 static void sem_resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
+static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
 static void sem_with_select_stmt(ast_node *ast);
@@ -9810,12 +9811,21 @@ additional_checks:
   }
 }
 
-// Validates the right arg of ':', and then rewrites the ast node
+// Validates the right arg of ':', '::' and then rewrites the ast node
 static void sem_reverse_apply(ast_node *ast, CSTR op) {
-  Contract(is_ast_reverse_apply(ast));
+  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast));
 
-  rewrite_reverse_apply(ast);
-  sem_expr_call(ast, op);
+  // we need the type of the left argument to do the reverse apply
+  // because the polymorphic forms want the type info.  So we try
+  // to get it.  If we get any errors, we're done here, no need to rewrite
+  bool_t hard_fail = false;
+  if (!sem_try_as_cursor(ast->left, &hard_fail) && !hard_fail) {
+    sem_expr(ast->left);
+  }
+  if (!is_error(ast->left)) {
+    rewrite_reverse_apply(ast, op);
+    sem_expr_call(ast, op);
+  }
 }
 
 static void sem_opt_filter_clause(ast_node *ast) {
@@ -20479,6 +20489,31 @@ cql_noexport void sem_cursor(ast_node *ast) {
   }
 }
 
+// If we can consume the ast as a cursor then do so
+// used if we might have a cursor context
+static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail) {
+  *hard_fail = false;
+
+  if (!is_id(ast)) {
+    return false;
+  }
+
+  EXTRACT_STRING(name, ast);
+
+  sem_resolve_id(ast, name, NULL);
+  if (is_error(ast)) {
+    // don't try again, we have no hope of this ever resolving
+    *hard_fail = true;
+    return false;
+  }
+
+  if (!is_cursor(ast->sem->sem_type)) {
+    return false;
+  }
+
+  return true;
+}
+
 // Information about switch cases, and the origin of the constants
 // this will be used to ensure enums are covered and there are no duplicates in the case list.
 typedef struct case_val {
@@ -24501,6 +24536,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(case_expr, sem_expr_case, "CASE");
   EXPR_INIT(concat, sem_concat, "||");
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
+  EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

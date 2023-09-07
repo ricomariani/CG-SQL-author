@@ -6995,7 +6995,7 @@ The statement ending at line XXXX
 DECLARE my_cursor CURSOR FOR SELECT 1 AS one, 2 AS two;
 
   {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage serialize fetch_into
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }
@@ -86603,4 +86603,278 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T
         | | {name x}
         | {type_object}: err
           | {name invalid_child_proc_2 SET}
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_null (x BOOL) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_null}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: bool variable in
+    |   | {param_detail}: x: bool variable in
+    |     | {name x}: x: bool variable in
+    |     | {type_bool}: bool
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_bool (x BOOL) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_bool}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: bool variable in
+    |   | {param_detail}: x: bool variable in
+    |     | {name x}: x: bool variable in
+    |     | {type_bool}: bool
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_int (x INTEGER) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_int}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    |   | {param_detail}: x: integer variable in
+    |     | {name x}: x: integer variable in
+    |     | {type_int}: integer
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_long (x LONG_INT) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_long}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: longint variable in
+    |   | {param_detail}: x: longint variable in
+    |     | {name x}: x: longint variable in
+    |     | {type_long}: longint
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_real (x REAL) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_real}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: real variable in
+    |   | {param_detail}: x: real variable in
+    |     | {name x}: x: real variable in
+    |     | {type_real}: real
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_text (x TEXT) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_text}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: text variable in
+    |   | {param_detail}: x: text variable in
+    |     | {name x}: x: text variable in
+    |     | {type_text}: text
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_blob (x BLOB) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_blob}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: blob variable in
+    |   | {param_detail}: x: blob variable in
+    |     | {name x}: x: blob variable in
+    |     | {type_blob}: blob
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_object (x OBJECT) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_object}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: object variable in
+    |   | {param_detail}: x: object variable in
+    |     | {name x}: x: object variable in
+    |     | {type_object}: object
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC rev_apply_cursor (x CURSOR) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name rev_apply_cursor}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: cursor variable in
+    |   | {param_detail}: x: cursor variable in
+    |     | {name x}: x: cursor variable in
+    |     | {type_cursor}: cursor
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_null(NULL);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_null}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {null}: null
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_bool(TRUE);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_bool}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {bool 1}: bool notnull
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_int(5);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_int}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 5}: integer notnull
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_long(5L);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_long}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {longint 5}: longint notnull
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_real(3.5);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_real}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {dbl 3.5}: real notnull
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_text("foo");
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_text}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'foo'}: text notnull
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_blob(blob_var);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_blob}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name blob_var}: blob_var: blob variable was_set
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_object(obj_var);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_object}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name obj_var}: obj_var: object variable was_set
+
+The statement ending at line XXXX
+
+FETCH my_cursor;
+
+  {fetch_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage fetch_into
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage fetch_into
+
+The statement ending at line XXXX
+
+SET int_result := rev_apply_cursor(my_cursor);
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {call}: integer notnull
+    | {name rev_apply_cursor}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage fetch_into
+
+The statement ending at line XXXX
+
+SET int_result := invalid_id_bogus::rev_apply();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bogus'
+
+  {assign}: err
+  | {name int_result}: int_result: integer variable was_set
+  | {reverse_apply_typed}
+    | {name invalid_id_bogus}: err
+    | {call}
+      | {name rev_apply}
+      | {call_arg_list}
+        | {call_filter_clause}
 

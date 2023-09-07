@@ -328,7 +328,6 @@ select  - NOT 'x';
 -- +1 error:
 select NOT - 'x';
 
-
 declare real_result2 real;
 
 -- TEST: declare function for ':' test
@@ -22904,3 +22903,78 @@ proc use_invalid_result_set2()
 begin
   declare x object<invalid_child_proc_2 set>;
 end;
+
+declare function rev_apply_null(x bool) integer not null;
+declare function rev_apply_bool(x bool) integer not null;
+declare function rev_apply_int(x int) integer not null;
+declare function rev_apply_long(x long) integer not null;
+declare function rev_apply_real(x real) integer not null;
+declare function rev_apply_text(x text) integer not null;
+declare function rev_apply_blob(x blob) integer not null;
+declare function rev_apply_object(x object) integer not null;
+declare function rev_apply_cursor(x cursor) integer not null;
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_null(NULL);
+-- - error:
+set int_result := null::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_bool(true);
+-- - error:
+set int_result := true::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_int(5);
+-- - error:
+set int_result := 5::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_long(5L);
+-- - error:
+set int_result := 5L::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_real(3.5);
+-- - error:
+set int_result := 3.5::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_text("foo");
+-- - error:
+set int_result := "foo"::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_blob(blob_var);
+-- - error:
+set int_result := blob_var::rev_apply();
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_object(obj_var);
+-- - error:
+set int_result := obj_var::rev_apply();
+
+-- make the cursor valid to use (this never runs so it's fine)
+fetch my_cursor;
+
+-- TEST: use the reverse apply with :: to get polymorphism
+-- validate rewrite only
+-- + SET int_result := rev_apply_cursor(my_cursor);
+-- - error:
+set int_result := my_cursor::rev_apply();
+
+-- TEST: path of invalid identifier has a slightly different error route
+-- + error: % name not found 'invalid_id_bogus'
+-- + {assign}: err
+-- + {name invalid_id_bogus}: err
+-- ONE error not TWO!
+-- +1 error: 
+set int_result := invalid_id_bogus::rev_apply();

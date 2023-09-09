@@ -7972,7 +7972,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Sep 6 18:43:46 PDT 2023</p>
+<p>Snapshot as of Fri Sep 8 17:33:51 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&#39;:&#39;
@@ -8612,6 +8612,7 @@ call:
   simple_call
   | basic_expr &#39;:&#39; simple_call
   | basic_expr &#39;:&#39; &#39;:&#39; simple_call
+  | basic_expr &#39;:&#39; &#39;:&#39; &#39;:&#39; simple_call
   ;
 
 basic_expr:
@@ -12032,7 +12033,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Sep 6 18:43:47 PDT 2023</p>
+<p>Snapshot as of Fri Sep 8 17:33:52 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

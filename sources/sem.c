@@ -9813,7 +9813,7 @@ additional_checks:
 
 // Validates the right arg of ':', '::' and then rewrites the ast node
 static void sem_reverse_apply(ast_node *ast, CSTR op) {
-  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast));
+  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast));
 
   // we need the type of the left argument to do the reverse apply
   // because the polymorphic forms want the type info.  So we try
@@ -24537,6 +24537,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(concat, sem_concat, "||");
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
   EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
+  EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

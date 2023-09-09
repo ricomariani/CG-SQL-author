@@ -22978,3 +22978,29 @@ set int_result := my_cursor::rev_apply();
 -- ONE error not TWO!
 -- +1 error: 
 set int_result := invalid_id_bogus::rev_apply();
+
+declare lbs real<pounds> not null;
+
+declare function some_polymorphic_function_real_pounds(x real<pounds>, y real) integer not null;
+
+-- TEST: using the type kind we append "real_pounds" not just "real"
+-- + LET poly_result_1 := some_polymorphic_function_real_pounds(lbs, 1);
+let poly_result_1 := lbs:::some_polymorphic_function(1);
+
+proc get_result()
+begin
+   select 1 x, 2 y;
+end;
+
+-- note that we have to lose the type kind object<get_result SET>
+-- we don't have any way to flow it into a declaration.
+-- so we have to use a generic object to capture the argument.
+-- this is of dubious usefulness.  But again these internal types
+-- are not intended to be used in this way anyway.
+declare function count_object_get_result_SET(result object) integer not null;
+
+-- TEST: this is a not very clever use of ::: but it showcases space issue
+-- note that we added an underscore so we get _SET
+-- + LET poly_result_2 := count_object_get_result_SET(get_result());
+-- - error:
+let poly_result_2 := get_result():::count();

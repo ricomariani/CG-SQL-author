@@ -980,7 +980,8 @@ static CSTR _Nonnull rewrite_type_suffix(sem_t core_type) {
 // Create a new call node using these two and the argument passed in
 // prior to the ':' symbol.
 cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
-  Contract(is_ast_reverse_apply(head) || is_ast_reverse_apply_typed(head));
+  Contract(is_ast_reverse_apply(head) || is_ast_reverse_apply_typed(head) || is_ast_reverse_apply_poly(head));
+  Contract(op[0] == ':');  // this : or :: or :::
   EXTRACT_ANY_NOTNULL(argument, head->left);
   EXTRACT_NOTNULL(call, head->right);
   EXTRACT_ANY_NOTNULL(function_name, call->left);
@@ -990,11 +991,42 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
 
   AST_REWRITE_INFO_SET(head->lineno, head->filename);
 
-  // This is the version that adds the type
-  if (!strcmp(op, "::")) {
-    EXTRACT_STRING(name, function_name);
-    sem_t sem_type = core_type_of(argument->sem->sem_type);
-    function_name = new_ast_str(dup_printf("%s_%s", name, rewrite_type_suffix(sem_type)));
+  if (!op[1]) {
+     // function_name is already good, don't need to do anything else
+  }
+  else if (!op[2] || !argument->sem->kind || !argument->sem->kind[0]) {
+     // This is the :: case or else the object has no type kind
+     Contract(op[1] == ':');
+     EXTRACT_STRING(name, function_name);
+     sem_t sem_type = core_type_of(argument->sem->sem_type);
+     function_name = new_ast_str(dup_printf("%s_%s", name, rewrite_type_suffix(sem_type)));
+  }
+  else {
+     Contract(op[2] == ':');
+     Contract(!op[3]);
+     // This is the ::: case where we use type and kind
+     EXTRACT_STRING(name, function_name);
+     sem_t sem_type = core_type_of(argument->sem->sem_type);
+     // discard const, this is ok as the string has not yet escaped into the world...
+     // we need to remove any internal space
+     char *new_name = (char *)dup_printf("%s_%s_%s", name, rewrite_type_suffix(sem_type), argument->sem->kind);
+
+     // This bit is necessary because builtin types like result sets are of type
+     // foo object<proc_name set> with the space.  We can't have a space in the function id
+     // so we clobber it into an underscore.  Only builtin types can have an embedded space
+     // and that type has to flow.  User declared types only are allowed identifiers.
+     // The two types are object<foo SET> and object<foo CURSOR>.  There are no cases with
+     // more than one space.
+     char *space = strchr(new_name, ' ');
+     if (space) {
+        // this is our buffer we just allocated, we can hammer it
+        *(char *)(space) = '_';
+
+        // There are no others, this is invariant!
+        Contract(!strchr(new_name, ' '));
+     }
+     // further changes would be invalid, the string has escaped into the tree
+     function_name = new_ast_str(new_name);
   }
 
   ast_node* new_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL),

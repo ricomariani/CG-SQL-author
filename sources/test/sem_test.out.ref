@@ -86878,3 +86878,114 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bo
       | {call_arg_list}
         | {call_filter_clause}
 
+The statement ending at line XXXX
+
+DECLARE lbs REAL<pounds> NOT NULL;
+
+  {declare_vars_type}: real<pounds> notnull
+  | {name_list}: lbs: real<pounds> notnull variable
+  | | {name lbs}: lbs: real<pounds> notnull variable
+  | {notnull}: real<pounds> notnull
+    | {type_real}: real<pounds>
+      | {name pounds}
+
+The statement ending at line XXXX
+
+DECLARE FUNC some_polymorphic_function_real_pounds (x REAL<pounds>, y REAL) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name some_polymorphic_function_real_pounds}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: real<pounds> variable in
+    | | | {param_detail}: x: real<pounds> variable in
+    | |   | {name x}: x: real<pounds> variable in
+    | |   | {type_real}: real<pounds>
+    | |     | {name pounds}
+    | | {params}
+    |   | {param}: y: real variable in
+    |     | {param_detail}: y: real variable in
+    |       | {name y}: y: real variable in
+    |       | {type_real}: real
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET poly_result_1 := some_polymorphic_function_real_pounds(lbs, 1);
+
+  {let_stmt}: poly_result_1: integer notnull variable
+  | {name poly_result_1}: poly_result_1: integer notnull variable
+  | {call}: integer notnull
+    | {name some_polymorphic_function_real_pounds}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name lbs}: lbs: real<pounds> notnull variable
+        | {arg_list}
+          | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC get_result ()
+BEGIN
+  SELECT 1 AS x, 2 AS y;
+END;
+
+  {create_proc_stmt}: get_result: { x: integer notnull, y: integer notnull } dml_proc
+  | {name get_result}: get_result: { x: integer notnull, y: integer notnull } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { x: integer notnull, y: integer notnull }
+        | {select_core_list}: select: { x: integer notnull, y: integer notnull }
+        | | {select_core}: select: { x: integer notnull, y: integer notnull }
+        |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull }
+        |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull }
+        |     | | {select_expr}: x: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | | {opt_as_alias}
+        |     | |   | {name x}
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: y: integer notnull
+        |     |     | {int 2}: integer notnull
+        |     |     | {opt_as_alias}
+        |     |       | {name y}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE FUNC count_object_get_result_SET (result OBJECT) INTEGER NOT NULL;
+
+  {declare_func_stmt}: integer notnull
+  | {name count_object_get_result_SET}: integer notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: result: object variable in
+    |   | {param_detail}: result: object variable in
+    |     | {name result}: result: object variable in
+    |     | {type_object}: object
+    | {notnull}: integer notnull
+      | {type_int}: integer
+
+The statement ending at line XXXX
+
+LET poly_result_2 := count_object_get_result_SET(get_result());
+
+  {let_stmt}: poly_result_2: integer notnull variable
+  | {name poly_result_2}: poly_result_2: integer notnull variable
+  | {call}: integer notnull
+    | {name count_object_get_result_SET}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {call}: object<get_result SET> notnull
+          | {name get_result}
+          | {call_arg_list}
+            | {call_filter_clause}
+

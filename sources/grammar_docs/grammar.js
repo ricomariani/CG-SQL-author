@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Sep  6 18:43:46 2023
+// Snapshot as of Fri Sep  8 17:33:51 2023
 
 
 const PREC = {
@@ -107,7 +107,7 @@ module.exports = grammar({
     raise_expr: $ => choice(seq($.RAISE, '(', $.IGNORE, ')'), seq($.RAISE, '(', $.ROLLBACK, ',', $.expr, ')'), seq($.RAISE, '(', $.ABORT, ',', $.expr, ')'), seq($.RAISE, '(', $.FAIL, ',', $.expr, ')')),
     opt_distinct: $ => choice($.empty, $.DISTINCT),
     simple_call: $ => seq($.name, '(', $.opt_distinct, optional($.arg_list), ')', optional($.opt_filter_clause)),
-    call: $ => choice($.simple_call, seq($.basic_expr, ':', $.simple_call), seq($.basic_expr, ':', ':', $.simple_call)),
+    call: $ => choice($.simple_call, seq($.basic_expr, ':', $.simple_call), seq($.basic_expr, ':', ':', $.simple_call), seq($.basic_expr, ':', ':', ':', $.simple_call)),
     basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')')),
     IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
     IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),

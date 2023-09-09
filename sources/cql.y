@@ -862,6 +862,8 @@ name:
   | PRIVATE { $name = new_ast_str("private"); }
   | FIRST { $name = new_ast_str("first"); }
   | LAST { $name = new_ast_str("last"); }
+  | ADD { $name = new_ast_str("add"); }
+  | VIEW { $name = new_ast_str("view"); }
   ;
 
 opt_name:

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Fri Sep  8 17:33:51 2023
+// Snapshot as of Fri Sep  8 17:49:41 2023
 
 
 const PREC = {
@@ -86,7 +86,7 @@ module.exports = grammar({
     indexed_column: $ => seq($.expr, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_where), optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST, $.ADD, $.VIEW),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
@@ -418,6 +418,7 @@ module.exports = grammar({
     PRIVATE: $ => CI('private'),
     FIRST: $ => CI('first'),
     LAST: $ => CI('last'),
+    ADD: $ => CI('add'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
     AT_SENSITIVE: $ => CI('@sensitive'),
@@ -538,7 +539,6 @@ module.exports = grammar({
     RELEASE: $ => CI('release'),
     AT_ECHO: $ => CI('@echo'),
     ALTER: $ => CI('alter'),
-    ADD: $ => CI('add'),
     COLUMN: $ => CI('column'),
     BEFORE: $ => CI('before'),
     AFTER: $ => CI('after'),

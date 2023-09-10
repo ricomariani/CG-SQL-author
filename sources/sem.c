@@ -6644,6 +6644,12 @@ static void sem_case_list(
       return;
     }
 
+    if (is_null_type(case_expr->sem->sem_type)) {
+      report_error(ast, "CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type", NULL);
+      record_error(ast);
+      return;
+    }
+
     if (!sem_verify_compat(case_expr, sem_type_required_for_when, case_expr->sem->sem_type, is_iif ? "iif" : "when")) {
       record_error(ast);
       record_error(head);

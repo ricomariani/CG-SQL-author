@@ -1715,3 +1715,9 @@ update foo set name = baz.name from bar join baz on bar.id = baz.id where bar.na
 proc foo() -- equivalent to create proc
 begin
 end;
+
+-- valid identifier even though it's a keyword
+let view := 5;
+
+-- valid identifier even though it's a keyword
+let add := 7;

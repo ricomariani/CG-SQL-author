@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Fri Sep  8 17:49:41 PDT 2023
+Snapshot as of Mon Sep 11 10:00:48 PDT 2023
 
 ### Operators and Literals
 
@@ -17338,6 +17338,22 @@ declare function bar() int
 
 All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
+### CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
+
+In a `CASE` statement each `WHEN` expression must not be a constant NULL. For example:
+```sql
+  declare hex text;
+  set hex := case color
+    when NULL    then "#FFFFFF" -- error
+    when "red"   then "#FF0000"
+    when "green" then "#00FF00"
+    when "blue"  then "#0000FF"
+    else "#000000"
+  end;
+```
+
+When the case expression `color` evaluates to NULL, it does not match with an expression that evaluates to NULL.
+Consequently, the CASE statement will default to the ELSE clause, provided it is defined.
 
 
 <!---
@@ -17350,7 +17366,7 @@ All subsequent calls to `bar()` in CQL will call the `foo()` function.
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Fri Sep  8 17:49:42 PDT 2023
+Snapshot as of Mon Sep 11 10:00:48 PDT 2023
 
 ### Rules
 

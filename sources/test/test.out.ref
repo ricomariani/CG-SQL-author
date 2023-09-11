@@ -1866,3 +1866,7 @@ SET name = baz.name FROM bar
 CREATE PROC foo ()
 BEGIN
 END;
+
+LET view := 5;
+
+LET add := 7;

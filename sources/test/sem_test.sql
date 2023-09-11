@@ -671,6 +671,30 @@ select case
   when 'x' then 'foo'
 end;
 
+-- TEST: when expression cannot be a constant null — Not to be confused with else
+-- + error: % WHEN expression must not be a constant NULL but can be of a nullable type
+-- +1 error:
+-- + {select_stmt}: err
+-- + {case_expr}: err
+-- + {null}: null
+select case "x"
+  when null then 'foo'
+  when "x" then 'foo'
+  when "y" then 'bar'
+end;
+
+-- TEST: when expression cannot be a constant null — Not to be confused with else
+-- + error: % WHEN expression must not be a constant NULL but can be of a nullable type
+-- +1 error:
+-- + {select_stmt}: err
+-- + {case_expr}: err
+-- + {null}: null
+select case
+  when null then 'foo'
+  when "x" then 'foo'
+  when "y" then 'bar'
+end;
+
 -- TEST: ok to compare strings to each other
 -- - error:
 -- note the result type is nullable, there was no else case!

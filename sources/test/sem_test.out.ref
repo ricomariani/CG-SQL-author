@@ -2921,6 +2921,81 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
+SELECT CASE "x" WHEN NULL THEN 'foo'
+WHEN "x" THEN 'foo'
+WHEN "y" THEN 'bar'
+END;
+
+test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {case_expr}: err
+  |     |     | {strlit 'x'}: text notnull
+  |     |     | {connector}
+  |     |       | {case_list}: err
+  |     |         | {when}
+  |     |         | | {null}: null
+  |     |         | | {strlit 'foo'}
+  |     |         | {case_list}
+  |     |           | {when}
+  |     |           | | {strlit 'x'}
+  |     |           | | {strlit 'foo'}
+  |     |           | {case_list}
+  |     |             | {when}
+  |     |               | {strlit 'y'}
+  |     |               | {strlit 'bar'}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT CASE WHEN NULL THEN 'foo'
+WHEN "x" THEN 'foo'
+WHEN "y" THEN 'bar'
+END;
+
+test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {case_expr}: err
+  |     |     | {connector}
+  |     |       | {case_list}: err
+  |     |         | {when}
+  |     |         | | {null}: null
+  |     |         | | {strlit 'foo'}
+  |     |         | {case_list}
+  |     |           | {when}
+  |     |           | | {strlit 'x'}
+  |     |           | | {strlit 'foo'}
+  |     |           | {case_list}
+  |     |             | {when}
+  |     |               | {strlit 'y'}
+  |     |               | {strlit 'bar'}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT CASE 'x' WHEN 'y' THEN 1
 WHEN 'z' THEN 2
 END;

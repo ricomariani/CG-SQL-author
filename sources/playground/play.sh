@@ -713,7 +713,7 @@ if [[ $rest != "" ]]; then
     exit 1
 fi
 
-if ! is_dependency_satisfied cql_compiler; then
+if [[ $sub_command != "build_cql_compiler" ]] && ! is_dependency_satisfied cql_compiler; then
     hello
     exit 1
 fi

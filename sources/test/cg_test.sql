@@ -560,7 +560,7 @@ end;
 -- +  }
 -- +  i2 = 300;
 -- + } while (0);
-set i2 := case when 1 then 100 when 2 then 200 when null then 500 else 300 end;
+set i2 := case when 1 then 100 when 2 then 200 else 300 end;
 
 -- TEST: a simple in expression
 -- + do {

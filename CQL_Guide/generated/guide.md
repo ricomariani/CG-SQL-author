@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 11 10:00:48 PDT 2023
+Snapshot as of Mon Sep 11 15:49:39 PDT 2023
 
 ### Operators and Literals
 
@@ -17366,7 +17366,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Sep 11 10:00:48 PDT 2023
+Snapshot as of Mon Sep 11 15:49:40 PDT 2023
 
 ### Rules
 

@@ -88,10 +88,12 @@ void yyset_in(FILE *);
 void yyset_lineno(int);
 void yyrestart(FILE *);
 
+#ifndef _MSC_VER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #pragma clang diagnostic ignored "-Wconversion"
+#endif
 
 // In two places in the grammar we have to include an optional name list
 // even though the name list isn't actually allowed.  We do this to avoid
@@ -2325,7 +2327,9 @@ blob_update_val_stmt:
 
 %%
 
+#ifndef _MSC_VER
 #pragma clang diagnostic pop
+#endif
 
 void yyerror(const char *format, ...) {
   extern int yylineno;
@@ -2391,7 +2395,7 @@ cql_data_defn( const char *global_proc_name );
 
 cql_data_defn( rtdata *rt );
 
-static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, int32_t *out_count, char ***out_args);
+static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, uint32_t *out_count, char ***out_args);
 
 static int32_t gather_arg_param(int32_t a, int32_t argc, char **argv, char **out_arg, const char *errmsg);
 
@@ -2608,7 +2612,7 @@ static void parse_cleanup() {
   parse_error_occurred = false;
 }
 
-static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, int *out_count, char ***out_args) {
+static int32_t gather_arg_params(int32_t a, int32_t argc, char **argv, uint32_t *out_count, char ***out_args) {
   if (a + 1 < argc) {
     a++;
     *out_args = &argv[a];

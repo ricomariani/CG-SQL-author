@@ -1457,7 +1457,7 @@ static cql_hash_code cql_hash_buffer(
 
   if (refs_count) {
     // first entry is the count, then there are count more entries hence loop <= count
-    for (int32_t i = 0; i < refs_count; i++) {
+    for (uint32_t i = 0; i < refs_count; i++) {
       cql_hash_code ref_hash = cql_ref_hash(*(cql_type_ref *)(data + refs_offset));
       hash = ((hash << 5) + hash) + ref_hash;
       refs_offset += sizeof(cql_type_ref);
@@ -1509,7 +1509,7 @@ static cql_bool cql_buffers_equal(
 
   if (refs_count) {
     // first entry is the count, then there are count more entries hence loop <= count
-    for (int32_t i = 0; i < refs_count; i++) {
+    for (uint32_t i = 0; i < refs_count; i++) {
       if (!cql_ref_equal(*(cql_type_ref *)(data1 + refs_offset),
                          *(cql_type_ref *)(data2 + refs_offset))) {
         return false;
@@ -2601,7 +2601,7 @@ static cql_hashtab *_Nonnull cql_hashtab_new(
 // release the memory for the hash table including
 // releasing all the strings stored as keys.
 static void cql_hashtab_delete(cql_hashtab *_Nonnull ht) {
-  for (int32_t i = 0; i < ht->capacity; i++) {
+  for (uint32_t i = 0; i < ht->capacity; i++) {
     cql_int64 key = ht->payload[i].key;
     cql_int64 val = ht->payload[i].val;
     if (key) {
@@ -3856,7 +3856,7 @@ cql_string_ref _Nullable cql_string_dictionary_find(
 static void cql_string_list_finalize(void *_Nonnull data) {
   cql_bytebuf *_Nonnull self = data;
   int32_t count = self->used / sizeof(cql_string_ref);
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     size_t offset = i * sizeof(cql_string_ref);
     cql_string_ref string = *(cql_string_ref *)(self->ptr + offset);
     cql_string_release(string);
@@ -4460,7 +4460,7 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // In the first pass we verify the provided values are compatible with
   // the provided types and compute the needed variable size.
   int64_t variable_size = 0;
-  for (int32_t icol = 0; icol < column_count; icol++) {
+  for (uint32_t icol = 0; icol < column_count; icol++) {
     int32_t index = icol * 2 + 1;
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
@@ -4504,8 +4504,8 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
 
   // In the second pass we write the arguments into the blob
   // using the offsets computed above.
-  for (int32_t icol = 0; icol < column_count; icol++) {
-    int32_t index = icol * 2 + 1;
+  for (uint32_t icol = 0; icol < column_count; icol++) {
+    uint32_t index = icol * 2 + 1;
     sqlite3_value *field_value_arg = argv[index];
     sqlite3_value *field_type_arg = argv[index + 1];
 
@@ -4900,7 +4900,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
   // is in the same order as it would be after a blob create even if the
   // arguments in the update case are in a different order, or partly
   // specified.
-  for (int32_t icol = 0; icol < header.column_count; icol++) {
+  for (uint32_t icol = 0; icol < header.column_count; icol++) {
     uint64_t storage_offset = shape.storage_offset + icol * sizeof(int64_t);
     uint64_t type_code_offset = shape.type_codes_offset + icol * sizeof(int8_t);
 

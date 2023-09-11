@@ -818,7 +818,7 @@ CSTR string_from_name_list_item(ast_node *node) {
 static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
   symtab *cache = symtab_new();
 
-  int32_t count1 = 0;
+  uint32_t count1 = 0;
 
   for (ast_node *name_list = name_list1; name_list; name_list = name_list->right) {
     CSTR name = string_from_name_list_item(name_list);
@@ -826,7 +826,7 @@ static bool_t is_name_list_equal(ast_node *name_list1, ast_node *name_list2) {
     count1++;
   }
 
-  int32_t count2 = 0;
+  uint32_t count2 = 0;
 
   for (ast_node *name_list = name_list2; name_list; name_list = name_list->right) {
     CSTR name = string_from_name_list_item(name_list);
@@ -1094,7 +1094,7 @@ cql_noexport sem_t sensitive_flag(sem_t sem_type) {
 // We need this to handle EXISTS(select * from ...)
 static sem_t any_sensitive(sem_struct *sptr) {
   sem_t sem_sensitive = 0;
-  for (int32_t i = 0; sem_sensitive == 0 && i < sptr->count; i++) {
+  for (uint32_t i = 0; sem_sensitive == 0 && i < sptr->count; i++) {
     sem_sensitive |= sensitive_flag(sptr->semtypes[i]);
   }
   return sem_sensitive;
@@ -1389,7 +1389,7 @@ cql_noexport bool_t is_proc_shared_fragment(ast_node *_Nonnull proc_stmt) {
 bool_t is_sensitive_column_in_result_set(CSTR name) {
   sem_struct *sptr = current_proc->sem->sptr;
   uint32_t count = sptr->count;
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     CSTR col = sptr->names[i];
     if (!strcmp(name, col)) {
       if (sptr->semtypes[i] & SEM_TYPE_SENSITIVE) {
@@ -1432,7 +1432,7 @@ static void sem_column_name_match_encode_context_column_type(CSTR name, ast_node
   Contract(current_proc);
   sem_struct *sptr = current_proc->sem->sptr;
   uint32_t count = sptr->count;
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     CSTR col = sptr->names[i];
     if (!strcmp(name, col)) {
       if (core_type_of(sptr->semtypes[i]) != encode_context_type) {
@@ -2277,7 +2277,7 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
 // For debug/test output, prettyprint a structure type
 static void print_sem_struct(sem_struct *sptr) {
   cql_output("%s: { ", sptr->struct_name);
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (i != 0) {
       cql_output(", ");
     }
@@ -2306,7 +2306,7 @@ static void print_sem_join(sem_join *jptr) {
   else {
     cql_output("JOIN { ");
   }
-  for (int32_t i = 0; i < jptr->count; i++) {
+  for (uint32_t i = 0; i < jptr->count; i++) {
     if (i != 0) {
       cql_output(", ");
     }
@@ -2513,10 +2513,10 @@ static sem_node *ok_sentinel(void) {
 // in a particular struct.
 int32_t sem_column_index(sem_struct *sptr, CSTR name) {
   uint32_t count = sptr->count;
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     CSTR col = sptr->names[i];
     if (!strcmp(name, col)) {
-      return i;
+      return (int32_t)i;
     }
   }
   return -1;
@@ -2557,7 +2557,7 @@ static sem_struct * new_sem_struct(CSTR name, uint32_t count) {
   sptr->semtypes = _ast_pool_new_array(sem_t, count);
   sptr->is_backed = false;
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sptr->names[i] = NULL;
     sptr->semtypes[i] = SEM_TYPE_ERROR;
     sptr->kinds[i] = NULL;
@@ -2576,7 +2576,7 @@ static sem_join * new_sem_join(uint32_t count) {
   jptr->names = _ast_pool_new_array(CSTR, count);
   jptr->tables = _ast_pool_new_array(sem_struct *, count);
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     jptr->names[i] = NULL;
     jptr->tables[i] = NULL;
   }
@@ -2592,7 +2592,7 @@ static sem_join * new_sem_join(uint32_t count) {
 // with the indicated removals.
 static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
   sem_struct *result = new_sem_struct(sptr->struct_name, sptr->count);
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     result->names[i] = sptr->names[i];
     result->kinds[i] = sptr->kinds[i];
     result->semtypes[i] = sptr->semtypes[i] & sem_not(strip);
@@ -2981,8 +2981,8 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
 
   // First make sure the resulting type could be reasonably used, no duplicate table names
   // note that the semantic names include any aliasing.
-  for (int32_t i = 0; i < j1->count; i++) {
-    for (int32_t j = 0; j < j2->count; j++) {
+  for (uint32_t i = 0; i < j1->count; i++) {
+    for (uint32_t j = 0; j < j2->count; j++) {
       CSTR n1 = j1->names[i];
       CSTR n2 = j2->names[j];
 
@@ -3025,12 +3025,12 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
   }
 
   // Now just copy over the names and the tables.
-  int32_t j = 0;
-  for (int32_t i = 0; i < j1->count; i++, j++) {
+  uint32_t j = 0;
+  for (uint32_t i = 0; i < j1->count; i++, j++) {
     jptr->names[j] = j1->names[i];
     jptr->tables[j] = sem_clone_struct_strip_flags(j1->tables[i], strip_left);
   }
-  for (int32_t i = 0; i < j2->count; i++, j++) {
+  for (uint32_t i = 0; i < j2->count; i++, j++) {
     jptr->names[j] = j2->names[i];
     jptr->tables[j] = sem_clone_struct_strip_flags(j2->tables[i], strip_right);
   }
@@ -3043,9 +3043,9 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
 // add a flag bit to the join columns.  Once you constrain on a senstive
 // column all the columns become sensitive.
 static void sem_add_flags_to_join(sem_join *jptr, sem_t flags) {
-  for (int32_t i = 0; i <jptr->count; i++) {
+  for (uint32_t i = 0; i <jptr->count; i++) {
     sem_struct *sptr = jptr->tables[i];
-    for (int32_t j = 0; j < sptr->count; j++) {
+    for (uint32_t j = 0; j < sptr->count; j++) {
       sptr->semtypes[j] |= flags;
     }
   }
@@ -3269,9 +3269,9 @@ static void sem_validate_previous_index(ast_node *prev_index) {
 // We often need to find the index of a particular column
 cql_noexport int32_t find_col_in_sptr(sem_struct *sptr, CSTR name) {
   Contract(name);
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (!Strcasecmp(sptr->names[i], name)) {
-      return i;
+      return (int32_t)i;
     }
   }
   return -1;
@@ -3674,7 +3674,7 @@ static bool_t validate_referenceable_column_callback(ast_node *indexed_columns, 
 // Check if a column is a primary or unique key
 static bool_t is_column_unique_key(ast_node *ref_table_ast, CSTR column_name) {
   sem_struct *sptr = ref_table_ast->sem->sptr;
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (!Strcasecmp(column_name, sptr->names[i]) &&
         (is_primary_key(sptr->semtypes[i]) || is_unique_key(sptr->semtypes[i]))) {
       return true;
@@ -3724,7 +3724,7 @@ static bool_t find_referenceable_columns(
   }
 
   // check if all column are in CREATE UNIQUE INDEX statement
-  for (int32_t i = 0; i < indices->capacity; i++) {
+  for (uint32_t i = 0; i < indices->capacity; i++) {
     symtab_entry entry = indices->payload[i];
     if (entry.sym) {
       ast_node *index_ast = (ast_node *)entry.val;
@@ -5190,7 +5190,7 @@ static void sem_select_star(ast_node *ast) {
   // First figure out how many fields there will be by visiting
   // every table in the join and summing the counts.
   uint32_t count = 0;
-  for (int32_t i = 0; i < jptr->count; i++) {
+  for (uint32_t i = 0; i < jptr->count; i++) {
     sem_struct *table = jptr->tables[i];
     count += table->count;
   }
@@ -5201,9 +5201,9 @@ static void sem_select_star(ast_node *ast) {
   sem_struct *sptr = new_sem_struct("select", count);
   int32_t field = 0;
 
-  for (int32_t i = 0; i < jptr->count; i++) {
+  for (uint32_t i = 0; i < jptr->count; i++) {
     sem_struct *table = jptr->tables[i];
-    for (int32_t j = 0; j < table->count; j++, field++) {
+    for (uint32_t j = 0; j < table->count; j++, field++) {
       sptr->names[field] = table->names[j];
       // If we inferred a column in `table` to be nonnull, make it a proper
       // nonnull type in the result.
@@ -5240,7 +5240,7 @@ static uint32_t sem_select_table_star_count(ast_node *ast) {
 
   sem_join *jptr = current_joinscope->jptr;
 
-  for (int32_t i = 0; i < jptr->count; i++) {
+  for (uint32_t i = 0; i < jptr->count; i++) {
     if (!Strcasecmp(jptr->names[i], name)) {
       ast->sem = new_sem(SEM_TYPE_STRUCT);
       ast->sem->name = jptr->names[i];
@@ -5275,7 +5275,7 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
 
   sem_join *jptr = current_joinscope->jptr;
 
-  int32_t i = 0;
+  uint32_t i = 0;
   while (Strcasecmp(jptr->names[i], name)) {
     i++;
   }
@@ -5285,7 +5285,7 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
 
   // we know there's room here, fill it in...
   sem_struct *table = jptr->tables[i];
-  for (int32_t j = 0; j < table->count; j++) {
+  for (uint32_t j = 0; j < table->count; j++) {
     sptr->names[index] = table->names[j];
     // If we inferred a column in `table` to be nonnull, make it a proper
     // nonnull type in the result.
@@ -5307,7 +5307,7 @@ static void sem_verify_no_anon_columns(ast_node *ast) {
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = ast->sem->sptr->count;
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     const char *col = sptr->names[i];
     if (!strcmp(col, "_anon")) {
       report_error(ast, "CQL0055: all columns in the select must have a name", NULL);
@@ -5324,7 +5324,7 @@ static void sem_verify_no_null_columns(ast_node *ast) {
   sem_struct *sptr = ast->sem->sptr;
   uint32_t count = ast->sem->sptr->count;
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     if (is_null_type(sptr->semtypes[i])) {
       report_error(ast, "CQL0056: NULL expression has no type to imply the type of the select result", sptr->names[i]);
       record_error(ast);
@@ -5344,7 +5344,7 @@ cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast) {
   // if there is an error it will be on the ast on exit as is normal
 }
 
-static void sem_emit_one_sptr_type(charbuf *output, sem_struct *sptr, int32_t i) {
+static void sem_emit_one_sptr_type(charbuf *output, sem_struct *sptr, uint32_t i) {
   bprintf(output, "%s ", sptr->names[i]);
   sem_t sem_type = sptr->semtypes[i];
   get_sem_core(sem_type, output);
@@ -5375,7 +5375,7 @@ static void sem_emit_column_diff_diagnostics(ast_node *left, ast_node *right) {
   symtab *left_symbols = symtab_new();
   symtab *right_symbols = symtab_new();
 
-  int32_t i;
+  uint32_t i;
   for (i = 0; i < sptr_left->count; i++) {
     bclear(&tmp);
     sem_emit_one_sptr_type(&tmp, sptr_left, i);
@@ -5431,7 +5431,7 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
     return NULL;
   }
 
-  for (int32_t i = 0; i < sptr_left->count; i++) {
+  for (uint32_t i = 0; i < sptr_left->count; i++) {
     const char *col1 = sptr_left->names[i];
     const char *col2 = sptr_right->names[i];
 
@@ -5452,7 +5452,7 @@ static sem_struct *sem_unify_compatible_columns(ast_node *left, ast_node *right)
   // Column types must be compatible
   sem_struct *sptr = new_sem_struct("union", sptr_left->count);
 
-  for (int32_t i = 0; i < sptr_left->count; i++) {
+  for (uint32_t i = 0; i < sptr_left->count; i++) {
     sem_t sem_type_1 = sptr_left->semtypes[i];
     sem_t sem_type_2 = sptr_right->semtypes[i];
     const char *col = sptr_left->names[i];
@@ -5499,7 +5499,7 @@ cql_noexport void sem_verify_identical_columns(ast_node *expected, ast_node *act
     return;
   }
 
-  for (int32_t i = 0; i < sptr_expected->count; i++) {
+  for (uint32_t i = 0; i < sptr_expected->count; i++) {
     sem_t sem_type_1 = sptr_expected->semtypes[i];
     sem_t sem_type_2 = sptr_actual->semtypes[i];
     const char *col1 = sptr_expected->names[i];
@@ -5867,10 +5867,10 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
   for (sem_joinscope *jscp = current_joinscope; jscp && jscp->jptr; jscp = jscp->parent) {
     sem_join *jptr = jscp->jptr;
     bool_t found_in_this_joinscope = false;
-    for (int32_t i = 0; i < jptr->count; i++) {
+    for (uint32_t i = 0; i < jptr->count; i++) {
       if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
         sem_struct *table = jptr->tables[i];
-        for (int32_t j = 0; j < table->count; j++) {
+        for (uint32_t j = 0; j < table->count; j++) {
           if (!Strcasecmp(name, table->names[j])) {
             if (found_in_this_joinscope) {
               // Since we found two candidates in the same joinscope, we have an
@@ -5970,7 +5970,7 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
   }
   else if (scope != NULL) {
     // more than one table but the name is scoped, still have a chance
-    for (int32_t i = 0; i < jptr->count; i++) {
+    for (uint32_t i = 0; i < jptr->count; i++) {
       if (!Strcasecmp(scope, jptr->names[i])) {
         col = name;
         kind = NULL;
@@ -6053,7 +6053,7 @@ static void sem_resolve_cursor_field(ast_node *ast, ast_node *cursor, CSTR field
   sem_struct *sptr = cursor->sem->sptr;
   Invariant(sptr->count > 0);
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (!Strcasecmp(sptr->names[i], field)) {
       if (ast) {
         ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
@@ -6174,7 +6174,7 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
   sem_struct *sptr = shape->sem->sptr;
   Invariant(sptr->count > 0);
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (!Strcasecmp(sptr->names[i], name)) {
       // We found the dot form of the name (e.g., 'bundle.foo') in the argument
       // bundle. The underscore version of the name (e.g., 'bundle_foo')
@@ -8488,11 +8488,11 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
 
 // lower has the same rules as upper
 static void sem_func_lower(ast_node *ast, uint32_t arg_count) {
-  return sem_func_upper(ast, arg_count);
+  sem_func_upper(ast, arg_count);
 }
 
 static void sem_func_coalesce(ast_node *ast, uint32_t arg_count) {
-  return sem_coalesce(ast, 0);  // do not set "ifnull"
+  sem_coalesce(ast, 0);  // do not set "ifnull"
 }
 
 // This is the common part of sum and total, we just verify that
@@ -8992,8 +8992,10 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
     return;
   }
 
-  if (arg_count < 1 + has_format) {
-    sem_validate_arg_count(ast, arg_count, 1 + has_format);
+  uint32_t min_arg_count = (uint32_t)(1 + has_format);
+
+  if (arg_count < min_arg_count) {
+    sem_validate_arg_count(ast, arg_count, min_arg_count);
     return;
   }
 
@@ -10872,7 +10874,7 @@ static bool_t sem_select_orderby(ast_node *ast) {
     EXTRACT_NOTNULL(select_core_list, select_stmt->left);
 
     sem_struct *sptr = select_core_list->sem->sptr;
-    for (int32_t i = 0; i < sptr->count; i++) {
+    for (uint32_t i = 0; i < sptr->count; i++) {
       sptr->semtypes[i] |= sem_sensitive;
     }
   }
@@ -11164,7 +11166,7 @@ static void sem_values(ast_node *ast) {
     // Once this is done the values clause can be made to look just like a select
     // result including the synthetic column names.
 
-    int32_t values_count = 0;
+    uint32_t values_count = 0;
     ast_node *last_expr = NULL;
     for (ast_node *node = values_insert_list; node; node = node->right) {
       EXTRACT_ANY_NOTNULL(expr, node->left);
@@ -11265,7 +11267,7 @@ static void sem_add_used_symbols(symtab **used_symbols, symtab *add_symbols) {
     *used_symbols = add_symbols;
   }
   else if (add_symbols) {
-    for (int32_t i = 0; i < add_symbols->capacity; i++) {
+    for (uint32_t i = 0; i < add_symbols->capacity; i++) {
       if (add_symbols->payload[i].sym) {
         symtab_add(*used_symbols, add_symbols->payload[i].sym, NULL);
       }
@@ -11630,7 +11632,7 @@ static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
 
   ast_node *item = name_list;
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (!item) {
       report_error(ast, "CQL0101: too few column names specified in common table expression", name);
       record_error(ast);
@@ -14492,8 +14494,8 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   }
 
   int16_t notnull_count = 0;
-  for (icol = 0; icol < sptr->count; icol++) {
-    if (is_nullable(sptr->semtypes[icol])) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
+    if (is_nullable(sptr->semtypes[i])) {
       continue;
     }
     notnull_count++;
@@ -14512,14 +14514,14 @@ static void sem_validate_table_for_backed(ast_node *ast) {
 
   notnull_count = 0;
   value_count = 0;
-  for (icol = 0; icol < sptr->count; icol++) {
-    sem_t sem_type = sptr->semtypes[icol];
+  for (uint32_t i = 0; i < sptr->count; i++) {
+    sem_t sem_type = sptr->semtypes[i];
     if (!is_nullable(sem_type)) {
-      table_info->notnull_cols[notnull_count++] = icol;
+      table_info->notnull_cols[notnull_count++] = (int16_t)i;
     }
 
     if (!is_primary_key(sem_type) && !is_partial_pk(sem_type)) {
-      table_info->value_cols[value_count++] = icol;
+      table_info->value_cols[value_count++] = (int16_t)i;
     }
   }
 
@@ -14657,7 +14659,7 @@ static void sem_create_table_stmt(ast_node *ast) {
 
   symtab *columns = symtab_new();
 
-  int32_t col = 0;
+  uint32_t col = 0;
   for (ast_node *item = col_key_list; item; item = item->right) {
     Contract(is_ast_col_key_list(item));
     EXTRACT_ANY_NOTNULL(def, item->left);
@@ -16156,7 +16158,7 @@ static void sem_column_spec_and_values(ast_node *ast, ast_node *table_ast) {
     // ensure that all the necessary columns are present in some order
 
     sem_struct *sptr = table_ast->sem->sptr;
-    for (int32_t icol = 0; icol < sptr->count; icol++) {
+    for (uint32_t icol = 0; icol < sptr->count; icol++) {
       sem_t sem_type_col = sptr->semtypes[icol];
       CSTR name = sptr->names[icol];
 
@@ -16354,7 +16356,7 @@ static void sem_insert_stmt(ast_node *ast) {
     // - has default value, including autoincrement column
     // - or is nullable. The default value for a nullable column is NULL.
     sem_struct *sptr = table_ast->sem->sptr;
-    for (int32_t i = 0; i < sptr->count; i++) {
+    for (uint32_t i = 0; i < sptr->count; i++) {
       sem_t type = sptr->semtypes[i];
       if (!is_nullable(type) && !has_default(type) && !has_autoincrement(type)) {
         report_error(
@@ -16497,7 +16499,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
 
   sem_struct *sptr = new_sem_struct("excluded", names_count);
   ast = name_list;
-  for (int32_t i = 0; i < names_count; i++, ast = ast->right) {
+  for (uint32_t i = 0; i < names_count; i++, ast = ast->right) {
     sptr->semtypes[i] = ast->left->sem->sem_type;
     sptr->names[i] = ast->left->sem->name;
     sptr->kinds[i] = ast->left->sem->kind;
@@ -16895,7 +16897,7 @@ static void sem_fetch_values_stmt(ast_node *ast) {
     // Ensure that all the necessary columns are present in some order.
 
     sem_struct *sptr = cursor->sem->sptr;
-    for (int32_t icol = 0; icol < sptr->count; icol++) {
+    for (uint32_t icol = 0; icol < sptr->count; icol++) {
       sem_t sem_type_col = sptr->semtypes[icol];
       CSTR name = sptr->names[icol];
 
@@ -17253,7 +17255,7 @@ static bool_t sem_validate_compatible_table_cols_select(ast_node *table_ast, ast
   // Here we just validate that the column types in struct type of the select
   // statement are compatible with the column names types that receive the values
   // in the insert statement.
-  int32_t icol_select = 0;
+  uint32_t icol_select = 0;
   for (ast_node *item = name_list ; item; item = item->right, icol_select++) {
     Invariant(icol_select < sptr_select->count);
 
@@ -17744,7 +17746,7 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
 
     // set the desired columns to all on or all off depending on if we are adding or not
     desired = (bool_t *)malloc(old_count);
-    for (int32_t i = 0; i < old_count; i++) {
+    for (uint32_t i = 0; i < old_count; i++) {
        desired[i] = !adding;
     }
 
@@ -17771,7 +17773,7 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
 
     // figure out how many columns in the desired result
     uint32_t count = 0;
-    for (int32_t i = 0; i < old_count; i++) {
+    for (uint32_t i = 0; i < old_count; i++) {
       count += desired[i];
     }
 
@@ -17785,7 +17787,7 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
     int32_t inew = 0;
 
     // now make the new structure based on the desired columns
-    for (int32_t iold = 0; iold < old_count; iold++) {
+    for (uint32_t iold = 0; iold < old_count; iold++) {
       if (desired[iold]) {
         sptr_new->names[inew] = sptr_old->names[iold];
         sptr_new->semtypes[inew] = sptr_old->semtypes[iold];
@@ -17896,7 +17898,7 @@ static void sem_validate_unique_names_struct_type(ast_node *ast) {
 
   symtab *fields = symtab_new();
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (!symtab_add(fields, sptr->names[i], NULL)) {
       report_error(ast, "CQL0180: duplicate column name in result not allowed", sptr->names[i]);
       record_error(ast);
@@ -17912,7 +17914,7 @@ static void sem_validate_unique_names_struct_type(ast_node *ast) {
 cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name) {
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (table_ast) {
-    for (int32_t i = 0; i < table_ast->sem->sptr->count; i++) {
+    for (uint32_t i = 0; i < table_ast->sem->sptr->count; i++) {
       if (!Strcasecmp(column_name, table_ast->sem->sptr->names[i])) {
         return table_ast->sem->sptr->semtypes[i];
       }
@@ -17926,7 +17928,7 @@ static CSTR find_column_kind(CSTR table_name, CSTR column_name) {
   CSTR result = NULL;
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (table_ast) {
-    for (int32_t i = 0; i < table_ast->sem->sptr->count; i++) {
+    for (uint32_t i = 0; i < table_ast->sem->sptr->count; i++) {
       if (!Strcasecmp(column_name, table_ast->sem->sptr->names[i])) {
         result = table_ast->sem->sptr->kinds[i];
         break;
@@ -20604,7 +20606,7 @@ static void sem_check_all_values_condition(ast_node *expr, bytebuf *case_buffer)
   bytebuf *enum_buffer = _ast_pool_new(bytebuf);
   bytebuf_open(enum_buffer);
 
-  int32_t case_count = case_buffer->used / sizeof(case_val);
+  uint32_t case_count = case_buffer->used / sizeof(case_val);
   case_val *case_vals = (case_val *)case_buffer->ptr;
 
   CSTR kind = expr->sem->kind;
@@ -23758,10 +23760,10 @@ cql_noexport void sem_accumulate_public_region_image(symtab *r, CSTR name) {
 // do a quick in/out test on the include an exclude list and get the right output.
 // It also means that anything that can go wrong will go wrong right here;   After this
 // all region names are known to be good.
-static symtab *sem_accumulate_regions(int32_t count, char **regions) {
+static symtab *sem_accumulate_regions(uint32_t count, char **regions) {
   symtab *result = symtab_new();
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     CSTR region = regions[i];
     if (!find_region(region)) {
       cql_error("invalid region specified '%s'\n", region);
@@ -24123,7 +24125,7 @@ static void sem_validate_all_deployable_regions(ast_node *root) {
 
   deployable_validation *validations = (deployable_validation *)deployable_validations->ptr;
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     deployable_validation *v = &validations[i];
 
     // don't pile on more errors...

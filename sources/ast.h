@@ -585,8 +585,12 @@ AST_DATA_DEFN( CSTR _Nonnull k_ast_blob = "blb" );
   AST_VIS ast_node *_Nonnull new_ast_ ## x(void); \
   AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x() { return new_ast(k_ast_ ## x, NULL, NULL); })
 
+#ifndef _MSC_VER
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
+
+#endif
 
 AST(stmt_list)
 AST(stmt_and_attr)
@@ -939,4 +943,6 @@ AST(blob_update_val_stmt)
 AST(seed_stub)
 AST(str_chain)
 
+#ifndef _MSC_VER
 #pragma clang diagnostic pop
+#endif

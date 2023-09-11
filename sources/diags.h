@@ -7,6 +7,8 @@
 
 // enable lots of extra warnings for cql
 
+#ifndef _MSC_VER
+
 #pragma clang diagnostic error "-Wall"
 
 // in case your compiler doesn't have some of the below
@@ -35,6 +37,8 @@
 #pragma clang diagnostic error "-Wunused-function"
 #endif
 
+#endif
+
 #ifndef __clang__
 #ifndef _Nonnull
     /* Hide Clang-only nullability specifiers if not Clang */
@@ -43,8 +47,12 @@
 #endif
 #endif
 
+#ifndef _MSC_VER
+
 #if defined(CQL_AMALGAM_LEAN)
 // in this version there are going to be unused stubs a-plenty
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wunused-variable"
+#endif
+
 #endif

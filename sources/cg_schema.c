@@ -1787,7 +1787,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
 
   uint32_t prev_version = 0;
 
-  for (int32_t i = 0; i < schema_items_count; i++) {
+  for (uint32_t i = 0; i < schema_items_count; i++) {
     schema_annotation *note = &notes[i];
 
     ast_node *version_annotation = note->annotation_ast;

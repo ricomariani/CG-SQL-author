@@ -89,11 +89,11 @@ typedef struct cmd_options {
   bool_t schema_exclusive;
   char *rt;
   char **file_names;
-  int32_t file_names_count;
+  uint32_t file_names_count;
   char **include_regions;
-  int32_t include_regions_count;
+  uint32_t include_regions_count;
   char **exclude_regions;
-  int32_t exclude_regions_count;
+  uint32_t exclude_regions_count;
   int32_t min_schema_version;
   char *c_include_path;
   char *objc_c_include_path;

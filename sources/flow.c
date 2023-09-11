@@ -430,7 +430,7 @@ static void merge_effects(sem_t *type, sem_t flag, int32_t delta_sum) {
   // If all branches set a flag, `delta_sum` will equal `branch_count`.
   // Likewise, if all branches unset it, `abs(delta_sum)` will equal
   // `branch_count`.
-  Invariant(abs(delta_sum) <= branch_count);
+  Invariant((uint32_t)abs(delta_sum) <= branch_count);
 
   // Indicates whether or not the branches cover all possible cases.
   bool_t covers_all_cases = current_context->branch_group.covers_all_cases;

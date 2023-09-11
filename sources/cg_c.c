@@ -3246,7 +3246,7 @@ static void cg_fields_in_canonical_order(charbuf *output, sem_struct *sptr) {
   uint32_t count = sptr->count;
 
   // first primitive types
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     if (is_ref_type(sem_type)) {
       continue;
@@ -3258,7 +3258,7 @@ static void cg_fields_in_canonical_order(charbuf *output, sem_struct *sptr) {
   }
 
   // then reference types
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     if (!is_ref_type(sem_type)) {
       continue;
@@ -3319,7 +3319,7 @@ static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR cursor_
 static int32_t refs_count_sptr(sem_struct *sptr) {
   int32_t refs_count = 0;
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (is_ref_type(sptr->semtypes[i])) {
       refs_count++;
     }
@@ -3336,7 +3336,7 @@ static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CST
 
   bprintf(output, "\n%scql_uint16 %s[] = { %d", prefix, sym_name, count);
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     bprintf(output, ",\n");
     bprintf(output, "  cql_offsetof(%s, %s)", struct_name,  sptr->names[i]);
   }
@@ -3349,7 +3349,7 @@ static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
 
   bprintf(output, "\n%suint8_t %s[] = {\n", prefix, sym_name);
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (i != 0) {
       bprintf(output, ",\n");
     }
@@ -3407,7 +3407,7 @@ static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym, C
 
   bprintf(output, "\n#define %s ", offset_sym);
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (is_ref_type(sptr->semtypes[i])) {
       bprintf(output, "cql_offsetof(%s, %s) // count = %d\n", struct_name,  sptr->names[i], refs_count);
       break;
@@ -4535,8 +4535,8 @@ cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
 }
 
 // This tells us how many fragments we emitted using some size math
-static int32_t cg_fragment_count() {
-  return (int32_t)(shared_fragment_strings.used / sizeof(CSTR));
+static uint32_t cg_fragment_count() {
+  return (uint32_t)(shared_fragment_strings.used / sizeof(CSTR));
 }
 
 // when we complete a chunk of fragment text we have to emit the predicates
@@ -4580,7 +4580,7 @@ static void cg_fragment_copy_pred() {
     return;
   }
 
-  int32_t count = cg_fragment_count();
+  uint32_t count = cg_fragment_count();
   if (count + 1 == max_fragment_predicate) {
     return;
   }
@@ -4954,7 +4954,7 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
     sem_struct *sptr = cte_body->sem->sptr;
 
-    for (int32_t i = 0; i < sptr->count; i++) {
+    for (uint32_t i = 0; i < sptr->count; i++) {
       bprintf(&wrapper, "%s%s", i == 0 ? "": ", ", sptr->names[i]);
     }
 
@@ -5203,7 +5203,7 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
       cg_pretty_quote_plaintext(sql.ptr, cg_main_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
     }
     else {
-      int32_t scount = cg_fragment_count();
+      uint32_t scount = cg_fragment_count();
 
       // declare the predicate variables if needed
       if (has_conditional_fragments) {
@@ -6001,7 +6001,7 @@ static void cg_fetch_stmt(ast_node *ast) {
     }
   }
   else {
-    for (int32_t i = 0; i < sptr->count; i++) {
+    for (uint32_t i = 0; i < sptr->count; i++) {
       CHARBUF_OPEN(temp);
       bprintf(&temp, "%s.%s", cursor_name, sptr->names[i]);
       bprintf(cg_main_output, "%s", newline);
@@ -6373,7 +6373,7 @@ static void cg_out_stmt(ast_node *ast) {
     bprintf(cg_main_output, "_result_->_refs_offset_ = %s;\n", sym.ptr);
   }
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     bclear(&var);
     bclear(&value);
     bprintf(&var, "_result_->%s", sptr->names[i]);
@@ -6424,7 +6424,7 @@ static void cg_call_external(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY(arg_list, ast->right);
 
-  return cg_call_named_external(name, arg_list);
+  cg_call_named_external(name, arg_list);
 }
 
 // This is performs an external function call, normalizing strings and passing
@@ -6590,7 +6590,7 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
       // we want is to just pass the variable itself, so we're going to look at the
       // value and reconstruct the variable by stripping off the .value
 
-      const int32_t dot_value_length = 6;  //  .value is 6 characters.
+      const uint32_t dot_value_length = 6;  //  .value is 6 characters.
 
       // if it was not null we'd be boxing, above.
       Invariant(is_nullable(sem_type_arg));
@@ -6761,9 +6761,8 @@ static void cg_call_stmt(ast_node *ast) {
   // just like a loose select statement would be.  Note this can be
   // overridden by a later result which is totally ok.  Same as for select
   // statements.
-  return cg_call_stmt_with_cursor(ast, NULL);
+  cg_call_stmt_with_cursor(ast, NULL);
 }
-
 
 // emit the declarations for anything implicitly declared then do a normal call
 static void cg_declare_out_call_stmt(ast_node *ast) {
@@ -7992,7 +7991,7 @@ static void cg_proc_result_set(ast_node *ast) {
   bool_t emit_setters = is_proc_emit_setters(ast);
 
   // For each field emit the _get_field method
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col = sptr->names[i];
     CSTR kind = sptr->kinds[i];
@@ -8016,7 +8015,7 @@ static void cg_proc_result_set(ast_node *ast) {
     function_info info = {
       .name = name,
       .col = col,
-      .col_index = i,
+      .col_index = (int32_t)i,
       .headers = h,
       .defs = d,
       .uses_out = uses_out,
@@ -8401,7 +8400,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   CSTR body_file_name = options.file_names[1];
   CSTR exports_file_name = NULL;
 
-  int32_t export_file_index = 2;
+  uint32_t export_file_index = 2;
 
   if (options.generate_exports) {
     if (options.file_names_count <= export_file_index) {
@@ -8497,6 +8496,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   }
 
   bprintf(&body_file, "%s", rt->source_wrapper_begin);
+  bprintf(&body_file, "#ifndef _MSC_VER\n");
   bprintf(&body_file, "#pragma clang diagnostic push\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunknown-warning-option\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wbitwise-op-parentheses\"\n");
@@ -8506,6 +8506,7 @@ cql_noexport void cg_c_main(ast_node *head) {
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunused-but-set-variable\"\n");
   bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunused-function\"\n");
+  bprintf(&body_file, "#endif\n");
 
   bprintf(&body_file, "%s", cg_fwd_ref_output->ptr);
   bprintf(&body_file, "%s", cg_constants_output->ptr);

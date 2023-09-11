@@ -1219,7 +1219,7 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   CSTR *ptrs = calloc(count, sizeof(CSTR));
 
   // now compute the fields we need
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     int16_t icol = table_info->notnull_cols[i];
     CSTR cname = sptr->names[icol];
     sem_t sem_type = sptr->semtypes[icol];
@@ -1234,7 +1234,7 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
 
   // assemble the fields into one big string to hash
   bool_t first = true;
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
      bputc(&tmp, first ? ':' : ',');
      bprintf(&tmp, ptrs[i]);
      first = false;
@@ -1297,7 +1297,7 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
   for (int16_t i = 0; i < count; i++) {
     int16_t icol = columns[i];
     Invariant(icol >= 0);
-    Invariant(icol < sptr->count);
+    Invariant((uint32_t)icol < sptr->count);
 
     if (!Strcasecmp(name, sptr->names[icol])) {
       return i;
@@ -2640,7 +2640,7 @@ static void gen_select_nothing_stmt(ast_node *ast) {
 
   gen_printf("SELECT ");
   sem_struct *sptr = ast->sem->sptr;
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (i) {
       gen_printf(",");
     }
@@ -3535,7 +3535,7 @@ static void gen_declare_proc_from_create_proc(ast_node *ast) {
       sem_struct *sptr = ast->sem->sptr;
 
       gen_printf(" (");
-      for (int32_t i = 0; i < sptr->count; i++) {
+      for (uint32_t i = 0; i < sptr->count; i++) {
         gen_printf("%s ", sptr->names[i]);
         sem_t sem_type = sptr->semtypes[i];
 

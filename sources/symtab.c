@@ -66,7 +66,7 @@ cql_noexport symtab *symtab_new_case_sens() {
 
 cql_noexport void symtab_delete(symtab *syms) {
   if (syms->teardown) {
-    for (int32_t i = 0; i < syms->capacity; i++) {
+    for (uint32_t i = 0; i < syms->capacity; i++) {
       void *val = syms->payload[i].val;
       if (val) {
         syms->teardown(val);
@@ -164,7 +164,7 @@ cql_noexport symtab_entry *symtab_copy_sorted_payload(symtab *syms, int (*compar
   size_t size = sizeof(symtab_entry);
   symtab_entry *sorted = calloc(count, size);
   int32_t found = 0;
-  for (int32_t i = 0; i < syms->capacity; i++) {
+  for (uint32_t i = 0; i < syms->capacity; i++) {
     // skip the null syms in our copy
     if (syms->payload[i].sym) {
       sorted[found++] = syms->payload[i];

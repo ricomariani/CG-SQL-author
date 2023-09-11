@@ -296,7 +296,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // round of JSON encoding necessarily produces the same output. This code once did two JSON
   // encodings it was only pedantically wrong.
   bprintf(&c_str_sql, "\"");
-  for (int32_t i = 1; i < json_str_sql.used - 2; i++) {
+  for (uint32_t i = 1; i < json_str_sql.used - 2; i++) {
     // json_str_sql can have no control characters, but it might have quotes and backslashes
     cg_encode_char_as_c_string_literal(json_str_sql.ptr[i], &c_str_sql);
   }
@@ -949,7 +949,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
     bprintf(&output_buf, "    THROW;\n");
     bprintf(&output_buf, "  END CATCH;\n");
   }
-  for (int32_t i = 1; i <= sql_stmt_count; i++) {
+  
+  for (uint32_t i = 1; i <= sql_stmt_count; i++) {
     bprintf(&output_buf, "  BEGIN TRY\n");
     bprintf(&output_buf, "    CALL populate_query_plan_%d();\n", i);
     bprintf(&output_buf, "  END TRY;\n");

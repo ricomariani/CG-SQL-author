@@ -437,7 +437,7 @@ static void cg_emit_index_stmt(
   int32_t count = buf ? buf->used / sizeof(*indexes_ast) : 0;
   gen_set_output_buffer(gen_create_indexes);
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     ast_node *index_ast = indexes_ast[i];
     EXTRACT_NOTNULL(create_index_stmt, index_ast);
     EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);

@@ -98,7 +98,7 @@ cql_noexport void rewrite_insert_list_from_shape(ast_node *ast, ast_node *from_s
 
   ast_node *item = name_list;
 
-  for (int32_t i = 0; i < count; i++, item = item->right) {
+  for (uint32_t i = 0; i < count; i++, item = item->right) {
     EXTRACT_STRING(item_name, item->left);
     ast_node *cname = new_ast_str(shape->sem->name);
     ast_node *col = new_ast_str(item_name);
@@ -336,7 +336,7 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
   sem_struct *sptr = likeable_shape->sem->sptr;
   uint32_t count = sptr->count;
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR col_name = sptr->names[i];
 
@@ -444,7 +444,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
     add_arg_bundle(shape_ast, shape_name);
   }
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR param_name = sptr->names[i];
     CSTR param_kind = sptr->kinds[i];
@@ -586,7 +586,7 @@ cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr) {
   ast_node *name_list = NULL;
   ast_node *name_list_tail = NULL;
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     if (sptr->semtypes[i] & SEM_TYPE_HIDDEN_COL) {
       continue;
     }
@@ -885,7 +885,7 @@ static void rewrite_one_typed_name(ast_node *typed_name, symtab *used_names) {
     // indeed arg_bundles is null at this point
   }
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     CSTR name = sptr->names[i];
     CSTR kind = sptr->kinds[i];
@@ -1528,12 +1528,12 @@ static void jfind_init(jfind_t *jfind, sem_join *jptr) {
 
   // here we make the lookup maps by walking the jptr for the from clause
   // this will save us a lot of searching later...
-  for (int32_t i = 0; i < jptr->count; i++) {
+  for (uint32_t i = 0; i < jptr->count; i++) {
     CSTR name = jptr->names[i];
     sem_struct *sptr = jptr->tables[i];
     symtab_add(jfind->tables, name, (void *)sptr);
 
-    for (int32_t j = 0; j < sptr->count; j++) {
+    for (uint32_t j = 0; j < sptr->count; j++) {
       CSTR col = sptr->names[j];
 
       if (!symtab_add(jfind->location, col, (void*)name)) {
@@ -1563,7 +1563,7 @@ static void jfind_cleanup(jfind_t *jfind) {
 static bool_t verify_matched_column(
   ast_node *ast,
   sem_struct *sptr_reqd,
-  int32_t i_reqd,
+  uint32_t i_reqd,
   sem_struct *sptr_actual,
   CSTR scope)
 {
@@ -1664,7 +1664,7 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
         sptr = sptr_table;
       }
 
-      for (int32_t j = 0; j < sptr->count; j++) {
+      for (uint32_t j = 0; j < sptr->count; j++) {
         CSTR col = sptr->names[j];
 
         if (used_names && !symtab_add(used_names, col, NULL)) {
@@ -1695,7 +1695,7 @@ static void rewrite_column_calculation(ast_node *column_calculation, jfind_t *jf
       // now we can use our found structure from the like
       // we will find the table that has the given column
       // we generate a disambiguation scope if it is needed
-      for (int32_t i = 0; i < sptr->count; i++) {
+      for (uint32_t i = 0; i < sptr->count; i++) {
         CSTR col = sptr->names[i];
 
         if (!used_names || symtab_add(used_names, col, NULL)) {
@@ -2361,7 +2361,7 @@ cql_noexport void rewrite_out_union_parent_child_stmt(ast_node *ast) {
 // shape.  We peel off the first item and then recurse to add the nested item.  Not
 // especially economical but fine for any normal sized table.  This can be made non-recursive
 // if it ever matters.
-static ast_node *rewrite_backed_expr_list(ast_node *backed_table, CSTR key, CSTR val, int32_t index) {
+static ast_node *rewrite_backed_expr_list(ast_node *backed_table, CSTR key, CSTR val, uint32_t index) {
   sem_struct *sptr = backed_table->sem->sptr;
   if (index >= sptr->count) {
     return NULL;
@@ -2748,7 +2748,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
     // we're looking for the columns in the order we need them now
     int16_t icol = cols[i];
     Invariant(icol >= 0);
-    Invariant(icol < sptr->count);
+    Invariant((uint32_t)icol < sptr->count);
     CSTR name = sptr->names[icol];
 
     ast_node *new_item = NULL;

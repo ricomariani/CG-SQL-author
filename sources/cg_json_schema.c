@@ -388,7 +388,7 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
   uint32_t count = ad_hoc_recreate_actions->count;
   symtab_entry *actions = symtab_copy_sorted_payload(ad_hoc_recreate_actions, default_symtab_comparator);
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     ast_node *ast = (ast_node *)actions[i].val;
     EXTRACT_STRING(group, ast->left);
     EXTRACT_STRING(proc, ast->right);
@@ -1425,7 +1425,7 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
   BEGIN_INDENT(proj, 2);
   BEGIN_LIST;
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(type, 2);
@@ -2590,7 +2590,7 @@ static void cg_json_table_users(charbuf *output) {
   bprintf(output, "\"tableUsers\" : {\n");
   BEGIN_INDENT(users, 2);
   BEGIN_LIST;
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     CSTR sym = deps[i].sym;
     charbuf *buf = (charbuf*)deps[i].val;
 

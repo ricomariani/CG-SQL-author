@@ -1,6 +1,7 @@
 
 #include "out/cg_test_c_with_type_getters.h"
 
+#ifndef _MSC_VER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
@@ -10,6 +11,7 @@
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-function"
+#endif
 extern cql_object_ref _Nonnull cql_partition_create(void);
 extern cql_bool cql_partition_cursor(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key, cql_dynamic_cursor *_Nonnull value);
 extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key);

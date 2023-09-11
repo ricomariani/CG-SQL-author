@@ -2622,8 +2622,8 @@ static void lua_ensure_temp_statement(int32_t stmt_index) {
 }
 
 // This tells us how many fragments we emitted using some size math
-static int32_t cg_lua_fragment_count() {
-  return (int32_t)(lua_shared_fragment_strings.used / sizeof(CSTR));
+static uint32_t cg_lua_fragment_count() {
+  return (uint32_t)(lua_shared_fragment_strings.used / sizeof(CSTR));
 }
 
 // when we complete a chunk of fragment text we have to emit the predicates
@@ -2667,7 +2667,7 @@ static void cg_lua_fragment_copy_pred() {
     return;
   }
 
-  int32_t count = cg_lua_fragment_count();
+  uint32_t count = cg_lua_fragment_count();
   if (count + 1 == lua_max_fragment_predicate) {
     return;
   }
@@ -3030,7 +3030,7 @@ static bool_t cg_lua_call_in_cte(ast_node *cte_body, void *context, charbuf *buf
 
     sem_struct *sptr = cte_body->sem->sptr;
 
-    for (int32_t i = 0; i < sptr->count; i++) {
+    for (uint32_t i = 0; i < sptr->count; i++) {
       bprintf(&wrapper, "%s%s", i == 0 ? "": ", ", sptr->names[i]);
     }
 
@@ -3247,7 +3247,7 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
       cg_pretty_quote_plaintext(sql.ptr, cg_main_output, PRETTY_QUOTE_C);
     }
     else {
-      int32_t scount = cg_lua_fragment_count();
+      uint32_t scount = cg_lua_fragment_count();
 
       // declare the predicate variables if needed
       if (lua_has_conditional_fragments) {
@@ -3346,7 +3346,7 @@ static void cg_lua_emit_field_names(charbuf *output, sem_struct *sptr) {
   Contract(sptr);
 
   bprintf(output, "{ ");
-    for (int32_t i = 0; i < sptr->count; i++) {
+    for (uint32_t i = 0; i < sptr->count; i++) {
     if (i > 0) {
       bprintf(output, ", ");
     }
@@ -3401,7 +3401,7 @@ static void cg_lua_put_typecode(charbuf *output, sem_t sem_type) {
 static void cg_lua_emit_field_types(charbuf *output, sem_struct *sptr) {
   bputc(output, '"');
 
-  for (int32_t i = 0; i < sptr->count; i++) {
+  for (uint32_t i = 0; i < sptr->count; i++) {
     sem_t sem_type = sptr->semtypes[i];
     cg_lua_put_typecode(output, sem_type);
   }
@@ -4153,7 +4153,7 @@ static void cg_lua_call_external(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY(arg_list, ast->right);
 
-  return cg_lua_call_named_external(name, arg_list);
+  cg_lua_call_named_external(name, arg_list);
 }
 
 // This is performs an external function call, normalizing strings and passing
@@ -4341,7 +4341,7 @@ static void cg_lua_call_stmt(ast_node *ast) {
   // just like a loose select statement would be.  Note this can be
   // overridden by a later result which is totally ok.  Same as for select
   // statements.
-  return cg_lua_call_stmt_with_cursor(ast, NULL);
+  cg_lua_call_stmt_with_cursor(ast, NULL);
 }
 
 

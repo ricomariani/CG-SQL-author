@@ -160,9 +160,9 @@ static void enqueue_all_triggers_node(dummy_test_info *info, CSTR table_or_view_
     // those triggers.
     bytebuf *buf = (bytebuf *)triggers_entry->val;
     ast_node **items = (ast_node **)buf->ptr;
-    int32_t count = buf->used / sizeof(*items);
+    uint32_t count = buf->used / sizeof(*items);
 
-    for (int32_t i = 0; i < count; i++) {
+    for (uint32_t i = 0; i < count; i++) {
       EXTRACT_ANY_NOTNULL(create_trigger_stmt, items[i]);
       EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
       EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
@@ -491,7 +491,7 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
     // the insert statement
     if (table_entry) {
       symtab *table = (symtab *)table_entry->val;
-      for (int32_t j = 0; j < table->capacity; j++) {
+      for (uint32_t j = 0; j < table->capacity; j++) {
         symtab_entry column_entry = table->payload[j];
 
         if (column_entry.sym) {
@@ -522,7 +522,7 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
 
     if (add_row) {
       // provide specific values for primary and foreign column to avoid foreign key violation.
-      for (int32_t i = 0; i < sptr->count; i++) {
+      for (uint32_t i = 0; i < sptr->count; i++) {
         sem_t col_type = sptr->semtypes[i];
         CSTR column_name = sptr->names[i];
 
@@ -625,10 +625,10 @@ static void cg_emit_index_stmt(
   symtab_entry *indexes_entry = symtab_find(all_tables_with_indexes, table_name);
   bytebuf *buf = indexes_entry ? (bytebuf *)indexes_entry->val : NULL;
   ast_node **indexes_ast = buf ? (ast_node **)buf->ptr : NULL;
-  int32_t count = buf ? buf->used / sizeof(*indexes_ast) : 0;
+  uint32_t count = buf ? buf->used / sizeof(*indexes_ast) : 0;
   gen_set_output_buffer(gen_create_indexes);
 
-  for (int32_t i = 0; i < count; i++) {
+  for (uint32_t i = 0; i < count; i++) {
     ast_node *index_ast = indexes_ast[i];
     EXTRACT_NOTNULL(create_index_stmt, index_ast);
     EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);

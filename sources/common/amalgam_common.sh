@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 process_headers() {
-
   echo "#ifndef CQL_NO_DIAGNOSTIC_BLOCK"
   cat "diags.h"
   echo "#endif"
@@ -88,6 +87,11 @@ echo -n "// @" >>out/cql_amalgam.c
 # the generated line needs to be first, the rest is normal source order.
 cat <<EOF >>out/cql_amalgam.c
 generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
+
+#ifdef _MSC_VER
+  // suppress fopen warning in MSC
+  #define _CRT_SECURE_NO_WARNINGS
+#endif
 
 #ifndef CQL_NO_SYSTEM_HEADERS
 
@@ -172,7 +176,9 @@ typedef const char *CSTR;
 #define yyset_lineno cql_yyset_lineno
 #define yyset_out cql_yyset_out
 
+#ifndef _MSC_VER
 #pragma clang diagnostic push
+#endif
 
 EOF
 
@@ -181,8 +187,10 @@ process_c_files >>out/pass1
 
 # the generated parser has free conversions not easily removed
 cat <<EOF >>out/pass1
+#ifndef _MSC_VER
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
 EOF
 
 cat "out/cql.y.h" >>out/pass1
@@ -190,7 +198,9 @@ cat "out/cql.y.c" >>out/pass1
 cat "out/cql.c" >>out/pass1
 
 cat <<EOF >>out/pass1
+#ifndef _MSC_VER
 #pragma clang diagnostic pop
+#endif
 EOF
 
 echo "static void cql_reset_globals() {" >>out/pass1

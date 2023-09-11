@@ -22,12 +22,19 @@
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
-int fileno(FILE *);
 static CSTR last_doc_comment = NULL;
 
+#ifndef CQL_AMALGAM
+// already in the headers in the amalgam
+int fileno(FILE *);
+#endif
+
 // the lexer has unused functions and implicit conversions, not easily removed
+
+#ifndef _MSC_VER
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wconversion"
+#endif
 
 cql_noexport CSTR get_last_doc_comment() {
   CSTR result = last_doc_comment;

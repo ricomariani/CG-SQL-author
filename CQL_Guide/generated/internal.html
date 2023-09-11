@@ -6715,7 +6715,7 @@ typedef struct cql_boxed_stmt {
 <span id="cb327-11"><a href="#cb327-11" aria-hidden="true"></a>  <span class="dt">int32_t</span> count = buf ? buf-&gt;used / <span class="kw">sizeof</span>(*indexes_ast) : <span class="dv">0</span>;</span>
 <span id="cb327-12"><a href="#cb327-12" aria-hidden="true"></a>  gen_set_output_buffer(gen_create_indexes);</span>
 <span id="cb327-13"><a href="#cb327-13" aria-hidden="true"></a></span>
-<span id="cb327-14"><a href="#cb327-14" aria-hidden="true"></a>  <span class="cf">for</span> (<span class="dt">int32_t</span> i = <span class="dv">0</span>; i &lt; count; i++) {</span>
+<span id="cb327-14"><a href="#cb327-14" aria-hidden="true"></a>  <span class="cf">for</span> (<span class="dt">uint32_t</span> i = <span class="dv">0</span>; i &lt; count; i++) {</span>
 <span id="cb327-15"><a href="#cb327-15" aria-hidden="true"></a>    ast_node *index_ast = indexes_ast[i];</span>
 <span id="cb327-16"><a href="#cb327-16" aria-hidden="true"></a>    EXTRACT_NOTNULL(create_index_stmt, index_ast);</span>
 <span id="cb327-17"><a href="#cb327-17" aria-hidden="true"></a>    EXTRACT_NOTNULL(create_index_on_list, create_index_stmt-&gt;left);</span>

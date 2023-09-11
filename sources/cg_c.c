@@ -1978,11 +1978,6 @@ static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_
     EXTRACT_ANY_NOTNULL(case_expr, when->left);
     EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
-    // null can't ever match anything, waste of time.
-    if (is_ast_null(case_expr)) {
-      continue;
-    }
-
     // WHEN [case_expr] THEN [then_expr]
 
     sem_t sem_type_case_expr = case_expr->sem->sem_type;

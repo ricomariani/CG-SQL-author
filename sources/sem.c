@@ -6633,25 +6633,31 @@ static void sem_case_list(
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_NOTNULL(when, ast->left);
-    // WHEN [case_expr] THEN [then_expr]
-    EXTRACT_ANY_NOTNULL(case_expr, when->left);
+    // WHEN [when_expr] THEN [then_expr]
+    EXTRACT_ANY_NOTNULL(when_expr, when->left);
     EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
-    sem_expr(case_expr);
-    if (is_error(case_expr)) {
+    sem_expr(when_expr);
+    if (is_error(when_expr)) {
       record_error(ast);
       record_error(head);
       return;
     }
 
-    if (!sem_verify_compat(case_expr, sem_type_required_for_when, case_expr->sem->sem_type, is_iif ? "iif" : "when")) {
+    if (is_null_type(when_expr->sem->sem_type)) {
+      report_error(ast, "CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type", NULL);
+      record_error(ast);
+      return;
+    }
+
+    if (!sem_verify_compat(when_expr, sem_type_required_for_when, when_expr->sem->sem_type, is_iif ? "iif" : "when")) {
       record_error(ast);
       record_error(head);
       return;
     }
 
-    sem_combine_kinds(case_expr, kind_required_for_when);
-    if (is_error(case_expr)) {
+    sem_combine_kinds(when_expr, kind_required_for_when);
+    if (is_error(when_expr)) {
       record_error(ast);
       record_error(head);
       return;
@@ -6659,7 +6665,7 @@ static void sem_case_list(
 
     FLOW_PUSH_CONTEXT_BRANCH();
     if (!has_expression_to_match) {
-      sem_set_improvements_for_true_condition(case_expr);
+      sem_set_improvements_for_true_condition(when_expr);
     }
     sem_expr(then_expr);
     FLOW_POP_CONTEXT_BRANCH();
@@ -6670,9 +6676,9 @@ static void sem_case_list(
       return;
     }
 
-    sem_set_improvements_for_false_condition(case_expr);
+    sem_set_improvements_for_false_condition(when_expr);
 
-    sem_sensitive |= sensitive_flag(case_expr->sem->sem_type);
+    sem_sensitive |= sensitive_flag(when_expr->sem->sem_type);
     sem_sensitive |= sensitive_flag(then_expr->sem->sem_type);
 
     if (sem_type_result == SEM_TYPE_PENDING) {

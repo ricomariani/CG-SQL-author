@@ -52,6 +52,8 @@ test/sem_test.sql:XXXX:1: error: in eq : CQL0009: incompatible types in expressi
 test/sem_test.sql:XXXX:1: error: in num : CQL0043: right operand must be a string in 'LIKE'
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'then'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'when'
+test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
+test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'when'
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'else'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'

@@ -19642,7 +19642,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET i2 := CASE WHEN 1 THEN 100
   WHEN 2 THEN 200
-  WHEN NULL THEN 500
   ELSE 300
   END;
   */

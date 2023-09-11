@@ -3559,11 +3559,8 @@ BEGIN_TEST(const_folding)
   EXPECT(const(case (1==0) when (1==1) then 10 else 20 end) == 20);
   EXPECT(const(case (1==1) when (0==1) then 10 else 20 end) == 20);
   EXPECT(const(case (1==0) when (0==1) then 10 else 20 end) == 10);
-  EXPECT(const(case (1==0) when null then 10 else 20 end) == 20);
-  EXPECT(const(case (1==0) when null then 10 end ) is null);
 
   EXPECT(const(case 5L when 1 then 10 when 2 then 20 end) is NULL);
-  EXPECT(const(case when NULL then 1 else 2 end) == 2);
 
   EXPECT(const(0x10) == 16);
   EXPECT(const(0x10 + 0xf) == 31);

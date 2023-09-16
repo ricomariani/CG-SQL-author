@@ -38,8 +38,49 @@ end;
 
 -- you could do something for blob and object too if you wanted
 
-CREATE PROC entrypoint ()
-BEGIN
+#define DUMP(expr)  printf("%20s -> %s\n", #expr, (expr)::fmt())
+#define NOTE(expr, note)  printf("%20s -> %s (%s)\n", #expr, (expr)::fmt(), note)
+
+proc dump_examples()
+begin
+  declare _null bool;
+  set _null := null;
+  printf("\n");
+  DUMP(1 + 1);
+  DUMP(1 + NULL);
+  DUMP(5 / 2);
+  DUMP(5 % 2);
+  DUMP(true and NULL);
+  DUMP(false and NULL);
+  DUMP(true or NULL);
+  DUMP(false or NULL);
+  NOTE(1 | 2 & 6, "not 3");
+  DUMP(1 + 3 * 2);
+  DUMP((1 + 3) * 2);
+  DUMP(true);
+  DUMP(false);
+  DUMP(not null);
+  DUMP(not true);
+  DUMP(not false);
+  NOTE(_null == 1, "hence not true");
+  NOTE(_null == _null, "hence not true");
+  DUMP("x" == "x");
+  DUMP(1 is 1);
+  DUMP(2 is 1);
+  DUMP(null is 1);
+  DUMP(null is null);
+  DUMP("x" is "x");
+  DUMP(2 between 1 and 3);
+  DUMP(3 between 1 and 2);
+  DUMP(5 in (1, 2, 3, 4, 5));
+  DUMP(7 in (1, 2));
+  DUMP(7 not in (1, 2));
+  DUMP(null in (1, 2, 3));
+  NOTE(null in (1, null, 3), "null == null is not true");
+end;
+
+proc entrypoint ()
+begin
   declare b bool;
   set b := true;
   let i := 5;
@@ -50,17 +91,19 @@ BEGIN
   -- otherwise the format string would work by itself
   -- ::fmt converts the data to a string even if it's null
   -- the normal runtime can't do that
-  call printf("bool:%s int:%s long:%s real:%s text:%s\n", b::fmt(), i::fmt(), l::fmt(), r::fmt(), t::fmt());
+  printf("bool:%s int:%s long:%s real:%s text:%s\n", b::fmt(), i::fmt(), l::fmt(), r::fmt(), t::fmt());
 
   -- fmt_bool handles null too
   set b := null;
-  call printf("bool:%s\n", b::fmt());
+  printf("bool:%s\n", b::fmt());
 
   -- using type kind to further specify which formatter
-   declare energy real<joules>;
-   set energy := 100.5;
-   declare weight real<pounds>;
-   set weight := 203;
+  declare energy real<joules>;
+  set energy := 100.5;
+  declare weight real<pounds>;
+  set weight := 203;
 
-  call printf("arg1: %s arg2: %s\n", energy:::fmt(), weight:::fmt());
-END;
+  printf("arg1: %s arg2: %s\n", energy:::fmt(), weight:::fmt());
+
+  dump_examples();
+end;

@@ -54,7 +54,9 @@ begin
   DUMP(false and NULL);
   DUMP(true or NULL);
   DUMP(false or NULL);
-  NOTE(1 | 2 & 6, "not 3");
+  NOTE(1 | 2 & 6, "this is not 3, because | and & have equal precedence in SQL");
+  NOTE((1 | 2) & 6, "with no parens it means this version");
+  NOTE(1 | (2 & 6), "this requires parens in SQL and CQL");
   DUMP(1 + 3 * 2);
   DUMP((1 + 3) * 2);
   DUMP(true);

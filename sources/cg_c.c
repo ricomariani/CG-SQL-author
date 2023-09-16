@@ -3031,6 +3031,22 @@ static void cg_elseif_list(ast_node *ast, ast_node *elsenode) {
   }
 }
 
+// This evaluates an expression and discards the result
+// We could optimize this more by looking to see if
+// the expression could possibly have side effects
+// and not emitting it if it is side-effect free.
+static void cg_expr_stmt(ast_node *ast) {
+  Contract(is_ast_expr_stmt(ast));
+
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  bprintf(cg_main_output, "(void)(%s);\n", expr_value.ptr);
+
+  CG_POP_EVAL(expr);
+}
+
 // As with the other cases the fact that expressions might require statements
 // complicates the codegen. If there is an else-if (expression) that expression
 // might itself require statements to compute the expression.  Even a logical AND
@@ -8654,6 +8670,7 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(select_stmt);
   STMT_INIT(with_select_stmt);
 
+  STMT_INIT(expr_stmt);
   STMT_INIT(if_stmt);
   STMT_INIT(switch_stmt);
   STMT_INIT(while_stmt);

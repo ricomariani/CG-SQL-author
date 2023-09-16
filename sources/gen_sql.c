@@ -3020,6 +3020,12 @@ static void gen_guard_stmt(ast_node *ast) {
   gen_one_stmt(stmt);
 }
 
+static void gen_expr_stmt(ast_node *ast) {
+  Contract(is_ast_expr_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  gen_expr(expr, EXPR_PRI_ROOT);
+}
+
 static void gen_delete_stmt(ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -4742,6 +4748,7 @@ cql_noexport void gen_init() {
   gen_stmts = symtab_new();
   gen_exprs = symtab_new();
 
+  STMT_INIT(expr_stmt);
   STMT_INIT(if_stmt);
   STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);

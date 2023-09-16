@@ -52,5 +52,6 @@ cql_noexport void rewrite_insert_statement_for_backed_table(ast_node *_Nonnull a
 cql_noexport void rewrite_delete_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_update_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_upsert_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
+cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast);
 
 #endif

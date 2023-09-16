@@ -4896,8 +4896,9 @@ BEGIN_TEST(clobber_blobs)
     end;
   end;
 
-  call printf("blob corruption results: good: %d, bad: %d\n", good, bad);
-  call printf("1000 bad results is normal\n");
+  -- use the no call syntax
+  printf("blob corruption results: good: %d, bad: %d\n", good, bad);
+  printf("1000 bad results is normal\n");
 END_TEST(clobber_blobs)
 
 #endif // LUA_RUN_TEST
@@ -6303,6 +6304,37 @@ BEGIN_TEST(mutate_compound_backed_key)
   fetch C;
   EXPECT(NOT C);
 END_TEST(mutate_compound_backed_key)
+
+-- This a bogus proc but it makes an interesting test
+-- it can be called directly or using proc as func 
+-- and we need both for this test.
+
+var a_global integer not null;
+create proc mutator(new_val integer not null, out result integer not null)
+begin
+  set result := new_val + 1;
+  set a_global := result;
+end;
+
+BEGIN_TEST(expr_stmt_rewrite)
+  set a_global := 0;
+  -- not a call
+  case when 1 then mutator(1) end;
+  EXPECT(a_global == 2);
+  case when 1 then mutator(100) end;
+  EXPECT(a_global == 101);
+  var result integer not null;
+  mutator(2, result);
+  EXPECT(a_global == 3);
+  EXPECT(result == 3);
+  -- chained call, the last one is the proc form so it needs all the args
+  -- we can actually do better on this by adding special logic to allow
+  -- proc_as_func at the top level if the arg count is ok for that
+  -- not yet implemented though
+  20:mutator():mutator(result);
+  EXPECT(result == 22);
+  EXPECT(a_global == 22);
+END_TEST(expr_stmt_rewrite)
 
 END_SUITE()
 

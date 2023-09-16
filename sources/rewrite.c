@@ -3611,4 +3611,57 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
   cte_cur = saved;
 }
 
+static ast_node *rewrite_expr_list_from_arg_list(ast_node *arg_list) {
+  if (!arg_list) {
+    return NULL;
+  }
+  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
+  return new_ast_expr_list(expr, rewrite_expr_list_from_arg_list(arg_list->right));
+}
+
+// The expression node has been identified to be a procedure call
+// Rewrite it as a call operation
+cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
+  Contract(is_ast_expr_stmt(ast));
+  EXTRACT_NOTNULL(call, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, call->left);
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  /* a function call might look like this
+     we nix the filter clause and create an expression  list
+  {call}
+  | {name baz}
+  | {call_arg_list}
+    | {call_filter_clause}
+    | {arg_list}
+      | {star}  <-- might be this special case or normal expression
+  */
+
+  EXTRACT_NOTNULL(call_arg_list, call->right);
+  EXTRACT_ANY(arg_list, call_arg_list->right);
+
+  ast_node *expr_list = NULL;
+
+  // This is a leaf, it mixes with nothing, so we return just the list and no recursion
+  if (arg_list && is_ast_star(arg_list->left)) {
+    ast_node *like = new_ast_like(name_ast, name_ast);
+    ast_node *shape_def = new_ast_shape_def(like, NULL);
+    ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
+    expr_list = new_ast_expr_list(call_expr, NULL);
+  }
+  else {
+    expr_list = rewrite_expr_list_from_arg_list(arg_list);
+  }
+
+  // expr_list might be null if no args
+  ast_node *new = new_ast_call_stmt(name_ast, expr_list);
+
+  AST_REWRITE_INFO_RESET();
+
+  ast->type = new->type;
+  ast_set_left(ast, new->left);
+  ast_set_right(ast, new->right);
+}
+
 #endif

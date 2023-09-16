@@ -594,6 +594,9 @@ extern CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, s
 extern CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_bool *_Nonnull x);
+extern cql_nullable_int32 expr_func_a(cql_nullable_int32 x);
+extern void expr_proc_b(cql_nullable_int32 x);
+
 extern cql_int32 an_alias_func(cql_int32 x);
 #define an_alias_func some_native_func
 cql_string_literal(_literal_1_text_, "text");
@@ -18859,6 +18862,12 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+DECLARE PROC expr_proc_b (x INTEGER);
+*/
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX
@@ -21350,6 +21359,13 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
   cql_finalize_stmt(&_temp_stmt);
   b2 = !!(_tmp_int_0);
+
+  // The statement ending at line XXXX
+
+  /*
+  1 + 2 + 3;
+  */
+  (void)(1 + 2 + 3);
 
   // The statement ending at line XXXX
 

@@ -86946,7 +86946,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bo
 
   {assign}: err
   | {name int_result}: int_result: integer variable was_set
-  | {reverse_apply_typed}
+  | {reverse_apply_typed}: err
     | {name invalid_id_bogus}: err
     | {call}
       | {name rev_apply}
@@ -87063,4 +87063,109 @@ LET poly_result_2 := count_object_get_result_SET(get_result());
           | {name get_result}
           | {call_arg_list}
             | {call_filter_clause}
+
+The statement ending at line XXXX
+
+DECLARE FUNC expr_func_a (x INTEGER) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name expr_func_a}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    |   | {param_detail}: x: integer variable in
+    |     | {name x}: x: integer variable in
+    |     | {type_int}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE PROC expr_proc_b (x INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name expr_proc_b}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: integer variable in
+        | {param_detail}: x: integer variable in
+          | {name x}: x: integer variable in
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+expr_func_a(1);
+
+  {expr_stmt}: integer
+  | {call}: integer
+    | {name expr_func_a}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CALL expr_proc_b(1);
+
+  {call_stmt}: ok
+  | {name expr_proc_b}: ok
+  | {expr_list}: ok
+    | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC local_expando_rewrite ()
+BEGIN
+  LET x := 1;
+  CALL expr_proc_b(LOCALS.x);
+END;
+
+  {create_proc_stmt}: ok
+  | {name local_expando_rewrite}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: x: integer notnull variable
+      | | {name x}: x: integer notnull variable
+      | | {int 1}: integer notnull
+      | {call_stmt}: ok
+        | {name expr_proc_b}: ok
+        | {expr_list}: ok
+          | {dot}: x: integer notnull variable
+            | {name LOCALS}
+            | {name x}
+
+The statement ending at line XXXX
+
+not_found_variable:foo();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found_variable'
+
+  {expr_stmt}: err
+  | {reverse_apply}
+    | {name not_found_variable}: err
+    | {call}
+      | {name foo}
+      | {call_arg_list}
+        | {call_filter_clause}
+
+The statement ending at line XXXX
+
+CALL expr_proc_b(expr_func_a(expr_func_a(1)));
+
+  {call_stmt}: ok
+  | {name expr_proc_b}: ok
+  | {expr_list}: ok
+    | {call}: integer
+      | {name expr_func_a}
+      | {call_arg_list}
+        | {call_filter_clause}
+        | {arg_list}: ok
+          | {call}: integer
+            | {name expr_func_a}
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {int 1}: integer notnull
 

@@ -236,6 +236,10 @@ static void sem_non_backed_table(ast_node *ast_error, ast_node *ast_table);
 static ast_node *sem_synthesize_current_locals();
 static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 
+#define SEM_REVERSE_APPLY_ANALYZE_CALL 1
+#define SEM_REVERSE_APPLY_REWRITE_ONLY 0
+static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze);
+
 static void lazy_free_symtab(void *syms) {
   symtab_delete(syms);
 }
@@ -9819,20 +9823,44 @@ additional_checks:
   }
 }
 
+#define SEM_REVERSE_APPLY_ANALYZE_CALL 1
+#define SEM_REVERSE_APPLY_REWRITE_ONLY 0
+
+static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
+  symtab_entry *entry = symtab_find(exprs, ast->type);
+  Invariant(entry);
+  sem_expr_dispatch *disp = (sem_expr_dispatch*)entry->val;
+  CSTR op = disp->str;
+
+  bool_t hard_fail = false;
+
+  if (op[0] == ':' && op[1] != '=') {
+    // we need the type of the left argument to do the reverse apply
+    // because the polymorphic forms want the type info.  So we try
+    // to get it.  If we get any errors, we're done here, no need to rewrite
+    if (!sem_try_as_cursor(ast->left, &hard_fail) && !hard_fail) {
+      sem_expr(ast->left);
+      hard_fail = is_error(ast->left);
+    }
+    if (!hard_fail) {
+      rewrite_reverse_apply(ast, op);
+      if (analyze) {
+        sem_expr_call(ast, op);
+        hard_fail = is_error(ast);
+      }
+    }
+  }
+
+  return hard_fail;
+}
+
 // Validates the right arg of ':', '::' and then rewrites the ast node
 static void sem_reverse_apply(ast_node *ast, CSTR op) {
   Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast));
-
-  // we need the type of the left argument to do the reverse apply
-  // because the polymorphic forms want the type info.  So we try
-  // to get it.  If we get any errors, we're done here, no need to rewrite
-  bool_t hard_fail = false;
-  if (!sem_try_as_cursor(ast->left, &hard_fail) && !hard_fail) {
-    sem_expr(ast->left);
-  }
-  if (!is_error(ast->left)) {
-    rewrite_reverse_apply(ast, op);
-    sem_expr_call(ast, op);
+  bool_t failed = sem_reverse_apply_if_needed(ast, SEM_REVERSE_APPLY_ANALYZE_CALL);
+  if (failed) {
+    // error already reported if any
+    record_error(ast);
   }
 }
 
@@ -15338,6 +15366,56 @@ static bool_t stmt_list_contains_control_stmt(ast_node *ast) {
   }
 
   return false;
+}
+
+// This analyzes and expression statement, discarding the result.
+// We also look for top level "function" calls that are actually calling
+// a procedure and convert the tree into a procedure call. This means
+// that at the top level if it could be a proc call or a func call (both can exist, e.g. printf)
+// the proc call gets priority!  This is not an accident!  Because printf.
+static void sem_expr_stmt(ast_node *ast) {
+  Contract(is_ast_expr_stmt(ast));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  
+  // if there is a x:y x::y or x:::y operation then transform the AST now
+  // so that everything looks like normal calls. Just the transform though.
+  // We may have to analyze the transformed call as a procedure so we defer that.
+  bool_t hard_error = sem_reverse_apply_if_needed(expr, SEM_REVERSE_APPLY_REWRITE_ONLY);
+  if (hard_error) {
+    record_error(ast);
+    return;
+  }
+
+  // Now there may have been a rewrite, refetch expr from the rewritten ast
+  // In most cases this is a no-op but not if the form was x::y()
+  expr = ast->left;
+
+  // Here there is the magic.  If the top level expression is a function call
+  // then we want to look to see if that "function" is actually a procedure
+  // if it is, we will rewrite that into a call statement so that you can
+  // call top level procedures with no call keyword.  We did the reverse
+  // apply above so that any x:foo(..) has already been unwound into a normal
+  // call.  We don't want to have to look for all the : :: and ::: forms.
+  if (is_ast_call(expr)) {
+    EXTRACT_ANY_NOTNULL(name_ast, expr->left);
+    EXTRACT_STRING(name, name_ast);
+
+    EXTRACT_NOTNULL(call_arg_list, expr->right);
+    EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
+    EXTRACT_ANY(filters, call_filter_clause->left);
+
+    // if there is a filter clause it can't be a proc call
+    bool_t is_proc = !filters && (find_proc(name) || find_unchecked_proc(name));
+
+    if (is_proc) {
+      rewrite_func_call_as_proc_call(ast);
+      sem_call_stmt_opt_cursor(ast, NULL);
+      return;
+    }
+  }
+
+  sem_expr(expr);
+  ast->sem = expr->sem;
 }
 
 // The top level if node links the initial cond_action with a possible
@@ -24316,6 +24394,7 @@ cql_noexport void sem_main(ast_node *ast) {
 
   symtab *syms = non_sql_stmts;
 
+  STMT_INIT(expr_stmt);
   STMT_INIT(if_stmt);
   STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);

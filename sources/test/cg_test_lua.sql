@@ -5144,6 +5144,15 @@ end;
 -- there is no codegen, this is a semantic analysis thing
 declare interface should_not_frag(id integer);
 
+-- TEST: top level expressions
+-- + local __ignored__ = 1 + 2 + 3
+-- + local __ignored__ = 4 + 5 + 6
+proc ignored_values()
+begin
+  1+2+3;
+  4+5+6;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

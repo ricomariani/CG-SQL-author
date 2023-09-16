@@ -286,7 +286,7 @@ static void cql_reset_globals(void);
 /* statements */
 %type <aval> stmt
 %type <aval> stmt_list opt_stmt_list
-%type <aval> any_stmt
+%type <aval> any_stmt expr_stmt
 %type <aval> begin_trans_stmt
 %type <aval> call_stmt
 %type <aval> close_stmt
@@ -399,8 +399,12 @@ stmt:
   misc_attrs any_stmt ';' { $stmt = make_statement_node($misc_attrs, $any_stmt); }
   ;
 
+expr_stmt: expr { $expr_stmt = new_ast_expr_stmt($expr);  }
+  ;
+
 any_stmt:
     alter_table_add_column_stmt
+  | expr_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | blob_get_key_type_stmt
@@ -858,7 +862,7 @@ name:
   | ROWID  { $name = new_ast_str("rowid"); }
   | REPLACE  { $name = new_ast_str("replace"); }
   | KEY  { $name = new_ast_str("key"); }
-  | VIRTUAL  { $name = new_ast_str("virtual"); }
+  | VIRTUAL { $name = new_ast_str("virtual"); }
   | TYPE { $name = new_ast_str("type"); }
   | HIDDEN { $name = new_ast_str("hidden"); }
   | PRIVATE { $name = new_ast_str("private"); }

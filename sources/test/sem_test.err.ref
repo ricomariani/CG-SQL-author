@@ -1654,4 +1654,5 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute mus
 test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc SET'
 test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc_2 SET'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bogus'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found_variable'
 semantic errors present; no code gen.

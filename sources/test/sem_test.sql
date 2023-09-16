@@ -23028,3 +23028,53 @@ declare function count_object_get_result_SET(result object) integer not null;
 -- + LET poly_result_2 := count_object_get_result_SET(get_result());
 -- - error:
 let poly_result_2 := get_result():::count();
+
+-- some things we will use in the tests
+declare function expr_func_a(x integer) integer;
+declare procedure expr_proc_b(x integer);
+
+-- TEST: top level function calls are ok, any expression is ok
+-- result is discarded
+-- + expr_func_a(1);
+-- + {expr_stmt}: integer
+-- + {call}: integer
+-- + {name expr_func_a}
+-- - error:
+expr_func_a(1);
+
+-- TEST: we should be able to call a proc at the top level (with rewrites)
+-- verify the rewrite
+-- + CALL expr_proc_b(1);
+-- + {call_stmt}: ok
+-- - error:
+expr_proc_b(1);
+
+
+-- TEST: the * notation needs additional rewrites to convert from ast_star
+-- verify the correct rewrite
+-- + CALL expr_proc_b(LOCALS.x);
+-- + call_stmt}: ok
+-- - ast_star
+-- - error:
+proc local_expando_rewrite()
+begin
+  let x := 1;
+  expr_proc_b(*);
+end;
+
+-- TEST: one error, not two, even though rewrite attemnt
+-- rewrite did not succeed
+-- + not_found_variable:foo();
+-- + {expr_stmt}: err
+-- + {reverse_apply}
+-- + error: % name not found 'not_found_variable'
+-- exactly one error
+-- +1 error:
+not_found_variable:foo();
+
+-- TEST: top level rewrite with various : operators
+-- reverse apply has to go first
+-- + CALL expr_proc_b(expr_func_a(expr_func_a(1)));
+-- + {call_stmt}: ok
+-- - error:
+1:expr_func_a():expr_func_a():expr_proc_b();

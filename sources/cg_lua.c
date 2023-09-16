@@ -1991,6 +1991,23 @@ static void cg_lua_elseif_list(ast_node *ast, ast_node *elsenode) {
   bprintf(cg_main_output, "end\n");
 }
 
+// This evaluates an expression and discards the result
+// We could optimize this more by looking to see if
+// the expression could possibly have side effects
+// and not emitting it if it is side-effect free.
+static void cg_lua_expr_stmt(ast_node *ast) {
+  Contract(is_ast_expr_stmt(ast));
+
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  CG_LUA_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
+
+  bprintf(cg_main_output, "local __ignored__ = %s\n", expr_value.ptr);
+
+  CG_LUA_POP_EVAL(expr);
+}
+
+
 // As with the other cases the fact that expressions might require statements
 // complicates the codegen. If there is an else-if (expression) that expression
 // might itself require statements to compute the expression.  Even a logical AND
@@ -5248,6 +5265,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(select_stmt);
   LUA_STMT_INIT(with_select_stmt);
 
+  LUA_STMT_INIT(expr_stmt);
   LUA_STMT_INIT(if_stmt);
   LUA_STMT_INIT(switch_stmt);
   LUA_STMT_INIT(while_stmt);

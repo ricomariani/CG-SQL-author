@@ -8641,6 +8641,22 @@ function select_if_nothing_or_null_in_loop(_db_)
   _temp1_stmt = nil
   return _rc_
 end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC ignored_values ()
+BEGIN
+  1 + 2 + 3;
+  4 + 5 + 6;
+END;
+--]]
+
+function ignored_values()
+  local __ignored__ = 1 + 2 + 3
+  local __ignored__ = 4 + 5 + 6
+
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

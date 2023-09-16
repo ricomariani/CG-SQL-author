@@ -5784,6 +5784,14 @@ begin
   let int_cast_foo := type_check(cast(1 as integer<foo>) as integer<foo> not null);
   let int_sql_val := (select type_check(1 as integer not null));
 end;
+
+declare function expr_func_a(x integer) integer;
+declare procedure expr_proc_b(x integer);
+
+-- TEST: top level expressions
+-- + (void)(1 + 2 + 3);
+1+2+3;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

@@ -3634,27 +3634,16 @@ cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
   | {name baz}
   | {call_arg_list}
     | {call_filter_clause}
-    | {arg_list}
-      | {star}  <-- might be this special case or normal expression
+    | {arg_list} <-- might be null
+      | {some_expr}  
   */
 
   EXTRACT_NOTNULL(call_arg_list, call->right);
   EXTRACT_ANY(arg_list, call_arg_list->right);
 
-  ast_node *expr_list = NULL;
+  ast_node *expr_list = rewrite_expr_list_from_arg_list(arg_list);
 
-  // This is a leaf, it mixes with nothing, so we return just the list and no recursion
-  if (arg_list && is_ast_star(arg_list->left)) {
-    ast_node *like = new_ast_like(name_ast, name_ast);
-    ast_node *shape_def = new_ast_shape_def(like, NULL);
-    ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
-    expr_list = new_ast_expr_list(call_expr, NULL);
-  }
-  else {
-    expr_list = rewrite_expr_list_from_arg_list(arg_list);
-  }
-
-  // expr_list might be null if no args
+  // expr_list might be null if no args, that's ok.
   ast_node *new = new_ast_call_stmt(name_ast, expr_list);
 
   AST_REWRITE_INFO_RESET();
@@ -3663,5 +3652,22 @@ cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
   ast_set_left(ast, new->left);
   ast_set_right(ast, new->right);
 }
+
+cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
+  // ast_star is a leaf, it mixes with nothing, so just replace it with "FROM LOCALS LIKE proc_name"
+  if (arg_list && is_ast_star(arg_list->left)) {
+    // the * operator is a singleton
+    Contract(is_ast_arg_list(arg_list));
+    Contract(!arg_list->right);
+    AST_REWRITE_INFO_SET(arg_list->lineno, arg_list->filename);
+    ast_node *like = new_ast_like(proc_name_ast, proc_name_ast);
+    ast_node *shape_def = new_ast_shape_def(like, NULL);
+    ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
+    ast_set_left(arg_list, call_expr);
+    AST_REWRITE_INFO_RESET();
+  }        
+}
+
+
 
 #endif

@@ -15390,9 +15390,9 @@ static void sem_expr_stmt(ast_node *ast) {
   // In most cases this is a no-op but not if the form was x::y()
   expr = ast->left;
 
-  // Here there is the magic.  If the top level expression is a function call
-  // then we want to look to see if that "function" is actually a procedure
-  // if it is, we will rewrite that into a call statement so that you can
+  // Here is the magic.  If the top level expression is a function call
+  // then we want to look to see if that function is actually a procedure.
+  // If it is, we will rewrite that into a call statement so that you can
   // call top level procedures with no call keyword.  We did the reverse
   // apply above so that any x:foo(..) has already been unwound into a normal
   // call.  We don't want to have to look for all the : :: and ::: forms.
@@ -15405,15 +15405,63 @@ static void sem_expr_stmt(ast_node *ast) {
     EXTRACT_ANY(filters, call_filter_clause->left);
 
     // if there is a filter clause it can't be a proc call
-    bool_t is_proc = !filters && (find_proc(name) || find_unchecked_proc(name));
+    if (!filters) {
+      bool_t perform_proc_rewrite = false;
+      ast_node *proc_stmt = find_proc(name);
 
-    if (is_proc) {
-      rewrite_func_call_as_proc_call(ast);
-      sem_call_stmt_opt_cursor(ast, NULL);
-      return;
+      if (proc_stmt) {
+        EXTRACT(arg_list, call_arg_list->right);
+
+        rewrite_ast_star_if_needed(arg_list, name_ast);
+    
+        // expand any FROM forms in the arg list
+        // it's still a function call after this.  This would
+        // have happened anyway in sem_expr we're doing it sooner.
+        if (!rewrite_shape_forms_in_list_if_needed(arg_list)) {
+          record_error(ast);
+          return;
+        }
+
+        // compute the count of provided args after expansion
+        uint32_t arg_count = 0;
+        for (ast_node *item = arg_list; item; item = item->right) arg_count++;
+
+        Contract(is_proc(proc_stmt));
+        EXTRACT_NOTNULL(proc_params_stmts, proc_stmt->right);
+        EXTRACT(params, proc_params_stmts->left);
+
+        // now compute the count of formal parameters
+        uint32_t param_count = 0;
+        for (ast_node *item = params; item; item = item->right) param_count++;
+
+        // if exactly one argument missing, don't do the rewrite
+        // if more are missing do the rewrite even though we know it will fail
+        // semantic validation.  The error message will be better.
+        perform_proc_rewrite = (arg_count != param_count - 1);
+      }
+      else if (find_unchecked_proc(name)) {
+        perform_proc_rewrite = true;
+      }
+
+      // All of this is so that you can write a top level proc call
+      // where the call will turn into proc as func because there is
+      // an out arg missing.  That call has to be not rewritten as
+      // a standard call.  So imagine there is a 'dump' function that
+      // prints its argument and returns it.  `x:dump()` needs to work
+      // at the top level even though dump has an out arg.
+      if  (perform_proc_rewrite) {
+        // Safe to rewrite the function as a proc call now
+        // Either it's unchecked, or else normal and matching arg count
+        rewrite_func_call_as_proc_call(ast);
+        sem_call_stmt_opt_cursor(ast, NULL);
+        return;
+      }
     }
   }
 
+  // If we're on this path then it's not a proc
+  // or else it is a proc but it's the proc as func pattern
+  // so it has to be evaluated as an expression.
   sem_expr(expr);
   ast->sem = expr->sem;
 }

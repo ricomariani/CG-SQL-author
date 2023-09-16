@@ -87169,3 +87169,90 @@ CALL expr_proc_b(expr_func_a(expr_func_a(1)));
               | {arg_list}: ok
                 | {int 1}: integer notnull
 
+The statement ending at line XXXX
+
+CREATE PROC dump_int (x INTEGER, OUT result INTEGER)
+BEGIN
+  SET result := x;
+  CALL printf(" %d", x);
+END;
+
+  {create_proc_stmt}: ok
+  | {name dump_int}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: result: integer variable out was_set
+    |     | {out}
+    |     | {param_detail}: result: integer variable out was_set
+    |       | {name result}: result: integer variable out was_set
+    |       | {type_int}: integer
+    | {stmt_list}: ok
+      | {assign}: result: integer variable out was_set
+      | | {name result}: result: integer variable out was_set
+      | | {name x}: x: integer variable in
+      | {call_stmt}: ok
+        | {name printf}: ok
+        | {expr_list}: ok
+          | {strlit ' %d'}: text notnull
+          | {expr_list}
+            | {name x}: x: integer variable in
+
+The statement ending at line XXXX
+
+CREATE PROC main ()
+BEGIN
+  LET x := 2;
+  DECLARE result INTEGER;
+  dump_int(1);
+  CALL dump_int(LOCALS.x, LOCALS.result);
+END;
+
+  {create_proc_stmt}: ok
+  | {name main}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: x: integer notnull variable
+      | | {name x}: x: integer notnull variable
+      | | {int 2}: integer notnull
+      | {declare_vars_type}: integer
+      | | {name_list}: result: integer variable was_set
+      | | | {name result}: result: integer variable was_set
+      | | {type_int}: integer
+      | {expr_stmt}: integer
+      | | {call}: integer
+      |   | {name dump_int}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {int 1}: integer notnull
+      | {call_stmt}: ok
+        | {name dump_int}: ok
+        | {expr_list}: ok
+          | {dot}: x: integer notnull variable
+          | | {name LOCALS}
+          | | {name x}
+          | {expr_list}
+            | {dot}: result: integer variable
+              | {name LOCALS}
+              | {name result}
+
+The statement ending at line XXXX
+
+dump_int(FROM this_name_does_not_exist);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'this_name_does_not_exist'
+
+  {expr_stmt}: err
+  | {call}
+    | {name dump_int}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: err
+        | {from_shape}
+          | {name this_name_does_not_exist}: err
+

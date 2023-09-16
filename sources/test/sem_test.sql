@@ -23078,3 +23078,31 @@ not_found_variable:foo();
 -- + {call_stmt}: ok
 -- - error:
 1:expr_func_a():expr_func_a():expr_proc_b();
+
+-- TEST: helper proc for the real test
+-- + call printf(" %d", x);
+-- - error:
+proc dump_int(x integer, out result integer)
+begin
+  set result := x;
+  printf(" %d", x);
+end;
+
+-- TEST: this dump call is NOT rewritten to a proc call
+-- it can't be because it uses the proc as func pattern
+-- + dump_int(1);
+-- + CALL dump_int(LOCALS.x, LOCALS.result);
+-- - error:
+proc main()
+begin
+  let x := 2;
+  declare result integer;
+  1::dump();
+  dump_int(*);
+end;
+
+-- TEST: try to expand a top level proc using a bogus FROM 
+-- + dump_int(FROM this_name_does_not_exist);
+-- + error: % name not found 'this_name_does_not_exist'
+-- +1 error
+dump_int(from this_name_does_not_exist);

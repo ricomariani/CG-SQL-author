@@ -15412,6 +15412,7 @@ static void sem_expr_stmt(ast_node *ast) {
       if (proc_stmt) {
         EXTRACT(arg_list, call_arg_list->right);
 
+        // expand '*' into FROM LOCALS LIKE [target_of_call] ARGUMENTS
         rewrite_ast_star_if_needed(arg_list, name_ast);
     
         // expand any FROM forms in the arg list
@@ -21551,6 +21552,9 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
   EXTRACT_STRING(name, name_ast);
+
+  // expand '*' into FROM LOCALS LIKE [target_of_call] ARGUMENTS
+  rewrite_ast_star_if_needed(arg_list, name_ast);
 
   ast_node *proc_stmt = find_proc(name);
 

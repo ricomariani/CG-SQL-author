@@ -1707,7 +1707,7 @@ foo (*) AS (CALL bar(1, 2))
 SELECT *
   FROM foo;
 
-CALL foo(FROM LOCALS LIKE foo ARGUMENTS);
+CALL foo(*);
 
 WITH
 bar (*) AS (CALL bar(1, 5) USING goo AS too),

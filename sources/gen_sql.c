@@ -904,23 +904,6 @@ static void gen_shape_arg(ast_node *ast) {
   }
 }
 
-static void gen_call_arg_list(ast_node *ast) {
-  while (ast) {
-    ast_node *left = ast->left;
-    if (is_ast_from_shape(left)) {
-      gen_shape_arg(left);
-    }
-    else {
-      gen_root_expr(left);
-    }
-
-    if (ast->right) {
-      gen_printf(", ");
-    }
-    ast = ast->right;
-  }
-}
-
 static void gen_case_list(ast_node *ast) {
   Contract(is_ast_case_list(ast));
 
@@ -4083,7 +4066,7 @@ static void gen_call_stmt(ast_node *ast) {
 
   gen_printf("CALL %s(", name);
   if (arg_list) {
-    gen_call_arg_list(arg_list);
+    gen_arg_list(arg_list);
   }
 
   gen_printf(")", name);

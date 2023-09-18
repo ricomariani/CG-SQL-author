@@ -275,7 +275,7 @@ static void cql_reset_globals(void);
 %type <aval> schema_unsub_stmt
 
 /* expressions and types */
-%type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list call_expr_list call_expr shape_arguments
+%type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list shape_arguments
 %type <aval> name name_list opt_name_list opt_name
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
@@ -1156,16 +1156,6 @@ col_calc:
   | name[n1] '.' name[n2] { $col_calc = new_ast_col_calc(new_ast_dot($n1, $n2), NULL); }
   ;
 
-call_expr:
-  expr  { $call_expr = $expr; }
-  | shape_arguments  { $call_expr = $shape_arguments; }
-  ;
-
-call_expr_list[result]:
-  call_expr  { $result = new_ast_arg_list($call_expr, NULL); }
-  | call_expr ',' call_expr_list[cel]  { $result = new_ast_arg_list($call_expr, $cel); }
-  ;
-
 cte_tables[result]:
   cte_table  { $result = new_ast_cte_tables($cte_table, NULL); }
   | cte_table ',' cte_tables[ct]  { $result = new_ast_cte_tables($cte_table, $ct); }
@@ -1918,22 +1908,9 @@ declare_vars_stmt:
   | declare_value_cursor { $declare_vars_stmt = $declare_value_cursor; }
   ;
 
-call_stmt:
-  CALL name '(' ')'  {
+call_stmt: CALL name '(' arg_list ')'  {
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      $call_stmt = new_ast_call_stmt($name, NULL); }
-  | CALL name '(' call_expr_list ')'  {
-      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      $call_stmt = new_ast_call_stmt($name, $call_expr_list); }
-  | CALL name '(' '*' ')'  {
-      YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
-      // sugar form -- this is the same as
-      // CALL name ( FROM LOCALS LIKE name ARGUMENTS) -- i.e. all arg names that match
-      ast_node *like = new_ast_like($name, $name);
-      ast_node *shape_def = new_ast_shape_def(like, NULL);
-      ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
-      ast_node *call_arg_list = new_ast_arg_list(call_expr, NULL);
-      $call_stmt = new_ast_call_stmt($name, call_arg_list); }
+      $call_stmt = new_ast_call_stmt($name, $arg_list); }
   ;
 
 while_stmt:

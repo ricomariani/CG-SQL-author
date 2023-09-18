@@ -4786,7 +4786,6 @@ static void cg_lua_emit_one_enum(ast_node *ast) {
   EXTRACT_NOTNULL(enum_values, ast->right);
   EXTRACT_ANY(name_ast, typed_name->left);
   EXTRACT_STRING(name, name_ast);
-  EXTRACT_ANY_NOTNULL(type, typed_name->right);
 
   bprintf(cg_main_output, "cql_emit_constants(\"enum\", \"%s\", {\n", name);
 

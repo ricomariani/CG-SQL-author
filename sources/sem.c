@@ -9502,8 +9502,8 @@ bool_t is_no_clause_simple_select(ast_node *select_stmt) {
 
 static bool_t find_shared_cte_with_args(ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
-  EXTRACT(expr_list, call_stmt->right);
-  *(bool_t *)context |= expr_list != NULL;
+  EXTRACT(arg_list, call_stmt->right);
+  *(bool_t *)context |= arg_list != NULL;
 
   return false;
 }
@@ -21549,7 +21549,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
-  EXTRACT(expr_list, ast->right);
+  EXTRACT(arg_list, ast->right);
   EXTRACT_STRING(name, name_ast);
 
   ast_node *proc_stmt = find_proc(name);
@@ -21585,7 +21585,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   }
 
   // expand any FROM forms in the arg list
-  if (!rewrite_shape_forms_in_list_if_needed(expr_list)) {
+  if (!rewrite_shape_forms_in_list_if_needed(arg_list)) {
     record_error(ast);
     return;
   }
@@ -21602,7 +21602,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
     has_dml |= is_dml_proc(proc_stmt->sem->sem_type);
 
-    sem_validate_args_vs_formals(ast, name, expr_list, params, NORMAL_CALL);
+    sem_validate_args_vs_formals(ast, name, arg_list, params, NORMAL_CALL);
 
     // The call may have mutated any or all of the currently improved globals,
     // so we simply invalidate all of them. We do this before returning in the
@@ -21615,7 +21615,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     }
   } else {
     // compute semantic type of each arg, reporting errors
-    sem_validate_args(ast, expr_list);
+    sem_validate_args(ast, arg_list);
     if (is_error(ast)) {
       return;
     }
@@ -22440,7 +22440,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 
   EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
   EXTRACT_STRING(name, name_ast);
-  EXTRACT(expr_list, call_stmt->right);
+  EXTRACT(arg_list, call_stmt->right);
 
   ast_node *proc_stmt = find_proc(name);
 
@@ -22461,7 +22461,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
 
   int32_t out_args = 0;
 
-  for (; params && expr_list; params = params->right, expr_list = expr_list->right) {
+  for (; params && arg_list; params = params->right, arg_list = arg_list->right) {
     EXTRACT_NOTNULL(param, params->left);
 
     Invariant(param->sem);
@@ -22475,7 +22475,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
     Invariant(is_out_parameter(sem_type_param));  // that's all that's left
     out_args++;
 
-    EXTRACT_ANY_NOTNULL(arg, expr_list->left);
+    EXTRACT_ANY_NOTNULL(arg, arg_list->left);
 
     if (!is_id(arg)) {
       report_error(arg, "CQL0207: expected a variable name for OUT or INOUT argument", param->sem->name);
@@ -22545,10 +22545,10 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
   // do the walk the code generator is going to do but sort of in reverse... we're
   // wanting variables to undecorate.  The IMPLICIT bits are the bread crumbs we need.
 
-  expr_list = call_stmt->right;
+  arg_list = call_stmt->right;
 
-  for (; expr_list; expr_list = expr_list->right) {
-    EXTRACT_ANY_NOTNULL(arg, expr_list->left);
+  for (; arg_list; arg_list = arg_list->right) {
+    EXTRACT_ANY_NOTNULL(arg, arg_list->left);
     if (arg->sem->sem_type & SEM_TYPE_IMPLICIT) {
       EXTRACT_STRING(var_name, arg);
       symtab_entry *entry = symtab_find(current_variables, var_name);

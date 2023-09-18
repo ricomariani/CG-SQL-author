@@ -9099,9 +9099,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'arg
     | {stmt_list}
       | {call_stmt}
         | {name anything}
-        | {expr_list}
+        | {arg_list}
           | {name arg1}
-          | {expr_list}
+          | {arg_list}
             | {name arg2}
 
 The statement ending at line XXXX
@@ -9222,9 +9222,9 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name anything}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {name arg1}: arg1: integer variable in
-          | {expr_list}
+          | {arg_list}
             | {name arg3}: arg3: real variable in out
 
 The statement ending at line XXXX
@@ -9485,7 +9485,7 @@ CALL printf('Hello, world');
 
   {call_stmt}: ok
   | {name printf}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {strlit 'Hello, world'}: text notnull
 
 The statement ending at line XXXX
@@ -9501,9 +9501,9 @@ CALL proc2(1, 'foo');
 
   {call_stmt}: ok dml_proc
   | {name proc2}: ok dml_proc
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {strlit 'foo'}: text notnull
 
 The statement ending at line XXXX
@@ -9514,9 +9514,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
   {call_stmt}: err
   | {name proc2}: ok dml_proc
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {strlit 'bar'}: err
-    | {expr_list}
+    | {arg_list}
       | {strlit 'foo'}
 
 The statement ending at line XXXX
@@ -9527,9 +9527,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 
   {call_stmt}: err
   | {name proc2}: ok dml_proc
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {int 2}: err
 
 The statement ending at line XXXX
@@ -9540,11 +9540,11 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
 
   {call_stmt}: err
   | {name proc2}: ok dml_proc
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {strlit 'foo'}: text notnull
-      | {expr_list}
+      | {arg_list}
         | {int 1}
 
 The statement ending at line XXXX
@@ -9555,7 +9555,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provi
 
   {call_stmt}: err
   | {name proc2}: ok dml_proc
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
 
 The statement ending at line XXXX
@@ -9566,9 +9566,9 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0213: procedure had errors, c
 
   {call_stmt}: err
   | {name proc3}
-  | {expr_list}
+  | {arg_list}
     | {int 1}
-    | {expr_list}
+    | {arg_list}
       | {strlit 'foo'}
 
 The statement ending at line XXXX
@@ -9607,11 +9607,11 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for 
 
   {call_stmt}: err
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {int 2}: err
-      | {expr_list}
+      | {arg_list}
         | {name X}
 
 The statement ending at line XXXX
@@ -9622,11 +9622,11 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0207: expected a variable name for 
 
   {call_stmt}: err
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {name X}: X: integer variable was_set
-      | {expr_list}
+      | {arg_list}
         | {int 3}: err
 
 The statement ending at line XXXX
@@ -9635,11 +9635,11 @@ CALL proc_with_output(1, X, Y);
 
   {call_stmt}: ok
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {name X}: X: integer variable was_set
-      | {expr_list}
+      | {arg_list}
         | {name Y}: Y: integer variable was_set
 
 The statement ending at line XXXX
@@ -9661,11 +9661,11 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name proc_with_output}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {int 1}: integer notnull
-          | {expr_list}
+          | {arg_list}
             | {name X}: X: integer variable was_set
-            | {expr_list}
+            | {arg_list}
               | {name arg1}: arg1: integer variable in out
 
 The statement ending at line XXXX
@@ -9687,11 +9687,11 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name proc_with_output}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {int 1}: integer notnull
-          | {expr_list}
+          | {arg_list}
             | {name X}: X: integer variable was_set
-            | {expr_list}
+            | {arg_list}
               | {name arg1}: arg1: integer variable out
 
 The statement ending at line XXXX
@@ -9702,11 +9702,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
 
   {call_stmt}: err
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
-    | {expr_list}
+    | {arg_list}
       | {name X}: X: integer variable was_set
-      | {expr_list}
+      | {arg_list}
         | {name X}: X: integer variable was_set
 
 The statement ending at line XXXX
@@ -9717,11 +9717,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
 
   {call_stmt}: err
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name X}: X: integer variable was_set
-    | {expr_list}
+    | {arg_list}
       | {name X}: X: integer variable was_set
-      | {expr_list}
+      | {arg_list}
         | {name Y}: Y: integer variable was_set
 
 The statement ending at line XXXX
@@ -9732,11 +9732,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
 
   {call_stmt}: err
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name X}: X: integer variable was_set
-    | {expr_list}
+    | {arg_list}
       | {name Y}: Y: integer variable was_set
-      | {expr_list}
+      | {arg_list}
         | {name X}: X: integer variable was_set
 
 The statement ending at line XXXX
@@ -9745,13 +9745,13 @@ CALL proc_with_output(1 + X, Y, X);
 
   {call_stmt}: ok
   | {name proc_with_output}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {add}: integer
     | | {int 1}: integer notnull
     | | {name X}: X: integer variable was_set
-    | {expr_list}
+    | {arg_list}
       | {name Y}: Y: integer variable was_set
-      | {expr_list}
+      | {arg_list}
         | {name X}: X: integer variable was_set
 
 The statement ending at line XXXX
@@ -9788,7 +9788,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for 
       |       | {select_offset}
       | {call_stmt}: err
         | {name test_proc3}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {name c}: err
 
 The statement ending at line XXXX
@@ -9806,7 +9806,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0207: expected a variable name for 
     | {stmt_list}: err
       | {call_stmt}: err
         | {name test_proc3}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {int -1}: integer<ints> notnull
 
 The statement ending at line XXXX
@@ -9824,7 +9824,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'unbound'
     | {stmt_list}: err
       | {call_stmt}: err
         | {name test_proc3}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {name unbound}: err
 
 The statement ending at line XXXX
@@ -11654,7 +11654,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
   | {name curs2}
   | {call_stmt}: err
     | {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
-    | {expr_list}: ok
+    | {arg_list}: ok
       | {int 1}
 
 The statement ending at line XXXX
@@ -11987,7 +11987,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
 
   {call_stmt}: err
   | {name out_proc}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name my_int}: my_int: integer notnull variable
 
 The statement ending at line XXXX
@@ -12007,7 +12007,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0209: proc out parameter: arg must 
 
   {call_stmt}: err
   | {name out_proc}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name my_real}: my_real: real variable
 
 The statement ending at line XXXX
@@ -19964,9 +19964,9 @@ SELECT *
   |       |   | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       |     | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       |       | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |       |       | {expr_list}: ok
+  |       |       | {arg_list}: ok
   |       |         | {int 1}: integer notnull
-  |       |         | {expr_list}
+  |       |         | {arg_list}
   |       |           | {int 2}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
@@ -20624,9 +20624,9 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was pro
   |     | {shared_cte}: err
   |       | {call_stmt}: err
   |         | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | {expr_list}: ok
+  |         | {arg_list}: ok
   |           | {int 1}: integer notnull
-  |           | {expr_list}
+  |           | {arg_list}
   |             | {int 2}: integer notnull
   | {select_stmt}
     | {select_core_list}
@@ -21056,9 +21056,9 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0429: called procedure
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21137,9 +21137,9 @@ test/sem_test.sql:XXXX:1: error: in cte_binding_list : CQL0430: no actual table 
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21218,9 +21218,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0428: duplicate binding of table in
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21303,9 +21303,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0431: an actual table was provided 
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21388,9 +21388,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'bogus
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21476,9 +21476,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0432: table provided must have the 
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21557,9 +21557,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0433: table argument 'source' requi
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21638,9 +21638,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
   |       | {shared_cte}: err
   |         | {call_stmt}: err
   |         | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | | {expr_list}: ok
+  |         | | {arg_list}: ok
   |         |   | {int 1}: integer notnull
-  |         |   | {expr_list}
+  |         |   | {arg_list}
   |         |     | {int 2}: integer notnull
   |         | {cte_binding_list}
   |           | {cte_binding}
@@ -21909,9 +21909,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
   |     | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | {expr_list}: ok
+  |         | {arg_list}: ok
   |           | {int 1}: integer notnull
-  |           | {expr_list}
+  |           | {arg_list}
   |             | {int 2}: integer notnull
   | {select_stmt}
     | {select_core_list}
@@ -22121,9 +22121,9 @@ SELECT *
   |     | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |         | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-  |         | {expr_list}: ok
+  |         | {arg_list}: ok
   |           | {int 1}: integer notnull
-  |           | {expr_list}
+  |           | {arg_list}
   |             | {int 2}: integer notnull
   | {select_stmt}: select: { x: integer notnull, y: integer notnull, z: real notnull }
     | {select_core_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
@@ -24096,9 +24096,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
   {call_stmt}: err
   | {name printf}: ok
-  | {expr_list}: err
+  | {arg_list}: err
     | {strlit '%d'}: text notnull
-    | {expr_list}
+    | {arg_list}
       | {call}: err
         | {name simple_func}
         | {call_arg_list}
@@ -26857,7 +26857,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
   | {name QQ}
   | {call_stmt}: err
     | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-    | {expr_list}: ok
+    | {arg_list}: ok
       | {int 1}
 
 The statement ending at line XXXX
@@ -27585,7 +27585,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
         | {name C}
         | {call_stmt}: err
           | {name declared_proc}: declared_proc: { t: text } uses_out
-          | {expr_list}: ok
+          | {arg_list}: ok
             | {not}: err
               | {strlit 'x'}: text notnull
 
@@ -27972,7 +27972,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
       | | {name C}
       | | {call_stmt}: err
       |   | {name out_cursor_proc}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable dml_proc shape_storage uses_out
-      |   | {expr_list}: ok
+      |   | {arg_list}: ok
       |     | {int 42}
       | {out_stmt}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
         | {name C}: C: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -35336,7 +35336,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive 
 
   {call_stmt}: err
   | {name decl1}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name _sens}: _sens: integer variable sensitive was_set
 
 The statement ending at line XXXX
@@ -35397,7 +35397,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive 
 
   {call_stmt}: err
   | {name sens_proc}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name X}: X: integer variable was_set
 
 The statement ending at line XXXX
@@ -35406,7 +35406,7 @@ CALL non_sens_proc(_sens);
 
   {call_stmt}: ok
   | {name non_sens_proc}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name _sens}: _sens: integer variable sensitive was_set
 
 The statement ending at line XXXX
@@ -35417,7 +35417,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
 
   {call_stmt}: err
   | {name non_sens_proc}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name int_nn}: int_nn: integer notnull variable was_set
 
 The statement ending at line XXXX
@@ -35428,7 +35428,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must 
 
   {call_stmt}: err
   | {name non_sens_proc_nonnull}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name X}: X: integer variable was_set
 
 The statement ending at line XXXX
@@ -46912,7 +46912,7 @@ DECLARE out_union_cursor CURSOR FOR CALL out_union_user(2);
   | {name out_union_cursor}: out_union_cursor: out_union_user: { id: integer, x: text } variable uses_out_union
   | {call_stmt}: out_union_user: { id: integer, x: text } uses_out_union
     | {name out_union_user}: out_union_user: { id: integer, x: text } uses_out_union
-    | {expr_list}: ok
+    | {arg_list}: ok
       | {int 2}: integer notnull
 
 The statement ending at line XXXX
@@ -48013,9 +48013,9 @@ CALL some_external_thing('x', 5.0);
 
   {call_stmt}: ok
   | {name some_external_thing}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {strlit 'x'}: text notnull
-    | {expr_list}
+    | {arg_list}
       | {dbl 5.0}: real notnull
 
 The statement ending at line XXXX
@@ -48249,10 +48249,10 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name printf}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {strlit '%s
 '}: text notnull
-          | {expr_list}
+          | {arg_list}
             | {dot}: x_id: integer variable in
               | {name x}
               | {name id}
@@ -48282,10 +48282,10 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0068: field not found in shape 'xyz
     | {stmt_list}: err
       | {call_stmt}: err
         | {name printf}: ok
-        | {expr_list}: err
+        | {arg_list}: err
           | {strlit '%s
 '}: text notnull
-          | {expr_list}
+          | {arg_list}
             | {dot}: err
               | {name x}
               | {name xyzzy}
@@ -48323,11 +48323,11 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok dml_proc
         | {name proc2}: ok dml_proc
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: args_arg1: integer variable in
           | | {name args}
           | | {name arg1}
-          | {expr_list}
+          | {arg_list}
             | {dot}: args_arg2: text variable in
               | {name args}
               | {name arg2}
@@ -49857,11 +49857,11 @@ END;
       |         | {strlit 'x'}: text notnull
       | {call_stmt}: ok
         | {name shape_consumer}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: C.x: integer notnull variable
           | | {name C}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}: C.y: text notnull variable
               | {name C}
               | {name y}
@@ -49881,7 +49881,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
     | {stmt_list}: err
       | {call_stmt}: err
         | {name shape_consumer}
-        | {expr_list}: err
+        | {arg_list}: err
           | {from_shape}
             | {name not_a_cursor}: err
 
@@ -49924,11 +49924,11 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0067: cursor was not used with 'fet
       |       | {select_offset}
       | {call_stmt}: err
         | {name shape_consumer}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: err
           | | {name C}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}
               | {name C}
               | {name y}
@@ -49982,7 +49982,7 @@ END;
       |         | {strlit 'x'}: text notnull
       | {call_stmt}: ok
         | {name shape_y_only}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: C.y: text notnull variable
             | {name C}
             | {name y}
@@ -50022,7 +50022,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
       |         | {strlit 'x'}: text notnull
       | {call_stmt}: err
         | {name shape_y_only}
-        | {expr_list}: err
+        | {arg_list}: err
           | {from_shape}
             | {name C}: C: shape: { x: integer notnull, y: text notnull } variable shape_storage value_cursor
             | {shape_def}: err
@@ -50117,61 +50117,61 @@ END;
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: C.x: integer notnull variable
       |   | | {name C}
       |   | | {name x}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: C.y: integer notnull variable
       |     | | {name C}
       |     | | {name y}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 1}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: C.x: integer notnull variable
       |     | | {name C}
       |     | | {name x}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: C.y: integer notnull variable
       |       | | {name C}
       |       | | {name y}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: C.x: integer notnull variable
       |       | | {name C}
       |       | | {name x}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {dot}: C.y: integer notnull variable
       |           | {name C}
       |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: C.x: integer notnull variable
           | | {name C}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}: C.y: integer notnull variable
             | | {name C}
             | | {name y}
-            | {expr_list}
+            | {arg_list}
               | {dot}: C.x: integer notnull variable
               | | {name C}
               | | {name x}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: C.y: integer notnull variable
                   | {name C}
                   | {name y}
@@ -50204,61 +50204,61 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: x: integer notnull variable in
       |   | | {name ARGUMENTS}
       |   | | {name x}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: y: integer notnull variable in
       |     | | {name ARGUMENTS}
       |     | | {name y}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 1}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: x: integer notnull variable in
       |     | | {name ARGUMENTS}
       |     | | {name x}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: y: integer notnull variable in
       |       | | {name ARGUMENTS}
       |       | | {name y}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: x: integer notnull variable in
       |       | | {name ARGUMENTS}
       |       | | {name x}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {dot}: y: integer notnull variable in
       |           | {name ARGUMENTS}
       |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: x: integer notnull variable in
           | | {name ARGUMENTS}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}: y: integer notnull variable in
             | | {name ARGUMENTS}
             | | {name y}
-            | {expr_list}
+            | {arg_list}
               | {dot}: x: integer notnull variable in
               | | {name ARGUMENTS}
               | | {name x}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: y: integer notnull variable in
                   | {name ARGUMENTS}
                   | {name y}
@@ -50278,12 +50278,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0340: FROM ARGUMENTS used in a proc
     | {stmt_list}: err
       | {call_stmt}: err
         | {name lotsa_ints}
-        | {expr_list}: err
+        | {arg_list}: err
           | {from_shape}
           | | {name ARGUMENTS}: err
-          | {expr_list}
+          | {arg_list}
             | {int 1}
-            | {expr_list}
+            | {arg_list}
               | {int 2}
 
 The statement ending at line XXXX
@@ -50294,12 +50294,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0163: FROM ARGUMENTS construct is o
 
   {call_stmt}: err
   | {name lotsa_ints}
-  | {expr_list}: err
+  | {arg_list}: err
     | {from_shape}
     | | {name ARGUMENTS}: err
-    | {expr_list}
+    | {arg_list}
       | {int 1}
-      | {expr_list}
+      | {arg_list}
         | {int 2}
 
 The statement ending at line XXXX
@@ -50331,67 +50331,67 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: y: integer notnull variable in
       |   | | {name ARGUMENTS}
       |   | | {name y}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 1}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 2}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: y: integer notnull variable in
       |     | | {name ARGUMENTS}
       |     | | {name y}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 2}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: y: integer notnull variable in
       |       | | {name ARGUMENTS}
       |       | | {name y}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 3}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {dot}: y: integer notnull variable in
       |           | {name ARGUMENTS}
       |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: y: integer notnull variable in
           | | {name ARGUMENTS}
           | | {name y}
-          | {expr_list}
+          | {arg_list}
             | {dot}: y: integer notnull variable in
             | | {name ARGUMENTS}
             | | {name y}
-            | {expr_list}
+            | {arg_list}
               | {dot}: y: integer notnull variable in
               | | {name ARGUMENTS}
               | | {name y}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: y: integer notnull variable in
                   | {name ARGUMENTS}
                   | {name y}
@@ -50425,67 +50425,67 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: y_: integer notnull variable in
       |   | | {name ARGUMENTS}
       |   | | {name y}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 1}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 2}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: y_: integer notnull variable in
       |     | | {name ARGUMENTS}
       |     | | {name y}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 2}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: y_: integer notnull variable in
       |       | | {name ARGUMENTS}
       |       | | {name y}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 3}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 3}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {dot}: y_: integer notnull variable in
       |           | {name ARGUMENTS}
       |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: y_: integer notnull variable in
           | | {name ARGUMENTS}
           | | {name y}
-          | {expr_list}
+          | {arg_list}
             | {dot}: y_: integer notnull variable in
             | | {name ARGUMENTS}
             | | {name y}
-            | {expr_list}
+            | {arg_list}
               | {dot}: y_: integer notnull variable in
               | | {name ARGUMENTS}
               | | {name y}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: y_: integer notnull variable in
                   | {name ARGUMENTS}
                   | {name y}
@@ -50518,61 +50518,61 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: x_: integer notnull variable in
       |   | | {name ARGUMENTS}
       |   | | {name x}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: y_: integer notnull variable in
       |     | | {name ARGUMENTS}
       |     | | {name y}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {int 1}: integer notnull
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: x_: integer notnull variable in
       |     | | {name ARGUMENTS}
       |     | | {name x}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: y_: integer notnull variable in
       |       | | {name ARGUMENTS}
       |       | | {name y}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {int 2}: integer notnull
       | {call_stmt}: ok
       | | {name lotsa_ints}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {int 1}: integer notnull
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {int 2}: integer notnull
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: x_: integer notnull variable in
       |       | | {name ARGUMENTS}
       |       | | {name x}
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {dot}: y_: integer notnull variable in
       |           | {name ARGUMENTS}
       |           | {name y}
       | {call_stmt}: ok
         | {name lotsa_ints}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: x_: integer notnull variable in
           | | {name ARGUMENTS}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}: y_: integer notnull variable in
             | | {name ARGUMENTS}
             | | {name y}
-            | {expr_list}
+            | {arg_list}
               | {dot}: x_: integer notnull variable in
               | | {name ARGUMENTS}
               | | {name x}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: y_: integer notnull variable in
                   | {name ARGUMENTS}
                   | {name y}
@@ -50597,13 +50597,13 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, the
     | {stmt_list}: err
       | {call_stmt}: err
         | {name lotsa_ints}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {int 1}: integer notnull
-          | {expr_list}
+          | {arg_list}
             | {int 2}: integer notnull
-            | {expr_list}
+            | {arg_list}
               | {int 3}: integer notnull
-              | {expr_list}
+              | {arg_list}
                 | {dot}: err
                   | {name ARGUMENTS}
                   | {name id}
@@ -50628,13 +50628,13 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
     | {stmt_list}: err
       | {call_stmt}: err
         | {name lotsa_ints}
-        | {expr_list}: err
+        | {arg_list}: err
           | {int 1}
-          | {expr_list}
+          | {arg_list}
             | {int 2}
-            | {expr_list}
+            | {arg_list}
               | {int 3}
-              | {expr_list}
+              | {arg_list}
                 | {from_shape}
                   | {name ARGUMENTS}: ARGUMENTS: ARGUMENTS: { x: integer variable in } shape_storage
                   | {shape_def}: err
@@ -51422,7 +51422,7 @@ END;
       | | {name c2}: c2: select: { x: integer notnull, y: text notnull } variable dml_proc shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {case_expr}: text
             | {connector}: text
               | {case_list}: text notnull
@@ -51533,7 +51533,7 @@ END;
       | | {name c2}: c2: select: { x: integer, y: text notnull } variable dml_proc shape_storage
       | {call_stmt}: ok
         | {name printf}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {case_expr}: text
             | {connector}: text
               | {case_list}: text notnull
@@ -53005,23 +53005,23 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name some_proc}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: id: integer variable in
           | | {name ARGUMENTS}
           | | {name id}
-          | {expr_list}
+          | {arg_list}
             | {dot}: t: text variable in
             | | {name ARGUMENTS}
             | | {name t}
-            | {expr_list}
+            | {arg_list}
               | {dot}: t1: text notnull variable in
               | | {name ARGUMENTS}
               | | {name t1}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: b: blob variable in
                 | | {name ARGUMENTS}
                 | | {name b}
-                | {expr_list}
+                | {arg_list}
                   | {dot}: x: integer notnull variable out
                     | {name ARGUMENTS}
                     | {name x}
@@ -53107,23 +53107,23 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name some_proc}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: id: integer variable in out
           | | {name ARGUMENTS}
           | | {name id}
-          | {expr_list}
+          | {arg_list}
             | {dot}: t: text variable in
             | | {name ARGUMENTS}
             | | {name t}
-            | {expr_list}
+            | {arg_list}
               | {dot}: t1: text notnull variable in
               | | {name ARGUMENTS}
               | | {name t1}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: b: blob variable in
                 | | {name ARGUMENTS}
                 | | {name b}
-                | {expr_list}
+                | {arg_list}
                   | {dot}: x: integer notnull variable out
                     | {name ARGUMENTS}
                     | {name x}
@@ -53150,7 +53150,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'some_proc3'
     | {stmt_list}
       | {call_stmt}
         | {name some_proc}
-        | {expr_list}
+        | {arg_list}
           | {from_shape}
             | {name ARGUMENTS}
 
@@ -61914,7 +61914,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0390: DECLARE OUT CALL used on a pr
   {declare_out_call_stmt}: err
   | {call_stmt}
     | {name decl1}
-    | {expr_list}
+    | {arg_list}
       | {int 1}
 
 The statement ending at line XXXX
@@ -61933,12 +61933,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
       | {declare_out_call_stmt}: err
         | {call_stmt}: err
           | {name out2_proc}: ok
-          | {expr_list}: ok
+          | {arg_list}: ok
             | {not}: err
             | | {strlit 'x'}: text notnull
-            | {expr_list}
+            | {arg_list}
               | {name u}
-              | {expr_list}
+              | {arg_list}
                 | {name v}
 
 The statement ending at line XXXX
@@ -61950,11 +61950,11 @@ test/sem_test.sql:XXXX:1: error: in declare_out_call_stmt : CQL0213: procedure h
   {declare_out_call_stmt}: err
   | {call_stmt}
     | {name decl_test_err}
-    | {expr_list}
+    | {arg_list}
       | {int 1}
-      | {expr_list}
+      | {arg_list}
         | {int 2}
-        | {expr_list}
+        | {arg_list}
           | {int 3}
 
 The statement ending at line XXXX
@@ -61966,11 +61966,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
   {declare_out_call_stmt}: err
   | {call_stmt}: err
     | {name out2_proc}: ok
-    | {expr_list}: ok
+    | {arg_list}: ok
       | {name u}: u: integer notnull variable implicit
-      | {expr_list}
+      | {arg_list}
         | {name u}: u: integer notnull variable implicit
-        | {expr_list}
+        | {arg_list}
           | {name v}: v: integer notnull variable implicit
 
 The statement ending at line XXXX
@@ -61982,11 +61982,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
   {declare_out_call_stmt}: err
   | {call_stmt}: err
     | {name out2_proc}: ok
-    | {expr_list}: ok
+    | {arg_list}: ok
       | {int 1}: integer notnull
-      | {expr_list}
+      | {arg_list}
         | {name u}: u: integer notnull variable implicit was_set
-        | {expr_list}
+        | {arg_list}
           | {name u}: u: integer notnull variable implicit was_set
 
 The statement ending at line XXXX
@@ -62010,13 +62010,13 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0207: expected a variable name for 
       | {declare_out_call_stmt}: err
         | {call_stmt}
           | {name out2_proc}
-          | {expr_list}
+          | {arg_list}
             | {name x}
-            | {expr_list}
+            | {arg_list}
               | {add}
               | | {int 1}
               | | {int 3}
-              | {expr_list}
+              | {arg_list}
                 | {name v}
 
 The statement ending at line XXXX
@@ -62124,11 +62124,11 @@ END;
       | {declare_out_call_stmt}: ok
         | {call_stmt}: ok
           | {name out2_proc}: ok
-          | {expr_list}: ok
+          | {arg_list}: ok
             | {name x}: x: integer variable in
-            | {expr_list}
+            | {arg_list}
               | {name u}: u: integer notnull variable implicit
-              | {expr_list}
+              | {arg_list}
                 | {name v}: v: integer notnull variable implicit
 
 The statement ending at line XXXX
@@ -62151,20 +62151,20 @@ END;
       | {declare_out_call_stmt}: ok
       | | {call_stmt}: ok
       |   | {name out2_proc}: ok
-      |   | {expr_list}: ok
+      |   | {arg_list}: ok
       |     | {name x}: x: integer variable in
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {name u}: u: integer notnull variable implicit
-      |       | {expr_list}
+      |       | {arg_list}
       |         | {name v}: v: integer notnull variable implicit
       | {declare_out_call_stmt}: ok
         | {call_stmt}: ok
           | {name out2_proc}: ok
-          | {expr_list}: ok
+          | {arg_list}: ok
             | {name x}: x: integer variable in
-            | {expr_list}
+            | {arg_list}
               | {name u}: u: integer notnull variable was_set
-              | {expr_list}
+              | {arg_list}
                 | {name v}: v: integer notnull variable was_set
 
 The statement ending at line XXXX
@@ -63427,9 +63427,9 @@ END;
       | |   |       | {name b}: b: integer inferred_notnull variable
       | |   | {call_stmt}: ok
       | |   | | {name sets_out}: ok
-      | |   | | {expr_list}: ok
+      | |   | | {arg_list}: ok
       | |   |   | {name x}: x: integer variable
-      | |   |   | {expr_list}
+      | |   |   | {arg_list}
       | |   |     | {name b}: b: integer inferred_notnull variable
       | |   | {let_stmt}: x1: integer notnull variable
       | |   | | {name x1}: x1: integer notnull variable
@@ -63444,9 +63444,9 @@ END;
       | |   | | {name b}: b: integer variable was_set
       | |   | {call_stmt}: ok
       | |   | | {name sets_out}: ok
-      | |   | | {expr_list}: ok
+      | |   | | {arg_list}: ok
       | |   |   | {name a}: a: integer inferred_notnull variable
-      | |   |   | {expr_list}
+      | |   |   | {arg_list}
       | |   |     | {name x}: x: integer variable was_set
       | |   | {let_stmt}: x2: integer variable
       | |   | | {name x2}: x2: integer variable
@@ -63483,9 +63483,9 @@ END;
         |   |       | {name b}: b: integer inferred_notnull variable was_set
         |   | {call_stmt}: ok
         |   | | {name sets_out}: ok
-        |   | | {expr_list}: ok
+        |   | | {arg_list}: ok
         |   |   | {name a}: a: integer inferred_notnull variable was_set
-        |   |   | {expr_list}
+        |   |   | {arg_list}
         |   |     | {name b}: b: integer inferred_notnull variable was_set
         |   | {let_stmt}: x4: integer variable
         |   | | {name x4}: x4: integer variable
@@ -64269,7 +64269,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must 
         | | {stmt_list}: err
         |   | {call_stmt}: err
         |     | {name requires_notnull_out}: ok
-        |     | {expr_list}: ok
+        |     | {arg_list}: ok
         |       | {name a}: a: integer inferred_notnull variable
         | {if_alt}
 
@@ -64318,7 +64318,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
         | | {stmt_list}: err
         |   | {call_stmt}: err
         |     | {name requires_notnull_inout}: ok
-        |     | {expr_list}: ok
+        |     | {arg_list}: ok
         |       | {name a}: a: integer inferred_notnull variable
         | {if_alt}
 
@@ -64598,21 +64598,21 @@ END;
       | |   |       | {name some_global}: some_global: integer inferred_notnull variable
       | |   | {call_stmt}: ok
       | |   | | {name requires_not_nulls}: ok
-      | |   | | {expr_list}: ok
+      | |   | | {arg_list}: ok
       | |   |   | {call}: some_global: integer notnull variable
       | |   |   | | {name cql_inferred_notnull}: some_global: integer notnull variable
       | |   |   | | {call_arg_list}
       | |   |   |   | {call_filter_clause}
       | |   |   |   | {arg_list}: ok
       | |   |   |     | {name some_global}: some_global: integer inferred_notnull variable
-      | |   |   | {expr_list}
+      | |   |   | {arg_list}
       | |   |     | {call}: some_global: integer notnull variable
       | |   |     | | {name cql_inferred_notnull}: some_global: integer notnull variable
       | |   |     | | {call_arg_list}
       | |   |     |   | {call_filter_clause}
       | |   |     |   | {arg_list}: ok
       | |   |     |     | {name some_global}: some_global: integer inferred_notnull variable
-      | |   |     | {expr_list}
+      | |   |     | {arg_list}
       | |   |       | {call}: some_global: integer notnull variable
       | |   |         | {name cql_inferred_notnull}: some_global: integer notnull variable
       | |   |         | {call_arg_list}
@@ -66326,7 +66326,7 @@ END;
       | |   | | | {stmt_list}: ok
       | |   | |   | {call_stmt}: ok
       | |   | |   | | {name printf}: ok
-      | |   | |   | | {expr_list}: ok
+      | |   | |   | | {arg_list}: ok
       | |   | |   |   | {strlit 'Hello, world!
 '}: text notnull
       | |   | |   | {return_stmt}: ok
@@ -67726,7 +67726,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
       | | {stmt_list}: err
       |   | {call_stmt}: err
       |   | | {name requires_int_notnull}: ok
-      |   | | {expr_list}: ok
+      |   | | {arg_list}: ok
       |   |   | {name a}: a: integer variable was_set
       |   | {let_stmt}: x1: integer variable
       |   | | {name x1}: x1: integer variable
@@ -68943,15 +68943,15 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before
       | | {name c}: err
       | {call_stmt}: err
       | | {name requires_inout_text_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {name a}: err
       | {call_stmt}: err
       | | {name requires_inout_blob_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {name b}: err
       | {call_stmt}: err
         | {name requires_inout_object_notnull}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {name c}: err
 
 The statement ending at line XXXX
@@ -69112,7 +69112,7 @@ END;
       |   | {type_text}: text
       | {call_stmt}: ok
       | | {name requires_out_text_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {name a}: a: text notnull variable init_required
       | {let_stmt}: x: text notnull variable
         | {name x}: x: text notnull variable
@@ -69516,7 +69516,7 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name requires_out_text_notnull}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: t: text notnull variable init_required out
             | {name ARGUMENTS}
             | {name t}
@@ -69541,7 +69541,7 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
         | {name requires_out_text_notnull}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: bundle_t: text notnull variable init_required out
             | {name bundle}
             | {name t}
@@ -69912,11 +69912,11 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
       | | {name requires_out_text_notnull_and_int}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: b0_a: text notnull variable init_required out
       |   | | {name b0}
       |   | | {name a}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: b0_b: integer variable in
       |       | {name b0}
       |       | {name b}
@@ -69925,23 +69925,23 @@ END;
       | | {strlit 'text'}: text notnull
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: b0_a: text notnull variable out was_set
       |     | {name b0}
       |     | {name a}
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {name b0_a}: b0_a: text notnull variable out was_set
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: b1_a: text notnull variable out was_set
       |     | {name b1}
       |     | {name a}
       | {call_stmt}: ok
       | | {name requires_text_notnull}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {name b1_a}: b1_a: text notnull variable out was_set
       | {if_stmt}: bool notnull
         | {cond_action}: bool notnull
@@ -69957,7 +69957,7 @@ END;
         | | {stmt_list}: ok
         |   | {call_stmt}: ok
         |   | | {name requires_int_notnull}: ok
-        |   | | {expr_list}: ok
+        |   | | {arg_list}: ok
         |   |   | {call}: b0_b: integer notnull variable in
         |   |     | {name cql_inferred_notnull}: b0_b: integer notnull variable in
         |   |     | {call_arg_list}
@@ -69968,7 +69968,7 @@ END;
         |   |           | {name b}
         |   | {call_stmt}: ok
         |   | | {name requires_int_notnull}: ok
-        |   | | {expr_list}: ok
+        |   | | {arg_list}: ok
         |   |   | {call}: b0_b: integer notnull variable in
         |   |     | {name cql_inferred_notnull}: b0_b: integer notnull variable in
         |   |     | {call_arg_list}
@@ -69977,7 +69977,7 @@ END;
         |   |         | {name b0_b}: b0_b: integer inferred_notnull variable in
         |   | {call_stmt}: ok
         |   | | {name requires_int_notnull}: ok
-        |   | | {expr_list}: ok
+        |   | | {arg_list}: ok
         |   |   | {call}: b1_b: integer notnull variable in
         |   |     | {name cql_inferred_notnull}: b1_b: integer notnull variable in
         |   |     | {call_arg_list}
@@ -69988,7 +69988,7 @@ END;
         |   |           | {name b}
         |   | {call_stmt}: ok
         |     | {name requires_int_notnull}: ok
-        |     | {expr_list}: ok
+        |     | {arg_list}: ok
         |       | {call}: b1_b: integer notnull variable in
         |         | {name cql_inferred_notnull}: b1_b: integer notnull variable in
         |         | {call_arg_list}
@@ -73038,7 +73038,7 @@ CALL proc_inout_text(a_string);
 
   {call_stmt}: ok
   | {name proc_inout_text}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name a_string}: a_string: text variable was_set
 
 The statement ending at line XXXX
@@ -73089,9 +73089,9 @@ CALL proc_inout_text_out_text(a_string, a_string2);
 
   {call_stmt}: ok
   | {name proc_inout_text_out_text}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name a_string}: a_string: text variable was_set
-    | {expr_list}
+    | {arg_list}
       | {name a_string2}: a_string2: text variable
 
 The statement ending at line XXXX
@@ -73146,9 +73146,9 @@ CALL proc_out_text_out_text(a_string, a_string2);
 
   {call_stmt}: ok
   | {name proc_out_text_out_text}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {name a_string}: a_string: text variable was_set
-    | {expr_list}
+    | {arg_list}
       | {name a_string2}: a_string2: text variable was_set
 
 The statement ending at line XXXX
@@ -73606,7 +73606,7 @@ END;
         |     | {shared_cte}: conditional_frag: { id: integer notnull } dml_proc
         |       | {call_stmt}: conditional_frag: { id: integer notnull } dml_proc
         |       | | {name conditional_frag}: conditional_frag: { id: integer notnull } dml_proc
-        |       | | {expr_list}: ok
+        |       | | {arg_list}: ok
         |       |   | {int 1}: integer notnull
         |       | {cte_binding_list}
         |         | {cte_binding}
@@ -76188,11 +76188,11 @@ END;
           |     |   | |     | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
           |     |   | |       | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
           |     |   | |         | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-          |     |   | |         | {expr_list}: ok
+          |     |   | |         | {arg_list}: ok
           |     |   | |           | {dot}: x: integer notnull variable in
           |     |   | |           | | {name LOCALS}
           |     |   | |           | | {name x}
-          |     |   | |           | {expr_list}
+          |     |   | |           | {arg_list}
           |     |   | |             | {dot}: y: integer notnull variable in
           |     |   | |               | {name LOCALS}
           |     |   | |               | {name y}
@@ -76316,11 +76316,11 @@ END;
           |     |   | |       |   | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
           |     |   | |       |   | | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
           |     |   | |       |   |   | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
-          |     |   | |       |   |   | {expr_list}: ok
+          |     |   | |       |   |   | {arg_list}: ok
           |     |   | |       |   |     | {dot}: x: integer notnull variable in
           |     |   | |       |   |     | | {name LOCALS}
           |     |   | |       |   |     | | {name x}
-          |     |   | |       |   |     | {expr_list}
+          |     |   | |       |   |     | {arg_list}
           |     |   | |       |   |       | {dot}: y: integer notnull variable in
           |     |   | |       |   |         | {name LOCALS}
           |     |   | |       |   |         | {name y}
@@ -84242,11 +84242,11 @@ END;
     | {stmt_list}: ok
       | {call_stmt}: ok
       | | {name any_args_at_all}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: x: integer<x> notnull variable in
       |   | | {name LOCALS}
       |   | | {name x}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: y: integer<y> variable in
       |       | {name LOCALS}
       |       | {name y}
@@ -84257,15 +84257,15 @@ END;
       |   | {name x}
       | {call_stmt}: ok
       | | {name any_args_at_all}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {dot}: x: integer<x> notnull variable in
       |   | | {name LOCALS}
       |   | | {name x}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {dot}: y: integer<y> variable in
       |     | | {name LOCALS}
       |     | | {name y}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {dot}: z: integer<x> notnull variable
       |         | {name LOCALS}
       |         | {name z}
@@ -84276,19 +84276,19 @@ END;
       |   | {name z}
       | {call_stmt}: ok
         | {name any_args_at_all}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: x: integer<x> notnull variable in
           | | {name LOCALS}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}: y: integer<y> variable in
             | | {name LOCALS}
             | | {name y}
-            | {expr_list}
+            | {arg_list}
               | {dot}: z: integer<x> notnull variable
               | | {name LOCALS}
               | | {name z}
-              | {expr_list}
+              | {arg_list}
                 | {dot}: u: integer<x> notnull variable
                   | {name LOCALS}
                   | {name u}
@@ -84308,7 +84308,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM LOCALS, there 
     | {stmt_list}: err
       | {call_stmt}: err
         | {name any_args_at_all}: ok
-        | {expr_list}: err
+        | {arg_list}: err
           | {dot}: err
             | {name locals}
             | {name xyzzy}
@@ -84333,7 +84333,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
 
   {call_stmt}: err
   | {name any_args_at_all}
-  | {expr_list}: err
+  | {arg_list}: err
     | {from_shape}
       | {name locals}: err
 
@@ -84389,21 +84389,21 @@ END;
       | | {if_alt}: ok
       | {call_stmt}: ok
       | | {name requires_not_nulls}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {call}: a_: integer notnull variable in
       |   | | {name cql_inferred_notnull}: a_: integer notnull variable in
       |   | | {call_arg_list}
       |   |   | {call_filter_clause}
       |   |   | {arg_list}: ok
       |   |     | {name a_}: a_: integer inferred_notnull variable in
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {call}: b: integer notnull variable
       |     | | {name cql_inferred_notnull}: b: integer notnull variable
       |     | | {call_arg_list}
       |     |   | {call_filter_clause}
       |     |   | {arg_list}: ok
       |     |     | {name b}: b: integer inferred_notnull variable
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {call}: c_: integer notnull variable
       |         | {name cql_inferred_notnull}: c_: integer notnull variable
       |         | {call_arg_list}
@@ -84412,7 +84412,7 @@ END;
       |             | {name c_}: c_: integer inferred_notnull variable
       | {call_stmt}: ok
       | | {name requires_not_nulls}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {call}: a_: integer notnull variable in
       |   | | {name cql_inferred_notnull}: a_: integer notnull variable in
       |   | | {call_arg_list}
@@ -84421,7 +84421,7 @@ END;
       |   |     | {dot}: a_: integer inferred_notnull variable in
       |   |       | {name LOCALS}
       |   |       | {name a}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {call}: b: integer notnull variable
       |     | | {name cql_inferred_notnull}: b: integer notnull variable
       |     | | {call_arg_list}
@@ -84430,7 +84430,7 @@ END;
       |     |     | {dot}: b: integer inferred_notnull variable
       |     |       | {name LOCALS}
       |     |       | {name b}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {call}: c_: integer notnull variable
       |         | {name cql_inferred_notnull}: c_: integer notnull variable
       |         | {call_arg_list}
@@ -84441,7 +84441,7 @@ END;
       |               | {name c}
       | {call_stmt}: ok
       | | {name requires_not_nulls}: ok
-      | | {expr_list}: ok
+      | | {arg_list}: ok
       |   | {call}: a_: integer notnull variable in
       |   | | {name cql_inferred_notnull}: a_: integer notnull variable in
       |   | | {call_arg_list}
@@ -84450,7 +84450,7 @@ END;
       |   |     | {dot}: a_: integer inferred_notnull variable in
       |   |       | {name LOCALS}
       |   |       | {name a_}
-      |   | {expr_list}
+      |   | {arg_list}
       |     | {call}: b: integer notnull variable
       |     | | {name cql_inferred_notnull}: b: integer notnull variable
       |     | | {call_arg_list}
@@ -84459,7 +84459,7 @@ END;
       |     |     | {dot}: b: integer inferred_notnull variable
       |     |       | {name LOCALS}
       |     |       | {name b}
-      |     | {expr_list}
+      |     | {arg_list}
       |       | {call}: c_: integer notnull variable
       |         | {name cql_inferred_notnull}: c_: integer notnull variable
       |         | {call_arg_list}
@@ -84470,7 +84470,7 @@ END;
       |               | {name c_}
       | {call_stmt}: ok
         | {name requires_not_nulls}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {call}: a_: integer notnull variable in
           | | {name cql_inferred_notnull}: a_: integer notnull variable in
           | | {call_arg_list}
@@ -84479,7 +84479,7 @@ END;
           |     | {dot}: a_: integer inferred_notnull variable in
           |       | {name LOCALS}
           |       | {name a}
-          | {expr_list}
+          | {arg_list}
             | {call}: b: integer notnull variable
             | | {name cql_inferred_notnull}: b: integer notnull variable
             | | {call_arg_list}
@@ -84488,7 +84488,7 @@ END;
             |     | {dot}: b: integer inferred_notnull variable
             |       | {name LOCALS}
             |       | {name b}
-            | {expr_list}
+            | {arg_list}
               | {call}: c_: integer notnull variable
                 | {name cql_inferred_notnull}: c_: integer notnull variable
                 | {call_arg_list}
@@ -85703,7 +85703,7 @@ END;
       | | {name __child_cursor__0}: __child_cursor__0: test_child: { x: integer } variable dml_proc shape_storage serialize
       | | {call_stmt}: test_child: { x: integer } dml_proc
       |   | {name test_child}: test_child: { x: integer } dml_proc
-      |   | {expr_list}: ok
+      |   | {arg_list}: ok
       |     | {int 1}: integer notnull
       | {loop_stmt}: ok
       | | {fetch_stmt}: __child_cursor__0: test_child: { x: integer } variable dml_proc shape_storage
@@ -85748,7 +85748,7 @@ END;
       | | {name __parent__0}: __parent__0: test_parent: { x: integer } variable dml_proc shape_storage
       | | {call_stmt}: test_parent: { x: integer } dml_proc
       |   | {name test_parent}: test_parent: { x: integer } dml_proc
-      |   | {expr_list}: ok
+      |   | {arg_list}: ok
       |     | {int 2}: integer notnull
       | {loop_stmt}: ok
         | {fetch_stmt}: __parent__0: test_parent: { x: integer } variable dml_proc shape_storage
@@ -85841,7 +85841,7 @@ END;
       | | {name __child_cursor__1}: __child_cursor__1: test_child: { x: integer } variable dml_proc shape_storage serialize
       | | {call_stmt}: test_child: { x: integer } dml_proc
       |   | {name test_child}: test_child: { x: integer } dml_proc
-      |   | {expr_list}: ok
+      |   | {arg_list}: ok
       |     | {int 1}: integer notnull
       | {loop_stmt}: ok
       | | {fetch_stmt}: __child_cursor__1: test_child: { x: integer } variable dml_proc shape_storage
@@ -85886,7 +85886,7 @@ END;
       | | {name __parent__1}: __parent__1: test_parent: { x: integer } variable dml_proc shape_storage
       | | {call_stmt}: test_parent: { x: integer } dml_proc
       |   | {name test_parent}: test_parent: { x: integer } dml_proc
-      |   | {expr_list}: ok
+      |   | {arg_list}: ok
       |     | {int 2}: integer notnull
       | {loop_stmt}: ok
         | {fetch_stmt}: __parent__1: test_parent: { x: integer } variable dml_proc shape_storage
@@ -87111,7 +87111,7 @@ CALL expr_proc_b(1);
 
   {call_stmt}: ok
   | {name expr_proc_b}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {int 1}: integer notnull
 
 The statement ending at line XXXX
@@ -87131,7 +87131,7 @@ END;
       | | {int 1}: integer notnull
       | {call_stmt}: ok
         | {name expr_proc_b}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: x: integer notnull variable
             | {name LOCALS}
             | {name x}
@@ -87156,7 +87156,7 @@ CALL expr_proc_b(expr_func_a(expr_func_a(1)));
 
   {call_stmt}: ok
   | {name expr_proc_b}: ok
-  | {expr_list}: ok
+  | {arg_list}: ok
     | {call}: integer
       | {name expr_func_a}
       | {call_arg_list}
@@ -87197,9 +87197,9 @@ END;
       | | {name x}: x: integer variable in
       | {call_stmt}: ok
         | {name printf}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {strlit ' %d'}: text notnull
-          | {expr_list}
+          | {arg_list}
             | {name x}: x: integer variable in
 
 The statement ending at line XXXX
@@ -87232,11 +87232,11 @@ END;
       |       | {int 1}: integer notnull
       | {call_stmt}: ok
         | {name dump_int}: ok
-        | {expr_list}: ok
+        | {arg_list}: ok
           | {dot}: x: integer notnull variable
           | | {name LOCALS}
           | | {name x}
-          | {expr_list}
+          | {arg_list}
             | {dot}: result: integer variable
               | {name LOCALS}
               | {name result}

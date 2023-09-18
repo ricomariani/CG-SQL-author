@@ -1162,8 +1162,8 @@ call_expr:
   ;
 
 call_expr_list[result]:
-  call_expr  { $result = new_ast_expr_list($call_expr, NULL); }
-  | call_expr ',' call_expr_list[cel]  { $result = new_ast_expr_list($call_expr, $cel); }
+  call_expr  { $result = new_ast_arg_list($call_expr, NULL); }
+  | call_expr ',' call_expr_list[cel]  { $result = new_ast_arg_list($call_expr, $cel); }
   ;
 
 cte_tables[result]:
@@ -1932,8 +1932,8 @@ call_stmt:
       ast_node *like = new_ast_like($name, $name);
       ast_node *shape_def = new_ast_shape_def(like, NULL);
       ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
-      ast_node *call_expr_list = new_ast_expr_list(call_expr, NULL);
-      $call_stmt = new_ast_call_stmt($name, call_expr_list); }
+      ast_node *call_arg_list = new_ast_arg_list(call_expr, NULL);
+      $call_stmt = new_ast_call_stmt($name, call_arg_list); }
   ;
 
 while_stmt:

@@ -13419,7 +13419,7 @@ end;
 
 -- TEST: try to do from arguments with a type but there is no such type
 -- + {call_stmt}: err
--- + {expr_list}: err
+-- + {arg_list}: err
 -- + error: % must be a cursor, proc, table, or view 'no_such_type_dude'
 -- +1 error:
 create proc call_from_arguments_bogus_type(x integer)

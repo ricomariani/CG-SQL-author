@@ -4391,10 +4391,10 @@ static void cg_lua_call_stmt(ast_node *ast) {
 static void cg_lua_declare_out_call_stmt(ast_node *ast) {
   Contract(is_ast_declare_out_call_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
-  EXTRACT(expr_list, call_stmt->right);
+  EXTRACT(arg_list, call_stmt->right);
 
-  for (; expr_list; expr_list = expr_list->right) {
-    EXTRACT_ANY_NOTNULL(arg, expr_list->left);
+  for (; arg_list; arg_list = arg_list->right) {
+    EXTRACT_ANY_NOTNULL(arg, arg_list->left);
     if (arg->sem->sem_type & SEM_TYPE_IMPLICIT) {
       EXTRACT_STRING(var_name, arg);
       cg_lua_declare_simple_var(arg->sem->sem_type, var_name);

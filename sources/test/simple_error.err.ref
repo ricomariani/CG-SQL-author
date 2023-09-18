@@ -1,2 +1,3 @@
-test/error.sql:XXXX:1: error: syntax error, unexpected $end, expecting ';'
+test/error.sql:XXXX:1: error: Unexpected $
+
 Parse errors found, no further passes will run.

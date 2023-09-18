@@ -3611,14 +3611,6 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
   cte_cur = saved;
 }
 
-static ast_node *rewrite_expr_list_from_arg_list(ast_node *arg_list) {
-  if (!arg_list) {
-    return NULL;
-  }
-  EXTRACT_ANY_NOTNULL(expr, arg_list->left);
-  return new_ast_expr_list(expr, rewrite_expr_list_from_arg_list(arg_list->right));
-}
-
 // The expression node has been identified to be a procedure call
 // Rewrite it as a call operation
 cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
@@ -3628,23 +3620,11 @@ cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-  /* a function call might look like this
-     we nix the filter clause and create an expression  list
-  {call}
-  | {name baz}
-  | {call_arg_list}
-    | {call_filter_clause}
-    | {arg_list} <-- might be null
-      | {some_expr}  
-  */
-
   EXTRACT_NOTNULL(call_arg_list, call->right);
   EXTRACT_ANY(arg_list, call_arg_list->right);
 
-  ast_node *expr_list = rewrite_expr_list_from_arg_list(arg_list);
-
-  // expr_list might be null if no args, that's ok.
-  ast_node *new = new_ast_call_stmt(name_ast, expr_list);
+  // arg_list might be null if no args, that's ok.
+  ast_node *new = new_ast_call_stmt(name_ast, arg_list);
 
   AST_REWRITE_INFO_RESET();
 

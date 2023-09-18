@@ -1114,13 +1114,13 @@ case_list[result]:
   | WHEN expr[e1] THEN expr[e2] case_list[cl]  { $result = new_ast_case_list(new_ast_when($e1, $e2), $cl);}
   ;
 
-arg_expr: '*' { $arg_expr = new_ast_star(); }
-  | expr { $arg_expr = $expr; }
+arg_expr: expr { $arg_expr = $expr; }
   | shape_arguments { $arg_expr = $shape_arguments; }
   ;
 
 arg_list[result]:
   /* nil */  { $result = NULL; }
+  | '*' { $result = new_ast_arg_list(new_ast_star(), NULL); }
   | arg_expr  { $result = new_ast_arg_list($arg_expr, NULL); }
   | arg_expr ',' arg_list[al]  { $result = new_ast_arg_list($arg_expr, $al); }
   ;

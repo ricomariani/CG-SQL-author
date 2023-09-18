@@ -77,6 +77,9 @@ static int32_t cg_lua_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_
 // True if we are presently emitting a stored proc
 static bool_t lua_in_proc = 0;
 
+// True if we are emitting a variable group
+static bool_t lua_in_var_group_emit = false;
+
 // True if we are in a loop (hence the statement might run again)
 static bool_t lua_in_loop = 0;
 
@@ -374,7 +377,7 @@ static void cg_lua_emit_local_init(charbuf *output, sem_t sem_type)
     case SEM_TYPE_TEXT:
     case SEM_TYPE_BLOB:
     case SEM_TYPE_OBJECT:
-      // no init needed
+      // no init needed     
       bprintf(output, "\n");
       break;
 
@@ -402,7 +405,23 @@ static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
   Contract(!is_null_type(sem_type));
   Contract(cg_main_output);
 
-  bprintf(output, "local %s", name);
+  if (lua_in_var_group_emit) {
+    // we only need initializers for not-null types that are not reference types
+    // here we are avoiding bogus looking codegen taking advantage that
+    // variables have the value nil by default which is the correct starting
+    // value for nullable types and ref types.
+    if (is_nullable(sem_type) || is_ref_type(sem_type)) {
+      // no init needed
+      return;
+    }
+  }
+  else {
+    // variable groups are global by construction so don't emit "local" for them
+    // if we're here this not a variable group
+    bprintf(output, "local ", name);
+  }
+
+  bprintf(output, "%s", name);
   cg_lua_emit_local_init(output, sem_type);
 }
 
@@ -2342,6 +2361,7 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   cg_lua_zero_masks(cg_lua_current_masks);
   lua_temp_statement_emitted = false;
   lua_in_proc = true;
+  lua_in_var_group_emit = false;
   current_proc = ast;
   lua_seed_declared = false;
 
@@ -3434,12 +3454,17 @@ static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   Contract(cursor_name);
   Contract(sptr);
 
+  CSTR local = "local ";
+  if (lua_in_var_group_emit) {
+    local = "";
+  }
+  
   // this should really zero the cursor
-  bprintf(cg_declarations_output, "local %s = { _has_row_ = false }\n", cursor_name);
-  bprintf(cg_declarations_output, "local %s_fields_ = ", cursor_name);
+  bprintf(cg_declarations_output, "%s%s = { _has_row_ = false }\n", local, cursor_name);
+  bprintf(cg_declarations_output, "%s%s_fields_ = ", local, cursor_name);
   cg_lua_emit_field_names(cg_declarations_output, sptr);
   bprintf(cg_declarations_output, "\n");
-  bprintf(cg_declarations_output, "local %s_types_ = ", cursor_name);
+  bprintf(cg_declarations_output, "%s%s_types_ = ", local, cursor_name);
   cg_lua_emit_field_types(cg_declarations_output, sptr);
   bprintf(cg_declarations_output, "\n");
 }
@@ -4780,6 +4805,54 @@ static void cg_lua_throw_stmt(ast_node *ast) {
   lua_rcthrown_used = true;
 }
 
+// This is a special NO-OP we want to verify that it does nothing
+// rather than ignore it in the tests.  We don't want it to blend
+// with the next group so we explicity make a do nothing function
+// just so that we get the test directives.
+static void cg_lua_declare_group_stmt(ast_node *ast) {
+  if (options.test) {
+    bprintf(cg_main_output, "-- declare group emits no lua\n");
+  }
+}
+
+// Emit group tells CQL to emit the variable definitions for the indicated groups into
+// the current translation unit.  This should be done one time to avoid duplicate symbols
+// at link time.  The indicated groups are enumerated and the definition form is emitted
+// using the normal helpers.
+static void cg_lua_emit_group_stmt(ast_node *ast) {
+  Contract(is_ast_emit_group_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  // Put a line marker in the header file in case we want a test suite that verifies that.
+  // Note we have to do this only because this only generates declarations so the
+  // normal logic for emitting these doesn't kick in.
+  if (options.test) {
+    bprintf(cg_declarations_output, "\n-- The statement ending at line %d\n", ast->lineno);
+  }
+
+  Contract(!lua_in_var_group_emit);
+  lua_in_var_group_emit = true;
+  while (name_list) {
+    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_STRING(name, name_ast);
+
+    ast_node *group = find_variable_group(name);
+    Contract(is_ast_declare_group_stmt(group));
+
+    EXTRACT_ANY_NOTNULL(group_name_ast, group->left);
+    EXTRACT_STRING(group_name, group_name_ast);
+    EXTRACT_NOTNULL(stmt_list, group->right);
+
+    // In lua the normal output is all you need
+    Invariant(!Strcasecmp(name, group_name));
+    cg_lua_stmt_list(stmt_list);
+
+    name_list = name_list->right;
+  }
+  lua_in_var_group_emit = false;
+}
+
+
 static void cg_lua_emit_one_enum(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
@@ -5347,7 +5420,6 @@ cql_noexport void cg_lua_init(void) {
   LUA_NO_OP_STMT_INIT(declare_named_type);
   LUA_NO_OP_STMT_INIT(declare_proc_no_check_stmt);
   LUA_NO_OP_STMT_INIT(schema_unsub_stmt);
-  LUA_NO_OP_STMT_INIT(declare_group_stmt);
   LUA_NO_OP_STMT_INIT(declare_interface_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_stmt);
@@ -5423,7 +5495,8 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(out_union_stmt);
   LUA_STMT_INIT(echo_stmt);
 
-  LUA_NO_OP_STMT_INIT(emit_group_stmt);
+  LUA_STMT_INIT(declare_group_stmt);
+  LUA_STMT_INIT(emit_group_stmt);
   LUA_STMT_INIT(emit_enums_stmt);
   LUA_STMT_INIT(emit_constants_stmt);
 

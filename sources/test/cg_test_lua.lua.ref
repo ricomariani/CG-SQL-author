@@ -7963,6 +7963,16 @@ function bigstuff()
 end
 
 -- The statement ending at line XXXX
+gr_cursor = { _has_row_ = false }
+gr_cursor_fields_ = { "x", "y" }
+gr_cursor_types_ = "IS"
+gr_not_null_integer = 0
+gr_not_null_bool = false
+gr_blob_cursor = { _has_row_ = false }
+gr_blob_cursor_fields_ = { "id", "name" }
+gr_blob_cursor_types_ = "IS"
+
+-- The statement ending at line XXXX
 
 --[[
 CREATE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>)
@@ -10903,6 +10913,22 @@ function cql_startup(_db_)
     big_long_constants_min = (-9223372036854775807 - 1),
     big_long_constants_almost_min = -9223372036854775807
   })
+
+  -- The statement ending at line XXXX
+
+  --[[
+  DECLARE GROUP var_group
+  BEGIN
+    DECLARE gr_cursor CURSOR LIKE SELECT 1 AS x, "2" AS y;
+    DECLARE gr_integer INTEGER;
+    DECLARE gr_bool BOOL;
+    DECLARE gr_text TEXT;
+    DECLARE gr_not_null_integer INTEGER NOT NULL;
+    DECLARE gr_not_null_bool BOOL NOT NULL;
+    DECLARE gr_blob_cursor CURSOR LIKE structured_storage;
+  END;
+  --]]
+  -- declare group emits no lua
 
   -- The statement ending at line XXXX
 

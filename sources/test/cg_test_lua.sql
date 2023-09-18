@@ -4877,19 +4877,39 @@ declare const group big_constants(
 
 @emit_constants big_constants;
 
--- TEST: variable group creates declarations only
--- group produces nothing in the main stream!
--- - row
--- - define
--- - extern
+-- TEST: variable group creates declarations only, in Lua that's *nothing*
+-- there is a special marker in the output for testing.
+-- + declare group emits no lua
+-- - gr_integer =
+-- - gr_cursor =
+-- - gr_blob_cursor =
 declare group var_group
 begin
   declare gr_cursor cursor like select 1 x, "2" y;
   declare gr_integer integer;
+  declare gr_bool bool;
+  declare gr_text text;
+  declare gr_not_null_integer integer not null;
+  declare gr_not_null_bool bool not null;
   declare gr_blob_cursor cursor like structured_storage;
 end;
 
--- TEST: emit group is a LUA no-op
+-- TEST: emit group in Lua creates the normal globals
+-- NOTE that this is not idempotent, you put these in ONE place
+-- or weirdness ensues.  Same as in C.  Note that we only
+-- have to emit declarations for cursors and not null scalars
+-- - local
+-- - gr_text =
+-- - gr_bool =
+-- - gr_integer =
+-- + gr_not_null_integer = 0
+-- + gr_not_null_bool = false
+-- + gr_cursor = { _has_row_ = false }
+-- + gr_cursor_fields_ = { "x", "y" }
+-- + gr_cursor_types_ = "IS"
+-- + gr_blob_cursor = { _has_row_ = false }
+-- + gr_blob_cursor_fields_ = { "id", "name" }
+-- + gr_blob_cursor_types_ = "IS"
 @emit_group var_group;
 
 -- TEST: use the global cursor for serialization

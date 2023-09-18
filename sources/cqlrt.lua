@@ -959,3 +959,15 @@ function cql_create_udf_stub(db, name)
   end
   return rc
 end
+
+-- this global will hold all the emitted constants
+_cql = {}
+
+-- this could be replaced in a custom cqlrt to store the constants anywhere you like
+function cql_emit_constants(type, name, values)
+  -- make _cql.enum or _cql.const etc. if needed
+  if _cql[type] == nil then
+    _cql[type] = {}
+  end
+  _cql[type][name] = values
+end

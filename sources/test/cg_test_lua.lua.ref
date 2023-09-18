@@ -10496,6 +10496,34 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
+  @EMIT_ENUMS some_ints;
+  --]]
+  cql_emit_constants("enum", "some_ints", {
+    foo = 12,
+    bar = 3
+  })
+
+  -- The statement ending at line XXXX
+
+  --[[
+  @EMIT_ENUMS;
+  --]]
+  cql_emit_constants("enum", "some_ints", {
+    foo = 12,
+    bar = 3
+  })
+  cql_emit_constants("enum", "some_reals", {
+    foo = 1.200000e+01,
+    bar = 3.000000e+00
+  })
+  cql_emit_constants("enum", "some_longs", {
+    foo = 9223372036854775807,
+    bar = 3
+  })
+
+  -- The statement ending at line XXXX
+
+  --[[
   INSERT INTO virtual_with_hidden(vy) VALUES(1);
   --]]
   _rc_ = cql_exec(_db_,
@@ -10851,6 +10879,30 @@ function cql_startup(_db_)
   SET abs_val_nullable := abs(NULL);
   --]]
   abs_val_nullable = cql_unary_abs(nil)
+
+  -- The statement ending at line XXXX
+
+  --[[
+  @EMIT_CONSTANTS some_constants;
+  --]]
+  cql_emit_constants("const", "some_constants", {
+    const_u = 0,
+    const_w = 3.500000e+00,
+    const_x = 1,
+    const_y = 5,
+    const_z = "hello, world\n"
+  })
+
+  -- The statement ending at line XXXX
+
+  --[[
+  @EMIT_CONSTANTS big_constants;
+  --]]
+  cql_emit_constants("const", "big_constants", {
+    big_long_constants_max = 9223372036854775807,
+    big_long_constants_min = (-9223372036854775807 - 1),
+    big_long_constants_almost_min = -9223372036854775807
+  })
 
   -- The statement ending at line XXXX
 

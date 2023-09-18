@@ -4780,6 +4780,129 @@ static void cg_lua_throw_stmt(ast_node *ast) {
   lua_rcthrown_used = true;
 }
 
+static void cg_lua_emit_one_enum(ast_node *ast) {
+  Contract(is_ast_declare_enum_stmt(ast));
+  EXTRACT_NOTNULL(typed_name, ast->left);
+  EXTRACT_NOTNULL(enum_values, ast->right);
+  EXTRACT_ANY(name_ast, typed_name->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_ANY_NOTNULL(type, typed_name->right);
+
+  bprintf(cg_main_output, "cql_emit_constants(\"enum\", \"%s\", {\n", name);
+
+  while (enum_values) {
+    EXTRACT_NOTNULL(enum_value, enum_values->left);
+    EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+    EXTRACT_STRING(enum_name, enum_name_ast);
+
+    bprintf(cg_main_output, "  %s = ", enum_name);
+    eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_FOR_LUA, cg_main_output);
+
+    if (enum_values->right) {
+      bputc(cg_main_output, ',');
+    }
+
+    bputc(cg_main_output, '\n');
+
+    enum_values = enum_values->right;
+  }
+
+  bprintf(cg_main_output, "})\n");
+}
+
+// We emit the enums into the current file so that Lua code can
+// use those values to call our procedures.  The generated code
+// from CQL uses the evaluated constants so these symbols are
+// for "others" to use.
+static void cg_lua_emit_enums_stmt(ast_node *ast) {
+  Contract(is_ast_emit_enums_stmt(ast));
+  EXTRACT(name_list, ast->left);
+
+  if (name_list) {
+    // names specified: emit those
+    while (name_list) {
+      // names previously checked, we assert they are good here
+      EXTRACT_STRING(name, name_list->left);
+      EXTRACT_NOTNULL(declare_enum_stmt, find_enum(name));
+      cg_lua_emit_one_enum(declare_enum_stmt);
+      name_list = name_list->right;
+    }
+  }
+  else {
+    // none specified: emit all
+    for (list_item *item = all_enums_list; item; item = item->next) {
+      EXTRACT_NOTNULL(declare_enum_stmt, item->ast);
+      cg_lua_emit_one_enum(declare_enum_stmt);
+    }
+  }
+}
+
+// This causes global constant declarations to go into the output file.
+// Those constants are not even used in our codegen because the ast is
+// rewritten to have the actual value rather than the name.  However this will
+// make it possible to use the constant in callers from Lua.  The constant values are
+// "public" in this sense.  This is a lot like the gen_sql code except it will be
+// in Lua format.  Note that cql_emit_constants can be replaced to put the
+// constants where they should be in your world
+
+static void cg_lua_emit_one_const_group(ast_node *ast) {
+  Contract(is_ast_declare_const_stmt(ast));
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NOTNULL(const_values, ast->right);
+  EXTRACT_STRING(name, name_ast);
+
+  bprintf(cg_main_output, "cql_emit_constants(\"const\", \"%s\", {\n", name);
+
+  while (const_values) {
+    EXTRACT_NOTNULL(const_value, const_values->left);
+    EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+    EXTRACT_STRING(const_name, const_name_ast);
+
+    bprintf(cg_main_output, "  %s = ", const_name);
+
+    if (is_numeric(const_value->sem->sem_type)) {
+      eval_format_number(const_value->sem->value, EVAL_FORMAT_FOR_LUA, cg_main_output);
+    }
+    else {
+      // we don't make a string object for string literals that are being emitted, just the lua literal
+      CHARBUF_OPEN(quoted);
+
+      EXTRACT_STRING(literal, const_value->right);
+      cg_lua_requote_literal(literal, &quoted);
+      bprintf(cg_main_output, "%s", quoted.ptr);
+
+      CHARBUF_CLOSE(quoted);
+    }
+
+    if (const_values->right) {
+      bputc(cg_main_output, ',');
+    }
+
+    bputc(cg_main_output, '\n');
+
+    const_values = const_values->right;
+  }
+
+  bprintf(cg_main_output, "})\n");
+}
+
+// emit the declared constants into the output stream using cql_emit_constants
+static void cg_lua_emit_constants_stmt(ast_node *ast) {
+  Contract(is_ast_emit_constants_stmt(ast));
+  EXTRACT_NOTNULL(name_list, ast->left);
+
+  if (name_list) {
+    // names specified: emit those
+    while (name_list) {
+      // names previously checked, we assert they are good here
+      EXTRACT_STRING(name, name_list->left);
+      EXTRACT_NOTNULL(declare_const_stmt, find_constant_group(name));
+      cg_lua_emit_one_const_group(declare_const_stmt);
+      name_list = name_list->right;
+    }
+  }
+}
+
 // Dispatch to one of the statement helpers using the symbol table.
 // There are special rules for the DDL methods. If they appear in a
 // global context (outside of any stored proc) they do not run, they
@@ -5227,9 +5350,6 @@ cql_noexport void cg_lua_init(void) {
   LUA_NO_OP_STMT_INIT(schema_unsub_stmt);
   LUA_NO_OP_STMT_INIT(declare_group_stmt);
   LUA_NO_OP_STMT_INIT(declare_interface_stmt);
-  LUA_NO_OP_STMT_INIT(emit_group_stmt);
-  LUA_NO_OP_STMT_INIT(emit_enums_stmt);
-  LUA_NO_OP_STMT_INIT(emit_constants_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_stmt);
   LUA_NO_OP_STMT_INIT(declare_func_stmt);
@@ -5303,6 +5423,10 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(out_stmt);
   LUA_STMT_INIT(out_union_stmt);
   LUA_STMT_INIT(echo_stmt);
+
+  LUA_NO_OP_STMT_INIT(emit_group_stmt);
+  LUA_STMT_INIT(emit_enums_stmt);
+  LUA_STMT_INIT(emit_constants_stmt);
 
   LUA_FUNC_INIT(sign);
   LUA_FUNC_INIT(abs);

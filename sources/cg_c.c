@@ -5528,6 +5528,10 @@ static void cg_emit_one_enum(ast_node *ast) {
   bprintf(cg_header_output, "\n#endif\n", name);
 }
 
+// We emit the enums into the current .h file so that C code can
+// use those values to call our procedures.  The generated code
+// from CQL uses the evaluated constants so these symbols are
+// for "others" to use.
 static void cg_emit_enums_stmt(ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
@@ -5568,29 +5572,29 @@ static void cg_emit_one_const_group(ast_node *ast) {
   bprintf(cg_header_output, "#define const_group_%s_defined\n\n", name);
 
   while (const_values) {
-     EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
-     EXTRACT_STRING(const_name, const_name_ast);
+    EXTRACT_NOTNULL(const_value, const_values->left);
+    EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+    EXTRACT_STRING(const_name, const_name_ast);
 
-     bprintf(cg_header_output, "#define %s ", const_name);
+    bprintf(cg_header_output, "#define %s ", const_name);
 
-     if (is_numeric(const_value->sem->sem_type)) {
-       eval_format_number(const_value->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
-     }
-     else {
-       // we don't make a string object for string literals that are being emitted, just the C literal
-       CHARBUF_OPEN(quoted);
+    if (is_numeric(const_value->sem->sem_type)) {
+      eval_format_number(const_value->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
+    }
+    else {
+      // we don't make a string object for string literals that are being emitted, just the C literal
+      CHARBUF_OPEN(quoted);
 
-       EXTRACT_STRING(literal, const_value->right);
-       cg_requote_literal(literal, &quoted);
-       bprintf(cg_header_output, "%s", quoted.ptr);
+      EXTRACT_STRING(literal, const_value->right);
+      cg_requote_literal(literal, &quoted);
+      bprintf(cg_header_output, "%s", quoted.ptr);
 
-       CHARBUF_CLOSE(quoted);
-     }
+      CHARBUF_CLOSE(quoted);
+    }
 
-     bprintf(cg_header_output, "\n");
+    bprintf(cg_header_output, "\n");
 
-     const_values = const_values->right;
+    const_values = const_values->right;
   }
   bprintf(cg_header_output, "\n#endif\n", name);
 }

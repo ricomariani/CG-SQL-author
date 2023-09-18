@@ -3569,13 +3569,28 @@ declare enum some_longs long (
   bar = 3
 );
 
--- TEST: emit enums doesn't do anything in lua because there is no .h file
--- we could emit them as globals or something but we don't do anything right now
+-- use the runtime helper to add these enums into the global enum table
+-- the behavior can be whatever you want it to be but by default it
+-- sents cql.enums.your_enum_type.an_enum
+-- +  @EMIT_ENUMS some_ints;
+-- + cql_emit_constants("enum", "some_ints", {
+-- +   foo = 12,
+-- +   bar = 3
+-- + })
 @emit_enums some_ints;
-@emit_enums;
 
--- TEST: if we ever emit stuff we have to be ok with emitting the same thing twice
-@emit_enums some_longs;
+-- TEST: emit a bunch of enums
+-- note it is safe to do this more than once
+-- +cql_emit_constants("enum", "some_ints", {
+-- + foo = 12,
+-- + bar = 3
+-- + cql_emit_constants("enum", "some_reals", {
+-- + foo = 1.200000e+01,
+-- + bar = 3.000000e+00
+-- + cql_emit_constants("enum", "some_longs", {
+-- + foo = 9223372036854775807,
+-- + bar = 3
+@emit_enums;
 
 -- TEST: resolve a virtual table, note that the arguments become the declaration
 -- + "CREATE VIRTUAL TABLE virt_table USING virt_module ( id INTEGER, t TEXT)"
@@ -4782,6 +4797,20 @@ begin
   let x := "/*  */";
 end;
 
+-- TEST: verify the constants going into the global table
+-- NOTE: const_u is the name of the constant, we don't
+-- add a prefix like const to the names. The other constants
+-- likewise have const in the name.  See above.
+-- + --[[
+-- + @EMIT_CONSTANTS some_constants;
+-- + --]]
+-- +  cql_emit_constants("const", "some_constants", {
+-- +    const_u = 0,
+-- +    const_w = 3.500000e+00,
+-- +    const_x = 1,
+-- +    const_y = 5,
+-- +    const_z = "hello, world\n"
+-- + })
 @emit_constants some_constants;
 
 @attribute(cql:blob_storage)

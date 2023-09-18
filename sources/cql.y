@@ -281,7 +281,7 @@ static void cql_reset_globals(void);
 
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_no_check_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
-%type <aval> arg_expr arg_list inout param params func_params func_param
+%type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 
 /* statements */
 %type <aval> stmt
@@ -1118,11 +1118,15 @@ arg_expr: expr { $arg_expr = $expr; }
   | shape_arguments { $arg_expr = $shape_arguments; }
   ;
 
+arg_exprs[result]:
+  arg_expr  { $result = new_ast_arg_list($arg_expr, NULL); }
+  | arg_expr ',' arg_exprs[al]  { $result = new_ast_arg_list($arg_expr, $al); }
+  ;
+
 arg_list[result]:
   /* nil */  { $result = NULL; }
   | '*' { $result = new_ast_arg_list(new_ast_star(), NULL); }
-  | arg_expr  { $result = new_ast_arg_list($arg_expr, NULL); }
-  | arg_expr ',' arg_list[al]  { $result = new_ast_arg_list($arg_expr, $al); }
+  | arg_exprs { $result = $arg_exprs; }
   ;
 
 expr_list[result]:

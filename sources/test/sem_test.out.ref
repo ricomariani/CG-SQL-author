@@ -85431,7 +85431,7 @@ SELECT no_check_select_fun(0, "hello");
 
 The statement ending at line XXXX
 
-SELECT no_check_select_fun(0, *);
+SELECT no_check_select_fun(*);
 
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
 
@@ -85446,9 +85446,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: err
-  |     |         | {int 0}: integer notnull
-  |     |         | {arg_list}
-  |     |           | {star}: err
+  |     |         | {star}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -85507,7 +85505,7 @@ SELECT t, i
 The statement ending at line XXXX
 
 SELECT t, i
-  FROM no_check_select_table_valued_fun(0, *);
+  FROM no_check_select_table_valued_fun(*);
 
 test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
 
@@ -85527,9 +85525,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
   |       |   | {table_function}: err
   |       |     | {name no_check_select_table_valued_fun}
   |       |     | {arg_list}: err
-  |       |       | {int 0}: integer notnull
-  |       |       | {arg_list}
-  |       |         | {star}: err
+  |       |       | {star}: err
   |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}

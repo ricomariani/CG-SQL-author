@@ -22649,7 +22649,7 @@ select no_check_select_fun(0, "hello");
 
 -- TEST: calling unchecked select function with invalid argument fails
 -- error: in star : CQL0051: argument can only be used in count(*) '*'
-select no_check_select_fun(0, *);
+select no_check_select_fun(*);
 
 -- TEST: declaring unchecked table valued select function
 -- + {declare_select_func_no_check_stmt}: select: { t: text, i: integer } select_func
@@ -22681,7 +22681,7 @@ select t, i from no_check_select_table_valued_fun(0, "hello");
 
 -- TEST: calling unchecked table valued function with invalid argument fails
 -- error: in star : CQL0051: argument can only be used in count(*) '*'
-select t, i from no_check_select_table_valued_fun(0, *);
+select t, i from no_check_select_table_valued_fun(*);
 
 -- TEST: redefining interface as proc (declare ... no check)
 -- + {declare_proc_no_check_stmt}: err

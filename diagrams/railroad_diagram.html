@@ -3229,24 +3229,22 @@
          <ul>
             <li><a href="#arg_list" title="arg_list">arg_list</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="arg_list">arg_list:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="395" height="129">
-         <polygon points="9 33 1 29 1 37"></polygon>
-         <polygon points="17 33 9 29 9 37"></polygon><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#arg_expr" xlink:title="arg_expr">
-            <rect x="71" y="19" width="76" height="32"></rect>
-            <rect x="69" y="17" width="76" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="79" y="37">arg_expr</text></a><rect x="167" y="19" width="24" height="32" rx="10"></rect>
-         <rect x="165" y="17" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="175" y="37">,</text>
-         <rect x="271" y="51" width="28" height="32" rx="10"></rect>
-         <rect x="269" y="49" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="279" y="69">*</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#arg_expr" xlink:title="arg_expr">
-            <rect x="271" y="95" width="76" height="32"></rect>
-            <rect x="269" y="93" width="76" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="279" y="113">arg_expr</text></a><path class="line" d="m17 33 h2 m40 0 h10 m76 0 h10 m0 0 h10 m24 0 h10 m-160 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -12 q0 -10 10 -10 m140 32 l20 0 m-20 0 q10 0 10 -10 l0 -12 q0 -10 -10 -10 m-140 0 h10 m0 0 h130 m-180 32 h20 m180 0 h20 m-220 0 q10 0 10 10 m200 0 q0 -10 10 -10 m-210 10 v14 m200 0 v-14 m-200 14 q0 10 10 10 m180 0 q10 0 10 -10 m-190 10 h10 m0 0 h170 m40 -34 h10 m0 0 h86 m-116 0 h20 m96 0 h20 m-136 0 q10 0 10 10 m116 0 q0 -10 10 -10 m-126 10 v12 m116 0 v-12 m-116 12 q0 10 10 10 m96 0 q10 0 10 -10 m-106 10 h10 m28 0 h10 m0 0 h48 m-106 -10 v20 m116 0 v-20 m-116 20 v24 m116 0 v-24 m-116 24 q0 10 10 10 m96 0 q10 0 10 -10 m-106 10 h10 m76 0 h10 m23 -76 h-3"></path>
-         <polygon points="385 33 393 29 393 37"></polygon>
-         <polygon points="385 33 377 29 377 37"></polygon></svg><p>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="arg_list">arg_list:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="215" height="145">
+         <polygon points="9 5 1 1 1 9"></polygon>
+         <polygon points="17 5 9 1 9 9"></polygon>
+         <rect x="51" y="23" width="28" height="32" rx="10"></rect>
+         <rect x="49" y="21" width="28" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="59" y="41">*</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#arg_expr" xlink:title="arg_expr">
+            <rect x="71" y="111" width="76" height="32"></rect>
+            <rect x="69" y="109" width="76" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="79" y="129">arg_expr</text></a><rect x="71" y="67" width="24" height="32" rx="10"></rect>
+         <rect x="69" y="65" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="79" y="85">,</text>
+         <path class="line" d="m17 5 h2 m20 0 h10 m0 0 h126 m-156 0 h20 m136 0 h20 m-176 0 q10 0 10 10 m156 0 q0 -10 10 -10 m-166 10 v12 m156 0 v-12 m-156 12 q0 10 10 10 m136 0 q10 0 10 -10 m-146 10 h10 m28 0 h10 m0 0 h88 m-146 -10 v20 m156 0 v-20 m-156 20 v68 m156 0 v-68 m-156 68 q0 10 10 10 m136 0 q10 0 10 -10 m-126 10 h10 m76 0 h10 m-116 0 l20 0 m-1 0 q-9 0 -9 -10 l0 -24 q0 -10 10 -10 m96 44 l20 0 m-20 0 q10 0 10 -10 l0 -24 q0 -10 -10 -10 m-96 0 h10 m24 0 h10 m0 0 h52 m43 -76 h-3"></path>
+         <polygon points="205 5 213 1 213 9"></polygon>
+         <polygon points="205 5 197 1 197 9"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#arg_list" title="arg_list">arg_list</a> ::= ( <a href="#arg_expr" title="arg_expr">arg_expr</a> ',' )* ( '*' | <a href="#arg_expr" title="arg_expr">arg_expr</a> )?</div></code></div>
+               <div><a href="#arg_list" title="arg_list">arg_list</a> ::= ( '*' | <a href="#arg_expr" title="arg_expr">arg_expr</a> ( ',' <a href="#arg_expr" title="arg_expr">arg_expr</a> )* )?</div></code></div>
       </p>
       <p>referenced by:
          <ul>

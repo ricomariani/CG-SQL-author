@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 18 11:30:13 PDT 2023
+Snapshot as of Mon Sep 18 11:45:44 PDT 2023
 
 ### Operators and Literals
 
@@ -756,11 +756,15 @@ arg_expr: expr
   | shape_arguments
   ;
 
+arg_exprs:
+  arg_expr
+  | arg_expr ',' arg_exprs
+  ;
+
 arg_list:
   /* nil */
   | '*'
-  | arg_expr
-  | arg_expr ',' arg_list
+  | arg_exprs
   ;
 
 expr_list:

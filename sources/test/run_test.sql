@@ -6000,7 +6000,7 @@ BEGIN_TEST(blob_updateval_null_cases)
        b,
        k1, NULL, CQL_BLOB_TYPE_BOOL,
        k2, NULL, CQL_BLOB_TYPE_INT64,
-       k4, NULL, CQL_BLOB_TYPE_STRING,
+       k4, NULL, CQL_BLOB_TYPE_STRING
        ));
 
   EXPECT((select bgetval_type(b) == 112235));
@@ -6015,7 +6015,7 @@ BEGIN_TEST(blob_updateval_null_cases)
   set b := (select bupdateval(
        b,
        k2, 0x12345678912L, CQL_BLOB_TYPE_INT64,
-       k4, 'abc', CQL_BLOB_TYPE_STRING,
+       k4, 'abc', CQL_BLOB_TYPE_STRING
        ));
 
   EXPECT((select bgetval_type(b) == 112235));

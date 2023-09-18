@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Mon Sep 18 11:30:13 2023
+// Snapshot as of Mon Sep 18 11:45:45 2023
 
 
 const PREC = {
@@ -125,7 +125,8 @@ module.exports = grammar({
     expr: $ => prec.left(choice($.math_expr, seq($.expr, $.AND, $.expr), seq($.expr, $.OR, $.expr))),
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
     arg_expr: $ => choice($.expr, $.shape_arguments),
-    arg_list: $ => choice('*', $.arg_expr, seq($.arg_expr, ',', optional($.arg_list))),
+    arg_exprs: $ => choice($.arg_expr, seq($.arg_expr, ',', $.arg_exprs)),
+    arg_list: $ => choice('*', $.arg_exprs),
     expr_list: $ => choice($.expr, seq($.expr, ',', $.expr_list)),
     shape_arguments: $ => choice(seq($.FROM, $.name), seq($.FROM, $.name, $.shape_def), seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
     column_calculation: $ => choice(seq($.COLUMNS, '(', $.col_calcs, ')'), seq($.COLUMNS, '(', $.DISTINCT, $.col_calcs, ')')),

@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 11 15:49:39 PDT 2023
+Snapshot as of Mon Sep 18 11:30:13 PDT 2023
 
 ### Operators and Literals
 
@@ -11008,8 +11008,12 @@ stmt:
   misc_attrs any_stmt ';'
   ;
 
+expr_stmt: expr
+  ;
+
 any_stmt:
     alter_table_add_column_stmt
+  | expr_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | blob_get_key_type_stmt
@@ -11646,13 +11650,13 @@ case_list:
   | "WHEN" expr "THEN" expr case_list
   ;
 
-arg_expr: '*'
-  | expr
+arg_expr: expr
   | shape_arguments
   ;
 
 arg_list:
   /* nil */
+  | '*'
   | arg_expr
   | arg_expr ',' arg_list
   ;
@@ -11684,16 +11688,6 @@ col_calc:
   | shape_def
   | name shape_def
   | name '.' name
-  ;
-
-call_expr:
-  expr
-  | shape_arguments
-  ;
-
-call_expr_list:
-  call_expr
-  | call_expr ',' call_expr_list
   ;
 
 cte_tables:
@@ -12314,10 +12308,7 @@ declare_vars_stmt:
   | declare_value_cursor
   ;
 
-call_stmt:
-  "CALL" name '(' ')'
-  | "CALL" name '(' call_expr_list ')'
-  | "CALL" name '(' '*' ')'
+call_stmt: "CALL" name '(' arg_list ')'
   ;
 
 while_stmt:
@@ -17366,7 +17357,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Sep 11 15:49:40 PDT 2023
+Snapshot as of Mon Sep 18 11:30:13 PDT 2023
 
 ### Rules
 
@@ -19999,7 +19990,30 @@ your fragments, especially any big ones, will help you to create great code.
 
 This is a brief discussion of the CQL Amalgam and its normal usage patterns.
 
-### Building the Amalgam
+### What is an Amalgam?  What is it for?
+
+The amalgam is not much more than a concatenation of all of the `.h` files and the `.c` files into one big `cql_amalgam.c` file.  
+With that files you can trivially make the compiler with a single `cc cql_amalgam.c` command.
+
+Because of this simplicity, the amalgam gives you a convenient way to consume the compiler in a different/unique build
+environment and, if desired, strip it down to just the parts you want while controlling its inputs more precisely than
+you can with just a command line tool.
+
+If you want to snapshot a particular CQL compiler the easiest way to do so is to use make an amalgam
+at that version and then check in the output `cql_amalgam.c`.  Just like with SQLite and its amalgam.
+
+There are many other uses of the amalgam:
+* It's possible to tweak the amalgam with a little pre-processing to make a windows binary, last time I attempted this it took about 10 minutes
+  * trying to get the whole build to work on Windows is a lot harder
+* The amalgam is readily consumed by [emscripten](https://en.wikipedia.org/wiki/Emscripten) to create WASM
+  * This along with Lua and SQLite in WASM resulted in [a fully online playground](https://mingodad.github.io/CG-SQL-Lua-playground/)
+  * Meta builds a VSCode extension that hosts the actual compiler in WASM in VSCode for error checking
+  * You can make any kind of tool of your own that wants to consume the AST or the output parts
+  * You can invoke the CQL compiler without launching a new process from inside your environment
+
+Generally the amalgam makes it easier for you to host the CQL compiler in some new environment.
+
+### Creating the Amalgam
 
 The amalgam has to include the results of bison and flex, so a normal build must run first.  The simplest
 way to build it starting from the `sources` directory is:

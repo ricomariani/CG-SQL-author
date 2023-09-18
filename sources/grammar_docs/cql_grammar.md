@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 11 15:49:39 PDT 2023
+Snapshot as of Mon Sep 18 11:30:13 PDT 2023
 
 ### Operators and Literals
 
@@ -110,8 +110,12 @@ stmt:
   misc_attrs any_stmt ';'
   ;
 
+expr_stmt: expr
+  ;
+
 any_stmt:
     alter_table_add_column_stmt
+  | expr_stmt
   | begin_schema_region_stmt
   | begin_trans_stmt
   | blob_get_key_type_stmt
@@ -748,13 +752,13 @@ case_list:
   | "WHEN" expr "THEN" expr case_list
   ;
 
-arg_expr: '*'
-  | expr
+arg_expr: expr
   | shape_arguments
   ;
 
 arg_list:
   /* nil */
+  | '*'
   | arg_expr
   | arg_expr ',' arg_list
   ;
@@ -786,16 +790,6 @@ col_calc:
   | shape_def
   | name shape_def
   | name '.' name
-  ;
-
-call_expr:
-  expr
-  | shape_arguments
-  ;
-
-call_expr_list:
-  call_expr
-  | call_expr ',' call_expr_list
   ;
 
 cte_tables:
@@ -1416,10 +1410,7 @@ declare_vars_stmt:
   | declare_value_cursor
   ;
 
-call_stmt:
-  "CALL" name '(' ')'
-  | "CALL" name '(' call_expr_list ')'
-  | "CALL" name '(' '*' ')'
+call_stmt: "CALL" name '(' arg_list ')'
   ;
 
 while_stmt:

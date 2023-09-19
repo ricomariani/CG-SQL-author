@@ -3650,21 +3650,39 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
 
 bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {
   Contract(expr);
-  Contract(op[0]);
-  Contract(op[1] == '=');
-  Contract(!op[2]);
+  Contract(op);
+  size_t len = strlen(op);
+  Contract(len);
+  Contract(op[len - 1] == '='); // ends in =
 
   CSTR node_type = NULL;
-  switch (op[0]) {
-    case '+':  node_type = k_ast_add; break;  // +=
-    case '-':  node_type = k_ast_sub; break;  // -=
-    case '*':  node_type = k_ast_mul; break;  // *=
-    case '/':  node_type = k_ast_div; break;  // /=
-    case '%':  node_type = k_ast_mod; break;  // %=
-    default:   return true;   // successful no-op
+
+  if (len == 2) {
+    switch (op[0]) {
+      case '+':  node_type = k_ast_add; break;  // +=
+      case '-':  node_type = k_ast_sub; break;  // -=
+      case '*':  node_type = k_ast_mul; break;  // *=
+      case '/':  node_type = k_ast_div; break;  // /=
+      case '%':  node_type = k_ast_mod; break;  // %=
+      case '&':  node_type = k_ast_bin_and; break;  // &=
+      case '|':  node_type = k_ast_bin_or; break;   // |=
+    }
+  }
+  else if (len == 3) {
+    // this is <<= and >>=
+    if (op[0] == op[1]) {
+      switch (op[0]) {
+        case '<':  node_type = k_ast_lshift; break;
+        case '>':  node_type = k_ast_rshift; break;
+      }
+    }
   }
 
-  Contract(node_type);
+  // nothing to do
+  if (!node_type) {
+     // successful no-op
+     return true;
+  }
 
   if (!is_id(expr->left)) {
     report_error(expr, "CQL0465: left operand of assignment operator must be a name", op);
@@ -3689,6 +3707,5 @@ bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull o
   AST_REWRITE_INFO_RESET();
   return true;
 }
-
 
 #endif

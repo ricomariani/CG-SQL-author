@@ -199,6 +199,10 @@ OVER                         { return OVER; }
 "*="                         { return MUL_EQ; }
 "/="                         { return DIV_EQ; }
 "%="                         { return MOD_EQ; }
+"|="                         { return OR_EQ; }
+"&="                         { return AND_EQ; }
+"<<="                        { return LS_EQ; }
+">>="                        { return RS_EQ; }
 "=="                         { return EQEQ; }
 "||"                         { return CONCAT; }
 IS{sp}NOT{sp}FALSE/{stop}    { return IS_NOT_FALSE; }

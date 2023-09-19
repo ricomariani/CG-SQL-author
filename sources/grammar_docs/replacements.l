@@ -291,6 +291,10 @@ SUB_EQ                                { put_quoted("-="); }
 DIV_EQ                                { put_quoted("/="); }
 MUL_EQ                                { put_quoted("*="); }
 MOD_EQ                                { put_quoted("%="); }
+AND_EQ                                { put_quoted("&="); }
+OR_EQ                                 { put_quoted("|="); }
+LS_EQ                                 { put_quoted("<<="); }
+RS_EQ                                 { put_quoted(">>="); }
 
   /*  passthrough normalized grammar rule operator */
 

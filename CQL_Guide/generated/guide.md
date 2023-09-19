@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 19 00:05:37 PDT 2023
+Snapshot as of Tue Sep 19 09:52:07 PDT 2023
 
 ### Operators and Literals
 
@@ -10916,7 +10916,7 @@ These are in order of priority lowest to highest
 ```
 ':'
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
-":=" "+=" "-=" "*=" "/=" "%="
+":=" "+=" "-=" "*=" "/=" "%=" "|=" "&=" "<<=" ">>="
 "OR"
 "AND"
 "NOT"
@@ -11649,6 +11649,10 @@ expr:
   | expr "/=" expr
   | expr "*=" expr
   | expr "%=" expr
+  | expr "&=" expr
+  | expr "|=" expr
+  | expr "<<=" expr
+  | expr ">>=" expr
   ;
 
 case_list:
@@ -17442,7 +17446,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep 19 00:05:37 PDT 2023
+Snapshot as of Tue Sep 19 09:52:08 PDT 2023
 
 ### Rules
 

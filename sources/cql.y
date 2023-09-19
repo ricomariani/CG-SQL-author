@@ -178,7 +178,7 @@ static void cql_reset_globals(void);
 
 %left ':'
 %left UNION_ALL UNION INTERSECT EXCEPT
-%right ASSIGN ADD_EQ SUB_EQ MUL_EQ DIV_EQ MOD_EQ
+%right ASSIGN ADD_EQ SUB_EQ MUL_EQ DIV_EQ MOD_EQ OR_EQ AND_EQ LS_EQ RS_EQ
 %left OR
 %left AND
 %left NOT
@@ -1123,6 +1123,10 @@ expr[result]:
   | expr[lhs] DIV_EQ expr[rhs] { $result = new_ast_div_eq($lhs, $rhs); }
   | expr[lhs] MUL_EQ expr[rhs] { $result = new_ast_mul_eq($lhs, $rhs); }
   | expr[lhs] MOD_EQ expr[rhs] { $result = new_ast_mod_eq($lhs, $rhs); }
+  | expr[lhs] AND_EQ expr[rhs] { $result = new_ast_and_eq($lhs, $rhs); }
+  | expr[lhs] OR_EQ expr[rhs] { $result = new_ast_or_eq($lhs, $rhs); }
+  | expr[lhs] LS_EQ expr[rhs] { $result = new_ast_ls_eq($lhs, $rhs); }
+  | expr[lhs] RS_EQ expr[rhs] { $result = new_ast_rs_eq($lhs, $rhs); }
   ;
 
 case_list[result]:

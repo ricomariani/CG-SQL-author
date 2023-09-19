@@ -18,4 +18,8 @@ begin
   DUMP(x -= 15);
   DUMP(x /= 3);
   DUMP(x %= 8);
+  DUMP(x |= 11);
+  DUMP(x &= 7);
+  DUMP(x <<= 3);
+  DUMP(x >>= 1);
 end;

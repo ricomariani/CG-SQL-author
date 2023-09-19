@@ -15396,8 +15396,9 @@ static void sem_expr_stmt(ast_node *ast) {
   sem_expr_dispatch *disp = (sem_expr_dispatch*)entry->val;
   CSTR op = disp->str;
 
-  Contract(op[0]);
-  if (op[1] == '=' && op[2] == '\0') {
+  size_t len = strlen(op);
+  Contract(len);
+  if (op[len-1] == '=') {
     // rewrite top level +=, -=, /=, *=, and %= before we go any further
     // if it's not one of these (e.g. ==) then this is a no-op
     if (!try_rewrite_op_equals_assignment(expr, op)) {
@@ -24722,6 +24723,10 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(mul_eq, sem_expr_assign, "*=");
   EXPR_INIT(div_eq, sem_expr_assign, "/=");
   EXPR_INIT(mod_eq, sem_expr_assign, "%=");
+  EXPR_INIT(and_eq, sem_expr_assign, "&=");
+  EXPR_INIT(or_eq, sem_expr_assign, "|=");
+  EXPR_INIT(ls_eq, sem_expr_assign, "<<=");
+  EXPR_INIT(rs_eq, sem_expr_assign, ">>=");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

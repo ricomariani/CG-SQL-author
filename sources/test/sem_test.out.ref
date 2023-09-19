@@ -87343,6 +87343,46 @@ SET op_assign := op_assign % 8;
 
 The statement ending at line XXXX
 
+SET op_assign := op_assign & 7;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {bin_and}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 7}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign | 22;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {bin_or}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 22}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign << 8;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {lshift}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 8}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign >> 11;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {rshift}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 11}: integer notnull
+
+The statement ending at line XXXX
+
 1 += 7;
 
 test/sem_test.sql:XXXX:1: error: in add_eq : CQL0465: left operand of assignment operator must be a name '+='

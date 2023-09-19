@@ -23151,6 +23151,26 @@ op_assign /= 10;
 -- - error:
 op_assign %= 8;
 
+-- TEST: rewrite %=
+-- + SET op_assign := op_assign & 7;
+-- - error:
+op_assign &= 7;
+
+-- TEST: rewrite %=
+-- + SET op_assign := op_assign | 22;
+-- - error:
+op_assign |= 22;
+
+-- TEST: rewrite %=
+-- + SET op_assign := op_assign << 8;
+-- - error:
+op_assign <<= 8;
+
+-- TEST: rewrite %=
+-- + SET op_assign := op_assign >> 11;
+-- - error:
+op_assign >>= 11;
+
 -- TEST: += (they are the same) on not an identifier
 -- + {expr_stmt}: err
 -- + {add_eq}: err

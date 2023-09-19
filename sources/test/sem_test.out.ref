@@ -87252,3 +87252,34 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'this_name_doe
         | {from_shape}
           | {name this_name_does_not_exist}: err
 
+The statement ending at line XXXX
+
+SET int_result := 701;
+
+  {assign}: int_result: integer variable was_set
+  | {name int_result}: int_result: integer variable was_set
+  | {int 701}: integer notnull
+
+The statement ending at line XXXX
+
+1 := 7;
+
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of `:=` must be a name
+
+  {expr_stmt}: err
+  | {expr_assign}: err
+    | {int 1}
+    | {int 7}
+
+The statement ending at line XXXX
+
+SET int_result := int_result := 2;
+
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment expression may only appear in the leftmost (usual) assignment position
+
+  {assign}: err
+  | {name int_result}: int_result: integer variable was_set
+  | {expr_assign}: err
+    | {name int_result}
+    | {int 2}
+

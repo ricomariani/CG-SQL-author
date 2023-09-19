@@ -1870,3 +1870,5 @@ END;
 LET view := 5;
 
 LET add := 7;
+
+add := add + 1;

@@ -1721,3 +1721,5 @@ let view := 5;
 
 -- valid identifier even though it's a keyword
 let add := 7;
+
+add := add + 1;

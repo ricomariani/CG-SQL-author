@@ -58,6 +58,15 @@
 #include "unit_tests.h"
 #include "rt.h"
 
+// In order for leak sanitizer to run, main must exit normally
+// and yet there are cases we need to bail out like we would in exit
+// to do that we use cql_cleanup_and_exit below which triggers this longjmp
+// here in main.  CQL aspires to be a library in the future and so
+// it cannot exit in those cases either it has to clean up, clean.
+
+static jmp_buf cql_for_exit;
+static int32_t cql_exit_code;
+
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
 #define YYSTACK_USE_ALLOCA 1
@@ -327,29 +336,29 @@ static void cql_reset_globals(void);
 
 program:
   opt_stmt_list  {
-    if (parse_error_occurred) {
-      cql_exit_on_parse_errors();
-    }
-    gen_init();
-    if (options.semantic) {
-      sem_main($opt_stmt_list);
-    }
-    if (options.codegen) {
-      rt->code_generator($opt_stmt_list);
-    }
-    else if (options.print_ast) {
-      print_root_ast($opt_stmt_list);
-      cql_output("\n");
-    } else if (options.print_dot) {
-      cql_output("\ndigraph parse {");
-      print_dot($opt_stmt_list);
-      cql_output("\n}\n");
-    }
-    else if (options.echo_input) {
-      gen_stmt_list_to_stdout($opt_stmt_list);
-    }
-    if (options.semantic) {
-      cql_exit_on_semantic_errors($opt_stmt_list);
+    // don't run further steps if something went wrong parsing
+    if (!parse_error_occurred) {
+      gen_init();
+      if (options.semantic) {
+        sem_main($opt_stmt_list);
+      }
+      if (options.codegen) {
+        rt->code_generator($opt_stmt_list);
+      }
+      else if (options.print_ast) {
+        print_root_ast($opt_stmt_list);
+        cql_output("\n");
+      } else if (options.print_dot) {
+        cql_output("\ndigraph parse {");
+        print_dot($opt_stmt_list);
+        cql_output("\n}\n");
+      }
+      else if (options.echo_input) {
+        gen_stmt_list_to_stdout($opt_stmt_list);
+      }
+      if (options.semantic) {
+        cql_exit_on_semantic_errors($opt_stmt_list);
+      }
     }
   }
   ;
@@ -1107,6 +1116,7 @@ expr[result]:
   math_expr { $result = $math_expr; }
   | expr[lhs] AND expr[rhs]  { $result = new_ast_and($lhs, $rhs); }
   | expr[lhs] OR expr[rhs]  { $result = new_ast_or($lhs, $rhs); }
+  | expr[lhs] ASSIGN expr[rhs] { $result = new_ast_expr_assign($lhs, $rhs); }
   ;
 
 case_list[result]:
@@ -2330,6 +2340,7 @@ void yyerror(const char *format, ...) {
   va_end(args);
 
   parse_error_occurred = true;
+  cql_exit_code = 2;
 }
 
 static uint64_t next_id = 0;
@@ -2520,15 +2531,6 @@ static void parse_cmd(int argc, char **argv) {
   #define cql_main main
 #endif
 
-// In order for leak sanitizer to run, main must exit normally
-// and yet there are cases we need to bail out like we would in exit
-// to do that we use cql_cleanup_and_exit below which triggers this longjmp
-// here in main.  CQL aspires to be a library in the future and so
-// it cannot exit in those cases either it has to clean up, clean.
-
-static jmp_buf for_exit;
-static int32_t exit_code;
-
 cql_noexport CSTR cql_builtin_text() {
   return
     "@attribute(cql:builtin)"
@@ -2548,10 +2550,11 @@ cql_noexport CSTR cql_builtin_text() {
 }
 
 int cql_main(int argc, char **argv) {
-  exit_code = 0;
+  cql_exit_code = 0;
   yylineno = 1;
+  parse_error_occurred = false;
 
-  if (!setjmp(for_exit)) {
+  if (!setjmp(cql_for_exit)) {
     parse_cmd(argc, argv);
     ast_init();
 
@@ -2560,8 +2563,10 @@ int cql_main(int argc, char **argv) {
 
     if (options.run_unit_tests) {
       run_unit_tests();
-    } else if (yyparse()) {
-      cql_exit_on_parse_errors();
+    } else {
+      if (yyparse() || parse_error_occurred) {
+        cql_exit_on_parse_errors();
+      }
     }
   }
 
@@ -2578,7 +2583,7 @@ int cql_main(int argc, char **argv) {
   cql_reset_globals();
 #endif
 
-  return exit_code;
+  return cql_exit_code;
 }
 
 #undef cql_main
@@ -2586,7 +2591,7 @@ int cql_main(int argc, char **argv) {
 // Use the longjmp buffer with the indicated code, see the comments above
 // for why this has to be this way.  Note we do this in one line so that
 // we don't get bogus code coverage errors for not covering the trialing brace
-void cql_cleanup_and_exit(int32_t code) { release_open_charbufs(); exit_code = code;  longjmp(for_exit, 1); }
+void cql_cleanup_and_exit(int32_t code) { release_open_charbufs(); cql_exit_code = code;  longjmp(cql_for_exit, 1); }
 
 static void cql_exit_on_parse_errors() {
   cql_error("Parse errors found, no further passes will run.\n");

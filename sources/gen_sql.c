@@ -4859,6 +4859,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(ne, gen_binary, "<>", EXPR_PRI_INEQUALITY);
   EXPR_INIT(ge, gen_binary, ">=", EXPR_PRI_INEQUALITY);
   EXPR_INIT(le, gen_binary, "<=", EXPR_PRI_INEQUALITY);
+  EXPR_INIT(expr_assign, gen_binary, ":=", EXPR_PRI_ASSIGN);
   EXPR_INIT(call, gen_expr_call, "CALL", EXPR_PRI_ROOT);
   EXPR_INIT(window_func_inv, gen_expr_window_func_inv, "WINDOW-FUNC-INV", EXPR_PRI_ROOT);
   EXPR_INIT(raise, gen_expr_raise, "RAISE", EXPR_PRI_ROOT);

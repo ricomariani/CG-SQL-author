@@ -235,6 +235,7 @@ static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table)
 static void sem_non_backed_table(ast_node *ast_error, ast_node *ast_table);
 static ast_node *sem_synthesize_current_locals();
 static CSTR find_column_kind(CSTR table_name, CSTR column_name);
+static void sem_assign(ast_node *ast);
 
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
@@ -2737,7 +2738,7 @@ static bool_t sem_verify_compat(ast_node *ast, sem_t sem_type_needed, sem_t sem_
   return true;
 }
 
-// When performing assignment either explicitly ( set X := Y ) or implicit (binding args to a proc call)
+// When performing assignment either explicitly ( set X = Y ) or implicit (binding args to a proc call)
 // there are additional type compat checks to be done beyond the normal is compat.  The above helps you
 // with symmetric operations like X == Y where either side can be promoted.  In an assignment the left
 // side cannot be promoted so the store can be lossy.  This checks for the lossy cases that are otherwise
@@ -15459,6 +15460,22 @@ static void sem_expr_stmt(ast_node *ast) {
       }
     }
   }
+  else if (is_ast_expr_assign(expr)) {
+    if (!is_id(expr->left)) {
+      report_error(expr, "CQL0465: left operand of `:=` must be a name", NULL);
+      record_error(expr);
+      record_error(ast);
+      return;
+    }
+
+    // convert the operator into a SET statement
+    // this is a top level expression so it's ok to do that
+    ast->type = k_ast_assign;
+    ast_set_left(ast, expr->left);
+    ast_set_right(ast, expr->right);
+    sem_assign(ast);
+    return;
+  }
 
   // If we're on this path then it's not a proc
   // or else it is a proc but it's the proc as func pattern
@@ -17438,6 +17455,13 @@ static bool_t sem_validate_compatible_cols_vals(ast_node *name_list, ast_node *v
   Invariant(!value);
 
   return true;
+}
+
+// All legal cases of expr_assign are re-written to the SET statement
+// any that are left are not in the canonical correct position so auto-error
+static void sem_expr_assign(ast_node *ast, CSTR op) {
+  report_error(ast, "CQL0492: assignment expression may only appear in the leftmost (usual) assignment position", NULL);
+  record_error(ast);
 }
 
 // The set statement is for local assignment.  We just validate
@@ -24677,6 +24701,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
   EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
   EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
+  EXPR_INIT(expr_assign, sem_expr_assign, ":=");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

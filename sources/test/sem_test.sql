@@ -23106,3 +23106,20 @@ end;
 -- + error: % name not found 'this_name_does_not_exist'
 -- +1 error
 dump_int(from this_name_does_not_exist);
+
+-- TEST: rewrite top level := into a SET
+-- + SET int_result := 701;
+-- + {assign}: int_result: integer variable was_set
+-- - error:
+int_result := 701;
+
+-- TEST: try to do an assignment that isn't an identifier
+-- + error: % left operand of `:=` must be a name
+-- +1 error:
+1 := 7;
+
+-- TEST: use := in a place other than the simplest
+-- + {expr_assign}: err
+-- + error: % assignment expression may only appear in the leftmost (usual) assignment position
+-- +1 error:
+int_result := int_result := 2;

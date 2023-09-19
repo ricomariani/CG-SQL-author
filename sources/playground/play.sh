@@ -108,6 +108,7 @@ hello() {
     local lsqlite_ready=$(is_dependency_satisfied lsqlite && echo true || echo false)
     local dot_ready=$(is_dependency_satisfied dot && echo true || echo false)
     local python3_ready=$(is_dependency_satisfied python3 && echo true || echo false)
+    local gcovr_ready=$(is_dependency_satisfied gcovr && echo true || echo false)
 
     cat <<EOF | theme
 CQL Playground — Onboarding checklist
@@ -162,6 +163,14 @@ Optional Dependencies
             echo "WARNING: \$JAVA_HOME must be set to your JDK dir"
         )
         Java is used to generate and execute the Java wrappers for CQL procedures.
+    Gcovr
+        $($gcovr_ready && \
+            echo "SUCCESS: gcovr is ready" || \
+            echo "WARNING: gcovr was not found.
+        Install it with: \`brew install gcovr\` (MacOS) or \`sudo apt-get install gcovr\` (Linux)".
+        )
+        Gcovr is used to assemble code coverage reports for the CQL compiler.
+        Gcovr provides a utility for managing the use of the GNU gcov utility and generating summarized code coverage results.
 
 Recommended Dependencies
     JQ
@@ -337,11 +346,11 @@ $O/stats.csv: $O/$(example_name).pre.sql
 
 ast: $O/ast.txt
 $O/ast.txt: $O/$(example_name).pre.sql
-> $(CQL) --in $O/$(example_name).pre.sql --sem --ast > $O/ast.txt
+> $(CQL) --in $O/$(example_name).pre.sql --sem --ast | sed '2,190d' > $O/ast.txt # Using sed to remove noise
 
 ast_dot: $O/ast.dot
 $O/ast.dot: $O/$(example_name).pre.sql
-> $(CQL) --in $O/$(example_name).pre.sql --dot > $O/ast.dot
+> $(CQL) --in $O/$(example_name).pre.sql --dot | sed '3,370d' > $O/ast.dot # Using sed to remove noise
 
 cql_sql_schema: $O/cql_sql_schema.sql
 $O/cql_sql_schema.sql: $O/cql_json_schema.json
@@ -603,6 +612,7 @@ is_dependency_satisfied() {
         lua)          type lua     >/dev/null 2>&1 && return 0 || return 1 ;;
         dot)          type dot     >/dev/null 2>&1 && return 0 || return 1 ;;
         python3)      type python3 >/dev/null 2>&1 && return 0 || return 1 ;;
+        gcovr)        type gcovr >/dev/null 2>&1 && return 0 || return 1 ;;
 
         *)
             echo "Unknown dependency: $1";

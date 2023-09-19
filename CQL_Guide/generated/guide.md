@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 18 11:45:44 PDT 2023
+Snapshot as of Tue Sep 19 00:05:37 PDT 2023
 
 ### Operators and Literals
 
@@ -10916,7 +10916,7 @@ These are in order of priority lowest to highest
 ```
 ':'
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
-":="
+":=" "+=" "-=" "*=" "/=" "%="
 "OR"
 "AND"
 "NOT"
@@ -11643,6 +11643,12 @@ expr:
   math_expr
   | expr "AND" expr
   | expr "OR" expr
+  | expr ":=" expr
+  | expr "+=" expr
+  | expr "-=" expr
+  | expr "/=" expr
+  | expr "*=" expr
+  | expr "%=" expr
   ;
 
 case_list:
@@ -17010,7 +17016,10 @@ Perhaps the group was not included (missing an #include) or else there is a typo
 
 -----
 
-### CQL0465 avaiable for re-use
+### CQL0465: left operand of `:=` must be a name
+
+The assignment syntax may be generalized at some point to support things like arrays but for now
+only simple names may appear on the left of the `:=` operator.
 
 -----
 
@@ -17121,25 +17130,37 @@ be removed in order to do this operation safely.
 
 In a `DECLARE INTERFACE` statement, the given name conflicts with an already declared function (`DECLARE FUNCTION` or `DECLARE SELECT FUNCTION`).  You'll have to choose a different name.
 
+-----
+
 ### CQL0478: interface name conflicts with procedure name 'name'
 
 In a `DECLARE INTERFACE` statement, the indicated name already corresponds to a created or declared stored procedure.  You'll have to choose a different name.
+
+-----
 
 ### CQL0479: interface declarations do not match 'name'
 
 The interface was previously declared with a `DECLARE INTERFACE` statement but when subsequent `DECLARE INTERFACE` was encountered, it did not match the previous declaration.
 
+-----
+
 ### CQL0480: declared interface must be top level 'name'
 
 A `DECLARE INTERFACE` statement is happening inside of a procedure.  This is not legal.  To correct this move the declaration outside of the procedure.
+
+-----
 
 ### CQL0481: proc name conflicts with interface name 'name'
 
 In a `CREATE PROCEDURE` / `DECLARE PROCEDURE` statement, the given name conflicts with an already declared interface (`DECLARE INTERFACE`).  You'll have to choose a different name.
 
+-----
+
 ### CQL0482: interface not found 'name'
 
 Interface with the name provided in `cql:implements` attribute does not exist
+
+-----
 
 ### CQL0483: table is not suitable for use as backing storage: [reason] 'table_name'
 
@@ -17157,13 +17178,19 @@ For instance:
 
 This error indicates that one of these items is present. The specific cause is included in the text of the message.
 
+-----
+
 ### CQL0484: procedure '%s' is missing column '%s' of interface '%s'
 
 Procedure should return all columns defined by the interface (and possibly others).  The columns may be returned in any order.
 
+-----
+
 ### CQL0485: column types returned by proc need to be the same as defined on the interface
 
 Procedure should return at least all columns defined by the interface and column type should be the same.
+
+-----
 
 ### CQL0486: function cannot be both a normal function and an unchecked function, 'function_name'
 
@@ -17181,6 +17208,8 @@ DECLARE SELECT FUNCTION foo() t text;
 
 Make sure the redeclaration of the function is consistent with the original declaration, or remove the redeclaration.
 
+-----
+
 ### CQL0487: table is not suitable as backed storage: [reason] 'table_name'
 
 The indicated table was marked with `@attribute(cql:backing_table)`.  This indicates
@@ -17197,6 +17226,8 @@ For instance:
 
 This error indicates that one of these items is present. The specific cause is included in the text of the message.
 
+-----
+
 ### CQL0488: the indicated table is not declared for backed storage 'table_name'
 
 When declaring a backed table, you must specify the physical table that will hold its data.  The backed table
@@ -17205,9 +17236,13 @@ The backing and backed_by attributes applies extra checks to tables to ensure th
 
 This error indicates that the named table is not marked as a backed table.
 
+-----
+
 ### CQL0489: the indicated column is not present in the named backed storage 'table_name.column_name'
 
 The named table is a backed table, but it does not have the indicated column.
+
+-----
 
 ### CQL0490: argument must be table.column where table is a backed table 'function"
 
@@ -17217,6 +17252,7 @@ where the table is not a backed table, hence the call is invalid.  Note that nor
 because these functions are typically called by CQL itself as part of the rewriting process for backed tables.  However it is
 possible to use them manually, hence they are error checked.
 
+-----
 
 ### CQL0491: argument 1 must be a table name that is a backed table 'cql_blob_create'
 
@@ -17228,8 +17264,33 @@ is not found or the table is not backed.  Note that normally this error doesn't 
 typically called by CQL itself as part of the rewriting process for backed tables.  However it is possible
 to `cql_blob_create` manually, hence it is error checked.
 
-### CQL0492 available for use
+-----
 
+### CQL0492: assignment operator may only appear in the leftmost (usual) assignment position, 'op'
+
+Assigment expressions are only allowed so as to make the SET keyword optional for readability.
+
+Why this limitation?
+
+First, control flow in expressions with side effects is weird and SQL has a lot of this:
+
+```
+case when something then x := 5 else z := 2 end;
+```
+
+Would wreak havoc with the logic for testing for un-initialized variables.  This is solvable with work.
+
+Second, the normal way chained assignment works alters the type as you go along so this form:
+
+```
+a := b := 1;
+```
+Would give an error if `b` is nullable and `a` is not nullable which is very bizaree indeed.
+
+For these reasons, at least for now, `:=` in expressions is just a convenience feature to let you skip the
+`SET` keyword which makes code a bit more readable.
+
+-----
 
 ### CQL0493: backed storage tables may not be used in indexes/triggers/drop 'table_name'
 
@@ -17252,6 +17313,8 @@ This gives you a useful index on the type field of the blob for all backed table
 
 But generally, physical operations like indices, triggers, and drop are not applicable to backed tables.
 
+-----
+
 ### CQL0494: mixing adding and removing columns from a shape 'name'
 
 When selecting columns from a shape you can use this form
@@ -17268,6 +17331,8 @@ LIKE some_shape(-name1, -name2)
 
 to extract everything but the named columns.  You can't mix the positive and negative forms
 
+-----
+
 ### CQL0495: no columns were selected in the LIKE expression
 
 An expression that is supposed to select some columns from a shape such as
@@ -17277,6 +17342,8 @@ LIKE some_shape(-name1, -name2)
 ```
 
 ended up removing all the columns from `some_shape`.
+
+-----
 
 ### CQL0496: SELECT NOTHING may only appear in the else clause of a shared fragment
 
@@ -17309,18 +17376,26 @@ However this is the only place SELECT NOTHING is allowed.  It must be:
 
 Any violation results in the present error.
 
+-----
+
 ### CQL0497: FROM clause not supported when updating backed table, 'table_name'
 
 SQLite supports an extended format of the update statement with a FROM clause.  At this time backed tables cannot be updated using this form.  This is likely to change fairly soon.
+
+-----
 
 ### CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 
 `@enforce_strict` has been use to enable strict update enforcement.  When enabled update statements may not include a FROM clause.
 This is done if the code expects to target SQLite version 3.33 or lower.
 
+-----
+
 ### CQL0499: alias_of attribute may only be added to a declare function statement
 
 `cql:alias_of` attributes may only be used in [`DECLARE FUNC` statements](#ordinary-scalar-functions) or [`DECLARE PROC` statements](#declaring-procedures-defined-elsewhere).
+
+-----
 
 ### CQL0500: alias_of attribute must be a non-empty string argument
 
@@ -17332,6 +17407,8 @@ declare function bar() int
 ```
 
 All subsequent calls to `bar()` in CQL will call the `foo()` function.
+
+-----
 
 ### CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
 
@@ -17346,9 +17423,13 @@ In a `CASE` statement each `WHEN` expression must not be a constant NULL. For ex
     else "#000000"
   end;
 ```
+-----
+
+### CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
 
 When the case expression `color` evaluates to NULL, it does not match with an expression that evaluates to NULL.
 Consequently, the CASE statement will default to the ELSE clause, provided it is defined.
+
 
 
 <!---
@@ -17361,7 +17442,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Sep 18 11:45:45 PDT 2023
+Snapshot as of Tue Sep 19 00:05:37 PDT 2023
 
 ### Rules
 

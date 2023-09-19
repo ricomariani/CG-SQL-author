@@ -1723,3 +1723,10 @@ let view := 5;
 let add := 7;
 
 add := add + 1;
+
+add += 5;
+sub -= 3;
+times *= 7;
+div /= 3;
+rmd %= 32;
+

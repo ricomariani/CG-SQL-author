@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 18 11:45:44 PDT 2023
+Snapshot as of Tue Sep 19 00:05:37 PDT 2023
 
 ### Operators and Literals
 
@@ -18,7 +18,7 @@ These are in order of priority lowest to highest
 ```
 ':'
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
-":="
+":=" "+=" "-=" "*=" "/=" "%="
 "OR"
 "AND"
 "NOT"
@@ -745,6 +745,12 @@ expr:
   math_expr
   | expr "AND" expr
   | expr "OR" expr
+  | expr ":=" expr
+  | expr "+=" expr
+  | expr "-=" expr
+  | expr "/=" expr
+  | expr "*=" expr
+  | expr "%=" expr
   ;
 
 case_list:

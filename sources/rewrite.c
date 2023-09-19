@@ -3648,6 +3648,47 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
   }        
 }
 
+bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {
+  Contract(expr);
+  Contract(op[0]);
+  Contract(op[1] == '=');
+  Contract(!op[2]);
+
+  CSTR node_type = NULL;
+  switch (op[0]) {
+    case '+':  node_type = k_ast_add; break;  // +=
+    case '-':  node_type = k_ast_sub; break;  // -=
+    case '*':  node_type = k_ast_mul; break;  // *=
+    case '/':  node_type = k_ast_div; break;  // /=
+    case '%':  node_type = k_ast_mod; break;  // %=
+    default:   return true;   // successful no-op
+  }
+
+  Contract(node_type);
+
+  if (!is_id(expr->left)) {
+    report_error(expr, "CQL0465: left operand of assignment operator must be a name", op);
+    record_error(expr);
+    return false;
+  }
+
+  EXTRACT_STRING(name, expr->left);
+
+  AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
+
+  // convert whatever it was we had into normal assignment
+  expr->type = k_ast_expr_assign;
+  // make the += or whatever
+  ast_node *oper = new_ast_add(new_ast_str(name), expr->right);
+  // change it to the right operator
+  oper->type = node_type;
+  // and load it up on the right side of the expression
+  // we now have an assignment expression which will be
+  // rewritten again into a SET
+  ast_set_right(expr, oper);
+  AST_REWRITE_INFO_RESET();
+  return true;
+}
 
 
 #endif

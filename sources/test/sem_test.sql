@@ -23114,12 +23114,46 @@ dump_int(from this_name_does_not_exist);
 int_result := 701;
 
 -- TEST: try to do an assignment that isn't an identifier
--- + error: % left operand of `:=` must be a name
+-- + error: % left operand of assignment operator must be a name ':='
 -- +1 error:
 1 := 7;
 
 -- TEST: use := in a place other than the simplest
 -- + {expr_assign}: err
--- + error: % assignment expression may only appear in the leftmost (usual) assignment position
+-- + error: % assignment operator may only appear in the leftmost (usual) assignment position ':='
 -- +1 error:
 int_result := int_result := 2;
+
+let op_assign := 5;
+
+-- TEST: rewrite +=
+-- + SET op_assign := op_assign + 7;
+-- - error:
+op_assign += 7;
+
+-- TEST: rewrite -=
+-- + SET op_assign := op_assign - 3;
+-- - error:
+op_assign -= 3;
+
+-- TEST: rewrite *=
+-- + SET op_assign := op_assign * 100;
+-- - error:
+op_assign *= 100;
+
+-- TEST: rewrite /=
+-- + SET op_assign := op_assign / 10;
+-- - error:
+op_assign /= 10;
+
+-- TEST: rewrite %=
+-- + SET op_assign := op_assign % 8;
+-- - error:
+op_assign %= 8;
+
+-- TEST: += (they are the same) on not an identifier
+-- + {expr_stmt}: err
+-- + {add_eq}: err
+-- + error: % left operand of assignment operator must be a name '+='
+-- + error:
+1 += 7;

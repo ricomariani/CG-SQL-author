@@ -178,7 +178,7 @@ static void cql_reset_globals(void);
 
 %left ':'
 %left UNION_ALL UNION INTERSECT EXCEPT
-%right ASSIGN
+%right ASSIGN ADD_EQ SUB_EQ MUL_EQ DIV_EQ MOD_EQ
 %left OR
 %left AND
 %left NOT
@@ -332,11 +332,12 @@ static void cql_reset_globals(void);
 
 %start program
 
+/* beware adding comments into this section causes the auto-gen grammar to fail */
+
 %%
 
 program:
   opt_stmt_list  {
-    // don't run further steps if something went wrong parsing
     if (!parse_error_occurred) {
       gen_init();
       if (options.semantic) {
@@ -1117,6 +1118,11 @@ expr[result]:
   | expr[lhs] AND expr[rhs]  { $result = new_ast_and($lhs, $rhs); }
   | expr[lhs] OR expr[rhs]  { $result = new_ast_or($lhs, $rhs); }
   | expr[lhs] ASSIGN expr[rhs] { $result = new_ast_expr_assign($lhs, $rhs); }
+  | expr[lhs] ADD_EQ expr[rhs] { $result = new_ast_add_eq($lhs, $rhs); }
+  | expr[lhs] SUB_EQ expr[rhs] { $result = new_ast_sub_eq($lhs, $rhs); }
+  | expr[lhs] DIV_EQ expr[rhs] { $result = new_ast_div_eq($lhs, $rhs); }
+  | expr[lhs] MUL_EQ expr[rhs] { $result = new_ast_mul_eq($lhs, $rhs); }
+  | expr[lhs] MOD_EQ expr[rhs] { $result = new_ast_mod_eq($lhs, $rhs); }
   ;
 
 case_list[result]:

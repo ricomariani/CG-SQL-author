@@ -286,6 +286,11 @@ LE                                    { put_quoted("<="); }
 EQEQ                                  { put_quoted("=="); }
 NE_                                   { put_quoted("!="); }
 NE                                    { put_quoted("<>"); }
+ADD_EQ                                { put_quoted("+="); }
+SUB_EQ                                { put_quoted("-="); }
+DIV_EQ                                { put_quoted("/="); }
+MUL_EQ                                { put_quoted("*="); }
+MOD_EQ                                { put_quoted("%="); }
 
   /*  passthrough normalized grammar rule operator */
 

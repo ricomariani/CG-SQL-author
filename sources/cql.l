@@ -194,6 +194,11 @@ OVER                         { return OVER; }
 ">="                         { return GE; }
 "<="                         { return LE; }
 ":="                         { return ASSIGN; }
+"+="                         { return ADD_EQ; }
+"-="                         { return SUB_EQ; }
+"*="                         { return MUL_EQ; }
+"/="                         { return DIV_EQ; }
+"%="                         { return MOD_EQ; }
 "=="                         { return EQEQ; }
 "||"                         { return CONCAT; }
 IS{sp}NOT{sp}FALSE/{stop}    { return IS_NOT_FALSE; }

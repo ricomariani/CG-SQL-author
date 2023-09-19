@@ -54,4 +54,5 @@ cql_noexport void rewrite_update_statement_for_backed_table(ast_node *_Nonnull a
 cql_noexport void rewrite_upsert_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast);
 cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast);
+cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op);
 #endif

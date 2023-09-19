@@ -87264,7 +87264,7 @@ The statement ending at line XXXX
 
 1 := 7;
 
-test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of `:=` must be a name
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of assignment operator must be a name ':='
 
   {expr_stmt}: err
   | {expr_assign}: err
@@ -87275,11 +87275,80 @@ The statement ending at line XXXX
 
 SET int_result := int_result := 2;
 
-test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment expression may only appear in the leftmost (usual) assignment position
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment operator may only appear in the leftmost (usual) assignment position ':='
 
   {assign}: err
   | {name int_result}: int_result: integer variable was_set
   | {expr_assign}: err
     | {name int_result}
     | {int 2}
+
+The statement ending at line XXXX
+
+LET op_assign := 5;
+
+  {let_stmt}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {int 5}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign + 7;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {add}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable
+    | {int 7}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign - 3;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {sub}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 3}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign * 100;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {mul}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 100}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign / 10;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {div}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 10}: integer notnull
+
+The statement ending at line XXXX
+
+SET op_assign := op_assign % 8;
+
+  {assign}: op_assign: integer notnull variable was_set
+  | {name op_assign}: op_assign: integer notnull variable was_set
+  | {mod}: integer notnull
+    | {name op_assign}: op_assign: integer notnull variable was_set
+    | {int 8}: integer notnull
+
+The statement ending at line XXXX
+
+1 += 7;
+
+test/sem_test.sql:XXXX:1: error: in add_eq : CQL0465: left operand of assignment operator must be a name '+='
+
+  {expr_stmt}: err
+  | {add_eq}: err
+    | {int 1}
+    | {int 7}
 

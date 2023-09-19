@@ -1656,6 +1656,7 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bogus'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found_variable'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'this_name_does_not_exist'
-test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of `:=` must be a name
-test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment expression may only appear in the leftmost (usual) assignment position
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of assignment operator must be a name ':='
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment operator may only appear in the leftmost (usual) assignment position ':='
+test/sem_test.sql:XXXX:1: error: in add_eq : CQL0465: left operand of assignment operator must be a name '+='
 semantic errors present; no code gen.

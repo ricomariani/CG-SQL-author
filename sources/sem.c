@@ -15391,6 +15391,21 @@ static void sem_expr_stmt(ast_node *ast) {
   // In most cases this is a no-op but not if the form was x::y()
   expr = ast->left;
 
+  symtab_entry *entry = symtab_find(exprs, expr->type);
+  Invariant(entry);
+  sem_expr_dispatch *disp = (sem_expr_dispatch*)entry->val;
+  CSTR op = disp->str;
+
+  Contract(op[0]);
+  if (op[1] == '=' && op[2] == '\0') {
+    // rewrite top level +=, -=, /=, *=, and %= before we go any further
+    // if it's not one of these (e.g. ==) then this is a no-op
+    if (!try_rewrite_op_equals_assignment(expr, op)) {
+      record_error(ast);
+      return;
+    }
+  }
+
   // Here is the magic.  If the top level expression is a function call
   // then we want to look to see if that function is actually a procedure.
   // If it is, we will rewrite that into a call statement so that you can
@@ -15462,7 +15477,7 @@ static void sem_expr_stmt(ast_node *ast) {
   }
   else if (is_ast_expr_assign(expr)) {
     if (!is_id(expr->left)) {
-      report_error(expr, "CQL0465: left operand of `:=` must be a name", NULL);
+      report_error(expr, "CQL0465: left operand of assignment operator must be a name", ":=");
       record_error(expr);
       record_error(ast);
       return;
@@ -17460,7 +17475,7 @@ static bool_t sem_validate_compatible_cols_vals(ast_node *name_list, ast_node *v
 // All legal cases of expr_assign are re-written to the SET statement
 // any that are left are not in the canonical correct position so auto-error
 static void sem_expr_assign(ast_node *ast, CSTR op) {
-  report_error(ast, "CQL0492: assignment expression may only appear in the leftmost (usual) assignment position", NULL);
+  report_error(ast, "CQL0492: assignment operator may only appear in the leftmost (usual) assignment position", op);
   record_error(ast);
 }
 
@@ -24702,6 +24717,11 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
   EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
   EXPR_INIT(expr_assign, sem_expr_assign, ":=");
+  EXPR_INIT(add_eq, sem_expr_assign, "+=");
+  EXPR_INIT(sub_eq, sem_expr_assign, "-=");
+  EXPR_INIT(mul_eq, sem_expr_assign, "*=");
+  EXPR_INIT(div_eq, sem_expr_assign, "/=");
+  EXPR_INIT(mod_eq, sem_expr_assign, "%=");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

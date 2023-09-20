@@ -95,7 +95,6 @@ function cql_get_aux_value_for_id(id)
   return nil
 end
 
--- use the native formatter just like C does
 -- cql_printf is the SQLite printf and it is far too expensive for general use
 -- use only when demanded by printf function calls
 function printf(...)

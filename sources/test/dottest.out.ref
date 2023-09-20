@@ -1,640 +1,224 @@
 
 digraph parse {
     stmt_list0 [label = "stmt_list" shape=plaintext]
-    stmt_list0 -> stmt_and_attr1;
-    stmt_and_attr1 [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attr1 -> misc_attrs2;
-    misc_attrs2 [label = "misc_attrs" shape=plaintext]
-    misc_attrs2 -> misc_attr3;
-    misc_attr3 [label = "misc_attr" shape=plaintext]
-    misc_attr3 -> dot4;
-    dot4 [label = "dot" shape=plaintext]
-    dot4 -> str5;
-    str5 [label = "cql" shape=plaintext]
- dot4 -> str6;
-    str6 [label = "builtin" shape=plaintext]
+    stmt_list0 -> select_stmt1;
+    select_stmt1 [label = "select_stmt" shape=plaintext]
+    select_stmt1 -> select_core_list2;
+    select_core_list2 [label = "select_core_list" shape=plaintext]
+    select_core_list2 -> select_core3;
+    select_core3 [label = "select_core" shape=plaintext]
     _3 [label = "⏚" shape=plaintext]
-    misc_attr3 -> _3;
-    _2 [label = "⏚" shape=plaintext]
-    misc_attrs2 -> _2;
- stmt_and_attr1 -> declare_func_stmt7;
-    declare_func_stmt7 [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt7 -> str8;
-    str8 [label = "cql_partition_create" shape=plaintext]
- declare_func_stmt7 -> func_params_return9;
-    func_params_return9 [label = "func_params_return" shape=plaintext]
+    select_core3 -> _3;
+ select_core3 -> select_expr_list_con4;
+    select_expr_list_con4 [label = "select_expr_list_con" shape=plaintext]
+    select_expr_list_con4 -> select_expr_list5;
+    select_expr_list5 [label = "select_expr_list" shape=plaintext]
+    select_expr_list5 -> select_expr6;
+    select_expr6 [label = "select_expr" shape=plaintext]
+    select_expr6 -> str7;
+    str7 [label = "x" shape=plaintext]
+    _6 [label = "⏚" shape=plaintext]
+    select_expr6 -> _6;
+ select_expr_list5 -> select_expr_list8;
+    select_expr_list8 [label = "select_expr_list" shape=plaintext]
+    select_expr_list8 -> select_expr9;
+    select_expr9 [label = "select_expr" shape=plaintext]
+    select_expr9 -> stra;
+    stra [label = "y" shape=plaintext]
     _9 [label = "⏚" shape=plaintext]
-    func_params_return9 -> _9;
- func_params_return9 -> create_data_typea;
-    create_data_typea [label = "create_data_type" shape=plaintext]
-    create_data_typea -> notnullb;
-    notnullb [label = "notnull" shape=plaintext]
-    notnullb -> type_objectc;
-    type_objectc [label = "type_object" shape=plaintext]
-    type_objectc -> strd;
-    strd [label = "partitioning" shape=plaintext]
+    select_expr9 -> _9;
+ select_expr_list8 -> select_expr_listb;
+    select_expr_listb [label = "select_expr_list" shape=plaintext]
+    select_expr_listb -> select_exprc;
+    select_exprc [label = "select_expr" shape=plaintext]
+    select_exprc -> numd;
+    numd [label = "5.2" shape=plaintext]
     _c [label = "⏚" shape=plaintext]
-    type_objectc -> _c;
+    select_exprc -> _c;
     _b [label = "⏚" shape=plaintext]
-    notnullb -> _b;
-    _a [label = "⏚" shape=plaintext]
-    create_data_typea -> _a;
- stmt_list0 -> stmt_liste;
-    stmt_liste [label = "stmt_list" shape=plaintext]
-    stmt_liste -> stmt_and_attrf;
-    stmt_and_attrf [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attrf -> misc_attrs10;
-    misc_attrs10 [label = "misc_attrs" shape=plaintext]
-    misc_attrs10 -> misc_attr11;
-    misc_attr11 [label = "misc_attr" shape=plaintext]
-    misc_attr11 -> dot12;
-    dot12 [label = "dot" shape=plaintext]
-    dot12 -> str13;
-    str13 [label = "cql" shape=plaintext]
- dot12 -> str14;
-    str14 [label = "builtin" shape=plaintext]
-    _11 [label = "⏚" shape=plaintext]
-    misc_attr11 -> _11;
+    select_expr_listb -> _b;
+ select_expr_list_con4 -> select_from_etce;
+    select_from_etce [label = "select_from_etc" shape=plaintext]
+    select_from_etce -> table_or_subquery_listf;
+    table_or_subquery_listf [label = "table_or_subquery_list" shape=plaintext]
+    table_or_subquery_listf -> table_or_subquery10;
+    table_or_subquery10 [label = "table_or_subquery" shape=plaintext]
+    table_or_subquery10 -> str11;
+    str11 [label = "A" shape=plaintext]
     _10 [label = "⏚" shape=plaintext]
-    misc_attrs10 -> _10;
- stmt_and_attrf -> declare_func_stmt15;
-    declare_func_stmt15 [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt15 -> str16;
-    str16 [label = "cql_partition_cursor" shape=plaintext]
- declare_func_stmt15 -> func_params_return17;
-    func_params_return17 [label = "func_params_return" shape=plaintext]
-    func_params_return17 -> params18;
-    params18 [label = "params" shape=plaintext]
-    params18 -> param19;
-    param19 [label = "param" shape=plaintext]
-    _19 [label = "⏚" shape=plaintext]
-    param19 -> _19;
- param19 -> param_detail1a;
-    param_detail1a [label = "param_detail" shape=plaintext]
-    param_detail1a -> str1b;
-    str1b [label = "p" shape=plaintext]
- param_detail1a -> notnull1c;
-    notnull1c [label = "notnull" shape=plaintext]
-    notnull1c -> type_object1d;
-    type_object1d [label = "type_object" shape=plaintext]
-    type_object1d -> str1e;
-    str1e [label = "partitioning" shape=plaintext]
-    _1d [label = "⏚" shape=plaintext]
-    type_object1d -> _1d;
-    _1c [label = "⏚" shape=plaintext]
-    notnull1c -> _1c;
- params18 -> params1f;
-    params1f [label = "params" shape=plaintext]
-    params1f -> param20;
-    param20 [label = "param" shape=plaintext]
+    table_or_subquery10 -> _10;
+    _f [label = "⏚" shape=plaintext]
+    table_or_subquery_listf -> _f;
+ select_from_etce -> select_where12;
+    select_where12 [label = "select_where" shape=plaintext]
+    _12 [label = "⏚" shape=plaintext]
+    select_where12 -> _12;
+ select_where12 -> select_groupby13;
+    select_groupby13 [label = "select_groupby" shape=plaintext]
+    _13 [label = "⏚" shape=plaintext]
+    select_groupby13 -> _13;
+ select_groupby13 -> select_having14;
+    select_having14 [label = "select_having" shape=plaintext]
+    _2 [label = "⏚" shape=plaintext]
+    select_core_list2 -> _2;
+ select_stmt1 -> select_orderby15;
+    select_orderby15 [label = "select_orderby" shape=plaintext]
+    select_orderby15 -> opt_orderby16;
+    opt_orderby16 [label = "opt_orderby" shape=plaintext]
+    opt_orderby16 -> orderby_list17;
+    orderby_list17 [label = "orderby_list" shape=plaintext]
+    orderby_list17 -> orderby_item18;
+    orderby_item18 [label = "orderby_item" shape=plaintext]
+    orderby_item18 -> str19;
+    str19 [label = "a" shape=plaintext]
+    _18 [label = "⏚" shape=plaintext]
+    orderby_item18 -> _18;
+ orderby_list17 -> orderby_list1a;
+    orderby_list1a [label = "orderby_list" shape=plaintext]
+    orderby_list1a -> orderby_item1b;
+    orderby_item1b [label = "orderby_item" shape=plaintext]
+    orderby_item1b -> str1c;
+    str1c [label = "b" shape=plaintext]
+    _1b [label = "⏚" shape=plaintext]
+    orderby_item1b -> _1b;
+ orderby_list1a -> orderby_list1d;
+    orderby_list1d [label = "orderby_list" shape=plaintext]
+    orderby_list1d -> orderby_item1e;
+    orderby_item1e [label = "orderby_item" shape=plaintext]
+    orderby_item1e -> str1f;
+    str1f [label = "c" shape=plaintext]
+    _1e [label = "⏚" shape=plaintext]
+    orderby_item1e -> _1e;
+ orderby_list1d -> orderby_list20;
+    orderby_list20 [label = "orderby_list" shape=plaintext]
+    orderby_list20 -> orderby_item21;
+    orderby_item21 [label = "orderby_item" shape=plaintext]
+    orderby_item21 -> str22;
+    str22 [label = "d" shape=plaintext]
+ orderby_item21 -> asc23;
+    asc23 [label = "asc" shape=plaintext]
     _20 [label = "⏚" shape=plaintext]
-    param20 -> _20;
- param20 -> param_detail21;
-    param_detail21 [label = "param_detail" shape=plaintext]
-    param_detail21 -> str22;
-    str22 [label = "key" shape=plaintext]
- param_detail21 -> type_cursor23;
-    type_cursor23 [label = "type_cursor" shape=plaintext]
- params1f -> params24;
-    params24 [label = "params" shape=plaintext]
-    params24 -> param25;
-    param25 [label = "param" shape=plaintext]
+    orderby_list20 -> _20;
+    _16 [label = "⏚" shape=plaintext]
+    opt_orderby16 -> _16;
+ select_orderby15 -> select_limit24;
+    select_limit24 [label = "select_limit" shape=plaintext]
+    select_limit24 -> opt_limit25;
+    opt_limit25 [label = "opt_limit" shape=plaintext]
+    opt_limit25 -> num26;
+    num26 [label = "5" shape=plaintext]
     _25 [label = "⏚" shape=plaintext]
-    param25 -> _25;
- param25 -> param_detail26;
-    param_detail26 [label = "param_detail" shape=plaintext]
-    param_detail26 -> str27;
-    str27 [label = "value" shape=plaintext]
- param_detail26 -> type_cursor28;
-    type_cursor28 [label = "type_cursor" shape=plaintext]
-    _24 [label = "⏚" shape=plaintext]
-    params24 -> _24;
- func_params_return17 -> notnull29;
-    notnull29 [label = "notnull" shape=plaintext]
-    notnull29 -> type_bool2a;
-    type_bool2a [label = "type_bool" shape=plaintext]
-    _29 [label = "⏚" shape=plaintext]
-    notnull29 -> _29;
- stmt_liste -> stmt_list2b;
-    stmt_list2b [label = "stmt_list" shape=plaintext]
-    stmt_list2b -> stmt_and_attr2c;
-    stmt_and_attr2c [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attr2c -> misc_attrs2d;
-    misc_attrs2d [label = "misc_attrs" shape=plaintext]
-    misc_attrs2d -> misc_attr2e;
-    misc_attr2e [label = "misc_attr" shape=plaintext]
-    misc_attr2e -> dot2f;
-    dot2f [label = "dot" shape=plaintext]
-    dot2f -> str30;
-    str30 [label = "cql" shape=plaintext]
- dot2f -> str31;
-    str31 [label = "builtin" shape=plaintext]
+    opt_limit25 -> _25;
+ select_limit24 -> select_offset27;
+    select_offset27 [label = "select_offset" shape=plaintext]
+ stmt_list0 -> stmt_list28;
+    stmt_list28 [label = "stmt_list" shape=plaintext]
+    stmt_list28 -> select_stmt29;
+    select_stmt29 [label = "select_stmt" shape=plaintext]
+    select_stmt29 -> select_core_list2a;
+    select_core_list2a [label = "select_core_list" shape=plaintext]
+    select_core_list2a -> select_core2b;
+    select_core2b [label = "select_core" shape=plaintext]
+    _2b [label = "⏚" shape=plaintext]
+    select_core2b -> _2b;
+ select_core2b -> select_expr_list_con2c;
+    select_expr_list_con2c [label = "select_expr_list_con" shape=plaintext]
+    select_expr_list_con2c -> select_expr_list2d;
+    select_expr_list2d [label = "select_expr_list" shape=plaintext]
+    select_expr_list2d -> select_expr2e;
+    select_expr2e [label = "select_expr" shape=plaintext]
+    select_expr2e -> add2f;
+    add2f [label = "add" shape=plaintext]
+    add2f -> num30;
+    num30 [label = "1.2" shape=plaintext]
+ add2f -> mul31;
+    mul31 [label = "mul" shape=plaintext]
+    mul31 -> num32;
+    num32 [label = "2147483648" shape=plaintext]
+ mul31 -> num33;
+    num33 [label = "3" shape=plaintext]
     _2e [label = "⏚" shape=plaintext]
-    misc_attr2e -> _2e;
+    select_expr2e -> _2e;
     _2d [label = "⏚" shape=plaintext]
-    misc_attrs2d -> _2d;
- stmt_and_attr2c -> declare_func_stmt32;
-    declare_func_stmt32 [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt32 -> str33;
-    str33 [label = "cql_extract_partition" shape=plaintext]
- declare_func_stmt32 -> func_params_return34;
-    func_params_return34 [label = "func_params_return" shape=plaintext]
-    func_params_return34 -> params35;
-    params35 [label = "params" shape=plaintext]
-    params35 -> param36;
-    param36 [label = "param" shape=plaintext]
+    select_expr_list2d -> _2d;
+ select_expr_list_con2c -> select_from_etc34;
+    select_from_etc34 [label = "select_from_etc" shape=plaintext]
+    _34 [label = "⏚" shape=plaintext]
+    select_from_etc34 -> _34;
+ select_from_etc34 -> select_where35;
+    select_where35 [label = "select_where" shape=plaintext]
+    _35 [label = "⏚" shape=plaintext]
+    select_where35 -> _35;
+ select_where35 -> select_groupby36;
+    select_groupby36 [label = "select_groupby" shape=plaintext]
     _36 [label = "⏚" shape=plaintext]
-    param36 -> _36;
- param36 -> param_detail37;
-    param_detail37 [label = "param_detail" shape=plaintext]
-    param_detail37 -> str38;
-    str38 [label = "p" shape=plaintext]
- param_detail37 -> notnull39;
-    notnull39 [label = "notnull" shape=plaintext]
-    notnull39 -> type_object3a;
-    type_object3a [label = "type_object" shape=plaintext]
-    type_object3a -> str3b;
-    str3b [label = "partitioning" shape=plaintext]
-    _3a [label = "⏚" shape=plaintext]
-    type_object3a -> _3a;
+    select_groupby36 -> _36;
+ select_groupby36 -> select_having37;
+    select_having37 [label = "select_having" shape=plaintext]
+    _2a [label = "⏚" shape=plaintext]
+    select_core_list2a -> _2a;
+ select_stmt29 -> select_orderby38;
+    select_orderby38 [label = "select_orderby" shape=plaintext]
+    _38 [label = "⏚" shape=plaintext]
+    select_orderby38 -> _38;
+ select_orderby38 -> select_limit39;
+    select_limit39 [label = "select_limit" shape=plaintext]
     _39 [label = "⏚" shape=plaintext]
-    notnull39 -> _39;
- params35 -> params3c;
-    params3c [label = "params" shape=plaintext]
-    params3c -> param3d;
-    param3d [label = "param" shape=plaintext]
-    _3d [label = "⏚" shape=plaintext]
-    param3d -> _3d;
- param3d -> param_detail3e;
-    param_detail3e [label = "param_detail" shape=plaintext]
-    param_detail3e -> str3f;
-    str3f [label = "key" shape=plaintext]
- param_detail3e -> type_cursor40;
-    type_cursor40 [label = "type_cursor" shape=plaintext]
-    _3c [label = "⏚" shape=plaintext]
-    params3c -> _3c;
- func_params_return34 -> create_data_type41;
-    create_data_type41 [label = "create_data_type" shape=plaintext]
-    create_data_type41 -> notnull42;
-    notnull42 [label = "notnull" shape=plaintext]
-    notnull42 -> type_object43;
-    type_object43 [label = "type_object" shape=plaintext]
-    _42 [label = "⏚" shape=plaintext]
-    notnull42 -> _42;
+    select_limit39 -> _39;
+ select_limit39 -> select_offset3a;
+    select_offset3a [label = "select_offset" shape=plaintext]
+ stmt_list28 -> stmt_list3b;
+    stmt_list3b [label = "stmt_list" shape=plaintext]
+    stmt_list3b -> select_stmt3c;
+    select_stmt3c [label = "select_stmt" shape=plaintext]
+    select_stmt3c -> select_core_list3d;
+    select_core_list3d [label = "select_core_list" shape=plaintext]
+    select_core_list3d -> select_core3e;
+    select_core3e [label = "select_core" shape=plaintext]
+    _3e [label = "⏚" shape=plaintext]
+    select_core3e -> _3e;
+ select_core3e -> select_expr_list_con3f;
+    select_expr_list_con3f [label = "select_expr_list_con" shape=plaintext]
+    select_expr_list_con3f -> select_expr_list40;
+    select_expr_list40 [label = "select_expr_list" shape=plaintext]
+    select_expr_list40 -> select_expr41;
+    select_expr41 [label = "select_expr" shape=plaintext]
+    select_expr41 -> concat42;
+    concat42 [label = "concat" shape=plaintext]
+    concat42 -> str43;
+    str43 [label = "'a'" shape=plaintext]
+ concat42 -> str44;
+    str44 [label = "'b'" shape=plaintext]
     _41 [label = "⏚" shape=plaintext]
-    create_data_type41 -> _41;
- stmt_list2b -> stmt_list44;
-    stmt_list44 [label = "stmt_list" shape=plaintext]
-    stmt_list44 -> stmt_and_attr45;
-    stmt_and_attr45 [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attr45 -> misc_attrs46;
-    misc_attrs46 [label = "misc_attrs" shape=plaintext]
-    misc_attrs46 -> misc_attr47;
-    misc_attr47 [label = "misc_attr" shape=plaintext]
-    misc_attr47 -> dot48;
-    dot48 [label = "dot" shape=plaintext]
-    dot48 -> str49;
-    str49 [label = "cql" shape=plaintext]
- dot48 -> str4a;
-    str4a [label = "builtin" shape=plaintext]
-    _47 [label = "⏚" shape=plaintext]
-    misc_attr47 -> _47;
+    select_expr41 -> _41;
+    _40 [label = "⏚" shape=plaintext]
+    select_expr_list40 -> _40;
+ select_expr_list_con3f -> select_from_etc45;
+    select_from_etc45 [label = "select_from_etc" shape=plaintext]
+    _45 [label = "⏚" shape=plaintext]
+    select_from_etc45 -> _45;
+ select_from_etc45 -> select_where46;
+    select_where46 [label = "select_where" shape=plaintext]
     _46 [label = "⏚" shape=plaintext]
-    misc_attrs46 -> _46;
- stmt_and_attr45 -> declare_func_stmt4b;
-    declare_func_stmt4b [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt4b -> str4c;
-    str4c [label = "cql_string_dictionary_create" shape=plaintext]
- declare_func_stmt4b -> func_params_return4d;
-    func_params_return4d [label = "func_params_return" shape=plaintext]
-    _4d [label = "⏚" shape=plaintext]
-    func_params_return4d -> _4d;
- func_params_return4d -> create_data_type4e;
-    create_data_type4e [label = "create_data_type" shape=plaintext]
-    create_data_type4e -> notnull4f;
-    notnull4f [label = "notnull" shape=plaintext]
-    notnull4f -> type_object50;
-    type_object50 [label = "type_object" shape=plaintext]
-    type_object50 -> str51;
-    str51 [label = "string_dictionary" shape=plaintext]
-    _50 [label = "⏚" shape=plaintext]
-    type_object50 -> _50;
-    _4f [label = "⏚" shape=plaintext]
-    notnull4f -> _4f;
-    _4e [label = "⏚" shape=plaintext]
-    create_data_type4e -> _4e;
- stmt_list44 -> stmt_list52;
-    stmt_list52 [label = "stmt_list" shape=plaintext]
-    stmt_list52 -> stmt_and_attr53;
-    stmt_and_attr53 [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attr53 -> misc_attrs54;
-    misc_attrs54 [label = "misc_attrs" shape=plaintext]
-    misc_attrs54 -> misc_attr55;
-    misc_attr55 [label = "misc_attr" shape=plaintext]
-    misc_attr55 -> dot56;
-    dot56 [label = "dot" shape=plaintext]
-    dot56 -> str57;
-    str57 [label = "cql" shape=plaintext]
- dot56 -> str58;
-    str58 [label = "builtin" shape=plaintext]
-    _55 [label = "⏚" shape=plaintext]
-    misc_attr55 -> _55;
-    _54 [label = "⏚" shape=plaintext]
-    misc_attrs54 -> _54;
- stmt_and_attr53 -> declare_func_stmt59;
-    declare_func_stmt59 [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt59 -> str5a;
-    str5a [label = "cql_string_dictionary_add" shape=plaintext]
- declare_func_stmt59 -> func_params_return5b;
-    func_params_return5b [label = "func_params_return" shape=plaintext]
-    func_params_return5b -> params5c;
-    params5c [label = "params" shape=plaintext]
-    params5c -> param5d;
-    param5d [label = "param" shape=plaintext]
-    _5d [label = "⏚" shape=plaintext]
-    param5d -> _5d;
- param5d -> param_detail5e;
-    param_detail5e [label = "param_detail" shape=plaintext]
-    param_detail5e -> str5f;
-    str5f [label = "dict" shape=plaintext]
- param_detail5e -> notnull60;
-    notnull60 [label = "notnull" shape=plaintext]
-    notnull60 -> type_object61;
-    type_object61 [label = "type_object" shape=plaintext]
-    type_object61 -> str62;
-    str62 [label = "string_dictionary" shape=plaintext]
-    _61 [label = "⏚" shape=plaintext]
-    type_object61 -> _61;
-    _60 [label = "⏚" shape=plaintext]
-    notnull60 -> _60;
- params5c -> params63;
-    params63 [label = "params" shape=plaintext]
-    params63 -> param64;
-    param64 [label = "param" shape=plaintext]
-    _64 [label = "⏚" shape=plaintext]
-    param64 -> _64;
- param64 -> param_detail65;
-    param_detail65 [label = "param_detail" shape=plaintext]
-    param_detail65 -> str66;
-    str66 [label = "key" shape=plaintext]
- param_detail65 -> notnull67;
-    notnull67 [label = "notnull" shape=plaintext]
-    notnull67 -> type_text68;
-    type_text68 [label = "type_text" shape=plaintext]
-    _67 [label = "⏚" shape=plaintext]
-    notnull67 -> _67;
- params63 -> params69;
-    params69 [label = "params" shape=plaintext]
-    params69 -> param6a;
-    param6a [label = "param" shape=plaintext]
-    _6a [label = "⏚" shape=plaintext]
-    param6a -> _6a;
- param6a -> param_detail6b;
-    param_detail6b [label = "param_detail" shape=plaintext]
-    param_detail6b -> str6c;
-    str6c [label = "value" shape=plaintext]
- param_detail6b -> notnull6d;
-    notnull6d [label = "notnull" shape=plaintext]
-    notnull6d -> type_text6e;
-    type_text6e [label = "type_text" shape=plaintext]
-    _6d [label = "⏚" shape=plaintext]
-    notnull6d -> _6d;
-    _69 [label = "⏚" shape=plaintext]
-    params69 -> _69;
- func_params_return5b -> notnull6f;
-    notnull6f [label = "notnull" shape=plaintext]
-    notnull6f -> type_bool70;
-    type_bool70 [label = "type_bool" shape=plaintext]
-    _6f [label = "⏚" shape=plaintext]
-    notnull6f -> _6f;
- stmt_list52 -> stmt_list71;
-    stmt_list71 [label = "stmt_list" shape=plaintext]
-    stmt_list71 -> stmt_and_attr72;
-    stmt_and_attr72 [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attr72 -> misc_attrs73;
-    misc_attrs73 [label = "misc_attrs" shape=plaintext]
-    misc_attrs73 -> misc_attr74;
-    misc_attr74 [label = "misc_attr" shape=plaintext]
-    misc_attr74 -> dot75;
-    dot75 [label = "dot" shape=plaintext]
-    dot75 -> str76;
-    str76 [label = "cql" shape=plaintext]
- dot75 -> str77;
-    str77 [label = "builtin" shape=plaintext]
-    _74 [label = "⏚" shape=plaintext]
-    misc_attr74 -> _74;
-    _73 [label = "⏚" shape=plaintext]
-    misc_attrs73 -> _73;
- stmt_and_attr72 -> declare_func_stmt78;
-    declare_func_stmt78 [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt78 -> str79;
-    str79 [label = "cql_string_dictionary_find" shape=plaintext]
- declare_func_stmt78 -> func_params_return7a;
-    func_params_return7a [label = "func_params_return" shape=plaintext]
-    func_params_return7a -> params7b;
-    params7b [label = "params" shape=plaintext]
-    params7b -> param7c;
-    param7c [label = "param" shape=plaintext]
-    _7c [label = "⏚" shape=plaintext]
-    param7c -> _7c;
- param7c -> param_detail7d;
-    param_detail7d [label = "param_detail" shape=plaintext]
-    param_detail7d -> str7e;
-    str7e [label = "dict" shape=plaintext]
- param_detail7d -> notnull7f;
-    notnull7f [label = "notnull" shape=plaintext]
-    notnull7f -> type_object80;
-    type_object80 [label = "type_object" shape=plaintext]
-    type_object80 -> str81;
-    str81 [label = "string_dictionary" shape=plaintext]
-    _80 [label = "⏚" shape=plaintext]
-    type_object80 -> _80;
-    _7f [label = "⏚" shape=plaintext]
-    notnull7f -> _7f;
- params7b -> params82;
-    params82 [label = "params" shape=plaintext]
-    params82 -> param83;
-    param83 [label = "param" shape=plaintext]
-    _83 [label = "⏚" shape=plaintext]
-    param83 -> _83;
- param83 -> param_detail84;
-    param_detail84 [label = "param_detail" shape=plaintext]
-    param_detail84 -> str85;
-    str85 [label = "key" shape=plaintext]
- param_detail84 -> type_text86;
-    type_text86 [label = "type_text" shape=plaintext]
-    _82 [label = "⏚" shape=plaintext]
-    params82 -> _82;
- func_params_return7a -> type_text87;
-    type_text87 [label = "type_text" shape=plaintext]
- stmt_list71 -> stmt_list88;
-    stmt_list88 [label = "stmt_list" shape=plaintext]
-    stmt_list88 -> stmt_and_attr89;
-    stmt_and_attr89 [label = "stmt_and_attr" shape=plaintext]
-    stmt_and_attr89 -> misc_attrs8a;
-    misc_attrs8a [label = "misc_attrs" shape=plaintext]
-    misc_attrs8a -> misc_attr8b;
-    misc_attr8b [label = "misc_attr" shape=plaintext]
-    misc_attr8b -> dot8c;
-    dot8c [label = "dot" shape=plaintext]
-    dot8c -> str8d;
-    str8d [label = "cql" shape=plaintext]
- dot8c -> str8e;
-    str8e [label = "builtin" shape=plaintext]
-    _8b [label = "⏚" shape=plaintext]
-    misc_attr8b -> _8b;
-    _8a [label = "⏚" shape=plaintext]
-    misc_attrs8a -> _8a;
- stmt_and_attr89 -> declare_func_stmt8f;
-    declare_func_stmt8f [label = "declare_func_stmt" shape=plaintext]
-    declare_func_stmt8f -> str90;
-    str90 [label = "cql_cursor_format" shape=plaintext]
- declare_func_stmt8f -> func_params_return91;
-    func_params_return91 [label = "func_params_return" shape=plaintext]
-    func_params_return91 -> params92;
-    params92 [label = "params" shape=plaintext]
-    params92 -> param93;
-    param93 [label = "param" shape=plaintext]
-    _93 [label = "⏚" shape=plaintext]
-    param93 -> _93;
- param93 -> param_detail94;
-    param_detail94 [label = "param_detail" shape=plaintext]
-    param_detail94 -> str95;
-    str95 [label = "C" shape=plaintext]
- param_detail94 -> type_cursor96;
-    type_cursor96 [label = "type_cursor" shape=plaintext]
-    _92 [label = "⏚" shape=plaintext]
-    params92 -> _92;
- func_params_return91 -> create_data_type97;
-    create_data_type97 [label = "create_data_type" shape=plaintext]
-    create_data_type97 -> notnull98;
-    notnull98 [label = "notnull" shape=plaintext]
-    notnull98 -> type_text99;
-    type_text99 [label = "type_text" shape=plaintext]
-    _98 [label = "⏚" shape=plaintext]
-    notnull98 -> _98;
-    _97 [label = "⏚" shape=plaintext]
-    create_data_type97 -> _97;
- stmt_list88 -> stmt_list9a;
-    stmt_list9a [label = "stmt_list" shape=plaintext]
-    stmt_list9a -> select_stmt9b;
-    select_stmt9b [label = "select_stmt" shape=plaintext]
-    select_stmt9b -> select_core_list9c;
-    select_core_list9c [label = "select_core_list" shape=plaintext]
-    select_core_list9c -> select_core9d;
-    select_core9d [label = "select_core" shape=plaintext]
-    _9d [label = "⏚" shape=plaintext]
-    select_core9d -> _9d;
- select_core9d -> select_expr_list_con9e;
-    select_expr_list_con9e [label = "select_expr_list_con" shape=plaintext]
-    select_expr_list_con9e -> select_expr_list9f;
-    select_expr_list9f [label = "select_expr_list" shape=plaintext]
-    select_expr_list9f -> select_expra0;
-    select_expra0 [label = "select_expr" shape=plaintext]
-    select_expra0 -> stra1;
-    stra1 [label = "x" shape=plaintext]
-    _a0 [label = "⏚" shape=plaintext]
-    select_expra0 -> _a0;
- select_expr_list9f -> select_expr_lista2;
-    select_expr_lista2 [label = "select_expr_list" shape=plaintext]
-    select_expr_lista2 -> select_expra3;
-    select_expra3 [label = "select_expr" shape=plaintext]
-    select_expra3 -> stra4;
-    stra4 [label = "y" shape=plaintext]
-    _a3 [label = "⏚" shape=plaintext]
-    select_expra3 -> _a3;
- select_expr_lista2 -> select_expr_lista5;
-    select_expr_lista5 [label = "select_expr_list" shape=plaintext]
-    select_expr_lista5 -> select_expra6;
-    select_expra6 [label = "select_expr" shape=plaintext]
-    select_expra6 -> numa7;
-    numa7 [label = "5.2" shape=plaintext]
-    _a6 [label = "⏚" shape=plaintext]
-    select_expra6 -> _a6;
-    _a5 [label = "⏚" shape=plaintext]
-    select_expr_lista5 -> _a5;
- select_expr_list_con9e -> select_from_etca8;
-    select_from_etca8 [label = "select_from_etc" shape=plaintext]
-    select_from_etca8 -> table_or_subquery_lista9;
-    table_or_subquery_lista9 [label = "table_or_subquery_list" shape=plaintext]
-    table_or_subquery_lista9 -> table_or_subqueryaa;
-    table_or_subqueryaa [label = "table_or_subquery" shape=plaintext]
-    table_or_subqueryaa -> strab;
-    strab [label = "A" shape=plaintext]
-    _aa [label = "⏚" shape=plaintext]
-    table_or_subqueryaa -> _aa;
-    _a9 [label = "⏚" shape=plaintext]
-    table_or_subquery_lista9 -> _a9;
- select_from_etca8 -> select_whereac;
-    select_whereac [label = "select_where" shape=plaintext]
-    _ac [label = "⏚" shape=plaintext]
-    select_whereac -> _ac;
- select_whereac -> select_groupbyad;
-    select_groupbyad [label = "select_groupby" shape=plaintext]
-    _ad [label = "⏚" shape=plaintext]
-    select_groupbyad -> _ad;
- select_groupbyad -> select_havingae;
-    select_havingae [label = "select_having" shape=plaintext]
-    _9c [label = "⏚" shape=plaintext]
-    select_core_list9c -> _9c;
- select_stmt9b -> select_orderbyaf;
-    select_orderbyaf [label = "select_orderby" shape=plaintext]
-    select_orderbyaf -> opt_orderbyb0;
-    opt_orderbyb0 [label = "opt_orderby" shape=plaintext]
-    opt_orderbyb0 -> orderby_listb1;
-    orderby_listb1 [label = "orderby_list" shape=plaintext]
-    orderby_listb1 -> orderby_itemb2;
-    orderby_itemb2 [label = "orderby_item" shape=plaintext]
-    orderby_itemb2 -> strb3;
-    strb3 [label = "a" shape=plaintext]
-    _b2 [label = "⏚" shape=plaintext]
-    orderby_itemb2 -> _b2;
- orderby_listb1 -> orderby_listb4;
-    orderby_listb4 [label = "orderby_list" shape=plaintext]
-    orderby_listb4 -> orderby_itemb5;
-    orderby_itemb5 [label = "orderby_item" shape=plaintext]
-    orderby_itemb5 -> strb6;
-    strb6 [label = "b" shape=plaintext]
-    _b5 [label = "⏚" shape=plaintext]
-    orderby_itemb5 -> _b5;
- orderby_listb4 -> orderby_listb7;
-    orderby_listb7 [label = "orderby_list" shape=plaintext]
-    orderby_listb7 -> orderby_itemb8;
-    orderby_itemb8 [label = "orderby_item" shape=plaintext]
-    orderby_itemb8 -> strb9;
-    strb9 [label = "c" shape=plaintext]
-    _b8 [label = "⏚" shape=plaintext]
-    orderby_itemb8 -> _b8;
- orderby_listb7 -> orderby_listba;
-    orderby_listba [label = "orderby_list" shape=plaintext]
-    orderby_listba -> orderby_itembb;
-    orderby_itembb [label = "orderby_item" shape=plaintext]
-    orderby_itembb -> strbc;
-    strbc [label = "d" shape=plaintext]
- orderby_itembb -> ascbd;
-    ascbd [label = "asc" shape=plaintext]
-    _ba [label = "⏚" shape=plaintext]
-    orderby_listba -> _ba;
-    _b0 [label = "⏚" shape=plaintext]
-    opt_orderbyb0 -> _b0;
- select_orderbyaf -> select_limitbe;
-    select_limitbe [label = "select_limit" shape=plaintext]
-    select_limitbe -> opt_limitbf;
-    opt_limitbf [label = "opt_limit" shape=plaintext]
-    opt_limitbf -> numc0;
-    numc0 [label = "5" shape=plaintext]
-    _bf [label = "⏚" shape=plaintext]
-    opt_limitbf -> _bf;
- select_limitbe -> select_offsetc1;
-    select_offsetc1 [label = "select_offset" shape=plaintext]
- stmt_list9a -> stmt_listc2;
-    stmt_listc2 [label = "stmt_list" shape=plaintext]
-    stmt_listc2 -> select_stmtc3;
-    select_stmtc3 [label = "select_stmt" shape=plaintext]
-    select_stmtc3 -> select_core_listc4;
-    select_core_listc4 [label = "select_core_list" shape=plaintext]
-    select_core_listc4 -> select_corec5;
-    select_corec5 [label = "select_core" shape=plaintext]
-    _c5 [label = "⏚" shape=plaintext]
-    select_corec5 -> _c5;
- select_corec5 -> select_expr_list_conc6;
-    select_expr_list_conc6 [label = "select_expr_list_con" shape=plaintext]
-    select_expr_list_conc6 -> select_expr_listc7;
-    select_expr_listc7 [label = "select_expr_list" shape=plaintext]
-    select_expr_listc7 -> select_exprc8;
-    select_exprc8 [label = "select_expr" shape=plaintext]
-    select_exprc8 -> addc9;
-    addc9 [label = "add" shape=plaintext]
-    addc9 -> numca;
-    numca [label = "1.2" shape=plaintext]
- addc9 -> mulcb;
-    mulcb [label = "mul" shape=plaintext]
-    mulcb -> numcc;
-    numcc [label = "2147483648" shape=plaintext]
- mulcb -> numcd;
-    numcd [label = "3" shape=plaintext]
-    _c8 [label = "⏚" shape=plaintext]
-    select_exprc8 -> _c8;
-    _c7 [label = "⏚" shape=plaintext]
-    select_expr_listc7 -> _c7;
- select_expr_list_conc6 -> select_from_etcce;
-    select_from_etcce [label = "select_from_etc" shape=plaintext]
-    _ce [label = "⏚" shape=plaintext]
-    select_from_etcce -> _ce;
- select_from_etcce -> select_wherecf;
-    select_wherecf [label = "select_where" shape=plaintext]
-    _cf [label = "⏚" shape=plaintext]
-    select_wherecf -> _cf;
- select_wherecf -> select_groupbyd0;
-    select_groupbyd0 [label = "select_groupby" shape=plaintext]
-    _d0 [label = "⏚" shape=plaintext]
-    select_groupbyd0 -> _d0;
- select_groupbyd0 -> select_havingd1;
-    select_havingd1 [label = "select_having" shape=plaintext]
-    _c4 [label = "⏚" shape=plaintext]
-    select_core_listc4 -> _c4;
- select_stmtc3 -> select_orderbyd2;
-    select_orderbyd2 [label = "select_orderby" shape=plaintext]
-    _d2 [label = "⏚" shape=plaintext]
-    select_orderbyd2 -> _d2;
- select_orderbyd2 -> select_limitd3;
-    select_limitd3 [label = "select_limit" shape=plaintext]
-    _d3 [label = "⏚" shape=plaintext]
-    select_limitd3 -> _d3;
- select_limitd3 -> select_offsetd4;
-    select_offsetd4 [label = "select_offset" shape=plaintext]
- stmt_listc2 -> stmt_listd5;
-    stmt_listd5 [label = "stmt_list" shape=plaintext]
-    stmt_listd5 -> select_stmtd6;
-    select_stmtd6 [label = "select_stmt" shape=plaintext]
-    select_stmtd6 -> select_core_listd7;
-    select_core_listd7 [label = "select_core_list" shape=plaintext]
-    select_core_listd7 -> select_cored8;
-    select_cored8 [label = "select_core" shape=plaintext]
-    _d8 [label = "⏚" shape=plaintext]
-    select_cored8 -> _d8;
- select_cored8 -> select_expr_list_cond9;
-    select_expr_list_cond9 [label = "select_expr_list_con" shape=plaintext]
-    select_expr_list_cond9 -> select_expr_listda;
-    select_expr_listda [label = "select_expr_list" shape=plaintext]
-    select_expr_listda -> select_exprdb;
-    select_exprdb [label = "select_expr" shape=plaintext]
-    select_exprdb -> concatdc;
-    concatdc [label = "concat" shape=plaintext]
-    concatdc -> strdd;
-    strdd [label = "'a'" shape=plaintext]
- concatdc -> strde;
-    strde [label = "'b'" shape=plaintext]
-    _db [label = "⏚" shape=plaintext]
-    select_exprdb -> _db;
-    _da [label = "⏚" shape=plaintext]
-    select_expr_listda -> _da;
- select_expr_list_cond9 -> select_from_etcdf;
-    select_from_etcdf [label = "select_from_etc" shape=plaintext]
-    _df [label = "⏚" shape=plaintext]
-    select_from_etcdf -> _df;
- select_from_etcdf -> select_wheree0;
-    select_wheree0 [label = "select_where" shape=plaintext]
-    _e0 [label = "⏚" shape=plaintext]
-    select_wheree0 -> _e0;
- select_wheree0 -> select_groupbye1;
-    select_groupbye1 [label = "select_groupby" shape=plaintext]
-    _e1 [label = "⏚" shape=plaintext]
-    select_groupbye1 -> _e1;
- select_groupbye1 -> select_havinge2;
-    select_havinge2 [label = "select_having" shape=plaintext]
-    _d7 [label = "⏚" shape=plaintext]
-    select_core_listd7 -> _d7;
- select_stmtd6 -> select_orderbye3;
-    select_orderbye3 [label = "select_orderby" shape=plaintext]
-    _e3 [label = "⏚" shape=plaintext]
-    select_orderbye3 -> _e3;
- select_orderbye3 -> select_limite4;
-    select_limite4 [label = "select_limit" shape=plaintext]
-    _e4 [label = "⏚" shape=plaintext]
-    select_limite4 -> _e4;
- select_limite4 -> select_offsete5;
-    select_offsete5 [label = "select_offset" shape=plaintext]
-    _d5 [label = "⏚" shape=plaintext]
-    stmt_listd5 -> _d5;
+    select_where46 -> _46;
+ select_where46 -> select_groupby47;
+    select_groupby47 [label = "select_groupby" shape=plaintext]
+    _47 [label = "⏚" shape=plaintext]
+    select_groupby47 -> _47;
+ select_groupby47 -> select_having48;
+    select_having48 [label = "select_having" shape=plaintext]
+    _3d [label = "⏚" shape=plaintext]
+    select_core_list3d -> _3d;
+ select_stmt3c -> select_orderby49;
+    select_orderby49 [label = "select_orderby" shape=plaintext]
+    _49 [label = "⏚" shape=plaintext]
+    select_orderby49 -> _49;
+ select_orderby49 -> select_limit4a;
+    select_limit4a [label = "select_limit" shape=plaintext]
+    _4a [label = "⏚" shape=plaintext]
+    select_limit4a -> _4a;
+ select_limit4a -> select_offset4b;
+    select_offset4b [label = "select_offset" shape=plaintext]
+    _3b [label = "⏚" shape=plaintext]
+    stmt_list3b -> _3b;
 }

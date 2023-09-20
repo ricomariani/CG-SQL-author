@@ -346,11 +346,11 @@ $O/stats.csv: $O/$(example_name).pre.sql
 
 ast: $O/ast.txt
 $O/ast.txt: $O/$(example_name).pre.sql
-> $(CQL) --in $O/$(example_name).pre.sql --sem --ast | sed '2,190d' > $O/ast.txt # Using sed to remove noise
+> $(CQL) --in $O/$(example_name).pre.sql --sem --ast --hide_builtins > $O/ast.txt # remove builtin spam
 
 ast_dot: $O/ast.dot
 $O/ast.dot: $O/$(example_name).pre.sql
-> $(CQL) --in $O/$(example_name).pre.sql --dot | sed '3,370d' > $O/ast.dot # Using sed to remove noise
+> $(CQL) --in $O/$(example_name).pre.sql --dot --hide_builtins > $O/ast.dot # remove builtin spam
 
 cql_sql_schema: $O/cql_sql_schema.sql
 $O/cql_sql_schema.sql: $O/cql_json_schema.json

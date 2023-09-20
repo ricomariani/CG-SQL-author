@@ -2359,6 +2359,16 @@ static void print_dot(struct ast_node *node) {
   assert(node);
   uint64_t id = next_id++;
 
+  // skip the builtin statements
+  while (options.hide_builtins && is_ast_stmt_list(node)) {
+    EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, node);
+
+    if (!misc_attrs || !find_named_attr(misc_attrs, "builtin")) {
+      break;
+    }
+    node = node->right;
+  }
+
   bool_t primitive = true;
 
   if (is_ast_num(node)) {
@@ -2448,6 +2458,8 @@ static void parse_cmd(int argc, char **argv) {
       options.print_ast = 1;
     } else if (strcmp(arg, "--nolines") == 0) {
       options.nolines = 1;
+    } else if (strcmp(arg, "--hide_builtins") == 0) {
+      options.hide_builtins = 1;
     } else if (strcmp(arg, "--schema_exclusive") == 0) {
       options.schema_exclusive = 1;
     } else if (strcmp(arg, "--dot") == 0) {

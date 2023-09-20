@@ -687,13 +687,16 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
   }
   else {
     if (pad == 2) {
-      cql_output("\n");
-
       if (parent && is_ast_stmt_list(parent)) {
+        EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, parent);
+
+        if (options.hide_builtins && misc_attrs && find_named_attr(misc_attrs, "builtin")) {
+          return;
+        }
+
+        cql_output("\n");
         cql_output("The statement ending at line %d\n\n", node->lineno);
         gen_stmt_level = 1;
-
-        EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, parent);
 
         if (misc_attrs) {
           gen_misc_attrs_to_stdout(misc_attrs);
@@ -712,6 +715,7 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
 #endif
       }
     }
+
     print_ast_type(node);
     if (flip && pad >= 2) {
       padbuffer[pad-2] = ' ';

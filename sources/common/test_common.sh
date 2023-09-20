@@ -152,7 +152,7 @@ basic_test() {
 dot_test() {
   echo '--------------------------------- STAGE 3 -- .DOT OUTPUT TEST'
   echo running "${TEST_DIR}/dottest.sql"
-  if ! ${CQL} --dot --in "${TEST_DIR}/dottest.sql" >"${OUT_DIR}/dottest.out"
+  if ! ${CQL} --dot --hide_builtins --in "${TEST_DIR}/dottest.sql" >"${OUT_DIR}/dottest.out"
   then
     echo DOT syntax test failed
     failed
@@ -165,7 +165,7 @@ dot_test() {
 semantic_test() {
   echo '--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST'
   echo running semantic analysis test
-  if ! sem_check --sem --ast --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
+  if ! sem_check --sem --ast --hide_builtins --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
      cat "${OUT_DIR}/sem_test.err"

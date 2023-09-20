@@ -318,7 +318,7 @@ begin
 
   _("### Case statement\n");
   let a := 1;
-  call printf(
+  call printf("%s",
     case a              -- a switch expression is optional
       when 1 then "one" -- one or more cases
       when 2 then "two"
@@ -331,7 +331,7 @@ begin
   _("### Case with no common expression is a series of independent tests\n");
   let b := 2;
   let c := 3;
-  call printf(
+  call printf("%s",
     case
       when b == 3 then "b = one"   -- booleans could be completely unrelated
       when c == 3 then "c = two"   -- first match wins
@@ -352,7 +352,7 @@ begin
   let d := 4;
   let e := 5;
   let f := 6;
-  call printf((
+  call printf("%s", (
     case d
       when 4 THEN
         case e
@@ -509,7 +509,7 @@ begin
 
   _("### CQL is a two-headed language\n");
   EXAMPLE(1+1, "-- this is evaluated in generated C code");
-  EXAMPLE(select 1+1, "-- this expresion goes to SQLite; SQLite does the addition");
+  EXAMPLE(select 1+1, "-- this expression goes to SQLite; SQLite does the addition");
   _("");
 
 

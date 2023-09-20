@@ -93,5 +93,4 @@ begin
   call mandelbrot();
 end;
 
-@echo lua, "function printf(...) io.write(cql_printf(...)) end\n";
 @echo lua, "go(sqlite3.open_memory())\n";

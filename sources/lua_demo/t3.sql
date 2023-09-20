@@ -30,5 +30,4 @@ begin
    end;
 end;
 
-@echo lua, "function printf(...) io.write(cql_printf(...)) end\n";
 @echo lua, "print_values()\n";

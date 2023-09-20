@@ -95,6 +95,9 @@ function cql_get_aux_value_for_id(id)
   return nil
 end
 
+-- use the native formatter just like C does
+-- cql_printf is the SQLite printf and it is far too expensive for general use
+-- use only when demanded by printf function calls
 function printf(...)
   io.write(cql_printf(...))
 end
@@ -422,9 +425,13 @@ end
 
 -- this needs better error handling
 -- the normal SQLite printf is not exposed to lua so we emulate it with a select statement
+-- this is not cheap... but it's the only compatible choice
 function cql_printf(fmt, ...)
+  if fmt == nil then return "" end
   fmt = string.gsub(fmt, "'", "''")
   args = {...}
+  -- no args, just use the format string
+  if #args == 0 then return fmt end
   cmd = "select printf('" .. fmt .."'"
   for i= 1, #args
   do

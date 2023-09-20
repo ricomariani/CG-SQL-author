@@ -47,7 +47,6 @@ echo ""
 echo query plan
 $O/cql --in qp.sql --cg $O/qp_gen.sql --rt query_plan
 $O/cql --in $O/qp_gen.sql --cg $O/x.l --rt lua --dev
-echo "function printf(...) io.write(cql_printf(...)) end" >> $O/x.l
 echo "query_plan(sqlite3.open_memory())" >> $O/x.l
 (cd $O ; lua $O/x.l)
 

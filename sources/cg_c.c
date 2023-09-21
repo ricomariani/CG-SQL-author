@@ -3195,6 +3195,14 @@ static void cg_param_init(ast_node *ast, charbuf *body) {
   // here we initialize the alias from the in parameter.  The variable now has normal
   // lifetime.
 
+  // Example:  proc foo(x text) begin x := 'foo'; end;
+  // the 'x' argument is borrowed, so we don't normallyl release 'x' however we put 'foo' in it
+  // The caller isn't going to release the string 'foo', we aren't because we donm't release 'x'
+  // becaues it's borrowed.  To fix this instead we generate effectively:
+  // proc foo(_in__x text) begin let x := _in__x;  x := 'foo'; end; 
+  // That pattern works as usual and of course _in__x is not mutated so it doesn't have to be
+  // released.  FWIW: Lua codegen doesn't have this problem because Lua manages the refs.
+
   if (!is_out_parameter(sem_type) && was_set_variable(sem_type) && is_ref_type(sem_type)) {
     cg_declare_simple_var(sem_type, name);
 
@@ -3844,7 +3852,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
       if (dml_proc) {
         bprintf(&proc_cleanup, "  %s_info.db = _db_;\n", proc_name_base.ptr);
       }
-      bprintf(&proc_cleanup, "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
+      bprintf(
+        &proc_cleanup,
+        "  cql_results_from_data(%s, &_rows_, &%s_info, (cql_result_set_ref *)_result_set_);\n",
         rc,
         proc_name_base.ptr);
       if (dml_proc) {

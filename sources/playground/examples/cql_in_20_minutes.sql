@@ -10,7 +10,7 @@
 
 -- The SQL file can be pre-processed with the C pre-processor
 -- E.g. It can be used to include another .sql file (which provides utility functions and macros)
-#include "./cql_in_20_minutes.utils.sql"
+#include <utils/dump.sql>
 
 create procedure chapter_1 ()
 begin

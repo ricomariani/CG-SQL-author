@@ -427,7 +427,6 @@ end
 -- this is not cheap... but it's the only compatible choice
 function cql_printf(fmt, ...)
   if fmt == nil then return "" end
-  fmt = string.gsub(fmt, "'", "''")
   args = {...}
   -- no args, just use the format string
   if #args == 0 then return fmt end

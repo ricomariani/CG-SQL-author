@@ -266,19 +266,17 @@ begin
 
 
   _("### WHILE loops iterate as usual\n");
-  declare i integer not null;
-  set i := 0;
+  let i := 0;
   while i < 5
   begin
     _("i %d", i);
-    set i := i + 1;
+    i += 1;
   end;
   _("");
 
 
   _("### Use LEAVE to end a loop early\n");
-  declare j integer not null;
-  set j := 0;
+  let j := 0;
   while j < 500
   begin
     if j >= 5 then
@@ -287,17 +285,16 @@ begin
     end if;
 
     _("j %d", j);
-    set j := j + 1;
+    j += 1;
   end;
   _("");
 
 
   _("### Use CONTINUE to go back to the loop test\n");
-  declare k integer not null;
-  set k := 0;
+  let k := 0;
   while k < 42
   begin
-     set k := k + 1;
+     k += 1;
      if k % 2 then
        -- Note: we to do this after "k" is incremented!
        -- to avoid an infinite loop

@@ -68,15 +68,13 @@ BEGIN
   let number_of_iterations := 1000000;
   printf("Context:\nNumber of iterations: %d\n\n", number_of_iterations);
   
-  declare i integer;
-
-  set i := 0;
+  let i := 0;
   timer:::start();
   while i <= number_of_iterations
   begin
     declare C1 cursor LIKE User;
     fetch C1 FROM VALUES(1, "Bob", gender_type.male, 1990);
-    set i := i + 1;
+    i += 1;
   end;
   timer:::stop();
   printf("Timings for Fetching User Like from values:\n");
@@ -84,12 +82,12 @@ BEGIN
   printf("\n\n");
 
 
-  set i := 0;
+  i := 0;
   timer:::start();
   while i <= number_of_iterations
   begin
     let user_boxed_1 := User(1, "Bob", gender_type.male, 1990);
-    set i := i + 1;
+    i += 1;
   end;
   timer:::stop();
   printf("Timings for calling User():\n");
@@ -97,12 +95,12 @@ BEGIN
   printf("\n\n");
 
 
-  set i := 0;
+  i := 0;
   timer:::start();
   while i <= number_of_iterations
   begin
     let user_boxed_2 := Nested_User_5(1, "Bob", gender_type.male, 1990);
-    set i := i + 1;
+    i += 1;
   end;
   timer:::stop();
   printf("Timings for calling Nested_User_5():\n");
@@ -112,13 +110,13 @@ BEGIN
 
   declare encoded_user OBJECT<encoded_user>;
   let user_boxed := encoded_user:::decode();
-  set i := 0;
+  i := 0;
   timer:::start();
   while i <= number_of_iterations
   begin
     cursor C2 for call user_and_themselves(user_boxed);
     fetch C2;
-    set i := i + 1;
+    i += 1;
   end;
   timer:::stop();
   printf("Timings for calling user_and_themselves():\n");

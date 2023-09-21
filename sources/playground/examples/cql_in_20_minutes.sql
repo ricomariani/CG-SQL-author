@@ -25,7 +25,7 @@ begin
 
 
   _("### Math is what you would expect\n");
-  EXAMPLE(1 + 1);  
+  EXAMPLE(1 + 1);
   EXAMPLE(8 - 1);
   EXAMPLE(10 * 2);
   EXAMPLE(35.0 / 5);
@@ -54,7 +54,6 @@ begin
 
 
   _("### Use true and false for bools, nullable bool is possible\n");
-
   EXAMPLE(true,  "-- how to true");
   EXAMPLE(false, "-- how to false");
   EXAMPLE(null,  "-- null means \"unknown\" in CQL like SQLite");
@@ -162,7 +161,7 @@ begin
   _("### Variables are declared with DECLARE\n");
   declare x integer not null;
   set X := 123;
-  EXAMPLE(X, "-- Keywords and identifiers are not case sensitive"); 
+  EXAMPLE(X, "-- Keywords and identifiers are not case sensitive");
   EXAMPLE(x, "-- x is the same as X");
   _("");
 
@@ -187,9 +186,9 @@ begin
   declare a_real real;       EXAMPLE(a_real, '-- null real');
   declare an_int integer;    EXAMPLE(an_int, '-- null integer');
   declare a_long long;       EXAMPLE(a_long, '-- null long');
-  declare a_string text;     EXAMPLE(a_string, "-- string is null, EXAMPLE() is not good enough");
-  -- declare an_object object;  EXAMPLE(an_object, "-- object is null, EXAMPLE() is not good enough");
-  declare a_blob blob;       EXAMPLE(a_blob, "-- blob is null, EXAMPLE() is not good enough");
+  declare a_string text;     EXAMPLE(a_string, "-- null string");
+  declare an_object object;  EXAMPLE(an_object, "-- null object");
+  declare a_blob blob;       EXAMPLE(a_blob, "-- null blob");
   _("");
 
 
@@ -231,22 +230,22 @@ begin
 
   let _int_not_null := 123;
   declare _int_null integer;
-
   let bool_IS_1 := _int_not_null IS _int_not_null;
   let bool_IS_2 := _int_not_null IS _int_null;
-  EXAMPLE(bool_IS_1, "-- `IS` never returns `NULL`");
-  EXAMPLE(bool_IS_2, "-- `IS` never returns `NULL`");
+  EXAMPLE(_int_not_null IS _int_not_null, "-- `IS` never returns `NULL`");
+  EXAMPLE(_int_not_null IS _int_null,     "-- `IS` never returns `NULL`");
+  _("");
 
-  let bool_EQ_1 := _int_not_null =  _int_not_null; --, `=` returns `NULL` if either side is `NULL`
-  let bool_EQ_2 := _int_not_null =  _int_null;     --, `=` returns `NULL` if either side is `NULL`
-  EXAMPLE(bool_EQ_1, "-- (NOT NULL = NOT NULL) -> NOT NULL");
-  EXAMPLE(bool_EQ_2, "-- (NOT NULL = NULL) -> NULL");
+  _("### `=` returns `NULL` if either side is `NULL`");
+  EXAMPLE(_int_not_null = _int_not_null, "-- (NOT NULL = NOT NULL) -> NOT NULL, ");
+  EXAMPLE(_int_not_null = _int_null    , "-- (NOT NULL = NULL) -> NULL");
+  _("");
 
-  -- The psuedo function "nullable" converts the type of its arg to the nullable
-  -- version of the same thing.
-
-  let n_i := nullable(1);   -- nullable integer variable initialized to 1
-  let l_i := nullable(1L);  -- nullable long variable initialized to 1
+  _("### The pseudo function `nullable` converts the type of its arg to the nullable version of the same thing");
+  let n_i := nullable(1);
+  let l_i := nullable(1L);
+  EXAMPLE(l_i, "-- nullable integer variable initialized to 1");
+  EXAMPLE(n_i, "-- nullable long variable initialized to 1");
 END;
 
 create procedure chapter_3 ()
@@ -644,7 +643,7 @@ begin
   -- call chapter_12();
 
   -- _("\n\n___\n");
-  
+
   -- call chapter_13();
 
   _("If you've read this far you know more than most now.  :)");

@@ -289,7 +289,7 @@ $O/.gitignore:
 
 preprocessed: $O/$(example_name).pre.sql
 $O/$(example_name).pre.sql: $(source)
-> cc --preprocess --language=c $(source) > $O/$(example_name).pre.sql
+> cc -I$O -I$(SCRIPT_DIR_RELATIVE) --preprocess --language=c $(source) > $O/$(example_name).pre.sql
 
 $O/$(example_name).c: $O/$(example_name).pre.sql
 > $(CQL) --nolines --in $O/$(example_name).pre.sql --cg $O/$(example_name).h $O/$(example_name).c $O/$(example_name)_imports.sql --generate_exports --cqlrt $(CQL_ROOT_DIR)/cqlrt.h

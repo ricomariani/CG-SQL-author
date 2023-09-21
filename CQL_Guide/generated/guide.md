@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 19 09:52:07 PDT 2023
+Snapshot as of Wed Sep 20 17:48:57 PDT 2023
 
 ### Operators and Literals
 
@@ -11039,8 +11039,8 @@ any_stmt:
   | declare_enum_stmt
   | declare_const_stmt
   | declare_group_stmt
-  | declare_select_func_no_check_stmt
   | declare_func_stmt
+  | declare_select_func_stmt
   | declare_out_call_stmt
   | declare_proc_no_check_stmt
   | declare_proc_stmt
@@ -12206,16 +12206,16 @@ const_values:
 const_value:  name '=' expr
   ;
 
-declare_select_func_no_check_stmt:
-  "DECLARE" "SELECT" function name "NO" "CHECK" data_type_with_options
+declare_select_func_stmt:
+   "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
+  | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
+  | "DECLARE" "SELECT" function name "NO" "CHECK" data_type_with_options
   | "DECLARE" "SELECT" function name "NO" "CHECK" '(' typed_names ')'
   ;
 
 declare_func_stmt:
   "DECLARE" function name '(' func_params ')' data_type_with_options
-  | "DECLARE" "SELECT" function name '(' params ')' data_type_with_options
   | "DECLARE" function name '(' func_params ')' "CREATE" data_type_with_options
-  | "DECLARE" "SELECT" function name '(' params ')' '(' typed_names ')'
   ;
 
 procedure: "PROC" | "PROCEDURE"
@@ -17446,7 +17446,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep 19 09:52:08 PDT 2023
+Snapshot as of Wed Sep 20 17:48:57 PDT 2023
 
 ### Rules
 

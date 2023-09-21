@@ -425,16 +425,13 @@ end
 -- this needs better error handling
 -- the normal SQLite printf is not exposed to lua so we emulate it with a select statement
 -- this is not cheap... but it's the only compatible choice
-function cql_printf(fmt, ...)
-  if fmt == nil then return "" end
+function cql_printf(...)
   args = {...}
-  -- no args, just use the format string
-  if #args == 0 then return fmt end
-  cmd = "select printf('" .. fmt .."'"
-  for i= 1, #args
-  do
-    cmd = cmd .. ",?"
-  end;
+  -- no args, empty string result
+  if #args == 0 or args[1] == "" then return "" end
+
+  cmd = "select printf(?"
+  for i= 2, #args do cmd = cmd .. ",?" end;
   cmd = cmd .. ");"
 
   -- dummy database

@@ -54,6 +54,16 @@ cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output);
 
 cql_noexport void cg_c_init(void);
 
+// This lets us emit proc or func args and get back the state we need to continue
+typedef struct {
+   bool_t need_comma;   // do we need a comma before the next param
+   charbuf *output;     // where does the output go
+   ast_node *params;    // these are the formal parameters
+   ast_node *arg_list;  // these are the actual arguments
+} proc_params_info;
+
+static void cg_emit_proc_params(proc_params_info *info);
+
 // Emits a sql statement with bound args.  Returns temp statement index used if any
 static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg_exec);
 
@@ -6642,6 +6652,7 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
   CG_POP_EVAL(arg);
 }
 
+
 // This generates the invocation for a user defined external function.
 // Basically we do a simple C invoke with the matching argument types which are known exactly
 // we do the usual argument conversions using cg_emit_one_arg just like when calling procedures
@@ -6718,26 +6729,24 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     need_comma = true;
   }
 
-  ast_node *item;
-  for (item = arg_list; item; item = item->right, params = params->right) {
-    EXTRACT_ANY(arg, item->left);
-    sem_t sem_type_arg = arg->sem->sem_type;
+  proc_params_info info = {
+    .output = &invocation,
+    .params = params,
+    .arg_list = arg_list,
+    .need_comma = need_comma
+  };
 
-    EXTRACT_NOTNULL(param, params->left);
-    sem_t sem_type_param = param->sem->sem_type;
+  // emit provided args, the param specs are needed for possible type conversions
+  cg_emit_proc_params(&info);
+  need_comma = info.need_comma;
+  params = info.params;
 
-    if (need_comma) {
-      bprintf(&invocation, ", ");
-    }
-    cg_emit_one_arg(arg, sem_type_param, sem_type_arg, &invocation);
-    need_comma = true;
-  }
-
-  if (!item && params) {
+  // no args left, but params are left
+  if (params && !info.arg_list) {
     // The only way this happens is when calling a stored proc like a function
     // using the last arg as the return type.
     Invariant(out_arg_result);
-    Invariant(!params->right);
+    Invariant(!params->right); // exactly one param was missing
     EXTRACT_NOTNULL(param, params->left);
     sem_t param_type = param->sem->sem_type;
     Invariant(is_out_parameter(param_type));
@@ -6811,25 +6820,38 @@ static void cg_declare_out_call_stmt(ast_node *ast) {
   cg_call_stmt(call_stmt);
 }
 
-
 // This helper method walks all the args and all the formal paramaters at the same time
 // it gets the appropriate type info for each and then generates the expression
 // for the evaluation of that argument.
-static void cg_emit_proc_params(charbuf *output, ast_node *params, ast_node *args) {
-  for (ast_node *item = args; item; item = item->right, params = params->right) {
-    EXTRACT_ANY_NOTNULL(arg, item->left);
+static void cg_emit_proc_params(proc_params_info *info) {
+  // Harvest the input
+  ast_node *arg_list = info->arg_list;
+  ast_node *params = info->params;
+  bool_t need_comma = info->need_comma;
+  charbuf *output = info->output;
+
+  for (;arg_list; arg_list = arg_list->right, params = params->right) {
+    EXTRACT_ANY_NOTNULL(arg, arg_list->left);
     sem_t sem_type_arg = arg->sem->sem_type;
 
     EXTRACT_NOTNULL(param, params->left);
     sem_t sem_type_param = param->sem->sem_type;
 
-    // note this might require type conversion, handled here.
-    cg_emit_one_arg(arg, sem_type_param, sem_type_arg, output);
-
-    if (item->right) {
+    if (need_comma) {
       bprintf(output, ", ");
     }
+
+    // note this might require type conversion, handled here.
+    cg_emit_one_arg(arg, sem_type_param, sem_type_arg, output);
+    need_comma = true;
   }
+
+  // return info so that output can continue in case more is coming
+  // normally args and params end at the same time but args can end early
+  // in the proc as func case, we generate a temporary out argument as the last arg
+  info->need_comma = need_comma;
+  info->arg_list = arg_list;
+  info->params = params;
 }
 
 // A call statement has several varieties:
@@ -6973,8 +6995,15 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   // we're wiping it when we exit this function anyway
   Invariant(stack_level == 0);
 
+  proc_params_info info = {
+    .output = &invocation,
+    .params = params,
+    .arg_list = expr_list,
+    .need_comma = false
+  };
+
   // emit provided args, the param specs are needed for possible type conversions
-  cg_emit_proc_params(&invocation, params, expr_list);
+  cg_emit_proc_params(&info);
 
   // For a fetch results proc we have to add the out argument here.
   // Declare that variable if needed.

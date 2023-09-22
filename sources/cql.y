@@ -1808,6 +1808,11 @@ declare_func_stmt:
   | DECLARE function name '(' func_params ')' CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
       $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, create_data_type)); }
+  | DECLARE function name NO CHECK data_type_with_options  {
+      $declare_func_stmt = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
+  | DECLARE function name NO CHECK CREATE data_type_with_options  {
+      ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
+      $declare_func_stmt = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, create_data_type)); }
   ;
 
 procedure: PROC | PROCEDURE

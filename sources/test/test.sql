@@ -1724,9 +1724,16 @@ let add := 7;
 
 add := add + 1;
 
+-- this just tests that we can parse and echo, no semantic check
 add += 5;
 sub -= 3;
 times *= 7;
 div /= 3;
-rmd %= 32;
+mod %= 32;
+_or |= 7;
+_and &= 12;
+lshift <<= 3;
+rshift >>= 3;
 
+declare function stew1 no check integer not null;
+declare function stew2 no check create text not null;

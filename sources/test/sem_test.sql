@@ -22618,6 +22618,53 @@ begin
    select 1 id, "2" name, 3 id2;
 end;
 
+-- TEST: declare unchecked functions (allows variadic params and uses the cheaper calling convention)
+-- external native functions get regular C strings arguments not string references just like
+-- unchecked procs.  This is so procs like printf have a chance to be called.
+-- + {declare_func_no_check_stmt}: text
+-- + {name no_check_func}: text
+-- + {func_params_return}
+-- + {type_text}: text
+-- - error:
+declare function no_check_func no check text;
+
+-- TEST: call with various args
+-- + {expr_stmt}: text
+-- + {call}: text
+-- + {name no_check_func}
+-- + {int 1}: integer notnull
+-- + {int 2}: integer notnull
+-- + {int 3}: integer notnull
+-- - error:
+no_check_func(1,2,3);
+
+-- TEST: call with various different args
+-- + {expr_stmt}: text
+-- + {call}: text
+-- + {name no_check_func}
+-- + {strlit 'a'}: text notnull
+-- + {int 1}: integer notnull
+-- - error:
+no_check_func("a", 1);
+
+-- TEST: call with no args
+-- + {expr_stmt}: text
+-- + {call}: text
+-- + {name no_check_func}
+-- - {arg_list}: ok
+-- - error:
+no_check_func();
+
+-- TEST: args are validated but not against a prototype
+-- + {expr_stmt}: err
+-- + {call}: err
+-- + {arg_list}: err
+-- + {not}: err
+-- error: % string operand not allowed in 'NOT'
+-- +1 error:
+no_check_func(1, not "x");
+
+
 -- TEST: declare unchecked select functions (allows variadic UDF params)
 -- + {declare_select_func_no_check_stmt}: text select_func
 -- + {name no_check_select_fun}: text

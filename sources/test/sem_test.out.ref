@@ -85187,6 +85187,72 @@ END;
 
 The statement ending at line XXXX
 
+DECLARE FUNC no_check_func NO CHECK TEXT;
+
+  {declare_func_no_check_stmt}: text
+  | {name no_check_func}: text
+  | {func_params_return}
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+no_check_func(1, 2, 3);
+
+  {expr_stmt}: text
+  | {call}: text
+    | {name no_check_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+        | {arg_list}
+          | {int 2}: integer notnull
+          | {arg_list}
+            | {int 3}: integer notnull
+
+The statement ending at line XXXX
+
+no_check_func("a", 1);
+
+  {expr_stmt}: text
+  | {call}: text
+    | {name no_check_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'a'}: text notnull
+        | {arg_list}
+          | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+no_check_func();
+
+  {expr_stmt}: text
+  | {call}: text
+    | {name no_check_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+no_check_func(1, NOT "x");
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {expr_stmt}: err
+  | {call}: err
+    | {name no_check_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: err
+        | {int 1}: integer notnull
+        | {arg_list}
+          | {not}: err
+            | {strlit 'x'}: text notnull
+
+The statement ending at line XXXX
+
 DECLARE SELECT FUNC no_check_select_fun NO CHECK TEXT;
 
   {declare_select_func_no_check_stmt}: text select_func

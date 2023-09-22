@@ -371,9 +371,12 @@ cql_noexport ast_node *get_proc_name(ast_node *ast) {
 }
 
 // Helper function to get the parameters node out of the ast for a func.
-cql_noexport ast_node *get_func_params(ast_node *func_stmt) {
-  Contract(is_ast_declare_func_stmt(func_stmt) || is_ast_declare_select_func_stmt(func_stmt));
-  EXTRACT_NOTNULL(func_params_return, func_stmt->right);
+cql_noexport ast_node *get_func_params(ast_node *ast) {
+  bool_t select_func = is_ast_declare_select_func_no_check_stmt(ast) || is_ast_declare_select_func_stmt(ast);
+  bool_t non_select_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_func_stmt(ast);
+  Contract(select_func || non_select_func);
+
+  EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT(params, func_params_return->left);
   return params;
 }

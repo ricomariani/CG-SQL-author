@@ -2709,7 +2709,7 @@ static void cg_expr_call(ast_node *ast, CSTR op, charbuf *is_null, charbuf *valu
 
   // name( [arg_list] )
 
-  if (find_func(name) || find_proc(name)) {
+  if (find_func(name) || find_proc(name) || find_unchecked_func(name)) {
     cg_user_func(ast, is_null, value);
   }
   else {
@@ -4099,15 +4099,6 @@ static void cg_declare_func_stmt(ast_node *ast) {
 
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(func_decl);
-}
-
-static void cg_declare_select_func_stmt(ast_node *ast) {
-  Contract(is_ast_declare_select_func_stmt(ast));
-
-  // We do not emit the declaration of the sql UDF into the header file
-  // since it is not callable from C (unlike regular declared functions)
-
-  // NO-OP
 }
 
 // emit the proc with the appropriate invocation prefix
@@ -6671,6 +6662,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
 
   ast_node *params = NULL;
   ast_node *func_stmt = find_func(name);
+  if (!func_stmt) func_stmt = find_unchecked_func(name);
   CSTR func_name = NULL;
 
   bool_t dml_proc = false;
@@ -6741,7 +6733,6 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   need_comma = info.need_comma;
   params = info.params;
 
-  // no args left, but params are left
   if (params && !info.arg_list) {
     // The only way this happens is when calling a stored proc like a function
     // using the last arg as the return type.
@@ -8680,7 +8671,9 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(declare_const_stmt);
   NO_OP_STMT_INIT(declare_named_type);
   NO_OP_STMT_INIT(declare_proc_no_check_stmt);
+  NO_OP_STMT_INIT(declare_func_no_check_stmt);
   NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
+  NO_OP_STMT_INIT(declare_select_func_stmt);
   NO_OP_STMT_INIT(declare_interface_stmt);
 
   COMMON_STMT_INIT(blob_get_key_type_stmt);
@@ -8735,7 +8728,6 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(emit_constants_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
-  STMT_INIT(declare_select_func_stmt);
   STMT_INIT(trycatch_stmt);
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(throw_stmt);

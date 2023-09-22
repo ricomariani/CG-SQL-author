@@ -3812,6 +3812,17 @@ static void gen_declare_func_stmt(ast_node *ast) {
   gen_data_type(ret_data_type);
 }
 
+static void gen_declare_func_no_check_stmt(ast_node *ast) {
+  Contract(is_ast_declare_func_no_check_stmt(ast));
+  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NOTNULL(func_params_return, ast->right);
+  EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
+
+  gen_printf("DECLARE FUNC %s NO CHECK ", name);
+
+  gen_data_type(ret_data_type);
+}
+
 static void gen_declare_vars_type(ast_node *ast) {
   Contract(is_ast_declare_vars_type(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
@@ -4790,6 +4801,7 @@ cql_noexport void gen_init() {
   STMT_INIT(declare_proc_no_check_stmt);
   STMT_INIT(declare_interface_stmt);
   STMT_INIT(declare_func_stmt);
+  STMT_INIT(declare_func_no_check_stmt);
   STMT_INIT(declare_select_func_stmt);
   STMT_INIT(declare_select_func_no_check_stmt);
   STMT_INIT(loop_stmt);
@@ -4865,6 +4877,10 @@ cql_noexport void gen_init() {
   EXPR_INIT(mul_eq, gen_binary, "*=", EXPR_PRI_ASSIGN);
   EXPR_INIT(div_eq, gen_binary, "/=", EXPR_PRI_ASSIGN);
   EXPR_INIT(mod_eq, gen_binary, "%=", EXPR_PRI_ASSIGN);
+  EXPR_INIT(or_eq, gen_binary, "|=", EXPR_PRI_ASSIGN);
+  EXPR_INIT(and_eq, gen_binary, "&=", EXPR_PRI_ASSIGN);
+  EXPR_INIT(rs_eq, gen_binary, ">>=", EXPR_PRI_ASSIGN);
+  EXPR_INIT(ls_eq, gen_binary, "<<=", EXPR_PRI_ASSIGN);
   EXPR_INIT(call, gen_expr_call, "CALL", EXPR_PRI_ROOT);
   EXPR_INIT(window_func_inv, gen_expr_window_func_inv, "WINDOW-FUNC-INV", EXPR_PRI_ROOT);
   EXPR_INIT(raise, gen_expr_raise, "RAISE", EXPR_PRI_ROOT);

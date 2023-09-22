@@ -5,12 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// cql - prounounced "see-queue-el" is a basic tool for enabling stored
+// cql - pronounced "see-queue-el" is a basic tool for enabling stored
 //       procedures for SQLite. The tool does this by parsing a language
 //       not unlike typical SQL stored procedure forms available in
 //       MySql and SQL Server.
 //
-//       Broadly speaaking compilation is as follows:
+//       Broadly speaking compilation is as follows:
 //         * SQL statements such as SELECT/INSERT/UPDATE/DELETE
 //           are converted into calls to SQLite to do the work.
 //           Any variables in those statements are converted into

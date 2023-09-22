@@ -817,25 +817,25 @@ static bool_t error_any_object(ast_node *ast, sem_t core_type_left, sem_t core_t
 // If there is a current object type, then the next item must match
 // If there is no such type, then an object type that arrives becomes the required type
 // if they ever don't match, record an error
-static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright) {
-  if (kright) {
-    if (kleft) {
-      if (strcmp(kleft, kright)) {
-        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kright, kleft);
+static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kind_left, CSTR kind_right) {
+  if (kind_right) {
+    if (kind_left) {
+      if (strcmp(kind_left, kind_right)) {
+        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kind_right, kind_left);
         report_error(ast, errmsg, NULL);
         record_error(ast);
       }
     }
-    return kright;
+    return kind_right;
   }
 
-  return kleft;
+  return kind_left;
 }
 
 // helper to crack the ast nodes first and then call the normal comparisons
-static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
-  CSTR kleft = ast->sem->kind;
-  return sem_combine_kinds_general(ast, kleft, kright);
+static CSTR sem_combine_kinds(ast_node *ast, CSTR kind_right) {
+  CSTR kind_left = ast->sem->kind;
+  return sem_combine_kinds_general(ast, kind_left, kind_right);
 }
 ```
 
@@ -931,7 +931,7 @@ static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t 
     return false;
   }
 
-  if (!sem_verify_safeassign(ast, sem_type_needed, sem_type_found, var_name)) {
+  if (!sem_verify_safe_assign(ast, sem_type_needed, sem_type_found, var_name)) {
     return false;
   }
 
@@ -950,7 +950,7 @@ static bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t 
 ```
 
 * `sem_verify_compat` : checks for standard type compatibility between the left and the right
-* `sem_verify_safeassign` : checks that if the types are different the right operand is the smaller of the two
+* `sem_verify_safe_assign` : checks that if the types are different the right operand is the smaller of the two
 * nullability checks ensure you aren't trying to assign a nullable value to a not null variable
 * sensitivity checks ensure you aren't trying to assign a sensitive value to a not sensitive variable
 

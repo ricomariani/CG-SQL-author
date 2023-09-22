@@ -95,13 +95,13 @@ static list_item *created_columns;
 static int32_t max_previous_schema_version;
 
 // Some facts to keep in mind when thinking about pending region validations:
-// * when doing previous schhema validation the previous schema come after @previous_schema;
+// * when doing previous schema validation the previous schema come after @previous_schema;
 //   this means it comes after the main schema so even though it's "previous" it comes second in the file
 //   this can be confusing.  Previous here always means the item in the previous schema which is the second item
 //   of that name found.
 // * when the item is encountered it's possible that it is in a region but that region has not
-//   yet been used in a depoyable region. In order to be sure that deployable regions don't change
-//   we have to wait until we've seen all the regions to decide which entites are in which deployable regions.
+//   yet been used in a deployable region. In order to be sure that deployable regions don't change
+//   we have to wait until we've seen all the regions to decide which entities are in which deployable regions.
 // * The canonical form of the previous schema has the region declarations first but we can't assume we're
 //   getting these in the canonical order. So we have to enqueue.
 // * The ast nodes here are durable as always as is the name which comes from the symbol table or the ast node
@@ -208,7 +208,7 @@ static void sem_validate_index_expr_for_jptr(sem_join *jptr, ast_node *expr);
 static void sem_numeric_expr(ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
 static void sem_misc_attrs_basic(ast_node *ast);
 static void sem_data_type_var(ast_node *ast);
-static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright);
+static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kind_left, CSTR kind_right);
 static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
@@ -413,7 +413,7 @@ static bool_t validating_previous_schema;
 // The current annonation target in create proc statement
 static CSTR annotation_target;
 
-// When we're doing previous schema validation we will march through the unsub/resub
+// When we're doing previous schema validation we will march through the unsub
 // directives in order, this tells us the next one to consider.
 static list_item *next_subscription;
 
@@ -428,7 +428,7 @@ static bool_t found_subscription_error;
 //   we're computing its type.
 // * We're analyzing an expression that was already analyzed (e.g., in a CTE).
 // * We're analyzing the output of a previous CQL run within which calls to
-//   `cql_inferrred_notnull` may occur.
+//   `cql_inferred_notnull` may occur.
 //
 // Regardless of the cause, if `is_analyzing_notnull_rewrite` is true, we do not
 // want to rewrite again.
@@ -436,7 +436,7 @@ static bool_t is_analyzing_notnull_rewrite;
 
 // Keeps track of all global variables that may currently be improved to be NOT
 // NULL. We need this because we must un-improve all such variables after every
-// procedure call (because we don't do interprocedural analysis and cannot know
+// procedure call (because we don't do inter-procedural analysis and cannot know
 // which globals may have been set to NULL).
 static global_notnull_improvement_item *global_notnull_improvements;
 
@@ -482,8 +482,9 @@ static bool_t current_proc_contains_try_is_proc_body;
 #define POP_JOIN() \
   current_joinscope = current_joinscope->parent;
 
-// Save the current expression context and create a new one, needed for instance if there is a nested select expression.
-// The context must have EXACTLY one bit set (enforced by contract below)
+// Save the current expression context and create a new one, needed for instance if there
+// is a nested select expression.  The context must have EXACTLY one bit set
+// (enforced by contract below)
 #define PUSH_EXPR_CONTEXT(x) \
   uint32_t saved_expr_context = current_expr_context; \
   current_expr_context = (x); \
@@ -497,7 +498,7 @@ static bool_t current_proc_contains_try_is_proc_body;
 // if there is one present, we just disable it by setting the jptr to null
 // we only do the monitoring and therefore alias minification on the top
 // level select statements;  internal names can be used all over for
-// nested nested selects and correlated subqueries.  That's not where
+// nested nested selects and correlated sub-queries.  That's not where
 // the space savings is anyway.
 #define PUSH_MONITOR_SYMTAB() \
   symtab *monitor_symbtab_saved = monitor_symtab; \
@@ -641,12 +642,12 @@ error:
 // a pending join expression the one struct in it. There is nothing
 // else in scope here.  Note variables are allowed, but weird.
 // You can in principle bind variables in place of constants in DDL
-// but this is basically never done. Still, for symmettry we allow
+// but this is basically never done. Still, for symmetry we allow
 // this (not new here but expressions are few in DDL)
 //   * create a join context with a table that is impossible to name
 //   * expressions like T.id are always invalid hence we use $$$ for the name
 //     because that can match no syntactically correct "T".
-//   * do smeantic analysis as usual on the expression, any numeric is
+//   * do semantic analysis as usual on the expression, any numeric is
 //     ok for a bool
 static void sem_validate_check_expr_for_table(ast_node *table, ast_node *expr, CSTR context) {
   Contract(is_ast_create_table_stmt(table));
@@ -702,7 +703,7 @@ static void sem_validate_index_expr_for_jptr(sem_join *jptr, ast_node *expr) {
 }
 
 // data needed for processing a column definition
-typedef struct coldef_info {
+typedef struct col_def_info {
   version_attrs_info *table_info;    // the various table version info items from the containing table
   sem_t col_sem_type;                // the semantic type of the created_columns
   CSTR col_name;                     // the column we are currently processing
@@ -715,7 +716,7 @@ typedef struct coldef_info {
   CSTR create_proc;                  // the name of the create migration proc if any
   CSTR delete_proc;                  // the name of the delete migration proc if any
   ast_node *default_value;           // the default value expression if there is one
-} coldef_info;
+} col_def_info;
 
 // We collect these as we process the column definitions.
 // tracking this information helps us to report on duplicates
@@ -723,7 +724,7 @@ typedef struct coldef_info {
 // and otherwise get the results on a silver platter when processing is done.
 // This also gives us access to the pending table info which can be used
 // for validation and error messages.
-static void init_coldef_info(coldef_info *info, version_attrs_info *table_info) {
+static void init_col_def_info(col_def_info *info, version_attrs_info *table_info) {
   info->table_info = table_info;
   info->col_sem_type = SEM_TYPE_PENDING;
   info->col_name = NULL;
@@ -976,7 +977,7 @@ static bool_t is_unique_key_valid(ast_node *table_ast, ast_node *uk) {
 }
 
 // Make sure the given number is an integer, and is in range.
-// We can only check the range if the integer evalautes to a constant which is
+// We can only check the range if the integer evaluates to a constant which is
 // common enough that we try to do this here.  If it's a not something we recognize
 // is a constant then all bets are off.
 static bool_t is_num_int_in_range(ast_node *ast, int64_t lower, int64_t upper) {
@@ -1342,14 +1343,6 @@ cql_noexport bool_t is_autotest_dummy_test(CSTR name) {
   return !Strcasecmp(name, "dummy_test");
 }
 
-cql_noexport bool_t sem_is_str_name(ast_node *ast) {
-  if (is_ast_str(ast)) {
-    EXTRACT_STRING(name, ast);
-    return name[0] != '\'' && name[0] != '\"';
-  }
-  return false;
-}
-
 // helper to search for the indicated misc attribute on a procedure
 cql_noexport bool_t is_proc_private(ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
@@ -1490,11 +1483,11 @@ static void enforce_encode_context_column_with_strict_mode(ast_node *misc_attrs)
   }
 }
 
-// enforce the specified column name must be valid string
-// return false if column is not valid string
+// Enforce the specified column name must be valid string.
+// Return false if column is not valid string.
 static bool_t vault_sensitive_encode_column_valid_string(ast_node *misc_attr_value, ast_node *misc_attrs)
 {
-  if (!sem_is_str_name(misc_attr_value)) {
+  if (!is_id(misc_attr_value)) {
     report_error(misc_attr_value, "CQL0363: all arguments must be names", "vault_sensitive");
     record_error(misc_attr_value);
     if (misc_attrs) {
@@ -1639,7 +1632,7 @@ enforce_encode_context_column_with_strict_mode(misc_attrs);
         sem_column_name_exist_in_result_set(context_col, misc_attr_value, misc_attrs);
         sem_column_name_match_encode_context_column_type(context_col, misc_attrs);
       }
-      // extrac context column
+      // extract context column
       if (info->encode_context_column) {
         *(info->encode_context_column) = context_col;
       }
@@ -1800,8 +1793,8 @@ static bool_t sem_validate_object_ast_in_current_region(CSTR name,
   return true;
 }
 
-// Only clients that want to ensure no conflict of names (whether deleted or
-// not) use this version.
+// Only callers that want to ensure no conflict of names (whether deleted or not)
+// use this version. Deleted names are not good for anything but de-duping against.
 ast_node *find_table_or_view_even_deleted(CSTR name) {
   Contract(name);
 
@@ -1847,7 +1840,9 @@ cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_
   // stub so we don't want to look at it it too deeply: It's just there so we
   // can produce this error.
   if (schema_upgrade_version > 0 && !is_ast_create_table_stmt(table_ast)) {
-    // views may not be accessed in a migration script
+    // Views may not be accessed in a migration script, because during migration
+    // they have been deleted and will come back after.  FWIW migration scripts
+    // turned out to be a terrible idea and using them at all is not recommended.
     Invariant(is_ast_create_view_stmt(table_ast));
     if (err_target) {
       CHARBUF_OPEN(err_msg);
@@ -1932,30 +1927,31 @@ static bool_t add_trigger(ast_node *ast, CSTR name) {
   return symtab_add(triggers, name, ast);
 }
 
+// Wrapper for triggers.
 static ast_node *find_trigger(CSTR name) {
   symtab_entry *entry = symtab_find(triggers, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// wrapper for variable groups
+// Wrapper for variable groups.
 cql_noexport ast_node *find_variable_group(CSTR name) {
   symtab_entry *entry = symtab_find(variable_groups, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// wrapper for constant groups
+// Wrapper for constant groups.
 cql_noexport ast_node *find_constant_group(CSTR name) {
   symtab_entry *entry = symtab_find(constant_groups, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// wrapper for constants
+// Wrapper for constants.
 cql_noexport ast_node *find_constant(CSTR name) {
   symtab_entry *entry = symtab_find(constants, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// returns the node only if it exists and is not restricted by the schema region.
+// Returns the node only if it exists and is not restricted by the schema region.
 static ast_node *find_usable_trigger(CSTR name, ast_node *err_target, CSTR msg) {
   ast_node *trigger_ast = find_trigger(name);
 
@@ -1981,7 +1977,7 @@ ast_node *find_enum(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// Wrappers for the arg bundles table
+// Wrappers for the arg bundles table.
 cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name) {
   return symtab_add(arg_bundles, name, ast);
 }
@@ -2004,6 +2000,7 @@ cql_noexport ast_node *find_proc(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
+// Wrappers for the unchecked proc table.
 static bool_t add_unchecked_proc(ast_node *ast, CSTR name) {
   return symtab_add(unchecked_procs, name, ast);
 }
@@ -2018,17 +2015,19 @@ cql_noexport bytebuf *find_proc_arg_info(CSTR name) {
   return entry ? (bytebuf *)(entry->val) : NULL;
 }
 
+// Wrapper for upgrade procedures (e.g. in an @create directive)
 static ast_node *find_upgrade_proc(CSTR name) {
   symtab_entry *entry = symtab_find(upgrade_procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
+// Wrapper for ad hoc migration procs (from @SCHEMA_AD_HOC_MIGRATION)
 static ast_node *find_ad_hoc_migrate(CSTR name) {
   symtab_entry *entry = symtab_find(ad_hoc_migrates, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// Wrappers for shape table
+// Wrappers for interfaces table (user defined shapes)
 static bool_t add_interface_type(ast_node *ast, CSTR name) {
   return symtab_add(interfaces, name, ast);
 }
@@ -2038,7 +2037,7 @@ ast_node *find_interface_type(CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-// Wrappers for the region table
+// Wrappers for the region table.
 cql_noexport ast_node *find_region(CSTR name) {
   symtab_entry *entry = symtab_find(schema_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
@@ -2081,7 +2080,7 @@ cql_noexport ast_node *find_named_type(CSTR name) {
 }
 
 static ast_node *find_cur_region(CSTR name) {
-  // during previous schema validation the current regions is the previous ones
+  // During previous schema validation the current region is the previous ones.
   symtab_entry *entry = symtab_find(new_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
@@ -2102,7 +2101,8 @@ CSTR create_group_id(CSTR group_name, CSTR table_name) {
    }
 }
 
-// Helper function to walk the graph stored in recreate_group_deps from = a starting group name to an ending group name.
+// Helper function to walk the graph stored in recreate_group_deps from 
+// a starting group name to an ending group name.
 // We perform a simple depth first search.
 static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
   if (!Strcasecmp(start, end)) {
@@ -2415,7 +2415,7 @@ static void cql_attach_captured_errors(ast_node *stmt) {
 
 // Outside of normal statement list processing you have to do your own
 // error capture logic; this helper capture a single error message.
-// the general case is more felixble but typically not needed.  Since these
+// the general case is more flexible but typically not needed.  Since these
 // errors don't flow up we have to mark the root directly so that the system
 // knows there were semantic errors.  This flow is only for deferred errors.
 static void report_and_capture_error(ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
@@ -2437,8 +2437,8 @@ static void report_and_capture_error(ast_node *root, ast_node *ast, CSTR err_msg
   CHARBUF_CLOSE(errbuf);
 }
 
-// error reporter for appending extra info on mismatched sem types where
-// exact type is expected
+// Error reporter for appending extra info on mismatched sem types where
+// exact type is expected.
 static void report_sem_type_mismatch(
     sem_t sem_expected_type,
     sem_t sem_actual_type,
@@ -2743,7 +2743,7 @@ static bool_t sem_verify_compat(ast_node *ast, sem_t sem_type_needed, sem_t sem_
 // with symmetric operations like X == Y where either side can be promoted.  In an assignment the left
 // side cannot be promoted so the store can be lossy.  This checks for the lossy cases that are otherwise
 // compatible.  That is, we assume that the above has already been called.
-static bool_t sem_verify_safeassign(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
+static bool_t sem_verify_safe_assign(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
   // normalize even if we weren't given core types
   sem_t core_type_needed = core_type_of(sem_type_needed);
   sem_t core_type_found = core_type_of(sem_type_found);
@@ -2816,7 +2816,7 @@ cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, 
     return false;
   }
 
-  if (!sem_verify_safeassign(ast, sem_type_needed, sem_type_found, var_name)) {
+  if (!sem_verify_safe_assign(ast, sem_type_needed, sem_type_found, var_name)) {
     return false;
   }
 
@@ -2837,7 +2837,7 @@ cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, 
 // are previously known to be compatible, it returns the smallest type
 // that holds both.  If either is nullable the result is nullable.
 // Note: in the few cases where that isn't true the normal algorithm for
-// nullablity result must be overridden (see coalesce for instance).
+// nullability result must be overridden (see coalesce for instance).
 static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
   sem_t combined_flags = combine_flags(sem_type_1, sem_type_2);
   sem_t core_type_1 = core_type_of(sem_type_1);
@@ -3767,7 +3767,7 @@ static bool_t find_referenceable_columns(
 // Check whether or not a column in a table is referenceable by other table in
 // foreign key statement.
 // This is used in autotest(dummy_test) to figure out which columns needs to have
-// explicite value in INSERT statement to avoid sql foreign key violations.
+// explicit value in INSERT statement to avoid sql foreign key violations.
 //
 // A column is considered referenceable if column is :
 //  - a primary e.g: create table t (a text primary key)
@@ -3904,7 +3904,7 @@ static void sem_fk_def(ast_node *table_ast, ast_node *def, version_attrs_info *t
   // The previous schema may have different regions and/or @recreate groups and this will
   // just lead to spurious errors.  The current schema was already checked for consistency
   // all we have to do is validate that the text of the columns didn't change and that
-  // happens later.  Visibiliity rules are moot.
+  // happens later.  Visibility rules are moot.
   if (validating_previous_schema) {
     record_ok(def);
     return;
@@ -4192,7 +4192,7 @@ static void record_recreate_annotation(ast_node *target_ast, CSTR target_name, C
 
 // This applies the validation for a FK in the context of a column, so that
 // single column is the FK to the outside reference.
-static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
+static void sem_col_attrs_fk(ast_node *fk, ast_node *def, col_def_info *info) {
   Contract(is_ast_col_attrs_fk(fk));
   Contract(is_ast_col_def(def));
   Contract(!current_joinscope);  // I don't belong inside a select(!)
@@ -4224,7 +4224,7 @@ static void sem_col_attrs_fk(ast_node *fk, ast_node *def, coldef_info *info) {
   // The previous schema may have different regions and/or @recreate groups and this will
   // just lead to spurious errors.  The current schema was already checked for consistency
   // all we have to do is validate that the text of the columns didn't change and that
-  // happens later.  Visibiliity of the referenced table in the previous schema is moot.
+  // happens later.  Visibility of the referenced table in the previous schema is moot.
   if (validating_previous_schema) {
     record_ok(fk);
     return;
@@ -4311,7 +4311,7 @@ void sem_validate_fk_attr(pending_table_validation *pending) {
 
 // Parse out the column information for this column and add the necessary flags
 // to the semantic type.  Note that we don't care about all of these flags.
-static sem_t sem_col_attrs(ast_node *def, ast_node *head, coldef_info *info) {
+static sem_t sem_col_attrs(ast_node *def, ast_node *head, col_def_info *info) {
   Contract(head);
   Contract(info);
 
@@ -4495,7 +4495,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *head, coldef_info *info) {
 // note that we need to carry some state here to do the validation.  We
 // track the number of auto-increment columns we've seen so far and
 // complain if we see more than one.
-static void sem_col_def(ast_node *def, coldef_info *info) {
+static void sem_col_def(ast_node *def, col_def_info *info) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
 
@@ -4640,7 +4640,7 @@ static void sem_col_def(ast_node *def, coldef_info *info) {
   def->sem->delete_version = info->delete_version;
 }
 
-// Queue a pending check valiation, this is just like the columns case
+// Queue a pending check validation, this is just like the columns case
 // we could do this right away because constraints come after columns
 // but we may as well just do the checks all the same.
 static void sem_check_def(ast_node *table_ast, ast_node *def) {
@@ -4658,7 +4658,7 @@ static void sem_check_def(ast_node *table_ast, ast_node *def) {
 // Dispatch the correct constraint type.  Release the saved table items
 // (used to find duplicates) when done.  This is always clean on entry
 // because this can't nest.
-static void sem_constraints(ast_node *table_ast, ast_node *col_key_list, coldef_info *info) {
+static void sem_constraints(ast_node *table_ast, ast_node *col_key_list, col_def_info *info) {
   Contract(is_ast_col_key_list(col_key_list));
   Invariant(!current_joinscope && !table_items);
   table_items = symtab_new();
@@ -5121,7 +5121,7 @@ static void sem_arg_expr(ast_node *ast, bool_t is_count) {
 
 // Walk an entire argument list and do the type inference on each argument.
 // Not that this happens in the context of a function call and depending
-// on what the function is, there may be rules for compatability of the
+// on what the function is, there may be rules for compatibility of the
 // arguments with the function and each other.  That doesn't happen here.
 // This just gets the type of each arg and makes sure independently they are
 // not bogus.
@@ -5854,7 +5854,7 @@ static bool_t sem_resolve_column_does_not_conflict_with_variable(ast_node *ast, 
 
 // Given a column name and optional scope (table name), try to find it as one of
 // the columns in the current join scope or else in one of the parent
-// joinscopes. If the name is ambiguous at any given level then it is an error,
+// join-scopes. If the name is ambiguous at any given level then it is an error,
 // but inner scopes are allowed to hide the names of outer scopes.
 static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
@@ -5881,7 +5881,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
               // Since we found two candidates in the same joinscope, we have an
               // ambiguity. It doesn't matter if we check for this before or
               // after we check for aliases as all aliases are in their own
-              // joinscopes anyway.
+              // join-scopes anyway.
               report_resolve_error(ast, "CQL0065: identifier is ambiguous", name);
               record_resolve_error(ast);
               return SEM_RESOLVE_STOP;
@@ -6220,10 +6220,10 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
 //   ast, errors will be reported to the user, and errors will be recorded in
 //   the AST.
 //
-// - `*typr_ptr` will be set to mutable type (`sem_t *`) in the current
+// - `*type_ptr` will be set to mutable type (`sem_t *`) in the current
 //   environment if the identifier successfully resolves to a type. (There are,
 //   unfortunately, a few exceptions in which a type will be successfully
-//   resolved and yet `*typr_ptr` will not be set. These include when the
+//   resolved and yet `*type_ptr` will not be set. These include when the
 //   expression is `rowid` (or similar) and when the id resolves to an enum
 //   case. The reason no mutable type is returned in these cases is that a new
 //   type is allocated as part of semantic analysis, and there exists no single,
@@ -6582,25 +6582,25 @@ static sem_t *find_mutable_type_and_global_status(CSTR name, CSTR scope, bool_t 
 // If there is a current object type, then the next item must match
 // If there is no such type, then an object type that arrives becomes the required type
 // if they ever don't match record an error
-static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright) {
-  if (kright) {
-    if (kleft) {
-      if (Strcasecmp(kleft, kright)) {
-        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kright, kleft);
+static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kind_left, CSTR kind_right) {
+  if (kind_right) {
+    if (kind_left) {
+      if (Strcasecmp(kind_left, kind_right)) {
+        CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kind_right, kind_left);
         report_error(ast, errmsg, NULL);
         record_error(ast);
       }
     }
-    return kright;
+    return kind_right;
   }
 
-  return kleft;
+  return kind_left;
 }
 
 // helper to crack the ast nodes first and then call the normal comparisons
-static CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {
-  CSTR kleft = ast->sem->kind;
-  return sem_combine_kinds_general(ast, kleft, kright);
+static CSTR sem_combine_kinds(ast_node *ast, CSTR kind_right) {
+  CSTR kind_left = ast->sem->kind;
+  return sem_combine_kinds_general(ast, kind_left, kind_right);
 }
 
 // Validate the contents of the case list of a case expression.
@@ -6829,7 +6829,7 @@ static void sem_expr_between_rewrite(ast_node *ast, CSTR cstr) {
   return;
 }
 
-// Between requires type compatability between all three of its arguments.
+// Between requires type compatibility between all three of its arguments.
 // Nullability follows the usual rules, if any might be null then the result
 // type might be null.  In any case the result's core type is BOOL.
 static void sem_expr_between_or_not_between(ast_node *ast, CSTR cstr) {
@@ -6920,7 +6920,7 @@ static void sem_expr_between_or_not_between(ast_node *ast, CSTR cstr) {
     Invariant(scope);
     CSTR name = dup_printf("_between_%d_", between_count++);
 
-    // implictly declare the local variable we need
+    // Implicitly declare the local variable we need
     ast_node *asts = new_ast_str(name);
     asts->sem = new_sem(expr->sem->sem_type | SEM_TYPE_VARIABLE);
     asts->sem->name = name;
@@ -7048,18 +7048,18 @@ static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  CSTR kleft = expr->sem->kind;
-  CSTR kright = type->sem->kind;
+  CSTR kind_left = expr->sem->kind;
+  CSTR kind_right = type->sem->kind;
 
-  if (!kleft && !kright) {
+  if (!kind_left && !kind_right) {
   }
-  else if (kleft && kright && !Strcasecmp(kleft, kright)) {
+  else if (kind_left && kind_right && !Strcasecmp(kind_left, kind_right)) {
   }
   else {
-    kleft = kleft ? kleft : "[none]";
-    kright = kright ? kright : "[none]";
+    kind_left = kind_left ? kind_left : "[none]";
+    kind_right = kind_right ? kind_right : "[none]";
 
-    CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kleft, kright);
+    CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kind_left, kind_right);
     report_error(ast, errmsg, NULL);
     record_error(ast);
     return;
@@ -7069,7 +7069,7 @@ static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
 }
 
 
-// Coalesce requires type compatability between all of its arguments.  The result
+// Coalesce requires type compatibility between all of its arguments.  The result
 // is a not null type if we find a not null item in the list.  There should be
 // nothing after that item.  Note that ifnull and coalesce are really the same thing
 // except ifnull must have exactly two arguments.
@@ -7166,7 +7166,7 @@ static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
 }
 
 // The in predicate is like many of the other multi-argument operators.  All the
-// items must be type compatible.  Note that in this case the nullablity of
+// items must be type compatible.  Note that in this case the nullability of
 // the items does not matter, only the nullability of the item being tested.
 // Note that null in (null) is null, not true.
 static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
@@ -8846,7 +8846,7 @@ static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
     }
 
     // sensitivity and nullability combine as usual.  Note that if arg1 is nullable and arg3 is not nullable
-    // even though it is the default value for arg1 it is NOT USED usless arg1 and offset is outside the window
+    // even though it is the default value for arg1 it is NOT USED unless arg1 and offset is outside the window
     // so normal nulls in the window can stay.  As a result this is no coalesce or anything like that. This is
     // just a normal nullability and sensitivity combo.
     combined_flags = combine_flags(arg1->sem->sem_type, arg3->sem->sem_type);
@@ -8928,7 +8928,7 @@ static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
   // ast->sem->name is not set here because e.g. nth_value(x) is not named "x"
 }
 
-// The group_concat function has an optional seperator, otherwise
+// The group_concat function has an optional separator, otherwise
 // it accepts anything and it results in a string.
 static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
@@ -9032,7 +9032,7 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
     }
   }
 
-  // the common special case of just a timestring and it's the 'now' literal
+  // the common special case of just a time string and it's the 'now' literal
   if (has_format == 0 && arg_count == 1) {
     ast_node *first = first_arg(arg_list);
     if (is_ast_str(first)) {
@@ -13175,12 +13175,12 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
     return;
   }
 
-  coldef_info cur_cd_info;
-  init_coldef_info(&cur_cd_info, cur_info);
+  col_def_info cur_cd_info;
+  init_col_def_info(&cur_cd_info, cur_info);
   sem_col_def(def, &cur_cd_info);
 
-  coldef_info prev_cd_info;
-  init_coldef_info(&prev_cd_info, prev_info);
+  col_def_info prev_cd_info;
+  init_col_def_info(&prev_cd_info, prev_info);
   sem_col_def(prev_def, &prev_cd_info);
 
   if (!sem_validate_create_prev_cur(prev_cd_info.create_version, cur_cd_info.create_version)) {
@@ -14616,8 +14616,8 @@ static void sem_create_table_stmt(ast_node *ast) {
   // if there is an existing table, save it here so we can check for duplicates later.
   ast_node *existing_defn = adding_current_entity ? find_table_or_view_even_deleted(name) : NULL;
 
-  coldef_info col_info;
-  init_coldef_info(&col_info, &table_vers_info);
+  col_def_info col_info;
+  init_col_def_info(&col_info, &table_vers_info);
 
   bool_t rewrite_col = rewrite_col_key_list(col_key_list);
 
@@ -14960,8 +14960,8 @@ static void sem_alter_table_add_column_stmt(ast_node *ast) {
   table_vers_info.recreate            = table_ast->sem->recreate;
   table_vers_info.recreate_group_name = table_ast->sem->recreate_group_name;
 
-  coldef_info col_info;
-  init_coldef_info(&col_info, &table_vers_info);
+  col_def_info col_info;
+  init_col_def_info(&col_info, &table_vers_info);
 
   sem_col_def(col_def, &col_info);
   if (is_error(col_def)) {

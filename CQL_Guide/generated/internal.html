@@ -1343,25 +1343,25 @@ AST(or)</code></pre>
 <a class="sourceLine" id="cb57-2" title="2"><span class="co">// If there is a current object type, then the next item must match</span></a>
 <a class="sourceLine" id="cb57-3" title="3"><span class="co">// If there is no such type, then an object type that arrives becomes the required type</span></a>
 <a class="sourceLine" id="cb57-4" title="4"><span class="co">// if they ever don&#39;t match, record an error</span></a>
-<a class="sourceLine" id="cb57-5" title="5"><span class="dt">static</span> CSTR sem_combine_kinds_general(ast_node *ast, CSTR kleft, CSTR kright) {</a>
-<a class="sourceLine" id="cb57-6" title="6">  <span class="cf">if</span> (kright) {</a>
-<a class="sourceLine" id="cb57-7" title="7">    <span class="cf">if</span> (kleft) {</a>
-<a class="sourceLine" id="cb57-8" title="8">      <span class="cf">if</span> (strcmp(kleft, kright)) {</a>
-<a class="sourceLine" id="cb57-9" title="9">        CSTR errmsg = dup_printf(<span class="st">&quot;CQL0070: expressions of different kinds can&#39;t be mixed: &#39;%s&#39; vs. &#39;%s&#39;&quot;</span>, kright, kleft);</a>
+<a class="sourceLine" id="cb57-5" title="5"><span class="dt">static</span> CSTR sem_combine_kinds_general(ast_node *ast, CSTR kind_left, CSTR kind_right) {</a>
+<a class="sourceLine" id="cb57-6" title="6">  <span class="cf">if</span> (kind_right) {</a>
+<a class="sourceLine" id="cb57-7" title="7">    <span class="cf">if</span> (kind_left) {</a>
+<a class="sourceLine" id="cb57-8" title="8">      <span class="cf">if</span> (strcmp(kind_left, kind_right)) {</a>
+<a class="sourceLine" id="cb57-9" title="9">        CSTR errmsg = dup_printf(<span class="st">&quot;CQL0070: expressions of different kinds can&#39;t be mixed: &#39;%s&#39; vs. &#39;%s&#39;&quot;</span>, kind_right, kind_left);</a>
 <a class="sourceLine" id="cb57-10" title="10">        report_error(ast, errmsg, NULL);</a>
 <a class="sourceLine" id="cb57-11" title="11">        record_error(ast);</a>
 <a class="sourceLine" id="cb57-12" title="12">      }</a>
 <a class="sourceLine" id="cb57-13" title="13">    }</a>
-<a class="sourceLine" id="cb57-14" title="14">    <span class="cf">return</span> kright;</a>
+<a class="sourceLine" id="cb57-14" title="14">    <span class="cf">return</span> kind_right;</a>
 <a class="sourceLine" id="cb57-15" title="15">  }</a>
 <a class="sourceLine" id="cb57-16" title="16"></a>
-<a class="sourceLine" id="cb57-17" title="17">  <span class="cf">return</span> kleft;</a>
+<a class="sourceLine" id="cb57-17" title="17">  <span class="cf">return</span> kind_left;</a>
 <a class="sourceLine" id="cb57-18" title="18">}</a>
 <a class="sourceLine" id="cb57-19" title="19"></a>
 <a class="sourceLine" id="cb57-20" title="20"><span class="co">// helper to crack the ast nodes first and then call the normal comparisons</span></a>
-<a class="sourceLine" id="cb57-21" title="21"><span class="dt">static</span> CSTR sem_combine_kinds(ast_node *ast, CSTR kright) {</a>
-<a class="sourceLine" id="cb57-22" title="22">  CSTR kleft = ast-&gt;sem-&gt;kind;</a>
-<a class="sourceLine" id="cb57-23" title="23">  <span class="cf">return</span> sem_combine_kinds_general(ast, kleft, kright);</a>
+<a class="sourceLine" id="cb57-21" title="21"><span class="dt">static</span> CSTR sem_combine_kinds(ast_node *ast, CSTR kind_right) {</a>
+<a class="sourceLine" id="cb57-22" title="22">  CSTR kind_left = ast-&gt;sem-&gt;kind;</a>
+<a class="sourceLine" id="cb57-23" title="23">  <span class="cf">return</span> sem_combine_kinds_general(ast, kind_left, kind_right);</a>
 <a class="sourceLine" id="cb57-24" title="24">}</a></code></pre></div>
 <ul>
 <li><code>sem_combine_kinds</code> : uses the worker <code>sem_combine_kinds_general</code> after extracting the <code>kind</code> from the left node
@@ -1423,7 +1423,7 @@ AST(or)</code></pre>
 <a class="sourceLine" id="cb60-10" title="10">    <span class="cf">return</span> false;</a>
 <a class="sourceLine" id="cb60-11" title="11">  }</a>
 <a class="sourceLine" id="cb60-12" title="12"></a>
-<a class="sourceLine" id="cb60-13" title="13">  <span class="cf">if</span> (!sem_verify_safeassign(ast, sem_type_needed, sem_type_found, var_name)) {</a>
+<a class="sourceLine" id="cb60-13" title="13">  <span class="cf">if</span> (!sem_verify_safe_assign(ast, sem_type_needed, sem_type_found, var_name)) {</a>
 <a class="sourceLine" id="cb60-14" title="14">    <span class="cf">return</span> false;</a>
 <a class="sourceLine" id="cb60-15" title="15">  }</a>
 <a class="sourceLine" id="cb60-16" title="16"></a>
@@ -1441,7 +1441,7 @@ AST(or)</code></pre>
 <a class="sourceLine" id="cb60-28" title="28">}</a></code></pre></div>
 <ul>
 <li><code>sem_verify_compat</code> : checks for standard type compatibility between the left and the right</li>
-<li><code>sem_verify_safeassign</code> : checks that if the types are different the right operand is the smaller of the two</li>
+<li><code>sem_verify_safe_assign</code> : checks that if the types are different the right operand is the smaller of the two</li>
 <li>nullability checks ensure you aren’t trying to assign a nullable value to a not null variable</li>
 <li>sensitivity checks ensure you aren’t trying to assign a sensitive value to a not sensitive variable</li>
 </ul>

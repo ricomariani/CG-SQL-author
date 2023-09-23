@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Sep 20 17:48:57 PDT 2023
+Snapshot as of Sat Sep 23 14:45:55 PDT 2023
 
 ### Operators and Literals
 
@@ -28,6 +28,7 @@ These are in order of priority lowest to highest
 "<<" ">>" '&' '|'
 '+' '-'
 '*' '/' '%'
+'['
 "||"
 "COLLATE"
 "UMINUS" '~'
@@ -249,6 +250,7 @@ schema_upgrade_version_stmt:
 set_stmt:
   "SET" name ":=" expr
   | "SET" name "FROM" "CURSOR" name
+  | "SET" name '[' arg_list ']' ":=" expr
   ;
 
 let_stmt:
@@ -526,6 +528,7 @@ name:
   | "LAST"
   | "ADD"
   | "VIEW"
+  | "INDEX"
   ;
 
 opt_name:
@@ -691,6 +694,8 @@ basic_expr:
   | "CASE" case_list "ELSE" expr "END"
   | "CAST" '(' expr "AS" data_type_any ')'
   | "TYPE_CHECK" '(' expr "AS" data_type_with_options ')'
+  | basic_expr '[' arg_list ']'
+  ;
 
 math_expr:
   basic_expr
@@ -1318,6 +1323,8 @@ declare_select_func_stmt:
 declare_func_stmt:
   "DECLARE" function name '(' func_params ')' data_type_with_options
   | "DECLARE" function name '(' func_params ')' "CREATE" data_type_with_options
+  | "DECLARE" function name "NO" "CHECK" data_type_with_options
+  | "DECLARE" function name "NO" "CHECK" "CREATE" data_type_with_options
   ;
 
 procedure: "PROC" | "PROCEDURE"

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Wed Sep 20 17:48:57 2023
+// Snapshot as of Sat Sep 23 14:45:55 2023
 
 
 const PREC = {
@@ -36,7 +36,7 @@ module.exports = grammar({
     previous_schema_stmt: $ => $.AT_PREVIOUS_SCHEMA,
     schema_upgrade_script_stmt: $ => $.AT_SCHEMA_UPGRADE_SCRIPT,
     schema_upgrade_version_stmt: $ => seq($.AT_SCHEMA_UPGRADE_VERSION, '(', $.INT_LIT, ')'),
-    set_stmt: $ => choice(seq($.SET, $.name, ":=", $.expr), seq($.SET, $.name, $.FROM, $.CURSOR, $.name)),
+    set_stmt: $ => choice(seq($.SET, $.name, ":=", $.expr), seq($.SET, $.name, $.FROM, $.CURSOR, $.name), seq($.SET, $.name, '[', optional($.arg_list), ']', ":=", $.expr)),
     let_stmt: $ => seq($.LET, $.name, ":=", $.expr),
     version_attrs_opt_recreate: $ => choice(seq($.AT_RECREATE, optional($.opt_delete_plain_attr)), seq($.AT_RECREATE, '(', $.name, ')', optional($.opt_delete_plain_attr)), $.version_attrs),
     opt_delete_plain_attr: $ => $.AT_DELETE,
@@ -87,7 +87,7 @@ module.exports = grammar({
     indexed_column: $ => seq($.expr, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_where), optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST, $.ADD, $.VIEW),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST, $.ADD, $.VIEW, $.INDEX),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
@@ -109,7 +109,7 @@ module.exports = grammar({
     opt_distinct: $ => choice($.empty, $.DISTINCT),
     simple_call: $ => seq($.name, '(', $.opt_distinct, optional($.arg_list), ')', optional($.opt_filter_clause)),
     call: $ => choice($.simple_call, seq($.basic_expr, ':', $.simple_call), seq($.basic_expr, ':', ':', $.simple_call), seq($.basic_expr, ':', ':', ':', $.simple_call)),
-    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')')),
+    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')'), seq($.basic_expr, '[', optional($.arg_list), ']')),
     IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
     IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),
     IS_TRUE: $ => prec.left(1, seq(CI('is'), CI('true'))),
@@ -238,7 +238,7 @@ module.exports = grammar({
     const_values: $ => choice($.const_value, seq($.const_value, ',', $.const_values)),
     const_value: $ => seq($.name, '=', $.expr),
     declare_select_func_stmt: $ => choice(seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', $.data_type_with_options), seq($.DECLARE, $.SELECT, $.function, $.name, '(', optional($.params), ')', '(', $.typed_names, ')'), seq($.DECLARE, $.SELECT, $.function, $.name, $.NO, $.CHECK, $.data_type_with_options), seq($.DECLARE, $.SELECT, $.function, $.name, $.NO, $.CHECK, '(', $.typed_names, ')')),
-    declare_func_stmt: $ => choice(seq($.DECLARE, $.function, $.name, '(', optional($.func_params), ')', $.data_type_with_options), seq($.DECLARE, $.function, $.name, '(', optional($.func_params), ')', $.CREATE, $.data_type_with_options)),
+    declare_func_stmt: $ => choice(seq($.DECLARE, $.function, $.name, '(', optional($.func_params), ')', $.data_type_with_options), seq($.DECLARE, $.function, $.name, '(', optional($.func_params), ')', $.CREATE, $.data_type_with_options), seq($.DECLARE, $.function, $.name, $.NO, $.CHECK, $.data_type_with_options), seq($.DECLARE, $.function, $.name, $.NO, $.CHECK, $.CREATE, $.data_type_with_options)),
     procedure: $ => choice($.PROC, $.PROCEDURE),
     declare_proc_no_check_stmt: $ => seq($.DECLARE, $.procedure, $.name, $.NO, $.CHECK),
     declare_proc_stmt: $ => choice(seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.USING, $.TRANSACTION), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, '(', $.typed_names, ')', $.USING, $.TRANSACTION), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, $.UNION, '(', $.typed_names, ')'), seq($.DECLARE, $.procedure, $.name, '(', optional($.params), ')', $.OUT, $.UNION, '(', $.typed_names, ')', $.USING, $.TRANSACTION)),

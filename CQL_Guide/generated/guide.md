@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Wed Sep 20 17:48:57 PDT 2023
+Snapshot as of Sat Sep 23 14:45:55 PDT 2023
 
 ### Operators and Literals
 
@@ -10926,6 +10926,7 @@ These are in order of priority lowest to highest
 "<<" ">>" '&' '|'
 '+' '-'
 '*' '/' '%'
+'['
 "||"
 "COLLATE"
 "UMINUS" '~'
@@ -11147,6 +11148,7 @@ schema_upgrade_version_stmt:
 set_stmt:
   "SET" name ":=" expr
   | "SET" name "FROM" "CURSOR" name
+  | "SET" name '[' arg_list ']' ":=" expr
   ;
 
 let_stmt:
@@ -11424,6 +11426,7 @@ name:
   | "LAST"
   | "ADD"
   | "VIEW"
+  | "INDEX"
   ;
 
 opt_name:
@@ -11589,6 +11592,8 @@ basic_expr:
   | "CASE" case_list "ELSE" expr "END"
   | "CAST" '(' expr "AS" data_type_any ')'
   | "TYPE_CHECK" '(' expr "AS" data_type_with_options ')'
+  | basic_expr '[' arg_list ']'
+  ;
 
 math_expr:
   basic_expr
@@ -12216,6 +12221,8 @@ declare_select_func_stmt:
 declare_func_stmt:
   "DECLARE" function name '(' func_params ')' data_type_with_options
   | "DECLARE" function name '(' func_params ')' "CREATE" data_type_with_options
+  | "DECLARE" function name "NO" "CHECK" data_type_with_options
+  | "DECLARE" function name "NO" "CHECK" "CREATE" data_type_with_options
   ;
 
 procedure: "PROC" | "PROCEDURE"
@@ -17093,7 +17100,21 @@ be managed via subscriptions.
 
 -----
 
-### CQL0470 available for re-use
+### CQL0470: array operation is only available for types with a declared type kind like `object<something>`
+
+Array operations from a type like `object<foo>` generate calls to
+
+`get_from_object_foo(index)` or `set_in_object_foo(index, value)`
+
+>NOTE: There can be more than one index if desired e.g., `foo[a, b]`.  
+
+In order to do this and create sensible unique names the thing that has array-like behavior has to have a type kind.  
+
+>NOTE: This works even for things that are primitive types.  For instance you could use array notation to get
+optional fields from a task id even if the task id is an integer.  `int<task_id> not null` can have an helper
+function `get_from_int_task_id(index integer);` and it "just works".
+
+>NOTE: Arrays can work in a SQL context if the appropriate `select functions` are defined.  Array syntax is only sugar.
 
 -----
 
@@ -17446,7 +17467,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Wed Sep 20 17:48:57 PDT 2023
+Snapshot as of Sat Sep 23 14:45:56 PDT 2023
 
 ### Rules
 

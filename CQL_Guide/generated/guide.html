@@ -713,7 +713,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#cql0467-a-shared-fragment-used-like-a-function-cannot-nest-fragments-that-use-arguments">CQL0467: a shared fragment used like a function cannot nest fragments that use arguments</a></li>
 <li><a href="#cql0468-attributecqlshared_fragment-may-only-be-placed-on-a-create-proc-statement-proc_name">CQL0468: <span class="citation" data-cites="attribute">@attribute</span>(cql:shared_fragment) may only be placed on a CREATE PROC statement ‘proc_name’</a></li>
 <li><a href="#cql0469-tableview-is-already-deleted-name">CQL0469: table/view is already deleted ‘name’</a></li>
-<li><a href="#cql0470-available-for-re-use">CQL0470 available for re-use</a></li>
+<li><a href="#cql0470-array-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething">CQL0470: array operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code></a></li>
 <li><a href="#cql0471-available-for-re-use">CQL0471 available for re-use</a></li>
 <li><a href="#cql0472-tableview-is-already-unsubscribed-name">CQL0472: table/view is already unsubscribed ‘name’</a></li>
 <li><a href="#cql0473-unsub-is-invalid-because-the-tableview-is-still-used-by-name">CQL0473: <span class="citation" data-cites="unsub">@unsub</span> is invalid because the table/view is still used by ‘name’</a></li>
@@ -7946,7 +7946,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Wed Sep 20 17:48:57 PDT 2023</p>
+<p>Snapshot as of Sat Sep 23 14:45:55 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&#39;:&#39;
@@ -7961,6 +7961,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 &quot;&lt;&lt;&quot; &quot;&gt;&gt;&quot; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
 &#39;*&#39; &#39;/&#39; &#39;%&#39;
+&#39;[&#39;
 &quot;||&quot;
 &quot;COLLATE&quot;
 &quot;UMINUS&quot; &#39;~&#39;</code></pre>
@@ -8174,6 +8175,7 @@ schema_upgrade_version_stmt:
 set_stmt:
   &quot;SET&quot; name &quot;:=&quot; expr
   | &quot;SET&quot; name &quot;FROM&quot; &quot;CURSOR&quot; name
+  | &quot;SET&quot; name &#39;[&#39; arg_list &#39;]&#39; &quot;:=&quot; expr
   ;
 
 let_stmt:
@@ -8451,6 +8453,7 @@ name:
   | &quot;LAST&quot;
   | &quot;ADD&quot;
   | &quot;VIEW&quot;
+  | &quot;INDEX&quot;
   ;
 
 opt_name:
@@ -8616,6 +8619,8 @@ basic_expr:
   | &quot;CASE&quot; case_list &quot;ELSE&quot; expr &quot;END&quot;
   | &quot;CAST&quot; &#39;(&#39; expr &quot;AS&quot; data_type_any &#39;)&#39;
   | &quot;TYPE_CHECK&quot; &#39;(&#39; expr &quot;AS&quot; data_type_with_options &#39;)&#39;
+  | basic_expr &#39;[&#39; arg_list &#39;]&#39;
+  ;
 
 math_expr:
   basic_expr
@@ -9243,6 +9248,8 @@ declare_select_func_stmt:
 declare_func_stmt:
   &quot;DECLARE&quot; function name &#39;(&#39; func_params &#39;)&#39; data_type_with_options
   | &quot;DECLARE&quot; function name &#39;(&#39; func_params &#39;)&#39; &quot;CREATE&quot; data_type_with_options
+  | &quot;DECLARE&quot; function name &quot;NO&quot; &quot;CHECK&quot; data_type_with_options
+  | &quot;DECLARE&quot; function name &quot;NO&quot; &quot;CHECK&quot; &quot;CREATE&quot; data_type_with_options
   ;
 
 procedure: &quot;PROC&quot; | &quot;PROCEDURE&quot;
@@ -11886,7 +11893,19 @@ select sum(...) filter(where ...) over (...)</code></pre>
 <h3 id="cql0469-tableview-is-already-deleted-name">CQL0469: table/view is already deleted ‘name’</h3>
 <p>In an <span class="citation" data-cites="unsub">@unsub</span> directive, the indicated table/view has already been deleted. It can no longer be managed via subscriptions.</p>
 <hr />
-<h3 id="cql0470-available-for-re-use">CQL0470 available for re-use</h3>
+<h3 id="cql0470-array-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething">CQL0470: array operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code></h3>
+<p>Array operations from a type like <code>object&lt;foo&gt;</code> generate calls to</p>
+<p><code>get_from_object_foo(index)</code> or <code>set_in_object_foo(index, value)</code></p>
+<blockquote>
+<p>NOTE: There can be more than one index if desired e.g., <code>foo[a, b]</code>.</p>
+</blockquote>
+<p>In order to do this and create sensible unique names the thing that has array-like behavior has to have a type kind.</p>
+<blockquote>
+<p>NOTE: This works even for things that are primitive types. For instance you could use array notation to get optional fields from a task id even if the task id is an integer. <code>int&lt;task_id&gt; not null</code> can have an helper function <code>get_from_int_task_id(index integer);</code> and it “just works”.</p>
+</blockquote>
+<blockquote>
+<p>NOTE: Arrays can work in a SQL context if the appropriate <code>select functions</code> are defined. Array syntax is only sugar.</p>
+</blockquote>
 <hr />
 <h3 id="cql0471-available-for-re-use">CQL0471 available for re-use</h3>
 <hr />
@@ -12061,7 +12080,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Wed Sep 20 17:48:57 PDT 2023</p>
+<p>Snapshot as of Sat Sep 23 14:45:56 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

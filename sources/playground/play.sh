@@ -272,6 +272,8 @@ do_build() {
     SCRIPT_DIR_RELATIVE="$SCRIPT_DIR_RELATIVE" \
     DEFAULT_C_CLIENT="$DEFAULT_C_CLIENT" \
     dot_is_ready="$(is_dependency_satisfied dot && echo true || echo false)" \
+    is_example_implemented_in_c=$(is_example_implemented_in c "$source" && echo true || echo false) \
+    is_example_implemented_in_lua=$(is_example_implemented_in lua "$source" && echo true || echo false) \
     source="$source" \
     example_name="$example_name" \
     OUT="$SCRIPT_OUT_DIR/$example_name" \
@@ -296,10 +298,14 @@ $O/$(example_name).c: $O/$(example_name).pre.sql
 
 c: $O/$(example_name)
 $O/$(example_name): $O/$(example_name).c
+ifeq ($(is_example_implemented_in_c),true)
 > if grep -q "entrypoint(void)" $O/$(example_name).h; then \
     FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \
 cc $$FLAGS --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf "$O/$(example_name).dSYM"
+else
+> echo "$(example_name) ($(source)) is not implemented in C yet"
+endif
 
 objc: $O/$(example_name).pre.sql
 > mkdir -p $O/objc
@@ -326,7 +332,11 @@ $O/cqlrt.lua:
 
 lua: $O/$(example_name).lua
 $O/$(example_name).lua: $O/$(example_name).pre.sql $O/cqlrt.lua
+ifeq ($(is_example_implemented_in_lua),true)
 > $(CQL) --in $O/$(example_name).pre.sql --rt lua --cg $O/$(example_name).lua && cat $(SCRIPT_DIR_RELATIVE)/default_client.lua >> $O/$(example_name).lua
+else
+> echo "$(example_name) ($(source)) is not implemented in Lua yet"
+endif
 
 schema_upgrade: $O/schema_upgrade.sql
 $O/schema_upgrade.sql: $O/$(example_name).pre.sql
@@ -438,6 +448,15 @@ do_run() {
     local target=$2
 
     local example_output_dir_relative="$SCRIPT_OUT_DIR/$example_name"
+
+    case "$target" in
+        c|lua)
+            if ! is_example_implemented_in "$target" "$source"; then
+                echo "WARNING: Example $example_name is not implemented in $target" | theme
+                exit 0 
+            fi
+            ;;
+    esac
 
     case "$target" in
         preprocessed)            execute "The 'preprocessed' output"            "cat $example_output_dir_relative/$example_name.sql.pre" ;;
@@ -619,6 +638,20 @@ is_dependency_satisfied() {
             exit 1
             ;;
     esac
+}
+
+is_example_implemented_in() {
+    local runtime=$1
+    local source=$2
+    
+    # You would typically do this using the json output. We're avoiding extra dependencies and complexity
+
+    case "$runtime" in
+        c)   grep -q '^\s*@attribute(playground:not_implemented_in_c)\s*$'   "$source" && return 1 || return 0 ;;
+        lua) grep -q '^\s*@attribute(playground:not_implemented_in_lua)\s*$' "$source" && return 1 || return 0 ;;
+    esac
+
+    return 1
 }
 
 ensure_source_files_are_provided() {

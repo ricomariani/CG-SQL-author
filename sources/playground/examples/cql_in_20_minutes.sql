@@ -12,6 +12,7 @@
 -- E.g. It can be used to include another .sql file (which provides utility functions and macros)
 #include <utils/dump.sql>
 
+@attribute(playground:not_implemented_in_lua)
 create procedure chapter_1 ()
 begin
   _("## CHAPTER 1 — Primitive Datatypes and Operators\n");

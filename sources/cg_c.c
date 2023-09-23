@@ -41,7 +41,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name);
 static void cg_proc_result_set(ast_node *ast);
 static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl);
 static void cg_emit_external_arglist(ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
-static void cg_call_named_external(charbuf *output, CSTR name, ast_node *expr_list);
+static void cg_call_named_external(CSTR name, ast_node *expr_list);
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value);
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
 static void cg_insert_dummy_spec(ast_node *ast);
@@ -2672,7 +2672,7 @@ static void cg_func_printf(ast_node *call_ast, charbuf *is_null, charbuf *value)
 
   CG_SETUP_RESULT_VAR(call_ast, SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
   bprintf(cg_main_output, "{\n");
-  cg_call_named_external(cg_main_output, "  char *_printf_result = sqlite3_mprintf", arg_list);
+  cg_call_named_external("  char *_printf_result = sqlite3_mprintf", arg_list);
   bprintf(cg_main_output, "  %s(%s);\n", rt->cql_string_release, result_var.ptr);
   bprintf(cg_main_output, "  %s = %s(_printf_result);\n", result_var.ptr, rt->cql_string_ref_new);
   bprintf(cg_main_output, "  sqlite3_free(_printf_result);\n");
@@ -6455,7 +6455,7 @@ static void cg_call_external(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY(arg_list, ast->right);
 
-  cg_call_named_external(cg_main_output, name, arg_list);
+  cg_call_named_external(name, arg_list);
 }
 
 // This is performs an external function call, normalizing strings and passing
@@ -6464,7 +6464,7 @@ static void cg_call_external(ast_node *ast) {
 // a sqlite helper method with user provided args.  All we do here is emit
 // the  name and then use the arg list helper.
 // The arg list helper gives us prep/invocation/cleanup buffers which we must emit.
-static void cg_call_named_external(charbuf *output, CSTR name, ast_node *arg_list) {
+static void cg_call_named_external(CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(invocation);
   CHARBUF_OPEN(prep);
   CHARBUF_OPEN(cleanup);
@@ -6480,7 +6480,7 @@ static void cg_call_named_external(charbuf *output, CSTR name, ast_node *arg_lis
   cg_emit_external_arglist(arg_list, &prep, &invocation, &cleanup);
   bprintf(&invocation, ");\n");
 
-  bprintf(output, "%s%s%s", prep.ptr, invocation.ptr, cleanup.ptr);
+  bprintf(cg_main_output, "%s%s%s", prep.ptr, invocation.ptr, cleanup.ptr);
 
   stack_level = stack_level_saved;  // put the scratch stack back
 
@@ -6702,8 +6702,15 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   CHARBUF_OPEN(cleanup);
 
   if (unchecked_func) {
-    // write the output into the invocation 
-    // this helper does everything so the other arm of this if isn't necessary at all
+    // This is a bit tricky.  As always in C output there may be
+    // some statements that have to be emitted as part of this
+    // expression.  Some expressions in SQL have flow control like CASE/WHEN/THEN/END
+    // So in this case we want to call the function and capture its result
+    // to do this we have to emit the preparatory statements, then use its
+    // invocation as part of an assignment and then, and only then, emit
+    // the cleanup for the prep work.  Note that the prep work can assign
+    // temporary string variables, commonly in external calls we have to
+    // convert to C string.  As always the lua version of this is much simpler.
     CHARBUF_OPEN(prep);
     bprintf(&invocation, "%s(", func_sym.ptr);
     cg_emit_external_arglist(arg_list, &prep, &invocation, &cleanup);

@@ -5202,6 +5202,26 @@ begin
   4+5+6;
 end;
 
+declare function stew1 no check integer not null;
+declare function stew2 no check create text not null;
+declare function stew3 no check text not null;
+
+-- TEST: invocation of no check functions
+-- + local x = 0
+-- + local y
+-- + local z
+-- + x = stew1("x")
+-- + y = stew2(1, 2, 3)
+-- + z = stew3("x", 1)
+-- + x = stew1(z)
+create proc no_check_test_proc()
+begin
+  let x := stew1('x');
+  let y := stew2(1,2,3);
+  let z := stew3('x', 1);
+  set x := stew1(z);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

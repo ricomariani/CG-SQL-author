@@ -287,6 +287,7 @@ cql_noexport bytebuf *find_proc_arg_info(CSTR name);
 cql_noexport ast_node *find_local_or_global_variable(CSTR name);
 cql_noexport ast_node *find_region(CSTR name);
 cql_noexport ast_node *find_func(CSTR name);
+cql_noexport ast_node *find_unchecked_func(CSTR name);
 cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
 cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg);
 cql_noexport symtab *find_default_values(CSTR name);

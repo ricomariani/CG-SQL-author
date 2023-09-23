@@ -18868,6 +18868,65 @@ cql_cleanup:
 /*
 DECLARE PROC expr_proc_b (x INTEGER);
 */
+
+// The statement ending at line XXXX
+
+/*
+@ECHO c, "int stew1(int x, ...);\n";
+*/
+int stew1(int x, ...);
+
+// The statement ending at line XXXX
+
+/*
+@ECHO c, "cql_string_ref stew2(int x, ...);\n";
+*/
+cql_string_ref stew2(int x, ...);
+
+// The statement ending at line XXXX
+
+/*
+@ECHO c, "cql_string_ref stew3(int x, ...);\n";
+*/
+cql_string_ref stew3(int x, ...);
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC no_check_func_calls ()
+BEGIN
+  LET x := stew1(0, 'x');
+  LET y := stew2(1, 2, 3);
+  LET z := stew3(2, 'x', 1);
+  LET q := stew2(1, y);
+END;
+*/
+
+#define _PROC_ "no_check_func_calls"
+/*
+export:
+DECLARE PROC no_check_func_calls ();
+*/
+void no_check_func_calls(void) {
+  cql_int32 x = 0;
+  cql_string_ref y = NULL;
+  cql_string_ref z = NULL;
+  cql_string_ref q = NULL;
+
+  x = stew1(0, "x");
+  cql_string_release(y);
+  y = stew2(1, 2, 3);
+  cql_set_string_ref(&z, stew3(2, "x", 1));
+  cql_alloc_cstr(_cstr_4, y);
+  cql_string_release(q);
+  q = stew2(1, _cstr_4);
+  cql_free_cstr(_cstr_4, y);
+
+  cql_string_release(y);
+  cql_string_release(z);
+  cql_string_release(q);
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

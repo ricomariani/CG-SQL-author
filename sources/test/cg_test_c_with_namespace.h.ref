@@ -3937,6 +3937,23 @@ extern CQL_WARN_UNUSED cql_code my_proc_check_type(sqlite3 *_Nonnull _db_);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+extern void no_check_func_calls(void);
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX
@@ -3944,5 +3961,3 @@ extern void end_proc(void);
 
 // The statement ending at line XXXX
 extern cql_nullable_int32 end_marker;
-
-// The statement ending at line XXXX

@@ -41,7 +41,7 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name);
 static void cg_proc_result_set(ast_node *ast);
 static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl);
 static void cg_emit_external_arglist(ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
-static void cg_call_named_external(CSTR name, ast_node *expr_list);
+static void cg_call_named_external(charbuf *output, CSTR name, ast_node *expr_list);
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value);
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
 static void cg_insert_dummy_spec(ast_node *ast);
@@ -2672,7 +2672,7 @@ static void cg_func_printf(ast_node *call_ast, charbuf *is_null, charbuf *value)
 
   CG_SETUP_RESULT_VAR(call_ast, SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
   bprintf(cg_main_output, "{\n");
-  cg_call_named_external("  char *_printf_result = sqlite3_mprintf", arg_list);
+  cg_call_named_external(cg_main_output, "  char *_printf_result = sqlite3_mprintf", arg_list);
   bprintf(cg_main_output, "  %s(%s);\n", rt->cql_string_release, result_var.ptr);
   bprintf(cg_main_output, "  %s = %s(_printf_result);\n", result_var.ptr, rt->cql_string_ref_new);
   bprintf(cg_main_output, "  sqlite3_free(_printf_result);\n");
@@ -2709,7 +2709,7 @@ static void cg_expr_call(ast_node *ast, CSTR op, charbuf *is_null, charbuf *valu
 
   // name( [arg_list] )
 
-  if (find_func(name) || find_proc(name)) {
+  if (find_func(name) || find_proc(name) || find_unchecked_func(name)) {
     cg_user_func(ast, is_null, value);
   }
   else {
@@ -4099,15 +4099,6 @@ static void cg_declare_func_stmt(ast_node *ast) {
 
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(func_decl);
-}
-
-static void cg_declare_select_func_stmt(ast_node *ast) {
-  Contract(is_ast_declare_select_func_stmt(ast));
-
-  // We do not emit the declaration of the sql UDF into the header file
-  // since it is not callable from C (unlike regular declared functions)
-
-  // NO-OP
 }
 
 // emit the proc with the appropriate invocation prefix
@@ -6464,7 +6455,7 @@ static void cg_call_external(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY(arg_list, ast->right);
 
-  cg_call_named_external(name, arg_list);
+  cg_call_named_external(cg_main_output, name, arg_list);
 }
 
 // This is performs an external function call, normalizing strings and passing
@@ -6473,7 +6464,7 @@ static void cg_call_external(ast_node *ast) {
 // a sqlite helper method with user provided args.  All we do here is emit
 // the  name and then use the arg list helper.
 // The arg list helper gives us prep/invocation/cleanup buffers which we must emit.
-static void cg_call_named_external(CSTR name, ast_node *arg_list) {
+static void cg_call_named_external(charbuf *output, CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(invocation);
   CHARBUF_OPEN(prep);
   CHARBUF_OPEN(cleanup);
@@ -6489,7 +6480,7 @@ static void cg_call_named_external(CSTR name, ast_node *arg_list) {
   cg_emit_external_arglist(arg_list, &prep, &invocation, &cleanup);
   bprintf(&invocation, ");\n");
 
-  bprintf(cg_main_output, "%s%s%s", prep.ptr, invocation.ptr, cleanup.ptr);
+  bprintf(output, "%s%s%s", prep.ptr, invocation.ptr, cleanup.ptr);
 
   stack_level = stack_level_saved;  // put the scratch stack back
 
@@ -6671,6 +6662,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
 
   ast_node *params = NULL;
   ast_node *func_stmt = find_func(name);
+  if (!func_stmt) func_stmt = find_unchecked_func(name);
   CSTR func_name = NULL;
 
   bool_t dml_proc = false;
@@ -6678,6 +6670,7 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   bool_t out_arg_result = false;
   bool_t result_set_return = false;
   bool_t need_comma = false;
+  bool_t unchecked_func = is_ast_declare_func_no_check_stmt(func_stmt);
 
   if (func_stmt) {
     EXTRACT_STRING(fname, func_stmt->left);
@@ -6706,64 +6699,76 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   CHARBUF_OPEN(invocation);
   CG_CHARBUF_OPEN_SYM(func_sym, func_name, result_set_return ? "_fetch_results" : "");
   CG_CHARBUF_OPEN_SYM(result_ref, func_name, "_result_set_ref");
+  CHARBUF_OPEN(cleanup);
 
-  if (dml_proc) {
-    bprintf(&invocation, "_rc_ = %s(_db_", func_sym.ptr);
-    need_comma = true;
+  if (unchecked_func) {
+    // write the output into the invocation 
+    // this helper does everything so the other arm of this if isn't necessary at all
+    CHARBUF_OPEN(prep);
+    bprintf(&invocation, "%s(", func_sym.ptr);
+    cg_emit_external_arglist(arg_list, &prep, &invocation, &cleanup);
+    bprintf(&invocation, ")");
+    bprintf(cg_main_output, "%s", prep.ptr);
+    CHARBUF_CLOSE(prep);
   }
   else {
-    bprintf(&invocation, "%s(", func_sym.ptr);
-    need_comma = false;
-  }
-
-  if (result_set_return) {
-    // capture the result var
-    if (need_comma) {
-      bprintf(&invocation, ", ");
+    if (dml_proc) {
+      bprintf(&invocation, "_rc_ = %s(_db_", func_sym.ptr);
+      need_comma = true;
     }
-
-    // the out arg is clobbered by the called function, we have to release it first
-    bprintf(cg_main_output, "cql_object_release(%s);\n", result_var.ptr);
-    bprintf(cg_main_output, "%s = NULL;\n", result_var.ptr);
-    bprintf(&invocation, "(%s *)&%s", result_ref.ptr, result_var.ptr);
-    need_comma = true;
-  }
-
-  proc_params_info info = {
-    .output = &invocation,
-    .params = params,
-    .arg_list = arg_list,
-    .need_comma = need_comma
-  };
-
-  // emit provided args, the param specs are needed for possible type conversions
-  cg_emit_proc_params(&info);
-  need_comma = info.need_comma;
-  params = info.params;
-
-  // no args left, but params are left
-  if (params && !info.arg_list) {
-    // The only way this happens is when calling a stored proc like a function
-    // using the last arg as the return type.
-    Invariant(out_arg_result);
-    Invariant(!params->right); // exactly one param was missing
-    EXTRACT_NOTNULL(param, params->left);
-    sem_t param_type = param->sem->sem_type;
-    Invariant(is_out_parameter(param_type));
-    Invariant(!is_in_parameter(param_type));
-
-    // the result variable is not an in/out arg, it's just a regular local
-    // it's otherwise the same as the paramater by consruction
-    sem_t arg_type = param_type & sem_not(SEM_TYPE_OUT_PARAMETER|SEM_TYPE_IN_PARAMETER);
-
-    cg_release_out_arg_before_call(arg_type, param_type, result_var.ptr);
-    if (need_comma) {
-      bprintf(&invocation, ", ");
+    else {
+      bprintf(&invocation, "%s(", func_sym.ptr);
+      need_comma = false;
     }
-    bprintf(&invocation, "&%s", result_var.ptr);
+  
+    if (result_set_return) {
+      // capture the result var
+      if (need_comma) {
+        bprintf(&invocation, ", ");
+      }
+  
+      // the out arg is clobbered by the called function, we have to release it first
+      bprintf(cg_main_output, "cql_object_release(%s);\n", result_var.ptr);
+      bprintf(cg_main_output, "%s = NULL;\n", result_var.ptr);
+      bprintf(&invocation, "(%s *)&%s", result_ref.ptr, result_var.ptr);
+      need_comma = true;
+    }
+  
+    proc_params_info info = {
+      .output = &invocation,
+      .params = params,
+      .arg_list = arg_list,
+      .need_comma = need_comma
+    };
+  
+    // emit provided args, the param specs are needed for possible type conversions
+    cg_emit_proc_params(&info);
+    need_comma = info.need_comma;
+    params = info.params;
+  
+    if (params && !info.arg_list) {
+      // The only way this happens is when calling a stored proc like a function
+      // using the last arg as the return type.
+      Invariant(out_arg_result);
+      Invariant(!params->right); // exactly one param was missing
+      EXTRACT_NOTNULL(param, params->left);
+      sem_t param_type = param->sem->sem_type;
+      Invariant(is_out_parameter(param_type));
+      Invariant(!is_in_parameter(param_type));
+  
+      // the result variable is not an in/out arg, it's just a regular local
+      // it's otherwise the same as the paramater by consruction
+      sem_t arg_type = param_type & sem_not(SEM_TYPE_OUT_PARAMETER|SEM_TYPE_IN_PARAMETER);
+  
+      cg_release_out_arg_before_call(arg_type, param_type, result_var.ptr);
+      if (need_comma) {
+        bprintf(&invocation, ", ");
+      }
+      bprintf(&invocation, "&%s", result_var.ptr);
+    }
+  
+    bprintf(&invocation, ")");
   }
-
-  bprintf(&invocation, ")");
 
   // Now store the result of the call.
   // the only trick here is we have to make sure we honor create semantics
@@ -6787,7 +6792,11 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   else {
     cg_copy(cg_main_output, result_var.ptr, func_stmt->sem->sem_type, invocation.ptr);
   }
+ 
+  // if any cleanup pending, safe to emit now (this is on the unchecked arm)
+  bprintf(cg_main_output, "%s", cleanup.ptr);
 
+  CHARBUF_CLOSE(cleanup);
   CHARBUF_CLOSE(result_ref);
   CHARBUF_CLOSE(func_sym);
   CHARBUF_CLOSE(invocation);
@@ -8680,7 +8689,9 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(declare_const_stmt);
   NO_OP_STMT_INIT(declare_named_type);
   NO_OP_STMT_INIT(declare_proc_no_check_stmt);
+  NO_OP_STMT_INIT(declare_func_no_check_stmt);
   NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
+  NO_OP_STMT_INIT(declare_select_func_stmt);
   NO_OP_STMT_INIT(declare_interface_stmt);
 
   COMMON_STMT_INIT(blob_get_key_type_stmt);
@@ -8735,7 +8746,6 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(emit_constants_stmt);
   STMT_INIT(declare_proc_stmt);
   STMT_INIT(declare_func_stmt);
-  STMT_INIT(declare_select_func_stmt);
   STMT_INIT(trycatch_stmt);
   STMT_INIT(proc_savepoint_stmt);
   STMT_INIT(throw_stmt);

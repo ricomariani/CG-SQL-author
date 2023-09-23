@@ -2281,7 +2281,7 @@ static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
   // emit function name.
   bprintf(output, "\"name\" : \"%s\"", name);
 
-  // emit parameters. has issue
+  // emit parameters.
   bprintf(output, ",\n\"args\" : [\n");
   BEGIN_INDENT(parms, 2);
   cg_json_params(output, params, NULL);

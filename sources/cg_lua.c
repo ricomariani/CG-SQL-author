@@ -2021,7 +2021,7 @@ static void cg_lua_expr_stmt(ast_node *ast) {
 
   CG_LUA_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
-  bprintf(cg_main_output, "local __ignored__ = %s\n", expr_value.ptr);
+  bprintf(cg_main_output, "__cql_ignored__ = %s\n__cql_ignored__ = nil\n", expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 }

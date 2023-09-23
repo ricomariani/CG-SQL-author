@@ -55,7 +55,7 @@ static void cg_lua_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t se
 static void cg_lua_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name);
 static void cg_lua_proc_result_set(ast_node *ast);
 static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR base_name);
-static void cg_lua_emit_external_arglist(ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
+static void cg_lua_emit_external_arglist(ast_node *expr_list, charbuf *invocation);
 static void cg_lua_call_named_external(CSTR name, ast_node *expr_list);
 static void cg_lua_user_func(ast_node *ast, charbuf *value);
 static void cg_lua_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
@@ -1675,7 +1675,7 @@ static void cg_lua_expr_call(ast_node *ast, CSTR op, charbuf *value, int32_t pri
 
   // name( [arg_list] )
 
-  if (find_func(name) || find_proc(name)) {
+  if (find_func(name) || find_proc(name) || find_unchecked_func(name)) {
     cg_lua_user_func(ast, value);
   }
   else {
@@ -4206,8 +4206,6 @@ static void cg_lua_call_external(ast_node *ast) {
 // The arg list helper gives us prep/invocation/cleanup buffers which we must emit.
 static void cg_lua_call_named_external(CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(invocation);
-  CHARBUF_OPEN(prep);
-  CHARBUF_OPEN(cleanup);
 
   // Note this function is called in an expression context such as
   // for the builtin "printf" SQL function it can also be called in the call
@@ -4217,15 +4215,13 @@ static void cg_lua_call_named_external(CSTR name, ast_node *arg_list) {
   int32_t lua_stack_level_saved = lua_stack_level;
 
   bprintf(&invocation, "%s(", name);
-  cg_lua_emit_external_arglist(arg_list, &prep, &invocation, &cleanup);
+  cg_lua_emit_external_arglist(arg_list, &invocation);
   bprintf(&invocation, ")\n");
 
-  bprintf(cg_main_output, "%s%s%s", prep.ptr, invocation.ptr, cleanup.ptr);
+  bprintf(cg_main_output, "%s", invocation.ptr);
 
   lua_stack_level = lua_stack_level_saved;  // put the scratch stack back
 
-  CHARBUF_CLOSE(cleanup);
-  CHARBUF_CLOSE(prep);
   CHARBUF_CLOSE(invocation);
 }
 
@@ -4234,7 +4230,7 @@ static void cg_lua_call_named_external(CSTR name, ast_node *arg_list) {
 //   * emit a standard call for the lot
 //   * there are no out args, so any reference to an out arg means the local copy
 //   * there is no return value (that's what native functions are for)
-static void cg_lua_emit_external_arglist(ast_node *arg_list, charbuf *prep, charbuf *invocation, charbuf *cleanup) {
+static void cg_lua_emit_external_arglist(ast_node *arg_list, charbuf *invocation) {
   for (ast_node *item = arg_list; item; item = item->right) {
     EXTRACT_ANY(arg, item->left);
 
@@ -4304,11 +4300,13 @@ static void cg_lua_user_func(ast_node *ast, charbuf *value) {
 
   ast_node *params = NULL;
   ast_node *func_stmt = find_func(name);
+  if (!func_stmt) func_stmt = find_unchecked_func(name);
   CSTR func_name = NULL;
 
   bool_t proc_as_func = false;
   bool_t dml_proc = false;
   bool_t result_set_return = false;
+  bool_t unchecked_func = is_ast_declare_func_no_check_stmt(func_stmt);
 
   if (func_stmt) {
     EXTRACT_STRING(fname, func_stmt->left);
@@ -4348,15 +4346,20 @@ static void cg_lua_user_func(ast_node *ast, charbuf *value) {
   }
   bprintf(&returns, "%s", result_var.ptr);
 
-  ast_node *item;
-  for (item = arg_list; item; item = item->right, params = params->right) {
-    EXTRACT_ANY(arg, item->left);
-    sem_t sem_type_arg = arg->sem->sem_type;
+  if (unchecked_func) {
+    Invariant(!params); // no params for unchecked, so no out params
+    cg_lua_emit_external_arglist(arg_list, &args);
+  }
+  else {
+    for (ast_node *item = arg_list; item; item = item->right, params = params->right) {
+      EXTRACT_ANY(arg, item->left);
+      sem_t sem_type_arg = arg->sem->sem_type;
 
-    EXTRACT_NOTNULL(param, params->left);
-    sem_t sem_type_param = param->sem->sem_type;
+      EXTRACT_NOTNULL(param, params->left);
+      sem_t sem_type_param = param->sem->sem_type;
 
-    cg_lua_emit_one_arg(arg, sem_type_param, sem_type_arg, &args, &returns);
+      cg_lua_emit_one_arg(arg, sem_type_param, sem_type_arg, &args, &returns);
+    }
   }
 
   // Now store the result of the call.
@@ -4385,7 +4388,6 @@ static void cg_lua_call_stmt(ast_node *ast) {
   // statements.
   cg_lua_call_stmt_with_cursor(ast, NULL);
 }
-
 
 // emit the declarations for anything implicitly declared then do a normal call
 static void cg_lua_declare_out_call_stmt(ast_node *ast) {
@@ -5424,6 +5426,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
   LUA_NO_OP_STMT_INIT(declare_select_func_stmt);
   LUA_NO_OP_STMT_INIT(declare_func_stmt);
+  LUA_NO_OP_STMT_INIT(declare_func_no_check_stmt);
   LUA_NO_OP_STMT_INIT(declare_proc_stmt);
 
   LUA_STD_DML_STMT_INIT(begin_trans_stmt);

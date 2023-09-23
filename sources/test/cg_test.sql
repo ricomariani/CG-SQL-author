@@ -5792,6 +5792,40 @@ declare procedure expr_proc_b(x integer);
 -- + (void)(1 + 2 + 3);
 1+2+3;
 
+declare function stew1 no check integer not null;
+declare function stew2 no check create text not null;
+declare function stew3 no check text not null;
+
+@echo c, "int stew1(int x, ...);\n";
+@echo c, "cql_string_ref stew2(int x, ...);\n";
+@echo c, "cql_string_ref stew3(int x, ...);\n";
+
+-- TEST: verify no check convention is working
+-- + cql_int32 x = 0;
+-- + cql_string_ref y = NULL;
+-- + cql_string_ref z = NULL;
+-- + x = stew1(0, "x");
+-- + cql_string_release(y);
+-- + y = stew2(1, 2, 3);
+-- + cql_set_string_ref(&z, stew3(2, "x", 1));
+-- + cql_alloc_cstr(_cstr_%, y);
+-- + q = stew2(1, _cstr_%);
+-- + cql_free_cstr(_cstr_%, y);
+-- + cql_string_release(q);
+-- + cql_string_release(y);
+-- + cql_string_release(z);
+create proc no_check_func_calls()
+begin
+  let x := stew1(0, 'x');
+  let y := stew2(1,2,3);
+  let z := stew3(2,'x', 1);
+  let q := stew2(1, y);
+end;
+
+-- TEST: cql:alias_of attribution
+@attribute(cql:alias_of=some_native_func)
+declare function an_alias_func(x int not null) int not null;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------
@@ -5805,6 +5839,3 @@ create proc end_proc() begin end;
 declare end_marker integer;
 --------------------------------------------------------------------
 
--- TEST: cql:alias_of attribution
-@attribute(cql:alias_of=some_native_func)
-declare function an_alias_func(x int not null) int not null;

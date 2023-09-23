@@ -19366,7 +19366,6 @@ static void sem_declare_func_stmt(ast_node *ast) {
   ast_node *existing_unchecked_func = find_unchecked_func(name);
 
   bool_t no_check = is_ast_declare_select_func_no_check_stmt(ast) || is_ast_declare_func_no_check_stmt(ast);
-  bool_t any_existing = !!existing_func || !!existing_unchecked_func;
 
   // Prevent redeclaration of normal function to be unchecked and vice versa
   if ((no_check && existing_func) || (!no_check && existing_unchecked_func))

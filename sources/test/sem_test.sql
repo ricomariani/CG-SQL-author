@@ -23224,3 +23224,45 @@ op_assign >>= 11;
 -- + error: % left operand of assignment operator must be a name '+='
 -- + error:
 1 += 7;
+
+declare function get_from_object_foo(array object<foo>, index text) text not null;
+declare function set_in_object_foo( array object<foo>, index text, value text) text not null;
+
+-- TEST: emulate array behavior with function rewrites
+-- we just have to verify the rewrites
+-- + LET z := get_from_object_foo(x, 'index');
+-- + set_in_object_foo(x, 'index1', 'value');
+-- + set_in_object_foo(x, 'index2', get_from_object_foo(x, 'value2'));
+-- we do it with the SET form and the expression statement form even though
+-- they map to the same thing
+proc array_test()
+begin
+  declare x object<foo>;
+  let z := x['index'];
+  x['index1'] := 'value';
+  SET x['index2'] := x['value2'];
+end;
+
+-- TEST: left of array does not have a type kind
+-- it has to have an object kind
+-- + {expr_stmt}: err
+-- + {array}: err
+-- + error: % array operation is only available for types with a declared type kind like object<something>
+-- +1 error
+1['x'];
+
+-- TEST: left of array does not have a type kind (in set context)
+-- it has to have an object kind
+-- + {expr_stmt}: err
+-- + {array}: err
+-- + error: % array operation is only available for types with a declared type kind like object<something>
+-- +1 error
+1['x'] := 'x';
+
+-- TEST: left of array has a semantic error
+-- it has to have an object kind
+-- + {expr_stmt}: err
+-- + {array}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error
+(not 'x')[5];

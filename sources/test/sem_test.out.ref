@@ -87269,3 +87269,148 @@ test/sem_test.sql:XXXX:1: error: in add_eq : CQL0465: left operand of assignment
     | {int 1}
     | {int 7}
 
+The statement ending at line XXXX
+
+DECLARE FUNC get_from_object_foo (array OBJECT<foo>, index TEXT) TEXT NOT NULL;
+
+  {declare_func_stmt}: text notnull
+  | {name get_from_object_foo}: text notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: array: object<foo> variable in
+    | | | {param_detail}: array: object<foo> variable in
+    | |   | {name array}: array: object<foo> variable in
+    | |   | {type_object}: object<foo>
+    | |     | {name foo}
+    | | {params}
+    |   | {param}: index: text variable in
+    |     | {param_detail}: index: text variable in
+    |       | {name index}: index: text variable in
+    |       | {type_text}: text
+    | {notnull}: text notnull
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+DECLARE FUNC set_in_object_foo (array OBJECT<foo>, index TEXT, value TEXT) TEXT NOT NULL;
+
+  {declare_func_stmt}: text notnull
+  | {name set_in_object_foo}: text notnull
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: array: object<foo> variable in
+    | | | {param_detail}: array: object<foo> variable in
+    | |   | {name array}: array: object<foo> variable in
+    | |   | {type_object}: object<foo>
+    | |     | {name foo}
+    | | {params}
+    |   | {param}: index: text variable in
+    |   | | {param_detail}: index: text variable in
+    |   |   | {name index}: index: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: value: text variable in
+    |       | {param_detail}: value: text variable in
+    |         | {name value}: value: text variable in
+    |         | {type_text}: text
+    | {notnull}: text notnull
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC array_test ()
+BEGIN
+  DECLARE x OBJECT<foo>;
+  LET z := get_from_object_foo(x, 'index');
+  set_in_object_foo(x, 'index1', 'value');
+  set_in_object_foo(x, 'index2', get_from_object_foo(x, 'value2'));
+END;
+
+  {create_proc_stmt}: ok
+  | {name array_test}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: object<foo>
+      | | {name_list}: x: object<foo> variable
+      | | | {name x}: x: object<foo> variable
+      | | {type_object}: object<foo>
+      |   | {name foo}
+      | {let_stmt}: z: text notnull variable
+      | | {name z}: z: text notnull variable
+      | | {call}: text notnull
+      |   | {name get_from_object_foo}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name x}: x: object<foo> variable
+      |       | {arg_list}
+      |         | {strlit 'index'}: text notnull
+      | {expr_stmt}: text notnull
+      | | {call}: text notnull
+      |   | {name set_in_object_foo}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name x}: x: object<foo> variable
+      |       | {arg_list}
+      |         | {strlit 'index1'}: text notnull
+      |         | {arg_list}
+      |           | {strlit 'value'}: text notnull
+      | {expr_stmt}: text notnull
+        | {call}: text notnull
+          | {name set_in_object_foo}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name x}: x: object<foo> variable
+              | {arg_list}
+                | {strlit 'index2'}: text notnull
+                | {arg_list}
+                  | {call}: text notnull
+                    | {name get_from_object_foo}
+                    | {call_arg_list}
+                      | {call_filter_clause}
+                      | {arg_list}: ok
+                        | {name x}: x: object<foo> variable
+                        | {arg_list}
+                          | {strlit 'value2'}: text notnull
+
+The statement ending at line XXXX
+
+1['x'];
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0470: array operation is only available for types with a declared type kind like object<something>
+
+  {expr_stmt}: err
+  | {array}: err
+    | {int 1}: err
+    | {arg_list}
+      | {strlit 'x'}
+
+The statement ending at line XXXX
+
+1['x'] := 'x';
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0470: array operation is only available for types with a declared type kind like object<something>
+
+  {expr_stmt}: err
+  | {expr_assign}
+    | {array}: err
+    | | {int 1}: err
+    | | {arg_list}
+    |   | {strlit 'x'}
+    | {strlit 'x'}
+
+The statement ending at line XXXX
+
+(NOT 'x')[5];
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {expr_stmt}: err
+  | {array}: err
+    | {not}: err
+    | | {strlit 'x'}: text notnull
+    | {arg_list}
+      | {int 5}
+

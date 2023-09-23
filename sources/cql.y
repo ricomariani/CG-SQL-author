@@ -188,6 +188,7 @@ static void cql_reset_globals(void);
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
+%left '['
 %left CONCAT
 %left COLLATE
 %right UMINUS '~'
@@ -549,6 +550,7 @@ schema_upgrade_version_stmt:
 set_stmt:
   SET name ASSIGN expr  { $set_stmt = new_ast_assign($name, $expr); }
   | SET name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
+  | SET name '[' arg_list ']' ASSIGN expr  { $set_stmt = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($name, $arg_list), $expr)); }
   ;
 
 let_stmt:
@@ -880,6 +882,7 @@ name:
   | LAST { $name = new_ast_str("last"); }
   | ADD { $name = new_ast_str("add"); }
   | VIEW { $name = new_ast_str("view"); }
+  | INDEX { $name = new_ast_str("index"); }
   ;
 
 opt_name:
@@ -1063,6 +1066,8 @@ basic_expr:
   | CASE case_list ELSE expr[cond] END  { $basic_expr = new_ast_case_expr(NULL, new_ast_connector($case_list, $cond));}
   | CAST '(' expr[sexp] AS data_type_any ')'  { $basic_expr = new_ast_cast_expr($sexp, $data_type_any); }
   | TYPE_CHECK '(' expr[sexp] AS data_type_with_options[type] ')' { $basic_expr = new_ast_type_check_expr($sexp, $type); }
+  | basic_expr[array] '[' arg_list ']' { $$ = new_ast_array($array, $arg_list); }
+  ;
 
 math_expr[result]:
   basic_expr  { $result = $basic_expr; }

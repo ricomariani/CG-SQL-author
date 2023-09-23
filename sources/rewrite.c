@@ -32,8 +32,8 @@
 #include "rewrite.h"
 #include "printf.h"
 
-static ast_node* rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type);
-static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list);
+static ast_node *rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type);
+static ast_node *rewrite_gen_printf_call(CSTR format, ast_node *arg_list);
 static ast_node *rewrite_gen_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2);
 static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t report_column_name);
 static bool_t rewrite_one_def(ast_node *head);
@@ -47,7 +47,7 @@ cql_noexport void rewrite_proclit(ast_node *ast) {
   EXTRACT_STRING(name, ast);
   CSTR newname = process_proclit(ast, name);
   if (newname) {
-    ((str_ast_node*)ast)->value = newname;
+    ((str_ast_node *)ast)->value = newname;
   }
 }
 
@@ -610,7 +610,7 @@ cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr) {
 
 // This helper function rewrites the expr_names ast to the columns_values ast.
 // e.g: fetch C using 1 a, 2 b, 3 c; ==> fetch C (a,b,c) values (1, 2, 3);
-cql_noexport void rewrite_expr_names_to_columns_values(ast_node* columns_values) {
+cql_noexport void rewrite_expr_names_to_columns_values(ast_node *columns_values) {
   Contract(is_ast_expr_names(columns_values));
 
   AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
@@ -645,7 +645,7 @@ cql_noexport void rewrite_expr_names_to_columns_values(ast_node* columns_values)
 
 // This helper function rewrites the select statement ast to the columns_values ast.
 // e.g: insert into X using select 1 a, 2 b, 3 c; ==> insert into X (a,b,c) values (1, 2, 3);
-cql_noexport void rewrite_select_stmt_to_columns_values(ast_node* columns_values) {
+cql_noexport void rewrite_select_stmt_to_columns_values(ast_node *columns_values) {
   EXTRACT_ANY_NOTNULL(select_stmt, columns_values);
   Contract(is_select_stmt(select_stmt));
 
@@ -958,9 +958,9 @@ cleanup:
 }
 
 // These are the :: suffixes for types
-static CSTR _Nonnull rewrite_type_suffix(sem_t core_type) {
+static CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
    CSTR result = "";
-    switch (core_type) {
+    switch (core_type_of(sem_type)) {
      case SEM_TYPE_NULL: result = "null"; break;
      case SEM_TYPE_BOOL: result = "bool"; break;
      case SEM_TYPE_INTEGER:  result = "int"; break;
@@ -974,6 +974,23 @@ static CSTR _Nonnull rewrite_type_suffix(sem_t core_type) {
   // Only the above are possible
   Contract(result[0]);
   return result;
+}
+
+// This bit is necessary because builtin types like result sets are of type
+// foo object<proc_name set> *with* the space.  We can't have a space in a function name
+// so we clobber it into an underscore.  Only builtin types can have an embedded space
+// and that type has to flow.  User declared types only are allowed identifiers.
+// The two types are object<foo SET> and object<foo CURSOR>.  There are no cases with
+// more than one space.  We verify all this below
+static void rewrite_replace_space_if_needed(char *new_name) {
+  char *space = strchr(new_name, ' ');
+  if (space) {
+    // this is our buffer we just allocated, we can hammer it
+    *(char *)(space) = '_';
+
+    // There are no others, this is invariant!
+    Contract(!strchr(new_name, ' '));
+  }
 }
 
 // Walk through the ast and grab the arg list as well as the function name.
@@ -998,7 +1015,7 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
      // This is the :: case or else the object has no type kind
      Contract(op[1] == ':');
      EXTRACT_STRING(name, function_name);
-     sem_t sem_type = core_type_of(argument->sem->sem_type);
+     sem_t sem_type = argument->sem->sem_type;
      function_name = new_ast_str(dup_printf("%s_%s", name, rewrite_type_suffix(sem_type)));
   }
   else {
@@ -1007,31 +1024,23 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
      // This is the ::: case where we use type and kind
      EXTRACT_STRING(name, function_name);
      sem_t sem_type = core_type_of(argument->sem->sem_type);
+
+     CSTR new_name = dup_printf("%s_%s_%s", name, rewrite_type_suffix(sem_type), argument->sem->kind);
+
      // discard const, this is ok as the string has not yet escaped into the world...
      // we need to remove any internal space
-     char *new_name = (char *)dup_printf("%s_%s_%s", name, rewrite_type_suffix(sem_type), argument->sem->kind);
+     rewrite_replace_space_if_needed((char *)new_name);
 
-     // This bit is necessary because builtin types like result sets are of type
-     // foo object<proc_name set> with the space.  We can't have a space in the function id
-     // so we clobber it into an underscore.  Only builtin types can have an embedded space
-     // and that type has to flow.  User declared types only are allowed identifiers.
-     // The two types are object<foo SET> and object<foo CURSOR>.  There are no cases with
-     // more than one space.
-     char *space = strchr(new_name, ' ');
-     if (space) {
-        // this is our buffer we just allocated, we can hammer it
-        *(char *)(space) = '_';
-
-        // There are no others, this is invariant!
-        Contract(!strchr(new_name, ' '));
-     }
      // further changes would be invalid, the string has escaped into the tree
      function_name = new_ast_str(new_name);
   }
 
-  ast_node* new_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL),
-                                new_ast_arg_list(argument, arg_list));
-  ast_node* new_call = new_ast_call(function_name, new_arg_list);
+  ast_node *new_arg_list =
+    new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(argument, arg_list)
+    );
+  ast_node *new_call = new_ast_call(function_name, new_arg_list);
 
   AST_REWRITE_INFO_RESET();
 
@@ -1095,15 +1104,15 @@ static CSTR coretype_format(sem_t sem_type) {
 }
 
 // Generate arg_list nodes and formatting values for a printf(...) ast
-static ast_node* rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type) {
+static ast_node *rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type) {
   // left to arg_list node
-  ast_node* dot = new_ast_dot(new_ast_str(cusor_name), new_ast_str(col_name));
+  ast_node *dot = new_ast_dot(new_ast_str(cusor_name), new_ast_str(col_name));
   // If the argument is blob type we need to print just its size therefore we rewrite
   // ast to call cql_get_blob_size(<blob>) which return the size of the argument
   if (is_blob(type)) {
     // right to call_arg_list node
-    ast_node* arg_list = new_ast_arg_list(dot, NULL);
-    ast_node* call_arg_list =
+    ast_node *arg_list = new_ast_arg_list(dot, NULL);
+    ast_node *call_arg_list =
         new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), arg_list);
     dot = new_ast_call(new_ast_str("cql_get_blob_size"), call_arg_list);
   }
@@ -1117,14 +1126,14 @@ static ast_node* rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR
 // function.
 // e.g: cusor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
 // e.g: cusor_name = C, dot_name = x, type = blob PRINTF("length %d blob", cql_get_blob_size(C.x));
-static ast_node* rewrite_gen_printf_call(CSTR format, ast_node *arg_list) {
+static ast_node *rewrite_gen_printf_call(CSTR format, ast_node *arg_list) {
   CSTR copy_format = dup_printf("'%s'", format);
   // right to call_arg_list node
-  ast_node* first_arg_list = new_ast_arg_list(new_ast_str(copy_format), arg_list);
+  ast_node *first_arg_list = new_ast_arg_list(new_ast_str(copy_format), arg_list);
   // right to call node
-  ast_node* call_arg_list = new_ast_call_arg_list(
+  ast_node *call_arg_list = new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL), first_arg_list);
-  ast_node* call = new_ast_call(new_ast_str("printf"), call_arg_list);
+  ast_node *call = new_ast_call(new_ast_str("printf"), call_arg_list);
   return call;
 }
 
@@ -1144,13 +1153,13 @@ static ast_node *rewrite_gen_nullable(ast_node *ast) {
 // e.g: (expr, val1, val2) => CASE WHEN expr THEN val2 ELSE val1;
 static ast_node *rewrite_gen_iif_case_expr(ast_node *expr, ast_node *val1, ast_node *val2) {
   // left case_list node
-  ast_node* when = new_ast_when(expr, val1);
+  ast_node *when = new_ast_when(expr, val1);
   // left connector node
-  ast_node* case_list = new_ast_case_list(when, NULL);
+  ast_node *case_list = new_ast_case_list(when, NULL);
   // case list with no ELSE (we get ELSE NULL by default)
-  ast_node* connector = new_ast_connector(case_list, val2);
+  ast_node *connector = new_ast_connector(case_list, val2);
   // CASE WHEN expr THEN result form; not CASE expr WHEN val THEN result
-  ast_node* case_expr = new_ast_case_expr(NULL, connector);
+  ast_node *case_expr = new_ast_case_expr(NULL, connector);
   return case_expr;
 }
 
@@ -1192,7 +1201,7 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
       CHARBUF_OPEN(format_output);
 
       // fourth argument to call printf node: call printf(...) node
-      ast_node* printf_arg_list3 = rewrite_gen_arg_list(
+      ast_node *printf_arg_list3 = rewrite_gen_arg_list(
           &format_output, c2_name, sptr2->names[i], sptr2->semtypes[i]);
       // CALL PRINTF ast on fourth argument
       ast_node *call_printf3 = rewrite_gen_printf_call(format_output.ptr, printf_arg_list3);
@@ -1206,7 +1215,7 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
         dot = rewrite_gen_nullable(dot);
       }
       // left of WHEN expr
-      ast_node* is_node = new_ast_is(dot, new_ast_null());
+      ast_node *is_node = new_ast_is(dot, new_ast_null());
       // case_expr node: CASE WHEN C.x IS NULL THEN 'null' ELSE printf("%s", C.x)
       ast_node *check_call_printf3 = rewrite_gen_iif_case_expr(
         is_node,
@@ -1216,7 +1225,7 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
       bclear(&format_output);
 
       // third argument to call printf node: call print(...) node
-      ast_node* printf_arg_list2 = rewrite_gen_arg_list(
+      ast_node *printf_arg_list2 = rewrite_gen_arg_list(
           &format_output, c1_name, sptr1->names[i], sptr1->semtypes[i]);
       // CALL PRINTF ast on third argument
       ast_node *call_printf2 = rewrite_gen_printf_call(format_output.ptr, printf_arg_list2);
@@ -1236,7 +1245,7 @@ static ast_node *rewrite_gen_case_expr(ast_node *var1, ast_node *var2, bool_t re
       bclear(&format_output);
 
       // second argument too call printf node: name node
-      ast_node * printf_arg_list1 = new_ast_str(dup_printf("'%s'", sptr1->names[i]));
+      ast_node *printf_arg_list1 = new_ast_str(dup_printf("'%s'", sptr1->names[i]));
       arg_list = new_ast_arg_list(printf_arg_list1, arg_list);
 
       // printf call node
@@ -1364,7 +1373,8 @@ cql_noexport void rewrite_nullable_to_notnull(ast_node *_Nonnull ast) {
     id_or_dot = new_ast_dot(new_ast_str(scope), new_ast_str(name));
   }
   ast_node *cql_inferred_notnull = new_ast_str("cql_inferred_notnull");
-  ast_node* call_arg_list = new_ast_call_arg_list(
+  ast_node *call_arg_list =
+    new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
       new_ast_arg_list(id_or_dot, NULL));
   ast->type = k_ast_call;
@@ -3648,7 +3658,7 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
   }        
 }
 
-bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {
+cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {
   Contract(expr);
   Contract(op);
   size_t len = strlen(op);
@@ -3706,6 +3716,57 @@ bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull o
   ast_set_right(expr, oper);
   AST_REWRITE_INFO_RESET();
   return true;
+}
+
+// Array access foo[a,b] can turn into
+//    get_from_object_kind(foo, a, b) OR set_in_object_kind(foo, a, b)
+// This helper does the job of rewriting the array into a function call.,
+// In the set case a second rewrite moves the assigned into the end of
+// the arg list.
+cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull operation) {
+  Contract(is_ast_array(expr));
+  EXTRACT_ANY_NOTNULL(array, expr->left);
+  EXTRACT_NOTNULL(arg_list, expr->right);
+  sem_t sem_type = array->sem->sem_type;
+  CSTR kind = array->sem->kind;
+  Contract(kind);
+
+  CSTR new_name = dup_printf("%s_%s_%s", operation, rewrite_type_suffix(sem_type), kind);
+
+  // discard const, this is ok as the string has not yet escaped into the world...
+  // we need to remove any internal space
+  rewrite_replace_space_if_needed((char *)new_name);
+ 
+  AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
+
+  ast_node *new_arg_list = new_ast_arg_list(array, arg_list);
+  ast_node *function_name = new_ast_str(new_name);
+  ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), new_arg_list);
+  ast_node *new_call = new_ast_call(function_name, call_arg_list);
+
+  expr->type = new_call->type;
+  ast_set_left(expr, new_call->left);
+  ast_set_right(expr, new_call->right);
+
+  AST_REWRITE_INFO_RESET();
+}
+
+// Appends the given argument to the end of an existing (not empty)
+// call argument list
+cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull arg) {
+  Contract(is_ast_call(call));
+  EXTRACT_NOTNULL(call_arg_list, call->right);
+  EXTRACT_NOTNULL(arg_list, call_arg_list->right);
+
+  while (arg_list->right) {
+    arg_list = arg_list->right;
+  }
+
+  // we're now at the end
+  AST_REWRITE_INFO_SET(arg->lineno, arg->filename);
+  ast_node *new_arg_list = new_ast_arg_list(arg, NULL);
+  ast_set_right(arg_list, new_arg_list);
+  AST_REWRITE_INFO_RESET();
 }
 
 #endif

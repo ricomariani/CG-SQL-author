@@ -2407,6 +2407,11 @@ cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
 
 static void cql_attach_captured_errors(ast_node *stmt) {
    if (is_error(stmt)) {
+      // If you hit this invariant it almost certainly means that
+      // an error was attached to a node in the AST but that node
+      // did not get record_error(..) called on it.  So the semantic
+      // info is still null.  Find the place where you reported
+      // this error and them make sure you also record the error in the AST.
       Invariant(stmt->sem);
       Invariant(stmt->sem->sem_type == SEM_TYPE_ERROR);
       stmt->sem->error = Strdup(error_capture->ptr);
@@ -9693,6 +9698,37 @@ static void sem_expr_raise(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
+// All we have to do is verify that the thing that is playing the role of the array
+// has a type kind.  If it does then we can rewrite it into a function call.  The
+// call might be to an invalid function but that's ok.  The next level of errors
+// checks all that and the arguments.  The mapping gets all the usual benefits
+static void sem_validate_array_transform(ast_node *ast,  CSTR op) {
+  EXTRACT_ANY_NOTNULL(array, ast->left);
+  sem_expr(array);
+  if (is_error(array)) {
+    record_error(ast);
+    return;
+  }
+
+  if (!array->sem->kind) {
+    report_error(array, "CQL0470: array operation is only available for types with a declared type kind like object<something>", NULL);
+    record_error(array);
+    record_error(ast);
+    return;
+  }
+
+  rewrite_array_as_call(ast, op);
+  record_ok(ast);
+}
+
+// If the array transform is legal then set it up
+static void sem_expr_array(ast_node *ast,  CSTR op) {
+  sem_validate_array_transform(ast, op);
+  if (!is_error(ast)) {
+    sem_expr(ast);
+  }
+}
+
 // This validates that the call is to one of the functions that we know and
 // then delegates to the appropriate shared helper function for that type
 // of call for additional validation.
@@ -15377,6 +15413,24 @@ static bool_t stmt_list_contains_control_stmt(ast_node *ast) {
 static void sem_expr_stmt(ast_node *ast) {
   Contract(is_ast_expr_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
+
+  // we have to write array access before everything else, it will need the other rewrites to follow
+  if (is_ast_expr_assign(expr)) {
+     EXTRACT_ANY_NOTNULL(array, expr->left);
+     EXTRACT_ANY_NOTNULL(value, expr->right);
+     if (is_ast_array(array)) {
+       sem_validate_array_transform(array, "set_in");
+       if (is_error(array)) {
+         record_error(ast);
+         return;
+       }
+       expr->type = array->type;
+       ast_set_left(expr, array->left);
+       ast_set_right(expr, array->right);
+       rewrite_append_arg(expr, value);
+     }
+  }
+
   
   // if there is a x:y x::y or x:::y operation then transform the AST now
   // so that everything looks like normal calls. Just the transform though.
@@ -24692,6 +24746,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(ne, sem_binary_eq_or_ne, "<>");
   EXPR_INIT(ge, sem_binary_compare, ">=");
   EXPR_INIT(le, sem_binary_compare, "<=");
+  EXPR_INIT(array, sem_expr_array, "get_from");
   EXPR_INIT(call, sem_expr_call, "CALL");
   EXPR_INIT(window_func_inv, sem_expr_window_func_inv, "WINDOW-FUNC-INV");
   EXPR_INIT(raise, sem_expr_raise, "RAISE");

@@ -7,7 +7,7 @@ digraph parse {
     select_core_list2 [label = "select_core_list" shape=plaintext]
     select_core_list2 -> select_core3;
     select_core3 [label = "select_core" shape=plaintext]
-    _3 [label = "⏚" shape=plaintext]
+    _3 [label = "&#x2307;" shape=plaintext]
     select_core3 -> _3;
  select_core3 -> select_expr_list_con4;
     select_expr_list_con4 [label = "select_expr_list_con" shape=plaintext]
@@ -17,7 +17,7 @@ digraph parse {
     select_expr6 [label = "select_expr" shape=plaintext]
     select_expr6 -> str7;
     str7 [label = "x" shape=plaintext]
-    _6 [label = "⏚" shape=plaintext]
+    _6 [label = "&#x2307;" shape=plaintext]
     select_expr6 -> _6;
  select_expr_list5 -> select_expr_list8;
     select_expr_list8 [label = "select_expr_list" shape=plaintext]
@@ -25,7 +25,7 @@ digraph parse {
     select_expr9 [label = "select_expr" shape=plaintext]
     select_expr9 -> stra;
     stra [label = "y" shape=plaintext]
-    _9 [label = "⏚" shape=plaintext]
+    _9 [label = "&#x2307;" shape=plaintext]
     select_expr9 -> _9;
  select_expr_list8 -> select_expr_listb;
     select_expr_listb [label = "select_expr_list" shape=plaintext]
@@ -33,9 +33,9 @@ digraph parse {
     select_exprc [label = "select_expr" shape=plaintext]
     select_exprc -> numd;
     numd [label = "5.2" shape=plaintext]
-    _c [label = "⏚" shape=plaintext]
+    _c [label = "&#x2307;" shape=plaintext]
     select_exprc -> _c;
-    _b [label = "⏚" shape=plaintext]
+    _b [label = "&#x2307;" shape=plaintext]
     select_expr_listb -> _b;
  select_expr_list_con4 -> select_from_etce;
     select_from_etce [label = "select_from_etc" shape=plaintext]
@@ -45,21 +45,21 @@ digraph parse {
     table_or_subquery10 [label = "table_or_subquery" shape=plaintext]
     table_or_subquery10 -> str11;
     str11 [label = "A" shape=plaintext]
-    _10 [label = "⏚" shape=plaintext]
+    _10 [label = "&#x2307;" shape=plaintext]
     table_or_subquery10 -> _10;
-    _f [label = "⏚" shape=plaintext]
+    _f [label = "&#x2307;" shape=plaintext]
     table_or_subquery_listf -> _f;
  select_from_etce -> select_where12;
     select_where12 [label = "select_where" shape=plaintext]
-    _12 [label = "⏚" shape=plaintext]
+    _12 [label = "&#x2307;" shape=plaintext]
     select_where12 -> _12;
  select_where12 -> select_groupby13;
     select_groupby13 [label = "select_groupby" shape=plaintext]
-    _13 [label = "⏚" shape=plaintext]
+    _13 [label = "&#x2307;" shape=plaintext]
     select_groupby13 -> _13;
  select_groupby13 -> select_having14;
     select_having14 [label = "select_having" shape=plaintext]
-    _2 [label = "⏚" shape=plaintext]
+    _2 [label = "&#x2307;" shape=plaintext]
     select_core_list2 -> _2;
  select_stmt1 -> select_orderby15;
     select_orderby15 [label = "select_orderby" shape=plaintext]
@@ -71,7 +71,7 @@ digraph parse {
     orderby_item18 [label = "orderby_item" shape=plaintext]
     orderby_item18 -> str19;
     str19 [label = "a" shape=plaintext]
-    _18 [label = "⏚" shape=plaintext]
+    _18 [label = "&#x2307;" shape=plaintext]
     orderby_item18 -> _18;
  orderby_list17 -> orderby_list1a;
     orderby_list1a [label = "orderby_list" shape=plaintext]
@@ -79,7 +79,7 @@ digraph parse {
     orderby_item1b [label = "orderby_item" shape=plaintext]
     orderby_item1b -> str1c;
     str1c [label = "b" shape=plaintext]
-    _1b [label = "⏚" shape=plaintext]
+    _1b [label = "&#x2307;" shape=plaintext]
     orderby_item1b -> _1b;
  orderby_list1a -> orderby_list1d;
     orderby_list1d [label = "orderby_list" shape=plaintext]
@@ -87,7 +87,7 @@ digraph parse {
     orderby_item1e [label = "orderby_item" shape=plaintext]
     orderby_item1e -> str1f;
     str1f [label = "c" shape=plaintext]
-    _1e [label = "⏚" shape=plaintext]
+    _1e [label = "&#x2307;" shape=plaintext]
     orderby_item1e -> _1e;
  orderby_list1d -> orderby_list20;
     orderby_list20 [label = "orderby_list" shape=plaintext]
@@ -97,9 +97,9 @@ digraph parse {
     str22 [label = "d" shape=plaintext]
  orderby_item21 -> asc23;
     asc23 [label = "asc" shape=plaintext]
-    _20 [label = "⏚" shape=plaintext]
+    _20 [label = "&#x2307;" shape=plaintext]
     orderby_list20 -> _20;
-    _16 [label = "⏚" shape=plaintext]
+    _16 [label = "&#x2307;" shape=plaintext]
     opt_orderby16 -> _16;
  select_orderby15 -> select_limit24;
     select_limit24 [label = "select_limit" shape=plaintext]
@@ -107,7 +107,7 @@ digraph parse {
     opt_limit25 [label = "opt_limit" shape=plaintext]
     opt_limit25 -> num26;
     num26 [label = "5" shape=plaintext]
-    _25 [label = "⏚" shape=plaintext]
+    _25 [label = "&#x2307;" shape=plaintext]
     opt_limit25 -> _25;
  select_limit24 -> select_offset27;
     select_offset27 [label = "select_offset" shape=plaintext]
@@ -119,7 +119,7 @@ digraph parse {
     select_core_list2a [label = "select_core_list" shape=plaintext]
     select_core_list2a -> select_core2b;
     select_core2b [label = "select_core" shape=plaintext]
-    _2b [label = "⏚" shape=plaintext]
+    _2b [label = "&#x2307;" shape=plaintext]
     select_core2b -> _2b;
  select_core2b -> select_expr_list_con2c;
     select_expr_list_con2c [label = "select_expr_list_con" shape=plaintext]
@@ -137,33 +137,33 @@ digraph parse {
     num32 [label = "2147483648" shape=plaintext]
  mul31 -> num33;
     num33 [label = "3" shape=plaintext]
-    _2e [label = "⏚" shape=plaintext]
+    _2e [label = "&#x2307;" shape=plaintext]
     select_expr2e -> _2e;
-    _2d [label = "⏚" shape=plaintext]
+    _2d [label = "&#x2307;" shape=plaintext]
     select_expr_list2d -> _2d;
  select_expr_list_con2c -> select_from_etc34;
     select_from_etc34 [label = "select_from_etc" shape=plaintext]
-    _34 [label = "⏚" shape=plaintext]
+    _34 [label = "&#x2307;" shape=plaintext]
     select_from_etc34 -> _34;
  select_from_etc34 -> select_where35;
     select_where35 [label = "select_where" shape=plaintext]
-    _35 [label = "⏚" shape=plaintext]
+    _35 [label = "&#x2307;" shape=plaintext]
     select_where35 -> _35;
  select_where35 -> select_groupby36;
     select_groupby36 [label = "select_groupby" shape=plaintext]
-    _36 [label = "⏚" shape=plaintext]
+    _36 [label = "&#x2307;" shape=plaintext]
     select_groupby36 -> _36;
  select_groupby36 -> select_having37;
     select_having37 [label = "select_having" shape=plaintext]
-    _2a [label = "⏚" shape=plaintext]
+    _2a [label = "&#x2307;" shape=plaintext]
     select_core_list2a -> _2a;
  select_stmt29 -> select_orderby38;
     select_orderby38 [label = "select_orderby" shape=plaintext]
-    _38 [label = "⏚" shape=plaintext]
+    _38 [label = "&#x2307;" shape=plaintext]
     select_orderby38 -> _38;
  select_orderby38 -> select_limit39;
     select_limit39 [label = "select_limit" shape=plaintext]
-    _39 [label = "⏚" shape=plaintext]
+    _39 [label = "&#x2307;" shape=plaintext]
     select_limit39 -> _39;
  select_limit39 -> select_offset3a;
     select_offset3a [label = "select_offset" shape=plaintext]
@@ -175,7 +175,7 @@ digraph parse {
     select_core_list3d [label = "select_core_list" shape=plaintext]
     select_core_list3d -> select_core3e;
     select_core3e [label = "select_core" shape=plaintext]
-    _3e [label = "⏚" shape=plaintext]
+    _3e [label = "&#x2307;" shape=plaintext]
     select_core3e -> _3e;
  select_core3e -> select_expr_list_con3f;
     select_expr_list_con3f [label = "select_expr_list_con" shape=plaintext]
@@ -186,39 +186,39 @@ digraph parse {
     select_expr41 -> concat42;
     concat42 [label = "concat" shape=plaintext]
     concat42 -> str43;
-    str43 [label = "'a'" shape=plaintext]
+    str43 [label = "\"a\"" shape=plaintext]
  concat42 -> str44;
-    str44 [label = "'b'" shape=plaintext]
-    _41 [label = "⏚" shape=plaintext]
+    str44 [label = "\"b\"" shape=plaintext]
+    _41 [label = "&#x2307;" shape=plaintext]
     select_expr41 -> _41;
-    _40 [label = "⏚" shape=plaintext]
+    _40 [label = "&#x2307;" shape=plaintext]
     select_expr_list40 -> _40;
  select_expr_list_con3f -> select_from_etc45;
     select_from_etc45 [label = "select_from_etc" shape=plaintext]
-    _45 [label = "⏚" shape=plaintext]
+    _45 [label = "&#x2307;" shape=plaintext]
     select_from_etc45 -> _45;
  select_from_etc45 -> select_where46;
     select_where46 [label = "select_where" shape=plaintext]
-    _46 [label = "⏚" shape=plaintext]
+    _46 [label = "&#x2307;" shape=plaintext]
     select_where46 -> _46;
  select_where46 -> select_groupby47;
     select_groupby47 [label = "select_groupby" shape=plaintext]
-    _47 [label = "⏚" shape=plaintext]
+    _47 [label = "&#x2307;" shape=plaintext]
     select_groupby47 -> _47;
  select_groupby47 -> select_having48;
     select_having48 [label = "select_having" shape=plaintext]
-    _3d [label = "⏚" shape=plaintext]
+    _3d [label = "&#x2307;" shape=plaintext]
     select_core_list3d -> _3d;
  select_stmt3c -> select_orderby49;
     select_orderby49 [label = "select_orderby" shape=plaintext]
-    _49 [label = "⏚" shape=plaintext]
+    _49 [label = "&#x2307;" shape=plaintext]
     select_orderby49 -> _49;
  select_orderby49 -> select_limit4a;
     select_limit4a [label = "select_limit" shape=plaintext]
-    _4a [label = "⏚" shape=plaintext]
+    _4a [label = "&#x2307;" shape=plaintext]
     select_limit4a -> _4a;
  select_limit4a -> select_offset4b;
     select_offset4b [label = "select_offset" shape=plaintext]
-    _3b [label = "⏚" shape=plaintext]
+    _3b [label = "&#x2307;" shape=plaintext]
     stmt_list3b -> _3b;
 }

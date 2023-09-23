@@ -1894,3 +1894,23 @@ rshift >>= 3;
 DECLARE FUNC stew1 NO CHECK INTEGER NOT NULL;
 
 DECLARE FUNC stew2 NO CHECK CREATE TEXT NOT NULL;
+
+b.f[x] := g.y[x] + z[x] + ~z[y];
+
+(NOT 'x')[5] IS "(not 'x')[5]";
+
+NOT 'x'[5] IS "not 'x'[5]";
+
+(a * b)[5] IS "(a*b)[5]";
+
+a * b[5] IS "a*b[5]";
+
+~x[5] IS "~x[5]";
+
+(~x)[5] IS "(~x)[5]";
+
+~foo::bar(x) IS "~foo::bar(x)";
+
+~a.b::bar(x) IS "~a.b::bar(x)";
+
+~a.b::bar(x) IS "~a.b::bar(x) (a.b) parens removed";

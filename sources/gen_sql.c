@@ -1486,6 +1486,19 @@ static void gen_cql_blob_update(ast_node *ast) {
   gen_printf(")");
 }
 
+static void gen_array(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_array(ast));
+  EXTRACT_ANY_NOTNULL(array, ast->left);
+  EXTRACT_NOTNULL(arg_list, ast->right);
+
+  if (pri_new < pri) gen_printf("(");
+  gen_expr(array, pri_new);
+  if (pri_new < pri) gen_printf(")");
+  gen_printf("[");
+  gen_arg_list(arg_list);
+  gen_printf("]");
+}
+
 static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
@@ -4881,6 +4894,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(and_eq, gen_binary, "&=", EXPR_PRI_ASSIGN);
   EXPR_INIT(rs_eq, gen_binary, ">>=", EXPR_PRI_ASSIGN);
   EXPR_INIT(ls_eq, gen_binary, "<<=", EXPR_PRI_ASSIGN);
+  EXPR_INIT(array, gen_array, "[]", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(call, gen_expr_call, "CALL", EXPR_PRI_ROOT);
   EXPR_INIT(window_func_inv, gen_expr_window_func_inv, "WINDOW-FUNC-INV", EXPR_PRI_ROOT);
   EXPR_INIT(raise, gen_expr_raise, "RAISE", EXPR_PRI_ROOT);

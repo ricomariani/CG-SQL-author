@@ -287,7 +287,8 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   PRI_ADD     +    -
   PRI_MUL     *    /    %
   PRI_CONCAT  ||
-  PRI_REVERSE_APPLY :
+  PRI_TILDE ~
+  PRI_REVERSE_APPLY : []
 */
 
 #define has_hex_prefix(s) (s[0] == '0' && (s[1] == 'x' || s[1] == 'X'))
@@ -305,8 +306,8 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
 #define EXPR_PRI_MUL 9
 #define EXPR_PRI_CONCAT 10
 #define EXPR_PRI_COLLATE 11
-#define EXPR_PRI_REVERSE_APPLY 12
-#define EXPR_PRI_TILDE 13
+#define EXPR_PRI_TILDE 12
+#define EXPR_PRI_REVERSE_APPLY 13
 
 /* from the SQLite grammar
 
@@ -766,6 +767,7 @@ AST(reverse_apply)
 AST(reverse_apply_typed)
 AST(reverse_apply_poly)
 AST(call)
+AST(array)
 AST(call_arg_list)
 AST(call_filter_clause)
 AST(arg_list)

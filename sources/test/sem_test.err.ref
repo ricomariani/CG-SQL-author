@@ -1660,4 +1660,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'this_name_doe
 test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of assignment operator must be a name ':='
 test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment operator may only appear in the leftmost (usual) assignment position ':='
 test/sem_test.sql:XXXX:1: error: in add_eq : CQL0465: left operand of assignment operator must be a name '+='
+test/sem_test.sql:XXXX:1: error: in num : CQL0470: array operation is only available for types with a declared type kind like object<something>
+test/sem_test.sql:XXXX:1: error: in num : CQL0470: array operation is only available for types with a declared type kind like object<something>
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 semantic errors present; no code gen.

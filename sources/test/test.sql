@@ -1737,3 +1737,18 @@ rshift >>= 3;
 
 declare function stew1 no check integer not null;
 declare function stew2 no check create text not null;
+
+b.f[x] := g.y[x] + z[x] + ~z[y];
+
+-- these parse test cases ensure the ast is right and echoing is right
+-- test.sql reference will change if the order of ops is wrong in the ast
+-- this stuff never gets touched once it's right.
+(not 'x')[5] IS "(not 'x')[5]";
+not 'x'[5] IS "not 'x'[5]";
+(a*b)[5] IS "(a*b)[5]";
+a*b[5] IS "a*b[5]";
+~x[5] IS "~x[5]";
+(~x)[5] IS "(~x)[5]";
+~foo::bar(x) IS "~foo::bar(x)";
+~a.b::bar(x) IS "~a.b::bar(x)";
+~(a.b)::bar(x) IS "~a.b::bar(x) (a.b) parens removed";

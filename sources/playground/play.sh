@@ -61,6 +61,7 @@ Arguments:
         preprocessed — The preprocessed version of the sql file
         cql_json_schema — A JSON output for codegen tools
         cql_sql_schema — A normalized version of the cql_json_schema (.sql)
+        cql_sqlite_schema — SQLite database of the cql_sql_schema.sql (.sqlite)
         table_diagram_dot — Table Diagram
         table_diagram_dot_pdf — Table Diagram as PDF file
         region_diagram_dot — Region Diagram
@@ -280,8 +281,8 @@ O=$(OUT)
 
 TO_PASCAL_CASE = $(shell echo $(1) | awk 'BEGIN {FS="[^a-zA-Z0-9]+"; OFS="";} {for (i=1; i<=NF; i++) $$i=toupper(substr($$i, 1, 1)) tolower(substr($$i, 2));} {print}')
 
-.PHONY:      gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf
-all_outputs: gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf
+.PHONY:      gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema cql_sqlite_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf
+all_outputs: gitignore preprocessed c c_binary lua query_plan objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema cql_sqlite_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf
 
 gitignore: $O/.gitignore
 $O/.gitignore:
@@ -356,6 +357,10 @@ cql_sql_schema: $O/cql_sql_schema.sql
 $O/cql_sql_schema.sql: $O/cql_json_schema.json
 > $(CQL_ROOT_DIR)/cqljson/cqljson.py --sql $O/cql_json_schema.json > $O/cql_sql_schema.sql
 
+cql_sqlite_schema: $O/cql_sqlite_schema.sqlite
+$O/cql_sqlite_schema.sqlite: $O/cql_sql_schema.sql
+> rm -f $O/cql_sqlite_schema.sqlite && cat $O/cql_sql_schema.sql | sqlite3 $O/cql_sqlite_schema.sqlite
+
 table_diagram_dot: $O/table_diagram.dot
 $O/table_diagram.dot: $O/cql_json_schema.json
 > $(CQL_ROOT_DIR)/cqljson/cqljson.py --table_diagram $O/cql_json_schema.json > $O/table_diagram.dot
@@ -424,7 +429,7 @@ run() {
         echo_vv -e "Running \`$example_name\` outputs ($source)\n" | theme
 
         if [[ $targets == "all_outputs" ]]; then
-            targets="c lua objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf"
+            targets="c lua objc java schema_upgrade cql_json_schema schema stats ast ast_dot cql_sql_schema cql_sqlite_schema table_diagram_dot region_diagram_dot erd_dot ast_dot_pdf table_diagram_dot_pdf region_diagram_dot_pdf erd_dot_pdf"
         fi
 
         for out_type in $targets; do
@@ -449,6 +454,7 @@ do_run() {
         schema_upgrade)          execute "The 'schema_upgrade' output"          "cat $example_output_dir_relative/schema_upgrade.sql" ;;
         cql_json_schema)         execute "The 'cql_json_schema' output"         "cat $example_output_dir_relative/cql_json_schema.json" ;;
         cql_sql_schema)          execute "The 'cql_sql_schema' output"          "cat $example_output_dir_relative/cql_sql_schema.sql" ;;
+        cql_sqlite_schema)       execute "The 'cql_sqlite_schema' output"       "ls $example_output_dir_relative/cql_sqlite_schema.sqlite" ;;
         table_diagram_dot)       execute "The 'table_diagram_dot' output"       "cat $example_output_dir_relative/table_diagram.dot" ;;
         table_diagram_dot_pdf)   execute "The 'table_diagram_dot_pdf' output"   "echo \"$ open $example_output_dir_relative/table_diagram.dot.pdf\"" ;;
         region_diagram_dot)      execute "The 'region_diagram_dot' output"      "cat $example_output_dir_relative/region_diagram.dot" ;;
@@ -657,7 +663,7 @@ while [[ $# -gt 0 ]]; do
         run-data-access-demo) sub_command="run_data_access_demo" ;;
 
         preprocessed|c|lua|objc|java|schema|schema_upgrade|query_plan|stats|ast|ast_dot| \
-        cql_json_schema|cql_sql_schema|table_diagram_dot|table_diagram_dot_pdf| \
+        cql_json_schema|cql_sql_schema|cql_sqlite_schema|table_diagram_dot|table_diagram_dot_pdf| \
         region_diagram_dot|region_diagram_dot_pdf|erd_dot|erd_dot_pdf)
             if [[ $targets != "all_outputs" ]] && [[ ! $targets =~ (^|[[:space:]])$1($|[[:space:]]) ]]; then
                 targets="$targets $1"

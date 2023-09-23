@@ -246,7 +246,7 @@ do_build() {
     fi
 
     if [[ $CLONE_SQLITE_DATABASE == true ]]; then
-        resolved_sqlite_file_path_absolute=$(readlink -f "$SCRIPT_OUT_DIR/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)")
+        resolved_sqlite_file_path_absolute="$SCRIPT_OUT_DIR/$example_name/$(basename $SQLITE_FILE_PATH_ABSOLUTE)"
 
         cp "$SQLITE_FILE_PATH_ABSOLUTE" "$resolved_sqlite_file_path_absolute"
 

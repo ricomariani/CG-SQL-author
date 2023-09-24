@@ -5777,6 +5777,69 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
   return SEM_RESOLVE_STOP;
 }
 
+static bool_t find_any_callable(CSTR name) {
+  return find_proc(name) || find_func(name) || find_unchecked_func(name);
+}
+
+static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name) {
+  Contract(sym);
+  Contract(expr);
+  Contract(name);
+
+  bclear(sym);
+  sem_t sem_type = expr->sem->sem_type;
+  CSTR kind = expr->sem->kind;
+  
+  if (!kind || !is_unitary(sem_type)) {
+    return false;
+  }
+
+  bprintf(sym, "get_%s_%s_%s", rewrite_type_suffix(sem_type), kind, name);
+  if (find_any_callable(sym->ptr)) {
+    return true;
+  }
+
+  bclear(sym);
+  bprintf(sym, "get_from_%s_%s", rewrite_type_suffix(sem_type), kind);
+  if (find_any_callable(sym->ptr)) {
+    return true;
+  }
+
+  bclear(sym);
+  return false;
+}
+
+static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+  Contract(name);
+  Contract(type_ptr);
+
+  if (!scope) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  ast_node *var = find_local_or_global_variable(scope);
+ 
+  if (!var) {
+    return SEM_RESOLVE_CONTINUE;
+  }
+
+  CHARBUF_OPEN(sym);
+
+  bool_t found = try_find_possible_dot_overload(&sym, var, name);
+  if (found) {
+    *type_ptr = &var->sem->sem_type;
+    if (ast) {
+      ast->sem = var->sem;
+      sem_add_flags(ast, 0);    // no flags added this is a clone
+      ast->sem->name = "$rewrite";
+    }
+  }
+
+  CHARBUF_CLOSE(sym);
+
+  return found ? SEM_RESOLVE_STOP : SEM_RESOLVE_CONTINUE;
+}
+
 // This helper adds new variables global or local, it also tracks the unitary locals
 // so that we can do the LOCALS shape
 static void add_variable(CSTR name, ast_node *variable) {
@@ -6266,6 +6329,7 @@ static void sem_resolve_id_with_type(ast_node *ast, CSTR name, CSTR scope, sem_t
     sem_try_resolve_global_constant,
     sem_try_resolve_cursor_field,
     sem_try_resolve_arg_bundle,
+    sem_try_resolve_dot_rewrite,
   };
 
   for (uint32_t i = 0; i < sizeof(resolver) / sizeof(void *); i++) {
@@ -9711,7 +9775,7 @@ static void sem_validate_array_transform(ast_node *ast,  CSTR op) {
   }
 
   if (!array->sem->kind) {
-    report_error(array, "CQL0470: array operation is only available for types with a declared type kind like object<something>", NULL);
+    report_error(array, "CQL0470: operation is only available for types with a declared type kind like object<something>", "[]");
     record_error(array);
     record_error(ast);
     return;
@@ -17527,10 +17591,10 @@ static bool_t sem_validate_compatible_cols_vals(ast_node *name_list, ast_node *v
   return true;
 }
 
-// All legal cases of expr_assign are re-written to the SET statement
-// any that are left are not in the canonical correct position so auto-error
-static void sem_expr_assign(ast_node *ast, CSTR op) {
-  report_error(ast, "CQL0492: assignment operator may only appear in the leftmost (usual) assignment position", op);
+// All legal cases of these operators are re-written 
+// any that are left are not in a valid position so they get an error
+static void sem_expr_invalid_op(ast_node *ast, CSTR op) {
+  report_error(ast, "CQL0492: operator found in an invalid position", op);
   record_error(ast);
 }
 
@@ -23034,8 +23098,49 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
 // Expression type for scoped name.
 static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   Contract(is_ast_dot(ast));
-  EXTRACT_NAME_AND_SCOPE(ast);
-  sem_resolve_id_expr(ast, name, scope);
+  Contract(is_id(ast->right));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT_STRING(name, ast->right);
+
+  // if this is normal name syntax we have to first see
+  // if this resolves in the usual way.  This unfortunately
+  // means that we get two lookups.  We can do better than
+  // this but keeping it simple for now.
+  if (is_id(expr)) {
+    EXTRACT_STRING(scope, expr);
+    // if we can resolve it the usual way then do
+    sem_resolve_id_expr(ast, name, scope);
+    if (is_error(ast) || !ast->sem->name || strcmp(ast->sem->name, "$rewrite")) {
+      return;
+    }
+  }
+
+  sem_expr(expr);
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  if (!expr->sem->kind) {
+    report_error(expr, "CQL0470: operation is only available for types with a declared type kind like object<something>", ".");
+    record_error(expr);
+    record_error(ast);
+    return;
+  }
+
+  CHARBUF_OPEN(sym);
+  bool_t found = try_find_possible_dot_overload(&sym, expr, name);
+  if (found) {
+    CSTR new_name = Strdup(sym.ptr);
+    rewrite_dot_as_call(ast, new_name);
+    sem_expr(ast);
+  }
+  else {
+    EXTRACT_STRING(dot_name, ast->right);
+    report_error(ast, "CQL0069: name not found", dot_name);
+    record_error(ast);
+  }
+  CHARBUF_CLOSE(sym);
 }
 
 // This function is used to detect the pattern that leaks memory on SQLite.
@@ -24780,16 +24885,18 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
   EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
   EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
-  EXPR_INIT(expr_assign, sem_expr_assign, ":=");
-  EXPR_INIT(add_eq, sem_expr_assign, "+=");
-  EXPR_INIT(sub_eq, sem_expr_assign, "-=");
-  EXPR_INIT(mul_eq, sem_expr_assign, "*=");
-  EXPR_INIT(div_eq, sem_expr_assign, "/=");
-  EXPR_INIT(mod_eq, sem_expr_assign, "%=");
-  EXPR_INIT(and_eq, sem_expr_assign, "&=");
-  EXPR_INIT(or_eq, sem_expr_assign, "|=");
-  EXPR_INIT(ls_eq, sem_expr_assign, "<<=");
-  EXPR_INIT(rs_eq, sem_expr_assign, ">>=");
+  EXPR_INIT(expr_assign, sem_expr_invalid_op, ":=");
+  EXPR_INIT(add_eq, sem_expr_invalid_op, "+=");
+  EXPR_INIT(sub_eq, sem_expr_invalid_op, "-=");
+  EXPR_INIT(mul_eq, sem_expr_invalid_op, "*=");
+  EXPR_INIT(div_eq, sem_expr_invalid_op, "/=");
+  EXPR_INIT(mod_eq, sem_expr_invalid_op, "%=");
+  EXPR_INIT(and_eq, sem_expr_invalid_op, "&=");
+  EXPR_INIT(or_eq, sem_expr_invalid_op, "|=");
+  EXPR_INIT(ls_eq, sem_expr_invalid_op, "<<=");
+  EXPR_INIT(rs_eq, sem_expr_invalid_op, ">>=");
+  EXPR_INIT(star, sem_expr_invalid_op, "*");
+  EXPR_INIT(table_star, sem_expr_invalid_op, "T.*");
 
   MISC_ATTR_INIT(ok_table_scan);
   MISC_ATTR_INIT(no_table_scan);

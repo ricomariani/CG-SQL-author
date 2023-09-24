@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Sat Sep 23 14:45:55 2023
+// Snapshot as of Sat Sep 23 20:43:50 2023
 
 
 const PREC = {
@@ -109,7 +109,7 @@ module.exports = grammar({
     opt_distinct: $ => choice($.empty, $.DISTINCT),
     simple_call: $ => seq($.name, '(', $.opt_distinct, optional($.arg_list), ')', optional($.opt_filter_clause)),
     call: $ => choice($.simple_call, seq($.basic_expr, ':', $.simple_call), seq($.basic_expr, ':', ':', $.simple_call), seq($.basic_expr, ':', ':', ':', $.simple_call)),
-    basic_expr: $ => choice($.name, $.AT_RC, seq($.name, '.', $.name), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')'), seq($.basic_expr, '[', optional($.arg_list), ']')),
+    basic_expr: $ => choice($.name, '*', $.AT_RC, seq($.basic_expr, '.', $.name), seq($.basic_expr, '.', '*'), $.any_literal, $.const_expr, seq('(', $.expr, ')'), $.call, $.window_func_inv, $.raise_expr, seq('(', $.select_stmt, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.OR, $.NULL, $.expr, ')'), seq('(', $.select_stmt, $.IF, $.NOTHING, $.THROW, ')'), seq($.EXISTS, '(', $.select_stmt, ')'), seq($.CASE, $.expr, $.case_list, $.END), seq($.CASE, $.expr, $.case_list, $.ELSE, $.expr, $.END), seq($.CASE, $.case_list, $.END), seq($.CASE, $.case_list, $.ELSE, $.expr, $.END), seq($.CAST, '(', $.expr, $.AS, $.data_type_any, ')'), seq($.TYPE_CHECK, '(', $.expr, $.AS, $.data_type_with_options, ')'), seq($.basic_expr, '[', optional($.arg_list), ']')),
     IS_NOT_TRUE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('true'))),
     IS_NOT_FALSE: $ => prec.left(1, seq(CI('is'), CI('not'), CI('false'))),
     IS_TRUE: $ => prec.left(1, seq(CI('is'), CI('true'))),
@@ -126,7 +126,7 @@ module.exports = grammar({
     case_list: $ => choice(seq($.WHEN, $.expr, $.THEN, $.expr), seq($.WHEN, $.expr, $.THEN, $.expr, $.case_list)),
     arg_expr: $ => choice($.expr, $.shape_arguments),
     arg_exprs: $ => choice($.arg_expr, seq($.arg_expr, ',', $.arg_exprs)),
-    arg_list: $ => choice('*', $.arg_exprs),
+    arg_list: $ => $.arg_exprs,
     expr_list: $ => choice($.expr, seq($.expr, ',', $.expr_list)),
     shape_arguments: $ => choice(seq($.FROM, $.name), seq($.FROM, $.name, $.shape_def), seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
     column_calculation: $ => choice(seq($.COLUMNS, '(', $.col_calcs, ')'), seq($.COLUMNS, '(', $.DISTINCT, $.col_calcs, ')')),
@@ -192,8 +192,8 @@ module.exports = grammar({
     opt_limit: $ => seq($.LIMIT, $.expr),
     opt_offset: $ => seq($.OFFSET, $.expr),
     select_opts: $ => choice($.ALL, $.DISTINCT, $.DISTINCTROW),
-    select_expr_list: $ => choice($.select_expr, seq($.select_expr, ',', $.select_expr_list), '*'),
-    select_expr: $ => choice(seq($.expr, optional($.opt_as_alias)), seq($.name, '.', '*'), $.column_calculation),
+    select_expr_list: $ => choice($.select_expr, seq($.select_expr, ',', $.select_expr_list)),
+    select_expr: $ => choice(seq($.expr, optional($.opt_as_alias)), $.column_calculation),
     opt_as_alias: $ => $.as_alias,
     as_alias: $ => choice(seq($.AS, $.name), $.name),
     query_parts: $ => choice($.table_or_subquery_list, $.join_clause),

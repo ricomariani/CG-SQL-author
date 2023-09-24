@@ -958,7 +958,7 @@ cleanup:
 }
 
 // These are the :: suffixes for types
-static CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
+cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
    CSTR result = "";
     switch (core_type_of(sem_type)) {
      case SEM_TYPE_NULL: result = "null"; break;
@@ -3767,6 +3767,34 @@ cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull
   ast_node *new_arg_list = new_ast_arg_list(arg, NULL);
   ast_set_right(arg_list, new_arg_list);
   AST_REWRITE_INFO_RESET();
+}
+
+cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_name) {
+  Contract(is_ast_dot(dot));
+  EXTRACT_ANY_NOTNULL(expr, dot->left);
+  
+  bool_t add_arg = !strncmp("get_from_", new_name, 9);
+
+  AST_REWRITE_INFO_SET(dot->lineno, dot->filename);
+
+  ast_node *base_list = NULL;
+  if (add_arg) {
+    EXTRACT_STRING(name, dot->right);
+    ast_node *new_str = new_ast_str(dup_printf("'%s'", name));
+    base_list = new_ast_arg_list(new_str, NULL);
+  }
+
+  ast_node *new_arg_list = new_ast_arg_list(expr, base_list);
+  ast_node *function_name = new_ast_str(new_name);
+  ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), new_arg_list);
+  ast_node *new_call = new_ast_call(function_name, call_arg_list);
+
+  dot->type = new_call->type;
+  ast_set_left(dot, new_call->left);
+  ast_set_right(dot, new_call->right);
+
+  AST_REWRITE_INFO_RESET();
+  
 }
 
 #endif

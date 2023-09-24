@@ -57,4 +57,6 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
 cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull operation);
 cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op);
 cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull arg);
+cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type);
+cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_name);
 #endif

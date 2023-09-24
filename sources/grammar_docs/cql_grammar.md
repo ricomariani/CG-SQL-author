@@ -9,14 +9,13 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Sep 23 14:45:55 PDT 2023
+Snapshot as of Sat Sep 23 20:43:50 PDT 2023
 
 ### Operators and Literals
 
 These are in order of priority lowest to highest
 
 ```
-':'
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
 ":=" "+=" "-=" "*=" "/=" "%=" "|=" "&=" "<<=" ">>="
 "OR"
@@ -28,7 +27,6 @@ These are in order of priority lowest to highest
 "<<" ">>" '&' '|'
 '+' '-'
 '*' '/' '%'
-'['
 "||"
 "COLLATE"
 "UMINUS" '~'
@@ -675,8 +673,10 @@ call:
 
 basic_expr:
   name
+  | '*'
   | "@RC"
-  | name '.' name
+  | basic_expr '.' name
+  | basic_expr '.' '*'
   | any_literal
   | const_expr
   | '(' expr ')'
@@ -778,7 +778,6 @@ arg_exprs:
 
 arg_list:
   /* nil */
-  | '*'
   | arg_exprs
   ;
 
@@ -1087,12 +1086,10 @@ select_opts:
 select_expr_list:
   select_expr
   | select_expr ',' select_expr_list
-  | '*'
   ;
 
 select_expr:
   expr opt_as_alias
-  | name '.' '*'
   | column_calculation
   ;
 

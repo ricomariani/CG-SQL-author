@@ -23167,7 +23167,7 @@ int_result := 701;
 
 -- TEST: use := in a place other than the simplest
 -- + {expr_assign}: err
--- + error: % assignment operator may only appear in the leftmost (usual) assignment position ':='
+-- + error: % operator found in an invalid position ':='
 -- +1 error:
 int_result := int_result := 2;
 
@@ -23247,7 +23247,7 @@ end;
 -- it has to have an object kind
 -- + {expr_stmt}: err
 -- + {array}: err
--- + error: % array operation is only available for types with a declared type kind like object<something>
+-- + error: % operation is only available for types with a declared type kind like object<something> '[]'
 -- +1 error
 1['x'];
 
@@ -23255,7 +23255,7 @@ end;
 -- it has to have an object kind
 -- + {expr_stmt}: err
 -- + {array}: err
--- + error: % array operation is only available for types with a declared type kind like object<something>
+-- + error: % operation is only available for types with a declared type kind like object<something> '[]'
 -- +1 error
 1['x'] := 'x';
 
@@ -23266,3 +23266,74 @@ end;
 -- + error: % string operand not allowed in 'NOT'
 -- +1 error
 (not 'x')[5];
+
+declare function get_object_dot_one_id(x object<dot_one>) integer;
+declare function get_from_object_dot_two no check integer;
+
+-- TEST: rewrite dot operations (not set case)
+-- +  LET z := get_object_dot_one_id(q);
+-- +  SET z := get_from_object_dot_two(u, 'id');
+-- +  SET z := get_from_object_dot_two(u, 'id2');
+-- - error:
+create proc dot_test()
+begin
+  declare q object<dot_one>;
+  declare u object<dot_two>;
+
+  let z := q.id;
+  set z := u.id;
+  set z := u.id2;
+end;
+
+-- TEST: try to use a . op but no helper functions
+-- + {dot}: err
+-- + error: % name not found 'q.id'
+-- +1 error:
+create proc dot_fail_no_funcs()
+begin
+  declare q object<dot_three>;
+
+  let z := q.id;
+end;
+
+-- TEST: try to use a . op but no helper functions
+-- + {dot}: err
+-- + error: % name not found 'q.id'
+-- +1 error:
+create proc dot_fail_no_kind()
+begin
+  declare q object;
+
+  let z := q.id;
+end;
+
+declare function make_dot_one() create object<dot_one>;
+
+-- TEST: try to use a . op but no helper functions (computed version)
+-- one successful rewrite
+-- + LET u := get_object_dot_one_id(make_dot_one());
+-- + {dot}: err
+-- + error: % name not found 'id2'
+-- +1 error:
+create proc dot_fail_no_missing_helper_computed()
+begin
+  declare q object;
+
+  let u := make_dot_one().id;
+  let v := make_dot_one().id2;
+end;
+
+
+-- TEST: bogus attempt -- no kind
+-- + {expr_stmt}: err
+-- + {dot}: err
+-- + error: % operation is only available for types with a declared type kind like object<something> '.'
+-- +1 error
+(1+1).foo;
+
+-- TEST: bogus attempt -- error expression
+-- + {expr_stmt}: err
+-- + {dot}: err
+-- + error: % string operand not allowed in 'NOT'
+-- +1 error
+(not 'x').foo;

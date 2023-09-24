@@ -129,6 +129,12 @@ void yyrestart(FILE *);
     yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
   }
 
+// If a column alias is present for * or T.* that's an error
+// We now parse ast_star as an expression to avoid ambiguities in the grammar
+// but that means we have to manually filter out some of this bad syntax
+#define YY_ERROR_ON_ALIAS_PRESENT(x) \
+   if (x) yyerror("* and T.* cannot have a column alias");
+
 #ifdef CQL_AMALGAM
 static void cql_reset_globals(void);
 #endif
@@ -176,19 +182,17 @@ static void cql_reset_globals(void);
 // you can match the language with those but the precedence of NOT is wrong
 // so order of operations will be subtlely off.  There are now tests for this.
 
-%left ':'
 %left UNION_ALL UNION INTERSECT EXCEPT
 %right ASSIGN ADD_EQ SUB_EQ MUL_EQ DIV_EQ MOD_EQ OR_EQ AND_EQ LS_EQ RS_EQ
 %left OR
 %left AND
 %left NOT
 %left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
-%right ISNULL NOTNULL
+%left ISNULL NOTNULL
 %left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
-%left '['
 %left CONCAT
 %left COLLATE
 %right UMINUS '~'
@@ -1047,8 +1051,10 @@ call:
 
 basic_expr:
   name  { $basic_expr = $name; }
+  | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
-  | name[lhs] '.' name[rhs]  { $basic_expr = new_ast_dot($lhs, $rhs); }
+  | basic_expr[lhs] '.' name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
+  | basic_expr[lhs] '.' '*' { $$ = new_ast_table_star($lhs); }
   | any_literal  { $basic_expr = $any_literal; }
   | const_expr { $basic_expr = $const_expr; }
   | '(' expr ')'  { $basic_expr = $expr; }
@@ -1150,7 +1156,6 @@ arg_exprs[result]:
 
 arg_list[result]:
   /* nil */  { $result = NULL; }
-  | '*' { $result = new_ast_arg_list(new_ast_star(), NULL); }
   | arg_exprs { $result = $arg_exprs; }
   ;
 
@@ -1517,12 +1522,18 @@ select_opts:
 select_expr_list[result]:
   select_expr  { $result = new_ast_select_expr_list($select_expr, NULL); }
   | select_expr ',' select_expr_list[sel]  { $result = new_ast_select_expr_list($select_expr, $sel); }
-  | '*'  { $result = new_ast_select_expr_list(new_ast_star(), NULL); }
   ;
 
 select_expr:
-  expr opt_as_alias  { $select_expr = new_ast_select_expr($expr, $opt_as_alias); }
-  | name '.' '*'  { $select_expr = new_ast_table_star($name); }
+  expr opt_as_alias  { 
+    if (is_ast_table_star($expr) || is_ast_star($expr)) {
+      YY_ERROR_ON_ALIAS_PRESENT($opt_as_alias);
+      $select_expr = $expr;
+    }
+    else {
+      $select_expr = new_ast_select_expr($expr, $opt_as_alias); 
+    }
+  }
   | column_calculation  { $select_expr = $column_calculation; }
   ;
 

@@ -10907,14 +10907,13 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Sep 23 14:45:55 PDT 2023
+Snapshot as of Sat Sep 23 20:43:50 PDT 2023
 
 ### Operators and Literals
 
 These are in order of priority lowest to highest
 
 ```
-':'
 "UNION ALL" "UNION" "INTERSECT" "EXCEPT"
 ":=" "+=" "-=" "*=" "/=" "%=" "|=" "&=" "<<=" ">>="
 "OR"
@@ -10926,7 +10925,6 @@ These are in order of priority lowest to highest
 "<<" ">>" '&' '|'
 '+' '-'
 '*' '/' '%'
-'['
 "||"
 "COLLATE"
 "UMINUS" '~'
@@ -11573,8 +11571,10 @@ call:
 
 basic_expr:
   name
+  | '*'
   | "@RC"
-  | name '.' name
+  | basic_expr '.' name
+  | basic_expr '.' '*'
   | any_literal
   | const_expr
   | '(' expr ')'
@@ -11676,7 +11676,6 @@ arg_exprs:
 
 arg_list:
   /* nil */
-  | '*'
   | arg_exprs
   ;
 
@@ -11985,12 +11984,10 @@ select_opts:
 select_expr_list:
   select_expr
   | select_expr ',' select_expr_list
-  | '*'
   ;
 
 select_expr:
   expr opt_as_alias
-  | name '.' '*'
   | column_calculation
   ;
 
@@ -17100,7 +17097,7 @@ be managed via subscriptions.
 
 -----
 
-### CQL0470: array operation is only available for types with a declared type kind like `object<something>`
+### CQL0470: operation is only available for types with a declared type kind like `object<something>` 'operator'
 
 Array operations from a type like `object<foo>` generate calls to
 
@@ -17115,6 +17112,8 @@ optional fields from a task id even if the task id is an integer.  `int<task_id>
 function `get_from_int_task_id(index integer);` and it "just works".
 
 >NOTE: Arrays can work in a SQL context if the appropriate `select functions` are defined.  Array syntax is only sugar.
+
+Using the dot (.) operator can also map to `set_object_foo` or `get_object_foo` and likewise requires a type kind.
 
 -----
 
@@ -17291,7 +17290,9 @@ to `cql_blob_create` manually, hence it is error checked.
 
 -----
 
-### CQL0492: assignment operator may only appear in the leftmost (usual) assignment position, 'op'
+### CQL0492:  operator found in an invalid position 'operator'
+
+There are several cases here:
 
 Assigment expressions are only allowed so as to make the SET keyword optional for readability.
 
@@ -17314,6 +17315,9 @@ Would give an error if `b` is nullable and `a` is not nullable which is very biz
 
 For these reasons, at least for now, `:=` in expressions is just a convenience feature to let you skip the
 `SET` keyword which makes code a bit more readable.
+
+The other cases involve '*' and 'T.*' which are only allowed where column or argument replacement
+is implied by them.  A loose '*'  like '* := 5;' is just wrong.
 
 -----
 
@@ -17467,7 +17471,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Sep 23 14:45:56 PDT 2023
+Snapshot as of Sat Sep 23 20:43:50 PDT 2023
 
 ### Rules
 

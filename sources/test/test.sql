@@ -1752,3 +1752,24 @@ a*b[5] IS "a*b[5]";
 ~foo::bar(x) IS "~foo::bar(x)";
 ~a.b::bar(x) IS "~a.b::bar(x)";
 ~(a.b)::bar(x) IS "~a.b::bar(x) (a.b) parens removed";
+(x+y).q IS "(x+y).q";
+x+y.q IS "x+y.q";
+x+(y.q) IS "x+y.q";
+foo(x).q IS "foo(x).q";
+~q.r IS "~q.r";
+~(q.r) IS "~q.r";
+(~q).r IS "(~q).r";
+
+-- these invalid forms now parse for grammar consistency
+-- however we have to rule them out by semantics
+
+* := *;
+T.* := U.*;
+
+-- this is valid/new
+foo(x).q;
+(a+b).r;
+
+foo(q).r;
+(~q).r;
+foo::bar().baz;

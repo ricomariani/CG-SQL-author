@@ -87152,7 +87152,7 @@ The statement ending at line XXXX
 
 SET int_result := int_result := 2;
 
-test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: assignment operator may only appear in the leftmost (usual) assignment position ':='
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0492: operator found in an invalid position ':='
 
   {assign}: err
   | {name int_result}: int_result: integer variable was_set
@@ -87379,7 +87379,7 @@ The statement ending at line XXXX
 
 1['x'];
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0470: array operation is only available for types with a declared type kind like object<something>
+test/sem_test.sql:XXXX:1: error: in num : CQL0470: operation is only available for types with a declared type kind like object<something> '[]'
 
   {expr_stmt}: err
   | {array}: err
@@ -87391,7 +87391,7 @@ The statement ending at line XXXX
 
 1['x'] := 'x';
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0470: array operation is only available for types with a declared type kind like object<something>
+test/sem_test.sql:XXXX:1: error: in num : CQL0470: operation is only available for types with a declared type kind like object<something> '[]'
 
   {expr_stmt}: err
   | {expr_assign}
@@ -87413,4 +87413,206 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | | {strlit 'x'}: text notnull
     | {arg_list}
       | {int 5}
+
+The statement ending at line XXXX
+
+DECLARE FUNC get_object_dot_one_id (x OBJECT<dot_one>) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name get_object_dot_one_id}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: object<dot_one> variable in
+    |   | {param_detail}: x: object<dot_one> variable in
+    |     | {name x}: x: object<dot_one> variable in
+    |     | {type_object}: object<dot_one>
+    |       | {name dot_one}
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC get_from_object_dot_two NO CHECK INTEGER;
+
+  {declare_func_no_check_stmt}: integer
+  | {name get_from_object_dot_two}: integer
+  | {func_params_return}
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC dot_test ()
+BEGIN
+  DECLARE q OBJECT<dot_one>;
+  DECLARE u OBJECT<dot_two>;
+  LET z := get_object_dot_one_id(q);
+  SET z := get_from_object_dot_two(u, 'id');
+  SET z := get_from_object_dot_two(u, 'id2');
+END;
+
+  {create_proc_stmt}: ok
+  | {name dot_test}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: object<dot_one>
+      | | {name_list}: q: object<dot_one> variable
+      | | | {name q}: q: object<dot_one> variable
+      | | {type_object}: object<dot_one>
+      |   | {name dot_one}
+      | {declare_vars_type}: object<dot_two>
+      | | {name_list}: u: object<dot_two> variable
+      | | | {name u}: u: object<dot_two> variable
+      | | {type_object}: object<dot_two>
+      |   | {name dot_two}
+      | {let_stmt}: z: integer variable was_set
+      | | {name z}: z: integer variable was_set
+      | | {call}: integer
+      |   | {name get_object_dot_one_id}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name q}: q: object<dot_one> variable
+      | {assign}: z: integer variable was_set
+      | | {name z}: z: integer variable was_set
+      | | {call}: integer
+      |   | {name get_from_object_dot_two}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name u}: u: object<dot_two> variable
+      |       | {arg_list}
+      |         | {strlit 'id'}: text notnull
+      | {assign}: z: integer variable was_set
+        | {name z}: z: integer variable was_set
+        | {call}: integer
+          | {name get_from_object_dot_two}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name u}: u: object<dot_two> variable
+              | {arg_list}
+                | {strlit 'id2'}: text notnull
+
+The statement ending at line XXXX
+
+CREATE PROC dot_fail_no_funcs ()
+BEGIN
+  DECLARE q OBJECT<dot_three>;
+  LET z := q.id;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'q.id'
+
+  {create_proc_stmt}: err
+  | {name dot_fail_no_funcs}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: object<dot_three>
+      | | {name_list}: q: object<dot_three> variable
+      | | | {name q}: q: object<dot_three> variable
+      | | {type_object}: object<dot_three>
+      |   | {name dot_three}
+      | {let_stmt}: err
+        | {name z}
+        | {dot}: err
+          | {name q}
+          | {name id}
+
+The statement ending at line XXXX
+
+CREATE PROC dot_fail_no_kind ()
+BEGIN
+  DECLARE q OBJECT;
+  LET z := q.id;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'q.id'
+
+  {create_proc_stmt}: err
+  | {name dot_fail_no_kind}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: object
+      | | {name_list}: q: object variable
+      | | | {name q}: q: object variable
+      | | {type_object}: object
+      | {let_stmt}: err
+        | {name z}
+        | {dot}: err
+          | {name q}
+          | {name id}
+
+The statement ending at line XXXX
+
+DECLARE FUNC make_dot_one () CREATE OBJECT<dot_one>;
+
+  {declare_func_stmt}: object<dot_one> create_func
+  | {name make_dot_one}: object<dot_one> create_func
+  | {func_params_return}
+    | {create_data_type}: object<dot_one> create_func
+      | {type_object}: object<dot_one>
+        | {name dot_one}
+
+The statement ending at line XXXX
+
+CREATE PROC dot_fail_no_missing_helper_computed ()
+BEGIN
+  DECLARE q OBJECT;
+  LET u := get_object_dot_one_id(make_dot_one());
+  LET v := make_dot_one().id2;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id2'
+
+  {create_proc_stmt}: err
+  | {name dot_fail_no_missing_helper_computed}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_vars_type}: object
+      | | {name_list}: q: object variable
+      | | | {name q}: q: object variable
+      | | {type_object}: object
+      | {let_stmt}: u: integer variable
+      | | {name u}: u: integer variable
+      | | {call}: integer
+      |   | {name get_object_dot_one_id}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {call}: object<dot_one> create_func
+      |         | {name make_dot_one}
+      |         | {call_arg_list}
+      |           | {call_filter_clause}
+      | {let_stmt}: err
+        | {name v}
+        | {dot}: err
+          | {call}: object<dot_one> create_func
+          | | {name make_dot_one}
+          | | {call_arg_list}
+          |   | {call_filter_clause}
+          | {name id2}
+
+The statement ending at line XXXX
+
+(1 + 1).foo;
+
+test/sem_test.sql:XXXX:1: error: in add : CQL0470: operation is only available for types with a declared type kind like object<something> '.'
+
+  {expr_stmt}: err
+  | {dot}: err
+    | {add}: err
+    | | {int 1}: integer notnull
+    | | {int 1}: integer notnull
+    | {name foo}
+
+The statement ending at line XXXX
+
+(NOT 'x').foo;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {expr_stmt}: err
+  | {dot}: err
+    | {not}: err
+    | | {strlit 'x'}: text notnull
+    | {name foo}
 

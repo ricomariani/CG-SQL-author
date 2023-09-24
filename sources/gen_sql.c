@@ -923,6 +923,17 @@ static void gen_case_list(ast_node *ast) {
   }
 }
 
+static void gen_expr_table_star(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_table_star(ast));
+  EXTRACT_STRING(table, ast->left);
+  gen_printf("%s.*", table);
+}
+
+static void gen_expr_star(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_star(ast));
+  gen_printf("*");
+}
+
 static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_num(ast));
   EXTRACT_NUM_VALUE(val, ast);
@@ -1005,6 +1016,15 @@ static void gen_expr_null(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 
 static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_dot(ast));
+
+  // the general case is not variables tables etc. the notifications do not fire
+  // these are rewritten away so they won't survive in the tree for later codegen
+  // to use these callbacks anyway.
+  if (!is_id(ast->left) || !is_id(ast->right)) {
+    gen_binary_no_spaces(ast, op, pri, pri_new);
+    return;
+  }
+
   EXTRACT_STRING(left, ast->left);
   EXTRACT_STRING(right, ast->right);
 
@@ -4859,11 +4879,13 @@ cql_noexport void gen_init() {
   STMT_INIT(blob_update_key_stmt);
   STMT_INIT(blob_update_val_stmt);
 
+  EXPR_INIT(table_star, gen_expr_table_star, "T.*", EXPR_PRI_ROOT);
+  EXPR_INIT(star, gen_expr_star, "*", EXPR_PRI_ROOT);
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);
   EXPR_INIT(str, gen_expr_str, "STR", EXPR_PRI_ROOT);
   EXPR_INIT(blob, gen_expr_blob, "BLB", EXPR_PRI_ROOT);
   EXPR_INIT(null, gen_expr_null, "NULL", EXPR_PRI_ROOT);
-  EXPR_INIT(dot, gen_expr_dot, "DOT", EXPR_PRI_ROOT);
+  EXPR_INIT(dot, gen_expr_dot, ".", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(const, gen_expr_const, "CONST", EXPR_PRI_ROOT);
   EXPR_INIT(bin_and, gen_binary, "&", EXPR_PRI_BINARY);
   EXPR_INIT(bin_or, gen_binary, "|", EXPR_PRI_BINARY);

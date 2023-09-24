@@ -713,7 +713,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#cql0467-a-shared-fragment-used-like-a-function-cannot-nest-fragments-that-use-arguments">CQL0467: a shared fragment used like a function cannot nest fragments that use arguments</a></li>
 <li><a href="#cql0468-attributecqlshared_fragment-may-only-be-placed-on-a-create-proc-statement-proc_name">CQL0468: <span class="citation" data-cites="attribute">@attribute</span>(cql:shared_fragment) may only be placed on a CREATE PROC statement ‘proc_name’</a></li>
 <li><a href="#cql0469-tableview-is-already-deleted-name">CQL0469: table/view is already deleted ‘name’</a></li>
-<li><a href="#cql0470-array-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething">CQL0470: array operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code></a></li>
+<li><a href="#cql0470-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething-operator">CQL0470: operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code> ‘operator’</a></li>
 <li><a href="#cql0471-available-for-re-use">CQL0471 available for re-use</a></li>
 <li><a href="#cql0472-tableview-is-already-unsubscribed-name">CQL0472: table/view is already unsubscribed ‘name’</a></li>
 <li><a href="#cql0473-unsub-is-invalid-because-the-tableview-is-still-used-by-name">CQL0473: <span class="citation" data-cites="unsub">@unsub</span> is invalid because the table/view is still used by ‘name’</a></li>
@@ -735,7 +735,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#cql0489-the-indicated-column-is-not-present-in-the-named-backed-storage-table_name.column_name">CQL0489: the indicated column is not present in the named backed storage ‘table_name.column_name’</a></li>
 <li><a href="#cql0490-argument-must-be-table.column-where-table-is-a-backed-table-function">CQL0490: argument must be table.column where table is a backed table ’function"</a></li>
 <li><a href="#cql0491-argument-1-must-be-a-table-name-that-is-a-backed-table-cql_blob_create">CQL0491: argument 1 must be a table name that is a backed table ‘cql_blob_create’</a></li>
-<li><a href="#cql0492-assignment-operator-may-only-appear-in-the-leftmost-usual-assignment-position-op">CQL0492: assignment operator may only appear in the leftmost (usual) assignment position, ‘op’</a></li>
+<li><a href="#cql0492-operator-found-in-an-invalid-position-operator">CQL0492: operator found in an invalid position ‘operator’</a></li>
 <li><a href="#cql0493-backed-storage-tables-may-not-be-used-in-indexestriggersdrop-table_name">CQL0493: backed storage tables may not be used in indexes/triggers/drop ‘table_name’</a></li>
 <li><a href="#cql0494-mixing-adding-and-removing-columns-from-a-shape-name">CQL0494: mixing adding and removing columns from a shape ‘name’</a></li>
 <li><a href="#cql0495-no-columns-were-selected-in-the-like-expression">CQL0495: no columns were selected in the LIKE expression</a></li>
@@ -7946,11 +7946,10 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat Sep 23 14:45:55 PDT 2023</p>
+<p>Snapshot as of Sat Sep 23 20:43:50 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
-<pre><code>&#39;:&#39;
-&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
+<pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
 &quot;:=&quot; &quot;+=&quot; &quot;-=&quot; &quot;*=&quot; &quot;/=&quot; &quot;%=&quot; &quot;|=&quot; &quot;&amp;=&quot; &quot;&lt;&lt;=&quot; &quot;&gt;&gt;=&quot;
 &quot;OR&quot;
 &quot;AND&quot;
@@ -7961,7 +7960,6 @@ Other physical indices might be helpful too and these can potentially be shared 
 &quot;&lt;&lt;&quot; &quot;&gt;&gt;&quot; &#39;&amp;&#39; &#39;|&#39;
 &#39;+&#39; &#39;-&#39;
 &#39;*&#39; &#39;/&#39; &#39;%&#39;
-&#39;[&#39;
 &quot;||&quot;
 &quot;COLLATE&quot;
 &quot;UMINUS&quot; &#39;~&#39;</code></pre>
@@ -8600,8 +8598,10 @@ call:
 
 basic_expr:
   name
+  | &#39;*&#39;
   | &quot;@RC&quot;
-  | name &#39;.&#39; name
+  | basic_expr &#39;.&#39; name
+  | basic_expr &#39;.&#39; &#39;*&#39;
   | any_literal
   | const_expr
   | &#39;(&#39; expr &#39;)&#39;
@@ -8703,7 +8703,6 @@ arg_exprs:
 
 arg_list:
   /* nil */
-  | &#39;*&#39;
   | arg_exprs
   ;
 
@@ -9012,12 +9011,10 @@ select_opts:
 select_expr_list:
   select_expr
   | select_expr &#39;,&#39; select_expr_list
-  | &#39;*&#39;
   ;
 
 select_expr:
   expr opt_as_alias
-  | name &#39;.&#39; &#39;*&#39;
   | column_calculation
   ;
 
@@ -11893,7 +11890,7 @@ select sum(...) filter(where ...) over (...)</code></pre>
 <h3 id="cql0469-tableview-is-already-deleted-name">CQL0469: table/view is already deleted ‘name’</h3>
 <p>In an <span class="citation" data-cites="unsub">@unsub</span> directive, the indicated table/view has already been deleted. It can no longer be managed via subscriptions.</p>
 <hr />
-<h3 id="cql0470-array-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething">CQL0470: array operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code></h3>
+<h3 id="cql0470-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething-operator">CQL0470: operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code> ‘operator’</h3>
 <p>Array operations from a type like <code>object&lt;foo&gt;</code> generate calls to</p>
 <p><code>get_from_object_foo(index)</code> or <code>set_in_object_foo(index, value)</code></p>
 <blockquote>
@@ -11906,6 +11903,7 @@ select sum(...) filter(where ...) over (...)</code></pre>
 <blockquote>
 <p>NOTE: Arrays can work in a SQL context if the appropriate <code>select functions</code> are defined. Array syntax is only sugar.</p>
 </blockquote>
+<p>Using the dot (.) operator can also map to <code>set_object_foo</code> or <code>get_object_foo</code> and likewise requires a type kind.</p>
 <hr />
 <h3 id="cql0471-available-for-re-use">CQL0471 available for re-use</h3>
 <hr />
@@ -11993,7 +11991,8 @@ select sum(...) filter(where ...) over (...)</code></pre>
 <h3 id="cql0491-argument-1-must-be-a-table-name-that-is-a-backed-table-cql_blob_create">CQL0491: argument 1 must be a table name that is a backed table ‘cql_blob_create’</h3>
 <p>When using the <code>cql_blob_create</code> helper function, the first argument must be a valid backed table (i.e. one that was marked with <code>@attribute(cql:backed_by=some_backing_table))</code>. The type signature of this table is used to create a hash valid for the type of the blob that is created. This error indicates that the first argument is not even an identifier, much less a table name that is backed. There are more specific errors if the table is not found or the table is not backed. Note that normally this error doesn’t happen because this functions is typically called by CQL itself as part of the rewriting process for backed tables. However it is possible to <code>cql_blob_create</code> manually, hence it is error checked.</p>
 <hr />
-<h3 id="cql0492-assignment-operator-may-only-appear-in-the-leftmost-usual-assignment-position-op">CQL0492: assignment operator may only appear in the leftmost (usual) assignment position, ‘op’</h3>
+<h3 id="cql0492-operator-found-in-an-invalid-position-operator">CQL0492: operator found in an invalid position ‘operator’</h3>
+<p>There are several cases here:</p>
 <p>Assigment expressions are only allowed so as to make the SET keyword optional for readability.</p>
 <p>Why this limitation?</p>
 <p>First, control flow in expressions with side effects is weird and SQL has a lot of this:</p>
@@ -12003,6 +12002,7 @@ select sum(...) filter(where ...) over (...)</code></pre>
 <pre><code>a := b := 1;</code></pre>
 <p>Would give an error if <code>b</code> is nullable and <code>a</code> is not nullable which is very bizaree indeed.</p>
 <p>For these reasons, at least for now, <code>:=</code> in expressions is just a convenience feature to let you skip the <code>SET</code> keyword which makes code a bit more readable.</p>
+<p>The other cases involve ‘<em>’ and ’T.</em>’ which are only allowed where column or argument replacement is implied by them. A loose ‘<em>’ like ’</em> := 5;’ is just wrong.</p>
 <hr />
 <h3 id="cql0493-backed-storage-tables-may-not-be-used-in-indexestriggersdrop-table_name">CQL0493: backed storage tables may not be used in indexes/triggers/drop ‘table_name’</h3>
 <p>The indicated table name was marked as backed storage. Therefore it does not have a physical manifestation, and therefore it cannot be used in an index or in a trigger. You may be able to get the index or trigger you want by creating an index on the backing storage and then using the blob access functions to index a column or check colulmns in a trigger. For instance this index is pretty normal:</p>
@@ -12080,7 +12080,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat Sep 23 14:45:56 PDT 2023</p>
+<p>Snapshot as of Sat Sep 23 20:43:50 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

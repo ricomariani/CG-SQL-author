@@ -61,6 +61,7 @@ BEGIN
   ;
 END;
 
+@attribute(playground:not_implemented_in_lua)
 CREATE PROC entrypoint ()
 BEGIN
   let timer := create_timer();

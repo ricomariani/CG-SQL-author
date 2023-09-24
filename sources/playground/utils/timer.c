@@ -1,4 +1,3 @@
-#include <cqlrt.h>
 #include <stdio.h>
 #include <time.h> 
 

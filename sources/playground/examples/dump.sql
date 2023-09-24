@@ -2,6 +2,7 @@
 
 -- Check the implementation in utils/dump.sql
 
+@attribute(playground:not_implemented_in_lua)
 proc entrypoint()
 begin
   1::dump();

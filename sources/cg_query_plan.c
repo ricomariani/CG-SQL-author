@@ -301,7 +301,6 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
     cg_encode_char_as_c_string_literal(json_str_sql.ptr[i], &c_str_sql);
   }
   bprintf(&c_str_sql, "\"");
-  bprintf(&body, "DECLARE stmt TEXT NOT NULL;\n");
 
   bprintf(&body, "LET query_plan_trivial_object := trivial_object();\n");
   bprintf(&body, "LET query_plan_trivial_blob := trivial_blob();\n\n");
@@ -310,15 +309,18 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // The C encoded will be unescaped when it is compiled and the JSON goes directly to the output
   // so that we correctly generate a JSON fragment as a result of running this code.  The JSON
   // string has escaped any quotes etc. that were in the original SQL.
+  bprintf(&body, "DECLARE stmt TEXT NOT NULL;\n");
   bprintf(&body, "SET stmt := %s;\n", c_str_sql.ptr);
+
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
   if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
     bprintf(
-        &body,
-        "INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, \"%s\", \"%s\");\n",
-        sql_stmt_count,
-        current_procedure_name,
-        current_ok_table_scan->ptr);
+      &body,
+      "INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, \"%s\", \"%s\");\n",
+      sql_stmt_count,
+      current_procedure_name,
+      current_ok_table_scan->ptr
+    );
   }
   bprintf(&body, "DECLARE C CURSOR FOR EXPLAIN QUERY PLAN\n");
   bprintf(&body, "%s;\n", sql.ptr);
@@ -538,11 +540,13 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
     }
   }
 
-  bprintf(output, "CREATE PROC populate_no_table_scan()\n"
-                  "BEGIN\n");
+  bprintf(output, "CREATE PROC populate_no_table_scan()\n");
+  bprintf(output, "BEGIN\n");
+
   if (no_scan_tables_buf.used > 1) {
     bprintf(output, "  INSERT OR IGNORE INTO no_table_scan(table_name) VALUES\n%s;\n", no_scan_tables_buf.ptr);
   }
+
   bprintf(output, "END;\n");
 
   CHARBUF_CLOSE(no_scan_tables_buf);
@@ -596,12 +600,13 @@ static void cg_qp_emit_udf_stubs(charbuf *output) {
 // plus the standard schema for query plan storage and emit any UDF stubs
 // at this time as well.  See above for the UDF stub code.
 static void cg_qp_emit_create_schema_proc(charbuf *output) {
-  bprintf(output,
-    "CREATE PROC create_schema()\n"
-    "BEGIN\n");
+  bprintf(output, "CREATE PROC create_schema()\n");
+  bprintf(output, "BEGIN\n");
+
   cg_qp_emit_udf_stubs(output);
   bindent(output, schema_stmts, 2);
   bprintf(output,
+    "%s",
     "  CREATE TABLE sql_temp(\n"
     "    id INT NOT NULL PRIMARY KEY,\n"
     "    sql TEXT NOT NULL\n"
@@ -629,6 +634,7 @@ static void cg_qp_emit_create_schema_proc(charbuf *output) {
     "    table_names TEXT NOT NULL\n"
     "  ) WITHOUT ROWID;\n"
     "END;\n"
+    "\n"
   );
 
   bprintf(output, "%s", backed_tables->ptr);
@@ -640,186 +646,197 @@ static void emit_populate_tables_proc(charbuf *output) {
 
 static void emit_print_sql_statement_proc(charbuf *output) {
   bprintf(output,
-          "%s",
-          "CREATE PROC print_sql_statement(sql_id integer not null)\n"
-          "BEGIN\n"
-          "  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;\n"
-          "  FETCH C;\n"
-          "  CALL printf(\"   \\\"query\\\" : \\\"%s\\\",\\n\", C.sql);\n"
-          "END;\n"
+    "%s",
+    "CREATE PROC print_sql_statement(sql_id integer not null)\n"
+    "BEGIN\n"
+    "  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;\n"
+    "  FETCH C;\n"
+    "  CALL printf(\"   \\\"query\\\" : \\\"%s\\\",\\n\", C.sql);\n"
+    "END;\n"
+    "\n"
   );
 }
 
 static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
-  bprintf(output, "CREATE PROC populate_table_scan_alert_table(table_ text not null)\n");
-  bprintf(output, "BEGIN\n");
-  bprintf(output, "  INSERT OR IGNORE INTO table_scan_alert\n");
-  bprintf(output, "    SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp\n");
-  bprintf(output, "    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR \n");
-  bprintf(output, "            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')\n");
-  bprintf(output, "          )\n");
-  bprintf(output, "    AND sql_id NOT IN (\n");
-  bprintf(output, "      SELECT sql_id from ok_table_scan\n");
-  bprintf(output, "        WHERE table_names GLOB ('*#' || table_ || '#*')\n");
-  bprintf(output, "    ) GROUP BY table_;\n");
-  bprintf(output, "END;\n");
+  bprintf(output,
+    "%s",
+    "CREATE PROC populate_table_scan_alert_table(table_ text not null)\n"
+    "BEGIN\n"
+    "  INSERT OR IGNORE INTO table_scan_alert\n"
+    "    SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp\n"
+    "    WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR \n"
+    "            zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')\n"
+    "          )\n"
+    "    AND sql_id NOT IN (\n"
+    "      SELECT sql_id from ok_table_scan\n"
+    "        WHERE table_names GLOB ('*#' || table_ || '#*')\n"
+    "    ) GROUP BY table_;\n"
+    "END;\n"
+    "\n"
+  );
 }
 
 static void emit_populate_b_tree_alert_table_proc(charbuf *output) {
   bprintf(output,
-          "%s",
-          "CREATE PROC populate_b_tree_alert_table()\n"
-          "BEGIN\n"
-          "  INSERT OR IGNORE INTO b_tree_alert\n"
-          "    SELECT '#' || sql_id || '(' || count(*) || ')' as info FROM plan_temp\n"
-          "    WHERE zdetail LIKE '%temp b-tree%'\n"
-          "    GROUP BY sql_id;\n"
-          "END;\n");
+    "%s",
+    "CREATE PROC populate_b_tree_alert_table()\n"
+    "BEGIN\n"
+    "  INSERT OR IGNORE INTO b_tree_alert\n"
+    "    SELECT '#' || sql_id || '(' || count(*) || ')' as info FROM plan_temp\n"
+    "    WHERE zdetail LIKE '%temp b-tree%'\n"
+    "    GROUP BY sql_id;\n"
+    "END;\n"
+    "\n"
+  );
 }
 
 static void emit_print_query_violation_proc(charbuf *output) {
   bprintf(output,
-          "%s",
-          "CREATE PROC print_query_violation()\n"
-          "BEGIN\n"
-          "  CALL populate_b_tree_alert_table();\n"
-          "  DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;\n"
-          "  LOOP FETCH C\n"
-          "  BEGIN\n"
-          "    CALL populate_table_scan_alert_table(C.table_name);\n"
-          "  END;\n\n"
-          "  LET first := true;\n"
-          "  CALL printf(\"\\\"alerts\\\" : {\\n\");\n"
-          "  DECLARE C2 CURSOR FOR\n"
-          "    SELECT 'tableScanViolation' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert\n"
-          "    UNION ALL\n"
-          "    SELECT 'tempBTreeViolation' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;\n"
-          "  LOOP FETCH C2\n"
-          "  BEGIN\n"
-          "    IF C2.info_list IS NOT NULL THEN\n"
-          "      CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
-          "      CALL printf(\"  \\\"%s\\\" : \", C2.key);\n"
-          "      CALL printf(\"\\\"%s\\\"\", C2.info_list);\n"
-          "      SET first := false;\n"
-          "    END IF;\n"
-          "  END;\n"
-          "  CALL printf(\"\\n},\\n\");\n"
-          "END;\n"
+    "%s",
+    "CREATE PROC print_query_violation()\n"
+    "BEGIN\n"
+    "  CALL populate_b_tree_alert_table();\n"
+    "  DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;\n"
+    "  LOOP FETCH C\n"
+    "  BEGIN\n"
+    "    CALL populate_table_scan_alert_table(C.table_name);\n"
+    "  END;\n\n"
+    "  LET first := true;\n"
+    "  CALL printf(\"\\\"alerts\\\" : {\\n\");\n"
+    "  DECLARE C2 CURSOR FOR\n"
+    "    SELECT 'tableScanViolation' AS key, group_concat(info, ', ') AS info_list FROM table_scan_alert\n"
+    "    UNION ALL\n"
+    "    SELECT 'tempBTreeViolation' AS key, group_concat(info, ', ') AS info_list FROM b_tree_alert;\n"
+    "  LOOP FETCH C2\n"
+    "  BEGIN\n"
+    "    IF C2.info_list IS NOT NULL THEN\n"
+    "      CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
+    "      CALL printf(\"  \\\"%s\\\" : \", C2.key);\n"
+    "      CALL printf(\"\\\"%s\\\"\", C2.info_list);\n"
+    "      SET first := false;\n"
+    "    END IF;\n"
+    "  END;\n"
+    "  CALL printf(\"\\n},\\n\");\n"
+    "END;\n"
+    "\n"
   );
 }
 
 static void emit_print_query_plan_stat_proc(charbuf *output) {
   bprintf(output,
-          "%s",
-          "CREATE PROC print_query_plan_stat(id_ integer not null)\n"
-          "BEGIN\n"
-          "  CALL printf(\"   \\\"stats\\\" : {\\n\");\n"
-          "  DECLARE Ca CURSOR FOR\n"
-          "  WITH\n"
-          "    scan(name, count, priority) AS (\n"
-          "      SELECT 'scan', COUNT(*), 0 \n"
-          "        FROM plan_temp \n"
-          "        WHERE zdetail LIKE '%scan%' AND sql_id = id_\n"
-          "    ),\n"
-          "    b_tree(name, count, priority) AS (\n"
-          "      SELECT 'tempBTree', COUNT(*), 1 \n"
-          "        FROM plan_temp \n"
-          "        WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_\n"
-          "    ),\n"
-          "    compound_subqueries(name, count, priority) AS (\n"
-          "      SELECT 'compoundSubquery', COUNT(*), 2 \n"
-          "        FROM plan_temp \n"
-          "        WHERE zdetail LIKE '%compound subqueries%' AND sql_id = id_\n"
-          "    ),\n"
-          "    execute_scalar(name, count, priority) AS (\n"
-          "      SELECT 'executeScalar', COUNT(*), 3 \n"
-          "        FROM plan_temp \n"
-          "        WHERE zdetail LIKE '%execute scalar%' AND sql_id = id_\n"
-          "    ),\n"
-          "    search(name, count, priority) AS (\n"
-          "      SELECT 'search', COUNT(*), 4 \n"
-          "        FROM plan_temp \n"
-          "        WHERE zdetail LIKE '%search%' AND iselectid NOT IN (\n"
-          "          SELECT iselectid \n"
-          "          FROM plan_temp \n"
-          "          WHERE zdetail LIKE '%search%using%covering%'\n"
-          "        ) AND sql_id = id_\n"
-          "    ),\n"
-          "    search_fast(name, count, priority) AS (\n"
-          "      SELECT 'searchUsingCovering', COUNT(*), 5 \n"
-          "        FROM plan_temp \n"
-          "        WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_\n"
-          "    )\n"
-          "  SELECT \n"
-          "   '\"' || name || '\"' name,\n"
-          "   count value\n"
-          "   FROM (\n"
-          "   SELECT * FROM scan\n"
-          "   UNION ALL\n"
-          "   SELECT * FROM search\n"
-          "   UNION ALL\n"
-          "   SELECT * FROM search_fast\n"
-          "   UNION ALL\n"
-          "   SELECT * FROM b_tree\n"
-          "   UNION ALL\n"
-          "   SELECT * FROM compound_subqueries\n"
-          "   UNION ALL\n"
-          "   SELECT * FROM execute_scalar\n"
-          "  )\n"
-          "  WHERE count > 0 ORDER BY priority ASC, count DESC;\n"
-          "  LET first := true;\n"
-          "  LOOP FETCH Ca\n"
-          "  BEGIN\n"
-          "    CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
-          "    CALL printf(\"      %s : %d\", Ca.name, Ca.value);\n"
-          "    SET first := false;\n"
-          "  END;\n"
-          "  CALL printf(\"\\n    },\\n\");\n"
-          "END;\n"
+    "%s",
+    "CREATE PROC print_query_plan_stat(id_ integer not null)\n"
+    "BEGIN\n"
+    "  CALL printf(\"   \\\"stats\\\" : {\\n\");\n"
+    "  DECLARE Ca CURSOR FOR\n"
+    "  WITH\n"
+    "    scan(name, count, priority) AS (\n"
+    "      SELECT 'scan', COUNT(*), 0 \n"
+    "        FROM plan_temp \n"
+    "        WHERE zdetail LIKE '%scan%' AND sql_id = id_\n"
+    "    ),\n"
+    "    b_tree(name, count, priority) AS (\n"
+    "      SELECT 'tempBTree', COUNT(*), 1 \n"
+    "        FROM plan_temp \n"
+    "        WHERE zdetail LIKE '%temp b-tree%' AND sql_id = id_\n"
+    "    ),\n"
+    "    compound_subqueries(name, count, priority) AS (\n"
+    "      SELECT 'compoundSubquery', COUNT(*), 2 \n"
+    "        FROM plan_temp \n"
+    "        WHERE zdetail LIKE '%compound subqueries%' AND sql_id = id_\n"
+    "    ),\n"
+    "    execute_scalar(name, count, priority) AS (\n"
+    "      SELECT 'executeScalar', COUNT(*), 3 \n"
+    "        FROM plan_temp \n"
+    "        WHERE zdetail LIKE '%execute scalar%' AND sql_id = id_\n"
+    "    ),\n"
+    "    search(name, count, priority) AS (\n"
+    "      SELECT 'search', COUNT(*), 4 \n"
+    "        FROM plan_temp \n"
+    "        WHERE zdetail LIKE '%search%' AND iselectid NOT IN (\n"
+    "          SELECT iselectid \n"
+    "          FROM plan_temp \n"
+    "          WHERE zdetail LIKE '%search%using%covering%'\n"
+    "        ) AND sql_id = id_\n"
+    "    ),\n"
+    "    search_fast(name, count, priority) AS (\n"
+    "      SELECT 'searchUsingCovering', COUNT(*), 5 \n"
+    "        FROM plan_temp \n"
+    "        WHERE zdetail LIKE '%search%using%covering%' AND sql_id = id_\n"
+    "    )\n"
+    "  SELECT \n"
+    "   '\"' || name || '\"' name,\n"
+    "   count value\n"
+    "   FROM (\n"
+    "   SELECT * FROM scan\n"
+    "   UNION ALL\n"
+    "   SELECT * FROM search\n"
+    "   UNION ALL\n"
+    "   SELECT * FROM search_fast\n"
+    "   UNION ALL\n"
+    "   SELECT * FROM b_tree\n"
+    "   UNION ALL\n"
+    "   SELECT * FROM compound_subqueries\n"
+    "   UNION ALL\n"
+    "   SELECT * FROM execute_scalar\n"
+    "  )\n"
+    "  WHERE count > 0 ORDER BY priority ASC, count DESC;\n"
+    "  LET first := true;\n"
+    "  LOOP FETCH Ca\n"
+    "  BEGIN\n"
+    "    CALL printf(\"%s\", IIF(first, \"\", \",\\n\"));\n"
+    "    CALL printf(\"      %s : %d\", Ca.name, Ca.value);\n"
+    "    SET first := false;\n"
+    "  END;\n"
+    "  CALL printf(\"\\n    },\\n\");\n"
+    "END;\n"
+    "\n"
   );
 }
 
 static void emit_print_query_plan_graph_proc(charbuf *output) {
   bprintf(output,
-          "%s",
-          "CREATE PROC print_query_plan_graph(id_ integer not null)\n"
-          "BEGIN\n"
-          "  DECLARE C CURSOR FOR\n"
-          "  WITH RECURSIVE\n"
-          "    plan_chain(iselectid,  zdetail, level) AS (\n"
-          "     SELECT 0 as  iselectid, 'QUERY PLAN' as  zdetail, 0 as level\n"
-          "     UNION ALL\n"
-          "     SELECT plan_temp.iselectid, plan_temp.zdetail, plan_chain.level+1 as level\n"
-          "      FROM plan_temp JOIN plan_chain ON plan_temp.iorder=plan_chain.iselectid WHERE plan_temp.sql_id = id_\n"
-          "     ORDER BY 3 DESC\n"
-          "    )\n"
-          "    SELECT\n"
-          "     level,\n"
-          "     substr('                              ', 1, max(level - 1, 0)*3) ||\n"
-          "     substr('|.............................', 1, min(level, 1)*3) ||\n"
-          "     zdetail as graph_line FROM plan_chain;\n"
-          "\n"
-          "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
-          "  LOOP FETCH C\n"
-          "  BEGIN\n"
-          "    CALL printf(\"\%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
-          "  END;\n"
-          "  CALL printf(\"\\\"\\n\");\n"
-          "END;\n"
+    "%s",
+    "CREATE PROC print_query_plan_graph(id_ integer not null)\n"
+    "BEGIN\n"
+    "  DECLARE C CURSOR FOR\n"
+    "  WITH RECURSIVE\n"
+    "    plan_chain(iselectid,  zdetail, level) AS (\n"
+    "     SELECT 0 as  iselectid, 'QUERY PLAN' as  zdetail, 0 as level\n"
+    "     UNION ALL\n"
+    "     SELECT plan_temp.iselectid, plan_temp.zdetail, plan_chain.level+1 as level\n"
+    "      FROM plan_temp JOIN plan_chain ON plan_temp.iorder=plan_chain.iselectid WHERE plan_temp.sql_id = id_\n"
+    "     ORDER BY 3 DESC\n"
+    "    )\n"
+    "    SELECT\n"
+    "     level,\n"
+    "     substr('                              ', 1, max(level - 1, 0)*3) ||\n"
+    "     substr('|.............................', 1, min(level, 1)*3) ||\n"
+    "     zdetail as graph_line FROM plan_chain;\n"
+    "\n"
+    "  CALL printf(\"   \\\"plan\\\" : \\\"\");\n"
+    "  LOOP FETCH C\n"
+    "  BEGIN\n"
+    "    CALL printf(\"\%s%s\", IIF(C.level, \"\\\\n\", \"\"), C.graph_line);\n"
+    "  END;\n"
+    "  CALL printf(\"\\\"\\n\");\n"
+    "END;\n"
+    "\n"
   );
 }
 
 static void emit_print_query_plan(charbuf *output) {
   bprintf(output,
-          "CREATE PROC print_query_plan(sql_id integer not null)\n"
-          "BEGIN\n"
-          "  CALL printf(\"  {\\n\");\n"
-          "  CALL printf(\"   \\\"id\\\" : %%d,\\n\", sql_id);\n"
-          "  CALL print_sql_statement(sql_id);\n"
-          "  CALL print_query_plan_stat(sql_id);\n"
-          "  CALL print_query_plan_graph(sql_id);\n"
-          "  CALL printf(\"  }\");\n"
-          "END;\n"
+    "CREATE PROC print_query_plan(sql_id integer not null)\n"
+    "BEGIN\n"
+    "  CALL printf(\"  {\\n\");\n"
+    "  CALL printf(\"   \\\"id\\\" : %%d,\\n\", sql_id);\n"
+    "  CALL print_sql_statement(sql_id);\n"
+    "  CALL print_query_plan_stat(sql_id);\n"
+    "  CALL print_query_plan_graph(sql_id);\n"
+    "  CALL printf(\"  }\");\n"
+    "END;\n"
+    "\n"
   );
 }
 
@@ -890,7 +907,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   cg_qp_stmt_list(head);
 
   bprintf(&output_buf, rt->source_prefix);
-  bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
+  bprintf(&output_buf, "declare proc printf no check;\n");
 
   if (!sql_stmt_count) {
     bprintf(&output_buf,
@@ -909,17 +926,21 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
     goto cleanup;
   }
 
-  bprintf(&output_buf, "DECLARE PROC cql_create_udf_stub(name TEXT NOT NULL) USING TRANSACTION;\n\n");
+  bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT NOT NULL) using transaction;\n\n");
 
-  bprintf(&output_buf, "proc trivial_object()\n");
-  bprintf(&output_buf, "begin\n");
-  bprintf(&output_buf, "  select 1 x;\n");
-  bprintf(&output_buf, "end;\n\n");
+  bprintf(&output_buf, 
+    "proc trivial_object()\n"
+    "begin\n"
+    "  select 1 x;\n"
+    "end;\n\n"
+  );
 
-  bprintf(&output_buf, "proc trivial_blob(out result blob not null)\n");
-  bprintf(&output_buf, "begin\n");
-  bprintf(&output_buf, "  set result := (select x'41');\n");
-  bprintf(&output_buf, "end;\n");
+  bprintf(&output_buf, 
+    "proc trivial_blob(out result blob not null)\n"
+    "begin\n"
+    "  set result := (select x'41');\n"
+    "end;\n\n"
+  );
 
   if (options.test) {
     while (head->right) {
@@ -929,30 +950,17 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   }
 
   cg_qp_emit_declare_func(&output_buf);
-  bprintf(&output_buf, "\n");
   cg_qp_emit_create_schema_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_populate_no_table_scan_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_populate_tables_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_populate_table_scan_alert_table_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_populate_b_tree_alert_table_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_print_query_violation_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_print_sql_statement_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_print_query_plan_stat_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_print_query_plan_graph_proc(&output_buf);
-  bprintf(&output_buf, "\n");
   emit_print_query_plan(&output_buf);
-  bprintf(&output_buf, "\n");
 
-  // create an empty query_plan method even if there are no statements
-  // (the helpers above won't be needed)
   bprintf(&output_buf, "CREATE PROC query_plan()\n");
   bprintf(&output_buf, "BEGIN\n");
   bprintf(&output_buf, "  CALL create_schema();\n");

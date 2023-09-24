@@ -913,8 +913,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
     bprintf(&output_buf,
       "create proc query_plan()\n"
       "begin\n"
-      "  -- Force the use of an sqlite connection to ensure it appears in the signature\n"
-      "  let i := (SELECT 1 force_connection);\n"
+      "  -- Force the dml proc signature\n"
+      "  let i := @rc;\n"
       "\n"
       "  -- No statements found: Print an empty query plan\n"
       "  call printf(\"{ \\\"plans\\\": [] }\\n\");\n"

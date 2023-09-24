@@ -1059,7 +1059,6 @@ query_plan_test() {
     failed
   fi
 
-  # linux build of sqlite doesn't have explain query plan
   echo run query plan in c
   if ! "./${OUT_DIR}/query_plan_test" >"${OUT_DIR}/cg_test_query_plan_view.out" 2>"${OUT_DIR}/cg_test_query_plan_view.err"
   then
@@ -1077,7 +1076,7 @@ query_plan_test() {
     failed
   fi
 
-  echo codegen query plan
+  echo codegen empty query plan
   if ! ${CQL} --test --dev --cg "${OUT_DIR}/cg_test_query_plan_empty.out" --in "${TEST_DIR}/cg_test_query_plan_empty.sql" --rt query_plan 2>"${OUT_DIR}/cg_test_query_plan_empty.err"
   then
     echo "ERROR:"
@@ -1085,7 +1084,7 @@ query_plan_test() {
     failed
   fi
 
-  echo semantic analysis
+  echo semantic analysis emtpy query plan
   if ! ${CQL} --sem --ast --dev --test --in "${OUT_DIR}/cg_test_query_plan_empty.out" >"${OUT_DIR}/__temp" 2>"${OUT_DIR}/cg_test_query_plan_empty.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
@@ -1093,9 +1092,45 @@ query_plan_test() {
      failed
   fi
 
-  echo validating query plan codegen
+  echo validating query plan codegen empty query plan
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_query_plan_empty.out
+
+  echo build empty query plan c code
+  if ! ${CQL} --test --dev --cg "${OUT_DIR}/query_plan.h" "${OUT_DIR}/query_plan.c" --in "${OUT_DIR}/cg_test_query_plan_empty.out" 2>"${OUT_DIR}/query_plan_print.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/query_plan_print.err"
+    failed
+  fi
+
+  echo compile empty query plan code
+  if ! do_make query_plan_test
+  then
+    echo build failed
+    failed
+  fi
+
+  echo run query plan in c
+  if ! "./${OUT_DIR}/query_plan_test" >"${OUT_DIR}/cg_test_query_plan_view.out" 2>"${OUT_DIR}/cg_test_query_plan_view.err"
+  then
+    echo "${OUT_DIR}/query_plan_test returned a failure code"
+    cat "${OUT_DIR}/cg_test_query_plan_view.out"
+    cat "${OUT_DIR}/cg_test_query_plan_view.err"
+    failed
+  fi
+
+  echo validate json format of empty query plan report
+  if ! common/json_check.py <"${OUT_DIR}/cg_test_query_plan_view.out" >"${OUT_DIR}/cg_test_query_plan_js.out" 2>"${OUT_DIR}/cg_test_query_plan_js.err"
+  then
+    echo "${OUT_DIR}/cg_test_query_plan_view.out has invalid json format"
+    cat "${OUT_DIR}/cg_test_query_plan_js.err"
+    failed
+  fi
+
+  echo "validating query plan empty result (this is stable)"
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_query_plan_view.out
 }
 
 line_number_test() {

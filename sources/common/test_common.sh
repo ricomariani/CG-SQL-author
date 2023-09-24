@@ -1077,10 +1077,25 @@ query_plan_test() {
     failed
   fi
 
-  echo "query plan diff temporarily disabled until SQLite 3.32 changes are sorted out"
-  # echo validating query plan view
-  # echo "  computing diffs (empty if none)"
-  # on_diff_exit cg_test_query_plan_js.out
+  echo codegen query plan
+  if ! ${CQL} --test --dev --cg "${OUT_DIR}/cg_test_query_plan_empty.out" --in "${TEST_DIR}/cg_test_query_plan_empty.sql" --rt query_plan 2>"${OUT_DIR}/cg_test_query_plan_empty.err"
+  then
+    echo "ERROR:"
+    cat "${OUT_DIR}/cg_test_query_plan_empty.err"
+    failed
+  fi
+
+  echo semantic analysis
+  if ! ${CQL} --sem --ast --dev --test --in "${OUT_DIR}/cg_test_query_plan_empty.out" >"${OUT_DIR}/__temp" 2>"${OUT_DIR}/cg_test_query_plan_empty.err"
+  then
+     echo "CQL semantic analysis returned unexpected error code"
+     cat "${OUT_DIR}/cg_test_query_plan_empty.err"
+     failed
+  fi
+
+  echo validating query plan codegen
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_query_plan_empty.out
 }
 
 line_number_test() {

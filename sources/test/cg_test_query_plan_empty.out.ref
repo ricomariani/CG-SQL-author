@@ -1,0 +1,10 @@
+
+declare proc printf no check;
+create proc query_plan()
+begin
+  -- Force the use of an sqlite connection to ensure it appears in the signature
+  let i := (SELECT 1 force_connection);
+
+  -- No statements found: Print an empty query plan
+  call printf("{ \"plans\": [] }\n");
+end;

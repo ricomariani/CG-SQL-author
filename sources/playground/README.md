@@ -93,6 +93,7 @@ Multiple outputs are available. They all serve a wide range of different purpose
 - **preprocessed** — The preprocessed version of the sql file
 - **cql_json_schema** — A JSON output for codegen tools
 - **cql_sql_schema** - A normalized version of the cql_json_schema (.sql)
+- **cql_sqlite_schema** - SQLite database of the cql_sql_schema.sql (.sqlite)
 - **table_diagram_dot** — Table Diagram
 - **table_diagram_dot_pdf** — Table Diagram as PDF file
 - **region_diagram_dot** — Region Diagram

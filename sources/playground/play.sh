@@ -310,17 +310,13 @@ objc: $O/$(example_name).pre.sql
 fi; \
 cc $$FLAGS -x objective-c --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O/objc -I$(CQL_ROOT_DIR)/cqlrt_cf -I$(CQL_ROOT_DIR) -I$(SCRIPT_DIR_RELATIVE) $O/objc/$(example_name).c $(SCRIPT_DIR_RELATIVE)/default_client.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlholder.m --output $O/objc/$(example_name) -lsqlite3 -framework Foundation -fobjc-arc
 
-query_plan: $O/$(example_name).pre.sql
-> if grep -q "entrypoint(void)" $O/$(example_name).h; then \
-    echo "Skipping query_plan generation — The entrypoint() procedure does not use a database connection"; \
-    exit 0; \
-else \
-    $(CQL) --nolines --in $O/$(example_name).pre.sql --rt query_plan --cg $O/query_plan.sql; \
-    $(CQL) --dev --in $O/query_plan.sql --cg $O/query_plan.h $O/query_plan.c; \
-    cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.c -o $O/query_plan.o; \
-    cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $(CQL_ROOT_DIR)/query_plan_test.c -o $O/query_plan_test.o; \
-    cc --debug --optimize -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.o $O/query_plan_test.o $(CQL_ROOT_DIR)/cqlrt.c --output $O/query_plan -lsqlite3 && rm -rf "$O/query_plan.dSYM"; \
-fi
+query_plan: $O/$(example_name).pre.sql c
+> $(CQL) --nolines --in $O/$(example_name).pre.sql --rt query_plan --cg $O/query_plan.sql;
+> $(CQL) --nolines --dev --in $O/query_plan.sql --cg $O/query_plan.h $O/query_plan.c;
+> cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.c -o $O/query_plan.o;
+> cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $(CQL_ROOT_DIR)/query_plan_test.c -o $O/query_plan_test.o;
+> cc --debug --optimize -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.o $O/query_plan_test.o $(CQL_ROOT_DIR)/cqlrt.c --output $O/query_plan -lsqlite3 && rm -rf "$O/query_plan.dSYM";
+
 $O/cqlrt.lua:
 > cp $(CQL_ROOT_DIR)/cqlrt.lua $O/cqlrt.lua
 

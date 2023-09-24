@@ -5194,8 +5194,9 @@ end;
 declare interface should_not_frag(id integer);
 
 -- TEST: top level expressions
--- + local __ignored__ = 1 + 2 + 3
--- + local __ignored__ = 4 + 5 + 6
+-- + __ignored__ = 1 + 2 + 3
+-- + __ignored__ = 4 + 5 + 6
+-- +2 __ignored__ = nil
 proc ignored_values()
 begin
   1+2+3;

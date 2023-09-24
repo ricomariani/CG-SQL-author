@@ -8663,8 +8663,10 @@ END;
 --]]
 
 function ignored_values()
-  local __ignored__ = 1 + 2 + 3
-  local __ignored__ = 4 + 5 + 6
+  __cql_ignored__ = 1 + 2 + 3
+  __cql_ignored__ = nil
+  __cql_ignored__ = 4 + 5 + 6
+  __cql_ignored__ = nil
 
 end
 

@@ -87616,3 +87616,121 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
     | | {strlit 'x'}: text notnull
     | {name foo}
 
+The statement ending at line XXXX
+
+DECLARE PROC set_in_object_dot_storage NO CHECK;
+
+  {declare_proc_no_check_stmt}: ok
+  | {name set_in_object_dot_storage}
+
+The statement ending at line XXXX
+
+DECLARE PROC set_object_dot_storage_id (self OBJECT<dot_storage>, value INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name set_object_dot_storage_id}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: self: object<dot_storage> variable in
+      | | {param_detail}: self: object<dot_storage> variable in
+      |   | {name self}: self: object<dot_storage> variable in
+      |   | {type_object}: object<dot_storage>
+      |     | {name dot_storage}
+      | {params}
+        | {param}: value: integer variable in
+          | {param_detail}: value: integer variable in
+            | {name value}: value: integer variable in
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INTEGER;
+
+  {declare_func_stmt}: integer
+  | {name get_object_dot_storage_id}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: self: object<dot_storage> variable in
+    |   | {param_detail}: self: object<dot_storage> variable in
+    |     | {name self}: self: object<dot_storage> variable in
+    |     | {type_object}: object<dot_storage>
+    |       | {name dot_storage}
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC get_from_object_dot_storage NO CHECK INTEGER;
+
+  {declare_func_no_check_stmt}: integer
+  | {name get_from_object_dot_storage}: integer
+  | {func_params_return}
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE storage OBJECT<dot_storage>;
+
+  {declare_vars_type}: object<dot_storage>
+  | {name_list}: storage: object<dot_storage> variable
+  | | {name storage}: storage: object<dot_storage> variable
+  | {type_object}: object<dot_storage>
+    | {name dot_storage}
+
+The statement ending at line XXXX
+
+CALL set_in_object_dot_storage(storage, 'id2', get_from_object_dot_storage(storage, 'id') + get_from_object_dot_storage(storage, 'id2'));
+
+  {call_stmt}: ok
+  | {name set_in_object_dot_storage}: ok
+  | {arg_list}: ok
+    | {name storage}: storage: object<dot_storage> variable
+    | {arg_list}
+      | {strlit 'id2'}: text notnull
+      | {arg_list}
+        | {add}: integer
+          | {call}: integer
+          | | {name get_from_object_dot_storage}
+          | | {call_arg_list}
+          |   | {call_filter_clause}
+          |   | {arg_list}: ok
+          |     | {name storage}: storage: object<dot_storage> variable
+          |     | {arg_list}
+          |       | {strlit 'id'}: text notnull
+          | {call}: integer
+            | {name get_from_object_dot_storage}
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name storage}: storage: object<dot_storage> variable
+                | {arg_list}
+                  | {strlit 'id2'}: text notnull
+
+The statement ending at line XXXX
+
+CALL set_in_object_dot_storage(storage, 'id2', get_object_dot_storage_id(storage) + get_from_object_dot_storage(storage, 'id2'));
+
+  {call_stmt}: ok
+  | {name set_in_object_dot_storage}: ok
+  | {arg_list}: ok
+    | {name storage}: storage: object<dot_storage> variable
+    | {arg_list}
+      | {strlit 'id2'}: text notnull
+      | {arg_list}
+        | {add}: integer
+          | {call}: integer
+          | | {name get_object_dot_storage_id}
+          | | {call_arg_list}
+          |   | {call_filter_clause}
+          |   | {arg_list}: ok
+          |     | {name storage}: storage: object<dot_storage> variable
+          | {call}: integer
+            | {name get_from_object_dot_storage}
+            | {call_arg_list}
+              | {call_filter_clause}
+              | {arg_list}: ok
+                | {name storage}: storage: object<dot_storage> variable
+                | {arg_list}
+                  | {strlit 'id2'}: text notnull
+

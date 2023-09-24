@@ -1773,3 +1773,5 @@ foo(x).q;
 foo(q).r;
 (~q).r;
 foo::bar().baz;
+
+column := 1;

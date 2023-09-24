@@ -887,6 +887,7 @@ name:
   | ADD { $name = new_ast_str("add"); }
   | VIEW { $name = new_ast_str("view"); }
   | INDEX { $name = new_ast_str("index"); }
+  | COLUMN { $name = new_ast_str("column"); }
   ;
 
 opt_name:

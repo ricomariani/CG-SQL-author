@@ -23337,3 +23337,22 @@ end;
 -- + error: % string operand not allowed in 'NOT'
 -- +1 error
 (not 'x').foo;
+
+-- both options for getting/setting tested here
+declare proc set_in_object_dot_storage no check;
+declare proc set_object_dot_storage_id(self object<dot_storage>, value int);
+declare function get_object_dot_storage_id(self object<dot_storage>) integer; 
+declare function get_from_object_dot_storage no check integer;
+
+declare storage object<dot_storage>;
+
+-- TEST: array case (control for set case)
+-- + CALL set_in_object_dot_storage(storage, 'id2', get_from_object_dot_storage(storage, 'id') + get_from_object_dot_storage(storage, 'id2'));
+-- - error:
+storage.id2 := storage['id'] + storage['id2'];
+
+-- TEST: set operator
+-- rewrite only!
+-- + CALL set_in_object_dot_storage(storage, 'id2', get_object_dot_storage_id(storage) + get_from_object_dot_storage(storage, 'id2'));
+-- - error:
+storage.id2 := storage.id + storage.id2;

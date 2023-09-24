@@ -3723,7 +3723,7 @@ cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CS
 // This helper does the job of rewriting the array into a function call.,
 // In the set case a second rewrite moves the assigned into the end of
 // the arg list.
-cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull operation) {
+cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull new_name) {
   Contract(is_ast_array(expr));
   EXTRACT_ANY_NOTNULL(array, expr->left);
   EXTRACT_NOTNULL(arg_list, expr->right);
@@ -3731,7 +3731,7 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull o
   CSTR kind = array->sem->kind;
   Contract(kind);
 
-  CSTR new_name = dup_printf("%s_%s_%s", operation, rewrite_type_suffix(sem_type), kind);
+  CSTR function_name = dup_printf("%s_%s_%s", new_name, rewrite_type_suffix(sem_type), kind);
 
   // discard const, this is ok as the string has not yet escaped into the world...
   // we need to remove any internal space
@@ -3740,9 +3740,9 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull o
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
 
   ast_node *new_arg_list = new_ast_arg_list(array, arg_list);
-  ast_node *function_name = new_ast_str(new_name);
+  ast_node *name_ast = new_ast_str(function_name);
   ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), new_arg_list);
-  ast_node *new_call = new_ast_call(function_name, call_arg_list);
+  ast_node *new_call = new_ast_call(name_ast, call_arg_list);
 
   expr->type = new_call->type;
   ast_set_left(expr, new_call->left);
@@ -3773,7 +3773,7 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_
   Contract(is_ast_dot(dot));
   EXTRACT_ANY_NOTNULL(expr, dot->left);
   
-  bool_t add_arg = !strncmp("get_from_", new_name, 9);
+  bool_t add_arg = !strncmp("get_from_", new_name, 9) || !strncmp("set_in_", new_name, 7);
 
   AST_REWRITE_INFO_SET(dot->lineno, dot->filename);
 

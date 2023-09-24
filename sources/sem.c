@@ -179,6 +179,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
 static void sem_resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
 static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
+static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
 static void sem_with_select_stmt(ast_node *ast);
 static void sem_upsert_stmt(ast_node *ast);
@@ -5778,10 +5779,10 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
 }
 
 static bool_t find_any_callable(CSTR name) {
-  return find_proc(name) || find_func(name) || find_unchecked_func(name);
+  return find_proc(name) || find_unchecked_proc(name) || find_func(name) || find_unchecked_func(name);
 }
 
-static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name) {
+static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name, CSTR choice1, CSTR choice2) {
   Contract(sym);
   Contract(expr);
   Contract(name);
@@ -5794,13 +5795,13 @@ static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR 
     return false;
   }
 
-  bprintf(sym, "get_%s_%s_%s", rewrite_type_suffix(sem_type), kind, name);
+  bprintf(sym, "%s_%s_%s_%s", choice1, rewrite_type_suffix(sem_type), kind, name);
   if (find_any_callable(sym->ptr)) {
     return true;
   }
 
   bclear(sym);
-  bprintf(sym, "get_from_%s_%s", rewrite_type_suffix(sem_type), kind);
+  bprintf(sym, "%s_%s_%s", choice2, rewrite_type_suffix(sem_type), kind);
   if (find_any_callable(sym->ptr)) {
     return true;
   }
@@ -5825,7 +5826,7 @@ static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR sc
 
   CHARBUF_OPEN(sym);
 
-  bool_t found = try_find_possible_dot_overload(&sym, var, name);
+  bool_t found = try_find_possible_dot_overload(&sym, var, name, "get", "get_from");
   if (found) {
     *type_ptr = &var->sem->sem_type;
     if (ast) {
@@ -15480,21 +15481,36 @@ static void sem_expr_stmt(ast_node *ast) {
 
   // we have to write array access before everything else, it will need the other rewrites to follow
   if (is_ast_expr_assign(expr)) {
-     EXTRACT_ANY_NOTNULL(array, expr->left);
+     EXTRACT_ANY_NOTNULL(left, expr->left);
      EXTRACT_ANY_NOTNULL(value, expr->right);
-     if (is_ast_array(array)) {
-       sem_validate_array_transform(array, "set_in");
-       if (is_error(array)) {
+
+     bool_t rewritten_assignment = false;
+
+     if (is_ast_array(left)) {
+       sem_validate_array_transform(left, "set_in");
+       rewritten_assignment = true;
+     }
+     else if (is_ast_dot(left)) {
+       sem_validate_dot_transform(left, "set", "set_in");
+       rewritten_assignment = true;
+     }
+
+     if (rewritten_assignment) {
+       if (is_error(left)) {
          record_error(ast);
          return;
        }
-       expr->type = array->type;
-       ast_set_left(expr, array->left);
-       ast_set_right(expr, array->right);
-       rewrite_append_arg(expr, value);
+
+       // move the assigned value into the last arg of the call
+       expr->type = left->type;
+       ast_set_left(expr, left->left);
+       ast_set_right(expr, left->right);
+       rewrite_append_arg(left, value);
+
+       // the call is left unanalyzed, call is processed further below
+       // so it won't escape the semantic pass
      }
   }
-
   
   // if there is a x:y x::y or x:::y operation then transform the AST now
   // so that everything looks like normal calls. Just the transform though.
@@ -23095,6 +23111,40 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
+static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2) {
+  Contract(is_ast_dot(ast));
+  Contract(is_id(ast->right));
+  EXTRACT_ANY_NOTNULL(expr, ast->left);
+  EXTRACT_STRING(name, ast->right);
+
+  sem_expr(expr);
+  if (is_error(expr)) {
+    record_error(ast);
+    return;
+  }
+
+  if (!expr->sem->kind) {
+    report_error(expr, "CQL0470: operation is only available for types with a declared type kind like object<something>", ".");
+    record_error(expr);
+    record_error(ast);
+    return;
+  }
+
+  CHARBUF_OPEN(sym);
+  bool_t found = try_find_possible_dot_overload(&sym, expr, name, choice1, choice2);
+  if (found) {
+    CSTR new_name = Strdup(sym.ptr);
+    rewrite_dot_as_call(ast, new_name);
+    record_ok(ast);
+  }
+  else {
+    EXTRACT_STRING(dot_name, ast->right);
+    report_error(ast, "CQL0069: name not found", dot_name);
+    record_error(ast);
+  }
+  CHARBUF_CLOSE(sym);
+}
+
 // Expression type for scoped name.
 static void sem_expr_dot(ast_node *ast, CSTR cstr) {
   Contract(is_ast_dot(ast));
@@ -23111,36 +23161,16 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
     // if we can resolve it the usual way then do
     sem_resolve_id_expr(ast, name, scope);
     if (is_error(ast) || !ast->sem->name || strcmp(ast->sem->name, "$rewrite")) {
+      // it's an error or it evaluated to something legit that isn't a rewrite request
+      // whichever of these it is, we're done here.
       return;
     }
   }
 
-  sem_expr(expr);
-  if (is_error(expr)) {
-    record_error(ast);
-    return;
-  }
-
-  if (!expr->sem->kind) {
-    report_error(expr, "CQL0470: operation is only available for types with a declared type kind like object<something>", ".");
-    record_error(expr);
-    record_error(ast);
-    return;
-  }
-
-  CHARBUF_OPEN(sym);
-  bool_t found = try_find_possible_dot_overload(&sym, expr, name);
-  if (found) {
-    CSTR new_name = Strdup(sym.ptr);
-    rewrite_dot_as_call(ast, new_name);
+  sem_validate_dot_transform(ast, "get", "get_from");
+  if (!is_error(ast)) {
     sem_expr(ast);
   }
-  else {
-    EXTRACT_STRING(dot_name, ast->right);
-    report_error(ast, "CQL0069: name not found", dot_name);
-    record_error(ast);
-  }
-  CHARBUF_CLOSE(sym);
 }
 
 // This function is used to detect the pattern that leaks memory on SQLite.

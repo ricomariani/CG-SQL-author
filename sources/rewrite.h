@@ -54,7 +54,7 @@ cql_noexport void rewrite_update_statement_for_backed_table(ast_node *_Nonnull a
 cql_noexport void rewrite_upsert_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast);
 cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast);
-cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull operation);
+cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull new_name);
 cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op);
 cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull arg);
 cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type);

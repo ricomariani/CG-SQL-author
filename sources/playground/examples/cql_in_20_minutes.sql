@@ -532,17 +532,17 @@ begin
 
 
   _("### Use IF NOTHING forms to handle no rows or null\n");
-  create table T1(id integer primary key, t text, r real);
-  insert into T1 values (1, "foo", 3.14);
+  create table T3(id integer primary key, t text, r real);
+  insert into T3 values (1, "foo", 3.14);
   declare _null integer;
 
-  EXAMPLE(select r from T1 where id = 1);
-  EXAMPLE(select r from T1 where id = 2 if nothing -1);
-  EXAMPLE(select _null from T1 where id = 1 if nothing -1);
-  EXAMPLE(select _null from T1 where id = 1 if nothing or null -1);
+  EXAMPLE(select r from T3 where id = 1);
+  EXAMPLE(select r from T3 where id = 2 if nothing -1);
+  EXAMPLE(select _null from T3 where id = 1 if nothing -1);
+  EXAMPLE(select _null from T3 where id = 1 if nothing or null -1);
   _("");
-  ERROR(select r from T1 where id = 2, "-- This throws an exception");
-  ERROR(select r from T1 where id = 2 if nothing throw, "-- Merely makes it explicit");
+  ERROR(select r from T3 where id = 2, "-- This throws an exception");
+  ERROR(select r from T3 where id = 2 if nothing throw, "-- Merely makes it explicit");
   _("");
 END;
 

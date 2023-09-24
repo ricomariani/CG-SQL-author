@@ -891,6 +891,24 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   bprintf(&output_buf, rt->source_prefix);
   bprintf(&output_buf, "DECLARE PROC printf NO CHECK;\n");
+
+  if (!sql_stmt_count) {
+    bprintf(&output_buf,
+      "create proc query_plan()\n"
+      "begin\n"
+      "  -- Force the use of an sqlite connection to ensure it appears in the signature\n"
+      "  let i := (SELECT 1 force_connection);\n"
+      "\n"
+      "  -- No statements found: Print an empty query plan\n"
+      "  call printf(\"{ \\\"plans\\\": [] }\\n\");\n"
+      "end;\n"
+    );
+
+    cql_write_file(options.file_names[0], output_buf.ptr);
+
+    goto cleanup;
+  }
+
   bprintf(&output_buf, "DECLARE PROC cql_create_udf_stub(name TEXT NOT NULL) USING TRANSACTION;\n\n");
 
   bprintf(&output_buf, "proc trivial_object()\n");
@@ -903,52 +921,48 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "  set result := (select x'41');\n");
   bprintf(&output_buf, "end;\n");
 
-  if (sql_stmt_count) {
-    if (options.test) {
-      while (head->right) {
-        head = head->right;
-      }
-      bprintf(&output_buf, "-- The statement ending at line %d\n\n", head->left->lineno);
+  if (options.test) {
+    while (head->right) {
+      head = head->right;
     }
-
-    cg_qp_emit_declare_func(&output_buf);
-    bprintf(&output_buf, "\n");
-    cg_qp_emit_create_schema_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_populate_no_table_scan_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_populate_tables_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_populate_table_scan_alert_table_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_populate_b_tree_alert_table_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_print_query_violation_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_print_sql_statement_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_print_query_plan_stat_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_print_query_plan_graph_proc(&output_buf);
-    bprintf(&output_buf, "\n");
-    emit_print_query_plan(&output_buf);
-    bprintf(&output_buf, "\n");
+    bprintf(&output_buf, "-- The statement ending at line %d\n\n", head->left->lineno);
   }
+
+  cg_qp_emit_declare_func(&output_buf);
+  bprintf(&output_buf, "\n");
+  cg_qp_emit_create_schema_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_populate_no_table_scan_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_populate_tables_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_populate_table_scan_alert_table_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_populate_b_tree_alert_table_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_print_query_violation_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_print_sql_statement_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_print_query_plan_stat_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_print_query_plan_graph_proc(&output_buf);
+  bprintf(&output_buf, "\n");
+  emit_print_query_plan(&output_buf);
+  bprintf(&output_buf, "\n");
 
   // create an empty query_plan method even if there are no statements
   // (the helpers above won't be needed)
   bprintf(&output_buf, "CREATE PROC query_plan()\n");
   bprintf(&output_buf, "BEGIN\n");
-  if (sql_stmt_count) {
-    bprintf(&output_buf, "  CALL create_schema();\n");
-    bprintf(&output_buf, "  BEGIN TRY\n");
-    bprintf(&output_buf, "    CALL populate_no_table_scan();\n");
-    bprintf(&output_buf, "  END TRY;\n");
-    bprintf(&output_buf, "  BEGIN CATCH\n");
-    bprintf(&output_buf, "    CALL printf(\"failed populating no_table_scan table\\n\");\n");
-    bprintf(&output_buf, "    THROW;\n");
-    bprintf(&output_buf, "  END CATCH;\n");
-  }
+  bprintf(&output_buf, "  CALL create_schema();\n");
+  bprintf(&output_buf, "  BEGIN TRY\n");
+  bprintf(&output_buf, "    CALL populate_no_table_scan();\n");
+  bprintf(&output_buf, "  END TRY;\n");
+  bprintf(&output_buf, "  BEGIN CATCH\n");
+  bprintf(&output_buf, "    CALL printf(\"failed populating no_table_scan table\\n\");\n");
+  bprintf(&output_buf, "    THROW;\n");
+  bprintf(&output_buf, "  END CATCH;\n");
   
   for (uint32_t i = 1; i <= sql_stmt_count; i++) {
     bprintf(&output_buf, "  BEGIN TRY\n");
@@ -961,11 +975,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   }
 
   bprintf(&output_buf, "  CALL printf(\"{\\n\");\n");
-
-  if (sql_stmt_count) {
-    bprintf(&output_buf, "  CALL print_query_violation();\n");
-  }
-
+  bprintf(&output_buf, "  CALL print_query_violation();\n");
   bprintf(&output_buf, "  CALL printf(\"\\\"plans\\\" : [\\n\");\n");
   bprintf(&output_buf, "  LET q := 1;\n");
   bprintf(&output_buf, "  WHILE q <= %d\n", sql_stmt_count);
@@ -980,7 +990,9 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "END;\n");
 
   cql_write_file(options.file_names[0], output_buf.ptr);
+  goto cleanup;
 
+cleanup:
   CHARBUF_CLOSE(output_buf);
   CHARBUF_CLOSE(backed_tables_buf);
   CHARBUF_CLOSE(schema_stmts_buf);

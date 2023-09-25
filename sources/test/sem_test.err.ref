@@ -1670,4 +1670,6 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0470: operation is only available f
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in eq : CQL0471: a top level equality is almost certainly an error. ':=' is assignment, not '='
 
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
+test/sem_test.sql:XXXX:1: error: in star : CQL0492: operator found in an invalid position '*'
 semantic errors present; no code gen.

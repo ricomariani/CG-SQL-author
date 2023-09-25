@@ -23362,3 +23362,15 @@ storage.id2 := storage.id + storage.id2;
 -- + error: % a top level equality is almost certainly an error. ':=' is assignment, not '='
 -- +1 error:
 x = 5;
+
+-- TEST: * can only appear by itself
+-- + {select_stmt}: err
+-- + error: % when '*' appears in an expression list there can be nothing else in the list
+-- +1 error:
+select *, 1 from foo;
+
+-- TEST: * can only appear by itself
+-- + {select_stmt}: err
+-- + error: % operator found in an invalid position '*'
+-- +1 error:
+select 1, * from foo;

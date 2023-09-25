@@ -165,6 +165,7 @@ typedef void sem_func(ast_node *ast, uint32_t arg_count);
 typedef void sem_special_func(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
 
 // forward references for mutual recursion cases
+static void sem_expr_invalid_op(ast_node *ast, CSTR op);
 static void sem_stmt_list(ast_node *ast);
 static void sem_stmt_list_in_current_flow_context(ast_node *ast);
 static void sem_stmt_list_within_loop(ast_node *stmt_list, ast_node *true_expr);
@@ -10317,7 +10318,11 @@ static void sem_select_expr_list(ast_node *ast) {
 
   if (is_ast_star(ast->left)) {
     // select * from [etc]
-    Contract(ast->right == NULL);
+    if (ast->right) {
+       report_error(ast, "CQL0474: when '*' appears in an expression list there can be nothing else in the list", NULL);
+       record_error(ast);
+       return;
+    }
     sem_select_star(ast->left);
     ast->sem = ast->left->sem;
     return;
@@ -10326,6 +10331,11 @@ static void sem_select_expr_list(ast_node *ast) {
   uint32_t count = 0;
   ast_node *node = ast;
   for (; node; node = node->right) {
+    if (is_ast_star(node->left)) {
+      // '*' is invalid in any position but the first which we already checked
+      sem_expr_invalid_op(node->left, "*");
+      return;
+    }
     if (is_ast_table_star(node->left)) {
       EXTRACT_NOTNULL(table_star, node->left);
       count += sem_select_table_star_count(table_star);

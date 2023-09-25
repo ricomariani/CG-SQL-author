@@ -2038,15 +2038,6 @@ static void gen_column_calculation(ast_node *ast) {
 }
 
 static void gen_select_expr_list(ast_node *ast) {
-
-  if (is_ast_star(ast->left)) {
-    Contract(ast->right == NULL);
-    if (!eval_star_callback(ast->left)) {
-      gen_printf("*");
-    }
-    return;
-  }
-
   symtab *temp = used_alias_syms;
   used_alias_syms = NULL;
 
@@ -2060,7 +2051,12 @@ static void gen_select_expr_list(ast_node *ast) {
 
   for (ast_node *item = ast; item; item = item->right) {
     ast_node *expr = item->left;
-    if (is_ast_table_star(expr)) {
+    if (is_ast_star(expr)) {
+      if (!eval_star_callback(expr)) {
+        gen_printf("*");
+      }
+    }
+    else if (is_ast_table_star(expr)) {
       if (!eval_star_callback(expr)) {
         EXTRACT_NOTNULL(table_star, expr);
         EXTRACT_STRING(name, table_star->left);

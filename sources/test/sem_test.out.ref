@@ -87746,3 +87746,57 @@ test/sem_test.sql:XXXX:1: error: in eq : CQL0471: a top level equality is almost
     | {name x}
     | {int 5}
 
+The statement ending at line XXXX
+
+SELECT *, 1
+  FROM foo;
+
+test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {star}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {int 1}
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1, *
+  FROM foo;
+
+test/sem_test.sql:XXXX:1: error: in star : CQL0492: operator found in an invalid position '*'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: integer notnull
+  |     | | | {int 1}: integer notnull
+  |     | | {select_expr_list}
+  |     |   | {star}: err
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

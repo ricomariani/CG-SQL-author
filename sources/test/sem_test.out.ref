@@ -87941,3 +87941,111 @@ test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an e
               | {arg_list}
                 | {int 1}
 
+The statement ending at line XXXX
+
+DECLARE FUNC create_event () CREATE OBJECT<event> NOT NULL;
+
+  {declare_func_stmt}: object<event> notnull create_func
+  | {name create_event}: object<event> notnull create_func
+  | {func_params_return}
+    | {create_data_type}: object<event> notnull create_func
+      | {notnull}: object<event> notnull
+        | {type_object}: object<event>
+          | {name event}
+
+The statement ending at line XXXX
+
+DECLARE PROC get_object_event_invitees (event_ OBJECT<event>, OUT value OBJECT<event_invitees> NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name get_object_event_invitees}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: event_: object<event> variable in
+      | | {param_detail}: event_: object<event> variable in
+      |   | {name event_}: event_: object<event> variable in
+      |   | {type_object}: object<event>
+      |     | {name event}
+      | {params}
+        | {param}: value: object<event_invitees> notnull variable init_required out
+          | {out}
+          | {param_detail}: value: object<event_invitees> notnull variable init_required out
+            | {name value}: value: object<event_invitees> notnull variable init_required out
+            | {notnull}: object<event_invitees> notnull
+              | {type_object}: object<event_invitees>
+                | {name event_invitees}
+
+The statement ending at line XXXX
+
+DECLARE PROC get_from_object_event_invitees (invitees OBJECT<event_invitees>, field TEXT NOT NULL, OUT value TEXT NOT NULL);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name get_from_object_event_invitees}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: invitees: object<event_invitees> variable in
+      | | {param_detail}: invitees: object<event_invitees> variable in
+      |   | {name invitees}: invitees: object<event_invitees> variable in
+      |   | {type_object}: object<event_invitees>
+      |     | {name event_invitees}
+      | {params}
+        | {param}: field: text notnull variable in
+        | | {param_detail}: field: text notnull variable in
+        |   | {name field}: field: text notnull variable in
+        |   | {notnull}: text notnull
+        |     | {type_text}: text
+        | {params}
+          | {param}: value: text notnull variable init_required out
+            | {out}
+            | {param_detail}: value: text notnull variable init_required out
+              | {name value}: value: text notnull variable init_required out
+              | {notnull}: text notnull
+                | {type_text}: text
+
+The statement ending at line XXXX
+
+CREATE PROC proc_as_func_preserves_kind ()
+BEGIN
+  LET event := create_event();
+  LET x := get_object_event_invitees(event);
+  LET y := get_from_object_event_invitees(get_object_event_invitees(event), 'firstName');
+END;
+
+  {create_proc_stmt}: ok
+  | {name proc_as_func_preserves_kind}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: event: object<event> notnull variable
+      | | {name event}: event: object<event> notnull variable
+      | | {call}: object<event> notnull create_func
+      |   | {name create_event}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      | {let_stmt}: x: object<event_invitees> notnull variable
+      | | {name x}: x: object<event_invitees> notnull variable
+      | | {call}: object<event_invitees> notnull
+      |   | {name get_object_event_invitees}
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {name event}: event: object<event> notnull variable
+      | {let_stmt}: y: text notnull variable
+        | {name y}: y: text notnull variable
+        | {call}: text notnull
+          | {name get_from_object_event_invitees}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {call}: object<event_invitees> notnull
+              | | {name get_object_event_invitees}
+              | | {call_arg_list}
+              |   | {call_filter_clause}
+              |   | {arg_list}: ok
+              |     | {name event}: event: object<event> notnull variable
+              | {arg_list}
+                | {strlit 'firstName'}: text notnull
+

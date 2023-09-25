@@ -23411,7 +23411,7 @@ declare proc get_from_object_event_invitees(invitees object<event_invitees>, fie
 -- TEST: when calling proc as func the kind of the out parameter should be preserved
 -- it didn't used to be which caused the get chain below to break
 -- + {let_stmt}: event: object<event> notnull variable
--- + {let_stmt}: y: text notnull variable
+-- + {let_stmt}: x: object<event_invitees> notnull variable
 -- + {let_stmt}: y: text notnull variable
 -- + {call}: object<event_invitees> notnull
 -- - {call}: object notnull

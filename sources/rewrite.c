@@ -3643,9 +3643,9 @@ cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
   ast_set_right(ast, new->right);
 }
 
-cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
+cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
   if (!arg_list) {
-    return;
+    return true;
   }
      
   // verify ast_star is a leaf, it mixes with nothing
@@ -3656,7 +3656,7 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
     if (arg_list->right) {
       report_error(arg_list, "CQL0474: when '*' appears in an expression list there can be nothing else in the list", NULL);
       record_error(arg_list);
-      return;
+      return false;
     }
 
     AST_REWRITE_INFO_SET(arg_list->lineno, arg_list->filename);
@@ -3666,7 +3666,8 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
     ast_set_left(arg_list, call_expr);
     AST_REWRITE_INFO_RESET();
   }        
-  record_ok(arg_list);
+
+  return true;
 }
 
 cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {

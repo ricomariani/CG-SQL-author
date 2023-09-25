@@ -33,6 +33,7 @@ cql_noexport void rewrite_select_stmt_to_columns_values(ast_node *_Nonnull colum
 cql_noexport void rewrite_empty_column_list(ast_node *_Nonnull columns_values, sem_struct *_Nonnull sptr);
 cql_noexport void rewrite_cql_cursor_diff(ast_node *_Nonnull ast, bool_t report_column_name);
 cql_noexport void rewrite_iif(ast_node *_Nonnull ast);
+cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast);
 cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(ast_node *_Nullable arg_list);
 cql_noexport void rewrite_cte_name_list_from_columns(ast_node *_Nonnull ast, ast_node *_Nonnull select_core);
 cql_noexport void rewrite_params(ast_node *_Nullable head, bytebuf *_Nullable args_info);
@@ -53,7 +54,6 @@ cql_noexport void rewrite_delete_statement_for_backed_table(ast_node *_Nonnull a
 cql_noexport void rewrite_update_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_upsert_statement_for_backed_table(ast_node *_Nonnull ast, list_item *_Nullable backed_tables_list);
 cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast);
-cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast);
 cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull new_name);
 cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op);
 cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull arg);

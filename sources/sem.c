@@ -15581,8 +15581,7 @@ static void sem_expr_stmt(ast_node *ast) {
         EXTRACT(arg_list, call_arg_list->right);
 
         // expand '*' into FROM LOCALS LIKE [target_of_call] ARGUMENTS
-        rewrite_ast_star_if_needed(arg_list, name_ast);
-        if (arg_list && is_error(arg_list)) {
+        if (!rewrite_ast_star_if_needed(arg_list, name_ast)) {
           record_error(ast);
           return;
         }
@@ -21756,8 +21755,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   EXTRACT_STRING(name, name_ast);
 
   // expand '*' into FROM LOCALS LIKE [target_of_call] ARGUMENTS
-  rewrite_ast_star_if_needed(arg_list, name_ast);
-  if (arg_list && is_error(arg_list)) {
+  if (!rewrite_ast_star_if_needed(arg_list, name_ast)) {
     record_error(ast);
     return;
   }

@@ -9377,7 +9377,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0213: procedure had errors, c
 
   {call_stmt}: err
   | {name proc3}
-  | {arg_list}: ok
+  | {arg_list}
     | {int 1}
     | {arg_list}
       | {strlit 'foo'}

@@ -87734,3 +87734,15 @@ CALL set_in_object_dot_storage(storage, 'id2', get_object_dot_storage_id(storage
                 | {arg_list}
                   | {strlit 'id2'}: text notnull
 
+The statement ending at line XXXX
+
+x = 5;
+
+test/sem_test.sql:XXXX:1: error: in eq : CQL0471: a top level equality is almost certainly an error. ':=' is assignment, not '='
+
+
+  {expr_stmt}: err
+  | {eq}: err
+    | {name x}
+    | {int 5}
+

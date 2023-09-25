@@ -15479,6 +15479,13 @@ static void sem_expr_stmt(ast_node *ast) {
   Contract(is_ast_expr_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
+  if (is_ast_eq(expr)) {
+    report_error(expr, "CQL0471: a top level equality is almost certainly an error. ':=' is assignment, not '='\n", NULL);
+    record_error(expr);
+    record_error(ast);
+    return;
+  }
+
   // we have to write array access before everything else, it will need the other rewrites to follow
   if (is_ast_expr_assign(expr)) {
      EXTRACT_ANY_NOTNULL(left, expr->left);

@@ -23356,3 +23356,9 @@ storage.id2 := storage['id'] + storage['id2'];
 -- + CALL set_in_object_dot_storage(storage, 'id2', get_object_dot_storage_id(storage) + get_from_object_dot_storage(storage, 'id2'));
 -- - error:
 storage.id2 := storage.id + storage.id2;
+
+-- TEST: friends don't let friends put = at the top level
+-- + {expr_stmt}: err
+-- + error: % a top level equality is almost certainly an error. ':=' is assignment, not '='
+-- +1 error:
+x = 5;

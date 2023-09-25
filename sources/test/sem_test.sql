@@ -23374,3 +23374,32 @@ select *, 1 from foo;
 -- + error: % operator found in an invalid position '*'
 -- +1 error:
 select 1, * from foo;
+
+declare proc a_target_proc(x integer, y integer);
+
+-- TEST: catch cases where * is in a bad place in the arg list
+-- + error: % argument can only be used in count(*) '*'
+-- +1 error:
+proc abuse_star1(like a_target_proc arguments)
+begin
+  a_target_proc(1, *, 1);
+end;
+
+-- TEST: catch cases where * is in a bad place in the arg list
+-- + error: % when '*' appears in an expression list there can be nothing else in the list
+-- +1 error:
+proc abuse_star2(like a_target_proc arguments)
+begin
+  call a_target_proc(*, 1);
+end;
+
+
+declare proc another_target_proc(x integer, y integer, out result integer);
+
+-- TEST: catch cases where * is in a bad place in the arg list
+-- + error: % when '*' appears in an expression list there can be nothing else in the list
+-- +1 error:
+proc abuse_star3(like a_target_proc arguments)
+begin
+  another_target_proc(*, 1);
+end;

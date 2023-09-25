@@ -9377,7 +9377,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0213: procedure had errors, c
 
   {call_stmt}: err
   | {name proc3}
-  | {arg_list}
+  | {arg_list}: ok
     | {int 1}
     | {arg_list}
       | {strlit 'foo'}
@@ -87799,4 +87799,145 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0492: operator found in an invalid
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE PROC a_target_proc (x INTEGER, y INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name a_target_proc}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: integer variable in
+      | | {param_detail}: x: integer variable in
+      |   | {name x}: x: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: y: integer variable in
+          | {param_detail}: y: integer variable in
+            | {name y}: y: integer variable in
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC abuse_star1 (x INTEGER, y INTEGER)
+BEGIN
+  CALL a_target_proc(1, *, 1);
+END;
+
+test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+
+  {create_proc_stmt}: err
+  | {name abuse_star1}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: integer variable in
+    |     | {param_detail}: y: integer variable in
+    |       | {name y}: y: integer variable in
+    |       | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name a_target_proc}: ok
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+          | {arg_list}
+            | {star}: err
+            | {arg_list}
+              | {int 1}
+
+The statement ending at line XXXX
+
+CREATE PROC abuse_star2 (x INTEGER, y INTEGER)
+BEGIN
+  CALL a_target_proc(*, 1);
+END;
+
+test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
+
+  {create_proc_stmt}: err
+  | {name abuse_star2}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: integer variable in
+    |     | {param_detail}: y: integer variable in
+    |       | {name y}: y: integer variable in
+    |       | {type_int}: integer
+    | {stmt_list}: err
+      | {call_stmt}: err
+        | {name a_target_proc}
+        | {arg_list}: err
+          | {star}
+          | {arg_list}
+            | {int 1}
+
+The statement ending at line XXXX
+
+DECLARE PROC another_target_proc (x INTEGER, y INTEGER, OUT result INTEGER);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name another_target_proc}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: integer variable in
+      | | {param_detail}: x: integer variable in
+      |   | {name x}: x: integer variable in
+      |   | {type_int}: integer
+      | {params}
+        | {param}: y: integer variable in
+        | | {param_detail}: y: integer variable in
+        |   | {name y}: y: integer variable in
+        |   | {type_int}: integer
+        | {params}
+          | {param}: result: integer variable out
+            | {out}
+            | {param_detail}: result: integer variable out
+              | {name result}: result: integer variable out
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC abuse_star3 (x INTEGER, y INTEGER)
+BEGIN
+  another_target_proc(*, 1);
+END;
+
+test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
+
+  {create_proc_stmt}: err
+  | {name abuse_star3}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: integer variable in
+    |     | {param_detail}: y: integer variable in
+    |       | {name y}: y: integer variable in
+    |       | {type_int}: integer
+    | {stmt_list}: err
+      | {expr_stmt}: err
+        | {call}
+          | {name another_target_proc}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: err
+              | {star}
+              | {arg_list}
+                | {int 1}
 

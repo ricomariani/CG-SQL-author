@@ -3644,11 +3644,21 @@ cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
 }
 
 cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
-  // ast_star is a leaf, it mixes with nothing, so just replace it with "FROM LOCALS LIKE proc_name"
-  if (arg_list && is_ast_star(arg_list->left)) {
+  if (!arg_list) {
+    return;
+  }
+     
+  // verify ast_star is a leaf, it mixes with nothing
+  // then replace it with "FROM LOCALS LIKE proc_name"
+  if (is_ast_star(arg_list->left)) {
     // the * operator is a singleton
     Contract(is_ast_arg_list(arg_list));
-    Contract(!arg_list->right);
+    if (arg_list->right) {
+      report_error(arg_list, "CQL0474: when '*' appears in an expression list there can be nothing else in the list", NULL);
+      record_error(arg_list);
+      return;
+    }
+
     AST_REWRITE_INFO_SET(arg_list->lineno, arg_list->filename);
     ast_node *like = new_ast_like(proc_name_ast, proc_name_ast);
     ast_node *shape_def = new_ast_shape_def(like, NULL);
@@ -3656,6 +3666,7 @@ cql_noexport void rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_n
     ast_set_left(arg_list, call_expr);
     AST_REWRITE_INFO_RESET();
   }        
+  record_ok(arg_list);
 }
 
 cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {

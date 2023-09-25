@@ -15582,6 +15582,10 @@ static void sem_expr_stmt(ast_node *ast) {
 
         // expand '*' into FROM LOCALS LIKE [target_of_call] ARGUMENTS
         rewrite_ast_star_if_needed(arg_list, name_ast);
+        if (arg_list && is_error(arg_list)) {
+          record_error(ast);
+          return;
+        }
     
         // expand any FROM forms in the arg list
         // it's still a function call after this.  This would
@@ -21753,6 +21757,10 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
 
   // expand '*' into FROM LOCALS LIKE [target_of_call] ARGUMENTS
   rewrite_ast_star_if_needed(arg_list, name_ast);
+  if (arg_list && is_error(arg_list)) {
+    record_error(ast);
+    return;
+  }
 
   ast_node *proc_stmt = find_proc(name);
 

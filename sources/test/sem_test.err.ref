@@ -1672,4 +1672,7 @@ test/sem_test.sql:XXXX:1: error: in eq : CQL0471: a top level equality is almost
 
 test/sem_test.sql:XXXX:1: error: in select_expr_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
 test/sem_test.sql:XXXX:1: error: in star : CQL0492: operator found in an invalid position '*'
+test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in count(*) '*'
+test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
+test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an expression list there can be nothing else in the list
 semantic errors present; no code gen.

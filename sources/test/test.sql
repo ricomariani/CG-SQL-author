@@ -39,10 +39,10 @@ create table foo(id int);
 create table foo(id int, name text, rate long int);
 
 -- create table with not null
-create table foo(id int not null, name text, rate long int);
+create table foo(id int!, name text, rate long int);
 
 -- create table with auto inc
-create table foo(id int not null primary key autoincrement, name text, rate long int);
+create table foo(id int! primary key autoincrement, name text, rate long int);
 
 -- create table with primary key
 create table foo(id int not null, name text primary key, rate long int);

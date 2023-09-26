@@ -9,7 +9,7 @@
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 26 12:44:48 PDT 2023
+Snapshot as of Tue Sep 26 15:28:24 PDT 2023
 
 ### Operators and Literals
 
@@ -556,7 +556,7 @@ cte_binding: name name
 
 col_attrs:
   /* nil */
-  | "NOT" "NULL" opt_conflict_clause col_attrs
+  | not_null opt_conflict_clause col_attrs
   | "PRIMARY" "KEY" opt_conflict_clause col_attrs
   | "PRIMARY" "KEY" opt_conflict_clause "AUTOINCREMENT" col_attrs
   | "DEFAULT" '-' num_literal col_attrs
@@ -607,12 +607,15 @@ data_type_any:
   | "ID"
   ;
 
+not_null: "NOT" "NULL" | '!'
+  ;
+
 data_type_with_options:
   data_type_any
-  | data_type_any "NOT" "NULL"
+  | data_type_any not_null
   | data_type_any "@SENSITIVE"
-  | data_type_any "@SENSITIVE" "NOT" "NULL"
-  | data_type_any "NOT" "NULL" "@SENSITIVE"
+  | data_type_any "@SENSITIVE" not_null
+  | data_type_any not_null "@SENSITIVE"
   ;
 
 str_literal:

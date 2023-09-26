@@ -916,7 +916,7 @@ cte_binding: name[formal] name[actual] { $cte_binding = new_ast_cte_binding($for
 
 col_attrs[result]:
   /* nil */  { $result = NULL; }
-  | NOT NULL_ opt_conflict_clause col_attrs[ca]  { $result = new_ast_col_attrs_not_null($opt_conflict_clause, $ca); }
+  | not_null opt_conflict_clause col_attrs[ca]  { $result = new_ast_col_attrs_not_null($opt_conflict_clause, $ca); }
   | PRIMARY KEY opt_conflict_clause col_attrs[ca]  {
     ast_node *autoinc_and_conflict_clause = new_ast_autoinc_and_conflict_clause(NULL, $opt_conflict_clause);
     $result = new_ast_col_attrs_pk(autoinc_and_conflict_clause, $ca);
@@ -981,12 +981,15 @@ data_type_any:
   | ID { $data_type_any = new_ast_str($ID); }
   ;
 
+not_null: NOT NULL_ | '!'
+  ;
+
 data_type_with_options:
   data_type_any { $data_type_with_options = $data_type_any; }
-  | data_type_any NOT NULL_ { $data_type_with_options = new_ast_notnull($data_type_any); }
+  | data_type_any not_null { $data_type_with_options = new_ast_notnull($data_type_any); }
   | data_type_any AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr($data_type_any, NULL); }
-  | data_type_any AT_SENSITIVE NOT NULL_ { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
-  | data_type_any NOT NULL_ AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  | data_type_any AT_SENSITIVE not_null { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
+  | data_type_any not_null AT_SENSITIVE { $data_type_with_options = new_ast_sensitive_attr(new_ast_notnull($data_type_any), NULL); }
   ;
 
 str_literal:

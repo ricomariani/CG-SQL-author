@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Tue Sep 26 12:44:48 2023
+// Snapshot as of Tue Sep 26 15:28:24 2023
 
 
 const PREC = {
@@ -93,12 +93,13 @@ module.exports = grammar({
     opt_name_list: $ => $.name_list,
     cte_binding_list: $ => choice($.cte_binding, seq($.cte_binding, ',', $.cte_binding_list)),
     cte_binding: $ => choice(seq($.name, $.name), seq($.name, $.AS, $.name)),
-    col_attrs: $ => choice(seq($.NOT, $.NULL, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, '+', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.HIDDEN, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
+    col_attrs: $ => choice(seq($.not_null, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.PRIMARY, $.KEY, optional($.opt_conflict_clause), $.AUTOINCREMENT, optional($.col_attrs)), seq($.DEFAULT, '-', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, '+', $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.num_literal, optional($.col_attrs)), seq($.DEFAULT, $.const_expr, optional($.col_attrs)), seq($.DEFAULT, $.str_literal, optional($.col_attrs)), seq($.COLLATE, $.name, optional($.col_attrs)), seq($.CHECK, '(', $.expr, ')', optional($.col_attrs)), seq($.UNIQUE, optional($.opt_conflict_clause), optional($.col_attrs)), seq($.HIDDEN, optional($.col_attrs)), seq($.AT_SENSITIVE, optional($.col_attrs)), seq($.AT_CREATE, $.version_annotation, optional($.col_attrs)), seq($.AT_DELETE, $.version_annotation, optional($.col_attrs)), seq($.fk_target_options, optional($.col_attrs))),
     version_annotation: $ => choice(seq('(', $.INT_LIT, ',', $.name, ')'), seq('(', $.INT_LIT, ',', $.name, ':', $.name, ')'), seq('(', $.INT_LIT, ')')),
     opt_kind: $ => seq('<', $.name, '>'),
     data_type_numeric: $ => choice(seq($.INT, optional($.opt_kind)), seq($.INTEGER, optional($.opt_kind)), seq($.REAL, optional($.opt_kind)), seq($.LONG, optional($.opt_kind)), seq($.BOOL, optional($.opt_kind)), seq($.LONG, $.INTEGER, optional($.opt_kind)), seq($.LONG, $.INT, optional($.opt_kind)), seq($.LONG_INT, optional($.opt_kind)), seq($.LONG_INTEGER, optional($.opt_kind))),
     data_type_any: $ => choice($.data_type_numeric, seq($.TEXT, optional($.opt_kind)), seq($.BLOB, optional($.opt_kind)), seq($.OBJECT, optional($.opt_kind)), seq($.OBJECT, '<', $.name, $.CURSOR, '>'), seq($.OBJECT, '<', $.name, $.SET, '>'), $.ID),
-    data_type_with_options: $ => choice($.data_type_any, seq($.data_type_any, $.NOT, $.NULL), seq($.data_type_any, $.AT_SENSITIVE), seq($.data_type_any, $.AT_SENSITIVE, $.NOT, $.NULL), seq($.data_type_any, $.NOT, $.NULL, $.AT_SENSITIVE)),
+    not_null: $ => choice(seq($.NOT, $.NULL), '!'),
+    data_type_with_options: $ => choice($.data_type_any, seq($.data_type_any, $.not_null), seq($.data_type_any, $.AT_SENSITIVE), seq($.data_type_any, $.AT_SENSITIVE, $.not_null), seq($.data_type_any, $.not_null, $.AT_SENSITIVE)),
     str_literal: $ => $.str_chain,
     str_chain: $ => choice($.str_leaf, seq($.str_leaf, $.str_chain)),
     str_leaf: $ => choice($.STR_LIT, $.C_STR_LIT),

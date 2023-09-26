@@ -8052,7 +8052,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Sep 26 12:44:48 PDT 2023</p>
+<p>Snapshot as of Tue Sep 26 15:28:24 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -8587,7 +8587,7 @@ cte_binding: name name
 
 col_attrs:
   /* nil */
-  | &quot;NOT&quot; &quot;NULL&quot; opt_conflict_clause col_attrs
+  | not_null opt_conflict_clause col_attrs
   | &quot;PRIMARY&quot; &quot;KEY&quot; opt_conflict_clause col_attrs
   | &quot;PRIMARY&quot; &quot;KEY&quot; opt_conflict_clause &quot;AUTOINCREMENT&quot; col_attrs
   | &quot;DEFAULT&quot; &#39;-&#39; num_literal col_attrs
@@ -8638,12 +8638,15 @@ data_type_any:
   | &quot;ID&quot;
   ;
 
+not_null: &quot;NOT&quot; &quot;NULL&quot; | &#39;!&#39;
+  ;
+
 data_type_with_options:
   data_type_any
-  | data_type_any &quot;NOT&quot; &quot;NULL&quot;
+  | data_type_any not_null
   | data_type_any &quot;@SENSITIVE&quot;
-  | data_type_any &quot;@SENSITIVE&quot; &quot;NOT&quot; &quot;NULL&quot;
-  | data_type_any &quot;NOT&quot; &quot;NULL&quot; &quot;@SENSITIVE&quot;
+  | data_type_any &quot;@SENSITIVE&quot; not_null
+  | data_type_any not_null &quot;@SENSITIVE&quot;
   ;
 
 str_literal:
@@ -12190,7 +12193,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Sep 26 12:44:48 PDT 2023</p>
+<p>Snapshot as of Tue Sep 26 15:28:25 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

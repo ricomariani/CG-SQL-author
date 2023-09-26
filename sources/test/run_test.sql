@@ -44,14 +44,14 @@ declare select function bcreatekey no check blob;
 declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
-declare function get_blob_byte(b blob not null, i integer not null) integer not null;
-declare function get_blob_size(b blob not null) integer not null;
-declare function create_truncated_blob(b blob not null, truncated_size integer not null) create blob not null;
+declare function get_blob_byte(b blob!, i int!) int!;
+declare function get_blob_size(b blob!) int!;
+declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
 
 BEGIN_SUITE()
 
-declare function blob_from_string(str text @sensitive) create blob not null;
-declare function string_from_blob(b blob @sensitive) create text not null;
+declare function blob_from_string(str text @sensitive) create blob!;
+declare function string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;
 
 declare enum floats real (
@@ -70,15 +70,15 @@ begin
   @attribute(cql:backing_table)
   create table backing(
     k blob primary key,
-    v blob not null
+    v blob!
   );
 end;
 
 @attribute(cql:backed_by=backing)
 create table backed (
   id integer primary key,
-  v1 integer not null,
-  v2 integer not null
+  v1 int!,
+  v2 int!
 );
 
 @attribute(cql:backed_by=backing)
@@ -111,9 +111,9 @@ BEGIN_TEST(arithmetic)
   EXPECT_SQL_TOO(-3 % -2 == -1);
 END_TEST(arithmetic)
 
-declare side_effect_0_count integer not null;
-declare side_effect_1_count integer not null;
-declare side_effect_null_count integer not null;
+declare side_effect_0_count int!;
+declare side_effect_1_count int!;
+declare side_effect_null_count int!;
 
 create proc side_effect_0(out result integer)
 begin
@@ -266,10 +266,10 @@ BEGIN_TEST(logical_operations)
   EXPECT_SQL_TOO(NOT 0 < 0);
 END_TEST(logical_operations)
 
-declare zero integer not null;
+declare zero int!;
 set zero := 0;
 
-declare one integer not null;
+declare one int!;
 set one := 1;
 
 -- logical and short-circuit verify 1/0 not evaluated
@@ -376,24 +376,24 @@ BEGIN_TEST(simple_funcs)
 END_TEST(simple_funcs)
 
 -- verify that out parameter is set in proc call
-create procedure echo ( in arg1 integer not null, out arg2 integer not null)
+create procedure echo ( in arg1 int!, out arg2 int!)
 begin
   set arg2 := arg1;
 end;
 
 BEGIN_TEST(out_arguments)
-  declare scratch integer not null;
+  declare scratch int!;
   call echo(12, scratch);
   EXPECT_SQL_TOO(scratch == 12);
 END_TEST(out_arguments)
 
 -- test simple recursive function
-create procedure fib (in arg integer not null, out result integer not null)
+create procedure fib (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;
   else
-    declare t integer not null;
+    declare t int!;
     call fib(arg - 1,  result);
     call fib(arg - 2,  t);
     set result := t + result;
@@ -401,7 +401,7 @@ begin
 end;
 
 BEGIN_TEST(simple_recursion)
-  declare scratch integer not null;
+  declare scratch int!;
   call fib(1, scratch);
   EXPECT(scratch == 1);
   call fib(2, scratch);
@@ -419,7 +419,7 @@ END_TEST(simple_recursion)
 -- test elementary cursor on select with no tables, still round trips through sqlite
 BEGIN_TEST(cursor_basics)
   declare col1 integer;
-  declare col2 real not null;
+  declare col2 real!;
   declare basic_cursor cursor for select 1, 2.5;
   fetch basic_cursor into col1, col2;
   EXPECT(basic_cursor);
@@ -432,8 +432,8 @@ END_TEST(cursor_basics)
 
 -- the most expensive way to swap two variables ever :)
 BEGIN_TEST(exchange_with_cursor)
-  declare arg1 integer not null;
-  declare arg2 integer not null;
+  declare arg1 int!;
+  declare arg2 int!;
   set arg1 := 7;
   set arg2 := 11;
   declare exchange_cursor cursor for select arg2, arg1;
@@ -447,7 +447,7 @@ END_TEST(exchange_with_cursor)
 create procedure make_mixed()
 begin
   create table mixed(
-    id integer not null,
+    id int!,
     name text,
     code long int,   -- these are nullable to make the cg harder
     flag bool,
@@ -498,14 +498,14 @@ begin
   insert into mixed values (4, "last name", 16, 0, 9.0, cast("blob3" as blob));
 end;
 
-create procedure update_mixed(id_ integer not null, name_ text, code_ long int, bl_ blob)
+create procedure update_mixed(id_ int!, name_ text, code_ long int, bl_ blob)
 begin
   update mixed set code = code_, bl = bl_ where id = id_;
 end;
 
 -- test readback of two rows
 BEGIN_TEST(read_mixed)
-  declare id_ integer not null;
+  declare id_ int!;
   declare name_ text;
   declare code_ long int;
   declare flag_ bool;
@@ -558,7 +558,7 @@ END_TEST(mutate_mixed)
 
 BEGIN_TEST(nested_select_expressions)
   -- use nested expression select
-  declare temp_1 integer not null;
+  declare temp_1 int!;
   set temp_1 := (select zero*5 + one*11);
   EXPECT(temp_1 == 11);
 
@@ -616,7 +616,7 @@ END_TEST(bool_round_trip)
 
 -- complex delete pattern
 
-create proc delete_one_from_mixed(out _id integer not null)
+create proc delete_one_from_mixed(out _id int!)
 begin
   set _id := (select id from mixed order by id limit 1);
   delete from mixed where id = _id;
@@ -626,7 +626,7 @@ BEGIN_TEST(delete_several)
   call load_mixed();
   EXPECT(2 == (select count(*) from mixed));
 
-  declare id_ integer not null;
+  declare id_ int!;
   call delete_one_from_mixed(id_);
   EXPECT(1 == id_);
   EXPECT(0 == (select count(*) from mixed where id = id_));
@@ -638,25 +638,25 @@ BEGIN_TEST(delete_several)
 END_TEST(delete_several)
 
 -- some basic string stuff using sqlite for string helpers
-create proc string_copy(in input text not null, out output text not null)
+create proc string_copy(in input text!, out output text!)
 begin
   -- extra shuffling for refcount testing
-  declare t text not null;
+  declare t text!;
   set t := input;
   set output := t;
 end;
 
 -- some basic string stuff using sqlite for string helpers
-create proc string_equal(in t1 text not null, in t2 text not null, out result bool not null)
+create proc string_equal(in t1 text!, in t2 text!, out result bool!)
 begin
   set result := (select t1 == t2);
 end;
 
 -- try out some string lifetime functions
 BEGIN_TEST(string_ref_test)
-  declare a_string text not null;
+  declare a_string text!;
   call string_copy("Hello", a_string);
-  declare result bool not null;
+  declare result bool!;
   call string_equal(a_string, "Hello", result);
   EXPECT(result);
 END_TEST(string_ref_test)
@@ -688,7 +688,7 @@ END_TEST(string_comparisons)
 -- string comparison nullability checks
 BEGIN_TEST(string_comparisons_nullability)
   declare null_ text;
-  declare x text not null;
+  declare x text!;
   set x := "x";
   EXPECT_SQL_TOO((nullable(x) < nullable(x)) is not null);
   EXPECT_SQL_TOO((nullable(x) > nullable("x")) is not null);
@@ -701,7 +701,7 @@ END_TEST(string_comparisons_nullability)
 -- string is null and is not null tests
 BEGIN_TEST(string_is_null_or_not)
   declare null_ text;
-  declare x text not null;
+  declare x text!;
   set x := "x";
   declare y text;
   set y := nullable("y");
@@ -717,11 +717,11 @@ END_TEST(string_is_null_or_not)
 
 -- binding tests for not null types
 BEGIN_TEST(bind_not_nullables)
-  declare b bool not null;
-  declare i integer not null;
-  declare l long integer not null;
-  declare r real not null;
-  declare t text not null;
+  declare b bool!;
+  declare i int!;
+  declare l long int!;
+  declare r real!;
+  declare t text!;
 
   set b := 1;
   set i := 2;
@@ -790,13 +790,13 @@ BEGIN_TEST(bind_nullables_null)
 END_TEST(bind_nullables_null)
 
 BEGIN_TEST(loop_fetch)
-  declare id_ integer not null;
+  declare id_ int!;
   declare name_ text;
   declare code_ long int;
   declare flag_  bool;
   declare rate_ real;
   declare bl_ blob;
-  declare count, sum integer not null;
+  declare count, sum int!;
 
   call load_mixed();
 
@@ -825,13 +825,13 @@ begin
 end;
 
 BEGIN_TEST(loop_control_flow)
-  declare id_ integer not null;
+  declare id_ int!;
   declare name_ text;
   declare code_ long int;
   declare flag_  bool;
   declare rate_ real;
   declare bl_ blob;
-  declare count integer not null;
+  declare count int!;
 
   call load_more_mixed();
 
@@ -857,7 +857,7 @@ END_TEST(loop_control_flow)
 
 -- basic test of while loop plus leave and continue
 BEGIN_TEST(while_control_flow)
-  declare i, sum integer not null;
+  declare i, sum int!;
 
   set i := 0;
   set sum := 0;
@@ -918,9 +918,9 @@ BEGIN_TEST(like_predicate)
 END_TEST(like_predicate)
 
 -- error handling with try catch throw
-create procedure throws(out did_throw bool not null)
+create procedure throws(out did_throw bool!)
 begin
-  declare x integer not null;
+  declare x int!;
   set did_throw := 0;
   begin try
     -- this fails
@@ -935,8 +935,8 @@ begin
 end;
 
 BEGIN_TEST(throw_and_catch)
-  declare did_throw bool not null;
-  declare did_continue bool not null;
+  declare did_throw bool!;
+  declare did_continue bool!;
   set did_continue := 0;
   begin try
     call throws(did_throw);
@@ -951,7 +951,7 @@ END_TEST(throw_and_catch)
 
 -- the catch block should not run if no errors
 BEGIN_TEST(throw_and_not_catch)
-  declare did_catch integer not null;
+  declare did_catch int!;
   begin try
     set did_catch := 0;
   end try;
@@ -961,7 +961,7 @@ BEGIN_TEST(throw_and_not_catch)
   EXPECT(did_catch == 0); -- catch did not run
 END_TEST(throw_and_not_catch)
 
-create procedure case_tester1(value integer not null, out result integer)
+create procedure case_tester1(value int!, out result integer)
 begin
   set result := case value
                      when 1 then 100
@@ -970,7 +970,7 @@ begin
                      else 400 end;
 end;
 
-create procedure case_tester2(value integer not null, out result integer)
+create procedure case_tester2(value int!, out result integer)
 begin
   set result := case value
                      when 1 then 100
@@ -1022,13 +1022,13 @@ BEGIN_TEST(string_case_test)
 END_TEST(string_case_test)
 
 
-create procedure in_tester1(value integer not null, out result bool not null)
+create procedure in_tester1(value int!, out result bool!)
 begin
   set result := value in (1, 2, 3);
 end;
 
 BEGIN_TEST(in_test_not_null)
-  declare result bool not null;
+  declare result bool!;
   call in_tester1(1, result);
   EXPECT(result);
   call in_tester1(2, result);
@@ -1060,28 +1060,28 @@ BEGIN_TEST(in_test_nullables)
   EXPECT(result is null);
 END_TEST(in_test_nullables)
 
-create procedure nullables_case_tester(value integer, out result integer not null)
+create procedure nullables_case_tester(value integer, out result int!)
 begin
   -- this is a very weird way to get a bool
   set result := case 1 when value then 1 else 0 end;
 end;
 
 BEGIN_TEST(nullable_when_test)
-  declare result integer not null;
+  declare result int!;
   call nullables_case_tester(1, result);
   EXPECT(result == 1);
   call nullables_case_tester(0, result);
   EXPECT(result == 0);
 END_TEST(nullable_when_test)
 
-create procedure nullables_case_tester2(value integer, out result integer not null)
+create procedure nullables_case_tester2(value integer, out result int!)
 begin
   -- this is a very weird way to get a bool
   set result := case when value then 1 else 0 end;
 end;
 
 BEGIN_TEST(nullable_when_pred_test)
-  declare result integer not null;
+  declare result int!;
   call nullables_case_tester(1, result);
   EXPECT(result == 1);
   call nullables_case_tester(0, result);
@@ -1109,7 +1109,7 @@ END_TEST(string_in_test)
 
 BEGIN_TEST(string_between_test)
   declare n1, n2, n3 text;
-  declare s1, s2, s3 text not null;
+  declare s1, s2, s3 text!;
 
   set n1 := "1";
   set n2 := "2";
@@ -1140,7 +1140,7 @@ END_TEST(string_between_test)
 
 BEGIN_TEST(string_not_between_test)
   declare n1, n2, n3 text;
-  declare s1, s2, s3 text not null;
+  declare s1, s2, s3 text!;
 
   set n1 := "1";
   set n2 := "2";
@@ -1169,7 +1169,7 @@ BEGIN_TEST(string_not_between_test)
   set n3 := "3";
 END_TEST(string_not_between_test)
 
-create proc maybe_commit(do_commit bool not null)
+create proc maybe_commit(do_commit bool!)
 begin
   call load_mixed();
   begin transaction;
@@ -1191,13 +1191,13 @@ END_TEST(transaction_mechanics)
 
 @attribute(cql:identity=(id, code, bl))
 @attribute(cql:generate_copy)
-create procedure get_mixed(lim integer not null)
+create procedure get_mixed(lim int!)
 begin
   select * from mixed limit lim;
 end;
 
 @attribute(cql:generate_copy)
-create procedure get_one_from_mixed(id_ integer not null)
+create procedure get_one_from_mixed(id_ int!)
 begin
   declare C cursor for select * from mixed where id = id_;
   fetch C;
@@ -1205,13 +1205,13 @@ begin
 end;
 
 BEGIN_TEST(proc_loop_fetch)
-  declare id_ integer not null;
+  declare id_ int!;
   declare name_ text;
   declare code_ long int;
   declare flag_  bool;
   declare rate_ real;
   declare bl_ blob;
-  declare count, sum integer not null;
+  declare count, sum int!;
 
   call load_mixed();
 
@@ -1226,7 +1226,7 @@ BEGIN_TEST(proc_loop_fetch)
   EXPECT(count == 2); -- there should be two rows
 END_TEST(proc_loop_fetch)
 
-create proc savepoint_maybe_commit(do_commit bool not null)
+create proc savepoint_maybe_commit(do_commit bool!)
 begin
   call load_mixed();
   savepoint foo;
@@ -1253,10 +1253,10 @@ BEGIN_TEST(exists_test)
   EXPECT((select NOT EXISTS(select * from mixed)));  -- not exists found no rows
 END_TEST(exists_test)
 
-create proc bulk_load_mixed(rows_ integer not null)
+create proc bulk_load_mixed(rows_ int!)
 begin
   delete from mixed;
-  declare i integer not null;
+  declare i int!;
   set i := 0;
   while i < rows_
   begin
@@ -1300,7 +1300,7 @@ BEGIN_TEST(complex_nested_selects)
 END_TEST(complex_nested_selects)
 
 BEGIN_TEST(proc_loop_auto_fetch)
-  declare count, sum integer not null;
+  declare count, sum int!;
 
   call load_mixed();
 
@@ -1368,7 +1368,7 @@ BEGIN_TEST(cast_expr)
 END_TEST(cast_expr)
 
 BEGIN_TEST(type_check)
-  let int_val := type_check(1 as int not null);
+  let int_val := type_check(1 as int!);
   EXPECT(int_val == 1);
 
   let int_cast_val := type_check(cast(1 as integer<foo>) as integer<foo> not null);
@@ -1443,7 +1443,7 @@ declare C cursor for
   union all
   select current as X from c2;
 
-  declare i integer not null;
+  declare i int!;
   set i := 1;
 
   loop fetch C
@@ -1455,7 +1455,7 @@ declare C cursor for
 END_TEST(with_recursive_test)
 
 
-create proc outint(out int1 integer, out int2 integer not null)
+create proc outint(out int1 integer, out int2 int!)
 begin
   declare C1 cursor for select 1;
   fetch C1 into int1;
@@ -1465,19 +1465,19 @@ END;
 
 BEGIN_TEST(fetch_output_param)
   declare int1 integer;
-  declare int2 integer not null;
+  declare int2 int!;
   call outint(int1, int2);
   EXPECT(int1 == 1); -- bind output nullable
   EXPECT(int2 == 2); -- bind output not nullable
 END_TEST(fetch_output_param)
 
-declare function run_test_math(int1 integer not null, out int2 integer) integer not null;
+declare function run_test_math(int1 int!, out int2 integer) int!;
 declare function string_create() create text;
-declare function string_ref_count(str text) integer not null;
+declare function string_ref_count(str text) int!;
 
 BEGIN_TEST(external_functions)
   declare int_out integer;
-  declare int_result integer not null;
+  declare int_result int!;
 
   set int_result := run_test_math(100, int_out);
   EXPECT(int_out == 500);
@@ -1491,7 +1491,7 @@ END_TEST(external_functions)
 
 BEGIN_TEST(rev_appl_operator)
   declare int_out integer;
-  declare int_result integer not null;
+  declare int_result int!;
 
   set int_result := 100:run_test_math(int_out);
   EXPECT_SQL_TOO(int_out == 500);
@@ -1499,7 +1499,7 @@ BEGIN_TEST(rev_appl_operator)
 
   declare int_out2 integer;
   declare int_out3 integer;
-  declare int_result2 integer not null;
+  declare int_result2 int!;
 
   -- test left associativity, given that this does not raise any errors, we know this is left associative
   set int_result2 := 10:run_test_math(int_out2):run_test_math(int_out3);
@@ -1508,15 +1508,15 @@ BEGIN_TEST(rev_appl_operator)
   EXPECT_SQL_TOO(int_result2 == 490);
 END_TEST(rev_appl_operator)
 
-declare function set_create() create object not null;
-declare function set_add(_set object not null, _key text not null) bool not null;
-declare function set_contains(_set object not null, _key text not null) bool not null;
+declare function set_create() create object!;
+declare function set_add(_set object!, _key text!) bool!;
+declare function set_contains(_set object!, _key text!) bool!;
 
 BEGIN_TEST(external_set)
   -- stress the create and copy semantics
-  declare _set object not null;
+  declare _set object!;
   set _set := set_create();
-  declare _set2 object not null;
+  declare _set2 object!;
   set _set2 := set_create();
   set _set := _set2; -- this is a copy
 
@@ -1528,7 +1528,7 @@ BEGIN_TEST(external_set)
 END_TEST(external_set)
 
 BEGIN_TEST(object_notnull)
-  declare _setNN object not null;
+  declare _setNN object!;
   declare _set object;
   set _set := nullable(set_create());
   set _setNN := ifnull_crash(_set);
@@ -1537,7 +1537,7 @@ END_TEST(object_notnull)
 
 BEGIN_TEST(dummy_values)
   delete from mixed;
-  declare i integer not null;
+  declare i int!;
   set i := 0;
   while (i < 20)
   begin
@@ -1560,11 +1560,11 @@ BEGIN_TEST(dummy_values)
 END_TEST(dummy_values)
 
 BEGIN_TEST(blob_basics)
-  declare s text not null;
+  declare s text!;
   set s := "a string";
-  declare b blob not null;
+  declare b blob!;
   set b := blob_from_string(s);
-  declare s2 text not null;
+  declare s2 text!;
   set s2 := string_from_blob(b);
   EXPECT(s == s2); -- blob conversion failed
   EXPECT(b == blob_from_string("a string"));
@@ -1587,9 +1587,9 @@ END_TEST(blob_basics)
 create proc blob_table_maker()
 begin
   create table if not exists blob_table(
-    id integer not null,
+    id int!,
     b1 blob,
-    b2 blob not null
+    b2 blob!
   );
   delete from blob_table;
 end;
@@ -1598,13 +1598,13 @@ create proc load_blobs()
 begin
   call blob_table_maker();
 
-  declare i, count integer not null;
+  declare i, count int!;
   set i := 0;
   set count := 20;
 
-  declare s text not null;
+  declare s text!;
   declare b1 blob;
-  declare b2 blob not null;
+  declare b2 blob!;
 
   while (i < count)
   begin
@@ -1619,7 +1619,7 @@ end;
 
 BEGIN_TEST(blob_data_manip)
   call load_blobs();
-  declare i, count integer not null;
+  declare i, count int!;
 
   declare C cursor for select * from blob_table order by id;
   set i := 0;
@@ -1651,11 +1651,11 @@ create procedure load_sparse_blobs()
 begin
   call blob_table_maker();
 
-  declare s text not null;
+  declare s text!;
   declare b1 blob;
-  declare b2 blob not null;
+  declare b2 blob!;
 
-  declare i, count integer not null;
+  declare i, count int!;
   set i := 0;
   set count := 20;
 
@@ -1671,7 +1671,7 @@ begin
 end;
 
 BEGIN_TEST(blob_data_manip_nullables)
-  declare i, count integer not null;
+  declare i, count int!;
   declare C cursor for select * from blob_table order by id;
   set i := 0;
   set count := 20;
@@ -1697,7 +1697,7 @@ BEGIN_TEST(blob_data_manip_nullables)
   EXPECT(i == count); -- wrong number of rows
 END_TEST(blob_data_manip_nullables)
 
-create proc row_getter(x integer not null, y real not null, z text)
+create proc row_getter(x int!, y real!, z text)
 begin
   declare C cursor for select x X, y Y, z Z;
   fetch C;
@@ -1712,7 +1712,7 @@ BEGIN_TEST(data_reader)
 END_TEST(data_reader)
 
 -- test simple recursive function -- using func syntax!
-create procedure fib2 (in arg integer not null, out result integer not null)
+create procedure fib2 (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;
@@ -1731,7 +1731,7 @@ BEGIN_TEST(recurse_with_proc)
 END_TEST(recurse_with_proc)
 
 -- test simple recursive function -- using func syntax!
-create procedure fib3 (in arg integer not null, out result integer not null)
+create procedure fib3 (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := (select 1); -- for this to be a dml proc
@@ -1753,7 +1753,7 @@ END_TEST(recurse_with_dml_proc)
 BEGIN_TEST(row_id_test)
   call load_mixed();
   declare C cursor for select rowid from mixed;
-  declare r integer not null;
+  declare r int!;
   set r := 1;
 
   loop fetch C
@@ -1765,12 +1765,12 @@ END_TEST(row_id_test)
 
 
 BEGIN_TEST(bind_and_fetch_all_types)
-  declare i integer not null;
-  declare l long not null;
-  declare r real not null;
-  declare b bool not null;
-  declare s text not null;
-  declare bl blob not null;
+  declare i int!;
+  declare l long!;
+  declare r real!;
+  declare b bool!;
+  declare s text!;
+  declare bl blob!;
 
   set i := 10;
   set l := 1234567890156789L;
@@ -1811,12 +1811,12 @@ BEGIN_TEST(bind_and_fetch_all_types_nullable)
 END_TEST(bind_and_fetch_all_types_nullable)
 
 BEGIN_TEST(fetch_all_types_cursor)
-  declare i integer not null;
-  declare l long not null;
-  declare r real not null;
-  declare b bool not null;
-  declare s text not null;
-  declare bl blob not null;
+  declare i int!;
+  declare l long!;
+  declare r real!;
+  declare b bool!;
+  declare s text!;
+  declare bl blob!;
 
   set i := 10;
   set l := 1234567890156789L;
@@ -2664,12 +2664,12 @@ begin
     s0 text @sensitive,
     bl0 blob @sensitive,
 
-    b1 bool not null @sensitive,
-    i1 integer not null @sensitive,
-    l1 long not null @sensitive,
-    d1 real not null @sensitive,
-    s1 text not null @sensitive,
-    bl1 blob not null @sensitive
+    b1 bool! @sensitive,
+    i1 int! @sensitive,
+    l1 long! @sensitive,
+    d1 real! @sensitive,
+    s1 text! @sensitive,
+    bl1 blob! @sensitive
   );
 
   insert into all_types_encoded_table values (
@@ -2691,14 +2691,14 @@ begin
     s0 text @sensitive,
     bl0 blob @sensitive,
 
-    b1 bool not null @sensitive,
-    i1 integer not null @sensitive,
-    l1 long not null @sensitive,
-    d1 real not null @sensitive,
-    s1 text not null @sensitive,
-    bl1 blob not null @sensitive,
+    b1 bool! @sensitive,
+    i1 int! @sensitive,
+    l1 long! @sensitive,
+    d1 real! @sensitive,
+    s1 text! @sensitive,
+    bl1 blob! @sensitive,
 
-    context text not null
+    context text!
   );
 
   insert into all_types_encoded_with_context_table values (
@@ -2845,7 +2845,7 @@ END_TEST(encoded_null_values)
 
 
 declare proc obj_shape(set_ object) out union (o object);
-declare proc not_null_obj_shape(set_ object not null) out union (o object not null);
+declare proc not_null_obj_shape(set_ object!) out union (o object!);
 
 create proc emit_object_result_set(set_ object)
 begin
@@ -2857,7 +2857,7 @@ begin
   out union C;
 end;
 
-create proc emit_object_result_set_not_null(set_ object not null)
+create proc emit_object_result_set_not_null(set_ object!)
 begin
   declare C cursor like not_null_obj_shape;
   fetch C using set_ o;
@@ -2929,12 +2929,12 @@ begin
     s0 text @sensitive,
     bl0 blob @sensitive,
 
-    b1 bool not null,
-    i1 integer not null,
-    l1 long not null,
-    d1 real not null,
-    s1 text not null,
-    bl1 blob not null
+    b1 bool!,
+    i1 int!,
+    l1 long!,
+    d1 real!,
+    s1 text!,
+    bl1 blob!
   );
 
   -- all nullables null
@@ -2948,9 +2948,9 @@ end;
 -- this proc will make the tables and also this serves as the table declarations
 create procedure init_temp_tables()
 begin
-  create temp table temp_table_one(id integer not null @sensitive);
-  create temp table temp_table_two(id integer not null);
-  create temp table temp_table_three(id integer not null);
+  create temp table temp_table_one(id int! @sensitive);
+  create temp table temp_table_two(id int!);
+  create temp table temp_table_three(id int!);
 
   insert into temp_table_one values(1);
   insert into temp_table_two values(2);
@@ -2991,10 +2991,10 @@ end;
 -- this table will never exist
 create table dummy_table(id integer);
 
-create proc some_integers(start integer not null, stop integer not null)
+create proc some_integers(start int!, stop int!)
 begin
   declare C cursor like select 1 v, 2 vsq, "xx" junk;
-  declare i integer not null;
+  declare i int!;
   set i := start;
   while (i < stop)
   begin
@@ -3013,13 +3013,13 @@ end;
 -- we need this helper to get a rowset out with type "object", all it does is call the above proc
 -- we just need the cast that it does really, but there's no way to code that cast in CQL.
 
-declare proc some_integers_fetch(out rs object not null, start integer not null, stop integer not null) using transaction;
+declare proc some_integers_fetch(out rs object!, start int!, stop int!) using transaction;
 
 -- these are the helper functions we will be using to read the rowset, they are defined and registered elsewhere
 -- See the "call cql_init_extensions();" above for registration.
 
 declare select function rscount(rs long) long;
-declare select function rscol(rs long, row integer not null, col integer not null) long;
+declare select function rscol(rs long, row int!, col int!) long;
 
 -- This test is is going to create a rowset using a stored proc, then
 -- using the helper proc some_integers_fetch() get access to the result set pointer
@@ -3029,10 +3029,10 @@ declare select function rscol(rs long, row integer not null, col integer not nul
 -- test the runtime binding facilities needed by ptr(x)
 
 BEGIN_TEST(rowset_reading)
-  declare start, stop, cur integer not null;
+  declare start, stop, cur int!;
   set start := 10;
   set stop := 20;
-  declare rs object not null;
+  declare rs object!;
   call some_integers_fetch(rs, start, stop);
 
   -- use a nullable version too to exercise both kinds of binding
@@ -3056,7 +3056,7 @@ BEGIN_TEST(rowset_reading)
 END_TEST(rowset_reading)
 
 BEGIN_TEST(rowset_reading_language_support)
-  declare cur integer not null;
+  declare cur int!;
   set cur := 7;
   declare C cursor for call some_integers(7, 12);
   loop fetch C
@@ -3162,12 +3162,12 @@ BEGIN_TEST(read_all_types_auto_fetcher)
 END_TEST(read_all_types_auto_fetcher)
 
 BEGIN_TEST(rowset_via_union_failed)
-  declare ok_after_all bool not null;
-  declare start, stop, cur integer not null;
+  declare ok_after_all bool!;
+  declare start, stop, cur int!;
 
   set start := -1;
   set stop := 1;
-  declare rs object not null;
+  declare rs object!;
   begin try
     call some_integers_fetch(rs, start, stop);
   end try;
@@ -3181,7 +3181,7 @@ BEGIN_TEST(rowset_via_union_failed)
 END_TEST(rowset_via_union_failed)
 
 BEGIN_TEST(boxing_cursors)
-  declare i integer not null;
+  declare i int!;
 
   set i := 0;
   while i < 5
@@ -3223,7 +3223,7 @@ begin
 end;
 
 BEGIN_TEST(boxing_from_call)
-  declare i integer not null;
+  declare i int!;
 
   set i := 0;
   while i < 5
@@ -3259,10 +3259,10 @@ END_TEST(boxing_from_call)
 @enforce_normal cast;
 
 BEGIN_TEST(numeric_casts)
-  declare b bool not null;
-  declare i int not null;
-  declare l long not null;
-  declare r real not null;
+  declare b bool!;
+  declare i int!;
+  declare l long!;
+  declare r real!;
   declare b0 bool;
   declare i0 int;
   declare l0 long;
@@ -3306,7 +3306,7 @@ END_TEST(numeric_casts)
 
 @enforce_strict cast;
 
-create proc dummy(seed integer not null, i integer not null, r real not null, b bool not null)
+create proc dummy(seed int!, i int!, r real!, b bool!)
 begin
   EXPECT(seed == i);
   EXPECT(seed == r);
@@ -3319,7 +3319,7 @@ BEGIN_TEST(cursor_args)
   call dummy(from args);
 END_TEST(cursor_args)
 
-DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
+DECLARE PROCEDURE cql_exec_internal(sql TEXT!) USING TRANSACTION;
 create table xyzzy(id integer, name text, data blob);
 
 BEGIN_TEST(exec_internal)
@@ -3572,7 +3572,7 @@ BEGIN_TEST(const_folding)
 END_TEST(const_folding)
 
 BEGIN_TEST(long_literals)
-  declare x long not null;
+  declare x long!;
   declare z long;
 
   set x := 1L;
@@ -3748,13 +3748,13 @@ begin
   insert into simple_rc_table(id, foo) values(1, "foo");
 end;
 
-create proc select_if_nothing(id_ integer not null)
+create proc select_if_nothing(id_ int!)
 begin
   declare bar text;
   set bar := (select foo from simple_rc_table where id == id_ if nothing "bar");
 end;
 
-create proc select_if_nothing_throw(id_ integer not null)
+create proc select_if_nothing_throw(id_ int!)
 begin
   declare bar text;
   set bar := (select foo from simple_rc_table where id == id_ if nothing throw);
@@ -3851,9 +3851,9 @@ END_TEST(nested_rc_values)
 
 -- facet helper functions, used by the schema upgrader
 DECLARE facet_data TYPE OBJECT<facet_data>;
-DECLARE FUNCTION cql_facets_create() create facet_data not null;
-DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT NOT NULL, crc LONG NOT NULL) BOOL NOT NULL;
-DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;
+DECLARE FUNCTION cql_facets_create() create facet_data!;
+DECLARE FUNCTION cql_facet_add(facets facet_data, facet TEXT!, crc LONG NOT NULL) BOOL NOT NULL;
+DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT!) LONG NOT NULL;
 
 BEGIN_TEST(facet_helpers)
   let facets := cql_facets_create();
@@ -3895,13 +3895,13 @@ BEGIN_TEST(facet_helpers)
 END_TEST(facet_helpers)
 
 -- not null result
-create proc f(x integer not null, out y integer not null)
+create proc f(x int!, out y int!)
 begin
   set y := x;
 end;
 
 -- nullable version (not null arg)
-create proc fn(x integer not null, out y integer)
+create proc fn(x int!, out y integer)
 begin
   set y := x;
 end;
@@ -3983,7 +3983,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc f2(pattern text, idstart int not null, idend int not null, lim int not null)
+create proc f2(pattern text, idstart int!, idend int!, lim int!)
 begin
   with
   source(*) LIKE f1,
@@ -4018,7 +4018,7 @@ BEGIN_TEST(shared_fragments)
 END_TEST(shared_fragments)
 
 @attribute(cql:shared_fragment)
-create proc select_nothing_user(flag bool not null)
+create proc select_nothing_user(flag bool!)
 begin
   if flag then
     select flag as xyzzy;
@@ -4082,7 +4082,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc conditional_values(x_ integer not null)
+create proc conditional_values(x_ int!)
 begin
   if x_ == 1 then
     select nullable(x_) id, 'x' t;
@@ -4160,14 +4160,7 @@ BEGIN_TEST(conditional_fragment_no_with)
 END_TEST(conditional_fragment_no_with)
 
 @attribute(cql:shared_fragment)
-create proc skip_notnulls(
-  a_ integer not null,
-  b_ bool not null,
-  c_ long not null,
-  d_ real not null,
-  e_ text not null,
-  f_ blob not null,
-  g_ object not null)
+create proc skip_notnulls(a_ int!, b_ bool!, c_ long!, d_ real!, e_ text!, f_ blob!, g_ object!)
 begin
   if a_ == 0 then
     select a_ - 100 result;
@@ -4189,9 +4182,9 @@ begin
 end;
 
 BEGIN_TEST(skip_notnulls)
-  declare _set object not null;
+  declare _set object!;
   set _set := set_create();
-  declare _bl blob not null;
+  declare _bl blob!;
   set _bl := blob_from_string('hi');
 
   declare C cursor for
@@ -4234,9 +4227,9 @@ begin
 end;
 
 BEGIN_TEST(skip_nullables)
-  declare _set object not null;
+  declare _set object!;
   set _set := set_create();
-  declare _bl blob not null;
+  declare _bl blob!;
   set _bl := blob_from_string('hi');
 
   declare C cursor for
@@ -4250,7 +4243,7 @@ BEGIN_TEST(skip_nullables)
 END_TEST(skip_nullables)
 
 @attribute(cql:shared_fragment)
-create proc abs_func(x integer not null)
+create proc abs_func(x int!)
 begin
   select case
     when x < 0 then x * -1
@@ -4259,7 +4252,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc max_func(x integer not null, y integer not null)
+create proc max_func(x int!, y int!)
 begin
   select case when x <= y then y else x end result;
 end;
@@ -4271,7 +4264,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc numbers(lim integer not null)
+create proc numbers(lim int!)
 begin
   with N(x) as (
     select 1 x
@@ -4346,13 +4339,13 @@ declare proc alltypes_nullable() (
 );
 
 declare proc alltypes_notnull() (
-  t_nn bool not null,
-  f_nn bool not null,
-  i_nn integer not null,
-  l_nn long not null,
-  r_nn real not null,
-  bl_nn blob not null,
-  str_nn text not null
+  t_nn bool!,
+  f_nn bool!,
+  i_nn int!,
+  l_nn long!,
+  r_nn real!,
+  bl_nn blob!,
+  str_nn text!
 );
 
 @attribute(cql:blob_storage)
@@ -4374,17 +4367,17 @@ create table storage_both(
 @attribute(cql:blob_storage)
 create table storage_with_extras(
   like alltypes_notnull,
-  x integer not null
+  x int!
 );
 
 @attribute(cql:blob_storage)
 create table storage_one_int(
-  x integer not null
+  x int!
 );
 
 @attribute(cql:blob_storage)
 create table storage_one_long(
-  x long not null
+  x long!
 );
 
 #ifndef LUA_RUN_TEST
@@ -4707,7 +4700,7 @@ BEGIN_TEST(bogus_varlong)
   EXPECT(caught);
 END_TEST(bogus_varlong)
 
-create proc round_trip_int(value integer not null)
+create proc round_trip_int(value int!)
 begin
   DECLARE C cursor LIKE storage_one_int;
   FETCH C using value x;
@@ -4719,7 +4712,7 @@ begin
   EXPECT(C.x == D.x);
 end;
 
-create proc round_trip_long(value long not null)
+create proc round_trip_long(value long!)
 begin
   DECLARE C cursor LIKE storage_one_long;
   FETCH C using value x;
@@ -4769,7 +4762,7 @@ BEGIN_TEST(verify_long_constant_forms)
   SET x := long_const_3;
   EXPECT_SQL_TOO(reference == x);
 
-  DECLARE z real not null;
+  DECLARE z real!;
   set z := 9223372036854775807;
 
   -- this verifies that z was stored as a double
@@ -4832,7 +4825,7 @@ BEGIN_TEST(serialization_tricky_values)
 END_TEST(serialization_tricky_values)
 
 declare proc rand_reset();
-declare proc corrupt_blob_with_invalid_shenanigans(b blob not null);
+declare proc corrupt_blob_with_invalid_shenanigans(b blob!);
 
 BEGIN_TEST(clobber_blobs)
   -- the point of the test is to ensure that we don't segv or get ASAN failures
@@ -4913,19 +4906,19 @@ BEGIN_TEST(arg_mutation)
 END_TEST(arg_mutation)
 
 declare proc lotsa_types() (
-  i integer not null,
-  l long not null,
-  b bool not null,
-  r real not null,
+  i int!,
+  l long!,
+  b bool!,
+  r real!,
   i0 integer,
   l0 long,
   b0 bool,
   r0 real,
-  t text not null,
+  t text!,
   t0 text
 );
 
-declare function cql_cursor_hash(C cursor) long not null;
+declare function cql_cursor_hash(C cursor) long!;
 
 BEGIN_TEST(cursor_hash)
   declare C cursor like lotsa_types;
@@ -5098,7 +5091,7 @@ BEGIN_TEST(cursor_hash)
 
 END_TEST(cursor_hash)
 
-declare function cql_cursors_equal(C1 cursor, C2 cursor) bool not null;
+declare function cql_cursors_equal(C1 cursor, C2 cursor) bool!;
 
 BEGIN_TEST(cursor_equal)
   declare C cursor like lotsa_types;
@@ -5266,12 +5259,12 @@ BEGIN_TEST(cursor_equal)
 
 END_TEST(cursor_equal)
 
-DECLARE PROC get_rows(result object not null) OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL, z BOOL);
+DECLARE PROC get_rows(result object!) OUT UNION (x INT!, y TEXT!, z BOOL);
 
 BEGIN_TEST(child_results)
   let p := cql_partition_create();
 
-  declare v cursor like (x integer not null, y text not null, z bool);
+  declare v cursor like (x int!, y text!, z bool);
   declare k cursor like v(x, y);
 
   -- empty cursors, not added to partition
@@ -5577,10 +5570,10 @@ END_TEST(cql_contains_column_def)
 
 DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
 DECLARE FUNCTION cql_string_list_create() CREATE cql_string_list not null;
-DECLARE FUNCTION cql_string_list_set_string(list cql_string_list, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) cql_string_list;
-DECLARE FUNCTION cql_string_list_get_string(list cql_string_list, index_ INTEGER NOT NULL) TEXT;
-DECLARE FUNCTION cql_string_list_get_count(list cql_string_list) INTEGER NOT NULL;
-DECLARE PROCEDURE cql_string_list_add_string(list cql_string_list, string TEXT NOT NULL);
+DECLARE FUNCTION cql_string_list_set_string(list cql_string_list, index_ INT!, value_ TEXT!) cql_string_list;
+DECLARE FUNCTION cql_string_list_get_string(list cql_string_list, index_ INT!) TEXT;
+DECLARE FUNCTION cql_string_list_get_count(list cql_string_list) INT!;
+DECLARE PROCEDURE cql_string_list_add_string(list cql_string_list, string TEXT!);
 
 BEGIN_TEST(cql_string_list)
   let list := cql_string_list_create();
@@ -5593,19 +5586,19 @@ BEGIN_TEST(cql_string_list)
 END_TEST(cql_string_list)
 
 -- make array wrappers for string list
-DECLARE FUNCTION get_from_object_cql_string_list(list cql_string_list, index_ INTEGER NOT NULL) TEXT;
+DECLARE FUNCTION get_from_object_cql_string_list(list cql_string_list, index_ INT!) TEXT;
 @echo c, "#define get_from_object_cql_string_list cql_string_list_get_string\n";
 @echo lua, "get_from_object_cql_string_list = cql_string_list_get_string\n";
 
-DECLARE FUNCTION set_in_object_cql_string_list(list cql_string_list, index_ INTEGER NOT NULL, VALUE TEXT NOT NULL) cql_string_list;
+DECLARE FUNCTION set_in_object_cql_string_list(list cql_string_list, index_ INT!, VALUE TEXT!) cql_string_list;
 @echo c, "#define set_in_object_cql_string_list cql_string_list_set_string\n";
 @echo lua, "set_in_object_cql_string_list = cql_string_list_set_string\n";
 
-DECLARE FUNCTION get_object_cql_string_list_count(list cql_string_list) INTEGER NOT NULL;
+DECLARE FUNCTION get_object_cql_string_list_count(list cql_string_list) INT!;
 @echo c, "#define get_object_cql_string_list_count cql_string_list_get_count\n";
 @echo lua, "get_object_cql_string_list_count = cql_string_list_get_count\n";
 
-PROC add_object_cql_string_list(list cql_string_list NOT NULL, value TEXT NOT NULL, OUT result cql_string_list not null)
+PROC add_object_cql_string_list(list cql_string_list!, value TEXT!, OUT result cql_string_list!)
 BEGIN
   cql_string_list_add_string(list, value);
   result := list;
@@ -5635,7 +5628,7 @@ BEGIN_TEST(cursor_formatting)
   LET s2 := cql_cursor_format(C);
   EXPECT(s2 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
 
-  declare D cursor like (a_bool bool not null, an_int int not null, a_long long not null, a_real real not null, a_string text not null, a_blob blob not null);
+  declare D cursor like (a_bool bool!, an_int int!, a_long long!, a_real real!, a_string text!, a_blob blob!);
 
   -- not null values
   fetch D(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1);
@@ -5656,7 +5649,7 @@ BEGIN_TEST(compressed_strings)
 END_TEST(compressed_strings)
 
 -- external implementation will test the exact value passed
-declare proc take_bool_not_null(x bool not null, y bool not null);
+declare proc take_bool_not_null(x bool!, y bool!);
 declare proc take_bool(x bool, y bool);
 
 BEGIN_TEST(normalize_bool_on_call)
@@ -6202,7 +6195,7 @@ END_TEST(backed_tables_default_values)
 -- the backing table was defined above already
 [[backed_by=backing]]
 create table mixed_backed(
-  id integer not null primary key,
+  id int! primary key,
   name text,
   code long int,
   flag bool,
@@ -6340,8 +6333,8 @@ END_TEST(mutate_compound_backed_key)
 -- it can be called directly or using proc as func 
 -- and we need both for this test.
 
-var a_global integer not null;
-create proc mutator(new_val integer not null, out result integer not null)
+var a_global int!;
+create proc mutator(new_val int!, out result int!)
 begin
   set result := new_val + 1;
   set a_global := result;
@@ -6354,7 +6347,7 @@ BEGIN_TEST(expr_stmt_rewrite)
   EXPECT(a_global == 2);
   case when 1 then mutator(100) end;
   EXPECT(a_global == 101);
-  var result integer not null;
+  var result int!;
   mutator(2, result);
   EXPECT(a_global == 3);
   EXPECT(result == 3);
@@ -6396,18 +6389,8 @@ end;
 -- Called in the test client to verify that we hit tripwires when passing NULL
 -- inappropriately for various argument types and at various argument indices.
 create proc proc_with_notnull_args(
-  a text not null,
-  b text not null,
-  out c text not null,
-  out d text not null,
-  inout e text not null,
-  inout f text not null,
-  inout g text not null,
-  inout h text not null,
-  i text not null,
-  out j text not null,
-  inout k text not null,
-  inout l text not null,
+  a text!, b text!, out c text!, out d text!, inout e text!, inout f text!,
+  inout g text!, inout h text!, i text!, out j text!, inout k text!, inout l text!,
 )
 begin
   set c := "text";

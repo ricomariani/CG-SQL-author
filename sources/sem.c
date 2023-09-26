@@ -21696,6 +21696,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
     }
 
     ast->sem = new_sem(core_type_of(sem_type_param) | not_nullable_flag(sem_type_param) | sensitive_flag(sem_type_param));
+    ast->sem->kind = param->sem->kind;
     return;
   }
 

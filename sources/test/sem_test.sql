@@ -23403,3 +23403,22 @@ proc abuse_star3(like a_target_proc arguments)
 begin
   another_target_proc(*, 1);
 end;
+
+declare function create_event() create object<event> not null;
+declare proc get_object_event_invitees(event_ object<event>, out value object<event_invitees> not null);
+declare proc get_from_object_event_invitees(invitees object<event_invitees>, field text not null, out value text not null);
+
+-- TEST: when calling proc as func the kind of the out parameter should be preserved
+-- it didn't used to be which caused the get chain below to break
+-- + {let_stmt}: event: object<event> notnull variable
+-- + {let_stmt}: x: object<event_invitees> notnull variable
+-- + {let_stmt}: y: text notnull variable
+-- + {call}: object<event_invitees> notnull
+-- - {call}: object notnull
+-- - error:
+proc proc_as_func_preserves_kind()
+BEGIN
+  let event := create_event();
+  let x := get_object_event_invitees(event);
+  let y := event.invitees.firstName;
+END;

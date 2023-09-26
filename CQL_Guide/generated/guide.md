@@ -2120,6 +2120,7 @@ void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
 cql_cleanup:
   cql_object_release(x);
 }
+```
 
 ### Properties and Arrays
 
@@ -2130,7 +2131,7 @@ it will rewrite property and array syntax into function calls.
 
 #### Specific Properties on objects
 
-The rewrite depends on the object type, and in particulur the "kind" designiation.  So
+The rewrite depends on the object type, and in particular the "kind" designation.  So
 for instance consider:
 
 ```
@@ -2163,7 +2164,7 @@ With those in place `cont.x := cont.x + 1` will be converted into this:
 CALL set_object_container_x(cont, get_object_container_x(cont) + 1);
 ```
 
-Importantly with this pattern you can control exactly which properties are availble.
+Importantly with this pattern you can control exactly which properties are available.
 missing properties will always give errors.  For instance `cont.y := 1;` results in `name not found 'y'`.
 
 This example uses `object` as the base type but it can be any type.  For instance if you have
@@ -2214,7 +2215,7 @@ CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1
 
 Array access is just like the open ended property form with two differences:
   * the type of the index can be anything you want it to be, not just text
-  * there can be as many indicies as you like
+  * there can be as many indices as you like
 
 For instance:
 
@@ -2275,7 +2276,7 @@ Finally, the `no check` version of the functions or procedures can also be used.
 use a var-arg list for instance in your arrays which might be interesting.  Variable indices can 
 be used in very flexible array builder forms.
 
-Another intersting aspect of the `no check` version of the APIs is that the calling convention for such
+Another interesting aspect of the `no check` version of the APIs is that the calling convention for such
 functions is a little different in C (in Lua it's the same).  In C the `no check` forms most common target
 is the `printf` function. But `printf` accepts C strings not CQL text objects.  This means any text argument
 must be converted to a normal C string before making the call.  But it also means that string literals
@@ -2299,9 +2300,10 @@ across any number of uses in your whole program, so there will only be one copy 
 This gives great economy for the flexible type case and it is actually why `no check` functions
 were added to the language, rounding out all the `no check` flavors.
 
-So, if targetting C, consider using `no check` functions and procedures for your getters and setters
-for maximum economy.
-
+So, if targeting C, consider using `no check` functions and procedures for your getters and setters
+for maximum economy.  If you also implement the functions on the C side as macros, or inline functions
+in your `cqlrt.h` path, then array and property access can be very economical.  There need
+not be any actual function calls by the time the code runs.
 
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -11102,7 +11104,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 26 11:45:27 PDT 2023
+Snapshot as of Tue Sep 26 12:44:48 PDT 2023
 
 ### Operators and Literals
 
@@ -17675,7 +17677,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep 26 11:45:27 PDT 2023
+Snapshot as of Tue Sep 26 12:44:48 PDT 2023
 
 ### Rules
 

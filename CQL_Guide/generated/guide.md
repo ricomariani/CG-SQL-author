@@ -2120,7 +2120,187 @@ void foo_user(cql_object_ref _Nullable *_Nonnull baz) {
 cql_cleanup:
   cql_object_release(x);
 }
+
+### Properties and Arrays
+
+CQL offers structured types in the form of cursors, but applications often need other
+structured types.  In the interest of not encumbering the language and runtime with whatever
+types given application might need, CQL offers a generic solution for properties and arrays where
+it will rewrite property and array syntax into function calls.
+
+#### Specific Properties on objects
+
+The rewrite depends on the object type, and in particulur the "kind" designiation.  So
+for instance consider:
+
 ```
+declare function create_container() create object<container> not null;
+let cont := create_container();
+cont.x := cont.x + 1;
+```
+
+For this to work we need a function that makes the container:
+
+```
+function create_container() create object<container>;
+```
+
+Now `cont.x` _might_ mean field access in a cursor or table access in a `select` expression. So,
+when it is seen, `cont.x` will be resolved in the usual ways. If these fail then CQL will look
+for a function or procedure called `set_object_container_x` to do setting and `get_object_container_x`
+to do getting.
+
+Like these maybe:
+
+```
+declare function get_object_container_x(self object<container> not null) int not null;
+declare proc set_object_container_x(self object<container> not null, value int not null);
+```
+
+With those in place `cont.x := cont.x + 1` will be converted into this:
+
+```
+CALL set_object_container_x(cont, get_object_container_x(cont) + 1);
+```
+
+Importantly with this pattern you can control exactly which properties are availble.
+missing properties will always give errors.  For instance `cont.y := 1;` results in `name not found 'y'`.
+
+This example uses `object` as the base type but it can be any type.  For instance if you have
+a type `integer<handle>` that identifies some storage based on the handle value, you can use the
+property pattern on this.  CQL does not care what the types are, so if property access is meaningful
+on your type then it can be supported.
+
+Additionally, the rewrite can happen in a SQL context or a native context.  The only difference is that
+in a SQL context you would need to create the appropriate SQLite UDF and declare it with
+`declare select function` rather than `declare function`.
+
+#### Open Ended Properties
+
+There is a second choice for properties, where the properties are open ended.  That is where
+the property name can be anything. If instead of the property specific functions above, we had created
+these more general functions:
+
+```
+declare function get_from_object_container(self object<container> not null, field text not null) int not null;
+declare proc set_in_object_container(self object<container> not null, field text not null, value int not null);
+```
+
+These functions have the desired property name as a parameter (`field`) and so they can work with any field.
+
+With these in place, `cont.y` is no longer an error.  We get these transforms:
+
+```
+CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1);
+CALL set_in_object_container(cont, 'y', 1);
+```
+
+Nearly the same, but more generic.  This is great if the properties are open-ended. Perhaps for a dictionary
+or something representing JSON. Anything like that.
+
+In fact, The property doesn't have to be a compile time constant.  If you use the array syntax:
+
+```
+cont['x'] := cont['x'] + 1;
+```
+
+You get exactly the same transform.
+
+```
+CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1);
+```
+
+#### Using Arrays in CQL
+
+Array access is just like the open ended property form with two differences:
+  * the type of the index can be anything you want it to be, not just text
+  * there can be as many indicies as you like
+
+For instance:
+
+```
+cont[1,2] := cont[3,4] + cont[5,6];
+```
+
+Could be supported by these functions:
+
+```
+declare function get_from_object_container(
+  self object<container> not null,
+  i int not null,
+  j int not null)
+    int not null;
+
+declare proc set_in_object_container(
+  self object<container> not null,
+  i int not null,
+  j int not null,
+  value int not null);
+```
+
+This results in:
+
+```
+CALL set_in_object_container(cont, 1, 2,
+  get_from_object_container(cont, 3, 4) +
+  get_from_object_container(cont, 5, 6));
+```
+
+This is a very simple transform that allows for the creation of any array-like behavior you might want.
+
+#### Notes On Implementation
+
+In addition to the function pattern shown above, you can use the "proc as func" form to get values, like so:
+
+```
+create proc get_from_object_container(self object<container>, field text not null, out value int not null) 
+begin
+  value := something;
+end;
+```
+
+And with this form you could write all of the property management or array management in CQL directly.
+
+However, it's often the case that you want to use native data structures to hold your things-with-properties
+or your arrays.  If that's the case, you can write them in C as usual, using the normal interface types
+to CQL that are defined in `cqlrt.h`.  The exact functions you need to implement will be emitted
+into the header file output for C.  For Lua, things are even easier, just write matching Lua functions
+in Lua.  It's all primitives or dictionaries in Lua.
+
+In C you could also implement some or all of the property reading functions as macros. You could
+add these macros to your copy of `cqlrt.h` (it's designed to be changed) or you could emit them with
+`@echo c, "#define stuff\n";`
+
+Finally, the `no check` version of the functions or procedures can also be used.  This will let you
+use a var-arg list for instance in your arrays which might be interesting.  Variable indices can 
+be used in very flexible array builder forms.
+
+Another intersting aspect of the `no check` version of the APIs is that the calling convention for such
+functions is a little different in C (in Lua it's the same).  In C the `no check` forms most common target
+is the `printf` function. But `printf` accepts C strings not CQL text objects.  This means any text argument
+must be converted to a normal C string before making the call.  But it also means that string literals
+pass through unchanged into the C!
+
+For instance:
+
+```
+   call printf("Hello world\n");
+```
+
+becomes:
+
+```
+   printf("Hello world\n");
+```
+
+So likewise, if your array or property getters are `no check` then `cont.x := 1;` becomes
+`set_in_object_container(cont, "x", 1)`.  Importantly the C string literal `"x"` will fold
+across any number of uses in your whole program, so there will only be one copy of the literal.
+This gives great economy for the flexible type case and it is actually why `no check` functions
+were added to the language, rounding out all the `no check` flavors.
+
+So, if targetting C, consider using `no check` functions and procedures for your getters and setters
+for maximum economy.
 
 
 <!---
@@ -3464,6 +3644,21 @@ select @columns(like Foo) from ...;
 select @columns(like Foo, like Bar) from ...;
 ```
 
+#### Subsets of Columns from shapes
+
+This pattern can be helpful for getting part of a shape.
+```
+-- get the a and b from the Foo shape only
+select @columns(like Foo(a,b))
+```
+
+This pattern is great for getting almost all of a shape (e.g. everything but the pk).
+
+```
+-- get the Foo shape except the a and b columns
+select @columns(like Foo(-a, -b))
+```
+
 #### Specific columns
 
 This form allows you to slice out a few columns without defining a shape, you
@@ -3500,8 +3695,8 @@ select @columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
 ```
 
 Of course this is all just sugar, so it all compiles to a column list with table
-qualifications -- but the syntax is very powerful.  You can easily narrowin a
-wide table, or fusing joins that share common keys.
+qualifications -- but the syntax is very powerful.  You can easily narrow a
+wide table, or fuse joins that share common keys without creating conflicts.
 
 ```
 -- just the Foo columns
@@ -10907,7 +11102,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Mon Sep 25 18:49:12 PDT 2023
+Snapshot as of Tue Sep 26 11:45:27 PDT 2023
 
 ### Operators and Literals
 
@@ -17480,7 +17675,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Mon Sep 25 18:49:12 PDT 2023
+Snapshot as of Tue Sep 26 11:45:27 PDT 2023
 
 ### Rules
 

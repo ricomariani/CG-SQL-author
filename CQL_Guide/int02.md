@@ -227,7 +227,7 @@ Note that `CSTR` is simply an alias for `const char *`.  `CSTR` is used extensiv
 ```c
 typedef struct sem_node {
   sem_t sem_type;                   // core type plus flags
-  CSTR name;                        // for named expressions in select columns, etc.
+  CSTR name;                        // for named expressions in select expression, etc.
   CSTR kind;                        // the Foo in object<Foo>, not a variable or column name
   CSTR error;                       // error text for test output, not used otherwise
   struct sem_struct *sptr;          // encoded struct if any

@@ -875,7 +875,7 @@ AST(or)</code></pre>
 <p>Note that <code>CSTR</code> is simply an alias for <code>const char *</code>. <code>CSTR</code> is used extensively in the codebase for brevity.</p>
 <div class="sourceCode" id="cb37"><pre class="sourceCode c"><code class="sourceCode c"><a class="sourceLine" id="cb37-1" title="1"><span class="kw">typedef</span> <span class="kw">struct</span> sem_node {</a>
 <a class="sourceLine" id="cb37-2" title="2">  sem_t sem_type;                   <span class="co">// core type plus flags</span></a>
-<a class="sourceLine" id="cb37-3" title="3">  CSTR name;                        <span class="co">// for named expressions in select columns, etc.</span></a>
+<a class="sourceLine" id="cb37-3" title="3">  CSTR name;                        <span class="co">// for named expressions in select expression, etc.</span></a>
 <a class="sourceLine" id="cb37-4" title="4">  CSTR kind;                        <span class="co">// the Foo in object&lt;Foo&gt;, not a variable or column name</span></a>
 <a class="sourceLine" id="cb37-5" title="5">  CSTR error;                       <span class="co">// error text for test output, not used otherwise</span></a>
 <a class="sourceLine" id="cb37-6" title="6">  <span class="kw">struct</span> sem_struct *sptr;          <span class="co">// encoded struct if any</span></a>

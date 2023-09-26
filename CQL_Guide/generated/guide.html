@@ -714,10 +714,10 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><a href="#cql0468-attributecqlshared_fragment-may-only-be-placed-on-a-create-proc-statement-proc_name">CQL0468: <span class="citation" data-cites="attribute">@attribute</span>(cql:shared_fragment) may only be placed on a CREATE PROC statement ‘proc_name’</a></li>
 <li><a href="#cql0469-tableview-is-already-deleted-name">CQL0469: table/view is already deleted ‘name’</a></li>
 <li><a href="#cql0470-operation-is-only-available-for-types-with-a-declared-type-kind-like-objectsomething-operator">CQL0470: operation is only available for types with a declared type kind like <code>object&lt;something&gt;</code> ‘operator’</a></li>
-<li><a href="#cql0471-available-for-re-use">CQL0471 available for re-use</a></li>
+<li><a href="#cql0471-a-top-level-equality-is-almost-certainly-an-error-is-assignment">CQL0471: a top level equality is almost certainly an error, ‘:=’ is assignment</a></li>
 <li><a href="#cql0472-tableview-is-already-unsubscribed-name">CQL0472: table/view is already unsubscribed ‘name’</a></li>
 <li><a href="#cql0473-unsub-is-invalid-because-the-tableview-is-still-used-by-name">CQL0473: <span class="citation" data-cites="unsub">@unsub</span> is invalid because the table/view is still used by ‘name’</a></li>
-<li><a href="#cql0474-available-for-re-use">CQL0474 available for re-use</a></li>
+<li><a href="#cql0474-when-appears-in-an-expression-list-there-can-be-nothing-else-in-the-list">CQL0474: when ’*’ appears in an expression list there can be nothing else in the list</a></li>
 <li><a href="#cql0475-available-for-re-use">CQL0475 available for re-use</a></li>
 <li><a href="#cql0476-available-for-re-use">CQL0476 available for re-use</a></li>
 <li><a href="#cql0477-interface-name-conflicts-with-func-name-name">CQL0477: interface name conflicts with func name ‘name’</a></li>
@@ -2983,45 +2983,45 @@ UNARY:          ~  -</code></pre>
 <h4 id="columns-from-a-join-table-or-tables">Columns from a join table or tables</h4>
 <p>This is the simplest form, it’s just like <code>T.*</code>:</p>
 <pre><code>-- same as A.*
-select columns(A) from ...;
+select @columns(A) from ...;
 
 -- same as A.*, B.*
-select columns(A, B) from ...;</code></pre>
+select @columns(A, B) from ...;</code></pre>
 <h4 id="columns-from-a-particular-joined-table-that-match-a-shape">Columns from a particular joined table that match a shape</h4>
 <p>This allows you to choose some of the columns of one table of the FROM clause.</p>
 <pre><code>-- the columns of A that match the shape Foo
-select columns(A like Foo) from ...;
+select @columns(A like Foo) from ...;
 
 -- get the Foo shape from A and the Bar shape from B
-select columns(A like Foo, B like Bar) from ...;</code></pre>
+select @columns(A like Foo, B like Bar) from ...;</code></pre>
 <h4 id="columns-from-any-that-match-a-shape-from-anywhere-in-the-from">Columns from any that match a shape, from anywhere in the FROM</h4>
 <p>Here we do not specify a particular table that contains the columns, the could come from any of the tables in the FROM clause.</p>
 <pre><code>--- get the Foo shape from anywhere in the join
-select columns(like Foo) from ...;
+select @columns(like Foo) from ...;
 
 -- get the Foo and Bar shapes, from anywhere in the join
-select columns(like Foo, like Bar) from ...;</code></pre>
+select @columns(like Foo, like Bar) from ...;</code></pre>
 <h4 id="specific-columns">Specific columns</h4>
 <p>This form allows you to slice out a few columns without defining a shape, you simply list the exact columns you want.</p>
 <pre><code>-- T1.x and T2.y plus the Foo shape
-select columns(T1.x, T2.y, like Foo) from ...;</code></pre>
+select @columns(T1.x, T2.y, like Foo) from ...;</code></pre>
 <h4 id="distinct-columns">Distinct columns</h4>
 <p>Its often the case that there are duplicate column names in the <code>FROM</code> clause. For instance, you could join <code>A</code> to <code>B</code> with both having a column <code>pk</code>. The final result set can only have one column named <code>pk</code>, the distinct clause helps you to get distinct column names. In this context <code>distinct</code> is about column names, not values.</p>
 <pre><code>-- removes duplicate column names
 -- e.g. there will be one copy of &#39;pk&#39;
-select columns(distinct A, B) from A join B using(pk);
+select @columns(distinct A, B) from A join B using(pk);
 
 -- if both Foo and Bar have an (e.g.) &#39;id&#39; field you only get one copy
-select columns(distinct like Foo, like Bar) from ...;</code></pre>
+select @columns(distinct like Foo, like Bar) from ...;</code></pre>
 <p>If a specific column is mentioned it is always included, but later expressions that are not a specific column will avoid that column name.</p>
 <pre><code>-- if F or B has an x it won&#39;t appear again, just T.x
-select columns(distinct T.x, F like Foo, B like Bar) from F, B ..;</code></pre>
+select @columns(distinct T.x, F like Foo, B like Bar) from F, B ..;</code></pre>
 <p>Of course this is all just sugar, so it all compiles to a column list with table qualifications – but the syntax is very powerful. You can easily narrowin a wide table, or fusing joins that share common keys.</p>
 <pre><code>-- just the Foo columns
-select columns(like Foo) from Superset_Of_Foo_From_Many_Joins_Even;
+select @columns(like Foo) from Superset_Of_Foo_From_Many_Joins_Even;
 
 -- only one copy of &#39;pk&#39;
-select columns(distinct A,B,C) from
+select @columns(distinct A,B,C) from
   A join B using (pk) join C using (pk);</code></pre>
 <p>And of course you can define shapes however you like and then use them to slice off column chucks of your choice. There are many ways to build up shapes from other shapes. For instance, you can declare procedures that return the shape you want and never actually create the procedure – a pattern is very much like a shape “typedef”. E.g.</p>
 <pre><code>declare proc shape1() (x integer, y real, z text);
@@ -7202,10 +7202,10 @@ END;</code></pre>
 Of course any of the usual cursor building forms can be used to power your blob creation, you just do one serialization at the end. The above is assembling a blob from arguments but you could equally make the blob from data.</p>
 <div class="sourceCode" id="cb462"><pre class="sourceCode sql"><code class="sourceCode sql"><a class="sourceLine" id="cb462-1" title="1"><span class="kw">create</span> proc get_news_info(id_ <span class="dt">long</span> <span class="kw">not</span> <span class="kw">null</span>, <span class="kw">out</span> result <span class="dt">blob</span><span class="op">&lt;</span>news_info<span class="op">&gt;</span>)</a>
 <a class="sourceLine" id="cb462-2" title="2"><span class="cf">begin</span></a>
-<a class="sourceLine" id="cb462-3" title="3">   <span class="co">-- use our columns sugar syntax for getting just news_info columns from</span></a>
+<a class="sourceLine" id="cb462-3" title="3">   <span class="co">-- use our @columns sugar syntax for getting just news_info columns from</span></a>
 <a class="sourceLine" id="cb462-4" title="4">   <span class="co">-- a table with potentially lots of stuff (or an error if it&#39;s missing columns)</span></a>
 <a class="sourceLine" id="cb462-5" title="5">   <span class="kw">declare</span> c <span class="kw">cursor</span> <span class="cf">for</span></a>
-<a class="sourceLine" id="cb462-6" title="6">     <span class="kw">select</span> <span class="kw">columns</span>(<span class="kw">like</span> news_info) <span class="kw">from</span> some_source_of_info <span class="kw">where</span> info.<span class="kw">id</span> <span class="op">=</span> id_;</a>
+<a class="sourceLine" id="cb462-6" title="6">     <span class="kw">select</span> @columns(<span class="kw">like</span> news_info) <span class="kw">from</span> some_source_of_info <span class="kw">where</span> info.<span class="kw">id</span> <span class="op">=</span> id_;</a>
 <a class="sourceLine" id="cb462-7" title="7">   fetch c;</a>
 <a class="sourceLine" id="cb462-8" title="8">   <span class="kw">set</span> result <span class="kw">from</span> <span class="kw">cursor</span> c;</a>
 <a class="sourceLine" id="cb462-9" title="9"><span class="cf">END</span>;</a></code></pre></div>
@@ -7946,7 +7946,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat Sep 23 20:43:50 PDT 2023</p>
+<p>Snapshot as of Mon Sep 25 18:49:12 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -7976,42 +7976,42 @@ REALLIT /* floating point literal */</code></pre>
 <pre><code>&quot;@ATTRIBUTE&quot; &quot;@BEGIN_SCHEMA_REGION&quot; &quot;@BLOB_CREATE_KEY&quot;
 &quot;@BLOB_CREATE_VAL&quot; &quot;@BLOB_GET_KEY&quot; &quot;@BLOB_GET_KEY_TYPE&quot;
 &quot;@BLOB_GET_VAL&quot; &quot;@BLOB_GET_VAL_TYPE&quot; &quot;@BLOB_UPDATE_KEY&quot;
-&quot;@BLOB_UPDATE_VAL&quot; &quot;@CREATE&quot; &quot;@DECLARE_DEPLOYABLE_REGION&quot;
-&quot;@DECLARE_SCHEMA_REGION&quot; &quot;@DELETE&quot; &quot;@DUMMY_SEED&quot; &quot;@ECHO&quot;
-&quot;@EMIT_CONSTANTS&quot; &quot;@EMIT_ENUMS&quot; &quot;@EMIT_GROUP&quot;
-&quot;@END_SCHEMA_REGION&quot; &quot;@ENFORCE_NORMAL&quot; &quot;@ENFORCE_POP&quot;
-&quot;@ENFORCE_PUSH&quot; &quot;@ENFORCE_RESET&quot; &quot;@ENFORCE_STRICT&quot;
-&quot;@EPONYMOUS&quot; &quot;@FILE&quot; &quot;@PREVIOUS_SCHEMA&quot; &quot;@PROC&quot; &quot;@RC&quot;
-&quot;@RECREATE&quot; &quot;@SCHEMA_AD_HOC_MIGRATION&quot;
-&quot;@SCHEMA_UPGRADE_SCRIPT&quot; &quot;@SCHEMA_UPGRADE_VERSION&quot;
-&quot;@SENSITIVE&quot; &quot;@UNSUB&quot; &quot;ABORT&quot; &quot;ACTION&quot; &quot;ADD&quot; &quot;AFTER&quot; &quot;ALL&quot;
-&quot;ALTER&quot; &quot;ARGUMENTS&quot; &quot;AS&quot; &quot;ASC&quot; &quot;AUTOINCREMENT&quot; &quot;BEFORE&quot;
-&quot;BEGIN&quot; &quot;BLOB&quot; &quot;BY&quot; &quot;CALL&quot; &quot;CASCADE&quot; &quot;CASE&quot; &quot;CAST&quot; &quot;CATCH&quot;
-&quot;CHECK&quot; &quot;CLOSE&quot; &quot;COLUMN&quot; &quot;COLUMNS&quot; &quot;COMMIT&quot; &quot;CONST&quot;
-&quot;CONSTRAINT&quot; &quot;CONTEXT COLUMN&quot; &quot;CONTEXT TYPE&quot; &quot;CONTINUE&quot;
-&quot;CREATE&quot; &quot;CROSS&quot; &quot;CURRENT ROW&quot; &quot;CURSOR HAS ROW&quot; &quot;CURSOR&quot;
-&quot;DECLARE&quot; &quot;DEFAULT&quot; &quot;DEFERRABLE&quot; &quot;DEFERRED&quot; &quot;DELETE&quot; &quot;DESC&quot;
-&quot;DISTINCT&quot; &quot;DISTINCTROW&quot; &quot;DO&quot; &quot;DROP&quot; &quot;ELSE IF&quot; &quot;ELSE&quot;
-&quot;ENCODE&quot; &quot;END&quot; &quot;ENUM&quot; &quot;EXCLUDE CURRENT ROW&quot; &quot;EXCLUDE GROUP&quot;
-&quot;EXCLUDE NO OTHERS&quot; &quot;EXCLUDE TIES&quot; &quot;EXCLUSIVE&quot; &quot;EXISTS&quot;
-&quot;EXPLAIN&quot; &quot;FAIL&quot; &quot;FETCH&quot; &quot;FILTER&quot; &quot;FIRST&quot; &quot;FOLLOWING&quot; &quot;FOR
-EACH ROW&quot; &quot;FOR&quot; &quot;FOREIGN&quot; &quot;FROM BLOB&quot; &quot;FROM&quot; &quot;FUNC&quot;
-&quot;FUNCTION&quot; &quot;GROUP&quot; &quot;GROUPS&quot; &quot;HAVING&quot; &quot;HIDDEN&quot; &quot;IF&quot; &quot;IGNORE&quot;
-&quot;IMMEDIATE&quot; &quot;INDEX&quot; &quot;INITIALLY&quot; &quot;INNER&quot; &quot;INOUT&quot; &quot;INSERT&quot;
-&quot;INSTEAD&quot; &quot;INT&quot; &quot;INTEGER&quot; &quot;INTERFACE&quot; &quot;INTO&quot; &quot;JOIN&quot; &quot;KEY&quot;
-&quot;LAST&quot; &quot;LEAVE&quot; &quot;LEFT&quot; &quot;LET&quot; &quot;LIMIT&quot; &quot;LONG&quot; &quot;LONG_INT&quot;
-&quot;LONG_INTEGER&quot; &quot;LOOP&quot; &quot;NO&quot; &quot;NOT DEFERRABLE&quot; &quot;NOTHING&quot;
-&quot;NULL&quot; &quot;NULLS&quot; &quot;OBJECT&quot; &quot;OF&quot; &quot;OFFSET&quot; &quot;ON CONFLICT&quot; &quot;ON&quot;
-&quot;OPEN&quot; &quot;ORDER&quot; &quot;OUT&quot; &quot;OUTER&quot; &quot;OVER&quot; &quot;PARTITION&quot; &quot;PRECEDING&quot;
-&quot;PRIMARY&quot; &quot;PRIVATE&quot; &quot;PROC&quot; &quot;PROCEDURE&quot; &quot;QUERY PLAN&quot; &quot;RAISE&quot;
-&quot;RANGE&quot; &quot;REAL&quot; &quot;RECURSIVE&quot; &quot;REFERENCES&quot; &quot;RELEASE&quot; &quot;RENAME&quot;
-&quot;REPLACE&quot; &quot;RESTRICT&quot; &quot;RETURN&quot; &quot;RIGHT&quot; &quot;ROLLBACK&quot; &quot;ROWID&quot;
-&quot;ROWS&quot; &quot;SAVEPOINT&quot; &quot;SELECT&quot; &quot;SET&quot; &quot;SIGN FUNCTION&quot;
-&quot;STATEMENT&quot; &quot;SWITCH&quot; &quot;TABLE&quot; &quot;TEMP&quot; &quot;TEXT&quot; &quot;THEN&quot; &quot;THROW&quot;
-&quot;TO&quot; &quot;TRANSACTION&quot; &quot;TRIGGER&quot; &quot;TRY&quot; &quot;TYPE&quot; &quot;TYPE_CHECK&quot;
-&quot;UNBOUNDED&quot; &quot;UNIQUE&quot; &quot;UPDATE&quot; &quot;UPSERT&quot; &quot;USING&quot; &quot;VALUES&quot;
-&quot;VAR&quot; &quot;VIEW&quot; &quot;VIRTUAL&quot; &quot;WHEN&quot; &quot;WHERE&quot; &quot;WHILE&quot; &quot;WINDOW&quot;
-&quot;WITH&quot; &quot;WITHOUT&quot;</code></pre>
+&quot;@BLOB_UPDATE_VAL&quot; &quot;@COLUMNS&quot; &quot;@CREATE&quot;
+&quot;@DECLARE_DEPLOYABLE_REGION&quot; &quot;@DECLARE_SCHEMA_REGION&quot;
+&quot;@DELETE&quot; &quot;@DUMMY_SEED&quot; &quot;@ECHO&quot; &quot;@EMIT_CONSTANTS&quot;
+&quot;@EMIT_ENUMS&quot; &quot;@EMIT_GROUP&quot; &quot;@END_SCHEMA_REGION&quot;
+&quot;@ENFORCE_NORMAL&quot; &quot;@ENFORCE_POP&quot; &quot;@ENFORCE_PUSH&quot;
+&quot;@ENFORCE_RESET&quot; &quot;@ENFORCE_STRICT&quot; &quot;@EPONYMOUS&quot; &quot;@FILE&quot;
+&quot;@PREVIOUS_SCHEMA&quot; &quot;@PROC&quot; &quot;@RC&quot; &quot;@RECREATE&quot;
+&quot;@SCHEMA_AD_HOC_MIGRATION&quot; &quot;@SCHEMA_UPGRADE_SCRIPT&quot;
+&quot;@SCHEMA_UPGRADE_VERSION&quot; &quot;@SENSITIVE&quot; &quot;@UNSUB&quot; &quot;ABORT&quot;
+&quot;ACTION&quot; &quot;ADD&quot; &quot;AFTER&quot; &quot;ALL&quot; &quot;ALTER&quot; &quot;ARGUMENTS&quot; &quot;AS&quot; &quot;ASC&quot;
+&quot;AUTOINCREMENT&quot; &quot;BEFORE&quot; &quot;BEGIN&quot; &quot;BLOB&quot; &quot;BY&quot; &quot;CALL&quot;
+&quot;CASCADE&quot; &quot;CASE&quot; &quot;CAST&quot; &quot;CATCH&quot; &quot;CHECK&quot; &quot;CLOSE&quot; &quot;COLUMN&quot;
+&quot;COMMIT&quot; &quot;CONST&quot; &quot;CONSTRAINT&quot; &quot;CONTEXT COLUMN&quot; &quot;CONTEXT
+TYPE&quot; &quot;CONTINUE&quot; &quot;CREATE&quot; &quot;CROSS&quot; &quot;CURRENT ROW&quot; &quot;CURSOR HAS
+ROW&quot; &quot;CURSOR&quot; &quot;DECLARE&quot; &quot;DEFAULT&quot; &quot;DEFERRABLE&quot; &quot;DEFERRED&quot;
+&quot;DELETE&quot; &quot;DESC&quot; &quot;DISTINCT&quot; &quot;DISTINCTROW&quot; &quot;DO&quot; &quot;DROP&quot; &quot;ELSE
+IF&quot; &quot;ELSE&quot; &quot;ENCODE&quot; &quot;END&quot; &quot;ENUM&quot; &quot;EXCLUDE CURRENT ROW&quot;
+&quot;EXCLUDE GROUP&quot; &quot;EXCLUDE NO OTHERS&quot; &quot;EXCLUDE TIES&quot;
+&quot;EXCLUSIVE&quot; &quot;EXISTS&quot; &quot;EXPLAIN&quot; &quot;FAIL&quot; &quot;FETCH&quot; &quot;FILTER&quot;
+&quot;FIRST&quot; &quot;FOLLOWING&quot; &quot;FOR EACH ROW&quot; &quot;FOR&quot; &quot;FOREIGN&quot; &quot;FROM
+BLOB&quot; &quot;FROM&quot; &quot;FUNC&quot; &quot;FUNCTION&quot; &quot;GROUP&quot; &quot;GROUPS&quot; &quot;HAVING&quot;
+&quot;HIDDEN&quot; &quot;IF&quot; &quot;IGNORE&quot; &quot;IMMEDIATE&quot; &quot;INDEX&quot; &quot;INITIALLY&quot;
+&quot;INNER&quot; &quot;INOUT&quot; &quot;INSERT&quot; &quot;INSTEAD&quot; &quot;INT&quot; &quot;INTEGER&quot;
+&quot;INTERFACE&quot; &quot;INTO&quot; &quot;JOIN&quot; &quot;KEY&quot; &quot;LAST&quot; &quot;LEAVE&quot; &quot;LEFT&quot; &quot;LET&quot;
+&quot;LIMIT&quot; &quot;LONG&quot; &quot;LONG_INT&quot; &quot;LONG_INTEGER&quot; &quot;LOOP&quot; &quot;NO&quot; &quot;NOT
+DEFERRABLE&quot; &quot;NOTHING&quot; &quot;NULL&quot; &quot;NULLS&quot; &quot;OBJECT&quot; &quot;OF&quot; &quot;OFFSET&quot;
+&quot;ON CONFLICT&quot; &quot;ON&quot; &quot;OPEN&quot; &quot;ORDER&quot; &quot;OUT&quot; &quot;OUTER&quot; &quot;OVER&quot;
+&quot;PARTITION&quot; &quot;PRECEDING&quot; &quot;PRIMARY&quot; &quot;PRIVATE&quot; &quot;PROC&quot;
+&quot;PROCEDURE&quot; &quot;QUERY PLAN&quot; &quot;RAISE&quot; &quot;RANGE&quot; &quot;REAL&quot; &quot;RECURSIVE&quot;
+&quot;REFERENCES&quot; &quot;RELEASE&quot; &quot;RENAME&quot; &quot;REPLACE&quot; &quot;RESTRICT&quot;
+&quot;RETURN&quot; &quot;RIGHT&quot; &quot;ROLLBACK&quot; &quot;ROWID&quot; &quot;ROWS&quot; &quot;SAVEPOINT&quot;
+&quot;SELECT&quot; &quot;SET&quot; &quot;SIGN FUNCTION&quot; &quot;STATEMENT&quot; &quot;SWITCH&quot; &quot;TABLE&quot;
+&quot;TEMP&quot; &quot;TEXT&quot; &quot;THEN&quot; &quot;THROW&quot; &quot;TO&quot; &quot;TRANSACTION&quot; &quot;TRIGGER&quot;
+&quot;TRY&quot; &quot;TYPE&quot; &quot;TYPE_CHECK&quot; &quot;UNBOUNDED&quot; &quot;UNIQUE&quot; &quot;UPDATE&quot;
+&quot;UPSERT&quot; &quot;USING&quot; &quot;VALUES&quot; &quot;VAR&quot; &quot;VIEW&quot; &quot;VIRTUAL&quot; &quot;WHEN&quot;
+&quot;WHERE&quot; &quot;WHILE&quot; &quot;WINDOW&quot; &quot;WITH&quot; &quot;WITHOUT&quot;</code></pre>
 <h3 id="rules">Rules</h3>
 <p>Note that in many cases the grammar is more generous than the overall language and errors have to be checked on top of this, often this is done on purpose because even when it’s possible it might be very inconvenient to do checks with syntax. For example the grammar cannot enforce non-duplicate ids in id lists, but it could enforce non-duplicate attributes in attribute lists. It chooses to do neither as they are easily done with semantic validation. Thus the grammar is not the final authority on what constitutes a valid program but it’s a good start.</p>
 <pre><code>
@@ -8452,6 +8452,7 @@ name:
   | &quot;ADD&quot;
   | &quot;VIEW&quot;
   | &quot;INDEX&quot;
+  | &quot;COLUMN&quot;
   ;
 
 opt_name:
@@ -8719,8 +8720,8 @@ shape_arguments:
   ;
 
 column_calculation:
-  &quot;COLUMNS&quot; &#39;(&#39; col_calcs &#39;)&#39;
-  | &quot;COLUMNS&quot; &#39;(&#39; &quot;DISTINCT&quot; col_calcs &#39;)&#39;
+  &quot;@COLUMNS&quot; &#39;(&#39; col_calcs &#39;)&#39;
+  | &quot;@COLUMNS&quot; &#39;(&#39; &quot;DISTINCT&quot; col_calcs &#39;)&#39;
   ;
 
 col_calcs:
@@ -11905,7 +11906,8 @@ select sum(...) filter(where ...) over (...)</code></pre>
 </blockquote>
 <p>Using the dot (.) operator can also map to <code>set_object_foo</code> or <code>get_object_foo</code> and likewise requires a type kind.</p>
 <hr />
-<h3 id="cql0471-available-for-re-use">CQL0471 available for re-use</h3>
+<h3 id="cql0471-a-top-level-equality-is-almost-certainly-an-error-is-assignment">CQL0471: a top level equality is almost certainly an error, ‘:=’ is assignment</h3>
+<p>Expressions can be top level statements and a statement like <code>x = 5;</code> is technically legal but this is almost certainly supposed to be <code>x := 5</code>. To avoid that problem we make the former an error. Note that in SQLite and CQL <code>=</code> and <code>==</code> are the same thing. <code>:=</code> is assignment.</p>
 <hr />
 <h3 id="cql0472-tableview-is-already-unsubscribed-name">CQL0472: table/view is already unsubscribed ‘name’</h3>
 <p>In an <span class="citation" data-cites="unsub">@unsub</span> directive, the indicated table/view has already been unsubscribed. It doesn’t need another unsubscription.</p>
@@ -11913,7 +11915,9 @@ select sum(...) filter(where ...) over (...)</code></pre>
 <h3 id="cql0473-unsub-is-invalid-because-the-tableview-is-still-used-by-name">CQL0473: <span class="citation" data-cites="unsub">@unsub</span> is invalid because the table/view is still used by ‘name’</h3>
 <p>This error indicates that you are attempting to <span class="citation" data-cites="unsub">@unsub</span> a table/view while there are still other tables/views that refer to it (e.g. by FK). You must <span class="citation" data-cites="unsub">@unsub</span> all of those as well in order to safely <span class="citation" data-cites="unsub">@unsub</span> the present table/view. All such dependencies will be listed. Note that some of those might, in turn, have the same issue. In short, a whole subtree has to be removed in order to do this operation safely.</p>
 <hr />
-<h3 id="cql0474-available-for-re-use">CQL0474 available for re-use</h3>
+<h3 id="cql0474-when-appears-in-an-expression-list-there-can-be-nothing-else-in-the-list">CQL0474: when ’*’ appears in an expression list there can be nothing else in the list</h3>
+<p>For generality <code>*</code> can appear in many expression contexts but when it is used it must appear by itself.</p>
+<p>For instance, <code>select *, * from foo</code> is not supported.</p>
 <hr />
 <h3 id="cql0475-available-for-re-use">CQL0475 available for re-use</h3>
 <hr />
@@ -12080,7 +12084,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat Sep 23 20:43:50 PDT 2023</p>
+<p>Snapshot as of Mon Sep 25 18:49:12 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 

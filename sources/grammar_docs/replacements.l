@@ -219,6 +219,7 @@ AT_BLOB_CREATE_KEY                    { put_quoted("@BLOB_CREATE_KEY"); }
 AT_BLOB_CREATE_VAL                    { put_quoted("@BLOB_CREATE_VAL"); }
 AT_BLOB_UPDATE_KEY                    { put_quoted("@BLOB_UPDATE_KEY"); }
 AT_BLOB_UPDATE_VAL                    { put_quoted("@BLOB_UPDATE_VAL"); }
+AT_COLUMNS                            { put_quoted("@COLUMNS"); }
 AT_CREATE                             { put_quoted("@CREATE"); }
 AT_DECLARE_DEPLOYABLE_REGION          { put_quoted("@DECLARE_DEPLOYABLE_REGION"); }
 AT_DECLARE_SCHEMA_REGION              { put_quoted("@DECLARE_SCHEMA_REGION"); }

@@ -6,7 +6,7 @@
  */
 
 
-// Snapshot as of Sat Sep 23 20:43:50 2023
+// Snapshot as of Mon Sep 25 18:49:12 2023
 
 
 const PREC = {
@@ -87,7 +87,7 @@ module.exports = grammar({
     indexed_column: $ => seq($.expr, optional($.opt_asc_desc)),
     indexed_columns: $ => choice($.indexed_column, seq($.indexed_column, ',', $.indexed_columns)),
     create_index_stmt: $ => seq($.CREATE, optional($.opt_unique), $.INDEX, optional($.opt_if_not_exists), $.name, $.ON, $.name, '(', $.indexed_columns, ')', optional($.opt_where), optional($.opt_delete_version_attr)),
-    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST, $.ADD, $.VIEW, $.INDEX),
+    name: $ => choice($.ID, $.TEXT, $.TRIGGER, $.ROWID, $.REPLACE, $.KEY, $.VIRTUAL, $.TYPE, $.HIDDEN, $.PRIVATE, $.FIRST, $.LAST, $.ADD, $.VIEW, $.INDEX, $.COLUMN),
     opt_name: $ => $.name,
     name_list: $ => choice($.name, seq($.name, ',', $.name_list)),
     opt_name_list: $ => $.name_list,
@@ -129,7 +129,7 @@ module.exports = grammar({
     arg_list: $ => $.arg_exprs,
     expr_list: $ => choice($.expr, seq($.expr, ',', $.expr_list)),
     shape_arguments: $ => choice(seq($.FROM, $.name), seq($.FROM, $.name, $.shape_def), seq($.FROM, $.ARGUMENTS), seq($.FROM, $.ARGUMENTS, $.shape_def)),
-    column_calculation: $ => choice(seq($.COLUMNS, '(', $.col_calcs, ')'), seq($.COLUMNS, '(', $.DISTINCT, $.col_calcs, ')')),
+    column_calculation: $ => choice(seq($.AT_COLUMNS, '(', $.col_calcs, ')'), seq($.AT_COLUMNS, '(', $.DISTINCT, $.col_calcs, ')')),
     col_calcs: $ => choice($.col_calc, seq($.col_calc, ',', $.col_calcs)),
     col_calc: $ => choice($.name, $.shape_def, seq($.name, $.shape_def), seq($.name, '.', $.name)),
     cte_tables: $ => choice($.cte_table, seq($.cte_table, ',', $.cte_tables)),
@@ -419,6 +419,7 @@ module.exports = grammar({
     FIRST: $ => CI('first'),
     LAST: $ => CI('last'),
     ADD: $ => CI('add'),
+    COLUMN: $ => CI('column'),
     AUTOINCREMENT: $ => CI('autoincrement'),
     COLLATE: $ => CI('collate'),
     AT_SENSITIVE: $ => CI('@sensitive'),
@@ -459,7 +460,7 @@ module.exports = grammar({
     -=: $ => CI('-='),
     WHEN: $ => CI('when'),
     THEN: $ => CI('then'),
-    COLUMNS: $ => CI('columns'),
+    AT_COLUMNS: $ => CI('@columns'),
     WITH: $ => CI('with'),
     RECURSIVE: $ => CI('recursive'),
     SELECT: $ => CI('select'),
@@ -540,7 +541,6 @@ module.exports = grammar({
     RELEASE: $ => CI('release'),
     AT_ECHO: $ => CI('@echo'),
     ALTER: $ => CI('alter'),
-    COLUMN: $ => CI('column'),
     BEFORE: $ => CI('before'),
     AFTER: $ => CI('after'),
     INSTEAD: $ => CI('instead'),

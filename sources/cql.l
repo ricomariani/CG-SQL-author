@@ -318,7 +318,7 @@ TYPE_CHECK                   { return TYPE_CHECK; }
 ALTER                        { return ALTER; }
 RENAME                       { return RENAME; }
 COLUMN                       { return COLUMN; }
-COLUMNS                      { return COLUMNS; }
+@COLUMNS                     { return AT_COLUMNS; }
 ADD                          { return ADD; }
 ARGUMENTS                    { return ARGUMENTS; }
 RETURN                       { return RETURN; }

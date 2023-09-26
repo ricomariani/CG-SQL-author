@@ -1605,15 +1605,15 @@ select * from bar, tar;
 
 select * from (call foo() using stuff as source);
 
-select columns(like foo) from foo2;
+select @columns(like foo) from foo2;
 
-select columns(like foo, y like bar) from foo2;
+select @columns(like foo, y like bar) from foo2;
 
-select columns(like foo, y like bar) from foo2;
+select @columns(like foo, y like bar) from foo2;
 
-select columns(distinct like foo, y like bar) from foo2;
+select @columns(distinct like foo, y like bar) from foo2;
 
-select columns(distinct a.b, like bar) from foo2;
+select @columns(distinct a.b, like bar) from foo2;
 
 create table T (x int, y int);
 create table U (u text, v text);

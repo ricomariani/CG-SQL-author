@@ -3433,10 +3433,10 @@ This is the simplest form, it's just like `T.*`:
 
 ```
 -- same as A.*
-select columns(A) from ...;
+select @columns(A) from ...;
 
 -- same as A.*, B.*
-select columns(A, B) from ...;
+select @columns(A, B) from ...;
 ```
 
 #### Columns from a particular joined table that match a shape
@@ -3445,10 +3445,10 @@ This allows you to choose some of the columns of one table of the FROM clause.
 
 ```
 -- the columns of A that match the shape Foo
-select columns(A like Foo) from ...;
+select @columns(A like Foo) from ...;
 
 -- get the Foo shape from A and the Bar shape from B
-select columns(A like Foo, B like Bar) from ...;
+select @columns(A like Foo, B like Bar) from ...;
 ```
 
 #### Columns from any that match a shape, from anywhere in the FROM
@@ -3458,10 +3458,10 @@ the could come from any of the tables in the FROM clause.
 
 ```
 --- get the Foo shape from anywhere in the join
-select columns(like Foo) from ...;
+select @columns(like Foo) from ...;
 
 -- get the Foo and Bar shapes, from anywhere in the join
-select columns(like Foo, like Bar) from ...;
+select @columns(like Foo, like Bar) from ...;
 ```
 
 #### Specific columns
@@ -3471,7 +3471,7 @@ simply list the exact columns you want.
 
 ```
 -- T1.x and T2.y plus the Foo shape
-select columns(T1.x, T2.y, like Foo) from ...;
+select @columns(T1.x, T2.y, like Foo) from ...;
 ```
 
 #### Distinct columns
@@ -3485,10 +3485,10 @@ column names, not values.
 ```
 -- removes duplicate column names
 -- e.g. there will be one copy of 'pk'
-select columns(distinct A, B) from A join B using(pk);
+select @columns(distinct A, B) from A join B using(pk);
 
 -- if both Foo and Bar have an (e.g.) 'id' field you only get one copy
-select columns(distinct like Foo, like Bar) from ...;
+select @columns(distinct like Foo, like Bar) from ...;
 ```
 
 If a specific column is mentioned it is always included, but later expressions
@@ -3496,7 +3496,7 @@ that are not a specific column will avoid that column name.
 
 ```
 -- if F or B has an x it won't appear again, just T.x
-select columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
+select @columns(distinct T.x, F like Foo, B like Bar) from F, B ..;
 ```
 
 Of course this is all just sugar, so it all compiles to a column list with table
@@ -3505,10 +3505,10 @@ wide table, or fusing joins that share common keys.
 
 ```
 -- just the Foo columns
-select columns(like Foo) from Superset_Of_Foo_From_Many_Joins_Even;
+select @columns(like Foo) from Superset_Of_Foo_From_Many_Joins_Even;
 
 -- only one copy of 'pk'
-select columns(distinct A,B,C) from
+select @columns(distinct A,B,C) from
   A join B using (pk) join C using (pk);
 ```
 
@@ -9817,10 +9817,10 @@ Of course any of the usual cursor building forms can be used to power your blob 
 ```sql
 create proc get_news_info(id_ long not null, out result blob<news_info>)
 begin
-   -- use our columns sugar syntax for getting just news_info columns from
+   -- use our @columns sugar syntax for getting just news_info columns from
    -- a table with potentially lots of stuff (or an error if it's missing columns)
    declare c cursor for
-     select columns(like news_info) from some_source_of_info where info.id = id_;
+     select @columns(like news_info) from some_source_of_info where info.id = id_;
    fetch c;
    set result from cursor c;
 END;
@@ -10907,7 +10907,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Sep 23 20:43:50 PDT 2023
+Snapshot as of Mon Sep 25 18:49:12 PDT 2023
 
 ### Operators and Literals
 
@@ -10946,42 +10946,42 @@ REALLIT /* floating point literal */
 "@ATTRIBUTE" "@BEGIN_SCHEMA_REGION" "@BLOB_CREATE_KEY"
 "@BLOB_CREATE_VAL" "@BLOB_GET_KEY" "@BLOB_GET_KEY_TYPE"
 "@BLOB_GET_VAL" "@BLOB_GET_VAL_TYPE" "@BLOB_UPDATE_KEY"
-"@BLOB_UPDATE_VAL" "@CREATE" "@DECLARE_DEPLOYABLE_REGION"
-"@DECLARE_SCHEMA_REGION" "@DELETE" "@DUMMY_SEED" "@ECHO"
-"@EMIT_CONSTANTS" "@EMIT_ENUMS" "@EMIT_GROUP"
-"@END_SCHEMA_REGION" "@ENFORCE_NORMAL" "@ENFORCE_POP"
-"@ENFORCE_PUSH" "@ENFORCE_RESET" "@ENFORCE_STRICT"
-"@EPONYMOUS" "@FILE" "@PREVIOUS_SCHEMA" "@PROC" "@RC"
-"@RECREATE" "@SCHEMA_AD_HOC_MIGRATION"
-"@SCHEMA_UPGRADE_SCRIPT" "@SCHEMA_UPGRADE_VERSION"
-"@SENSITIVE" "@UNSUB" "ABORT" "ACTION" "ADD" "AFTER" "ALL"
-"ALTER" "ARGUMENTS" "AS" "ASC" "AUTOINCREMENT" "BEFORE"
-"BEGIN" "BLOB" "BY" "CALL" "CASCADE" "CASE" "CAST" "CATCH"
-"CHECK" "CLOSE" "COLUMN" "COLUMNS" "COMMIT" "CONST"
-"CONSTRAINT" "CONTEXT COLUMN" "CONTEXT TYPE" "CONTINUE"
-"CREATE" "CROSS" "CURRENT ROW" "CURSOR HAS ROW" "CURSOR"
-"DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED" "DELETE" "DESC"
-"DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE IF" "ELSE"
-"ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW" "EXCLUDE GROUP"
-"EXCLUDE NO OTHERS" "EXCLUDE TIES" "EXCLUSIVE" "EXISTS"
-"EXPLAIN" "FAIL" "FETCH" "FILTER" "FIRST" "FOLLOWING" "FOR
-EACH ROW" "FOR" "FOREIGN" "FROM BLOB" "FROM" "FUNC"
-"FUNCTION" "GROUP" "GROUPS" "HAVING" "HIDDEN" "IF" "IGNORE"
-"IMMEDIATE" "INDEX" "INITIALLY" "INNER" "INOUT" "INSERT"
-"INSTEAD" "INT" "INTEGER" "INTERFACE" "INTO" "JOIN" "KEY"
-"LAST" "LEAVE" "LEFT" "LET" "LIMIT" "LONG" "LONG_INT"
-"LONG_INTEGER" "LOOP" "NO" "NOT DEFERRABLE" "NOTHING"
-"NULL" "NULLS" "OBJECT" "OF" "OFFSET" "ON CONFLICT" "ON"
-"OPEN" "ORDER" "OUT" "OUTER" "OVER" "PARTITION" "PRECEDING"
-"PRIMARY" "PRIVATE" "PROC" "PROCEDURE" "QUERY PLAN" "RAISE"
-"RANGE" "REAL" "RECURSIVE" "REFERENCES" "RELEASE" "RENAME"
-"REPLACE" "RESTRICT" "RETURN" "RIGHT" "ROLLBACK" "ROWID"
-"ROWS" "SAVEPOINT" "SELECT" "SET" "SIGN FUNCTION"
-"STATEMENT" "SWITCH" "TABLE" "TEMP" "TEXT" "THEN" "THROW"
-"TO" "TRANSACTION" "TRIGGER" "TRY" "TYPE" "TYPE_CHECK"
-"UNBOUNDED" "UNIQUE" "UPDATE" "UPSERT" "USING" "VALUES"
-"VAR" "VIEW" "VIRTUAL" "WHEN" "WHERE" "WHILE" "WINDOW"
-"WITH" "WITHOUT"
+"@BLOB_UPDATE_VAL" "@COLUMNS" "@CREATE"
+"@DECLARE_DEPLOYABLE_REGION" "@DECLARE_SCHEMA_REGION"
+"@DELETE" "@DUMMY_SEED" "@ECHO" "@EMIT_CONSTANTS"
+"@EMIT_ENUMS" "@EMIT_GROUP" "@END_SCHEMA_REGION"
+"@ENFORCE_NORMAL" "@ENFORCE_POP" "@ENFORCE_PUSH"
+"@ENFORCE_RESET" "@ENFORCE_STRICT" "@EPONYMOUS" "@FILE"
+"@PREVIOUS_SCHEMA" "@PROC" "@RC" "@RECREATE"
+"@SCHEMA_AD_HOC_MIGRATION" "@SCHEMA_UPGRADE_SCRIPT"
+"@SCHEMA_UPGRADE_VERSION" "@SENSITIVE" "@UNSUB" "ABORT"
+"ACTION" "ADD" "AFTER" "ALL" "ALTER" "ARGUMENTS" "AS" "ASC"
+"AUTOINCREMENT" "BEFORE" "BEGIN" "BLOB" "BY" "CALL"
+"CASCADE" "CASE" "CAST" "CATCH" "CHECK" "CLOSE" "COLUMN"
+"COMMIT" "CONST" "CONSTRAINT" "CONTEXT COLUMN" "CONTEXT
+TYPE" "CONTINUE" "CREATE" "CROSS" "CURRENT ROW" "CURSOR HAS
+ROW" "CURSOR" "DECLARE" "DEFAULT" "DEFERRABLE" "DEFERRED"
+"DELETE" "DESC" "DISTINCT" "DISTINCTROW" "DO" "DROP" "ELSE
+IF" "ELSE" "ENCODE" "END" "ENUM" "EXCLUDE CURRENT ROW"
+"EXCLUDE GROUP" "EXCLUDE NO OTHERS" "EXCLUDE TIES"
+"EXCLUSIVE" "EXISTS" "EXPLAIN" "FAIL" "FETCH" "FILTER"
+"FIRST" "FOLLOWING" "FOR EACH ROW" "FOR" "FOREIGN" "FROM
+BLOB" "FROM" "FUNC" "FUNCTION" "GROUP" "GROUPS" "HAVING"
+"HIDDEN" "IF" "IGNORE" "IMMEDIATE" "INDEX" "INITIALLY"
+"INNER" "INOUT" "INSERT" "INSTEAD" "INT" "INTEGER"
+"INTERFACE" "INTO" "JOIN" "KEY" "LAST" "LEAVE" "LEFT" "LET"
+"LIMIT" "LONG" "LONG_INT" "LONG_INTEGER" "LOOP" "NO" "NOT
+DEFERRABLE" "NOTHING" "NULL" "NULLS" "OBJECT" "OF" "OFFSET"
+"ON CONFLICT" "ON" "OPEN" "ORDER" "OUT" "OUTER" "OVER"
+"PARTITION" "PRECEDING" "PRIMARY" "PRIVATE" "PROC"
+"PROCEDURE" "QUERY PLAN" "RAISE" "RANGE" "REAL" "RECURSIVE"
+"REFERENCES" "RELEASE" "RENAME" "REPLACE" "RESTRICT"
+"RETURN" "RIGHT" "ROLLBACK" "ROWID" "ROWS" "SAVEPOINT"
+"SELECT" "SET" "SIGN FUNCTION" "STATEMENT" "SWITCH" "TABLE"
+"TEMP" "TEXT" "THEN" "THROW" "TO" "TRANSACTION" "TRIGGER"
+"TRY" "TYPE" "TYPE_CHECK" "UNBOUNDED" "UNIQUE" "UPDATE"
+"UPSERT" "USING" "VALUES" "VAR" "VIEW" "VIRTUAL" "WHEN"
+"WHERE" "WHILE" "WINDOW" "WITH" "WITHOUT"
 ```
 ### Rules
 
@@ -11425,6 +11425,7 @@ name:
   | "ADD"
   | "VIEW"
   | "INDEX"
+  | "COLUMN"
   ;
 
 opt_name:
@@ -11692,8 +11693,8 @@ shape_arguments:
   ;
 
 column_calculation:
-  "COLUMNS" '(' col_calcs ')'
-  | "COLUMNS" '(' "DISTINCT" col_calcs ')'
+  "@COLUMNS" '(' col_calcs ')'
+  | "@COLUMNS" '(' "DISTINCT" col_calcs ')'
   ;
 
 col_calcs:
@@ -17117,7 +17118,11 @@ Using the dot (.) operator can also map to `set_object_foo` or `get_object_foo` 
 
 -----
 
-### CQL0471 available for re-use
+### CQL0471: a top level equality is almost certainly an error,  ':=' is assignment
+
+Expressions can be top level statements and a statement like `x = 5;` is technically legal but this is almost certainly
+supposed to be `x := 5`.  To avoid that problem we make the former an error.  Note that in SQLite and CQL `=` and `==`
+are the same thing.  `:=` is assignment.
 
 -----
 
@@ -17138,7 +17143,11 @@ be removed in order to do this operation safely.
 
 -----
 
-### CQL0474 available for re-use
+### CQL0474: when '*' appears in an expression list there can be nothing else in the list
+
+For generality `*` can appear in many expression contexts but when it is used it must appear by itself.
+
+For instance, `select *, * from foo` is not supported.
 
 -----
 
@@ -17471,7 +17480,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Sep 23 20:43:50 PDT 2023
+Snapshot as of Mon Sep 25 18:49:12 PDT 2023
 
 ### Rules
 

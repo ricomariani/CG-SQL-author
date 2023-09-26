@@ -782,6 +782,12 @@ function cql_string_list_get_string(list, i)
   return list[i+1]
 end
 
+function cql_string_list_set_string(list, i, val)
+  -- one based index
+  list[i+1] = val
+  return list;
+end
+
 function cql_exec_internal(db, str)
   return db:exec(str)
 end

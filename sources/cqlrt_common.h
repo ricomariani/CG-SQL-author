@@ -420,6 +420,7 @@ CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
 CQL_EXPORT void cql_string_list_add_string(cql_object_ref _Nullable list, cql_string_ref _Nonnull string);
 CQL_EXPORT int32_t cql_string_list_get_count(cql_object_ref _Nullable list);
 CQL_EXPORT cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable list, int32_t index);
+CQL_EXPORT cql_object_ref _Nullable cql_string_list_set_string(cql_object_ref _Nullable list, int32_t index, cql_string_ref _Nonnull value);
 
 // For internal use by the schema upgrader only, subject to change and generally uninteresting because
 // of its unusual matching rules.

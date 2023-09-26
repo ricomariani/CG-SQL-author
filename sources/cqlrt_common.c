@@ -3911,6 +3911,22 @@ cql_string_ref _Nullable cql_string_list_get_string(cql_object_ref _Nullable lis
   return result;
 }
 
+// Edits the string item in place
+cql_object_ref _Nullable cql_string_list_set_string(cql_object_ref _Nullable list, int32_t index, cql_string_ref _Nonnull value) {
+  if (list) {
+    cql_contract(value);
+    cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+    int32_t count = self->used / sizeof(cql_string_ref);
+    cql_contract(index >= 0 && index < count);
+    cql_invariant(self->ptr);
+    size_t offset = index * sizeof(cql_string_ref);
+    cql_string_ref *data = (cql_string_ref *)(self->ptr + offset);
+    cql_set_string_ref(data, value);
+  }
+
+  return list;
+}
+
 // This is called when the reference count of the boxed statement becomes zero
 // It will finalize the actual SQLite statement.  i.e. this is a destructor/finalizer
 static void cql_boxed_stmt_finalize(void *_Nonnull data) {

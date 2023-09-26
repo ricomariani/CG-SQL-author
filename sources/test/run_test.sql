@@ -5576,7 +5576,8 @@ END_TEST(cql_contains_column_def)
 -- generic lists of strings so we offer these based on bytebuf
 
 DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
-DECLARE FUNCTION cql_string_list_create() CREATE cql_string_list;
+DECLARE FUNCTION cql_string_list_create() CREATE cql_string_list not null;
+DECLARE FUNCTION cql_string_list_set_string(list cql_string_list, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) cql_string_list;
 DECLARE FUNCTION cql_string_list_get_string(list cql_string_list, index_ INTEGER NOT NULL) TEXT;
 DECLARE FUNCTION cql_string_list_get_count(list cql_string_list) INTEGER NOT NULL;
 DECLARE PROCEDURE cql_string_list_add_string(list cql_string_list, string TEXT NOT NULL);
@@ -5585,11 +5586,41 @@ BEGIN_TEST(cql_string_list)
   let list := cql_string_list_create();
   EXPECT(0 == cql_string_list_get_count(list));
   CALL cql_string_list_add_string(list, "hello");
-  CALL cql_string_list_add_string(list, "goodbyte");
+  CALL cql_string_list_add_string(list, "goodbye");
   EXPECT(2 == cql_string_list_get_count(list));
   EXPECT("hello" == cql_string_list_get_string(list, 0));
-  EXPECT("goodbyte" == cql_string_list_get_string(list, 1));
+  EXPECT("goodbye" == cql_string_list_get_string(list, 1));
 END_TEST(cql_string_list)
+
+-- make array wrappers for string list
+DECLARE FUNCTION get_from_object_cql_string_list(list cql_string_list, index_ INTEGER NOT NULL) TEXT;
+@echo c, "#define get_from_object_cql_string_list cql_string_list_get_string\n";
+@echo lua, "get_from_object_cql_string_list = cql_string_list_get_string\n";
+
+DECLARE FUNCTION set_in_object_cql_string_list(list cql_string_list, index_ INTEGER NOT NULL, VALUE TEXT NOT NULL) cql_string_list;
+@echo c, "#define set_in_object_cql_string_list cql_string_list_set_string\n";
+@echo lua, "set_in_object_cql_string_list = cql_string_list_set_string\n";
+
+DECLARE FUNCTION get_object_cql_string_list_count(list cql_string_list) INTEGER NOT NULL;
+@echo c, "#define get_object_cql_string_list_count cql_string_list_get_count\n";
+@echo lua, "get_object_cql_string_list_count = cql_string_list_get_count\n";
+
+PROC add_object_cql_string_list(list cql_string_list NOT NULL, value TEXT NOT NULL, OUT result cql_string_list not null)
+BEGIN
+  cql_string_list_add_string(list, value);
+  result := list;
+END;
+
+BEGIN_TEST(cql_string_list_as_array)
+  let list := cql_string_list_create();
+  EXPECT(0 == list.count);
+  list:::add("hello"):::add("goodbye");
+  EXPECT(2 == list.count);
+  EXPECT("hello" == list[0]);
+  EXPECT("goodbye" == list[1]);
+  list[0] := "salut";
+  EXPECT("salut" == list[0]);
+END_TEST(cql_string_list_as_array)
 
 BEGIN_TEST(cursor_formatting)
   declare C cursor like (a_bool bool, an_int int, a_long long, a_real real, a_string text, a_blob blob);

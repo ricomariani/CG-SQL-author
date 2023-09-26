@@ -23422,3 +23422,33 @@ BEGIN
   let x := get_object_event_invitees(event);
   let y := event.invitees.firstName;
 END;
+
+-- we make a table and a shape
+create table larger_table (a int, b int, c int, d int);
+interface smaller_interface(a int, b int);
+
+-- TEST: rewrite with specified like columns
+-- this is pulling out the smaller interface but not a, so just b.
+-- this is interesting because it's a nested rewrite
+-- + SELECT larger_table.b
+-- - larger_table.a
+-- - larger_table.c
+-- - larger_table.d
+select @columns(larger_table like smaller_interface(-a)) from larger_table;
+
+-- TEST: rewrite with specified like columns
+-- this is pulling out the smaller interface but not a, so just b.
+-- this is interesting because it's a nested rewrite
+-- + SELECT larger_table.a
+-- - larger_table.b
+-- - larger_table.c
+-- - larger_table.d
+select @columns(larger_table like smaller_interface(a)) from larger_table;
+
+-- TEST: rewrite with specified like columns
+-- this is pulling out the smaller interface but not a, so just b.
+-- this is interesting because it's a nested rewrite
+-- + SELECT larger_table.a, larger_table.b
+-- - larger_table.c
+-- - larger_table.d
+select @columns(larger_table like smaller_interface) from larger_table;

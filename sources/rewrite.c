@@ -2781,8 +2781,8 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
       // when we copy the tree we will use the file and line numbers from the original
       // so we temporarily discard whatever file and line number we are using right now
 
+      // this can happen inside of other rewrites so we nest it
       AST_REWRITE_INFO_SAVE();
-        ast_reset_rewrite_info();
         ast_node *_Nonnull node = entry->val;
         ast_node *def_value;
 

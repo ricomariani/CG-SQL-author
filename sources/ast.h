@@ -213,7 +213,8 @@ extern minipool *_Nullable ast_pool;
 // any new nodes will be charged to this location
 #define AST_REWRITE_INFO_SAVE() \
   int32_t lineno_saved = yylineno; \
-  CSTR current_file_saved = current_file;
+  CSTR current_file_saved = current_file; \
+  ast_reset_rewrite_info()
 
 // reset the location to make sure it's not used by the next new nodes
 #define AST_REWRITE_INFO_RESTORE() \

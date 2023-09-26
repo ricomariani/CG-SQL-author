@@ -18117,11 +18117,14 @@ cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_
       }
     }
 
+    // this rewrite can nest in the bigger columns rewrite so push/pop needed
+    AST_REWRITE_INFO_SAVE();
     AST_REWRITE_INFO_SET(base_shape->lineno, base_shape->filename);
     result = new_ast_shape_def(NULL, NULL);
     result->sem = new_sem(SEM_TYPE_STRUCT);
     result->sem->sptr = sptr_new;
     AST_REWRITE_INFO_RESET();
+    AST_REWRITE_INFO_RESTORE();
     goto cleanup;
   }
   else {

@@ -88049,3 +88049,138 @@ END;
               | {arg_list}
                 | {strlit 'firstName'}: text notnull
 
+The statement ending at line XXXX
+
+CREATE TABLE larger_table(
+  a INTEGER,
+  b INTEGER,
+  c INTEGER,
+  d INTEGER
+);
+
+  {create_table_stmt}: larger_table: { a: integer, b: integer, c: integer, d: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name larger_table}
+  | {col_key_list}
+    | {col_def}: a: integer
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name a}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: b: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name b}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: c: integer
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name c}
+        |     | {type_int}: integer
+        | {col_key_list}
+          | {col_def}: d: integer
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+                | {name d}
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE INTERFACE smaller_interface (a INTEGER, b INTEGER);
+
+  {declare_interface_stmt}: smaller_interface: { a: integer, b: integer }
+  | {name smaller_interface}
+  | {proc_params_stmts}
+    | {typed_names}: smaller_interface: { a: integer, b: integer }
+      | {typed_name}: a: integer
+      | | {name a}
+      | | {type_int}: a: integer
+      | {typed_names}
+        | {typed_name}: b: integer
+          | {name b}
+          | {type_int}: b: integer
+
+The statement ending at line XXXX
+
+SELECT larger_table.b
+  FROM larger_table;
+
+  {select_stmt}: select: { b: integer }
+  | {select_core_list}: select: { b: integer }
+  | | {select_core}: select: { b: integer }
+  |   | {select_expr_list_con}: select: { b: integer }
+  |     | {select_expr_list}: select: { b: integer }
+  |     | | {select_expr}: b: integer
+  |     |   | {dot}: b: integer
+  |     |     | {name larger_table}
+  |     |     | {name b}
+  |     | {select_from_etc}: TABLE { larger_table: larger_table }
+  |       | {table_or_subquery_list}: TABLE { larger_table: larger_table }
+  |       | | {table_or_subquery}: TABLE { larger_table: larger_table }
+  |       |   | {name larger_table}: TABLE { larger_table: larger_table }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT larger_table.a
+  FROM larger_table;
+
+  {select_stmt}: select: { a: integer }
+  | {select_core_list}: select: { a: integer }
+  | | {select_core}: select: { a: integer }
+  |   | {select_expr_list_con}: select: { a: integer }
+  |     | {select_expr_list}: select: { a: integer }
+  |     | | {select_expr}: a: integer
+  |     |   | {dot}: a: integer
+  |     |     | {name larger_table}
+  |     |     | {name a}
+  |     | {select_from_etc}: TABLE { larger_table: larger_table }
+  |       | {table_or_subquery_list}: TABLE { larger_table: larger_table }
+  |       | | {table_or_subquery}: TABLE { larger_table: larger_table }
+  |       |   | {name larger_table}: TABLE { larger_table: larger_table }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT larger_table.a, larger_table.b
+  FROM larger_table;
+
+  {select_stmt}: select: { a: integer, b: integer }
+  | {select_core_list}: select: { a: integer, b: integer }
+  | | {select_core}: select: { a: integer, b: integer }
+  |   | {select_expr_list_con}: select: { a: integer, b: integer }
+  |     | {select_expr_list}: select: { a: integer, b: integer }
+  |     | | {select_expr}: a: integer
+  |     | | | {dot}: a: integer
+  |     | |   | {name larger_table}
+  |     | |   | {name a}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}: b: integer
+  |     |     | {dot}: b: integer
+  |     |       | {name larger_table}
+  |     |       | {name b}
+  |     | {select_from_etc}: TABLE { larger_table: larger_table }
+  |       | {table_or_subquery_list}: TABLE { larger_table: larger_table }
+  |       | | {table_or_subquery}: TABLE { larger_table: larger_table }
+  |       |   | {name larger_table}: TABLE { larger_table: larger_table }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

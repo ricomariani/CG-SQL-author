@@ -269,6 +269,7 @@ cql_noexport void print_ast(ast_node *_Nullable node, ast_node *_Nullable parent
 cql_noexport void print_root_ast(ast_node *_Nullable node);
 
 cql_noexport void ast_reset_rewrite_info(void);
+cql_noexport ast_node *_Nullable ast_clone_tree(ast_node *_Nullable ast);
 cql_noexport CSTR _Nonnull convert_cstrlit(CSTR _Nonnull cstr);
 
 cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator);

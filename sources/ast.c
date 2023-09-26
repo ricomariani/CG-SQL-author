@@ -996,3 +996,30 @@ cql_noexport CSTR get_named_string_attribute_value(ast_node *_Nonnull misc_attr_
   find_attribute_str(misc_attr_list, record_string_value, &result, name);
   return result;
 }
+
+// Copy the whole tree recursively
+cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
+  if (!ast) {
+     return NULL;
+  }
+  else if (is_ast_num(ast)) {
+    num_ast_node *nast = _ast_pool_new(num_ast_node);
+    *nast = *(num_ast_node *)ast;
+    return (ast_node*)nast;
+  }
+  else if (is_ast_str(ast) || is_ast_blob(ast)) {
+    str_ast_node *sast = _ast_pool_new(str_ast_node);
+    *sast = *(str_ast_node *)ast;
+    return (ast_node*)sast;
+  }
+  else if (is_ast_int(ast)) {
+    int_ast_node *iast = _ast_pool_new(int_ast_node);
+    *iast = *(int_ast_node *)ast;
+    return (ast_node*)iast;
+  }
+  ast_node *_ast = _ast_pool_new(ast_node);
+  *_ast = *ast;
+  _ast->left = ast_clone_tree(ast->left);
+  _ast->right = ast_clone_tree(ast->right);
+  return _ast;
+}

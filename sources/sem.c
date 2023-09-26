@@ -15496,6 +15496,15 @@ static void sem_expr_stmt(ast_node *ast) {
     return;
   }
 
+  // find the operator tag for the expression here
+  symtab_entry *entry = symtab_find(exprs, expr->type);
+  Invariant(entry);
+  sem_expr_dispatch *disp = (sem_expr_dispatch*)entry->val;
+
+  // rewrite top level +=, -=, /=, *=, and %= before we go any further
+  // if it's not one of these (e.g. ==) then this is a no-op
+  rewrite_op_equals_assignment_if_needed(expr, disp->str);
+
   // we have to write array access before everything else, it will need the other rewrites to follow
   if (is_ast_expr_assign(expr)) {
      EXTRACT_ANY_NOTNULL(left, expr->left);
@@ -15538,25 +15547,6 @@ static void sem_expr_stmt(ast_node *ast) {
     return;
   }
 
-  // Now there may have been a rewrite, refetch expr from the rewritten ast
-  // In most cases this is a no-op but not if the form was x::y()
-  expr = ast->left;
-
-  symtab_entry *entry = symtab_find(exprs, expr->type);
-  Invariant(entry);
-  sem_expr_dispatch *disp = (sem_expr_dispatch*)entry->val;
-  CSTR op = disp->str;
-
-  size_t len = strlen(op);
-  Contract(len);
-  if (op[len-1] == '=') {
-    // rewrite top level +=, -=, /=, *=, and %= before we go any further
-    // if it's not one of these (e.g. ==) then this is a no-op
-    if (!try_rewrite_op_equals_assignment(expr, op)) {
-      record_error(ast);
-      return;
-    }
-  }
 
   // Here is the magic.  If the top level expression is a function call
   // then we want to look to see if that function is actually a procedure.

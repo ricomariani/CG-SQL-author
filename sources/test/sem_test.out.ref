@@ -87260,14 +87260,16 @@ SET op_assign := op_assign >> 11;
 
 The statement ending at line XXXX
 
-1 += 7;
+1 := 1 + 7;
 
-test/sem_test.sql:XXXX:1: error: in add_eq : CQL0465: left operand of assignment operator must be a name '+='
+test/sem_test.sql:XXXX:1: error: in expr_assign : CQL0465: left operand of assignment operator must be a name ':='
 
   {expr_stmt}: err
-  | {add_eq}: err
+  | {expr_assign}: err
     | {int 1}
-    | {int 7}
+    | {add}
+      | {int 1}
+      | {int 7}
 
 The statement ending at line XXXX
 
@@ -87733,6 +87735,88 @@ CALL set_in_object_dot_storage(storage, 'id2', get_object_dot_storage_id(storage
                 | {name storage}: storage: object<dot_storage> variable
                 | {arg_list}
                   | {strlit 'id2'}: text notnull
+
+The statement ending at line XXXX
+
+CALL set_in_object_dot_storage(storage, ( SELECT 'id'
+UNION ALL
+SELECT 'id'
+LIMIT 1 ), get_from_object_dot_storage(storage, ( SELECT 'id'
+UNION ALL
+SELECT 'id'
+LIMIT 1 )) + 1);
+
+  {call_stmt}: ok
+  | {name set_in_object_dot_storage}: ok
+  | {arg_list}: ok
+    | {name storage}: storage: object<dot_storage> variable
+    | {arg_list}
+      | {select_stmt}: _anon: text notnull
+      | | {select_core_list}: UNION ALL: { _anon: text notnull }
+      | | | {select_core}: select: { _anon: text notnull }
+      | | | | {select_expr_list_con}: select: { _anon: text notnull }
+      | | |   | {select_expr_list}: select: { _anon: text notnull }
+      | | |   | | {select_expr}: text notnull
+      | | |   |   | {strlit 'id'}: text notnull
+      | | |   | {select_from_etc}: ok
+      | | |     | {select_where}
+      | | |       | {select_groupby}
+      | | |         | {select_having}
+      | | | {select_core_compound}
+      | |   | {int 2}
+      | |   | {select_core_list}: select: { _anon: text notnull }
+      | |     | {select_core}: select: { _anon: text notnull }
+      | |       | {select_expr_list_con}: select: { _anon: text notnull }
+      | |         | {select_expr_list}: select: { _anon: text notnull }
+      | |         | | {select_expr}: text notnull
+      | |         |   | {strlit 'id'}: text notnull
+      | |         | {select_from_etc}: ok
+      | |           | {select_where}
+      | |             | {select_groupby}
+      | |               | {select_having}
+      | | {select_orderby}
+      |   | {select_limit}
+      |     | {opt_limit}: integer notnull
+      |     | | {int 1}: integer notnull
+      |     | {select_offset}
+      | {arg_list}
+        | {add}: integer
+          | {call}: integer
+          | | {name get_from_object_dot_storage}
+          | | {call_arg_list}
+          |   | {call_filter_clause}
+          |   | {arg_list}: ok
+          |     | {name storage}: storage: object<dot_storage> variable
+          |     | {arg_list}
+          |       | {select_stmt}: _anon: text notnull
+          |         | {select_core_list}: UNION ALL: { _anon: text notnull }
+          |         | | {select_core}: select: { _anon: text notnull }
+          |         | | | {select_expr_list_con}: select: { _anon: text notnull }
+          |         | |   | {select_expr_list}: select: { _anon: text notnull }
+          |         | |   | | {select_expr}: text notnull
+          |         | |   |   | {strlit 'id'}: text notnull
+          |         | |   | {select_from_etc}: ok
+          |         | |     | {select_where}
+          |         | |       | {select_groupby}
+          |         | |         | {select_having}
+          |         | | {select_core_compound}
+          |         |   | {int 2}
+          |         |   | {select_core_list}: select: { _anon: text notnull }
+          |         |     | {select_core}: select: { _anon: text notnull }
+          |         |       | {select_expr_list_con}: select: { _anon: text notnull }
+          |         |         | {select_expr_list}: select: { _anon: text notnull }
+          |         |         | | {select_expr}: text notnull
+          |         |         |   | {strlit 'id'}: text notnull
+          |         |         | {select_from_etc}: ok
+          |         |           | {select_where}
+          |         |             | {select_groupby}
+          |         |               | {select_having}
+          |         | {select_orderby}
+          |           | {select_limit}
+          |             | {opt_limit}: integer notnull
+          |             | | {int 1}: integer notnull
+          |             | {select_offset}
+          | {int 1}: integer notnull
 
 The statement ending at line XXXX
 

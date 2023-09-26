@@ -3670,12 +3670,16 @@ cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast
   return true;
 }
 
-cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CSTR _Nonnull op) {
+
+cql_noexport void rewrite_op_equals_assignment_if_needed(ast_node *_Nonnull expr, CSTR _Nonnull op) {
   Contract(expr);
   Contract(op);
+
   size_t len = strlen(op);
   Contract(len);
-  Contract(op[len - 1] == '='); // ends in =
+  if (op[len-1] != '=') {
+    return;
+  }
 
   CSTR node_type = NULL;
 
@@ -3702,32 +3706,31 @@ cql_noexport bool_t try_rewrite_op_equals_assignment(ast_node *_Nonnull expr, CS
 
   // nothing to do
   if (!node_type) {
-     // successful no-op
-     return true;
+     return;
   }
 
-  if (!is_id(expr->left)) {
-    report_error(expr, "CQL0465: left operand of assignment operator must be a name", op);
-    record_error(expr);
-    return false;
-  }
-
-  EXTRACT_STRING(name, expr->left);
+  EXTRACT_ANY_NOTNULL(lval, expr->left);
 
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
 
+  // make a copy of the left side to use on the right
+  ast_node *rval = ast_clone_tree(lval);
+
   // convert whatever it was we had into normal assignment
   expr->type = k_ast_expr_assign;
-  // make the += or whatever
-  ast_node *oper = new_ast_add(new_ast_str(name), expr->right);
-  // change it to the right operator
+
+  // create the tree in += form
+  ast_node *oper = new_ast_add(rval, expr->right);
+
+  // change it to the correct operator (provided)
   oper->type = node_type;
+
   // and load it up on the right side of the expression
   // we now have an assignment expression which will be
   // rewritten again into a SET
   ast_set_right(expr, oper);
+
   AST_REWRITE_INFO_RESET();
-  return true;
 }
 
 // Array access foo[a,b] can turn into

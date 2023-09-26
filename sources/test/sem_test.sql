@@ -23220,8 +23220,8 @@ op_assign >>= 11;
 
 -- TEST: += (they are the same) on not an identifier
 -- + {expr_stmt}: err
--- + {add_eq}: err
--- + error: % left operand of assignment operator must be a name '+='
+-- + {expr_assign}: err
+-- + error: % left operand of assignment operator must be a name ':='
 -- + error:
 1 += 7;
 
@@ -23356,6 +23356,12 @@ storage.id2 := storage['id'] + storage['id2'];
 -- + CALL set_in_object_dot_storage(storage, 'id2', get_object_dot_storage_id(storage) + get_from_object_dot_storage(storage, 'id2'));
 -- - error:
 storage.id2 := storage.id + storage.id2;
+
+-- TEST: exotic expressions
+-- complex rewrite with all node types
+-- + CALL set_in_object_dot_storage(storage, ( SELECT 'id'
+-- - error:
+storage[(select 'id' union all select 'id' limit 1)] += 1;
 
 -- TEST: friends don't let friends put = at the top level
 -- + {expr_stmt}: err

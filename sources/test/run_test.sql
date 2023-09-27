@@ -5568,44 +5568,19 @@ END_TEST(cql_contains_column_def)
 -- this is not a very functional list but schema helpers might need
 -- generic lists of strings so we offer these based on bytebuf
 
-DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
-DECLARE FUNCTION cql_string_list_create() CREATE cql_string_list not null;
-DECLARE FUNCTION cql_string_list_set_string(list cql_string_list, index_ INT!, value_ TEXT!) cql_string_list;
-DECLARE FUNCTION cql_string_list_get_string(list cql_string_list, index_ INT!) TEXT;
-DECLARE FUNCTION cql_string_list_get_count(list cql_string_list) INT!;
-DECLARE PROCEDURE cql_string_list_add_string(list cql_string_list, string TEXT!);
 
 BEGIN_TEST(cql_string_list)
-  let list := cql_string_list_create();
-  EXPECT(0 == cql_string_list_get_count(list));
-  CALL cql_string_list_add_string(list, "hello");
-  CALL cql_string_list_add_string(list, "goodbye");
-  EXPECT(2 == cql_string_list_get_count(list));
-  EXPECT("hello" == cql_string_list_get_string(list, 0));
-  EXPECT("goodbye" == cql_string_list_get_string(list, 1));
+  let list := create_cql_string_list();
+  EXPECT(0 == get_object_cql_string_list_count(list));
+  add_object_cql_string_list(list, "hello");
+  add_object_cql_string_list(list, "goodbye");
+  EXPECT(2 == get_object_cql_string_list_count(list));
+  EXPECT("hello" == get_from_object_cql_string_list(list, 0));
+  EXPECT("goodbye" == get_from_object_cql_string_list(list, 1));
 END_TEST(cql_string_list)
 
--- make array wrappers for string list
-DECLARE FUNCTION get_from_object_cql_string_list(list cql_string_list, index_ INT!) TEXT;
-@echo c, "#define get_from_object_cql_string_list cql_string_list_get_string\n";
-@echo lua, "get_from_object_cql_string_list = cql_string_list_get_string\n";
-
-DECLARE FUNCTION set_in_object_cql_string_list(list cql_string_list, index_ INT!, VALUE TEXT!) cql_string_list;
-@echo c, "#define set_in_object_cql_string_list cql_string_list_set_string\n";
-@echo lua, "set_in_object_cql_string_list = cql_string_list_set_string\n";
-
-DECLARE FUNCTION get_object_cql_string_list_count(list cql_string_list) INT!;
-@echo c, "#define get_object_cql_string_list_count cql_string_list_get_count\n";
-@echo lua, "get_object_cql_string_list_count = cql_string_list_get_count\n";
-
-PROC add_object_cql_string_list(list cql_string_list!, value TEXT!, OUT result cql_string_list!)
-BEGIN
-  cql_string_list_add_string(list, value);
-  result := list;
-END;
-
 BEGIN_TEST(cql_string_list_as_array)
-  let list := cql_string_list_create();
+  let list := create_cql_string_list();
   EXPECT(0 == list.count);
   list:::add("hello"):::add("goodbye");
   EXPECT(2 == list.count);

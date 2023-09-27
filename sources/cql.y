@@ -2607,19 +2607,34 @@ static void parse_cmd(int argc, char **argv) {
 cql_noexport CSTR cql_builtin_text() {
   return
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL;"
+    "DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL;"
+    "DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL;"
+    "DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;"
+
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_string_dictionary_create() CREATE OBJECT<string_dictionary> NOT NULL;"
+    "DECLARE FUNC cql_string_dictionary_create() CREATE OBJECT<string_dictionary>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_string_dictionary_add(dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL;"
+    "DECLARE FUNC cql_string_dictionary_add(dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_string_dictionary_find(dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT;"
+    "DECLARE FUNC cql_string_dictionary_find(dict OBJECT<string_dictionary>!, key TEXT) TEXT;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_cursor_format(C CURSOR) CREATE TEXT NOT NULL;";
+    "DECLARE FUNC cql_cursor_format(C CURSOR) CREATE TEXT!;"
+
+    "@attribute(cql:builtin)"
+    "TYPE cql_string_list OBJECT<cql_string_list>;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC create_cql_string_list() CREATE cql_string_list!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC set_in_object_cql_string_list(list cql_string_list!, index_ INT!, value_ TEXT!) cql_string_list!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC get_from_object_cql_string_list(list cql_string_list!, index_ INT!) TEXT;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC get_object_cql_string_list_count(list cql_string_list!) INT!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC add_object_cql_string_list(list cql_string_list!, string TEXT!) cql_string_list!;"
+    ;
 }
 
 int cql_main(int argc, char **argv) {

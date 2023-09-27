@@ -373,6 +373,22 @@ begin
   EXAMPLE(7 NOT IN (1, 2));
   EXAMPLE(null not in (null, 3));
   _("");
+
+  _("### Use of Array and Property Syntax\n");
+  _("let list := create_cql_string_list()");
+  let list := create_cql_string_list();
+  EXAMPLE(0 == list.count);
+
+  printf("%20s\n", 'list:::add("hello"):::add("goodbye")');
+  list:::add("hello"):::add("goodbye");
+
+  EXAMPLE(2 == list.count);
+  EXAMPLE("hello" == list[0]);
+  EXAMPLE("goodbye" == list[1]);
+  _('list[0] := "salut"');
+  list[0] := "salut";
+  EXAMPLE("salut" == list[0]);
+  _("");
 END;
 
 create procedure chapter_5 ()

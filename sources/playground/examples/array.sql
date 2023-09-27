@@ -1,81 +1,92 @@
 declare proc printf no check;
 
-proc make_schema()
-begin
-  printf("creating schema\n");
-  create table tasks (
-    task_id int not null primary key,
-    name text not null,
-    notes text not null
-  );
+-- make two kludgy globals to hold the state
+declare _names cql_string_list;
+declare _notes cql_string_list;
 
-  printf("inserting data\n");
-  insert into tasks values
-           (1, "T1", "notes for 1"),
-           (2, "T2", "notes for 2"),
-           (3, "T3", "notes for 3");
-  printf("tasks table ready\n");
+proc init_data()
+begin
+  -- this kind of sharded representation is not recommended
+  -- but it makes a fine sample showing how you could do things
+  -- with atypical objects.  Imagine what you could do with
+  -- native callbacks and an HWND
+  _names := create_cql_string_list();
+  _notes := create_cql_string_list();
+
+  let i := 0;
+  while i <= 3
+  begin
+    _names:::add(printf("T%d", i));
+    _notes:::add(printf("notes for %d", i));
+    i += 1;
+  end;
 end;
 
-/* this is a terrible idea never do this for real, it's just a demo
-   in the name of all you hold dear do not copy and paste this code */
-proc get_from_int_task_id(task_id_ integer not null, field text not null, out value text not null)
+proc get_from_int_task_id(task_id integer! , field text! , out value text!)
 begin
-  cursor C for select * from tasks where task_id = task_id_;
-  fetch C;
+  -- we have to do this to make sure we don't get a warning for uninitialized variables
+  let names := ifnull_throw(_names);
+  let notes := ifnull_throw(_notes);
 
-  value := ifnull(case when field == "name" then C.name when field == "notes" then C.notes  end, "unknown");
+  value := ifnull(
+  case
+    when task_id < 0 or task_id > names.count then null
+    when field == "name" then names[task_id]
+    when field == "notes" then notes[task_id]
+  end, "unknown");
 end;
 
-/* this is a terrible idea never do this for real, it's just a demo
-   in the name of all you hold dear do not copy and paste this code */
-proc set_in_int_task_id(task_id_ integer not null, field text not null, value text not null)
+proc set_in_int_task_id(task_id integer not null, field text not null, value text not null)
 begin
-  if field == 'name' then
-    -- omg this is so bad
-    update tasks set name = value where task_id = task_id_;
-  else if field == 'notes' then
-    -- omg this is so bad
-    update tasks set notes = value where task_id = task_id_;
+  -- we have to do this to make sure we don't get a warning for uninitialized variables
+  let names := ifnull_throw(_names);
+  let notes := ifnull_throw(_notes);
+
+  if task_id < 0 or task_id > names.count return;
+
+  if field == "name" then
+     names[task_id] := value;
+  else if field == "notes" then
+     notes[task_id] := value;
   end if;
 end;
 
 proc entrypoint()
 begin
-  make_schema();
+  init_data();
   declare id int<task_id>;
 
   printf("\nenumerating with array syntax\n\n");
-  id := 0;
+  id := -1;
   while id <= 4
   begin
-    printf("%d %s %s\n", id, id['name'], id['notes']);
+    printf("%d %20s %20s\n", id, id['name'], id['notes']);
     id += 1;
   end;
 
   printf("\nnow the same thing with property syntax.\n\n");
-  id := 0;
+  id := -1;
   while id <= 4
   begin
-    printf("%d %s %s\n", id, id.name, id.notes);
+    printf("%d %20s %20s\n", id, id.name, id.notes);
     id += 1;
   end;
 
   printf("\nupdating values with some array and property jazz\n");
 
-  printf("task1: name := T1.new\n");
+  printf("task1: name := T1*\n");
   id := 1;
-  id.name := "T1.new";
+  id.name := "T1*";
 
-  printf("task3: notes := new notes for T3\n");
+  printf("task3: notes := notes for 3*\n");
   id := 3;
-  id.notes := "new notes for T3";
+  id.notes := "notes for 3*";
 
   printf("\nnow we view the changes\n\n");
-  id := 0;
+  id := -1;
   while id <= 4
   begin
-    printf("%d %s %s\n", id, id.name, id.notes);
+    printf("%d %20s %20s\n", id, id.name, id.notes);
     id += 1;
   end;
 end;

@@ -765,27 +765,28 @@ function cql_string_dictionary_find(dict, key)
   return dict[key]
 end
 
-function cql_string_list_create()
+function create_cql_string_list()
   return {}
 end
 
-function cql_string_list_get_count(list)
+function get_object_cql_string_list_count(list)
   return #list
 end
 
-function cql_string_list_add_string(list, str)
+function add_object_cql_string_list(list, str)
   table.insert(list, str)
+  return list
 end
 
-function cql_string_list_get_string(list, i)
+function get_from_object_cql_string_list(list, i)
   -- one based index
   return list[i+1]
 end
 
-function cql_string_list_set_string(list, i, val)
+function set_in_object_cql_string_list(list, i, val)
   -- one based index
   list[i+1] = val
-  return list;
+  return list
 end
 
 function cql_exec_internal(db, str)

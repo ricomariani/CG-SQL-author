@@ -5323,6 +5323,163 @@
 
     The statement ending at line XXXX
 
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL
+
+    {
+      "name" : "create_cql_string_list",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_string_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL
+
+    {
+      "name" : "set_in_object_cql_string_list",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_string_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value_",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_string_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL) TEXT
+
+    {
+      "name" : "get_from_object_cql_string_list",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_string_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT NULL) INTEGER NOT NULL
+
+    {
+      "name" : "get_object_cql_string_list_count",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_string_list",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, string TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL
+
+    {
+      "name" : "add_object_cql_string_list",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_string_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "string",
+          "type" : "text",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_string_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
     @ATTRIBUTE(foo=bar)
     DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL NOT NULL, i_nn INTEGER NOT NULL, l_nn LONG_INT NOT NULL, r_nn REAL NOT NULL, bl_nn BLOB NOT NULL, str_nn TEXT NOT NULL, obj_nn OBJECT NOT NULL) BOOL
 

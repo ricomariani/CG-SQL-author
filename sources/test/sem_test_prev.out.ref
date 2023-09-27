@@ -191,6 +191,162 @@ DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT NOT NULL;
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:builtin)
+DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: object<cql_string_list>
+    | {name cql_string_list}: object<cql_string_list>
+    | {type_object}: object<cql_string_list>
+      | {name cql_string_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_string_list> notnull create_func
+    | {name create_cql_string_list}: object<cql_string_list> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_string_list> notnull create_func
+        | {notnull}: object<cql_string_list> notnull
+          | {type_object}: object<cql_string_list>
+            | {name cql_string_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_string_list> notnull
+    | {name set_in_object_cql_string_list}: object<cql_string_list> notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_string_list> notnull variable in
+      | | | {param_detail}: list: object<cql_string_list> notnull variable in
+      | |   | {name list}: list: object<cql_string_list> notnull variable in
+      | |   | {notnull}: object<cql_string_list> notnull
+      | |     | {type_object}: object<cql_string_list>
+      | |       | {name cql_string_list}
+      | | {params}
+      |   | {param}: index_: integer notnull variable in
+      |   | | {param_detail}: index_: integer notnull variable in
+      |   |   | {name index_}: index_: integer notnull variable in
+      |   |   | {notnull}: integer notnull
+      |   |     | {type_int}: integer
+      |   | {params}
+      |     | {param}: value_: text notnull variable in
+      |       | {param_detail}: value_: text notnull variable in
+      |         | {name value_}: value_: text notnull variable in
+      |         | {notnull}: text notnull
+      |           | {type_text}: text
+      | {notnull}: object<cql_string_list> notnull
+        | {type_object}: object<cql_string_list>
+          | {name cql_string_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL) TEXT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: text
+    | {name get_from_object_cql_string_list}: text
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_string_list> notnull variable in
+      | | | {param_detail}: list: object<cql_string_list> notnull variable in
+      | |   | {name list}: list: object<cql_string_list> notnull variable in
+      | |   | {notnull}: object<cql_string_list> notnull
+      | |     | {type_object}: object<cql_string_list>
+      | |       | {name cql_string_list}
+      | | {params}
+      |   | {param}: index_: integer notnull variable in
+      |     | {param_detail}: index_: integer notnull variable in
+      |       | {name index_}: index_: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT NULL) INTEGER NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name get_object_cql_string_list_count}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_string_list> notnull variable in
+      |   | {param_detail}: list: object<cql_string_list> notnull variable in
+      |     | {name list}: list: object<cql_string_list> notnull variable in
+      |     | {notnull}: object<cql_string_list> notnull
+      |       | {type_object}: object<cql_string_list>
+      |         | {name cql_string_list}
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, string TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_string_list> notnull
+    | {name add_object_cql_string_list}: object<cql_string_list> notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_string_list> notnull variable in
+      | | | {param_detail}: list: object<cql_string_list> notnull variable in
+      | |   | {name list}: list: object<cql_string_list> notnull variable in
+      | |   | {notnull}: object<cql_string_list> notnull
+      | |     | {type_object}: object<cql_string_list>
+      | |       | {name cql_string_list}
+      | | {params}
+      |   | {param}: string: text notnull variable in
+      |     | {param_detail}: string: text notnull variable in
+      |       | {name string}: string: text notnull variable in
+      |       | {notnull}: text notnull
+      |         | {type_text}: text
+      | {notnull}: object<cql_string_list> notnull
+        | {type_object}: object<cql_string_list>
+          | {name cql_string_list}
+
+The statement ending at line XXXX
+
 @DECLARE_DEPLOYABLE_REGION base;
 
   {declare_deployable_region_stmt}: base: region deployable

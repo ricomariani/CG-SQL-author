@@ -2050,18 +2050,28 @@ cql_noexport ast_node *find_region(CSTR name) {
 // own symbol table. The local symbol table is always searched first to find named type
 // otherwise the global storage is used.
 static bool_t add_named_type(CSTR name, ast_node *ast) {
-  symtab *tab;
-  if (current_proc) {
-    tab = local_types;
-  } else {
-    tab = global_types;
+
+  // the target symbol table, local or global
+  symtab *tab = current_proc ? local_types : global_types;
+
+  // look for the type only in the scope it is going into.
+  symtab_entry *entry = symtab_find(tab, name);
+  ast_node *existing_type = entry ? (ast_node*)(entry->val) : NULL;
+
+  if (existing_type) {
+    bool_t matching = sem_validate_identical_text(existing_type, ast, gen_one_stmt, NULL);
+
+    if (!matching) {
+      report_error(ast, "CQL0359: conflicting type declaration", name);
+      record_error(ast);
+      return false;
+    }
+  }
+  else {
+    bool_t added = symtab_add(tab, name, ast);
+    Invariant(added);
   }
 
-  if (!symtab_add(tab, name, ast)) {
-    report_error(ast, "CQL0359: duplicate type declaration", name);
-    record_error(ast);
-    return false;
-  }
   return true;
 }
 
@@ -20189,14 +20199,13 @@ static void sem_declare_interface_stmt(ast_node *ast) {
   ast->sem->sptr->struct_name = name;
 
   if (existing_interface) {
-      bool_t matching = sem_validate_identical_text(existing_interface, ast, gen_declare_interface_stmt, NULL);
+    bool_t matching = sem_validate_identical_text(existing_interface, ast, gen_one_stmt, NULL);
 
-      if (!matching) {
-        report_error(ast, "CQL0479: interface declarations do not match", name);
-        record_error(ast);
-      }
+    if (!matching) {
+      report_error(ast, "CQL0479: interface declarations do not match", name);
+      record_error(ast);
     }
-
+  }
 }
 
 // This helper verifies that the name of a variable is ok in the current scope

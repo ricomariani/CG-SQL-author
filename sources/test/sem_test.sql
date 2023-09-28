@@ -14968,8 +14968,9 @@ declare my_type type bogus_type;
 
 -- TEST: duplicate declare type definition
 -- + {declare_named_type}: err
--- + error: % duplicate type declaration 'my_type'
--- +1 error:
+-- + error: % conflicting type declaration 'my_type'
+-- extra error line for the two conflicting types
+-- +3 error:
 declare my_type type integer;
 
 -- TEST: use declared type in variable declaration
@@ -15248,8 +15249,9 @@ declare my_enum_type type ints;
 
 -- TEST: used a named type's name to declare an enum
 -- + {declare_enum_stmt}: err
--- + error: % duplicate type declaration 'my_type'
--- +1 error:
+-- + error: % conflicting type declaration 'my_type'
+-- additional errors for the two conflicting lines
+-- +3 error:
 declare enum my_type integer (
  negative_one = -1,
  postive_one = 1
@@ -23458,3 +23460,15 @@ select @columns(larger_table like smaller_interface(a)) from larger_table;
 -- - larger_table.c
 -- - larger_table.d
 select @columns(larger_table like smaller_interface) from larger_table;
+
+-- TEST: valid duplicate type
+-- + {declare_named_type}: integer notnull
+-- -error:
+type an_integer_type integer!;
+
+-- TEST: valid duplicate type
+-- + {declare_named_type}: integer notnull
+-- note that even though ! syntax was used for the former the AST is the same
+-- so there is no error here
+-- -error:
+type an_integer_type integer not null;

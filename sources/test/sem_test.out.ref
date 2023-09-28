@@ -56153,7 +56153,11 @@ The statement ending at line XXXX
 
 DECLARE my_type TYPE INTEGER;
 
-test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: duplicate type declaration 'my_type'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE INTEGER
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: conflicting type declaration 'my_type'
 
   {declare_named_type}: err
   | {name my_type}: integer
@@ -56821,7 +56825,14 @@ DECLARE ENUM my_type INTEGER (
   postive_one = 1
 );
 
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0359: duplicate type declaration 'my_type'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INTEGER (
+  negative_one = -1,
+  postive_one = 1
+)
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0359: conflicting type declaration 'my_type'
 
   {declare_enum_stmt}: err
   | {typed_name}: my_type: integer<my_type> notnull
@@ -88267,4 +88278,22 @@ SELECT larger_table.a, larger_table.b
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE an_integer_type TYPE INTEGER NOT NULL;
+
+  {declare_named_type}: integer notnull
+  | {name an_integer_type}: integer notnull
+  | {notnull}: integer notnull
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE an_integer_type TYPE INTEGER NOT NULL;
+
+  {declare_named_type}: integer notnull
+  | {name an_integer_type}: integer notnull
+  | {notnull}: integer notnull
+    | {type_int}: integer
 

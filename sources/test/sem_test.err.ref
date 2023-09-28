@@ -1210,7 +1210,11 @@ test/sem_test.sql:XXXX:1: error: in sensitive_attr : CQL0367: an attribute was s
 test/sem_test.sql:XXXX:1: error: in sensitive_attr : CQL0367: an attribute was specified twice '@sensitive'
 test/sem_test.sql:XXXX:1: error: in notnull : CQL0367: an attribute was specified twice 'not null'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
-test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: duplicate type declaration 'my_type'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE INTEGER
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: conflicting type declaration 'my_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP some_group_with_a_var_of_a_named_type
@@ -1233,7 +1237,14 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0360: unknown type 'bogus_type'
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0359: duplicate type declaration 'my_type'
+Incompatible declarations found
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INTEGER (
+  negative_one = -1,
+  postive_one = 1
+)
+The above must be identical.
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0359: conflicting type declaration 'my_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'

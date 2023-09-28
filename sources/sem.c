@@ -2168,9 +2168,6 @@ static void get_sem_core(sem_t sem_type, charbuf *out) {
 
 // For debug/test output, prettyprint the flags
 static void get_sem_flags(sem_t sem_type, charbuf *out) {
-  // This is never present in the AST itself.
-  Contract(!(sem_type & SEM_TYPE_ALIAS));
-
   // This is never present in the AST after a top-level statement has been
   // analyzed: All initialization improvements on variables and parameters are
   // unset by then, and, unlike `SEM_TYPE_INFERRED_NOTNULL`, there is no
@@ -2288,6 +2285,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   }
   if (sem_type & SEM_TYPE_PARTIAL_PK) {
     bprintf(out, " partial_pk");
+  }
+  if (sem_type & SEM_TYPE_ALIAS) {
+    bprintf(out, " alias");
   }
 }
 
@@ -2507,7 +2507,7 @@ cql_noexport void sem_remove_flags(ast_node *ast, sem_t flags) {
   ast->sem = sem;
 }
 
-// Like `add_sem_flags`, but completely replaces the flags instead of adding
+// Like `sem_add_flags`, but completely replaces the flags instead of adding
 // additional flags.
 static void sem_replace_flags(ast_node *ast, sem_t flags) {
   sem_node *sem = _ast_pool_new(sem_node);
@@ -3483,6 +3483,10 @@ static void sem_create_index_stmt(ast_node *ast) {
       report_error(index_name_ast, "CQL0018: duplicate index name", index_name);
       record_error(index_name_ast);
       record_error(ast);
+    }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
     }
     return;
   }
@@ -12882,6 +12886,10 @@ static void sem_create_view_stmt(ast_node *ast) {
       record_error(name_ast);
       record_error(ast);
     }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
+    }
     return;
   }
 
@@ -14015,6 +14023,10 @@ static void sem_create_trigger_stmt(ast_node *ast) {
       record_error(trigger_name_ast);
       record_error(ast);
     }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
+    }
     return;
   }
 
@@ -14918,6 +14930,10 @@ static void sem_create_table_stmt(ast_node *ast) {
         report_error(name_ast, "CQL0103: duplicate table/view name", name);
         record_error(name_ast);
         record_error(ast);
+      }
+      else {
+        // this will let us find the duplicate later, it marks this as not authoritative
+        sem_add_flags(ast, SEM_TYPE_ALIAS);
       }
       goto cleanup;;
     }

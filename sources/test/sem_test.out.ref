@@ -46,7 +46,7 @@ CREATE TABLE foo(
   id INTEGER PRIMARY KEY AUTOINCREMENT
 );
 
-  {create_table_stmt}: foo: { id: integer notnull primary_key autoinc }
+  {create_table_stmt}: foo: { id: integer notnull primary_key autoinc } alias
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -4430,7 +4430,7 @@ The statement ending at line XXXX
 CREATE VIEW MyView AS
 SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
-  {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+  {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
   | {int 0}
   | {view_and_attrs}
     | {name_and_select}
@@ -4666,7 +4666,7 @@ The statement ending at line XXXX
 
 CREATE INDEX index_1 ON foo (id);
 
-  {create_index_stmt}: ok
+  {create_index_stmt}: ok alias
   | {create_index_on_list}
   | | {name index_1}
   | | {name foo}
@@ -32406,7 +32406,7 @@ BEGIN
   INSERT INTO bar(id, name, rate) VALUES(7, 'goo', 17L);
 END;
 
-  {create_trigger_stmt}: ok
+  {create_trigger_stmt}: ok alias
   | {int 0}
   | {trigger_body_vers}
     | {trigger_def}
@@ -46926,7 +46926,7 @@ CREATE TABLE IF NOT EXISTS foo(
   id INTEGER PRIMARY KEY AUTOINCREMENT
 );
 
-  {create_table_stmt}: foo: { id: integer notnull primary_key autoinc }
+  {create_table_stmt}: foo: { id: integer notnull primary_key autoinc } alias
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 2}
@@ -46946,7 +46946,7 @@ The statement ending at line XXXX
 CREATE VIEW IF NOT EXISTS MyView AS
 SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
-  {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+  {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
   | {int 2}
   | {view_and_attrs}
     | {name_and_select}
@@ -46986,7 +46986,7 @@ BEGIN
   DELETE FROM bar WHERE rate > new.id;
 END;
 
-  {create_trigger_stmt}: ok
+  {create_trigger_stmt}: ok alias
   | {int 2}
   | {trigger_body_vers}
     | {trigger_def}
@@ -47015,7 +47015,7 @@ The statement ending at line XXXX
 
 CREATE INDEX IF NOT EXISTS index_1 ON foo (id);
 
-  {create_index_stmt}: ok
+  {create_index_stmt}: ok alias
   | {create_index_on_list}
   | | {name index_1}
   | | {name foo}

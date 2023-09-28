@@ -66,6 +66,11 @@
 
 @attribute(cql:no_table_scan)
 create table t1(id int primary key, name text);
+
+-- duplicate, no problem!  only one will be emitted for SQLite
+@attribute(cql:no_table_scan)
+create table t1(id int primary key, name text);
+
 @attribute(cql:no_table_scan)
 create table t2(id int primary key, name text);
 create table t3(id int primary key, name text);
@@ -79,8 +84,11 @@ create table foo(id int);
 create table _foo(id int);
 create table foo_(id int);
 create index it1 ON t1(name, id);
+create index it1 ON t1(name, id);
+create index it4 ON t4(data, id);
 create index it4 ON t4(data, id);
 create index it5 ON t4(data) @delete(1);
+create view my_view as select * from t1 inner join t2 using(id);
 create view my_view as select * from t1 inner join t2 using(id);
 declare function any_func() bool not null;
 declare select function is_declare_func_enabled() bool not null;
@@ -93,6 +101,11 @@ declare data_var blob;
 set timer_var := 1;
 set label_var := 'Eric';
 set data_var := blob_from_string('1');
+create trigger my_trigger
+  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
+begin
+  delete from t2 where id > new.id;
+end;
 create trigger my_trigger
   after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
 begin

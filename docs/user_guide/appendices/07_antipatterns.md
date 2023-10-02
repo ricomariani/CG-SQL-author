@@ -4,11 +4,11 @@
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 7: CQL Anti-patterns
+## Appendix 7: Antipatterns
 
 These are a few of the antipatterns I've seen while travelling through various CQL source files.  They are in various categories.
 
-Refer also to Appendix 8: CQL Best Practices.
+Refer also to Appendix 8: Best Practices.
 
 ### Common Schema
 

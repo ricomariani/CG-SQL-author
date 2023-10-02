@@ -4,13 +4,13 @@
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 8: CQL Best Practices
+## Appendix 8: Best Practices
 
 This is a brief discussion of every statement type and some general best practices for that statement.
 The statements are in mostly alphabetical order except related statements were
 moved up in the order to make logical groups.
 
-Refer also to Appendix 7: CQL Anti-patterns.
+Refer also to Appendix 7: Anti-patterns.
 
 ### Data Definition Language (DDL)
 

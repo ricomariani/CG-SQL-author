@@ -11104,7 +11104,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Sep 26 15:28:24 PDT 2023
+Snapshot as of Tue Oct  3 00:30:12 PDT 2023
 
 ### Operators and Literals
 
@@ -15869,9 +15869,10 @@ To correct this move the declaration outside of the procedure.
 
 ----
 
-### CQL0359: duplicate type declaration 'type_name'
+### CQL0359: conflicting type declaration 'type_name'
 
-The name of a declared type should always be unique.
+If a type name is used twice then the two or more declarations must be identical.  The
+conflicting types will be included in the output and printed in full.
 
 ----
 
@@ -17351,7 +17352,11 @@ For instance, `select *, * from foo` is not supported.
 
 -----
 
-### CQL0475 available for re-use
+### CQL0475: select functions cannot have out parameters 'param_name'
+
+A function declared with `declare select function` will be called by SQLite -- it has no possibilty
+of having a call-by-reference out argument.  Therefore these are disallowed.  Both `out` and `in out`
+forms generate this error and may not be used.
 
 -----
 
@@ -17680,7 +17685,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Sep 26 15:28:25 PDT 2023
+Snapshot as of Tue Oct  3 00:30:12 PDT 2023
 
 ### Rules
 

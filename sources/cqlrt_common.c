@@ -3885,6 +3885,8 @@ cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list,
 
 // Returns the number of elements in the given string list
 int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list) {
+  cql_contract(list);
+
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   return self->used / sizeof(cql_string_ref);
 }
@@ -3907,6 +3909,7 @@ cql_string_ref _Nonnull get_from_object_cql_string_list(cql_object_ref _Nonnull 
 cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value) {
   cql_contract(list);
   cql_contract(value);
+
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
   int32_t count = self->used / sizeof(cql_string_ref);
   cql_contract(index >= 0 && index < count);

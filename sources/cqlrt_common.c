@@ -3884,15 +3884,9 @@ cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list,
 }
 
 // Returns the number of elements in the given string list
-int32_t get_object_cql_string_list_count(cql_object_ref _Nullable list) {
-  int32_t result = 0;
-
-  if (list) {
-    cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
-    result = self->used / sizeof(cql_string_ref);
-  }
-
-  return result;
+int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list) {
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  return self->used / sizeof(cql_string_ref);
 }
 
 // Returns the nth string from the string list with no extra retain (get semantics)

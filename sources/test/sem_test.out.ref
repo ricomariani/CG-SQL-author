@@ -88297,3 +88297,39 @@ DECLARE an_integer_type TYPE INTEGER NOT NULL;
   | {notnull}: integer notnull
     | {type_int}: integer
 
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC select_func_with_out_arg1 (INOUT inout_param INTEGER NOT NULL) INTEGER;
+
+test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'inout_param'
+
+  {declare_select_func_stmt}: err
+  | {name select_func_with_out_arg1}
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: err
+    |   | {inout}
+    |   | {param_detail}: inout_param: integer notnull variable in out
+    |     | {name inout_param}: inout_param: integer notnull variable in out
+    |     | {notnull}: integer notnull
+    |       | {type_int}: integer
+    | {type_int}
+
+The statement ending at line XXXX
+
+DECLARE SELECT FUNC select_func_with_out_arg2 (OUT out_param INTEGER NOT NULL) INTEGER;
+
+test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'out_param'
+
+  {declare_select_func_stmt}: err
+  | {name select_func_with_out_arg2}
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: err
+    |   | {out}
+    |   | {param_detail}: out_param: integer notnull variable out
+    |     | {name out_param}: out_param: integer notnull variable out
+    |     | {notnull}: integer notnull
+    |       | {type_int}: integer
+    | {type_int}
+

@@ -23472,3 +23472,15 @@ type an_integer_type integer!;
 -- so there is no error here
 -- -error:
 type an_integer_type integer not null;
+
+-- TEST: select functions cannot have out arguments -- inout form
+-- + {declare_select_func_stmt}: err
+-- + error: % select functions cannot have out parameters 'inout_param'
+-- +1 error:
+declare select func select_func_with_out_arg1(inout inout_param int!) int;
+
+-- TEST: select functions cannot have out arguments -- out form
+-- + {declare_select_func_stmt}: err
+-- + error: % select functions cannot have out parameters 'out_param'
+-- +1 error:
+declare select func select_func_with_out_arg2(out out_param int!) int;

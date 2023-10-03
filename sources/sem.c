@@ -19577,6 +19577,20 @@ static void sem_declare_func_stmt(ast_node *ast) {
       record_error(ast);
       return;
     }
+
+    if (select_func) {
+      for (ast_node *item = params; item; item = item->right) {
+        Contract(is_ast_params(item));
+        EXTRACT_NOTNULL(param, item->left);
+        sem_t sem_type = param->sem->sem_type;
+        if (is_out_parameter(sem_type)) {
+          report_error(param, "CQL0475: select functions cannot have out parameters", param->sem->name);
+          record_error(param);
+          record_error(ast);
+          return;
+        }
+      }
+    }
   }
 
   if (is_ast_typed_names(ret_data_type)) {

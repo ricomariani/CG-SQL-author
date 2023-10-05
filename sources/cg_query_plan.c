@@ -349,7 +349,7 @@ static void cg_qp_sql_stmt(ast_node *ast) {
   // we only run if the item is not deleted (i.e. delete version == -1) and
   // it is not an aliased item.  That is if there are two copies of create table T1(...)
   // the 2nd identical copy should not be emitted. Same for indices, triggers, and views.
-  if (ast->sem->delete_version <= 0 && !(ast->sem->sem_type & SEM_TYPE_ALIAS)) {
+  if (ast->sem->delete_version <= 0 && !is_alias_ast(ast)) {
     charbuf *out = schema_stmts;
     if (is_backing(ast->sem->sem_type)) {
       bprintf(out, "@attribute(cql:backing_table)\n");

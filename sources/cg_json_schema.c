@@ -2498,6 +2498,13 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
+
+    // declares can be duplicated, we don't want to emit more than one into the JSON
+    // e.g. you can declare the same proc twice
+    if (is_alias_ast(stmt)) {
+      continue;
+    }
+
     if (is_ast_create_proc_stmt(stmt)) {
       cg_json_create_proc(stmt, misc_attrs);
     }

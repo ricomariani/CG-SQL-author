@@ -79,6 +79,16 @@ create table T2
   id integer primary key autoincrement
 );
 
+-- TEST: duplicate statements are marked as aliases and are not emitted again
+-- note that no output is created for this statement so actually if that's the
+-- case we will pattern match against the next statement which is just fine
+-- that solid validation.  The next patterns also match fine so no issues there.
+-- - "T2"
+create table T2
+(
+  id integer primary key autoincrement
+);
+
 -- TEST: force unique  key flag
 -- unique key implies not null
 -- + "name" : "T3"

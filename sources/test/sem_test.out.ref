@@ -15223,7 +15223,7 @@ The statement ending at line XXXX
 
 DECLARE PROC decl1 (id INTEGER);
 
-  {declare_proc_stmt}: ok
+  {declare_proc_stmt}: ok alias
   | {proc_name_type}
   | | {name decl1}: ok
   | | {int 0}
@@ -35885,7 +35885,7 @@ The statement ending at line XXXX
 
 DECLARE PROC out_cursor_proc () OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION;
 
-  {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
+  {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out alias
   | {proc_name_type}
   | | {name out_cursor_proc}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
   | | {int 7}
@@ -53940,7 +53940,7 @@ DECLARE ENUM integer_things INTEGER (
   pencil
 );
 
-  {declare_enum_stmt}: integer_things: integer<integer_things> notnull
+  {declare_enum_stmt}: integer_things: integer<integer_things> notnull alias
   | {typed_name}: integer_things: integer<integer_things> notnull
   | | {name integer_things}
   | | {type_int}: integer_things: integer<integer_things> notnull
@@ -56234,7 +56234,7 @@ The statement ending at line XXXX
 
 DECLARE PROC some_proc_with_an_arg_of_a_named_type (x TEXT @SENSITIVE);
 
-  {declare_proc_stmt}: ok
+  {declare_proc_stmt}: ok alias
   | {proc_name_type}
   | | {name some_proc_with_an_arg_of_a_named_type}: ok
   | | {int 0}
@@ -56276,7 +56276,7 @@ BEGIN
   DECLARE some_group_var2 TEXT @SENSITIVE;
 END;
 
-  {declare_group_stmt}: ok
+  {declare_group_stmt}: ok alias
   | {name some_group_with_a_var_of_a_named_type}
   | {stmt_list}
     | {declare_vars_type}
@@ -56297,7 +56297,7 @@ BEGIN
   DECLARE some_group_var2 my_type;
 END;
 
-  {declare_group_stmt}: ok
+  {declare_group_stmt}: ok alias
   | {name some_group_with_a_var_of_a_named_type}
   | {stmt_list}
     | {declare_vars_type}
@@ -56617,7 +56617,7 @@ The statement ending at line XXXX
 
 DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE);
 
-  {declare_proc_stmt}: ok
+  {declare_proc_stmt}: ok alias
   | {proc_name_type}
   | | {name uses_complex_table_attrs}: ok
   | | {int 0}
@@ -73216,6 +73216,42 @@ test/sem_test.sql:XXXX:1: error: in declare_const_stmt : CQL0356: const definiti
 
 The statement ending at line XXXX
 
+DECLARE CONST GROUP foo (
+  const_v = FALSE,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2 + 3,
+  const_z = "hello, world\n"
+);
+
+  {declare_const_stmt}: ok alias
+  | {name foo}
+  | {const_values}
+    | {const_value}: bool = 0 notnull
+    | | {name const_v}: bool = 0 notnull
+    | | {bool 0}: bool = 0 notnull
+    | {const_values}
+      | {const_value}: real = 3.500000e+00 notnull
+      | | {name const_w}: real = 3.500000e+00 notnull
+      | | {dbl 3.5}: real = 3.500000e+00 notnull
+      | {const_values}
+        | {const_value}: longint = 1 notnull
+        | | {name const_x}: longint = 1 notnull
+        | | {longint 1}: longint = 1 notnull
+        | {const_values}
+          | {const_value}: integer = 5 notnull
+          | | {name const_y}: integer = 5 notnull
+          | | {add}: integer = 5 notnull
+          |   | {int 2}: integer notnull
+          |   | {int 3}: integer notnull
+          | {const_values}
+            | {const_value}: text notnull
+              | {name const_z}: text notnull
+              | {strlit 'hello, world
+'}: text notnull
+
+The statement ending at line XXXX
+
 CREATE PROC try_to_nest_constants ()
 BEGIN
   DECLARE CONST GROUP err5 (
@@ -83128,7 +83164,7 @@ BEGIN
   DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
 END;
 
-  {declare_group_stmt}: ok
+  {declare_group_stmt}: ok alias
   | {name var_group}
   | {stmt_list}
     | {declare_vars_type}
@@ -84552,7 +84588,7 @@ The statement ending at line XXXX
 
 DECLARE INTERFACE interface1 (id INTEGER);
 
-  {declare_interface_stmt}: interface1: { id: integer }
+  {declare_interface_stmt}: interface1: { id: integer } alias
   | {name interface1}
   | {proc_params_stmts}
     | {typed_names}: interface1: { id: integer }
@@ -88292,7 +88328,7 @@ The statement ending at line XXXX
 
 DECLARE an_integer_type TYPE INTEGER NOT NULL;
 
-  {declare_named_type}: integer notnull
+  {declare_named_type}: integer notnull alias
   | {name an_integer_type}: integer notnull
   | {notnull}: integer notnull
     | {type_int}: integer

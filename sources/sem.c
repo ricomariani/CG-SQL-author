@@ -2066,6 +2066,10 @@ static bool_t add_named_type(CSTR name, ast_node *ast) {
       record_error(ast);
       return false;
     }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
+    }
   }
   else {
     bool_t added = symtab_add(tab, name, ast);
@@ -19326,6 +19330,8 @@ static void sem_create_proc_stmt(ast_node *ast) {
   }
 
   if (existing_proc) {
+    // we're comparsing the declaration against the definition
+    // neither is an alias so we won't mark one as such
     bool_t matching = sem_validate_identical_procs(existing_proc, ast);
     if (!matching) {
       report_error(ast, "CQL0189: procedure declarations/definitions do not match", name);
@@ -19817,6 +19823,10 @@ static void sem_declare_enum_stmt(ast_node *ast) {
       record_error(ast);
       goto cleanup;
     }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
+    }
   }
   else {
     // note that enums  get a slightly different treatment when in previous schema
@@ -19888,6 +19898,12 @@ static void sem_declare_group_stmt(ast_node *ast) {
     if (!matching) {
       report_error(ast, "CQL0463: variable definitions do not match in group", name);
       record_error(ast);
+      return;
+    }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      record_ok(ast);
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
       return;
     }
 
@@ -20026,6 +20042,12 @@ static void sem_declare_const_stmt(ast_node *ast) {
     if (!matching) {
       report_error(ast, "CQL0356: const definitions do not match", name);
       record_error(ast);
+      return;
+    }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      record_ok(ast);
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
       return;
     }
   }
@@ -20181,6 +20203,10 @@ static void sem_declare_proc_stmt(ast_node *ast) {
       report_error(ast, "CQL0196: procedure declarations/definitions do not match", name);
       record_error(ast);
     }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
+    }
   }
 }
 
@@ -20234,6 +20260,10 @@ static void sem_declare_interface_stmt(ast_node *ast) {
     if (!matching) {
       report_error(ast, "CQL0479: interface declarations do not match", name);
       record_error(ast);
+    }
+    else {
+      // this will let us find the duplicate later, it marks this as not authoritative
+      sem_add_flags(ast, SEM_TYPE_ALIAS);
     }
   }
 }
@@ -21556,6 +21586,11 @@ static ast_node *out_tagged_id_from_id(ast_node *id) {
 // Returns true if `id` is tagged, else false.
 static bool_t is_id_out_tagged(ast_node *id) {
   return !!((uintptr_t)id & id_out_tag_bit);
+}
+
+cql_noexport bool_t is_alias_ast(ast_node *_Nonnull ast) {
+ Contract(ast);
+ return ast->sem && (ast->sem->sem_type & SEM_TYPE_ALIAS);
 }
 
 // Compares the names of two (possibly) tagged ids in a manner such that

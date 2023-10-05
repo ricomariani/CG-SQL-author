@@ -24,7 +24,7 @@ create table foo(
 );
 
 -- TEST: exact duplicate table is ok
--- + create_table_stmt% foo: % id: integer notnull primary_key autoinc
+-- + {create_table_stmt}: foo: { id: integer notnull primary_key autoinc } alias
 -- - error:
 create table foo(
   id integer PRIMARY KEY AUTOINCREMENT
@@ -1183,7 +1183,7 @@ create index index_1 on foo(id);
 
 -- TEST: exact duplicate index is ok
 -- - error:
--- + {create_index_stmt}: ok
+-- + {create_index_stmt}: ok alias
 -- + {name id}: id: integer notnull
 create index index_1 on foo(id);
 
@@ -8656,7 +8656,7 @@ begin
 end;
 
 -- TEST: exact duplicate trigger is ok
--- + {create_trigger_stmt}: ok
+-- + {create_trigger_stmt}: ok alias
 -- +4 {dot}: b: real notnull
 -- + {name ViewShape}
 -- + {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
@@ -12501,13 +12501,13 @@ create table if not exists foo(
 );
 
 -- TEST: verify that duplicate view with different "IF NOT EXISTS" is still ok
--- + {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+-- + {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
 -- + {int 2}
 -- - error:
 create view if not exists MyView as select 1 as f1, 2 as f2, 3 as f3;
 
 -- TEST: verify that duplicate trigger  with different "IF NOT EXISTS" is still ok
--- + {create_trigger_stmt}: ok
+-- + {create_trigger_stmt}: ok alias
 -- + {int 2}
 -- - error:
 create trigger if not exists trigger2
@@ -12517,7 +12517,7 @@ begin
 end;
 
 -- TEST: verify that duplicate index  with different "IF NOT EXISTS" is still ok
--- + {create_index_stmt}: ok
+-- + {create_index_stmt}: ok alias
 -- + {int 2}
 -- - error:
 create index if not exists index_1 on foo(id);
@@ -19870,6 +19870,18 @@ declare const group foo (
   const_v = false
 );
 
+-- TEST: existing constant group that's a duplciate
+-- this is ok
+-- + {declare_const_stmt}: ok alias
+-- - error:
+declare const group foo (
+  const_v = false,
+  const_w = 3.5,
+  const_x = 1L,
+  const_y = 2+3,
+  const_z = "hello, world\n"
+);
+
 -- TEST: nested constants not allowed
 -- + {declare_const_stmt}: err
 -- + error: % declared constants must be top level 'err5'
@@ -22083,7 +22095,7 @@ begin
 end;
 
 -- TEST: duplicate var group is ok
--- + {declare_group_stmt}: ok
+-- + {declare_group_stmt}: ok alias
 -- - error:
 declare group var_group
 begin

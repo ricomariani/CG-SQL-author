@@ -270,6 +270,7 @@ cql_noexport bool_t is_proc_suppress_result_set(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_suppress_getters(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_emit_setters(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_shared_fragment(ast_node *ast);
+cql_noexport bool_t is_alias_ast(ast_node *ast);
 
 cql_noexport CSTR sem_get_name(ast_node *ast);
 cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);
@@ -337,6 +338,7 @@ cql_noexport void sem_select(ast_node *node);
 cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
 cql_noexport ast_node *sem_skip_with(ast_node *ast);
 cql_noexport bool_t is_table_not_physical(ast_node *table_ast);
+cql_noexport bool_t sem_is_alias(ast_node *ast);
 
 #endif
 

@@ -8023,7 +8023,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Sat Oct 7 00:37:50 PDT 2023</p>
+<p>Snapshot as of Sat Oct 7 01:06:45 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -12165,7 +12165,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Sat Oct 7 00:37:50 PDT 2023</p>
+<p>Snapshot as of Sat Oct 7 01:06:45 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -12833,7 +12833,7 @@ opt_declare_select_funcs:  | declare_select_funcs
 declare_select_funcs: declare_select_func | declare_select_func &#39;,&#39; declare_select_funcs
   ;
 
-declare_select_func: declare_func | declare_table_valued_func
+declare_select_func: declare_scalar_select_func | declare_table_valued_func
   ;
 
 opt_declare_no_check_funcs:  | declare_no_check_funcs
@@ -12860,12 +12860,19 @@ declare_func: &#39;{&#39;
          &#39;}&#39;
   ;
 
+declare_scalar_select_func: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_complex_args &#39;]&#39; &#39;,&#39;
+          opt_attributes
+          return_type
+         &#39;}&#39;
+  ;
+
 declare_table_valued_func: &#39;{&#39;
           &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
           &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_complex_args &#39;]&#39; &#39;,&#39;
           opt_attributes
-          projection
-          &#39;&quot;createsObject&quot;&#39; &#39;:&#39; BOOL_LITERAL
+          &#39;&quot;projection&quot;&#39; &#39;:&#39; &#39;[&#39; projected_columns &#39;]&#39;
          &#39;}&#39;
   ;
 
@@ -12877,11 +12884,17 @@ declare_no_check_func: &#39;{&#39;
          &#39;}&#39;
   ;
 
+declare_no_check_select_func: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          opt_attributes
+          return_type
+         &#39;}&#39;
+  ;
+
 declare_no_check_table_valued_func: &#39;{&#39;
           &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
           opt_attributes
-          projection
-          &#39;&quot;createsObject&quot;&#39; &#39;:&#39; BOOL_LITERAL
+          &#39;&quot;projection&quot;&#39; &#39;:&#39; &#39;[&#39; projected_columns &#39;]&#39;
          &#39;}&#39;
   ;
 

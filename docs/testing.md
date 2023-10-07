@@ -1,16 +1,32 @@
 # Testing CG/SQL
 
-Run this command in the `sources` directory:
-```
-./test.sh
-```
 
-This will build and run the test suite
+<style>
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
 
-```
-./test.sh --use_amalgam
-```
+th, td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
 
-Does the same thing but it tests the built amalgam rather than the normal build
+th {
+  background-color: #f2f2f2;
+}
+</style>
+
+Basic testing commands you should know
+
+|Command|Details|
+|:-----|:------|
+|`./test.sh` | Build the compiler and run the suite.  This is the bread an butter of the dev cycle.|
+|`--use_amalgam`| Builds the compiler from the amalgam and then tests it as above.|
+|`--use_asan`| Enable address sanitizer.  Great and finding memory issues.|
+|`--use_clang`| Clang finds more warnings than GCC in general, recommened before any PR.|
+|`cov.sh` | See [Code Coverage](code-coverage.md) |
+
 
 > See details in our [CQL Internals documentation](../CQL_Guide/generated/internal.md#part-4-testing)

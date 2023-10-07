@@ -25,6 +25,14 @@ cat $CQL_ROOT_DIR/cql.y \
   | sed -e "/^  *$/d" \
   | $CQL_OUT_DIR/replacements \
   | sed -e "s/  *$//" \
+  | tee $OUT/cql_grammar_for_markdown.txt \
+  | cat <(echo "// @nolint") - \
+  | awk 'BEGIN { FS="\n"; RS="" } { gsub("\n","",$0); print }' \
+  | sed \
+      -e 's/:/ ::= /' \
+      -e 's/;$//' \
+      -e 's/  */ /g' \
+      -e 's/  *$//' \
   > $OUT/cql_grammar.txt
 ls $OUT/cql_grammar.txt
 
@@ -32,13 +40,7 @@ ls $OUT/cql_grammar.txt
 debug "Building CQL Grammar Railroad diagram"
 
   # | sed -f $SCRIPT_DIR_RELATIVE/grammar_utils/diagram_tweaks.txt \
-cat <(echo "// @nolint") $OUT/cql_grammar.txt \
-  | awk 'BEGIN { FS="\n"; RS="" } { gsub("\n","",$0); print }' \
-  | sed \
-      -e 's/:/ ::= /' \
-      -e 's/;$//' \
-      -e 's/  */ /g' \
-      -e 's/  *$//' \
+cat $OUT/cql_grammar.txt \
   | $SCRIPT_DIR_RELATIVE/grammar_utils/compile_bottlecaps_railroad_diagram.sh \
   > $OUT/cql_grammar.railroad.html
 ls $OUT/cql_grammar.railroad.html
@@ -79,7 +81,7 @@ function statement_type_keywords_section() {
 }
 
 function rules_section() {
-  cat $OUT/cql_grammar.txt
+  cat $OUT/cql_grammar_for_markdown.txt
 }
 
 cat <<EOF \
@@ -134,6 +136,8 @@ Thus the grammar is not the final authority on what constitutes a valid program 
 $(rules_section)
 \`\`\`
 EOF
+
+rm -f $OUT/cql_grammar_for_markdown.txt >&2
 
 ls $OUT/cql_grammar.md
 

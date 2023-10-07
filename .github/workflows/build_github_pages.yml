@@ -6,11 +6,6 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
     steps:
       - uses: actions/checkout@v4
       - name: Create temp directory in workspace
@@ -59,6 +54,10 @@ jobs:
           ls ${{ github.workspace }}/.generated/
 
   deploy:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{steps.deployment.outputs.page_url}}

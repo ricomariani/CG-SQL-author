@@ -62,7 +62,6 @@ jobs:
     permissions:
       contents: read
       pages: write
-      metadata: read
       id-token: write
     environment:
       name: github-pages

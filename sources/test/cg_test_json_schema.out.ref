@@ -5796,8 +5796,7 @@
           "type" : "text",
           "isNotNull" : 0
         }
-      ],
-      "createsObject" : 0
+      ]
     }
   ],
   "declareNoCheckSelectFuncs" : [
@@ -5811,8 +5810,7 @@
       "returnType" : {
         "type" : "real",
         "isNotNull" : 0
-      },
-      "createsObject" : 0
+      }
     }
   ],
   "interfaces" : [

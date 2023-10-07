@@ -734,7 +734,7 @@ opt_declare_select_funcs:  | declare_select_funcs
 declare_select_funcs: declare_select_func | declare_select_func ',' declare_select_funcs
   ;
 
-declare_select_func: declare_func | declare_table_valued_func 
+declare_select_func: declare_scalar_select_func | declare_table_valued_func 
   ;
 
 opt_declare_no_check_funcs:  | declare_no_check_funcs
@@ -761,12 +761,19 @@ declare_func: '{'
          '}'
   ;
 
+declare_scalar_select_func: '{'
+          NAME STRING_LITERAL ','
+          ARGS '[' opt_complex_args ']' ','
+          opt_attributes
+          return_type
+         '}'
+  ;
+
 declare_table_valued_func: '{'
           NAME STRING_LITERAL ','
           ARGS '[' opt_complex_args ']' ','
           opt_attributes
-          projection
-          CREATES_OBJECT BOOL_LITERAL
+          PROJECTION '[' projected_columns ']'
          '}'
   ;
 
@@ -778,11 +785,17 @@ declare_no_check_func: '{'
          '}'
   ;
 
+declare_no_check_select_func: '{'
+          NAME STRING_LITERAL ','
+          opt_attributes
+          return_type
+         '}'
+  ;
+
 declare_no_check_table_valued_func: '{'
           NAME STRING_LITERAL ','
           opt_attributes
-          projection
-          CREATES_OBJECT BOOL_LITERAL
+          PROJECTION '[' projected_columns ']'
          '}'
   ;
 

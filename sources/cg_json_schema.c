@@ -2259,10 +2259,12 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
     bprintf(output, "\n}");
   }
 
-  // emit whether this function is a "create" function or not.
-  // (this means its return value begins with a +1 ref that the caller now owns)
-  // always false for table valued functions
-  bprintf(output, ",\n\"createsObject\" : %d", (int)creates_object);
+  if (!select_func) {
+    // emit whether this function is a "create" function or not.
+    // (this means its return value begins with a +1 ref that the caller now owns)
+    // always false for table valued functions
+    bprintf(output, ",\n\"createsObject\" : %d", (int)creates_object);
+  }
 
   // add this function to the list.
   output = stmt_out;

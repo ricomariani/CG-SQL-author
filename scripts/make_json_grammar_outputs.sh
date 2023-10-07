@@ -57,8 +57,6 @@ cat <<EOF \
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of $(date)
-
 ### Rules
 
 \`\`\`

@@ -266,7 +266,6 @@ print(
     " * LICENSE file in the root directory of this source tree.\n"
     " */\n\n"
 )
-print("// Snapshot as of {}\n\n".format(datetime.datetime.now().strftime("%c")))
 print(
     "const PREC = {\n"
     "};\n\n"

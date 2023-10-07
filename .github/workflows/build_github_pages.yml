@@ -2,6 +2,10 @@ name: Build Github Pages
 
 on: push
 
+permission:
+  contents: 'read'
+  id-token: 'write'
+
 jobs:
   build:
     runs-on: ubuntu-22.04

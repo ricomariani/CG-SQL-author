@@ -11104,7 +11104,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Sat Oct  7 01:20:26 PDT 2023
+Snapshot as of Sat Oct  7 01:29:43 PDT 2023
 
 ### Operators and Literals
 
@@ -17685,7 +17685,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Sat Oct  7 01:20:26 PDT 2023
+Snapshot as of Sat Oct  7 01:29:43 PDT 2023
 
 ### Rules
 
@@ -18356,7 +18356,9 @@ opt_declare_select_funcs:  | declare_select_funcs
 declare_select_funcs: declare_select_func | declare_select_func ',' declare_select_funcs
   ;
 
-declare_select_func: declare_scalar_select_func | declare_table_valued_select_func
+declare_select_func:
+    '{' '"name"' ':' STRING_LITERAL ',' '"args"' ':' '[' opt_complex_args ']' ',' opt_attributes return_type '}'
+  | '{' '"name"' ':' STRING_LITERAL ',' '"args"' ':' '[' opt_complex_args ']' ',' opt_attributes '"projection"' ':' '[' projected_columns ']' '}'
   ;
 
 opt_declare_no_check_funcs:  | declare_no_check_funcs
@@ -18371,7 +18373,9 @@ opt_declare_no_check_select_funcs:  | declare_no_check_select_funcs
 declare_no_check_select_funcs: declare_no_check_select_func | declare_no_check_select_func ',' declare_no_check_select_funcs
   ;
 
-declare_no_check_select_func: declare_no_check_scalar_select_func | declare_no_check_table_valued_select_func
+declare_no_check_select_func:
+    '{' '"name"' ':' STRING_LITERAL ',' opt_attributes return_type '}'
+  | '{' '"name"' ':' STRING_LITERAL ',' opt_attributes '"projection"' ':' '[' projected_columns ']' '}'
   ;
 
 declare_func: '{'
@@ -18383,22 +18387,6 @@ declare_func: '{'
          '}'
   ;
 
-declare_scalar_select_func: '{'
-          '"name"' ':' STRING_LITERAL ','
-          '"args"' ':' '[' opt_complex_args ']' ','
-          opt_attributes
-          return_type
-         '}'
-  ;
-
-declare_table_valued_select_func: '{'
-          '"name"' ':' STRING_LITERAL ','
-          '"args"' ':' '[' opt_complex_args ']' ','
-          opt_attributes
-          '"projection"' ':' '[' projected_columns ']'
-         '}'
-  ;
-
 declare_no_check_func: '{'
           '"name"' ':' STRING_LITERAL ','
           opt_attributes
@@ -18407,19 +18395,6 @@ declare_no_check_func: '{'
          '}'
   ;
 
-declare_no_check_scalar_select_func: '{'
-          '"name"' ':' STRING_LITERAL ','
-          opt_attributes
-          return_type
-         '}'
-  ;
-
-declare_no_check_table_valued_select_func: '{'
-          '"name"' ':' STRING_LITERAL ','
-          opt_attributes
-          '"projection"' ':' '[' projected_columns ']'
-         '}'
-  ;
 
 return_type: '"returnType"' ':' '{'
           '"type"' ':' STRING_LITERAL ','

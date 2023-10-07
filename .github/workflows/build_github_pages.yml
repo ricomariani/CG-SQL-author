@@ -1,0 +1,64 @@
+name: Build Github Pages
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create temp directory in workspace
+        run: "mkdir -p ${{ github.workspace }}/.generated"
+
+      # Build Guides
+      - uses: docker://pandoc/core:3.1-ubuntu
+        with:
+          options: --volume ${{ github.workspace }}:/workspace
+          entrypoint: /bin/bash
+          args: "-x scripts/make_guide.sh all"
+      - name: Move generated guides
+        run: |
+          sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
+          mv ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
+          ls ${{ github.workspace }}/.generated/
+
+
+      # Build Grammars
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'microsoft'
+
+      - name: Cache rr-2.0-java11
+        id: cache-rr
+        uses: actions/cache@v3
+        with:
+          path: ~/rr-2.0-java11
+          key: rr-2.0-java11
+      - name: Download rr-2.0-java11.zip if not cached
+        if: steps.cache-rr.outputs.cache-hit != 'true'
+        run: |
+          wget https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip -O rr-2.0-java11.zip
+          unzip rr-2.0-java11.zip -d ./rr-2.0-java11
+          mv ./rr-2.0-java11 ~/rr-2.0-java11
+
+      - name: Build Grammar outputs
+        run: |
+          mkdir -p ${{ github.workspace }}/sources/out
+          (cd ${{ github.workspace }}/sources/ ; make --quiet out/replacements out/json_replacements)
+          ${{ github.workspace }}/scripts/make_cql_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_query_plan_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_json_grammar_outputs.sh
+          mv ${{ github.workspace }}/scripts/out/*_grammar.* ${{ github.workspace }}/.generated/
+          ls ${{ github.workspace }}/.generated/
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{steps.deployment.outputs.page_url}}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

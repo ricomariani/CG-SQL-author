@@ -9,7 +9,7 @@ TEST_DIR="test"
 CQL="./${OUT_DIR}/cql"
 
 # shellcheck disable=SC2034
-ERROR_DOC="../CQL_Guide/x4.md"
+ERROR_DOC="../docs/user_guide/appendices/04_error_codes.md"
 
 # shellcheck disable=SC1091
 source common/test_helpers.sh || exit 1

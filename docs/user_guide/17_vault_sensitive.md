@@ -4,7 +4,7 @@
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 17: Vault Sensitive -- Encoding for Privacy
+## Chapter 17: Vault Sensitive — Encoding for Privacy
 
 ### Introduction
 

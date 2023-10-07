@@ -21,6 +21,7 @@
 #
 # #####################################################################################
 
+import sys
 import datetime
 import re
 
@@ -101,7 +102,7 @@ SUPPRESS_RULES = {
     "create_table_prefix_opt_temp"
 }
 
-cql_grammar = "cql_grammar.txt"
+cql_grammar = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
 ts_grammar = {}
 ts_rule_names = []
 
@@ -265,7 +266,6 @@ print(
     " * LICENSE file in the root directory of this source tree.\n"
     " */\n\n"
 )
-print("// Snapshot as of {}\n\n".format(datetime.datetime.now().strftime("%c")))
 print(
     "const PREC = {\n"
     "};\n\n"

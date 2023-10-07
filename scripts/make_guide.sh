@@ -9,6 +9,12 @@ readonly OUT=$SCRIPT_DIR_RELATIVE/out
 mkdir -p $OUT
 debug() { echo $@ >&2; }
 
+# if guide type is all, then build all guides
+if [ "$1" == "all" ]; then
+    $SCRIPT_DIR_RELATIVE/make_guide.sh "user_guide" "CQL User's Guide" $SCRIPT_DIR_RELATIVE/../docs/user_guide/*.md $SCRIPT_DIR_RELATIVE/../docs/user_guide/**/*.md
+    $SCRIPT_DIR_RELATIVE/make_guide.sh "developer_guide" "CQL Developer's Guide" $SCRIPT_DIR_RELATIVE/../docs/developer_guide/*.md
+    exit 0
+fi
 
 guide_type=$1
 guide_name=$2

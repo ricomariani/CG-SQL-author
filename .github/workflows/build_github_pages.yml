@@ -6,22 +6,34 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      # Build Guides
       - uses: docker://pandoc/core:2.9
         with:
           options: --volume ${{ github.workspace }}:/workspace
-          run: ./workspace/scripts/build_guides.sh
-      - name: Fix permissions
-        run: chmod --changes --recursive +rX .generated/
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          path: .generated/
-          artifact-name: github-pages
-          retention-days: 14
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+          run: ./workspace/scripts/make-guide.sh all
+      - name: Move generated guides
+        run: mv scripts/out/*_guide.* .generated/
 
+      # Build Grammars
+      - name: Cache rr-2.0-java11
+        id: cache-rr
+        uses: actions/cache@v3
+        with:
+          path: ~/rr-2.0-java11
+          key: rr-2.0-java11
+      - name: Download rr-2.0-java11.zip if not cached
+        if: steps.cache-rr.outputs.cache-hit != 'true'
+        run: |
+          wget https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip -O rr-2.0-java11.zip
+          unzip rr-2.0-java11.zip -d ./rr-2.0-java11
+          mv ./rr-2.0-java11 ~/rr-2.0-java11
+      - uses: docker://openjdk:22-jdk-bullseye
+        with:
+          options: --volume ${{ github.workspace }}:/workspace
+          run: ./workspace/scripts/make-guide.sh all
+      - name: Move generated grammar outputs
+        run: mv scripts/out/*_grammar.* .generated/
+  
   deploy:
     environment:
       name: github-pages

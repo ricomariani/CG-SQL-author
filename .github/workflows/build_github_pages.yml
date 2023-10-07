@@ -5,6 +5,12 @@ on: push
 jobs:
   build:
     runs-on: ubuntu-22.04
+
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
       - name: Create temp directory in workspace

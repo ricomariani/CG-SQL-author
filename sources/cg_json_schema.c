@@ -2186,13 +2186,12 @@ static void cg_defined_on_line(charbuf *output, ast_node *ast) {
   bprintf(output, ",\n\"definedOnLine\" : %d", lineno);
 }
 
-static void cg_json_declare_interface(ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_interface(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
-  charbuf *output = interfaces_json;
   cg_begin_proc(output, ast, NULL);
 
   BEGIN_INDENT(interface, 2);
@@ -2211,7 +2210,7 @@ static void cg_json_declare_interface(ast_node *ast, ast_node *misc_attrs) {
   cg_end_proc(output, ast);
 }
 
-static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_func_stmt(ast));
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2256,7 +2255,7 @@ static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
   bprintf(output, ",\n\"createsObject\" : %d", (int)creates_object);
 
   // add this function to the list.
-  output = declare_funcs;
+  output = stmt_out;
   cg_begin_proc(output, ast, misc_attrs);
   BEGIN_INDENT(func, 2);
   bprintf(output, "%s", declare_func_buffer.ptr);
@@ -2267,7 +2266,7 @@ static void cg_json_declare_funcs(ast_node *ast, ast_node *misc_attrs) {
   cg_end_proc(output, ast);
 }
 
-static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
@@ -2305,7 +2304,7 @@ static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
   bprintf(output, ",\n\"usesDatabase\" : %d", !!(sem_type & SEM_TYPE_DML_PROC));
 
   // add this proc to the list.
-  output = declare_procs;
+  output = stmt_out;
   cg_begin_proc(output, ast, misc_attrs);
   BEGIN_INDENT(proc, 2);
   bprintf(output, "%s", declare_proc_buffer.ptr);
@@ -2322,8 +2321,9 @@ static void cg_json_declare_proc(ast_node *ast, ast_node *misc_attrs) {
 // output stream for the type of statement and then a suitable helper is dispatched.
 // Additionally, each procedure includes an array of tables that it uses regardless
 // of the type of procedure.
-static void cg_json_create_proc(ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_create_proc_stmt(ast));
+  Contract(unused == NULL);  // proc output is complicated, this code knows what to do
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -2471,6 +2471,19 @@ static void cg_json_declare_vars_type(charbuf *output, ast_node *ast, ast_node *
   }
 }
 
+
+// all the generic statement handlers look like this
+// this is a custom functor to call them
+typedef struct {
+  void (*func)(charbuf *out, ast_node *ast, ast_node *misc_attrs);
+  charbuf *out;
+} json_dispatch;
+
+#undef STMT_INIT
+#define STMT_INIT(x, func, out) \
+  json_dispatch json_disp_ ## x = { func,  out }; \
+  symtab_add(stmts, k_ast_ ## x, (void *)&json_disp_ ##x)
+
 // Here we create several buffers for the various statement types and then redirect
 // output into the appropriate buffer as we walk the statements.  Finally each buffer
 // is emitted in order.
@@ -2496,6 +2509,14 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   declare_funcs = &declare_funcs_buf;
   interfaces_json = &interfaces_buf;
 
+  symtab *stmts = symtab_new();
+
+  STMT_INIT(create_proc_stmt, cg_json_create_proc, NULL);
+  STMT_INIT(declare_vars_type, cg_json_declare_vars_type, &attributes_buf);
+  STMT_INIT(declare_interface_stmt, cg_json_declare_interface, &interfaces_buf);
+  STMT_INIT(declare_proc_stmt, cg_json_declare_proc, declare_procs);
+  STMT_INIT(declare_func_stmt, cg_json_declare_func, declare_funcs);
+
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
 
@@ -2505,21 +2526,17 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
       continue;
     }
 
-    if (is_ast_create_proc_stmt(stmt)) {
-      cg_json_create_proc(stmt, misc_attrs);
+    // Search for the functions we declared above and dispatch
+    symtab_entry *entry = symtab_find(stmts, stmt->type);
+    if (!entry) {
+      continue;
     }
-    else if (is_ast_declare_vars_type(stmt)) {
-      cg_json_declare_vars_type(&attributes_buf, stmt, misc_attrs);
-    } else if (is_ast_declare_interface_stmt(stmt)) {
-      cg_json_declare_interface(stmt, misc_attrs);
-    }
-    else if (is_ast_declare_proc_stmt(stmt)) {
-      cg_json_declare_proc(stmt, misc_attrs);
-    }
-    else if (is_ast_declare_func_stmt(stmt)) {
-      cg_json_declare_funcs(stmt, misc_attrs);
-    }
+
+    json_dispatch *disp = (json_dispatch *)entry->val;
+    disp->func(disp->out, stmt, misc_attrs);
   }
+  
+  symtab_delete(stmts);
 
   bprintf(output, "\"attributes\" : [");
   bprintf(output, "%s", attributes_buf.ptr);

@@ -4,6 +4,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+echo "This tool was once used to do manual doc updates."
+echo "We are migrating to github workflow to do that all automatically."
+echo "We have not yet deleted this script so as to harvest more from it maybe"
+echo "It is not currently working."
+exit 1
+
 set -euo pipefail
 
 CQL_SOURCES=$(git rev-parse --show-toplevel)/sources

@@ -53,10 +53,16 @@ jobs:
           mv ${{ github.workspace }}/scripts/out/*_grammar.* ${{ github.workspace }}/.generated/
           ls ${{ github.workspace }}/.generated/
 
+      - name: Upload artifacts
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ${{ github.workspace }}/.generated/
+
   deploy:
     permissions:
       contents: read
       pages: write
+      metadata: read
       id-token: write
     environment:
       name: github-pages

@@ -4,7 +4,7 @@
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 14: CQL Shared Fragments
+## Chapter 14: Shared Fragments
 
 Shared fragments allows you to reuse and compose SQL queires in a safe (type checked) and efficient manner. They are based on [Common Table Expressions (CTEs)](https://www.sqlite.org/lang_with.html), so some basic knowledge of that is recommended before using Shared Fragments.
 

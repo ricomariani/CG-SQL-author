@@ -2171,11 +2171,11 @@
             <li><a href="#column" title="column">column</a></li>
             <li><a href="#declare_func" title="declare_func">declare_func</a></li>
             <li><a href="#declare_no_check_func" title="declare_no_check_func">declare_no_check_func</a></li>
-            <li><a href="#declare_no_check_select_func" title="declare_no_check_select_func">declare_no_check_select_func</a></li>
-            <li><a href="#declare_no_check_table_valued_func" title="declare_no_check_table_valued_func">declare_no_check_table_valued_func</a></li>
+            <li><a href="#declare_no_check_scalar_select_func" title="declare_no_check_scalar_select_func">declare_no_check_scalar_select_func</a></li>
+            <li><a href="#declare_no_check_table_valued_select_func" title="declare_no_check_table_valued_select_func">declare_no_check_table_valued_select_func</a></li>
             <li><a href="#declare_proc" title="declare_proc">declare_proc</a></li>
             <li><a href="#declare_scalar_select_func" title="declare_scalar_select_func">declare_scalar_select_func</a></li>
-            <li><a href="#declare_table_valued_func" title="declare_table_valued_func">declare_table_valued_func</a></li>
+            <li><a href="#declare_table_valued_select_func" title="declare_table_valued_select_func">declare_table_valued_select_func</a></li>
             <li><a href="#delete" title="delete">delete</a></li>
             <li><a href="#general" title="general">general</a></li>
             <li><a href="#index" title="index">index</a></li>
@@ -2682,8 +2682,8 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#declare_no_check_table_valued_func" title="declare_no_check_table_valued_func">declare_no_check_table_valued_func</a></li>
-            <li><a href="#declare_table_valued_func" title="declare_table_valued_func">declare_table_valued_func</a></li>
+            <li><a href="#declare_no_check_table_valued_select_func" title="declare_no_check_table_valued_select_func">declare_no_check_table_valued_select_func</a></li>
+            <li><a href="#declare_table_valued_select_func" title="declare_table_valued_select_func">declare_table_valued_select_func</a></li>
             <li><a href="#interface" title="interface">interface</a></li>
             <li><a href="#projection" title="projection">projection</a></li>
          </ul>
@@ -4380,7 +4380,7 @@
             <li><a href="#declare_func" title="declare_func">declare_func</a></li>
             <li><a href="#declare_proc" title="declare_proc">declare_proc</a></li>
             <li><a href="#declare_scalar_select_func" title="declare_scalar_select_func">declare_scalar_select_func</a></li>
-            <li><a href="#declare_table_valued_func" title="declare_table_valued_func">declare_table_valued_func</a></li>
+            <li><a href="#declare_table_valued_select_func" title="declare_table_valued_select_func">declare_table_valued_select_func</a></li>
             <li><a href="#general" title="general">general</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="complex_arg">complex_arg:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="939" height="103">
@@ -4821,21 +4821,21 @@
          <ul>
             <li><a href="#json_schema" title="json_schema">json_schema</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_select_func">declare_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="291" height="81">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_select_func">declare_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="335" height="81">
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_scalar_select_func" xlink:title="declare_scalar_select_func">
             <rect x="51" y="3" width="192" height="32"></rect>
             <rect x="49" y="1" width="192" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="21">declare_scalar_select_func</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_table_valued_func" xlink:title="declare_table_valued_func">
-            <rect x="51" y="47" width="192" height="32"></rect>
-            <rect x="49" y="45" width="192" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="65">declare_table_valued_func</text></a><path class="line" d="m17 17 h2 m20 0 h10 m192 0 h10 m-232 0 h20 m212 0 h20 m-252 0 q10 0 10 10 m232 0 q0 -10 10 -10 m-242 10 v24 m232 0 v-24 m-232 24 q0 10 10 10 m212 0 q10 0 10 -10 m-222 10 h10 m192 0 h10 m23 -44 h-3"></path>
-         <polygon points="281 17 289 13 289 21"></polygon>
-         <polygon points="281 17 273 13 273 21"></polygon></svg><p>
+            <text class="nonterminal" x="59" y="21">declare_scalar_select_func</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_table_valued_select_func" xlink:title="declare_table_valued_select_func">
+            <rect x="51" y="47" width="236" height="32"></rect>
+            <rect x="49" y="45" width="236" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="65">declare_table_valued_select_func</text></a><path class="line" d="m17 17 h2 m20 0 h10 m192 0 h10 m0 0 h44 m-276 0 h20 m256 0 h20 m-296 0 q10 0 10 10 m276 0 q0 -10 10 -10 m-286 10 v24 m276 0 v-24 m-276 24 q0 10 10 10 m256 0 q10 0 10 -10 m-266 10 h10 m236 0 h10 m23 -44 h-3"></path>
+         <polygon points="325 17 333 13 333 21"></polygon>
+         <polygon points="325 17 317 13 317 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#declare_select_func" title="declare_select_func">declare_select_func</a></div>
                <div>         ::= <a href="#declare_scalar_select_func" title="declare_scalar_select_func">declare_scalar_select_func</a></div>
-               <div>           | <a href="#declare_table_valued_func" title="declare_table_valued_func">declare_table_valued_func</a></div></code></div>
+               <div>           | <a href="#declare_table_valued_select_func" title="declare_table_valued_select_func">declare_table_valued_select_func</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -4879,44 +4879,21 @@
          <ul>
             <li><a href="#json_schema" title="json_schema">json_schema</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_no_check_select_func">declare_no_check_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="741" height="125">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_no_check_select_func">declare_no_check_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="403" height="81">
          <polygon points="9 17 1 13 1 21"></polygon>
-         <polygon points="17 17 9 13 9 21"></polygon><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_no_check_func" xlink:title="declare_no_check_func">
-            <rect x="51" y="3" width="168" height="32"></rect>
-            <rect x="49" y="1" width="168" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="21">declare_no_check_func</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_no_check_table_valued_func" xlink:title="declare_no_check_table_valued_func">
-            <rect x="51" y="47" width="258" height="32"></rect>
-            <rect x="49" y="45" width="258" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="59" y="65">declare_no_check_table_valued_func</text></a><rect x="51" y="91" width="28" height="32" rx="10"></rect>
-         <rect x="49" y="89" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="59" y="109">{</text>
-         <rect x="99" y="91" width="70" height="32" rx="10"></rect>
-         <rect x="97" y="89" width="70" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="107" y="109">"name"</text>
-         <rect x="189" y="91" width="24" height="32" rx="10"></rect>
-         <rect x="187" y="89" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="197" y="109">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#STRING_LITERAL" xlink:title="STRING_LITERAL">
-            <rect x="233" y="91" width="124" height="32"></rect>
-            <rect x="231" y="89" width="124" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="241" y="109">STRING_LITERAL</text></a><rect x="377" y="91" width="24" height="32" rx="10"></rect>
-         <rect x="375" y="89" width="24" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="385" y="109">,</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_attributes" xlink:title="opt_attributes">
-            <rect x="421" y="91" width="110" height="32"></rect>
-            <rect x="419" y="89" width="110" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="429" y="109">opt_attributes</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#return_type" xlink:title="return_type">
-            <rect x="551" y="91" width="94" height="32"></rect>
-            <rect x="549" y="89" width="94" height="32" class="nonterminal"></rect>
-            <text class="nonterminal" x="559" y="109">return_type</text></a><rect x="665" y="91" width="28" height="32" rx="10"></rect>
-         <rect x="663" y="89" width="28" height="32" class="terminal" rx="10"></rect>
-         <text class="terminal" x="673" y="109">}</text>
-         <path class="line" d="m17 17 h2 m20 0 h10 m168 0 h10 m0 0 h474 m-682 0 h20 m662 0 h20 m-702 0 q10 0 10 10 m682 0 q0 -10 10 -10 m-692 10 v24 m682 0 v-24 m-682 24 q0 10 10 10 m662 0 q10 0 10 -10 m-672 10 h10 m258 0 h10 m0 0 h384 m-672 -10 v20 m682 0 v-20 m-682 20 v24 m682 0 v-24 m-682 24 q0 10 10 10 m662 0 q10 0 10 -10 m-672 10 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m94 0 h10 m0 0 h10 m28 0 h10 m23 -88 h-3"></path>
-         <polygon points="731 17 739 13 739 21"></polygon>
-         <polygon points="731 17 723 13 723 21"></polygon></svg><p>
+         <polygon points="17 17 9 13 9 21"></polygon><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_no_check_scalar_select_func" xlink:title="declare_no_check_scalar_select_func">
+            <rect x="51" y="3" width="260" height="32"></rect>
+            <rect x="49" y="1" width="260" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="21">declare_no_check_scalar_select_func</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#declare_no_check_table_valued_select_func" xlink:title="declare_no_check_table_valued_select_func">
+            <rect x="51" y="47" width="304" height="32"></rect>
+            <rect x="49" y="45" width="304" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="59" y="65">declare_no_check_table_valued_select_func</text></a><path class="line" d="m17 17 h2 m20 0 h10 m260 0 h10 m0 0 h44 m-344 0 h20 m324 0 h20 m-364 0 q10 0 10 10 m344 0 q0 -10 10 -10 m-354 10 v24 m344 0 v-24 m-344 24 q0 10 10 10 m324 0 q10 0 10 -10 m-334 10 h10 m304 0 h10 m23 -44 h-3"></path>
+         <polygon points="393 17 401 13 401 21"></polygon>
+         <polygon points="393 17 385 13 385 21"></polygon></svg><p>
          <div class="ebnf"><code>
                <div><a href="#declare_no_check_select_func" title="declare_no_check_select_func">declare_no_check_select_func</a></div>
-               <div>         ::= <a href="#declare_no_check_func" title="declare_no_check_func">declare_no_check_func</a></div>
-               <div>           | <a href="#declare_no_check_table_valued_func" title="declare_no_check_table_valued_func">declare_no_check_table_valued_func</a></div>
-               <div>           | '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> <a href="#return_type" title="return_type">return_type</a> '}'</div></code></div>
+               <div>         ::= <a href="#declare_no_check_scalar_select_func" title="declare_no_check_scalar_select_func">declare_no_check_scalar_select_func</a></div>
+               <div>           | <a href="#declare_no_check_table_valued_select_func" title="declare_no_check_table_valued_select_func">declare_no_check_table_valued_select_func</a></div></code></div>
       </p>
       <p>referenced by:
          <ul>
@@ -5039,7 +5016,7 @@
          <ul>
             <li><a href="#declare_select_func" title="declare_select_func">declare_select_func</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_table_valued_func">declare_table_valued_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="953" height="103">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_table_valued_select_func">declare_table_valued_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="953" height="103">
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon>
          <rect x="31" y="3" width="28" height="32" rx="10"></rect>
@@ -5096,7 +5073,7 @@
          <polygon points="943 83 951 79 951 87"></polygon>
          <polygon points="943 83 935 79 935 87"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#declare_table_valued_func" title="declare_table_valued_func">declare_table_valued_func</a></div>
+               <div><a href="#declare_table_valued_select_func" title="declare_table_valued_select_func">declare_table_valued_select_func</a></div>
                <div>         ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' '"args"' ':' '[' <a href="#opt_complex_args" title="opt_complex_args">opt_complex_args</a> ']' ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> '"projection"' ':' '[' <a href="#projected_columns" title="projected_columns">projected_columns</a> ']' '}'</div></code></div>
       </p>
       <p>referenced by:
@@ -5148,10 +5125,45 @@
       </p>
       <p>referenced by:
          <ul>
-            <li><a href="#declare_no_check_select_func" title="declare_no_check_select_func">declare_no_check_select_func</a></li>
             <li><a href="#opt_declare_no_check_funcs" title="opt_declare_no_check_funcs">opt_declare_no_check_funcs</a></li>
          </ul>
-      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_no_check_table_valued_func">declare_no_check_table_valued_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="951" height="103">
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_no_check_scalar_select_func">declare_no_check_scalar_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="701" height="37">
+         <polygon points="9 17 1 13 1 21"></polygon>
+         <polygon points="17 17 9 13 9 21"></polygon>
+         <rect x="31" y="3" width="28" height="32" rx="10"></rect>
+         <rect x="29" y="1" width="28" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="39" y="21">{</text>
+         <rect x="79" y="3" width="70" height="32" rx="10"></rect>
+         <rect x="77" y="1" width="70" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="87" y="21">"name"</text>
+         <rect x="169" y="3" width="24" height="32" rx="10"></rect>
+         <rect x="167" y="1" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="177" y="21">:</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#STRING_LITERAL" xlink:title="STRING_LITERAL">
+            <rect x="213" y="3" width="124" height="32"></rect>
+            <rect x="211" y="1" width="124" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="221" y="21">STRING_LITERAL</text></a><rect x="357" y="3" width="24" height="32" rx="10"></rect>
+         <rect x="355" y="1" width="24" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="365" y="21">,</text><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#opt_attributes" xlink:title="opt_attributes">
+            <rect x="401" y="3" width="110" height="32"></rect>
+            <rect x="399" y="1" width="110" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="409" y="21">opt_attributes</text></a><a xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#return_type" xlink:title="return_type">
+            <rect x="531" y="3" width="94" height="32"></rect>
+            <rect x="529" y="1" width="94" height="32" class="nonterminal"></rect>
+            <text class="nonterminal" x="539" y="21">return_type</text></a><rect x="645" y="3" width="28" height="32" rx="10"></rect>
+         <rect x="643" y="1" width="28" height="32" class="terminal" rx="10"></rect>
+         <text class="terminal" x="653" y="21">}</text>
+         <path class="line" d="m17 17 h2 m0 0 h10 m28 0 h10 m0 0 h10 m70 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m124 0 h10 m0 0 h10 m24 0 h10 m0 0 h10 m110 0 h10 m0 0 h10 m94 0 h10 m0 0 h10 m28 0 h10 m3 0 h-3"></path>
+         <polygon points="691 17 699 13 699 21"></polygon>
+         <polygon points="691 17 683 13 683 21"></polygon></svg><p>
+         <div class="ebnf"><code>
+               <div><a href="#declare_no_check_scalar_select_func" title="declare_no_check_scalar_select_func">declare_no_check_scalar_select_func</a></div>
+               <div>         ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> <a href="#return_type" title="return_type">return_type</a> '}'</div></code></div>
+      </p>
+      <p>referenced by:
+         <ul>
+            <li><a href="#declare_no_check_select_func" title="declare_no_check_select_func">declare_no_check_select_func</a></li>
+         </ul>
+      </p><br /><p style="font-size: 14px; font-weight:bold"><a name="declare_no_check_table_valued_select_func">declare_no_check_table_valued_select_func:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="951" height="103">
          <polygon points="9 17 1 13 1 21"></polygon>
          <polygon points="17 17 9 13 9 21"></polygon>
          <rect x="31" y="3" width="28" height="32" rx="10"></rect>
@@ -5191,7 +5203,7 @@
          <polygon points="941 83 949 79 949 87"></polygon>
          <polygon points="941 83 933 79 933 87"></polygon></svg><p>
          <div class="ebnf"><code>
-               <div><a href="#declare_no_check_table_valued_func" title="declare_no_check_table_valued_func">declare_no_check_table_valued_func</a></div>
+               <div><a href="#declare_no_check_table_valued_select_func" title="declare_no_check_table_valued_select_func">declare_no_check_table_valued_select_func</a></div>
                <div>         ::= '{' '"name"' ':' <a href="#STRING_LITERAL" title="STRING_LITERAL">STRING_LITERAL</a> ',' <a href="#opt_attributes" title="opt_attributes">opt_attributes</a> '"projection"' ':' '[' <a href="#projected_columns" title="projected_columns">projected_columns</a> ']' '}'</div></code></div>
       </p>
       <p>referenced by:
@@ -5248,7 +5260,7 @@
          <ul>
             <li><a href="#declare_func" title="declare_func">declare_func</a></li>
             <li><a href="#declare_no_check_func" title="declare_no_check_func">declare_no_check_func</a></li>
-            <li><a href="#declare_no_check_select_func" title="declare_no_check_select_func">declare_no_check_select_func</a></li>
+            <li><a href="#declare_no_check_scalar_select_func" title="declare_no_check_scalar_select_func">declare_no_check_scalar_select_func</a></li>
             <li><a href="#declare_scalar_select_func" title="declare_scalar_select_func">declare_scalar_select_func</a></li>
          </ul>
       </p><br /><p style="font-size: 14px; font-weight:bold"><a name="opt_interfaces">opt_interfaces:</a></p><svg xmlns="http://www.w3.org/2000/svg" width="215" height="97">

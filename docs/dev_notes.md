@@ -4,7 +4,7 @@
 1. If you aren't good with `yacc`/`lex` you probably should do some homework before you start. CQL development is all about building and walking a syntax tree.  It's possible to make local changes without knowing the details but it can be hard to figure out where to make changes without context.
 2. CQL development is basically test driven, to create a new feature:
    1. Add the language feature to `test.sql`
-   2. run `test.sh`; it will fail due to parse error
+   2. run [`test.sh`](testing.md); it will fail due to parse error
    3. Add the syntax to `cql.y` and create the necessary tree pieces in `ast.h`
    4. run `test.sh`; accept any file differences to install this as the new reference baseline.
    5. Add a test case to `sem_test.sql` that uses your new feature. `sem_test.sql` can contain pattern matching for the semantic output.
@@ -22,7 +22,7 @@
    17. Add code that runs your new feature using `run_test.sql`
    18. Run `test.sh`, if your codegen was perfect it could pass; it probably won't at first
    19. fix your code until it's done; you shouldn't need to accept any more diffs at this point
-   20. run `cov.sh` to confirm 100% coverage
+   20. run [`cov.sh`](code-coverage.md) to confirm 100% coverage
    21. sanity check the GCC build (I use a linux box for this)
 
 3. Get a solid code review and land as usual.

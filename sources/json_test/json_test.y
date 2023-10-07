@@ -62,7 +62,9 @@ void yyset_lineno(int);
 %token USES_DATABASE HAS_SELECT_RESULT HAS_OUT_UNION_RESULT HAS_OUT_RESULT REGIONS GENERAL INTERFACES
 %token USING USING_PRIVATELY IS_DEPLOYABLE_ROOT AD_HOC_MIGRATION_PROCS VERSION
 %token BINDING_INOUT BINDING_OUT COLLATE CHECK_EXPR CHECK_EXPR_ARGS CHECK_EXPRESSIONS
-%token ENUMS CONSTANT_GROUPS DECLARE_PROCS DECLARE_FUNCS CREATES_OBJECT RETURN_TYPE
+%token ENUMS CONSTANT_GROUPS CREATES_OBJECT RETURN_TYPE
+%token DECLARE_FUNCS DECLARE_NO_CHECK_FUNCS DECLARE_SELECT_FUNCS DECLARE_NO_CHECK_SELECT_FUNCS
+%token DECLARE_PROCS DECLARE_NO_CHECK_PROCS
 
 %start json_schema
 
@@ -82,7 +84,11 @@ json_schema: '{'
          DELETES '[' opt_deletes ']' ','
          GENERAL '[' opt_generals ']' ','
          DECLARE_PROCS '[' opt_declare_procs']' ','
+         DECLARE_NO_CHECK_PROCS '[' opt_declare_no_check_procs']' ','
          DECLARE_FUNCS '[' opt_declare_funcs']' ','
+         DECLARE_NO_CHECK_FUNCS '[' opt_declare_no_check_funcs']' ','
+         DECLARE_SELECT_FUNCS '[' opt_declare_select_funcs']' ','
+         DECLARE_NO_CHECK_SELECT_FUNCS '[' opt_declare_no_check_select_funcs']' ','
          INTERFACES '[' opt_interfaces ']' ','
          REGIONS '[' opt_regions ']' ','
          AD_HOC_MIGRATION_PROCS '[' opt_ad_hoc_migrations ']' ','
@@ -707,10 +713,43 @@ declare_proc: '{'
          '}'
   ;
 
+opt_declare_no_check_procs: | declare_no_check_procs
+  ;
+
+declare_no_check_procs: declare_no_check_proc | declare_no_check_proc ',' declare_no_check_procs
+  ;
+
+declare_no_check_proc: '{' NAME STRING_LITERAL ',' ATTRIBUTES '[' attribute_list ']' '}' |  '{' NAME STRING_LITERAL '}'
+  ;
+
 opt_declare_funcs:  | declare_funcs
   ;
 
 declare_funcs: declare_func | declare_func ',' declare_funcs
+  ;
+
+opt_declare_select_funcs:  | declare_select_funcs
+  ;
+
+declare_select_funcs: declare_select_func | declare_select_func ',' declare_select_funcs
+  ;
+
+declare_select_func: declare_func | declare_table_valued_func 
+  ;
+
+opt_declare_no_check_funcs:  | declare_no_check_funcs
+  ;
+
+declare_no_check_funcs: declare_no_check_func | declare_no_check_func ',' declare_no_check_funcs
+  ;
+
+opt_declare_no_check_select_funcs:  | declare_no_check_select_funcs
+  ;
+
+declare_no_check_select_funcs: declare_no_check_select_func | declare_no_check_select_func ',' declare_no_check_select_funcs
+  ;
+
+declare_no_check_select_func: declare_no_check_func | declare_no_check_table_valued_func
   ;
 
 declare_func: '{'
@@ -718,6 +757,31 @@ declare_func: '{'
           ARGS '[' opt_complex_args ']' ','
           opt_attributes
           return_type ','
+          CREATES_OBJECT BOOL_LITERAL
+         '}'
+  ;
+
+declare_table_valued_func: '{'
+          NAME STRING_LITERAL ','
+          ARGS '[' opt_complex_args ']' ','
+          opt_attributes
+          projection
+          CREATES_OBJECT BOOL_LITERAL
+         '}'
+  ;
+
+declare_no_check_func: '{'
+          NAME STRING_LITERAL ','
+          opt_attributes
+          return_type ','
+          CREATES_OBJECT BOOL_LITERAL
+         '}'
+  ;
+
+declare_no_check_table_valued_func: '{'
+          NAME STRING_LITERAL ','
+          opt_attributes
+          projection
           CREATES_OBJECT BOOL_LITERAL
          '}'
   ;

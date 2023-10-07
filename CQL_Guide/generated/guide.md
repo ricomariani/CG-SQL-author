@@ -11104,7 +11104,7 @@ These are the various outputs the compiler can produce.
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
 
-Snapshot as of Tue Oct  3 00:30:12 PDT 2023
+Snapshot as of Sat Oct  7 00:37:50 PDT 2023
 
 ### Operators and Literals
 
@@ -17685,7 +17685,7 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 
-Snapshot as of Tue Oct  3 00:30:12 PDT 2023
+Snapshot as of Sat Oct  7 00:37:50 PDT 2023
 
 ### Rules
 
@@ -17706,7 +17706,11 @@ json_schema: '{'
          '"deletes"' ':' '[' opt_deletes ']' ','
          '"general"' ':' '[' opt_generals ']' ','
          '"declareProcs"' ':' '[' opt_declare_procs']' ','
+         '"declareNoCheckProcs"' ':' '[' opt_declare_no_check_procs']' ','
          '"declareFuncs"' ':' '[' opt_declare_funcs']' ','
+         '"declareNoCheckFuncs"' ':' '[' opt_declare_no_check_funcs']' ','
+         '"declareSelectFuncs"' ':' '[' opt_declare_select_funcs']' ','
+         '"declareNoCheckSelectFuncs"' ':' '[' opt_declare_no_check_select_funcs']' ','
          '"interfaces"' ':' '[' opt_interfaces ']' ','
          '"regions"' ':' '[' opt_regions ']' ','
          '"adHocMigrationProcs"' ':' '[' opt_ad_hoc_migrations ']' ','
@@ -18331,10 +18335,43 @@ declare_proc: '{'
          '}'
   ;
 
+opt_declare_no_check_procs: | declare_no_check_procs
+  ;
+
+declare_no_check_procs: declare_no_check_proc | declare_no_check_proc ',' declare_no_check_procs
+  ;
+
+declare_no_check_proc: '{' '"name"' ':' STRING_LITERAL ',' '"attributes"' ':' '[' attribute_list ']' '}' |  '{' '"name"' ':' STRING_LITERAL '}'
+  ;
+
 opt_declare_funcs:  | declare_funcs
   ;
 
 declare_funcs: declare_func | declare_func ',' declare_funcs
+  ;
+
+opt_declare_select_funcs:  | declare_select_funcs
+  ;
+
+declare_select_funcs: declare_select_func | declare_select_func ',' declare_select_funcs
+  ;
+
+declare_select_func: declare_func | declare_table_valued_func
+  ;
+
+opt_declare_no_check_funcs:  | declare_no_check_funcs
+  ;
+
+declare_no_check_funcs: declare_no_check_func | declare_no_check_func ',' declare_no_check_funcs
+  ;
+
+opt_declare_no_check_select_funcs:  | declare_no_check_select_funcs
+  ;
+
+declare_no_check_select_funcs: declare_no_check_select_func | declare_no_check_select_func ',' declare_no_check_select_funcs
+  ;
+
+declare_no_check_select_func: declare_no_check_func | declare_no_check_table_valued_func
   ;
 
 declare_func: '{'
@@ -18342,6 +18379,31 @@ declare_func: '{'
           '"args"' ':' '[' opt_complex_args ']' ','
           opt_attributes
           return_type ','
+          '"createsObject"' ':' BOOL_LITERAL
+         '}'
+  ;
+
+declare_table_valued_func: '{'
+          '"name"' ':' STRING_LITERAL ','
+          '"args"' ':' '[' opt_complex_args ']' ','
+          opt_attributes
+          projection
+          '"createsObject"' ':' BOOL_LITERAL
+         '}'
+  ;
+
+declare_no_check_func: '{'
+          '"name"' ':' STRING_LITERAL ','
+          opt_attributes
+          return_type ','
+          '"createsObject"' ':' BOOL_LITERAL
+         '}'
+  ;
+
+declare_no_check_table_valued_func: '{'
+          '"name"' ':' STRING_LITERAL ','
+          opt_attributes
+          projection
           '"createsObject"' ':' BOOL_LITERAL
          '}'
   ;

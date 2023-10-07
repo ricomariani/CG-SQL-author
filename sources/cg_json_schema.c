@@ -52,11 +52,6 @@ static charbuf *inserts;
 static charbuf *updates;
 static charbuf *general;
 static charbuf *general_inserts;
-static charbuf *interfaces_json;
-
-// These are the main output buffers for declare statements.
-static charbuf *declare_procs;
-static charbuf *declare_funcs;
 
 // We use this to track every table we've ever seen and we remember what stored procedures use it
 static symtab *tables_to_procs;
@@ -1979,10 +1974,12 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
   cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
 }
 
-// Start a new section for a proc, if testing we spew the test info here
+// Start a new section for any kind of thing, if testing we spew the test info here
 // This lets us attribute the output to a particular line number in the test file.
-static void cg_begin_proc(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
-  Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_interface_stmt(ast) || is_ast_declare_func_stmt(ast) || is_ast_declare_proc_stmt(ast));
+// This code also adds the pesky comma that goes before any new items in the same
+// section.
+static void cg_begin_item_attrs(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
+  Contract(ast);
 
   if (output->used > 1) bprintf(output, ",\n");
   cg_json_test_details(output, ast, misc_attrs);
@@ -2058,7 +2055,7 @@ bool_t static is_simple_insert(ast_node *ast) {
 
 static void cg_json_general_proc(ast_node *ast, ast_node *misc_attrs, CSTR params) {
   charbuf *output = general;
-  cg_begin_proc(output, ast, misc_attrs);
+  cg_begin_item_attrs(output, ast, misc_attrs);
   sem_t sem_type = ast->sem->sem_type;
   BEGIN_INDENT(proc, 2)
   bprintf(output, "%s", params);
@@ -2192,7 +2189,7 @@ static void cg_json_declare_interface(charbuf *output, ast_node *ast, ast_node *
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
-  cg_begin_proc(output, ast, NULL);
+  cg_begin_item_attrs(output, ast, NULL);
 
   BEGIN_INDENT(interface, 2);
   bprintf(output, "\"name\" : \"%s\"", name);
@@ -2211,7 +2208,11 @@ static void cg_json_declare_interface(charbuf *output, ast_node *ast, ast_node *
 }
 
 static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
-  Contract(is_ast_declare_func_stmt(ast));
+  bool_t select_func = is_ast_declare_select_func_no_check_stmt(ast) || is_ast_declare_select_func_stmt(ast);
+  bool_t non_select_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_func_stmt(ast);
+  bool_t no_check_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast);
+  Contract(select_func || non_select_func);
+
   EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -2222,12 +2223,14 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
 
   bprintf(output, "\"name\" : \"%s\"", name);
 
-  // emit parameters.
-  bprintf(output, ",\n\"args\" : [\n");
-  BEGIN_INDENT(parms, 2);
-  cg_json_params(output, params, NULL);
-  END_INDENT(parms);
-  bprintf(output, "]");
+  if (!no_check_func) {
+    // emit parameters.
+    bprintf(output, ",\n\"args\" : [\n");
+    BEGIN_INDENT(parms, 2);
+    cg_json_params(output, params, NULL);
+    END_INDENT(parms);
+    bprintf(output, "]");
+  }
 
   // emit attributes.
   if (misc_attrs) {
@@ -2237,32 +2240,70 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
 
   // emit return type.
   EXTRACT_ANY_NOTNULL(data_type, func_params_return->right);
-  bool_t creates_object = false;
-  if (is_ast_create_data_type(data_type)) {
-    creates_object = true;
-    data_type = data_type->left;
-  }
 
-  Invariant(data_type);
-  bprintf(output, ",\n\"returnType\" : {\n");
-  BEGIN_INDENT(type, 2);
-  cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
-  END_INDENT(type);
-  bprintf(output, "\n}");
+  bool_t creates_object = false;
+  if (is_ast_typed_names(data_type)) {
+    // table valued function
+    cg_json_projection(output, data_type);
+  }
+  else {
+    if (is_ast_create_data_type(data_type)) {
+      creates_object = true;
+      data_type = data_type->left;
+    }
+
+    bprintf(output, ",\n\"returnType\" : {\n");
+    BEGIN_INDENT(type, 2);
+    cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
+    END_INDENT(type);
+    bprintf(output, "\n}");
+  }
 
   // emit whether this function is a "create" function or not.
   // (this means its return value begins with a +1 ref that the caller now owns)
+  // always false for table valued functions
   bprintf(output, ",\n\"createsObject\" : %d", (int)creates_object);
 
   // add this function to the list.
   output = stmt_out;
-  cg_begin_proc(output, ast, misc_attrs);
+  cg_begin_item_attrs(output, ast, misc_attrs);
   BEGIN_INDENT(func, 2);
   bprintf(output, "%s", declare_func_buffer.ptr);
   END_INDENT(func);
 
   // clean up
   CHARBUF_CLOSE(declare_func_buffer);
+  cg_end_proc(output, ast);
+}
+
+
+// the no check version has no args, and it is never DML, and never has a shape
+static void cg_json_declare_proc_no_check(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
+  Contract(is_ast_declare_proc_no_check_stmt(ast));
+  EXTRACT_ANY_NOTNULL(proc_name, ast->left);
+  EXTRACT_STRING(name, proc_name);
+
+  CHARBUF_OPEN(declare_proc_buffer);
+  charbuf *output = &declare_proc_buffer;
+
+  // emit function name.
+  bprintf(output, "\"name\" : \"%s\"", name);
+
+  // emit attributes.
+  if (misc_attrs) {
+    bprintf(output, ",\n");
+    cg_json_misc_attrs(output, misc_attrs);
+  }
+
+  // add this proc to the list.
+  output = stmt_out;
+  cg_begin_item_attrs(output, ast, misc_attrs);
+  BEGIN_INDENT(proc, 2);
+  bprintf(output, "%s", declare_proc_buffer.ptr);
+  END_INDENT(proc);
+
+  // cleanup
+  CHARBUF_CLOSE(declare_proc_buffer);
   cg_end_proc(output, ast);
 }
 
@@ -2305,7 +2346,7 @@ static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *mis
 
   // add this proc to the list.
   output = stmt_out;
-  cg_begin_proc(output, ast, misc_attrs);
+  cg_begin_item_attrs(output, ast, misc_attrs);
   BEGIN_INDENT(proc, 2);
   bprintf(output, "%s", declare_proc_buffer.ptr);
   END_INDENT(proc);
@@ -2381,7 +2422,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
 
   if (simple && is_select_stmt(stmt)) {
     output = queries;
-    cg_begin_proc(output, ast, misc_attrs);
+    cg_begin_item_attrs(output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
     cg_json_projection(output, stmt);
@@ -2392,7 +2433,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
     bool_t simple_insert = is_simple_insert(stmt);
 
     output = simple_insert ? inserts : general_inserts;
-    cg_begin_proc(output, ast, misc_attrs);
+    cg_begin_item_attrs(output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
     cg_json_insert_stmt(output, stmt, simple_insert);
@@ -2400,7 +2441,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
   }
   else if (simple && is_delete_stmt(stmt)) {
     output = deletes;
-    cg_begin_proc(output, ast, misc_attrs);
+    cg_begin_item_attrs(output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
     cg_json_delete_stmt(output, stmt);
@@ -2408,7 +2449,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
   }
   else if (simple && is_update_stmt(stmt)) {
     output = updates;
-    cg_begin_proc(output, ast, misc_attrs);
+    cg_begin_item_attrs(output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
     cg_json_update_stmt(output, stmt);
@@ -2429,7 +2470,7 @@ cleanup:
 // are placed as an attribution on the statements "declare database object".
 // Attributes for any object variables named *database are unified so that
 // different schema fragments can contribute easily.
-static void cg_json_declare_vars_type(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_database_var(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_vars_type(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -2496,8 +2537,12 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_OPEN(general_inserts_buf);
   CHARBUF_OPEN(attributes_buf);
   CHARBUF_OPEN(declare_procs_buf);
+  CHARBUF_OPEN(declare_no_check_procs_buf);
   CHARBUF_OPEN(declare_funcs_buf);
-  CHARBUF_OPEN(interfaces_buf);
+  CHARBUF_OPEN(declare_no_check_funcs_buf);
+  CHARBUF_OPEN(declare_select_funcs_buf);
+  CHARBUF_OPEN(declare_no_check_select_funcs_buf);
+  CHARBUF_OPEN(declare_interfaces_buf);
 
   queries = &query_buf;
   inserts = &insert_buf;
@@ -2505,17 +2550,19 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   deletes = &delete_buf;
   general = &general_buf;
   general_inserts = &general_inserts_buf;
-  declare_procs = &declare_procs_buf;
-  declare_funcs = &declare_funcs_buf;
-  interfaces_json = &interfaces_buf;
 
   symtab *stmts = symtab_new();
 
   STMT_INIT(create_proc_stmt, cg_json_create_proc, NULL);
-  STMT_INIT(declare_vars_type, cg_json_declare_vars_type, &attributes_buf);
-  STMT_INIT(declare_interface_stmt, cg_json_declare_interface, &interfaces_buf);
-  STMT_INIT(declare_proc_stmt, cg_json_declare_proc, declare_procs);
-  STMT_INIT(declare_func_stmt, cg_json_declare_func, declare_funcs);
+  STMT_INIT(declare_vars_type, cg_json_database_var, &attributes_buf);
+  STMT_INIT(declare_interface_stmt, cg_json_declare_interface, &declare_interfaces_buf);
+  STMT_INIT(declare_proc_stmt, cg_json_declare_proc, &declare_procs_buf);
+  STMT_INIT(declare_proc_no_check_stmt, cg_json_declare_proc_no_check, &declare_no_check_procs_buf);
+  STMT_INIT(declare_func_stmt, cg_json_declare_func, &declare_funcs_buf);
+  STMT_INIT(declare_func_no_check_stmt, cg_json_declare_func, &declare_no_check_funcs_buf);
+  STMT_INIT(declare_select_func_stmt, cg_json_declare_func, &declare_select_funcs_buf);
+  STMT_INIT(declare_select_func_no_check_stmt, cg_json_declare_func, &declare_no_check_select_funcs_buf);
+
 
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
@@ -2535,7 +2582,7 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
     json_dispatch *disp = (json_dispatch *)entry->val;
     disp->func(disp->out, stmt, misc_attrs);
   }
-  
+
   symtab_delete(stmts);
 
   bprintf(output, "\"attributes\" : [");
@@ -2567,19 +2614,39 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareProcs\" : [\n");
-  bindent(output, declare_procs, 2);
+  bindent(output, &declare_procs_buf, 2);
+  bprintf(output, "\n],\n");
+
+  bprintf(output, "\"declareNoCheckProcs\" : [\n");
+  bindent(output, &declare_no_check_procs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareFuncs\" : [\n");
-  bindent(output, declare_funcs, 2);
+  bindent(output, &declare_funcs_buf, 2);
+  bprintf(output, "\n],\n");
+
+  bprintf(output, "\"declareNoCheckFuncs\" : [\n");
+  bindent(output, &declare_no_check_funcs_buf, 2);
+  bprintf(output, "\n],\n");
+
+  bprintf(output, "\"declareSelectFuncs\" : [\n");
+  bindent(output, &declare_select_funcs_buf, 2);
+  bprintf(output, "\n],\n");
+
+  bprintf(output, "\"declareNoCheckSelectFuncs\" : [\n");
+  bindent(output, &declare_no_check_select_funcs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"interfaces\" : [\n");
-  bindent(output, interfaces_json, 2);
+  bindent(output, &declare_interfaces_buf, 2);
   bprintf(output, "\n]");
 
-  CHARBUF_CLOSE(interfaces_buf);
+  CHARBUF_CLOSE(declare_interfaces_buf);
+  CHARBUF_CLOSE(declare_no_check_select_funcs_buf);
+  CHARBUF_CLOSE(declare_select_funcs_buf);
+  CHARBUF_CLOSE(declare_no_check_funcs_buf);
   CHARBUF_CLOSE(declare_funcs_buf);
+  CHARBUF_CLOSE(declare_no_check_procs_buf);
   CHARBUF_CLOSE(declare_procs_buf);
   CHARBUF_CLOSE(attributes_buf);
   CHARBUF_CLOSE(general_inserts_buf);
@@ -2597,9 +2664,6 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   updates = NULL;
   general = NULL;
   general_inserts = NULL;
-  declare_procs = NULL;
-  declare_funcs = NULL;
-  interfaces_json = NULL;
 }
 
 // Here we emit a top level fragment that has all the tables and

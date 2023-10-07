@@ -45,7 +45,11 @@ CONSTANT_GROUPS                       { printTag("constantGroups"); }
 CRC                                   { printTag("crc"); }
 CREATES_OBJECT                        { printTag("createsObject"); }
 DECLARE_FUNCS                         { printTag("declareFuncs"); }
+DECLARE_NO_CHECK_FUNCS                { printTag("declareNoCheckFuncs"); }
+DECLARE_SELECT_FUNCS                  { printTag("declareSelectFuncs"); }
+DECLARE_NO_CHECK_SELECT_FUNCS         { printTag("declareNoCheckSelectFuncs"); }
 DECLARE_PROCS                         { printTag("declareProcs"); }
+DECLARE_NO_CHECK_PROCS                { printTag("declareNoCheckProcs"); }
 DEFAULT_VALUE                         { printTag("defaultValue"); }
 DEFINED_IN_FILE                       { printTag("definedInFile"); }
 DEFINED_ON_LINE                       { printTag("definedOnLine"); }

@@ -5104,6 +5104,31 @@
       "usesDatabase" : 1
     }
   ],
+  "declareNoCheckProcs" : [
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(garbonzo=1)
+    DECLARE PROC printf NO CHECK
+
+    {
+      "name" : "printf",
+      "attributes" : [
+        {
+          "name" : "garbonzo",
+          "value" : 1
+        }
+      ]
+    },
+
+    The statement ending at line XXXX
+
+    DECLARE PROC other_no_check_proc NO CHECK
+
+    {
+      "name" : "other_no_check_proc"
+    }
+  ],
   "declareFuncs" : [
 
     The statement ending at line XXXX
@@ -5733,6 +5758,61 @@
         "isNotNull" : 0
       },
       "createsObject" : 1
+    }
+  ],
+  "declareNoCheckFuncs" : [
+
+    The statement ending at line XXXX
+
+    DECLARE FUNC NoCheckFunc NO CHECK TEXT NOT NULL
+
+    {
+      "name" : "NoCheckFunc",
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    }
+  ],
+  "declareSelectFuncs" : [
+
+    The statement ending at line XXXX
+
+    DECLARE SELECT FUNC tvf (id INTEGER) (foo TEXT)
+
+    {
+      "name" : "tvf",
+      "args" : [
+        {
+          "name" : "id",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "projection" : [
+        {
+          "name" : "foo",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "createsObject" : 0
+    }
+  ],
+  "declareNoCheckSelectFuncs" : [
+
+    The statement ending at line XXXX
+
+    DECLARE SELECT FUNC NoCheckSelectFunc NO CHECK REAL
+
+    {
+      "name" : "NoCheckSelectFunc",
+      "returnType" : {
+        "type" : "real",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
     }
   ],
   "interfaces" : [

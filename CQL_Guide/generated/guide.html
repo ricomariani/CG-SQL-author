@@ -8023,7 +8023,7 @@ Other physical indices might be helpful too and these can potentially be shared 
 -->
 <h2 id="appendix-2-cql-grammar">Appendix 2: CQL Grammar</h2>
 <p>What follows is taken from a grammar snapshot with the tree building rules removed. It should give a fair sense of the syntax of CQL (but not semantic validation).</p>
-<p>Snapshot as of Tue Oct 3 00:30:12 PDT 2023</p>
+<p>Snapshot as of Sat Oct 7 00:37:50 PDT 2023</p>
 <h3 id="operators-and-literals">Operators and Literals</h3>
 <p>These are in order of priority lowest to highest</p>
 <pre><code>&quot;UNION ALL&quot; &quot;UNION&quot; &quot;INTERSECT&quot; &quot;EXCEPT&quot;
@@ -12165,7 +12165,7 @@ create index backing_type_index on backing(cql_blob_get_type(k));</code></pre>
 -->
 <h2 id="appendix-5-json-schema-grammar">Appendix 5: JSON Schema Grammar</h2>
 <p>What follows is taken from the JSON validation grammar with the tree building rules removed.</p>
-<p>Snapshot as of Tue Oct 3 00:30:12 PDT 2023</p>
+<p>Snapshot as of Sat Oct 7 00:37:50 PDT 2023</p>
 <h3 id="rules-1">Rules</h3>
 <pre><code>
 
@@ -12183,7 +12183,11 @@ json_schema: &#39;{&#39;
          &#39;&quot;deletes&quot;&#39; &#39;:&#39; &#39;[&#39; opt_deletes &#39;]&#39; &#39;,&#39;
          &#39;&quot;general&quot;&#39; &#39;:&#39; &#39;[&#39; opt_generals &#39;]&#39; &#39;,&#39;
          &#39;&quot;declareProcs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_declare_procs&#39;]&#39; &#39;,&#39;
+         &#39;&quot;declareNoCheckProcs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_declare_no_check_procs&#39;]&#39; &#39;,&#39;
          &#39;&quot;declareFuncs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_declare_funcs&#39;]&#39; &#39;,&#39;
+         &#39;&quot;declareNoCheckFuncs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_declare_no_check_funcs&#39;]&#39; &#39;,&#39;
+         &#39;&quot;declareSelectFuncs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_declare_select_funcs&#39;]&#39; &#39;,&#39;
+         &#39;&quot;declareNoCheckSelectFuncs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_declare_no_check_select_funcs&#39;]&#39; &#39;,&#39;
          &#39;&quot;interfaces&quot;&#39; &#39;:&#39; &#39;[&#39; opt_interfaces &#39;]&#39; &#39;,&#39;
          &#39;&quot;regions&quot;&#39; &#39;:&#39; &#39;[&#39; opt_regions &#39;]&#39; &#39;,&#39;
          &#39;&quot;adHocMigrationProcs&quot;&#39; &#39;:&#39; &#39;[&#39; opt_ad_hoc_migrations &#39;]&#39; &#39;,&#39;
@@ -12808,10 +12812,43 @@ declare_proc: &#39;{&#39;
          &#39;}&#39;
   ;
 
+opt_declare_no_check_procs: | declare_no_check_procs
+  ;
+
+declare_no_check_procs: declare_no_check_proc | declare_no_check_proc &#39;,&#39; declare_no_check_procs
+  ;
+
+declare_no_check_proc: &#39;{&#39; &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39; &#39;&quot;attributes&quot;&#39; &#39;:&#39; &#39;[&#39; attribute_list &#39;]&#39; &#39;}&#39; |  &#39;{&#39; &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;}&#39;
+  ;
+
 opt_declare_funcs:  | declare_funcs
   ;
 
 declare_funcs: declare_func | declare_func &#39;,&#39; declare_funcs
+  ;
+
+opt_declare_select_funcs:  | declare_select_funcs
+  ;
+
+declare_select_funcs: declare_select_func | declare_select_func &#39;,&#39; declare_select_funcs
+  ;
+
+declare_select_func: declare_func | declare_table_valued_func
+  ;
+
+opt_declare_no_check_funcs:  | declare_no_check_funcs
+  ;
+
+declare_no_check_funcs: declare_no_check_func | declare_no_check_func &#39;,&#39; declare_no_check_funcs
+  ;
+
+opt_declare_no_check_select_funcs:  | declare_no_check_select_funcs
+  ;
+
+declare_no_check_select_funcs: declare_no_check_select_func | declare_no_check_select_func &#39;,&#39; declare_no_check_select_funcs
+  ;
+
+declare_no_check_select_func: declare_no_check_func | declare_no_check_table_valued_func
   ;
 
 declare_func: &#39;{&#39;
@@ -12819,6 +12856,31 @@ declare_func: &#39;{&#39;
           &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_complex_args &#39;]&#39; &#39;,&#39;
           opt_attributes
           return_type &#39;,&#39;
+          &#39;&quot;createsObject&quot;&#39; &#39;:&#39; BOOL_LITERAL
+         &#39;}&#39;
+  ;
+
+declare_table_valued_func: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          &#39;&quot;args&quot;&#39; &#39;:&#39; &#39;[&#39; opt_complex_args &#39;]&#39; &#39;,&#39;
+          opt_attributes
+          projection
+          &#39;&quot;createsObject&quot;&#39; &#39;:&#39; BOOL_LITERAL
+         &#39;}&#39;
+  ;
+
+declare_no_check_func: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          opt_attributes
+          return_type &#39;,&#39;
+          &#39;&quot;createsObject&quot;&#39; &#39;:&#39; BOOL_LITERAL
+         &#39;}&#39;
+  ;
+
+declare_no_check_table_valued_func: &#39;{&#39;
+          &#39;&quot;name&quot;&#39; &#39;:&#39; STRING_LITERAL &#39;,&#39;
+          opt_attributes
+          projection
           &#39;&quot;createsObject&quot;&#39; &#39;:&#39; BOOL_LITERAL
          &#39;}&#39;
   ;

@@ -1701,10 +1701,30 @@ DECLARE PROC declared_proc(id INTEGER) OUT (t TEXT);
 -- + "usesDatabase" : 1
 DECLARE PROC out_cursor_proc() OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION;
 
--- TEST: check declare select functions are not included in declareFuncs
--- + "declareFuncs" : [
--- - "name" : "tvf"
+-- TEST: check declare select functions are included in declareSelectFuncs
+-- + "name" : "tvf"
+-- + "name" : "id",
+-- + "projection" : [
+-- + "name" : "foo",
+-- + "type" : "text",
+-- + "isNotNull" : 0
 DECLARE SELECT FUNCTION tvf(id INTEGER) (foo TEXT);
+
+-- TEST: no check text return
+-- + "name" : "NoCheckFunc",
+-- + "returnType" : {
+-- + "type" : "text",
+-- + "isNotNull" : 1
+-- + "createsObject" : 0
+DECLARE FUNCTION NoCheckFunc NO CHECK TEXT!;
+
+-- TEST: no check select real return
+-- + "name" : "NoCheckSelectFunc",
+-- + "returnType" : {
+-- + "type" : "real",
+-- + "isNotNull" : 0
+-- + "createsObject" : 0
+DECLARE SELECT FUNCTION NoCheckSelectFunc NO CHECK REAL;
 
 -- TEST: check proc with like as an argument
 -- + "args" : [
@@ -1716,9 +1736,19 @@ DECLARE SELECT FUNCTION tvf(id INTEGER) (foo TEXT);
 -- +3 "type" : "text"
 DECLARE PROC proc_with_like() (id INTEGER, LIKE name);
 
--- TEST: check procs with no check are not included in declareProcs
--- - "name" : "printf"
+-- TEST: check procs with no check included in their section
+-- + "name" : "printf"
+-- + "name" : "garbonzo",
+-- + "value" : 1
+@attribute(garbonzo=1)
 DECLARE PROC printf NO CHECK;
+
+-- TEST: check procs with no check included in their section
+-- check format correctly with no attributes
+-- the real test here is the grammar parsing and well-formed check
+-- for commas in the right places (not done in this tool)
+-- + "name" : "other_no_check_proc"
+DECLARE PROC other_no_check_proc NO CHECK;
 
 -- TEST: check declare function that take all possible parameter types
 -- + "args" : [

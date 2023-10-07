@@ -138,8 +138,12 @@ int fileno(FILE *);
 \"checkExpressions\"[ \t]*:      { return CHECK_EXPRESSIONS; }
 \"onRecreateOf\"[ \t]*:          { return ON_RECREATE_OF; }
 \"interfaces\"[ \t]*:            { return INTERFACES; }
-\"declareProcs\"[ \t]*:          { return DECLARE_PROCS; }
-\"declareFuncs\"[ \t]*:          { return DECLARE_FUNCS; }
+\"declareProcs\"[ \t]*:              { return DECLARE_PROCS; }
+\"declareNoCheckProcs\"[ \t]*:       { return DECLARE_NO_CHECK_PROCS; }
+\"declareFuncs\"[ \t]*:              { return DECLARE_FUNCS; }
+\"declareNoCheckFuncs\"[ \t]*:       { return DECLARE_NO_CHECK_FUNCS; }
+\"declareSelectFuncs\"[ \t]*:        { return DECLARE_SELECT_FUNCS; }
+\"declareNoCheckSelectFuncs\"[ \t]*: { return DECLARE_NO_CHECK_SELECT_FUNCS; }
 \"createsObject\"[ \t]*:         { return CREATES_OBJECT; }
 \"returnType\"[ \t]*:            { return RETURN_TYPE; }
 

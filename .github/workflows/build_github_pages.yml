@@ -6,15 +6,29 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4
+      - name: Create temp directory in workspace
+        run: "mkdir -p ${{ github.workspace }}/.generated"
+
       # Build Guides
-      - uses: docker://pandoc/core:2.9
+      - uses: docker://pandoc/core:3.1-ubuntu
         with:
           options: --volume ${{ github.workspace }}:/workspace
-          run: ./workspace/scripts/make-guide.sh all
+          entrypoint: /bin/bash
+          args: "-x scripts/make_guide.sh all"
       - name: Move generated guides
-        run: mv scripts/out/*_guide.* .generated/
+        run: |
+          sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
+          mv ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
+          ls ${{ github.workspace }}/.generated/
+
 
       # Build Grammars
+      - uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'microsoft'
+
       - name: Cache rr-2.0-java11
         id: cache-rr
         uses: actions/cache@v3
@@ -27,13 +41,17 @@ jobs:
           wget https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip -O rr-2.0-java11.zip
           unzip rr-2.0-java11.zip -d ./rr-2.0-java11
           mv ./rr-2.0-java11 ~/rr-2.0-java11
-      - uses: docker://openjdk:22-jdk-bullseye
-        with:
-          options: --volume ${{ github.workspace }}:/workspace
-          run: ./workspace/scripts/make-guide.sh all
-      - name: Move generated grammar outputs
-        run: mv scripts/out/*_grammar.* .generated/
-  
+
+      - name: Build Grammar outputs
+        run: |
+          mkdir -p ${{ github.workspace }}/sources/out
+          (cd ${{ github.workspace }}/sources/ ; make --quiet out/replacements out/json_replacements)
+          ${{ github.workspace }}/scripts/make_cql_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_query_plan_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_json_grammar_outputs.sh
+          mv ${{ github.workspace }}/scripts/out/*_grammar.* ${{ github.workspace }}/.generated/
+          ls ${{ github.workspace }}/.generated/
+
   deploy:
     environment:
       name: github-pages

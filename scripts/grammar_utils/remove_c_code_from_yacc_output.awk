@@ -15,8 +15,8 @@ BEGIN {
 
 function take() { return $(++cursor) }
 function put(char) { printf "%s", char; }
-function skipQuotedString(char) { while ($(++cursor) != char) }
-function skipLabel() { while ($(++cursor) != "]") }
+function skipQuotedString(char) { while ($(++cursor) != char) { } }
+function skipLabel() { while ($(++cursor) != "]") { } }
 
 function extract_quoted_string(start_quoting_char) {
     put(start_quoting_char);

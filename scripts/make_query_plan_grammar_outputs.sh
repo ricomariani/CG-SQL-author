@@ -10,7 +10,7 @@ debug() { echo $@ >&2; }
 
 
 debug "Cleanup remaining artifacts"
-rm $OUT/query_plan_grammar.*
+rm -f $OUT/query_plan_grammar.*
 
 
 debug "Building Query Plan Grammar Railroad diagram"

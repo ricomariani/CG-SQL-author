@@ -7,13 +7,15 @@ readonly OUT=$SCRIPT_DIR_RELATIVE/out
 readonly CQL_ROOT_DIR=$SCRIPT_DIR_RELATIVE/../sources
 readonly CQL_OUT_DIR=$CQL_ROOT_DIR/out
 
-(mkdir -p $CQL_OUT_DIR; cd "$CQL_ROOT_DIR" ; make --quiet out/replacements) >&2
+if [ ! -f "$CQL_OUT_DIR/replacements" ]; then
+  (mkdir -p $CQL_OUT_DIR; cd "$CQL_ROOT_DIR" ; make --quiet out/replacements) >&2
+fi
 mkdir -p $OUT
 debug() { echo $@ >&2; }
 
 
 debug "Cleanup remaining artifacts"
-rm $OUT/cql_grammar.*
+rm -f $OUT/cql_grammar.*
 
 
 debug "Building CQL Grammar"

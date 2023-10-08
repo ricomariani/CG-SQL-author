@@ -6,6 +6,7 @@ readonly SCRIPT_DIR_RELATIVE=$(dirname "$0")
 readonly OUT=$SCRIPT_DIR_RELATIVE/out
 readonly CQL_ROOT_DIR=$SCRIPT_DIR_RELATIVE/../sources
 readonly CQL_OUT_DIR=$CQL_ROOT_DIR/out
+readonly CQL_DOC_DIR=$SCRIPT_DIR_RELATIVE/../docs
 
 if [ ! -f "$CQL_OUT_DIR/replacements" ]; then
   (mkdir -p $CQL_OUT_DIR; cd "$CQL_ROOT_DIR" ; make --quiet out/replacements) >&2
@@ -136,6 +137,9 @@ $(rules_section)
 EOF
 
 rm -f $OUT/cql_grammar_for_markdown.txt >&2
+
+# Now we blast the checked in stub with the fully computed grammar appendix!
+cp $OUT/cql_grammar.md $CQL_DOC_DIR/user_guide/appendices/02_grammar.md
 
 ls $OUT/cql_grammar.md
 

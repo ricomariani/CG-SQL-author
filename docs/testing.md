@@ -10,6 +10,9 @@ While standing in the `/sources` directory you may use test.sh and with these im
 |`--use_amalgam`| Builds the compiler from the amalgam and then tests it as above.|
 |`--use_asan`| Enable address sanitizer.  Great and finding memory issues.|
 |`--use_clang`| Clang finds more warnings than GCC in general, recommened before any PR.|
+|`--use_gcc`| If clang is the default, you should also try GCC before any PR.|
+|`--non_interactive`|Used when calling from a script file, it won't prompt for diffs.|
+|`--coverage`|Triggers coverage tasks, used by `cov.sh`, not intended for direct use.|
 |`cov.sh` | See [Code Coverage](code-coverage.md) |
 
 

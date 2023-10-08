@@ -9,20 +9,20 @@ The full system also includes features for managing and upgrading schema, creati
 ### Essential Documentation
 
 - [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
-- [CG/SQL Language Guide](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md) ([HTML Version](https://ricomariani.github.io/CG-SQL-author/CQL_Guide/generated/guide.html))
-- [CG/SQL Internals](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/internal.md) ([HTML Version](https://ricomariani.github.io/CG-SQL-author/CQL_Guide/generated/internal.html))
-- [Getting Started with CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/getting-started.md)
+- [CG/SQL Language Guide](https://ricomariani.github.io/CG-SQL-author/user_guide.html#chapter-1-introduction)
+- [CG/SQL Internals](https://ricomariani.github.io/CG-SQL-author/developer_guide.html)
+- [Getting Started with CG/SQL](https://ricomariani.github.io/CG-SQL-author/user_guide.html#getting-started)
 - [Writing a Hello World Program](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started)
 - [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
-- [Examples](https://github.com/ricomariani/CG-SQL-author/wiki/Examples)
+- [Examples](Examples)
+
+### Grammar Diagrams
+- [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/cql_grammar.railroad.html)
+- [JSON Output Diagrams](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html)
+- [Query Plan Output Diagram](https://ricomariani.github.io/CG-SQL-author/query_plan_grammar.railroad.html)
 
 ### Wiki
 - [Wiki Home](https://github.com/ricomariani/CG-SQL-author/wiki/Home)
-
-### Grammar Diagrams
-- [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/railroad_diagram.html)
-- [JSON Output Diagrams](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
-- [Query Plan Output Diagram](https://ricomariani.github.io/CG-SQL-author/diagrams/query_plan_railroad_diagram.html)
 
 ### For Contributors
 - [Contributing](https://github.com/ricomariani/CG-SQL-author/blob/main/CONTRIBUTING.md)

@@ -138,9 +138,6 @@ EOF
 
 rm -f $OUT/cql_grammar_for_markdown.txt >&2
 
-# Now we blast the checked in stub with the fully computed grammar appendix!
-cp $OUT/cql_grammar.md $CQL_DOC_DIR/user_guide/appendices/02_grammar.md
-
 ls $OUT/cql_grammar.md
 
 debug ""

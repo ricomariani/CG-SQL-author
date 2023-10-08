@@ -11,10 +11,10 @@ The full system also includes features for managing and upgrading schema, creati
 - [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
 - [CG/SQL Language Guide](https://ricomariani.github.io/CG-SQL-author/user_guide.html#chapter-1-introduction)
 - [CG/SQL Internals](https://ricomariani.github.io/CG-SQL-author/developer_guide.html)
-- [Getting Started with CG/SQL](https://ricomariani.github.io/CG-SQL-author/user_guide.html#getting-started)
-- [Writing a Hello World Program](https://github.com/ricomariani/CG-SQL-author/blob/main/CQL_Guide/generated/guide.md#getting-started)
+- [Getting Started with CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/getting-started.md)
+- [Writing a Hello World Program](https://ricomariani.github.io/CG-SQL-author/user_guide.html#getting-started)
 - [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
-- [Examples](Examples)
+- [Examples](https://github.com/ricomariani/CG-SQL-author/wiki/Examples)
 
 ### Grammar Diagrams
 - [Language Railroad Diagrams](https://ricomariani.github.io/CG-SQL-author/cql_grammar.railroad.html)

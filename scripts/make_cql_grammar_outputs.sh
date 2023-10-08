@@ -138,6 +138,8 @@ EOF
 
 rm -f $OUT/cql_grammar_for_markdown.txt >&2
 
+debug "grammar output at $OUT/cql_grammar.md"
+
 ls $OUT/cql_grammar.md
 
 debug ""

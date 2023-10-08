@@ -66,6 +66,7 @@ int main(int argc, char **argv)
   }
 
   sqlite3_close(db);
+  return 0;
 }
 ```
 
@@ -116,6 +117,7 @@ create proc hello()
 begin
   create table my_data(t text not null);
   insert into my_data(t) values("Hello, world\n");
+
   declare t text not null;
   set t := (select * from my_data);
   call printf('%s', t);
@@ -197,10 +199,10 @@ be an error.  We'll talk about more flexible ways to read from the database late
 
 At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
 CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
-working with local variables. Those expressions are compiled into C logic that emulates the behavior of SQLite
-on the data.  It provides complex expression constructs such as `IN` and `CASE` but it is ultimately evaluated by C
-execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by SQLite itself.
-To make this clearer let's change the example a little bit before we move on.
+working with local variables. Those expressions are compiled into C (or Lua) logic that emulates the behavior
+of SQLite on the data.  It provides complex expression constructs such as `IN` and `CASE` but it is ultimately
+evaluated by C execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by
+SQLite itself.  To make this clearer let's change the example a little bit before we move on.
 
 ```sql
 set t := (select "__"||t||' '||1.234 from my_data);
@@ -212,7 +214,7 @@ This is a somewhat silly example but it illustrates some important things:
 * the `||` concatenation operator is evaluated by SQLite
 * you can mix and match both kinds of string literals, they will all be the single quote variety by the time SQLite sees them
 * the `||` operator has lots of complex formatting conversions (such as converting real values to strings)
-* in fact the conversions are so subtle as to be impossible to emulate in loose C code with any economy, so, like a few other operators, `||` is only supported in the SQLite context
+  * in fact the conversions are so subtle as to be impossible to emulate in loose C code with any economy, so, like a few other operators, `||` is only supported in the SQLite context
 
 Returning now to our code as written, we see something very familiar:
 
@@ -220,14 +222,14 @@ Returning now to our code as written, we see something very familiar:
 call printf('%s', t);
 ```
 
-Note that we've used the single quote syntax here for no good reason other than illustration. There are no escape
-sequences here so either form would do the job. Importantly, the string literal will not create a string object as before
-but the text variable `t` is of course a string reference.  Before it can be used in a call to an un-declared function it
-must be converted into a temporary C string.  This might require allocation in general, that allocation is automatically
-managed.
+Note that we've used the single quote syntax here for no good reason other than illustration. There are no
+escape sequences here so either form would do the job. Importantly, the string literal will not create a
+string object as before but the text variable `t` is of course a string reference.  Before it can be used
+in a call to an un-declared function it must be converted into a temporary C string.  This might require
+allocation in general, that allocation is automatically managed.
 
-Also, note that CQL assumes that calls to "no check" functions should be emitted as written.  In this way you can use
-`printf` even though CQL knows nothing about it.
+Also, note that CQL assumes that calls to "no check" functions should be emitted as written.
+In this way you can use `printf` even though CQL knows nothing about it.
 
 Lastly we have:
 
@@ -235,10 +237,12 @@ Lastly we have:
 drop table my_data;
 ```
 
-This is not strictly necessary because the database is in memory anyway and the program is about to exit but there
-it is for illustration.
+This is not strictly necessary because the database is in memory anyway and the program is about to exit
+but there it is for illustration.
 
-Now the Data Manipulation Language (i.e. insert and select here; and henceforth DML) and the DDL might fail for various reasons.  If that happens the proc will `goto` a cleanup handler and return the failed return code instead of running the rest of the code.  Any temporary memory allocations will be freed and any pending
+Now the Data Manipulation Language (i.e. insert and select here; and henceforth DML) and the DDL might fail
+for various reasons.  If that happens the proc will `goto` a cleanup handler and return the failed return code
+instead of running the rest of the code.  Any temporary memory allocations will be freed and any pending
 SQLite statements will be finalized.  More on that later when we discuss error handling.
 
 With that we have a much more complicated program that prints "Hello, world"
@@ -251,13 +255,17 @@ Let's change our example again and start using some database features.
 ```sql
 declare procedure printf no check;
 
-create proc hello()
+-- for previty the `create` in `create proc` can be elided
+proc hello()
 begin
+  -- this time we use the ! short hand for not null
   create table my_data(
-    pos integer not null primary key,
-    txt text not null
+    pos int! primary key,
+    txt text!
   );
 
+  -- you can supply more than one set of values in a single insert
+  -- but we didn't here.
   insert into my_data values(2, 'World');
   insert into my_data values(0, 'Hello');
   insert into my_data values(1, 'There');
@@ -266,8 +274,10 @@ begin
 
   loop fetch C
   begin
-    call printf("%d: %s\n", C.pos, C.txt);
+    -- we elided the 'call' here to show the briefer syntax
+    printf("%d: %s\n", C.pos, C.txt);
   end;
+
   close C;
 
   drop table my_data;
@@ -298,7 +308,8 @@ The most important change is here:
 declare C cursor for select * from my_data order by pos;
 ```
 
-We've created a non-scalar variable `C`, a cursor over the indicated result set.  The results will be ordered by `pos`.
+We've created a non-scalar variable `C`, a cursor over the indicated result set.
+The results will be ordered by `pos`.
 
 ```sql
 loop fetch C
@@ -307,29 +318,30 @@ begin
 end;
 ```
 
-This loop will run until there are no results left (it might not run at all if there are zero rows, that is not an error).
-The `FETCH` construct allows you to specify target variables, but if you do not do so, then a synthetic structure is
-automatically created to capture the projection of the `select`.  In this case the columns are `pos` and `txt`.
-The automatically created storage exactly matches the type of the columns in the select list which could itself be tricky to calculate
-if the `select` is complex.  In this case the `select` is quite simple and the columns of the result directly match the schema for `my_data`.
-An integer and a string reference.  Both not null.
+This loop will run until there are no results left (it might not run at all if there are zero rows,
+that is not an error).  The `FETCH` construct allows you to specify target variables, but if you do
+not do so, then a synthetic structure is automatically created to capture the projection of the `select`. 
+In this case the columns are `pos` and `txt`.  The automatically created storage exactly matches the
+type of the columns in the select list (which could itself be a tricky calculatation)
+In this case the `select` is quite simple and the columns of the result directly match the schema for
+`my_data`.  An integer and a string reference.  Both not null.
 
 
 ```sql
-call printf("%d: %s\n", C.pos, C.txt);
+printf("%d: %s\n", C.pos, C.txt);
 ```
 
-The storage for the cursor is given the same names as the columns of the projection of the select, in this case the columns were not renamed so `pos` and `txt` are the fields in the cursor.
-Double quotes were used in the format string to get the newline in there easily.
+The storage for the cursor is given the same names as the columns of the projection of the select,
+in this case the columns were not renamed in the select clause so `pos` and `txt` are the fields
+in the cursor.  Double quotes were used in the format string to get the newline in there easily.
 
 ```sql
 close C;
 ```
 
-The cursor is automatically released at the end of the procedure but in this case we'd like to release it before the
-`drop table` happens so there is an explicit `close`. This is frequently elided in favor of the automatic cleanup.
-There is an `open` cursor statement as well but it doesn't do anything.  It's there because many systems have that
-construct and it does balance the `close`.
+The cursor is automatically released at the end of the procedure but in this case we'd like to release it
+before the `drop table` happens so there is an explicit `close`. This is frequently elided in favor of the
+automatic cleanup.
 
 
 If you compile and run this program, you'll get this output:
@@ -357,9 +369,10 @@ we have defined above.
 
 ```sql
 -- needed to allow vararg calls to C functions
-declare procedure printf no check;
+declare proc printf no check;
 
-create proc mandelbrot()
+-- proc and procedure can be used interchangeably
+procedure mandelbrot()
 begin
   -- this is basically one giant select statement
   declare C cursor for
@@ -403,28 +416,28 @@ This code uses all kinds of SQLite features to produce this text:
 
 ```bash
 $
-                                    ....#
-                                   ..#*..
-                                 ..+####+.
-                            .......+####....   +
-                           ..##+*##########+.++++
-                          .+.##################+.
-              .............+###################+.+
-              ..++..#.....*#####################+.
-             ...+#######++#######################.
-          ....+*################################.
- #############################################...
-          ....+*################################.
-             ...+#######++#######################.
-              ..++..#.....*#####################+.
-              .............+###################+.+
-                          .+.##################+.
-                           ..##+*##########+.++++
-                            .......+####....   +
-                                 ..+####+.
-                                   ..#*..
-                                    ....#
-                                    +.
+                                     ....#
+                                    ..#*..
+                                  ..+####+.
+                             .......+####....   +
+                            ..##+*##########+.++++
+                           .+.##################+.
+               .............+###################+.+
+               ..++..#.....*#####################+.
+              ...+#######++#######################.
+           ....+*################################.
+  #############################################...
+           ....+*################################.
+              ...+#######++#######################.
+               ..++..#.....*#####################+.
+               .............+###################+.+
+                           .+.##################+.
+                            ..##+*##########+.++++
+                             .......+####....   +
+                                  ..+####+.
+                                    ..#*..
+                                     ....#
+                                      +.
 ```
 
 Which probably doesn't come up very often but it does illustrate several things:

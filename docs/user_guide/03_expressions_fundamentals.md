@@ -1,4 +1,4 @@
-<!---
+eference
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
@@ -1319,13 +1319,22 @@ The object type has no value based comparison, so there is no `<`, `>` and so fo
 
 The following table is useful.  Let's suppose there are exactly two distinct objects 'X' and 'Y'
 
-true expressions: `X = X`   `X <> Y` `Y = Y`   `Y <> X`  `X IN (X, Y)`  `X NOT IN (Y)`
+|result|examples...|  |  |  |  |  |
+|------|-----------|--|--|--|--|--|
+|true  |`X = X`|`X <> Y`|`Y = Y`|`Y <> X`| `X IN (X, Y)`    |`X NOT IN (Y)`|
+|false |`X = Y`|`X <> X`|`Y = X`|`Y <> Y`| `X NOT IN (X, Y)`||
+|null  |`null = null`| ` X <> null`| `x = null`|`null <> null`|`Y <> null`| `y = null`|
+|true  | `X is not null` | `Y is not null` | `null is null` |
+|false | `X is null` | `Y is null` | `null is not null` |
 
-false expressions: `X = Y`  `X <> X` `Y = X`  `Y <> Y`  `X NOT IN (X, Y)`
+`null = null` resulting in `null` is particular surprising but consistent with the usual SQL rules.  
+And again, as in SQL, the `IS` operator returns true for `X IS Y` even if both are `null`.
 
-null expressions: `null = null`  ` X <> null`   `x = null` `null <> null`  `Y <> null`   `y = null`
-
-`null = null` resulting in `null` is particular surprising but consistent with the usual SQL rules.  And again, as in SQL, the `IS` operator returns true for `X IS Y` even if both are `null`.
+>NOTE: null-valued variables evaluate as above, however, the `NULL` literal generally yields errors
+>if it is used strangely.  e.g. in `if x == NULL` you get an error, the result is always going to be
+>`NULL` hence falsey.  This was almost certainly intended to be `if x IS NULL`.  Likewise, comparing
+> expressions that are known to be `NOT NULL` against null yields errors.  This is also true where
+> an expression has been inferred to be `NOT NULL` by control flow analysis.
 
 ### `TEXT`
 
@@ -1333,24 +1342,25 @@ Text has value comparison semantics but normal string comparison is done only wi
 
 For text comparisons including equality:
 
-true:   if and only if both operands are not null and the comparison matches (using strcmp)
-false:  if and only if  both operands are not null and the comparison does not match (using strcmp)
-null:   if and only if at least one operand is null
+|result|cases|
+|:-----|:----|
+|true  |if and only if both operands are not null and the comparison matches (using strcmp)|
+|false |if and only if  both operands are not null and the comparison does not match (using strcmp)|
+|null  |if and only if at least one operand is null|
 
 EXAMPLE: `'x' < 'y'`  is true because `strcmp("x", "y") < 0`
 
-The `IS` and `IS NOT` operators behave similarly to equality and inequality, but never return `null`.  If `X` is some value that doesn't happen to be `null` then we have the following:
+As with type `object`, the `IS` and `IS NOT` operators behave similarly to equality and inequality, but never produce a `null` result.  Strings have the same null semantics as `object`.  In fact strings have all the same semantics as object except that they get a  value comparison with `strcmp` rather than an identity comparison.  With object `x == y` implies that `x` and `y` point to the very same object. With strings, it only means `x` and `y` hold the same text.
 
-true:  `null is null` `X is X` `X is not null` `null is not X`
-false: `null is not null` `X is not X` `X is null` `null  is X`
+The `IN` and `NOT IN` operators also work for text using the same value comparisons as above.
 
-The `IN` and `NOT IN` operators also work for text using the same value comparisons as above.  Additionally there are special text comparison
-operators such as `LIKE`, `MATCH` and `GLOB`.  These comparisons are defined by SQLite.
+Additionally there are special text comparison operators such as `LIKE`, `MATCH` and `GLOB`.  These comparisons are defined by SQLite.
 
 ### `BLOB`
 
-Blobs are compared by value (equivalent to `memcmp`) but have no well-defined ordering. The `memcmp` order is deemed not helpful as blobs
-usually have internal structure hence the valid comparisons are only equality and inequality.
+Blobs are compared by value (equivalent to `memcmp`) but have no well-defined ordering. The `memcmp` order is deemed
+not helpful as blobs usually have internal structure hence the valid comparisons are only equality and inequality.
+
 You can use user defined functions to do better comparisons of your particular blobs if needed.
 
 The net comparison behavior is otherwise just like strings.
@@ -1519,8 +1529,9 @@ CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1
 #### Using Arrays in CQL
 
 Array access is just like the open ended property form with two differences:
-  * the type of the index can be anything you want it to be, not just text
-  * there can be as many indices as you like
+
+* the type of the index can be anything you want it to be, not just text
+* there can be as many indices as you like
 
 For instance:
 

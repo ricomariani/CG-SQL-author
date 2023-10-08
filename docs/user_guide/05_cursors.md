@@ -431,7 +431,8 @@ generally a lot easier.
 
 ### Reshaping Data, Cursor `LIKE` forms
 
-There are lots of cases where you have big rows with many columns, and there are various manipulations you might need to do.
+There are lots of cases where you have big rows with many columns, and there are various manipulations
+you might need to do.
 
 What follows is a set of useful syntactic sugar constructs that simplify handling
 complex rows.  The idea is that pretty much anywhere you can specify a list of columns
@@ -440,8 +441,9 @@ shape `x` -- which is usually a table or a cursor.
 
 It’s a lot easier to illustrate with examples, even though these are, again, a bit contrived.
 
-First we need some table with lots of columns -- usually the column names are much bigger which makes it all the more important to not have to type them over and over, but
-in the interest of some brevity, here's a big table:
+First we need some table with lots of columns -- usually the column names are much bigger which makes
+it all the more important to not have to type them over and over, but in the interest of some brevity,
+here is a big table:
 
 ```sql
 create table big (
@@ -452,7 +454,8 @@ create table big (
   c integer,
   d integer,
   e integer,
-  f integer);
+  f integer
+);
 ```
 
 This example showcases several of the cursor and shape slicing features by emitting
@@ -472,7 +475,9 @@ begin
   fetch main_row;
 
   -- now fetch the result columns out of the main row
-  -- 'like result' means "the column names found in 'result'"
+  -- `like result` here means to use the names of the result cursor
+  -- to index into the columns of the main_row cursor, and then
+  -- and store them in `result`
   fetch result from cursor main_row(like result);
 
   -- this is our first result row
@@ -483,10 +488,10 @@ begin
   declare alt_row cursor for select b, c from big where big.id2 = main_row.id2;
   fetch alt_row;
 
-  -- update some of the fields 'result' from the the new cursor
+  -- update some of the fields in 'result' from the `alt_row`
   update cursor result(like alt_row) from cursor alt_row;
 
-  -- and emit the 2nd row
+  -- and emit the modified result, so we've generated two rows
   out union result;
 end;
 ```
@@ -617,11 +622,12 @@ is the right choice, as the `out` parameters have to be declared anyway.
 The first form is in some sense the origin of the value cursor.  Value cursors were added to the language initially to provide a way to capture the single row `OUT` statement results, much like result set cursors were added to capture procedure results from `OUT UNION`.  In the first form, the cursor storage (a C struct) is provided by reference as a hidden out parameter to the procedure and the procedure fills it in.  The procedure may or may not use the `OUT` statement in its control flow, as the cursor might not hold a row.  You can use `if C then ...` as before to test for a row.
 
 The second form is more interesting as it allows the cursor to be loaded from arbitrary expressions subject to some rules:
- * you should think of the cursor as a logical row: it's either fully loaded or it's not, therefore you must specify enough columns in the column list to ensure that all `NOT NULL` columns will get a value
- * if not mentioned in the list, NULL will be loaded where possible
- * if insufficient columns are named, an error is generated
- * if the value types specified are not compatible with the column types mentioned, an error is generated
- * later in this chapter, we'll show that columns can also be filled with dummy data using a seed value
+
+* you should think of the cursor as a logical row: it's either fully loaded or it's not, therefore you must specify enough columns in the column list to ensure that all `NOT NULL` columns will get a value
+* if not mentioned in the list, NULL will be loaded where possible
+* if insufficient columns are named, an error is generated
+* if the value types specified are not compatible with the column types mentioned, an error is generated
+* later in this chapter, we'll show that columns can also be filled with dummy data using a seed value
 
 With this form, any possible valid cursor values could be set, but many forms of updates
 that are common would be awkward. So there are various forms of syntactic sugar that are
@@ -650,7 +656,7 @@ That most recent form doesn't seem like it saves much, but recall the first rewr
   * both cursors are expanded into all their columns, creating a copy from one to the other
   * `fetch C from D` can be used if the cursors have the exact same column names and types; it also generates slightly better code and is a common case
 
- It is very normal to want to use only some of the columns of a cursor; these `like` forms do that job.  We saw some of these forms in an earlier example.
+ It is very normal to want to use only some of the columns of a cursor; these `LIKE` forms do that job.  We saw some of these forms in an earlier example.
 
  * `fetch C from cursor D(like C)`
    * here `D` is presumed to be "bigger" than `C`, in that it has all of the `C` columns and maybe more.  The `like C` expands into the names of the `C` columns so `C` is loaded from the `C` part of `D`
@@ -732,7 +738,7 @@ begin
 end;
 ```
 
-The `like` construct allows you to select some of the arguments, or
+The `LIKE` construct allows you to select some of the arguments, or
 some of a cursor to use as arguments.  This next procedure has more arguments
 than just `T`. The arguments will be `x_`, `y_`, `z_`, `a_`, `b_`.  But the
 call will still have the `T` arguments `x_`, `y_`, and `z_`.

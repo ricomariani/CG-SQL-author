@@ -11,19 +11,6 @@ jobs:
       - name: Create temp directory in workspace
         run: "mkdir -p ${{ github.workspace }}/.generated"
 
-      # Build Guides
-      - uses: docker://pandoc/core:3.1-ubuntu
-        with:
-          options: --volume ${{ github.workspace }}:/workspace
-          entrypoint: /bin/bash
-          args: "-x scripts/make_guide.sh all"
-      - name: Move generated guides
-        run: |
-          sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
-          mv ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
-          ls ${{ github.workspace }}/.generated/
-
-
       # Build Grammars
       - uses: actions/setup-java@v3
         with:
@@ -51,6 +38,18 @@ jobs:
           ${{ github.workspace }}/scripts/make_query_plan_grammar_outputs.sh
           ${{ github.workspace }}/scripts/make_json_grammar_outputs.sh
           mv ${{ github.workspace }}/scripts/out/*_grammar.* ${{ github.workspace }}/.generated/
+          ls ${{ github.workspace }}/.generated/
+
+      # Build Guides
+      - uses: docker://pandoc/core:3.1-ubuntu
+        with:
+          options: --volume ${{ github.workspace }}:/workspace
+          entrypoint: /bin/bash
+          args: "-x scripts/make_guide.sh all"
+      - name: Move generated guides
+        run: |
+          sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
+          mv ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
           ls ${{ github.workspace }}/.generated/
 
       - name: Upload artifacts

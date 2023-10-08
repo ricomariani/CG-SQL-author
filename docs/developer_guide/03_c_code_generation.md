@@ -298,7 +298,7 @@ which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is inv
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
 will go into there rather than being accumulated at the global level.
 
->NOTE: it's possible to have code that is not in a procedure (see [`--global_proc`](guide.md#--global_proc-name)).
+>NOTE: it's possible to have code that is not in a procedure (see [`--global_proc`](user_guide.html#--global_proc-name)).
 
 In general, it's very useful to have different buffers open at the same time.  New local variables
 or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to
@@ -2219,7 +2219,7 @@ That last flag indicates that there is no statement for this cursor, it's just v
 `SEM_TYPE_HAS_SHAPE_STORAGE` -- if they had no statement and no storage they would be -- nothing.
 
 Value cursors are enormously helpful and there is sugar for loading them from all kinds of sources with a shape.
-These forms are described more properly in [Chapter 5](guide.md#chapter-5-types-of-cursors-shapes-out-and-out-union-and-fetch) of the Guide but they
+These forms are described more properly in [Chapter 5](user_guide.html#chapter-5-types-of-cursors-shapes-out-and-out-union-and-fetch) of the Guide but they
 all end up going through the general form, making the codegen considerably simpler. There are many examples where the semantic
 analyzer rewrites a sugar form to a canonical form to keep the codegen from forking into dozens of special cases
 and most of them have to do with shapes and cursors.

@@ -193,8 +193,8 @@ cql_string_ref new_str_ref = cql_encode_string_ref_new(encoder, *str_ref, encode
 
 There are similar functions in the runtime like `cql_encode_double` with a similar signature.
 
-The default encodings are very lame and only useful for testing.  Like many things in `cqlrt.c` you should [replace them](../internal.md#part-5-cql-runtime)
-with something appropriate for your environment.  See the section on [encoding sensitive columns](../internal.md#encoding-of-sensitive-columns).
+The default encodings are very lame and only useful for testing.  Like many things in `cqlrt.c` you should [replace them](developer_guide.html#part-5-cql-runtime)
+with something appropriate for your environment.  See the section on [encoding sensitive columns](developer_guide.html#encoding-of-sensitive-columns).
 
 Even very simple encoders can help avoid mistakes because they force the use of the decoder and that usage gives you a "code smell" to look for.
 Some sections of code, maybe even most sections, have no business decoding anything.  And even the super-lame "just add '#'" strategy in the defeault

@@ -13,7 +13,7 @@ While standing in the `/sources` directory you may use test.sh and with these im
 |`cov.sh` | See [Code Coverage](code-coverage.md) |
 
 
-See details in our [CQL Internals documentation](../CQL_Guide/generated/internal.md#part-4-testing)
+See details in our [CQL Internals documentation](https://ricomariani.github.io/CG-SQL-author/developer_guide.html#part-4-testing)
 
 >NOTE: For productivty it's not uncommon to tweak `test.sh` so that the test you care about runs first.
 >But don't submit a PR with the tests reordered.  Not that the author has ever made that mistake or

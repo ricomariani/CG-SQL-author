@@ -20,7 +20,7 @@ in many environments only one thread is doing all the data access.  But if you p
 between threads this is something you'll want to address.  `CQLRT` is designed to be replacable.  In fact
 there is another version included in the distribution `cqlrt_cf` that is more friendly to iOS and CoreFoundation.
 This alternate version is an excellent demonstration of what is possible.  There are more details
-in [Internals Part 5: CQL Runtime](internal.md#part-5-cql-runtime)
+in [Internals Part 5: CQL Runtime](developer_guide.html#part-5-cql-runtime)
 
 #### Statement Caching
 
@@ -105,7 +105,7 @@ codes be lost because (e.g.) a `finalize` has happened, clearing the code. You c
 for instance, your runtime caches the results of recent failed `prepare` calls. In any case,
 what you log and where you log it is entirely up to you.
 
-The `cql_error_trace` macro is described in [Internals Part 3](internal.md#cleanup-and-errors)
+The `cql_error_trace` macro is described in [Internals Part 3](internal.developer_guide.html#cleanup-and-errors)
 It will typically invoke `printf` or `fprintf` or something like that to trace the origin of thrown
 exceptions and to get the error text from SQLite as soon as possible.
 

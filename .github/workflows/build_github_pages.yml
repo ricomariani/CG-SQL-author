@@ -37,7 +37,7 @@ jobs:
           ${{ github.workspace }}/scripts/make_cql_grammar_outputs.sh
           ${{ github.workspace }}/scripts/make_query_plan_grammar_outputs.sh
           ${{ github.workspace }}/scripts/make_json_grammar_outputs.sh
-          mv ${{ github.workspace }}/scripts/out/*_grammar.* ${{ github.workspace }}/.generated/
+          cp ${{ github.workspace }}/scripts/out/*_grammar.* ${{ github.workspace }}/.generated/
           ls ${{ github.workspace }}/.generated/
 
       # Build Guides
@@ -49,7 +49,7 @@ jobs:
       - name: Move generated guides
         run: |
           sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
-          mv ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
+          cp ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
           ls ${{ github.workspace }}/.generated/
 
       - name: Upload artifacts
@@ -57,6 +57,9 @@ jobs:
         with:
           path: ${{ github.workspace }}/.generated/
 
+      - name: Cleanup output directory
+        run: |
+          rm -rf ${{ github.workspace }}/script/out  
   deploy:
     permissions:
       contents: read

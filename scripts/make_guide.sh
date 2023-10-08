@@ -57,4 +57,8 @@ pandoc $source \
     --to html \
     --output $target
 
+# change margins to be more reader friendly
+sed -e "s/max-width: 36em;/max-width: 70em;/" <$target >$target.tmp
+mv $target.tmp $target
+
 debug "$target was successfully created"

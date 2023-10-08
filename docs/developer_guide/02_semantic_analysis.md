@@ -146,6 +146,7 @@ The core bits are as follows:
 ```
 
 These break into a few categories:
+
 * `NULL` to `OBJECT` are the "unitary" types -- these are the types that a single simple variable can be
   * a column can be any of these except `OBJECT` or `NULL`
   * the `NULL` type comes only from the `NULL` literal which has no type

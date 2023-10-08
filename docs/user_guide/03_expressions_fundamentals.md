@@ -34,7 +34,7 @@ CQL evaluation rules are designed to be as similar as possible but some variance
 The operator precedence rules in CQL are as follows; the top-most rule binds the most loosely and the bottom-most rule binds the most tightly:
 
 ```
-ASSIGNMENT:     :=
+ASSIGNMENT:     := += -= /= *= %= &= |= <<= >>=
 LOGICAL_OR:     OR
 LOGICAL_AND:    AND
 LOGICAL_NOT:    NOT
@@ -47,6 +47,7 @@ MULTIPLICATION: * / %
 CONCAT:         ||
 COLLATE:        COLLATE
 UNARY:          ~  -
+SPECIAL:        x[] x:y x.y f(y) CAST, CASE
 ```
 
 The above rules are **not** the same as C's operator precedence rules! Instead,
@@ -99,9 +100,13 @@ sources as we will see.
 declare i_nn integer not null;
 ```
 
-In the context of computing the types of expressions, CQL is statically typed and so it must make a decision about the type of any expression based on the type information at hand at compile time.  As a result it handles the static type of an expression conservatively.  If the result might be null then the expression is of a nullable type and the compiled code will include an affordance for the possibility of a null value at runtime.
+In the context of computing the types of expressions, CQL is statically typed and so it must make a decision about
+the type of any expression based on the type information at hand at compile time.  As a result it handles the static
+type of an expression conservatively.  If the result might be null then the expression is of a nullable type and
+the compiled code will include an affordance for the possibility of a null value at runtime.
 
-The generated code for nullable types is considerably less efficient and so it should be avoided if that is reasonably possible.
+The generated code for nullable types is considerably less efficient and so it should be avoided
+if that is reasonably possible.
 
 #### LET Statement
 
@@ -1526,17 +1531,9 @@ cont[1,2] := cont[3,4] + cont[5,6];
 Could be supported by these functions:
 
 ```
-declare function get_from_object_container(
-  self object<container> not null,
-  i int not null,
-  j int not null)
-    int not null;
+declare function get_from_object_container(self object<container>!, i int!, j int!) int!;
 
-declare proc set_in_object_container(
-  self object<container> not null,
-  i int not null,
-  j int not null,
-  value int not null);
+declare proc set_in_object_container(self object<container>!, i int!, j int!, value int!);
 ```
 
 This results in:
@@ -1554,7 +1551,7 @@ This is a very simple transform that allows for the creation of any array-like b
 In addition to the function pattern shown above, you can use the "proc as func" form to get values, like so:
 
 ```
-create proc get_from_object_container(self object<container>, field text not null, out value int not null) 
+create proc get_from_object_container(self object<container>!, field text!, out value int!)
 begin
   value := something;
 end;
@@ -1573,7 +1570,7 @@ add these macros to your copy of `cqlrt.h` (it's designed to be changed) or you 
 `@echo c, "#define stuff\n";`
 
 Finally, the `no check` version of the functions or procedures can also be used.  This will let you
-use a var-arg list for instance in your arrays which might be interesting.  Variable indices can 
+use a var-arg list for instance in your arrays which might be interesting.  Variable indices can
 be used in very flexible array builder forms.
 
 Another interesting aspect of the `no check` version of the APIs is that the calling convention for such
@@ -1604,3 +1601,4 @@ So, if targeting C, consider using `no check` functions and procedures for your 
 for maximum economy.  If you also implement the functions on the C side as macros, or inline functions
 in your `cqlrt.h` path, then array and property access can be very economical.  There need
 not be any actual function calls by the time the code runs.
+

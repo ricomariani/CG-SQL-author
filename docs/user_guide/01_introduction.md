@@ -126,19 +126,26 @@ declare procedure printf no check;
 -- print a conversion table  for temperatures from 0 to 300
 create proc conversions()
 begin
-  declare fahr, celsius integer not null;
-  declare lower, upper, step integer not null;
+  -- not null can be abbreviated with '!'
+  declare fahr, celsius int!; 
 
-  set lower := 0;   /* lower limit of range */
-  set upper := 300; /* upper limit of range */
-  set step := 20;   /* step size */
+  -- variable type can be implied
+  -- these are all int not null  (or int!)
+  let lower := 0;   /* lower limit of range */
+  let upper := 300; /* upper limit of range */
+  let step := 20;   /* step size */
 
+  -- this is the canonical SQL assignment syntax
+  -- but there are shorthand versions available in CQL
   set fahr := lower;
   while fahr <= upper
   begin
-    set celsius := 5 * (fahr - 32) / 9;
+    -- top level assignment without 'set' is ok
+    celsius := 5 * (fahr - 32) / 9;
     call printf("%d\t%d\n", fahr, celsius);
-    set fahr := fahr + step;
+
+    -- the usual assignment ops are supported
+    fahr += step;
   end;
 end;
 ```
@@ -164,6 +171,7 @@ The most basic types are the scalar or "unitary" types (as they are referred to 
 |`text`      |n/a          | an immutable string reference      |
 |`blob`      |n/a          | an immutable blob reference        |
 |`object`    |n/a          | an object reference                |
+|`X not null`|x!           | `!` means `not null` in types      |
 
 >NOTE: SQLite makes no distinction between integer storage and long integer storage, but the declarations
 >tell CQL whether it should use the SQLite methods for binding and reading 64-bit or 32-bit quantities
@@ -190,13 +198,13 @@ non-reference type, however: They are automatically assigned an initial value of
 The programs execution begins with three assignments:
 
 ```sql
-set lower := 0;
-set upper := 300;
-set step := 20;
+let lower := 0;
+let upper := 300;
+let step := 20;
 ```
 
 This initializes the variables just like in the isomorphic C code.  Statements are seperated by semicolons,
-just like in C.
+just like in C.  Here the data type of the variable is inferred because of `let`.
 
 The table is then printed using a `while` loop
 
@@ -215,12 +223,15 @@ The body of a `begin/end` block such as the one in the `while` statement can con
 The typical computation of Celsius temperature ensues with this code:
 
 ```sql
-set celsius := 5 * (fahr - 32) / 9;
+celsius := 5 * (fahr - 32) / 9;
 call printf("%d\t%d\n", fahr, celsius);
-set fahr := fahr + step;
+fahr += step;
 ```
 
-This computes the celsuis and then prints it out, moving on to the next entry in the table.
+This computes the celsius and then prints it out, moving on to the next entry in the table. Note that we
+have started using some shorthand.  `SET` can be elided.  And the `+=` assignment operators are also
+supported.  Top level procedure calls can also be made without the `call` keyword, that, too, could have
+been elided.
 
 Importantly, the CQL compiler uses the normal SQLite order of operations, which is NOT the C order of operations.
 As a result, the compiler may need to add parentheses in the C output to get the correct order; or it may remove

@@ -51,7 +51,6 @@ jobs:
           sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
           mv ${{ github.workspace }}/scripts/out/*_guide.* ${{ github.workspace }}/.generated/
           ls ${{ github.workspace }}/.generated/
-          cp ${{ github.workspace }}/.generated/cql_grammar.md ${{ github.workspace }}/scripts/out
 
       - name: Upload artifacts
         uses: actions/upload-pages-artifact@v2

@@ -76,11 +76,24 @@ jobs:
   test:
     name: Run Test Suite
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/sources
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
-      - name: TODO
-        run: echo @TODO
+      - name: TODO — Install dependencies
+        run: echo "TODO — Install dependencies"
+      - name: Execute test script using Clang in non-interactive mode
+        run: ./test.sh --use_clang --non_interactive
+      - name: Execute test script using GCC in non-interactive mode
+        run: ./test.sh --use_gcc --non_interactive
+      - name: Execute test script in non-interactive mode (Using Amalgam)
+        run: ./test.sh --use_clang --use_amalgam --non_interactive
+      - name: Execute test script in non-interactive mode with Address Sanitizer enabled
+        run: ./test.sh --use_clang --use_asan --non_interactive
+      - name: Execute coverage script
+        run: ./cov.sh
 
   build:
     name: Release Cross compilation builds of CQL

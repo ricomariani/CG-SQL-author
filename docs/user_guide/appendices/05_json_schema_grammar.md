@@ -9,3 +9,5 @@
 This content is computed by a github workflow.
 
 This file is only a placeholder, the contents of the file make no difference at all.
+
+<!-- I_AM_A_STUB -->

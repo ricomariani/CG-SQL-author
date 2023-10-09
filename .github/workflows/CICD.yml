@@ -1,0 +1,87 @@
+name: CICD
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+jobs:
+  documentation:
+    name: Build Documentation
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - name: Create ${{ github.workspace }}/.www directory in workspace
+        run: mkdir -p ${{ github.workspace }}/.www
+      - name: Setup java 17 (to generate railroad diagrams)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'microsoft'
+      - name: Attempt to retrieve Bottlecaps RailRoad from cache
+        id: bottlecaps-railroad
+        uses: actions/cache@v3
+        with:
+          path: ~/rr-2.0-java11
+          key: rr-2.0-java11
+      - name: Cache MISS — Download Bottlecaps RailRoad
+        if: steps.bottlecaps-railroad.outputs.cache-hit != 'true'
+        run: |
+          wget https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip -O rr-2.0-java11.zip
+          unzip rr-2.0-java11.zip -d ./rr-2.0-java11
+          mv ./rr-2.0-java11 ~/rr-2.0-java11
+      - name: Build Grammar outputs
+        run: |
+          mkdir -p ${{ github.workspace }}/sources/out
+          (cd ${{ github.workspace }}/sources/ ; make --quiet out/replacements out/json_replacements)
+          ${{ github.workspace }}/scripts/make_cql_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_query_plan_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_json_grammar_outputs.sh
+          ls ${{ github.workspace }}/sources/out
+      - name: Swap Stubbed Sections with generated content
+        run: |
+          cp ${{ github.workspace }}/scripts/out/cql_grammar.md ${{ github.workspace }}/docs/user_guide/appendices/02_grammar.md
+          cp ${{ github.workspace }}/scripts/out/json_grammar.md ${{ github.workspace }}/docs/user_guide/appendices/05_json_schema_grammar.md
+      - name: Build Guides
+        uses: docker://pandoc/core:3.1-ubuntu
+        with:
+          options: --volume ${{ github.workspace }}:/workspace
+          entrypoint: /bin/bash
+          args: "-x scripts/make_guide.sh all"
+      - name: Change ownership of generated files to (Github) runner
+        run: sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
+      - name: Prepare Github Pages — Copy selected generated files to ${{ github.workspace }}/.www
+        run: |
+          cp ${{ github.workspace }}/scripts/out/*_grammar.railroad.html ${{ github.workspace }}/.www/
+          cp ${{ github.workspace }}/scripts/out/*_guide.html ${{ github.workspace }}/.www/
+      - name: Debug — List files in ${{ github.workspace }}/.www
+        run: ls ${{ github.workspace }}/.www/
+      - name: Upload Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ${{ github.workspace }}/.www/
+      - name: Deploy GitHub Pages
+        uses: actions/deploy-pages@v2
+
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - name: TODO
+        run: echo @TODO
+
+  build:
+    name: Release Cross compilation builds of CQL
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - name: TODO
+        run: echo @TODO

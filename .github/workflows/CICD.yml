@@ -12,6 +12,9 @@ on:
 jobs:
   documentation:
     name: Build Documentation
+    permissions:
+      pages: write
+      id-token: write
     runs-on: ubuntu-22.04
     steps:
       - name: Git Checkout

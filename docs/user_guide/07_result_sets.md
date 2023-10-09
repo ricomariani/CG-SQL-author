@@ -73,9 +73,11 @@ extern cql_code read_foo_fetch_results(sqlite3 *_Nonnull _db_,
   read_foo_result_set_ref _Nullable *_Nonnull result_set,
   cql_int32 id_);
 ```
-The result set fetcher method gives you a `read_foo_result_set_ref` if it succeeds.  It accepts the `id_` argument which it
-will internally pass along to `read_foo(...)`.  The latter function provides a `sqlite3_stmt*` which can then be iterated in the fetcher.
-This method is the main public entry point for result sets.
+The result set fetcher method gives you a `read_foo_result_set_ref` if
+it succeeds.  It accepts the `id_` argument which it will internally pass
+along to `read_foo(...)`.  The latter function provides a `sqlite3_stmt*`
+which can then be iterated in the fetcher.  This method is the main
+public entry point for result sets.
 
 Once you have a result set, you can read values out of it.
 
@@ -191,10 +193,15 @@ read_foo_fetch_results(
 
 ### Results Sets From `OUT UNION`
 
-The `out` keyword was added for writing procedures that produce a single row result set.  With that, it became possible to make any single row result you wanted, assembling it from whatever sources you needed.  That is an important
-case as single row results happen frequently and they are comparatively easy to create and pass around using C
-structures for the backing store.  However, it's not everything; there are also cases where full flexibility is needed
-while producing a standard many-row result set.  For this we have `out union` which was discussed fully in Chapter 5.  Here we'll discuss the code generation behind that.
+The `out` keyword was added for writing procedures that produce a
+single row result set.  With that, it became possible to make any single
+row result you wanted, assembling it from whatever sources you needed.
+That is an important case as single row results happen frequently and they
+are comparatively easy to create and pass around using C structures for
+the backing store.  However, it's not everything; there are also cases
+where full flexibility is needed while producing a standard many-row
+result set.  For this we have `out union` which was discussed fully in
+Chapter 5.  Here we'll discuss the code generation behind that.
 
 
 Here’s an example from the CQL tests:
@@ -213,11 +220,17 @@ begin
 end;
 ```
 
-In this example the entire result set is made up out of thin air.  Of course any combination of this computation or data-access is possible, so you can ultimately make any rows you want in any order using SQLite to help you as much or as little as you need.
+In this example the entire result set is made up out of thin air.
+Of course any combination of this computation or data-access is possible,
+so you can ultimately make any rows you want in any order using SQLite
+to help you as much or as little as you need.
 
-Virtually all the code pieces to do this already exist for normal result sets.  The important parts of the output code look like this in your generated C.
+Virtually all the code pieces to do this already exist for normal
+result sets.  The important parts of the output code look like this in
+your generated C.
 
-We need a buffer to hold the rows we are going to accumulate;  We use `cql_bytebuf` just like the normal fetcher above.
+We need a buffer to hold the rows we are going to accumulate;  We use
+`cql_bytebuf` just like the normal fetcher above.
 
 ```c
 // This bit creates a growable buffer to hold the rows
@@ -235,24 +248,34 @@ cql_retain_row(C_);   // a no-op if there is no row in the cursor
 if (C_._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C_, sizeof(C_));
 ```
 
-Finally, we make the rowset when the procedure exits. If the procedure is returning with no errors the result set is created, otherwise the buffer is released.  The global `some_integers_info` has constants that describe the shape produced by this procedure just like the other cases that produce a result set.
+Finally, we make the rowset when the procedure exits. If the procedure
+is returning with no errors the result set is created, otherwise the
+buffer is released.  The global `some_integers_info` has constants that
+describe the shape produced by this procedure just like the other cases
+that produce a result set.
+
 ```
 cql_results_from_data(_rc_,
                       &_rows_,
                       &some_integers_info,
                       (cql_result_set_ref *)_result_set_);
 ```
-The operations here are basically the same ones that will happen inside of the standard helper
-`cql_fetch_all_results`, the difference, of course, is that you write the loop manually and therefore have
-full control of the rows as they go in to the result set.
+The operations here are basically the same ones that will happen inside of
+the standard helper `cql_fetch_all_results`, the difference, of course,
+is that you write the loop manually and therefore have full control of
+the rows as they go in to the result set.
 
-In short, the overhead is pretty low.  What you’re left with is pretty much the base cost of your algorithm.  The cost here is very similar to what it would be for any other thing that make rows.
+In short, the overhead is pretty low.  What you’re left with is pretty
+much the base cost of your algorithm.  The cost here is very similar to
+what it would be for any other thing that make rows.
 
-Of course, if you make a million rows, well, that would burn a lot of memory.
+Of course, if you make a million rows, well, that would burn a lot
+of memory.
 
 ### A Working Example
 
-Here's a fairly simple example illustrating some of these concepts including the reading of rowsets.
+Here's a fairly simple example illustrating some of these concepts
+including the reading of rowsets.
 
 ```sql
 -- hello.sql:

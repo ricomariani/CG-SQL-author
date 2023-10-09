@@ -31,7 +31,8 @@ are allowed on which data.  Strict type checking is much more reasonable given C
 
 ### Getting Started
 
-Before starting this tutorial, make sure you have built the `cql` executable first in [Building CG/SQL](../../docs/getting-started.md)
+Before starting this tutorial, make sure you have built the `cql`
+executable first in [Building CG/SQL](../../docs/getting-started.md)
 
 The "Hello World" program rendered in CQL looks like this:
 
@@ -117,7 +118,9 @@ the string "Hello, world" and then a newline.
 
 ### Variables and Arithmetic
 
-Borrowing once again from examples in "The C Programming Language", it's possible to do significant control flow in CQL without reference to databases.  The following program illustrates a variety of concepts:
+Borrowing once again from examples in "The C Programming Language",
+it's possible to do significant control flow in CQL without reference
+to databases.  The following program illustrates a variety of concepts:
 
 ```sql
 -- needed to allow vararg calls to C functions
@@ -261,10 +264,16 @@ they might be applied when performing a `+` operation.
 
 ### Preprocessing Features
 
-CQL does not include its own pre-processor but it is designed to consume the output of the C pre-processor.  To do this, you can either write the output of the pre-processor to a temporary file and read it into CQL as usual or you can set up a pipeline something like this:
+CQL does not include its own pre-processor but it is designed to consume
+the output of the C pre-processor.  To do this, you can either write the
+output of the pre-processor to a temporary file and read it into CQL as
+usual or you can set up a pipeline something like this:
 
 ```bash
 $ cc -x c -E your_program.sql | cql --cg your_program.h your_program.c
 ```
 
-The above causes the C compiler to invoke only the pre-processor `-E` and to treat the input as though it were C code `-x c` even though it is in a `.sql` file. Later examples will assume that you have configured CQL to be used with the C pre-processor as above.
+The above causes the C compiler to invoke only the pre-processor `-E`
+and to treat the input as though it were C code `-x c` even though it
+is in a `.sql` file. Later examples will assume that you have configured
+CQL to be used with the C pre-processor as above.

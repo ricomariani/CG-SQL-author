@@ -6,8 +6,9 @@
 -->
 ## Chapter 2: Using Data
 
-The point of using CQL is to facilitate access to a SQLite database so we'll switch gears to a slightly more complicated setup.  We'll
-still keep things fairly simple but let's start to use some database features.
+The point of using CQL is to facilitate access to a SQLite database so
+we'll switch gears to a slightly more complicated setup.  We'll still
+keep things fairly simple but let's start to use some database features.
 
 >NOTE: it is not the intent of this tutorial to also be
 >a primer for the SQLite programming language which is so ably documented on https://sqlite.org/.
@@ -33,17 +34,23 @@ begin
 end;
 ```
 
-That looks like an interesting little baby program and it appears as though it would once again print that most famous of salutations, "Hello, world".
+That looks like an interesting little baby program and it appears
+as though it would once again print that most famous of salutations,
+"Hello, world".
 
-Well, it doesn't.  At least, not yet.  Let's walk through the various things that are going to go wrong as this will teach us everything we need to know about activating CQL from some environment of your choice.
+Well, it doesn't.  At least, not yet.  Let's walk through the various
+things that are going to go wrong as this will teach us everything we
+need to know about activating CQL from some environment of your choice.
 
 ### Providing a Suitable Database
 
-CQL is just a compiler, it doesn't know how the code it creates will be provisioned any more than say clang does.
-It creates functions with predictable signatures so that they can be called from C just as easily as the SQLite API
-itself, and using the same currency.  Our new version of `hello` now requires a database handle because it performs
-database operations.  Also there are now opportunities for the database operations to fail, and so `hello` now provides a
-return code.
+CQL is just a compiler, it doesn't know how the code it creates will
+be provisioned any more than say clang does.  It creates functions
+with predictable signatures so that they can be called from C just as
+easily as the SQLite API itself, and using the same currency.  Our new
+version of `hello` now requires a database handle because it performs
+database operations.  Also there are now opportunities for the database
+operations to fail, and so `hello` now provides a return code.
 
 A new minimal `main` program might look something like this:
 
@@ -70,7 +77,8 @@ int main(int argc, char **argv)
 }
 ```
 
-If we re-run CQL and look in the `hello.h` output file we'll see that the declaration of the `hello` function is now:
+If we re-run CQL and look in the `hello.h` output file we'll see that
+the declaration of the `hello` function is now:
 
 ```c
 ...
@@ -156,8 +164,11 @@ When `hello` runs we begin with
 create table my_data(t text not null);
 ```
 
-This will create the `my_data` table with a single column `t`, of type `text not null`.  That will work because
-we know we're going to call this with a fresh/empty database.  More typically you might do `create table if not exists ...` or otherwise have a general attach/create phase or something to that effect.  We'll dispense with that here.
+This will create the `my_data` table with a single column `t`, of type
+`text not null`.  That will work because we know we're going to call
+this with a fresh/empty database.  More typically you might do `create
+table if not exists ...` or otherwise have a general attach/create phase
+or something to that effect.  We'll dispense with that here.
 
 Next we'll run the insert statement:
 
@@ -165,7 +176,11 @@ Next we'll run the insert statement:
 insert into my_data(t) values("Hello, world\n");
 ```
 
-This will add a single row to the table.  Note that we have again used double quotes, meaning that this is a C string literal.  This is highly convenient given the escape sequences.  Normally SQLite text has the newlines directly embedded in it; that practice isn't very compiler friendly, hence the alternative.
+This will add a single row to the table.  Note that we have again used
+double quotes, meaning that this is a C string literal.  This is highly
+convenient given the escape sequences.  Normally SQLite text has the
+newlines directly embedded in it; that practice isn't very compiler
+friendly, hence the alternative.
 
 Next we declare a local variable to hold our data:
 
@@ -179,14 +194,19 @@ Then, we can read back our data:
 set t := (select * from my_data);
 ```
 
-This form of database reading has very limited usability but it does work for this case and it is illustrative.
-The presence of `(select ...)` indicates to the CQL compiler that the parenthesized expression should be given to
-SQLite for evaluation according to the SQLite rules.  The expression is statically checked at compile time to
-ensure that it has exactly one result column. In this case the `*` is just column `t`, and actually it would have
-been clearer to use `t` directly here but then there wouldn't be a reason to talk about `*` and multiple columns.
-At run time, the `select` query must return exactly one row or an error code will be returned.  It's not uncommon
-to see `(select ... limit 1)` to force the issue.  But that still leaves the possibility of zero rows, which would
-be an error.  We'll talk about more flexible ways to read from the database later.
+This form of database reading has very limited usability but it does
+work for this case and it is illustrative.  The presence of `(select
+...)` indicates to the CQL compiler that the parenthesized expression
+should be given to SQLite for evaluation according to the SQLite rules.
+The expression is statically checked at compile time to ensure that it
+has exactly one result column. In this case the `*` is just column `t`,
+and actually it would have been clearer to use `t` directly here but
+then there wouldn't be a reason to talk about `*` and multiple columns.
+At run time, the `select` query must return exactly one row or an error
+code will be returned.  It's not uncommon to see `(select ... limit 1)`
+to force the issue.  But that still leaves the possibility of zero rows,
+which would be an error.  We'll talk about more flexible ways to read
+from the database later.
 
 
 > You can declare a variable and assign it in one step with the `LET` keyword, e.g.
@@ -197,12 +217,15 @@ be an error.  We'll talk about more flexible ways to read from the database late
 > The code would normally be written in this way but for discussion purposes, these examples continue to avoid `LET`.
 
 
-At this point it seems wise to bring up the unusual expression evaluation properties of CQL.
-CQL is by necessity a two-headed beast.  On the one side there is a rich expression evaluation language for
-working with local variables. Those expressions are compiled into C (or Lua) logic that emulates the behavior
-of SQLite on the data.  It provides complex expression constructs such as `IN` and `CASE` but it is ultimately
-evaluated by C execution.  Alternately, anything that is inside of a piece of SQL is necessarily evaluated by
-SQLite itself.  To make this clearer let's change the example a little bit before we move on.
+At this point it seems wise to bring up the unusual expression evaluation
+properties of CQL.  CQL is by necessity a two-headed beast.  On the one
+side there is a rich expression evaluation language for working with
+local variables. Those expressions are compiled into C (or Lua) logic
+that emulates the behavior of SQLite on the data.  It provides complex
+expression constructs such as `IN` and `CASE` but it is ultimately
+evaluated by C execution.  Alternately, anything that is inside of a
+piece of SQL is necessarily evaluated by SQLite itself.  To make this
+clearer let's change the example a little bit before we move on.
 
 ```sql
 set t := (select "__"||t||' '||1.234 from my_data);
@@ -299,8 +322,11 @@ The table now includes a position column to give us some ordering.  That is the 
 insert into my_data values(2, 'World');
 ```
 
-The insert statements provide both columns, not in the printed order.  The insert form where the columns are not
-specified indicates that all the columns will be present, in order; this is more economical to type.  CQL will generate errors at compile time if there are any missing columns or if any of the values are not type compatible with the indicated column.
+The insert statements provide both columns, not in the printed order.
+The insert form where the columns are not specified indicates that all
+the columns will be present, in order; this is more economical to type.
+CQL will generate errors at compile time if there are any missing columns
+or if any of the values are not type compatible with the indicated column.
 
 The most important change is here:
 

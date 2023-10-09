@@ -6,10 +6,21 @@
 -->
 ## Chapter 8: Functions
 
-CQL stored procs have a very simple contract so it is easy to declare procedures and then implement them in regular C; the C functions just have to conform to the contract.  However, CQL procedures have their own calling conventions and this makes it very inconvenient to use external code that is not doing database things and wants to return values.  Even a random number generator or something would be difficult to use because it could not be called in the context of an expression.  To allow for this CQL adds declared functions
+CQL stored procs have a very simple contract so it is easy to declare
+procedures and then implement them in regular C; the C functions just
+have to conform to the contract.  However, CQL procedures have their own
+calling conventions and this makes it very inconvenient to use external
+code that is not doing database things and wants to return values.
+Even a random number generator or something would be difficult to
+use because it could not be called in the context of an expression.
+To allow for this CQL adds declared functions
 
 In another example of the two-headed nature of CQL, there are two ways to declare functions.  As we have already
-seen you can make function-like procedures and call them like functions simply by making a procedure with an `out` parameter. However, there are also cases where it is reasonable to make function calls to external functions of other kinds.  There are three major types of functions you might wish to call.
+seen you can make function-like procedures and call them like functions
+simply by making a procedure with an `out` parameter. However, there
+are also cases where it is reasonable to make function calls to external
+functions of other kinds.  There are three major types of functions you
+might wish to call.
 
 ### Function Types
 
@@ -89,34 +100,47 @@ begin
 end;
 ```
 
-This presumably returns the "encoded" text, whatever that might be.  Note that if `sqlite3_create_function`
-is not called before this code runs, a run-time error will ensue.  Just as CQL must assume that declared
-tables really are created, it also assumes that declared function really are created.  This is another case
-of telling the compiler in advance what the situation will be at runtime.
+This presumably returns the "encoded" text, whatever that might be.
+Note that if `sqlite3_create_function` is not called before this code
+runs, a run-time error will ensue.  Just as CQL must assume that declared
+tables really are created, it also assumes that declared function really
+are created.  This is another case of telling the compiler in advance
+what the situation will be at runtime.
 
-SQLite allows for many flexible kinds of user defined functions.  CQL doesn't concern itself with the details of the implementation of the function, it only needs the signature so that it can validate calls.
+SQLite allows for many flexible kinds of user defined functions.
+CQL doesn't concern itself with the details of the implementation of
+the function, it only needs the signature so that it can validate calls.
 
-Note that SQL Scalar Functions cannot contain `object` parameters. To pass an `object`, you should instead pass
-the memory address of this object using a `LONG INT` parameter. To access the address of an `object` at runtime, you should use
-the `ptr()` function. See [the notes section below](#notes-on-builtin-functions) for more information.
+Note that SQL Scalar Functions cannot contain `object` parameters. To
+pass an `object`, you should instead pass the memory address of this
+object using a `LONG INT` parameter. To access the address of an `object`
+at runtime, you should use the `ptr()` function. See [the notes section
+below](#notes-on-builtin-functions) for more information.
 
 See also: [Create Or Redefine SQL Functions](https://www.sqlite.org/c3ref/create_function.html).
 
 #### SQL Table Valued Functions
 
-More recent versions of SQLite also include the ability to add table-valued functions to statements in place of actual tables. These functions can use their arguments to create a "virtual table" value for use in place of a table.  For this
-to work, again SQLite must be told of the existence of the table.  There are a series of steps to make this happen
-beginning with `sqlite3_create_module` which are described in the SQLite documents under "The Virtual Table Mechanism Of SQLite."
+More recent versions of SQLite also include the ability to add
+table-valued functions to statements in place of actual tables. These
+functions can use their arguments to create a "virtual table" value for
+use in place of a table.  For this to work, again SQLite must be told of
+the existence of the table.  There are a series of steps to make this
+happen beginning with `sqlite3_create_module` which are described in
+the SQLite documents under "The Virtual Table Mechanism Of SQLite."
 
-Once that has been done, a table-valued function can be defined for most object types.  For instance it is possible to
-create a table-valued function like so:
+Once that has been done, a table-valued function can be defined for
+most object types.  For instance it is possible to create a table-valued
+function like so:
 
 ```sql
 declare select function dict_contents(dict object not null)
    (k text not null, v text not null);
 ```
 
-This is just like the previous type of select function but the return type is a table shape.  Once the above has been done you can legally write something like this:
+This is just like the previous type of select function but the return
+type is a table shape.  Once the above has been done you can legally
+write something like this:
 
 ```sql
 create proc read_dict(dict object not null, pattern text)
@@ -134,7 +158,11 @@ and only more modern versions of SQLite even support it.
 
 ### SQL Functions with Unchecked Parameter Types
 
-Certain SQL functions like [`json_extract`](https://www.sqlite.org/json1.html#jex) are variadic (they accept variable number of arguments). To use such functions within CQL, you can declare a SQL function to have untyped parameters by including the `NO CHECK` clause instead of parameter types.
+Certain SQL functions like
+[`json_extract`](https://www.sqlite.org/json1.html#jex) are variadic (they
+accept variable number of arguments). To use such functions within CQL,
+you can declare a SQL function to have untyped parameters by including
+the `NO CHECK` clause instead of parameter types.
 
 For example:
 ```sql
@@ -142,15 +170,20 @@ declare select function json_extract no check text;
 ```
 
 This is also supported for SQL table-valued functions:
+
 ```sql
 declare select function table_valued_function no check (t text, i int);
 ```
 
->NOTE: currently the `NO CHECK` clause is not supported for non SQL [Ordinary Scalar Functions](#Ordinary-Scalar-Functions).
+>NOTE: currently the `NO CHECK` clause is not supported for non SQL
+>[Ordinary Scalar Functions](#Ordinary-Scalar-Functions).
 
 ### Notes on Builtin Functions
 
-Some of the SQLite builtin functions are hard-coded;  these are the functions that have semantics that are not readily captured with a simple prototype.  Other SQLite functions can be declared with `declare select function ...` and then used.
+Some of the SQLite builtin functions are hard-coded;  these are the
+functions that have semantics that are not readily captured with a
+simple prototype.  Other SQLite functions can be declared with `declare
+select function ...` and then used.
 
 CQL's hard-coded builtin list includes:
 
@@ -206,9 +239,19 @@ Special Functions
  * sensitive
  * ptr
 
-`Nullable` casts an operand to the nullable version of its type and otherwise does nothing.  This cast might be useful if you need an exact type match in a situation.  It is stripped from any generated SQL and generated C so it has no runtime effect at all other than the indirect consequences of changing the storage class of its operand.
+`Nullable` casts an operand to the nullable version of its type and
+otherwise does nothing.  This cast might be useful if you need an exact
+type match in a situation.  It is stripped from any generated SQL and
+generated C so it has no runtime effect at all other than the indirect
+consequences of changing the storage class of its operand.
 
-`Sensitive` casts an operand to the sensitive version of its type and otherwise does nothing.  This cast might be useful if you need an exact type match in a situation.  It is stripped from any generated SQL and generated C so it has no runtime effect at all other than the indirect consequences of changing the storage class of its operand.
+`Sensitive` casts an operand to the sensitive version of its type and
+otherwise does nothing.  This cast might be useful if you need an exact
+type match in a situation.  It is stripped from any generated SQL and
+generated C so it has no runtime effect at all other than the indirect
+consequences of changing the storage class of its operand.
 
-`Ptr` is used to cause a reference type variable to be bound as a long integer to SQLite. This is a way of giving object pointers to SQLite UDFs. Not all versions of Sqlite support
-binding object variables, so passing memory addresses is the best we can do on all versions.
+`Ptr` is used to cause a reference type variable to be bound as a long
+integer to SQLite. This is a way of giving object pointers to SQLite
+UDFs. Not all versions of Sqlite support binding object variables,
+so passing memory addresses is the best we can do on all versions.

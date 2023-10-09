@@ -6,19 +6,31 @@
 -->
 ## Chapter 13: JSON Output
 
-To help facilitate additional tools that might want to depend on CQL input files further down the toolchain, CQL includes a JSON output format for SQL DDL as well as stored procedure information, including special information for a single-statement DML.  "Single-statement DML" refers to those stored procedures that consist of a single `insert`, `select`, `update`, or `delete`.   Even though such procedures comprise just one statement, good argument binding can create very powerful DML fragments that are re-usable.  Many CQL stored procedures are of this form (in practice maybe 95% are just one statement.)
+To help facilitate additional tools that might want to depend on CQL
+input files further down the toolchain, CQL includes a JSON output format
+for SQL DDL as well as stored procedure information, including special
+information for a single-statement DML.  "Single-statement DML" refers
+to those stored procedures that consist of a single `insert`, `select`,
+`update`, or `delete`.   Even though such procedures comprise just one
+statement, good argument binding can create very powerful DML fragments
+that are re-usable.  Many CQL stored procedures are of this form (in
+practice maybe 95% are just one statement.)
 
-To use CQL in this fashion, the sequence will be something like the below.  See [Appendix 1](#appendix-1-command-line-options)
-for command line details.
+To use CQL in this fashion, the sequence will be something like the
+below.  See [Appendix 1](#appendix-1-command-line-options) for command
+line details.
 
 ```bash
 cql --in input.sql --rt json_schema --cg out.json
 ```
 
-The output contains many different sections for the various types of entities that CQL can process.  There is a full description of
-the possible outputs available in [diagram form](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
+The output contains many different sections for the various
+types of entities that CQL can process.  There is a full
+description of the possible outputs available in [diagram
+form](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
 
-In the balance of this chapter we'll deal with the contents of the sections and their meaning rather than the specifics of the format,
+In the balance of this chapter we'll deal with the contents of the
+sections and their meaning rather than the specifics of the format,
 which are better described with the grammar above.
 
 ### Tables
@@ -113,15 +125,16 @@ generates:
 
 ### Region Information
 
-Region Information can appear on many entities, it consists of two optional elements:
+Region Information can appear on many entities, it consists of two
+optional elements:
 
 * **region** : optional, the name of the region in which the entity was defined
 * **deployedInRegion** : optional, the deployment region in which that region is located
 
 ### Attributes
 
-Miscellaneous attributes can be present on virtual every kind of entity.  They are optional.  The root node
-introduces the attributes:
+Miscellaneous attributes can be present on virtual every kind of entity.
+They are optional.  The root node introduces the attributes:
 
 * **attributes** : a list at least one attribute
 
@@ -138,18 +151,25 @@ Each _attribute value_ can be:
 * any literal
 * an array of _attribute values_
 
-Since the _attribute values_ can nest it's possible to represent arbitrarily complex data types in an attribute.
+Since the _attribute values_ can nest it's possible to represent
+arbitrarily complex data types in an attribute.
 
 ### Global attributes
 
-While the most common use case for attributes is to be attached to other entities (e.g., tables, columns), CQL also lets you define
-"global" attributes, which are included in the top level `attributes` section of the JSON output. To specify global attributes you
-declare a variable of type `object` ending with the suffix `database` and attach attributes to it. CQL will merge together all the attributes
-from all the variables ending with `database` and place them in the `attributes` section of the JSON output.
+While the most common use case for attributes is to be attached to
+other entities (e.g., tables, columns), CQL also lets you define
+"global" attributes, which are included in the top level `attributes`
+section of the JSON output. To specify global attributes you declare a
+variable of type `object` ending with the suffix `database` and attach
+attributes to it. CQL will merge together all the attributes from all
+the variables ending with `database` and place them in the `attributes`
+section of the JSON output.
 
-Global attributes give you a way to add global configuration information into the CQL JSON output. You can, for instance,
-include these attributes in some root file that you `#include` in the rest of your CQL code, and by doing this,
-these attributes will be visible in any generated JSON for those files.
+Global attributes give you a way to add global configuration information
+into the CQL JSON output. You can, for instance, include these attributes
+in some root file that you `#include` in the rest of your CQL code,
+and by doing this, these attributes will be visible in any generated
+JSON for those files.
 
 Example:
 
@@ -185,7 +205,8 @@ Generates:
 
 ### Foreign Keys
 
-Foreign keys appear only in tables, the list of keys contains zero or more entries of this form:
+Foreign keys appear only in tables, the list of keys contains zero or
+more entries of this form:
 
 * **name** : optional, the name of the foreign key if specified
 * **columns** : the names of the constrained columns in the current table (the "child" table)
@@ -197,7 +218,8 @@ Foreign keys appear only in tables, the list of keys contains zero or more entri
 
 ### Unique Keys
 
-Unique keys appear only in tables, the list of keys contains zero or more entries of this form:
+Unique keys appear only in tables, the list of keys contains zero or
+more entries of this form:
 
 * **name**: optional, the name of the unique key if specified
 * **columns**: a list of 1 or more constrained column names
@@ -206,7 +228,8 @@ Unique keys appear only in tables, the list of keys contains zero or more entrie
 
 ### Check Expressions
 
-Check Expressions appear only in tables, the list of keys contains zero or more entries of this form:
+Check Expressions appear only in tables, the list of keys contains zero
+or more entries of this form:
 
 * **name** : optional, the name of the unique key if specified
 * **checkExpr** : the check expression in plain text
@@ -220,7 +243,8 @@ at run time.  This is an extraordinary choice but technically possible.
 
 ### Columns
 
-Columns are themselves rather complex, there are 1 or more of them in each table.  The table will have
+Columns are themselves rather complex, there are 1 or more of them in
+each table.  The table will have
 a list of records of this form:
 
 * **name** : the name of the columns
@@ -243,20 +267,24 @@ a list of records of this form:
 
 ### Virtual Tables
 
-The "virtualTables" section is very similar to the "tables" section with zero or more virtual table entries.
+The "virtualTables" section is very similar to the "tables" section with
+zero or more virtual table entries.
+
 Virtual table entries are the same as table entries with the following additions:
 
 * **module** : the name of the module that manages this virtual table
 * **isEponymous** : true if the virtual table was declared eponymous
 * **isVirtual** : always true for virtual tables
 
-The JSON schema for these items was designed to be as similar as possible so that typically the same code can handle both
-with possibly a few extra tests of the isVirtual field.
+The JSON schema for these items was designed to be as similar as possible
+so that typically the same code can handle both with possibly a few
+extra tests of the isVirtual field.
 
 
 ### Views
 
-The views section contains the list of all views in the schema, it is zero or more view entires of this form.
+The views section contains the list of all views in the schema, it is
+zero or more view entires of this form.
 
 * **name** : the view name
 * **crc** : the schema CRC for the entire view definition
@@ -270,7 +298,8 @@ The views section contains the list of all views in the schema, it is zero or mo
 * **selectArgs** : the names of arguments any unbound expressions ("?") in the view
 * **_dependencies_** : several lists of tables and how they are used in the view, see the [section on dependencies](#dependencies)
 
-Note that the use of unbound expressions in a view truly extraordinary so selectArgs is essentially always going to be an empty list.
+>NOTE: The use of unbound expressions in a view would be truly extraordinary
+>so selectArgs is essentially always going to be an empty list.
 
 Example:
 
@@ -309,9 +338,11 @@ Generates:
 
 ### Projections
 
-A projection defines the output shape of something that can return a table-like value such as a view or a procedure.
+A projection defines the output shape of something that can return a
+table-like value such as a view or a procedure.
 
-The projection consists of a list of one or more _projected columns_, each of which is:
+The projection consists of a list of one or more _projected columns_,
+each of which is:
 
 * **name** : the name of the result column  (e.g. in select 2 as foo) the name is "foo"
 * **type** : the type of the column (e.g. text, real, etc.)
@@ -321,8 +352,10 @@ The projection consists of a list of one or more _projected columns_, each of wh
 
 ### Dependencies
 
-The dependencies section appears in many entities, it indicates things that were used by the object and how they were used.
-Most of the fields are optional, some fields are impossible in some contexts (e.g. inserts can happen inside of views).
+The dependencies section appears in many entities, it indicates things
+that were used by the object and how they were used.  Most of the fields
+are optional, some fields are impossible in some contexts (e.g. inserts
+can happen inside of views).
 
 * **insertTables** : optional, a list of tables into which values were inserted
 * **updateTables** : optional, a list of tables whose values were updated
@@ -334,7 +367,8 @@ Most of the fields are optional, some fields are impossible in some contexts (e.
 
 ### Indices
 
-The indices section contains the list of all indices in the schema, it is zero or more view entires of this form:
+The indices section contains the list of all indices in the schema,
+it is zero or more view entires of this form:
 
 * **name** : the index name
 * **crc** : the schema CRC for the entire index definition
@@ -382,16 +416,20 @@ The next several sections:
 * Deletes
 * General
 
-All provide information about various types of procedures.  Some "simple" procedures that consist only of the type of statement
-correspond to their section (and some other rules) present additional information about their contents.  This can sometimes
-be useful.  All the sections define certain common things about procedures so that basic information is available about
-all procedures.  This is is basically the contents of the "general" section which deals with procedures that have a complex
+All provide information about various types of procedures.  Some "simple"
+procedures that consist only of the type of statement correspond to
+their section (and some other rules) present additional information
+about their contents.  This can sometimes be useful.  All the sections
+define certain common things about procedures so that basic information
+is available about all procedures.  This is is basically the contents
+of the "general" section which deals with procedures that have a complex
 body of which little can be said.
 
 
 #### Queries
 
-The queries section corresponds to the stored procedures that are a single SELECT statement with no fragments.
+The queries section corresponds to the stored procedures that are a
+single SELECT statement with no fragments.
 
 The fields of a query record are:
 
@@ -451,8 +489,9 @@ Generates:
 
 #### Procedure Arguments
 
-Procedure arguments have several generalities that don't come up very often but are important to describe.  The argument list
-of a procedure is 0 or more arguments of the form:
+Procedure arguments have several generalities that don't come up very
+often but are important to describe.  The argument list of a procedure
+is 0 or more arguments of the form:
 
 * **name** : the argument name, any valid identifier
 * **argOrigin** : either the name repeated if it's just a name or a 3 part string if it came from a bundle, see below
@@ -461,8 +500,9 @@ of a procedure is 0 or more arguments of the form:
 * **isSensitive** : optional, true if the argument is marked with @sensitive (e.g. it has PII etc.)
 * **isNotNull** : true if the argument is declared not null
 
-An example of a simple argument was shown above, if we change the example a little bit to use the argument bundle syntax
-(even though it's overkill) we can see the general form of argOrigin.
+An example of a simple argument was shown above, if we change the example
+a little bit to use the argument bundle syntax (even though it's overkill)
+we can see the general form of argOrigin.
 
 Example:
 
@@ -513,11 +553,14 @@ Generates:
     }
 ```
 
-Note the synthetic names `a_foo_id` and `a_foo_name` the argOrigin indicates that the bundle name is `a_foo`
-which could have been anything, the shape was `foo` and the column in `foo` was `id` or `name` as appropriate.
+Note the synthetic names `a_foo_id` and `a_foo_name` the argOrigin
+indicates that the bundle name is `a_foo` which could have been anything,
+the shape was `foo` and the column in `foo` was `id` or `name` as
+appropriate.
 
-The JSON is often used to generate glue code to call procedures from different languages.  The argOrigin can be useful if
-you want to codegen something other normal arguments in your code.
+The JSON is often used to generate glue code to call procedures from
+different languages.  The argOrigin can be useful if you want to codegen
+something other normal arguments in your code.
 
 
 #### General Inserts
@@ -537,8 +580,9 @@ The fields of a general insert record are:
 * **statementArgs** : a list of procedure arguments (possibly empty) that should be used to replace the corresponding "?" parameters in the statement
 * **statementType** : there are several insert forms such as "INSERT", "INSERT OR REPLACE", "REPLACE", etc. the type is encoded here
 
-General inserts does not include the inserted values because they are not directly extractable in general.  This form is used if one of
-these is true:
+General inserts does not include the inserted values because they are
+not directly extractable in general.  This form is used if one of these
+is true:
 
  * insert from multiple value rows
  * insert from a select statement
@@ -576,12 +620,15 @@ Generates:
 
 #### Simple Inserts
 
-The vanilla inserts section can be used for procedures that just insert a single row.  This is a
-very common case and if the JSON is being used to drive custom code generation it is useful
-to provide the extra information.  The data in this section is exactly the same as the General Inserts
-section except that includes the inserted values.  The "values" property has this extra information.
+The vanilla inserts section can be used for procedures that just
+insert a single row.  This is a very common case and if the JSON is
+being used to drive custom code generation it is useful to provide the
+extra information.  The data in this section is exactly the same as
+the General Inserts section except that includes the inserted values.
+The "values" property has this extra information.
 
-Each value in the values list corresponds 1:1 with a column and has this form:
+Each value in the values list corresponds 1:1 with a column and has
+this form:
 
 * **value** : the expression for this value
 * **valueArgs**: the array of procedure arguments that should replace the "?" entries in the value
@@ -638,7 +685,8 @@ Generates:
 
 #### Updates
 
-The updates section corresponds to the stored procedures that are a single UPDATE statement with no fragments. The
+The updates section corresponds to the stored procedures that are a
+single UPDATE statement with no fragments. The
 fields of an update record are:
 
 * **name** : the name of the procedure
@@ -694,9 +742,10 @@ Generates:
 
 #### Deletes
 
-The deletes section corresponds to the stored procedures that are a single DELETE statement with no fragments. The
-fields of a delete record are exactly the same as those of update.  Those are the basic fields needed to bind any
-statement.
+The deletes section corresponds to the stored procedures that are a single
+DELETE statement with no fragments. The fields of a delete record are
+exactly the same as those of update.  Those are the basic fields needed
+to bind any statement.
 
 Example:
 
@@ -732,14 +781,17 @@ Generates:
 
 #### General
 
-And finally the section for procedures that were encountered that are not one of the simple prepared statement forms.  The principle reasons for being in this category are:
+And finally the section for procedures that were encountered that are
+not one of the simple prepared statement forms.  The principle reasons
+for being in this category are:
+
 * the procedure has out arguments
 * the procedure uses something other than a single DML statement
 * the procedure has no projection (no result of any type)
 * the procedure uses shared fragments and hence has complex argument binding
 
-The fields of a general procedure are something like a union of update and delete and query but with no statement info.  The are
-as follows:
+The fields of a general procedure are something like a union of update
+and delete and query but with no statement info.  The are as follows:
 
 * **name** : the name of the procedure
 * **definedInFile** : the file that contains the procedure (the path is as it was specified to CQL so it might be relative or absolute)
@@ -761,7 +813,8 @@ The result contract is at most one of these:
 * **hasOutResult**: true if the procedure generates its projection using OUT
 * **hasOutUnionResult**: true if the procedure generates its projection using OUT UNION
 
-A procedure that does not produce a result set in any way will set none of these and have no projection entry.
+A procedure that does not produce a result set in any way will set none
+of these and have no projection entry.
 
 Example:
 
@@ -842,13 +895,26 @@ Generates:
 ```
 
 ### Procecdure Declarations
-The `declareProcs` section contains a list of procedure declaractions. Each declaration is of the form:
+
+The `declareProcs` section contains a list of procedure
+declaractions. Each declaration is of the form:
 
 * **name** : the name of the procedure
 * **args** : _procedure arguments_ see the relevant section
 * **attributes** : optional, see the section on attributes, they appear in many places
 * **projection** : An array of projections. See [the section on projections](#projections)
 * **usesDatabase** : true if the procedure requires you to pass in a sqlite connection to call it
+
+The `declareNoCheckProcs` describes procedures declared like so:
+
+```
+DECLARE PROC Foo NO CHECK
+```
+
+Such procedures carry on the name and attributes
+
+* **name** : the name of the procedure
+* **attributes** : optional, see the section on attributes, they appear in many places
 
 ### Function Declarations
 
@@ -859,6 +925,12 @@ The `declareFuncs` section contains a list of function declarations, Each declar
 * **attributes** : optional, see the section on attributes, they appear in many places
 * **returnType** : see the relevant section below.
 * **createsObject** : true if the function will create a new object (e.g. `declare function dict_create() create object;`)
+
+There are also sections for `declareNoCheckFuncs`, `declareSelectFuncs`, and `declareNoCheckSelectFuncs`. 
+
+* No check function do not have the `args` tag
+* Select functions do not have the `createsObject` tag (they can't create objects)
+* Select functions may have a `projection` instead of a `returnType` if they are table-valued
 
 ### Return Type
 
@@ -938,7 +1010,8 @@ Generates:
 
 ### Constant Groups
 
-This section list all the constant groups and values.  Each entry is of the form:
+This section list all the constant groups and values.  Each entry is of
+the form:
 
 * **name** : the name of the constant group
 * **values**: a list of declared constant values, this can be of mixed type
@@ -993,14 +1066,16 @@ Generates:
 
 ### Subscriptions
 
-This section list all the schema subscriptions in order of appearance.  Each entry is of the form:
+This section list all the schema subscriptions in order of appearance.
+Each entry is of the form:
 
 * **type** : always "unsub" at this time
 * **table** : the target of the subscription directive
 * **version** : the version at which this operation is to happen (always 1 at this time)
 
-This section is a little more complicated than it needs to be becasue of the legacy/deprecated `@resub` directive.  At
-this point only the table name is relevant.  The version is always 1 and the type is always "unsub".
+This section is a little more complicated than it needs to be becasue
+of the legacy/deprecated `@resub` directive.  At this point only the table
+name is relevant.  The version is always 1 and the type is always "unsub".
 
 Example:
 
@@ -1020,6 +1095,8 @@ Generates:
 
 ### Summary
 
-These sections general provide all the information about everything that was declared in a translation unit.  Typically
-not the full body of what was declared but its interface.  The schema information provide the core type and context
-while the procedure information illuminates the code that was generated and how you might call it.
+These sections general provide all the information about everything that
+was declared in a translation unit.  Typically not the full body of what
+was declared but its interface.  The schema information provide the core
+type and context while the procedure information illuminates the code
+that was generated and how you might call it.

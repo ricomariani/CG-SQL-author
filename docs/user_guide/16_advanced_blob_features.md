@@ -6,14 +6,27 @@
 -->
 ## Chapter 16: Advanced Blob Features
 
-There are two large features that involve complex uses of blobs that are supported in the default runtime.  These are Blob Storage and Backed Tables, the latter of which uses key and value blobs for generic schema.
+There are two large features that involve complex uses of blobs that
+are supported in the default runtime.  These are Blob Storage and Backed
+Tables, the latter of which uses key and value blobs for generic schema.
 
 ### Blob Storage
 
-The general idea here is that you might want to take arbitrary data that is in a cursor, which is to say any database shape at all, and convert it into a single blob.  You could use this blob to store composite data in a single column in the database or to send your data over some kind of wire transport in a generic fashion.  The idea of blob storage is to provide a reslient way to do this that is platform neutral (i.e. you can store the blob on one system and recover it on another system with different endian order).  Blob storage allows limited extension of the blob shape over time, allowing you to add new nullable columns at the end of your shape and still recover your data from older blobs.
+The general idea here is that you might want to take arbitrary data that
+is in a cursor, which is to say any database shape at all, and convert
+it into a single blob.  You could use this blob to store composite data
+in a single column in the database or to send your data over some kind
+of wire transport in a generic fashion.  The idea of blob storage is
+to provide a reslient way to do this that is platform neutral (i.e. you
+can store the blob on one system and recover it on another system with
+different endian order).  Blob storage allows limited extension of the
+blob shape over time, allowing you to add new nullable columns at the
+end of your shape and still recover your data from older blobs.
 
 #### Defining a shape for Blob Storage
-In SQL/CQL, the main way you define structures, especially those that you want to maintain, is with tables.  Hence we introduce notation like this:
+
+In SQL/CQL, the main way you define structures, especially those that you
+want to maintain, is with tables.  Hence we introduce notation like this:
 
 ```sql
 @attribute(cql:blob_storage)
@@ -24,10 +37,16 @@ create table news_info(
 );
 ```
 
-The `blob_storage attribute` indicates that the table we're about to define here is not really going to be a materialized table.  As a result, you will not be
-able to (e.g.) `DROP` the table or `SELECT` from it, and there will be no schema upgrade for it should you request one. However, the usual schema maintenance rules still
-apply (See [Chapter 10](#chapter-10-schema-management-features) and [Chapter 11](#chapter-11-previous-schema-validation)) which help you to create compatible versions of this structure.
-For instance, new columns can be added only at the end, and only if they are nullable. Here we add `source` to the schema in a hypothetical "version 6".  
+The `blob_storage attribute` indicates that the table we're about
+to define here is not really going to be a materialized table.  As a
+result, you will not be able to (e.g.) `DROP` the table or `SELECT`
+from it, and there will be no schema upgrade for it should you request
+one. However, the usual schema maintenance rules still apply (See
+[Chapter 10](#chapter-10-schema-management-features) and
+[Chapter 11](#chapter-11-previous-schema-validation)) which help you to
+create compatible versions of this structure.  For instance, new columns
+can be added only at the end, and only if they are nullable. Here we add
+`source` to the schema in a hypothetical "version 6".
 
 ```sql
 @attribute(cql:blob_storage)
@@ -38,13 +57,19 @@ create table news_info(
   source text @create(6)
 );
 ```
->Note: schema versions move forward globally in the schema, not locally in one table; this implies there are versions 1-5 elsewhere, not shown.
+>NOTE: schema versions move forward globally in the schema, not locally
+>in one table; this implies there are versions 1-5 elsewhere, not shown.
 
-Additionally, since the storage is not backed by SQLite and therefore lacks its constraint system, default values and constraints are not allowed in a table marked with `cql:blob_storage`; it's just data. Similarly, triggers, views, and indices may not use the table marked as blob storage. It isn't really a table.
+Additionally, since the storage is not backed by SQLite and therefore
+lacks its constraint system, default values and constraints are
+not allowed in a table marked with `cql:blob_storage`; it's just
+data. Similarly, triggers, views, and indices may not use the table
+marked as blob storage. It isn't really a table.
 
 #### Declaring Blob Storage
 
-Blob storage goes in a blob field, but recall CQL has discriminated types so we can use a form like this:
+Blob storage goes in a blob field, but recall CQL has discriminated
+types so we can use a form like this:
 
 ```sql
 create table info(
@@ -53,11 +78,19 @@ create table info(
 );
 ```
 
-From a SQL perspective `news_info` is just a blob, you can only apply blob operations to it in the context of a query.  This means `WHERE` clauses that partially constraint the blob contents are not generally possible (though you could do it if you write suitable UDFs and [Backed Tables](#backed-tables) actually generalize this if generic schema support is what is desired).  Blob storage is really about moving the whole blob around so it's apprpropriate when you want to crack the blob in code, and not so much in database operations.
+From a SQL perspective `news_info` is just a blob, you can only apply
+blob operations to it in the context of a query.  This means `WHERE`
+clauses that partially constraint the blob contents are not generally
+possible (though you could do it if you write suitable UDFs and
+[Backed Tables](#backed-tables) actually generalize this if generic schema support
+is what is desired).  Blob storage is really about moving the whole blob
+around so it's apprpropriate when you want to crack the blob in code,
+and not so much in database operations.
 
 #### Creating Blobs with Blob Storage
 
-You can use the `SET` statement on a variable of type `blob<news_info>` starting from any cursor that has shape `news_info` like so:
+You can use the `SET` statement on a variable of type `blob<news_info>`
+starting from any cursor that has shape `news_info` like so:
 
 ```sql
 create proc make_blob(like news_info, out result blob<news_info>)
@@ -71,8 +104,11 @@ begin
 END;
 ```
 
-This declares a cursor, loads it from argument values, and converts it to a blob.  
-Of course any of the usual cursor building forms can be used to power your blob creation, you just do one serialization at the end.  The above is assembling a blob from arguments but you could equally make the blob from data.
+This declares a cursor, loads it from argument values, and converts it
+to a blob.  Of course any of the usual cursor building forms can be used
+to power your blob creation, you just do one serialization at the end.
+The above is assembling a blob from arguments but you could equally make
+the blob from data.
 
 ```sql
 create proc get_news_info(id_ long not null, out result blob<news_info>)
@@ -86,14 +122,18 @@ begin
 END;
 ```
 
-There are *many* cursor fetch forms, including dummy data forms and other interesting bits of sugar.  
-You can fetch a cursor from arguments, from other cursors, and even combinations.  Because cursors
-are the source of new blobs,  any of these data acquistion forms are viable and convenient sources of data.
+There are *many* cursor fetch forms, including dummy data forms and other
+interesting bits of sugar.  You can fetch a cursor from arguments, from
+other cursors, and even combinations.  Because cursors are the source of
+new blobs,  any of these data acquistion forms are viable and convenient
+sources of data.
 
 #### Unpacking Blob Storage
 
-Again, the normal way that you work with records in CQL is by creating suitable cursors. Such cursors can be economically accessed on a field-by-field basis. What we need is a way to easily recreate a cursor from a blob
-so we can read the data values. To do this use this form:
+Again, the normal way that you work with records in CQL is by creating
+suitable cursors. Such cursors can be economically accessed on a
+field-by-field basis. What we need is a way to easily recreate a cursor
+from a blob so we can read the data values. To do this use this form:
 
 ```sql
 -- get the blob from somewhere (b will be of type blob<news_info>)
@@ -105,17 +145,29 @@ declare c cursor like b;
 -- load the cursor (note that this can throw an exception if the blob is corrupt)
 fetch c from b;
 -- now use c.who, c.what, etc.
-```
 
-On the data is loaded in a cursor is very economical to access on a field-by-field basis, and,
-since the deserialization of the blob happened all at once, that is also economical.
->NOTE: The runtime cannot assume that the blob is well formed, it could be coming from anywhere.  For secure-code reasons it must assume the is "hostile".  Hence the decoding validates the shape, internal lengths, and so forth.  Therefore there are many ways it might fail.
+On the data is loaded in a cursor is very economical to access on a
+field-by-field basis, and, since the deserialization of the blob happened
+all at once, that is also economical.
 
-Once you have the cursor you can do any of the usual data operations; you could even make new blobs with different combinations by slicing the cursor fields using the `LIKE` operator.  You can return the cursor with `OUT`, or `OUT UNION`, or pass the blob fields as arguments to functions using the `FROM` forms. The cracked blob is fully usable for all the usual CQL things you might need to do.
+>NOTE: The runtime cannot assume that the blob is well formed, it could
+>be coming from anywhere.  For secure-code reasons it must assume the is
+>"hostile".  Hence the decoding validates the shape, internal lengths,
+>and so forth.  Therefore there are many ways it might fail.
+
+Once you have the cursor you can do any of the usual data operations;
+you could even make new blobs with different combinations by slicing the
+cursor fields using the `LIKE` operator.  You can return the cursor with
+`OUT`, or `OUT UNION`, or pass the blob fields as arguments to functions
+using the `FROM` forms. The cracked blob is fully usable for all the
+usual CQL things you might need to do.
 
 #### Blob Storage Representation
 
-The blob data must be able to evolve over time, so each blob has to be self-describing.  We must also be able to throw an exception if an incorrect or invalid blob is used when loading a cursor, so the blob has to contain the following:
+The blob data must be able to evolve over time, so each blob has to
+be self-describing.  We must also be able to throw an exception if an
+incorrect or invalid blob is used when loading a cursor, so the blob
+has to contain the following:
 
 * the number of columns in the blob data type when it was created
 * the type of each field (this is encoded as a single plain-text character)
@@ -135,14 +187,23 @@ The blob data must be able to evolve over time, so each blob has to be self-desc
 
 #### Blob Storage Customization
 
-As with many other features, it's possible to replace the (de)serialization with code of your choice by supplying your own runtime methods. 
+As with many other features, it's possible to replace the
+(de)serialization with code of your choice by supplying your own runtime
+methods.
 
-Storage types that are going to be persisted in the database or go over a wire-protocol should be managed like schema with the usual validation rules.  On the other hand, formats that will be used only transiently in memory can be changed at whim from version to version.  As mentioned above, the design specifically considers cases where a new
-client discovers an old-format blob (with fewer columns) and, the reverse, cases where an old client recieves a datagram from a new client with too many columns.  Any customizations should consider these same cases.
+Storage types that are going to be persisted in the database or go
+over a wire-protocol should be managed like schema with the usual
+validation rules.  On the other hand, formats that will be used only
+transiently in memory can be changed at whim from version to version.
+As mentioned above, the design specifically considers cases where a new
+client discovers an old-format blob (with fewer columns) and, the reverse,
+cases where an old client recieves a datagram from a new client with
+too many columns.  Any customizations should consider these same cases.
 
 #### Blob Storage Example
 
-The code samples below illustrate some of the more common blob operations that are likely to come up.
+The code samples below illustrate some of the more common blob operations
+that are likely to come up.
 
 ```sql
 @attribute(cql:blob_storage)
@@ -229,31 +290,39 @@ end;
 
 ### Backed Tables
 
-Most production databases include some tables that are fairly generic, they use maybe a simple key-value
-combination to store some simple settings or something like that.  In the course of feature development
-this kind of thing comes up pretty often and in large client applications there are many small features
-that need a little bit of state. 
+Most production databases include some tables that are fairly generic,
+they use maybe a simple key-value combination to store some simple
+settings or something like that.  In the course of feature development
+this kind of thing comes up pretty often and in large client applications
+there are many small features that need a little bit of state.
 
-It's easy enough to model whatever state you need with a table or two but this soon results in an explosion
-of tiny tables.  In some cases there are only a few rows of configuration data and indeed the situation can
-be so bad that the text of the schema for the little state table is larger than the sum of all the data you
-will ever store there.  This situation is a bit tragic because SQLite has initialization cost associated with
-each table.  So these "baby tables" are really not paying for themselves at all.  
+It's easy enough to model whatever state you need with a table or two but
+this soon results in an explosion of tiny tables.  In some cases there
+are only a few rows of configuration data and indeed the situation can be
+so bad that the text of the schema for the little state table is larger
+than the sum of all the data you will ever store there.  This situation
+is a bit tragic because SQLite has initialization cost associated with
+each table.  So these "baby tables" are really not paying for themselves
+at all.
 
-What we'd like to do is use some kind of generic table as the backing store for many of these small tables
-while preserving type safety. The cost of access might be a bit higher but since data volumes are expected
-to be low anyway this would be a good trade-off.  And we can have as many as we like.  In some cases the state
-doesn't even need to be persisted, so we're talking about tables in an in-memory database.  Here low cost of
-initialization is especially important. And lastly, if your project has dozens or even hundreds of small
-features like this, the likelihood that all of them are even used in any one session is quite low and so again,
-having a low fixed cost for the schema is a good thing.  No need to create a few hundred in-memory tables on
-the off chance that they are needed.
+What we'd like to do is use some kind of generic table as the backing
+store for many of these small tables while preserving type safety. The
+cost of access might be a bit higher but since data volumes are expected
+to be low anyway this would be a good trade-off.  And we can have as many
+as we like.  In some cases the state doesn't even need to be persisted,
+so we're talking about tables in an in-memory database.  Here low cost of
+initialization is especially important. And lastly, if your project has
+dozens or even hundreds of small features like this, the likelihood that
+all of them are even used in any one session is quite low and so again,
+having a low fixed cost for the schema is a good thing.  No need to create
+a few hundred in-memory tables on the off chance that they are needed.
 
 #### Defining Backed Tables
 
-First you need a place to store the data.  We using "backing" tables to store the data for "backed" tables.
-And we define a backing table in the usual way.  A simple backing table is just a key/value store and looks
-like this:
+First you need a place to store the data.  We using "backing" tables
+to store the data for "backed" tables.  And we define a backing table
+in the usual way.  A simple backing table is just a key/value store and
+looks like this:
 
 ```sql
 @ATTRIBUTE(cql:backing_table)
@@ -263,14 +332,20 @@ CREATE TABLE backing(
 );
 ```
 
-The `backing_table` attribute indicates that the table we're about to define is to be used for backing storage.  
-At present it is signficantly restricted. It has to have exactly two columns, both of which are blobs, one is the
-key and one is the value.  It should be either "baseline" schema (no @create annotation) or annotated with
-`@create` as it is expected to be precious data.  `@recreate` is an error.  If it's an in-memory table then
-versioning is somewhat moot but really the backing store schema is not supposed to change over time, that's the point.   
+The `backing_table` attribute indicates that the table we're about to
+define is to be used for backing storage.  At present it is signficantly
+restricted. It has to have exactly two columns, both of which are blobs,
+one is the key and one is the value.  It should be either "baseline"
+schema (no @create annotation) or annotated with `@create` as it is
+expected to be precious data.  `@recreate` is an error.  If it's an
+in-memory table then versioning is somewhat moot but really the backing
+store schema is not supposed to change over time, that's the point.
 
-In future versions we expect to allow some number of additional physical columns which can be used by the backed
-tables (discussed below) but for now only the simple key/value pattern is allowed.  The columns can have any names but as they will be frequently used short names like "k" and "v" are recommended.
+In future versions we expect to allow some number of additional physical
+columns which can be used by the backed tables (discussed below) but for
+now only the simple key/value pattern is allowed.  The columns can have
+any names but as they will be frequently used short names like "k" and
+"v" are recommended.
 
 Backed tables look like this:
 
@@ -289,18 +364,30 @@ CREATE TABLE backed2(
 );
 ```
 
-The `backed_by` attribute indicates that the table we're about to define is not really going to be its own table.  
-As a result, you will not be able to (e.g.) `DROP` the table or `CREATE INDEX` or `CREATE TRIGGER` on it, and there
-will be no schema upgrade for it should you request one with `--rt schema_upgrade`.  The table may not contain
-constraints as there would be no way to enforce them, but they may have default values.  As compensation for
-these restrictions, backed tables can be changed freely and have no associated physical schema cost.
->NOTE: Adding new not null columns creatives effectively a new backed table, any previous data will seem "lost".  See below.
+The `backed_by` attribute indicates that the table we're about to define
+is not really going to be its own table.  As a result, you will not be
+able to (e.g.) `DROP` the table or `CREATE INDEX` or `CREATE TRIGGER`
+on it, and there will be no schema upgrade for it should you request one
+with `--rt schema_upgrade`.  The table may not contain constraints as
+there would be no way to enforce them, but they may have default values.
+As compensation for these restrictions, backed tables can be changed
+freely and have no associated physical schema cost.
+
+>NOTE: Adding new not null columns creatives effectively a new backed
+>table, any previous data will seem "lost".  See below.
 
 #### Reading Data From Backed Tables
 
-To understand how reading works, imagine that we had a VIEW for each backed table which simply reads the blobs out of the backing store and then extracts the backed columns using some blob extraction functions. This would work, but then we'd be trading view schema for table schema so the schema savings we're trying to achieve would be lost.
+To understand how reading works, imagine that we had a VIEW for
+each backed table which simply reads the blobs out of the backing
+store and then extracts the backed columns using some blob extraction
+functions. This would work, but then we'd be trading view schema for
+table schema so the schema savings we're trying to achieve would be lost.
 
-We can't use an actual VIEW but CQL already has something very "view like" -- the shared fragment structure.  So what we do instead of views is to automatically create a shared fragment just like the view we could have made.  The shared fragment looks like this:
+We can't use an actual VIEW but CQL already has something very "view
+like" -- the shared fragment structure.  So what we do instead of views
+is to automatically create a shared fragment just like the view we could
+have made.  The shared fragment looks like this:
 
 ```sql
 @ATTRIBUTE(cql:shared_fragment)
@@ -318,12 +405,25 @@ END;
 
 Two things to note:
 
-First, this fragment has the right shape, but the shared fragment doesn't directly call blob extraction UDFs.  Rather it uses indirect functions like `cql_blob_get`. The point of these helpers is to make the actual blob functions configurable.  The default runtime includes an implementation of extration functions with the default names, but you can create whatever blob format you want. You could even use [blob storage](#blob-storage) as your backing store (though it isn't well suited for field-at-a-time extraction). You can even have different encodings in different backed tables.
+First, this fragment has the right shape, but the shared fragment
+doesn't directly call blob extraction UDFs.  Rather it uses indirect
+functions like `cql_blob_get`. The point of these helpers is to make
+the actual blob functions configurable.  The default runtime includes
+an implementation of extration functions with the default names, but
+you can create whatever blob format you want. You could even use
+[blob storage](#blob-storage) as your backing store (though it isn't well
+suited for field-at-a-time extraction). You can even have different
+encodings in different backed tables.
 
-Second, there is a type code embedded in the procedure.  The type code is a hash of the _type name_ and the _names_
-and _types_ of all the _not-null_ fields in the backed table.  The hash is arbitrary but repeatable, any system can
-compute the same hash and find the records they want without having to share headers. The actual hash function is
-included in the open source but it's just a SHA256 reduced to 64 bits with some name canonicalization. The [JSON output](#chapter-13-json-output) also includes the relevant hashes so you can easily consume them without even having to know the hash function.
+Second, there is a type code embedded in the procedure.  The type
+code is a hash of the _type name_ and the _names_ and _types_ of all
+the _not-null_ fields in the backed table.  The hash is arbitrary but
+repeatable, any system can compute the same hash and find the records
+they want without having to share headers. The actual hash function is
+included in the open source but it's just a SHA256 reduced to 64 bits with
+some name canonicalization. The [JSON output](#chapter-13-json-output)
+also includes the relevant hashes so you can easily consume them without
+even having to know the hash function.
 
 As a second example, the expanded code for `backed2` is shown below:
 
@@ -339,30 +439,51 @@ BEGIN
     WHERE cql_blob_get_type(T.k) = -1844763880292276559L;
 END;
 ```
-As you can see it's very similar -- the type hash is different and of course it has different columns but the pattern should be clear.
+As you can see it's very similar -- the type hash is different and of
+course it has different columns but the pattern should be clear.
 
 #### Computation of the Type Hash
 
-The type hash, which is also sometimes called the record type, is designed to stay fixed over time even if you add
-new optional fields.  Contrariwise, if you change the name of the type or if you add new not null fields the type
-identity is considered to be changed and any data you have in the backing table will basically be ignored because
-the type hash will not match.  This is lossy but safe.  More complicated migrations from one type shape to another or possibly by introducing a new backed type and moving data.
+The type hash, which is also sometimes called the record type, is
+designed to stay fixed over time even if you add new optional fields.
+Contrariwise, if you change the name of the type or if you add new not
+null fields the type identity is considered to be changed and any data
+you have in the backing table will basically be ignored because the
+type hash will not match.  This is lossy but safe.  More complicated
+migrations from one type shape to another or possibly by introducing a
+new backed type and moving data.
 
 ####  `cql_blob_get` and `cql_blob_get_type`
 
-By default cql_blob_get turns into either `bgetkey` or `bgetval` depending on if you are reading from the key blob
-or the value blob.  The directives for configuring this function are:
+By default cql_blob_get turns into either `bgetkey` or `bgetval` depending
+on if you are reading from the key blob or the value blob.  The directives
+for configuring this function are:
 
 ```sql
 @blob_get_key bgetkey offset;
 @blob_get_val bgetval;
 ```
 
-You can configure the system to ask for the column by offset (this is normal for the primary key because it has a fixed number of columns for any given key type and they are all mandatory), or by hash code (this is normal for the value type because it might be missing some columns and so offset is probably not appropriate).  However both are configurable so you want to do key by hashcode simply omit the "offset" part of the directive.  Likewise if your values are offset addressable you can add "offset" to the value directive.  Here the offset means the zero based ordinal of the column in the key or the value.
+You can configure the system to ask for the column by offset (this is
+normal for the primary key because it has a fixed number of columns
+for any given key type and they are all mandatory), or by hash code
+(this is normal for the value type because it might be missing some
+columns and so offset is probably not appropriate).  However both are
+configurable so you want to do key by hashcode simply omit the "offset"
+part of the directive.  Likewise if your values are offset addressable
+you can add "offset" to the value directive.  Here the offset means the
+zero based ordinal of the column in the key or the value.
 
->NOTE: The blob format for keys must be canonical in the sense that the same values always produce the same blob so if you use a field id based blob it will be important to always store the fields in the same order.  Contrariwise use of offsets for the value blob indicates that your particular value blob will have fixed storage that is addressable by offset.  This may be suitable for your needs, for instance maybe you only ever need to store 0-3 integers in the value.
+>NOTE: The blob format for keys must be canonical in the sense that the
+>same values always produce the same blob so if you use a field id based
+>blob it will be important to always store the fields in the same order.
+>Contrariwise use of offsets for the value blob indicates that your
+>particular value blob will have fixed storage that is addressable by
+>offset.  This may be suitable for your needs, for instance maybe you
+>only ever need to store 0-3 integers in the value.
 
-The type access functions are similarly configurable (these functions get no argument).
+The type access functions are similarly configurable (these functions
+get no argument).
 
 ```sql
 @blob_get_key_type bgetkey_type;
@@ -371,7 +492,8 @@ The type access functions are similarly configurable (these functions get no arg
 
 #### Selecting from a Backed Table
 
-Armed with these basic transforms we can already do a simple transform to make select statement work.  Suppose CQL sees:
+Armed with these basic transforms we can already do a simple transform
+to make select statement work.  Suppose CQL sees:
 
 ```sql
 declare C cursor for select * from backed;
@@ -386,9 +508,14 @@ The compiler can make this select statement work with a simple transform:
     FROM backed;
 ```
 
-Now remember `_backed` was the automatically created shared fragment.  Basically, when the compiler encounters a select statement that mentions any backed table it adds a call to the corresponding shared fragment in the `WITH` clause, creating a `WITH`` clause if needed.  This effectively creates necessary "view".  And, because we're
-using the shared fragment form, all users of this fragment will share the text of the view.  So there is no schema
-and the "view" text of the backed table appears only once in the binary.  More precisely we get this after full expansion:
+Now remember `_backed` was the automatically created shared fragment.
+Basically, when the compiler encounters a select statement that mentions
+any backed table it adds a call to the corresponding shared fragment in
+the `WITH` clause, creating a `WITH`` clause if needed.  This effectively
+creates necessary "view".  And, because we're using the shared fragment
+form, all users of this fragment will share the text of the view.
+So there is no schema and the "view" text of the backed table appears
+only once in the binary.  More precisely we get this after full expansion:
 
 ```sql
 WITH
@@ -404,7 +531,8 @@ SELECT rowid, id, name, bias
   FROM backed;
 ```
 
-Now with this in mind we can see that it would be very beneficial to also add this:
+Now with this in mind we can see that it would be very beneficial to
+also add this:
 
 ```sql
 [[deterministic]] declare select function bgetkey_type(b blob) long;
@@ -417,9 +545,9 @@ or more cleanly:
 CREATE INDEX backing_index ON backing(cql_blob_get_type(k));
 ```
 
-Either of these results in a computed index on the row type stored in the blob.  
-Other physical indices might be helpful too and these can potentially
-be shared by many backed tables, or used in partial indicies.
+Either of these results in a computed index on the row type stored in
+the blob.  Other physical indices might be helpful too and these can
+potentially be shared by many backed tables, or used in partial indicies.
 
 >NOTE: Your type function can be named something other than the default `bgetkey_type`.
 
@@ -440,8 +568,10 @@ WITH
     INNER JOIN backed2 AS T2
     WHERE T1.id = T2.id;
 ```
-Now even though two different backed tables will be using the backing store, the original select "just works" once the CTE's have been added.  All the compiler had to do was add both backed table fragments.  Even if `backed`
-was joined against itself, that would also just work.
+Now even though two different backed tables will be using the backing
+store, the original select "just works" once the CTE's have been added.
+All the compiler had to do was add both backed table fragments.  Even if
+`backed` was joined against itself, that would also just work.
 
 #### Inserting Into a Backed Table
 
@@ -450,7 +580,9 @@ It will be useful to consider a simple example such as:
 insert into backed values (1, "n001", 1.2), (2, "n002", 3.7);
 ```
 
-This statement has to insert into the backing storage, converting the various values into key and value blobs.  The compiler uses a simple transform to do this job as well.  The above becomes:
+This statement has to insert into the backing storage, converting the
+various values into key and value blobs.  The compiler uses a simple
+transform to do this job as well.  The above becomes:
 
 ```sql
  WITH
@@ -465,12 +597,22 @@ This statement has to insert into the backing storage, converting the various va
     FROM _vals AS V;
 ```
 
-Again the compiler is opting for a transform that is universal and here the issue is that the data to be inserted
-can be arbitrarily complicated.  It might include nested select expressions, value computations, or any similar thing. In this particular case the data is literal values but in general the values could be anything.  
+Again the compiler is opting for a transform that is universal and here
+the issue is that the data to be inserted can be arbitrarily complicated.
+It might include nested select expressions, value computations, or any
+similar thing. In this particular case the data is literal values but
+in general the values could be anything.
 
-To accompodate this possiblity the compiler's transform takes the original values and puts them in its own CTE `_vals`. It then generates a new insert statement targetting the backing store by converting _vals into two blobs -- one for the key and one for the value.  There is only the one place it needs to do this for any given `insert` statement no matter now many items are inserted or how complex the insertion computation might be.
+To accompodate this possiblity the compiler's transform takes the original
+values and puts them in its own CTE `_vals`. It then generates a new
+insert statement targetting the backing store by converting _vals into
+two blobs -- one for the key and one for the value.  There is only the one
+place it needs to do this for any given `insert` statement no matter now
+many items are inserted or how complex the insertion computation might be.
 
-The compiler uses `cql_blob_create` as a wrapper to that can expand to a user configured function with optional hash codes and mandatory field types.  The default configuration that corresponds to this:
+The compiler uses `cql_blob_create` as a wrapper to that can expand
+to a user configured function with optional hash codes and mandatory
+field types.  The default configuration that corresponds to this:
 
 ```sql
 @blob_create_key bcreatekey offset;
@@ -492,15 +634,23 @@ INSERT INTO backing(k, v) SELECT
   FROM _vals AS V
 ```
 
-As can be seen, both blobs have the same overall type code (2105552408096159860) as in the select case.  The key blob is configured for to use offsets and the argument positions give the implied offset.  In contrast the value blob is using hash codes (`offset` was not specified).  This configuration is typical.
+As can be seen, both blobs have the same overall type code
+(2105552408096159860) as in the select case.  The key blob is configured
+for to use offsets and the argument positions give the implied offset.
+In contrast the value blob is using hash codes (`offset` was not
+specified).  This configuration is typical.
 
 A more complex insert works just as well:
+
 ```sql
 insert into backed
   select id+10, name||'x', bias+3 from backed where id < 3;
 ```
 
-The above insert statement is a bit of a mess.  It's taking some of the backed data and using that data to create new backed data.  But the simple transform above works just as before.  We add the needed `backed` CTE for the select and create `_vals` like before.
+The above insert statement is a bit of a mess.  It's taking some of
+the backed data and using that data to create new backed data.  But the
+simple transform above works just as before.  We add the needed `backed`
+CTE for the select and create `_vals` like before.
 
 ```sql
 WITH
@@ -518,10 +668,11 @@ WITH
 ```
 
 Looking closely at the above we see a few things:
-- `cql_blob_create` will expand as before (not shown)
-- we added `backed(*)` as usual
-- `_vals` once again just has the exact unchanged insert clause
-- the `insert into backing(k, v)` part is identical, the same recipe always works
+
+* `cql_blob_create` will expand as before (not shown)
+* we added `backed(*)` as usual
+* `_vals` once again just has the exact unchanged insert clause
+* the `insert into backing(k, v)` part is identical, the same recipe always works
 
 
 #### Deleting From a Backed Table
@@ -532,7 +683,9 @@ Again, we begin with a simple example:
 delete from backed where id = 7;
 ```
 
-The compiler requires a transformation that is quite general and while this case is simple the where condition could be very complicated.  Fortunately there is such a simple transform:
+The compiler requires a transformation that is quite general and while
+this case is simple the where condition could be very complicated.
+Fortunately there is such a simple transform:
 
 ```sql
 WITH
@@ -546,11 +699,12 @@ DELETE FROM backing
 ```
 
 All the compiler has to do here is:
+
 * add the usual `_backed` CTE
 * move the original `WHERE` clause into a subordinate `SELECT` that gives us the rowids to delete.
 
-With the backed table in scope, any `WHERE` clause works. If other backed tables are mentioned, the compiler
-simply adds those as usual.
+With the backed table in scope, any `WHERE` clause works. If other backed
+tables are mentioned, the compiler simply adds those as usual.
 
 Below is a more complicated delete, it's a bit crazy but illustrative:
 
@@ -559,7 +713,8 @@ delete from backed where
   id in (select id from backed2 where name like '%x%');
 ```
 
-So this is using rows in `backed2` to decide which rows to deleted in `backed`.  The same simple transform works directly.
+So this is using rows in `backed2` to decide which rows to deleted in
+`backed`.  The same simple transform works directly.
 
 ```sql
 WITH
@@ -576,29 +731,36 @@ DELETE FROM backing
 ```
 
 What happened:
+
 * the `WHERE` clause went directly into the body of the rowid select
 * `backed` was used as before but now we also need `backed2`
 
-The delete pattern does not need any additional cql helpers beyond what we've already seen.
+The delete pattern does not need any additional cql helpers beyond what
+we've already seen.
 
 #### Updating Backed Tables
 
-The `update` statement is the most complicated of all the DML forms, it requires all the transforms from the previous statements plus one additional transform.
+The `update` statement is the most complicated of all the DML forms,
+it requires all the transforms from the previous statements plus one
+additional transform.
 
-First, the compiler requires two more blob helpers that are configurable.  By default they look like this:
+First, the compiler requires two more blob helpers that are configurable.
+By default they look like this:
 
 ```sql
 @blob_update_key bupdatekey offset;
 @blob_update_val bupdateval;
 ```
 
-These are used to replace particular columns in a stored blob.  Now let's start with a very simple update to see now it all works:
+These are used to replace particular columns in a stored blob.  Now let's
+start with a very simple update to see now it all works:
 
 ```sql
 update backed set name = 'foo' where id = 5;
 ```
 
 Fundamentally we need to do these things:
+
 * the target of the update has to end up being the backing table
 * we need the backed table CTE so we can do the filtering
 * we want to use the rowid trick to figure out which rows to update which handles our `where` clause
@@ -617,12 +779,17 @@ UPDATE backing
 ```
 
 Looking into the details:
+
 * we needed the normal CTE so that we can use `backed` rows
 * the `WHERE` clause moved into a `WHERE rowid` sub-select just like in the `DELETE` case
 * they compiler changed the SET targets to be `k` and `v` very much like the `INSERT` case, except we used an update helper that takes the current blob and creates a new blob to store
   * the helper is varargs so as we'll see it can mutate many columns in one call
 
-The above gives a update statement that is almost working.  The remaining problem is that it is possible to use the existing column values in the update expressions and there is no way to use our `backed` CTE to get those values in that context since the final update has to be all relative to the backing table.
+The above gives a update statement that is almost working.  The remaining
+problem is that it is possible to use the existing column values in
+the update expressions and there is no way to use our `backed` CTE to
+get those values in that context since the final update has to be all
+relative to the backing table.
 
 Let's look at another example to illustrate this last wrinkle:
 
@@ -630,8 +797,11 @@ Let's look at another example to illustrate this last wrinkle:
 update backed set name = name || 'y' where bias < 5;
 ```
 
-This update basically adds the letter 'y' to the name of some rows.  This is a silly example but this kind of thing happens in many contexts that are definitely not silly.  To make these cases work the reference to `name` inside of
-the set expression has to change. We end up with something like this:
+This update basically adds the letter 'y' to the name of some rows.
+This is a silly example but this kind of thing happens in many contexts
+that are definitely not silly.  To make these cases work the reference
+to `name` inside of the set expression has to change. We end up with
+something like this:
 
 ```sql
 WITH
@@ -645,12 +815,17 @@ UPDATE backing
     WHERE bias < 5);
 ```
 
-Importantly the reference to `name` in the set expression was changed to `cql_blob_get(v, backed.name)` -- extracting the name from the value blob. After which it is appended with 'y' as usual.
+Importantly the reference to `name` in the set expression was changed to
+`cql_blob_get(v, backed.name)` -- extracting the name from the value
+blob. After which it is appended with 'y' as usual.
 
-The rest of the pattern is just as it was after the first attempt above, in fact literally everything else is unchanged.  It's easy to see that the `WHERE` clause could be arbitrarily complex with no difficulty.  
+The rest of the pattern is just as it was after the first attempt above,
+in fact literally everything else is unchanged.  It's easy to see that
+the `WHERE` clause could be arbitrarily complex with no difficulty.
 
->NOTE: Since the `UPDATE` statement has no `FROM` clause only the fields in the target table might need to be rewritten,
-so in this case `name`, `id`, and `bias` were possible but only `name` was mentioned.
+>NOTE: Since the `UPDATE` statement has no `FROM` clause only the fields
+>in the target table might need to be rewritten, so in this case `name`,
+>`id`, and `bias` were possible but only `name` was mentioned.
 
 After the `cql_blob_get` and `cql_blob_update` are expanded the result looks like this:
 
@@ -676,9 +851,20 @@ SET v =
   WHERE bias < 5);
 ```
 
->NOTE: The blob update function for the value blob requires the original blob, the hash or offset to update, the new value, and the type of the new value. The blob update function for the key blob is the nearly same (blob, hash/offset, value) but the type is not required since the key blob necessarily has all the fields present because they are necessarily not null.  Therefore the type codes are already all present and so the type of every column is known. The value blob might be missing nullable values hence their type might not be stored/known.
+>NOTE: The blob update function for the value blob requires the original
+>blob, the hash or offset to update, the new value, and the type of the
+>new value. The blob update function for the key blob is the nearly same
+>(blob, hash/offset, value) but the type is not required since the key
+>blob necessarily has all the fields present because they are necessarily
+>not null.  Therefore the type codes are already all present and so the
+>type of every column is known. The value blob might be missing nullable
+>values hence their type might not be stored/known.
 
-Normally backed tables are used without having to know the details of the transforms and the particulars of how each of the helper UDFs is invoked but for illustration purposes we can make another small example that shows a few more variations that might be created. In this examples keys and values need to be mutated.
+Normally backed tables are used without having to know the details of
+the transforms and the particulars of how each of the helper UDFs is
+invoked but for illustration purposes we can make another small example
+that shows a few more variations that might be created. In this examples
+keys and values need to be mutated.
 
 ```sql
 @attribute(cql:backed_by=backing)
@@ -719,11 +905,13 @@ SET
   WHERE name = 'foo');
 ```
 
-As expected the `bupdatekey` call gets the column offset (1) but not the type code (2).  `bupdateval` gets a hash code and a type.
+As expected the `bupdatekey` call gets the column offset (1) but not
+the type code (2).  `bupdateval` gets a hash code and a type.
 
 #### Normal Helper Declarations
 
-If you want to refer to your blob functions in your own code, such as for indices you'll also need to do something like this:
+If you want to refer to your blob functions in your own code, such as
+for indices you'll also need to do something like this:
 
 ```sql
 [[deterministic]] declare select function bgetkey_type(b blob) long;
@@ -736,6 +924,12 @@ If you want to refer to your blob functions in your own code, such as for indice
 [[deterministic]] declare select function bupdatekey no check blob;
 ```
 
-`bgetval` and `bgetkey` are not readily declarable generally because their result is polymorphic so it's preferable to use `cql_blob_get` like the compiler does (see examples above) which then does the rewrite for you.  But it is helpful to have a UDF declaration for each of the above, especially if you want the `--rt query_plan` output to work seamlessly.  Typically `bgetval` or `bgetval` would only be needed in the context of a `create index` statement and `cql_blob_get` can be used instead in that case.
-
+`bgetval` and `bgetkey` are not readily declarable generally because their
+result is polymorphic so it's preferable to use `cql_blob_get` like the
+compiler does (see examples above) which then does the rewrite for you.
+But it is helpful to have a UDF declaration for each of the above,
+especially if you want the `--rt query_plan` output to work seamlessly.
+Typically `bgetval` or `bgetval` would only be needed in the context
+of a `create index` statement and `cql_blob_get` can be used instead in
+that case.
 

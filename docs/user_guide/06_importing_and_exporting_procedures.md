@@ -76,7 +76,9 @@ DECLARE PROC with_result_set () OUT (id INTEGER NOT NULL,
                                      size REAL);
 ```
 
-This form can have `USING TRANSACTION`  or not, since it is possible to emit a row with a value cursor and never use the database.  See the previous chapter for details on the `OUT` statement.
+This form can have `USING TRANSACTION`  or not, since it is possible
+to emit a row with a value cursor and never use the database.  See the
+previous chapter for details on the `OUT` statement.
 
 ### Procedures that return a full result set
 
@@ -91,15 +93,19 @@ DECLARE PROC with_result_set () OUT UNION (id INTEGER NOT NULL,
                                      size REAL);
 ```
 
-This form can have `USING TRANSACTION`  or not, since it is possible to emit a rows with a value cursor and never use the database.  See the previous chapter for details on the `OUT UNION` statement.
+This form can have `USING TRANSACTION`  or not, since it is possible
+to emit a rows with a value cursor and never use the database.  See the
+previous chapter for details on the `OUT UNION` statement.
 
 ### Exporting Declared Symbols Automatically
 
-To avoid errors, the declarations for any given file can be automatically created
-by adding something like `--generate_exports` to the command line. This will require an additonal file name to be passed in the `--cg` portion to capture the exports.
+To avoid errors, the declarations for any given file can be automatically
+created by adding something like `--generate_exports` to the command
+line. This will require an additonal file name to be passed in the `--cg`
+portion to capture the exports.
 
-That file can then be used with `#include` when you combine the C pre-processor
-with CQL as is normally done.
+That file can then be used with `#include` when you combine the C
+pre-processor with CQL as is normally done.
 
 Nomenclature is perhaps a bit weird here.  You use `--generate_exports` to export
 the stored procedure declarations from the translation units.  Of course those

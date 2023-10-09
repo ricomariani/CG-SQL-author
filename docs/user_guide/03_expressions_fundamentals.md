@@ -6,8 +6,12 @@ eference
 -->
 ## Chapter 3: Expression Fundamentals
 
-Until this point we've only discussed simple kinds of expressions as well as variables and table columns marked with `NOT NULL`. These are indeed the easiest types for CQL to work with as they tend to correspond most directly to the types known to C.  However,
-SQL provides for many more types of expressions as well as nullable types and these require handling in any language that purports to be like SQL.
+Until this point we've only discussed simple kinds of expressions as
+well as variables and table columns marked with `NOT NULL`. These are
+indeed the easiest types for CQL to work with as they tend to correspond
+most directly to the types known to C.  However, SQL provides for many
+more types of expressions as well as nullable types and these require
+handling in any language that purports to be like SQL.
 
 ### Expression Examples
 
@@ -25,13 +29,20 @@ Example expressions (these are all true)
 7 & 3 == 2 | 1
 1 << 2 == 4
 ```
-However, before going any further it's important to note that CQL is inherently a two-headed beast.  Expressions are either evaluated by transpiling to C (like the predicate of an IF statement, or a variable assignment) or by sending them to SQLIte for evaluation (like expressions inside a `SELECT` statement or the `WHERE` part of a `DELETE`).
+However, before going any further it's important to note that CQL is
+inherently a two-headed beast.  Expressions are either evaluated by
+transpiling to C (like the predicate of an IF statement, or a variable
+assignment) or by sending them to SQLIte for evaluation (like expressions
+inside a `SELECT` statement or the `WHERE` part of a `DELETE`).
 
-CQL evaluation rules are designed to be as similar as possible but some variance is inevitable because evaluation is done in two fundamentally different ways.
+CQL evaluation rules are designed to be as similar as possible but some
+variance is inevitable because evaluation is done in two fundamentally
+different ways.
 
 ### Operator Precedence
 
-The operator precedence rules in CQL are as follows; the top-most rule binds the most loosely and the bottom-most rule binds the most tightly:
+The operator precedence rules in CQL are as follows; the top-most rule
+binds the most loosely and the bottom-most rule binds the most tightly:
 
 ```
 ASSIGNMENT:     := += -= /= *= %= &= |= <<= >>=
@@ -116,8 +127,9 @@ You can declare and initialize a variable in one step using the `LET` form, e.g.
 LET x := 1;
 ```
 
-The named variable is declared to be the exact type of the expression on the right.  More on expressions in the coming sections.  The right side is often a constant
-in these cases but does not need to be.
+The named variable is declared to be the exact type of the expression
+on the right.  More on expressions in the coming sections.  The right
+side is often a constant in these cases but does not need to be.
 
 ```sql
 LET i := 1;  -- integer not null
@@ -145,7 +157,9 @@ LET s_l := sensitive(1L);  -- sensitive nullable long variable initialized to 1
 
 #### The `@RC` special variable
 
-CQL also has the special built-in variable `@RC` which refers to the most recent error code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`, 1 == `SQLITE_ERROR`.   `@RC` is of type `integer not null`.  Specifically:
+CQL also has the special built-in variable `@RC` which refers to the most
+recent error code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`,
+1 == `SQLITE_ERROR`.   `@RC` is of type `integer not null`.  Specifically:
 
 * each catch block captures the error code when it is entered into its own local variable
 * this variable is created lazily, so it only exists if it is used
@@ -174,6 +188,7 @@ There are a number of literal objects that may be expressed in CQL.  These are a
   * the purpose of the `@FILE` construct is to provide a partial path to a file for diagnostics that is consistent even if the file is built in various different root paths on different build machines
 
 #### Blob Literals
+
 * SQLite Blob literals are supported in SQL contexts (i.e. where they will be processed by SQLite), CQL produces an error if you attempt to use a blob literal in a loose expression
 
 #### Numeric Literals
@@ -197,19 +212,29 @@ Examples:
 ```
 
 #### The NULL literal
-The use of `NULL` always gives a nullable result however this literal is special in that it has no storage class. `NULL` is neither numeric nor string itself but rather mutates into
-whatever it is first combined with.   For instance `NULL + 1` results in a nullable integer.  Because `NULL` has no primitive type in some cases where type knowledge
-is required you might have to use the CAST() function to cast the NULL to a specific type such as `CAST(NULL as TEXT)`.   This construct guarantees type consistence in cases like `SELECT` from different sources combined with `UNION ALL`
+The use of `NULL` always gives a nullable result however this literal is
+special in that it has no storage class. `NULL` is neither numeric nor
+string itself but rather mutates into whatever it is first combined with.
+For instance `NULL + 1` results in a nullable integer.  Because `NULL`
+has no primitive type in some cases where type knowledge is required you
+might have to use the CAST() function to cast the NULL to a specific type
+such as `CAST(NULL as TEXT)`.   This construct guarantees type consistency
+in cases like `SELECT` from different sources combined with `UNION ALL`
 
->NOTE: constructs like `CAST(NULL as TEXT)` are always rewritten to just `NULL` before going to SQLite as the cast is uninteresting except for the type information which SQLite doesn't need/use anyway.
+>NOTE: constructs like `CAST(NULL as TEXT)` are always rewritten to just
+>`NULL` before going to SQLite as the cast is uninteresting except for
+>the type information which SQLite doesn't need/use anyway.
 
 #### Other Considerations
 
 There are no boolean literals other than the integers `0` and `1`.
 
-The C pre-processor is often combined with CQL in which case the `_FILE_` and `_LINE_` directives may be used to create literals; they will be preprocessed into normal literals.
+The C pre-processor is often combined with CQL in which case the `_FILE_`
+and `_LINE_` directives may be used to create literals; they will be
+preprocessed into normal literals.
 
-The use of `_FILE_` can give surprising results in the presence of build systems, hence the existence of `@FILE(...)`.
+The use of `_FILE_` can give surprising results in the presence of build
+systems, hence the existence of `@FILE(...)`.
 
 
 ### Const and Enumerations
@@ -375,7 +400,9 @@ specifically the above enum has type `integer<thing> not null`.  The rules for t
 
 ### Type Kinds
 
-Any CQL type can be tagged with a "kind" for instance `real` can become `real<meters>`, `integer` can become `integer<job_id>`.  The idea here is that the additional tag, the "kind" can help prevent type mistakes
+Any CQL type can be tagged with a "kind" for instance `real` can become
+`real<meters>`, `integer` can become `integer<job_id>`.  The idea here
+is that the additional tag, the "kind" can help prevent type mistakes
 in arguments, in columns and in procedure calls.  For instance:
 
 ```sql
@@ -390,9 +417,10 @@ begin
 end;
 ```
 
-In this situation you couldn't accidentally switch the columns in `do_something` even though both
-are `real`, and indeed SQLite will only see the type `real` for both.  If you have your own variables
-typed `real<size>` and `real<duration>` you can't accidentally do:
+In this situation you couldn't accidentally switch the columns in
+`do_something` even though both are `real`, and indeed SQLite will only
+see the type `real` for both.  If you have your own variables typed
+`real<size>` and `real<duration>` you can't accidentally do:
 
 ```sql
   call do_something(duration, size);
@@ -400,8 +428,8 @@ typed `real<size>` and `real<duration>` you can't accidentally do:
 
 even though both are real.  The type kind won't match.
 
-Importantly, an expression with no type kind is compatible with any type kind (or none).  Hence all of
-the below are legal.
+Importantly, an expression with no type kind is compatible with any type
+kind (or none).  Hence all of the below are legal.
 
 ```sql
 declare generic real;
@@ -410,17 +438,23 @@ set generic := duration;    -- no kind may accept <seconds>
 set duration := generic;    -- no kind may be stored in <seconds>
 ```
 
-Only mixing types where both have a kind, and the kind is different generates errors.  This choice allows you to
-write procedures that (for instance) log any `integer` or any `real`, or that return an `integer` out of a collection.
+Only mixing types where both have a kind, and the kind is different
+generates errors.  This choice allows you to write procedures that (for
+instance) log any `integer` or any `real`, or that return an `integer`
+out of a collection.
 
-These rules are applied to comparisons, assignments, column updates, anywhere and everywhere types are checked for compatibility.
+These rules are applied to comparisons, assignments, column updates,
+anywhere and everywhere types are checked for compatibility.
 
-To get the most value out of these constructs, the authors recommend that type kinds be used universally except
-when the extra compatibility described above is needed (like low level helper functions.)
+To get the most value out of these constructs, the authors recommend
+that type kinds be used universally except when the extra compatibility
+described above is needed (like low level helper functions.)
 
-Importantly, type kind can be applied to object types as well, allowing `object<dict>` to be distinct from `object<list>`.
+Importantly, type kind can be applied to object types as well, allowing
+`object<dict>` to be distinct from `object<list>`.
 
-At run time the kind information is lost. But it does find it's way into the JSON output so external tools
+At run time the kind information is lost. But it does find it's way into
+the JSON output so external tools
 also get to see the kinds.
 
 ### Nullability
@@ -821,13 +855,19 @@ END;
 
 ### Expression Types
 
-CQL supports a variety of expressions, nearly everything from the SQLite world.  The following are the various supported operators; they are presented in order from the weakest binding strength to the strongest.
-Note that the binding order is NOT the same as C, and in some cases it is radically different (e.g. boolean math)
+CQL supports a variety of expressions, nearly everything from the
+SQLite world.  The following are the various supported operators; they
+are presented in order from the weakest binding strength to the strongest.
+Note that the binding order is NOT the same as C, and in some cases it
+is radically different (e.g. boolean math)
 
 #### UNION and UNION ALL
-These appear only in the context of `SELECT` statements.  The arms of a compound select may include `FROM`, `WHERE`, `GROUP BY`, `HAVING`, and `WINDOW`.  If `ORDER BY` or `LIMIT ... OFFSET` are present, these apply to the entire UNION.
+These appear only in the context of `SELECT` statements.  The arms of a
+compound select may include `FROM`, `WHERE`, `GROUP BY`, `HAVING`, and
+`WINDOW`.  If `ORDER BY` or `LIMIT ... OFFSET` are present, these apply
+to the entire UNION.
 
-example:
+Example:
 
 ```sql
 select A.x x from A inner join B using(z)
@@ -835,7 +875,8 @@ union all
 select C.x x from C
 where x = 1;
 ```
-The `WHERE` applies only to the second select in the union.  And each `SELECT` is evaluated before the the `UNION ALL`
+The `WHERE` applies only to the second select in the union.  And each
+`SELECT` is evaluated before the the `UNION ALL`
 
 ```sql
 select A.x x from A inner join B using(z)
@@ -845,12 +886,16 @@ select C.x x from C
 where x = 1
 order by x;
 ```
-The `ORDER BY` applies to the result of the union, so any results from the 2nd branch will sort before any results from the first branch (because `x` is constrained in both).
+The `ORDER BY` applies to the result of the union, so any results from
+the 2nd branch will sort before any results from the first branch (because
+`x` is constrained in both).
 
 #### Assignment
 
-Assignment only occurs in the `UPDATE` statement or in the `SET` statement.  In both cases the left side
-is a simple target and the right side is a general expression.  The expression is evaluated before the assignment.
+Assignment only occurs in the `UPDATE` statement or in the `SET`
+statement.  In both cases the left side is a simple target and the right
+side is a general expression.  The expression is evaluated before the
+assignment.
 
 example:
 
@@ -860,7 +905,9 @@ SET x := 1 + 3 AND 4;  -- + before AND then :=
 
 #### Logical OR
 
-The logical `OR` operator does shortcut evaluation, much like the C `||` operator (not to be confused with SQL's concatenation operator with the same lexeme).
+The logical `OR` operator does shortcut evaluation, much like the C `||`
+operator (not to be confused with SQL's concatenation operator with the
+same lexeme).
 
 The truth table for logical `OR` is as follows:
 
@@ -878,7 +925,9 @@ The truth table for logical `OR` is as follows:
 
 
 #### Logical AND
-The logical `AND` operator does shortcut evaluation, much like the C `&&` operator, so if the left side is zero the result is 0 and the right side is not evaluated.
+The logical `AND` operator does shortcut evaluation, much like the C `&&`
+operator, so if the left side is zero the result is 0 and the right side
+is not evaluated.
 
 The truth table for logical `AND` is as follows:
 
@@ -903,9 +952,13 @@ These are ternary operators.  The general forms are:
   expr1 BETWEEN expr2 AND expr3
   expr1 NOT BETWEEN expr2 AND expr3
 ```
-Note that there is an inherent ambiguity in the language because `expr2` or `expr3` could be logical expressions that include `AND`. CQL resolves this ambiguity by insisting that `expr2` and `expr3` be "math expressions" in the grammar.  These expressions may not have ungrouped `AND` or `OR` operators.
+Importantly, there is an inherent ambiguity in the language because `expr2`
+or `expr3` ablve could be logical expressions that include `AND`. CQL resolves
+this ambiguity by insisting that `expr2` and `expr3` be "math expressions"
+as defined in the CQL grammar.  These expressions may not have ungrouped `AND` or
+`OR` operators.
 
-Examples::
+Examples:
 
 ```sql
 -- oh hell no (syntax error)
@@ -950,31 +1003,43 @@ These operators do the usual order comparison of their two operands.
 * Strings are compared based on their value (as with other comparisons) not their address
 * Numerics are compared as usual with the usual promotion rules
 
->NOTE: CQL uses `strcmp` for string comparison. In SQL expressions the comparison happens in whatever way SQLite has been configured. Typically general purpose string comparison should be done with helper functions that deal with collation and other considerations.  This is a very complex topic and CQL is largely silent on it.
+>NOTE: CQL uses `strcmp` for string comparison. In SQL expressions the
+>comparison happens in whatever way SQLite has been configured. Typically
+>general purpose string comparison should be done with helper functions
+>that deal with collation and other considerations.  This is a very
+>complex topic and CQL is largely silent on it.
 
 #### Bitwise operators <<, >>, &, |
 
-These are the bit-manipulation operations.  Their binding strength is VERY different than C so beware.
-And notably the `&` operator has the same binding strength as the `|` operator so they bind left to right,
-which is utterly unlike most systems.  Many parentheses are likely to be needed to get the usual "or of ands" patterns codified correctly.  Likewise, the shift operators `<<` and `>>` are the same strength as `&` and `|` which is very atypical. Consider:
+These are the bit-manipulation operations.  Their binding strength is
+VERY different than C so beware.  And notably the `&` operator has the
+same binding strength as the `|` operator so they bind left to right,
+which is utterly unlike most systems.  Many parentheses are likely to
+be needed to get the usual "or of ands" patterns codified correctly.
+
+Likewise, the shift operators `<<` and `>>` are the same strength as
+`&` and `|` which is very atypical. Consider:
 
 ```sql
-x & 1 << 7;    -- probably doesn't mean what you think (this is not ambiguous, it's well defined, but unlike C)
-(x & 1) << 7;   -- means the same as the above
+x & 1 << 7;    -- not ambiguous but unusual meaning, not like C or Lua
+(x & 1) << 7;  -- means the same as the above
 x & (1 << 7)   -- probably what you intended
 ```
 
-Note that these operators only work on integer and long integer data.  If any operand is `NULL` the result is `NULL.
+Note that these operators only work on integer and long integer data.
+If any operand is `NULL` the result is `NULL.
 
 #### Addition and Subtraction +, -
-These operators do the typical math.  Note that there are no unsigned numerics so it's always signed math that is happening here.
+These operators do the typical math.  Note that there are no unsigned
+numerics so it's always signed math that is happening here.
 
 * operands are promoted to the "biggest" type involved as previously described (bool -> int -> long -> real)
 * only numeric operands are legal (no adding strings)
 * if any operand is `NULL` the result is `NULL`
 
 #### Multiplication, Division, Modulus *, /, %
-These operators do the typical math.  Note that there are no unsigned numerics so it's always signed math that is happening here.
+These operators do the typical math.  Note that there are no unsigned
+numerics so it's always signed math that is happening here.
 
 * operands are promoted to the "biggest" type as previously described (bool -> int -> long -> real)
 * only numeric operands are legal (no multiplying strings)
@@ -991,7 +1056,9 @@ Unary negation (`-`) and bitwise invert (`~`) are the strongest binding operator
 
 ### CASE Expressions
 
-The `case` expression has two major forms and provides a great deal of flexibility in an expression.  You can kind of think of it as the C `?:` operator on steroids.
+The `case` expression has two major forms and provides a great deal of
+flexibility in an expression.  You can kind of think of it as the C `?:`
+operator on steroids.
 
 ```sql
 set x := 'y';
@@ -1002,7 +1069,12 @@ select case x
 end;
 ```
 
-In this form the `case` expression (`x` here) is evaluated exactly once and then compared against each `when` clause. Every `when` clause must be type compatible with the `case` expression.  The `then` expression that corresponds to the matching `when` is evaluated and becomes the result. If no `when` matches then the `else` expression is used.  If there is no `else` and no matching `when` then the result is `null`.
+In this form the `case` expression (`x` here) is evaluated exactly once
+and then compared against each `when` clause. Every `when` clause must be
+type compatible with the `case` expression.  The `then` expression that
+corresponds to the matching `when` is evaluated and becomes the result. If
+no `when` matches then the `else` expression is used.  If there is no
+`else` and no matching `when` then the result is `null`.
 
 If that's not general enough, there is an alternate form:
 
@@ -1016,9 +1088,15 @@ select case
 end;
 ```
 
-The second form, where there is no value before the first `when` keyword, each `when` expression is a separate independent boolean expression.  The first one that evaluates to true causes the corresponding `then` to be evaluated and that becomes the result.  As before, if there is no matching `when` clause then the result is the `else` expression if present, or `null` if there is no `else`.
+The second form, where there is no value before the first `when` keyword,
+each `when` expression is a separate independent boolean expression.
+The first one that evaluates to true causes the corresponding `then`
+to be evaluated and that becomes the result.  As before, if there is
+no matching `when` clause then the result is the `else` expression if
+present, or `null` if there is no `else`.
 
-The result types must be compatible and the best type to hold the answer is selected with the usual promotion rules.
+The result types must be compatible and the best type to hold the answer
+is selected with the usual promotion rules.
 
 #### SELECT expressions
 
@@ -1028,8 +1106,10 @@ Single values can be extracted from SQLite using an inline `select` expression. 
 set x_ := (select x from somewhere where id = 1);
 ```
 
-The select statement in question must extract exactly one column and the type of the expression becomes the type of the column.  This form can appear
-anywhere an expression can appear, though it is most commonly used in assignments.  Something like this would also be valid:
+The select statement in question must extract exactly one column and
+the type of the expression becomes the type of the column.  This form
+can appear anywhere an expression can appear, though it is most commonly
+used in assignments.  Something like this would also be valid:
 
 ```sql
 if (select x from somewhere where id = 1) == 3 then
@@ -1039,10 +1119,15 @@ end if;
 
 The select statement can of course be arbitrarily complex.
 
-Note, if the select statement returns no rows this will result in the normal error flow.  In that case, the error code will be SQLITE_DONE, which is treated like an
-error because in this context SQLITE_ROW is expected as a result of the select.  This is not a typical error code and can be quite surprising to callers. If you're
-seeing this failure mode it usually means the code had no affordance for the case where there were no rows and probably that situation should have been handled.
-This is an easy mistake to make, so to avoid it, CQL also supports these more tolerant forms:
+Importantly, if the `select` statement returns no rows this will result in
+the normal error flow.  In that case, the error code will be SQLITE_DONE,
+which is treated like an error because in this context SQLITE_ROW is
+expected as a result of the select.  This is not a typical error code
+and can be quite surprising to callers. If you're seeing this failure
+mode it usually means the code had no affordance for the case where
+there were no rows and probably that situation should have been handled.
+This is an easy mistake to make, so to avoid it, CQL also supports these
+more tolerant forms:
 
 ```sql
 set x_ := (select x from somewhere where id = 1 if nothing -1);
@@ -1054,23 +1139,28 @@ And even more generally if the schema allows for null values and those are not d
 set x_ := (select x from somewhere where id = 1 if nothing or null -1);
 ```
 
-Both of these are much safer to use as only genuine errors (e.g. the table was dropped and no longer exists) will result in the error control flow.
+Both of these are much safer to use as only genuine errors (e.g. the table
+was dropped and no longer exists) will result in the error control flow.
 
 Again note that:
 
 ```sql
-set x_ := (select ifnull(x,-1) from somewhere where id = 1);
+set x_ := (select ifnull(x, -1) from somewhere where id = 1);
 ```
 
-Would not avoid the SQLITE_DONE error code, because no rows returned is not at all the same as a null value returned.
+Would not avoid the SQLITE_DONE error code, because no rows returned is
+not at all the same as a null value returned.
 
-The `if nothing or null` form above is equivalent to the following, but it is more economical, and probably clearer:
+The `if nothing or null` form above is equivalent to the following,
+but it is more economical, and probably clearer:
 
 ```sql
-set x_ := (select ifnull(x,-1) from somewhere where id = 1 if nothing -1);
+set x_ := (select ifnull(x, -1) from somewhere where id = 1 if nothing -1);
 ```
 
-To compute the type of the overall expression, the rules are almost the same as normal binary operators.  In particular:
+To compute the type of the overall expression, the rules are almost the
+same as normal binary operators.  In particular:
+
 * if the default expression is present it must be type compatible with the select result
   * the result type is the smallest type that holds both the select value and the default expression (see normal promotion rules above)
 * object types are not allowed (SQLite cannot return an object)
@@ -1078,15 +1168,19 @@ To compute the type of the overall expression, the rules are almost the same as 
 * in `(select ... if nothing)` the result type is not null if and only if both the select result and the default expression types are not null (normal binary rules)
 * in `(select ... if nothing or null)` the result type is not null if and only if the default expression type is not null
 
-Finally, the form  `(select ... if nothing throw)` is allowed; this form is exactly the same as normal
-`(select ...)` but makes the explicit that the error control flow will happen if there is no row.  Consequently
-this form is allowed even if `@enforce_strict select if nothing` is in force.
+Finally, the form  `(select ... if nothing throw)` is allowed; this form
+is exactly the same as normal `(select ...)` but makes the explicit that
+the error control flow will happen if there is no row.  Consequently this
+form is allowed even if `@enforce_strict select if nothing` is in force.
 
 ### Marking Data as Sensitive
 
-CQL supports the notion of 'sensitive' data in a first class way.  You can think of it as very much like nullability;  It largely begins by tagging data columns with `@sensitive`
+CQL supports the notion of 'sensitive' data in a first class way.
+You can think of it as very much like nullability;  It largely begins
+by tagging data columns with `@sensitive`
 
-Rather than go through the whole calculus, it's easier to understand by a series of examples.  So let's start with a table with some sensitive data.
+Rather than go through the whole calculus, it's easier to understand by a
+series of examples.  So let's start with a table with some sensitive data.
 
 ```sql
 create table with_sensitive(
@@ -1096,7 +1190,8 @@ create table with_sensitive(
 );
 ```
 
-The most obvious thing you might do at this point is create a stored proc that would read data out of that table.  Maybe something like this:
+The most obvious thing you might do at this point is create a stored
+proc that would read data out of that table.  Maybe something like this:
 
 ```sql
 create proc get_sensitive()
@@ -1111,7 +1206,8 @@ begin
 end;
 ```
 
-So looking at that procedure we can see that it's reading sensitive data, so the result will have some sensitive columns in it.
+So looking at that procedure we can see that it's reading sensitive data,
+so the result will have some sensitive columns in it.
 
  * the "id" is not sensitive (at least not in this example)
  * sens + 1 is sensitive, math on a sensitive field leaves it sensitive
@@ -1120,9 +1216,14 @@ So looking at that procedure we can see that it's reading sensitive data, so the
  * -sens is sensitive, that's more math
  * and the between expression is also sensitive
 
-Generally sensitivity is "radioactive" - anything it touches becomes sensitive.  This is very important because even a simple looking expression like `sens IS NOT NULL` must lead to a sensitive result or the whole process would be largely useless.  It has to be basically impossible to wash away sensitivity.
+Generally sensitivity is "radioactive" - anything it touches becomes
+sensitive.  This is very important because even a simple looking
+expression like `sens IS NOT NULL` must lead to a sensitive result or
+the whole process would be largely useless.  It has to be basically
+impossible to wash away sensitivity.
 
-These rules apply to normal expressions as well as expressions in the context of SQL.  Accordingly:
+These rules apply to normal expressions as well as expressions in the
+context of SQL.  Accordingly:
 
 Sensitive variables can be declared:
 
@@ -1131,6 +1232,7 @@ declare sens integer @sensitive;
 ```
 
 Simple operations on the variables are sensitive
+
 ```sql
 -- this is sensitive (and the same would be true for any other math)
 sens + 1;
@@ -1190,7 +1292,9 @@ exists(select info from with_sensitive)
 exists(select id from with_sensitive)
 ```
 
-If this is making you nervous, it probably should, we need a little more protection because of the way EXISTS is typically used.  The predicates matter, consider the following:
+If this is making you nervous, it probably should, we need a little more
+protection because of the way EXISTS is typically used.  The predicates
+matter, consider the following:
 
 ```sql
 -- id is now sensitive because the predicate of the where clause was sensitive
@@ -1200,11 +1304,19 @@ select id from with_sensitive where sens = 1;
 exists(select id from with_sensitive where sens = 1)
 ```
 
-In general: if the predicate of a `WHERE` or `HAVING` clause is sensitive then all columns in the result become sensitive.
+In general: if the predicate of a `WHERE` or `HAVING` clause is sensitive
+then all columns in the result become sensitive.
 
-Similarly when performing joins, if the column specified in the `USING` clause is sensitive or the predicate of the `ON` clause is sensitive then the result of the join is considered to be all sensitive columns (even if the columns were not sensitive in the schema).
+Similarly when performing joins, if the column specified in the `USING`
+clause is sensitive or the predicate of the `ON` clause is sensitive
+then the result of the join is considered to be all sensitive columns
+(even if the columns were not sensitive in the schema).
 
-Likewise a sensitive expression in `LIMIT` or `OFFSET` will result in 100% sensitive columns as these can be used in a `WHERE`-ish way.  There is no reasonable defense against using `LIMIT` and testing for the presence or absence of a row as a way to wash away sensitivity so that is a weakness, but the rules that are present are likely to be very helpful.
+Likewise a sensitive expression in `LIMIT` or `OFFSET` will result in 100%
+sensitive columns as these can be used in a `WHERE`-ish way.  There is no
+reasonable defense against using `LIMIT` and testing for the presence or
+absence of a row as a way to wash away sensitivity so that is a weakness,
+but the rules that are present are likely to be very helpful.
 
 ```sql
 -- join with ON
@@ -1214,9 +1326,11 @@ select T1.id from with_sensitive T1 inner join with_sensitive T2 on T1.sens = T2
 select T1.id from with_sensitive T1 inner join with_sensitive T2 using(sens);
 ```
 
-All of these expression and join propagations are designed to make it impossible to simply wash-away sensitivity with a little bit of math.
+All of these expression and join propagations are designed to make it
+impossible to simply wash-away sensitivity with a little bit of math.
 
-Now we come to enforcement, which boils down to what assignments or "assignment-like" operations we allow.
+Now we come to enforcement, which boils down to what assignments or
+"assignment-like" operations we allow.
 
 If we have these:
 
@@ -1225,7 +1339,8 @@ declare sens integer @sensitive;
 declare not_sens integer;
 ```
 
-We can use those as stand-ins for lots of expressions, but the essential calculus goes like this:
+We can use those as stand-ins for lots of expressions, but the essential
+calculus goes like this:
 
 ```sql
 -- assigning a sensitive to a sensitive is ok
@@ -1247,11 +1362,22 @@ Now these "assignments" can happen in a variety of ways:
    * any OUT parameters of the target be "assignable" from the procedures type to the argument variable
    * any IN/OUT parameters require both the above
 
-Now it's possible to write a procedure that accepts sensitive things and returns non-sensitive things.  This is fundamentally necessary because the proc must be able return (e.g.) a success code, or encrypted data, that is not sensitive.  However, if you write the procedure in CQL it, too, will have to follow the assignment rules and so cheating will be quite hard.  The idea here is to make it easy to handle sensitive data well and make typical mistakes trigger errors.
+Now it's possible to write a procedure that accepts sensitive things and
+returns non-sensitive things.  This is fundamentally necessary because
+the proc must be able return (e.g.) a success code, or encrypted data,
+that is not sensitive.  However, if you write the procedure in CQL it,
+too, will have to follow the assignment rules and so cheating will be
+quite hard.  The idea here is to make it easy to handle sensitive data
+well and make typical mistakes trigger errors.
 
-With these rules  it's possible to compute the the type of procedure result sets and also to enforce IN/OUT parameters.  Since the signature of procedures is conveniently generated with --generate_exports good practices are fairly easy to follow and sensitivity checks flow well into your programs.
+With these rules  it's possible to compute the the type of procedure
+result sets and also to enforce IN/OUT parameters.  Since the signature
+of procedures is conveniently generated with --generate_exports good
+practices are fairly easy to follow and sensitivity checks flow well
+into your programs.
 
-This is a brief summary of CQL semantics for reference types -- those types that are ref counted by the runtime.
+This is a brief summary of CQL semantics for reference types -- those
+types that are ref counted by the runtime.
 
 The three reference types are:
 
@@ -1259,7 +1385,10 @@ The three reference types are:
 * OBJECT
 * BLOB
 
-Each of these has their own macro for `retain` and `release` though all three actually turn into the exact same code in all the current CQL runtime implementations.  In all cases the object is expected to be promptly freed when the reference count falls to zero.
+Each of these has their own macro for `retain` and `release` though
+all three actually turn into the exact same code in all the current
+CQL runtime implementations.  In all cases the object is expected to be
+promptly freed when the reference count falls to zero.
 
 ### Reference Semantics
 
@@ -1282,7 +1411,9 @@ Each of these has their own macro for `retain` and `release` though all three ac
 
 ### Function Return Values
 
-Stored procedures do not return values, they only have `out` arguments and those are well defined as above.  Functions however are also supported and they can have either `get` or `create` semantics
+Stored procedures do not return values, they only have `out` arguments
+and those are well defined as above.  Functions however are also supported
+and they can have either `get` or `create` semantics
 
 #### Get Semantics
 
@@ -1292,7 +1423,9 @@ If you declare a function like so:
 declare function Getter() object;
 ```
 
-Then CQL assumes that the returned object should follow the normal rules above, retain/release will balance by the end of the procedure for locals and globals or `out` arguments could retain the object
+Then CQL assumes that the returned object should follow the normal rules
+above, retain/release will balance by the end of the procedure for locals
+and globals or `out` arguments could retain the object
 
 #### Create Semantics
 
@@ -1302,12 +1435,18 @@ If you declare a function like so:
 declare function Getter() create text;
 ```
 
-then CQL assumes that the function created a new result which it is now responsible for releasing.  In short, the returned object is assumed to arrive with a retain count of 1 already on it.  When CQL stores this return value it will:
+then CQL assumes that the function created a new result which it is now
+responsible for releasing.  In short, the returned object is assumed
+to arrive with a retain count of 1 already on it.  When CQL stores this
+return value it will:
 
 * release the object that was present at the storage location (if any)
 * copy the returned pointer without further retaining it this one time
 
-As a result if you store the returned value in a local variable it will be released when the procedure exits (as usual) or if you instead store the result in a global or an out parameter the result will survive to be used later.
+As a result if you store the returned value in a local variable it will
+be released when the procedure exits (as usual) or if you instead store
+the result in a global or an out parameter the result will survive to
+be used later.
 
 ### Comparison
 
@@ -1338,7 +1477,10 @@ And again, as in SQL, the `IS` operator returns true for `X IS Y` even if both a
 
 ### `TEXT`
 
-Text has value comparison semantics but normal string comparison is done only with `strcmp` which is of limited value.  Typically you'll want to either delegate the comparison to Sqlite (with `(select x < y)`) or else use a helper function with a suitable comparison mechanism.
+Text has value comparison semantics but normal string comparison is
+done only with `strcmp` which is of limited value.  Typically you'll
+want to either delegate the comparison to Sqlite (with `(select x < y)`)
+or else use a helper function with a suitable comparison mechanism.
 
 For text comparisons including equality:
 
@@ -1350,18 +1492,28 @@ For text comparisons including equality:
 
 EXAMPLE: `'x' < 'y'`  is true because `strcmp("x", "y") < 0`
 
-As with type `object`, the `IS` and `IS NOT` operators behave similarly to equality and inequality, but never produce a `null` result.  Strings have the same null semantics as `object`.  In fact strings have all the same semantics as object except that they get a  value comparison with `strcmp` rather than an identity comparison.  With object `x == y` implies that `x` and `y` point to the very same object. With strings, it only means `x` and `y` hold the same text.
+As with type `object`, the `IS` and `IS NOT` operators behave similarly to
+equality and inequality, but never produce a `null` result.  Strings have
+the same null semantics as `object`.  In fact strings have all the same
+semantics as object except that they get a  value comparison with `strcmp`
+rather than an identity comparison.  With object `x == y` implies that
+`x` and `y` point to the very same object. With strings, it only means
+`x` and `y` hold the same text.
 
 The `IN` and `NOT IN` operators also work for text using the same value comparisons as above.
 
-Additionally there are special text comparison operators such as `LIKE`, `MATCH` and `GLOB`.  These comparisons are defined by SQLite.
+Additionally there are special text comparison operators such as `LIKE`,
+`MATCH` and `GLOB`.  These comparisons are defined by SQLite.
 
 ### `BLOB`
 
-Blobs are compared by value (equivalent to `memcmp`) but have no well-defined ordering. The `memcmp` order is deemed
-not helpful as blobs usually have internal structure hence the valid comparisons are only equality and inequality.
+Blobs are compared by value (equivalent to `memcmp`) but have no
+well-defined ordering. The `memcmp` order is deemed not helpful as blobs
+usually have internal structure hence the valid comparisons are only
+equality and inequality.
 
-You can use user defined functions to do better comparisons of your particular blobs if needed.
+You can use user defined functions to do better comparisons of your
+particular blobs if needed.
 
 The net comparison behavior is otherwise just like strings.
 

@@ -208,7 +208,9 @@ This form allows any kind of declaration, for instance:
 declare C cursor like ( id integer not null, val real, flag boolean );
 ```
 
-This wouldn't really give us much more than the other forms, however typed name lists can include LIKE in them again, as part of the list.  Which means you can do this kind of thing:
+This wouldn't really give us much more than the other forms, however typed name 
+lists can include LIKE in them again, as part of the list.  Which means you can 
+do this kind of thing:
 
 ```
 declare C cursor like (like D, extra1 real, extra2 bool)
@@ -222,7 +224,9 @@ fetch C from values (from D, 2.5, false);
 
 and now you have D plus 2 more fields which maybe you want to output.
 
-Importantly this way of doing it means that C always includes D, even if D changes over time.  As long as the `extra1` and `extra2` fields don't conflict names it will always work.
+Importantly this way of doing it means that C always includes D, even if D changes
+over time.  As long as the `extra1` and `extra2` fields don't conflict names 
+it will always work.
 
 
 ### OUT Statement
@@ -549,7 +553,8 @@ Finally, while I've shown both `LIKE` forms separately, they can also be used to
   update cursor C(like X) from cursor D(like X);
 ```
 
-The above would mean, "move the columns that are found in `X` from cursor `D` to cursor `C`", presuming `X` has columns common to both.
+The above would mean, "move the columns that are found in `X` from cursor
+`D` to cursor `C`", presuming `X` has columns common to both.
 
 ### Fetch Statement Specifics
 
@@ -570,8 +575,9 @@ through the results.  You load the next row with:
 * `FETCH C`, or
 * `FETCH C into x, y, z;`
 
-In the first form `C` is said to be *automatic* in that it automatically declares the storage needed to hold all its columns.  As mentioned above, automatic cursors have
-storage for their row.
+In the first form `C` is said to be *automatic* in that it automatically
+declares the storage needed to hold all its columns.  As mentioned above,
+automatic cursors have storage for their row.
 
 Having done this fetch you can use C as a scalar variable to see if it holds a row, e.g.
 
@@ -609,7 +615,8 @@ is the right choice, as the `out` parameters have to be declared anyway.
  * `declare C cursor like X;`
    * where X is the name of a table, a view, another cursor, or a procedure that returns a structured result
 
- A value cursor is *always* automatic; it's purpose is to hold a row.  It doesn't iterate over anything but it can be re-loaded in a loop.
+ A value cursor is *always* automatic; it's purpose is to hold a row.
+ It doesn't iterate over anything but it can be re-loaded in a loop.
 
  * `fetch C` or `fetch C into ...` is not valid on such a cursor, because it doesn't have a source to step through.
 
@@ -619,9 +626,18 @@ is the right choice, as the `out` parameters have to be declared anyway.
    * `foo` must be a procedure that returns one row with `OUT`
  * `fetch C(a,b,c...) from values(x, y, z);`
 
-The first form is in some sense the origin of the value cursor.  Value cursors were added to the language initially to provide a way to capture the single row `OUT` statement results, much like result set cursors were added to capture procedure results from `OUT UNION`.  In the first form, the cursor storage (a C struct) is provided by reference as a hidden out parameter to the procedure and the procedure fills it in.  The procedure may or may not use the `OUT` statement in its control flow, as the cursor might not hold a row.  You can use `if C then ...` as before to test for a row.
+The first form is in some sense the origin of the value cursor.
+Value cursors were added to the language initially to provide a way to
+capture the single row `OUT` statement results, much like result set
+cursors were added to capture procedure results from `OUT UNION`.  In the
+first form, the cursor storage (a C struct) is provided by reference as
+a hidden out parameter to the procedure and the procedure fills it in.
+The procedure may or may not use the `OUT` statement in its control
+flow, as the cursor might not hold a row.  You can use `if C then ...`
+as before to test for a row.
 
-The second form is more interesting as it allows the cursor to be loaded from arbitrary expressions subject to some rules:
+The second form is more interesting as it allows the cursor to be loaded
+from arbitrary expressions subject to some rules:
 
 * you should think of the cursor as a logical row: it's either fully loaded or it's not, therefore you must specify enough columns in the column list to ensure that all `NOT NULL` columns will get a value
 * if not mentioned in the list, NULL will be loaded where possible
@@ -656,7 +672,8 @@ That most recent form doesn't seem like it saves much, but recall the first rewr
   * both cursors are expanded into all their columns, creating a copy from one to the other
   * `fetch C from D` can be used if the cursors have the exact same column names and types; it also generates slightly better code and is a common case
 
- It is very normal to want to use only some of the columns of a cursor; these `LIKE` forms do that job.  We saw some of these forms in an earlier example.
+ It is very normal to want to use only some of the columns of a cursor;
+ these `LIKE` forms do that job.  We saw some of these forms in an earlier example.
 
  * `fetch C from cursor D(like C)`
    * here `D` is presumed to be "bigger" than `C`, in that it has all of the `C` columns and maybe more.  The `like C` expands into the names of the `C` columns so `C` is loaded from the `C` part of `D`
@@ -669,7 +686,9 @@ That most recent form doesn't seem like it saves much, but recall the first rewr
    * the `like D` expands into the columns of `D` causing the cursor to be loaded with what's in `D` and `NULL` (if needed)
    * when expanded, this might look like `fetch C(x, y) from values(D.x, D.y)`
 
-`LIKE` can be used in both places, for instance suppose `E` is a shape that has a subset of the rows of both `C` and `D`.  You can write a form like this:
+`LIKE` can be used in both places, for instance suppose `E` is a shape
+that has a subset of the rows of both `C` and `D`.  You can write a form
+like this:
 
 * `fetch C(like E) from cursor D(like E)`
   * this means take the column names found in `E` and copy them from D to C.
@@ -687,9 +706,11 @@ That most recent form doesn't seem like it saves much, but recall the first rewr
 
 ### Calling Procedures with Argument Bundles
 
-It's often desirable to treat bundles of arguments as a unit, or cursors as a unit, especially when calling other procedures.  The shape patterns above are very helpful
-for moving data between cursors, and the database.  These can be rounded out with
-similar constructs for procedure definitions and procedure calls as follows.
+It's often desirable to treat bundles of arguments as a unit, or cursors
+as a unit, especially when calling other procedures.  The shape patterns
+above are very helpful for moving data between cursors, and the database.
+These can be rounded out with similar constructs for procedure definitions
+and procedure calls as follows.
 
 First we'll define some shapes to use in the examples.  Note that we made `U` using `T`.
 
@@ -929,7 +950,8 @@ but it is a very interesting place to use shapes.  To make it possible to use
 shape notations and not confuse them with standard SQL the `COLUMNS` construct was
 added to the language.  This allows for a sugared syntax for extracting columns in bulk.
 
-The `COLUMNS` clause is like of a generalization of the `select T.*` with shape slicing and type-checking.  The forms are discussed below:
+The `COLUMNS` clause is like of a generalization of the `select T.*`
+with shape slicing and type-checking.  The forms are discussed below:
 
 
 #### Columns from a join table or tables
@@ -1048,28 +1070,36 @@ out of complex queries without having to type the columns names over and over.
 
 ### Missing Data Columns, Nulls and Dummy Data
 
-What follows are the rules for columns that are missing in an `INSERT`, or `FETCH` statement. As with many of the other things discussed here, the forms result in
-automatic rewriting of the code to include the specified dummy data.  So SQLite
-will never see these forms.
+What follows are the rules for columns that are missing in an `INSERT`,
+or `FETCH` statement. As with many of the other things discussed here,
+the forms result in automatic rewriting of the code to include the
+specified dummy data.  So SQLite will never see these forms.
 
-Two things to note: First, the dummy data options described below are really only interesting in test code, it's hard to imagine them being useful in production code.
-Second, none of what follows applies to the `update cursor` statement because its
-purpose is to do partial updates on exactly the specified columns and we're about to
-talk about what happens with the columns that were not specified.
+Two things to note: First, the dummy data options described below are
+really only interesting in test code, it's hard to imagine them being
+useful in production code.  Second, none of what follows applies to the
+`update cursor` statement because its purpose is to do partial updates
+on exactly the specified columns and we're about to talk about what
+happens with the columns that were not specified.
 
-When fetching a row all the columns must come from somewhere; if the column is
-mentioned or mentioned by rewrite then it must have a value mentioned, or a value
-mentioned by rewrite. For columns that are not mentioned, a NULL value is used if
-it is legal to do so.  For example, `fetch C(a) from values(1)` might turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
+When fetching a row all the columns must come from somewhere; if the
+column is mentioned or mentioned by rewrite then it must have a value
+mentioned, or a value mentioned by rewrite. For columns that are not
+mentioned, a NULL value is used if it is legal to do so.  For example,
+`fetch C(a) from values(1)` might turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
 
-In addition to the automatic NULL you may add the annotation `@dummy_seed([long integer expression])`. If this annotion is present then:
+In addition to the automatic NULL you may add the annotation
+`@dummy_seed([long integer expression])`. If this annotion is present
+then:
+
 * the expression is evaluated and stored in the hidden variable _seed_
 * all integers, and long integers get _seed_ as their value (possibly truncated)
 * booleans get 1 if and only if _seed_ is non-zero
 * strings get the name of the string column an underscore and the value as text (e.g.   "myText_7" if _seed_ is 7)
 * blobs are not currently supported for dummy data (CQL is missing blob conversions which are needed first)
 
-This construct is hugely powerful in a loop to create many complete rows with very little effort, even if the schema change over time.
+This construct is hugely powerful in a loop to create many complete rows
+with very little effort, even if the schema change over time.
 
 ```sql
 declare i integer not null;
@@ -1082,7 +1112,9 @@ begin
 end;
 ```
 
-Now in this example we don't need to know anything about `my_table` other than that it has a column named `id`. This example shows several things:
+Now in this example we don't need to know anything about `my_table`
+other than that it has a column named `id`.  This example shows several things:
+
  * we got the shape of the cursor from the table we were inserting into
  * you can do your own computation for some of the columns (those named) and leave the unnamed values to be defaulted
  * the rewrites mentioned above work for the `insert` statement as well as `fetch`
@@ -1090,9 +1122,20 @@ Now in this example we don't need to know anything about `my_table` other than t
    * bonus, dummy blob data does work in insert statements because SQLite can do the string conversion easily
    * the dummy value for a blob is a blob that holds the text of the column name and the text of the seed just like a string column
 
-The `@dummy_seed` form can be modified with `@dummy_nullables`, this indicates that rather than using NULL for any nullable value that is missing, CQL should use the seed value.  This overrides the default behavior of using NULL where columns are needed.  Note the NULL filling works a little differently on insert statements.  Since SQLite will provide a NULL if one is legal the column doesn't have to be added to the list with a NULL value during rewriting, it can simply be omitted, making the statement smaller.
+The `@dummy_seed` form can be modified with `@dummy_nullables`, this
+indicates that rather than using NULL for any nullable value that is
+missing, CQL should use the seed value.  This overrides the default
+behavior of using NULL where columns are needed.  Note the NULL filling
+works a little differently on insert statements.  Since SQLite will
+provide a NULL if one is legal the column doesn't have to be added to
+the list with a NULL value during rewriting, it can simply be omitted,
+making the statement smaller.
 
-Finally for `insert` statement only, SQLite will normally use the default value of a column if it has one, so there is no need to add missing columns with default values to the insert statement.  However if you specify `@dummy_defaults` then columns with a default value will instead be rewritten and they will get `_seed_` as their value.
+Finally for `insert` statement only, SQLite will normally use the default
+value of a column if it has one, so there is no need to add missing
+columns with default values to the insert statement.  However if you
+specify `@dummy_defaults` then columns with a default value will instead
+be rewritten and they will get `_seed_` as their value.
 
 Some examples.  Suppose columns a, b, c are not null;  m, n are nullable; and x, y have defaults.
 
@@ -1117,16 +1160,21 @@ insert into my_table(a) values(7) @dummy_seed(1000) @dummy_nullables @dummy_defa
 insert into my_table(a, b, c, m, n, x, y) values(7, 1000, 1000, 1000, 1000, 1000, 1000);
 ```
 
-The sugar features on `fetch`, `insert`, and `update cursor` are as symmetric as possible, but again, dummy data is generally only interesting in test code. Dummy  data will continue to give you valid test rows even if columns are added or removed from the tables in question.
+The sugar features on `fetch`, `insert`, and `update cursor` are as
+symmetric as possible, but again, dummy data is generally only interesting
+in test code. Dummy  data will continue to give you valid test rows even
+if columns are added or removed from the tables in question.
 
 ### Generalized Cursor Lifetimes aka Cursor "Boxing"
 
-Generalized Cursor Lifetime refers to capturing a Statement Cursor in an object so that it can used more flexibly.  Wrapping something
-in an object is often called "boxing".  Since Generalized Cursor Lifetime is a mouthful we'll refer to it as "boxing"
-from here forward. The symmetric operation "unboxing" refers to converting the boxed object back into a cursor.
+Generalized Cursor Lifetime refers to capturing a Statement Cursor in an
+object so that it can used more flexibly.  Wrapping something in an object
+is often called "boxing".  Since Generalized Cursor Lifetime is a mouthful
+we'll refer to it as "boxing" from here forward. The symmetric operation
+"unboxing" refers to converting the boxed object back into a cursor.
 
-The normal cursor usage pattern is by far the most common, a cursor is created directly with something like
-these forms:
+The normal cursor usage pattern is by far the most common, a cursor is
+created directly with something like these forms:
 
 ```sql
 declare C cursor for select * from shape_source;
@@ -1143,12 +1191,15 @@ begin
 end;
 ```
 
-Those are the usual patterns and they allow statement cursors to be consumed sort of "up" the call chain from where the cursor was created.
-But what if you want some worker procedures that consume a cursor? There is no way to pass your cursor down again with these normal patterns alone.
+Those are the usual patterns and they allow statement cursors to be
+consumed sort of "up" the call chain from where the cursor was created.
+But what if you want some worker procedures that consume a cursor? There
+is no way to pass your cursor down again with these normal patterns alone.
 
-To generalize the patterns, allowing, for instance, a cursor to be returned as an out parameter or accepted as
-an in parameter you first need to declare an object variable that can hold the cursor and has a type indicating
-the shape of the cursor.
+To generalize the patterns, allowing, for instance, a cursor to be
+returned as an out parameter or accepted as an in parameter you first
+need to declare an object variable that can hold the cursor and has a
+type indicating the shape of the cursor.
 
 To make an object that can hold a cursor:
 
@@ -1156,9 +1207,12 @@ To make an object that can hold a cursor:
 declare obj object<T cursor>;
 ```
 
-Where `T` is the name of a shape. It can be a table name, or a view name, or it can be the name of the canonical procedure that returns the result.
-T should be some kind of global name, something that could be accessed with `#include` in various places.
-Referring to the examples above, choices for `T` might be `shape_source` the table or `proc_that_returns_a_shape` the procedure.
+Where `T` is the name of a shape. It can be a table name, or a view
+name, or it can be the name of the canonical procedure that returns
+the result.  T should be some kind of global name, something that
+could be accessed with `#include` in various places.  Referring to the
+examples above, choices for `T` might be `shape_source` the table or
+`proc_that_returns_a_shape` the procedure.
 
 >NOTE: it's always possible make a fake procedure that returns a result to sort of "typedef" a shape name.  e.g.
 
@@ -1166,14 +1220,17 @@ Referring to the examples above, choices for `T` might be `shape_source` the tab
 declare proc my_shape() (id integer not null, name text);
 ```
 
-The procedure here `my_shape` doesn’t have to actually ever be created, in fact it’s better if it isn't.  It won’t ever be called;
-its hypothetical result is just being as a shape.  This can be useful if you have several procedures like `proc_that_returns_a_shape`
-that all return results with the columns of `my_shape`.
+The procedure here `my_shape` doesn’t have to actually ever be created,
+in fact it’s better if it isn't.  It won’t ever be called; its
+hypothetical result is just being as a shape.  This can be useful if
+you have several procedures like `proc_that_returns_a_shape` that all
+return results with the columns of `my_shape`.
 
-To create the boxed cursor, first declare the object variable that will hold it and then set object from the cursor.
-Note that in the following example the cursor `C` must have the shape defined by `my_shape` or an error is produced.
-The type of the object is crucial because, as we'll see, during unboxing that type defines the shape
-of the unboxed cursor.
+To create the boxed cursor, first declare the object variable that will
+hold it and then set object from the cursor.  Note that in the following
+example the cursor `C` must have the shape defined by `my_shape` or an
+error is produced.  The type of the object is crucial because, as we'll
+see, during unboxing that type defines the shape of the unboxed cursor.
 
 
 ```sql
@@ -1184,9 +1241,10 @@ declare box_obj object<my_shape cursor>;
 set box_obj from cursor C;
 ```
 
-The variable `box_obj` can now be passed around as usual.  It could be stored in a suitable `out` variable
-or it could be passed to a procedure as an `in` parameter.  Then, later, you can "unbox" `box_obj` to get a
-cursor back. Like so
+The variable `box_obj` can now be passed around as usual.  It could be
+stored in a suitable `out` variable or it could be passed to a procedure
+as an `in` parameter.  Then, later, you can "unbox" `box_obj` to get a
+cursor back. Like so:
 
 ```sql
 -- unboxing a cursor from an object, the type of box_obj defines the type of the created cursor
@@ -1218,11 +1276,13 @@ begin
 end;
 ```
 
-Importantly, once you box a cursor the underlying SQLite statement’s lifetime is managed by the box object with normal
-retain/release semantics.  The box and underlying statement can be released simply by setting all references to it to null
-as usual.
+Importantly, once you box a cursor the underlying SQLite statement’s
+lifetime is managed by the box object with normal retain/release
+semantics.  The box and underlying statement can be released simply by
+setting all references to it to null as usual.
 
-With this pattern it's possible to, for instance, create a cursor, box it, consume some of the rows in one procedure, do some other stuff,
+With this pattern it's possible to, for instance, create a cursor,
+box it, consume some of the rows in one procedure, do some other stuff,
 and then consume the rest of the rows in another different procedure.
 
 Important Notes:
@@ -1231,5 +1291,9 @@ Important Notes:
 * there is no operation for "peeking" at a cursor without advancing it; if your code requires that you inspect the row and then delegate it, you can do this simply by passing the cursor data as a value rather than the cursor statement.  Boxing and unboxing are for cases where you need to stream data out of the cursor in helper procedures
 * durably storing a boxed cursor (e.g. in a global) could lead to all manner of problems -- it is *exactly* like holding on to a `sqlite3_stmt *` for a long time with all the same problems because that is exactly is happening
 
-Summarizing, the main reason for using the boxing patterns is to allow for standard helper procedures that can get a cursor from a variety of places and process it.
-Boxing isn’t the usual pattern at all and returning cursors in a box, while possible, should be avoided in favor of the simpler patterns, if only because then then lifetime management is very simple in all those cases.
+Summarizing, the main reason for using the boxing patterns is to allow
+for standard helper procedures that can get a cursor from a variety
+of places and process it.  Boxing isn’t the usual pattern at all and
+returning cursors in a box, while possible, should be avoided in favor
+of the simpler patterns, if only because then then lifetime management
+is very simple in all those cases.

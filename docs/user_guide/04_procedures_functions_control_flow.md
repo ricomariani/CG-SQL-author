@@ -150,22 +150,25 @@ Let's go over this peculiar loop:
   end;
 ```
 
-This is an immediate sign that there will be an unusual exit condition.  The loop will never end without one because `1` will never be false.
+This is an immediate sign that there will be an unusual exit condition.
+The loop will never end without one because `1` will never be false.
 
 ```sql
    if x < 0 then
      leave;
 ```
-Now here we've encoded our exit condition a bit strangely: we might have done the equivalent job with a normal condition in the predicate
-part of the `while` statement but for illustration anyway, when x becomes negative `leave` will cause us to exit the loop.  This is like
-`break` in C.
+Now here we've encoded our exit condition a bit strangely: we might have
+done the equivalent job with a normal condition in the predicate part of
+the `while` statement but for illustration anyway, when x becomes negative
+`leave` will cause us to exit the loop.  This is like `break` in C.
 
 ```sql
    else if x % 100 = 0 then
      continue;
 ```
 
-This bit says that on every 100th iteration we go back to the start of the loop.  So the next bit will not run, which is the printing.
+This bit says that on every 100th iteration we go back to the start of
+the loop.  So the next bit will not run, which is the printing.
 
 ```sql
    else if x % 10 = 0 then
@@ -177,8 +180,11 @@ Finishing up the control flow, on every 10th iteration we print the value of the
 
 ### The SWITCH Statement
 
-The  CQL `SWITCH` is designed to map to the C `switch` statement for better codegen and also to give us the opportunity to do better error checking.
-`SWITCH` is a *statement* like `IF` not an *expression* like `CASE..WHEN..END` so it combines with other statements. The general form looks like this:
+The  CQL `SWITCH` is designed to map to the C `switch` statement for
+better codegen and also to give us the opportunity to do better error
+checking.  `SWITCH` is a *statement* like `IF` not an *expression* like
+`CASE..WHEN..END` so it combines with other statements. The general form
+looks like this:
 
 ```SQL
 SWITCH switch-expression [optional ALL VALUES]
@@ -244,16 +250,21 @@ switch x all values
 end;
 ```
 
-Using `THEN NOTHING` allows the compiler to avoid emitting a useless `break` in the C code.  Hence that choice is better/clearer than `when brush then leave;`
+Using `THEN NOTHING` allows the compiler to avoid emitting a useless
+`break` in the C code.  Hence that choice is better/clearer than `when
+brush then leave;`
 
-Note that the presence of `_count` in the enum will not cause an error in the above because it starts with `_`.
+Note that the presence of `_count` in the enum will not cause an error
+in the above because it starts with `_`.
 
-The `C` output for this statement will be a direct mapping to a `C` switch statement.
+The `C` output for this statement will be a direct mapping to a `C`
+switch statement.
 
 ### The TRY, CATCH, and THROW Statements
 
-This example illustrates catching an error from some DML, and recovering rather than letting the error cascade up.
-This is the common "upsert" pattern (insert or update)
+This example illustrates catching an error from some DML, and recovering
+rather than letting the error cascade up.  This is the common "upsert"
+pattern (insert or update)
 
 ```sql
 declare procedure printf no check;
@@ -293,8 +304,10 @@ we prepare to catch that error.
     end try;
 ```
 
-Now, having failed to insert, presumably because a row with the provided `id` already exists, we try to update
-that row instead.  However that might also fail, so we  wrap it in another try.  If the update fails, then there is a final catch block:
+Now, having failed to insert, presumably because a row with the provided
+`id` already exists, we try to update that row instead.  However that
+might also fail, so we  wrap it in another try.  If the update fails,
+then there is a final catch block:
 
 ```sql
     begin catch
@@ -303,11 +316,14 @@ that row instead.  However that might also fail, so we  wrap it in another try. 
     end catch;
 ```
 
-Here we see a usage of the `@rc` variable to observe the failed error code.  In this case we simply print a diagnostic message and
-then use the `throw` keyword to rethrow the previous failure (exactly what is stored in `@rc`).  In general, `throw` will create a
-failure in the current block using the most recent failed result code from SQLite (`@rc`) if it is an error, or else the general
-`SQLITE_ERROR` result code if there is no such error.  In this case the failure code for the `update` statement will become the
-result code of the current procedure.
+Here we see a usage of the `@rc` variable to observe the failed error
+code.  In this case we simply print a diagnostic message and then use the
+`throw` keyword to rethrow the previous failure (exactly what is stored
+in `@rc`).  In general, `throw` will create a failure in the current
+block using the most recent failed result code from SQLite (`@rc`)
+if it is an error, or else the general `SQLITE_ERROR` result code if
+there is no such error.  In this case the failure code for the `update`
+statement will become the result code of the current procedure.
 
 This leaves only the closing markers:
 
@@ -321,10 +337,12 @@ If control flow reaches the normal end of the procedure it will return `SQLITE_O
 ### Procedures as Functions: Motivation and Example
 
 
-The calling convention for CQL stored procedures often (usually) requires that the procedure returns a result code from SQLite.
-This makes it impossible to write a procedure that returns a result like a function, as the result position is already used for
-the error code.  You can get around this problem by using `out` arguments as your return codes.  So for instance, this version
-of the Fibonacci function is possible.
+The calling convention for CQL stored procedures often (usually) requires
+that the procedure returns a result code from SQLite.  This makes it
+impossible to write a procedure that returns a result like a function,
+as the result position is already used for the error code.  You can
+get around this problem by using `out` arguments as your return codes.
+So for instance, this version of the Fibonacci function is possible.
 
 
 ```sql
@@ -345,10 +363,14 @@ end;
 The above works, but the notation is very awkward.
 
 
-CQL has a "procedures as functions" feature that tries to make this more pleasant by making it possible to use function call notation
-on a procedure whose last argument is an `out` variable.  You simply call the procedure like it was a function and omit the last argument in the call.
-A temporary variable is automatically created to hold the result and that temporary becomes the logical return of the function.
-For semantic analysis, the result type of the function becomes the type of the `out` argument.
+CQL has a "procedures as functions" feature that tries to make this
+more pleasant by making it possible to use function call notation on a
+procedure whose last argument is an `out` variable.  You simply call
+the procedure like it was a function and omit the last argument in
+the call.  A temporary variable is automatically created to hold the
+result and that temporary becomes the logical return of the function.
+For semantic analysis, the result type of the function becomes the type
+of the `out` argument.
 
 ```sql
 -- rewritten with function call syntax
@@ -368,7 +390,9 @@ This form is allowed when:
 * the formal parameter for that last argument was marked with `out` (neither `in` nor `inout` are acceptable)
 * the procedure does not return a result set using a `select` statement or `out` statement (more on these later)
 
-If the procedure in question uses SQLite, or calls something that uses SQLite, then it might fail.
-If that happens the result code will propagate just like it would have with the usual `call` form.
-Any failures can be caught with `try/catch` as usual.
-This feature is really only syntatic sugar for the "awkward" form above, but it does allow for slightly better generated C code.
+If the procedure in question uses SQLite, or calls something that
+uses SQLite, then it might fail.  If that happens the result code
+will propagate just like it would have with the usual `call` form.
+Any failures can be caught with `try/catch` as usual.  This feature is
+really only syntatic sugar for the "awkward" form above, but it does
+allow for slightly better generated C code.

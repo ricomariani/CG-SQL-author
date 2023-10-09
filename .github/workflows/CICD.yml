@@ -12,6 +12,8 @@ on:
 jobs:
   documentation:
     name: Build Documentation
+    environment:
+      name: github-pages
     permissions:
       pages: write
       id-token: write

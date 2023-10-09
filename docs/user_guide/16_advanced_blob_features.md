@@ -145,10 +145,11 @@ declare c cursor like b;
 -- load the cursor (note that this can throw an exception if the blob is corrupt)
 fetch c from b;
 -- now use c.who, c.what, etc.
+```
 
-On the data is loaded in a cursor is very economical to access on a
+Once the data is loaded in a cursor it is very economical to access on a
 field-by-field basis, and, since the deserialization of the blob happened
-all at once, that is also economical.
+all at once, that can also be economical.
 
 >NOTE: The runtime cannot assume that the blob is well formed, it could
 >be coming from anywhere.  For secure-code reasons it must assume the is

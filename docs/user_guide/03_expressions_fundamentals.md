@@ -1530,7 +1530,11 @@ For text comparisons including equality:
 |false |if and only if  both operands are not null and the comparison does not match (using strcmp)|
 |null  |if and only if at least one operand is null|
 
->EXAMPLE: `'x' < 'y'`  is true because `strcmp("x", "y") < 0`
+Example:
+
+```
+'x' < 'y' == true -- because strcmp("x", "y") < 0
+```
 
 As with type `object`, the `IS` and `IS NOT` operators behave similarly to
 equality and inequality, but never produce a `null` result.  Strings have

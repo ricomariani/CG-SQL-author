@@ -1,4 +1,4 @@
-eference
+<!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
@@ -99,10 +99,11 @@ declare t2 text;
 declare bl2 blob;
 ```
 
-ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`, and `bl1`, `bl2` are nullable.
-In some sense variables and columns declared nullable (by virtue of the missing `NOT NULL`) are the
-root sources of nullability in the SQL language.  That and the `NULL` literal.  Though there are other
-sources as we will see.
+ALL of `i1`, `i2`, `b1`, `b2`, `l1`, `l2`, `r1`, `r2`, `t1`, `t2`,
+and `bl1`, `bl2` are nullable.  In some sense variables and columns
+declared nullable (by virtue of the missing `NOT NULL`) are the root
+sources of nullability in the SQL language.  That and the `NULL` literal.
+Though there are other sources as we will see.
 
 `NOT NULL` could be added to any of these, e.g.
 
@@ -111,17 +112,21 @@ sources as we will see.
 declare i_nn integer not null;
 ```
 
-In the context of computing the types of expressions, CQL is statically typed and so it must make a decision about
-the type of any expression based on the type information at hand at compile time.  As a result it handles the static
-type of an expression conservatively.  If the result might be null then the expression is of a nullable type and
-the compiled code will include an affordance for the possibility of a null value at runtime.
+In the context of computing the types of expressions, CQL is statically
+typed and so it must make a decision about the type of any expression
+based on the type information at hand at compile time.  As a result
+it handles the static type of an expression conservatively.  If the
+result might be null then the expression is of a nullable type and the
+compiled code will include an affordance for the possibility of a null
+value at runtime.
 
-The generated code for nullable types is considerably less efficient and so it should be avoided
-if that is reasonably possible.
+The generated code for nullable types is considerably less efficient
+and so it should be avoided if that is reasonably possible.
 
 #### LET Statement
 
-You can declare and initialize a variable in one step using the `LET` form, e.g.
+You can declare and initialize a variable in one step using the `LET`
+form, e.g.
 
 ```sql
 LET x := 1;
@@ -139,16 +144,18 @@ LET b := x IS y; -- bool not null
 LET b := x = y;  -- bool (maybe not null depending on x/y)
 ```
 
-The pseudo function "nullable" removes `not null` from the type of its argument but otherwise does no computation.
-This can be useful to initialize nullable types.
+The pseudo function "nullable" removes `not null` from the type of
+its argument but otherwise does no computation.  This can be useful to
+initialize nullable types.
 
 ```sql
 LET n_i := nullable(1);  -- nullable integer variable initialized to 1
 LET n_l := nullable(1L);  -- nullable long variable initialized to 1
 ```
 
-The pseudo function "sensitive" adds `@sensitive` to the type of its argument but otherwise does no computation.
-This also can be useful to initialize nullable types.
+The pseudo function "sensitive" adds `@sensitive` to the type of its
+argument but otherwise does no computation.  This also can be useful to
+initialize nullable types.
 
 ```sql
 LET s_i := sensitive(1);  -- sensitive nullable integer variable initialized to 1
@@ -170,7 +177,8 @@ recent error code returned by a SQLite operation, e.g. 0 == `SQLITE_OK`,
 
 ### Types of Literals
 
-There are a number of literal objects that may be expressed in CQL.  These are as follows:
+There are a number of literal objects that may be expressed in CQL.
+These are as follows:
 
 #### String Literals
 
@@ -239,13 +247,16 @@ systems, hence the existence of `@FILE(...)`.
 
 ### Const and Enumerations
 
-It's possible to use named constants in CQL with nothing more than the C pre-processor features that have already appeared,
-however use of #define in such a way is not entirely satisfactory.  For one thing, CQL will not know these constants
-exist in any way as they will be replaced before it ever sees them.  This means CQL can't provide their values for you
+It's possible to use named constants in CQL with nothing more than the C
+pre-processor features that have already appeared, however use of #define
+in such a way is not entirely satisfactory.  For one thing, CQL will not
+know these constants exist in any way as they will be replaced before
+it ever sees them.  This means CQL can't provide their values for you
 in the JSON output for instance.
 
-To help with this problem, CQL includes constants, note, this is not the same as enumerated types as we'll
-see later.  You can now write something like this:
+To help with this problem, CQL includes constants, note, this is not
+the same as enumerated types as we'll see later.  You can now write
+something like this:
 
 ```sql
 declare enum business_type integer (
@@ -269,19 +280,22 @@ select 14;
 And that is exactly what SQLite will see, the literal `14`.
 
 You can also use the enum to define column types:
+
 ```sql
 CREATE TABLE businesses (
-name  TEXT,
-type  business_type
+  name TEXT,
+  type business_type
 );
 ```
 
 CQL will then enforce that you use the correct enum to access those columns. For example, this is valid:
+
 ```sql
 SELECT * FROM businesses WHERE type = business_type.laundromat;
 ```
 
 While this does not type check:
+
 ```sql
 SELECT * FROM businesses WHERE type = business_corp_state.delaware;
 ```
@@ -329,15 +343,19 @@ you get:
 #define floating__pi 3.141590e+00
 ```
 
-In order to get useful expressions in enumeration values, constant folding and general evaluation was added to the compiler;
-these expressions work on any numeric type and the literal null.  The supported operations include:
+In order to get useful expressions in enumeration values, constant folding
+and general evaluation was added to the compiler; these expressions
+work on any numeric type and the literal null.  The supported operations
+include:
 
-`+`, `-`, `*`, `/`, `%`, `|`, `&`, `<<`, `>>`, `~`, `and`, `or`, `not`, `==`, `<=`, `>=`, `!=`, `<`, `>`, the `cast` operator
-and the `case` forms (including the `iif` function).  These are enough to make a lot of very interesting expressions, all of
-which are evaluated at compile time.
+`+`, `-`, `*`, `/`, `%`, `|`, `&`, `<<`, `>>`, `~`, `and`, `or`, `not`,
+`==`, `<=`, `>=`, `!=`, `<`, `>`, the `cast` operator and the `case`
+forms (including the `iif` function).  These are enough to make a lot of
+very interesting expressions, all of which are evaluated at compile time.
 
-Constant folding was added to allow for rich `enum` expressions, but there is also the `const()` primitive in the
-language which can appear anywhere a literal could appear.  This allows you do things like:
+Constant folding was added to allow for rich `enum` expressions, but
+there is also the `const()` primitive in the language which can appear
+anywhere a literal could appear.  This allows you do things like:
 
 ```sql
 create table something(
@@ -350,18 +368,24 @@ The `const` form is also very useful in macros:
 ```c
 #define SOMETHING const(12+3)
 ```
-This form ensures that the constant will be evaluated at compile time. The `const` pseudo-function can also nest
-so you can build these kinds of macros from other macros or you can build enum values this way.
+
+This form ensures that the constant will be evaluated at compile
+time. The `const` pseudo-function can also nest so you can build these
+kinds of macros from other macros or you can build enum values this way.
 Anywhere you might need literals, you can use `const`.
 
 ### Named Types
 
-A common source of errors in stored procedures is incorrect typing in arguments.  For instance, a particular key
-for an entity might need to be `LONG` or even always `LONG NOT NULL` or `LONG NOT NULL @SENSITIVE` and the only
-way to do this in the past was maybe with some `#define` thing.  Otherwise you have to diligently get the type right
-in all the places, and should it ever change, again you have to visit all the places.   To help with this situation,
-and to make the code a little more self-describing we added named types to the language.  This is a lot like `typedef` in
-the C language.  They do not create different incompatible types but they do let you name things well.
+A common source of errors in stored procedures is incorrect typing in
+arguments.  For instance, a particular key for an entity might need to be
+`LONG` or even always `LONG NOT NULL` or `LONG NOT NULL @SENSITIVE` and
+the only way to do this in the past was maybe with some `#define` thing.
+Otherwise you have to diligently get the type right in all the places, and
+should it ever change, again you have to visit all the places.   To help
+with this situation, and to make the code a little more self-describing
+we added named types to the language.  This is a lot like `typedef`
+in the C language.  They do not create different incompatible types but
+they do let you name things well.
 
 You can now write these sorts of forms:
 
@@ -395,8 +419,10 @@ declare enum thing integer (
 declare thing_type type thing;
 ```
 
-Enumerations always get "not null" in addition to their base type.  Enumerations also have a unique "kind" associated,
-specifically the above enum has type `integer<thing> not null`.  The rules for type kinds are described below.
+Enumerations always get "not null" in addition to their base type.
+Enumerations also have a unique "kind" associated, specifically the above
+enum has type `integer<thing> not null`.  The rules for type kinds are
+described below.
 
 ### Type Kinds
 
@@ -1100,7 +1126,8 @@ is selected with the usual promotion rules.
 
 #### SELECT expressions
 
-Single values can be extracted from SQLite using an inline `select` expression.  For instance:
+Single values can be extracted from SQLite using an inline `select`
+expression.  For instance:
 
 ```sql
 set x_ := (select x from somewhere where id = 1);
@@ -1277,7 +1304,8 @@ select SUM(T1.sens) from with_sensitive T1;
 select COUNT(T1.sens) from with_sensitive T1;
 ```
 
-There are many operators that get similar treatment such as `COALESCE`, `IFNULL`, `IS` and `IS NOT`.
+There are many operators that get similar treatment such as `COALESCE`,
+`IFNULL`, `IS` and `IS NOT`.
 
 Things get more interesting when we come to the `EXISTS` operator:
 
@@ -1458,13 +1486,13 @@ The object type has no value based comparison, so there is no `<`, `>` and so fo
 
 The following table is useful.  Let's suppose there are exactly two distinct objects 'X' and 'Y'
 
-|result|examples...|  |  |  |  |  |
-|------|-----------|--|--|--|--|--|
+|result|examples...|   |   |   |   |   |
+|:-----|:----------|:--|:--|:--|:--|:--|
 |true  |`X = X`|`X <> Y`|`Y = Y`|`Y <> X`| `X IN (X, Y)`    |`X NOT IN (Y)`|
-|false |`X = Y`|`X <> X`|`Y = X`|`Y <> Y`| `X NOT IN (X, Y)`||
+|false |`X = Y`|`X <> X`|`Y = X`|`Y <> Y`| `X NOT IN (X, Y)`| |
 |null  |`null = null`| ` X <> null`| `x = null`|`null <> null`|`Y <> null`| `y = null`|
-|true  | `X is not null` | `Y is not null` | `null is null` |
-|false | `X is null` | `Y is null` | `null is not null` |
+|true  | `X is not null` | `Y is not null` | `null is null` | | | |
+|false | `X is null` | `Y is null` | `null is not null` | | | |
 
 `null = null` resulting in `null` is particular surprising but consistent with the usual SQL rules.  
 And again, as in SQL, the `IS` operator returns true for `X IS Y` even if both are `null`.
@@ -1500,7 +1528,8 @@ rather than an identity comparison.  With object `x == y` implies that
 `x` and `y` point to the very same object. With strings, it only means
 `x` and `y` hold the same text.
 
-The `IN` and `NOT IN` operators also work for text using the same value comparisons as above.
+The `IN` and `NOT IN` operators also work for text using the same value
+comparisons as above.
 
 Additionally there are special text comparison operators such as `LIKE`,
 `MATCH` and `GLOB`.  These comparisons are defined by SQLite.
@@ -1591,15 +1620,16 @@ cql_cleanup:
 
 ### Properties and Arrays
 
-CQL offers structured types in the form of cursors, but applications often need other
-structured types.  In the interest of not encumbering the language and runtime with whatever
-types given application might need, CQL offers a generic solution for properties and arrays where
-it will rewrite property and array syntax into function calls.
+CQL offers structured types in the form of cursors, but applications
+often need other structured types.  In the interest of not encumbering
+the language and runtime with whatever types given application might
+need, CQL offers a generic solution for properties and arrays where it
+will rewrite property and array syntax into function calls.
 
 #### Specific Properties on objects
 
-The rewrite depends on the object type, and in particular the "kind" designation.  So
-for instance consider:
+The rewrite depends on the object type, and in particular the "kind"
+designation.  So for instance consider:
 
 ```
 declare function create_container() create object<container> not null;
@@ -1613,9 +1643,10 @@ For this to work we need a function that makes the container:
 function create_container() create object<container>;
 ```
 
-Now `cont.x` _might_ mean field access in a cursor or table access in a `select` expression. So,
-when it is seen, `cont.x` will be resolved in the usual ways. If these fail then CQL will look
-for a function or procedure called `set_object_container_x` to do setting and `get_object_container_x`
+Now `cont.x` _might_ mean field access in a cursor or table access in a
+`select` expression. So, when it is seen, `cont.x` will be resolved in the
+usual ways. If these fail then CQL will look for a function or procedure
+called `set_object_container_x` to do setting and `get_object_container_x`
 to do getting.
 
 Like these maybe:
@@ -1631,42 +1662,50 @@ With those in place `cont.x := cont.x + 1` will be converted into this:
 CALL set_object_container_x(cont, get_object_container_x(cont) + 1);
 ```
 
-Importantly with this pattern you can control exactly which properties are available.
-missing properties will always give errors.  For instance `cont.y := 1;` results in `name not found 'y'`.
+Importantly with this pattern you can control exactly which properties
+are available.  missing properties will always give errors.  For instance
+`cont.y := 1;` results in `name not found 'y'`.
 
-This example uses `object` as the base type but it can be any type.  For instance if you have
-a type `integer<handle>` that identifies some storage based on the handle value, you can use the
-property pattern on this.  CQL does not care what the types are, so if property access is meaningful
-on your type then it can be supported.
+This example uses `object` as the base type but it can be any type.
+For instance if you have a type `integer<handle>` that identifies some
+storage based on the handle value, you can use the property pattern
+on this.  CQL does not care what the types are, so if property access
+is meaningful on your type then it can be supported.
 
-Additionally, the rewrite can happen in a SQL context or a native context.  The only difference is that
-in a SQL context you would need to create the appropriate SQLite UDF and declare it with
-`declare select function` rather than `declare function`.
+Additionally, the rewrite can happen in a SQL context or a native context.
+The only difference is that in a SQL context you would need to create
+the appropriate SQLite UDF and declare it with `declare select function`
+rather than `declare function`.
 
 #### Open Ended Properties
 
-There is a second choice for properties, where the properties are open ended.  That is where
-the property name can be anything. If instead of the property specific functions above, we had created
-these more general functions:
+There is a second choice for properties, where the properties are open
+ended.  That is where the property name can be anything. If instead
+of the property specific functions above, we had created these more
+general functions:
 
 ```
-declare function get_from_object_container(self object<container> not null, field text not null) int not null;
-declare proc set_in_object_container(self object<container> not null, field text not null, value int not null);
+declare function get_from_object_container(self object<container>! , field text!) int!;
+declare proc set_in_object_container(self object<container>!, field text!, value int!);
 ```
 
-These functions have the desired property name as a parameter (`field`) and so they can work with any field.
+These functions have the desired property name as a parameter (`field`)
+and so they can work with any field.
 
-With these in place, `cont.y` is no longer an error.  We get these transforms:
+With these in place, `cont.y` is no longer an error.  We get these
+transforms:
 
 ```
 CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1);
 CALL set_in_object_container(cont, 'y', 1);
 ```
 
-Nearly the same, but more generic.  This is great if the properties are open-ended. Perhaps for a dictionary
-or something representing JSON. Anything like that.
+Nearly the same, but more generic.  This is great if the properties
+are open-ended. Perhaps for a dictionary or something representing
+JSON. Anything like that.
 
-In fact, The property doesn't have to be a compile time constant.  If you use the array syntax:
+In fact, The property doesn't have to be a compile time constant.
+If you use the array syntax:
 
 ```
 cont['x'] := cont['x'] + 1;
@@ -1707,11 +1746,13 @@ CALL set_in_object_container(cont, 1, 2,
   get_from_object_container(cont, 5, 6));
 ```
 
-This is a very simple transform that allows for the creation of any array-like behavior you might want.
+This is a very simple transform that allows for the creation of any
+array-like behavior you might want.
 
 #### Notes On Implementation
 
-In addition to the function pattern shown above, you can use the "proc as func" form to get values, like so:
+In addition to the function pattern shown above, you can use the "proc
+as func" form to get values, like so:
 
 ```
 create proc get_from_object_container(self object<container>!, field text!, out value int!)
@@ -1720,27 +1761,34 @@ begin
 end;
 ```
 
-And with this form you could write all of the property management or array management in CQL directly.
+And with this form you could write all of the property management or
+array management in CQL directly.
 
-However, it's often the case that you want to use native data structures to hold your things-with-properties
-or your arrays.  If that's the case, you can write them in C as usual, using the normal interface types
-to CQL that are defined in `cqlrt.h`.  The exact functions you need to implement will be emitted
-into the header file output for C.  For Lua, things are even easier, just write matching Lua functions
-in Lua.  It's all primitives or dictionaries in Lua.
+However, it's often the case that you want to use native data structures
+to hold your things-with-properties or your arrays.  If that's the case,
+you can write them in C as usual, using the normal interface types to
+CQL that are defined in `cqlrt.h`.  The exact functions you need to
+implement will be emitted into the header file output for C.  For Lua,
+things are even easier, just write matching Lua functions in Lua.
+It's all primitives or dictionaries in Lua.
 
-In C you could also implement some or all of the property reading functions as macros. You could
-add these macros to your copy of `cqlrt.h` (it's designed to be changed) or you could emit them with
-`@echo c, "#define stuff\n";`
+In C you could also implement some or all of the property reading
+functions as macros. You could add these macros to your copy of `cqlrt.h`
+(it's designed to be changed) or you could emit them with `@echo c,
+"#define stuff\n";`
 
-Finally, the `no check` version of the functions or procedures can also be used.  This will let you
-use a var-arg list for instance in your arrays which might be interesting.  Variable indices can
-be used in very flexible array builder forms.
+Finally, the `no check` version of the functions or procedures can also
+be used.  This will let you use a var-arg list for instance in your
+arrays which might be interesting.  Variable indices can be used in very
+flexible array builder forms.
 
-Another interesting aspect of the `no check` version of the APIs is that the calling convention for such
-functions is a little different in C (in Lua it's the same).  In C the `no check` forms most common target
-is the `printf` function. But `printf` accepts C strings not CQL text objects.  This means any text argument
-must be converted to a normal C string before making the call.  But it also means that string literals
-pass through unchanged into the C!
+Another interesting aspect of the `no check` version of the APIs is that
+the calling convention for such functions is a little different in C (in
+Lua it's the same).  In C the `no check` forms most common target is the
+`printf` function. But `printf` accepts C strings not CQL text objects.
+This means any text argument must be converted to a normal C string
+before making the call.  But it also means that string literals pass
+through unchanged into the C!
 
 For instance:
 
@@ -1754,14 +1802,17 @@ becomes:
    printf("Hello world\n");
 ```
 
-So likewise, if your array or property getters are `no check` then `cont.x := 1;` becomes
-`set_in_object_container(cont, "x", 1)`.  Importantly the C string literal `"x"` will fold
-across any number of uses in your whole program, so there will only be one copy of the literal.
-This gives great economy for the flexible type case and it is actually why `no check` functions
-were added to the language, rounding out all the `no check` flavors.
+So likewise, if your array or property getters are `no check` then `cont.x
+:= 1;` becomes `set_in_object_container(cont, "x", 1)`.  Importantly the
+C string literal `"x"` will fold across any number of uses in your whole
+program, so there will only be one copy of the literal.  This gives great
+economy for the flexible type case and it is actually why `no check`
+functions were added to the language, rounding out all the `no check`
+flavors.
 
-So, if targeting C, consider using `no check` functions and procedures for your getters and setters
-for maximum economy.  If you also implement the functions on the C side as macros, or inline functions
-in your `cqlrt.h` path, then array and property access can be very economical.  There need
-not be any actual function calls by the time the code runs.
+So, if targeting C, consider using `no check` functions and procedures
+for your getters and setters for maximum economy.  If you also implement
+the functions on the C side as macros, or inline functions in your
+`cqlrt.h` path, then array and property access can be very economical.
+There need not be any actual function calls by the time the code runs.
 

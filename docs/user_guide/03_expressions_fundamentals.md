@@ -1486,22 +1486,25 @@ The object type has no value based comparison, so there is no `<`, `>` and so fo
 
 The following table is useful.  Let's suppose there are exactly two distinct objects 'X' and 'Y'
 
-|result|examples...|   |   |   |   |   |
-|:-----|:----------|:--|:--|:--|:--|:--|
-|true  |`X = X`|`X <> Y`|`Y = Y`|`Y <> X`| `X IN (X, Y)`    |`X NOT IN (Y)`|
-|false |`X = Y`|`X <> X`|`Y = X`|`Y <> Y`| `X NOT IN (X, Y)`| |
-|null  |`null = null`| ` X <> null`| `x = null`|`null <> null`|`Y <> null`| `y = null`|
-|true  | `X is not null` | `Y is not null` | `null is null` | | | |
-|false | `X is null` | `Y is null` | `null is not null` | | | |
+|result|`examples     `|`             `|`                `|`            `|`               `|`            `|
+|:----:|:-------------:|:-------------:|:----------------:|:------------:|:---------------:|:------------:|
+|true  |`X = X`        |`X <> Y`       |`Y = Y`           |`Y <> X`      |`X IN (X, Y)`    |`X NOT IN (Y)`|
+|false |`X = Y  `      |`X <> X`       |`Y = X`           |`Y <> Y`      |`X NOT IN (X, Y)`|              |
+|null  |`null = null`  |`X <> null`    |`x = null`        |`null <> null`|`Y <> null`      |`y = null`    |
+|true  |`X is not null`|`Y is not null`|`null is null`    |              |                 |              |
+|false |`X is null`    |`Y is null`    |`null is not null`|              |                 |              |
 
-`null = null` resulting in `null` is particular surprising but consistent with the usual SQL rules.  
-And again, as in SQL, the `IS` operator returns true for `X IS Y` even if both are `null`.
+`null = null` resulting in `null` is particular surprising but consistent
+with the usual SQL rules.  And again, as in SQL, the `IS` operator
+returns true for `X IS Y` even if both are `null`.
 
->NOTE: null-valued variables evaluate as above, however, the `NULL` literal generally yields errors
->if it is used strangely.  e.g. in `if x == NULL` you get an error, the result is always going to be
->`NULL` hence falsey.  This was almost certainly intended to be `if x IS NULL`.  Likewise, comparing
-> expressions that are known to be `NOT NULL` against null yields errors.  This is also true where
-> an expression has been inferred to be `NOT NULL` by control flow analysis.
+>NOTE: null-valued variables evaluate as above, however, the `NULL`
+>literal generally yields errors if it is used strangely.  e.g. in `if
+>x == NULL` you get an error, the result is always going to be `NULL`
+>hence falsey.  This was almost certainly intended to be `if x IS NULL`.
+>Likewise, comparing expressions that are known to be `NOT NULL` against
+>null yields errors.  This is also true where an expression has been
+>inferred to be `NOT NULL` by control flow analysis.
 
 ### `TEXT`
 
@@ -1512,8 +1515,8 @@ or else use a helper function with a suitable comparison mechanism.
 
 For text comparisons including equality:
 
-|result|cases|
-|:-----|:----|
+|result|`                                      cases                                      `|
+|:-----|:----------------------------------------------------------------------------------|
 |true  |if and only if both operands are not null and the comparison matches (using strcmp)|
 |false |if and only if  both operands are not null and the comparison does not match (using strcmp)|
 |null  |if and only if at least one operand is null|

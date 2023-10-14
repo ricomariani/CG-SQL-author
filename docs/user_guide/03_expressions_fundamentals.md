@@ -233,9 +233,17 @@ in cases like `SELECT` from different sources combined with `UNION ALL`
 >`NULL` before going to SQLite as the cast is uninteresting except for
 >the type information which SQLite doesn't need/use anyway.
 
-#### Other Considerations
+#### Boolean Literals
 
-There are no boolean literals other than the integers `0` and `1`.
+The boolean literals `TRUE` and `FALSE` (case insensitive) may be used
+freely.  These are the same as the normal literals `0` and `1` except
+they have type `BOOL`.  They mix with numbers in the usual ways with
+the usual promotion rules.
+
+>NOTE: even if the target language is Lua you can mix and match bools and
+>integers in CQL.  The compiler will emit casts if needed.
+
+#### Other Considerations
 
 The C pre-processor is often combined with CQL in which case the `_FILE_`
 and `_LINE_` directives may be used to create literals; they will be
@@ -1521,7 +1529,7 @@ For text comparisons including equality:
 |false |if and only if  both operands are not null and the comparison does not match (using strcmp)|
 |null  |if and only if at least one operand is null|
 
-EXAMPLE: `'x' < 'y'`  is true because `strcmp("x", "y") < 0`
+>EXAMPLE: `'x' < 'y'`  is true because `strcmp("x", "y") < 0`
 
 As with type `object`, the `IS` and `IS NOT` operators behave similarly to
 equality and inequality, but never produce a `null` result.  Strings have

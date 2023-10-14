@@ -932,7 +932,7 @@ statement.  In both cases the left side is a simple target and the right
 side is a general expression.  The expression is evaluated before the
 assignment.
 
-example:
+Example:
 
 ```sql
 SET x := 1 + 3 AND 4;  -- + before AND then :=

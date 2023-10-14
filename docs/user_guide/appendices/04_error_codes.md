@@ -399,7 +399,7 @@ Would provoke this error.  In this case the error would report that the problem 
 
 The referenced name is the name of a local or a global in the same scope as the name of a column.  This can lead to surprising results as it is not clear which name takes priority (previously the variable did rather than the column, now it's an error).
 
-example:
+Example:
 
 ```sql
 create proc foo(id integer)
@@ -4275,12 +4275,12 @@ However the nested fragment(s) cannot take any arguments. The inner fragment mus
 
 In order to use a shared fragment the compiler must see the full body of the fragment, this is
 because the fragment will be inlined into the SQL in which it appears.  As a consequence it
-makes no sense to try to apply the attribute to a procedure declaration.  Instead put the
-shared fragment you want to use somewhere where it can be #included in full.
+makes no sense to try to apply the attribute to a procedure declaration. 
 
-example error:
+Example:
 
 ```sql
+-- incorrect, the compiler needs to see the whole body of the shared fragment
 @attribute(cql:shared_fragment)
 declare proc x() (x integer);
 
@@ -4291,7 +4291,9 @@ begin
 end;
 ```
 
-Instead, include the entire body like so (this example is ultra simple).
+Instead provide the whole body of the fragment.
+
+Example:
 
 ```sql
 @attribute(cql:shared_fragment)

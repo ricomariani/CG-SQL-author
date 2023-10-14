@@ -220,6 +220,7 @@ Examples:
 ```
 
 #### The NULL literal
+
 The use of `NULL` always gives a nullable result however this literal is
 special in that it has no storage class. `NULL` is neither numeric nor
 string itself but rather mutates into whatever it is first combined with.
@@ -357,8 +358,8 @@ work on any numeric type and the literal null.  The supported operations
 include:
 
 `+`, `-`, `*`, `/`, `%`, `|`, `&`, `<<`, `>>`, `~`, `and`, `or`, `not`,
-`==`, `<=`, `>=`, `!=`, `<`, `>`, the `cast` operator and the `case`
-forms (including the `iif` function).  These are enough to make a lot of
+`==`, `<=`, `>=`, `!=`, `<`, `>`, the `CAST` operator and the `CASE`
+forms (including the `IIF` function).  These are enough to make a lot of
 very interesting expressions, all of which are evaluated at compile time.
 
 Constant folding was added to allow for rich `enum` expressions, but

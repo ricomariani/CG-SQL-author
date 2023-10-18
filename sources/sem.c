@@ -18729,11 +18729,18 @@ static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt
     symtab_delete(bind_info.names);
 
     if (info.missing_else) {
-      report_error(info.missing_else, "CQL0442: shared fragments with conditionals must include an else clause", proc_name);
-      record_error(misc_attrs);
-      record_error(stmt_list);
-      record_error(create_proc_stmt);
-      return;
+      Invariant(is_ast_if_stmt(info.missing_else));
+      ast_node *ast = info.missing_else;
+      EXTRACT_NOTNULL(if_alt, ast->right);
+
+      AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+      ast_node *select_nothing_ast = new_ast_select_nothing_stmt();
+      ast_node *stmt_list_ast = new_ast_stmt_list(select_nothing_ast, NULL);
+      if_alt->right = new_ast_else(stmt_list_ast);
+  
+      sem_select_nothing_stmt(select_nothing_ast);
+      
+      AST_REWRITE_INFO_RESET();
     }
 
     if (info.bad_statement_form) {

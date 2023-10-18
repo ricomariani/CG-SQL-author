@@ -3872,33 +3872,6 @@ There are no other valid options.
 
 -----
 
-### CQL0442: shared fragments with conditionals must include an else clause 'procedure_name'
-
-In shared fragment with conditionals (i.e. it has an IF statement at the top) the fragment
-must have an ELSE block so that it is guaranteed to create chunk of SQL text in its expansion.
-When no rows are required you can do so with something like:
-
-```
-IF ... THEN
-  ...
-ELSE
-   select 1 x, '2' y WHERE 0;
-END IF;
-```
-
-If the `ELSE` condition indicates that some join should not happen you might generate default values
-or NULLs for the join result like so:
-
-```
-IF ... THEN
-  ...
-ELSE
-  select input_stuff.*, NULL x, -1 y;
-END IF;
-```
-
------
-
 ### CQL0443: shared fragments with conditionals must have exactly one SELECT or WITH...SELECT in each statement list 'procedure_name'
 
 In a shared fragment with conditionals the top level statement is an "IF".  All of the statement lists in

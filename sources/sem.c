@@ -18732,15 +18732,21 @@ static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt
       Invariant(is_ast_if_stmt(info.missing_else));
       ast_node *ast = info.missing_else;
       EXTRACT_NOTNULL(if_alt, ast->right);
+      Invariant(if_alt->right == NULL); // our missing else
 
+      // The else clause is easy to add it's always in the same place in the AST
+      // We make a one statement statement list and plop it in.
       AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
       ast_node *select_nothing_ast = new_ast_select_nothing_stmt();
       ast_node *stmt_list_ast = new_ast_stmt_list(select_nothing_ast, NULL);
       if_alt->right = new_ast_else(stmt_list_ast);
-  
-      sem_select_nothing_stmt(select_nothing_ast);
-      
       AST_REWRITE_INFO_RESET();
+  
+      // better to do the analysis after the rewrite is closed
+      // as it happens this doesn't kick off a new rewrite but
+      // in general sem_* might rewrite so we want to be done with our
+      // edits before we resume semantic analysis
+      sem_select_nothing_stmt(select_nothing_ast);
     }
 
     if (info.bad_statement_form) {

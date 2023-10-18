@@ -345,11 +345,44 @@ entirely different between the branches removing unnecessary code,
 or swapping in a new experimental cache in your test environment, or
 anything like that.
 
+#### Conditionals without ELSE clauses
+When a condiitional is specified without an else clause, the fragment would return a result with no rows if none of the specified conditionals are truthy.
+
+For example:
+```sql
+[[shared_fragment]]
+PROC maybe_empty(cond BOOL NOT NULL)
+BEGIN
+  IF cond THEN
+    SELECT 1 a, 2 b, 3 c;
+  END IF;
+END;
+```
+
+Internally, this is actually equivalent to the following:
+```sql
+[[shared_fragment]]
+PROC maybe_empty(cond BOOL NOT NULL)
+BEGIN
+  IF cond THEN
+    SELECT 1 a, 2 b, 3 c;
+  ELSE
+    SELECT NOTHING;
+  END IF;
+END;
+```
+
+The `SELECT NOTHING` expands to the a query that returns no rows, like this:
+```sql
+SELECT 0,0,0 WHERE 0; -- number of columns match the query returned by the main conditional.
+```
+
+#### Summary
+
 The generalization is simply this:
 
 * instead of just one select statement there is one top level "IF" statement
 * each statement list of the IF must be exactly one select statement
-* there must be an ELSE clause
 * the select statements must be type compatible, just like in a normal procedure
 * any table parameters with the same name in different branches must have the same type
   * otherwise it would be impossible to provide a single actual table for those table parameters

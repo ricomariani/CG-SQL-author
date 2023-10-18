@@ -19815,25 +19815,25 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provi
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_conditional_no_else ()
+CREATE PROC conditional_no_else ()
 BEGIN
   IF 1 THEN
     SELECT 1 AS x;
+  ELSE
+    SELECT NOTHING;
   END IF;
 END;
 
-test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
-
-  {stmt_and_attr}: err
-  | {misc_attrs}: err
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
   | | {misc_attr}
   |   | {dot}
   |     | {name cql}
   |     | {name shared_fragment}
-  | {create_proc_stmt}: err
-    | {name bogus_conditional_no_else}: err
+  | {create_proc_stmt}: conditional_no_else: { x: integer notnull } dml_proc
+    | {name conditional_no_else}: conditional_no_else: { x: integer notnull } dml_proc
     | {proc_params_stmts}
-      | {stmt_list}: err
+      | {stmt_list}: ok
         | {if_stmt}: integer notnull
           | {cond_action}: integer notnull
           | | {int 1}: integer notnull
@@ -19855,6 +19855,9 @@ test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0442: shared fragments with con
           |       | {select_limit}
           |         | {select_offset}
           | {if_alt}: ok
+            | {else}
+              | {stmt_list}
+                | {select_nothing_stmt}: conditional_no_else: { x: integer notnull } dml_proc
 
 The statement ending at line XXXX
 

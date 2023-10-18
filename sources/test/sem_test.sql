@@ -5299,12 +5299,12 @@ select * from (call a_shared_frag(1, 2));
 -- +1 error:
 select * from (call a_shared_frag());
 
--- TEST: create a conditional fragment with no else
--- + {create_proc_stmt}: err
--- + error: % shared fragments with conditionals must include an else clause 'bogus_conditional_no_else'
--- +1 error:
+-- TEST: a conditional shared fragment without an else clause is equivalent to
+-- putting "select nothing" in an else clause.
+-- + {select_nothing_stmt}: conditional_no_else: { x: integer notnull }
+-- - error
 @attribute(cql:shared_fragment)
-create proc bogus_conditional_no_else()
+create proc conditional_no_else()
 begin
   if 1 then
     select 1 x;

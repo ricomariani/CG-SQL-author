@@ -339,3 +339,46 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   bprintf(output, temp_output.ptr);
   CHARBUF_CLOSE(temp_output);
 }
+
+cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
+  Contract(qstr);
+  Contract(qstr[0] == '`');
+  uint32_t len = strlen(qstr);
+  Contract(len > 2);  // `x` is the smallest
+  Contract(qstr[len-1] == '`');
+  uint32_t used = output->used;
+
+  bool_t used_hex = false;
+  len--;
+  uint32_t i;
+  for (i = 1; i < len; i++) {
+    char ch = qstr[i];
+    if (
+      (ch >= 'a' && ch <= 'z') ||
+      (ch >= 'A' && ch <= 'Z' && ch != 'X') ||
+      (ch >= '0' && ch <= '9') ||
+      ch == '_') {
+        bputc(output, qstr[i]);
+        continue;
+    }
+
+    if (qstr[i] == '`') {
+      // the string is known to be well formed!
+      Contract(qstr[i+1] == '`');
+      i++;
+    }
+
+    bputc(output, 'X');
+    emit_hex_digit(ch >> 4, output);
+    emit_hex_digit(ch & 0xf, output);
+    used_hex = true;
+  }
+
+  if (used_hex) {
+    bputc(output, '#');
+    bputc(output, '$');
+    memmove(output->ptr + used + 1, output->ptr + used - 1, output->used - used - 2);
+    output->ptr[used-1] = 'X';
+    output->ptr[used] = '_';
+  }
+}

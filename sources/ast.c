@@ -187,7 +187,7 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
   sast->lineno = yylineno;
   sast->filename = current_file;
   sast->sem = NULL;
-  sast->cstr_literal = false;
+  sast->str_type = STR_SQL;
   return (ast_node *)sast;
 }
 
@@ -213,7 +213,7 @@ cql_noexport ast_node *new_ast_blob(CSTR value) {
   sast->lineno = yylineno;
   sast->filename = current_file;
   sast->sem = NULL;
-  sast->cstr_literal = false;
+  sast->str_type = STR_SQL;
   return (ast_node *)sast;
 }
 
@@ -261,7 +261,18 @@ cql_noexport CSTR convert_cstrlit(CSTR cstr) {
 cql_noexport ast_node *new_ast_cstr(CSTR value) {
   value = convert_cstrlit(value);
   str_ast_node *sast = (str_ast_node *)new_ast_str(value);
-  sast->cstr_literal = true;
+  sast->str_type = STR_CSTR;
+  return (ast_node *)sast;
+}
+
+cql_noexport ast_node *new_ast_qstr(CSTR value) {
+  CHARBUF_OPEN(encoded);
+    cg_encode_qstr(&encoded, value);
+    value = Strdup(encoded.ptr);
+  CHARBUF_CLOSE(encoded);
+
+  str_ast_node *sast = (str_ast_node *)new_ast_str(value);
+  sast->str_type = STR_QSTR;
   return (ast_node *)sast;
 }
 

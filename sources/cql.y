@@ -151,7 +151,7 @@ static void cql_reset_globals(void);
   char *sval;
 }
 
-%token <sval> ID TRUE_ "TRUE" FALSE_ "FALSE"
+%token <sval> ID QID TRUE_ "TRUE" FALSE_ "FALSE"
 %token <sval> STRLIT CSTRLIT BLOBLIT
 %token <sval> INTLIT
 %token <ival> BOOL_ "BOOL"
@@ -876,6 +876,7 @@ create_index_stmt:
 
 name:
   ID  { $name = new_ast_str($ID); }
+  | QID { $name = new_ast_qstr($QID); }
   | TEXT  { $name = new_ast_str("text"); }
   | TRIGGER  { $name = new_ast_str("trigger"); }
   | ROWID  { $name = new_ast_str("rowid"); }
@@ -3047,7 +3048,7 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   // this just forces the literal to be echoed as a C literal
   // so that it is prettier in the echoed output, otherwise no difference
   // all literals are stored in SQL format.
-  ((str_ast_node *)lit)->cstr_literal = true;
+  ((str_ast_node *)lit)->str_type = STR_CSTR;
 
   CHARBUF_CLOSE(result);
   CHARBUF_CLOSE(tmp);

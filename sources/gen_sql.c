@@ -981,7 +981,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   if (is_strlit(ast)) {
     str_ast_node *asts = (str_ast_node *)ast;
-    if (!asts->cstr_literal || for_sqlite()) {
+    if (asts->str_type != STR_CSTR || for_sqlite()) {
       // Note: str is the lexeme, so it is either still quoted and escaped
       // or if it was a c string literal it was already normalized to SQL form.
       // In both cases we can just print.

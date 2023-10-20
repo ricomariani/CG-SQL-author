@@ -161,6 +161,10 @@ typedef struct int_ast_node {
   int64_t value;
 } int_ast_node;
 
+#define STR_SQL 0
+#define STR_CSTR 1
+#define STR_QSTR 2
+
 typedef struct str_ast_node {
   const char *_Nonnull type;
   struct sem_node *_Nullable sem;
@@ -168,7 +172,7 @@ typedef struct str_ast_node {
   int32_t lineno;
   CSTR _Nonnull filename;
   const char *_Nullable value;
-  bool_t cstr_literal;
+  uint8_t str_type;
 } str_ast_node;
 
 typedef struct num_ast_node {
@@ -232,6 +236,7 @@ cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull v
 cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(const char *_Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr(const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_blob(const char *_Nonnull value);
 
 cql_noexport bool_t is_ast_int(ast_node *_Nullable node);

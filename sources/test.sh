@@ -1097,7 +1097,7 @@ query_plan_test() {
   on_diff_exit cg_test_query_plan.out
 
   echo build query plan c code
-  if ! ${CQL} --test --dev --cg "${OUT_DIR}/query_plan.h" "${OUT_DIR}/query_plan.c" --in "${OUT_DIR}/cg_test_query_plan.out" 2>"${OUT_DIR}/query_plan_print.err"
+  if ! ${CQL} --test --dev --format_table_alias_for_eqp --cg "${OUT_DIR}/query_plan.h" "${OUT_DIR}/query_plan.c" --in "${OUT_DIR}/cg_test_query_plan.out" 2>"${OUT_DIR}/query_plan_print.err"
   then
     echo "ERROR:"
     cat "${OUT_DIR}/query_plan_print.err"
@@ -1161,6 +1161,7 @@ query_plan_test() {
   fi
 
   echo compile empty query plan code
+  rm ${OUT_DIR}/query_plan.o # Make doesn't do a clean build automatically for some reason...
   if ! do_make query_plan_test
   then
     echo build failed

@@ -1,6 +1,6 @@
 {
   "alerts": {
-    "tableScanViolation": "T1(2), T2(4)",
+    "tableScanViolation": "T1(6), T2(7), FOO(5)",
     "tempBTreeViolation": "#1(1)"
   },
   "plans": [
@@ -25,70 +25,78 @@
     },
     {
       "id": 3,
-      "query": "UPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT NAME\n  FROM t3)",
+      "query": "UPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT T.NAME\n  FROM t3 AS T)",
       "stats": {
         "scan": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH t1 USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN t3"
+      "plan": "QUERY PLAN\n|..SEARCH t1 USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t3 AS T"
     },
     {
       "id": 4,
-      "query": "WITH\nsome_cte (id, name) AS (SELECT 1 AS id, 'Irene' AS name)\nUPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT name\n  FROM some_cte)",
-      "stats": {
-        "scan": 2,
-        "searchUsingCovering": 1
-      },
-      "plan": "QUERY PLAN\n|..SEARCH t1 USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 2\n   |..CO-ROUTINE some_cte\n      |..SCAN CONSTANT ROW\n   |..SCAN some_cte"
-    },
-    {
-      "id": 5,
-      "query": "DELETE FROM t1 WHERE name IN (SELECT t2.name\n  FROM t2\n  INNER JOIN t3 USING (name))",
+      "query": "WITH\nsome_cte (id, name) AS (SELECT T.*\n  FROM t2 AS T)\nUPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT name\n  FROM some_cte)",
       "stats": {
         "scan": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH t1 USING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN t2\n   |..SEARCH t3 USING AUTOMATIC COVERING INDEX (name=?)"
+      "plan": "QUERY PLAN\n|..SEARCH t1 USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS T"
+    },
+    {
+      "id": 5,
+      "query": "UPDATE t1\nSET id = other_table.id,\nname = other_table.name FROM (SELECT foo.*\n  FROM t2 AS foo\nLIMIT 1) AS other_table",
+      "stats": {
+        "scan": 3
+      },
+      "plan": "QUERY PLAN\n|..MATERIALIZE other_table\n   |..SCAN TABLE t2 AS foo\n|..SCAN other_table\n|..SCAN t1"
     },
     {
       "id": 6,
-      "query": "WITH\nsome_cte (name) AS (SELECT t2.name\n  FROM t2\n  INNER JOIN t3 USING (id))\nDELETE FROM t1 WHERE name NOT IN (SELECT *\n  FROM some_cte)",
+      "query": "DELETE FROM t1 WHERE name IN (SELECT foo.name\n  FROM t2 AS foo\n  INNER JOIN t3 USING (name))",
+      "stats": {
+        "scan": 1,
+        "searchUsingCovering": 1
+      },
+      "plan": "QUERY PLAN\n|..SEARCH t1 USING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t2 AS foo\n   |..SEARCH t3 USING AUTOMATIC COVERING INDEX (name=?)"
+    },
+    {
+      "id": 7,
+      "query": "WITH\nsome_cte (name) AS (SELECT foo.name\n  FROM t2 AS foo\n  INNER JOIN t3 USING (id))\nDELETE FROM t1 WHERE name NOT IN (SELECT *\n  FROM some_cte)",
       "stats": {
         "scan": 2,
         "search": 1
       },
-      "plan": "QUERY PLAN\n|..SCAN t1\n|..LIST SUBQUERY 2\n   |..SCAN t2\n   |..SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?)"
-    },
-    {
-      "id": 7,
-      "query": "INSERT INTO t1(id, name) SELECT *\n  FROM t2\nUNION ALL\nSELECT *\n  FROM t3",
-      "stats": {
-        "scan": 2
-      },
-      "plan": "QUERY PLAN\n|..COMPOUND QUERY\n   |..LEFT-MOST SUBQUERY\n      |..SCAN t2\n   |..UNION ALL\n      |..SCAN t3"
+      "plan": "QUERY PLAN\n|..SCAN t1\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS foo\n   |..SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?)"
     },
     {
       "id": 8,
-      "query": "WITH\nsome_cte (id, name) AS (SELECT 1, 'x')\nINSERT INTO t1(id, name) SELECT *\n  FROM some_cte",
+      "query": "INSERT INTO t1(id, name) SELECT foo.*\n  FROM t2 AS foo\nUNION ALL\nSELECT bar.*\n  FROM t3 AS bar",
       "stats": {
         "scan": 2
       },
-      "plan": "QUERY PLAN\n|..CO-ROUTINE some_cte\n   |..SCAN CONSTANT ROW\n|..SCAN some_cte"
+      "plan": "QUERY PLAN\n|..COMPOUND QUERY\n   |..LEFT-MOST SUBQUERY\n      |..SCAN TABLE t2 AS foo\n   |..UNION ALL\n      |..SCAN TABLE t3 AS bar"
     },
     {
       "id": 9,
+      "query": "WITH\nsome_cte (id, name) AS (SELECT T.*\n  FROM t2 AS T)\nINSERT INTO t1(id, name) SELECT *\n  FROM some_cte",
+      "stats": {
+        "scan": 1
+      },
+      "plan": "QUERY PLAN\n|..SCAN TABLE t2 AS T"
+    },
+    {
+      "id": 10,
       "query": "BEGIN",
       "stats": {},
       "plan": "QUERY PLAN"
     },
     {
-      "id": 10,
+      "id": 11,
       "query": "INSERT INTO t1(id, name) VALUES(1, 'Irene')\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u00e2\u0080\u00a2 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
       "stats": {},
       "plan": "QUERY PLAN"
     },
     {
-      "id": 11,
+      "id": 12,
       "query": "WITH\nsome_cte (id, name) AS (SELECT 1, 'Irene')\nINSERT INTO t1(id, name) SELECT *\n  FROM some_cte\n  WHERE id = 1\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u00e2\u0080\u00a2 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
       "stats": {
         "scan": 2
@@ -96,13 +104,13 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE some_cte\n   |..SCAN CONSTANT ROW\n|..SCAN some_cte"
     },
     {
-      "id": 12,
+      "id": 13,
       "query": "COMMIT",
       "stats": {},
       "plan": "QUERY PLAN"
     },
     {
-      "id": 13,
+      "id": 14,
       "query": "DROP TABLE IF EXISTS t1",
       "stats": {
         "scan": 4
@@ -110,7 +118,7 @@
       "plan": "QUERY PLAN\n|..SCAN main.sqlite_master\n|..SCAN main.sqlite_master\n|..SCAN main.sqlite_master\n|..SCAN main.sqlite_master"
     },
     {
-      "id": 14,
+      "id": 15,
       "query": "DROP VIEW my_view",
       "stats": {
         "scan": 1
@@ -118,7 +126,7 @@
       "plan": "QUERY PLAN\n|..SCAN main.sqlite_master"
     },
     {
-      "id": 15,
+      "id": 16,
       "query": "DROP INDEX it1",
       "stats": {
         "scan": 2
@@ -126,7 +134,7 @@
       "plan": "QUERY PLAN\n|..SCAN main.sqlite_master\n|..SCAN main.sqlite_master"
     },
     {
-      "id": 16,
+      "id": 17,
       "query": "WITH\nsome_cte (name) AS (SELECT t2.name\n  FROM t2\n  INNER JOIN t3 USING (id))\nSELECT *\n  FROM some_cte",
       "stats": {
         "scan": 1,
@@ -135,7 +143,7 @@
       "plan": "QUERY PLAN\n|..SCAN t2\n|..SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?)"
     },
     {
-      "id": 17,
+      "id": 18,
       "query": "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\n  FROM t1",
       "stats": {
         "scan": 1
@@ -143,7 +151,7 @@
       "plan": "QUERY PLAN\n|..SCAN t1"
     },
     {
-      "id": 18,
+      "id": 19,
       "query": "SELECT *\n  FROM scan_ok",
       "stats": {
         "scan": 1
@@ -151,7 +159,7 @@
       "plan": "QUERY PLAN\n|..SCAN scan_ok"
     },
     {
-      "id": 19,
+      "id": 20,
       "query": "SELECT 1 AS n\n  FROM foo_,\n_foo",
       "stats": {
         "scan": 2
@@ -159,7 +167,7 @@
       "plan": "QUERY PLAN\n|..SCAN foo_\n|..SCAN _foo"
     },
     {
-      "id": 20,
+      "id": 21,
       "query": "SELECT ifnull(nullable(1), 42) AS nullable_result",
       "stats": {
         "scan": 1
@@ -167,20 +175,12 @@
       "plan": "QUERY PLAN\n|..SCAN CONSTANT ROW"
     },
     {
-      "id": 21,
+      "id": 22,
       "query": "WITH\nI (id) AS (CALL ids_from_string('1')),\nE (id) AS (CALL ids_from_string('1'))\nSELECT C.*\n  FROM C\n  WHERE C.id IN (SELECT *\n  FROM I) AND C.id NOT IN (SELECT *\n  FROM E)",
       "stats": {
         "scan": 7
       },
       "plan": "QUERY PLAN\n|..SCAN C\n|..LIST SUBQUERY 9\n   |..CO-ROUTINE splitter\n      |..SETUP\n         |..SCAN CONSTANT ROW\n      |..RECURSIVE STEP\n         |..SCAN splitter\n   |..SCAN splitter\n|..LIST SUBQUERY 10\n   |..CO-ROUTINE splitter\n      |..SETUP\n         |..SCAN CONSTANT ROW\n      |..RECURSIVE STEP\n         |..SCAN splitter\n   |..SCAN splitter"
-    },
-    {
-      "id": 22,
-      "query": "WITH\nfrag (val) AS (CALL frag(1))\nSELECT *\n  FROM frag",
-      "stats": {
-        "scan": 2
-      },
-      "plan": "QUERY PLAN\n|..CO-ROUTINE frag\n   |..SCAN CONSTANT ROW\n|..SCAN frag"
     },
     {
       "id": 23,
@@ -192,20 +192,28 @@
     },
     {
       "id": 24,
+      "query": "WITH\nfrag (val) AS (CALL frag(1))\nSELECT *\n  FROM frag",
+      "stats": {
+        "scan": 2
+      },
+      "plan": "QUERY PLAN\n|..CO-ROUTINE frag\n   |..SCAN CONSTANT ROW\n|..SCAN frag"
+    },
+    {
+      "id": 25,
       "query": "SELECT one.id, one.t, one.b, one.r, two.id AS id_, two.t AS t_, two.b AS b_, two.r AS r_\n  FROM select_virtual_table AS one,\nselect_virtual_table AS two",
       "stats": {
         "scan": 2
       },
-      "plan": "QUERY PLAN\n|..SCAN one\n|..SCAN two"
-    },
-    {
-      "id": 25,
-      "query": "WITH\nbacked (rowid, id, name) AS (CALL _backed())\nSELECT *\n  FROM backed\n  WHERE name = 'x'",
-      "stats": {},
-      "plan": "QUERY PLAN\n|..SEARCH T USING INDEX backing_index (<expr>=?)"
+      "plan": "QUERY PLAN\n|..SCAN TABLE select_virtual_table AS one\n|..SCAN TABLE select_virtual_table AS two"
     },
     {
       "id": 26,
+      "query": "WITH\nbacked (rowid, id, name) AS (CALL _backed())\nSELECT *\n  FROM backed\n  WHERE name = 'x'",
+      "stats": {},
+      "plan": "QUERY PLAN\n|..SEARCH TABLE backing AS T USING INDEX backing_index (<expr>=?)"
+    },
+    {
+      "id": 27,
       "query": "SELECT CAST(1L AS INTEGER)",
       "stats": {
         "scan": 1
@@ -213,7 +221,7 @@
       "plan": "QUERY PLAN\n|..SCAN CONSTANT ROW"
     },
     {
-      "id": 27,
+      "id": 28,
       "query": "SELECT CAST(1.0 AS INTEGER)",
       "stats": {
         "scan": 1
@@ -221,7 +229,7 @@
       "plan": "QUERY PLAN\n|..SCAN CONSTANT ROW"
     },
     {
-      "id": 28,
+      "id": 29,
       "query": "SELECT CAST(1 AS REAL)",
       "stats": {
         "scan": 1
@@ -229,7 +237,7 @@
       "plan": "QUERY PLAN\n|..SCAN CONSTANT ROW"
     },
     {
-      "id": 29,
+      "id": 30,
       "query": "SELECT CAST(true AS INTEGER)",
       "stats": {
         "scan": 1
@@ -237,7 +245,7 @@
       "plan": "QUERY PLAN\n|..SCAN CONSTANT ROW"
     },
     {
-      "id": 30,
+      "id": 31,
       "query": "SELECT *\n  FROM (CALL notnull_int_frag(1))",
       "stats": {
         "scan": 2
@@ -245,7 +253,7 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE _ns_\n   |..SCAN CONSTANT ROW\n|..SCAN _ns_"
     },
     {
-      "id": 31,
+      "id": 32,
       "query": "SELECT stuff() AS x, notnull_int_frag(1) AS y, T1.*\n  FROM (CALL notnull_int_frag(1 + 1)) AS T1",
       "stats": {
         "scan": 4
@@ -253,7 +261,7 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE _ns_\n   |..SCAN CONSTANT ROW\n|..SCAN _ns_\n|..SCALAR SUBQUERY 2\n   |..CO-ROUTINE (subquery-1)\n      |..SCAN CONSTANT ROW\n   |..SCAN (subquery-1)"
     },
     {
-      "id": 32,
+      "id": 33,
       "query": "SELECT *\n  FROM (CALL simple_blob_fragment(nullable(trivial_blob())))",
       "stats": {
         "scan": 2
@@ -261,7 +269,7 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE _ns_\n   |..SCAN CONSTANT ROW\n|..SCAN _ns_"
     },
     {
-      "id": 33,
+      "id": 34,
       "query": "SELECT *\n  FROM (CALL simple_object_fragment(nullable(trivial_object())))",
       "stats": {
         "scan": 2
@@ -269,7 +277,7 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE _ns_\n   |..SCAN CONSTANT ROW\n|..SCAN _ns_"
     },
     {
-      "id": 34,
+      "id": 35,
       "query": "WITH\nqp_take_blob (inner_a) AS (CALL qp_take_blob(nullable(query_plan_trivial_blob)))\nSELECT *\n  FROM qp_take_blob",
       "stats": {
         "scan": 2
@@ -277,7 +285,7 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE qp_take_inner_blob\n   |..SCAN CONSTANT ROW\n|..SCAN qp_take_inner_blob"
     },
     {
-      "id": 35,
+      "id": 36,
       "query": "WITH\nqp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(nullable(query_plan_trivial_blob)))\nSELECT *\n  FROM qp_take_inner_blob",
       "stats": {
         "scan": 2
@@ -285,7 +293,7 @@
       "plan": "QUERY PLAN\n|..CO-ROUTINE qp_take_inner_blob\n   |..SCAN CONSTANT ROW\n|..SCAN qp_take_inner_blob"
     },
     {
-      "id": 36,
+      "id": 37,
       "query": "SELECT nullable(query_plan_trivial_blob) AS foo",
       "stats": {
         "scan": 1
@@ -293,12 +301,37 @@
       "plan": "QUERY PLAN\n|..SCAN CONSTANT ROW"
     },
     {
-      "id": 37,
+      "id": 38,
       "query": "SELECT *\n  FROM (CALL outer_frag())",
       "stats": {
         "scan": 2
       },
       "plan": "QUERY PLAN\n|..CO-ROUTINE _ns_\n   |..SCAN CONSTANT ROW\n|..SCAN _ns_"
+    },
+    {
+      "id": 39,
+      "query": "SELECT alias.*\n  FROM t1 AS alias",
+      "stats": {
+        "scan": 1
+      },
+      "plan": "QUERY PLAN\n|..SCAN TABLE t1 AS alias"
+    },
+    {
+      "id": 40,
+      "query": "SELECT alias.rowid\n  FROM t1 AS alias",
+      "stats": {
+        "scan": 1
+      },
+      "plan": "QUERY PLAN\n|..SCAN TABLE t1 AS alias"
+    },
+    {
+      "id": 41,
+      "query": "SELECT view.*\n  FROM my_view_using_table_alias AS view",
+      "stats": {
+        "scan": 1,
+        "search": 1
+      },
+      "plan": "QUERY PLAN\n|..SCAN TABLE t1 AS foo\n|..SEARCH TABLE t2 AS bar USING INTEGER PRIMARY KEY (rowid=?)"
     }
   ]
 }

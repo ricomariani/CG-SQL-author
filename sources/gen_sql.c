@@ -1069,6 +1069,9 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     // special case for rewritten arguments, hide the "ARGUMENTS." stuff
     gen_printf("%s", ast->sem->name);
   }
+  else if (options.format_table_alias_for_eqp && get_inserted_table_alias_string_override(ast)) {
+    gen_printf("%s.%s", get_inserted_table_alias_string_override(ast), right);
+  }
   else {
     gen_printf("%s.%s", left, right);
   }
@@ -1978,6 +1981,15 @@ static void gen_as_alias(ast_node *ast) {
   gen_printf(" AS %s", name);
 }
 
+static void gen_as_alias_with_override(ast_node *ast) {
+  Contract(options.format_table_alias_for_eqp);
+
+  CSTR name = get_inserted_table_alias_string_override(ast);
+  Invariant(name);
+
+  gen_printf(" AS %s", name);
+}
+
 static void gen_select_expr(ast_node *ast) {
   Contract(is_ast_select_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -2130,7 +2142,11 @@ static void gen_table_or_subquery(ast_node *ast) {
 
   EXTRACT(opt_as_alias, ast->right);
   if (opt_as_alias) {
-    gen_as_alias(opt_as_alias);
+    if (get_inserted_table_alias_string_override(opt_as_alias)) {
+      gen_as_alias_with_override(opt_as_alias);
+    } else {
+      gen_as_alias(opt_as_alias);
+    }
   }
 }
 
@@ -4679,6 +4695,11 @@ static void gen_blob_update_val_stmt(ast_node *ast) {
   gen_printf("@BLOB_UPDATE_VAL %s%s", name, offset ? " OFFSET" : "");
 }
 
+static void gen_keep_table_name_in_aliases_stmt(ast_node *ast) {
+  Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
+  gen_printf("@KEEP_TABLE_NAME_IN_ALIASES");
+}
+
 static void gen_explain_stmt(ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
   EXTRACT_OPTION(query_plan, ast->left);
@@ -4874,6 +4895,8 @@ cql_noexport void gen_init() {
   STMT_INIT(blob_create_val_stmt);
   STMT_INIT(blob_update_key_stmt);
   STMT_INIT(blob_update_val_stmt);
+
+  STMT_INIT(keep_table_name_in_aliases_stmt);
 
   EXPR_INIT(table_star, gen_expr_table_star, "T.*", EXPR_PRI_ROOT);
   EXPR_INIT(star, gen_expr_star, "*", EXPR_PRI_ROOT);

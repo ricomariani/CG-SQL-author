@@ -78,3 +78,6 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
   emits rowset accessors using shared type getters instead of individual functions
   this makes them more interoperable if they share columns
   used with --rt c
+--format_table_alias_for_eqp
+  rename any table aliases used in SQL queries so they include the name of the actual table
+  being aliased. This is useful when generating query plans with cg_query_plan.

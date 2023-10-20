@@ -315,6 +315,7 @@ TYPE_CHECK                   { return TYPE_CHECK; }
 @SCHEMA_UPGRADE_VERSION      { return AT_SCHEMA_UPGRADE_VERSION; }
 @SENSITIVE                   { return AT_SENSITIVE; }
 @UNSUB                       { return AT_UNSUB; }
+@KEEP_TABLE_NAME_IN_ALIASES  { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
 ALTER                        { return ALTER; }
 RENAME                       { return RENAME; }
 COLUMN                       { return COLUMN; }

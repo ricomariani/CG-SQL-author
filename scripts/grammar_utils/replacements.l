@@ -248,6 +248,7 @@ AT_SCHEMA_UPGRADE_SCRIPT              { put_quoted("@SCHEMA_UPGRADE_SCRIPT"); }
 AT_SCHEMA_UPGRADE_VERSION             { put_quoted("@SCHEMA_UPGRADE_VERSION"); }
 AT_SENSITIVE                          { put_quoted("@SENSITIVE"); }
 AT_UNSUB                              { put_quoted("@UNSUB"); }
+AT_KEEP_TABLE_NAME_IN_ALIASES         { put_quoted("@KEEP_TABLE_NAME_IN_ALIASES"); }
 CONTEXT_COLUMN                        { put_quoted("CONTEXT COLUMN"); }
 CONTEXT_TYPE                          { put_quoted("CONTEXT TYPE"); }
 CURRENT_ROW                           { put_quoted("CURRENT ROW"); }

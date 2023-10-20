@@ -271,6 +271,7 @@ cql_noexport bool_t is_proc_suppress_getters(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_emit_setters(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_shared_fragment(ast_node *ast);
 cql_noexport bool_t is_alias_ast(ast_node *ast);
+cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *ast);
 
 cql_noexport CSTR sem_get_name(ast_node *ast);
 cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);

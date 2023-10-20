@@ -245,6 +245,7 @@ static void cql_reset_globals(void);
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
+%token AT_KEEP_TABLE_NAME_IN_ALIASES
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 
 /* ddl stuff */
@@ -334,6 +335,7 @@ static void cql_reset_globals(void);
 %type <aval> blob_get_key_type_stmt blob_get_val_type_stmt blob_get_key_stmt blob_get_val_stmt
 %type <aval> blob_create_key_stmt blob_create_val_stmt blob_update_key_stmt blob_update_val_stmt
 %type <aval> opt_use_offset
+%type <aval> keep_table_name_in_aliases_stmt
 
 %start program
 
@@ -510,6 +512,7 @@ any_stmt:
   | with_insert_stmt
   | with_update_stmt
   | with_upsert_stmt
+  | keep_table_name_in_aliases_stmt
   ;
 
 explain_stmt:
@@ -2355,6 +2358,8 @@ blob_update_val_stmt:
   AT_BLOB_UPDATE_VAL name opt_use_offset { $blob_update_val_stmt = new_ast_blob_update_val_stmt($name, $opt_use_offset); }
   ;
 
+keep_table_name_in_aliases_stmt:
+  AT_KEEP_TABLE_NAME_IN_ALIASES { $keep_table_name_in_aliases_stmt = new_ast_keep_table_name_in_aliases_stmt(); }
 %%
 
 #ifndef _MSC_VER
@@ -2525,6 +2530,8 @@ static void parse_cmd(int argc, char **argv) {
       options.generate_exports = 1;
     } else if (strcmp(arg, "--generate_type_getters") == 0) {
       options.generate_type_getters = 1;
+    } else if (strcmp(arg, "--format_table_alias_for_eqp") == 0) {
+      options.format_table_alias_for_eqp = 1;
     } else if (strcmp(arg, "--cg") == 0) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;
@@ -2964,6 +2971,9 @@ static void cql_usage() {
     "  emits rowset accessors using shared type getters instead of individual functions\n"
     "  this makes them more interoperable if they share columns\n"
     "  used with --rt c\n"
+    "--format_table_alias_for_eqp\n"
+    "  rename any table aliases used in SQL queries so they include the name of the actual table\n"
+    "  being aliased. This is useful when generating query plans with cg_query_plan.\n"
     );
 }
 

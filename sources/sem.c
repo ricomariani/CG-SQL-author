@@ -383,6 +383,9 @@ static bool_t in_shared_fragment_call;
 // If the current context is a trigger statement list
 static bool_t in_trigger;
 
+// If the current context is a trigger statement when clause
+static bool_t in_trigger_when_expr;
+
 // If the current context is inside of a switch statement
 static bool_t in_switch;
 
@@ -13988,9 +13991,15 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   }
 
   if (when_expr) {
+    Invariant(!in_trigger_when_expr);
+    in_trigger_when_expr = 1;
+
     PUSH_JOIN(when_scope, jptr);
     sem_numeric_expr(when_expr, NULL, "WHEN", SEM_EXPR_CONTEXT_WHERE);
     POP_JOIN();
+
+    Invariant(in_trigger_when_expr);
+    in_trigger_when_expr = 0;
 
     if (is_error(when_expr)) {
       record_error(ast);
@@ -25173,6 +25182,7 @@ cql_noexport void sem_cleanup() {
   has_dml = false;
   in_shared_fragment_call = false;
   in_trigger = false;
+  in_trigger_when_expr = false;
   in_switch = false;
   in_upsert = false;
   in_upsert_rewrite = false;

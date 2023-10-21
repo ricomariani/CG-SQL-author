@@ -405,6 +405,11 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
 
+#define EXTRACT_STR_NODE(name, node) \
+  Contract(node); \
+  Contract(is_ast_str(node)); \
+  str_ast_node *name = (str_ast_node *)(node)
+
 #define EXTRACT_BLOBTEXT(name, node) \
   Contract(is_ast_blob(node)); \
   const char *name = ((str_ast_node *)(node))->value; \

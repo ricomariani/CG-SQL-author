@@ -140,8 +140,14 @@ cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
 }
 
 static void gen_name(ast_node *ast) {
+  EXTRACT_STR_NODE(sast, ast);
   EXTRACT_STRING(name, ast);
-  gen_printf("%s", name);
+  if (sast->str_type == STR_QSTR) {
+    cg_decode_qstr(output, name);
+  }
+  else {
+    gen_printf("%s", name);
+  }
 }
 
 static void gen_name_list(ast_node *list) {
@@ -283,7 +289,7 @@ void gen_data_type(ast_node *ast) {
       }
     }
     if (!suppress) {
-      gen_printf("%s", name);
+      gen_name(ast);
     }
     return;
   }
@@ -329,8 +335,8 @@ static void gen_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
-  EXTRACT_STRING(index_name, create_index_on_list->left);
-  EXTRACT_STRING(table_name, create_index_on_list->right);
+  EXTRACT_ANY_NOTNULL(index_name, create_index_on_list->left);
+  EXTRACT_ANY_NOTNULL(table_name, create_index_on_list->right);
 
   gen_printf("CREATE ");
   if (flags & INDEX_UNIQUE) {
@@ -338,7 +344,10 @@ static void gen_create_index_stmt(ast_node *ast) {
   }
   gen_printf("INDEX ");
   gen_if_not_exists(ast, !!(flags & INDEX_IFNE));
-  gen_printf("%s ON %s (", index_name, table_name);
+  gen_name(index_name);
+  gen_printf(" ON ");
+  gen_name(table_name);
+  gen_printf("(");
   gen_indexed_columns(indexed_columns);
   gen_printf(")");
   if (opt_where) {
@@ -448,11 +457,11 @@ static void gen_fk_target_options(ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_OPTION(flags, ast->right);
-  EXTRACT_STRING(table_name, fk_target->left);
+  EXTRACT_ANY_NOTNULL(table_name, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   gen_printf("REFERENCES ");
-  gen_printf("%s", table_name);
+  gen_name(table_name);
   gen_printf(" (");
   gen_name_list(ref_list);
   gen_printf(")");
@@ -466,8 +475,10 @@ static void gen_fk_def(ast_node *def) {
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    EXTRACT_ANY_NOTNULL(name_ast, def->left);
+    gen_printf("CONSTRAINT ");
+    gen_name(name_ast);
+    gen_printf(" ");
   }
 
   gen_printf("FOREIGN KEY (");
@@ -507,8 +518,10 @@ static void gen_pk_def(ast_node *def) {
   EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    EXTRACT_ANY_NOTNULL(name_ast, def->left);
+    gen_printf("CONSTRAINT ");
+    gen_name(name_ast);
+    gen_printf(" ");
   }
 
   gen_printf("PRIMARY KEY (");
@@ -3441,19 +3454,21 @@ static void gen_fetch_values_stmt(ast_node *ast) {
 
 static void gen_assign(ast_node *ast) {
   Contract(is_ast_assign(ast));
-  EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf("SET %s := ", name);
+  gen_printf("SET ");
+  gen_name(ast->left);
+  gen_printf(" := ");
   gen_root_expr(expr);
 }
 
 static void gen_let_stmt(ast_node *ast) {
   Contract(is_ast_let_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf("LET %s := ", name);
+  gen_printf("LET "); 
+  gen_name(ast->left);
+  gen_printf(" := ");
   gen_root_expr(expr);
 }
 
@@ -3526,12 +3541,13 @@ cql_noexport void gen_params(ast_node *ast) {
 
 static void gen_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
 
-  gen_printf("CREATE PROC %s (", name);
+  gen_printf("CREATE PROC ");
+  gen_name(ast->left);
+  gen_printf(" (");
   if (params) {
     gen_params(params);
   }
@@ -3543,11 +3559,12 @@ static void gen_create_proc_stmt(ast_node *ast) {
 static void gen_declare_proc_from_create_proc(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(!for_sqlite());
-  EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
 
-  gen_printf("DECLARE PROC %s (", name);
+  gen_printf("DECLARE PROC ");
+  gen_name(ast->left);
+  gen_printf(" (");
   if (params) {
     gen_params(params);
   }
@@ -3715,17 +3732,18 @@ void gen_typed_names(ast_node *ast) {
 static void gen_declare_proc_no_check_stmt(ast_node *ast) {
   Contract(is_ast_declare_proc_no_check_stmt(ast));
   EXTRACT_ANY_NOTNULL(proc_name, ast->left);
-  EXTRACT_STRING(name, proc_name);
-  gen_printf("DECLARE PROC %s NO CHECK", name);
+  gen_printf("DECLARE PROC ");
+  gen_name(proc_name);
+  gen_printf(" NO CHECK");
 }
 
 cql_noexport void gen_declare_interface_stmt(ast_node *ast) {
   Contract(is_ast_declare_interface_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
-  gen_printf("DECLARE INTERFACE %s", name);
+  gen_printf("DECLARE INTERFACE ");
+  gen_name(ast->left);
 
   gen_printf(" (");
   gen_typed_names(typed_names);
@@ -4117,15 +4135,17 @@ static void gen_loop_stmt(ast_node *ast) {
 
 static void gen_call_stmt(ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
 
-  gen_printf("CALL %s(", name);
+  gen_printf("CALL ");
+  gen_name(name_ast);
+  gen_printf("(");
   if (arg_list) {
     gen_arg_list(arg_list);
   }
 
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_declare_out_call_stmt(ast_node *ast) {
@@ -4529,7 +4549,7 @@ static void gen_schema_unsub_stmt(ast_node *ast) {
   EXTRACT_STRING(name, version_annotation->right);
 
   gen_printf("@UNSUB(");
-  gen_printf("%s", name);
+  gen_name(version_annotation->right);
   gen_printf(")");
 }
 
@@ -4540,10 +4560,11 @@ static void gen_schema_ad_hoc_migration_stmt(ast_node *ast) {
 
   // two arg version is a recreate upgrade instruction
   if (r) {
-    EXTRACT_STRING(group, l);
-    EXTRACT_STRING(proc, r);
     gen_printf("@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(");
-    gen_printf("%s, %s)", group, proc);
+    gen_name(l);  // group
+    gen_printf(", ");
+    gen_name(r);  // proc
+    gen_printf(")");
   }
   else {
     gen_printf("@SCHEMA_AD_HOC_MIGRATION(");

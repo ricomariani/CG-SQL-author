@@ -69,19 +69,35 @@ cql_noexport bool_t is_ast_blob(ast_node *node) {
 }
 
 cql_noexport bool_t is_at_rc(ast_node *node) {
-  return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
+  if (!is_ast_str(node)) {
+    return false;
+  }
+  EXTRACT_STRING(name, node);
+  return !Strcasecmp("@RC", name);
 }
 
 cql_noexport bool_t is_proclit(ast_node *node) {
-  return is_ast_str(node) && !Strcasecmp("@proc", ((str_ast_node*)node)->value);
+  if (!is_ast_str(node)) {
+    return false;
+  }
+  EXTRACT_STRING(name, node);
+  return !Strcasecmp("@PROC", name);
 }
 
 cql_noexport bool_t is_strlit(ast_node *node) {
-  return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
+  if (!is_ast_str(node)) {
+    return false;
+  }
+  EXTRACT_STRING(str, node);
+  return str[0] == '\'';
 }
 
 cql_noexport bool_t is_id(ast_node *node) {
-  return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
+  if (!is_ast_str(node)) {
+    return false;
+  }
+  EXTRACT_STRING(str, node);
+  return str[0] != '\'';
 }
 
 cql_noexport bool_t is_id_or_dot(ast_node *node) {
@@ -282,12 +298,23 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   bool_t ret = false;
 
   if (is_ast_str(node)) {
+    EXTRACT_STRING(str, node);
+    EXTRACT_STR_NODE(asts, node);
+
     cql_output("%s", padbuffer);
     if (is_strlit(node)) {
-      cql_output("{strlit %s}", ((struct str_ast_node *)node)->value);
+      cql_output("{strlit %s}", str);
     }
     else {
-      cql_output("{name %s}", ((struct str_ast_node *)node)->value);
+      if (asts->str_type == STR_QSTR) {
+        CHARBUF_OPEN(tmp);
+          cg_decode_qstr(&tmp, str);
+          cql_output("{name %s}", tmp.ptr);
+        CHARBUF_CLOSE(tmp);
+      }
+      else {
+        cql_output("{name %s}", str);
+      }
     }
     ret = true;
   }
@@ -314,8 +341,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   }
 
   if (is_ast_blob(node)) {
+    EXTRACT_STRING(value, node);
     cql_output("%s", padbuffer);
-    cql_output("{blob %s}", ((struct str_ast_node *)node)->value);
+    cql_output("{blob %s}", value);
     ret = true;
   }
 

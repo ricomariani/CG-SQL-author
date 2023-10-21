@@ -171,7 +171,7 @@ static uint32_t hex_to_int(char c) {
 
 static void decode_hex_escape(CSTR *pstr, charbuf *output) {
   Contract(pstr);
-  Contract(**pstr == 'x');
+  Contract(**pstr == 'x' || **pstr == 'X');
   CSTR p = *pstr;
   p++; // skip the 'x'
 
@@ -344,7 +344,7 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
   Contract(qstr[0] == '`');
   uint32_t len = strlen(qstr);
-  Contract(len > 2);  // `x` is the smallest
+  Contract(len >= 3);  // `a` is the smallest legal string
   Contract(qstr[len-1] == '`');
   uint32_t used = output->used;
 
@@ -375,10 +375,35 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   }
 
   if (used_hex) {
-    bputc(output, '#');
+    // place holders to make space
     bputc(output, '$');
+    bputc(output, '$');
+    // shift the string up two characters
     memmove(output->ptr + used + 1, output->ptr + used - 1, output->used - used - 2);
+    // add the X_ prefix
     output->ptr[used-1] = 'X';
     output->ptr[used] = '_';
   }
+}
+
+cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
+  Contract(qstr);
+
+  // The string was quoted but didn't require escapes, just put the original back-quotes back
+  if (qstr[0] != 'X' || qstr[1] != '_') {
+    bprintf(output, "`%s`", qstr);
+    return;
+  }
+
+  bputc(output, '`');
+  qstr += 2;
+  for (; *qstr; qstr++) {
+    if (*qstr != 'X') {
+      bputc(output, *qstr);
+    }
+    else {
+      decode_hex_escape(&qstr, output);
+    }
+  }
+  bputc(output, '`');
 }

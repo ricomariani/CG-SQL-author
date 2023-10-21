@@ -254,7 +254,7 @@ static void cql_reset_globals(void);
 %type <ival> frame_type frame_exclude join_type
 %type <ival> opt_vtab_flags
 
-%type <aval> col_key_list col_key_def col_def col_name
+%type <aval> col_key_list col_key_def col_def sql_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
@@ -638,10 +638,10 @@ create_table_prefix_opt_temp:
   };
 
 create_table_stmt:
-  create_table_prefix_opt_temp opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
+  create_table_prefix_opt_temp opt_if_not_exists sql_name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
     int flags = $create_table_prefix_opt_temp | $opt_if_not_exists | $opt_no_rowid;
     struct ast_node *flags_node = new_ast_opt(flags);
-    struct ast_node *name = $name;
+    struct ast_node *name = $sql_name;
     struct ast_node *col_key_list = $col_key_list;
     struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, $version_attrs_opt_recreate);
     struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
@@ -711,8 +711,9 @@ shape_def_base:
   | LIKE name ARGUMENTS { $shape_def_base = new_ast_like($name, $name); }
   ;
 
-col_name:
-  name  { $col_name = $name; }
+sql_name:
+  name  { $sql_name = $name; }
+  | QID { $sql_name = new_ast_qstr($QID); }
   ;
 
 misc_attr_key:
@@ -752,8 +753,8 @@ misc_attrs[result]:
   ;
 
 col_def:
-  misc_attrs col_name data_type_any col_attrs  {
-  struct ast_node *name_type = new_ast_col_def_name_type($col_name, $data_type_any);
+  misc_attrs sql_name data_type_any col_attrs  {
+  struct ast_node *name_type = new_ast_col_def_name_type($sql_name, $data_type_any);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, $col_attrs);
   $col_def = make_coldef_node(col_def_type_attrs, $misc_attrs);
   }
@@ -876,7 +877,6 @@ create_index_stmt:
 
 name:
   ID  { $name = new_ast_str($ID); }
-  | QID { $name = new_ast_qstr($QID); }
   | TEXT  { $name = new_ast_str("text"); }
   | TRIGGER  { $name = new_ast_str("trigger"); }
   | ROWID  { $name = new_ast_str("rowid"); }
@@ -1063,6 +1063,7 @@ basic_expr:
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
   | basic_expr[lhs] '.' '*' { $$ = new_ast_table_star($lhs); }
+  | QID '.' '*' { $$ = new_ast_table_star(new_ast_qstr($QID)); }
   | any_literal  { $basic_expr = $any_literal; }
   | const_expr { $basic_expr = $const_expr; }
   | '(' expr ')'  { $basic_expr = $expr; }
@@ -1575,7 +1576,7 @@ join_target_list[result]:
   ;
 
 table_or_subquery:
-  name opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($name, $opt_as_alias); }
+  sql_name opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($sql_name, $opt_as_alias); }
   | '(' select_stmt ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($select_stmt, $opt_as_alias); }
   | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
   | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }

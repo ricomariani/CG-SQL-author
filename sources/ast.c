@@ -68,6 +68,10 @@ cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
 
+cql_noexport bool_t is_qid(ast_node *node) {
+  return is_ast_str(node) && ((str_ast_node *)node)->str_type == STR_QSTR;
+}
+
 cql_noexport bool_t is_at_rc(ast_node *node) {
   if (!is_ast_str(node)) {
     return false;
@@ -299,14 +303,13 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
   if (is_ast_str(node)) {
     EXTRACT_STRING(str, node);
-    EXTRACT_STR_NODE(asts, node);
 
     cql_output("%s", padbuffer);
     if (is_strlit(node)) {
       cql_output("{strlit %s}", str);
     }
     else {
-      if (asts->str_type == STR_QSTR) {
+      if (is_qid(node)) {
         CHARBUF_OPEN(tmp);
           cg_decode_qstr(&tmp, str);
           cql_output("{name %s}", tmp.ptr);

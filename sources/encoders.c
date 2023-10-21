@@ -364,6 +364,7 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
 
     if (qstr[i] == '`') {
       // the string is known to be well formed!
+      // skip the second ` of the series
       Contract(qstr[i+1] == '`');
       i++;
     }
@@ -403,7 +404,30 @@ cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
     }
     else {
       decode_hex_escape(&qstr, output);
+      if (output->ptr[output->used - 2] == '`') {
+        bputc(output, '`');
+      }
     }
   }
   bputc(output, '`');
+}
+
+cql_noexport void cg_unquote_encoded_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
+  Contract(qstr);
+
+  // The string was quoted but didn't require escapes, just put the original back-quotes back
+  if (qstr[0] != 'X' || qstr[1] != '_') {
+    bprintf(output, "%s", qstr);
+    return;
+  }
+
+  qstr += 2;
+  for (; *qstr; qstr++) {
+    if (*qstr != 'X') {
+      bputc(output, *qstr);
+    }
+    else {
+      decode_hex_escape(&qstr, output);
+    }
+  }
 }

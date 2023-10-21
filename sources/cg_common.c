@@ -20,6 +20,7 @@ cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 #include "ast.h"
 #include "sem.h"
 #include "symtab.h"
+#include "encoders.h"
 
 // Storage declarations
 cql_data_defn( symtab *_Nullable cg_stmts );
@@ -210,7 +211,14 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
           bprintf(buffer, ", ");
         }
         first = false;
-        bprintf(buffer, "%s", sptr->names[i]);
+        if (!(sptr->semtypes[i] & SEM_TYPE_QID)) {
+          bprintf(buffer, "%s", sptr->names[i]);
+        }
+        else {
+          bprintf(buffer, "[");
+          cg_unquote_encoded_qstr(buffer, sptr->names[i]);
+          bprintf(buffer, "]");
+        }
       }
     }
   }
@@ -233,6 +241,18 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         } else {
           bprintf(buffer, "%s.%s", ast->sem->name, sptr->names[i]);
         }
+
+        /* rico fix this
+        bprintf(buffer, "%s.", ast->sem->name);
+
+        if (!(sptr->semtypes[i] & SEM_TYPE_QID)) {
+          bprintf(buffer, "%s", sptr->names[i]);
+        }
+        else {
+          bprintf(buffer, "[");
+          cg_unquote_encoded_qstr(buffer, sptr->names[i]);
+          bprintf(buffer, "]");
+        */
       }
     }
   }

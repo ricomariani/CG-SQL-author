@@ -96,6 +96,19 @@ static void add_name_to_output(charbuf* output, CSTR table_name) {
   bprintf(output, "\"%s\"", table_name);
 }
 
+static void cg_json_sql_name(charbuf *output, ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  if (is_qid(ast)) {
+    CHARBUF_OPEN(sql_name);
+    cg_unquote_encoded_qstr(&sql_name, name);
+    cg_pretty_quote_plaintext(sql_name.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
+    CHARBUF_CLOSE(sql_name);
+  }
+  else {
+    bprintf(output, "\"%s\"", name);
+  }
+}
+
 
 // This is the callback function that tells us a view name was found in the body
 // of the stored proc we are currently examining.  The void context information
@@ -779,12 +792,14 @@ static void cg_json_col_def(charbuf *output, col_info *info) {
   EXTRACT(misc_attrs, def->right);
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_STRING(name, col_def_name_type->left);
+  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(col, 2);
 
-  bprintf(output, "\"name\" : \"%s\",\n", name);
+  bprintf(output, "\"name\" : ");
+  cg_json_sql_name(output, name_ast);
+  bprintf(output, ",\n");
 
   if (misc_attrs) {
     cg_json_misc_attrs(output, misc_attrs);
@@ -1536,7 +1551,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
-  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
 
   int32_t temp = flags & TABLE_IS_TEMP;
@@ -1567,7 +1582,8 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   bool_t is_deleted = ast->sem->delete_version > 0;
   bool_t is_unsub = ast->sem->unsubscribed > 0;
 
-  bprintf(output, "\"name\" : \"%s\"", name);
+  bprintf(output, "\"name\" : ");
+  cg_json_sql_name(output, name_ast);
 
   CHARBUF_OPEN(table_schema);
   gen_sql_callbacks schema_callbacks;

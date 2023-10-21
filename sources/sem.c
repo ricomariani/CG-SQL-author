@@ -2297,6 +2297,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_ALIAS) {
     bprintf(out, " alias");
   }
+  if (sem_type & SEM_TYPE_QID) {
+    bprintf(out, " qid");
+  }
 }
 
 // For debug/test output, prettyprint a structure type
@@ -2634,7 +2637,13 @@ static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
 // to get rid of other table-ish flags like HAS_DEFAULT and AUTOINCREMENT
 // they don't contribute to anything and they make the tree ugly.
 static sem_struct *new_sem_struct_strip_table_flags(sem_struct *sptr) {
-  sem_t allowed_flags = SEM_TYPE_CORE | SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_HIDDEN_COL | SEM_TYPE_ALIAS;
+  sem_t allowed_flags =
+       SEM_TYPE_CORE |
+       SEM_TYPE_NOTNULL |
+       SEM_TYPE_SENSITIVE |
+       SEM_TYPE_HIDDEN_COL |
+       SEM_TYPE_ALIAS |
+       SEM_TYPE_QID;
 
   sem_struct *result = sem_clone_struct_strip_flags(sptr, sem_not(allowed_flags));
 
@@ -4554,8 +4563,13 @@ static void sem_col_def(ast_node *def, col_def_info *info) {
   def->sem->name = name;
   def->sem->kind = data_type->sem->kind;
 
+
   info->col_sem_type = def->sem->sem_type;
   info->col_name = name;
+
+  if (is_qid(name_ast)) {
+    sem_add_flags(def, SEM_TYPE_QID);
+  }
 
   if (attrs) {
     sem_add_flags(def, sem_col_attrs(def, attrs, info));

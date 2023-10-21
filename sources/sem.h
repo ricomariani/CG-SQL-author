@@ -190,7 +190,8 @@ typedef struct schema_annotation {
 #define SEM_TYPE_BACKING       _64(0x200000000000) // set on tables that are used for backing store
 #define SEM_TYPE_BACKED        _64(0x400000000000) // set on tables/exprs that have a backing store
 #define SEM_TYPE_PARTIAL_PK    _64(0x800000000000) // set if column is a primary key
-#define SEM_TYPE_FLAGS         _64(0xFFFFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_QID          _64(0x1000000000000) // set if column has a `quoted` name
+#define SEM_TYPE_FLAGS        _64(0x1FFFFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002

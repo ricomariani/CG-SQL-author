@@ -88,7 +88,6 @@ typedef struct cmd_options {
   bool_t run_unit_tests;
   bool_t nolines;
   bool_t schema_exclusive;
-  bool_t format_table_alias_for_eqp;
   char *rt;
   char **file_names;
   uint32_t file_names_count;

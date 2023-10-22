@@ -1069,7 +1069,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     // special case for rewritten arguments, hide the "ARGUMENTS." stuff
     gen_printf("%s", ast->sem->name);
   }
-  else if (options.format_table_alias_for_eqp && get_inserted_table_alias_string_override(ast)) {
+  else if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
     gen_printf("%s.%s", get_inserted_table_alias_string_override(ast), right);
   }
   else {
@@ -1982,7 +1982,7 @@ static void gen_as_alias(ast_node *ast) {
 }
 
 static void gen_as_alias_with_override(ast_node *ast) {
-  Contract(options.format_table_alias_for_eqp);
+  Contract(keep_table_name_in_aliases);
 
   CSTR name = get_inserted_table_alias_string_override(ast);
   Invariant(name);

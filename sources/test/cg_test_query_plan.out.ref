@@ -1,5 +1,6 @@
 
 declare proc printf no check;
+@keep_table_name_in_aliases;
 declare proc cql_create_udf_stub(name TEXT NOT NULL) using transaction;
 
 proc trivial_object()

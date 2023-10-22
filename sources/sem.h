@@ -394,3 +394,6 @@ cql_data_decl( bool_t in_upsert_rewrite );
 cql_data_decl ( ast_node *current_upsert_table_ast );
 // This is the symbol table with the recreate group dependencies where an edge B -> A means A FKs to B
 cql_data_decl( symtab *recreate_group_deps );
+
+// Truthy when the @keep_table_name_in_aliases_stmt directive is used.
+cql_data_decl( bool_t keep_table_name_in_aliases );

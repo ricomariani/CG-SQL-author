@@ -5288,7 +5288,7 @@ static uint32_t sem_select_table_star_count(ast_node *ast) {
       }
 
       // Insert table alias name override if enabled.
-      if (options.format_table_alias_for_eqp && !in_trigger && !in_trigger_when_expr) {
+      if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr) {
         insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
       }
 
@@ -6020,7 +6020,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
             type = &table->semtypes[j];
 
             // Insert table alias name override if enabled.
-            if (options.format_table_alias_for_eqp && !in_trigger && !in_trigger_when_expr && ast && scope) {
+            if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
               Invariant(is_ast_dot(ast));
               insert_table_alias_string_overide(ast->left, table->struct_name);
             }
@@ -6085,7 +6085,7 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
         sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
 
         // Insert table alias name override if enabled.
-        if (options.format_table_alias_for_eqp && !in_trigger && !in_trigger_when_expr && ast && scope) {
+        if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
           Invariant(is_ast_dot(ast));
           insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
         }
@@ -10536,7 +10536,7 @@ static void sem_table_or_subquery(ast_node *ast) {
 
     // Rename this alias definition if it is aliasing a name string (i.e. not subquery, table function)
     // for query plan analysis if enabled.
-    if (is_ast_str(factor) && options.format_table_alias_for_eqp && !in_trigger && !in_trigger_when_expr) {
+    if (is_ast_str(factor) && keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr) {
       EXTRACT_STRING(table_name, factor);
       EXTRACT_STRING(original_alias_name, opt_as_alias->left)
       insert_table_alias_string_overide(opt_as_alias->left, table_name);
@@ -24734,10 +24734,17 @@ static void sem_blob_update_val_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+static void sem_keep_table_name_in_aliases_stmt(ast_node *ast) {
+  Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
+  record_ok(ast);
+
+  keep_table_name_in_aliases = 1;
+}
+
 // Add a special sem node to a string node to represent an "override" of the original string value.
 // This is currently used only for overriding table name aliases for better explain query plan analysis.
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name) {
-  Contract(options.format_table_alias_for_eqp);
+  Contract(keep_table_name_in_aliases);
   Contract(is_ast_str(ast));
   EXTRACT_STRING(original_alias, ast);
 
@@ -24959,6 +24966,8 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(blob_create_val_stmt);
   STMT_INIT(blob_update_key_stmt);
   STMT_INIT(blob_update_val_stmt);
+
+  STMT_INIT(keep_table_name_in_aliases_stmt);
 
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);
@@ -25245,6 +25254,7 @@ cql_noexport void sem_cleanup() {
   in_switch = false;
   in_upsert = false;
   in_upsert_rewrite = false;
+  keep_table_name_in_aliases = false;
   loop_depth = 0;
   in_proc_savepoint = false;
   max_previous_schema_version = -1;
@@ -25326,3 +25336,6 @@ cql_data_defn( bool_t in_upsert_rewrite );
 cql_data_defn ( ast_node *current_upsert_table_ast );
 // This is the symbol table with recreate group dependencies
 cql_data_defn( symtab *recreate_group_deps );
+
+// Truthy when the @keep_table_name_in_aliases_stmt directive is used.
+cql_data_defn( bool_t keep_table_name_in_aliases );

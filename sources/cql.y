@@ -2530,8 +2530,6 @@ static void parse_cmd(int argc, char **argv) {
       options.generate_exports = 1;
     } else if (strcmp(arg, "--generate_type_getters") == 0) {
       options.generate_type_getters = 1;
-    } else if (strcmp(arg, "--format_table_alias_for_eqp") == 0) {
-      options.format_table_alias_for_eqp = 1;
     } else if (strcmp(arg, "--cg") == 0) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;
@@ -2971,9 +2969,6 @@ static void cql_usage() {
     "  emits rowset accessors using shared type getters instead of individual functions\n"
     "  this makes them more interoperable if they share columns\n"
     "  used with --rt c\n"
-    "--format_table_alias_for_eqp\n"
-    "  rename any table aliases used in SQL queries so they include the name of the actual table\n"
-    "  being aliased. This is useful when generating query plans with cg_query_plan.\n"
     );
 }
 

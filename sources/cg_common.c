@@ -227,7 +227,7 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         }
         first = false;
 
-        if (options.format_table_alias_for_eqp && get_inserted_table_alias_string_override(ast)) {
+        if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
           CSTR table_alias_name = get_inserted_table_alias_string_override(ast);
           bprintf(buffer, "%s.%s", table_alias_name, sptr->names[i]);
         } else {

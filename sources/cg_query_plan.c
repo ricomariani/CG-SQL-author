@@ -912,6 +912,10 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, rt->source_prefix);
   bprintf(&output_buf, "declare proc printf no check;\n");
 
+  // Print special annotation that would rename any table name aliases in
+  // SELECT queries to include table names. Makes query plans more informative.
+  bprintf(&output_buf, "@keep_table_name_in_aliases;\n");
+
   if (!sql_stmt_count) {
     bprintf(&output_buf,
       "create proc query_plan()\n"

@@ -1062,7 +1062,7 @@ basic_expr:
   | QID { $basic_expr = new_ast_qstr($QID); }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
-  | basic_expr[lhs] '.' name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
+  | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
   | basic_expr[lhs] '.' '*' { $$ = new_ast_table_star($lhs); }
   | any_literal  { $basic_expr = $any_literal; }
   | const_expr { $basic_expr = $const_expr; }

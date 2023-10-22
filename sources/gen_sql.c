@@ -1038,8 +1038,8 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     return;
   }
 
-  EXTRACT_STRING(left, ast->left);
-  EXTRACT_STRING(right, ast->right);
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right);
 
   if (eval_variables_callback(ast)) {
     return;
@@ -1049,7 +1049,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   bool_t handled = false;
 
   if (has_table_rename_callback) {
-    handled = gen_callbacks->table_rename_callback(ast->left, gen_callbacks->table_rename_context, output);
+    handled = gen_callbacks->table_rename_callback(left, gen_callbacks->table_rename_context, output);
   }
 
   if (handled) {
@@ -1071,14 +1071,25 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     // At this point the correct table name is already in the stream, so left is
     // now useless. So we just throw it away.
 
-    left = "";
+    left = NULL;
   }
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // simple case if SEM is not available
-  gen_printf("%s.%s", left, right);
+  if (left) {
+     gen_name(left);
+  }
+  gen_printf(".");
+  gen_name(right);
 #else
-  if (!strcmp("ARGUMENTS", left) && ast->sem && ast->sem->name) {
+  bool_t is_arguments = false;
+
+  if (is_id(left)) {
+    EXTRACT_STRING(lname, left);
+    is_arguments = !strcmp("ARGUMENTS", lname) && ast->sem && ast->sem->name;
+  }
+
+  if (is_arguments) {
     // special case for rewritten arguments, hide the "ARGUMENTS." stuff
     gen_printf("%s", ast->sem->name);
   }
@@ -1086,7 +1097,11 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_printf("%s.%s", get_inserted_table_alias_string_override(ast), right);
   }
   else {
-    gen_printf("%s.%s", left, right);
+    if (left) {
+      gen_name(left);
+    }
+    gen_printf(".");
+    gen_name(right);
   }
 #endif
 }

@@ -344,7 +344,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   }
 
   if (is_ast_blob(node)) {
-    EXTRACT_STRING(value, node);
+    EXTRACT_BLOBTEXT(value, node);
     cql_output("%s", padbuffer);
     cql_output("{blob %s}", value);
     ret = true;

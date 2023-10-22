@@ -19184,6 +19184,37 @@ void qid_t4b(void) {
 
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t5 ()
+BEGIN
+  CREATE VIEW `view` AS
+  SELECT 1 AS x;
+END;
+*/
+
+#define _PROC_ "qid_t5"
+/*
+export:
+DECLARE PROC qid_t5 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code qid_t5(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec(_db_,
+    "CREATE VIEW [view] AS "
+    "SELECT 1 AS x");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

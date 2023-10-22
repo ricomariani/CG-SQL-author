@@ -1614,9 +1614,9 @@ table_function:
   ;
 
 create_view_stmt:
-  CREATE opt_temp VIEW opt_if_not_exists name AS select_stmt opt_delete_version_attr  {
+  CREATE opt_temp VIEW opt_if_not_exists sql_name AS select_stmt opt_delete_version_attr  {
   struct ast_node *flags = new_ast_opt($opt_temp | $opt_if_not_exists);
-  struct ast_node *name_and_select = new_ast_name_and_select($name, $select_stmt);
+  struct ast_node *name_and_select = new_ast_name_and_select($sql_name, $select_stmt);
   struct ast_node *view_and_attrs = new_ast_view_and_attrs(name_and_select, $opt_delete_version_attr);
   $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
   ;

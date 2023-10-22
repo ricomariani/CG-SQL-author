@@ -5929,6 +5929,15 @@ begin
   fetch R using  3 x, 4 `a b`;
 end;
 
+-- TEST: make a view, use the form that doesn't require escaping
+-- + _rc_ = cql_exec(_db_,
+-- +   "CREATE VIEW [view] AS "
+-- +   "SELECT 1 AS x");
+create proc qid_t5()
+begin
+  create view `view` as select 1 x;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

@@ -23588,3 +23588,10 @@ end;
 -- + error: % name not found '`a b`'
 -- +1 error:
 let error_test_for_qid := `a b`;
+
+-- TEST: make a view, use the form that doesn't require escaping
+-- + CREATE VIEW `view` AS
+-- + SELECT 1 AS x;
+-- + {create_view_stmt}: view: { x: integer notnull }
+-- +  {name `view`}
+create view `view` as select 1 x;

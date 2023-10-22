@@ -88614,3 +88614,30 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found '`a b`'
   | {name error_test_for_qid}
   | {name `a b`}: err
 
+The statement ending at line XXXX
+
+CREATE VIEW `view` AS
+SELECT 1 AS x;
+
+  {create_view_stmt}: view: { x: integer notnull }
+  | {int 0}
+  | {view_and_attrs}
+    | {name_and_select}
+      | {name `view`}
+      | {select_stmt}: view: { x: integer notnull }
+        | {select_core_list}: view: { x: integer notnull }
+        | | {select_core}: view: { x: integer notnull }
+        |   | {select_expr_list_con}: view: { x: integer notnull }
+        |     | {select_expr_list}: view: { x: integer notnull }
+        |     | | {select_expr}: x: integer notnull
+        |     |   | {int 1}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name x}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+

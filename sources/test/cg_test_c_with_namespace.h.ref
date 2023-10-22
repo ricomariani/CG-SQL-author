@@ -3984,6 +3984,9 @@ extern void qid_t4a(void);
 extern void qid_t4b(void);
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code qid_t5(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

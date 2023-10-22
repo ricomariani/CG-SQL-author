@@ -2762,7 +2762,6 @@ static void gen_create_view_stmt(ast_node *ast) {
   EXTRACT_ANY(attrs, view_and_attrs->right);
   EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
   EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
-  EXTRACT_STRING(name, name_ast);
 
   bool_t if_not_exist = !!(flags & VIEW_IF_NOT_EXISTS);
 
@@ -2772,8 +2771,8 @@ static void gen_create_view_stmt(ast_node *ast) {
   }
   gen_printf("VIEW ");
   gen_if_not_exists(ast, if_not_exist);
-
-  gen_printf("%s AS\n", name);
+  gen_name(name_ast);
+  gen_printf(" AS\n");
   gen_select_stmt(select_stmt);
   gen_version_attrs(attrs);
 }

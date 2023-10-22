@@ -2004,9 +2004,10 @@ cql_noexport void gen_root_expr(ast_node *ast) {
 }
 
 static void gen_as_alias(ast_node *ast) {
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
 
-  gen_printf(" AS %s", name);
+  gen_printf(" AS ");
+  gen_name(name_ast);
 }
 
 static void gen_as_alias_with_override(ast_node *ast) {
@@ -3277,10 +3278,11 @@ static void gen_insert_dummy_spec(ast_node *ast) {
 
 static void gen_shape_def_base(ast_node *ast) {
   Contract(is_ast_like(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT_ANY(from_args, ast->right);
 
-  gen_printf("LIKE %s", name);
+  gen_printf("LIKE ");
+  gen_name(name_ast);
   if (from_args) {
     gen_printf(" ARGUMENTS");
   }
@@ -3288,12 +3290,12 @@ static void gen_shape_def_base(ast_node *ast) {
 
 static void gen_shape_expr(ast_node *ast) {
   Contract(is_ast_shape_expr(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
 
   if (!ast->right) {
     gen_printf("-");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_shape_exprs(ast_node *ast) {

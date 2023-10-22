@@ -88372,3 +88372,245 @@ test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot hav
     |       | {type_int}: integer
     | {type_int}
 
+The statement ending at line XXXX
+
+CREATE TABLE `xyz``abc`(
+  x INTEGER NOT NULL,
+  `a b` INTEGER NOT NULL
+);
+
+  {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } qid
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name `xyz``abc`}
+  | {col_key_list}
+    | {col_def}: x: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name x}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: X_aX20b: integer notnull qid
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name `a b`}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+
+The statement ending at line XXXX
+
+CREATE PROC qid_t1 ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM `xyz``abc`;
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d %d", C.x, C.`a b`);
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name qid_t1}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   | {select_core_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   | | {select_core}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | {select_expr_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | | {star}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {loop_stmt}: ok
+        | {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+        | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+        | {stmt_list}: ok
+          | {call_stmt}: ok
+            | {name printf}: ok
+            | {arg_list}: ok
+              | {strlit '%d %d'}: text notnull
+              | {arg_list}
+                | {dot}: C.x: integer notnull variable
+                | | {name C}
+                | | {name x}
+                | {arg_list}
+                  | {dot}: C.X_aX20b: integer notnull variable qid
+                    | {name C}
+                    | {name `a b`}
+
+The statement ending at line XXXX
+
+CREATE PROC qid_t2 ()
+BEGIN
+  DECLARE D CURSOR FOR SELECT `xyz``abc`.*
+    FROM `xyz``abc`;
+  LOOP FETCH D
+  BEGIN
+    CALL printf("%d %d", D.x, D.`a b`);
+  END;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name qid_t2}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+      | | {name D}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   | {select_core_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   | | {select_core}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | {select_expr_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | | {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     |   | {name `xyz``abc`}
+      |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {loop_stmt}: ok
+        | {fetch_stmt}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+        | | {name D}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+        | {stmt_list}: ok
+          | {call_stmt}: ok
+            | {name printf}: ok
+            | {arg_list}: ok
+              | {strlit '%d %d'}: text notnull
+              | {arg_list}
+                | {dot}: D.x: integer notnull variable
+                | | {name D}
+                | | {name x}
+                | {arg_list}
+                  | {dot}: D.X_aX20b: integer notnull variable qid
+                    | {name D}
+                    | {name `a b`}
+
+The statement ending at line XXXX
+
+CREATE PROC qid_t3 ()
+BEGIN
+  LET x := ( SELECT `xyz``abc`.`a b`
+    FROM `xyz``abc` );
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name qid_t3}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: x: integer notnull variable
+        | {name x}: x: integer notnull variable
+        | {select_stmt}: X_aX20b: integer notnull qid
+          | {select_core_list}: select: { X_aX20b: integer notnull qid }
+          | | {select_core}: select: { X_aX20b: integer notnull qid }
+          |   | {select_expr_list_con}: select: { X_aX20b: integer notnull qid }
+          |     | {select_expr_list}: select: { X_aX20b: integer notnull qid }
+          |     | | {select_expr}: X_aX20b: integer notnull qid
+          |     |   | {dot}: X_aX20b: integer notnull qid
+          |     |     | {name `xyz``abc`}
+          |     |     | {name `a b`}
+          |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+          |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
+          |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
+          |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC qid_t4 ()
+BEGIN
+  DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
+  DECLARE R CURSOR LIKE `xyz``abc`;
+  FETCH R(x, `a b`) FROM VALUES(1, 2);
+  CALL printf("%d %d\n", R.x, R.`a b`);
+  FETCH R(x, `a b`) FROM VALUES(3, 4);
+END;
+
+  {create_proc_stmt}: ok
+  | {name qid_t4}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
+      | | {name Q}: Q: select: { x: integer notnull } variable shape_storage value_cursor
+      | | {shape_def}: select: { x: integer notnull }
+      |   | {like}: ok
+      |   | | {name `xyz``abc`}
+      |   | {shape_exprs}
+      |     | {shape_expr}
+      |       | {name `a b`}
+      | {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+      | | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+      | | {shape_def}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } qid
+      |   | {like}: ok
+      |     | {name `xyz``abc`}
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name x}: x: integer notnull
+      |     |   | {name_list}
+      |     |     | {name `a b`}: X_aX20b: integer notnull qid
+      |     | {insert_list}: ok
+      |       | {int 1}: integer notnull
+      |       | {insert_list}
+      |         | {int 2}: integer notnull
+      | {call_stmt}: ok
+      | | {name printf}: ok
+      | | {arg_list}: ok
+      |   | {strlit '%d %d
+'}: text notnull
+      |   | {arg_list}
+      |     | {dot}: R.x: integer notnull variable
+      |     | | {name R}
+      |     | | {name x}
+      |     | {arg_list}
+      |       | {dot}: R.X_aX20b: integer notnull variable qid
+      |         | {name R}
+      |         | {name `a b`}
+      | {fetch_values_stmt}: ok
+        | {name_columns_values}
+          | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name x}: x: integer notnull
+            |   | {name_list}
+            |     | {name `a b`}: X_aX20b: integer notnull qid
+            | {insert_list}: ok
+              | {int 3}: integer notnull
+              | {insert_list}
+                | {int 4}: integer notnull
+
+The statement ending at line XXXX
+
+LET error_test_for_qid := X_aX20b;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found '`a b`'
+
+  {let_stmt}: err
+  | {name error_test_for_qid}
+  | {name `a b`}: err
+

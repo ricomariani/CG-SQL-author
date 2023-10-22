@@ -3966,6 +3966,24 @@ extern void no_check_func_calls(void);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code qid_t0(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code qid_t1(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code qid_t2(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern CQL_WARN_UNUSED cql_code qid_t3(sqlite3 *_Nonnull _db_);
+
+// The statement ending at line XXXX
+extern void qid_t4a(void);
+
+// The statement ending at line XXXX
+extern void qid_t4b(void);
+
+// The statement ending at line XXXX
 extern cql_int32 this_is_the_end;
 
 // The statement ending at line XXXX

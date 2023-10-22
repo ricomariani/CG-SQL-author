@@ -23496,3 +23496,95 @@ declare select func select_func_with_out_arg1(inout inout_param int!) int;
 -- + error: % select functions cannot have out parameters 'out_param'
 -- +1 error:
 declare select func select_func_with_out_arg2(out out_param int!) int;
+
+-- TEST: create a table with a weird name and a weird column
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE TABLE `xyz``abc`(
+-- + x INTEGER NOT NULL,
+-- + `a b` INTEGER NOT NULL
+-- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } qid
+-- + {name `xyz``abc`}
+-- + {col_def}: x: integer notnull
+-- + {col_def}: X_aX20b: integer notnull qid
+-- + {name `a b`}
+-- - error:
+create table `xyz``abc`
+(
+ x int!,
+ `a b` int!
+);
+
+-- TEST: make a cursor on an exotic name and fetch from it
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE C CURSOR FOR SELECT *
+-- + FROM `xyz``abc`;
+-- + CALL printf("%d %d", C.x, C.`a b`);
+-- + {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+-- + {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+-- + {dot}: C.x: integer notnull variable
+-- + {dot}: C.X_aX20b: integer notnull variable qid
+-- - error:
+create proc qid_t1()
+begin
+  cursor C for select * from `xyz``abc`;
+  loop fetch C
+  begin
+    call printf("%d %d", C.x, C.`a b`);
+  end;
+end;
+
+-- TEST: Test several expansions
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE D CURSOR FOR SELECT `xyz``abc`.*
+-- + FROM `xyz``abc`;
+-- + CALL printf("%d %d", D.x, D.`a b`);
+-- + {declare_cursor}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+-- + {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+-- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid }
+-- - error:
+create proc qid_t2()
+begin
+  cursor D for select `xyz``abc`.* from `xyz``abc`;
+  loop fetch D
+  begin
+    call printf("%d %d", D.x, D.`a b`);
+  end;
+end;
+
+-- TEST: Test select expression with specified exact columns
+-- verify that echoing is re-emitting the escaped text
+-- + LET x := ( SELECT `xyz``abc`.`a b`
+-- + FROM `xyz``abc` );
+-- + {let_stmt}: x: integer notnull variable
+-- + {select_stmt}: X_aX20b: integer notnull qid
+-- + {dot}: X_aX20b: integer notnull qid
+-- + {name `xyz``abc`}
+-- + {name `a b`}
+-- + {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+-- - error:
+create proc qid_t3()
+begin
+  let x := (select `xyz``abc`.`a b` from `xyz``abc`);
+end;
+
+-- TEST: cursor forms with exotic columns
+-- + DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
+-- + DECLARE R CURSOR LIKE `xyz``abc`;
+-- + FETCH R(x, `a b`) FROM VALUES(1, 2);
+-- + CALL printf("%d %d\n", R.x, R.`a b`);
+-- + FETCH R(x, `a b`) FROM VALUES(3, 4);
+-- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+create proc qid_t4()
+begin
+  cursor Q like `xyz``abc`(-`a b`);
+  cursor R like `xyz``abc`;
+  fetch R from values(1, 2);
+  printf("%d %d\n", R.x, R.`a b`);
+  fetch R using  3 x, 4 `a b`;
+end;
+
+-- TEST: error message specifies unencoded name
+-- + error: % name not found '`a b`'
+-- +1 error:
+let error_test_for_qid := `a b`;

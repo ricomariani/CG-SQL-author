@@ -697,8 +697,8 @@ shape_exprs[result] :
   ;
 
 shape_expr:
-  name  { $shape_expr = new_ast_shape_expr($name, $name); }
-  | '-' name  { $shape_expr = new_ast_shape_expr($name, NULL); }
+  sql_name  { $shape_expr = new_ast_shape_expr($sql_name, $sql_name); }
+  | '-' sql_name  { $shape_expr = new_ast_shape_expr($sql_name, NULL); }
   ;
 
 shape_def:
@@ -707,7 +707,7 @@ shape_def:
   ;
 
 shape_def_base:
-    LIKE name { $shape_def_base = new_ast_like($name, NULL); }
+    LIKE sql_name { $shape_def_base = new_ast_like($sql_name, NULL); }
   | LIKE name ARGUMENTS { $shape_def_base = new_ast_like($name, $name); }
   ;
 
@@ -1552,8 +1552,8 @@ opt_as_alias:
   ;
 
 as_alias:
-  AS name  { $as_alias = new_ast_opt_as_alias($name); }
-  | name  { $as_alias = new_ast_opt_as_alias($name); }
+  AS sql_name  { $as_alias = new_ast_opt_as_alias($sql_name); }
+  | sql_name  { $as_alias = new_ast_opt_as_alias($sql_name); }
   ;
 
 query_parts:

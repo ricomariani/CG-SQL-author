@@ -18932,6 +18932,258 @@ void no_check_func_calls(void) {
   cql_string_release(q);
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t0 ()
+BEGIN
+  CREATE TABLE `xyz``abc`(
+    x INTEGER NOT NULL,
+    `a b` INTEGER NOT NULL
+  );
+END;
+*/
+
+#define _PROC_ "qid_t0"
+/*
+export:
+DECLARE PROC qid_t0 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code qid_t0(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec(_db_,
+    "CREATE TABLE [xyz`abc]( "
+      "x INTEGER NOT NULL, "
+      "[a b] INTEGER NOT NULL "
+    ")");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t1 ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM `xyz``abc`;
+  LOOP FETCH C
+  BEGIN
+    CALL printf("%d %d", C.x, C.`a b`);
+  END;
+END;
+*/
+
+#define _PROC_ "qid_t1"
+/*
+export:
+DECLARE PROC qid_t1 () USING TRANSACTION;
+*/
+
+typedef struct qid_t1_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_int32 X_aX20b;
+} qid_t1_C_row;
+CQL_WARN_UNUSED cql_code qid_t1(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+  qid_t1_C_row C = { 0 };
+
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT x, [a b] "
+      "FROM [xyz`abc]");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  for (;;) {
+    _rc_ = sqlite3_step(C_stmt);
+    C._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, C_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.X_aX20b);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!C._has_row_) break;
+    printf("%d %d", C.x, C.X_aX20b);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t2 ()
+BEGIN
+  DECLARE D CURSOR FOR SELECT `xyz``abc`.*
+    FROM `xyz``abc`;
+  LOOP FETCH D
+  BEGIN
+    CALL printf("%d %d", D.x, D.`a b`);
+  END;
+END;
+*/
+
+#define _PROC_ "qid_t2"
+/*
+export:
+DECLARE PROC qid_t2 () USING TRANSACTION;
+*/
+
+typedef struct qid_t2_D_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_int32 X_aX20b;
+} qid_t2_D_row;
+CQL_WARN_UNUSED cql_code qid_t2(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *D_stmt = NULL;
+  qid_t2_D_row D = { 0 };
+
+  _rc_ = cql_prepare(_db_, &D_stmt,
+    "SELECT [xyz`abc].x, [xyz`abc].[a b] "
+      "FROM [xyz`abc]");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  for (;;) {
+    _rc_ = sqlite3_step(D_stmt);
+    D._has_row_ = _rc_ == SQLITE_ROW;
+    cql_multifetch(_rc_, D_stmt, 2,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &D.x,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &D.X_aX20b);
+    if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+    if (!D._has_row_) break;
+    printf("%d %d", D.x, D.X_aX20b);
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&D_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t3 ()
+BEGIN
+  LET x := ( SELECT `xyz``abc`.`a b`
+    FROM `xyz``abc` );
+END;
+*/
+
+#define _PROC_ "qid_t3"
+/*
+export:
+DECLARE PROC qid_t3 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code qid_t3(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_int32 x = 0;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT [xyz`abc].[a b] "
+      "FROM [xyz`abc]");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    x = sqlite3_column_int(_temp_stmt, 0);
+  cql_finalize_stmt(&_temp_stmt);
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t4a ()
+BEGIN
+  DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
+END;
+*/
+
+#define _PROC_ "qid_t4a"
+/*
+export:
+DECLARE PROC qid_t4a ();
+*/
+
+typedef struct qid_t4a_Q_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+} qid_t4a_Q_row;
+void qid_t4a(void) {
+  qid_t4a_Q_row Q = { 0 };
+
+
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t4b ()
+BEGIN
+  DECLARE R CURSOR LIKE `xyz``abc`;
+  FETCH R(x, `a b`) FROM VALUES(1, 2);
+  CALL printf("%d %d\n", R.x, R.`a b`);
+  FETCH R(x, `a b`) FROM VALUES(3, 4);
+END;
+*/
+
+#define _PROC_ "qid_t4b"
+/*
+export:
+DECLARE PROC qid_t4b ();
+*/
+
+typedef struct qid_t4b_R_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int32 x;
+  cql_int32 X_aX20b;
+} qid_t4b_R_row;
+void qid_t4b(void) {
+  qid_t4b_R_row R = { 0 };
+
+  R._has_row_ = 1;
+  R.x = 1;
+  R.X_aX20b = 2;
+  printf("%d %d\n", R.x, R.X_aX20b);
+  R._has_row_ = 1;
+  R.x = 3;
+  R.X_aX20b = 4;
+
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

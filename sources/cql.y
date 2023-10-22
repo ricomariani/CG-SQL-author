@@ -1059,11 +1059,11 @@ call:
 
 basic_expr:
   name  { $basic_expr = $name; }
+  | QID { $basic_expr = new_ast_qstr($QID); }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
   | basic_expr[lhs] '.' '*' { $$ = new_ast_table_star($lhs); }
-  | QID '.' '*' { $$ = new_ast_table_star(new_ast_qstr($QID)); }
   | any_literal  { $basic_expr = $any_literal; }
   | const_expr { $basic_expr = $const_expr; }
   | '(' expr ')'  { $basic_expr = $expr; }

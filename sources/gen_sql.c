@@ -938,8 +938,8 @@ static void gen_case_list(ast_node *ast) {
 
 static void gen_expr_table_star(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_table_star(ast));
-  EXTRACT_STRING(table, ast->left);
-  gen_printf("%s.*", table);
+  gen_name(ast->left);
+  gen_printf(".*");
 }
 
 static void gen_expr_star(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2084,8 +2084,8 @@ static void gen_select_expr_list(ast_node *ast) {
     else if (is_ast_table_star(expr)) {
       if (!eval_star_callback(expr)) {
         EXTRACT_NOTNULL(table_star, expr);
-        EXTRACT_STRING(name, table_star->left);
-        gen_printf("%s.*", name);
+        gen_name(table_star->left);
+        gen_printf(".*");
       }
     }
     else if (is_ast_column_calculation(expr)) {

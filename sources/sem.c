@@ -2415,6 +2415,14 @@ cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
   CSTR subj3 = "";
 
   if (subject) {
+
+    if (subject[0] == 'X' && subject[1] == '_' && strchr(subject+2, 'X')) {
+       // this is almost certainly a QID, decode it
+       CHARBUF_OPEN(tmp);
+       cg_decode_qstr(&tmp, subject);
+       subject = Strdup(tmp.ptr);
+       CHARBUF_CLOSE(tmp);
+    }
     subj1 = " '";
     subj2 = subject;
     subj3 = "'";
@@ -14968,6 +14976,10 @@ static void sem_create_table_stmt(ast_node *ast) {
   ast->sem->delete_version      = table_vers_info.delete_version;
   ast->sem->recreate            = table_vers_info.recreate;
   ast->sem->recreate_group_name = table_vers_info.recreate_group_name;
+
+  if (is_qid(name_ast)) {
+    ast->sem->sem_type |= SEM_TYPE_QID;
+  }
 
   run_pending_table_validations();
 

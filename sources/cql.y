@@ -555,13 +555,13 @@ schema_upgrade_version_stmt:
   ;
 
 set_stmt:
-  SET name ASSIGN expr  { $set_stmt = new_ast_assign($name, $expr); }
-  | SET name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
-  | SET name '[' arg_list ']' ASSIGN expr  { $set_stmt = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($name, $arg_list), $expr)); }
+  SET sql_name ASSIGN expr  { $set_stmt = new_ast_assign($sql_name, $expr); }
+  | SET sql_name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
+  | SET sql_name '[' arg_list ']' ASSIGN expr  { $set_stmt = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($sql_name, $arg_list), $expr)); }
   ;
 
 let_stmt:
-  LET name ASSIGN expr  { $let_stmt = new_ast_let_stmt($name, $expr); }
+  LET sql_name ASSIGN expr  { $let_stmt = new_ast_let_stmt($sql_name, $expr); }
   ;
 
 version_attrs_opt_recreate:
@@ -713,7 +713,7 @@ shape_def_base:
 
 sql_name:
   name  { $sql_name = $name; }
-  | QID { $sql_name = new_ast_qstr($QID); }
+  | QID { $sql_name = new_ast_qstr_quoted($QID); }
   ;
 
 misc_attr_key:
@@ -1064,7 +1064,7 @@ call:
 
 basic_expr:
   name  { $basic_expr = $name; }
-  | QID { $basic_expr = new_ast_qstr($QID); }
+  | QID { $basic_expr = new_ast_qstr_quoted($QID); }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
@@ -1234,8 +1234,8 @@ cte_table:
       $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
   | cte_decl LIKE '(' select_stmt ')'  {
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
-  | cte_decl LIKE name  {
-      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($name, NULL)); }
+  | cte_decl LIKE sql_name  {
+      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
   ;
 
 with_prefix:
@@ -1961,7 +1961,7 @@ declare_type_stmt:
   ;
 
 declare_vars_stmt:
-  DECLARE name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  DECLARE sql_name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($sql_name_list, $data_type_with_options); }
   | VAR name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
   | declare_value_cursor { $declare_vars_stmt = $declare_value_cursor; }
   ;

@@ -967,7 +967,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     EXTRACT_OPTION(flags, ast->left);
     EXTRACT(view_and_attrs, ast->right);
     EXTRACT(name_and_select, view_and_attrs->left);
-    EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
+    EXTRACT_NAME_AST(name_ast, name_and_select->left);
     EXTRACT_STRING(name, name_ast);
 
     if (flags & VIEW_IS_TEMP) {

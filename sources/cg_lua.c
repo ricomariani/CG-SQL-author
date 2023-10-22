@@ -439,7 +439,7 @@ static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
 // in semantic analysis.
 static bool_t lua_is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
   if (ast && ast->parent && (is_ast_assign(ast->parent) || is_ast_let_stmt(ast->parent))) {
-    EXTRACT_ANY_NOTNULL(name_ast, ast->parent->left);
+    EXTRACT_NAME_AST(name_ast, ast->parent->left);
     sem_t sem_type_target = name_ast->sem->sem_type;
     sem_type_target &= (SEM_TYPE_CORE | SEM_TYPE_NOTNULL);
     return sem_type_target == sem_type;
@@ -463,7 +463,7 @@ static void cg_lua_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, char
   // try to avoid creating a scratch variable if we can use the target of an assignment in flight.
   if (lua_is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
-    EXTRACT_ANY_NOTNULL(name_ast, ast->parent->left);
+    EXTRACT_NAME_AST(name_ast, ast->parent->left);
     EXTRACT_STRING(name, name_ast);
     bprintf(var, "%s", name);
   }
@@ -950,7 +950,7 @@ static void cg_lua_unary(ast_node *ast, CSTR op, charbuf *value, int32_t pri, in
 // sign has a standard helper
 static void cg_lua_func_sign(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -966,7 +966,7 @@ static void cg_lua_func_sign(ast_node *call_ast, charbuf *value) {
 // abs has a standard helper
 static void cg_lua_func_abs(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1456,7 +1456,7 @@ static void cg_lua_id(ast_node *expr, charbuf *value) {
 //   until true
 static void cg_lua_func_coalesce(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1505,7 +1505,7 @@ static void cg_lua_func_ifnull(ast_node *call_ast, charbuf *value) {
 // no-op function, we just force parents to not screw up the order of ops
 static void cg_lua_func_sensitive(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1523,7 +1523,7 @@ static void cg_lua_func_sensitive(ast_node *call_ast, charbuf *value) {
 // no-op function, we just force parents to not screw up the order of ops
 static void cg_lua_func_nullable(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1547,7 +1547,7 @@ typedef enum {
 // Generates code for all functions of the attest_notnull family.
 static void cg_lua_func_attest_notnull(ast_node *call_ast, charbuf *value, lua_attest_notnull_variant variant) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1610,7 +1610,7 @@ static void cg_lua_func_cql_inferred_notnull(ast_node *call_ast, charbuf *value)
 // i.e. lua codegen doesn't have compressed string forms yet so we just emit a normal literal
 static void cg_lua_func_cql_compressed(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1634,7 +1634,7 @@ static void cg_lua_func_last_insert_rowid(ast_node *ast, charbuf *value) {
 // a call to an external (not stored proc) function.  Use that.
 static void cg_lua_func_printf(ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1651,7 +1651,7 @@ static void cg_lua_func_printf(ast_node *call_ast, charbuf *value) {
 // this is super simple in LUA because the nullable case is the same as the not nullable case
 static void cg_lua_func_cql_get_blob_size(ast_node *ast, charbuf *value) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -1670,7 +1670,7 @@ static void cg_lua_func_cql_get_blob_size(ast_node *ast, charbuf *value) {
 // because semantic analysis verified them already.
 static void cg_lua_expr_call(ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
 
   // name( [arg_list] )
@@ -2067,7 +2067,7 @@ static void cg_lua_if_stmt(ast_node *ast) {
 // we have to do here is pull the name and types out of the ast.
 static void cg_lua_assign(ast_node *ast) {
   Contract(is_ast_assign(ast) || is_ast_let_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
   CSTR name = name_ast->sem->name;  // crucial: use the canonical name not the specified name
@@ -2088,7 +2088,7 @@ static void cg_lua_assign(ast_node *ast) {
 // then do the usual SET codegen.
 static void cg_lua_let_stmt(ast_node *ast) {
   Contract(is_ast_let_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
 
   cg_lua_declare_simple_var(name_ast->sem->sem_type, name);
@@ -2128,7 +2128,7 @@ static void cg_lua_params(ast_node *ast, charbuf *decls, charbuf *returns) {
 static void cg_lua_param_init(ast_node *ast, charbuf *body) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
+  EXTRACT_NAME_AST(name_ast, param_detail->left)
   EXTRACT_STRING(name, name_ast);
 
   // [in out] name [datatype]
@@ -2180,7 +2180,7 @@ static void cg_lua_emit_contracts(ast_node *ast, charbuf *b) {
     Contract(is_ast_params(params));
     EXTRACT_NOTNULL(param, params->left);
     EXTRACT_NOTNULL(param_detail, param->right);
-    EXTRACT_ANY_NOTNULL(name_ast, param_detail->left);
+    EXTRACT_NAME_AST(name_ast, param_detail->left);
     EXTRACT_STRING(name, name_ast);
     sem_t sem_type = name_ast->sem->sem_type;
 
@@ -2547,7 +2547,7 @@ static void cg_lua_declare_vars_type(ast_node *declare_vars_type) {
   // DECLARE [name_list] [data_type]
 
   for (ast_node *ast = name_list; ast; ast = ast->right) {
-    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    EXTRACT_NAME_AST(name_ast, ast->left);
     EXTRACT_STRING(name, name_ast);
 
     cg_lua_declare_simple_var(name_ast->sem->sem_type, name);
@@ -3478,7 +3478,7 @@ static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
 //    can be used in expressions to see if a row was fetched.
 static void cg_lua_declare_cursor(ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
 
   // TODO, finalize cursor before fetching if in loop cg_c does this
@@ -3622,7 +3622,7 @@ static void cg_lua_declare_cursor_like(ast_node *name_ast) {
 static void cg_lua_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   Contract(ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   cg_lua_declare_cursor_like(name_ast);
 }
@@ -3630,7 +3630,7 @@ static void cg_lua_declare_cursor_like_name(ast_node *ast) {
 static void cg_lua_declare_cursor_like_select(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
   Contract(is_select_stmt(ast->right));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   cg_lua_declare_cursor_like(name_ast);
 }
@@ -3638,7 +3638,7 @@ static void cg_lua_declare_cursor_like_select(ast_node *ast) {
 static void cg_lua_declare_cursor_like_typed_names(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
   Contract(is_ast_typed_names(ast->right));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   cg_lua_declare_cursor_like(name_ast);
 }
@@ -3647,7 +3647,7 @@ static void cg_lua_declare_cursor_like_typed_names(ast_node *ast) {
 // for the cursor here.
 static void cg_lua_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
   EXTRACT_NOTNULL(call_stmt, ast->right);
 
@@ -3776,7 +3776,7 @@ static void cg_lua_fetch_stmt(ast_node *ast) {
     int32_t i = 0; // column get is zero based
 
     for (ast_node *item = name_list; item; item = item->right, i++) {
-      EXTRACT_ANY_NOTNULL(name_ast, item->left);
+      EXTRACT_NAME_AST(name_ast, item->left);
       EXTRACT_STRING(var, name_ast);
       bprintf(cg_main_output, "%s = %s.", var, cursor_name);
       if (strcmp(sptr->names[i], "_anon")) {
@@ -4191,7 +4191,7 @@ static void cg_lua_echo_stmt(ast_node *ast) {
 // given a name in the AST.  This is for when the user coded the call.
 static void cg_lua_call_external(ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY(arg_list, ast->right);
 
@@ -4293,7 +4293,7 @@ static void cg_lua_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_t
 // This code is also used in the proc as func path hence the dml stuff
 static void cg_lua_user_func(ast_node *ast, charbuf *value) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -4477,7 +4477,7 @@ static void cg_lua_emit_proc_params(charbuf *output, charbuf *results, ast_node 
 // several rules for each kind of arg, described above in cg_lua_emit_one_arg.
 static void cg_lua_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY(expr_list, ast->right);
 
@@ -4835,7 +4835,7 @@ static void cg_lua_emit_group_stmt(ast_node *ast) {
   Contract(!lua_in_var_group_emit);
   lua_in_var_group_emit = true;
   while (name_list) {
-    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_NAME_AST(name_ast, name_list->left);
     EXTRACT_STRING(name, name_ast);
 
     ast_node *group = find_variable_group(name);
@@ -4921,7 +4921,7 @@ static void cg_lua_emit_enums_stmt(ast_node *ast) {
 
 static void cg_lua_emit_one_const_group(ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(const_values, ast->right);
   EXTRACT_STRING(name, name_ast);
 

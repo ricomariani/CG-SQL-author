@@ -646,7 +646,7 @@ static CSTR get_table_or_view_name(ast_node *table_or_view) {
   if (is_ast_create_table_stmt(table_or_view)) {
     EXTRACT_NOTNULL(create_table_name_flags, table_or_view->left);
     EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-    EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+    EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
     EXTRACT_STRING(name, name_ast);
     table_name = name;
   }
@@ -654,7 +654,7 @@ static CSTR get_table_or_view_name(ast_node *table_or_view) {
     Contract(is_ast_create_view_stmt(table_or_view));
     EXTRACT(view_and_attrs, table_or_view->right);
     EXTRACT(name_and_select, view_and_attrs->left);
-    EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
+    EXTRACT_NAME_AST(name_ast, name_and_select->left);
     EXTRACT_STRING(name, name_ast);
     table_name = name;
   }

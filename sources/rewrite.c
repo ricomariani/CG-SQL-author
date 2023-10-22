@@ -484,7 +484,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
     }
 
     ast_node *type = rewrite_gen_data_type(sem_type, param_kind);
-    ast_node *name_ast = new_ast_str(param_name);
+    ast_node *name_ast = new_str_or_qstr(param_name, !!(sem_type & SEM_TYPE_QID));
     ast_node *param_detail_new = new_ast_param_detail(name_ast, type);
 
     ast_node *inout = NULL; // IN by default
@@ -750,7 +750,7 @@ cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(ast_node *arg_list) {
 // cql_cursor_diff_xxx(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
 cql_noexport void rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_name) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -792,7 +792,7 @@ cql_noexport void rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_na
 // caller deal with it.
 cql_noexport void rewrite_iif(ast_node *ast) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -3627,7 +3627,7 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(
 cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
   Contract(is_ast_expr_stmt(ast));
   EXTRACT_NOTNULL(call, ast->left);
-  EXTRACT_ANY_NOTNULL(name_ast, call->left);
+  EXTRACT_NAME_AST(name_ast, call->left);
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 

@@ -88986,3 +88986,84 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already
         | {name `a b`}
         | {type_int}: integer
 
+The statement ending at line XXXX
+
+CREATE PROC args_defined_by_exotics (x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+BEGIN
+  SET `a b_` := 1;
+  SET `a b_` := `a b_` + 1;
+  LET `u v` := 5;
+  SET `u v` := 6;
+END;
+
+  {create_proc_stmt}: ok
+  | {name args_defined_by_exotics}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: x_: integer notnull variable in
+    | | | {param_detail}: x_: integer notnull variable in
+    | |   | {name x_}: x_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: X_aX20b_: integer notnull variable in was_set
+    |     | {param_detail}: X_aX20b_: integer notnull variable in was_set
+    |       | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {stmt_list}: ok
+      | {assign}: X_aX20b_: integer notnull variable in was_set
+      | | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+      | | {int 1}: integer notnull
+      | {assign}: X_aX20b_: integer notnull variable in was_set
+      | | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+      | | {add}: integer notnull
+      |   | {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+      |   | {int 1}: integer notnull
+      | {let_stmt}: X_uX20v: integer notnull variable was_set
+      | | {name `u v`}: X_uX20v: integer notnull variable was_set
+      | | {int 5}: integer notnull
+      | {assign}: X_uX20v: integer notnull variable was_set
+        | {name `u v`}: X_uX20v: integer notnull variable was_set
+        | {int 6}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_boxing_with_qid ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT 1 AS x;
+  DECLARE `box obj` OBJECT<C CURSOR>;
+  SET `box obj` FROM CURSOR C;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name cursor_boxing_with_qid}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { x: integer notnull } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull } variable dml_proc boxed
+      | | {select_stmt}: select: { x: integer notnull }
+      |   | {select_core_list}: select: { x: integer notnull }
+      |   | | {select_core}: select: { x: integer notnull }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull }
+      |   |     | {select_expr_list}: select: { x: integer notnull }
+      |   |     | | {select_expr}: x: integer notnull
+      |   |     |   | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name x}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {declare_vars_type}: object<C CURSOR>
+      | | {name_list}: X_boxX20obj: object<C CURSOR> variable
+      | | | {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+      | | {type_object}: object<C CURSOR>
+      |   | {name C CURSOR}
+      | {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
+        | {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+        | {name C}: C: select: { x: integer notnull } variable dml_proc
+

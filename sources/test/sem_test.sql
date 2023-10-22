@@ -23729,3 +23729,42 @@ drop view `vvv v`;
 -- the echo is all that matters
 -- + ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
 alter table `xyz``abc` add column `a b` int;
+
+-- TEST: this construct forces exotic names into the reality of locals
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE PROC args_defined_by_exotics (x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+-- + SET `a b_` := 1;
+-- + SET `a b_` := `a b_` + 1;
+-- + LET `u v` := 5;
+-- + SET `u v` := 6;
+-- + {param}: X_aX20b_: integer notnull variable in was_set
+-- + {assign}: X_aX20b_: integer notnull variable in was_set
+-- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+-- + {add}: integer notnull
+-- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+-- + {let_stmt}: X_uX20v: integer notnull variable was_set
+-- + {name `u v`}: X_uX20v: integer notnull variable was_set
+-- + {assign}: X_uX20v: integer notnull variable was_set
+-- - error:
+create proc args_defined_by_exotics(like `xyz``abc`)
+begin
+  `a b_` := 1;
+  `a b_` += 1;
+  LET `u v` := 5;
+  SET `u v` := 6;
+end;
+
+-- TEST: boxed cursor constructs and unusual box object
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE C CURSOR FOR SELECT 1 AS x;
+-- + DECLARE `box obj` OBJECT<C CURSOR>;
+-- + SET `box obj` FROM CURSOR C;
+-- + {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+-- + {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
+-- - error:
+create proc cursor_boxing_with_qid()
+begin
+  declare C cursor for select 1 x;
+  declare `box obj` object<C cursor>;
+  set `box obj` from cursor C;
+end;

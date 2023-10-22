@@ -552,7 +552,7 @@ static void cg_json_constant_groups(charbuf* output) {
   for (list_item *item = all_constant_groups_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_declare_const_stmt(ast));
-    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    EXTRACT_NAME_AST(name_ast, ast->left);
     EXTRACT_NOTNULL(const_values, ast->right);
     EXTRACT_STRING(name, name_ast);
 
@@ -792,7 +792,7 @@ static void cg_json_col_def(charbuf *output, col_info *info) {
   EXTRACT(misc_attrs, def->right);
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(col, 2);
@@ -1475,7 +1475,7 @@ static void cg_json_views(charbuf *output) {
     EXTRACT(view_and_attrs, ast->right);
     EXTRACT(name_and_select, view_and_attrs->left);
     EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-    EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
+    EXTRACT_NAME_AST(name_ast, name_and_select->left);
     EXTRACT_STRING(name, name_ast);
 
     if (i > 0) {
@@ -1551,7 +1551,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
 
   int32_t temp = flags & TABLE_IS_TEMP;
@@ -1904,7 +1904,7 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
 
   EXTRACT_ANY_NOTNULL(insert_type, insert_stmt->left);
   EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
-  EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left)
+  EXTRACT_NAME_AST(name_ast, name_columns_values->left)
   EXTRACT_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY(columns_values_right, columns_values->right);
@@ -1966,7 +1966,7 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
 static void cg_json_delete_stmt(charbuf *output, ast_node * ast) {
   Contract(is_delete_stmt(ast));
   ast_node *delete_stmt = is_ast_with_delete_stmt(ast) ? ast->right : ast;
-  EXTRACT_ANY_NOTNULL(name_ast, delete_stmt->left);
+  EXTRACT_NAME_AST(name_ast, delete_stmt->left);
 
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
@@ -1981,7 +1981,7 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
   Contract(is_update_stmt(ast));
   ast_node *update_stmt = is_ast_with_update_stmt(ast) ? ast->right : ast;
 
-  EXTRACT_ANY_NOTNULL(name_ast, update_stmt->left);
+  EXTRACT_NAME_AST(name_ast, update_stmt->left);
 
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
@@ -2229,7 +2229,7 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
   bool_t no_check_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast);
   Contract(select_func || non_select_func);
 
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT(params, func_params_return->left);
@@ -2328,7 +2328,7 @@ static void cg_json_declare_proc_no_check(charbuf *stmt_out, ast_node *ast, ast_
 static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
-  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
+  EXTRACT_NAME_AST(name_ast, proc_name_type->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -2383,7 +2383,7 @@ static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *mis
 static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(unused == NULL);  // proc output is complicated, this code knows what to do
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);

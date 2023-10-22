@@ -531,7 +531,7 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
       if (misc_attrs != NULL) {
         EXTRACT_NOTNULL(create_table_name_flags, item->ast->left);
         EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-        EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+        EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
         EXTRACT_STRING(name, name_ast);
         if (exists_attribute_str(misc_attrs, "no_table_scan")) {
           if (no_scan_tables_buf.used > 1) {

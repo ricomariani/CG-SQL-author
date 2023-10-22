@@ -236,7 +236,8 @@ cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull v
 cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_qstr(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr_quoted(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_blob(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_str_or_qstr(CSTR _Nonnull name, bool_t qstr);
 
@@ -406,6 +407,10 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   Contract(is_ast_str(node)); \
   const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
+
+#define EXTRACT_NAME_AST(name_ast, node) \
+  Contract(is_id(node)); \
+  ast_node *name_ast = (node);
 
 #define EXTRACT_BLOBTEXT(name, node) \
   Contract(is_ast_blob(node)); \

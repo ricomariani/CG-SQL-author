@@ -269,15 +269,36 @@ cql_noexport ast_node *new_ast_cstr(CSTR value) {
   return (ast_node *)sast;
 }
 
-cql_noexport ast_node *new_ast_qstr(CSTR value) {
-  CHARBUF_OPEN(encoded);
-    cg_encode_qstr(&encoded, value);
-    value = Strdup(encoded.ptr);
-  CHARBUF_CLOSE(encoded);
+cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
+  Contract(value);
+  Contract(value[0] != '`');
 
   str_ast_node *sast = (str_ast_node *)new_ast_str(value);
   sast->str_type = STR_QSTR;
   return (ast_node *)sast;
+}
+
+cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
+  Contract(value);
+  Contract(value[0] == '`');
+  ast_node *result;
+
+  CHARBUF_OPEN(encoded);
+    cg_encode_qstr(&encoded, value);
+    result = new_ast_qstr_escaped(Strdup(encoded.ptr));
+  CHARBUF_CLOSE(encoded);
+
+  return result;
+}
+
+// create a new id node either qid or normal based on the bool
+cql_noexport ast_node *new_str_or_qstr(CSTR name, bool_t qstr) {
+  if (qstr) {
+    return new_ast_qstr_escaped(name);
+  }
+  else {
+    return new_ast_str(name);
+  }
 }
 
 static char padbuffer[4096];
@@ -796,7 +817,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     EXTRACT_NOTNULL(call_stmt, node->left);
     EXTRACT(cte_binding_list, node->right);
 
-    EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+    EXTRACT_NAME_AST(name_ast, call_stmt->left);
     EXTRACT_STRING(name, name_ast);
     ast_node *proc = find_proc(name);
     if (proc) {
@@ -838,31 +859,31 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     // normally we don't start by walking tables anyway so this doesn't
     // run if you do a standard walk of a procedure
     if (callbacks->notify_fk) {
-      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      EXTRACT_NAME_AST(name_ast, node->left);
       table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_drop_view_stmt(node) || is_ast_drop_table_stmt(node)) {
     if (callbacks->notify_table_or_view_drops) {
-      EXTRACT_ANY_NOTNULL(name_ast, node->right);
+      EXTRACT_NAME_AST(name_ast, node->right);
       table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_trigger_target_action(node)) {
     if (callbacks->notify_triggers) {
-      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      EXTRACT_NAME_AST(name_ast, node->left);
       table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_delete_stmt(node)) {
-    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    EXTRACT_NAME_AST(name_ast, node->left);
     table_or_view_name_ast = name_ast;
     alt_callback = callbacks->callback_deletes;
     alt_visited = callbacks->visited_delete;
   }
   else if (is_ast_insert_stmt(node)) {
     EXTRACT(name_columns_values, node->right);
-    EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left);
+    EXTRACT_NAME_AST(name_ast, name_columns_values->left);
     table_or_view_name_ast = name_ast;
     alt_callback = callbacks->callback_inserts;
     alt_visited = callbacks->visited_insert;
@@ -882,7 +903,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     // but it lets us share code so we just go with it.  The other case
     // is a possible proc_as_func call so we must check if the target is a proc.
 
-    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    EXTRACT_NAME_AST(name_ast, node->left);
     EXTRACT_STRING(name, name_ast);
     ast_node *proc = find_proc(name);
 
@@ -1050,17 +1071,3 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   return _ast;
 }
 
-// create a new id node either qid or normal based on the bool
-cql_noexport ast_node *new_str_or_qstr(CSTR name, bool_t qstr) {
-  ast_node *ast;
-  if (qstr) {
-    CHARBUF_OPEN(tmp);
-    cg_decode_qstr(&tmp, name);
-    ast = new_ast_qstr(Strdup(tmp.ptr));
-    CHARBUF_CLOSE(tmp);
-  }
-  else {
-    ast = new_ast_str(name);
-  }
-  return ast;
-}

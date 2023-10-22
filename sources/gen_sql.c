@@ -156,6 +156,13 @@ static void gen_name(ast_node *ast) {
   }
 }
 
+static void gen_constraint_name(ast_node *ast) {
+  EXTRACT_ANY_NOTNULL(name_ast, ast);
+  gen_printf("CONSTRAINT ");
+  gen_name(name_ast);
+  gen_printf(" ");
+}
+
 static void gen_name_list(ast_node *list) {
   Contract(is_ast_name_list(list));
 
@@ -369,8 +376,7 @@ static void gen_unq_def(ast_node *def) {
   EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   gen_printf("UNIQUE (");
@@ -384,8 +390,7 @@ static void gen_unq_def(ast_node *def) {
 static void gen_check_def(ast_node *def) {
   Contract(is_ast_check_def(def));
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   EXTRACT_ANY_NOTNULL(expr, def->right);
@@ -463,11 +468,11 @@ static void gen_fk_target_options(ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_OPTION(flags, ast->right);
-  EXTRACT_STRING(table_name, fk_target->left);
+  EXTRACT_ANY_NOTNULL(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   gen_printf("REFERENCES ");
-  gen_printf("%s", table_name);
+  gen_name(table_name_ast);
   gen_printf(" (");
   gen_name_list(ref_list);
   gen_printf(")");
@@ -481,8 +486,7 @@ static void gen_fk_def(ast_node *def) {
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   gen_printf("FOREIGN KEY (");
@@ -522,8 +526,7 @@ static void gen_pk_def(ast_node *def) {
   EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   gen_printf("PRIMARY KEY (");

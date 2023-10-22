@@ -88376,10 +88376,10 @@ The statement ending at line XXXX
 
 CREATE TABLE `xyz``abc`(
   x INTEGER NOT NULL,
-  `a b` INTEGER NOT NULL
+  `a b` INTEGER NOT NULL UNIQUE
 );
 
-  {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } qid
+  {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -88392,12 +88392,13 @@ CREATE TABLE `xyz``abc`(
     |   | | {type_int}: integer
     |   | {col_attrs_not_null}: ok
     | {col_key_list}
-      | {col_def}: X_aX20b: integer notnull qid
+      | {col_def}: X_aX20b: integer notnull unique_key qid
         | {col_def_type_attrs}: ok
           | {col_def_name_type}
           | | {name `a b`}
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
+            | {col_attrs_unique}
 
 The statement ending at line XXXX
 
@@ -88559,14 +88560,14 @@ END;
       |   | {shape_exprs}
       |     | {shape_expr}
       |       | {name `a b`}
-      | {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
-      | | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
-      | | {shape_def}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } qid
+      | {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
+      | | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
+      | | {shape_def}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
       |   | {like}: ok
       |     | {name `xyz``abc`}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+      |   | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -88587,12 +88588,12 @@ END;
       |     | | {name R}
       |     | | {name x}
       |     | {arg_list}
-      |       | {dot}: R.X_aX20b: integer notnull variable qid
+      |       | {dot}: R.X_aX20b: integer notnull variable unique_key qid
       |         | {name R}
       |         | {name `a b`}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+          | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -88657,4 +88658,116 @@ CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
           | {indexed_column}
             | {name `a b`}: X_aX20b: integer notnull qid
             | {asc}
+
+The statement ending at line XXXX
+
+CREATE TABLE qid_ref_1(
+  x INTEGER NOT NULL REFERENCES `xyz``abc` (`a b`)
+);
+
+  {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name qid_ref_1}
+  | {col_key_list}
+    | {col_def}: x: integer notnull foreign_key
+      | {col_def_type_attrs}: ok
+        | {col_def_name_type}
+        | | {name x}
+        | | {type_int}: integer
+        | {col_attrs_not_null}: ok
+          | {col_attrs_fk}: ok
+            | {fk_target_options}
+              | {fk_target}
+              | | {name `xyz``abc`}
+              | | {name_list}
+              |   | {name `a b`}: X_aX20b: integer notnull qid
+              | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE qid_ref_2(
+  `uu uu` INTEGER NOT NULL,
+  CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
+);
+
+  {create_table_stmt}: qid_ref_2: { X_uuX20uu: integer notnull foreign_key qid }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name qid_ref_2}
+  | {col_key_list}
+    | {col_def}: X_uuX20uu: integer notnull qid
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name `uu uu`}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {fk_def}: ok
+        | {name `c1`}
+        | {fk_info}
+          | {name_list}
+          | | {name `uu uu`}: X_uuX20uu: integer notnull qid
+          | {fk_target_options}
+            | {fk_target}
+            | | {name `xyz``abc`}
+            | | {name_list}
+            |   | {name `a b`}: X_aX20b: integer notnull qid
+            | {int 0}
+
+The statement ending at line XXXX
+
+CREATE TABLE qid_ref_3(
+  `uu uu` INTEGER NOT NULL,
+  CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
+);
+
+  {create_table_stmt}: qid_ref_3: { X_uuX20uu: integer notnull partial_pk qid }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name qid_ref_3}
+  | {col_key_list}
+    | {col_def}: X_uuX20uu: integer notnull partial_pk qid
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name `uu uu`}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {pk_def}
+        | {name `c1`}
+        | {indexed_columns_conflict_clause}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name `uu uu`}: X_uuX20uu: integer notnull qid
+
+The statement ending at line XXXX
+
+CREATE TABLE qid_ref_4(
+  `uu uu` INTEGER NOT NULL,
+  CONSTRAINT `c1` UNIQUE (`uu uu`)
+);
+
+  {create_table_stmt}: qid_ref_4: { X_uuX20uu: integer notnull qid }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name qid_ref_4}
+  | {col_key_list}
+    | {col_def}: X_uuX20uu: integer notnull qid
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name `uu uu`}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {unq_def}
+        | {name `c1`}
+        | {indexed_columns_conflict_clause}
+          | {indexed_columns}
+            | {indexed_column}
+              | {name `uu uu`}: X_uuX20uu: integer notnull qid
 

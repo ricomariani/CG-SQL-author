@@ -23502,16 +23502,16 @@ declare select func select_func_with_out_arg2(out out_param int!) int;
 -- + CREATE TABLE `xyz``abc`(
 -- + x INTEGER NOT NULL,
 -- + `a b` INTEGER NOT NULL
--- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } qid
+-- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
 -- + {name `xyz``abc`}
 -- + {col_def}: x: integer notnull
--- + {col_def}: X_aX20b: integer notnull qid
+-- + {col_def}: X_aX20b: integer notnull unique_key qid
 -- + {name `a b`}
 -- - error:
 create table `xyz``abc`
 (
  x int!,
- `a b` int!
+ `a b` int! unique
 );
 
 -- TEST: make a cursor on an exotic name and fetch from it
@@ -23575,7 +23575,7 @@ end;
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
 -- + FETCH R(x, `a b`) FROM VALUES(3, 4);
 -- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
--- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
 create proc qid_t4()
 begin
   cursor Q like `xyz``abc`(-`a b`);
@@ -23606,3 +23606,47 @@ create view `view` as select 1 x;
 -- + {name `a b`}: X_aX20b: integer notnull qid
 -- - error:
 create index `abc def` on `xyz``abc` (`a b` asc);
+
+-- TEST: use a reference attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + x INTEGER NOT NULL REFERENCES `xyz``abc` (`a b`)
+-- + {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+create table qid_ref_1 (
+  x int! references `xyz``abc`(`a b`)
+);
+
+-- TEST: use a reference attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
+-- +  {name `c1`}
+-- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+create table qid_ref_2 (
+  `uu uu` int!,
+  constraint `c1` foreign key ( `uu uu` ) references `xyz``abc`(`a b`)
+);
+
+-- TEST: use a primary key attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
+-- + {create_table_stmt}: qid_ref_3: { X_uuX20uu: integer notnull partial_pk qid }
+-- + {name `c1`}
+-- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+create table qid_ref_3 (
+  `uu uu` int!,
+  constraint `c1` primary key ( `uu uu` )
+);
+
+-- TEST: use a primary key attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CONSTRAINT `c1` UNIQUE (`uu uu`)
+-- + {create_table_stmt}: qid_ref_4: { X_uuX20uu: integer notnull qid }
+-- + {name `c1`}
+-- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+create table qid_ref_4 (
+  `uu uu` int!,
+  constraint `c1` unique ( `uu uu` )
+);

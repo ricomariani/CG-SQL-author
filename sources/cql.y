@@ -291,7 +291,7 @@ static void cql_reset_globals(void);
 
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list shape_arguments
-%type <aval> name name_list opt_name_list opt_name
+%type <aval> name name_list sql_name_list opt_name_list opt_name
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
@@ -761,9 +761,9 @@ col_def:
   ;
 
 pk_def:
-  CONSTRAINT name PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
+  CONSTRAINT sql_name PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $pk_def = new_ast_pk_def($name, indexed_columns_conflict_clause);
+    $pk_def = new_ast_pk_def($sql_name, indexed_columns_conflict_clause);
   }
   | PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
@@ -822,23 +822,23 @@ fk_initial_state:
   ;
 
 fk_def:
-  CONSTRAINT name FOREIGN KEY '(' name_list ')' fk_target_options  {
-    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
-    $fk_def = new_ast_fk_def($name, fk_info); }
-  | FOREIGN KEY '(' name_list ')' fk_target_options  {
-    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
+  CONSTRAINT sql_name FOREIGN KEY '(' sql_name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($sql_name_list, $fk_target_options);
+    $fk_def = new_ast_fk_def($sql_name, fk_info); }
+  | FOREIGN KEY '(' sql_name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($sql_name_list, $fk_target_options);
     $fk_def = new_ast_fk_def(NULL, fk_info); }
   ;
 
 fk_target_options:
-  REFERENCES name '(' name_list ')' opt_fk_options  {
-    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($name, $name_list), new_ast_opt($opt_fk_options)); }
+  REFERENCES sql_name '(' sql_name_list ')' opt_fk_options  {
+    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($sql_name, $sql_name_list), new_ast_opt($opt_fk_options)); }
   ;
 
 unq_def:
-  CONSTRAINT name UNIQUE '(' indexed_columns ')' opt_conflict_clause {
+  CONSTRAINT sql_name UNIQUE '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $unq_def = new_ast_unq_def($name, indexed_columns_conflict_clause);
+    $unq_def = new_ast_unq_def($sql_name, indexed_columns_conflict_clause);
   }
   | UNIQUE '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
@@ -902,6 +902,11 @@ opt_name:
 name_list[result]:
   name  { $result = new_ast_name_list($name, NULL); }
   |  name ',' name_list[nl]  { $result = new_ast_name_list($name, $nl); }
+  ;
+
+sql_name_list[result]:
+  sql_name  { $result = new_ast_name_list($sql_name, NULL); }
+  |  sql_name ',' sql_name_list[nl]  { $result = new_ast_name_list($sql_name, $nl); }
   ;
 
 opt_name_list:

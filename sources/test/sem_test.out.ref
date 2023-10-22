@@ -88771,3 +88771,109 @@ CREATE TABLE qid_ref_4(
             | {indexed_column}
               | {name `uu uu`}: X_uuX20uu: integer notnull qid
 
+The statement ending at line XXXX
+
+UPDATE `xyz``abc`
+SET `a b` = 5;
+
+  {update_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  | {update_set}
+    | {update_list}: ok
+    | | {update_entry}: X_aX20b: integer notnull qid
+    |   | {name `a b`}: X_aX20b: integer notnull qid
+    |   | {int 5}: integer notnull
+    | {update_from}
+      | {update_where}
+        | {update_orderby}
+
+The statement ending at line XXXX
+
+INSERT INTO `xyz``abc`(x, `a b`) VALUES(1, 5);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer notnull
+      |   | {name_list}
+      |     | {name `a b`}: X_aX20b: integer notnull qid
+      | {select_stmt}: values: { column1: integer notnull, column2: integer notnull }
+        | {select_core_list}: values: { column1: integer notnull, column2: integer notnull }
+        | | {select_core}: values: { column1: integer notnull, column2: integer notnull }
+        |   | {select_values}
+        |   | {values}: values: { column1: integer notnull, column2: integer notnull }
+        |     | {insert_list}: ok
+        |       | {int 1}: integer notnull
+        |       | {insert_list}
+        |         | {int 5}: integer notnull
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | {name_columns_values}
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name `a b`}: X_aX20b: integer notnull qid
+      |   | {name_list}
+      |     | {name x}: x: integer notnull
+      | {insert_list}
+        | {int 1}: integer notnull
+        | {insert_list}
+          | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | | {seed_stub}
+  |   | {int 500}: integer notnull
+  |   | {int 0}
+  | {name_columns_values}
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer notnull
+      |   | {name_list}
+      |     | {name `a b`}: X_aX20b: integer notnull qid
+      | {insert_list}
+        | {int 2}: integer notnull
+        | {insert_list}
+          | {name _seed_}: _seed_: integer notnull variable
+
+The statement ending at line XXXX
+
+INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+
+  {insert_stmt}: ok
+  | {insert_normal}
+  | | {seed_stub}
+  |   | {int 500}: integer notnull
+  |   | {int 0}
+  | {name_columns_values}
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {columns_values}: ok
+      | {column_spec}
+      | | {name_list}
+      |   | {name x}: x: integer notnull
+      |   | {name_list}
+      |     | {name `a b`}: X_aX20b: integer notnull qid
+      | {insert_list}
+        | {int 2}: integer notnull
+        | {insert_list}
+          | {name _seed_}: _seed_: integer notnull variable
+

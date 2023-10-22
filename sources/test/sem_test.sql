@@ -23635,6 +23635,7 @@ create table qid_ref_2 (
 -- + {create_table_stmt}: qid_ref_3: { X_uuX20uu: integer notnull partial_pk qid }
 -- + {name `c1`}
 -- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- - error:
 create table qid_ref_3 (
   `uu uu` int!,
   constraint `c1` primary key ( `uu uu` )
@@ -23646,7 +23647,45 @@ create table qid_ref_3 (
 -- + {create_table_stmt}: qid_ref_4: { X_uuX20uu: integer notnull qid }
 -- + {name `c1`}
 -- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- - error:
 create table qid_ref_4 (
   `uu uu` int!,
   constraint `c1` unique ( `uu uu` )
 );
+
+-- TEST: an update statement with quoted strings
+-- verify that echoing is re-emitting the escaped text
+-- + UPDATE `xyz``abc`
+-- + SET `a b` = 5;
+-- + {update_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+update `xyz``abc` set `a b` = 5;
+
+-- TEST: insert statement vanilla with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(1, 5);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc` values (1, 5);
+
+-- TEST: insert statement using syntaxwith quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc` using 1 `a b`, 2 x;
+
+-- TEST: insert statement dummy seed using form
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc` using 2 x @dummy_seed(500);
+
+-- TEST: insert statement dummy seed values form
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc`(x) values(2) @dummy_seed(500);

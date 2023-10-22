@@ -291,7 +291,7 @@ static void cql_reset_globals(void);
 
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list shape_arguments
-%type <aval> name name_list sql_name_list opt_name_list opt_name
+%type <aval> name name_list sql_name_list opt_name_list opt_sql_name
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
@@ -894,9 +894,9 @@ name:
   | COLUMN { $name = new_ast_str("column"); }
   ;
 
-opt_name:
-  /* nil */  { $opt_name = NULL; }
-  | name  { $opt_name = $name; }
+opt_sql_name:
+  /* nil */  { $opt_sql_name = NULL; }
+  | sql_name  { $opt_sql_name = $sql_name; }
   ;
 
 name_list[result]:
@@ -1676,27 +1676,26 @@ from_shape:
   ;
 
 insert_stmt:
-  insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec  {
+  insert_stmt_type sql_name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
-  | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec  {
+  | insert_stmt_type sql_name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
-  | insert_stmt_type name DEFAULT VALUES  {
+  | insert_stmt_type sql_name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, default_columns_values);
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, default_columns_values);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
-  | insert_stmt_type name USING select_stmt {
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $select_stmt);
+  | insert_stmt_type sql_name USING select_stmt {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $select_stmt);
     $insert_stmt_type->left = NULL; // dummy spec not allowed in this form
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);
-  }
-  | insert_stmt_type name USING expr_names opt_insert_dummy_spec {
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
+    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+  | insert_stmt_type sql_name USING expr_names opt_insert_dummy_spec {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $expr_names);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
@@ -1713,12 +1712,12 @@ insert_list[result]:
   ;
 
 basic_update_stmt:
-  UPDATE opt_name SET update_list opt_from_query_parts opt_where  {
+  UPDATE opt_sql_name SET update_list opt_from_query_parts opt_where  {
     struct ast_node *orderby = new_ast_update_orderby(NULL, NULL);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
-    $basic_update_stmt = new_ast_update_stmt($opt_name, list); }
+    $basic_update_stmt = new_ast_update_stmt($opt_sql_name, list); }
   ;
 
 with_update_stmt:
@@ -1726,17 +1725,17 @@ with_update_stmt:
   ;
 
 update_stmt:
-  UPDATE name SET update_list opt_from_query_parts opt_where opt_orderby opt_limit  {
+  UPDATE sql_name SET update_list opt_from_query_parts opt_where opt_orderby opt_limit  {
     struct ast_node *limit = $opt_limit;
     struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
-    $update_stmt = new_ast_update_stmt($name, list); }
+    $update_stmt = new_ast_update_stmt($sql_name, list); }
   ;
 
 update_entry:
-  name '=' expr  { $update_entry = new_ast_update_entry($name, $expr); }
+  sql_name '=' expr  { $update_entry = new_ast_update_entry($sql_name, $expr); }
   ;
 
 update_list[result]:
@@ -2208,7 +2207,7 @@ create_trigger_stmt:
   ;
 
 trigger_def:
-  name[n1] trigger_condition trigger_operation ON name[n2] trigger_action  {
+  sql_name[n1] trigger_condition trigger_operation ON sql_name[n2] trigger_action  {
   $trigger_def = new_ast_trigger_def(
         $n1,
         new_ast_trigger_condition(

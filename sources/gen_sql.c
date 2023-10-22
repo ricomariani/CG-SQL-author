@@ -3114,9 +3114,9 @@ static void gen_with_delete_stmt(ast_node *ast) {
 static void gen_update_entry(ast_node *ast) {
   Contract(is_ast_update_entry(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->right)
-  EXTRACT_STRING(name, ast->left);
-  gen_printf("%s = ", name);
-
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  gen_name(name_ast);
+  gen_printf(" = ");
   gen_root_expr(expr);
 }
 
@@ -3185,8 +3185,9 @@ static void gen_update_stmt(ast_node *ast) {
 
   gen_printf("UPDATE");
   if (ast->left) {
-    EXTRACT_STRING(name, ast->left);
-    gen_printf(" %s", name);
+    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    gen_printf(" ");
+    gen_name(name_ast);
   }
   gen_printf("\nSET ");
   gen_update_list(update_list);
@@ -3350,12 +3351,13 @@ static void gen_insert_stmt(ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
-  EXTRACT_STRING(name, name_columns_values->left);
+  EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_ANY(insert_dummy_spec, insert_type->left);
 
   gen_insert_type(insert_type);
-  gen_printf(" INTO %s", name);
+  gen_printf(" INTO ");
+  gen_name(name_ast);
 
   if (is_ast_expr_names(columns_values)) {
     gen_printf(" USING ");

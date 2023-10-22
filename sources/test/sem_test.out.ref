@@ -89067,3 +89067,30 @@ END;
         | {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
         | {name C}: C: select: { x: integer notnull } variable dml_proc
 
+The statement ending at line XXXX
+
+CREATE TABLE reuse_exotic_columns(
+  x INTEGER NOT NULL,
+  `a b` INTEGER NOT NULL
+);
+
+  {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, X_aX20b: integer notnull qid }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name reuse_exotic_columns}
+  | {col_key_list}
+    | {col_def}: x: integer notnull
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name x}
+    |   | | {type_int}: integer
+    |   | {col_attrs_not_null}: ok
+    | {col_key_list}
+      | {col_def}: X_aX20b: integer notnull qid
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+          | | {name `a b`}
+          | | {type_int}: integer
+          | {col_attrs_not_null}: ok
+

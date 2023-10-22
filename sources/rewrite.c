@@ -343,7 +343,7 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
 
     // Construct a col_def using name and core semantic type
     ast_node *data_type = rewrite_gen_data_type(core_type_of(sem_type), NULL);
-    ast_node *name_ast = new_ast_str(col_name);
+    ast_node *name_ast = new_str_or_qstr(col_name, !!(sem_type & SEM_TYPE_QID));
     ast_node *name_type = new_ast_col_def_name_type(name_ast, data_type);
 
     // In the case of columns the ast has col attributes to represent

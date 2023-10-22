@@ -23768,3 +23768,14 @@ begin
   declare `box obj` object<C cursor>;
   set `box obj` from cursor C;
 end;
+
+-- TEST: create a new table using a nested shape with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE TABLE reuse_exotic_columns(
+-- + x INTEGER NOT NULL,
+-- + `a b` INTEGER NOT NULL
+-- + {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, X_aX20b: integer notnull qid }
+-- - error:
+create table reuse_exotic_columns (
+  LIKE `xyz``abc`
+);

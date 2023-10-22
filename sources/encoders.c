@@ -343,7 +343,7 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
 cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
   Contract(qstr[0] == '`');
-  uint32_t len = strlen(qstr);
+  uint32_t len = (uint32_t)strlen(qstr);
   Contract(len >= 3);  // `a` is the smallest legal string
   Contract(qstr[len-1] == '`');
   uint32_t used = output->used;
@@ -352,7 +352,7 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   len--;
   uint32_t i;
   for (i = 1; i < len; i++) {
-    char ch = qstr[i];
+    uint8_t ch = (uint8_t)qstr[i];
     if (
       (ch >= 'a' && ch <= 'z') ||
       (ch >= 'A' && ch <= 'Z' && ch != 'X') ||

@@ -23704,3 +23704,23 @@ begin
   fetch C;
   insert into `xyz``abc`(like `xyz``abc`) values(from C);
 end;
+
+-- TEST: drop a table with quoted named
+-- the echo is all that matters
+-- + DROP TABLE `xyz``abc`;
+drop table `xyz``abc`;
+
+-- TEST: drop an index
+-- the echo is all that matters
+-- + DROP INDEX `abc`;
+drop index `abc`;
+
+-- TEST: drop a trigger
+-- the echo is all that matters
+-- + DROP TRIGGER `abc def`;
+drop trigger `abc def`;
+
+-- TEST: drop a view
+-- the echo is all that matters
+-- + DROP VIEW `vvv v`;
+drop view `vvv v`;

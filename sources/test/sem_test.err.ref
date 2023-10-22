@@ -1688,4 +1688,7 @@ test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an e
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'inout_param'
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'out_param'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found '`a b`'
+test/sem_test.sql:XXXX:1: error: in str : CQL0112: index in drop statement was not declared 'abc'
+test/sem_test.sql:XXXX:1: error: in str : CQL0113: trigger in drop statement was not declared '`abc def`'
+test/sem_test.sql:XXXX:1: error: in str : CQL0110: view in drop statement does not exist '`vvv v`'
 semantic errors present; no code gen.

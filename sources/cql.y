@@ -592,26 +592,26 @@ opt_delete_version_attr:
   ;
 
 drop_table_stmt:
-  DROP TABLE IF EXISTS name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_opt(1), $name);  }
-  | DROP TABLE name  { $drop_table_stmt = new_ast_drop_table_stmt(NULL, $name);  }
+  DROP TABLE IF EXISTS sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP TABLE sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(NULL, $sql_name);  }
   ;
 
 drop_view_stmt:
-  DROP VIEW IF EXISTS name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_opt(1), $name);  }
-  | DROP VIEW name  { $drop_view_stmt = new_ast_drop_view_stmt(NULL, $name);  }
+  DROP VIEW IF EXISTS sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP VIEW sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(NULL, $sql_name);  }
   ;
 
 drop_index_stmt:
-  DROP INDEX IF EXISTS name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_opt(1), $name);  }
-  | DROP INDEX name  { $drop_index_stmt = new_ast_drop_index_stmt(NULL, $name);  }
+  DROP INDEX IF EXISTS sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP INDEX sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(NULL, $sql_name);  }
   ;
 
 drop_trigger_stmt:
-  DROP TRIGGER IF EXISTS name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_opt(1), $name);  }
-  | DROP TRIGGER name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $name);  }
+  DROP TRIGGER IF EXISTS sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP TRIGGER sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $sql_name);  }
   ;
 
-create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags name[table_name]
+create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags sql_name[table_name]
                            USING name[module_name] opt_module_args
                            AS '(' col_key_list ')' opt_delete_version_attr {
     int flags = $opt_vtab_flags;

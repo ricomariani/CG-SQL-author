@@ -88938,3 +88938,37 @@ END;
                 | {select_limit}
                   | {select_offset}
 
+The statement ending at line XXXX
+
+DROP TABLE `xyz``abc`;
+
+  {drop_table_stmt}: ok
+  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+
+The statement ending at line XXXX
+
+DROP INDEX `abc`;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0112: index in drop statement was not declared 'abc'
+
+  {drop_index_stmt}: err
+  | {name `abc`}
+
+The statement ending at line XXXX
+
+DROP TRIGGER `abc def`;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0113: trigger in drop statement was not declared '`abc def`'
+
+  {drop_trigger_stmt}: err
+  | {name `abc def`}
+
+The statement ending at line XXXX
+
+DROP VIEW `vvv v`;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0110: view in drop statement does not exist '`vvv v`'
+
+  {drop_view_stmt}: err
+  | {name `vvv v`}
+

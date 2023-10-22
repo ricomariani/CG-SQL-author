@@ -2958,49 +2958,49 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
 static void gen_drop_view_stmt(ast_node *ast) {
   Contract(is_ast_drop_view_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
 
   gen_printf("DROP VIEW ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_drop_table_stmt(ast_node *ast) {
   Contract(is_ast_drop_table_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
 
   gen_printf("DROP TABLE ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_drop_index_stmt(ast_node *ast) {
   Contract(is_ast_drop_index_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
 
   gen_printf("DROP INDEX ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_drop_trigger_stmt(ast_node *ast) {
   Contract(is_ast_drop_trigger_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
 
   gen_printf("DROP TRIGGER ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_alter_table_add_column_stmt(ast_node *ast) {

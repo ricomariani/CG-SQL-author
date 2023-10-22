@@ -1,10 +1,13 @@
+---
+title: "Chapter 3: C Code Generation"
+weight: 3
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Part 3: C Code Generation
 
 ### Preface
 

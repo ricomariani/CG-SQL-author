@@ -1,10 +1,13 @@
+---
+title: "Chapter 9: Statements Summary and Error Checking"
+weight: 9
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 9: Statements Summary and Error Checking
 
 The following is a brief discussion of the major statement types and the
 semantic rules that CQL enforces for each of the statements.  A detailed
@@ -969,7 +972,7 @@ might tempt it to include different columns in the result than CQL saw
 at compile time.
 
 With this done we just have to look at the places a `select *` might
-appear so we can see if it is safe (or at least reasonably safe) to use 
+appear so we can see if it is safe (or at least reasonably safe) to use
 `*` and, by extension of the same argument, `T.*`.
 
 In an `EXISTS` or `NOT EXISTS` clause like `where not exists (select * from x)`*

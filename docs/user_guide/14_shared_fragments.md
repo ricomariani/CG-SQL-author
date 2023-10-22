@@ -1,10 +1,13 @@
+---
+title: "Chapter 14: Shared Fragments"
+weight: 14
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 14: Shared Fragments
 
 Shared fragments allows you to reuse and compose SQL queires in a safe
 (type checked) and efficient manner. They are based on [Common Table

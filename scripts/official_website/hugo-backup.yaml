@@ -1,0 +1,41 @@
+baseURL: https://www.cgsql.dev
+title: CG/SQL
+theme: hextra
+
+# Book configuration
+disablePathToLower: true
+enableGitInfo: true
+
+# Needed for mermaid/katex shortcodes
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+  tableOfContents:
+    startLevel: 0
+
+menu:
+  after:
+    - name: Official Github Repository
+      url: https://github.com/ricomariani/CG-SQL-author
+      weight: 1
+
+params:
+  BookDateFormat: "January 2, 2006"
+  BookRepo: https://github.com/ricomariani/CG-SQL-author
+  BookTheme: "dark"
+  BookFavicon: favicon.ico
+  BookLogo: /logo.png
+  BookToc: true # TableOfContent.
+  # BookEditPath: edit/main/docs
+  # BookSection: /
+  bookCollapseSection: true
+  BookSearch: true
+  BookComments: false
+
+module:
+  mounts:
+    - source: ../../docs
+      target: content
+    # - source: ../../README.md
+    #   target: content/docs/index.md

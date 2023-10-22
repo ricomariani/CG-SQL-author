@@ -1,10 +1,13 @@
+---
+title: "Chapter 11: Previous Schema Validation"
+weight: 11
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 11: Previous Schema Validation
 
 As we saw in the previous chapter, CQL includes powerful schema management
 tools for creating automatic upgrade scripts for your databases.

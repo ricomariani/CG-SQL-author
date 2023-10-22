@@ -1,10 +1,13 @@
+---
+title: "Chapter 5: Types of Cursors, Shapes, OUT and OUT UNION, and FETCH"
+weight: 5
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 5: Types of Cursors, Shapes, OUT and OUT UNION, and FETCH
 
 In the previous chapters we have used cursor variables without fully discussing them.
 Most of the uses are fairly self-evident but a more exhaustive discussion is also useful.
@@ -208,8 +211,8 @@ This form allows any kind of declaration, for instance:
 declare C cursor like ( id integer not null, val real, flag boolean );
 ```
 
-This wouldn't really give us much more than the other forms, however typed name 
-lists can include LIKE in them again, as part of the list.  Which means you can 
+This wouldn't really give us much more than the other forms, however typed name
+lists can include LIKE in them again, as part of the list.  Which means you can
 do this kind of thing:
 
 ```
@@ -225,7 +228,7 @@ fetch C from values (from D, 2.5, false);
 and now you have D plus 2 more fields which maybe you want to output.
 
 Importantly this way of doing it means that C always includes D, even if D changes
-over time.  As long as the `extra1` and `extra2` fields don't conflict names 
+over time.  As long as the `extra1` and `extra2` fields don't conflict names
 it will always work.
 
 

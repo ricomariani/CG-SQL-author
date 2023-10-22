@@ -1,0 +1,9 @@
+[submodule "scripts/official_website/themes/hugo-book"]
+	path = scripts/official_website/themes/hugo-book
+	url = https://github.com/alex-shpak/hugo-book
+[submodule "scripts/official_website/themes/hextra-starter-template"]
+	path = scripts/official_website/themes/hextra-starter-template
+	url = https://github.com/imfing/hextra-starter-template.git
+[submodule "scripts/official_website/themes/hextra"]
+	path = scripts/official_website/themes/hextra
+	url = https://github.com/imfing/hextra

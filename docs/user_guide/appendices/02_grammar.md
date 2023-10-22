@@ -1,10 +1,13 @@
+---
+title: "Appendix 2: CQL Grammar"
+weight: 2
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 2: CQL Grammar
 
 This content is computed by a github workflow.
 

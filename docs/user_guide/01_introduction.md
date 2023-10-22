@@ -1,10 +1,13 @@
+---
+title: "Chapter 1: Introduction"
+weight: 1
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 1: Introduction
 
 CQL was designed as a precompiled addition to the SQLite runtime system.  SQLite lacks
 stored procedures, but has a rich C runtime interface that allows you to create any kind
@@ -130,7 +133,7 @@ declare procedure printf no check;
 create proc conversions()
 begin
   -- not null can be abbreviated with '!'
-  declare fahr, celsius int!; 
+  declare fahr, celsius int!;
 
   -- variable type can be implied
   -- these are all int not null  (or int!)

@@ -11,6 +11,8 @@ on:
 
 jobs:
   documentation:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
     name: Build Documentation
     environment:
       name: github-pages
@@ -66,6 +68,19 @@ jobs:
           cp ${{ github.workspace }}/scripts/out/*_guide.html ${{ github.workspace }}/.www/
       - name: Debug — List files in ${{ github.workspace }}/.www
         run: ls ${{ github.workspace }}/.www/
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.119.0'
+          extended: true
+      - name: Build with Hugo
+        env:
+          HUGO_ENVIRONMENT: production
+        run: |
+          hugo \
+            --minify \
+            --themesDir=../.. --source=exampleSite \
+            --baseURL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
       - name: Upload Pages
         uses: actions/upload-pages-artifact@v2
         with:
@@ -82,6 +97,11 @@ jobs:
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
+      - name: Install Test Dependencies (gcovr)
+        run: |
+          sudo apt-get update -y
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip
+          pip3 install gcovr
       - name: TODO — Install dependencies
         run: echo "TODO — Install dependencies"
       - name: Execute test script using Clang in non-interactive mode

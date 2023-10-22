@@ -1,10 +1,13 @@
+---
+title: "Chapter 4: Procedures, Functions, and Control Flow"
+weight: 4
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 4: Procedures, Functions, and Control Flow
 
 All kinds of control flow happens in the context of some procedure. Though we've already introduced examples of procedures let's
 now go over some of the additional aspects we have not yet illustrated.

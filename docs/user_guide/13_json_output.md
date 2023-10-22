@@ -1,10 +1,13 @@
+---
+title: "Chapter 13: JSON Output"
+weight: 13
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 13: JSON Output
 
 To help facilitate additional tools that might want to depend on CQL
 input files further down the toolchain, CQL includes a JSON output format
@@ -926,7 +929,7 @@ The `declareFuncs` section contains a list of function declarations, Each declar
 * **returnType** : see the relevant section below.
 * **createsObject** : true if the function will create a new object (e.g. `declare function dict_create() create object;`)
 
-There are also sections for `declareNoCheckFuncs`, `declareSelectFuncs`, and `declareNoCheckSelectFuncs`. 
+There are also sections for `declareNoCheckFuncs`, `declareSelectFuncs`, and `declareNoCheckSelectFuncs`.
 
 * No check function do not have the `args` tag
 * Select functions do not have the `createsObject` tag (they can't create objects)

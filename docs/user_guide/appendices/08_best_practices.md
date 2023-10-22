@@ -1,10 +1,13 @@
+---
+title: "Appendix 8: Best Practices"
+weight: 8
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 8: Best Practices
 
 This is a brief discussion of every statement type and some general best practices for that statement.
 The statements are in mostly alphabetical order except related statements were

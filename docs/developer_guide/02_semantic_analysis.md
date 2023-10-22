@@ -1,10 +1,13 @@
+---
+title: "Chapter 2: Semantic Analysis"
+weight: 2
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Part 2: Semantic Analysis
 
 ### Preface
 

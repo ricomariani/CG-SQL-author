@@ -1,0 +1,127 @@
+
+{{ define "main" }}
+<div class="mx-auto flex max-w-screen-xl">
+  {{ partial "sidebar.html" (dict "context" . "disableSidebar" true) }}
+  <div class="w-full break-words flex flex-col min-h-[calc(100vh-var(--navbar-height))] min-w-0 justify-start pb-8 pr-[calc(env(safe-area-inset-right)-1.5rem)]">
+    <section class="flex flex-col items-center gap-2 px-6 sm:px-4 pt-8 md:pt-12">
+      <h1 class="text-4xl text-center font-bold leading-tight tracking-tighter md:text-5xl mt-6">
+        SQLite Stored Procedures
+      </h1>
+      <p style="max-width: 800px;" class="mt-4 text-xl text-gray-600 text-center dark:text-gray-400 sm:text-xl">
+        Compile SQLite stored procedures into C
+      </p>
+      <div class="mt-8">
+        {{- $docsURL := "docs" | relURL -}}
+        <a href="{{ $docsURL }}"
+          class="font-bold text-lg cursor-pointer px-6 py-3 text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300 rounded-md text-center mr-2 mb-2 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
+        >
+          Get Started
+        </a>
+      </div>
+    </section>
+    <section class="mt-12 flex max-w-[90rem] flex-col items-start gap-2 px-6 sm:px-4 pt-8 pb-8">
+      <div class="mt-6 grid grid-cols-1 gap-4 w-full">
+        {{ template "cta-card" (dict
+          "title" "What is CG/SQL?"
+          "subtitle" "Lorem ipsum"
+          "style" "background: radial-gradient(ellipse at 50% 80%,rgba(45,175,233,0.15),hsla(0,0%,100%,0));"
+          )
+        }}
+      </div>
+      <div class="mt-6 grid grid-cols-1 gap-4 w-full">
+        {{ template "cta-card" (dict
+          "title" "When would I use CG/SQL?"
+          "subtitle" "Lorem ipsum"
+          "style" "background: radial-gradient(ellipse at 50% 80%,rgba(246,204,105,0.15),hsla(0,0%,100%,0));"
+          )
+        }}
+      </div>
+      <div class="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 grid-cols-1 gap-4 w-full">
+        {{ template "hextra-feature-card" (dict
+          "title" "xxx"
+          "icon" "xxx"
+          "style" "background: radial-gradient(ellipse at 60% 500%,rgba(45,175,233,0.15),hsla(0,0%,100%,0));"
+          "subtitle" "Lorem ipsum"
+          )
+        }}
+        {{ template "hextra-feature-card" (dict
+          "title" "yyy"
+          "icon" "yyy"
+          "style" "background: radial-gradient(ellipse at 60% 500%,rgba(246,204,105,0.15),hsla(0,0%,100%,0));"
+          "subtitle" "Lorem ipsum"
+          )
+        }}
+        {{ template "hextra-feature-card" (dict
+          "title" "zzz"
+          "icon" "zzz"
+          "style" "background: radial-gradient(ellipse at 60% 500%,rgba(208,0,82,0.15),hsla(0,0%,100%,0));"
+          "subtitle" "Lorem ipsum"
+          )
+        }}
+        {{ template "hextra-feature-card" (dict
+          "title" "xxx"
+          "icon" "xxx"
+          "style" "background: radial-gradient(ellipse at 60% 500%,rgba(246,204,105,0.15),hsla(0,0%,100%,0));"
+          "subtitle" "Lorem ipsum"
+          )
+        }}
+        {{ template "hextra-feature-card" (dict
+          "title" "yyy"
+          "icon" "yyy"
+          "style" "background: radial-gradient(ellipse at 60% 500%,rgba(208,0,82,0.15),hsla(0,0%,100%,0));"
+          "subtitle" "Lorem ipsum"
+          )
+        }}
+        {{ template "hextra-feature-card" (dict
+          "title" "zzz"
+          "icon" "zzz"
+          "style" "background: radial-gradient(ellipse at 60% 500%,rgba(45,175,233,0.15),hsla(0,0%,100%,0));"
+          "subtitle" "Lorem ipsum"
+          )
+        }}
+      </div>
+    </section>
+  </div>
+</div>
+<span id="backToTop"></span>
+{{- end -}}
+
+{{- define "cta-card" -}}
+  {{- $title := .title -}}
+  {{- $subtitle := .subtitle -}}
+  {{- $class := .class -}}
+  {{- $style := .style -}}
+
+  <div
+    {{ with $style }}style="{{ . | safeCSS }}"{{ end }}
+    class="{{ $class }} relative overflow-hidden rounded-3xl border border-gray-200 hover:border-gray-300 dark:border-neutral-800 dark:hover:border-neutral-700 before:pointer-events-none before:absolute before:inset-0 before:bg-glass-gradient"
+  >
+    <div class="relative w-full p-6">
+      <h3 class="text-2xl font-bold text-gray-400 leading-6 mb-2">{{ $title }}</h3>
+      <p class="text-gray-600 dark:text-gray-400 text-sm leading-6">{{ $subtitle | markdownify }}</p>
+    </div>
+  </div>
+{{- end -}}
+
+{{- define "hextra-feature-card" -}}
+  {{- $title := .title -}}
+  {{- $subtitle := .subtitle -}}
+  {{- $class := .class -}}
+  {{- $icon := .icon -}}
+  {{- $image := .image -}}
+  {{- $imageClass := .imageClass -}}
+  {{- $style := .style -}}
+
+  <div
+    {{ with $style }}style="{{ . | safeCSS }}"{{ end }}
+    class="{{ $class }} relative overflow-hidden rounded-3xl border border-gray-200 hover:border-gray-300 dark:border-neutral-800 dark:hover:border-neutral-700 before:pointer-events-none before:absolute before:inset-0 before:bg-glass-gradient"
+  >
+    <div class="relative w-full p-6">
+      <h3 class="text-2xl font-medium leading-6 mb-2 flex items-center">
+        {{- partial "utils/icon.html" (dict "name" $icon) -}}
+        <span style="margin-left: 0.5rem">{{ $title }}</span>
+      </h3>
+      <p class="text-gray-600 dark:text-gray-400 text-sm leading-6">{{ $subtitle | markdownify }}</p>
+    </div>
+  </div>
+{{- end -}}

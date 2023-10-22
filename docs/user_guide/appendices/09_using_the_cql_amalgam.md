@@ -1,10 +1,13 @@
+---
+title: "Appendix 9: Using the CQL Amalgam"
+weight: 9
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 9: Using the CQL Amalgam
 
 This is a brief discussion of the CQL Amalgam and its normal usage patterns.
 

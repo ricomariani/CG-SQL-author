@@ -1,10 +1,13 @@
+---
+title: "Chapter 6: Importing and Exporting Procedures"
+weight: 6
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 6: Importing and Exporting Procedures
 
 CQL generally doesn't see the whole world in one compilation.
 In this way it's a lot more like, say, the C compiler than it is like, say, Java

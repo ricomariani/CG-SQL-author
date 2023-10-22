@@ -1,10 +1,13 @@
+---
+title: "Chapter 8: Functions"
+weight: 8
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 8: Functions
 
 CQL stored procs have a very simple contract so it is easy to declare
 procedures and then implement them in regular C; the C functions just

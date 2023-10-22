@@ -166,7 +166,7 @@ static void enqueue_all_triggers_node(dummy_test_info *info, CSTR table_or_view_
       EXTRACT_ANY_NOTNULL(create_trigger_stmt, items[i]);
       EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
       EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-      EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+      EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
       EXTRACT_STRING(trigger_name, trigger_name_ast);
 
       if (symtab_add(info->found_triggers, trigger_name, NULL)) {
@@ -202,7 +202,7 @@ static void process_pending_triggers(void *_Nullable context) {
       gen_set_output_buffer(gen_drop_triggers);
       EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
       EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-      EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+      EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
       EXTRACT_STRING(trigger_name, trigger_name_ast);
       bprintf(gen_drop_triggers, "DROP TRIGGER IF EXISTS %s;\n", trigger_name);
 
@@ -584,7 +584,7 @@ static void init_all_trigger_per_table() {
     EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
     EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
     EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-    EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+    EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
     EXTRACT_STRING(table_name, table_name_ast);
 
     if (create_trigger_stmt->sem->delete_version > 0) {
@@ -603,7 +603,7 @@ static void init_all_indexes_per_table() {
   for (list_item *item = all_indices_list; item; item = item->next) {
     EXTRACT_NOTNULL(create_index_stmt, item->ast);
     EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);
-    EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+    EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
 
     if (create_index_stmt->sem->delete_version > 0) {
@@ -632,7 +632,7 @@ static void cg_emit_index_stmt(
     ast_node *index_ast = indexes_ast[i];
     EXTRACT_NOTNULL(create_index_stmt, index_ast);
     EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
 
     gen_statement_with_callbacks(index_ast, callback);

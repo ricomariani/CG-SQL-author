@@ -3279,9 +3279,9 @@ static void sem_validate_previous_index(ast_node *prev_index) {
   EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
-  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
   EXTRACT_STRING(index_name, index_name_ast);
-  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
   EXTRACT_STRING(table_name, table_name_ast);
 
   ast_node *ast = find_index(index_name);
@@ -3384,9 +3384,9 @@ static void sem_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
-  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
   EXTRACT_STRING(index_name, index_name_ast);
-  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
   EXTRACT_STRING(table_name, table_name_ast);
 
   // Index declarations (i.e. outside of any proc) are totally ignored
@@ -3788,9 +3788,9 @@ static bool_t find_referenceable_columns(
       EXTRACT_OPTION(flags, flags_names_attrs->left);
       EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
       EXTRACT(opt_where, index_names_and_attrs->right);
-      EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+      EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
       EXTRACT_STRING(index_name, index_name_ast);
-      EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+      EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
       EXTRACT_STRING(table_name, table_name_ast);
 
       if (!(flags & INDEX_UNIQUE)) {
@@ -3895,7 +3895,7 @@ cql_noexport CSTR sem_get_name(ast_node *ast) {
   else if (is_ast_create_trigger_stmt(ast)) {
     EXTRACT_NOTNULL(trigger_body_vers, ast->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-    EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+    EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
     EXTRACT_STRING(trigger_name, trigger_name_ast);
     name = trigger_name;
   }
@@ -12468,7 +12468,7 @@ static void sem_shared_cte(ast_node *cte_body) {
   }
 
   // check if we are calling a shared fragment
-  EXTRACT_ANY_NOTNULL(proc_name_ast, call_stmt->left);
+  EXTRACT_NAME_AST(proc_name_ast, call_stmt->left);
   EXTRACT_STRING(proc_name, proc_name_ast);
   ast_node *proc_stmt = find_proc(proc_name);
   if (!is_proc_shared_fragment(proc_stmt)) {
@@ -12742,7 +12742,7 @@ static void sem_validate_previous_view(ast_node *prev_view) {
   EXTRACT_OPTION(prev_flags, prev_view->left);
   EXTRACT_NAMED(prev_view_and_attrs, view_and_attrs, prev_view->right);
   EXTRACT_NAMED(prev_name_and_select, name_and_select, prev_view_and_attrs->left);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_name_and_select->left);
+  EXTRACT_NAME_AST(prev_name_ast, prev_name_and_select->left);
   EXTRACT_STRING(name, prev_name_ast);
 
   bool_t is_temp = !! (prev_flags & VIEW_IS_TEMP);
@@ -12785,7 +12785,7 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
   EXTRACT_OPTION(prev_flags, prev_trigger->left);
   EXTRACT_NAMED_NOTNULL(prev_trigger_body_vers, trigger_body_vers, prev_trigger->right);
   EXTRACT_NAMED_NOTNULL(prev_trigger_def, trigger_def, prev_trigger_body_vers->left);
-  EXTRACT_ANY_NOTNULL(prev_trigger_name_ast, prev_trigger_def->left);
+  EXTRACT_NAME_AST(prev_trigger_name_ast, prev_trigger_def->left);
   EXTRACT_STRING(name, prev_trigger_name_ast);
 
   bool_t is_temp = !! (prev_flags & TRIGGER_IS_TEMP);
@@ -13336,7 +13336,7 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
   EXTRACT_NAMED_NOTNULL(prev_col_def_type_attrs, col_def_type_attrs, prev_def->left);
   EXTRACT_ANY(prev_attrs, prev_col_def_type_attrs->right);
   EXTRACT_NAMED_NOTNULL(prev_col_def_name_type, col_def_name_type, prev_col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_col_def_name_type->left);
+  EXTRACT_NAME_AST(prev_name_ast, prev_col_def_name_type->left);
   EXTRACT_STRING(prev_name, prev_name_ast);
 
   if (strcmp(name, prev_name)) {
@@ -13562,7 +13562,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   EXTRACT_NAMED_NOTNULL(prev_table_flags_attrs, table_flags_attrs, prev_create_table_name_flags->left);
   EXTRACT_OPTION(prev_flags, prev_table_flags_attrs->left);
   EXTRACT_ANY(prev_table_attrs, prev_table_flags_attrs->right);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_create_table_name_flags->right);
+  EXTRACT_NAME_AST(prev_name_ast, prev_create_table_name_flags->right);
   EXTRACT_STRING(name, prev_name_ast);
   EXTRACT_ANY_NOTNULL(prev_col_key_list, prev_table->right);
 
@@ -13860,7 +13860,7 @@ static void sem_record_trigger_dependencies(ast_node *ast) {
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
   EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-  EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+  EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_STRING(table_name, table_name_ast);
 
   trigger_dep_context context = {
@@ -13896,7 +13896,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
   EXTRACT_ANY(trigger_attrs, trigger_body_vers->right);
   EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-  EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+  EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
   EXTRACT_STRING(trigger_name, trigger_name_ast);
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
   EXTRACT_OPTION(cond_flags, trigger_condition->left);
@@ -13907,7 +13907,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-  EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+  EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_STRING(table_name, table_name_ast);
   EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
   EXTRACT_OPTION(action_flags, trigger_action->left);
@@ -19859,7 +19859,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
 
   while (enum_values) {
      EXTRACT_NOTNULL(enum_value, enum_values->left);
-     EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+     EXTRACT_NAME_AST(enum_name_ast, enum_value->left);
      EXTRACT_STRING(enum_name, enum_name_ast);
      EXTRACT_ANY(expr, enum_value->right);
 
@@ -20061,7 +20061,7 @@ static void sem_declare_const_stmt(ast_node *ast) {
 
   while (const_values) {
      EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_NAME_AST(const_name_ast, const_value->left);
      EXTRACT_STRING(const_name, const_name_ast);
      EXTRACT_ANY(expr, const_value->right);
 
@@ -22058,7 +22058,7 @@ static void sem_fetch_stmt(ast_node *ast) {
   uint32_t cols = cursor->sem->sptr->count;
   ast_node *item = name_list;
   for (item = name_list; item && icol < cols; item = item->right, icol++) {
-    EXTRACT_ANY_NOTNULL(var_name_ast, item->left);
+    EXTRACT_NAME_AST(var_name_ast, item->left);
     EXTRACT_STRING(name, var_name_ast);
 
     ast_node *variable = find_local_or_global_variable(name);

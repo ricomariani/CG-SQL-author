@@ -443,7 +443,7 @@ static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
 
   while (enum_values) {
      EXTRACT_NOTNULL(enum_value, enum_values->left);
-     EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+     EXTRACT_NAME_AST(enum_name_ast, enum_value->left);
      EXTRACT_STRING(enum_name, enum_name_ast);
 
      COMMA;
@@ -509,7 +509,7 @@ static void cg_json_const_values(ast_node *const_values, charbuf *output) {
 
   while (const_values) {
      EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_NAME_AST(const_name_ast, const_value->left);
      EXTRACT_STRING(const_name, const_name_ast);
      EXTRACT_ANY_NOTNULL(const_expr, const_value->right);
 
@@ -1158,9 +1158,9 @@ static void cg_json_indices(charbuf *output) {
     EXTRACT_OPTION(flags, flags_names_attrs->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
     EXTRACT(opt_where, index_names_and_attrs->right);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
-    EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+    EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
 
     ast_node *misc_attrs = NULL;
@@ -1254,7 +1254,7 @@ static void cg_json_triggers(charbuf *output) {
     EXTRACT(name_list, trigger_operation->right);
     flags |= op_flags;
     EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-    EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+    EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
     EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
     EXTRACT_OPTION(action_flags, trigger_action->left);
     flags |= action_flags;
@@ -1529,7 +1529,7 @@ static void cg_json_table_indices(list_item *head, charbuf *output) {
 
     Invariant(is_ast_create_index_stmt(ast));
     EXTRACT_NOTNULL(create_index_on_list, ast->left);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
 
     if (needs_comma) {

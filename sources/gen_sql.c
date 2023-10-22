@@ -348,8 +348,8 @@ static void gen_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
-  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
-  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
+  EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
 
   gen_printf("CREATE ");
   if (flags & INDEX_UNIQUE) {
@@ -468,7 +468,7 @@ static void gen_fk_target_options(ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_OPTION(flags, ast->right);
-  EXTRACT_ANY_NOTNULL(table_name_ast, fk_target->left);
+  EXTRACT_NAME_AST(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   gen_printf("REFERENCES ");

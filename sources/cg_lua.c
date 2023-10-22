@@ -2894,7 +2894,7 @@ static bool_t cg_lua_inline_func(ast_node *call_ast, void *context, charbuf *buf
       EXTRACT_ANY_NOTNULL(expr, arg_list->left);
 
       EXTRACT_NOTNULL(param_detail, param->right);
-      EXTRACT_ANY_NOTNULL(param_name_ast, param_detail->left)
+      EXTRACT_NAME_AST(param_name_ast, param_detail->left)
       EXTRACT_STRING(param_name, param_name_ast);
 
       gen_root_expr(expr);
@@ -3000,7 +3000,7 @@ static bool_t cg_lua_call_in_cte(ast_node *cte_body, void *context, charbuf *buf
     EXTRACT_ANY_NOTNULL(expr, expr_list->left);
 
     EXTRACT_NOTNULL(param_detail, param->right);
-    EXTRACT_ANY_NOTNULL(param_name_ast, param_detail->left)
+    EXTRACT_NAME_AST(param_name_ast, param_detail->left)
     EXTRACT_STRING(param_name, param_name_ast);
 
     sem_t sem_type_var = param_name_ast->sem->sem_type;
@@ -4841,7 +4841,7 @@ static void cg_lua_emit_group_stmt(ast_node *ast) {
     ast_node *group = find_variable_group(name);
     Contract(is_ast_declare_group_stmt(group));
 
-    EXTRACT_ANY_NOTNULL(group_name_ast, group->left);
+    EXTRACT_NAME_AST(group_name_ast, group->left);
     EXTRACT_STRING(group_name, group_name_ast);
     EXTRACT_NOTNULL(stmt_list, group->right);
 
@@ -4866,7 +4866,7 @@ static void cg_lua_emit_one_enum(ast_node *ast) {
 
   while (enum_values) {
     EXTRACT_NOTNULL(enum_value, enum_values->left);
-    EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+    EXTRACT_NAME_AST(enum_name_ast, enum_value->left);
     EXTRACT_STRING(enum_name, enum_name_ast);
 
     bprintf(cg_main_output, "  %s = ", enum_name);
@@ -4929,7 +4929,7 @@ static void cg_lua_emit_one_const_group(ast_node *ast) {
 
   while (const_values) {
     EXTRACT_NOTNULL(const_value, const_values->left);
-    EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+    EXTRACT_NAME_AST(const_name_ast, const_value->left);
     EXTRACT_STRING(const_name, const_name_ast);
 
     bprintf(cg_main_output, "  %s = ", const_name);

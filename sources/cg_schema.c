@@ -792,7 +792,7 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
     ast_node *index = item->ast;
 
     EXTRACT_NOTNULL(create_index_on_list, index->left);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
 
     bprintf(&out, "  CALL %s_cql_set_facet_version(cql_compressed('%s_index_crc'), -1);\n", global_proc_name, index_name);
@@ -865,7 +865,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     EXTRACT_OPTION(flags, ast->left);
     EXTRACT_NOTNULL(trigger_body_vers, ast->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-    EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+    EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
     EXTRACT_STRING(name, trigger_name_ast);
     EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
     EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
@@ -1065,9 +1065,9 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
     EXTRACT(opt_where, index_names_and_attrs->right);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
     EXTRACT_STRING(index_name, index_name_ast);
-    EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+    EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
 
     if (names.used > 1) {

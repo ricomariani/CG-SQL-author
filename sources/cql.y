@@ -862,7 +862,7 @@ indexed_columns[result]:
   ;
 
 create_index_stmt:
-  CREATE opt_unique INDEX opt_if_not_exists name[tbl_name] ON name[idx_name] '(' indexed_columns ')' opt_where opt_delete_version_attr  {
+  CREATE opt_unique INDEX opt_if_not_exists sql_name[tbl_name] ON sql_name[idx_name] '(' indexed_columns ')' opt_where opt_delete_version_attr  {
     int flags = 0;
     if ($opt_unique) flags |= INDEX_UNIQUE;
     if ($opt_if_not_exists) flags |= INDEX_IFNE;

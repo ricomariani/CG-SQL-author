@@ -19215,6 +19215,35 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC qid_t6 ()
+BEGIN
+  CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
+END;
+*/
+
+#define _PROC_ "qid_t6"
+/*
+export:
+DECLARE PROC qid_t6 () USING TRANSACTION;
+*/
+CQL_WARN_UNUSED cql_code qid_t6(sqlite3 *_Nonnull _db_) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+
+  _rc_ = cql_exec(_db_,
+    "CREATE INDEX [abc def] ON [xyz`abc] ([a b] ASC)");
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  return _rc_;
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

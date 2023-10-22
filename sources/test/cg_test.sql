@@ -5938,6 +5938,14 @@ begin
   create view `view` as select 1 x;
 end;
 
+-- TEST: make an index with quoted names
+-- + _rc_ = cql_exec(_db_,
+-- + "CREATE INDEX [abc def] ON [xyz`abc] ([a b] ASC)");
+create proc qid_t6()
+begin
+  create index `abc def` ON `xyz``abc` (`a b` asc);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

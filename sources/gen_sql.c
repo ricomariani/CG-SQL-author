@@ -341,8 +341,8 @@ static void gen_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
-  EXTRACT_STRING(index_name, create_index_on_list->left);
-  EXTRACT_STRING(table_name, create_index_on_list->right);
+  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
 
   gen_printf("CREATE ");
   if (flags & INDEX_UNIQUE) {
@@ -350,7 +350,10 @@ static void gen_create_index_stmt(ast_node *ast) {
   }
   gen_printf("INDEX ");
   gen_if_not_exists(ast, !!(flags & INDEX_IFNE));
-  gen_printf("%s ON %s (", index_name, table_name);
+  gen_name(index_name_ast);
+  gen_printf(" ON ");
+  gen_name(table_name_ast);
+  gen_printf(" (");
   gen_indexed_columns(indexed_columns);
   gen_printf(")");
   if (opt_where) {
@@ -1017,7 +1020,8 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   }
   else {
     if (!eval_variables_callback(ast)) {
-      gen_printf("%s", str);  // an identifier
+      // an identifier
+      gen_name(ast);
     }
   }
 }

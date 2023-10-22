@@ -88606,7 +88606,7 @@ END;
 
 The statement ending at line XXXX
 
-LET error_test_for_qid := X_aX20b;
+LET error_test_for_qid := `a b`;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found '`a b`'
 
@@ -88640,4 +88640,21 @@ SELECT 1 AS x;
         | {select_orderby}
           | {select_limit}
             | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
+
+  {create_index_stmt}: ok
+  | {create_index_on_list}
+  | | {name `abc def`}
+  | | {name `xyz``abc`}
+  | {flags_names_attrs}
+    | {int 0}
+    | {connector}
+      | {index_names_and_attrs}
+        | {indexed_columns}
+          | {indexed_column}
+            | {name `a b`}: X_aX20b: integer notnull qid
+            | {asc}
 

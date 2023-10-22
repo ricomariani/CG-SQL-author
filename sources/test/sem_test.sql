@@ -23568,6 +23568,7 @@ begin
 end;
 
 -- TEST: cursor forms with exotic columns
+-- verify that echoing is re-emitting the escaped text
 -- + DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
 -- + DECLARE R CURSOR LIKE `xyz``abc`;
 -- + FETCH R(x, `a b`) FROM VALUES(1, 2);
@@ -23590,8 +23591,18 @@ end;
 let error_test_for_qid := `a b`;
 
 -- TEST: make a view, use the form that doesn't require escaping
+-- verify that echoing is re-emitting the escaped text
 -- + CREATE VIEW `view` AS
 -- + SELECT 1 AS x;
 -- + {create_view_stmt}: view: { x: integer notnull }
 -- +  {name `view`}
 create view `view` as select 1 x;
+
+-- TEST: create an index with unusual names
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
+-- + {name `abc def`}
+-- + {name `xyz``abc`}
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+create index `abc def` on `xyz``abc` (`a b` asc);

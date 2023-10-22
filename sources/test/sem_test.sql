@@ -23061,7 +23061,7 @@ set int_result := my_cursor::rev_apply();
 -- + {assign}: err
 -- + {name invalid_id_bogus}: err
 -- ONE error not TWO!
--- +1 error: 
+-- +1 error:
 set int_result := invalid_id_bogus::rev_apply();
 
 declare lbs real<pounds> not null;
@@ -23162,7 +23162,7 @@ begin
   dump_int(*);
 end;
 
--- TEST: try to expand a top level proc using a bogus FROM 
+-- TEST: try to expand a top level proc using a bogus FROM
 -- + dump_int(FROM this_name_does_not_exist);
 -- + error: % name not found 'this_name_does_not_exist'
 -- +1 error
@@ -23355,7 +23355,7 @@ end;
 -- both options for getting/setting tested here
 declare proc set_in_object_dot_storage no check;
 declare proc set_object_dot_storage_id(self object<dot_storage>, value int);
-declare function get_object_dot_storage_id(self object<dot_storage>) integer; 
+declare function get_object_dot_storage_id(self object<dot_storage>) integer;
 declare function get_from_object_dot_storage no check integer;
 
 declare storage object<dot_storage>;
@@ -23689,3 +23689,18 @@ insert into `xyz``abc` using 2 x @dummy_seed(500);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc`(x) values(2) @dummy_seed(500);
+
+-- TEST: create a cursor and expand it using the from form
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE C CURSOR FOR SELECT *
+-- + FROM `xyz``abc`;
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(C.x, C.`a b`);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `a b`}
+-- - error:
+proc quoted_from_forms()
+begin
+  cursor C for select * from `xyz``abc`;
+  fetch C;
+  insert into `xyz``abc`(like `xyz``abc`) values(from C);
+end;

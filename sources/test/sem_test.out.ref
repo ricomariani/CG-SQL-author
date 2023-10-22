@@ -88877,3 +88877,64 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
         | {insert_list}
           | {name _seed_}: _seed_: integer notnull variable
 
+The statement ending at line XXXX
+
+CREATE PROC quoted_from_forms ()
+BEGIN
+  DECLARE C CURSOR FOR SELECT *
+    FROM `xyz``abc`;
+  FETCH C;
+  INSERT INTO `xyz``abc`(x, `a b`) VALUES(C.x, C.`a b`);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name quoted_from_forms}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   | {select_core_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   | | {select_core}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | {select_expr_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | | {star}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       |   | {name `xyz``abc`}: TABLE { X_xyzX60abc: X_xyzX60abc }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+      | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+      | {insert_stmt}: ok
+        | {insert_normal}
+        | {name_columns_values}
+          | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+          | {columns_values}: ok
+            | {column_spec}
+            | | {name_list}
+            |   | {name x}: x: integer notnull
+            |   | {name_list}
+            |     | {name `a b`}: X_aX20b: integer notnull qid
+            | {select_stmt}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
+              | {select_core_list}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
+              | | {select_core}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
+              |   | {select_values}
+              |   | {values}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
+              |     | {insert_list}: ok
+              |       | {dot}: C.x: integer notnull variable
+              |       | | {name C}
+              |       | | {name x}
+              |       | {insert_list}
+              |         | {dot}: C.X_aX20b: integer notnull variable qid
+              |           | {name C}
+              |           | {name `a b`}
+              | {select_orderby}
+                | {select_limit}
+                  | {select_offset}
+

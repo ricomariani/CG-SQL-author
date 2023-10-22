@@ -270,7 +270,7 @@ static void rewrite_from_shape_args(ast_node *head) {
 
       for (uint32_t i = 0; i < count; i++) {
         ast_node *cname = new_ast_str(shape->sem->name);
-        ast_node *col = new_ast_str(sptr->names[i]);
+        ast_node *col = new_str_or_qstr(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
         ast_node *dot = new_ast_dot(cname, col);
 
         if (i == 0) {
@@ -592,17 +592,7 @@ cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr) {
       continue;
     }
 
-    ast_node *ast_col;
-
-    if (sptr->semtypes[i] & SEM_TYPE_QID) {
-      CHARBUF_OPEN(tmp);
-      cg_decode_qstr(&tmp, sptr->names[i]);
-      ast_col = new_ast_qstr(Strdup(tmp.ptr));
-      CHARBUF_CLOSE(tmp);
-    }
-    else {
-      ast_col = new_ast_str(sptr->names[i]);
-    }
+    ast_node *ast_col = new_str_or_qstr(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 
     // add name to the name list
     ast_node *new_tail = new_ast_name_list(ast_col, NULL);

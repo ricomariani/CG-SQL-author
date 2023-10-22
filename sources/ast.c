@@ -1049,3 +1049,18 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   _ast->right = ast_clone_tree(ast->right);
   return _ast;
 }
+
+// create a new id node either qid or normal based on the bool
+cql_noexport ast_node *new_str_or_qstr(CSTR name, bool_t qstr) {
+  ast_node *ast;
+  if (qstr) {
+    CHARBUF_OPEN(tmp);
+    cg_decode_qstr(&tmp, name);
+    ast = new_ast_qstr(Strdup(tmp.ptr));
+    CHARBUF_CLOSE(tmp);
+  }
+  else {
+    ast = new_ast_str(name);
+  }
+  return ast;
+}

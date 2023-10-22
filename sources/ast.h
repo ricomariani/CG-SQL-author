@@ -234,10 +234,11 @@ cql_noexport void ast_cleanup(void);
 cql_noexport ast_node *_Nonnull new_ast(const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
 cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
-cql_noexport ast_node *_Nonnull new_ast_str(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_cstr(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_qstr(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_blob(const char *_Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_blob(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_str_or_qstr(CSTR _Nonnull name, bool_t qstr);
 
 cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);

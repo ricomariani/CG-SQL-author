@@ -17486,16 +17486,8 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
 
   // Look up the name in the current scope, and only that scope.  No locals
   // No nothing.  Just the columns in the indicated type.
-  ast_node *ast_col;
+  ast_node *ast_col = new_str_or_qstr(info->name, !!(info->sem_type_col & SEM_TYPE_QID));
 
-  if (info->sem_type_col & SEM_TYPE_QID) {
-    CHARBUF_OPEN(tmp);
-    cg_decode_qstr(&tmp, info->name);
-    ast_col = new_ast_qstr(Strdup(tmp.ptr));
-    CHARBUF_CLOSE(tmp);
-  } else {
-    ast_col = new_ast_str(info->name);
-  }
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(info_scope, info->jptr);
   bool_t found = sem_find_column_for_name(ast_col, info->name);
@@ -17503,8 +17495,6 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
   Invariant(!is_error(ast_col));  // name is known to be good!
   POP_JOIN();
   POP_JOIN();
-
-  // rico
 
   // add name to the name list
   ast_node *new_tail = new_ast_name_list(ast_col, NULL);

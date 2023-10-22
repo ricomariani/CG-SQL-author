@@ -73,35 +73,19 @@ cql_noexport bool_t is_qid(ast_node *node) {
 }
 
 cql_noexport bool_t is_at_rc(ast_node *node) {
-  if (!is_ast_str(node)) {
-    return false;
-  }
-  EXTRACT_STRING(name, node);
-  return !Strcasecmp("@RC", name);
+  return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node *)node)->value);
 }
 
 cql_noexport bool_t is_proclit(ast_node *node) {
-  if (!is_ast_str(node)) {
-    return false;
-  }
-  EXTRACT_STRING(name, node);
-  return !Strcasecmp("@PROC", name);
+  return is_ast_str(node) && !Strcasecmp("@PROC", ((str_ast_node *)node)->value);
 }
 
 cql_noexport bool_t is_strlit(ast_node *node) {
-  if (!is_ast_str(node)) {
-    return false;
-  }
-  EXTRACT_STRING(str, node);
-  return str[0] == '\'';
+  return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
 }
 
 cql_noexport bool_t is_id(ast_node *node) {
-  if (!is_ast_str(node)) {
-    return false;
-  }
-  EXTRACT_STRING(str, node);
-  return str[0] != '\'';
+  return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
 }
 
 cql_noexport bool_t is_id_or_dot(ast_node *node) {

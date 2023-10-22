@@ -756,7 +756,7 @@ end;
 
 -- TEST: declare a table with sensitive column
 -- + danger TEXT @SENSITIVE
--- +2 @SENSITIVE
+-- +1 @SENSITIVE
 -- +1 "isSensitive" : 1,
 create table radioactive(
  id integer not null,
@@ -1868,3 +1868,11 @@ DECLARE FUNCTION func_create_text() CREATE TEXT;
 -- + "createsObject" : 1
 -- + "type" : "object"
 DECLARE FUNCTION func_create_object() CREATE OBJECT;
+
+-- TEST: create a table with exotic name and columns
+-- + "schema" : "CREATE TABLE [abc def](\n  [x y] INTEGER NOT NULL\n)"
+-- + "name" : "abc def",
+-- + "name" : "x y",
+create table `abc def` (
+  `x y` int!
+);

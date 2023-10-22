@@ -11,7 +11,7 @@
 
     {
       "name" : "Foo",
-      "schema" : "CREATE TABLE Foo(\n  id INTEGER<ident> NOT NULL,\n  name TEXT\n)",
+      "schema" : "CREATE TABLE Foo(\n  id INTEGER NOT NULL,\n  name TEXT\n)",
       "CRC" : "3234492599048457151",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -503,7 +503,7 @@
 
     {
       "name" : "T9",
-      "schema" : "CREATE TABLE T9(\n  id1 INTEGER DEFAULT 3 PRIMARY KEY,\n  id2 INTEGER,\n  id3 INTEGER,\n  name TEXT DEFAULT \"xyzzy\",\n  val REAL DEFAULT -3.5,\n  val2 LONG_INT DEFAULT 123456789123456789L,\n  CONSTRAINT uk1 UNIQUE (id2 DESC, id3 ASC),\n  CONSTRAINT uk2 UNIQUE (id2 / 2 ASC, id3 + 2 DESC)\n)",
+      "schema" : "CREATE TABLE T9(\n  id1 INTEGER DEFAULT 3 PRIMARY KEY,\n  id2 INTEGER,\n  id3 INTEGER,\n  name TEXT DEFAULT 'xyzzy',\n  val REAL DEFAULT -3.5,\n  val2 LONG_INT DEFAULT 123456789123456789,\n  CONSTRAINT uk1 UNIQUE (id2 DESC, id3 ASC),\n  CONSTRAINT uk2 UNIQUE (id2 / 2 ASC, id3 + 2 DESC)\n)",
       "CRC" : "6457405878864377226",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1249,7 +1249,7 @@
 
     {
       "name" : "radioactive",
-      "schema" : "CREATE TABLE radioactive(\n  id INTEGER NOT NULL,\n  danger TEXT @SENSITIVE\n)",
+      "schema" : "CREATE TABLE radioactive(\n  id INTEGER NOT NULL,\n  danger TEXT\n)",
       "CRC" : "4798964007804907379",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -1433,7 +1433,7 @@
 
     {
       "name" : "with_unnamed_check_constraints",
-      "schema" : "CREATE TABLE with_unnamed_check_constraints(\n  w INTEGER<meters>,\n  CHECK (w > 5)\n)",
+      "schema" : "CREATE TABLE with_unnamed_check_constraints(\n  w INTEGER,\n  CHECK (w > 5)\n)",
       "CRC" : "4543876486311618263",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2395,6 +2395,44 @@
       ],
       "checkExpressions" : [
       ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE TABLE `abc def`(
+      `x y` INTEGER NOT NULL
+    )
+
+    {
+      "name" : "abc def",
+      "schema" : "CREATE TABLE [abc def](\n  [x y] INTEGER NOT NULL\n)",
+      "CRC" : "-8830380235914581124",
+      "isTemp" : 0,
+      "ifNotExists" : 0,
+      "withoutRowid" : 0,
+      "isAdded" : 0,
+      "isDeleted" : 0,
+      "isRecreated": 0,
+      "columns" : [
+        {
+          "name" : "x y",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 0,
+          "isAutoIncrement" : 0
+        }
+      ],
+      "primaryKey" : [  ],
+      "primaryKeySortOrders" : [  ],
+      "foreignKeys" : [
+      ],
+      "uniqueKeys" : [
+      ],
+      "checkExpressions" : [
+      ]
     }
   ],
   "virtualTables" : [
@@ -2468,7 +2506,7 @@
 
     {
       "name" : "a_second_virtual_table",
-      "schema" : "CREATE TABLE a_second_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT\n)",
+      "schema" : "CREATE TABLE a_second_virtual_table(\n  id INTEGER,\n  t TEXT\n)",
       "CRC" : "-8286429800647299700",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2522,7 +2560,7 @@
 
     {
       "name" : "a_third_virtual_table",
-      "schema" : "CREATE TABLE a_third_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n)",
+      "schema" : "CREATE TABLE a_third_virtual_table(\n  id INTEGER,\n  t TEXT,\n  q REAL\n)",
       "CRC" : "-6640301384858104825",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -2587,7 +2625,7 @@
 
     {
       "name" : "a_deleted_virtual_table",
-      "schema" : "CREATE TABLE a_deleted_virtual_table(\n  id INTEGER @SENSITIVE,\n  t TEXT,\n  q REAL\n)",
+      "schema" : "CREATE TABLE a_deleted_virtual_table(\n  id INTEGER,\n  t TEXT,\n  q REAL\n)",
       "CRC" : "-4336016932503752576",
       "isTemp" : 0,
       "ifNotExists" : 0,

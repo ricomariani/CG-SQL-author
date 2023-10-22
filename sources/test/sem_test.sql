@@ -23724,3 +23724,8 @@ drop trigger `abc def`;
 -- the echo is all that matters
 -- + DROP VIEW `vvv v`;
 drop view `vvv v`;
+
+-- TEST: alter table
+-- the echo is all that matters
+-- + ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
+alter table `xyz``abc` add column `a b` int;

@@ -3005,10 +3005,12 @@ static void gen_drop_trigger_stmt(ast_node *ast) {
 
 static void gen_alter_table_add_column_stmt(ast_node *ast) {
   Contract(is_ast_alter_table_add_column_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
   EXTRACT(col_def, ast->right);
 
-  gen_printf("ALTER TABLE %s ADD COLUMN ", name);
+  gen_printf("ALTER TABLE ");
+  gen_name(name_ast);
+  gen_printf(" ADD COLUMN ");
   gen_col_def(col_def);
 }
 

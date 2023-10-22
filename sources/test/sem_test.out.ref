@@ -88972,3 +88972,17 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0110: view in drop statement does n
   {drop_view_stmt}: err
   | {name `vvv v`}
 
+The statement ending at line XXXX
+
+ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
+
+test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required '`a b`'
+
+  {alter_table_add_column_stmt}: err
+  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  | {col_def}: X_aX20b: integer qid
+    | {col_def_type_attrs}: ok
+      | {col_def_name_type}
+        | {name `a b`}
+        | {type_int}: integer
+

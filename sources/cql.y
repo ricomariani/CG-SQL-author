@@ -2194,8 +2194,8 @@ echo_stmt:
   ;
 
 alter_table_add_column_stmt:
-  ALTER TABLE name ADD COLUMN col_def  {
-    $alter_table_add_column_stmt = new_ast_alter_table_add_column_stmt($name, $col_def); }
+  ALTER TABLE sql_name ADD COLUMN col_def  {
+    $alter_table_add_column_stmt = new_ast_alter_table_add_column_stmt($sql_name, $col_def); }
   ;
 
 create_trigger_stmt:

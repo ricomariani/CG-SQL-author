@@ -50,10 +50,12 @@ function rules_section() {
   cat $OUT/json_grammar.txt
 }
 
-cat <<EOF \
-  | cat $SCRIPT_DIR_RELATIVE/grammar_utils/meta_licence_header.template.html - \
-  > $OUT/json_grammar.md
-## Appendix 5: JSON Schema Grammar
+cat <<EOF > $OUT/json_grammar.md
+---
+title: "Appendix 5: JSON Schema Grammar"
+weight: 5
+---
+$(cat $SCRIPT_DIR_RELATIVE/grammar_utils/meta_licence_header.template.html)
 
 What follows is taken from the JSON validation grammar with the tree building rules removed.
 

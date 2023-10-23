@@ -85,10 +85,13 @@ function rules_section() {
   cat $OUT/cql_grammar_for_markdown.txt
 }
 
-cat <<EOF \
-  | cat $SCRIPT_DIR_RELATIVE/grammar_utils/meta_licence_header.template.html - \
-  > $OUT/cql_grammar.md
-## Appendix 2: CQL Grammar
+
+cat <<EOF > $OUT/cql_grammar.md
+---
+title: "Appendix 2: CQL Grammar"
+weight: 2
+---
+$(cat $SCRIPT_DIR_RELATIVE/grammar_utils/meta_licence_header.template.html)
 
 What follows is taken from a grammar snapshot with the tree building rules removed.
 It should give a fair sense of the syntax of CQL (but not semantic validation).
@@ -128,7 +131,7 @@ and errors have to be checked on top of this, often this is done on purpose beca
 even when it's possible it might be very inconvenient to do checks with syntax.
 For example the grammar cannot enforce non-duplicate ids in id lists,
 but it could enforce non-duplicate attributes in attribute lists.
-It chooses to do neither as they are easily done with semantic validation. 
+It chooses to do neither as they are easily done with semantic validation.
 Thus the grammar is not the final authority on what constitutes a valid program but it's a good start.
 
 \`\`\`

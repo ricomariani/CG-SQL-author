@@ -51,7 +51,7 @@ BEGIN
   call cql_create_udf_stub("bupdatekey");
   call cql_create_udf_stub("bupdateval");
   call cql_create_udf_stub("stuff");
-  CREATE TABLE t1(
+  CREATE TABLE `table one`(
     id INTEGER PRIMARY KEY,
     name TEXT
   );
@@ -83,18 +83,18 @@ BEGIN
   CREATE TABLE foo_(
     id INTEGER
   );
-  CREATE INDEX it1 ON t1 (name, id);
+  CREATE INDEX it1 ON `table one` (name, id);
   CREATE INDEX it4 ON t4 (data, id);
   CREATE VIEW my_view AS
   SELECT *
-    FROM t1
+    FROM `table one`
     INNER JOIN t2 USING (id);
   CREATE VIEW my_view_using_table_alias AS
   SELECT foo.*, bar.id AS id2, bar.rowid AS rowid
-    FROM t1 AS foo
+    FROM `table one` AS foo
     INNER JOIN t2 AS bar USING (id);
   CREATE TRIGGER my_trigger
-    AFTER INSERT ON t1
+    AFTER INSERT ON `table one`
     WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 1
   BEGIN
   DELETE FROM t2 WHERE id > new.id;
@@ -157,7 +157,7 @@ CREATE TABLE backed(
 CREATE PROC populate_no_table_scan()
 BEGIN
   INSERT OR IGNORE INTO no_table_scan(table_name) VALUES
-    ("t1"),
+    ("table one"),
     ("t2"),
     ("scan_ok"),
     ("foo");
@@ -168,11 +168,11 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT *\\n  FROM t1\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\nORDER BY name ASC";
+  SET stmt := "SELECT *\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\nORDER BY name ASC";
   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT *
-    FROM t1
+    FROM `table one`
     WHERE name = 'Nelly' AND id IN (SELECT id
     FROM t2
     WHERE id = 1
@@ -210,10 +210,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "UPDATE t1\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT T.NAME\\n  FROM t3 AS T)";
+  SET stmt := "UPDATE `table one`\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT T.NAME\\n  FROM t3 AS T)";
   INSERT INTO sql_temp(id, sql) VALUES(3, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  UPDATE t1
+  UPDATE `table one`
   SET id = 1,
   name = '1'
     WHERE name IN (SELECT T.NAME
@@ -230,13 +230,13 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT T.*\\n  FROM t2 AS T)\\nUPDATE t1\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT name\\n  FROM some_cte)";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT T.*\\n  FROM t2 AS T)\\nUPDATE `table one`\\nSET id = 1,\\nname = '1'\\n  WHERE name IN (SELECT name\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(4, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
   some_cte (id, name) AS (SELECT T.*
     FROM t2 AS T)
-  UPDATE t1
+  UPDATE `table one`
   SET id = 1,
   name = '1'
     WHERE name IN (SELECT name
@@ -253,10 +253,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DELETE FROM t1 WHERE name IN (SELECT foo.name\\n  FROM t2 AS foo\\n  INNER JOIN t3 USING (name))";
+  SET stmt := "DELETE FROM `table one` WHERE name IN (SELECT foo.name\\n  FROM t2 AS foo\\n  INNER JOIN t3 USING (name))";
   INSERT INTO sql_temp(id, sql) VALUES(5, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DELETE FROM t1 WHERE name IN (SELECT foo.name
+  DELETE FROM `table one` WHERE name IN (SELECT foo.name
     FROM t2 AS foo
     INNER JOIN t3 USING (name));
   LOOP FETCH C
@@ -271,14 +271,14 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (name) AS (SELECT foo.name\\n  FROM t2 AS foo\\n  INNER JOIN t3 USING (id))\\nDELETE FROM t1 WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
+  SET stmt := "WITH\\nsome_cte (name) AS (SELECT foo.name\\n  FROM t2 AS foo\\n  INNER JOIN t3 USING (id))\\nDELETE FROM `table one` WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(6, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
   some_cte (name) AS (SELECT foo.name
     FROM t2 AS foo
     INNER JOIN t3 USING (id))
-  DELETE FROM t1 WHERE name NOT IN (SELECT *
+  DELETE FROM `table one` WHERE name NOT IN (SELECT *
     FROM some_cte);
   LOOP FETCH C
   BEGIN
@@ -292,10 +292,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "INSERT INTO t1(id, name) SELECT foo.*\\n  FROM t2 AS foo\\nUNION ALL\\nSELECT bar.*\\n  FROM t3 AS bar";
+  SET stmt := "INSERT INTO `table one`(id, name) SELECT foo.*\\n  FROM t2 AS foo\\nUNION ALL\\nSELECT bar.*\\n  FROM t3 AS bar";
   INSERT INTO sql_temp(id, sql) VALUES(7, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  INSERT INTO t1(id, name) SELECT foo.*
+  INSERT INTO `table one`(id, name) SELECT foo.*
     FROM t2 AS foo
   UNION ALL
   SELECT bar.*
@@ -312,13 +312,13 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT T.*\\n  FROM t2 AS T)\\nINSERT INTO t1(id, name) SELECT *\\n  FROM some_cte";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT T.*\\n  FROM t2 AS T)\\nINSERT INTO `table one`(id, name) SELECT *\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(8, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
   some_cte (id, name) AS (SELECT T.*
     FROM t2 AS T)
-  INSERT INTO t1(id, name) SELECT *
+  INSERT INTO `table one`(id, name) SELECT *
     FROM some_cte;
   LOOP FETCH C
   BEGIN
@@ -348,10 +348,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "INSERT INTO t1(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  SET stmt := "INSERT INTO `table one`(id, name) VALUES(1, 'Irene')\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(10, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  INSERT INTO t1(id, name) VALUES(1, 'Irene')
+  INSERT INTO `table one`(id, name) VALUES(1, 'Irene')
   ON CONFLICT (id) DO UPDATE
   SET name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
   LOOP FETCH C
@@ -366,12 +366,12 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1, 'Irene')\\nINSERT INTO t1(id, name) SELECT *\\n  FROM some_cte\\n  WHERE id = 1\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
+  SET stmt := "WITH\\nsome_cte (id, name) AS (SELECT 1, 'Irene')\\nINSERT INTO `table one`(id, name) SELECT *\\n  FROM some_cte\\n  WHERE id = 1\\nON CONFLICT (id) DO UPDATE\\nSET name = excluded.name || 'replace' || ' \\u00e2\\u0080\\u00a2 ' || '\\\\x01\\\\x02\\\\xA1\\\\x1b\\\\x00\\\\xg' || 'it''s high noon\\\\r\\\\n\\\\f\\\\b\\\\t\\\\v' || \\\"it's\\\" || name";
   INSERT INTO sql_temp(id, sql) VALUES(11, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
   some_cte (id, name) AS (SELECT 1, 'Irene')
-  INSERT INTO t1(id, name) SELECT *
+  INSERT INTO `table one`(id, name) SELECT *
     FROM some_cte
     WHERE id = 1
   ON CONFLICT (id) DO UPDATE
@@ -404,10 +404,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DROP TABLE IF EXISTS t1";
+  SET stmt := "DROP TABLE IF EXISTS `table one`";
   INSERT INTO sql_temp(id, sql) VALUES(13, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DROP TABLE IF EXISTS t1;
+  DROP TABLE IF EXISTS `table one`;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(13, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -473,11 +473,11 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\\n  FROM t1";
+  SET stmt := "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\\n  FROM `table one`";
   INSERT INTO sql_temp(id, sql) VALUES(17, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx
-    FROM t1;
+    FROM `table one`;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(17, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -955,11 +955,11 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT alias.*\\n  FROM t1 AS alias";
+  SET stmt := "SELECT alias.*\\n  FROM `table one` AS alias";
   INSERT INTO sql_temp(id, sql) VALUES(38, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT alias.*
-    FROM t1 AS alias;
+    FROM `table one` AS alias;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(38, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -972,11 +972,11 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT alias.rowid\\n  FROM t1 AS alias";
+  SET stmt := "SELECT alias.rowid\\n  FROM `table one` AS alias";
   INSERT INTO sql_temp(id, sql) VALUES(39, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT alias.rowid
-    FROM t1 AS alias;
+    FROM `table one` AS alias;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(39, C.iselectid, C.iorder, C.ifrom, C.zdetail);

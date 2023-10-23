@@ -9,7 +9,7 @@
 -- +1 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 -- +1 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
 -- + CREATE PROC create_schema()
--- + CREATE TABLE t1
+-- + CREATE TABLE `table one`
 -- + CREATE TABLE t2
 -- + CREATE TABLE t3
 -- + CREATE TABLE t4
@@ -65,11 +65,11 @@
 -- - Error
 
 @attribute(cql:no_table_scan)
-create table t1(id int primary key, name text);
+create table `table one`(id int primary key, name text);
 
 -- duplicate, no problem!  only one will be emitted for SQLite
 @attribute(cql:no_table_scan)
-create table t1(id int primary key, name text);
+create table `table one`(id int primary key, name text);
 
 @attribute(cql:no_table_scan)
 create table t2(id int primary key, name text);
@@ -83,14 +83,14 @@ create table scan_ok(id int);
 create table foo(id int);
 create table _foo(id int);
 create table foo_(id int);
-create index it1 ON t1(name, id);
-create index it1 ON t1(name, id);
+create index it1 ON `table one`(name, id);
+create index it1 ON `table one`(name, id);
 create index it4 ON t4(data, id);
 create index it4 ON t4(data, id);
 create index it5 ON t4(data) @delete(1);
-create view my_view as select * from t1 inner join t2 using(id);
-create view my_view as select * from t1 inner join t2 using(id);
-create view my_view_using_table_alias as select foo.*, bar.id id2, bar.rowid rowid from t1 as foo inner join t2 as bar using(id);
+create view my_view as select * from `table one` inner join t2 using(id);
+create view my_view as select * from `table one` inner join t2 using(id);
+create view my_view_using_table_alias as select foo.*, bar.id id2, bar.rowid rowid from `table one` as foo inner join t2 as bar using(id);
 declare function any_func() bool not null;
 declare select function is_declare_func_enabled() bool not null;
 declare select function is_declare_func_wall(id long integer) bool not null;
@@ -103,18 +103,18 @@ set timer_var := 1;
 set label_var := 'Eric';
 set data_var := blob_from_string('1');
 create trigger my_trigger
-  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
+  after insert on `table one` when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
 begin
   delete from t2 where id > new.id;
 end;
 create trigger my_trigger
-  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
+  after insert on `table one` when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
 begin
   delete from t2 where id > new.id;
 end;
 
 create trigger my_trigger_deleted
-  after insert on t1 when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
+  after insert on `table one` when is_declare_func_enabled() and (is_declare_func_wall(new.id) = 1)
 begin
   delete from t2 where id > new.id;
 end @delete(1);
@@ -131,7 +131,7 @@ declare select function select_virtual_table(b text) (id long int, t text, b blo
 -- Proc with SELECT stmt
 create proc sample()
 begin
-  select * from t1
+  select * from `table one`
     where name = 'Nelly' and
     id IN (
       select id from t2
@@ -146,20 +146,20 @@ end;
 select is_declare_func_wall(id) from t4 where data = data_var;
 
 -- UPDATE stmt
-update t1 set id = 1, name = label_var where name in (select T.NAME from t3 as T);
+update `table one` set id = 1, name = label_var where name in (select T.NAME from t3 as T);
 
 -- [WITH ... UPDATE] stmt
 with
   some_cte(id, name) as (select T.* from t2 as T)
-update t1 set id = 1, name = label_var where name in (select name from some_cte);
+update `table one` set id = 1, name = label_var where name in (select name from some_cte);
 
 -- UPDATE FROM stmt
 -- This doesn't work on SQLite 3.31 which is still the default on Ubuntu
 -- disabling this for now.  Maybe we can do this conditionally somehow...
--- update t1 set id = other_table.id, name = other_table.name from (select foo.* from t2 as foo limit 1) as other_table;
+-- update `table one` set id = other_table.id, name = other_table.name from (select foo.* from t2 as foo limit 1) as other_table;
 
 -- DELETE stmt
-delete from t1
+delete from `table one`
   where name in (
     select foo.name
       from t2 as foo inner join t3 using(name)
@@ -170,30 +170,30 @@ with
   some_cte(name) as (
     select foo.name from t2 as foo inner join t3 using(id)
   )
-  delete from t1 where name not in (select * from some_cte);
+  delete from `table one` where name not in (select * from some_cte);
 
 -- INSERT stmt
-insert into t1 select foo.* from t2 as foo union all select bar.* from t3 as bar;
+insert into `table one` select foo.* from t2 as foo union all select bar.* from t3 as bar;
 
 -- [WITH... INSERT] stmt
 with some_cte(id, name) as (select T.* from t2 as T)
-insert into t1 select * from some_cte;
+insert into `table one` select * from some_cte;
 
 -- BEGIN stmt
 begin transaction;
 
 -- UPSERT stmt
-insert into t1(id, name) values(1, 'Irene') on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
+insert into `table one`(id, name) values(1, 'Irene') on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
 
 -- [WITH...UPSERT] stmt
 with some_cte(id, name) as (select 1, 'Irene')
-insert into t1(id, name) select * from some_cte where id = 1 on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
+insert into `table one`(id, name) select * from some_cte where id = 1 on conflict(id) do update set name = excluded.name || 'replace' || ' • ' || '\x01\x02\xA1\x1b\x00\xg' || 'it''s high noon\r\n\f\b\t\v' || "it's" || name;
 
 -- COMMIT stmt
 commit transaction;
 
 -- DROP TABLE stmt
-drop table if exists t1;
+drop table if exists `table one`;
 
 -- DROP VIEW stmt
 drop view my_view;
@@ -215,7 +215,7 @@ with
 -- + SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx
 create proc read_object(sync_group_ids_ object not null)
 begin
-  select array_num_at(ptr(sync_group_ids_), id) as idx from t1;
+  select array_num_at(ptr(sync_group_ids_), id) as idx from `table one`;
 end;
 
 -- ok_table_scan attr
@@ -536,13 +536,13 @@ end;
 -- Use this special syntax to test edge case in --format_table_alias_for_eqp
 proc use_table_star_in_query()
 begin
-  select alias.* from t1 as alias;
+  select alias.* from `table one` as alias;
 end;
 
 -- Use this special syntax to test edge case in --format_table_alias_for_eqp
 proc use_rowid_column_in_query()
 begin
-  select alias.rowid from t1 as alias;
+  select alias.rowid from `table one` as alias;
 end;
 
 proc use_view_with_table_alias_in_query()

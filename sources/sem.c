@@ -24785,9 +24785,27 @@ static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonn
     return;
   }
 
+  bool_t qid = !!(table_ast->sem->sem_type & SEM_TYPE_QID);
+
+  CSTR result;
+
+  // fully decoded and ready to use in both cases
+  if (qid) {
+    CHARBUF_OPEN(tmp);
+    bprintf(&tmp, "[TABLE ");
+    cg_unquote_encoded_qstr(&tmp, table_name);
+    bprintf(&tmp, " AS %s]", original_alias);
+    result = Strdup(tmp.ptr);
+    CHARBUF_CLOSE(tmp);
+  }
+  else {
+    result = dup_printf("[TABLE %s AS %s]", table_name, original_alias);
+  }
+
+
   // Allow existing alias to be reformatted as something like "TABLE table_name AS some_alias".
   sem_node *new_alias_sem = new_sem(SEM_TYPE_OK);
-  new_alias_sem->name = dup_printf("[TABLE %s AS %s]", table_name, original_alias);
+  new_alias_sem->name = result;
   ast->sem = new_alias_sem;
 }
 

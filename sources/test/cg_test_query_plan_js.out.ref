@@ -1,19 +1,19 @@
 {
   "alerts": {
-    "tableScanViolation": "T1(5), T2(6), FOO(4)",
+    "tableScanViolation": "TABLE ONE(5), T2(6), FOO(4)",
     "tempBTreeViolation": "#1(1)"
   },
   "plans": [
     {
       "id": 1,
-      "query": "SELECT *\n  FROM t1\n  WHERE name = 'Nelly' AND id IN (SELECT id\n  FROM t2\n  WHERE id = 1\nUNION\nSELECT id\n  FROM t3)\nORDER BY name ASC",
+      "query": "SELECT *\n  FROM `table one`\n  WHERE name = 'Nelly' AND id IN (SELECT id\n  FROM t2\n  WHERE id = 1\nUNION\nSELECT id\n  FROM t3)\nORDER BY name ASC",
       "stats": {
         "scan": 1,
         "tempBTree": 1,
         "search": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE t1 USING COVERING INDEX it1 (name=? AND id=? AND rowid=?)\n|..LIST SUBQUERY 2\n   |..COMPOUND QUERY\n      |..LEFT-MOST SUBQUERY\n         |..SEARCH TABLE t2 USING INTEGER PRIMARY KEY (rowid=?)\n      |..UNION USING TEMP B-TREE\n         |..SCAN TABLE t3"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX it1 (name=? AND id=? AND rowid=?)\n|..LIST SUBQUERY 2\n   |..COMPOUND QUERY\n      |..LEFT-MOST SUBQUERY\n         |..SEARCH TABLE t2 USING INTEGER PRIMARY KEY (rowid=?)\n      |..UNION USING TEMP B-TREE\n         |..SCAN TABLE t3"
     },
     {
       "id": 2,
@@ -25,44 +25,44 @@
     },
     {
       "id": 3,
-      "query": "UPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT T.NAME\n  FROM t3 AS T)",
+      "query": "UPDATE `table one`\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT T.NAME\n  FROM t3 AS T)",
       "stats": {
         "scan": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE t1 USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t3 AS TABLE t3 AS T"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t3 AS TABLE t3 AS T"
     },
     {
       "id": 4,
-      "query": "WITH\nsome_cte (id, name) AS (SELECT T.*\n  FROM t2 AS T)\nUPDATE t1\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT name\n  FROM some_cte)",
+      "query": "WITH\nsome_cte (id, name) AS (SELECT T.*\n  FROM t2 AS T)\nUPDATE `table one`\nSET id = 1,\nname = '1'\n  WHERE name IN (SELECT name\n  FROM some_cte)",
       "stats": {
         "scan": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE t1 USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS TABLE t2 AS T"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS TABLE t2 AS T"
     },
     {
       "id": 5,
-      "query": "DELETE FROM t1 WHERE name IN (SELECT foo.name\n  FROM t2 AS foo\n  INNER JOIN t3 USING (name))",
+      "query": "DELETE FROM `table one` WHERE name IN (SELECT foo.name\n  FROM t2 AS foo\n  INNER JOIN t3 USING (name))",
       "stats": {
         "scan": 1,
         "search": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE t1 USING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t2 AS TABLE t2 AS foo\n   |..SEARCH TABLE t3 USING AUTOMATIC COVERING INDEX (name=?)"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t2 AS TABLE t2 AS foo\n   |..SEARCH TABLE t3 USING AUTOMATIC COVERING INDEX (name=?)"
     },
     {
       "id": 6,
-      "query": "WITH\nsome_cte (name) AS (SELECT foo.name\n  FROM t2 AS foo\n  INNER JOIN t3 USING (id))\nDELETE FROM t1 WHERE name NOT IN (SELECT *\n  FROM some_cte)",
+      "query": "WITH\nsome_cte (name) AS (SELECT foo.name\n  FROM t2 AS foo\n  INNER JOIN t3 USING (id))\nDELETE FROM `table one` WHERE name NOT IN (SELECT *\n  FROM some_cte)",
       "stats": {
         "scan": 2,
         "search": 1
       },
-      "plan": "QUERY PLAN\n|..SCAN TABLE t1\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS TABLE t2 AS foo\n   |..SEARCH TABLE t3 USING INTEGER PRIMARY KEY (rowid=?)"
+      "plan": "QUERY PLAN\n|..SCAN TABLE table one\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS TABLE t2 AS foo\n   |..SEARCH TABLE t3 USING INTEGER PRIMARY KEY (rowid=?)"
     },
     {
       "id": 7,
-      "query": "INSERT INTO t1(id, name) SELECT foo.*\n  FROM t2 AS foo\nUNION ALL\nSELECT bar.*\n  FROM t3 AS bar",
+      "query": "INSERT INTO `table one`(id, name) SELECT foo.*\n  FROM t2 AS foo\nUNION ALL\nSELECT bar.*\n  FROM t3 AS bar",
       "stats": {
         "scan": 2
       },
@@ -70,7 +70,7 @@
     },
     {
       "id": 8,
-      "query": "WITH\nsome_cte (id, name) AS (SELECT T.*\n  FROM t2 AS T)\nINSERT INTO t1(id, name) SELECT *\n  FROM some_cte",
+      "query": "WITH\nsome_cte (id, name) AS (SELECT T.*\n  FROM t2 AS T)\nINSERT INTO `table one`(id, name) SELECT *\n  FROM some_cte",
       "stats": {
         "scan": 1
       },
@@ -84,13 +84,13 @@
     },
     {
       "id": 10,
-      "query": "INSERT INTO t1(id, name) VALUES(1, 'Irene')\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u00e2\u0080\u00a2 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
+      "query": "INSERT INTO `table one`(id, name) VALUES(1, 'Irene')\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u00e2\u0080\u00a2 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
       "stats": {},
       "plan": "QUERY PLAN"
     },
     {
       "id": 11,
-      "query": "WITH\nsome_cte (id, name) AS (SELECT 1, 'Irene')\nINSERT INTO t1(id, name) SELECT *\n  FROM some_cte\n  WHERE id = 1\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u00e2\u0080\u00a2 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
+      "query": "WITH\nsome_cte (id, name) AS (SELECT 1, 'Irene')\nINSERT INTO `table one`(id, name) SELECT *\n  FROM some_cte\n  WHERE id = 1\nON CONFLICT (id) DO UPDATE\nSET name = excluded.name || 'replace' || ' \u00e2\u0080\u00a2 ' || '\\x01\\x02\\xA1\\x1b\\x00\\xg' || 'it''s high noon\\r\\n\\f\\b\\t\\v' || \"it's\" || name",
       "stats": {
         "scan": 2
       },
@@ -104,7 +104,7 @@
     },
     {
       "id": 13,
-      "query": "DROP TABLE IF EXISTS t1",
+      "query": "DROP TABLE IF EXISTS `table one`",
       "stats": {},
       "plan": "QUERY PLAN"
     },
@@ -131,11 +131,11 @@
     },
     {
       "id": 17,
-      "query": "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\n  FROM t1",
+      "query": "SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx\n  FROM `table one`",
       "stats": {
         "scan": 1
       },
-      "plan": "QUERY PLAN\n|..SCAN TABLE t1"
+      "plan": "QUERY PLAN\n|..SCAN TABLE table one"
     },
     {
       "id": 18,
@@ -297,19 +297,19 @@
     },
     {
       "id": 38,
-      "query": "SELECT alias.*\n  FROM t1 AS alias",
+      "query": "SELECT alias.*\n  FROM `table one` AS alias",
       "stats": {
         "scan": 1
       },
-      "plan": "QUERY PLAN\n|..SCAN TABLE t1 AS TABLE t1 AS alias"
+      "plan": "QUERY PLAN\n|..SCAN TABLE table one AS TABLE table one AS alias"
     },
     {
       "id": 39,
-      "query": "SELECT alias.rowid\n  FROM t1 AS alias",
+      "query": "SELECT alias.rowid\n  FROM `table one` AS alias",
       "stats": {
         "scan": 1
       },
-      "plan": "QUERY PLAN\n|..SCAN TABLE t1 AS TABLE t1 AS alias"
+      "plan": "QUERY PLAN\n|..SCAN TABLE table one AS TABLE table one AS alias"
     },
     {
       "id": 40,
@@ -318,7 +318,7 @@
         "scan": 1,
         "search": 1
       },
-      "plan": "QUERY PLAN\n|..SCAN TABLE t1 AS TABLE t1 AS foo\n|..SEARCH TABLE t2 AS TABLE t2 AS bar USING INTEGER PRIMARY KEY (rowid=?)"
+      "plan": "QUERY PLAN\n|..SCAN TABLE table one AS TABLE table one AS foo\n|..SEARCH TABLE t2 AS TABLE t2 AS bar USING INTEGER PRIMARY KEY (rowid=?)"
     }
   ]
 }

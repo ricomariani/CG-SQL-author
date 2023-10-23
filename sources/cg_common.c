@@ -236,7 +236,9 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         first = false;
 
         if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
-          // rico fix this
+          // In case of QID the table alias is already encoded and ready to use
+          // It's like that because it is always of the from "[table table_name as some_alias]"
+          // so we decode the QID stuff when we make the alias
           CSTR table_alias_name = get_inserted_table_alias_string_override(ast);
           bprintf(buffer, "%s", table_alias_name);
         } else {

@@ -154,7 +154,7 @@ with
 update `table one` set id = 1, name = label_var where name in (select name from some_cte);
 
 -- UPDATE FROM stmt
--- This doesn't work on SQLite 3.31 which is still the default on Ubuntu
+-- This does not work on SQLite 3.31 which is still the default on Ubuntu
 -- disabling this for now.  Maybe we can do this conditionally somehow...
 -- update `table one` set id = other_table.id, name = other_table.name from (select foo.* from t2 as foo limit 1) as other_table;
 

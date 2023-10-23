@@ -13,7 +13,7 @@
         "search": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX it1 (name=? AND id=? AND rowid=?)\n|..LIST SUBQUERY 2\n   |..COMPOUND QUERY\n      |..LEFT-MOST SUBQUERY\n         |..SEARCH TABLE t2 USING INTEGER PRIMARY KEY (rowid=?)\n      |..UNION USING TEMP B-TREE\n         |..SCAN TABLE t3"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX table one index (name=? AND id=? AND rowid=?)\n|..LIST SUBQUERY 2\n   |..COMPOUND QUERY\n      |..LEFT-MOST SUBQUERY\n         |..SEARCH TABLE t2 USING INTEGER PRIMARY KEY (rowid=?)\n      |..UNION USING TEMP B-TREE\n         |..SCAN TABLE t3"
     },
     {
       "id": 2,
@@ -30,7 +30,7 @@
         "scan": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t3 AS TABLE t3 AS T"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX table one index (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t3 AS TABLE t3 AS T"
     },
     {
       "id": 4,
@@ -39,7 +39,7 @@
         "scan": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX it1 (name=?)\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS TABLE t2 AS T"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING COVERING INDEX table one index (name=?)\n|..LIST SUBQUERY 2\n   |..SCAN TABLE t2 AS TABLE t2 AS T"
     },
     {
       "id": 5,
@@ -49,7 +49,7 @@
         "search": 1,
         "searchUsingCovering": 1
       },
-      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING INDEX it1 (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t2 AS TABLE t2 AS foo\n   |..SEARCH TABLE t3 USING AUTOMATIC COVERING INDEX (name=?)"
+      "plan": "QUERY PLAN\n|..SEARCH TABLE table one USING INDEX table one index (name=?)\n|..LIST SUBQUERY 1\n   |..SCAN TABLE t2 AS TABLE t2 AS foo\n   |..SEARCH TABLE t3 USING AUTOMATIC COVERING INDEX (name=?)"
     },
     {
       "id": 6,
@@ -116,7 +116,7 @@
     },
     {
       "id": 15,
-      "query": "DROP INDEX it1",
+      "query": "DROP INDEX `table one index`",
       "stats": {},
       "plan": "QUERY PLAN"
     },

@@ -83,8 +83,8 @@ create table scan_ok(id int);
 create table foo(id int);
 create table _foo(id int);
 create table foo_(id int);
-create index it1 ON `table one`(name, id);
-create index it1 ON `table one`(name, id);
+create index `table one index` ON `table one`(name, id);
+create index `table one index` ON `table one`(name, id);
 create index it4 ON t4(data, id);
 create index it4 ON t4(data, id);
 create index it5 ON t4(data) @delete(1);
@@ -199,7 +199,7 @@ drop table if exists `table one`;
 drop view my_view;
 
 -- DROP INDEX stmt
-drop index it1;
+drop index `table one index`;
 
 -- DROP TRIGGER stmt
 drop trigger if exists my_trigger;

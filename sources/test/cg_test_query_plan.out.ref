@@ -83,7 +83,7 @@ BEGIN
   CREATE TABLE foo_(
     id INTEGER
   );
-  CREATE INDEX it1 ON `table one` (name, id);
+  CREATE INDEX `table one index` ON `table one` (name, id);
   CREATE INDEX it4 ON t4 (data, id);
   CREATE VIEW my_view AS
   SELECT *
@@ -436,10 +436,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DROP INDEX it1";
+  SET stmt := "DROP INDEX `table one index`";
   INSERT INTO sql_temp(id, sql) VALUES(15, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  DROP INDEX it1;
+  DROP INDEX `table one index`;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(15, C.iselectid, C.iorder, C.ifrom, C.zdetail);

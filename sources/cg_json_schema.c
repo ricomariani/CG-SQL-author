@@ -88,26 +88,74 @@ static llint_t crc_stmt(ast_node *stmt) {
   return result;
 }
 
-static void add_name_to_output(charbuf* output, CSTR table_name) {
+static void cg_json_sql_name_ex(charbuf *output, CSTR name, bool qid) {
+  if (qid) {
+    CHARBUF_OPEN(sql_name);
+    cg_unquote_encoded_qstr(&sql_name, name);
+    cg_pretty_quote_plaintext(sql_name.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
+    CHARBUF_CLOSE(sql_name);
+  }
+  else {
+    bprintf(output, "\"%s\"", name);
+  }
+}
+
+static void cg_json_sptr_sql_name(charbuf *output, sem_struct *sptr, int32_t i) {
+  CSTR name = sptr->names[i];
+  cg_json_sql_name_ex(output, name, !!(sptr->semtypes[i] & SEM_TYPE_QID));
+}
+
+static void cg_json_sql_name(charbuf *output, ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  cg_json_sql_name_ex(output, name, is_qid(ast));
+}
+
+static ast_node *name_ast_from_node(ast_node *ast) {
+  if (is_ast_create_proc_stmt(ast)) {
+    EXTRACT_NAME_AST(proc_name_ast, ast->left);
+    return proc_name_ast;
+  }
+
+  if (is_ast_declare_proc_stmt(ast)) {
+    EXTRACT_NOTNULL(proc_name_type, ast->left);
+    EXTRACT_NAME_AST(proc_name_ast, proc_name_type->left);
+    return proc_name_ast;
+  }
+
+  if (is_ast_create_table_stmt(ast)) {
+    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
+    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
+    return table_name_ast;
+  }
+
+  // the only other option
+  Contract(is_ast_create_view_stmt(ast));
+  EXTRACT(view_and_attrs, ast->right);
+  EXTRACT(name_and_select, view_and_attrs->left);
+  EXTRACT_NAME_AST(view_name_ast, name_and_select->left);
+  return view_name_ast;
+}
+
+static void add_name_to_output(charbuf* output, ast_node *ast) {
   Contract(output);
+  ast_node *name_ast = name_ast_from_node(ast);
   if (output->used > 1) {
     bprintf(output, ", ");
   }
-  bprintf(output, "\"%s\"", table_name);
+  cg_json_sql_name(output, name_ast);
 }
-
 
 // This is the callback function that tells us a view name was found in the body
 // of the stored proc we are currently examining.  The void context information
 // is how we remember which proc we were processing.   For each table we have
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
-static void cg_found_view(CSTR view_name, ast_node* table_ast, void* pvContext) {
+static void cg_found_view(CSTR view_name, ast_node *name_ast, void* pvContext) {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
   Contract(context->used_views);
 
-  add_name_to_output(context->used_views, view_name);
+  add_name_to_output(context->used_views, name_ast);
 }
 
 // This is the callback function that tells us a table name was found in the body
@@ -115,7 +163,7 @@ static void cg_found_view(CSTR view_name, ast_node* table_ast, void* pvContext) 
 // is how we remember which proc we were processing.   For each table we have
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
-static void cg_found_table(CSTR table_name, ast_node* table_ast, void* pvContext) {
+static void cg_found_table(CSTR table_name, ast_node *table_ast, void* pvContext) {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
   Contract(context->used_tables);
@@ -128,12 +176,10 @@ static void cg_found_table(CSTR table_name, ast_node* table_ast, void* pvContext
     charbuf* output = symtab_ensure_charbuf(tables_to_procs, table_name);
 
     // Get the proc name and add it to the list for this table
-    EXTRACT_STRING(proc_name, proc_ast->left);
-
-    add_name_to_output(output, proc_name);
+    add_name_to_output(output, proc_ast);
   }
 
-  add_name_to_output(context->used_tables, table_name);
+  add_name_to_output(context->used_tables, table_ast);
 }
 
 static void cg_found_insert(CSTR table_name, ast_node *table_ast, void *pvContext)
@@ -141,7 +187,7 @@ static void cg_found_insert(CSTR table_name, ast_node *table_ast, void *pvContex
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
 
-  add_name_to_output(context->insert_tables, table_name);
+  add_name_to_output(context->insert_tables, table_ast);
 }
 
 static void cg_found_update(CSTR table_name, ast_node *table_ast, void *pvContext)
@@ -149,7 +195,7 @@ static void cg_found_update(CSTR table_name, ast_node *table_ast, void *pvContex
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
 
-  add_name_to_output(context->update_tables, table_name);
+  add_name_to_output(context->update_tables, table_ast);
 }
 
 static void cg_found_delete(CSTR table_name, ast_node *table_ast, void *pvContext)
@@ -157,21 +203,21 @@ static void cg_found_delete(CSTR table_name, ast_node *table_ast, void *pvContex
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
 
-  add_name_to_output(context->delete_tables, table_name);
+  add_name_to_output(context->delete_tables, table_ast);
 }
 
 static void cg_found_from(CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
-  add_name_to_output(context->from_tables, table_name);
+  add_name_to_output(context->from_tables, table_ast);
 }
 
 static void cg_found_proc(CSTR proc_name, ast_node *name_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
-  add_name_to_output(context->used_procs, proc_name);
+  add_name_to_output(context->used_procs, name_ast);
 }
 
 // When processing generated SQL we get a callback every time a variable appears
@@ -430,7 +476,7 @@ static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
 
   while (enum_values) {
      EXTRACT_NOTNULL(enum_value, enum_values->left);
-     EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+     EXTRACT_NAME_AST(enum_name_ast, enum_value->left);
      EXTRACT_STRING(enum_name, enum_name_ast);
 
      COMMA;
@@ -496,7 +542,7 @@ static void cg_json_const_values(ast_node *const_values, charbuf *output) {
 
   while (const_values) {
      EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_NAME_AST(const_name_ast, const_value->left);
      EXTRACT_STRING(const_name, const_name_ast);
      EXTRACT_ANY_NOTNULL(const_expr, const_value->right);
 
@@ -539,7 +585,7 @@ static void cg_json_constant_groups(charbuf* output) {
   for (list_item *item = all_constant_groups_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_declare_const_stmt(ast));
-    EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+    EXTRACT_NAME_AST(name_ast, ast->left);
     EXTRACT_NOTNULL(const_values, ast->right);
     EXTRACT_STRING(name, name_ast);
 
@@ -665,18 +711,28 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
   }
 
   if (sem_type & SEM_TYPE_PK) {
-    bprintf(info->col_pk, "\"%s\"", name);
+    cg_json_sql_name_ex(info->col_pk, name, !!(sem_type & SEM_TYPE_QID));
   }
 
   if (sem_type & SEM_TYPE_UK) {
     if (info->col_uk->used > 1) {
       bprintf(info->col_uk, ",\n");
     }
+    CHARBUF_OPEN(tmp);
+    bprintf(&tmp, "%s_uk", name);
+    bool_t is_qid = !!(sem_type & SEM_TYPE_QID);
+
     bprintf(info->col_uk, "{\n");
-    bprintf(info->col_uk, "  \"name\" : \"%s_uk\",\n", name);
-    bprintf(info->col_uk, "  \"columns\" : [ \"%s\" ],\n", name);
+    bprintf(info->col_uk, "  \"name\" : ");
+    cg_json_sql_name_ex(info->col_uk, tmp.ptr, is_qid);
+    bprintf(info->col_uk, ",\n");
+    bprintf(info->col_uk, "  \"columns\" : [ ");
+    cg_json_sql_name_ex(info->col_uk, name, is_qid);
+    bprintf(info->col_uk, " ],\n");
     bprintf(info->col_uk, "  \"sortOrders\" : [ \"\" ]\n");
     bprintf(info->col_uk, "}");
+
+    CHARBUF_CLOSE(tmp);
   }
 
   // There could be several foreign keys, we have to walk the list of attributes and gather them all
@@ -779,12 +835,14 @@ static void cg_json_col_def(charbuf *output, col_info *info) {
   EXTRACT(misc_attrs, def->right);
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_STRING(name, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(col, 2);
 
-  bprintf(output, "\"name\" : \"%s\",\n", name);
+  bprintf(output, "\"name\" : ");
+  cg_json_sql_name(output, name_ast);
+  bprintf(output, ",\n");
 
   if (misc_attrs) {
     cg_json_misc_attrs(output, misc_attrs);
@@ -924,6 +982,15 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
   cg_json_fk_flags(output, flags);
 }
 
+static void cg_json_opt_constraint_name(charbuf *output, ast_node *def) {
+  if (def->left) {
+    EXTRACT_NAME_AST(constraint_name_ast, def->left);
+    bprintf(output, "\"name\" : ");
+    cg_json_sql_name(output, constraint_name_ast);
+    bprintf(output, ",\n");
+  }
+}
+
 // A full FK definition consists of the constrained columns
 // and the FK target.  This takes care of the columns and defers
 // to the above for the target (the target is used in other cases too)
@@ -933,10 +1000,7 @@ static void cg_json_fk_def(charbuf *output, ast_node *def) {
   EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
 
-  if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    bprintf(output, "\"name\" : \"%s\",\n", name);
-  }
+  cg_json_opt_constraint_name(output, def);
 
   bprintf(output, "\"columns\" : [ ");
   cg_json_name_list(output, src_list);
@@ -954,10 +1018,7 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
 
   bprintf(output, "{\n");
   BEGIN_INDENT(uk, 2);
-  if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    bprintf(output, "\"name\" : \"%s\",\n", name);
-  }
+  cg_json_opt_constraint_name(output, def);
 
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
@@ -981,10 +1042,7 @@ static void cg_json_check_def(charbuf *output, ast_node *def) {
 
   bprintf(output, "{\n");
   BEGIN_INDENT(chk, 2);
-  if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    bprintf(output, "\"name\" : \"%s\",\n", name);
-  }
+  cg_json_opt_constraint_name(output, def);
   cg_fragment_with_params_raw(output, "checkExpr", expr, gen_root_expr);
   END_INDENT(chk);
   bprintf(output, "\n}");
@@ -1143,9 +1201,8 @@ static void cg_json_indices(charbuf *output) {
     EXTRACT_OPTION(flags, flags_names_attrs->left);
     EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
     EXTRACT(opt_where, index_names_and_attrs->right);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
-    EXTRACT_STRING(index_name, index_name_ast);
-    EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
+    EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
     EXTRACT_STRING(table_name, table_name_ast);
 
     ast_node *misc_attrs = NULL;
@@ -1163,9 +1220,11 @@ static void cg_json_indices(charbuf *output) {
     BEGIN_INDENT(index, 2);
 
     bool_t is_deleted = ast->sem->delete_version > 0;
-    bprintf(output, "\"name\" : \"%s\"", index_name);
+    bprintf(output, "\"name\" : ");
+    cg_json_sql_name(output, index_name_ast);
     bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
-    bprintf(output, ",\n\"table\" : \"%s\"", table_name);
+    bprintf(output, ",\n\"table\" : ");
+    cg_json_sql_name(output, table_name_ast);
     bprintf(output, ",\n\"isUnique\" : %d", !!(flags & INDEX_UNIQUE));
     bprintf(output, ",\n\"ifNotExists\" : %d", !!(flags & INDEX_IFNE));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
@@ -1229,7 +1288,7 @@ static void cg_json_triggers(charbuf *output) {
     EXTRACT_OPTION(flags, ast->left);
     EXTRACT_NOTNULL(trigger_body_vers, ast->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-    EXTRACT_STRING(trigger_name, trigger_def->left);
+    EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
     EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
     EXTRACT_OPTION(cond_flags, trigger_condition->left);
     flags |= cond_flags;
@@ -1239,7 +1298,7 @@ static void cg_json_triggers(charbuf *output) {
     EXTRACT(name_list, trigger_operation->right);
     flags |= op_flags;
     EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-    EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+    EXTRACT_STRING(table_name, trigger_target_action->left);
     EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
     EXTRACT_OPTION(action_flags, trigger_action->left);
     flags |= action_flags;
@@ -1257,7 +1316,8 @@ static void cg_json_triggers(charbuf *output) {
     cg_json_test_details(output, ast, misc_attrs);
 
     // use the canonical name (which may be case-sensitively different)
-    CSTR table_name = table_name_ast->sem->sptr->struct_name;
+    ast_node *canonical_ast = find_table_or_view_even_deleted(table_name);
+    ast_node *target_name_ast = name_ast_from_node(canonical_ast);
 
     COMMA;
     bprintf(output, "{\n");
@@ -1265,9 +1325,11 @@ static void cg_json_triggers(charbuf *output) {
     BEGIN_INDENT(trigger, 2);
 
     bool_t is_deleted = ast->sem->delete_version > 0;
-    bprintf(output, "\"name\" : \"%s\"", trigger_name);
+    bprintf(output, "\"name\" : ");
+    cg_json_sql_name(output, trigger_name_ast);
     bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
-    bprintf(output, ",\n\"target\" : \"%s\"", table_name);
+    bprintf(output, ",\n\"target\" : ");
+    cg_json_sql_name(output, target_name_ast);
     bprintf(output, ",\n\"isTemp\" : %d", !!(flags & TRIGGER_IS_TEMP));
     bprintf(output, ",\n\"ifNotExists\" : %d", !!(flags & TRIGGER_IF_NOT_EXISTS));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
@@ -1424,7 +1486,9 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(type, 2);
-    bprintf(output, "\"name\" : \"%s\",\n", sptr->names[i]);
+    bprintf(output, "\"name\" : ");
+    cg_json_sptr_sql_name(output, sptr, (int32_t)i);
+    bprintf(output, ",\n");
     cg_json_data_type(output, sptr->semtypes[i], sptr->kinds[i]);
     END_INDENT(type);
     bprintf(output, "\n}");
@@ -1460,8 +1524,7 @@ static void cg_json_views(charbuf *output) {
     EXTRACT(view_and_attrs, ast->right);
     EXTRACT(name_and_select, view_and_attrs->left);
     EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-    EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
-    EXTRACT_STRING(name, name_ast);
+    EXTRACT_NAME_AST(name_ast, name_and_select->left);
 
     if (i > 0) {
       bprintf(output, ",\n");
@@ -1470,7 +1533,8 @@ static void cg_json_views(charbuf *output) {
 
     bool_t is_deleted = ast->sem->delete_version > 0;
     BEGIN_INDENT(view, 2);
-    bprintf(output, "\"name\" : \"%s\"", name);
+    bprintf(output, "\"name\" : ");
+    cg_json_sql_name(output, name_ast);
     bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
     bprintf(output, ",\n\"isTemp\" : %d", !!(flags & VIEW_IS_TEMP));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
@@ -1514,14 +1578,13 @@ static void cg_json_table_indices(list_item *head, charbuf *output) {
 
     Invariant(is_ast_create_index_stmt(ast));
     EXTRACT_NOTNULL(create_index_on_list, ast->left);
-    EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
-    EXTRACT_STRING(index_name, index_name_ast);
+    EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
 
     if (needs_comma) {
       bprintf(output, ", ");
     }
 
-    bprintf(output, "\"%s\"", index_name);
+    cg_json_sql_name(output, index_name_ast);
     needs_comma = 1;
   }
   bprintf(output, " ]");
@@ -1536,7 +1599,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
-  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
 
   int32_t temp = flags & TABLE_IS_TEMP;
@@ -1567,12 +1630,13 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   bool_t is_deleted = ast->sem->delete_version > 0;
   bool_t is_unsub = ast->sem->unsubscribed > 0;
 
-  bprintf(output, "\"name\" : \"%s\"", name);
+  bprintf(output, "\"name\" : ");
+  cg_json_sql_name(output, name_ast);
 
   CHARBUF_OPEN(table_schema);
   gen_sql_callbacks schema_callbacks;
   init_gen_sql_callbacks(&schema_callbacks);
-  schema_callbacks.mode = gen_mode_no_annotations;
+  schema_callbacks.mode = gen_mode_sql;
   gen_set_output_buffer(&table_schema);
   gen_statement_with_callbacks(ast, &schema_callbacks);
   bprintf(output, ",\n\"schema\" : ");
@@ -1888,7 +1952,7 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
 
   EXTRACT_ANY_NOTNULL(insert_type, insert_stmt->left);
   EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
-  EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left)
+  EXTRACT_NAME_AST(name_ast, name_columns_values->left)
   EXTRACT_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY(columns_values_right, columns_values->right);
@@ -1950,7 +2014,7 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
 static void cg_json_delete_stmt(charbuf *output, ast_node * ast) {
   Contract(is_delete_stmt(ast));
   ast_node *delete_stmt = is_ast_with_delete_stmt(ast) ? ast->right : ast;
-  EXTRACT_ANY_NOTNULL(name_ast, delete_stmt->left);
+  EXTRACT_NAME_AST(name_ast, delete_stmt->left);
 
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
@@ -1965,7 +2029,7 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
   Contract(is_update_stmt(ast));
   ast_node *update_stmt = is_ast_with_update_stmt(ast) ? ast->right : ast;
 
-  EXTRACT_ANY_NOTNULL(name_ast, update_stmt->left);
+  EXTRACT_NAME_AST(name_ast, update_stmt->left);
 
   // use the canonical name (which may be case-sensitively different)
   CSTR name = name_ast->sem->sptr->struct_name;
@@ -2213,7 +2277,7 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
   bool_t no_check_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast);
   Contract(select_func || non_select_func);
 
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT(params, func_params_return->left);
@@ -2312,7 +2376,7 @@ static void cg_json_declare_proc_no_check(charbuf *stmt_out, ast_node *ast, ast_
 static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
-  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
+  EXTRACT_NAME_AST(name_ast, proc_name_type->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -2367,7 +2431,7 @@ static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *mis
 static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(unused == NULL);  // proc output is complicated, this code knows what to do
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);

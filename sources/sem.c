@@ -2297,6 +2297,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_ALIAS) {
     bprintf(out, " alias");
   }
+  if (sem_type & SEM_TYPE_QID) {
+    bprintf(out, " qid");
+  }
 }
 
 // For debug/test output, prettyprint a structure type
@@ -2412,6 +2415,14 @@ cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject) {
   CSTR subj3 = "";
 
   if (subject) {
+
+    if (subject[0] == 'X' && subject[1] == '_' && strchr(subject+2, 'X')) {
+       // this is almost certainly a QID, decode it
+       CHARBUF_OPEN(tmp);
+       cg_decode_qstr(&tmp, subject);
+       subject = Strdup(tmp.ptr);
+       CHARBUF_CLOSE(tmp);
+    }
     subj1 = " '";
     subj2 = subject;
     subj3 = "'";
@@ -2634,7 +2645,13 @@ static sem_struct *sem_clone_struct_strip_flags(sem_struct *sptr, sem_t strip) {
 // to get rid of other table-ish flags like HAS_DEFAULT and AUTOINCREMENT
 // they don't contribute to anything and they make the tree ugly.
 static sem_struct *new_sem_struct_strip_table_flags(sem_struct *sptr) {
-  sem_t allowed_flags = SEM_TYPE_CORE | SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE | SEM_TYPE_HIDDEN_COL | SEM_TYPE_ALIAS;
+  sem_t allowed_flags =
+       SEM_TYPE_CORE |
+       SEM_TYPE_NOTNULL |
+       SEM_TYPE_SENSITIVE |
+       SEM_TYPE_HIDDEN_COL |
+       SEM_TYPE_ALIAS |
+       SEM_TYPE_QID;
 
   sem_struct *result = sem_clone_struct_strip_flags(sptr, sem_not(allowed_flags));
 
@@ -3262,9 +3279,9 @@ static void sem_validate_previous_index(ast_node *prev_index) {
   EXTRACT_NOTNULL(index_names_and_attrs, connector->left);
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
-  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
   EXTRACT_STRING(index_name, index_name_ast);
-  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
   EXTRACT_STRING(table_name, table_name_ast);
 
   ast_node *ast = find_index(index_name);
@@ -3367,9 +3384,9 @@ static void sem_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
-  EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+  EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
   EXTRACT_STRING(index_name, index_name_ast);
-  EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+  EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
   EXTRACT_STRING(table_name, table_name_ast);
 
   // Index declarations (i.e. outside of any proc) are totally ignored
@@ -3771,9 +3788,9 @@ static bool_t find_referenceable_columns(
       EXTRACT_OPTION(flags, flags_names_attrs->left);
       EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
       EXTRACT(opt_where, index_names_and_attrs->right);
-      EXTRACT_ANY_NOTNULL(index_name_ast, create_index_on_list->left);
+      EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
       EXTRACT_STRING(index_name, index_name_ast);
-      EXTRACT_ANY_NOTNULL(table_name_ast, create_index_on_list->right);
+      EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
       EXTRACT_STRING(table_name, table_name_ast);
 
       if (!(flags & INDEX_UNIQUE)) {
@@ -3878,7 +3895,7 @@ cql_noexport CSTR sem_get_name(ast_node *ast) {
   else if (is_ast_create_trigger_stmt(ast)) {
     EXTRACT_NOTNULL(trigger_body_vers, ast->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-    EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+    EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
     EXTRACT_STRING(trigger_name, trigger_name_ast);
     name = trigger_name;
   }
@@ -4538,7 +4555,7 @@ static void sem_col_def(ast_node *def, col_def_info *info) {
 
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(data_type, col_def_name_type->right);
 
@@ -4554,8 +4571,13 @@ static void sem_col_def(ast_node *def, col_def_info *info) {
   def->sem->name = name;
   def->sem->kind = data_type->sem->kind;
 
+
   info->col_sem_type = def->sem->sem_type;
   info->col_name = name;
+
+  if (is_qid(name_ast)) {
+    sem_add_flags(def, SEM_TYPE_QID);
+  }
 
   if (attrs) {
     sem_add_flags(def, sem_col_attrs(def, attrs, info));
@@ -7186,7 +7208,7 @@ static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
 // except ifnull must have exactly two arguments.
 static void sem_coalesce(ast_node *call_ast, bool_t is_ifnull) {
   Contract(is_ast_call(call_ast));
-  EXTRACT_ANY_NOTNULL(name_ast, call_ast->left);
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -7370,7 +7392,7 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
 // do that for other reasons anyway so there is no additional walk here.
 static bool_t sem_validate_arg_count(ast_node *ast, uint32_t count, uint32_t expected) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
 
   if (count != expected) {
@@ -7397,7 +7419,7 @@ static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_cont
 // This helper method checks the function against the mask of its valid contexts.
 static bool_t sem_validate_function_context(ast_node *ast, uint32_t valid_contexts) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
 
   return sem_validate_context(ast, name, valid_contexts);
@@ -7440,7 +7462,7 @@ static void sem_expr_exists(ast_node *ast, CSTR cstr) {
 
 static bool_t sem_validate_window_context(ast_node *ast) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
 
   // check the context first, better error message
@@ -7455,7 +7477,7 @@ static bool_t sem_validate_window_context(ast_node *ast) {
 // they may not appear in a WHERE clause.  Validate the current context.
 static bool_t sem_validate_aggregate_context(ast_node *ast) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
 
   // check the context first, better error message
@@ -7492,7 +7514,7 @@ static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
 // nullable depending on the input blob.  Otherwise this is very nearly a normal function.
 static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
@@ -7543,7 +7565,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
 //
 static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
@@ -7659,7 +7681,7 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
 //
 static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
@@ -7779,7 +7801,7 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
 // the backing table.
 static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
@@ -7854,7 +7876,7 @@ static void sem_special_func_cql_blob_get(ast_node *ast, uint32_t arg_count, boo
 // You can count anything, you always get an integer
 static void sem_special_func_count(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -7884,7 +7906,7 @@ static void sem_special_func_count(ast_node *ast, uint32_t arg_count, bool_t *is
 // You can min/max numerics and strings, you get what you started with.
 static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -7957,7 +7979,7 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
 // You can round real numbers, you may specify a precision
 static void sem_func_round(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8024,7 +8046,7 @@ static void sem_aggr_func_min(ast_node *ast, uint32_t arg_count) {
 // Avg validation -> any numeric is ok, but you get a real back.
 static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8065,7 +8087,7 @@ static void sem_func_ifnull(ast_node *ast, uint32_t arg_count) {
 // will do nothing unless --compress has been selected
 static void sem_func_cql_compressed(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8099,7 +8121,7 @@ static void sem_func_cql_compressed(ast_node *ast, uint32_t arg_count) {
 // results but we don't have one at this time.
 static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8131,7 +8153,7 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8165,7 +8187,7 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8214,7 +8236,7 @@ static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_nullif(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8251,7 +8273,7 @@ static void sem_func_nullif(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8284,7 +8306,7 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8322,7 +8344,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8350,7 +8372,7 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_char(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8409,7 +8431,7 @@ static bool_t sem_validate_cursor_from_variable(ast_node *ast, CSTR target) {
 // will only show up as the product of rewrite rules).
 static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count, uint32_t valid_contexts) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8481,7 +8503,7 @@ static void sem_special_func_cql_inferred_notnull(ast_node *ast, uint32_t arg_co
 // Note cql_cursor_diff_xxx is also rewritten to a case_expr node
 static bool_t validate_cql_cursor_diff(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8573,7 +8595,7 @@ static void sem_special_func_iif(ast_node *ast, uint32_t arg_count, bool_t *is_a
 
 static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8617,7 +8639,7 @@ static void sem_func_coalesce(ast_node *ast, uint32_t arg_count) {
 // in SQLite, so there's no "non-aggregate" case like min/max.
 static void sem_validate_sum_or_total(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8645,7 +8667,7 @@ static void sem_validate_sum_or_total(ast_node *ast, uint32_t arg_count) {
 // Sum validation -> any numeric is ok
 static void sem_aggr_func_sum(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8676,7 +8698,7 @@ static void sem_aggr_func_sum(ast_node *ast, uint32_t arg_count) {
 // Total validation -> any numeric is ok
 static void sem_aggr_func_total(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8702,7 +8724,7 @@ static void sem_aggr_func_total(ast_node *ast, uint32_t arg_count) {
 // Substr validation -> 2 or 3 args, first arg is a string, the others are integers
 static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8775,7 +8797,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
 // Validates SQLite's replace(input, find, replace_with) function.
 static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8824,7 +8846,7 @@ static void sem_validate_window_func(
   uint32_t arg_count_needed_max,
   sem_t sem_func_return) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
 
   if (!sem_validate_window_context(ast)) {
     return;
@@ -8867,7 +8889,7 @@ static void sem_func_cume_dist(ast_node *ast, uint32_t arg_count) {
 // Validation of the builtin window function ntile(...). It takes one integer argument
 static void sem_func_ntile(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8894,7 +8916,7 @@ static void sem_func_ntile(ast_node *ast, uint32_t arg_count) {
 // with two of them optional.
 static void sem_func_lag(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -8986,7 +9008,7 @@ static void sem_func_lead(ast_node *ast, uint32_t arg_count) {
 // Validation of the builtin window function first_value(...). It takes one expression parameter
 static void sem_func_first_value(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9011,7 +9033,7 @@ static void sem_func_last_value(ast_node *ast, uint32_t arg_count) {
 // Validation of the builtin window function nth_value(...). It takes two parameters
 static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9043,7 +9065,7 @@ static void sem_func_nth_value(ast_node *ast, uint32_t arg_count) {
 // it accepts anything and it results in a string.
 static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9089,7 +9111,7 @@ static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
 // Validate the format args, nothing else is really needed.
 static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, sem_t sem_type) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9189,7 +9211,7 @@ static void sem_func_julianday(ast_node *ast, uint32_t arg_count) {
 // unable to deal with objects directly.
 static void sem_special_func_ptr(ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9220,7 +9242,7 @@ static void sem_special_func_ptr(ast_node *ast, uint32_t arg_count, bool_t *is_a
 // statements or other similar situations.
 static void sem_func_sensitive(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9243,7 +9265,7 @@ static void sem_func_sensitive(ast_node *ast, uint32_t arg_count) {
 // statements or other similar situations.
 static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9288,7 +9310,7 @@ static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count)
 // The random function gives you a random long_int
 static void sem_func_random(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   if (!sem_validate_arg_count(ast, arg_count, 0)) {
     return;
@@ -9305,7 +9327,7 @@ static void sem_func_random(ast_node *ast, uint32_t arg_count) {
 // It tells the query planner that the given (one) argument is probably a boolean value of `true`.
 static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9329,7 +9351,7 @@ static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
 // by the most recent update/insert/delete.
 static void sem_func_changes(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   if (sem_validate_db_func_with_no_args(ast, arg_count)) {
     return;
@@ -9341,7 +9363,7 @@ static void sem_func_changes(ast_node *ast, uint32_t arg_count) {
 // The last_insert_rowid function is used to get the rowid of the most recently inserted row with a rowid.
 static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   if (sem_validate_db_func_with_no_args(ast, arg_count)) {
     return;
@@ -9421,7 +9443,7 @@ static CSTR format_string_from_format_strlit(ast_node *format_strlit) {
 // with a string literal containing the format string as its first argument.
 static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9514,7 +9536,7 @@ static void sem_user_func(ast_node *ast, ast_node *user_func) {
   bool_t non_select_func = is_ast_declare_func_no_check_stmt(user_func) || is_ast_declare_func_stmt(user_func);
   bool_t no_check = is_ast_declare_select_func_no_check_stmt(user_func) || is_ast_declare_func_no_check_stmt(user_func);
   Contract(select_func || non_select_func);
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
@@ -9840,7 +9862,7 @@ static void sem_expr_array(ast_node *ast,  CSTR op) {
 // of call for additional validation.
 static void sem_expr_call(ast_node *ast, CSTR cstr) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
@@ -10810,7 +10832,7 @@ static void sem_query_parts(ast_node *ast) {
 static void sem_table_function(ast_node *ast) {
   Contract(is_ast_table_function(ast));
 
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT(arg_list, ast->right);
 
@@ -11786,7 +11808,7 @@ static void sem_explain_stmt(ast_node *stmt) {
 // The type of the CTE is inferred from the column types of the select.
 static void sem_cte_decl(ast_node *ast, ast_node *select_core)  {
   Contract(is_ast_cte_decl(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(name_list, ast->right)
 
@@ -12175,7 +12197,7 @@ cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info
     EXTRACT_NOTNULL(call_stmt, node->left);
     EXTRACT(cte_binding_list, node->right);
 
-    EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+    EXTRACT_NAME_AST(name_ast, call_stmt->left);
     EXTRACT_STRING(name, name_ast);
 
     new_info = *info;
@@ -12446,7 +12468,7 @@ static void sem_shared_cte(ast_node *cte_body) {
   }
 
   // check if we are calling a shared fragment
-  EXTRACT_ANY_NOTNULL(proc_name_ast, call_stmt->left);
+  EXTRACT_NAME_AST(proc_name_ast, call_stmt->left);
   EXTRACT_STRING(proc_name, proc_name_ast);
   ast_node *proc_stmt = find_proc(proc_name);
   if (!is_proc_shared_fragment(proc_stmt)) {
@@ -12720,7 +12742,7 @@ static void sem_validate_previous_view(ast_node *prev_view) {
   EXTRACT_OPTION(prev_flags, prev_view->left);
   EXTRACT_NAMED(prev_view_and_attrs, view_and_attrs, prev_view->right);
   EXTRACT_NAMED(prev_name_and_select, name_and_select, prev_view_and_attrs->left);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_name_and_select->left);
+  EXTRACT_NAME_AST(prev_name_ast, prev_name_and_select->left);
   EXTRACT_STRING(name, prev_name_ast);
 
   bool_t is_temp = !! (prev_flags & VIEW_IS_TEMP);
@@ -12763,7 +12785,7 @@ static void sem_validate_previous_trigger(ast_node *prev_trigger) {
   EXTRACT_OPTION(prev_flags, prev_trigger->left);
   EXTRACT_NAMED_NOTNULL(prev_trigger_body_vers, trigger_body_vers, prev_trigger->right);
   EXTRACT_NAMED_NOTNULL(prev_trigger_def, trigger_def, prev_trigger_body_vers->left);
-  EXTRACT_ANY_NOTNULL(prev_trigger_name_ast, prev_trigger_def->left);
+  EXTRACT_NAME_AST(prev_trigger_name_ast, prev_trigger_def->left);
   EXTRACT_STRING(name, prev_trigger_name_ast);
 
   bool_t is_temp = !! (prev_flags & TRIGGER_IS_TEMP);
@@ -12839,7 +12861,7 @@ static void sem_create_view_stmt(ast_node *ast) {
   EXTRACT(name_and_select, view_and_attrs->left);
   EXTRACT_ANY(attrs, view_and_attrs->right);
   EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-  EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
+  EXTRACT_NAME_AST(name_ast, name_and_select->left);
   EXTRACT_STRING(name, name_ast);
 
   // if we're validating a previous view we don't want to parse the contents, we only want
@@ -13033,7 +13055,7 @@ static void sem_non_backed_table(ast_node *ast_error, ast_node *ast_table) {
 
   if (is_ast_create_table_stmt(ast_table) && is_table_backed(ast_table)) {
     EXTRACT_NOTNULL(create_table_name_flags, ast_table->left);
-    EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+    EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
     EXTRACT_STRING(name, name_ast);
 
     report_error(ast_error, "CQL0493: backed storage tables may not be used in indexes/triggers/drop", name);
@@ -13052,7 +13074,7 @@ static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table)
 
   if (is_ast_create_table_stmt(ast_table) && is_table_blob_storage(ast_table)) {
     EXTRACT_NOTNULL(create_table_name_flags, ast_table->left);
-    EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+    EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
     EXTRACT_STRING(name, name_ast);
 
     report_error(ast_error, "CQL0458: the indicated table may only be used for blob storage", name);
@@ -13068,7 +13090,7 @@ static void sem_non_blob_storage_table(ast_node *ast_error, ast_node *ast_table)
 // * it has to be a table and not a view
 static void sem_drop_table_stmt(ast_node *ast) {
   Contract(is_ast_drop_table_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
   // we might be making the dropped table a reality so it's ok to try to drop @deleted tables
@@ -13104,7 +13126,7 @@ static void sem_drop_table_stmt(ast_node *ast) {
 // * it has to be a view and not a table
 static void sem_drop_view_stmt(ast_node *ast) {
   Contract(is_ast_drop_view_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
   // we might be making the dropped view a reality so it's ok to try to drop @deleted views
@@ -13130,7 +13152,7 @@ static void sem_drop_view_stmt(ast_node *ast) {
 // * it could be deleted now, that's ok, but the name has to be valid
 static void sem_drop_index_stmt(ast_node *ast) {
   Contract(is_ast_drop_index_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
   ast_node *index_ast = find_usable_index(name, name_ast, "CQL0112: index in drop statement was not declared");
@@ -13147,7 +13169,7 @@ static void sem_drop_index_stmt(ast_node *ast) {
 // * it could be deleted now, that's ok, but the name has to be valid
 static void sem_drop_trigger_stmt(ast_node *ast) {
   Contract(is_ast_drop_trigger_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
 
   ast_node *trigger_ast = find_usable_trigger(name,
@@ -13306,7 +13328,7 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
   EXTRACT_STRING(name, name_ast);
 
   // pull out the previous column info
@@ -13314,7 +13336,7 @@ static void sem_validate_col_def_prev_cur(ast_node *def, ast_node *prev_def, ver
   EXTRACT_NAMED_NOTNULL(prev_col_def_type_attrs, col_def_type_attrs, prev_def->left);
   EXTRACT_ANY(prev_attrs, prev_col_def_type_attrs->right);
   EXTRACT_NAMED_NOTNULL(prev_col_def_name_type, col_def_name_type, prev_col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_col_def_name_type->left);
+  EXTRACT_NAME_AST(prev_name_ast, prev_col_def_name_type->left);
   EXTRACT_STRING(prev_name, prev_name_ast);
 
   if (strcmp(name, prev_name)) {
@@ -13540,7 +13562,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   EXTRACT_NAMED_NOTNULL(prev_table_flags_attrs, table_flags_attrs, prev_create_table_name_flags->left);
   EXTRACT_OPTION(prev_flags, prev_table_flags_attrs->left);
   EXTRACT_ANY(prev_table_attrs, prev_table_flags_attrs->right);
-  EXTRACT_ANY_NOTNULL(prev_name_ast, prev_create_table_name_flags->right);
+  EXTRACT_NAME_AST(prev_name_ast, prev_create_table_name_flags->right);
   EXTRACT_STRING(name, prev_name_ast);
   EXTRACT_ANY_NOTNULL(prev_col_key_list, prev_table->right);
 
@@ -13573,7 +13595,7 @@ static void sem_validate_previous_table(ast_node *prev_table) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_ANY_NOTNULL(col_key_list, ast->right);
 
   // Tables that are missing from the previous schema have to be validated as well
@@ -13838,7 +13860,7 @@ static void sem_record_trigger_dependencies(ast_node *ast) {
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
   EXTRACT_NOTNULL(trigger_op_target, trigger_condition->right);
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-  EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+  EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_STRING(table_name, table_name_ast);
 
   trigger_dep_context context = {
@@ -13874,7 +13896,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
   EXTRACT_ANY(trigger_attrs, trigger_body_vers->right);
   EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-  EXTRACT_ANY_NOTNULL(trigger_name_ast, trigger_def->left);
+  EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
   EXTRACT_STRING(trigger_name, trigger_name_ast);
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
   EXTRACT_OPTION(cond_flags, trigger_condition->left);
@@ -13885,7 +13907,7 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-  EXTRACT_ANY_NOTNULL(table_name_ast, trigger_target_action->left);
+  EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_STRING(table_name, table_name_ast);
   EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
   EXTRACT_OPTION(action_flags, trigger_action->left);
@@ -14139,7 +14161,7 @@ static void sem_blob_storage_col_def(ast_node *table_ast, ast_node *def, CSTR ta
 
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
   EXTRACT_STRING(col_name, name_ast);
 
   // if we find anything weird, it's an error
@@ -14206,7 +14228,7 @@ static void sem_validate_table_for_blob_storage(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
 
@@ -14269,7 +14291,7 @@ static void sem_backing_col_def(ast_node *table_ast, ast_node *def, CSTR table_n
 
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
   EXTRACT_ANY_NOTNULL(col_type, col_def_name_type->right);
   EXTRACT_STRING(col_name, name_ast);
 
@@ -14356,7 +14378,7 @@ static void sem_validate_table_for_backing(ast_node *ast) {
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
 
@@ -14451,7 +14473,7 @@ static void sem_backed_col_def(ast_node *table_ast, ast_node *def, CSTR table_na
 
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
   EXTRACT_STRING(col_name, name_ast);
 
   // if we find anything weird, it's an error
@@ -14525,7 +14547,7 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
-  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
@@ -14746,7 +14768,7 @@ static void sem_create_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+  EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(col_key_list, ast->right);
 
@@ -14955,6 +14977,10 @@ static void sem_create_table_stmt(ast_node *ast) {
   ast->sem->recreate            = table_vers_info.recreate;
   ast->sem->recreate_group_name = table_vers_info.recreate_group_name;
 
+  if (is_qid(name_ast)) {
+    ast->sem->sem_type |= SEM_TYPE_QID;
+  }
+
   run_pending_table_validations();
 
   if (!is_error(ast)) {
@@ -15105,7 +15131,7 @@ void sem_create_virtual_table_stmt(ast_node *ast) {
 // state.
 static void sem_alter_table_add_column_stmt(ast_node *ast) {
   Contract(is_ast_alter_table_add_column_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT(col_def, ast->right);
 
@@ -15621,7 +15647,7 @@ static void sem_expr_stmt(ast_node *ast) {
   // apply above so that any x:foo(..) has already been unwound into a normal
   // call.  We don't want to have to look for all the : :: and ::: forms.
   if (is_ast_call(expr)) {
-    EXTRACT_ANY_NOTNULL(name_ast, expr->left);
+    EXTRACT_NAME_AST(name_ast, expr->left);
     EXTRACT_STRING(name, name_ast);
 
     EXTRACT_NOTNULL(call_arg_list, expr->right);
@@ -15842,7 +15868,7 @@ cql_noexport ast_node *sem_skip_with(ast_node *ast) {
 // Additionally we verify that the table actually was defined and is not a view.
 static void sem_delete_stmt(ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT(opt_where, ast->right);
 
@@ -16624,7 +16650,7 @@ static void sem_insert_stmt(ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left)
+  EXTRACT_NAME_AST(name_ast, name_columns_values->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_ANY(insert_dummy_spec, insert_type->left);
@@ -16836,7 +16862,7 @@ static void sem_upsert_stmt(ast_node *stmt) {
 
   // insert_stmt ON CONFLICT ([indexed_columns]) [WHERE ...] DO [UPDATE ...]
   EXTRACT_NOTNULL(name_columns_values, insert_stmt->right);
-  EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left)
+  EXTRACT_NAME_AST(name_ast, name_columns_values->left)
   EXTRACT_STRING(name, name_ast);
 
   ast_node *table_ast = find_usable_and_not_deleted_table_or_view(
@@ -17460,7 +17486,8 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
 
   // Look up the name in the current scope, and only that scope.  No locals
   // No nothing.  Just the columns in the indicated type.
-  ast_node *ast_col = new_ast_str(info->name);
+  ast_node *ast_col = new_str_or_qstr(info->name, !!(info->sem_type_col & SEM_TYPE_QID));
+
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(info_scope, info->jptr);
   bool_t found = sem_find_column_for_name(ast_col, info->name);
@@ -17695,7 +17722,7 @@ static void sem_expr_invalid_op(ast_node *ast, CSTR op) {
 // There are special cases for cursor variables, which cannot be set.
 static void sem_assign(ast_node *ast) {
   Contract(is_ast_assign(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
@@ -17841,7 +17868,7 @@ static void sem_param(ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_ANY(opt_inout, ast->left);
   EXTRACT_NOTNULL(param_detail, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, param_detail->left)
+  EXTRACT_NAME_AST(name_ast, param_detail->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_ANY_NOTNULL(data_type, param_detail->right);
 
@@ -17900,7 +17927,7 @@ static ast_node *sem_find_likeable_proc_args(ast_node *like_ast, int32_t likeabl
   Contract(is_ast_like(like_ast));
   Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
 
-  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
+  EXTRACT_NAME_AST(name_ast, like_ast->left);
   EXTRACT_STRING(like_name, name_ast);
 
   ast_node *proc= find_proc(like_name);
@@ -18010,7 +18037,7 @@ cql_noexport ast_node *sem_find_shape_def_base(ast_node *like_ast, int32_t likea
     return sem_find_likeable_proc_args(like_ast, likeable_for);
   }
 
-  EXTRACT_ANY_NOTNULL(name_ast, like_ast->left);
+  EXTRACT_NAME_AST(name_ast, like_ast->left);
   EXTRACT_STRING(like_name, name_ast);
 
   ast_node *found_shape = find_local_or_global_variable(like_name);
@@ -19281,7 +19308,7 @@ static void sem_misc_attrs(ast_node *ast) {
 static void sem_create_proc_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -19499,7 +19526,7 @@ cleanup:
 // is if the name is not unique.  The type ast has no error cases.
 static void sem_typed_name(ast_node *typed_name, symtab *names) {
   Contract(is_ast_typed_name(typed_name));
-  EXTRACT_ANY_NOTNULL(name_ast, typed_name->left);
+  EXTRACT_NAME_AST(name_ast, typed_name->left);
   EXTRACT_STRING(name, name_ast);
 
   if (!symtab_add(names, name, typed_name)) {
@@ -19568,7 +19595,7 @@ static void sem_declare_func_stmt(ast_node *ast) {
   bool_t non_select_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_func_stmt(ast);
   Contract(select_func || non_select_func);
 
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT(params, func_params_return->left);
@@ -19679,7 +19706,7 @@ static void sem_declare_func_stmt(ast_node *ast) {
 // This is a helper function for handling select function declarations
 static void sem_declare_select_func_stmt_common(ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
@@ -19806,7 +19833,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
-  EXTRACT_ANY_NOTNULL(name_ast, typed_name->left);
+  EXTRACT_NAME_AST(name_ast, typed_name->left);
   EXTRACT_STRING(name, name_ast);
   sem_data_type_column(typed_name->right);
   typed_name->sem = typed_name->right->sem;
@@ -19832,7 +19859,7 @@ static void sem_declare_enum_stmt(ast_node *ast) {
 
   while (enum_values) {
      EXTRACT_NOTNULL(enum_value, enum_values->left);
-     EXTRACT_ANY_NOTNULL(enum_name_ast, enum_value->left);
+     EXTRACT_NAME_AST(enum_name_ast, enum_value->left);
      EXTRACT_STRING(enum_name, enum_name_ast);
      EXTRACT_ANY(expr, enum_value->right);
 
@@ -19924,7 +19951,7 @@ cleanup:
 static void sem_declare_group_stmt(ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
 
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(stmt_list, ast->right);
 
@@ -19985,7 +20012,7 @@ static void sem_emit_group_stmt(ast_node *ast) {
   EXTRACT(name_list, ast->left);
 
   while (name_list) {
-    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_NAME_AST(name_ast, name_list->left);
     EXTRACT_STRING(name, name_ast);
 
     if (!find_variable_group(name)) {
@@ -20014,7 +20041,7 @@ static void sem_emit_group_stmt(ast_node *ast) {
 //   * string constants must be a string literal
 static void sem_declare_const_stmt(ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(const_values, ast->right);
 
@@ -20034,7 +20061,7 @@ static void sem_declare_const_stmt(ast_node *ast) {
 
   while (const_values) {
      EXTRACT_NOTNULL(const_value, const_values->left);
-     EXTRACT_ANY_NOTNULL(const_name_ast, const_value->left);
+     EXTRACT_NAME_AST(const_name_ast, const_value->left);
      EXTRACT_STRING(const_name, const_name_ast);
      EXTRACT_ANY(expr, const_value->right);
 
@@ -20157,7 +20184,7 @@ static void sem_declare_proc_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
-  EXTRACT_ANY_NOTNULL(name_ast, proc_name_type->left);
+  EXTRACT_NAME_AST(name_ast, proc_name_type->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_OPTION(type, proc_name_type->right);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -20262,7 +20289,7 @@ static void sem_declare_proc_stmt(ast_node *ast) {
 static void sem_declare_interface_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_declare_interface_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left)
+  EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
@@ -21867,7 +21894,7 @@ static void sem_validate_args_vs_formals(ast_node *ast, CSTR name, ast_node *arg
 //    * non-out parameters must be type-compatible, but exact match is not required
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
   EXTRACT_STRING(name, name_ast);
 
@@ -22031,7 +22058,7 @@ static void sem_fetch_stmt(ast_node *ast) {
   uint32_t cols = cursor->sem->sptr->count;
   ast_node *item = name_list;
   for (item = name_list; item && icol < cols; item = item->right, icol++) {
-    EXTRACT_ANY_NOTNULL(var_name_ast, item->left);
+    EXTRACT_NAME_AST(var_name_ast, item->left);
     EXTRACT_STRING(name, var_name_ast);
 
     ast_node *variable = find_local_or_global_variable(name);
@@ -22763,7 +22790,7 @@ static void sem_declare_out_call_stmt(ast_node *ast) {
   Contract(is_ast_declare_out_call_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
 
-  EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+  EXTRACT_NAME_AST(name_ast, call_stmt->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT(arg_list, call_stmt->right);
 
@@ -23703,7 +23730,7 @@ static void sem_validate_all_tables_not_in_previous(ast_node *root) {
     // backed tables are likewise exempted
     if (!is_error(ast) && !is_backed(ast->sem->sem_type)) {
       EXTRACT_NOTNULL(create_table_name_flags, ast->left);
-      EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+      EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
       EXTRACT_STRING(name, name_ast);
 
       sem_validate_old_object_or_marked_create(root, ast, err_msg.ptr, name);
@@ -23763,7 +23790,7 @@ static void sem_validate_all_prev_recreate_tables(ast_node *root) {
     ast_node *ast = item->ast;
 
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
-    EXTRACT_ANY_NOTNULL(name_ast, create_table_name_flags->right);
+    EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
     EXTRACT_STRING(name, name_ast);
 
     sem_validate_marked_create_or_delete(root, ast, err_msg.ptr, name);
@@ -23811,7 +23838,7 @@ static void sem_validate_all_columns_not_in_previous(ast_node *root) {
 
     EXTRACT_NOTNULL(col_def_type_attrs, def->left);
     EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-    EXTRACT_ANY_NOTNULL(name_ast, col_def_name_type->left);
+    EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
     EXTRACT_STRING(name, name_ast);
 
     sem_validate_old_object_or_marked_create(root, def, err_msg.ptr, name);
@@ -24646,7 +24673,7 @@ static void sem_emit_enums_stmt(ast_node *ast) {
   EXTRACT(name_list, ast->left);
 
   while (name_list) {
-    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_NAME_AST(name_ast, name_list->left);
     EXTRACT_STRING(name, name_ast);
 
     if (!find_enum(name)) {
@@ -24666,7 +24693,7 @@ static void sem_emit_constants_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(name_list, ast->left);
 
   while (name_list) {
-    EXTRACT_ANY_NOTNULL(name_ast, name_list->left);
+    EXTRACT_NAME_AST(name_ast, name_list->left);
     EXTRACT_STRING(name, name_ast);
 
     if (!find_constant_group(name)) {
@@ -24758,9 +24785,27 @@ static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonn
     return;
   }
 
+  bool_t qid = !!(table_ast->sem->sem_type & SEM_TYPE_QID);
+
+  CSTR result;
+
+  // fully decoded and ready to use in both cases
+  if (qid) {
+    CHARBUF_OPEN(tmp);
+    bprintf(&tmp, "[TABLE ");
+    cg_unquote_encoded_qstr(&tmp, table_name);
+    bprintf(&tmp, " AS %s]", original_alias);
+    result = Strdup(tmp.ptr);
+    CHARBUF_CLOSE(tmp);
+  }
+  else {
+    result = dup_printf("[TABLE %s AS %s]", table_name, original_alias);
+  }
+
+
   // Allow existing alias to be reformatted as something like "TABLE table_name AS some_alias".
   sem_node *new_alias_sem = new_sem(SEM_TYPE_OK);
-  new_alias_sem->name = dup_printf("[TABLE %s AS %s]", table_name, original_alias);
+  new_alias_sem->name = result;
   ast->sem = new_alias_sem;
 }
 

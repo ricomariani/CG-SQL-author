@@ -141,7 +141,26 @@ cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
 
 static void gen_name(ast_node *ast) {
   EXTRACT_STRING(name, ast);
-  gen_printf("%s", name);
+  if (is_qid(ast)) {
+    if (!for_sqlite()) {
+      cg_decode_qstr(output, name);
+    }
+    else {
+      gen_printf("[");
+      cg_unquote_encoded_qstr(output, name);
+      gen_printf("]");
+    }
+  }
+  else {
+    gen_printf("%s", name);
+  }
+}
+
+static void gen_constraint_name(ast_node *ast) {
+  EXTRACT_NAME_AST(name_ast, ast);
+  gen_printf("CONSTRAINT ");
+  gen_name(name_ast);
+  gen_printf(" ");
 }
 
 static void gen_name_list(ast_node *list) {
@@ -329,8 +348,8 @@ static void gen_create_index_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(indexed_columns, index_names_and_attrs->left);
   EXTRACT(opt_where, index_names_and_attrs->right);
   EXTRACT_ANY(attrs, connector->right);
-  EXTRACT_STRING(index_name, create_index_on_list->left);
-  EXTRACT_STRING(table_name, create_index_on_list->right);
+  EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
+  EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
 
   gen_printf("CREATE ");
   if (flags & INDEX_UNIQUE) {
@@ -338,7 +357,10 @@ static void gen_create_index_stmt(ast_node *ast) {
   }
   gen_printf("INDEX ");
   gen_if_not_exists(ast, !!(flags & INDEX_IFNE));
-  gen_printf("%s ON %s (", index_name, table_name);
+  gen_name(index_name_ast);
+  gen_printf(" ON ");
+  gen_name(table_name_ast);
+  gen_printf(" (");
   gen_indexed_columns(indexed_columns);
   gen_printf(")");
   if (opt_where) {
@@ -354,8 +376,7 @@ static void gen_unq_def(ast_node *def) {
   EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   gen_printf("UNIQUE (");
@@ -369,8 +390,7 @@ static void gen_unq_def(ast_node *def) {
 static void gen_check_def(ast_node *def) {
   Contract(is_ast_check_def(def));
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   EXTRACT_ANY_NOTNULL(expr, def->right);
@@ -448,11 +468,11 @@ static void gen_fk_target_options(ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_OPTION(flags, ast->right);
-  EXTRACT_STRING(table_name, fk_target->left);
+  EXTRACT_NAME_AST(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
   gen_printf("REFERENCES ");
-  gen_printf("%s", table_name);
+  gen_name(table_name_ast);
   gen_printf(" (");
   gen_name_list(ref_list);
   gen_printf(")");
@@ -466,8 +486,7 @@ static void gen_fk_def(ast_node *def) {
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   gen_printf("FOREIGN KEY (");
@@ -507,8 +526,7 @@ static void gen_pk_def(ast_node *def) {
   EXTRACT_ANY(conflict_clause, indexed_columns_conflict_clause->right);
 
   if (def->left) {
-    EXTRACT_STRING(name, def->left);
-    gen_printf("CONSTRAINT %s ", name);
+    gen_constraint_name(def->left);
   }
 
   gen_printf("PRIMARY KEY (");
@@ -641,14 +659,15 @@ static void gen_col_def(ast_node *def) {
   EXTRACT(misc_attrs, def->right);
   EXTRACT_ANY(attrs, col_def_type_attrs->right);
   EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-  EXTRACT_STRING(name, col_def_name_type->left);
+  EXTRACT_NAME_AST(name_ast, col_def_name_type->left);
   EXTRACT_ANY_NOTNULL(data_type, col_def_name_type->right);
 
   if (misc_attrs) {
     gen_misc_attrs(misc_attrs);
   }
 
-  gen_printf("%s ", name);
+  gen_name(name_ast);
+  gen_printf(" ");
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // with no SEM we can't do this conversion, we're just doing vanilla echos
@@ -925,8 +944,8 @@ static void gen_case_list(ast_node *ast) {
 
 static void gen_expr_table_star(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_table_star(ast));
-  EXTRACT_STRING(table, ast->left);
-  gen_printf("%s.*", table);
+  gen_name(ast->left);
+  gen_printf(".*");
 }
 
 static void gen_expr_star(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -981,7 +1000,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   if (is_strlit(ast)) {
     str_ast_node *asts = (str_ast_node *)ast;
-    if (!asts->cstr_literal || for_sqlite()) {
+    if (asts->str_type != STR_CSTR || for_sqlite()) {
       // Note: str is the lexeme, so it is either still quoted and escaped
       // or if it was a c string literal it was already normalized to SQL form.
       // In both cases we can just print.
@@ -1004,7 +1023,8 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   }
   else {
     if (!eval_variables_callback(ast)) {
-      gen_printf("%s", str);  // an identifier
+      // an identifier
+      gen_name(ast);
     }
   }
 }
@@ -1025,8 +1045,8 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     return;
   }
 
-  EXTRACT_STRING(left, ast->left);
-  EXTRACT_STRING(right, ast->right);
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right);
 
   if (eval_variables_callback(ast)) {
     return;
@@ -1036,7 +1056,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   bool_t handled = false;
 
   if (has_table_rename_callback) {
-    handled = gen_callbacks->table_rename_callback(ast->left, gen_callbacks->table_rename_context, output);
+    handled = gen_callbacks->table_rename_callback(left, gen_callbacks->table_rename_context, output);
   }
 
   if (handled) {
@@ -1058,22 +1078,38 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     // At this point the correct table name is already in the stream, so left is
     // now useless. So we just throw it away.
 
-    left = "";
+    left = NULL;
   }
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // simple case if SEM is not available
-  gen_printf("%s.%s", left, right);
+  if (left) {
+     gen_name(left);
+  }
+  gen_printf(".");
+  gen_name(right);
 #else
-  if (!strcmp("ARGUMENTS", left) && ast->sem && ast->sem->name) {
+  bool_t is_arguments = false;
+
+  if (is_id(left)) {
+    EXTRACT_STRING(lname, left);
+    is_arguments = !strcmp("ARGUMENTS", lname) && ast->sem && ast->sem->name;
+  }
+
+  if (is_arguments) {
     // special case for rewritten arguments, hide the "ARGUMENTS." stuff
     gen_printf("%s", ast->sem->name);
   }
   else if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
-    gen_printf("%s.%s", get_inserted_table_alias_string_override(ast), right);
+    gen_printf("%s.", get_inserted_table_alias_string_override(ast));
+    gen_name(right);
   }
   else {
-    gen_printf("%s.%s", left, right);
+    if (left) {
+      gen_name(left);
+    }
+    gen_printf(".");
+    gen_name(right);
   }
 #endif
 }
@@ -1524,7 +1560,7 @@ static void gen_array(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
 static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
-  EXTRACT_ANY_NOTNULL(name_ast, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
@@ -1976,9 +2012,10 @@ cql_noexport void gen_root_expr(ast_node *ast) {
 }
 
 static void gen_as_alias(ast_node *ast) {
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
-  gen_printf(" AS %s", name);
+  gen_printf(" AS ");
+  gen_name(name_ast);
 }
 
 static void gen_as_alias_with_override(ast_node *ast) {
@@ -2071,8 +2108,8 @@ static void gen_select_expr_list(ast_node *ast) {
     else if (is_ast_table_star(expr)) {
       if (!eval_star_callback(expr)) {
         EXTRACT_NOTNULL(table_star, expr);
-        EXTRACT_STRING(name, table_star->left);
-        gen_printf("%s.*", name);
+        gen_name(table_star->left);
+        gen_printf(".*");
       }
     }
     else if (is_ast_column_calculation(expr)) {
@@ -2105,7 +2142,7 @@ static void gen_table_or_subquery(ast_node *ast) {
     }
 
     if (!handled) {
-      gen_printf("%s", name);
+      gen_name(factor);
     }
   }
   else if (is_ast_select_stmt(factor) || is_ast_with_select_stmt(factor)) {
@@ -2732,8 +2769,7 @@ static void gen_create_view_stmt(ast_node *ast) {
   EXTRACT(name_and_select, view_and_attrs->left);
   EXTRACT_ANY(attrs, view_and_attrs->right);
   EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-  EXTRACT_ANY_NOTNULL(name_ast, name_and_select->left);
-  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NAME_AST(name_ast, name_and_select->left);
 
   bool_t if_not_exist = !!(flags & VIEW_IF_NOT_EXISTS);
 
@@ -2743,8 +2779,8 @@ static void gen_create_view_stmt(ast_node *ast) {
   }
   gen_printf("VIEW ");
   gen_if_not_exists(ast, if_not_exist);
-
-  gen_printf("%s AS\n", name);
+  gen_name(name_ast);
+  gen_printf(" AS\n");
   gen_select_stmt(select_stmt);
   gen_version_attrs(attrs);
 }
@@ -2756,7 +2792,7 @@ static void gen_create_trigger_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
   EXTRACT_ANY(trigger_attrs, trigger_body_vers->right);
   EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-  EXTRACT_STRING(trigger_name, trigger_def->left);
+  EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
   EXTRACT_OPTION(cond_flags, trigger_condition->left);
   flags |= cond_flags;
@@ -2766,7 +2802,7 @@ static void gen_create_trigger_stmt(ast_node *ast) {
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-  EXTRACT_STRING(table_name, trigger_target_action->left);
+  EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
   EXTRACT_OPTION(action_flags, trigger_action->left);
   flags |= action_flags;
@@ -2781,7 +2817,8 @@ static void gen_create_trigger_stmt(ast_node *ast) {
   gen_printf("TRIGGER ");
   gen_if_not_exists(ast, !!(flags & TRIGGER_IF_NOT_EXISTS));
 
-  gen_printf("%s\n  ", trigger_name);
+  gen_name(trigger_name_ast);
+  gen_printf("\n  ");
 
   if (flags & TRIGGER_BEFORE) {
     gen_printf("BEFORE ");
@@ -2807,7 +2844,8 @@ static void gen_create_trigger_stmt(ast_node *ast) {
       gen_printf(" ");
     }
   }
-  gen_printf("ON %s", table_name);
+  gen_printf("ON ");
+  gen_name(table_name_ast);
 
   if (flags & TRIGGER_FOR_EACH_ROW) {
     gen_printf("\n  FOR EACH ROW");
@@ -2830,7 +2868,7 @@ static void gen_create_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_STRING(name, create_table_name_flags->right);
+  EXTRACT_ANY_NOTNULL(table_name, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, ast->right);
 
   bool_t temp = !!(flags & TABLE_IS_TEMP);
@@ -2845,7 +2883,8 @@ static void gen_create_table_stmt(ast_node *ast) {
   gen_printf("TABLE ");
   gen_if_not_exists(ast, if_not_exist);
 
-  gen_printf("%s(\n", name);
+  gen_name(table_name);
+  gen_printf("(\n");
   gen_col_key_list(col_key_list);
   gen_printf("\n)");
   if (no_rowid) {
@@ -2922,57 +2961,59 @@ static void gen_create_virtual_table_stmt(ast_node *ast) {
 static void gen_drop_view_stmt(ast_node *ast) {
   Contract(is_ast_drop_view_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
 
   gen_printf("DROP VIEW ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_drop_table_stmt(ast_node *ast) {
   Contract(is_ast_drop_table_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
 
   gen_printf("DROP TABLE ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_drop_index_stmt(ast_node *ast) {
   Contract(is_ast_drop_index_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
 
   gen_printf("DROP INDEX ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_drop_trigger_stmt(ast_node *ast) {
   Contract(is_ast_drop_trigger_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
-  EXTRACT_STRING(name, ast->right);
+  EXTRACT_NAME_AST(name_ast, ast->right);
 
   gen_printf("DROP TRIGGER ");
   if (if_exists) {
     gen_printf("IF EXISTS ");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_alter_table_add_column_stmt(ast_node *ast) {
   Contract(is_ast_alter_table_add_column_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(col_def, ast->right);
 
-  gen_printf("ALTER TABLE %s ADD COLUMN ", name);
+  gen_printf("ALTER TABLE ");
+  gen_name(name_ast);
+  gen_printf(" ADD COLUMN ");
   gen_col_def(col_def);
 }
 
@@ -3056,10 +3097,11 @@ static void gen_expr_stmt(ast_node *ast) {
 
 static void gen_delete_stmt(ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(opt_where, ast->right);
 
-  gen_printf("DELETE FROM %s", name);
+  gen_printf("DELETE FROM ");
+  gen_name(name_ast);
   if (opt_where) {
     gen_printf(" WHERE ");
     gen_root_expr(opt_where->left);
@@ -3078,9 +3120,9 @@ static void gen_with_delete_stmt(ast_node *ast) {
 static void gen_update_entry(ast_node *ast) {
   Contract(is_ast_update_entry(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->right)
-  EXTRACT_STRING(name, ast->left);
-  gen_printf("%s = ", name);
-
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  gen_name(name_ast);
+  gen_printf(" = ");
   gen_root_expr(expr);
 }
 
@@ -3149,8 +3191,9 @@ static void gen_update_stmt(ast_node *ast) {
 
   gen_printf("UPDATE");
   if (ast->left) {
-    EXTRACT_STRING(name, ast->left);
-    gen_printf(" %s", name);
+    EXTRACT_NAME_AST(name_ast, ast->left);
+    gen_printf(" ");
+    gen_name(name_ast);
   }
   gen_printf("\nSET ");
   gen_update_list(update_list);
@@ -3248,10 +3291,11 @@ static void gen_insert_dummy_spec(ast_node *ast) {
 
 static void gen_shape_def_base(ast_node *ast) {
   Contract(is_ast_like(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY(from_args, ast->right);
 
-  gen_printf("LIKE %s", name);
+  gen_printf("LIKE ");
+  gen_name(name_ast);
   if (from_args) {
     gen_printf(" ARGUMENTS");
   }
@@ -3259,12 +3303,12 @@ static void gen_shape_def_base(ast_node *ast) {
 
 static void gen_shape_expr(ast_node *ast) {
   Contract(is_ast_shape_expr(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
 
   if (!ast->right) {
     gen_printf("-");
   }
-  gen_printf("%s", name);
+  gen_name(name_ast);
 }
 
 static void gen_shape_exprs(ast_node *ast) {
@@ -3313,12 +3357,13 @@ static void gen_insert_stmt(ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
-  EXTRACT_STRING(name, name_columns_values->left);
+  EXTRACT_NAME_AST(name_ast, name_columns_values->left);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
   EXTRACT_ANY(insert_dummy_spec, insert_type->left);
 
   gen_insert_type(insert_type);
-  gen_printf(" INTO %s", name);
+  gen_printf(" INTO ");
+  gen_name(name_ast);
 
   if (is_ast_expr_names(columns_values)) {
     gen_printf(" USING ");
@@ -3441,19 +3486,23 @@ static void gen_fetch_values_stmt(ast_node *ast) {
 
 static void gen_assign(ast_node *ast) {
   Contract(is_ast_assign(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf("SET %s := ", name);
+  gen_printf("SET ");
+  gen_name(name_ast);
+  gen_printf(" := ");
   gen_root_expr(expr);
 }
 
 static void gen_let_stmt(ast_node *ast) {
   Contract(is_ast_let_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf("LET %s := ", name);
+  gen_printf("LET ");
+  gen_name(name_ast);
+  gen_printf(" := ");
   gen_root_expr(expr);
 }
 
@@ -3476,11 +3525,12 @@ static void gen_normal_param(ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_ANY(opt_inout, ast->left);
   EXTRACT_NOTNULL(param_detail, ast->right);
-  EXTRACT_STRING(name, param_detail->left);
+  EXTRACT_NAME_AST(name_ast, param_detail->left);
   EXTRACT_ANY_NOTNULL(data_type, param_detail->right);
 
   gen_opt_inout(opt_inout);
-  gen_printf("%s ", name);
+  gen_name(name_ast);
+  gen_printf(" ");
   gen_data_type(data_type);
 }
 
@@ -4013,10 +4063,12 @@ static void gen_declare_const_stmt(ast_node *ast) {
 
 static void gen_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
-  EXTRACT_STRING(var_name, ast->left);
+  EXTRACT_NAME_AST(var_name_ast, ast->left);
   EXTRACT_STRING(cursor_name, ast->right);
 
-  gen_printf("SET %s FROM CURSOR %s", var_name, cursor_name);
+  gen_printf("SET ");
+  gen_name(var_name_ast);
+  gen_printf(" FROM CURSOR %s", cursor_name);
 }
 
 static void gen_fetch_stmt(ast_node *ast) {

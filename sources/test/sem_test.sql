@@ -23061,7 +23061,7 @@ set int_result := my_cursor::rev_apply();
 -- + {assign}: err
 -- + {name invalid_id_bogus}: err
 -- ONE error not TWO!
--- +1 error: 
+-- +1 error:
 set int_result := invalid_id_bogus::rev_apply();
 
 declare lbs real<pounds> not null;
@@ -23162,7 +23162,7 @@ begin
   dump_int(*);
 end;
 
--- TEST: try to expand a top level proc using a bogus FROM 
+-- TEST: try to expand a top level proc using a bogus FROM
 -- + dump_int(FROM this_name_does_not_exist);
 -- + error: % name not found 'this_name_does_not_exist'
 -- +1 error
@@ -23355,7 +23355,7 @@ end;
 -- both options for getting/setting tested here
 declare proc set_in_object_dot_storage no check;
 declare proc set_object_dot_storage_id(self object<dot_storage>, value int);
-declare function get_object_dot_storage_id(self object<dot_storage>) integer; 
+declare function get_object_dot_storage_id(self object<dot_storage>) integer;
 declare function get_from_object_dot_storage no check integer;
 
 declare storage object<dot_storage>;
@@ -23496,3 +23496,286 @@ declare select func select_func_with_out_arg1(inout inout_param int!) int;
 -- + error: % select functions cannot have out parameters 'out_param'
 -- +1 error:
 declare select func select_func_with_out_arg2(out out_param int!) int;
+
+-- TEST: create a table with a weird name and a weird column
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE TABLE `xyz``abc`(
+-- + x INTEGER NOT NULL,
+-- + `a b` INTEGER NOT NULL
+-- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}
+-- + {col_def}: x: integer notnull
+-- + {col_def}: X_aX20b: integer notnull unique_key qid
+-- + {name `a b`}
+-- - error:
+create table `xyz``abc`
+(
+ x int!,
+ `a b` int! unique
+);
+
+-- TEST: make a cursor on an exotic name and fetch from it
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE C CURSOR FOR SELECT *
+-- + FROM `xyz``abc`;
+-- + CALL printf("%d %d", C.x, C.`a b`);
+-- + {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+-- + {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+-- + {dot}: C.x: integer notnull variable
+-- + {dot}: C.X_aX20b: integer notnull variable qid
+-- - error:
+create proc qid_t1()
+begin
+  cursor C for select * from `xyz``abc`;
+  loop fetch C
+  begin
+    call printf("%d %d", C.x, C.`a b`);
+  end;
+end;
+
+-- TEST: Test several expansions
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE D CURSOR FOR SELECT `xyz``abc`.*
+-- + FROM `xyz``abc`;
+-- + CALL printf("%d %d", D.x, D.`a b`);
+-- + {declare_cursor}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
+-- + {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+-- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid }
+-- - error:
+create proc qid_t2()
+begin
+  cursor D for select `xyz``abc`.* from `xyz``abc`;
+  loop fetch D
+  begin
+    call printf("%d %d", D.x, D.`a b`);
+  end;
+end;
+
+-- TEST: Test select expression with specified exact columns
+-- verify that echoing is re-emitting the escaped text
+-- + LET x := ( SELECT `xyz``abc`.`a b`
+-- + FROM `xyz``abc` );
+-- + {let_stmt}: x: integer notnull variable
+-- + {select_stmt}: X_aX20b: integer notnull qid
+-- + {dot}: X_aX20b: integer notnull qid
+-- + {name `xyz``abc`}
+-- + {name `a b`}
+-- + {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
+-- - error:
+create proc qid_t3()
+begin
+  let x := (select `xyz``abc`.`a b` from `xyz``abc`);
+end;
+
+-- TEST: cursor forms with exotic columns
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
+-- + DECLARE R CURSOR LIKE `xyz``abc`;
+-- + FETCH R(x, `a b`) FROM VALUES(1, 2);
+-- + CALL printf("%d %d\n", R.x, R.`a b`);
+-- + FETCH R(x, `a b`) FROM VALUES(3, 4);
+-- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
+create proc qid_t4()
+begin
+  cursor Q like `xyz``abc`(-`a b`);
+  cursor R like `xyz``abc`;
+  fetch R from values(1, 2);
+  printf("%d %d\n", R.x, R.`a b`);
+  fetch R using  3 x, 4 `a b`;
+end;
+
+-- TEST: error message specifies unencoded name
+-- + error: % name not found '`a b`'
+-- +1 error:
+let error_test_for_qid := `a b`;
+
+-- TEST: make a view, use the form that doesn't require escaping
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE VIEW `view` AS
+-- + SELECT 1 AS x;
+-- + {create_view_stmt}: view: { x: integer notnull }
+-- +  {name `view`}
+create view `view` as select 1 x;
+
+-- TEST: create an index with unusual names
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
+-- + {name `abc def`}
+-- + {name `xyz``abc`}
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+create index `abc def` on `xyz``abc` (`a b` asc);
+
+-- TEST: use a reference attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + x INTEGER NOT NULL REFERENCES `xyz``abc` (`a b`)
+-- + {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+create table qid_ref_1 (
+  x int! references `xyz``abc`(`a b`)
+);
+
+-- TEST: use a reference attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
+-- +  {name `c1`}
+-- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+create table qid_ref_2 (
+  `uu uu` int!,
+  constraint `c1` foreign key ( `uu uu` ) references `xyz``abc`(`a b`)
+);
+
+-- TEST: use a primary key attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
+-- + {create_table_stmt}: qid_ref_3: { X_uuX20uu: integer notnull partial_pk qid }
+-- + {name `c1`}
+-- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- - error:
+create table qid_ref_3 (
+  `uu uu` int!,
+  constraint `c1` primary key ( `uu uu` )
+);
+
+-- TEST: use a primary key attribute with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CONSTRAINT `c1` UNIQUE (`uu uu`)
+-- + {create_table_stmt}: qid_ref_4: { X_uuX20uu: integer notnull qid }
+-- + {name `c1`}
+-- + {name `uu uu`}: X_uuX20uu: integer notnull qid
+-- - error:
+create table qid_ref_4 (
+  `uu uu` int!,
+  constraint `c1` unique ( `uu uu` )
+);
+
+-- TEST: an update statement with quoted strings
+-- verify that echoing is re-emitting the escaped text
+-- + UPDATE `xyz``abc`
+-- + SET `a b` = 5;
+-- + {update_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `a b`}: X_aX20b: integer notnull qid
+-- - error:
+update `xyz``abc` set `a b` = 5;
+
+-- TEST: insert statement vanilla with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(1, 5);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc` values (1, 5);
+
+-- TEST: insert statement using syntaxwith quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc` using 1 `a b`, 2 x;
+
+-- TEST: insert statement dummy seed using form
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc` using 2 x @dummy_seed(500);
+
+-- TEST: insert statement dummy seed values form
+-- verify that echoing is re-emitting the escaped text
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- - error:
+insert into `xyz``abc`(x) values(2) @dummy_seed(500);
+
+-- TEST: create a cursor and expand it using the from form
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE C CURSOR FOR SELECT *
+-- + FROM `xyz``abc`;
+-- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(C.x, C.`a b`);
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `a b`}
+-- - error:
+proc quoted_from_forms()
+begin
+  cursor C for select * from `xyz``abc`;
+  fetch C;
+  insert into `xyz``abc`(like `xyz``abc`) values(from C);
+end;
+
+-- TEST: drop a table with quoted named
+-- the echo is all that matters
+-- + DROP TABLE `xyz``abc`;
+drop table `xyz``abc`;
+
+-- TEST: drop an index
+-- the echo is all that matters
+-- + DROP INDEX `abc`;
+drop index `abc`;
+
+-- TEST: drop a trigger
+-- the echo is all that matters
+-- + DROP TRIGGER `abc def`;
+drop trigger `abc def`;
+
+-- TEST: drop a view
+-- the echo is all that matters
+-- + DROP VIEW `vvv v`;
+drop view `vvv v`;
+
+-- TEST: alter table
+-- the echo is all that matters
+-- + ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
+alter table `xyz``abc` add column `a b` int;
+
+-- TEST: this construct forces exotic names into the reality of locals
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE PROC args_defined_by_exotics (x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+-- + SET `a b_` := 1;
+-- + SET `a b_` := `a b_` + 1;
+-- + LET `u v` := 5;
+-- + SET `u v` := 6;
+-- + {param}: X_aX20b_: integer notnull variable in was_set
+-- + {assign}: X_aX20b_: integer notnull variable in was_set
+-- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+-- + {add}: integer notnull
+-- + {name `a b_`}: X_aX20b_: integer notnull variable in was_set
+-- + {let_stmt}: X_uX20v: integer notnull variable was_set
+-- + {name `u v`}: X_uX20v: integer notnull variable was_set
+-- + {assign}: X_uX20v: integer notnull variable was_set
+-- - error:
+create proc args_defined_by_exotics(like `xyz``abc`)
+begin
+  `a b_` := 1;
+  `a b_` += 1;
+  LET `u v` := 5;
+  SET `u v` := 6;
+end;
+
+-- TEST: boxed cursor constructs and unusual box object
+-- verify that echoing is re-emitting the escaped text
+-- + DECLARE C CURSOR FOR SELECT 1 AS x;
+-- + DECLARE `box obj` OBJECT<C CURSOR>;
+-- + SET `box obj` FROM CURSOR C;
+-- + {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
+-- + {set_from_cursor}: C: select: { x: integer notnull } variable dml_proc boxed
+-- - error:
+create proc cursor_boxing_with_qid()
+begin
+  declare C cursor for select 1 x;
+  declare `box obj` object<C cursor>;
+  set `box obj` from cursor C;
+end;
+
+-- TEST: create a new table using a nested shape with quoted names
+-- verify that echoing is re-emitting the escaped text
+-- + CREATE TABLE reuse_exotic_columns(
+-- + x INTEGER NOT NULL,
+-- + `a b` INTEGER NOT NULL
+-- + {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, X_aX20b: integer notnull qid }
+-- - error:
+create table reuse_exotic_columns (
+  LIKE `xyz``abc`
+);

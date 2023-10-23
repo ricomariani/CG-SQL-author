@@ -161,6 +161,10 @@ typedef struct int_ast_node {
   int64_t value;
 } int_ast_node;
 
+#define STR_SQL 0
+#define STR_CSTR 1
+#define STR_QSTR 2
+
 typedef struct str_ast_node {
   const char *_Nonnull type;
   struct sem_node *_Nullable sem;
@@ -168,7 +172,7 @@ typedef struct str_ast_node {
   int32_t lineno;
   CSTR _Nonnull filename;
   const char *_Nullable value;
-  bool_t cstr_literal;
+  uint8_t str_type;
 } str_ast_node;
 
 typedef struct num_ast_node {
@@ -230,9 +234,12 @@ cql_noexport void ast_cleanup(void);
 cql_noexport ast_node *_Nonnull new_ast(const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
 cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
-cql_noexport ast_node *_Nonnull new_ast_str(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_cstr(const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_blob(const char *_Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr_quoted(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_blob(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_str_or_qstr(CSTR _Nonnull name, bool_t qstr);
 
 cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
@@ -246,6 +253,7 @@ cql_noexport bool_t is_update_stmt(ast_node *_Nullable ast);
 
 cql_noexport bool_t is_strlit(ast_node *_Nullable node);
 cql_noexport bool_t is_id(ast_node *_Nullable node);
+cql_noexport bool_t is_qid(ast_node *_Nullable node);
 cql_noexport bool_t is_id_or_dot(ast_node *_Nullable node);
 cql_noexport bool_t is_proclit(ast_node *_Nullable node);
 cql_noexport bool_t is_at_rc(ast_node *_Nullable node);
@@ -399,6 +407,10 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   Contract(is_ast_str(node)); \
   const char *name = ((str_ast_node *)(node))->value; \
   Contract(name);
+
+#define EXTRACT_NAME_AST(name_ast, node) \
+  Contract(is_id(node)); \
+  ast_node *name_ast = (node);
 
 #define EXTRACT_BLOBTEXT(name, node) \
   Contract(is_ast_blob(node)); \

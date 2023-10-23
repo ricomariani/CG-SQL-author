@@ -25,3 +25,6 @@ cql_noexport void cg_decode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnul
 cql_noexport void cg_pretty_quote_plaintext(CSTR _Nonnull str, charbuf *_Nonnull output, uint32_t flags);
 cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b);
 cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr);
+cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr);
+cql_noexport void cg_unquote_encoded_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr);

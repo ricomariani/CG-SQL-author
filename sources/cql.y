@@ -151,7 +151,7 @@ static void cql_reset_globals(void);
   char *sval;
 }
 
-%token <sval> ID TRUE_ "TRUE" FALSE_ "FALSE"
+%token <sval> ID QID TRUE_ "TRUE" FALSE_ "FALSE"
 %token <sval> STRLIT CSTRLIT BLOBLIT
 %token <sval> INTLIT
 %token <ival> BOOL_ "BOOL"
@@ -254,7 +254,7 @@ static void cql_reset_globals(void);
 %type <ival> frame_type frame_exclude join_type
 %type <ival> opt_vtab_flags
 
-%type <aval> col_key_list col_key_def col_def col_name
+%type <aval> col_key_list col_key_def col_def sql_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
@@ -291,7 +291,7 @@ static void cql_reset_globals(void);
 
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list shape_arguments
-%type <aval> name name_list opt_name_list opt_name
+%type <aval> name name_list sql_name_list opt_name_list opt_sql_name
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
@@ -555,13 +555,13 @@ schema_upgrade_version_stmt:
   ;
 
 set_stmt:
-  SET name ASSIGN expr  { $set_stmt = new_ast_assign($name, $expr); }
-  | SET name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
-  | SET name '[' arg_list ']' ASSIGN expr  { $set_stmt = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($name, $arg_list), $expr)); }
+  SET sql_name ASSIGN expr  { $set_stmt = new_ast_assign($sql_name, $expr); }
+  | SET sql_name[id] FROM CURSOR name[cursor] { $set_stmt = new_ast_set_from_cursor($id, $cursor); }
+  | SET sql_name '[' arg_list ']' ASSIGN expr  { $set_stmt = new_ast_expr_stmt(new_ast_expr_assign(new_ast_array($sql_name, $arg_list), $expr)); }
   ;
 
 let_stmt:
-  LET name ASSIGN expr  { $let_stmt = new_ast_let_stmt($name, $expr); }
+  LET sql_name ASSIGN expr  { $let_stmt = new_ast_let_stmt($sql_name, $expr); }
   ;
 
 version_attrs_opt_recreate:
@@ -592,26 +592,26 @@ opt_delete_version_attr:
   ;
 
 drop_table_stmt:
-  DROP TABLE IF EXISTS name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_opt(1), $name);  }
-  | DROP TABLE name  { $drop_table_stmt = new_ast_drop_table_stmt(NULL, $name);  }
+  DROP TABLE IF EXISTS sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP TABLE sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(NULL, $sql_name);  }
   ;
 
 drop_view_stmt:
-  DROP VIEW IF EXISTS name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_opt(1), $name);  }
-  | DROP VIEW name  { $drop_view_stmt = new_ast_drop_view_stmt(NULL, $name);  }
+  DROP VIEW IF EXISTS sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP VIEW sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(NULL, $sql_name);  }
   ;
 
 drop_index_stmt:
-  DROP INDEX IF EXISTS name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_opt(1), $name);  }
-  | DROP INDEX name  { $drop_index_stmt = new_ast_drop_index_stmt(NULL, $name);  }
+  DROP INDEX IF EXISTS sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP INDEX sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(NULL, $sql_name);  }
   ;
 
 drop_trigger_stmt:
-  DROP TRIGGER IF EXISTS name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_opt(1), $name);  }
-  | DROP TRIGGER name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $name);  }
+  DROP TRIGGER IF EXISTS sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_opt(1), $sql_name);  }
+  | DROP TRIGGER sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $sql_name);  }
   ;
 
-create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags name[table_name]
+create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags sql_name[table_name]
                            USING name[module_name] opt_module_args
                            AS '(' col_key_list ')' opt_delete_version_attr {
     int flags = $opt_vtab_flags;
@@ -638,10 +638,10 @@ create_table_prefix_opt_temp:
   };
 
 create_table_stmt:
-  create_table_prefix_opt_temp opt_if_not_exists name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
+  create_table_prefix_opt_temp opt_if_not_exists sql_name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
     int flags = $create_table_prefix_opt_temp | $opt_if_not_exists | $opt_no_rowid;
     struct ast_node *flags_node = new_ast_opt(flags);
-    struct ast_node *name = $name;
+    struct ast_node *name = $sql_name;
     struct ast_node *col_key_list = $col_key_list;
     struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, $version_attrs_opt_recreate);
     struct ast_node *table_name_flags = new_ast_create_table_name_flags(table_flags_attrs, name);
@@ -697,8 +697,8 @@ shape_exprs[result] :
   ;
 
 shape_expr:
-  name  { $shape_expr = new_ast_shape_expr($name, $name); }
-  | '-' name  { $shape_expr = new_ast_shape_expr($name, NULL); }
+  sql_name  { $shape_expr = new_ast_shape_expr($sql_name, $sql_name); }
+  | '-' sql_name  { $shape_expr = new_ast_shape_expr($sql_name, NULL); }
   ;
 
 shape_def:
@@ -707,12 +707,13 @@ shape_def:
   ;
 
 shape_def_base:
-    LIKE name { $shape_def_base = new_ast_like($name, NULL); }
+    LIKE sql_name { $shape_def_base = new_ast_like($sql_name, NULL); }
   | LIKE name ARGUMENTS { $shape_def_base = new_ast_like($name, $name); }
   ;
 
-col_name:
-  name  { $col_name = $name; }
+sql_name:
+  name  { $sql_name = $name; }
+  | QID { $sql_name = new_ast_qstr_quoted($QID); }
   ;
 
 misc_attr_key:
@@ -752,17 +753,17 @@ misc_attrs[result]:
   ;
 
 col_def:
-  misc_attrs col_name data_type_any col_attrs  {
-  struct ast_node *name_type = new_ast_col_def_name_type($col_name, $data_type_any);
+  misc_attrs sql_name data_type_any col_attrs  {
+  struct ast_node *name_type = new_ast_col_def_name_type($sql_name, $data_type_any);
   struct ast_node *col_def_type_attrs = new_ast_col_def_type_attrs(name_type, $col_attrs);
   $col_def = make_coldef_node(col_def_type_attrs, $misc_attrs);
   }
   ;
 
 pk_def:
-  CONSTRAINT name PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
+  CONSTRAINT sql_name PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $pk_def = new_ast_pk_def($name, indexed_columns_conflict_clause);
+    $pk_def = new_ast_pk_def($sql_name, indexed_columns_conflict_clause);
   }
   | PRIMARY KEY '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
@@ -821,23 +822,23 @@ fk_initial_state:
   ;
 
 fk_def:
-  CONSTRAINT name FOREIGN KEY '(' name_list ')' fk_target_options  {
-    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
-    $fk_def = new_ast_fk_def($name, fk_info); }
-  | FOREIGN KEY '(' name_list ')' fk_target_options  {
-    ast_node *fk_info = new_ast_fk_info($name_list, $fk_target_options);
+  CONSTRAINT sql_name FOREIGN KEY '(' sql_name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($sql_name_list, $fk_target_options);
+    $fk_def = new_ast_fk_def($sql_name, fk_info); }
+  | FOREIGN KEY '(' sql_name_list ')' fk_target_options  {
+    ast_node *fk_info = new_ast_fk_info($sql_name_list, $fk_target_options);
     $fk_def = new_ast_fk_def(NULL, fk_info); }
   ;
 
 fk_target_options:
-  REFERENCES name '(' name_list ')' opt_fk_options  {
-    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($name, $name_list), new_ast_opt($opt_fk_options)); }
+  REFERENCES sql_name '(' sql_name_list ')' opt_fk_options  {
+    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($sql_name, $sql_name_list), new_ast_opt($opt_fk_options)); }
   ;
 
 unq_def:
-  CONSTRAINT name UNIQUE '(' indexed_columns ')' opt_conflict_clause {
+  CONSTRAINT sql_name UNIQUE '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
-    $unq_def = new_ast_unq_def($name, indexed_columns_conflict_clause);
+    $unq_def = new_ast_unq_def($sql_name, indexed_columns_conflict_clause);
   }
   | UNIQUE '(' indexed_columns ')' opt_conflict_clause {
     ast_node *indexed_columns_conflict_clause = new_ast_indexed_columns_conflict_clause($indexed_columns, $opt_conflict_clause);
@@ -861,7 +862,7 @@ indexed_columns[result]:
   ;
 
 create_index_stmt:
-  CREATE opt_unique INDEX opt_if_not_exists name[tbl_name] ON name[idx_name] '(' indexed_columns ')' opt_where opt_delete_version_attr  {
+  CREATE opt_unique INDEX opt_if_not_exists sql_name[tbl_name] ON sql_name[idx_name] '(' indexed_columns ')' opt_where opt_delete_version_attr  {
     int flags = 0;
     if ($opt_unique) flags |= INDEX_UNIQUE;
     if ($opt_if_not_exists) flags |= INDEX_IFNE;
@@ -893,14 +894,19 @@ name:
   | COLUMN { $name = new_ast_str("column"); }
   ;
 
-opt_name:
-  /* nil */  { $opt_name = NULL; }
-  | name  { $opt_name = $name; }
+opt_sql_name:
+  /* nil */  { $opt_sql_name = NULL; }
+  | sql_name  { $opt_sql_name = $sql_name; }
   ;
 
 name_list[result]:
   name  { $result = new_ast_name_list($name, NULL); }
   |  name ',' name_list[nl]  { $result = new_ast_name_list($name, $nl); }
+  ;
+
+sql_name_list[result]:
+  sql_name  { $result = new_ast_name_list($sql_name, NULL); }
+  |  sql_name ',' sql_name_list[nl]  { $result = new_ast_name_list($sql_name, $nl); }
   ;
 
 opt_name_list:
@@ -1058,9 +1064,10 @@ call:
 
 basic_expr:
   name  { $basic_expr = $name; }
+  | QID { $basic_expr = new_ast_qstr_quoted($QID); }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
-  | basic_expr[lhs] '.' name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
+  | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
   | basic_expr[lhs] '.' '*' { $$ = new_ast_table_star($lhs); }
   | any_literal  { $basic_expr = $any_literal; }
   | const_expr { $basic_expr = $const_expr; }
@@ -1227,8 +1234,8 @@ cte_table:
       $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
   | cte_decl LIKE '(' select_stmt ')'  {
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
-  | cte_decl LIKE name  {
-      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($name, NULL)); }
+  | cte_decl LIKE sql_name  {
+      $cte_table = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
   ;
 
 with_prefix:
@@ -1550,8 +1557,8 @@ opt_as_alias:
   ;
 
 as_alias:
-  AS name  { $as_alias = new_ast_opt_as_alias($name); }
-  | name  { $as_alias = new_ast_opt_as_alias($name); }
+  AS sql_name  { $as_alias = new_ast_opt_as_alias($sql_name); }
+  | sql_name  { $as_alias = new_ast_opt_as_alias($sql_name); }
   ;
 
 query_parts:
@@ -1574,7 +1581,7 @@ join_target_list[result]:
   ;
 
 table_or_subquery:
-  name opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($name, $opt_as_alias); }
+  sql_name opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($sql_name, $opt_as_alias); }
   | '(' select_stmt ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($select_stmt, $opt_as_alias); }
   | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
   | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }
@@ -1612,9 +1619,9 @@ table_function:
   ;
 
 create_view_stmt:
-  CREATE opt_temp VIEW opt_if_not_exists name AS select_stmt opt_delete_version_attr  {
+  CREATE opt_temp VIEW opt_if_not_exists sql_name AS select_stmt opt_delete_version_attr  {
   struct ast_node *flags = new_ast_opt($opt_temp | $opt_if_not_exists);
-  struct ast_node *name_and_select = new_ast_name_and_select($name, $select_stmt);
+  struct ast_node *name_and_select = new_ast_name_and_select($sql_name, $select_stmt);
   struct ast_node *view_and_attrs = new_ast_view_and_attrs(name_and_select, $opt_delete_version_attr);
   $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
   ;
@@ -1624,8 +1631,8 @@ with_delete_stmt:
   ;
 
 delete_stmt:
-  DELETE FROM name opt_where  {
-   $delete_stmt = new_ast_delete_stmt($name, $opt_where); }
+  DELETE FROM sql_name opt_where  {
+   $delete_stmt = new_ast_delete_stmt($sql_name, $opt_where); }
   ;
 
 opt_insert_dummy_spec:
@@ -1669,27 +1676,26 @@ from_shape:
   ;
 
 insert_stmt:
-  insert_stmt_type name opt_column_spec select_stmt opt_insert_dummy_spec  {
+  insert_stmt_type sql_name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
-  | insert_stmt_type name opt_column_spec from_shape opt_insert_dummy_spec  {
+  | insert_stmt_type sql_name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, columns_values);
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
-  | insert_stmt_type name DEFAULT VALUES  {
+  | insert_stmt_type sql_name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, default_columns_values);
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, default_columns_values);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
-  | insert_stmt_type name USING select_stmt {
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $select_stmt);
+  | insert_stmt_type sql_name USING select_stmt {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $select_stmt);
     $insert_stmt_type->left = NULL; // dummy spec not allowed in this form
-    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);
-  }
-  | insert_stmt_type name USING expr_names opt_insert_dummy_spec {
-    struct ast_node *name_columns_values = new_ast_name_columns_values($name, $expr_names);
+    $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
+  | insert_stmt_type sql_name USING expr_names opt_insert_dummy_spec {
+    struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $expr_names);
     $insert_stmt_type->left = $opt_insert_dummy_spec;
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
@@ -1706,12 +1712,12 @@ insert_list[result]:
   ;
 
 basic_update_stmt:
-  UPDATE opt_name SET update_list opt_from_query_parts opt_where  {
+  UPDATE opt_sql_name SET update_list opt_from_query_parts opt_where  {
     struct ast_node *orderby = new_ast_update_orderby(NULL, NULL);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
-    $basic_update_stmt = new_ast_update_stmt($opt_name, list); }
+    $basic_update_stmt = new_ast_update_stmt($opt_sql_name, list); }
   ;
 
 with_update_stmt:
@@ -1719,17 +1725,17 @@ with_update_stmt:
   ;
 
 update_stmt:
-  UPDATE name SET update_list opt_from_query_parts opt_where opt_orderby opt_limit  {
+  UPDATE sql_name SET update_list opt_from_query_parts opt_where opt_orderby opt_limit  {
     struct ast_node *limit = $opt_limit;
     struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
-    $update_stmt = new_ast_update_stmt($name, list); }
+    $update_stmt = new_ast_update_stmt($sql_name, list); }
   ;
 
 update_entry:
-  name '=' expr  { $update_entry = new_ast_update_entry($name, $expr); }
+  sql_name '=' expr  { $update_entry = new_ast_update_entry($sql_name, $expr); }
   ;
 
 update_list[result]:
@@ -1955,7 +1961,7 @@ declare_type_stmt:
   ;
 
 declare_vars_stmt:
-  DECLARE name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
+  DECLARE sql_name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($sql_name_list, $data_type_with_options); }
   | VAR name_list data_type_with_options  { $declare_vars_stmt = new_ast_declare_vars_type($name_list, $data_type_with_options); }
   | declare_value_cursor { $declare_vars_stmt = $declare_value_cursor; }
   ;
@@ -2188,8 +2194,8 @@ echo_stmt:
   ;
 
 alter_table_add_column_stmt:
-  ALTER TABLE name ADD COLUMN col_def  {
-    $alter_table_add_column_stmt = new_ast_alter_table_add_column_stmt($name, $col_def); }
+  ALTER TABLE sql_name ADD COLUMN col_def  {
+    $alter_table_add_column_stmt = new_ast_alter_table_add_column_stmt($sql_name, $col_def); }
   ;
 
 create_trigger_stmt:
@@ -2201,7 +2207,7 @@ create_trigger_stmt:
   ;
 
 trigger_def:
-  name[n1] trigger_condition trigger_operation ON name[n2] trigger_action  {
+  sql_name[n1] trigger_condition trigger_operation ON sql_name[n2] trigger_action  {
   $trigger_def = new_ast_trigger_def(
         $n1,
         new_ast_trigger_condition(
@@ -3047,7 +3053,7 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   // this just forces the literal to be echoed as a C literal
   // so that it is prettier in the echoed output, otherwise no difference
   // all literals are stored in SQL format.
-  ((str_ast_node *)lit)->cstr_literal = true;
+  ((str_ast_node *)lit)->str_type = STR_CSTR;
 
   CHARBUF_CLOSE(result);
   CHARBUF_CLOSE(tmp);

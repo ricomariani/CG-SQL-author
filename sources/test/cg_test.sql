@@ -5826,6 +5826,126 @@ end;
 @attribute(cql:alias_of=some_native_func)
 declare function an_alias_func(x int not null) int not null;
 
+-- TEST: create a table with a weird name and a weird column
+-- verify that echoing is re-emitting the escaped text
+-- + _rc_ = cql_exec(_db_,
+-- + "CREATE TABLE [xyz`abc]( "
+-- + "x INTEGER NOT NULL, "
+-- + "[a b] INTEGER NOT NULL "
+-- + ")");
+create proc qid_t0()
+begin
+  create table `xyz``abc`(
+   x int!,
+   `a b` int!
+  );
+end;
+
+-- TEST: make a cursor on an exotic name and fetch from it
+-- + _rc_ = cql_prepare(_db_, &C_stmt,
+-- + "SELECT x, [a b] "
+-- + "FROM [xyz`abc]");
+-- + typedef struct qid_t1_C_row {
+-- +   cql_bool _has_row_;
+-- +   cql_uint16 _refs_count_;
+-- +   cql_uint16 _refs_offset_;
+-- +   cql_int32 x;
+-- +   cql_int32 X_aX20b;
+-- + } qid_t1_C_row;
+-- +  printf("%d %d", C.x, C.X_aX20b);
+create proc qid_t1()
+begin
+  cursor C for select * from `xyz``abc`;
+  loop fetch C
+  begin
+    call printf("%d %d", C.x, C.`a b`);
+  end;
+end;
+
+-- TEST: Test several expansions
+-- + typedef struct qid_t2_D_row {
+-- + cql_bool _has_row_;
+-- + cql_uint16 _refs_count_;
+-- + cql_uint16 _refs_offset_;
+-- + cql_int32 x;
+-- + cql_int32 X_aX20b;
+-- + } qid_t2_D_row;
+-- + _rc_ = cql_prepare(_db_, &D_stmt,
+-- +  "SELECT [xyz`abc].x, [xyz`abc].[a b] "
+-- +  "FROM [xyz`abc]");
+-- + printf("%d %d", D.x, D.X_aX20b);
+create proc qid_t2()
+begin
+  cursor D for select `xyz``abc`.* from `xyz``abc`;
+  loop fetch D
+  begin
+    call printf("%d %d", D.x, D.`a b`);
+  end;
+end;
+
+-- TEST: Test select expression with specified exact columns
+-- + _rc_ = cql_prepare(_db_, &_temp_stmt,
+-- + "SELECT [xyz`abc].[a b] "
+-- + "FROM [xyz`abc]");
+-- + x = sqlite3_column_int(_temp_stmt, 0);
+create proc qid_t3()
+begin
+  let x := (select `xyz``abc`.`a b` from `xyz``abc`);
+end;
+
+-- TEST: cursor forms with exotic columns, column restriction
+-- + typedef struct qid_t4a_Q_row {
+-- +   cql_bool _has_row_;
+-- +   cql_uint16 _refs_count_;
+-- +   cql_uint16 _refs_offset_;
+-- +   cql_int32 x;
+-- + } qid_t4a_Q_row;
+-- - aX20b
+create proc qid_t4a()
+begin
+  cursor Q like `xyz``abc`(-`a b`);
+end;
+
+-- TEST: cursor forms with exotic columns
+-- + typedef struct qid_t4b_R_row {
+-- + cql_bool _has_row_;
+-- + cql_uint16 _refs_count_;
+-- + cql_uint16 _refs_offset_;
+-- + cql_int32 x;
+-- + cql_int32 X_aX20b;
+-- + } qid_t4b_R_row;
+-- + R._has_row_ = 1;
+-- + R.x = 1;
+-- + R.X_aX20b = 2;
+-- + printf("%d %d\n", R.x, R.X_aX20b);
+-- + R._has_row_ = 1;
+-- + R.x = 3;
+-- + R.X_aX20b = 4;
+create proc qid_t4b()
+begin
+  cursor R like `xyz``abc`;
+  fetch R from values(1, 2);
+  printf("%d %d\n", R.x, R.`a b`);
+  fetch R using  3 x, 4 `a b`;
+end;
+
+-- TEST: make a view, use the form that doesn't require escaping
+-- + _rc_ = cql_exec(_db_,
+-- +   "CREATE VIEW [view] AS "
+-- +   "SELECT 1 AS x");
+create proc qid_t5()
+begin
+  create view `view` as select 1 x;
+end;
+
+-- TEST: make an index with quoted names
+-- + _rc_ = cql_exec(_db_,
+-- + "CREATE INDEX [abc def] ON [xyz`abc] ([a b] ASC)");
+create proc qid_t6()
+begin
+  create index `abc def` ON `xyz``abc` (`a b` asc);
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

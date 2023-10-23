@@ -20,6 +20,7 @@ cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 #include "ast.h"
 #include "sem.h"
 #include "symtab.h"
+#include "encoders.h"
 
 // Storage declarations
 cql_data_defn( symtab *_Nullable cg_stmts );
@@ -210,7 +211,14 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
           bprintf(buffer, ", ");
         }
         first = false;
-        bprintf(buffer, "%s", sptr->names[i]);
+        if (!(sptr->semtypes[i] & SEM_TYPE_QID)) {
+          bprintf(buffer, "%s", sptr->names[i]);
+        }
+        else {
+          bprintf(buffer, "[");
+          cg_unquote_encoded_qstr(buffer, sptr->names[i]);
+          bprintf(buffer, "]");
+        }
       }
     }
   }
@@ -228,10 +236,31 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         first = false;
 
         if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
+          // In case of QID the table alias is already encoded and ready to use
+          // It's like that because it is always of the from "[table table_name as some_alias]"
+          // so we decode the QID stuff when we make the alias
           CSTR table_alias_name = get_inserted_table_alias_string_override(ast);
-          bprintf(buffer, "%s.%s", table_alias_name, sptr->names[i]);
+          bprintf(buffer, "%s", table_alias_name);
         } else {
-          bprintf(buffer, "%s.%s", ast->sem->name, sptr->names[i]);
+          if (is_qid(ast->left)) {
+            bprintf(buffer, "[");
+            cg_unquote_encoded_qstr(buffer, ast->sem->name);
+            bprintf(buffer, "]");
+          }
+          else {
+            bprintf(buffer, "%s", ast->sem->name);
+          }
+        }
+
+        bprintf(buffer, ".");
+
+        if (!(sptr->semtypes[i] & SEM_TYPE_QID)) {
+          bprintf(buffer, "%s", sptr->names[i]);
+        }
+        else {
+          bprintf(buffer, "[");
+          cg_unquote_encoded_qstr(buffer, sptr->names[i]);
+          bprintf(buffer, "]");
         }
       }
     }

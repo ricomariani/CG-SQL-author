@@ -68,12 +68,16 @@ cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
 
+cql_noexport bool_t is_qid(ast_node *node) {
+  return is_ast_str(node) && ((str_ast_node *)node)->str_type == STR_QSTR;
+}
+
 cql_noexport bool_t is_at_rc(ast_node *node) {
-  return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node*)node)->value);
+  return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node *)node)->value);
 }
 
 cql_noexport bool_t is_proclit(ast_node *node) {
-  return is_ast_str(node) && !Strcasecmp("@proc", ((str_ast_node*)node)->value);
+  return is_ast_str(node) && !Strcasecmp("@PROC", ((str_ast_node *)node)->value);
 }
 
 cql_noexport bool_t is_strlit(ast_node *node) {
@@ -187,7 +191,7 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
   sast->lineno = yylineno;
   sast->filename = current_file;
   sast->sem = NULL;
-  sast->cstr_literal = false;
+  sast->str_type = STR_SQL;
   return (ast_node *)sast;
 }
 
@@ -213,7 +217,7 @@ cql_noexport ast_node *new_ast_blob(CSTR value) {
   sast->lineno = yylineno;
   sast->filename = current_file;
   sast->sem = NULL;
-  sast->cstr_literal = false;
+  sast->str_type = STR_SQL;
   return (ast_node *)sast;
 }
 
@@ -261,8 +265,40 @@ cql_noexport CSTR convert_cstrlit(CSTR cstr) {
 cql_noexport ast_node *new_ast_cstr(CSTR value) {
   value = convert_cstrlit(value);
   str_ast_node *sast = (str_ast_node *)new_ast_str(value);
-  sast->cstr_literal = true;
+  sast->str_type = STR_CSTR;
   return (ast_node *)sast;
+}
+
+cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
+  Contract(value);
+  Contract(value[0] != '`');
+
+  str_ast_node *sast = (str_ast_node *)new_ast_str(value);
+  sast->str_type = STR_QSTR;
+  return (ast_node *)sast;
+}
+
+cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
+  Contract(value);
+  Contract(value[0] == '`');
+  ast_node *result;
+
+  CHARBUF_OPEN(encoded);
+    cg_encode_qstr(&encoded, value);
+    result = new_ast_qstr_escaped(Strdup(encoded.ptr));
+  CHARBUF_CLOSE(encoded);
+
+  return result;
+}
+
+// create a new id node either qid or normal based on the bool
+cql_noexport ast_node *new_str_or_qstr(CSTR name, bool_t qstr) {
+  if (qstr) {
+    return new_ast_qstr_escaped(name);
+  }
+  else {
+    return new_ast_str(name);
+  }
 }
 
 static char padbuffer[4096];
@@ -271,12 +307,22 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   bool_t ret = false;
 
   if (is_ast_str(node)) {
+    EXTRACT_STRING(str, node);
+
     cql_output("%s", padbuffer);
     if (is_strlit(node)) {
-      cql_output("{strlit %s}", ((struct str_ast_node *)node)->value);
+      cql_output("{strlit %s}", str);
     }
     else {
-      cql_output("{name %s}", ((struct str_ast_node *)node)->value);
+      if (is_qid(node)) {
+        CHARBUF_OPEN(tmp);
+          cg_decode_qstr(&tmp, str);
+          cql_output("{name %s}", tmp.ptr);
+        CHARBUF_CLOSE(tmp);
+      }
+      else {
+        cql_output("{name %s}", str);
+      }
     }
     ret = true;
   }
@@ -303,8 +349,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   }
 
   if (is_ast_blob(node)) {
+    EXTRACT_BLOBTEXT(value, node);
     cql_output("%s", padbuffer);
-    cql_output("{blob %s}", ((struct str_ast_node *)node)->value);
+    cql_output("{blob %s}", value);
     ret = true;
   }
 
@@ -770,7 +817,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     EXTRACT_NOTNULL(call_stmt, node->left);
     EXTRACT(cte_binding_list, node->right);
 
-    EXTRACT_ANY_NOTNULL(name_ast, call_stmt->left);
+    EXTRACT_NAME_AST(name_ast, call_stmt->left);
     EXTRACT_STRING(name, name_ast);
     ast_node *proc = find_proc(name);
     if (proc) {
@@ -812,31 +859,31 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     // normally we don't start by walking tables anyway so this doesn't
     // run if you do a standard walk of a procedure
     if (callbacks->notify_fk) {
-      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      EXTRACT_NAME_AST(name_ast, node->left);
       table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_drop_view_stmt(node) || is_ast_drop_table_stmt(node)) {
     if (callbacks->notify_table_or_view_drops) {
-      EXTRACT_ANY_NOTNULL(name_ast, node->right);
+      EXTRACT_NAME_AST(name_ast, node->right);
       table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_trigger_target_action(node)) {
     if (callbacks->notify_triggers) {
-      EXTRACT_ANY_NOTNULL(name_ast, node->left);
+      EXTRACT_NAME_AST(name_ast, node->left);
       table_or_view_name_ast = name_ast;
     }
   }
   else if (is_ast_delete_stmt(node)) {
-    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    EXTRACT_NAME_AST(name_ast, node->left);
     table_or_view_name_ast = name_ast;
     alt_callback = callbacks->callback_deletes;
     alt_visited = callbacks->visited_delete;
   }
   else if (is_ast_insert_stmt(node)) {
     EXTRACT(name_columns_values, node->right);
-    EXTRACT_ANY_NOTNULL(name_ast, name_columns_values->left);
+    EXTRACT_NAME_AST(name_ast, name_columns_values->left);
     table_or_view_name_ast = name_ast;
     alt_callback = callbacks->callback_inserts;
     alt_visited = callbacks->visited_insert;
@@ -856,7 +903,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     // but it lets us share code so we just go with it.  The other case
     // is a possible proc_as_func call so we must check if the target is a proc.
 
-    EXTRACT_ANY_NOTNULL(name_ast, node->left);
+    EXTRACT_NAME_AST(name_ast, node->left);
     EXTRACT_STRING(name, name_ast);
     ast_node *proc = find_proc(name);
 
@@ -869,8 +916,8 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
 
       EXTRACT_STRING(canon_name, get_proc_name(proc));
       if (callbacks->callback_proc) {
-        if (symtab_add(callbacks->visited_proc, canon_name, name_ast)) {
-          callbacks->callback_proc(canon_name, name_ast, callbacks->callback_context);
+        if (symtab_add(callbacks->visited_proc, canon_name, proc)) {
+          callbacks->callback_proc(canon_name, proc, callbacks->callback_context);
         }
       }
     }
@@ -1023,3 +1070,4 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   _ast->right = ast_clone_tree(ast->right);
   return _ast;
 }
+

@@ -353,6 +353,7 @@ CURSOR{sp}HAS{sp}ROW/{stop}  { return CURSOR_HAS_ROW; }
 
 ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)? { yylval.sval = Strdup(yytext); return REALLIT; }
 
+`(``|[^`\n])*`               { yylval.sval = Strdup(yytext); return QID; }
 \"(\\.|[^\\"\n])*\"          { yylval.sval = Strdup(yytext); return CSTRLIT; }
 '(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
 X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }

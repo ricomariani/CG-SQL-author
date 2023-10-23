@@ -958,6 +958,7 @@ AST(blob_update_key_stmt)
 AST(blob_update_val_stmt)
 AST(seed_stub)
 AST(str_chain)
+AST0(keep_table_name_in_aliases_stmt)
 
 #ifndef _MSC_VER
 #pragma clang diagnostic pop

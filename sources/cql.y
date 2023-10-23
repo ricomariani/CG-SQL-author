@@ -245,6 +245,7 @@ static void cql_reset_globals(void);
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
+%token AT_KEEP_TABLE_NAME_IN_ALIASES
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 
 /* ddl stuff */
@@ -334,6 +335,7 @@ static void cql_reset_globals(void);
 %type <aval> blob_get_key_type_stmt blob_get_val_type_stmt blob_get_key_stmt blob_get_val_stmt
 %type <aval> blob_create_key_stmt blob_create_val_stmt blob_update_key_stmt blob_update_val_stmt
 %type <aval> opt_use_offset
+%type <aval> keep_table_name_in_aliases_stmt
 
 %start program
 
@@ -510,6 +512,7 @@ any_stmt:
   | with_insert_stmt
   | with_update_stmt
   | with_upsert_stmt
+  | keep_table_name_in_aliases_stmt
   ;
 
 explain_stmt:
@@ -2355,6 +2358,8 @@ blob_update_val_stmt:
   AT_BLOB_UPDATE_VAL name opt_use_offset { $blob_update_val_stmt = new_ast_blob_update_val_stmt($name, $opt_use_offset); }
   ;
 
+keep_table_name_in_aliases_stmt:
+  AT_KEEP_TABLE_NAME_IN_ALIASES { $keep_table_name_in_aliases_stmt = new_ast_keep_table_name_in_aliases_stmt(); }
 %%
 
 #ifndef _MSC_VER

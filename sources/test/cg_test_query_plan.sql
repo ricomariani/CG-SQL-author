@@ -90,6 +90,7 @@ create index it4 ON t4(data, id);
 create index it5 ON t4(data) @delete(1);
 create view my_view as select * from t1 inner join t2 using(id);
 create view my_view as select * from t1 inner join t2 using(id);
+create view my_view_using_table_alias as select foo.*, bar.id id2, bar.rowid rowid from t1 as foo inner join t2 as bar using(id);
 declare function any_func() bool not null;
 declare select function is_declare_func_enabled() bool not null;
 declare select function is_declare_func_wall(id long integer) bool not null;
@@ -145,32 +146,35 @@ end;
 select is_declare_func_wall(id) from t4 where data = data_var;
 
 -- UPDATE stmt
-update t1 set id = 1, name = label_var where name in (select NAME from t3);
+update t1 set id = 1, name = label_var where name in (select T.NAME from t3 as T);
 
 -- [WITH ... UPDATE] stmt
 with
-  some_cte(id, name) as (select 1 id, 'Irene' name)
+  some_cte(id, name) as (select T.* from t2 as T)
 update t1 set id = 1, name = label_var where name in (select name from some_cte);
+
+-- UPDATE FROM stmt
+update t1 set id = other_table.id, name = other_table.name from (select foo.* from t2 as foo limit 1) as other_table;
 
 -- DELETE stmt
 delete from t1
   where name in (
-    select t2.name
-      from t2 inner join t3 using(name)
+    select foo.name
+      from t2 as foo inner join t3 using(name)
   );
 
 -- [WITH ... DELETE] stmt
 with
   some_cte(name) as (
-    select t2.name from t2 inner join t3 using(id)
+    select foo.name from t2 as foo inner join t3 using(id)
   )
   delete from t1 where name not in (select * from some_cte);
 
 -- INSERT stmt
-insert into t1 select * from t2 union all select * from t3;
+insert into t1 select foo.* from t2 as foo union all select bar.* from t3 as bar;
 
 -- [WITH... INSERT] stmt
-with some_cte(id, name) as (select 1, 'x')
+with some_cte(id, name) as (select T.* from t2 as T)
 insert into t1 select * from some_cte;
 
 -- BEGIN stmt
@@ -525,4 +529,21 @@ end;
 proc do_something()
 begin
   select * from (call outer_frag());
+end;
+
+-- Use this special syntax to test edge case in --format_table_alias_for_eqp
+proc use_table_star_in_query()
+begin
+  select alias.* from t1 as alias;
+end;
+
+-- Use this special syntax to test edge case in --format_table_alias_for_eqp
+proc use_rowid_column_in_query()
+begin
+  select alias.rowid from t1 as alias;
+end;
+
+proc use_view_with_table_alias_in_query()
+begin
+  select view.* from my_view_using_table_alias as view;
 end;

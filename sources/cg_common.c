@@ -226,7 +226,13 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
           bprintf(buffer, ", ");
         }
         first = false;
-        bprintf(buffer, "%s.%s", ast->sem->name, sptr->names[i]);
+
+        if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
+          CSTR table_alias_name = get_inserted_table_alias_string_override(ast);
+          bprintf(buffer, "%s.%s", table_alias_name, sptr->names[i]);
+        } else {
+          bprintf(buffer, "%s.%s", ast->sem->name, sptr->names[i]);
+        }
       }
     }
   }

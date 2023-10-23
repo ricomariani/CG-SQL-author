@@ -1840,6 +1840,8 @@ SELECT NOTHING;
 
 LET z := "abc\n123\r\n\x02lmnop''";
 
+@KEEP_TABLE_NAME_IN_ALIASES;
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

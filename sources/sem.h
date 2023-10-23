@@ -271,6 +271,7 @@ cql_noexport bool_t is_proc_suppress_getters(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_emit_setters(ast_node *proc_stmt);
 cql_noexport bool_t is_proc_shared_fragment(ast_node *ast);
 cql_noexport bool_t is_alias_ast(ast_node *ast);
+cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *ast);
 
 cql_noexport CSTR sem_get_name(ast_node *ast);
 cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);
@@ -393,3 +394,6 @@ cql_data_decl( bool_t in_upsert_rewrite );
 cql_data_decl ( ast_node *current_upsert_table_ast );
 // This is the symbol table with the recreate group dependencies where an edge B -> A means A FKs to B
 cql_data_decl( symtab *recreate_group_deps );
+
+// Truthy when the @keep_table_name_in_aliases_stmt directive is used.
+cql_data_decl( bool_t keep_table_name_in_aliases );

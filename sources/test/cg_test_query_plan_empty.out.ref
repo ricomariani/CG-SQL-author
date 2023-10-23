@@ -1,5 +1,6 @@
 
 declare proc printf no check;
+@keep_table_name_in_aliases;
 create proc query_plan()
 begin
   -- Force the dml proc signature

@@ -238,6 +238,7 @@ static void sem_non_backed_table(ast_node *ast_error, ast_node *ast_table);
 static ast_node *sem_synthesize_current_locals();
 static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 static void sem_assign(ast_node *ast);
+static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
@@ -382,6 +383,9 @@ static bool_t in_shared_fragment_call;
 
 // If the current context is a trigger statement list
 static bool_t in_trigger;
+
+// If the current context is a trigger statement when clause
+static bool_t in_trigger_when_expr;
 
 // If the current context is inside of a switch statement
 static bool_t in_switch;
@@ -5283,6 +5287,11 @@ static uint32_t sem_select_table_star_count(ast_node *ast) {
         return 0;
       }
 
+      // Insert table alias name override if enabled.
+      if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr) {
+        insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
+      }
+
       return jptr->tables[i]->count;
     }
   }
@@ -6009,6 +6018,12 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
             found_jptr = jptr;
             // Store this for setting type_ptr later, if successful.
             type = &table->semtypes[j];
+
+            // Insert table alias name override if enabled.
+            if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
+              Invariant(is_ast_dot(ast));
+              insert_table_alias_string_overide(ast->left, table->struct_name);
+            }
           }
         }
       }
@@ -6068,6 +6083,13 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
         col = name;
         kind = NULL;
         sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+
+        // Insert table alias name override if enabled.
+        if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
+          Invariant(is_ast_dot(ast));
+          insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
+        }
+        
         break;
       }
     }
@@ -10511,6 +10533,14 @@ static void sem_table_or_subquery(ast_node *ast) {
   EXTRACT(opt_as_alias, ast->right);
   if (opt_as_alias) {
     sem_as_alias(opt_as_alias, alias_target);
+
+    // Rename this alias definition if it is aliasing a name string (i.e. not subquery, table function)
+    // for query plan analysis if enabled.
+    if (is_ast_str(factor) && keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr) {
+      EXTRACT_STRING(table_name, factor);
+      EXTRACT_STRING(original_alias_name, opt_as_alias->left)
+      insert_table_alias_string_overide(opt_as_alias->left, table_name);
+    }
   }
 }
 
@@ -13988,9 +14018,15 @@ static void sem_create_trigger_stmt(ast_node *ast) {
   }
 
   if (when_expr) {
+    Invariant(!in_trigger_when_expr);
+    in_trigger_when_expr = 1;
+
     PUSH_JOIN(when_scope, jptr);
     sem_numeric_expr(when_expr, NULL, "WHEN", SEM_EXPR_CONTEXT_WHERE);
     POP_JOIN();
+
+    Invariant(in_trigger_when_expr);
+    in_trigger_when_expr = 0;
 
     if (is_error(when_expr)) {
       record_error(ast);
@@ -24698,6 +24734,45 @@ static void sem_blob_update_val_stmt(ast_node *ast) {
   record_ok(ast);
 }
 
+static void sem_keep_table_name_in_aliases_stmt(ast_node *ast) {
+  Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
+  record_ok(ast);
+
+  keep_table_name_in_aliases = 1;
+}
+
+// Add a special sem node to a string node to represent an "override" of the original string value.
+// This is currently used only for overriding table name aliases for better explain query plan analysis.
+static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name) {
+  Contract(keep_table_name_in_aliases);
+  Contract(is_ast_str(ast));
+  EXTRACT_STRING(original_alias, ast);
+
+  // Don't do this renaming if the underlying construct isn't a table (e.g. a CTE instead).
+  ast_node *table_ast = find_table_or_view_even_deleted(table_name);
+  if (!table_ast) {
+    return;
+  }
+
+  if (!strcmp(table_name, original_alias)) {
+    return;
+  }
+
+  // Allow existing alias to be reformatted as something like "TABLE table_name AS some_alias".
+  sem_node *new_alias_sem = new_sem(SEM_TYPE_OK);
+  new_alias_sem->name = dup_printf("[TABLE %s AS %s]", table_name, original_alias);
+  ast->sem = new_alias_sem;
+}
+
+// Return value of special sem node inserted by insert_table_alias_string_overide.
+cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull ast) {
+  if (!ast->left->sem) {
+    return NULL;
+  }
+
+  return ast->left->sem->name;
+}
+
 // Most codegen types are not compatible with previous schema generation because it adds stuff to the AST
 // and that stuff isn't even fully type evaluated.  So the best thing to do is punt on codegen if we
 // did that sort of validation.
@@ -24891,6 +24966,8 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(blob_create_val_stmt);
   STMT_INIT(blob_update_key_stmt);
   STMT_INIT(blob_update_val_stmt);
+
+  STMT_INIT(keep_table_name_in_aliases_stmt);
 
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);
@@ -25173,9 +25250,11 @@ cql_noexport void sem_cleanup() {
   has_dml = false;
   in_shared_fragment_call = false;
   in_trigger = false;
+  in_trigger_when_expr = false;
   in_switch = false;
   in_upsert = false;
   in_upsert_rewrite = false;
+  keep_table_name_in_aliases = false;
   loop_depth = 0;
   in_proc_savepoint = false;
   max_previous_schema_version = -1;
@@ -25257,3 +25336,6 @@ cql_data_defn( bool_t in_upsert_rewrite );
 cql_data_defn ( ast_node *current_upsert_table_ast );
 // This is the symbol table with recreate group dependencies
 cql_data_defn( symtab *recreate_group_deps );
+
+// Truthy when the @keep_table_name_in_aliases_stmt directive is used.
+cql_data_defn( bool_t keep_table_name_in_aliases );

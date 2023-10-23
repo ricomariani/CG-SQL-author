@@ -1128,6 +1128,10 @@ query_plan_test() {
     failed
   fi
 
+  echo validating query plan view
+  echo "  computing diffs (empty if none)"
+  on_diff_exit cg_test_query_plan_js.out
+
   echo codegen empty query plan
   if ! ${CQL} --test --dev --cg "${OUT_DIR}/cg_test_query_plan_empty.out" --in "${TEST_DIR}/cg_test_query_plan_empty.sql" --rt query_plan 2>"${OUT_DIR}/cg_test_query_plan_empty.err"
   then
@@ -1157,6 +1161,7 @@ query_plan_test() {
   fi
 
   echo compile empty query plan code
+  rm ${OUT_DIR}/query_plan.o # Make doesn't do a clean build automatically for some reason...
   if ! do_make query_plan_test
   then
     echo build failed

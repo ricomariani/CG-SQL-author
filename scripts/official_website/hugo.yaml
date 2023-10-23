@@ -76,5 +76,5 @@ module:
   mounts:
     - source: ../../docs
       target: content/docs
-    - source: ../../docs/quick_start
-      target: content/blog
+    - source: ../../README.md
+      target: content/docs/_index.md

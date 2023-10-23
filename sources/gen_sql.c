@@ -1101,7 +1101,8 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     gen_printf("%s", ast->sem->name);
   }
   else if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
-    gen_printf("%s.%s", get_inserted_table_alias_string_override(ast), right);
+    gen_printf("%s.", get_inserted_table_alias_string_override(ast));
+    gen_name(right);
   }
   else {
     if (left) {

@@ -1487,7 +1487,7 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
     bprintf(output, "{\n");
     BEGIN_INDENT(type, 2);
     bprintf(output, "\"name\" : ");
-    cg_json_sptr_sql_name(output, sptr, i);
+    cg_json_sptr_sql_name(output, sptr, (int32_t)i);
     bprintf(output, ",\n");
     cg_json_data_type(output, sptr->semtypes[i], sptr->kinds[i]);
     END_INDENT(type);

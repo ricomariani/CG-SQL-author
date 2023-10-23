@@ -236,11 +236,21 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         first = false;
 
         if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
+          // rico fix this
           CSTR table_alias_name = get_inserted_table_alias_string_override(ast);
-          bprintf(buffer, "%s.", table_alias_name);
+          bprintf(buffer, "%s", table_alias_name);
         } else {
-          bprintf(buffer, "%s.", ast->sem->name);
+          if (is_qid(ast->left)) {
+            bprintf(buffer, "[");
+            cg_unquote_encoded_qstr(buffer, ast->sem->name);
+            bprintf(buffer, "]");
+          }
+          else {
+            bprintf(buffer, "%s", ast->sem->name);
+          }
         }
+
+        bprintf(buffer, ".");
 
         if (!(sptr->semtypes[i] & SEM_TYPE_QID)) {
           bprintf(buffer, "%s", sptr->names[i]);
@@ -250,10 +260,6 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
           cg_unquote_encoded_qstr(buffer, sptr->names[i]);
           bprintf(buffer, "]");
         }
-
-        /* rico fix this
-          bprintf(buffer, "%s.", ast->sem->name);
-        */
       }
     }
   }

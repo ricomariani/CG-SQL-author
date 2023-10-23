@@ -1870,9 +1870,60 @@ DECLARE FUNCTION func_create_text() CREATE TEXT;
 DECLARE FUNCTION func_create_object() CREATE OBJECT;
 
 -- TEST: create a table with exotic name and columns
--- + "schema" : "CREATE TABLE [abc def](\n  [x y] INTEGER NOT NULL\n)"
 -- + "name" : "abc def",
+-- + "schema" : "CREATE TABLE [abc def](\n  [a b] INTEGER NOT NULL UNIQUE,\n  [x y] INTEGER NOT NULL PRIMARY KEY\n)",
+-- + "indices" : [ "wx yz" ],
+-- + "name" : "a b",
 -- + "name" : "x y",
+-- + "primaryKey" : [ "x y" ],
+-- + "name" : "a b_uk",
+-- + "columns" : [ "a b" ],
 create table `abc def` (
-  `x y` int!
+  `a b` int! unique,
+  `x y` int! primary key
 );
+
+-- TEST: a projection with quoted names
+-- + "name" : "generate_quoted_items",
+-- + "fromTables" : [ "abc def" ],
+-- + "usesTables" : [ "abc def" ],
+-- + "name" : "a b",
+-- + "name" : "x y",
+-- + "statement" : "SELECT [a b], [x y] FROM [abc def]",
+-- + "statementArgs" : [  ]
+create proc generate_quoted_items()
+begin
+  select * from `abc def`;
+end;
+
+-- TEST: projection from a view
+-- + "name" : "a view",
+-- + "name" : "a b",
+-- + "name" : "x y",
+-- + "select" : "SELECT [a b], [x y] FROM [abc def]",
+-- + "selectArgs" : [  ],
+-- + "fromTables" : [ "abc def" ],
+-- + "usesTables" : [ "abc def" ]
+create view `a view` as select * from `abc def`;
+
+-- TEST: create an index with quoted names
+-- + CREATE INDEX `wx yz` ON `abc def` (`a b` ASC)
+-- + "name" : "wx yz",
+-- + "table" : "abc def",
+-- + "columns" : [ "`a b`" ],
+create index `wx yz` on `abc def` (`a b` asc);
+
+-- TEST: trigger with quoted names
+-- + "name" : "compound trigger",
+-- + "target" : "abc def",
+-- + "whenExpr" : "old.[a b] = 3",
+-- + "statement" : "CREATE TEMP TRIGGER IF NOT EXISTS [compound trigger] BEFORE DELETE ON [abc def] FOR EACH ROW WHEN old.[a b] = 3 BEGIN DELETE FROM [abc def] WHERE [a b] = 2; END",
+-- + "deleteTables" : [ "abc def" ],
+-- + "usesTables" : [ "abc def" ]
+create temp trigger if not exists `compound trigger`
+  before delete on `abc def`
+  for each row
+  when old.`a b` = 3
+begin
+  delete from `abc def` where `a b` = 2;
+end;

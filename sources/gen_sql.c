@@ -2791,7 +2791,7 @@ static void gen_create_trigger_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
   EXTRACT_ANY(trigger_attrs, trigger_body_vers->right);
   EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
-  EXTRACT_STRING(trigger_name, trigger_def->left);
+  EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
   EXTRACT_NOTNULL(trigger_condition, trigger_def->right);
   EXTRACT_OPTION(cond_flags, trigger_condition->left);
   flags |= cond_flags;
@@ -2801,7 +2801,7 @@ static void gen_create_trigger_stmt(ast_node *ast) {
   EXTRACT(name_list, trigger_operation->right);
   flags |= op_flags;
   EXTRACT_NOTNULL(trigger_target_action, trigger_op_target->right);
-  EXTRACT_STRING(table_name, trigger_target_action->left);
+  EXTRACT_NAME_AST(table_name_ast, trigger_target_action->left);
   EXTRACT_NOTNULL(trigger_action, trigger_target_action->right);
   EXTRACT_OPTION(action_flags, trigger_action->left);
   flags |= action_flags;
@@ -2816,7 +2816,8 @@ static void gen_create_trigger_stmt(ast_node *ast) {
   gen_printf("TRIGGER ");
   gen_if_not_exists(ast, !!(flags & TRIGGER_IF_NOT_EXISTS));
 
-  gen_printf("%s\n  ", trigger_name);
+  gen_name(trigger_name_ast);
+  gen_printf("\n  ");
 
   if (flags & TRIGGER_BEFORE) {
     gen_printf("BEFORE ");
@@ -2842,7 +2843,8 @@ static void gen_create_trigger_stmt(ast_node *ast) {
       gen_printf(" ");
     }
   }
-  gen_printf("ON %s", table_name);
+  gen_printf("ON ");
+  gen_name(table_name_ast);
 
   if (flags & TRIGGER_FOR_EACH_ROW) {
     gen_printf("\n  FOR EACH ROW");
@@ -3094,10 +3096,11 @@ static void gen_expr_stmt(ast_node *ast) {
 
 static void gen_delete_stmt(ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(opt_where, ast->right);
 
-  gen_printf("DELETE FROM %s", name);
+  gen_printf("DELETE FROM ");
+  gen_name(name_ast);
   if (opt_where) {
     gen_printf(" WHERE ");
     gen_root_expr(opt_where->left);

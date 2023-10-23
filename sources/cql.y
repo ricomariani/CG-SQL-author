@@ -1631,8 +1631,8 @@ with_delete_stmt:
   ;
 
 delete_stmt:
-  DELETE FROM name opt_where  {
-   $delete_stmt = new_ast_delete_stmt($name, $opt_where); }
+  DELETE FROM sql_name opt_where  {
+   $delete_stmt = new_ast_delete_stmt($sql_name, $opt_where); }
   ;
 
 opt_insert_dummy_spec:

@@ -916,8 +916,8 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
 
       EXTRACT_STRING(canon_name, get_proc_name(proc));
       if (callbacks->callback_proc) {
-        if (symtab_add(callbacks->visited_proc, canon_name, name_ast)) {
-          callbacks->callback_proc(canon_name, name_ast, callbacks->callback_context);
+        if (symtab_add(callbacks->visited_proc, canon_name, proc)) {
+          callbacks->callback_proc(canon_name, proc, callbacks->callback_context);
         }
       }
     }

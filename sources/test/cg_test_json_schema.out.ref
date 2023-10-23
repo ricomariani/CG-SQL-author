@@ -2400,36 +2400,53 @@
     The statement ending at line XXXX
 
     CREATE TABLE `abc def`(
-      `x y` INTEGER NOT NULL
+      `a b` INTEGER NOT NULL UNIQUE,
+      `x y` INTEGER NOT NULL PRIMARY KEY
     )
 
     {
       "name" : "abc def",
-      "schema" : "CREATE TABLE [abc def](\n  [x y] INTEGER NOT NULL\n)",
-      "CRC" : "-8830380235914581124",
+      "schema" : "CREATE TABLE [abc def](\n  [a b] INTEGER NOT NULL UNIQUE,\n  [x y] INTEGER NOT NULL PRIMARY KEY\n)",
+      "CRC" : "-3130740227523881403",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
       "isAdded" : 0,
       "isDeleted" : 0,
       "isRecreated": 0,
+      "indices" : [ "wx yz" ],
       "columns" : [
+        {
+          "name" : "a b",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "isAdded" : 0,
+          "isDeleted" : 0,
+          "isPrimaryKey" : 0,
+          "isUniqueKey" : 1,
+          "isAutoIncrement" : 0
+        },
         {
           "name" : "x y",
           "type" : "integer",
           "isNotNull" : 1,
           "isAdded" : 0,
           "isDeleted" : 0,
-          "isPrimaryKey" : 0,
+          "isPrimaryKey" : 1,
           "isUniqueKey" : 0,
           "isAutoIncrement" : 0
         }
       ],
-      "primaryKey" : [  ],
-      "primaryKeySortOrders" : [  ],
+      "primaryKey" : [ "x y" ],
+      "primaryKeySortOrders" : [ "" ],
       "foreignKeys" : [
       ],
       "uniqueKeys" : [
+        {
+          "name" : "a b_uk",
+          "columns" : [ "a b" ],
+          "sortOrders" : [ "" ]
+        }
       ],
       "checkExpressions" : [
       ]
@@ -2998,6 +3015,36 @@
       "selectArgs" : [  ],
       "usesTables" : [  ]
     }
+
+    The statement ending at line XXXX
+
+    CREATE VIEW `a view` AS
+    SELECT *
+      FROM `abc def`
+
+    ,
+    {
+      "name" : "a view",
+      "CRC" : "-4116429888159671067",
+      "isTemp" : 0,
+      "isDeleted" : 0,
+      "projection" : [
+        {
+          "name" : "a b",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "x y",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "select" : "SELECT [a b], [x y] FROM [abc def]",
+      "selectArgs" : [  ],
+      "fromTables" : [ "abc def" ],
+      "usesTables" : [ "abc def" ]
+    }
   ],
   "indices" : [
 
@@ -3121,6 +3168,21 @@
       ],
       "columns" : [ "id" ],
       "sortOrders" : [ "" ]
+    }
+    The statement ending at line XXXX
+
+    CREATE INDEX `wx yz` ON `abc def` (`a b` ASC)
+
+    ,
+    {
+      "name" : "wx yz",
+      "CRC" : "210597346967693894",
+      "table" : "abc def",
+      "isUnique" : 0,
+      "ifNotExists" : 0,
+      "isDeleted" : 0,
+      "columns" : [ "`a b`" ],
+      "sortOrders" : [ "asc" ]
     }
   ],
   "triggers" : [
@@ -3355,6 +3417,34 @@
       "region" : "region0",
       "deployedInRegion" : "region2",
       "usesTables" : [  ]
+    }
+    The statement ending at line XXXX
+
+    CREATE TEMP TRIGGER IF NOT EXISTS `compound trigger`
+      BEFORE DELETE ON `abc def`
+      FOR EACH ROW
+      WHEN old.`a b` = 3
+    BEGIN
+    DELETE FROM `abc def` WHERE `a b` = 2;
+    END
+
+    ,
+    {
+      "name" : "compound trigger",
+      "CRC" : "-3644874480545703871",
+      "target" : "abc def",
+      "isTemp" : 1,
+      "ifNotExists" : 1,
+      "isDeleted" : 0,
+      "isBeforeTrigger" : 1,
+      "isDeleteTrigger" : 1,
+      "forEachRow" : 1,
+      "whenExpr" : "old.[a b] = 3",
+      "whenExprArgs" : [  ],
+      "statement" : "CREATE TEMP TRIGGER IF NOT EXISTS [compound trigger] BEFORE DELETE ON [abc def] FOR EACH ROW WHEN old.[a b] = 3 BEGIN DELETE FROM [abc def] WHERE [a b] = 2; END",
+      "statementArgs" : [  ],
+      "deleteTables" : [ "abc def" ],
+      "usesTables" : [ "abc def" ]
     }
   ],
   "attributes" : [
@@ -3981,6 +4071,38 @@
       ],
       "statement" : "SELECT ? AS id, ? AS name",
       "statementArgs" : [ "id_", "name_" ]
+    },
+
+    The statement ending at line XXXX
+
+    CREATE PROC generate_quoted_items ()
+    BEGIN
+    SELECT *
+      FROM `abc def`;
+    END
+
+    {
+      "name" : "generate_quoted_items",
+      "definedInFile" : "cg_test_json_schema.sql",
+      "definedOnLine" : 1894,
+      "args" : [
+      ],
+      "fromTables" : [ "abc def" ],
+      "usesTables" : [ "abc def" ],
+      "projection" : [
+        {
+          "name" : "a b",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "x y",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "statement" : "SELECT [a b], [x y] FROM [abc def]",
+      "statementArgs" : [  ]
     }
   ],
   "inserts" : [
@@ -6096,6 +6218,7 @@
     "T3" : [ "insert_with_select", "insert_compound", "insert_multi_value", "upsert_proc", "with_upsert_proc", "with_insert_proc" ],
     "T5" : [ "typical_select", "joiner" ],
     "T6" : [ "shared_frag_user", "shared_frag_user_nested_select" ],
+    "X_abcX20def" : [ "generate_quoted_items" ],
     "radioactive" : [ "radioactive_proc" ]
   }
 }

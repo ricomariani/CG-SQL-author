@@ -14916,9 +14916,9 @@ static void sem_create_table_stmt(ast_node *ast) {
       if (!symtab_add(columns, def->sem->name, NULL)) {
         EXTRACT_NOTNULL(col_def_type_attrs, def->left);
         EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-        EXTRACT_ANY_NOTNULL(col_def_ast, col_def_name_type->left);
+        EXTRACT_NAME_AST(col_name_ast, col_def_name_type->left);
 
-        report_error(col_def_ast, "CQL0142: duplicate column name", def->sem->name);
+        report_error(col_name_ast, "CQL0142: duplicate column name", def->sem->name);
         record_error(ast);
         symtab_delete(columns);
         goto cleanup;;

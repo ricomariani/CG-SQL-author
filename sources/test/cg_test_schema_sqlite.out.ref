@@ -1,31 +1,31 @@
 
-CREATE TABLE foo(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE [quoted foo](
+  [an id] INTEGER PRIMARY KEY,
   rate LONG_INT,
-  rate_2 LONG_INT,
-  id2 INTEGER DEFAULT 12345,
+  [rate 2] LONG_INT,
+  [id 2] INTEGER DEFAULT 12345,
   name TEXT,
   name_2 TEXT
 );
 
 CREATE TABLE added_table(
-  id INTEGER NOT NULL,
+  [an id] INTEGER NOT NULL,
   name1 TEXT,
   name2 TEXT
 );
 
 CREATE TABLE g1(
-  id INTEGER PRIMARY KEY,
+  [an id] INTEGER PRIMARY KEY,
   name TEXT
 );
 
 CREATE TABLE use_g1(
-  id INTEGER PRIMARY KEY REFERENCES g1 (id),
+  [an id] INTEGER PRIMARY KEY REFERENCES g1 ([an id]),
   name2 TEXT
 );
 
 CREATE TABLE table2(
-  id INTEGER NOT NULL REFERENCES foo (id),
+  [an id] INTEGER NOT NULL REFERENCES [quoted foo] ([an id]),
   name1 TEXT,
   name2 TEXT,
   name3 TEXT,
@@ -33,37 +33,37 @@ CREATE TABLE table2(
 );
 
 CREATE TABLE other_table(
-  id INTEGER
+  [an id] INTEGER
 );
 
 CREATE TABLE table_to_recreate(
-  id INTEGER NOT NULL,
+  [an id] INTEGER NOT NULL,
   name TEXT
 );
 
 CREATE TABLE grouped_table_1(
-  id INTEGER NOT NULL,
+  [an id] INTEGER NOT NULL,
   name TEXT
 );
 
 CREATE TABLE grouped_table_2(
-  id INTEGER NOT NULL,
+  [an id] INTEGER NOT NULL,
   name TEXT
 );
 
 CREATE TABLE grouped_table_3(
-  id INTEGER NOT NULL,
+  [an id] INTEGER NOT NULL,
   name TEXT
 );
 
 CREATE TABLE t5(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  [an id] INTEGER PRIMARY KEY AUTOINCREMENT,
   data TEXT
 );
 
 CREATE TABLE t6(
-  id LONG_INT PRIMARY KEY,
-  FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+  [an id] LONG_INT PRIMARY KEY,
+  FOREIGN KEY ([an id]) REFERENCES t5 ([an id]) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other);
@@ -71,56 +71,56 @@ CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other);
 CREATE VIRTUAL TABLE epon USING epon;
 
 CREATE VIRTUAL TABLE complex_virtual_table USING a_module (
-  id INTEGER,
+  [an id] INTEGER,
   t TEXT);
 
 CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (
-  id INTEGER,
+  [an id] INTEGER,
   t TEXT);
 
-CREATE TABLE migrated_from_recreate(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE [migrated from recreate](
+  [an id] INTEGER PRIMARY KEY,
   t TEXT
 );
 
 CREATE TABLE migrated_from_recreate2(
-  id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
+  [an id] INTEGER PRIMARY KEY REFERENCES [migrated from recreate] ([an id]),
   t TEXT
 );
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER NOT NULL ON CONFLICT FAIL
+  [an id] INTEGER NOT NULL ON CONFLICT FAIL
 );
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER NOT NULL,
-  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+  [an id] INTEGER NOT NULL,
+  CONSTRAINT [pk 1] PRIMARY KEY ([an id]) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE expression_pk(
-  id INTEGER NOT NULL,
-  CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+  [an id] INTEGER NOT NULL,
+  CONSTRAINT [pk 1] PRIMARY KEY ([an id] / 2, [an id] % 2)
 );
 
 CREATE TABLE expression_uk(
-  id INTEGER NOT NULL,
-  CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+  [an id] INTEGER NOT NULL,
+  CONSTRAINT uk1 UNIQUE ([an id] / 2, [an id] % 2)
 );
 
 CREATE TABLE delete__second(
-  id INTEGER PRIMARY KEY
+  [an id] INTEGER PRIMARY KEY
 );
 
 CREATE TABLE delete_first(
-  id INTEGER REFERENCES delete__second (id)
+  [an id] INTEGER REFERENCES delete__second ([an id])
 );
 
-CREATE TABLE create_first(
-  id INTEGER PRIMARY KEY
+CREATE TABLE [create first](
+  [an id] INTEGER PRIMARY KEY
 );
 
-CREATE TABLE create__second(
-  id INTEGER REFERENCES create_first (id)
+CREATE TABLE create_second(
+  [an id] INTEGER REFERENCES [create first] ([an id])
 );
 
 CREATE TABLE unsub_recreated(
@@ -149,30 +149,30 @@ CREATE TABLE unsub_voyage(
 );
 
 CREATE TABLE unsub_inner(
-  id INTEGER PRIMARY KEY,
+  [an id] INTEGER PRIMARY KEY,
   name_inner TEXT
 );
 
 CREATE TABLE unsub_outer(
-  id INTEGER PRIMARY KEY REFERENCES unsub_inner (id),
+  [an id] INTEGER PRIMARY KEY REFERENCES unsub_inner ([an id]),
   name_outer TEXT
 );
 
 CREATE TABLE some_table(
-  id INTEGER
+  [an id] INTEGER
 );
 
 CREATE VIEW shared_view AS
 SELECT *
-  FROM foo;
+  FROM [quoted foo];
 
 CREATE VIEW live_view AS
 SELECT *
-  FROM foo;
+  FROM [quoted foo];
 
 CREATE VIEW dead_view AS
 SELECT *
-  FROM foo;
+  FROM [quoted foo];
 
 CREATE VIEW another_live_view AS
 SELECT *
@@ -186,21 +186,21 @@ CREATE VIEW foo_view_normal AS
 SELECT *
   FROM some_table;
 
-CREATE INDEX shared_index ON foo (name, name_2);
+CREATE INDEX shared_index ON [quoted foo] (name, name_2);
 
 CREATE INDEX gr1_index ON g1 (name);
 
-CREATE INDEX gr1_index2 ON g1 (name, id);
+CREATE INDEX gr1_index2 ON g1 (name, [an id]);
 
-CREATE INDEX gr1_index3 ON g1 (my_func(name), id);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), [an id]);
 
 CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 
 CREATE INDEX index_going_away ON table2 (name3);
 
-CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
+CREATE INDEX recreate_index_needs_deleting ON [migrated from recreate] (t);
 
-CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
+CREATE INDEX recreate_index_needs_deleting2 ON [migrated from recreate] (t);
 
 CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
 
@@ -213,36 +213,36 @@ CREATE INDEX us1 ON unsub_inner (name_inner);
 CREATE INDEX us2 ON unsub_outer (name_outer);
 
 CREATE TRIGGER shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON [quoted foo]
 BEGIN
 SELECT 1;
 END;
 
 CREATE TRIGGER not_shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON [quoted foo]
 BEGIN
-SELECT new.id;
+SELECT new.[an id];
 END;
 
 CREATE TRIGGER insert_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON [quoted foo]
   FOR EACH ROW
-  WHEN new.id > 7
+  WHEN new.[an id] > 7
 BEGIN
-SELECT new.id;
+SELECT new.[an id];
 END;
 
 CREATE TRIGGER old_trigger_was_deleted
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON [quoted foo]
 BEGIN
-SELECT new.id;
+SELECT new.[an id];
 END;
 
 CREATE TRIGGER trig_with_filter
-  BEFORE INSERT ON foo
-  WHEN filter_(new.id) = 3
+  BEFORE INSERT ON [quoted foo]
+  WHEN filter_(new.[an id]) = 3
 BEGIN
-DELETE FROM foo WHERE id = 77;
+DELETE FROM [quoted foo] WHERE [an id] = 77;
 END;
 
 CREATE TRIGGER unsub_recreated_trigger
@@ -263,13 +263,13 @@ CREATE TEMP TABLE this_table_appears_in_temp_section(
 
 CREATE TEMP VIEW temp_view_in_temp_section AS
 SELECT *
-  FROM foo;
+  FROM [quoted foo];
 
 CREATE TEMP TRIGGER temp_trigger_in_temp_section
-  BEFORE DELETE ON foo
+  BEFORE DELETE ON [quoted foo]
   FOR EACH ROW
-  WHEN old.id > 7
+  WHEN old.[an id] > 7
 BEGIN
-SELECT old.id;
+SELECT old.[an id];
 END;
 

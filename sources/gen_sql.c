@@ -2868,7 +2868,7 @@ static void gen_create_table_stmt(ast_node *ast) {
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
   EXTRACT_OPTION(flags, table_flags_attrs->left);
   EXTRACT_ANY(table_attrs, table_flags_attrs->right);
-  EXTRACT_ANY_NOTNULL(table_name, create_table_name_flags->right);
+  EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
   EXTRACT_NOTNULL(col_key_list, ast->right);
 
   bool_t temp = !!(flags & TABLE_IS_TEMP);
@@ -2883,7 +2883,7 @@ static void gen_create_table_stmt(ast_node *ast) {
   gen_printf("TABLE ");
   gen_if_not_exists(ast, if_not_exist);
 
-  gen_name(table_name);
+  gen_name(table_name_ast);
   gen_printf("(\n");
   gen_col_key_list(col_key_list);
   gen_printf("\n)");

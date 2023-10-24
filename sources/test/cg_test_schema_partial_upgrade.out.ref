@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 4537885047772706106
+-- schema crc 7469967406364100179
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -37,11 +37,11 @@ DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 @DECLARE_SCHEMA_REGION other;
 
 @begin_schema_region shared;
-CREATE TABLE foo(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE `quoted foo`(
+  `an id` INTEGER PRIMARY KEY,
   rate LONG_INT @DELETE(5),
-  rate_2 LONG_INT @DELETE(4, DeleteRate2Proc),
-  id2 INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
+  `rate 2` LONG_INT @DELETE(4, DeleteRate2Proc),
+  `id 2` INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -49,7 +49,7 @@ CREATE TABLE foo(
 
 @begin_schema_region shared;
 CREATE TABLE added_table(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -57,21 +57,21 @@ CREATE TABLE added_table(
 
 @begin_schema_region shared;
 CREATE TABLE g1(
-  id INTEGER PRIMARY KEY,
+  `an id` INTEGER PRIMARY KEY,
   name TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TABLE use_g1(
-  id INTEGER PRIMARY KEY REFERENCES g1 (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES g1 (`an id`),
   name2 TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE TABLE table2(
-  id INTEGER NOT NULL REFERENCES foo (id),
+  `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`),
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -82,19 +82,19 @@ CREATE TABLE table2(
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
-  FROM foo;
+  FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW live_view AS
 SELECT *
-  FROM foo;
+  FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW dead_view AS
 SELECT *
-  FROM foo @DELETE(2, DeadViewMigration);
+  FROM `quoted foo` @DELETE(2, DeadViewMigration);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -104,7 +104,7 @@ SELECT *
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX shared_index ON foo (name, name_2);
+CREATE INDEX shared_index ON `quoted foo` (name, name_2);
 @end_schema_region;
 
 @begin_schema_region shared;
@@ -112,11 +112,11 @@ CREATE INDEX gr1_index ON g1 (name);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index2 ON g1 (name, id);
+CREATE INDEX gr1_index2 ON g1 (name, `an id`);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index3 ON g1 (my_func(name), id) @DELETE(5);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), `an id`) @DELETE(5);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -129,7 +129,7 @@ CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
 
 @begin_schema_region shared;
 CREATE TRIGGER shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
 SELECT 1;
 END;
@@ -137,27 +137,27 @@ END;
 
 @begin_schema_region extra;
 CREATE TRIGGER not_shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TRIGGER insert_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
   FOR EACH ROW
-  WHEN new.id > 7
+  WHEN new.`an id` > 7
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TRIGGER old_trigger_was_deleted
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END @DELETE(3);
 @end_schema_region;
 
@@ -292,7 +292,7 @@ DECLARE PROC CreateName2Proc() USING TRANSACTION;
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE IF NOT EXISTS table2(
-    id INTEGER NOT NULL REFERENCES foo (id)
+    `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`)
   );
 
 END;
@@ -346,9 +346,9 @@ END;
 CREATE PROCEDURE test_cql_create_all_triggers()
 BEGIN
   CREATE TRIGGER not_shared_trigger
-    BEFORE INSERT ON foo
+    BEFORE INSERT ON `quoted foo`
   BEGIN
-  SELECT new.id;
+  SELECT new.`an id`;
   END;
 END;
 
@@ -406,7 +406,7 @@ END;
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
-  IF cql_facet_find(test_facets, facet) <> 4537885047772706106 THEN
+  IF cql_facet_find(test_facets, facet) <> 7469967406364100179 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -420,9 +420,9 @@ BEGIN
     ---- install baseline schema if needed ----
 
     CALL test_cql_get_version_crc(0, schema_version);
-    IF schema_version != 9182485842590513839 THEN
+    IF schema_version != -5659731869764981632 THEN
       CALL test_cql_install_baseline_schema();
-      CALL test_cql_set_version_crc(0, 9182485842590513839);
+      CALL test_cql_set_version_crc(0, -5659731869764981632);
     END IF;
 
     CALL test_get_table_defs();
@@ -469,11 +469,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 4537885047772706106);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 7469967406364100179);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', 4537885047772706106);
+    CALL test_cql_set_facet_version('cql_schema_crc', 7469967406364100179);
   END IF;
 END;
 
@@ -530,7 +530,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 4537885047772706106 THEN
+  IF schema_crc <> 7469967406364100179 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

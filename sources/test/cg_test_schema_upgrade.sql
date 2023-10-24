@@ -13,48 +13,48 @@
 
 @begin_schema_region shared;
 
-create table foo(
-  id integer primary key,
+create table `quoted foo`(
+  `an id` integer primary key,
   rate long integer @delete(5),
-  rate_2 long integer @delete(4, DeleteRate2Proc),
-  id2 integer default 12345 @create(4, CreateId2Proc),
+  `rate 2` long integer @delete(4, DeleteRate2Proc),
+  `id 2` integer default 12345 @create(4, CreateId2Proc),
   name text @create(5),
   name_2 text @create(6)
 );
 
 create table added_table(
-  id integer not null,
+  `an id` integer not null,
   name1 text,
   name2 text @create(4)
 ) @create(3) @delete(5);
 
 -- this view will be declared in extra schema but not upgraded
-create view shared_view as select * from foo;
+create view shared_view as select * from `quoted foo`;
 
 -- this index will be declared in extra schema but not upgraded
-create index shared_index on foo(name, name_2);
+create index shared_index on `quoted foo`(name, name_2);
 
 -- this trigger will be declared in extra schema but not upgraded
 create trigger shared_trigger
-  before insert on foo
+  before insert on `quoted foo`
 begin
   select 1;
 end;
 
 -- this view is present in the output
-create view live_view as select * from foo;
+create view live_view as select * from `quoted foo`;
 
 -- this view is not present in the output
-create view dead_view as select * from foo @delete(2, DeadViewMigration);
+create view dead_view as select * from `quoted foo` @delete(2, DeadViewMigration);
 
 -- make a recreate-group with an FK dependency (legal)
 create table g1(
-  id integer primary key,
+  `an id` integer primary key,
   name text
 ) @recreate(gr1);
 
 create table use_g1(
-  id integer primary key references g1(id),
+  `an id` integer primary key references g1(`an id`),
   name2 text
 ) @recreate(gr1);
 
@@ -62,8 +62,8 @@ create table use_g1(
 declare select function my_func(x text) text;
 
 create index gr1_index on g1(name);
-create index gr1_index2 on g1(name, id);
-create index gr1_index3 on g1(my_func(name), id) @delete(5);
+create index gr1_index2 on g1(name, `an id`);
+create index gr1_index3 on g1(my_func(name), `an id`) @delete(5);
 
 @end_schema_region;
 
@@ -71,7 +71,7 @@ create index gr1_index3 on g1(my_func(name), id) @delete(5);
 
 -- this table will be declared in the extra schema upgrade and upgraded
 create table table2(
-  id integer not null references foo(id),
+  `an id` integer not null references `quoted foo`(`an id`),
   name1 text @create(2, CreateName1Proc),
   name2 text @create(2, CreateName2Proc),
   name3 text @create(2), -- no proc
@@ -89,29 +89,29 @@ create index index_going_away on table2(name3) @delete(3);
 
 -- this trigger will be declared and upgraded in extra schema
 create trigger not_shared_trigger
-  before insert on foo
+  before insert on `quoted foo`
 begin
-  select new.id;
+  select new.`an id`;
 end;
 
 @end_schema_region;
 
 @begin_schema_region other;
 
-create table other_table(id integer);
+create table other_table(`an id` integer);
 
 @end_schema_region;
 
 -- this table is on the recreate plan
 create table table_to_recreate(
-  id integer not null,
+  `an id` integer not null,
   name text
 ) @recreate;
 
 -- these tables are in a recreate group
-create table grouped_table_1( id integer not null, name text ) @recreate(my_group);
-create table grouped_table_2( id integer not null, name text ) @recreate(my_group);
-create table grouped_table_3( id integer not null, name text ) @recreate(my_group);
+create table grouped_table_1( `an id` integer not null, name text ) @recreate(my_group);
+create table grouped_table_2( `an id` integer not null, name text ) @recreate(my_group);
+create table grouped_table_3( `an id` integer not null, name text ) @recreate(my_group);
 
 -- temp tables go into the temp table section
 create temp table this_table_appears_in_temp_section(
@@ -119,33 +119,33 @@ create temp table this_table_appears_in_temp_section(
 );
 
 -- temp views go into the temp section
-create temp view temp_view_in_temp_section as select * from foo;
+create temp view temp_view_in_temp_section as select * from `quoted foo`;
 
 @begin_schema_region shared;
 
 -- temp triggers go into the temp section
 create temp trigger temp_trigger_in_temp_section
-  before delete on foo
+  before delete on `quoted foo`
   for each row
-  when old.id > 7
+  when old.`an id` > 7
 begin
-  select old.id;
+  select old.`an id`;
 end;
 
 -- an actual trigger, this will be managed using recreate rules
 create trigger insert_trigger
-  before insert on foo
+  before insert on `quoted foo`
   for each row
-  when new.id > 7
+  when new.`an id` > 7
 begin
-  select new.id;
+  select new.`an id`;
 end;
 
 -- this trigger was retired
 create trigger old_trigger_was_deleted
-  before insert on foo
+  before insert on `quoted foo`
 begin
-  select new.id;
+  select new.`an id`;
 end @delete(3);
 
 -- do an ad hoc migration at version 5 (inside the region)
@@ -161,77 +161,77 @@ declare select function filter_(id integer) integer not null;
 
 -- now use that function in a trigger
 create trigger trig_with_filter
-  before insert on foo
-  when filter_(new.id) = 3
+  before insert on `quoted foo`
+  when filter_(new.`an id`) = 3
 begin
-  delete from foo where id = 77;
+  delete from `quoted foo` where `an id` = 77;
 end;
 
--- test that column type of id in t5, t6 tables is not converted to integer.
+-- test that column type of `an id` in t5, t6 tables is not converted to integer.
 create table t5(
-  id long int primary key autoincrement,
+  `an id` long int primary key autoincrement,
   data text
 );
 
 create table t6(
-  id long int primary key,
-  foreign key (id) references t5 (id) on update cascade on delete cascade
+  `an id` long int primary key,
+  foreign key (`an id`) references t5 (`an id`) on update cascade on delete cascade
 );
 
 create virtual table a_virtual_table using a_module ( this, that, the_other )
 as (
-  id integer @sensitive,
+  `an id` integer @sensitive,
   t text
 );
 
 create virtual table @eponymous epon using epon
 as (
-  id integer @sensitive,
+  `an id` integer @sensitive,
   t text
 );
 
 create virtual table complex_virtual_table using a_module(arguments following)
 as (
-  id integer @sensitive,
+  `an id` integer @sensitive,
   t text
 );
 
 create virtual table deleted_virtual_table using a_module(arguments following)
 as (
-  id integer @sensitive,
+  `an id` integer @sensitive,
   t text
 ) @delete(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
-create table migrated_from_recreate(
-  id integer primary key,
+create table `migrated from recreate`(
+  `an id` integer primary key,
   t text
 ) @create(4, cql:from_recreate);
 
-create index recreate_index_needs_deleting on migrated_from_recreate(t);
-create index recreate_index_needs_deleting2 on migrated_from_recreate(t);
+create index recreate_index_needs_deleting on `migrated from recreate`(t);
+create index recreate_index_needs_deleting2 on `migrated from recreate`(t);
 
 create table migrated_from_recreate2(
-  id integer primary key references migrated_from_recreate(id),
+  `an id` integer primary key references `migrated from recreate`(`an id`),
   t text
 ) @create(4, cql:from_recreate);
 
 create index recreate_index_needs_deleting3 on migrated_from_recreate2(t);
 
-create table conflict_clause_t(id int not null on conflict fail);
+create table conflict_clause_t(`an id` int not null on conflict fail);
 
 create table conflict_clause_pk(
-  id int not null,
-  constraint pk1 primary key (id) on conflict rollback
+  `an id` int not null,
+  constraint `pk 1` primary key (`an id`) on conflict rollback
 );
 
 create table expression_pk(
-  id int not null,
-  constraint pk1 primary key (id/2, id%2)
+  `an id` int not null,
+  constraint `pk 1` primary key (`an id`/2, `an id`%2)
 );
 
 create table expression_uk(
-  id int not null,
-  constraint uk1 unique (id/2, id%2)
+  `an id` int not null,
+  constraint uk1 unique (`an id`/2, `an id`%2)
 );
 
 -- This table has to be deleted after delete_first
@@ -239,25 +239,25 @@ create table expression_uk(
 -- the old algorithm would have got this wrong
 create table delete__second
 (
- id integer primary key
+ `an id` integer primary key
 ) @delete(7);
 
 create table delete_first
 (
-  id integer references delete__second(id)
+  `an id` integer references delete__second(`an id`)
 ) @delete(7);
 
--- This table has to be created before create__second
+-- This table has to be created before create_second
 -- even though it sorts in the other order by name.
 -- the old algorithm would have got this wrong
-create table create_first
+create table `create first`
 (
- id integer primary key
+ `an id` integer primary key
 ) @create(7);
 
-create table create__second
+create table create_second
 (
-  id integer references create_first(id)
+  `an id` integer references `create first`(`an id`)
 ) @create(7);
 
 
@@ -333,14 +333,14 @@ begin
 end;
 
 create table unsub_inner(
- id integer primary key,
+ `an id` integer primary key,
  name_inner text
 );
 
 create index us1 on unsub_inner(name_inner);
 
 create table unsub_outer(
- id integer primary key references unsub_inner(id),
+ `an id` integer primary key references unsub_inner(`an id`),
  name_outer text
 );
 
@@ -351,7 +351,7 @@ create index us2 on unsub_outer(name_outer);
 @unsub(unsub_outer);
 @unsub(unsub_inner);
 
-create table some_table(id integer);
+create table some_table(`an id` integer);
 
 create view foo_view_unsubscribed as select * from some_table;
 create view foo_view_normal as select * from some_table;

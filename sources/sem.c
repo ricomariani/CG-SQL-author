@@ -3878,29 +3878,49 @@ static sem_t sem_validate_referenceable_fk_def(ast_node *ref_table_ast, ast_node
 }
 
 // Get the name string of the object, for a variety of objects (tables and views for now)
-cql_noexport CSTR sem_get_name(ast_node *ast) {
-  CSTR name = NULL;
-
-  if (is_ast_create_view_stmt(ast)) {
-    EXTRACT_NOTNULL(view_and_attrs, ast->right);
-    EXTRACT_NOTNULL(name_and_select, view_and_attrs->left);
-    EXTRACT_STRING(view_name, name_and_select->left);
-    name = view_name;
-  }
-  else if (is_ast_create_table_stmt(ast)) {
+cql_noexport ast_node *sem_get_name_ast(ast_node *ast) {
+  if (is_ast_create_table_stmt(ast)) {
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
-    EXTRACT_STRING(table_name, create_table_name_flags->right);
-    name = table_name;
+    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
+    return table_name_ast;
   }
-  else if (is_ast_create_trigger_stmt(ast)) {
+
+  if (is_ast_create_trigger_stmt(ast)) {
     EXTRACT_NOTNULL(trigger_body_vers, ast->right);
     EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
     EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
-    EXTRACT_STRING(trigger_name, trigger_name_ast);
-    name = trigger_name;
+    return trigger_name_ast;
   }
 
-  Contract(name); // failure means an invalid type was provided
+  if (is_ast_create_proc_stmt(ast)) {
+    EXTRACT_NAME_AST(proc_name_ast, ast->left);
+    return proc_name_ast;
+  }
+
+  if (is_ast_declare_proc_stmt(ast)) {
+    EXTRACT_NOTNULL(proc_name_type, ast->left);
+    EXTRACT_NAME_AST(proc_name_ast, proc_name_type->left);
+    return proc_name_ast;
+  }
+
+  if (is_ast_col_def(ast)) {
+    EXTRACT_NOTNULL(col_def_type_attrs, ast->left);
+    EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
+    EXTRACT_NAME_AST(col_name_ast, col_def_name_type->left);
+    return col_name_ast;
+  }
+
+  // the only other option
+  Contract(is_ast_create_view_stmt(ast));
+  EXTRACT(view_and_attrs, ast->right);
+  EXTRACT(name_and_select, view_and_attrs->left);
+  EXTRACT_NAME_AST(view_name_ast, name_and_select->left);
+  return view_name_ast;
+}
+
+cql_noexport CSTR sem_get_name(ast_node *ast) {
+  ast_node *name_ast = sem_get_name_ast(ast);
+  EXTRACT_STRING(name, name_ast);
   return name;
 }
 

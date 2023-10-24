@@ -275,6 +275,7 @@ cql_noexport bool_t is_alias_ast(ast_node *ast);
 cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *ast);
 
 cql_noexport CSTR sem_get_name(ast_node *ast);
+cql_noexport ast_node *sem_get_name_ast(ast_node *ast);
 cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);
 
 // Exit if schema validation directive was seen

@@ -11,11 +11,11 @@ DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 @DECLARE_SCHEMA_REGION other;
 
 @begin_schema_region shared;
-CREATE TABLE foo(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE `quoted foo`(
+  `an id` INTEGER PRIMARY KEY,
   rate LONG_INT @DELETE(5),
-  rate_2 LONG_INT @DELETE(4, DeleteRate2Proc),
-  id2 INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
+  `rate 2` LONG_INT @DELETE(4, DeleteRate2Proc),
+  `id 2` INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -23,7 +23,7 @@ CREATE TABLE foo(
 
 @begin_schema_region shared;
 CREATE TABLE added_table(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -31,21 +31,21 @@ CREATE TABLE added_table(
 
 @begin_schema_region shared;
 CREATE TABLE g1(
-  id INTEGER PRIMARY KEY,
+  `an id` INTEGER PRIMARY KEY,
   name TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TABLE use_g1(
-  id INTEGER PRIMARY KEY REFERENCES g1 (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES g1 (`an id`),
   name2 TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE TABLE table2(
-  id INTEGER NOT NULL REFERENCES foo (id),
+  `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`),
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -55,103 +55,103 @@ CREATE TABLE table2(
 
 @begin_schema_region other;
 CREATE TABLE other_table(
-  id INTEGER
+  `an id` INTEGER
 );
 @end_schema_region;
 
 CREATE TABLE table_to_recreate(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE;
 
 CREATE TABLE grouped_table_1(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_2(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_3(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE t5(
-  id LONG_INT PRIMARY KEY AUTOINCREMENT,
+  `an id` LONG_INT PRIMARY KEY AUTOINCREMENT,
   data TEXT
 );
 
 CREATE TABLE t6(
-  id LONG_INT PRIMARY KEY,
-  FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+  `an id` LONG_INT PRIMARY KEY,
+  FOREIGN KEY (`an id`) REFERENCES t5 (`an id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 ) @DELETE(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
-CREATE TABLE migrated_from_recreate(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE `migrated from recreate`(
+  `an id` INTEGER PRIMARY KEY,
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE migrated_from_recreate2(
-  id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES `migrated from recreate` (`an id`),
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER NOT NULL ON CONFLICT FAIL
+  `an id` INTEGER NOT NULL ON CONFLICT FAIL
 );
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER NOT NULL,
-  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+  `an id` INTEGER NOT NULL,
+  CONSTRAINT `pk 1` PRIMARY KEY (`an id`) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE expression_pk(
-  id INTEGER NOT NULL,
-  CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+  `an id` INTEGER NOT NULL,
+  CONSTRAINT `pk 1` PRIMARY KEY (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE expression_uk(
-  id INTEGER NOT NULL,
-  CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+  `an id` INTEGER NOT NULL,
+  CONSTRAINT uk1 UNIQUE (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE delete__second(
-  id INTEGER PRIMARY KEY
+  `an id` INTEGER PRIMARY KEY
 ) @DELETE(7);
 
 CREATE TABLE delete_first(
-  id INTEGER REFERENCES delete__second (id)
+  `an id` INTEGER REFERENCES delete__second (`an id`)
 ) @DELETE(7);
 
-CREATE TABLE create_first(
-  id INTEGER PRIMARY KEY
+CREATE TABLE `create first`(
+  `an id` INTEGER PRIMARY KEY
 ) @CREATE(7);
 
-CREATE TABLE create__second(
-  id INTEGER REFERENCES create_first (id)
+CREATE TABLE create_second(
+  `an id` INTEGER REFERENCES `create first` (`an id`)
 ) @CREATE(7);
 
 @ATTRIBUTE(cql:blob_storage)
@@ -209,40 +209,40 @@ CREATE TABLE unsub_voyage(
 
 @begin_schema_region other;
 CREATE TABLE unsub_inner(
-  id INTEGER PRIMARY KEY,
+  `an id` INTEGER PRIMARY KEY,
   name_inner TEXT
 );
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE TABLE unsub_outer(
-  id INTEGER PRIMARY KEY REFERENCES unsub_inner (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES unsub_inner (`an id`),
   name_outer TEXT
 );
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE TABLE some_table(
-  id INTEGER
+  `an id` INTEGER
 );
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
-  FROM foo;
+  FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW live_view AS
 SELECT *
-  FROM foo;
+  FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW dead_view AS
 SELECT *
-  FROM foo @DELETE(2, DeadViewMigration);
+  FROM `quoted foo` @DELETE(2, DeadViewMigration);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -264,7 +264,7 @@ SELECT *
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX shared_index ON foo (name, name_2);
+CREATE INDEX shared_index ON `quoted foo` (name, name_2);
 @end_schema_region;
 
 @begin_schema_region shared;
@@ -272,11 +272,11 @@ CREATE INDEX gr1_index ON g1 (name);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index2 ON g1 (name, id);
+CREATE INDEX gr1_index2 ON g1 (name, `an id`);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index3 ON g1 (my_func(name), id) @DELETE(5);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), `an id`) @DELETE(5);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -287,9 +287,9 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
 @end_schema_region;
 
-CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
+CREATE INDEX recreate_index_needs_deleting ON `migrated from recreate` (t);
 
-CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
+CREATE INDEX recreate_index_needs_deleting2 ON `migrated from recreate` (t);
 
 CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
 
@@ -309,7 +309,7 @@ CREATE INDEX us2 ON unsub_outer (name_outer);
 
 @begin_schema_region shared;
 CREATE TRIGGER shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
 SELECT 1;
 END;
@@ -317,35 +317,35 @@ END;
 
 @begin_schema_region extra;
 CREATE TRIGGER not_shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TRIGGER insert_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
   FOR EACH ROW
-  WHEN new.id > 7
+  WHEN new.`an id` > 7
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TRIGGER old_trigger_was_deleted
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END @DELETE(3);
 @end_schema_region;
 
 CREATE TRIGGER trig_with_filter
-  BEFORE INSERT ON foo
-  WHEN filter_(new.id) = 3
+  BEFORE INSERT ON `quoted foo`
+  WHEN filter_(new.`an id`) = 3
 BEGIN
-DELETE FROM foo WHERE id = 77;
+DELETE FROM `quoted foo` WHERE `an id` = 77;
 END;
 
 CREATE TRIGGER unsub_recreated_trigger

@@ -723,6 +723,29 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
 
 static symtab *full_drop_funcs;
 
+static void cg_schema_name_as_sql_string(charbuf *output, ast_node *ast) {
+  CHARBUF_OPEN(tmp);
+  EXTRACT_STRING(name, ast);
+  if (is_qid(ast)) {
+    bprintf(&tmp, "[");
+    cg_unquote_encoded_qstr(&tmp, name);
+    bprintf(&tmp, "]");
+  }
+  else {
+    bprintf(&tmp, "%s", name);
+  }
+
+  // escape the string but don't put the surrounding quotes
+  // it will be used inside of other strings
+  const char *p = tmp.ptr;
+  for ( ;*p; p++) {
+    if (*p == '\'') bputc(output, *p);
+    bputc(output, *p);
+  }
+
+  CHARBUF_CLOSE(tmp);
+}
+
 // When we are moving a table from the recreate plan to the create plan
 // there is a chance that we will find an old version of the table in
 // the database.  We want to delete it and anything it depends upon
@@ -734,11 +757,15 @@ static symtab *full_drop_funcs;
 // one time even though it might be called from several locations
 // and recursively.
 static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
-  CSTR target_name = sem_get_name(target_ast);
+  ast_node *table_name_ast = sem_get_name_ast(target_ast);
+  EXTRACT_STRING(target_name, table_name_ast);
 
   if (symtab_find(full_drop_funcs, target_name)) {
     return;
   }
+
+  CHARBUF_OPEN(table_name_sql);
+  cg_schema_name_as_sql_string(&table_name_sql, table_name_ast);
 
   symtab_add(full_drop_funcs, target_name, NULL);
 
@@ -803,12 +830,13 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
   }
 
   bprintf(&out, "  -- drop the target table and mark it dropped\n");
-  bprintf(&out, "  CALL %s_drop_table_helper(cql_compressed('%s'));\n", global_proc_name, target_name);
+  bprintf(&out, "  CALL %s_drop_table_helper(cql_compressed('%s'));\n", global_proc_name, table_name_sql.ptr);
   bprintf(&out, "END;\n");
 
   bprintf(decls, "%s", out.ptr);
 
   CHARBUF_CLOSE(out);
+  CHARBUF_CLOSE(table_name_sql);
 }
 
 // This entry point is for generating a full image of the declared schema
@@ -1640,6 +1668,16 @@ static llint_t cg_schema_compute_crc(
   return schema_crc;
 }
 
+static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  if (is_qid(ast)) {
+    cg_decode_qstr(output, name);
+  }
+  else {
+    bprintf(output, "%s", name);
+  }
+}
+
 // Main entry point for schema upgrade code-gen.
 cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   Contract(options.file_names_count == 1);
@@ -1837,11 +1875,24 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           continue;
         }
 
+        CHARBUF_OPEN(table_name_sql);
+        CHARBUF_OPEN(col_name_sql);
+        CHARBUF_OPEN(table_name_cql);
+        CHARBUF_OPEN(col_name_cql);
+
+        ast_node *table = note->target_ast;
+        Contract(is_ast_create_table_stmt(table));
+        ast_node *table_name_ast = sem_get_name_ast(table);
+
+        cg_schema_name_as_sql_string(&table_name_sql, table_name_ast);
+        cg_schema_name_as_cql_string(&table_name_cql, table_name_ast);
+
         ast_node *def = note->column_ast;
         Contract(is_ast_col_def(def));
-        EXTRACT_NOTNULL(col_def_type_attrs, def->left);
-        EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-        EXTRACT_STRING(col_name, col_def_name_type->left);
+        ast_node *col_name_ast = sem_get_name_ast(def);
+
+        cg_schema_name_as_sql_string(&col_name_sql, col_name_ast);
+        cg_schema_name_as_cql_string(&col_name_cql, col_name_ast);
 
         CSTR col_type = coretype_string(def->sem->sem_type);
         gen_sql_callbacks callbacks;
@@ -1854,36 +1905,60 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         gen_col_def_with_callbacks(def, &callbacks);
 
         bprintf(&upgrade, "    -- altering table %s to add column %s %s;\n\n",
-          target_name,
-          col_name,
+          table_name_sql.ptr,
+          col_name_sql.ptr,
           col_type);
         bprintf(&upgrade, "    IF NOT %s_column_exists(cql_compressed('%s'), cql_compressed('%s %s')) THEN \n",
           global_proc_name,
-          target_name,
-          col_name,
+          table_name_sql.ptr,
+          col_name_sql.ptr,
           col_type);
         bprintf(&upgrade, "      ALTER TABLE %s ADD COLUMN %s;\n",
-          target_name,
+          table_name_cql.ptr,
           sql_out.ptr);
         bprintf(&upgrade, "    END IF;\n\n");
 
         CHARBUF_CLOSE(sql_out);
+        CHARBUF_CLOSE(col_name_cql);
+        CHARBUF_CLOSE(table_name_cql);
+        CHARBUF_CLOSE(col_name_sql);
+        CHARBUF_CLOSE(table_name_sql);
         break;
       }
 
       case SCHEMA_ANNOTATION_DELETE_COLUMN: {
+        ast_node *table = note->target_ast;
+        Contract(is_ast_create_table_stmt(table));
+        ast_node *table_name_ast = sem_get_name_ast(table);
+
         ast_node *def = note->column_ast;
         Contract(is_ast_col_def(def));
-        EXTRACT_NOTNULL(col_def_type_attrs, def->left);
-        EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
-        EXTRACT_STRING(col_name, col_def_name_type->left);
+        ast_node *col_name_ast = sem_get_name_ast(def);
 
-        bprintf(&upgrade, "    -- logical delete of column %s from %s; -- no ddl\n\n", col_name, target_name);
+        CHARBUF_OPEN(table_name_sql);
+        CHARBUF_OPEN(col_name_sql);
+
+        cg_schema_name_as_sql_string(&table_name_sql, table_name_ast);
+        cg_schema_name_as_sql_string(&col_name_sql, col_name_ast);
+
+        bprintf(&upgrade, "    -- logical delete of column %s from %s; -- no ddl\n\n",
+            col_name_sql.ptr, table_name_sql.ptr);
+
+        CHARBUF_CLOSE(col_name_sql);
+        CHARBUF_CLOSE(table_name_sql);
         break;
       }
 
       case SCHEMA_ANNOTATION_CREATE_TABLE: {
         // check for one time drop
+
+        CHARBUF_OPEN(table_name_sql);
+
+        ast_node *table = note->target_ast;
+        Contract(is_ast_create_table_stmt(table));
+        ast_node *table_name_ast = sem_get_name_ast(table);
+
+        cg_schema_name_as_sql_string(&table_name_sql, table_name_ast);
 
         EXTRACT_ANY(dot, version_annotation->right);
         if (dot && is_ast_dot(dot)) {
@@ -1893,8 +1968,8 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           if (!Strcasecmp(lhs, "cql") && !Strcasecmp(rhs, "from_recreate")) {
             emit_full_drop(note->target_ast, &decls);
 
-            bprintf(&upgrade, "    -- one time drop moving to create from recreate %s\n\n", target_name);
-            bprintf(&upgrade, "    SET facet := cql_compressed('1_time_drop_%s');\n", target_name);
+            bprintf(&upgrade, "    -- one time drop moving to create from recreate %s\n\n", table_name_sql.ptr);
+            bprintf(&upgrade, "    SET facet := cql_compressed('1_time_drop_%s');\n", table_name_sql.ptr);
             bprintf(&upgrade, "    IF cql_facet_find(%s_facets, facet) != %d THEN\n", global_proc_name, vers);
             bprintf(&upgrade, "      CALL %s_%s_full_drop();\n", global_proc_name, target_name);
             bprintf(&upgrade, "      CALL %s_cql_set_facet_version(facet, %d);\n", global_proc_name, vers);
@@ -1902,8 +1977,9 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           }
         }
 
-        bprintf(&upgrade, "    IF NOT %s_table_exists(cql_compressed('%s')) THEN\n", global_proc_name, target_name);
-        bprintf(&upgrade, "      -- creating table %s\n\n", target_name);
+        bprintf(&upgrade, "    IF NOT %s_table_exists(cql_compressed('%s')) THEN\n",
+                                 global_proc_name, table_name_sql.ptr);
+        bprintf(&upgrade, "      -- creating table %s\n\n", table_name_sql.ptr);
 
         gen_sql_callbacks callbacks;
         init_gen_sql_callbacks(&callbacks);
@@ -1920,6 +1996,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         bprintf(&upgrade, "    END IF;\n\n");
 
         CHARBUF_CLOSE(sql_out);
+        CHARBUF_CLOSE(table_name_sql);
         break;
       }
 

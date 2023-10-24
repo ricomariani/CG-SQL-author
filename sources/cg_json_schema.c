@@ -110,35 +110,9 @@ static void cg_json_sql_name(charbuf *output, ast_node *ast) {
   cg_json_sql_name_ex(output, name, is_qid(ast));
 }
 
-static ast_node *name_ast_from_node(ast_node *ast) {
-  if (is_ast_create_proc_stmt(ast)) {
-    EXTRACT_NAME_AST(proc_name_ast, ast->left);
-    return proc_name_ast;
-  }
-
-  if (is_ast_declare_proc_stmt(ast)) {
-    EXTRACT_NOTNULL(proc_name_type, ast->left);
-    EXTRACT_NAME_AST(proc_name_ast, proc_name_type->left);
-    return proc_name_ast;
-  }
-
-  if (is_ast_create_table_stmt(ast)) {
-    EXTRACT_NOTNULL(create_table_name_flags, ast->left);
-    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
-    return table_name_ast;
-  }
-
-  // the only other option
-  Contract(is_ast_create_view_stmt(ast));
-  EXTRACT(view_and_attrs, ast->right);
-  EXTRACT(name_and_select, view_and_attrs->left);
-  EXTRACT_NAME_AST(view_name_ast, name_and_select->left);
-  return view_name_ast;
-}
-
 static void add_name_to_output(charbuf* output, ast_node *ast) {
   Contract(output);
-  ast_node *name_ast = name_ast_from_node(ast);
+  ast_node *name_ast = sem_get_name_ast(ast);
   if (output->used > 1) {
     bprintf(output, ", ");
   }
@@ -1317,7 +1291,7 @@ static void cg_json_triggers(charbuf *output) {
 
     // use the canonical name (which may be case-sensitively different)
     ast_node *canonical_ast = find_table_or_view_even_deleted(table_name);
-    ast_node *target_name_ast = name_ast_from_node(canonical_ast);
+    ast_node *target_name_ast = sem_get_name_ast(canonical_ast);
 
     COMMA;
     bprintf(output, "{\n");

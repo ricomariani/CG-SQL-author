@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc 9110227700131655447
+-- schema crc 4660416469974371563
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -37,11 +37,11 @@ DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
 @DECLARE_SCHEMA_REGION other;
 
 @begin_schema_region shared;
-CREATE TABLE foo(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE `quoted foo`(
+  `an id` INTEGER PRIMARY KEY,
   rate LONG_INT @DELETE(5),
-  rate_2 LONG_INT @DELETE(4, DeleteRate2Proc),
-  id2 INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
+  `rate 2` LONG_INT @DELETE(4, DeleteRate2Proc),
+  `id 2` INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -49,7 +49,7 @@ CREATE TABLE foo(
 
 @begin_schema_region shared;
 CREATE TABLE added_table(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -57,21 +57,21 @@ CREATE TABLE added_table(
 
 @begin_schema_region shared;
 CREATE TABLE g1(
-  id INTEGER PRIMARY KEY,
+  `an id` INTEGER PRIMARY KEY,
   name TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TABLE use_g1(
-  id INTEGER PRIMARY KEY REFERENCES g1 (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES g1 (`an id`),
   name2 TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE TABLE table2(
-  id INTEGER NOT NULL REFERENCES foo (id),
+  `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`),
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -81,103 +81,103 @@ CREATE TABLE table2(
 
 @begin_schema_region other;
 CREATE TABLE other_table(
-  id INTEGER
+  `an id` INTEGER
 );
 @end_schema_region;
 
 CREATE TABLE table_to_recreate(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE;
 
 CREATE TABLE grouped_table_1(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_2(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_3(
-  id INTEGER NOT NULL,
+  `an id` INTEGER NOT NULL,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE t5(
-  id LONG_INT PRIMARY KEY AUTOINCREMENT,
+  `an id` LONG_INT PRIMARY KEY AUTOINCREMENT,
   data TEXT
 );
 
 CREATE TABLE t6(
-  id LONG_INT PRIMARY KEY,
-  FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+  `an id` LONG_INT PRIMARY KEY,
+  FOREIGN KEY (`an id`) REFERENCES t5 (`an id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-  id INTEGER @SENSITIVE,
+  `an id` INTEGER @SENSITIVE,
   t TEXT
 ) @DELETE(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
-CREATE TABLE migrated_from_recreate(
-  id INTEGER PRIMARY KEY,
+CREATE TABLE `migrated from recreate`(
+  `an id` INTEGER PRIMARY KEY,
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE migrated_from_recreate2(
-  id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES `migrated from recreate` (`an id`),
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER NOT NULL ON CONFLICT FAIL
+  `an id` INTEGER NOT NULL ON CONFLICT FAIL
 );
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER NOT NULL,
-  CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+  `an id` INTEGER NOT NULL,
+  CONSTRAINT `pk 1` PRIMARY KEY (`an id`) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE expression_pk(
-  id INTEGER NOT NULL,
-  CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+  `an id` INTEGER NOT NULL,
+  CONSTRAINT `pk 1` PRIMARY KEY (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE expression_uk(
-  id INTEGER NOT NULL,
-  CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+  `an id` INTEGER NOT NULL,
+  CONSTRAINT uk1 UNIQUE (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE delete__second(
-  id INTEGER PRIMARY KEY
+  `an id` INTEGER PRIMARY KEY
 ) @DELETE(7);
 
 CREATE TABLE delete_first(
-  id INTEGER REFERENCES delete__second (id)
+  `an id` INTEGER REFERENCES delete__second (`an id`)
 ) @DELETE(7);
 
-CREATE TABLE create_first(
-  id INTEGER PRIMARY KEY
+CREATE TABLE `create first`(
+  `an id` INTEGER PRIMARY KEY
 ) @CREATE(7);
 
-CREATE TABLE create__second(
-  id INTEGER REFERENCES create_first (id)
+CREATE TABLE create_second(
+  `an id` INTEGER REFERENCES `create first` (`an id`)
 ) @CREATE(7);
 
 @ATTRIBUTE(cql:blob_storage)
@@ -235,40 +235,40 @@ CREATE TABLE unsub_voyage(
 
 @begin_schema_region other;
 CREATE TABLE unsub_inner(
-  id INTEGER PRIMARY KEY,
+  `an id` INTEGER PRIMARY KEY,
   name_inner TEXT
 );
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE TABLE unsub_outer(
-  id INTEGER PRIMARY KEY REFERENCES unsub_inner (id),
+  `an id` INTEGER PRIMARY KEY REFERENCES unsub_inner (`an id`),
   name_outer TEXT
 );
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE TABLE some_table(
-  id INTEGER
+  `an id` INTEGER
 );
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
 SELECT *
-  FROM foo;
+  FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW live_view AS
 SELECT *
-  FROM foo;
+  FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW dead_view AS
 SELECT *
-  FROM foo @DELETE(2, DeadViewMigration);
+  FROM `quoted foo` @DELETE(2, DeadViewMigration);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -290,7 +290,7 @@ SELECT *
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX shared_index ON foo (name, name_2);
+CREATE INDEX shared_index ON `quoted foo` (name, name_2);
 @end_schema_region;
 
 @begin_schema_region shared;
@@ -298,11 +298,11 @@ CREATE INDEX gr1_index ON g1 (name);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index2 ON g1 (name, id);
+CREATE INDEX gr1_index2 ON g1 (name, `an id`);
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE INDEX gr1_index3 ON g1 (my_func(name), id) @DELETE(5);
+CREATE INDEX gr1_index3 ON g1 (my_func(name), `an id`) @DELETE(5);
 @end_schema_region;
 
 @begin_schema_region extra;
@@ -313,9 +313,9 @@ CREATE INDEX not_shared_present_index ON table2 (name1, name2);
 CREATE INDEX index_going_away ON table2 (name3) @DELETE(3);
 @end_schema_region;
 
-CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
+CREATE INDEX recreate_index_needs_deleting ON `migrated from recreate` (t);
 
-CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
+CREATE INDEX recreate_index_needs_deleting2 ON `migrated from recreate` (t);
 
 CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
 
@@ -335,7 +335,7 @@ CREATE INDEX us2 ON unsub_outer (name_outer);
 
 @begin_schema_region shared;
 CREATE TRIGGER shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
 SELECT 1;
 END;
@@ -343,35 +343,35 @@ END;
 
 @begin_schema_region extra;
 CREATE TRIGGER not_shared_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TRIGGER insert_trigger
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
   FOR EACH ROW
-  WHEN new.id > 7
+  WHEN new.`an id` > 7
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TRIGGER old_trigger_was_deleted
-  BEFORE INSERT ON foo
+  BEFORE INSERT ON `quoted foo`
 BEGIN
-SELECT new.id;
+SELECT new.`an id`;
 END @DELETE(3);
 @end_schema_region;
 
 CREATE TRIGGER trig_with_filter
-  BEFORE INSERT ON foo
-  WHEN filter_(new.id) = 3
+  BEFORE INSERT ON `quoted foo`
+  WHEN filter_(new.`an id`) = 3
 BEGIN
-DELETE FROM foo WHERE id = 77;
+DELETE FROM `quoted foo` WHERE `an id` = 77;
 END;
 
 CREATE TRIGGER unsub_recreated_trigger
@@ -593,7 +593,7 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_migrated_from_recreate_full_drop()
+CREATE PROC test_X_migratedX20fromX20recreate_full_drop()
 BEGIN
   -- drop all dependent tables
   CALL test_migrated_from_recreate2_full_drop();
@@ -603,7 +603,7 @@ BEGIN
   CALL test_cql_set_facet_version(cql_compressed('recreate_index_needs_deleting2_index_crc'), -1);
 
   -- drop the target table and mark it dropped
-  CALL test_drop_table_helper(cql_compressed('migrated_from_recreate'));
+  CALL test_drop_table_helper(cql_compressed('[migrated from recreate]'));
 END;
 DECLARE PROC CreateId2Proc() USING TRANSACTION;
 DECLARE PROC DeleteRate2Proc() USING TRANSACTION;
@@ -611,47 +611,47 @@ DECLARE PROC MyAdHocMigrationScript() USING TRANSACTION;
 
 CREATE PROCEDURE test_cql_install_baseline_schema()
 BEGIN
-  CREATE TABLE IF NOT EXISTS foo(
-    id INTEGER PRIMARY KEY,
+  CREATE TABLE IF NOT EXISTS `quoted foo`(
+    `an id` INTEGER PRIMARY KEY,
     rate LONG_INT,
-    rate_2 LONG_INT
+    `rate 2` LONG_INT
   );
 
   CREATE TABLE IF NOT EXISTS table2(
-    id INTEGER NOT NULL REFERENCES foo (id)
+    `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`)
   );
 
   CREATE TABLE IF NOT EXISTS other_table(
-    id INTEGER
+    `an id` INTEGER
   );
 
   CREATE TABLE IF NOT EXISTS t5(
-    id LONG_INT PRIMARY KEY AUTOINCREMENT,
+    `an id` LONG_INT PRIMARY KEY AUTOINCREMENT,
     data TEXT
   );
 
   CREATE TABLE IF NOT EXISTS t6(
-    id LONG_INT PRIMARY KEY,
-    FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
+    `an id` LONG_INT PRIMARY KEY,
+    FOREIGN KEY (`an id`) REFERENCES t5 (`an id`) ON UPDATE CASCADE ON DELETE CASCADE
   );
 
   CREATE TABLE IF NOT EXISTS conflict_clause_t(
-    id INTEGER NOT NULL ON CONFLICT FAIL
+    `an id` INTEGER NOT NULL ON CONFLICT FAIL
   );
 
   CREATE TABLE IF NOT EXISTS conflict_clause_pk(
-    id INTEGER NOT NULL,
-    CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
+    `an id` INTEGER NOT NULL,
+    CONSTRAINT `pk 1` PRIMARY KEY (`an id`) ON CONFLICT ROLLBACK
   );
 
   CREATE TABLE IF NOT EXISTS expression_pk(
-    id INTEGER NOT NULL,
-    CONSTRAINT pk1 PRIMARY KEY (id / 2, id % 2)
+    `an id` INTEGER NOT NULL,
+    CONSTRAINT `pk 1` PRIMARY KEY (`an id` / 2, `an id` % 2)
   );
 
   CREATE TABLE IF NOT EXISTS expression_uk(
-    id INTEGER NOT NULL,
-    CONSTRAINT uk1 UNIQUE (id / 2, id % 2)
+    `an id` INTEGER NOT NULL,
+    CONSTRAINT uk1 UNIQUE (`an id` / 2, `an id` % 2)
   );
 
   CREATE TABLE IF NOT EXISTS backing(
@@ -660,7 +660,7 @@ BEGIN
   );
 
   CREATE TABLE IF NOT EXISTS some_table(
-    id INTEGER
+    `an id` INTEGER
   );
 
 END;
@@ -682,10 +682,10 @@ CREATE PROCEDURE test_cql_create_all_views()
 BEGIN
   CREATE VIEW shared_view AS
   SELECT *
-    FROM foo;
+    FROM `quoted foo`;
   CREATE VIEW live_view AS
   SELECT *
-    FROM foo;
+    FROM `quoted foo`;
   CREATE VIEW another_live_view AS
   SELECT *
     FROM table2;
@@ -699,7 +699,7 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_drop_all_indices()
 BEGIN
-  IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8812401562048594220 THEN
+  IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8386858284532282478 THEN
     DROP INDEX IF EXISTS shared_index;
   END IF;
   DROP INDEX IF EXISTS gr1_index3;
@@ -709,10 +709,10 @@ BEGIN
   END IF;
   DROP INDEX IF EXISTS index_going_away;
   CALL test_cql_set_facet_version('index_going_away_index_crc', -1);
-  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting_index_crc') != -5814116180550350562 THEN
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting_index_crc') != -137927727086017185 THEN
     DROP INDEX IF EXISTS recreate_index_needs_deleting;
   END IF;
-  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting2_index_crc') != 3261027906397844075 THEN
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting2_index_crc') != 8473350895248278346 THEN
     DROP INDEX IF EXISTS recreate_index_needs_deleting2;
   END IF;
   IF cql_facet_find(test_facets, 'recreate_index_needs_deleting3_index_crc') != 6591796666912246967 THEN
@@ -732,21 +732,21 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_create_all_indices()
 BEGIN
-  IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8812401562048594220 THEN
-    CREATE INDEX shared_index ON foo (name, name_2);
-    CALL test_cql_set_facet_version('shared_index_index_crc', -8812401562048594220);
+  IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8386858284532282478 THEN
+    CREATE INDEX shared_index ON `quoted foo` (name, name_2);
+    CALL test_cql_set_facet_version('shared_index_index_crc', -8386858284532282478);
   END IF;
   IF cql_facet_find(test_facets, 'not_shared_present_index_index_crc') != -4019575091142856767 THEN
     CREATE INDEX not_shared_present_index ON table2 (name1, name2);
     CALL test_cql_set_facet_version('not_shared_present_index_index_crc', -4019575091142856767);
   END IF;
-  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting_index_crc') != -5814116180550350562 THEN
-    CREATE INDEX recreate_index_needs_deleting ON migrated_from_recreate (t);
-    CALL test_cql_set_facet_version('recreate_index_needs_deleting_index_crc', -5814116180550350562);
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting_index_crc') != -137927727086017185 THEN
+    CREATE INDEX recreate_index_needs_deleting ON `migrated from recreate` (t);
+    CALL test_cql_set_facet_version('recreate_index_needs_deleting_index_crc', -137927727086017185);
   END IF;
-  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting2_index_crc') != 3261027906397844075 THEN
-    CREATE INDEX recreate_index_needs_deleting2 ON migrated_from_recreate (t);
-    CALL test_cql_set_facet_version('recreate_index_needs_deleting2_index_crc', 3261027906397844075);
+  IF cql_facet_find(test_facets, 'recreate_index_needs_deleting2_index_crc') != 8473350895248278346 THEN
+    CREATE INDEX recreate_index_needs_deleting2 ON `migrated from recreate` (t);
+    CALL test_cql_set_facet_version('recreate_index_needs_deleting2_index_crc', 8473350895248278346);
   END IF;
   IF cql_facet_find(test_facets, 'recreate_index_needs_deleting3_index_crc') != 6591796666912246967 THEN
     CREATE INDEX recreate_index_needs_deleting3 ON migrated_from_recreate2 (t);
@@ -772,27 +772,27 @@ END;
 CREATE PROCEDURE test_cql_create_all_triggers()
 BEGIN
   CREATE TRIGGER shared_trigger
-    BEFORE INSERT ON foo
+    BEFORE INSERT ON `quoted foo`
   BEGIN
   SELECT 1;
   END;
   CREATE TRIGGER not_shared_trigger
-    BEFORE INSERT ON foo
+    BEFORE INSERT ON `quoted foo`
   BEGIN
-  SELECT new.id;
+  SELECT new.`an id`;
   END;
   CREATE TRIGGER insert_trigger
-    BEFORE INSERT ON foo
+    BEFORE INSERT ON `quoted foo`
     FOR EACH ROW
-    WHEN new.id > 7
+    WHEN new.`an id` > 7
   BEGIN
-  SELECT new.id;
+  SELECT new.`an id`;
   END;
   CREATE TRIGGER trig_with_filter
-    BEFORE INSERT ON foo
-    WHEN filter_(new.id) = 3
+    BEFORE INSERT ON `quoted foo`
+    WHEN filter_(new.`an id`) = 3
   BEGIN
-  DELETE FROM foo WHERE id = 77;
+  DELETE FROM `quoted foo` WHERE `an id` = 77;
   END;
 END;
 
@@ -800,7 +800,7 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == -7285282401093800357 RETURN; 
+  IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 5397908619516658201 RETURN; 
   IF cql_facet_find(test_facets, 'foo_group_crc') != -5376428347335479627 THEN
     LET foo_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE recreate_backing( "
@@ -828,16 +828,16 @@ BEGIN
     END IF;
     CALL test_cql_set_facet_version('unsub_recreated_table_crc', 5091758298977444343);
   END IF;
-  IF cql_facet_find(test_facets, 'my_group_group_crc') != -5749224930715671870 THEN
+  IF cql_facet_find(test_facets, 'my_group_group_crc') != -7095034607558163151 THEN
     LET my_group_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE grouped_table_1( "
-          "id INTEGER NOT NULL, "
+          "[an id] INTEGER NOT NULL, "
           "name TEXT "
         "); CREATE TABLE grouped_table_2( "
-          "id INTEGER NOT NULL, "
+          "[an id] INTEGER NOT NULL, "
           "name TEXT "
         "); CREATE TABLE grouped_table_3( "
-          "id INTEGER NOT NULL, "
+          "[an id] INTEGER NOT NULL, "
           "name TEXT "
         "); "
       ),
@@ -846,12 +846,12 @@ BEGIN
     IF my_group_result THEN 
       CALL test_rebuilt_tables_insert_helper("my_group_group_crc");
     END IF;
-    CALL test_cql_set_facet_version('my_group_group_crc', -5749224930715671870);
+    CALL test_cql_set_facet_version('my_group_group_crc', -7095034607558163151);
   END IF;
-  IF cql_facet_find(test_facets, 'table_to_recreate_table_crc') != -3246234300517746946 THEN
+  IF cql_facet_find(test_facets, 'table_to_recreate_table_crc') != -3890192064319085571 THEN
     LET table_to_recreate_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE table_to_recreate( "
-          "id INTEGER NOT NULL, "
+          "[an id] INTEGER NOT NULL, "
           "name TEXT "
         "); "
       ),
@@ -860,21 +860,21 @@ BEGIN
     IF table_to_recreate_result THEN 
       CALL test_rebuilt_tables_insert_helper("table_to_recreate_table_crc");
     END IF;
-    CALL test_cql_set_facet_version('table_to_recreate_table_crc', -3246234300517746946);
+    CALL test_cql_set_facet_version('table_to_recreate_table_crc', -3890192064319085571);
   END IF;
-  IF cql_facet_find(test_facets, 'gr1_group_crc') != -5103843476505738426 THEN
+  IF cql_facet_find(test_facets, 'gr1_group_crc') != -4058225819820428713 THEN
     LET gr1_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE TABLE g1( "
-          "id INTEGER PRIMARY KEY, "
+          "[an id] INTEGER PRIMARY KEY, "
           "name TEXT "
         "); CREATE TABLE use_g1( "
-          "id INTEGER PRIMARY KEY REFERENCES g1 (id), "
+          "[an id] INTEGER PRIMARY KEY REFERENCES g1 ([an id]), "
           "name2 TEXT "
         "); "
       ),
       cql_compressed(
         "CREATE INDEX gr1_index ON g1 (name); "
-        "CREATE INDEX gr1_index2 ON g1 (name, id);"
+        "CREATE INDEX gr1_index2 ON g1 (name, [an id]);"
       ),
       cql_compressed(""));
     IF NOT gr1_result THEN 
@@ -886,20 +886,20 @@ BEGIN
     IF gr1_result THEN 
       CALL test_rebuilt_tables_insert_helper("gr1_group_crc");
     END IF;
-    CALL test_cql_set_facet_version('gr1_group_crc', -5103843476505738426);
+    CALL test_cql_set_facet_version('gr1_group_crc', -4058225819820428713);
   END IF;
-  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', -7285282401093800357);
+  CALL test_cql_set_facet_version('all_nonvirtual_tables_crc', 5397908619516658201);
 END;
 
 -- recreate all the virtual @recreate tables that might have changed
 @attribute(cql:private)
 CREATE PROCEDURE test_cql_recreate_virtual_tables()
 BEGIN
-  IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == -6646772091319565328 RETURN; 
-  IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != -3297146967072858107 THEN
+  IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == 5087671875723827320 RETURN; 
+  IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != -9096134801896065707 THEN
     LET complex_virtual_table_result := cql_rebuild_recreate_group(cql_compressed(
         "CREATE VIRTUAL TABLE complex_virtual_table USING a_module ( "
-          "id INTEGER, "
+          "[an id] INTEGER, "
           "t TEXT); "
       ),
       cql_compressed(""),
@@ -907,7 +907,7 @@ BEGIN
     IF complex_virtual_table_result THEN 
       CALL test_rebuilt_tables_insert_helper("complex_virtual_table_table_crc");
     END IF;
-    CALL test_cql_set_facet_version('complex_virtual_table_table_crc', -3297146967072858107);
+    CALL test_cql_set_facet_version('complex_virtual_table_table_crc', -9096134801896065707);
   END IF;
   IF cql_facet_find(test_facets, 'a_virtual_table_table_crc') != 6926381574149521832 THEN
     LET a_virtual_table_result := cql_rebuild_recreate_group(cql_compressed(
@@ -920,7 +920,7 @@ BEGIN
     END IF;
     CALL test_cql_set_facet_version('a_virtual_table_table_crc', 6926381574149521832);
   END IF;
-  CALL test_cql_set_facet_version('all_virtual_tables_crc', -6646772091319565328);
+  CALL test_cql_set_facet_version('all_virtual_tables_crc', 5087671875723827320);
 END;
 
 CREATE PROCEDURE test_cql_install_temp_schema()
@@ -931,14 +931,14 @@ BEGIN
 
   CREATE TEMP VIEW temp_view_in_temp_section AS
   SELECT *
-    FROM foo;
+    FROM `quoted foo`;
 
   CREATE TEMP TRIGGER temp_trigger_in_temp_section
-    BEFORE DELETE ON foo
+    BEFORE DELETE ON `quoted foo`
     FOR EACH ROW
-    WHEN old.id > 7
+    WHEN old.`an id` > 7
   BEGIN
-  SELECT old.id;
+  SELECT old.`an id`;
   END;
 
 END;
@@ -991,7 +991,7 @@ END;
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
-  IF cql_facet_find(test_facets, facet) <> 3058097930777242867 THEN
+  IF cql_facet_find(test_facets, facet) <> -2073072010624379779 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -1005,9 +1005,9 @@ BEGIN
     ---- install baseline schema if needed ----
 
     CALL test_cql_get_version_crc(0, schema_version);
-    IF schema_version != 129671327043555633 THEN
+    IF schema_version != 1971161261156161665 THEN
       CALL test_cql_install_baseline_schema();
-      CALL test_cql_set_version_crc(0, 129671327043555633);
+      CALL test_cql_set_version_crc(0, 1971161261156161665);
     END IF;
 
     CALL test_get_table_defs();
@@ -1060,26 +1060,26 @@ BEGIN
       -- creating table added_table
 
       CREATE TABLE IF NOT EXISTS added_table(
-        id INTEGER NOT NULL,
+        `an id` INTEGER NOT NULL,
         name1 TEXT
       );
     END IF;
 
     ---- upgrade to schema version 4 ----
 
-    -- one time drop moving to create from recreate migrated_from_recreate
+    -- one time drop moving to create from recreate [migrated from recreate]
 
-    SET facet := cql_compressed('1_time_drop_migrated_from_recreate');
+    SET facet := cql_compressed('1_time_drop_[migrated from recreate]');
     IF cql_facet_find(test_facets, facet) != 4 THEN
-      CALL test_migrated_from_recreate_full_drop();
+      CALL test_X_migratedX20fromX20recreate_full_drop();
       CALL test_cql_set_facet_version(facet, 4);
     END IF;
 
-    IF NOT test_table_exists(cql_compressed('migrated_from_recreate')) THEN
-      -- creating table migrated_from_recreate
+    IF NOT test_table_exists(cql_compressed('[migrated from recreate]')) THEN
+      -- creating table [migrated from recreate]
 
-      CREATE TABLE IF NOT EXISTS migrated_from_recreate(
-        id INTEGER PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS `migrated from recreate`(
+        `an id` INTEGER PRIMARY KEY,
         t TEXT
       );
     END IF;
@@ -1096,18 +1096,18 @@ BEGIN
       -- creating table migrated_from_recreate2
 
       CREATE TABLE IF NOT EXISTS migrated_from_recreate2(
-        id INTEGER PRIMARY KEY REFERENCES migrated_from_recreate (id),
+        `an id` INTEGER PRIMARY KEY REFERENCES `migrated from recreate` (`an id`),
         t TEXT
       );
     END IF;
 
-    -- altering table foo to add column id2 INTEGER;
+    -- altering table [quoted foo] to add column [id 2] INTEGER;
 
-    IF NOT test_column_exists(cql_compressed('foo'), cql_compressed('id2 INTEGER')) THEN 
-      ALTER TABLE foo ADD COLUMN id2 INTEGER DEFAULT 12345;
+    IF NOT test_column_exists(cql_compressed('[quoted foo]'), cql_compressed('[id 2] INTEGER')) THEN 
+      ALTER TABLE `quoted foo` ADD COLUMN `id 2` INTEGER DEFAULT 12345;
     END IF;
 
-    -- logical delete of column rate_2 from foo; -- no ddl
+    -- logical delete of column [rate 2] from [quoted foo]; -- no ddl
 
     -- data migration procedures
     IF cql_facet_find(test_facets, 'CreateId2Proc') = -1 THEN
@@ -1121,13 +1121,13 @@ BEGIN
 
     ---- upgrade to schema version 5 ----
 
-    -- altering table foo to add column name TEXT;
+    -- altering table [quoted foo] to add column name TEXT;
 
-    IF NOT test_column_exists(cql_compressed('foo'), cql_compressed('name TEXT')) THEN 
-      ALTER TABLE foo ADD COLUMN name TEXT;
+    IF NOT test_column_exists(cql_compressed('[quoted foo]'), cql_compressed('name TEXT')) THEN 
+      ALTER TABLE `quoted foo` ADD COLUMN name TEXT;
     END IF;
 
-    -- logical delete of column rate from foo; -- no ddl
+    -- logical delete of column rate from [quoted foo]; -- no ddl
 
     -- ad hoc migration proc MyAdHocMigrationScript will run
 
@@ -1139,27 +1139,27 @@ BEGIN
 
     ---- upgrade to schema version 6 ----
 
-    -- altering table foo to add column name_2 TEXT;
+    -- altering table [quoted foo] to add column name_2 TEXT;
 
-    IF NOT test_column_exists(cql_compressed('foo'), cql_compressed('name_2 TEXT')) THEN 
-      ALTER TABLE foo ADD COLUMN name_2 TEXT;
+    IF NOT test_column_exists(cql_compressed('[quoted foo]'), cql_compressed('name_2 TEXT')) THEN 
+      ALTER TABLE `quoted foo` ADD COLUMN name_2 TEXT;
     END IF;
 
     ---- upgrade to schema version 7 ----
 
-    IF NOT test_table_exists(cql_compressed('create_first')) THEN
-      -- creating table create_first
+    IF NOT test_table_exists(cql_compressed('[create first]')) THEN
+      -- creating table [create first]
 
-      CREATE TABLE IF NOT EXISTS create_first(
-        id INTEGER PRIMARY KEY
+      CREATE TABLE IF NOT EXISTS `create first`(
+        `an id` INTEGER PRIMARY KEY
       );
     END IF;
 
-    IF NOT test_table_exists(cql_compressed('create__second')) THEN
-      -- creating table create__second
+    IF NOT test_table_exists(cql_compressed('create_second')) THEN
+      -- creating table create_second
 
-      CREATE TABLE IF NOT EXISTS create__second(
-        id INTEGER REFERENCES create_first (id)
+      CREATE TABLE IF NOT EXISTS create_second(
+        `an id` INTEGER REFERENCES `create first` (`an id`)
       );
     END IF;
 
@@ -1170,11 +1170,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', 3058097930777242867);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -2073072010624379779);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', 9110227700131655447);
+    CALL test_cql_set_facet_version('cql_schema_crc', 4660416469974371563);
   END IF;
 END;
 
@@ -1231,7 +1231,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> 9110227700131655447 THEN
+  IF schema_crc <> 4660416469974371563 THEN
     BEGIN TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

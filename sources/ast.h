@@ -239,7 +239,6 @@ cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_qstr_quoted(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_blob(CSTR _Nonnull value);
-cql_noexport ast_node *_Nonnull new_str_or_qstr(CSTR _Nonnull name, bool_t qstr);
 
 cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);

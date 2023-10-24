@@ -270,7 +270,7 @@ static void rewrite_from_shape_args(ast_node *head) {
 
       for (uint32_t i = 0; i < count; i++) {
         ast_node *cname = new_ast_str(shape->sem->name);
-        ast_node *col = new_str_or_qstr(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
+        ast_node *col = new_str_or_qstr(sptr->names[i], sptr->semtypes[i]);
         ast_node *dot = new_ast_dot(cname, col);
 
         if (i == 0) {
@@ -343,7 +343,7 @@ cql_noexport bool_t rewrite_one_def(ast_node *head) {
 
     // Construct a col_def using name and core semantic type
     ast_node *data_type = rewrite_gen_data_type(core_type_of(sem_type), NULL);
-    ast_node *name_ast = new_str_or_qstr(col_name, !!(sem_type & SEM_TYPE_QID));
+    ast_node *name_ast = new_str_or_qstr(col_name, sem_type);
     ast_node *name_type = new_ast_col_def_name_type(name_ast, data_type);
 
     // In the case of columns the ast has col attributes to represent
@@ -484,7 +484,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
     }
 
     ast_node *type = rewrite_gen_data_type(sem_type, param_kind);
-    ast_node *name_ast = new_str_or_qstr(param_name, !!(sem_type & SEM_TYPE_QID));
+    ast_node *name_ast = new_str_or_qstr(param_name, sem_type);
     ast_node *param_detail_new = new_ast_param_detail(name_ast, type);
 
     ast_node *inout = NULL; // IN by default
@@ -592,7 +592,7 @@ cql_noexport ast_node *rewrite_gen_full_column_list(sem_struct *sptr) {
       continue;
     }
 
-    ast_node *ast_col = new_str_or_qstr(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
+    ast_node *ast_col = new_str_or_qstr(sptr->names[i], sptr->semtypes[i]);
 
     // add name to the name list
     ast_node *new_tail = new_ast_name_list(ast_col, NULL);

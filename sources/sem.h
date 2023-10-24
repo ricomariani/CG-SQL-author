@@ -274,6 +274,7 @@ cql_noexport bool_t is_proc_shared_fragment(ast_node *ast);
 cql_noexport bool_t is_alias_ast(ast_node *ast);
 cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *ast);
 
+cql_noexport ast_node *_Nonnull new_str_or_qstr(CSTR _Nonnull name, sem_t sem_type);
 cql_noexport CSTR sem_get_name(ast_node *ast);
 cql_noexport ast_node *sem_get_name_ast(ast_node *ast);
 cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);

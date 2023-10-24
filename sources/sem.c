@@ -240,6 +240,17 @@ static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 
+// create a new id node either qid or normal based on the bool
+cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
+  if (sem_type & SEM_TYPE_QID) {
+    return new_ast_qstr_escaped(name);
+  }
+  else {
+    return new_ast_str(name);
+  }
+}
+
+
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
 static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze);
@@ -17506,7 +17517,7 @@ static void sem_synthesize_dummy_value(dummy_info *info) {
 
   // Look up the name in the current scope, and only that scope.  No locals
   // No nothing.  Just the columns in the indicated type.
-  ast_node *ast_col = new_str_or_qstr(info->name, !!(info->sem_type_col & SEM_TYPE_QID));
+  ast_node *ast_col = new_str_or_qstr(info->name, info->sem_type_col);
 
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(info_scope, info->jptr);

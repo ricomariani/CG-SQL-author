@@ -291,16 +291,6 @@ cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
   return result;
 }
 
-// create a new id node either qid or normal based on the bool
-cql_noexport ast_node *new_str_or_qstr(CSTR name, bool_t qstr) {
-  if (qstr) {
-    return new_ast_qstr_escaped(name);
-  }
-  else {
-    return new_ast_str(name);
-  }
-}
-
 static char padbuffer[4096];
 
 cql_noexport bool_t print_ast_value(struct ast_node *node) {

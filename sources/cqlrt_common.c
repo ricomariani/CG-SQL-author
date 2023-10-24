@@ -9,6 +9,9 @@
 
 #include <stdlib.h>
 
+// Enable this to print a trace of running statements to stderr
+// #define CQL_TRACE_STATEMENTS 1
+
 #if defined(TARGET_OS_LINUX) && TARGET_OS_LINUX
 #include <alloca.h>
 #endif // TARGET_OS_LINUX
@@ -66,6 +69,9 @@ void cql_finalize_on_error(cql_code rc, sqlite3_stmt *_Nullable *_Nonnull pstmt)
 // the cursor used to hold.  This lets us do simple preparation in a loop without added
 // conditionals in the generated code.
 cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, const char *_Nonnull sql) {
+#ifdef CQL_TRACE_STATEMENTS
+  fprintf(stderr, "PREP> %s\n", sql);
+#endif
   cql_finalize_stmt(pstmt);
   return cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
 }
@@ -129,6 +135,9 @@ cql_code cql_prepare_var(
 // This code is here just to reduce the code size of exec calls in the generated code.
 // There are a lot of such calls.
 cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql) {
+#ifdef CQL_TRACE_STATEMENTS
+  fprintf(stderr, "EXEC> %s\n", sql);
+#endif
   return cql_sqlite3_exec(db, sql);
 }
 

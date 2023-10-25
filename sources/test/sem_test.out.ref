@@ -77241,7 +77241,7 @@ END;
         | | {cte_tables}: ok
         |   | {cte_table}: backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint }
         |     | {cte_decl}: backed: { rowid: longint notnull, status_id: integer notnull, global_connection_state: longint }
-        |     | | {name backed}
+        |     | | {name backed}: TABLE { backed: backed }
         |     | | {name_list}
         |     |   | {name rowid}
         |     |   | {name_list}
@@ -80578,7 +80578,7 @@ SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
   | | {cte_tables}: ok
   |   | {cte_table}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
   |   | | {cte_decl}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
-  |   | | | {name basic_table}
+  |   | | | {name basic_table}: TABLE { basic_table: basic_table }
   |   | | | {name_list}
   |   | |   | {name rowid}
   |   | |   | {name_list}
@@ -80794,7 +80794,7 @@ SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
   | | {cte_tables}: ok
   |   | {cte_table}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
   |   | | {cte_decl}: basic_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> }
-  |   | | | {name basic_table}
+  |   | | | {name basic_table}: TABLE { basic_table: basic_table }
   |   | | | {name_list}
   |   | |   | {name rowid}
   |   | |   | {name_list}
@@ -86001,7 +86001,7 @@ SELECT *
     | | {cte_tables}: ok
     |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
     |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-    |     | | {name simple_backed_table}
+    |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
     |     | | {name_list}
     |     |   | {name rowid}
     |     |   | {name_list}
@@ -86040,7 +86040,7 @@ INSERT INTO dummy_table_for_backed_test(id) SELECT id
   | | {cte_tables}: ok
   |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-  |     | | {name simple_backed_table}
+  |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
   |     | | {name_list}
   |     |   | {name rowid}
   |     |   | {name_list}
@@ -86088,7 +86088,7 @@ DELETE FROM dummy_table_for_backed_test WHERE id IN (SELECT id
   | | {cte_tables}: ok
   |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-  |     | | {name simple_backed_table}
+  |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
   |     | | {name_list}
   |     |   | {name rowid}
   |     |   | {name_list}
@@ -86135,7 +86135,7 @@ SET id = id + 1
   | | {cte_tables}: ok
   |   | {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
   |     | {cte_decl}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-  |     | | {name simple_backed_table}
+  |     | | {name simple_backed_table}: TABLE { simple_backed_table: simple_backed_table }
   |     | | {name_list}
   |     |   | {name rowid}
   |     |   | {name_list}

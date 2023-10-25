@@ -69,11 +69,17 @@ void cql_finalize_on_error(cql_code rc, sqlite3_stmt *_Nullable *_Nonnull pstmt)
 // the cursor used to hold.  This lets us do simple preparation in a loop without added
 // conditionals in the generated code.
 cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, const char *_Nonnull sql) {
-#ifdef CQL_TRACE_STATEMENTS
-  fprintf(stderr, "PREP> %s\n", sql);
-#endif
+
   cql_finalize_stmt(pstmt);
-  return cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
+  cql_code rc = cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
+
+#ifdef CQL_TRACE_STATEMENTS
+  if (rc) {
+    fprintf(stderr, "PREP> %s\n", sql);
+    fprintf(stderr, "Error %d %s\n", rc, sqlite3_errmsg(db));
+  }
+#endif
+  return rc;
 }
 
 // create a single string from the varargs and count provided
@@ -125,20 +131,31 @@ cql_code cql_prepare_var(
   va_list args;
   va_start(args, preds);
   char *sql = cql_vconcat(count, preds, &args);
-  cql_code result = cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
+  cql_code rc = cql_sqlite3_prepare_v2(db, sql, -1, pstmt, NULL);
   va_end(args);
+#ifdef CQL_TRACE_STATEMENTS
+  if (rc) {
+    fprintf(stderr, "PREP> %s\n", sql);
+    fprintf(stderr, "Error %d %s\n", rc, sqlite3_errmsg(db));
+  }
+#endif
   free(sql);
-  return result;
+  return rc;
 }
 
 // This is a simple wrapper for the sqlite3_exec method with the usual extra arguments.
 // This code is here just to reduce the code size of exec calls in the generated code.
 // There are a lot of such calls.
 cql_code cql_exec(sqlite3 *_Nonnull db, const char *_Nonnull sql) {
+  cql_code rc = cql_sqlite3_exec(db, sql);
+
 #ifdef CQL_TRACE_STATEMENTS
-  fprintf(stderr, "EXEC> %s\n", sql);
+  if (rc) {
+    fprintf(stderr, "EXEC> %s\n", sql);
+    fprintf(stderr, "Error %d %s\n", rc, sqlite3_errmsg(db));
+  }
 #endif
-  return cql_sqlite3_exec(db, sql);
+  return rc;
 }
 
 // This is a simple wrapper for the sqlite3_exec method with the usual extra arguments.
@@ -148,10 +165,16 @@ cql_code cql_exec_var(sqlite3 *_Nonnull db, cql_int32 count, const char *_Nullab
   va_list args;
   va_start(args, preds);
   char *sql = cql_vconcat(count, preds, &args);
-  cql_code result = cql_sqlite3_exec(db, sql);
+  cql_code rc = cql_sqlite3_exec(db, sql);
   va_end(args);
+#ifdef CQL_TRACE_STATEMENTS
+  if (rc) {
+    fprintf(stderr, "EXEC> %s\n", sql);
+    fprintf(stderr, "Error %d %s\n", rc, sqlite3_errmsg(db));
+  }
+#endif
   free(sql);
-  return result;
+  return rc;
 }
 
 // This version of exec takes a string variable and is therefore more dangerous.  It is
@@ -228,7 +251,14 @@ cql_code cql_prepare_frags(
   frags = cql_decode(frags, &len);
   STACK_BYTES_ALLOC(sql, len);
   cql_expand_frags(sql, base, frags);
-  return cql_sqlite3_prepare_v2(db, sql, len, pstmt, NULL);
+  cql_code rc = cql_sqlite3_prepare_v2(db, sql, len, pstmt, NULL);
+#ifdef CQL_TRACE_STATEMENTS
+  if (rc) {
+    fprintf(stderr, "PREP> %s\n", sql);
+    fprintf(stderr, "Error %d %s\n", rc, sqlite3_errmsg(db));
+  }
+#endif
+  return rc;
 }
 
 // To keep the contract as simple as possible we encode everything we
@@ -245,7 +275,14 @@ cql_code cql_exec_frags(
   frags = cql_decode(frags, &len);
   STACK_BYTES_ALLOC(sql, len);
   cql_expand_frags(sql, base, frags);
-  return cql_sqlite3_exec(db, sql);
+  cql_code rc = cql_sqlite3_exec(db, sql);
+#ifdef CQL_TRACE_STATEMENTS
+  if (rc) {
+    fprintf(stderr, "EXEC> %s\n", sql);
+    fprintf(stderr, "Error %d %s\n", rc, sqlite3_errmsg(db));
+  }
+#endif
+  return rc;
 }
 
 // Finalizes the statement if it is not null.  Note that the statement pointer

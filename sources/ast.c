@@ -185,6 +185,7 @@ cql_noexport ast_node *new_ast_opt(int32_t value) {
 
 cql_noexport ast_node *new_ast_str(CSTR value) {
   Contract(current_file && yylineno > 0);
+  Contract(value);
   str_ast_node *sast = _ast_pool_new(str_ast_node);
   sast->type = k_ast_str;
   sast->value = value;

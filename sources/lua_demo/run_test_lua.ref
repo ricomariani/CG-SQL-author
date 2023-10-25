@@ -7,7 +7,7 @@ err: 	101	db info:	101	no more rows available
 err: 	101	thrown exception
 err: 	1	db info:	1	table foo already exists
 err: 	19	db info:	19	UNIQUE constraint failed: foo.id
-err: 	19	db info:	19	UNIQUE constraint failed: backing.k
-err: 	19	db info:	19	UNIQUE constraint failed: backing.k
-err: 	19	db info:	19	UNIQUE constraint failed: backing.k
+err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
+err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
+err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 exit code	0

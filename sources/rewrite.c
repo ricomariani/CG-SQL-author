@@ -2366,20 +2366,36 @@ cql_noexport void rewrite_out_union_parent_child_stmt(ast_node *ast) {
   cursor_base += child_count;
 }
 
+typedef struct {
+  ast_node *backed_table;
+  CSTR key;
+  sem_t sem_type_key;
+  CSTR val;
+  sem_t sem_type_val;
+} backed_expr_list_info;
+
 // Each column in the backed table needs an entry in the select list for the generated
 // create proc.  It will fetch from either the key blob or the value blob.  This can be
 // generalized in the future but for now we support only the "two blob" backing store
 // shape.  We peel off the first item and then recurse to add the nested item.  Not
 // especially economical but fine for any normal sized table.  This can be made non-recursive
 // if it ever matters.
-static ast_node *rewrite_backed_expr_list(ast_node *backed_table, CSTR key, CSTR val, uint32_t index) {
-  sem_struct *sptr = backed_table->sem->sptr;
+static ast_node *rewrite_backed_expr_list(backed_expr_list_info *info, uint32_t index) {
+  sem_struct *sptr = info->backed_table->sem->sptr;
   if (index >= sptr->count) {
     return NULL;
   }
 
   sem_t sem_type = sptr->semtypes[index];
   bool_t is_key_column = is_primary_key(sem_type) || is_partial_pk(sem_type);
+
+  ast_node *col_name_ast;
+  if (is_key_column) {
+     col_name_ast = new_str_or_qstr(info->key, info->sem_type_key);
+  }
+  else {
+     col_name_ast = new_str_or_qstr(info->val, info->sem_type_val);
+  }
 
   ast_node *result = new_ast_select_expr_list(
     new_ast_select_expr(
@@ -2390,12 +2406,12 @@ static ast_node *rewrite_backed_expr_list(ast_node *backed_table, CSTR key, CSTR
           new_ast_arg_list(
             new_ast_dot(
               new_ast_str("T"),
-              new_ast_str(is_key_column ? key : val)
+              col_name_ast
             ),
             new_ast_arg_list(
               new_ast_dot(
                 new_ast_str(sptr->struct_name),
-                new_ast_str(sptr->names[index])
+                new_str_or_qstr(sptr->names[index], sem_type)
               ),
               NULL
             )
@@ -2403,10 +2419,10 @@ static ast_node *rewrite_backed_expr_list(ast_node *backed_table, CSTR key, CSTR
         )
       ),
       new_ast_opt_as_alias(
-        new_ast_str(sptr->names[index])
+        new_str_or_qstr(sptr->names[index], sem_type)
       )
     ),
-    rewrite_backed_expr_list(backed_table, key, val, index + 1)
+    rewrite_backed_expr_list(info, index + 1)
   );
 
   return result;
@@ -2452,10 +2468,15 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   sem_t sem_type = sptr_backing->semtypes[0];
   bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
 
-  CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
-  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
-
-  ast_node *select_expr_list = rewrite_backed_expr_list(backed_table, backing_key, backing_val, 0);
+  backed_expr_list_info info = {
+    .backed_table = backed_table,
+    .key = sptr_backing->names[!is_key_first], // if the order is kv then the key is column 0, else 1
+    .sem_type_key = sptr_backing->semtypes[!is_key_first], 
+    .val = sptr_backing->names[is_key_first], // if the order is kv then the key is column 0, else 1
+    .sem_type_val = sptr_backing->semtypes[is_key_first],  // if the order is kv then the value is colume 1, else 0
+  };
+  
+  ast_node *select_expr_list = rewrite_backed_expr_list(&info, 0);
 
   ast_node *select_stmt =
     new_ast_select_stmt(
@@ -2491,7 +2512,7 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
                         new_ast_arg_list(
                           new_ast_dot(
                             new_ast_str("T"),
-                            new_ast_str(backing_key)
+                            new_str_or_qstr(info.key, info.sem_type_key)
                           ),
                           NULL
                         )
@@ -2589,7 +2610,8 @@ static void rewrite_backed_table_ctes(
     }
     else {
       EXTRACT_NOTNULL(table_or_subquery, item->ast);
-      EXTRACT_STRING(backed_table_name, table_or_subquery->left);
+      EXTRACT_NAME_AST(backed_table_name_ast, table_or_subquery->left);
+      EXTRACT_STRING(backed_table_name, backed_table_name_ast);
       CSTR backed_proc_name = dup_printf("_%s", backed_table_name);
 
       if (symtab_add(backed, backed_table_name, NULL)) {
@@ -2598,7 +2620,7 @@ static void rewrite_backed_table_ctes(
         backed_cte_tables = new_ast_cte_tables(
           new_ast_cte_table(
             new_ast_cte_decl(
-              new_ast_str(backed_table_name),
+              ast_clone_tree(backed_table_name_ast),
               new_ast_star()
             ),
             new_ast_shared_cte(
@@ -2761,6 +2783,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
     Invariant(icol >= 0);
     Invariant((uint32_t)icol < sptr->count);
     CSTR name = sptr->names[icol];
+    ast_node *name_ast = new_str_or_qstr(name, sptr->semtypes[icol]);
 
     ast_node *new_item = NULL;
     symtab_entry *entry = NULL;
@@ -2772,7 +2795,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
         new_ast_arg_list(
           new_ast_dot(new_ast_str("V"), new_ast_str(name)),
           new_ast_arg_list(
-            new_ast_dot(new_ast_str(backed_table_name), new_ast_str(name)),
+            new_ast_dot(new_ast_str(backed_table_name), name_ast),
             NULL
           )
         );
@@ -2808,7 +2831,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
       new_item = new_ast_arg_list(
         def_value,
         new_ast_arg_list(
-          new_ast_dot(new_ast_str(backed_table_name), new_ast_str(name)),
+          new_ast_dot(new_ast_str(backed_table_name), name_ast),
           NULL
         )
       );
@@ -2844,12 +2867,14 @@ static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast
     .name_list = name_list
   };
 
+  ast_node *table_name_ast = ast_clone_tree(sem_get_name_ast(backed_table));
+
   return new_ast_call(
     new_ast_str("cql_blob_create"),
     new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
       new_ast_arg_list(
-        new_ast_str(backed_table->sem->sptr->struct_name),
+        table_name_ast,
         rewrite_create_blob_args(&info)
       )
     )
@@ -2857,14 +2882,14 @@ static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast
 }
 
 // create the wrapper for a cql_blob_get call for the given blob, backed table name and column name
-static ast_node *cql_blob_get_call (CSTR blob_field, CSTR backed_table, CSTR col) {
+static ast_node *cql_blob_get_call (CSTR blob_field, sem_t sem_type_blob, CSTR backed_table, CSTR col) {
   // this is just cql_blob_get(blob_field, backed_table.col)
   return new_ast_call(
     new_ast_str("cql_blob_get"),
     new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
       new_ast_arg_list(
-        new_ast_str(blob_field),
+        new_str_or_qstr(blob_field, sem_type_blob),
         new_ast_arg_list(
           new_ast_dot(
             new_ast_str(backed_table),
@@ -2881,7 +2906,9 @@ static ast_node *cql_blob_get_call (CSTR blob_field, CSTR backed_table, CSTR col
 // so that we can flow the pointer instead of all these arguments
 typedef struct update_rewrite_info {
   CSTR backing_key;
+  sem_t sem_type_key;
   CSTR backing_val;
+  sem_t sem_type_val;
   bool_t for_key;
   ast_node *backed_table;
 } update_rewrite_info;
@@ -2904,7 +2931,8 @@ static void rewrite_blob_column_references(update_rewrite_info *info, ast_node *
        // now we can easily decide which backing column to use
        bool_t is_key_column = is_primary_key(sem_type) || is_partial_pk(sem_type);
        CSTR blob_field = is_key_column ? info->backing_key : info->backing_val;
-       ast_node *new = cql_blob_get_call(blob_field, ast->sem->backed_table, ast->sem->name);
+       sem_t blob_type = is_key_column ? info->sem_type_key : info->sem_type_val;
+       ast_node *new = cql_blob_get_call(blob_field, blob_type, ast->sem->backed_table, ast->sem->name);
        ast->type = new->type;
        ast_set_left(ast, new->left);
        ast_set_right(ast, new->right);
@@ -2944,7 +2972,7 @@ static ast_node *rewrite_update_blob_args(update_rewrite_info *info, ast_node *u
     return new_ast_arg_list(
       expr,
       new_ast_arg_list(
-        new_ast_dot(new_ast_str(backed_table_name), new_ast_str(name)),
+        new_ast_dot(new_ast_str(backed_table_name), new_str_or_qstr(name, sem_type)),
         rewrite_update_blob_args(info, update_list->right)
       )
     );
@@ -2966,12 +2994,14 @@ static ast_node *rewrite_blob_update(
   sem_t sem_type = sptr_backing->semtypes[0];
   bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
 
-  update_rewrite_info info;
-
-  info.backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
-  info.backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
-  info.for_key = for_key;
-  info.backed_table = backed_table;
+  update_rewrite_info info = {
+   .backing_key = sptr_backing->names[!is_key_first], // if the order is kv then the key is column 0, else 1
+   .sem_type_key = sptr_backing->semtypes[!is_key_first], 
+   .backing_val = sptr_backing->names[is_key_first],  
+   .sem_type_val = sptr_backing->semtypes[is_key_first], 
+   .for_key = for_key,
+   .backed_table = backed_table,
+  };
 
   // if there are no args for this blob type then do not make the blob update call at all.
   ast_node *arg_list = rewrite_update_blob_args(&info, update_list);
@@ -2980,7 +3010,8 @@ static ast_node *rewrite_blob_update(
   }
 
   CSTR blob_name = for_key ? info.backing_key : info.backing_val;
-  ast_node *blob_val = new_ast_str(blob_name);
+  sem_t blob_type = for_key ? info.sem_type_key : info.sem_type_val;
+  ast_node *blob_val = new_str_or_qstr(blob_name, blob_type);
 
   Contract(is_ast_update_list(update_list));
 
@@ -3193,15 +3224,17 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
 
   CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
   CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
+  sem_t sem_type_key = sptr_backing->semtypes[!is_key_first]; 
+  sem_t sem_type_val = sptr_backing->semtypes[is_key_first]; 
 
   ast_node *new_name_columns_values = new_ast_name_columns_values(
     new_ast_str(backing_table_name),
     new_ast_columns_values(
       new_ast_column_spec(
         new_ast_name_list(
-          new_ast_str(backing_key),
+          new_str_or_qstr(backing_key, sem_type_key),
           new_ast_name_list(
-            new_ast_str(backing_val),
+            new_str_or_qstr(backing_val, sem_type_val),
             NULL
           )
         )
@@ -3475,7 +3508,9 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
 
   CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
-  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
+  sem_t sem_type_key = sptr_backing->semtypes[!is_key_first];
+  CSTR backing_val = sptr_backing->names[is_key_first];
+  sem_t sem_type_val = sptr_backing->semtypes[is_key_first];
 
   // the new where clause has at its core a select statement that generates the
   // rowids of the rows to be updated.  This is using the existing where clause
@@ -3500,7 +3535,7 @@ cql_noexport void rewrite_update_statement_for_backed_table(
   ast_node *up_tail = new_update_list;
   if (key_expr) {
     ast_node *new = new_ast_update_list(
-      new_ast_update_entry(new_ast_str(backing_key), key_expr),
+      new_ast_update_entry(new_str_or_qstr(backing_key, sem_type_key), key_expr),
       NULL
     );
     ast_set_right(up_tail, new);
@@ -3509,7 +3544,7 @@ cql_noexport void rewrite_update_statement_for_backed_table(
 
   if (val_expr) {
     ast_node *new = new_ast_update_list(
-      new_ast_update_entry(new_ast_str(backing_val), val_expr),
+      new_ast_update_entry(new_str_or_qstr(backing_val, sem_type_val), val_expr),
       NULL
     );
     ast_set_right(up_tail, new);

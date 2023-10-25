@@ -69,8 +69,8 @@ create proc make_schema()
 begin
   @attribute(cql:backing_table)
   create table backing(
-    k blob primary key,
-    v blob!
+    `the key` blob primary key,
+    `the value` blob!
   );
 end;
 

@@ -2783,7 +2783,8 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
     Invariant(icol >= 0);
     Invariant((uint32_t)icol < sptr->count);
     CSTR name = sptr->names[icol];
-    ast_node *name_ast = new_str_or_qstr(name, sptr->semtypes[icol]);
+    sem_t sem_type = sptr->semtypes[icol];
+    ast_node *name_ast = new_str_or_qstr(name, sem_type);
 
     ast_node *new_item = NULL;
     symtab_entry *entry = NULL;
@@ -2793,7 +2794,7 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
       // these are named columns present in _vals so use V.name
       new_item =
         new_ast_arg_list(
-          new_ast_dot(new_ast_str("V"), new_ast_str(name)),
+          new_ast_dot(new_ast_str("V"), ast_clone_tree(name_ast)),
           new_ast_arg_list(
             new_ast_dot(new_ast_str(backed_table_name), name_ast),
             NULL

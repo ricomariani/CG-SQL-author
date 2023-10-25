@@ -77,14 +77,14 @@ end;
 @attribute(cql:backed_by=backing)
 create table backed (
   id integer primary key,
-  v1 int!,
-  v2 int!
+  `value one` int!,
+  `value two` int!
 );
 
 @attribute(cql:backed_by=backing)
 create table backed2 (
   id integer primary key,
-  v1 integer
+  `value one` integer
 );
 
 call make_schema();
@@ -3671,23 +3671,23 @@ BEGIN_TEST(if_nothing_forms)
   set t1 := (select t from tdata if nothing "nothing");
   EXPECT(t1 == "nothing");
 
-  declare v1 integer;
-  set v1 := (select v from tdata if nothing -1);
-  EXPECT(v1 == -1);
+  declare `value one` integer;
+  set `value one` := (select v from tdata if nothing -1);
+  EXPECT(`value one` == -1);
 
   insert into tdata values(1, 2, null);
   set t1 := (select t from tdata if nothing "nothing");
   EXPECT(t1 is null);
 
-  set v1 := (select v from tdata if nothing -1);
-  EXPECT(v1 == 2);
+  set `value one` := (select v from tdata if nothing -1);
+  EXPECT(`value one` == 2);
 
   set t1 := (select t from tdata if nothing or null "still nothing");
   EXPECT(t1 == "still nothing");
 
   insert into tdata values(2, null, "x");
-  set v1 := (select v from tdata where id == 2 if nothing or null -1);
-  EXPECT(v1 == -1);
+  set `value one` := (select v from tdata where id == 2 if nothing or null -1);
+  EXPECT(`value one` == -1);
 
 END_TEST(if_nothing_forms)
 
@@ -6087,43 +6087,43 @@ BEGIN_TEST(backed_tables)
   declare C cursor for select * from backed;
   loop fetch C
   begin
-    EXPECT(C.v1 = 100*C.id);
-    EXPECT(C.v2 = 100*C.id+1);
+    EXPECT(C.`value one` = 100*C.id);
+    EXPECT(C.`value two` = 100*C.id+1);
     set r := r + 1;
   end;
   EXPECT(r == 2);
 
   -- update some keys and values
-  update backed set id=3, v1=300, v2=301 where id = 2;
-  update backed set id=4, v1=400, v2=401 where v1 = 100;
+  update backed set id=3, `value one`=300, `value two`=301 where id = 2;
+  update backed set id=4, `value one`=400, `value two`=401 where `value one` = 100;
 
   -- reverify it still makes sense
   set r := 0;
   declare D cursor for select * from backed;
   loop fetch D
   begin
-    EXPECT(D.v1 = 100*D.id);
-    EXPECT(D.v2 = 100*D.id+1);
+    EXPECT(D.`value one` = 100*D.id);
+    EXPECT(D.`value two` = 100*D.id+1);
     set r := r + 1;
   end;
   EXPECT(r == 2);
 
   -- delete one row
-  delete from backed where v2 = 401;
+  delete from backed where `value two` = 401;
 
   -- validate again, use aggregate functions and nested select alternatives
   EXPECT(1 == (select count(*) from backed));
-  EXPECT(300 == (select v1 from backed where id = 3));
+  EXPECT(300 == (select `value one` from backed where id = 3));
 
   -- update using the values already in the table
-  update backed set id = id + 1, v1 = v1 + 100, v2 = backed.v2 + 100;
+  update backed set id = id + 1, `value one` = `value one` + 100, `value two` = backed.`value two` + 100;
 
-  EXPECT(400 == (select v1 from backed where id = 4));
+  EXPECT(400 == (select `value one` from backed where id = 4));
 
   -- another swizzle using values to update keys and keys to update values
-  update backed set id = (v1 + 100)/100, v1 = (id+1)*100, v2 = v2 + 100;
+  update backed set id = (`value one` + 100)/100, `value one` = (id+1)*100, `value two` = `value two` + 100;
 
-  EXPECT(500 == (select v1 from backed where id = 5));
+  EXPECT(500 == (select `value one` from backed where id = 5));
 
   -- insert a row with only key and no value
   insert into backed2(id) values(1);

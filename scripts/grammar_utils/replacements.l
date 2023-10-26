@@ -158,6 +158,7 @@ PRIMARY                               { put_quoted("PRIMARY"); }
 PRIVATE                               { put_quoted("PRIVATE"); }
 PROC                                  { put_quoted("PROC"); }
 PROCEDURE                             { put_quoted("PROCEDURE"); }
+QID                                   { put_quoted("`quoted identifier`"); }
 RAISE                                 { put_quoted("RAISE"); }
 RANGE                                 { put_quoted("RANGE"); }
 REAL                                  { put_quoted("REAL"); }

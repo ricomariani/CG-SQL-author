@@ -504,6 +504,7 @@ extern CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqli
 extern CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 // static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
+extern CQL_WARN_UNUSED cql_code shared_frag_else_nothing_in_from_clause_test(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 extern cql_blob_ref _Nullable make_blob(void);
 
 // The statement ending at line XXXX
@@ -15864,48 +15865,45 @@ CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _d
   cql_error_prepare();
   cql_int32 _p1_x__ = 0;
   cql_int32 _p2_x_ = 0;
-  char _preds_1[10];
+  char _preds_1[8];
   char _vpreds_1[8];
 
   memset(&_preds_1[0], 0, sizeof(_preds_1));
   memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
   _p1_x__ = 1;
   _preds_1[0] = 1;
-  _preds_1[1] = 1;
   if (_p1_x__ <= 5) {
-    _preds_1[2] = 1;
+    _preds_1[1] = 1;
     _p2_x_ = 1;
     if (_p2_x_ == 1) {
-      _preds_1[3] = 1;
-      _vpreds_1[0] = 1; // pred 3 known to be 1
+      _preds_1[2] = 1;
+      _vpreds_1[0] = 1; // pred 2 known to be 1
     }
     else {
       if (_p2_x_ == 2) {
-        _preds_1[4] = 1;
-        _vpreds_1[1] = 1; // pred 4 known to be 1
-        _vpreds_1[2] = 1; // pred 4 known to be 1
+        _preds_1[3] = 1;
+        _vpreds_1[1] = 1; // pred 3 known to be 1
+        _vpreds_1[2] = 1; // pred 3 known to be 1
       }
       else {
-        _preds_1[5] = 1;
-        _vpreds_1[3] = 1; // pred 5 known to be 1
-        _vpreds_1[4] = 1; // pred 5 known to be 1
-        _vpreds_1[5] = 1; // pred 5 known to be 1
+        _preds_1[4] = 1;
+        _vpreds_1[3] = 1; // pred 4 known to be 1
+        _vpreds_1[4] = 1; // pred 4 known to be 1
+        _vpreds_1[5] = 1; // pred 4 known to be 1
       }
     }
-    _preds_1[6] = _preds_1[2];
-    _vpreds_1[6] = _preds_1[2];
+    _preds_1[5] = _preds_1[1];
+    _vpreds_1[6] = _preds_1[1];
   }
   else {
-    _preds_1[7] = 1;
-    _vpreds_1[7] = 1; // pred 7 known to be 1
+    _preds_1[6] = 1;
+    _vpreds_1[7] = 1; // pred 6 known to be 1
   }
-  _preds_1[8] = 1;
-  _preds_1[9] = 1;
+  _preds_1[7] = 1;
   _rc_ = cql_prepare_var(_db_, _result_stmt,
-    10, _preds_1,
+    8, _preds_1,
   "SELECT x "
       "FROM (",
-  "WITH _ns_(x) AS (",
   "WITH "
     "shared_conditional (x) AS (",
   "SELECT ?",
@@ -15915,8 +15913,7 @@ CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _d
     "SELECT x "
       "FROM shared_conditional "
       "WHERE ? = 5",
-  "SELECT ?",
-  ") SELECT * FROM _ns_",
+  "SELECT ? AS x",
   ")"
   );
   cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
@@ -15960,12 +15957,10 @@ static CQL_WARN_UNUSED cql_code simple_shared_frag(sqlite3 *_Nonnull _db_, sqlit
   cql_error_prepare();
 
   _rc_ = cql_prepare_var(_db_, _result_stmt,
-    5, NULL,
+    3, NULL,
   "SELECT shared_something "
       "FROM (",
-  "WITH _ns_(shared_something) AS (",
-  "SELECT 1234",
-  ") SELECT * FROM _ns_",
+  "SELECT 1234 AS shared_something",
   ")"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -16083,6 +16078,123 @@ CQL_WARN_UNUSED cql_code shared_frag_else_nothing_test(sqlite3 *_Nonnull _db_, s
   ") "
     "SELECT id "
       "FROM foo"
+  );
+  cql_multibind_var(&_rc_, _db_, _result_stmt, 1, _vpreds_1,
+                CQL_DATA_TYPE_INT32, &_p1_id__);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC shared_frag_else_nothing_in_from_clause_test ()
+BEGIN
+  SELECT *
+    FROM (CALL shared_frag_else_nothing(5));
+END;
+*/
+
+#define _PROC_ "shared_frag_else_nothing_in_from_clause_test"
+static int32_t shared_frag_else_nothing_in_from_clause_test_perf_index;
+
+cql_string_proc_name(shared_frag_else_nothing_in_from_clause_test_stored_procedure_name, "shared_frag_else_nothing_in_from_clause_test");
+
+typedef struct shared_frag_else_nothing_in_from_clause_test_row {
+  cql_nullable_int32 id1;
+  cql_string_ref _Nonnull text1;
+} shared_frag_else_nothing_in_from_clause_test_row;
+
+cql_bool shared_frag_else_nothing_in_from_clause_test_get_id1_is_null(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_frag_else_nothing_in_from_clause_test_row *data = (shared_frag_else_nothing_in_from_clause_test_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id1.is_null;
+}
+
+cql_int32 shared_frag_else_nothing_in_from_clause_test_get_id1_value(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_frag_else_nothing_in_from_clause_test_row *data = (shared_frag_else_nothing_in_from_clause_test_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].id1.value;
+}
+
+cql_string_ref _Nonnull shared_frag_else_nothing_in_from_clause_test_get_text1(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set, cql_int32 row) {
+  shared_frag_else_nothing_in_from_clause_test_row *data = (shared_frag_else_nothing_in_from_clause_test_row *)cql_result_set_get_data((cql_result_set_ref)result_set);
+  return data[row].text1;
+}
+
+uint8_t shared_frag_else_nothing_in_from_clause_test_data_types[shared_frag_else_nothing_in_from_clause_test_data_types_count] = {
+  CQL_DATA_TYPE_INT32, // id1
+  CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL, // text1
+};
+
+#define shared_frag_else_nothing_in_from_clause_test_refs_offset cql_offsetof(shared_frag_else_nothing_in_from_clause_test_row, text1) // count = 1
+
+static cql_uint16 shared_frag_else_nothing_in_from_clause_test_col_offsets[] = { 2,
+  cql_offsetof(shared_frag_else_nothing_in_from_clause_test_row, id1),
+  cql_offsetof(shared_frag_else_nothing_in_from_clause_test_row, text1)
+};
+
+cql_int32 shared_frag_else_nothing_in_from_clause_test_result_count(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set) {
+  return cql_result_set_get_count((cql_result_set_ref)result_set);
+}
+
+CQL_WARN_UNUSED cql_code shared_frag_else_nothing_in_from_clause_test_fetch_results(sqlite3 *_Nonnull _db_, shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nullable *_Nonnull result_set) {
+  sqlite3_stmt *stmt = NULL;
+  cql_profile_start(CRC_shared_frag_else_nothing_in_from_clause_test, &shared_frag_else_nothing_in_from_clause_test_perf_index);
+  cql_code rc = shared_frag_else_nothing_in_from_clause_test(_db_, &stmt);
+  cql_fetch_info info = {
+    .rc = rc,
+    .db = _db_,
+    .stmt = stmt,
+    .data_types = shared_frag_else_nothing_in_from_clause_test_data_types,
+    .col_offsets = shared_frag_else_nothing_in_from_clause_test_col_offsets,
+    .refs_count = 1,
+    .refs_offset = shared_frag_else_nothing_in_from_clause_test_refs_offset,
+    .encode_context_index = -1,
+    .rowsize = sizeof(shared_frag_else_nothing_in_from_clause_test_row),
+    .crc = CRC_shared_frag_else_nothing_in_from_clause_test,
+    .perf_index = &shared_frag_else_nothing_in_from_clause_test_perf_index,
+  };
+  return cql_fetch_all_results(&info, (cql_result_set_ref *)result_set);
+}
+
+/*
+export:
+DECLARE PROC shared_frag_else_nothing_in_from_clause_test () (id1 INTEGER, text1 TEXT NOT NULL);
+*/
+CQL_WARN_UNUSED cql_code shared_frag_else_nothing_in_from_clause_test(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
+  cql_code _rc_ = SQLITE_OK;
+  *_result_stmt = NULL;
+  cql_error_prepare();
+  cql_nullable_bool _tmp_n_bool_0 = { .is_null = 1 };
+  cql_nullable_int32 _p1_id__ = { .is_null = 1 };
+  char _preds_1[4];
+  char _vpreds_1[1];
+
+  memset(&_preds_1[0], 0, sizeof(_preds_1));
+  memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
+  cql_set_notnull(_p1_id__, 5);
+  _preds_1[0] = 1;
+  cql_set_nullable(_tmp_n_bool_0, _p1_id__.is_null, _p1_id__.value > 0);
+  if (cql_is_nullable_true(_tmp_n_bool_0.is_null, _tmp_n_bool_0.value)) {
+    _preds_1[1] = 1;
+    _vpreds_1[0] = 1; // pred 1 known to be 1
+  }
+  else {
+    _preds_1[2] = 1;
+  }
+  _preds_1[3] = 1;
+  _rc_ = cql_prepare_var(_db_, _result_stmt,
+    4, _preds_1,
+  "SELECT id1, text1 "
+      "FROM (",
+  "SELECT ? AS id1, 'x' AS text1",
+  "SELECT 0 id1,0 text1 WHERE 0",
+  ")"
   );
   cql_multibind_var(&_rc_, _db_, _result_stmt, 1, _vpreds_1,
                 CQL_DATA_TYPE_INT32, &_p1_id__);

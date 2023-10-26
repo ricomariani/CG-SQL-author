@@ -4885,87 +4885,66 @@ end;
 
 -- TEST: nested select syntax with complex fragment
 --
--- 10 fragments and 8 variables as expected
+-- 7 fragments and 8 variables as expected
 -- control flow corresponds to the nested selects (manually verified)
 -- see discussion per fragment
--- +  char _preds_1[10];
--- +  char _vpreds_1[8];
--- +  memset(&_preds_1[0], 0, sizeof(_preds_1));
--- +  memset(&_vpreds_1[0], 0, sizeof(_vpreds_1));
--- +  _p1_x__ = 1;
--- +  _preds_1[0] = 1;
--- +  _preds_1[1] = 1;
--- +  if (_p1_x__ <= 5) {
--- +    _preds_1[2] = 1;
--- +    _p2_x_ = 1;
--- +    if (_p2_x_ == 1) {
--- +      _preds_1[3] = 1;
--- +      _vpreds_1[0] = 1; // pred 3 known to be 1
--- +    }
--- +    else {
--- +      if (_p2_x_ == 2) {
--- +        _preds_1[4] = 1;
--- +        _vpreds_1[1] = 1; // pred 4 known to be 1
--- +        _vpreds_1[2] = 1; // pred 4 known to be 1
--- +      }
--- +      else {
--- +        _preds_1[5] = 1;
--- +        _vpreds_1[3] = 1; // pred 5 known to be 1
--- +        _vpreds_1[4] = 1; // pred 5 known to be 1
--- +        _vpreds_1[5] = 1; // pred 5 known to be 1
--- +      }
--- +    }
--- +    _preds_1[6] = _preds_1[2];
--- +    _vpreds_1[6] = _preds_1[2];
--- +  }
--- +  else {
--- +    _preds_1[7] = 1;
--- +    _vpreds_1[7] = 1; // pred 7 known to be 1
--- +  }
--- +  _preds_1[8] = 1;
--- +  _preds_1[9] = 1;
--- +  _rc_ = cql_prepare_var(_db_, _result_stmt,
--- +    10, _preds_1,
---
+-- + _p1_x__ = 1;
+-- + _preds_1[0] = 1;
+-- + if (_p1_x__ <= 5) {
+-- +   _preds_1[1] = 1;
+-- +   _p2_x_ = 1;
+-- +   if (_p2_x_ == 1) {
+-- +     _preds_1[2] = 1;
+-- +     _vpreds_1[0] = 1; // pred 2 known to be 1
+-- +   }
+-- +   else {
+-- +     if (_p2_x_ == 2) {
+-- +       _preds_1[3] = 1;
+-- +       _vpreds_1[1] = 1; // pred 3 known to be 1
+-- +       _vpreds_1[2] = 1; // pred 3 known to be 1
+-- +     }
+-- +     else {
+-- +       _preds_1[4] = 1;
+-- +       _vpreds_1[3] = 1; // pred 4 known to be 1
+-- +       _vpreds_1[4] = 1; // pred 4 known to be 1
+-- +       _vpreds_1[5] = 1; // pred 4 known to be 1
+-- +     }
+-- +   }
+-- +   _preds_1[5] = _preds_1[1];
+-- +   _vpreds_1[6] = _preds_1[1];
+-- + }
+-- + else {
+-- +   _preds_1[6] = 1;
+-- +   _vpreds_1[7] = 1; // pred 6 known to be 1
+-- + }
+-- + _preds_1[7] = 1;
+-- + _rc_ = cql_prepare_var(_db_, _result_stmt,
+-- +   8, _preds_1,
 -- fragment 0 always present
--- +  "SELECT x "
--- +      "FROM (",
---
--- fragment 1, the nested wrapper -- always present
--- +  "WITH _ns_(x) AS (",
---
--- fragment 2 present if x <= 5
--- +  "WITH "
--- +    "shared_conditional (x) AS (",
---
--- fragment 3 present if x == 1
+-- + "SELECT x "
+-- +     "FROM (",
+-- fragment 1 present if x <= 5
+-- + "WITH "
+-- +   "shared_conditional (x) AS (",
+-- fragment 2 present if x == 1
 -- first variable binding v[0] = pred[3]
--- +  "SELECT ?",
---
--- fragment 4 present if x == 2
+-- + "SELECT ?",
+-- fragment 3 present if x == 2
 -- second variable binding v[1], v[2] = pred[4]
--- +  "SELECT ? + ?",
---
--- fragment 5 present if x == 3
+-- + "SELECT ? + ?",
+-- fragment 4 present if x == 3
 -- third variable binding v[3], v[4], v[5] = pred[5]
--- +  "SELECT ? + ? + ?",
---
--- fragment 6 the tail of fragment 2, present if x <= 5
+-- + "SELECT ? + ? + ?",
+-- fragment 5 the tail of fragment 1, present if x <= 5
 -- fourth variable binding v[6] = pred[6] = pred[2]
--- +  ") "
--- +    "SELECT x "
--- +      "FROM shared_conditional "
--- +      "WHERE ? = 5",
---
--- fragment 7 present if x > 5
+-- + ") "
+-- +   "SELECT x "
+-- +     "FROM shared_conditional "
+-- +     "WHERE ? = 5",
+-- fragment 6 present if x > 5
 -- fifth variable binding v[7] = pred[7] = !pred[2]
--- +  "SELECT ?",
---
--- fragment 8 present always
--- +  ") SELECT * FROM _ns_",
---
--- fragment 9 present always
--- +  ")"
+-- + "SELECT ? AS x",
+-- + ")"
 create proc use_nested_select_shared_frag_form()
 begin
   select * from (call nested_shared_proc(1));
@@ -4977,9 +4956,7 @@ end;
 -- if we are using nested select or not.
 -- + "SELECT shared_something "
 -- + "FROM (",
--- + "WITH _ns_(shared_something) AS (",
--- + "SELECT 1234",
--- + ") SELECT * FROM _ns_",
+-- + "SELECT 1234 AS shared_something",
 -- + ")"
 @attribute(cql:private)
 create proc simple_shared_frag()
@@ -5005,6 +4982,14 @@ create proc shared_frag_else_nothing_test()
 begin
   with (call shared_frag_else_nothing(5))
   select * from foo;
+end;
+
+-- TEST: select nothing in FROM clause epands into the right number of columns
+-- with column names
+-- + "SELECT 0 id1,0 text1 WHERE 0",
+create proc shared_frag_else_nothing_in_from_clause_test()
+begin
+  select * from (call shared_frag_else_nothing(5));
 end;
 
 declare const group some_constants (

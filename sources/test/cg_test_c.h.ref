@@ -3500,6 +3500,30 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row2)
 
 // The statement ending at line XXXX
+#define CRC_shared_frag_else_nothing_in_from_clause_test -470936310725986298L
+
+extern cql_string_ref _Nonnull shared_frag_else_nothing_in_from_clause_test_stored_procedure_name;
+
+#define shared_frag_else_nothing_in_from_clause_test_data_types_count 2
+
+#ifndef result_set_type_decl_shared_frag_else_nothing_in_from_clause_test_result_set
+#define result_set_type_decl_shared_frag_else_nothing_in_from_clause_test_result_set 1
+cql_result_set_type_decl(shared_frag_else_nothing_in_from_clause_test_result_set, shared_frag_else_nothing_in_from_clause_test_result_set_ref);
+#endif
+extern cql_bool shared_frag_else_nothing_in_from_clause_test_get_id1_is_null(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 shared_frag_else_nothing_in_from_clause_test_get_id1_value(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_string_ref _Nonnull shared_frag_else_nothing_in_from_clause_test_get_text1(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set, cql_int32 row);
+extern cql_int32 shared_frag_else_nothing_in_from_clause_test_result_count(shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nonnull result_set);
+extern CQL_WARN_UNUSED cql_code shared_frag_else_nothing_in_from_clause_test_fetch_results(sqlite3 *_Nonnull _db_, shared_frag_else_nothing_in_from_clause_test_result_set_ref _Nullable *_Nonnull result_set);
+#define shared_frag_else_nothing_in_from_clause_test_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
+#define shared_frag_else_nothing_in_from_clause_test_row_equal(rs1, row1, rs2, row2) \
+cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
+  (cql_result_set_ref)(rs1), \
+  row1, \
+  (cql_result_set_ref)(rs2), \
+  row2)
+
+// The statement ending at line XXXX
 
 // The statement ending at line XXXX
 extern void slash_star_and_star_slash(void);

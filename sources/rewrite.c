@@ -446,14 +446,21 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    sem_t sem_type = sptr->semtypes[i];
+    sem_t param_type = sptr->semtypes[i];
     CSTR param_name = sptr->names[i];
     CSTR param_kind = sptr->kinds[i];
     CSTR original_name = param_name;
 
     if (shape_name[0]) {
       // the orignal name in this form has to be compound to disambiguate
-      param_name = dup_printf("%s_%s", shape_name, param_name);
+      if ((param_type & SEM_TYPE_QID) && param_name[0] == 'X' && param_name[1] == '_') {
+        // if we had a QID then we need to move the X_ to the front
+        param_name = dup_printf("X_%s_%s", shape_name, param_name + 2);
+      }
+      else {
+        // otherwise normal concat
+        param_name = dup_printf("%s_%s", shape_name, param_name);
+      }
 
       // note we skip none of these, if the names conflict that is an error:
       // e.g. if you make an arg like x_y and you then have a shape named x
@@ -466,7 +473,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
       // The idea here is that if it came from a procedure we want to keep the same signature
       // exactly and if any _ needed to be added to avoid conflict with a column name then it already was.
 
-      if (!(sem_type & (SEM_TYPE_IN_PARAMETER | SEM_TYPE_OUT_PARAMETER))) {
+      if (!(param_type & (SEM_TYPE_IN_PARAMETER | SEM_TYPE_OUT_PARAMETER))) {
         param_name = dup_printf("%s_", param_name);
       }
 
@@ -483,13 +490,13 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
       bytebuf_append_var(args_info, shape_type);
     }
 
-    ast_node *type = rewrite_gen_data_type(sem_type, param_kind);
-    ast_node *name_ast = new_str_or_qstr(param_name, sem_type);
+    ast_node *type = rewrite_gen_data_type(param_type, param_kind);
+    ast_node *name_ast = new_str_or_qstr(param_name, param_type);
     ast_node *param_detail_new = new_ast_param_detail(name_ast, type);
 
     ast_node *inout = NULL; // IN by default
-    if (sem_type & SEM_TYPE_OUT_PARAMETER) {
-      if (sem_type & SEM_TYPE_IN_PARAMETER) {
+    if (param_type & SEM_TYPE_OUT_PARAMETER) {
+      if (param_type & SEM_TYPE_IN_PARAMETER) {
         inout = new_ast_inout();
       }
       else {

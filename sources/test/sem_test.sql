@@ -23779,3 +23779,18 @@ end;
 create table reuse_exotic_columns (
   LIKE `xyz``abc`
 );
+
+-- TEST: shape name expansion with quid in the columns
+-- verifying the echo is correct (this is actually sufficient)
+-- + CREATE PROC qid_shape_args (AAA_x INTEGER NOT NULL, `AAA_a b` INTEGER NOT NULL, BBB_x INTEGER NOT NULL, `BBB_a b` INTEGER NOT NULL, x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+-- + {create_proc_stmt}: ok
+-- + {name AAA_x}: AAA_x: integer notnull variable in
+-- + {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in
+-- + {name BBB_x}: BBB_x: integer notnull variable in
+-- + {name `BBB_a b`}: X_BBB_aX20b: integer notnull variable in
+-- + {name x_}: x_: integer notnull variable in
+-- + {name `a b_`}: X_aX20b_: integer notnull variable in
+-- - error:
+proc qid_shape_args(AAA like `xyz``abc`, BBB like `xyz``abc`, like `xyz``abc`)
+begin
+end;

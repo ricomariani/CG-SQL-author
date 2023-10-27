@@ -89094,3 +89094,49 @@ CREATE TABLE reuse_exotic_columns(
           | | {type_int}: integer
           | {col_attrs_not_null}: ok
 
+The statement ending at line XXXX
+
+CREATE PROC qid_shape_args (AAA_x INTEGER NOT NULL, `AAA_a b` INTEGER NOT NULL, BBB_x INTEGER NOT NULL, `BBB_a b` INTEGER NOT NULL, x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+BEGIN
+END;
+
+  {create_proc_stmt}: ok
+  | {name qid_shape_args}: ok
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: AAA_x: integer notnull variable in
+      | | {param_detail}: AAA_x: integer notnull variable in
+      |   | {name AAA_x}: AAA_x: integer notnull variable in
+      |   | {notnull}: integer notnull
+      |     | {type_int}: integer
+      | {params}
+        | {param}: X_AAA_aX20b: integer notnull variable in
+        | | {param_detail}: X_AAA_aX20b: integer notnull variable in
+        |   | {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in
+        |   | {notnull}: integer notnull
+        |     | {type_int}: integer
+        | {params}
+          | {param}: BBB_x: integer notnull variable in
+          | | {param_detail}: BBB_x: integer notnull variable in
+          |   | {name BBB_x}: BBB_x: integer notnull variable in
+          |   | {notnull}: integer notnull
+          |     | {type_int}: integer
+          | {params}
+            | {param}: X_BBB_aX20b: integer notnull variable in
+            | | {param_detail}: X_BBB_aX20b: integer notnull variable in
+            |   | {name `BBB_a b`}: X_BBB_aX20b: integer notnull variable in
+            |   | {notnull}: integer notnull
+            |     | {type_int}: integer
+            | {params}
+              | {param}: x_: integer notnull variable in
+              | | {param_detail}: x_: integer notnull variable in
+              |   | {name x_}: x_: integer notnull variable in
+              |   | {notnull}: integer notnull
+              |     | {type_int}: integer
+              | {params}
+                | {param}: X_aX20b_: integer notnull variable in
+                  | {param_detail}: X_aX20b_: integer notnull variable in
+                    | {name `a b_`}: X_aX20b_: integer notnull variable in
+                    | {notnull}: integer notnull
+                      | {type_int}: integer
+

@@ -14,6 +14,7 @@
 #include "symtab.h"
 #include "crc64xz.h"
 #include "sha256.h"
+#include "gen_sql.h"
 
 // When emitting code for a sql statement you might need to prepare it expecting
 // to use the sql statement yourself, or you may just want to run the SQL.
@@ -208,6 +209,12 @@ typedef struct cg_expr_dispatch {
   CSTR _Nonnull str;
   int32_t pri_new;
 } cg_expr_dispatch;
+
+// Used by the cte_proc_context attribute in gen_sql_callbacks
+typedef struct {
+  gen_sql_callbacks *_Nonnull callbacks;
+  bool_t minify_aliases;
+} cte_proc_call_info;
 
 // These are pre-loaded with pointers to functions for handling the
 // root statements and functions.

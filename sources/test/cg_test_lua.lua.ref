@@ -7779,14 +7779,14 @@ function use_nested_select_shared_frag_form(_db_)
     10, _preds_1,
     {
     "SELECT x FROM (",
-    "WITH _ns_(x) AS (",
+    "(",
     "WITH shared_conditional (x) AS (",
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
     ") SELECT x FROM shared_conditional WHERE ? = 5",
-    "SELECT ?",
-    ") SELECT * FROM _ns_",
+    "SELECT ? AS x",
+    ")",
     ")"
     }
   )
@@ -7832,9 +7832,9 @@ function simple_shared_frag(_db_)
     5, nil,
     {
     "SELECT shared_something FROM (",
-    "WITH _ns_(shared_something) AS (",
-    "SELECT 1234",
-    ") SELECT * FROM _ns_",
+    "(",
+    "SELECT 1234 AS shared_something",
+    ")",
     ")"
     }
   )

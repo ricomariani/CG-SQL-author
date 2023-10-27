@@ -4932,7 +4932,7 @@ end;
 -- +      "FROM (",
 --
 -- fragment 1, the nested wrapper -- always present
--- +  "WITH _ns_(x) AS (",
+-- +  "(",
 --
 -- fragment 2 present if x <= 5
 -- +  "WITH "
@@ -4959,10 +4959,10 @@ end;
 --
 -- fragment 7 present if x > 5
 -- fifth variable binding v[7] = pred[7] = !pred[2]
--- +  "SELECT ?",
+-- +  "SELECT ? AS x",
 --
 -- fragment 8 present always
--- +  ") SELECT * FROM _ns_",
+-- +  ")",
 --
 -- fragment 9 present always
 -- +  ")"
@@ -4977,9 +4977,7 @@ end;
 -- if we are using nested select or not.
 -- + "SELECT shared_something "
 -- + "FROM (",
--- + "WITH _ns_(shared_something) AS (",
--- + "SELECT 1234",
--- + ") SELECT * FROM _ns_",
+-- + "SELECT 1234 AS shared_something",
 -- + ")"
 @attribute(cql:private)
 create proc simple_shared_frag()
@@ -5005,6 +5003,14 @@ create proc shared_frag_else_nothing_test()
 begin
   with (call shared_frag_else_nothing(5))
   select * from foo;
+end;
+
+-- TEST: select nothing in FROM clause epands into the right number of columns
+-- with column names
+-- + "SELECT 0 id1,0 text1 WHERE 0",
+create proc shared_frag_else_nothing_in_from_clause_test()
+begin
+  select * from (call shared_frag_else_nothing(5));
 end;
 
 declare const group some_constants (

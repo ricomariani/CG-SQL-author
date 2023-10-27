@@ -4965,28 +4965,22 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
   cg_emit_one_frag(buffer);
 
-  // we need the column names for our select
-  // we'll accomplish this by generating a CTE wrapper
-  // the column names are were already in the original text but
-  // we want to minify those out, we could turn off alias minification here
-  // but if we did that then we couldn't share the text of the fragment
-  // so instead we make a wrapper that has exatly the column names we need
-
   bool_t is_nested_select = is_ast_table_or_subquery(cte_body->parent);
+  cte_proc_call_info* info = (cte_proc_call_info*)context;
+  bool_t saved_minify_aliases = info->callbacks->minify_aliases;
 
   CHARBUF_OPEN(wrapper);
   if (is_nested_select) {
-    // this ensures that all the columns of the select are correctly named
-    bprintf(&wrapper, "WITH _ns_(");
+    // We need to keep column names of the generated SELECT
+    // when generating shared fragments as a subquery.
+    info->callbacks->minify_aliases = false;
 
-    sem_struct *sptr = cte_body->sem->sptr;
-
-    for (uint32_t i = 0; i < sptr->count; i++) {
-      bprintf(&wrapper, "%s%s", i == 0 ? "": ", ", sptr->names[i]);
-    }
-
-    bprintf(&wrapper, ") AS (");
+    bprintf(&wrapper, "(");
     cg_emit_one_frag(&wrapper);
+  } else {
+    // Use the original global setting
+    // (subcalls inside a CTE of a fragment in a nested select can use original setting)
+    info->callbacks->minify_aliases = info->minify_aliases;
   }
 
   if (is_ast_if_stmt(stmt)) {
@@ -5003,10 +4997,11 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   }
 
   if (is_nested_select) {
-    bprintf(&wrapper, ") SELECT * FROM _ns_");
+    bprintf(&wrapper, ")");
     cg_emit_one_frag(&wrapper);
   }
 
+  info->callbacks->minify_aliases = saved_minify_aliases;
   CHARBUF_CLOSE(wrapper);
 
   symtab_delete(proc_arg_aliases);
@@ -5162,6 +5157,11 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
   callbacks.cte_suppress_callback = cg_suppress_cte;
   callbacks.table_rename_callback = cg_table_rename;
   callbacks.func_callback = cg_inline_func;
+
+  cte_proc_call_info cte_proc_context;
+  callbacks.cte_proc_context = &cte_proc_context;
+  cte_proc_context.callbacks = &callbacks;
+  cte_proc_context.minify_aliases = minify_aliases;
 
   CHARBUF_OPEN(sql);
   gen_set_output_buffer(&sql);

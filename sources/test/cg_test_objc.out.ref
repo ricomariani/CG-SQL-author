@@ -4256,6 +4256,50 @@ static inline BOOL CGBSharedFragElseNothingTestRowEqual(CGBSharedFragElseNothing
   return CGCSharedFragElseNothingTestRowEqual(CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet1), row1, CGCSharedFragElseNothingTestFromCGBSharedFragElseNothingTest(resultSet2), row2);
 }
 
+@class CGBSharedFragElseNothingInFromClauseTest;
+
+#ifdef CQL_EMIT_OBJC_INTERFACES
+@interface CGBSharedFragElseNothingInFromClauseTest
+@end
+#endif
+
+static inline CGBSharedFragElseNothingInFromClauseTest *CGBSharedFragElseNothingInFromClauseTestFromCGCSharedFragElseNothingInFromClauseTest(CGCSharedFragElseNothingInFromClauseTestResultSetRef resultSet)
+{
+  return (__bridge CGBSharedFragElseNothingInFromClauseTest *)resultSet;
+}
+
+static inline CGCSharedFragElseNothingInFromClauseTestResultSetRef CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(CGBSharedFragElseNothingInFromClauseTest *resultSet)
+{
+  return (__bridge CGCSharedFragElseNothingInFromClauseTestResultSetRef)resultSet;
+}
+
+static inline NSNumber *_Nullable CGBSharedFragElseNothingInFromClauseTestGetId1(CGBSharedFragElseNothingInFromClauseTest *resultSet, int32_t row)
+{
+  CGCSharedFragElseNothingInFromClauseTestResultSetRef cResultSet = CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(resultSet);
+  return CGCSharedFragElseNothingInFromClauseTestGetId1IsNull(cResultSet, row) ? nil : @(CGCSharedFragElseNothingInFromClauseTestGetId1Value(cResultSet, row));
+}
+
+static inline NSString *CGBSharedFragElseNothingInFromClauseTestGetText1(CGBSharedFragElseNothingInFromClauseTest *resultSet, int32_t row)
+{
+  CGCSharedFragElseNothingInFromClauseTestResultSetRef cResultSet = CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(resultSet);
+  return (__bridge NSString *)CGCSharedFragElseNothingInFromClauseTestGetText1(cResultSet, row);
+}
+
+static inline int32_t CGBSharedFragElseNothingInFromClauseTestResultCount(CGBSharedFragElseNothingInFromClauseTest *resultSet)
+{
+  return CGCSharedFragElseNothingInFromClauseTestResultCount(CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(resultSet));
+}
+
+static inline NSUInteger CGBSharedFragElseNothingInFromClauseTestRowHash(CGBSharedFragElseNothingInFromClauseTest *resultSet, int32_t row)
+{
+  return CGCSharedFragElseNothingInFromClauseTestRowHash(CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(resultSet), row);
+}
+
+static inline BOOL CGBSharedFragElseNothingInFromClauseTestRowEqual(CGBSharedFragElseNothingInFromClauseTest *resultSet1, int32_t row1, CGBSharedFragElseNothingInFromClauseTest *resultSet2, int32_t row2)
+{
+  return CGCSharedFragElseNothingInFromClauseTestRowEqual(CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(resultSet1), row1, CGCSharedFragElseNothingInFromClauseTestFromCGBSharedFragElseNothingInFromClauseTest(resultSet2), row2);
+}
+
 @class CGBSomeRedeclaredOutProc;
 
 #ifdef CQL_EMIT_OBJC_INTERFACES

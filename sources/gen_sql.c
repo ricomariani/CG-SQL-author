@@ -2709,7 +2709,12 @@ static void gen_select_nothing_stmt(ast_node *ast) {
     if (i) {
       gen_printf(",");
     }
-    gen_printf("0");
+
+    if (gen_callbacks && gen_callbacks->minify_aliases) {
+      gen_printf("0");
+    } else {
+      gen_printf("0 %s", sptr->names[i]);
+    }
   }
   gen_printf(" WHERE 0");
 }

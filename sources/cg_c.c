@@ -4974,8 +4974,12 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
   cte_proc_call_info* info = (cte_proc_call_info*)context;
   bool_t saved_minify_aliases = info->callbacks->minify_aliases;
 
+  CHARBUF_OPEN(wrapper);
   if (is_nested_select) {
     info->callbacks->minify_aliases = false;
+
+    bprintf(&wrapper, "(");
+    cg_emit_one_frag(&wrapper);
   } else {
     // Use the original global setting
     // (subcalls inside a CTE of a fragment in a nested select can use original setting)
@@ -4995,7 +4999,13 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
     cg_fragment_stmt(stmt, buffer);
   }
 
+  if (is_nested_select) {
+    bprintf(&wrapper, ")");
+    cg_emit_one_frag(&wrapper);
+  }
+
   info->callbacks->minify_aliases = saved_minify_aliases;
+  CHARBUF_CLOSE(wrapper);
 
   symtab_delete(proc_arg_aliases);
   symtab_delete(proc_cte_aliases);

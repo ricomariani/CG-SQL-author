@@ -4723,7 +4723,7 @@ end;
 -- +  "SELECT x FROM (",
 --
 -- fragment 1, the nested wrapper -- always present
--- +  "WITH _ns_(x) AS (",
+-- +  "(",
 --
 -- fragment 2 present if x <= 5
 -- +  "WITH shared_conditional (x) AS (",
@@ -4749,7 +4749,7 @@ end;
 -- +  "SELECT ?",
 --
 -- fragment 8 present always
--- +  ") SELECT * FROM _ns_",
+-- +  ")",
 --
 -- fragment 9 present always
 -- +  ")"
@@ -4763,9 +4763,9 @@ end;
 -- accomplishes this.  We do it this way so that the text of the fragment is the same
 -- if we are using nested select or not.
 -- + "SELECT shared_something FROM (",
--- + "WITH _ns_(shared_something) AS (",
--- + "SELECT 1234",
--- + ") SELECT * FROM _ns_",
+-- + "(",
+-- + "SELECT 1234 as shared_something",
+-- + ")",
 -- + ")"
 @attribute(cql:private)
 create proc simple_shared_frag()

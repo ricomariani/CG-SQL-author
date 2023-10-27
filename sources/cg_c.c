@@ -62,11 +62,6 @@ typedef struct {
    ast_node *arg_list;  // these are the actual arguments
 } proc_params_info;
 
-typedef struct {
-  gen_sql_callbacks *callbacks;
-  bool_t minify_aliases;
-} cte_proc_call_info;
-
 static void cg_emit_proc_params(proc_params_info *info);
 
 // Emits a sql statement with bound args.  Returns temp statement index used if any
@@ -4976,6 +4971,8 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
 
   CHARBUF_OPEN(wrapper);
   if (is_nested_select) {
+    // We need to keep column names of the generated SELECT
+    // when generating shared fragments as a subquery.
     info->callbacks->minify_aliases = false;
 
     bprintf(&wrapper, "(");

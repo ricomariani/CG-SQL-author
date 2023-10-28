@@ -5299,6 +5299,12 @@ select * from (call a_shared_frag(1, 2));
 -- +1 error:
 select * from (call a_shared_frag());
 
+-- TEST: fragment in nested select cannot be referred to without explict alias
+-- + {select_expr_list}: err
+-- + error: % table not found 'a_shared_frag'
+-- +1 error:
+select a_shared_frag.* from (call a_shared_frag(1, 2));
+
 -- TEST: a conditional shared fragment without an else clause is equivalent to
 -- putting "select nothing" in an else clause.
 -- + {select_nothing_stmt}: conditional_no_else: { x: integer notnull }

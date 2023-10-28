@@ -29,7 +29,7 @@ create table dbl_table (
   constraint unq unique (num, label)
 );
 
-create table Caa
+create table `table C`
 (
   id int not null,
   `a pk` real not null,
@@ -65,9 +65,9 @@ create table self_ref_table2
   name text
 );
 
-create view Foo AS select * from Caa;
+create view `Foo View` AS select * from `table C`;
 
-create view Complex_view AS select * from Caa where name in (select id_ from primary_as_column);
+create view Complex_view AS select * from `table C` where name in (select id_ from primary_as_column);
 
 declare proc decl1(id integer) ( A integer not null, B bool );
 
@@ -180,7 +180,7 @@ create table child_blob_primary_key (
 @attribute(cql:autotest=(dummy_table))
 create proc sample_proc1()
 begin
-  select * from Foo;
+  select * from `Foo View`;
 end;
 
 -- TEST: dummy_insert only
@@ -189,7 +189,7 @@ end;
 @attribute(cql:autotest=(dummy_table, dummy_insert))
 create proc sample_proc2()
 begin
-  select * from Foo;
+  select * from `Foo View`;
 end;
 
 -- TEST: dummy_select only
@@ -198,7 +198,7 @@ end;
 @attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc3()
 begin
-  select * from Foo;
+  select * from `Foo View`;
 end;
 
 -- TEST: dummy_table and dummy_insert only
@@ -209,7 +209,7 @@ end;
 @attribute(cql:autotest=(dummy_table, dummy_insert))
 create proc sample_proc4()
 begin
-  select id from Foo;
+  select id from `Foo View`;
 end;
 
 -- TEST: dummy_table and dummy_insert only
@@ -220,7 +220,7 @@ end;
 @attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc5()
 begin
-  select id from Foo;
+  select id from `Foo View`;
 end;
 
 -- TEST: dummy_select and dummy_insert only
@@ -230,7 +230,7 @@ end;
 @attribute(cql:autotest=(dummy_table, dummy_select, dummy_insert))
 create proc sample_proc6()
 begin
-  select id from Foo;
+  select id from `Foo View`;
 end;
 
 -- TEST: dummy_table, dummy_select, dummy_insert, dummy_test
@@ -243,13 +243,13 @@ end;
 -- + CREATE PROC test_sample_proc7_populate_tables()
 -- + CREATE PROC test_sample_proc7_drop_tables()
 -- + CREATE PROC test_sample_proc7_read_Baa()
--- + CREATE PROC test_sample_proc7_read_Caa()
--- + CREATE PROC test_sample_proc7_read_Foo()
+-- + CREATE PROC test_sample_proc7_read_X_tableX20C()
+-- + CREATE PROC test_sample_proc7_read_X_FooX20View()
 -- + CREATE PROC test_sample_proc7_drop_indexes()
 @attribute(cql:autotest=(dummy_table, dummy_insert, dummy_select, dummy_test))
 create proc sample_proc7()
 begin
-  select id from Foo;
+  select id from `Foo View`;
 end;
 
 -- TEST: Proc has fetch_result instead of result_set
@@ -257,7 +257,7 @@ end;
 @attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc11()
 begin
-  DECLARE curs CURSOR FOR SELECT id FROM FOO;
+  DECLARE curs CURSOR FOR SELECT id FROM `FOO VIEW`;
   FETCH curs;
   OUT curs;
 end;
@@ -269,7 +269,7 @@ end;
 @attribute(cql:autotest=(dummy_result_set))
 create proc sample_proc12()
 begin
-  DECLARE curs CURSOR FOR SELECT id FROM FOO;
+  DECLARE curs CURSOR FOR SELECT id FROM `FOO VIEW`;
   FETCH curs;
   OUT curs;
 end;
@@ -287,13 +287,13 @@ end;
 -- + CREATE PROC test_sample_proc13_populate_tables()
 -- + CREATE PROC test_sample_proc13_drop_tables()
 -- + CREATE PROC test_sample_proc13_read_Baa()
--- + CREATE PROC test_sample_proc13_read_Caa()
--- + CREATE PROC test_sample_proc13_read_Foo()
+-- + CREATE PROC test_sample_proc13_read_X_tableX20C()
+-- + CREATE PROC test_sample_proc13_read_X_FooX20View()
 -- + CREATE PROC test_sample_proc13_drop_indexes()
 @attribute(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
 create proc sample_proc13()
 begin
-  DECLARE curs CURSOR FOR SELECT id FROM FOO;
+  DECLARE curs CURSOR FOR SELECT id FROM `FOO VIEW`;
   FETCH curs;
   OUT curs;
 end;
@@ -302,52 +302,52 @@ end;
 -- + CREATE PROC test_sample_proc14_create_tables()
 -- + CREATE PROC test_sample_proc14_populate_tables()
 -- + CREATE PROC test_sample_proc14_read_Baa()
--- + CREATE PROC test_sample_proc14_read_Caa()
--- + CREATE PROC test_sample_proc14_read_Foo()
+-- + CREATE PROC test_sample_proc14_read_X_tableX20C()
+-- + CREATE PROC test_sample_proc14_read_X_FooX20View()
 -- + CREATE PROC test_sample_proc14_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc14()
 begin
-  select * from Foo;
+  select * from `Foo View`;
 end;
 
 -- TEST: test dummy_test with primary key as column in the table "primary_as_column"
 -- + CREATE PROC test_sample_proc15_create_tables()
 -- + CREATE PROC test_sample_proc15_populate_tables()
 -- + CREATE PROC test_sample_proc15_read_primary_as_column()
--- + CREATE PROC test_sample_proc15_read_foo()
+-- + CREATE PROC test_sample_proc15_read_X_FooX20View()
 -- + CREATE PROC test_sample_proc15_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc15()
 begin
-  select * from primary_as_column left join foo;
+  select * from primary_as_column left join `foo view`;
 end;
 
 -- TEST: test dummy_test with insert statement
 -- + CREATE PROC test_sample_proc16_create_tables()
 -- + CREATE PROC test_sample_proc16_populate_tables()
--- + CREATE PROC test_sample_proc16_read_Caa()
+-- + CREATE PROC test_sample_proc16_read_X_tableX20C()
 -- + CREATE PROC test_sample_proc16_read_Baa()
 -- + CREATE PROC test_sample_proc16_read_dbl_table()
 -- + CREATE PROC test_sample_proc16_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc16()
 begin
-  insert into Caa(id, `a pk`, name) values (1, 1.1, 'val');
+  insert into `table C`(id, `a pk`, name) values (1, 1.1, 'val');
 end;
 
 -- TEST: test dummy_test with drop,delete table statement
 -- + CREATE PROC test_sample_proc17_create_tables()
 -- + CREATE PROC test_sample_proc17_populate_tables()
--- + CREATE PROC test_sample_proc17_read_Caa()
+-- + CREATE PROC test_sample_proc17_read_X_tableX20C()
 -- + CREATE PROC test_sample_proc17_read_Baa()
 -- + CREATE PROC test_sample_proc17_read_primary_as_column()
 -- + CREATE PROC test_sample_proc17_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc17()
 begin
-  drop table Caa;
-  drop view Foo;
+  drop table `table C`;
+  drop view `Foo View`;
   delete from primary_as_column where id_ = '1';
 end;
 
@@ -355,13 +355,13 @@ end;
 -- + CREATE PROC test_sample_proc18_create_tables()
 -- + CREATE PROC test_sample_proc18_populate_tables()
 -- + CREATE PROC test_sample_proc18_drop_tables()
--- + CREATE PROC test_sample_proc18_read_Caa()
+-- + CREATE PROC test_sample_proc18_read_X_tableX20C()
 -- + CREATE PROC test_sample_proc18_read_Baa()
 -- + CREATE PROC test_sample_proc18_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc18()
 begin
-  create view zaa AS select * from Caa;
+  create view zaa AS select * from `table C`;
 end;
 
 -- TEST: test dummy_test with create table statement with the foreign key table (Baa) to generate
@@ -382,20 +382,20 @@ end;
 -- TEST: test dummy_test with update statement
 -- + CREATE PROC test_sample_proc20_create_tables()
 -- + CREATE PROC test_sample_proc20_populate_tables()
--- + CREATE PROC test_sample_proc20_read_Caa()
+-- + CREATE PROC test_sample_proc20_read_X_tableX20C()
 -- + CREATE PROC test_sample_proc20_read_Baa()
 -- + CREATE PROC test_sample_proc20_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc20()
 begin
-  update Caa set id = 1;
+  update `table C` set id = 1;
 end;
 
 -- TEST: test dummy_test with create view statement contains multiple tables
 -- + CREATE PROC test_sample_proc21_create_tables()
 -- + CREATE TABLE IF NOT EXISTS primary_as_column
 -- + CREATE TABLE IF NOT EXISTS Baa
--- + CREATE TABLE IF NOT EXISTS Caa
+-- + CREATE TABLE IF NOT EXISTS `table C`
 -- + CREATE VIEW IF NOT EXISTS Complex_view
 -- + CREATE PROC test_sample_proc21_populate_tables()
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1')
@@ -407,16 +407,16 @@ end;
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(333, 2)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(444, 3)
--- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(333, 'Nelly', 1, 1, 1)
--- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(444, 'Babeth', 2, 2, 2)
+-- + INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(333, 'Nelly', 1, 1, 1)
+-- + INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(444, 'Babeth', 2, 2, 2)
 -- + CREATE PROC test_sample_proc21_drop_tables()
 -- + DROP VIEW IF EXISTS Complex_view;
--- + DROP TABLE IF EXISTS Caa;
+-- + DROP TABLE IF EXISTS `table C`;
 -- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS Baa;
 -- + DROP TABLE IF EXISTS primary_as_column;
--- + CREATE PROC test_sample_proc21_read_Caa()
--- + SELECT * FROM Caa;
+-- + CREATE PROC test_sample_proc21_read_X_tableX20C()
+-- + SELECT * FROM `table C`;
 -- + CREATE PROC test_sample_proc21_read_Baa()
 -- + CREATE PROC test_sample_proc21_read_Complex_view()
 -- + CREATE PROC test_sample_proc21_read_primary_as_column()
@@ -425,7 +425,7 @@ end;
 -- + CREATE PROC test_sample_proc21_drop_indexes()
 -- + DROP INDEX IF EXISTS p_id;
 -- + DROP INDEX IF EXISTS `Baa id index`;
-@attribute(cql:autotest=((dummy_test, (Baa, (id), (111), (333)), (Caa, (name, id), ('Nelly', 333), ('Babeth', 444))), dummy_table))
+@attribute(cql:autotest=((dummy_test, (Baa, (id), (111), (333)), (`table C`, (name, id), ('Nelly', 333), ('Babeth', 444))), dummy_table))
 create proc sample_proc21()
 begin
   select * from Complex_view;
@@ -435,7 +435,7 @@ end;
 -- + CREATE PROC test_sample_proc22_create_tables()
 -- + CREATE TABLE IF NOT EXISTS primary_as_column
 -- + CREATE TABLE IF NOT EXISTS Baa
--- + CREATE TABLE IF NOT EXISTS Caa
+-- + CREATE TABLE IF NOT EXISTS `table C`
 -- + CREATE VIEW IF NOT EXISTS Complex_view
 -- + CREATE PROC test_sample_proc22_populate_tables()
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1')
@@ -446,16 +446,16 @@ end;
 -- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(222, 2)
--- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(111, 'Nelly', 1, 1, 1)
--- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2)
+-- + INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(111, 'Nelly', 1, 1, 1)
+-- + INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2)
 -- + CREATE PROC test_sample_proc22_drop_tables()
 -- + DROP VIEW IF EXISTS Complex_view;
--- + DROP TABLE IF EXISTS Caa;
+-- + DROP TABLE IF EXISTS `table C`;
 -- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS Baa;
 -- + DROP TABLE IF EXISTS primary_as_column;
--- + CREATE PROC test_sample_proc22_read_Caa()
--- + SELECT * FROM Caa;
+-- + CREATE PROC test_sample_proc22_read_X_tableX20C()
+-- + SELECT * FROM `table C`;
 -- + CREATE PROC test_sample_proc22_read_Baa()
 -- + CREATE PROC test_sample_proc22_read_Complex_view()
 -- + CREATE PROC test_sample_proc22_read_primary_as_column()
@@ -464,7 +464,7 @@ end;
 -- + CREATE PROC test_sample_proc22_drop_indexes()
 -- + DROP INDEX IF EXISTS p_id;
 -- + DROP INDEX IF EXISTS `Baa id index`;
-@attribute(cql:autotest=((dummy_test, (Caa, (name, id), ('Nelly', 111), ('Babeth', 222))), dummy_table))
+@attribute(cql:autotest=((dummy_test, (`table C`, (name, id), ('Nelly', 111), ('Babeth', 222))), dummy_table))
 create proc sample_proc22()
 begin
   select * from Complex_view;
@@ -474,7 +474,7 @@ end;
 -- + CREATE PROC test_sample_proc23_create_tables()
 -- + CREATE TABLE IF NOT EXISTS primary_as_column
 -- + CREATE TABLE IF NOT EXISTS Baa
--- + CREATE TABLE IF NOT EXISTS Caa
+-- + CREATE TABLE IF NOT EXISTS `table C`
 -- + CREATE VIEW IF NOT EXISTS Complex_view
 -- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1)
 -- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2)
@@ -484,8 +484,8 @@ end;
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2)
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1)
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2)
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1)
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc23_drop_indexes()
@@ -502,34 +502,34 @@ end;
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE TABLE IF NOT EXISTS dbl_table
--- + CREATE TABLE IF NOT EXISTS Caa
+-- + CREATE TABLE IF NOT EXISTS `table C`
 -- + CREATE PROC test_sample_proc24_populate_tables()
 -- + CREATE PROC test_sample_proc24_drop_tables()
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Chris', 777.0)
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1)
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2)
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1)
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2)
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc24_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (dbl_table, (num, label), (777.0, 'Chris'))), dummy_table))
 create proc sample_proc24()
 begin
-  select * from Caa;
+  select * from `table C`;
 end;
 
 -- TEST: test dummy_test with fk column value populated to fk table that already has the value
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(777.0, '1')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1)
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2)
+-- + INSERT OR IGNORE INTO `table C`(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1)
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2)
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc25_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
-@attribute(cql:autotest=((dummy_test, (dbl_table, (num), (777.0)), (Caa, (uid), (777.0))), dummy_table))
+@attribute(cql:autotest=((dummy_test, (dbl_table, (num), (777.0)), (`table C`, (uid), (777.0))), dummy_table))
 create proc sample_proc25()
 begin
-  select * from Caa;
+  select * from `table C`;
 end;
 
 -- TEST: test dummy_test with unique column
@@ -671,12 +671,12 @@ END;
 -- TEST:
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-99, 1)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-444, 2)
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1)
--- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2)
-@attribute(cql:autotest=((dummy_test, (Baa, (id), (-99)), (Caa, (id), (-444)))))
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1)
+-- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2)
+@attribute(cql:autotest=((dummy_test, (Baa, (id), (-99)), (`table C`, (id), (-444)))))
 create proc sample_proc311()
 begin
-  select * from Caa;
+  select * from `table C`;
 end;
 
 -- TEST: test that column type of id in t5, t6 tables is not converted to integer.
@@ -693,7 +693,7 @@ end;
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc32()
 begin
-  declare curs cursor like foo;
+  declare curs cursor like `foo view`;
 end;
 
 -- TEST: test dummy_test with cursor like a proc, do not generate dummy_test because decl1 is not a table.
@@ -749,7 +749,7 @@ end;
 -- - DECLARE
 create proc sample_proc8()
 begin
-  select id from Foo;
+  select id from `Foo View`;
 end;
 
 -- TEST: Proc does not return a result set, do not generate anything
@@ -758,7 +758,7 @@ end;
 @attribute(cql:autotest=(dummy_table))
 create proc sample_proc9()
 begin
-  insert into Caa values (1, 1.1, 10, "asdf", "Antonia", 0);
+  insert into `table C` values (1, 1.1, 10, "asdf", "Antonia", 0);
 end;
 
 -- TEST: self referencing table -- ensure null binds correctly

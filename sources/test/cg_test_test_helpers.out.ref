@@ -180,7 +180,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -191,9 +191,9 @@ BEGIN
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
-  CREATE VIEW IF NOT EXISTS Foo AS
+  CREATE VIEW IF NOT EXISTS `Foo View` AS
   SELECT *
-    FROM Caa;
+    FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc7_create_triggers()
@@ -219,14 +219,14 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc7_drop_tables()
 BEGIN
-  DROP VIEW IF EXISTS Foo;
-  DROP TABLE IF EXISTS Caa;
+  DROP VIEW IF EXISTS `Foo View`;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -253,14 +253,14 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc7_read_Caa()
+CREATE PROC test_sample_proc7_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc7_read_Foo()
+CREATE PROC test_sample_proc7_read_X_FooX20View()
 BEGIN
-  SELECT * FROM Foo;
+  SELECT * FROM `Foo View`;
 END;
 
 CREATE PROC test_sample_proc7_drop_indexes()
@@ -313,7 +313,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -324,9 +324,9 @@ BEGIN
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
-  CREATE VIEW IF NOT EXISTS Foo AS
+  CREATE VIEW IF NOT EXISTS `Foo View` AS
   SELECT *
-    FROM Caa;
+    FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc13_create_triggers()
@@ -352,14 +352,14 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc13_drop_tables()
 BEGIN
-  DROP VIEW IF EXISTS Foo;
-  DROP TABLE IF EXISTS Caa;
+  DROP VIEW IF EXISTS `Foo View`;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -386,14 +386,14 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc13_read_Caa()
+CREATE PROC test_sample_proc13_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc13_read_Foo()
+CREATE PROC test_sample_proc13_read_X_FooX20View()
 BEGIN
-  SELECT * FROM Foo;
+  SELECT * FROM `Foo View`;
 END;
 
 CREATE PROC test_sample_proc13_drop_indexes()
@@ -449,7 +449,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -460,9 +460,9 @@ BEGIN
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
-  CREATE VIEW IF NOT EXISTS Foo AS
+  CREATE VIEW IF NOT EXISTS `Foo View` AS
   SELECT *
-    FROM Caa;
+    FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc14_create_triggers()
@@ -488,14 +488,14 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc14_drop_tables()
 BEGIN
-  DROP VIEW IF EXISTS Foo;
-  DROP TABLE IF EXISTS Caa;
+  DROP VIEW IF EXISTS `Foo View`;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -522,14 +522,14 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc14_read_Caa()
+CREATE PROC test_sample_proc14_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc14_read_Foo()
+CREATE PROC test_sample_proc14_read_X_FooX20View()
 BEGIN
-  SELECT * FROM Foo;
+  SELECT * FROM `Foo View`;
 END;
 
 CREATE PROC test_sample_proc14_drop_indexes()
@@ -565,7 +565,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -576,9 +576,9 @@ BEGIN
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
-  CREATE VIEW IF NOT EXISTS Foo AS
+  CREATE VIEW IF NOT EXISTS `Foo View` AS
   SELECT *
-    FROM Caa;
+    FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc15_create_triggers()
@@ -606,14 +606,14 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(129);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(130) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(131);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(131);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc15_drop_tables()
 BEGIN
-  DROP VIEW IF EXISTS Foo;
-  DROP TABLE IF EXISTS Caa;
+  DROP VIEW IF EXISTS `Foo View`;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -646,14 +646,14 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc15_read_Caa()
+CREATE PROC test_sample_proc15_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc15_read_Foo()
+CREATE PROC test_sample_proc15_read_X_FooX20View()
 BEGIN
-  SELECT * FROM Foo;
+  SELECT * FROM `Foo View`;
 END;
 
 CREATE PROC test_sample_proc15_drop_indexes()
@@ -683,7 +683,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -719,13 +719,13 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc16_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -752,9 +752,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc16_read_Caa()
+CREATE PROC test_sample_proc16_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc16_drop_indexes()
@@ -783,7 +783,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -801,9 +801,9 @@ BEGIN
     PRIMARY KEY (id_, seat)
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
-  CREATE VIEW IF NOT EXISTS Foo AS
+  CREATE VIEW IF NOT EXISTS `Foo View` AS
   SELECT *
-    FROM Caa;
+    FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc17_create_triggers()
@@ -829,17 +829,17 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc17_drop_tables()
 BEGIN
-  DROP VIEW IF EXISTS Foo;
+  DROP VIEW IF EXISTS `Foo View`;
   DROP TABLE IF EXISTS primary_as_column;
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -866,9 +866,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc17_read_Caa()
+CREATE PROC test_sample_proc17_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc17_read_primary_as_column()
@@ -876,9 +876,9 @@ BEGIN
   SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc17_read_Foo()
+CREATE PROC test_sample_proc17_read_X_FooX20View()
 BEGIN
-  SELECT * FROM Foo;
+  SELECT * FROM `Foo View`;
 END;
 
 CREATE PROC test_sample_proc17_drop_indexes()
@@ -908,7 +908,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -944,13 +944,13 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc18_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -977,9 +977,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc18_read_Caa()
+CREATE PROC test_sample_proc18_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc18_drop_indexes()
@@ -1053,7 +1053,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -1089,13 +1089,13 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc20_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -1122,9 +1122,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc20_read_Caa()
+CREATE PROC test_sample_proc20_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc20_drop_indexes()
@@ -1153,7 +1153,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -1173,7 +1173,7 @@ BEGIN
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
   SELECT *
-    FROM Caa
+    FROM `table C`
     WHERE name IN (SELECT id_
     FROM primary_as_column);
 END;
@@ -1202,8 +1202,8 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(127) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1) @dummy_seed(128);
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2) @dummy_seed(129) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(333, 'Nelly', 1, 1, 1) @dummy_seed(130);
-  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(444, 'Babeth', 2, 2, 2) @dummy_seed(131) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(333, 'Nelly', 1, 1, 1) @dummy_seed(130);
+  INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(444, 'Babeth', 2, 2, 2) @dummy_seed(131) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(132);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(133) @dummy_nullables @dummy_defaults;
 END;
@@ -1212,7 +1212,7 @@ CREATE PROC test_sample_proc21_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS Complex_view;
   DROP TABLE IF EXISTS primary_as_column;
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -1239,9 +1239,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc21_read_Caa()
+CREATE PROC test_sample_proc21_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc21_read_primary_as_column()
@@ -1291,7 +1291,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -1311,7 +1311,7 @@ BEGIN
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
   SELECT *
-    FROM Caa
+    FROM `table C`
     WHERE name IN (SELECT id_
     FROM primary_as_column);
 END;
@@ -1339,8 +1339,8 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1) @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(111, 'Nelly', 1, 1, 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(111, 'Nelly', 1, 1, 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
@@ -1349,7 +1349,7 @@ CREATE PROC test_sample_proc22_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS Complex_view;
   DROP TABLE IF EXISTS primary_as_column;
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -1376,9 +1376,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc22_read_Caa()
+CREATE PROC test_sample_proc22_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc22_read_primary_as_column()
@@ -1428,7 +1428,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -1448,7 +1448,7 @@ BEGIN
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
   SELECT *
-    FROM Caa
+    FROM `table C`
     WHERE name IN (SELECT id_
     FROM primary_as_column);
 END;
@@ -1476,8 +1476,8 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
@@ -1486,7 +1486,7 @@ CREATE PROC test_sample_proc23_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS Complex_view;
   DROP TABLE IF EXISTS primary_as_column;
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -1513,9 +1513,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc23_read_Caa()
+CREATE PROC test_sample_proc23_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc23_read_primary_as_column()
@@ -1555,7 +1555,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -1591,13 +1591,13 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Chris', 777.0) @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc24_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -1624,9 +1624,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc24_read_Caa()
+CREATE PROC test_sample_proc24_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc24_drop_indexes()
@@ -1665,7 +1665,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -1701,13 +1701,13 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(777.0, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc25_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -1734,9 +1734,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc25_read_Caa()
+CREATE PROC test_sample_proc25_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc25_drop_indexes()
@@ -2102,7 +2102,7 @@ BEGIN
     tag TEXT,
     CONSTRAINT unq UNIQUE (num, label)
   );
-  CREATE TABLE IF NOT EXISTS Caa(
+  CREATE TABLE IF NOT EXISTS `table C`(
     id INTEGER NOT NULL,
     `a pk` REAL NOT NULL,
     uid REAL,
@@ -2138,13 +2138,13 @@ BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc311_drop_tables()
 BEGIN
-  DROP TABLE IF EXISTS Caa;
+  DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
@@ -2171,9 +2171,9 @@ BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc311_read_Caa()
+CREATE PROC test_sample_proc311_read_X_tableX20C()
 BEGIN
-  SELECT * FROM Caa;
+  SELECT * FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc311_drop_indexes()

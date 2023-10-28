@@ -92,7 +92,7 @@ static void cg_test_helpers_emit_name_ast(charbuf *output, ast_node *name_ast) {
   cg_test_helpers_emit_name(output, name, is_qid(name_ast));
 }
 
-static void cg_test_helpers_emit_sptr_index(charbuf *output, sem_struct *sptr, int i) {
+static void cg_test_helpers_emit_sptr_index(charbuf *output, sem_struct *sptr, uint32_t i) {
   cg_test_helpers_emit_name(output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
@@ -531,7 +531,7 @@ static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_a
             
             int32_t icol = sem_column_index(sptr, column_name);
             Invariant(icol >= 0);
-            cg_test_helpers_emit_sptr_index(&names, sptr, icol);
+            cg_test_helpers_emit_sptr_index(&names, sptr, (uint32_t)icol);
             comma = ", ";
 
             symtab_add(col_syms, column_name, NULL);

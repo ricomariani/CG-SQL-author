@@ -160,7 +160,7 @@ static void gen_name(ast_node *ast) {
   gen_name_ex(name, is_qid(ast));
 }
 
-static void gen_sptr_name(sem_struct *sptr, int i) {
+static void gen_sptr_name(sem_struct *sptr, uint32_t i) {
   gen_name_ex(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 

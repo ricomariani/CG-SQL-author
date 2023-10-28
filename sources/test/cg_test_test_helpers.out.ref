@@ -1,13 +1,13 @@
 
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
 DECLARE PROC sample_proc4 () (id INTEGER NOT NULL);
@@ -31,16 +31,16 @@ DECLARE PROC sample_proc12 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
 DECLARE PROC sample_proc13 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc21 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc21 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc22 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc22 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc24 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc24 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc25 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc25 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 
 -- The statement ending at line XXXX
@@ -167,12 +167,12 @@ CREATE PROC test_sample_proc7_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -182,13 +182,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS Foo AS
@@ -198,29 +198,29 @@ END;
 
 CREATE PROC test_sample_proc7_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc7_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc7_drop_tables()
@@ -228,14 +228,14 @@ BEGIN
   DROP VIEW IF EXISTS Foo;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc7_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc7_read_Baa()
@@ -243,9 +243,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc7_read_Aaa()
+CREATE PROC test_sample_proc7_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc7_read_dbl_table()
@@ -265,7 +265,7 @@ END;
 
 CREATE PROC test_sample_proc7_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -300,12 +300,12 @@ CREATE PROC test_sample_proc13_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -315,13 +315,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS Foo AS
@@ -331,29 +331,29 @@ END;
 
 CREATE PROC test_sample_proc13_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc13_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc13_drop_tables()
@@ -361,14 +361,14 @@ BEGIN
   DROP VIEW IF EXISTS Foo;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc13_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc13_read_Baa()
@@ -376,9 +376,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc13_read_Aaa()
+CREATE PROC test_sample_proc13_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc13_read_dbl_table()
@@ -398,7 +398,7 @@ END;
 
 CREATE PROC test_sample_proc13_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 CREATE PROC open_sample_proc13()
@@ -436,12 +436,12 @@ CREATE PROC test_sample_proc14_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -451,13 +451,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS Foo AS
@@ -467,29 +467,29 @@ END;
 
 CREATE PROC test_sample_proc14_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc14_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc14_drop_tables()
@@ -497,14 +497,14 @@ BEGIN
   DROP VIEW IF EXISTS Foo;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc14_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc14_read_Baa()
@@ -512,9 +512,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc14_read_Aaa()
+CREATE PROC test_sample_proc14_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc14_read_dbl_table()
@@ -534,7 +534,7 @@ END;
 
 CREATE PROC test_sample_proc14_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -552,12 +552,12 @@ BEGIN
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -567,13 +567,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS Foo AS
@@ -583,16 +583,16 @@ END;
 
 CREATE PROC test_sample_proc15_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
@@ -600,14 +600,14 @@ CREATE PROC test_sample_proc15_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(123);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(127);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(125);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(127);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(129);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(130) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(131);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(131);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc15_drop_tables()
@@ -615,15 +615,15 @@ BEGIN
   DROP VIEW IF EXISTS Foo;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
   DROP TABLE IF EXISTS primary_as_column;
 END;
 
 CREATE PROC test_sample_proc15_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc15_read_primary_as_column()
@@ -636,9 +636,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc15_read_Aaa()
+CREATE PROC test_sample_proc15_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc15_read_dbl_table()
@@ -659,7 +659,7 @@ END;
 CREATE PROC test_sample_proc15_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS p_id;
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -670,12 +670,12 @@ CREATE PROC test_sample_proc16_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -685,56 +685,56 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
 END;
 
 CREATE PROC test_sample_proc16_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc16_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc16_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc16_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc16_read_Baa()
@@ -742,9 +742,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc16_read_Aaa()
+CREATE PROC test_sample_proc16_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc16_read_dbl_table()
@@ -759,7 +759,7 @@ END;
 
 CREATE PROC test_sample_proc16_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -770,12 +770,12 @@ CREATE PROC test_sample_proc17_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -785,13 +785,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
@@ -808,29 +808,29 @@ END;
 
 CREATE PROC test_sample_proc17_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc17_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
@@ -841,14 +841,14 @@ BEGIN
   DROP TABLE IF EXISTS primary_as_column;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc17_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc17_read_Baa()
@@ -856,9 +856,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc17_read_Aaa()
+CREATE PROC test_sample_proc17_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc17_read_dbl_table()
@@ -883,7 +883,7 @@ END;
 
 CREATE PROC test_sample_proc17_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
 END;
 
@@ -895,12 +895,12 @@ CREATE PROC test_sample_proc18_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -910,56 +910,56 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
 END;
 
 CREATE PROC test_sample_proc18_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc18_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc18_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc18_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc18_read_Baa()
@@ -967,9 +967,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc18_read_Aaa()
+CREATE PROC test_sample_proc18_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc18_read_dbl_table()
@@ -984,7 +984,7 @@ END;
 
 CREATE PROC test_sample_proc18_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -995,10 +995,10 @@ CREATE PROC test_sample_proc19_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 END;
 
 CREATE PROC test_sample_proc19_create_triggers()
@@ -1008,8 +1008,8 @@ END;
 
 CREATE PROC test_sample_proc19_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc19_drop_tables()
@@ -1029,7 +1029,7 @@ END;
 
 CREATE PROC test_sample_proc19_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -1040,12 +1040,12 @@ CREATE PROC test_sample_proc20_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1055,56 +1055,56 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
 END;
 
 CREATE PROC test_sample_proc20_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc20_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc20_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc20_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc20_read_Baa()
@@ -1112,9 +1112,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc20_read_Aaa()
+CREATE PROC test_sample_proc20_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc20_read_dbl_table()
@@ -1129,7 +1129,7 @@ END;
 
 CREATE PROC test_sample_proc20_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -1140,12 +1140,12 @@ CREATE PROC test_sample_proc21_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1155,13 +1155,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
@@ -1180,30 +1180,30 @@ END;
 
 CREATE PROC test_sample_proc21_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc21_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(111, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(333, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(444, 3) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(126);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(127) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(333, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(444, 3) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(126);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(127) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1) @dummy_seed(128);
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2) @dummy_seed(129) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(333, 'Nelly', 1, 1, 1) @dummy_seed(130);
-  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(444, 'Babeth', 2, 2, 2) @dummy_seed(131) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(333, 'Nelly', 1, 1, 1) @dummy_seed(130);
+  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(444, 'Babeth', 2, 2, 2) @dummy_seed(131) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(132);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(133) @dummy_nullables @dummy_defaults;
 END;
@@ -1214,14 +1214,14 @@ BEGIN
   DROP TABLE IF EXISTS primary_as_column;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc21_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc21_read_Baa()
@@ -1229,9 +1229,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc21_read_Aaa()
+CREATE PROC test_sample_proc21_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc21_read_dbl_table()
@@ -1256,7 +1256,7 @@ END;
 
 CREATE PROC test_sample_proc21_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
 END;
 
@@ -1278,12 +1278,12 @@ CREATE PROC test_sample_proc22_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1293,13 +1293,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
@@ -1318,29 +1318,29 @@ END;
 
 CREATE PROC test_sample_proc22_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc22_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(111, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(222, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(222, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1) @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2) @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(111, 'Nelly', 1, 1, 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(222, 'Babeth', 2, 2, 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(111, 'Nelly', 1, 1, 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
@@ -1351,14 +1351,14 @@ BEGIN
   DROP TABLE IF EXISTS primary_as_column;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc22_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc22_read_Baa()
@@ -1366,9 +1366,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc22_read_Aaa()
+CREATE PROC test_sample_proc22_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc22_read_dbl_table()
@@ -1393,7 +1393,7 @@ END;
 
 CREATE PROC test_sample_proc22_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
 END;
 
@@ -1415,12 +1415,12 @@ CREATE PROC test_sample_proc23_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1430,13 +1430,13 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
@@ -1455,29 +1455,29 @@ END;
 
 CREATE PROC test_sample_proc23_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc23_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(131);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
@@ -1488,14 +1488,14 @@ BEGIN
   DROP TABLE IF EXISTS primary_as_column;
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc23_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc23_read_Baa()
@@ -1503,9 +1503,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc23_read_Aaa()
+CREATE PROC test_sample_proc23_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc23_read_dbl_table()
@@ -1530,7 +1530,7 @@ END;
 
 CREATE PROC test_sample_proc23_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
 END;
 
@@ -1542,12 +1542,12 @@ CREATE PROC test_sample_proc24_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1557,56 +1557,56 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
 END;
 
 CREATE PROC test_sample_proc24_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc24_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Chris', 777.0) @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc24_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc24_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc24_read_Baa()
@@ -1614,9 +1614,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc24_read_Aaa()
+CREATE PROC test_sample_proc24_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc24_read_dbl_table()
@@ -1631,7 +1631,7 @@ END;
 
 CREATE PROC test_sample_proc24_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 CREATE PROC open_sample_proc24()
@@ -1652,12 +1652,12 @@ CREATE PROC test_sample_proc25_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1667,56 +1667,56 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
 END;
 
 CREATE PROC test_sample_proc25_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc25_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(777.0, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(uid, id, dl, name, num) VALUES(777.0, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc25_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc25_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc25_read_Baa()
@@ -1724,9 +1724,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc25_read_Aaa()
+CREATE PROC test_sample_proc25_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc25_read_dbl_table()
@@ -1741,7 +1741,7 @@ END;
 
 CREATE PROC test_sample_proc25_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 CREATE PROC open_sample_proc25()
@@ -1842,8 +1842,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 
 CREATE PROC test_sample_proc28_create_tables()
 BEGIN
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1855,23 +1855,23 @@ END;
 
 CREATE PROC test_sample_proc28_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc28_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(125);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
@@ -1879,18 +1879,18 @@ END;
 CREATE PROC test_sample_proc28_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
 END;
 
 CREATE PROC test_sample_proc28_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc28_read_Aaa()
+CREATE PROC test_sample_proc28_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc28_read_dbl_table()
@@ -1944,8 +1944,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 
 CREATE PROC test_sample_proc30_create_tables()
 BEGIN
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1957,23 +1957,23 @@ END;
 
 CREATE PROC test_sample_proc30_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc30_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(123);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(125);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
@@ -1981,18 +1981,18 @@ END;
 CREATE PROC test_sample_proc30_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
 END;
 
 CREATE PROC test_sample_proc30_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc30_read_Aaa()
+CREATE PROC test_sample_proc30_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc30_read_dbl_table()
@@ -2023,7 +2023,7 @@ END;
 
 CREATE PROC test_sample_proc31_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS R1
+  CREATE TRIGGER IF NOT EXISTS `Trigger 1`
     BEFORE DELETE ON T1
   BEGIN
   DELETE FROM T2 WHERE id = OLD.id;
@@ -2057,7 +2057,7 @@ END;
 
 CREATE PROC test_sample_proc31_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS R1;
+  DROP TRIGGER IF EXISTS `Trigger 1`;
   DROP TRIGGER IF EXISTS R2;
 END;
 
@@ -2089,12 +2089,12 @@ CREATE PROC test_sample_proc311_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INTEGER NOT NULL,
-    id2 LONG_INT,
-    id3 TEXT
+    `id 2` LONG_INT,
+    `id 3` TEXT
   );
-  CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
-  CREATE TABLE IF NOT EXISTS Aaa(
-    dl REAL NOT NULL PRIMARY KEY
+  CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
+  CREATE TABLE IF NOT EXISTS `table a`(
+    `a pk` REAL NOT NULL PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -2104,56 +2104,56 @@ BEGIN
   );
   CREATE TABLE IF NOT EXISTS Caa(
     id INTEGER NOT NULL,
-    dl REAL NOT NULL,
+    `a pk` REAL NOT NULL,
     uid REAL,
     name TEXT,
     name2 TEXT,
     num LONG_INT,
-    FOREIGN KEY (id, num) REFERENCES Baa (id, id2) ON UPDATE NO ACTION,
-    FOREIGN KEY (dl) REFERENCES Aaa (dl) ON UPDATE NO ACTION,
+    FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
+    FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
 END;
 
 CREATE PROC test_sample_proc311_create_triggers()
 BEGIN
-  CREATE TRIGGER IF NOT EXISTS onAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `also on table a`
+    BEFORE DELETE ON `table a`
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
-  CREATE TRIGGER IF NOT EXISTS triggerAaa
-    BEFORE DELETE ON Aaa
+  CREATE TRIGGER IF NOT EXISTS `trigger on table a`
+    BEFORE DELETE ON `table a`
     WHEN is_declare_func_enabled()
   BEGIN
-  DELETE FROM dbl_table WHERE num = OLD.dl;
+  DELETE FROM dbl_table WHERE num = OLD.`a pk`;
   END;
 END;
 
 CREATE PROC test_sample_proc311_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(-99, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO Baa(id, id2) VALUES(-444, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(1) @dummy_seed(125);
-  INSERT OR IGNORE INTO Aaa(dl) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-99, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-444, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(125);
+  INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(127);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(128) @dummy_nullables @dummy_defaults;
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(-444, 1, 1, '1', 1) @dummy_seed(129);
-  INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(-444, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1) @dummy_seed(129);
+  INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_sample_proc311_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Caa;
   DROP TABLE IF EXISTS dbl_table;
-  DROP TABLE IF EXISTS Aaa;
+  DROP TABLE IF EXISTS `table a`;
   DROP TABLE IF EXISTS Baa;
 END;
 
 CREATE PROC test_sample_proc311_drop_triggers()
 BEGIN
-  DROP TRIGGER IF EXISTS onAaa;
-  DROP TRIGGER IF EXISTS triggerAaa;
+  DROP TRIGGER IF EXISTS `also on table a`;
+  DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
 CREATE PROC test_sample_proc311_read_Baa()
@@ -2161,9 +2161,9 @@ BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc311_read_Aaa()
+CREATE PROC test_sample_proc311_read_X_tableX20a()
 BEGIN
-  SELECT * FROM Aaa;
+  SELECT * FROM `table a`;
 END;
 
 CREATE PROC test_sample_proc311_read_dbl_table()
@@ -2178,7 +2178,7 @@ END;
 
 CREATE PROC test_sample_proc311_drop_indexes()
 BEGIN
-  DROP INDEX IF EXISTS baa_id;
+  DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
@@ -2257,9 +2257,9 @@ CREATE PROC test_self_ref_proc_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INTEGER PRIMARY KEY,
-    id2 INTEGER @SENSITIVE,
+    `id 2` INTEGER @SENSITIVE,
     name TEXT,
-    FOREIGN KEY (id2) REFERENCES self_ref_table (id)
+    FOREIGN KEY (`id 2`) REFERENCES self_ref_table (id)
   );
 END;
 
@@ -2270,8 +2270,8 @@ END;
 
 CREATE PROC test_self_ref_proc_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, NULL) @dummy_seed(123);
-  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_self_ref_proc_drop_tables()
@@ -2297,9 +2297,9 @@ CREATE PROC test_self_ref_proc_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INTEGER PRIMARY KEY,
-    id2 INTEGER @SENSITIVE,
+    `id 2` INTEGER @SENSITIVE,
     name TEXT,
-    FOREIGN KEY (id2) REFERENCES self_ref_table (id)
+    FOREIGN KEY (`id 2`) REFERENCES self_ref_table (id)
   );
 END;
 
@@ -2310,8 +2310,8 @@ END;
 
 CREATE PROC test_self_ref_proc_no_data_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_self_ref_proc_no_data_drop_tables()
@@ -2337,7 +2337,7 @@ CREATE PROC test_self_ref_proc2_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table2(
     id INTEGER PRIMARY KEY,
-    id2 INTEGER REFERENCES self_ref_table2 (id),
+    `id 2` INTEGER REFERENCES self_ref_table2 (id),
     name TEXT
   );
 END;
@@ -2349,8 +2349,8 @@ END;
 
 CREATE PROC test_self_ref_proc2_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, NULL) @dummy_seed(123);
-  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_self_ref_proc2_drop_tables()
@@ -2376,7 +2376,7 @@ CREATE PROC test_self_ref_proc2_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table2(
     id INTEGER PRIMARY KEY,
-    id2 INTEGER REFERENCES self_ref_table2 (id),
+    `id 2` INTEGER REFERENCES self_ref_table2 (id),
     name TEXT
   );
 END;
@@ -2388,8 +2388,8 @@ END;
 
 CREATE PROC test_self_ref_proc2_no_data_populate_tables()
 BEGIN
-  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, 1) @dummy_seed(123);
-  INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+  INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+  INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
 CREATE PROC test_self_ref_proc2_no_data_drop_tables()

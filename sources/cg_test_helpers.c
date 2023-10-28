@@ -77,6 +77,26 @@ static void find_all_table_nodes(dummy_test_info *info, ast_node *node);
 
 static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed);
 
+static void cg_test_helpers_emit_name(charbuf *output, CSTR name, bool_t qid) {
+  if (qid) {
+    cg_decode_qstr(output, name);
+  }
+  else {
+    bprintf(output, "%s", name);
+  }
+}
+
+// emit a name or a quoted name as needed
+static void cg_test_helpers_emit_name_ast(charbuf *output, ast_node *name_ast) {
+  EXTRACT_STRING(name, name_ast);
+  cg_test_helpers_emit_name(output, name, is_qid(name_ast));
+}
+
+static void cg_test_helpers_emit_sptr_index(charbuf *output, sem_struct *sptr, int i) {
+  cg_test_helpers_emit_name(output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
+}
+
+
 // The dummy_table, dummy_insert, dummy_select and dummy_result_set attributions
 // will reference the original procedure by name in a LIKE clause.  In order to get its
 // result type, we need to emit a declaration for the proc because its body will not be
@@ -183,6 +203,7 @@ static void process_pending_triggers(void *_Nullable context) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.if_not_exists_callback = cg_test_helpers_force_if_not_exists;
+  callbacks.mode = gen_mode_no_annotations;
 
   // note that we might get more triggers as a result of processing these triggers
   while (info->pending_triggers) {
@@ -203,8 +224,9 @@ static void process_pending_triggers(void *_Nullable context) {
       EXTRACT_NOTNULL(trigger_body_vers, create_trigger_stmt->right);
       EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
       EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
-      EXTRACT_STRING(trigger_name, trigger_name_ast);
-      bprintf(gen_drop_triggers, "DROP TRIGGER IF EXISTS %s;\n", trigger_name);
+      bprintf(gen_drop_triggers, "DROP TRIGGER IF EXISTS ");
+      cg_test_helpers_emit_name_ast(gen_drop_triggers, trigger_name_ast);
+      bprintf(gen_drop_triggers, ";\n");
 
       // Now we need to find all the tables referenced in the triggers, because those tables
       // should also to be part of tables emit by dummy_test. Otherwise the triggers statement
@@ -466,7 +488,7 @@ static void cg_dummy_test_emit_integer_value(charbuf *output, sem_t col_type, in
 // but also info in dummy_test attribute. If column's values are provided in
 // dummy_test info for the table, it'll be used otherwise @dummy_seed is used to
 // populated seed value into table.
-static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed) {
+static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed) {
   Contract(is_ast_create_table_stmt(table_ast));
 
   // do not emit populate for backing tables, let backed tables do the job
@@ -475,7 +497,8 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
   }
 
   sem_struct *sptr = table_ast->sem->sptr;
-  CSTR table_name = sptr->struct_name;
+  ast_node *table_name_ast = sem_get_name_ast(table_ast);
+  EXTRACT_STRING(table_name, table_name_ast);
   bool_t add_row;
   int32_t row_index = -1;
   symtab_entry *table_entry = symtab_find(dummy_test_infos, table_name);
@@ -504,7 +527,11 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
             cg_dummy_test_column_value(&str_val, column_values[row_index]);
 
             bprintf(&values, "%s%s", comma, str_val.ptr);
-            bprintf(&names, "%s%s", comma, column_name);
+            bprintf(&names, "%s", comma);
+            
+            int32_t icol = sem_column_index(sptr, column_name);
+            Invariant(icol >= 0);
+            cg_test_helpers_emit_sptr_index(&names, sptr, icol);
             comma = ", ";
 
             symtab_add(col_syms, column_name, NULL);
@@ -543,7 +570,8 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
                 cg_dummy_test_emit_integer_value(&str_val, col_type, cg_validate_value_range(index_value));
               }
             }
-            bprintf(&names, "%s%s", comma, column_name);
+            bprintf(&names, "%s", comma);
+            cg_test_helpers_emit_sptr_index(&names, sptr, i);
             bprintf(&values, "%s", comma);
             comma = ", ";
 
@@ -557,9 +585,9 @@ static void cg_dummy_test_populate (charbuf *gen_insert_tables, ast_node *table_
         }
       }
 
-      bprintf(gen_insert_tables,
-              "INSERT OR IGNORE INTO %s(%s) VALUES(%s) @dummy_seed(%d)%s;\n",
-              table_name,
+      bprintf(gen_insert_tables, "INSERT OR IGNORE INTO ");
+      cg_test_helpers_emit_name_ast(gen_insert_tables, table_name_ast);
+      bprintf(gen_insert_tables, "(%s) VALUES(%s) @dummy_seed(%d)%s;\n",
               names.ptr,
               values.ptr,
               (*dummy_value_seed)++,
@@ -617,11 +645,12 @@ static void init_all_indexes_per_table() {
 
 // Emit create and drop index statement for all indexes on a table.
 static void cg_emit_index_stmt(
-  CSTR table_name,
+  ast_node *table_name_ast,
   charbuf *gen_create_indexes,
   charbuf *gen_drop_indexes,
   gen_sql_callbacks *callback)
 {
+  EXTRACT_STRING(table_name, table_name_ast);
   symtab_entry *indexes_entry = symtab_find(all_tables_with_indexes, table_name);
   bytebuf *buf = indexes_entry ? (bytebuf *)indexes_entry->val : NULL;
   ast_node **indexes_ast = buf ? (ast_node **)buf->ptr : NULL;
@@ -633,32 +662,13 @@ static void cg_emit_index_stmt(
     EXTRACT_NOTNULL(create_index_stmt, index_ast);
     EXTRACT_NOTNULL(create_index_on_list, create_index_stmt->left);
     EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
-    EXTRACT_STRING(index_name, index_name_ast);
 
     gen_statement_with_callbacks(index_ast, callback);
     bprintf(gen_create_indexes, ";\n");
-    bprintf(gen_drop_indexes, "DROP INDEX IF EXISTS %s;\n", index_name);
+    bprintf(gen_drop_indexes, "DROP INDEX IF EXISTS ");
+    cg_test_helpers_emit_name_ast(gen_drop_indexes, index_name_ast);
+    bprintf(gen_drop_indexes, ";\n");
   }
-}
-
-static CSTR get_table_or_view_name(ast_node *table_or_view) {
-  CSTR table_name = NULL;
-  if (is_ast_create_table_stmt(table_or_view)) {
-    EXTRACT_NOTNULL(create_table_name_flags, table_or_view->left);
-    EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
-    EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
-    EXTRACT_STRING(name, name_ast);
-    table_name = name;
-  }
-  else {
-    Contract(is_ast_create_view_stmt(table_or_view));
-    EXTRACT(view_and_attrs, table_or_view->right);
-    EXTRACT(name_and_select, view_and_attrs->left);
-    EXTRACT_NAME_AST(name_ast, name_and_select->left);
-    EXTRACT_STRING(name, name_ast);
-    table_name = name;
-  }
-  return table_name;
 }
 
 // Emit procedure for dummy_test attribution. This is the entry point that emit
@@ -729,11 +739,13 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   for (list_item *item = info.found_tables; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(table_or_view, item->ast);
     Invariant(is_ast_create_table_stmt(table_or_view) || is_ast_create_view_stmt(table_or_view));
-    CSTR table_name = get_table_or_view_name(table_or_view);
+    ast_node *name_ast = sem_get_name_ast(table_or_view);
 
     // backed tables are not to be dropped, they don't exist physically
     if (!is_backed(table_or_view->sem->sem_type)) {
-      bprintf(&gen_drop_tables, "DROP %s IF EXISTS %s;\n", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW", table_name);
+      bprintf(&gen_drop_tables, "DROP %s IF EXISTS ", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW");
+      cg_test_helpers_emit_name_ast(&gen_drop_tables, name_ast);
+      bprintf(&gen_drop_tables, ";\n");
     }
   }
 
@@ -779,8 +791,8 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     // the CREATE for those indices and a DROP for the indices.  The CREATE goes with
     // the table creates.  The indices may be dropped seperately so the DROP goes
     // in its own buffer
-    CSTR table_name = get_table_or_view_name(table_or_view);
-    cg_emit_index_stmt(table_name, &gen_create_tables, &gen_drop_indexes, &callbacks);
+    ast_node *name_ast = sem_get_name_ast(table_or_view);
+    cg_emit_index_stmt(name_ast, &gen_create_tables, &gen_drop_indexes, &callbacks);
 
     // Next we generate a fragment to populate data for this table using the current seed value
     // We don't do this for views or virtual tables
@@ -792,10 +804,14 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     // data out of it.  Most tests don't use all of them but it's only test code so size doesn't
     // matter so much and it's super easy to have them all handy so we aren't picky.
 
+    EXTRACT_STRING(table_name, name_ast);
+
     bprintf(&gen_read_tables, "\n");
     bprintf(&gen_read_tables, "CREATE PROC test_%s_read_%s()\n", proc_name, table_name);
     bprintf(&gen_read_tables, "BEGIN\n");
-    bprintf(&gen_read_tables, "  SELECT * FROM %s;\n", table_name);
+    bprintf(&gen_read_tables, "  SELECT * FROM ");
+    cg_test_helpers_emit_name_ast(&gen_read_tables, name_ast);
+    bprintf(&gen_read_tables, ";\n", table_name);
     bprintf(&gen_read_tables, "END;\n");
   }
 

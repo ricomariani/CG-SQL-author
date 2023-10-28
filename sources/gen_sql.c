@@ -139,9 +139,8 @@ cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
   output = buffer;
 }
 
-static void gen_name(ast_node *ast) {
-  EXTRACT_STRING(name, ast);
-  if (is_qid(ast)) {
+static void gen_name_ex(CSTR name, bool_t is_qid) {
+  if (is_qid) {
     if (!for_sqlite()) {
       cg_decode_qstr(output, name);
     }
@@ -154,6 +153,15 @@ static void gen_name(ast_node *ast) {
   else {
     gen_printf("%s", name);
   }
+}
+
+static void gen_name(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  gen_name_ex(name, is_qid(ast));
+}
+
+static void gen_sptr_name(sem_struct *sptr, int i) {
+  gen_name_ex(sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
 static void gen_constraint_name(ast_node *ast) {
@@ -2713,7 +2721,8 @@ static void gen_select_nothing_stmt(ast_node *ast) {
     if (gen_callbacks && gen_callbacks->minify_aliases) {
       gen_printf("0");
     } else {
-      gen_printf("0 %s", sptr->names[i]);
+      gen_printf("0 ");
+      gen_sptr_name(sptr, i);
     }
   }
   gen_printf(" WHERE 0");
@@ -3625,9 +3634,10 @@ static void gen_declare_proc_from_create_proc(ast_node *ast) {
 
       gen_printf(" (");
       for (uint32_t i = 0; i < sptr->count; i++) {
-        gen_printf("%s ", sptr->names[i]);
-        sem_t sem_type = sptr->semtypes[i];
+        gen_sptr_name(sptr, i);
+        gen_printf(" ");
 
+        sem_t sem_type = sptr->semtypes[i];
         gen_printf("%s", coretype_string(sem_type));
 
         CSTR kind = sptr->kinds[i];
@@ -3742,8 +3752,8 @@ static void gen_typed_name(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(type, typed_name->right);
 
   if (name) {
-    EXTRACT_STRING(formal, name);
-    gen_printf("%s ", formal);
+    gen_name(name);
+    gen_printf(" ");
   }
 
   if (is_ast_shape_def(type)) {

@@ -6,21 +6,21 @@
  */
 
 -- test helpers generation tests
-create table Aaa
+create table `table a`
 (
-  dl real not null primary key
+  `a pk` real not null primary key
 );
 
 create table Baa
 (
   id int not null,
-  id2 long int,
-  id3 text
+  `id 2` long int,
+  `id 3` text
 );
 
-create unique index baa_id on Baa(id, id2);
+create unique index `Baa id index` on Baa(id, `id 2`);
 
-create unique index baa_id_deleted on Baa(id, id2) @delete(1);
+create unique index baa_id_deleted on Baa(id, `id 2`) @delete(1);
 
 create table dbl_table (
   num real,
@@ -32,13 +32,13 @@ create table dbl_table (
 create table Caa
 (
   id int not null,
-  dl real not null,
+  `a pk` real not null,
   uid real,
   name text,
   name2 text,
   num long int,
-  FOREIGN KEY (id, num) REFERENCES Baa(id, id2) ON UPDATE NO ACTION,
-  FOREIGN KEY (dl) REFERENCES Aaa(dl) ON UPDATE NO ACTION,
+  FOREIGN KEY (id, num) REFERENCES Baa(id, `id 2`) ON UPDATE NO ACTION,
+  FOREIGN KEY (`a pk`) REFERENCES `table a`(`a pk`) ON UPDATE NO ACTION,
   FOREIGN KEY (uid, name) REFERENCES dbl_table(num, label) ON UPDATE NO ACTION
 );
 
@@ -53,15 +53,15 @@ create table primary_as_column
 create table self_ref_table
 (
   id integer primary key,
-  id2 integer @sensitive, -- @sensitive forces attrs to be examined
+  `id 2` integer @sensitive, -- @sensitive forces attrs to be examined
   name text,
-  foreign key (id2) references self_ref_table(id)
+  foreign key (`id 2`) references self_ref_table(id)
 );
 
 create table self_ref_table2
 (
   id integer primary key,
-  id2 integer references self_ref_table2(id),
+  `id 2` integer references self_ref_table2(id),
   name text
 );
 
@@ -78,17 +78,17 @@ create index p_id_delete on primary_as_column(id_) @delete(1);
 @attribute(cql:deterministic)
 declare select function is_declare_func_enabled() bool not null;
 
-create trigger triggerAaa
-    before delete on Aaa when is_declare_func_enabled()
-  begin
-    delete from dbl_table where num = OLD.dl;
-  end;
+create trigger `trigger on table a`
+  before delete on `table a` when is_declare_func_enabled()
+begin
+  delete from dbl_table where num = OLD.`a pk`;
+end;
 
-create trigger triggerAaa_deleted
-    before delete on Aaa when is_declare_func_enabled()
-  begin
-    delete from dbl_table where num = OLD.dl;
-  end @delete(2);
+create trigger trigger_deleted
+  before delete on `table a` when is_declare_func_enabled()
+begin
+  delete from dbl_table where num = OLD.`a pk`;
+end @delete(2);
 
 create table experiment_value
 (
@@ -106,14 +106,17 @@ create table T4
 (
   id int primary key
 );
+
 create table T1
 (
   id int
 );
+
 create table T2
 (
   id int
 );
+
 create table T3
 (
   id int,
@@ -124,12 +127,13 @@ create table t5(
   id long int primary key autoincrement,
   data text
 );
+
 create table t6(
   id long int primary key,
   foreign key (id) references t5 (id) on update cascade on delete cascade
 );
 
-create trigger R1
+create trigger `Trigger 1`
     before delete on T1
 begin
   delete from T2 where id = OLD.id;
@@ -170,7 +174,7 @@ create table child_blob_primary_key (
 );
 
 -- TEST: dummy_table only
--- + %DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
+-- + %DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);%
 -- + %DROP TABLE test_sample_proc1;%
 @attribute(cql:autotest=(dummy_table))
@@ -180,7 +184,7 @@ begin
 end;
 
 -- TEST: dummy_insert only
--- + %DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
+-- + %DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %INSERT INTO test_sample_proc2 FROM ARGUMENTS;%
 @attribute(cql:autotest=(dummy_table, dummy_insert))
 create proc sample_proc2()
@@ -189,7 +193,7 @@ begin
 end;
 
 -- TEST: dummy_select only
--- + %DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, dl REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
+-- + %DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);%
 -- + %SELECT * FROM test_sample_proc3;%
 @attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc3()
@@ -329,7 +333,7 @@ end;
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc16()
 begin
-  insert into Caa(id, dl, name) values (1, 1.1, 'val');
+  insert into Caa(id, `a pk`, name) values (1, 1.1, 'val');
 end;
 
 -- TEST: test dummy_test with drop,delete table statement
@@ -371,7 +375,7 @@ begin
 create table t (
   id int not null primary key,
   num long int,
-  FOREIGN KEY (id, num) REFERENCES Baa(id, id2) ON UPDATE NO ACTION
+  FOREIGN KEY (id, num) REFERENCES Baa(id, `id 2`) ON UPDATE NO ACTION
 );
 end;
 
@@ -398,17 +402,17 @@ end;
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1)
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2)
--- + INSERT OR IGNORE INTO Aaa(dl) VALUES(1)
--- + INSERT OR IGNORE INTO Aaa(dl) VALUES(2)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(111, 1)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(333, 2)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(444, 3)
--- + INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(333, 'Nelly', 1, 1, 1)
--- + INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(444, 'Babeth', 2, 2, 2)
+-- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1)
+-- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(333, 2)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(444, 3)
+-- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(333, 'Nelly', 1, 1, 1)
+-- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(444, 'Babeth', 2, 2, 2)
 -- + CREATE PROC test_sample_proc21_drop_tables()
 -- + DROP VIEW IF EXISTS Complex_view;
 -- + DROP TABLE IF EXISTS Caa;
--- + DROP TABLE IF EXISTS Aaa;
+-- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS Baa;
 -- + DROP TABLE IF EXISTS primary_as_column;
 -- + CREATE PROC test_sample_proc21_read_Caa()
@@ -417,10 +421,10 @@ end;
 -- + CREATE PROC test_sample_proc21_read_Complex_view()
 -- + CREATE PROC test_sample_proc21_read_primary_as_column()
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
--- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+-- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc21_drop_indexes()
 -- + DROP INDEX IF EXISTS p_id;
--- + DROP INDEX IF EXISTS baa_id;
+-- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (Baa, (id), (111), (333)), (Caa, (name, id), ('Nelly', 333), ('Babeth', 444))), dummy_table))
 create proc sample_proc21()
 begin
@@ -438,16 +442,16 @@ end;
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Nelly', 1)
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Babeth', 2)
--- + INSERT OR IGNORE INTO Aaa(dl) VALUES(1)
--- + INSERT OR IGNORE INTO Aaa(dl) VALUES(2)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(111, 1)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(222, 2)
--- + INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(111, 'Nelly', 1, 1, 1)
--- + INSERT OR IGNORE INTO Caa(id, name, dl, uid, num) VALUES(222, 'Babeth', 2, 2, 2)
+-- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1)
+-- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(222, 2)
+-- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(111, 'Nelly', 1, 1, 1)
+-- + INSERT OR IGNORE INTO Caa(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2)
 -- + CREATE PROC test_sample_proc22_drop_tables()
 -- + DROP VIEW IF EXISTS Complex_view;
 -- + DROP TABLE IF EXISTS Caa;
--- + DROP TABLE IF EXISTS Aaa;
+-- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS Baa;
 -- + DROP TABLE IF EXISTS primary_as_column;
 -- + CREATE PROC test_sample_proc22_read_Caa()
@@ -456,10 +460,10 @@ end;
 -- + CREATE PROC test_sample_proc22_read_Complex_view()
 -- + CREATE PROC test_sample_proc22_read_primary_as_column()
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
--- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+-- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc22_drop_indexes()
 -- + DROP INDEX IF EXISTS p_id;
--- + DROP INDEX IF EXISTS baa_id;
+-- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (Caa, (name, id), ('Nelly', 111), ('Babeth', 222))), dummy_table))
 create proc sample_proc22()
 begin
@@ -472,21 +476,21 @@ end;
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE TABLE IF NOT EXISTS Caa
 -- + CREATE VIEW IF NOT EXISTS Complex_view
--- + INSERT OR IGNORE INTO Aaa(dl) VALUES(1)
--- + INSERT OR IGNORE INTO Aaa(dl) VALUES(2)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(1, 1)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(2, 2)
+-- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1)
+-- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2)
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1')
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 2, '2', 2)
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 1, '1', 1)
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2)
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 1, '1', 1)
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
--- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+-- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc23_drop_indexes()
 -- + DROP INDEX IF EXISTS p_id;
--- + DROP INDEX IF EXISTS baa_id;
+-- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=(dummy_test))
 create proc sample_proc23()
 begin
@@ -495,7 +499,7 @@ end;
 
 -- TEST: test dummy_test with fk column value populated to fk table
 -- + CREATE PROC test_sample_proc24_create_tables()
--- + CREATE TABLE IF NOT EXISTS Aaa
+-- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE TABLE IF NOT EXISTS dbl_table
 -- + CREATE TABLE IF NOT EXISTS Caa
@@ -503,11 +507,11 @@ end;
 -- + CREATE PROC test_sample_proc24_drop_tables()
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Chris', 777.0)
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1)
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2)
--- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1)
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2)
+-- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc24_drop_indexes()
--- + DROP INDEX IF EXISTS baa_id;
+-- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (dbl_table, (num, label), (777.0, 'Chris'))), dummy_table))
 create proc sample_proc24()
 begin
@@ -517,11 +521,11 @@ end;
 -- TEST: test dummy_test with fk column value populated to fk table that already has the value
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(777.0, '1')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + INSERT OR IGNORE INTO Caa(uid, id, dl, name, num) VALUES(777.0, 1, 1, '1', 1)
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(2, 2, 777.0, '2', 2)
--- + CREATE UNIQUE INDEX IF NOT EXISTS baa_id ON Baa (id, id2);
+-- + INSERT OR IGNORE INTO Caa(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1)
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2)
+-- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE PROC test_sample_proc25_drop_indexes()
--- + DROP INDEX IF EXISTS baa_id;
+-- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (dbl_table, (num), (777.0)), (Caa, (uid), (777.0))), dummy_table))
 create proc sample_proc25()
 begin
@@ -561,43 +565,43 @@ BEGIN
   SELECT * FROM experiment_value;
 END;
 
--- TEST: test dbl_table is processed in dummy_test because of triggerAaa on Aaa
+-- TEST: test dbl_table is processed in dummy_test because of `trigger on table a` on `table a`
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 -- + CREATE PROC test_sample_proc28_create_tables()
--- + CREATE TABLE IF NOT EXISTS Aaa
+-- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
 -- + CREATE PROC test_sample_proc28_create_triggers()
--- + CREATE TRIGGER IF NOT EXISTS triggerAaa
+-- + CREATE TRIGGER IF NOT EXISTS `trigger on table a`
 -- + CREATE PROC test_sample_proc28_populate_tables()
--- +2 INSERT OR IGNORE INTO Aaa
+-- +2 INSERT OR IGNORE INTO `table a`
 -- +2 INSERT OR IGNORE INTO dbl_table
 -- + CREATE PROC test_sample_proc28_drop_tables()
--- + DROP TABLE IF EXISTS Aaa;
+-- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS dbl_table;
 -- + CREATE PROC test_sample_proc28_drop_triggers()
--- + DROP TRIGGER IF EXISTS triggerAaa
--- + CREATE PROC test_sample_proc28_read_Aaa()
+-- + DROP TRIGGER IF EXISTS `trigger on table a`
+-- + CREATE PROC test_sample_proc28_read_X_tableX20a()
 -- + CREATE PROC test_sample_proc28_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc28()
 BEGIN
-  select * from Aaa;
+  select * from `table a`;
 END;
 
--- TEST: test Aaa is not processed in dummy_test because the triggerAaa is on Aaa
+-- TEST: test `table a` is not processed in dummy_test because the trigger`table a` is on `table a`
 -- + CREATE PROC test_sample_proc29_create_tables()
--- - CREATE TABLE IF NOT EXISTS Aaa
+-- - CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
 -- _ CREATE PROC test_sample_proc29_create_triggers()
--- - CREATE TRIGGER triggerAaa
+-- - CREATE TRIGGER `trigger on table a`
 -- + CREATE PROC test_sample_proc29_populate_tables()
--- - INSERT OR IGNORE INTO Aaa
+-- - INSERT OR IGNORE INTO `table a`
 -- +2 INSERT OR IGNORE INTO dbl_table
 -- + CREATE PROC test_sample_proc29_drop_tables()
--- - DROP TABLE IF EXISTS Aaa;
+-- - DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS dbl_table;
 -- + CREATE PROC test_sample_proc29_drop_triggers()
--- - DROP TRIGGER IF EXISTS triggerAaa
+-- - DROP TRIGGER IF EXISTS `trigger on table a`
 -- + CREATE PROC test_sample_proc29_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc29()
@@ -605,30 +609,30 @@ BEGIN
   select * from dbl_table;
 END;
 
--- TEST: test dbl_table is processed in dummy_test because of triggerAaa on Aaa
+-- TEST: test dbl_table is processed in dummy_test because of trigger`table a` on `table a`
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
 -- + CREATE PROC test_sample_proc30_create_tables()
--- + CREATE TABLE IF NOT EXISTS Aaa
+-- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
 -- + CREATE PROC test_sample_proc30_create_triggers()
--- + CREATE TRIGGER IF NOT EXISTS triggerAaa
+-- + CREATE TRIGGER IF NOT EXISTS `trigger on table a`
 -- + CREATE PROC test_sample_proc30_populate_tables()
--- +2 INSERT OR IGNORE INTO Aaa
+-- +2 INSERT OR IGNORE INTO `table a`
 -- +2 INSERT OR IGNORE INTO dbl_table
 -- + CREATE PROC test_sample_proc30_drop_tables()
--- + DROP TABLE IF EXISTS Aaa;
+-- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS dbl_table;
 -- + CREATE PROC test_sample_proc30_drop_triggers()
--- + DROP TRIGGER IF EXISTS triggerAaa
--- + CREATE PROC test_sample_proc30_read_Aaa()
+-- + DROP TRIGGER IF EXISTS `trigger on table a`
+-- + CREATE PROC test_sample_proc30_read_X_tableX20a
 -- + CREATE PROC test_sample_proc30_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc30()
 BEGIN
-  create trigger onAaa
-      before delete on Aaa
+  create trigger `also on table a`
+      before delete on `table a`
     begin
-      delete from dbl_table where num = OLD.dl;
+      delete from dbl_table where num = OLD.`a pk`;
     end;
 END;
 
@@ -639,7 +643,7 @@ END;
 -- + CREATE TABLE IF NOT EXISTS T3
 -- + CREATE TABLE IF NOT EXISTS T4
 -- + CREATE PROC test_sample_proc31_create_triggers()
--- + CREATE TRIGGER IF NOT EXISTS R1
+-- + CREATE TRIGGER IF NOT EXISTS `Trigger 1`
 -- + CREATE TRIGGER IF NOT EXISTS R2
 -- + CREATE PROC test_sample_proc31_populate_tables()
 -- +2 INSERT OR IGNORE INTO T1
@@ -652,7 +656,7 @@ END;
 -- + DROP TABLE IF EXISTS T3;
 -- + DROP TABLE IF EXISTS T4;
 -- + CREATE PROC test_sample_proc31_drop_triggers()
--- + DROP TRIGGER IF EXISTS R1
+-- + DROP TRIGGER IF EXISTS `Trigger 1`
 -- + DROP TRIGGER IF EXISTS R2
 -- + CREATE PROC test_sample_proc31_read_T1()
 -- + CREATE PROC test_sample_proc31_read_T2()
@@ -665,10 +669,10 @@ BEGIN
 END;
 
 -- TEST:
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(-99, 1)
--- + INSERT OR IGNORE INTO Baa(id, id2) VALUES(-444, 2)
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(-444, 1, 1, '1', 1)
--- + INSERT OR IGNORE INTO Caa(id, dl, uid, name, num) VALUES(-444, 2, 2, '2', 2)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-99, 1)
+-- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-444, 2)
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1)
+-- + INSERT OR IGNORE INTO Caa(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2)
 @attribute(cql:autotest=((dummy_test, (Baa, (id), (-99)), (Caa, (id), (-444)))))
 create proc sample_proc311()
 begin
@@ -758,17 +762,17 @@ begin
 end;
 
 -- TEST: self referencing table -- ensure null binds correctly
--- + INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, NULL) @dummy_seed(123);
--- + INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-@attribute(cql:autotest=((dummy_test, (self_ref_table, (id, id2), (1, null), (2, 1)))))
+-- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+@attribute(cql:autotest=((dummy_test, (self_ref_table, (id, `id 2`), (1, null), (2, 1)))))
 create proc self_ref_proc()
 begin
   select * from self_ref_table;
 end;
 
 -- TEST: self referencing table -- no data specified
--- + INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(1, 1) @dummy_seed(123);
--- + INSERT OR IGNORE INTO self_ref_table(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=((dummy_test)))
 create proc self_ref_proc_no_data()
 begin
@@ -776,17 +780,17 @@ begin
 end;
 
 -- TEST: self referencing table -- using attribute -- ensure null binds correctly
--- + INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, NULL) @dummy_seed(123);
--- + INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
-@attribute(cql:autotest=((dummy_test, (self_ref_table2, (id, id2), (1, null), (2, 1)))))
+-- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+@attribute(cql:autotest=((dummy_test, (self_ref_table2, (id, `id 2`), (1, null), (2, 1)))))
 create proc self_ref_proc2()
 begin
   select * from self_ref_table2;
 end;
 
 -- TEST: self referencing table -- using attribute --  no data specified
--- + INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(1, 1) @dummy_seed(123);
--- + INSERT OR IGNORE INTO self_ref_table2(id, id2) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
+-- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
+-- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=((dummy_test)))
 create proc self_ref_proc2_no_data()
 begin

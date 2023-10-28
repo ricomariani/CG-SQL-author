@@ -291,7 +291,7 @@ static void cql_reset_globals(void);
 
 /* expressions and types */
 %type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list shape_arguments
-%type <aval> name name_list sql_name_list opt_name_list opt_sql_name
+%type <aval> name name_list sql_name_list opt_sql_name_list opt_name_list opt_sql_name
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
 /* proc stuff */
@@ -732,7 +732,7 @@ misc_attr_value_list[result]:
   ;
 
 misc_attr_value:
-  name  { $misc_attr_value = $name; }
+  sql_name  { $misc_attr_value = $sql_name; }
   | any_literal  { $misc_attr_value = $any_literal; }
   | const_expr  { $misc_attr_value = $const_expr; }
   | '(' misc_attr_value_list ')'  { $misc_attr_value = $misc_attr_value_list; }
@@ -911,7 +911,12 @@ sql_name_list[result]:
 
 opt_name_list:
   /* nil */  { $opt_name_list = NULL; }
-  | name_list  {$opt_name_list = $name_list; }
+  | name_list  { $opt_name_list = $name_list; }
+  ;
+
+opt_sql_name_list:
+  /* nil */  { $opt_sql_name_list = NULL; }
+  | sql_name_list  { $opt_sql_name_list = $sql_name_list; }
   ;
 
 cte_binding_list[result]:
@@ -1665,7 +1670,7 @@ with_insert_stmt:
 
 opt_column_spec:
   /* nil */  { $opt_column_spec = NULL; }
-  | '(' opt_name_list ')'  { $opt_column_spec = new_ast_column_spec($opt_name_list); }
+  | '(' opt_sql_name_list ')'  { $opt_column_spec = new_ast_column_spec($opt_sql_name_list); }
   | '(' shape_def ')'  { $opt_column_spec = new_ast_column_spec($shape_def); }
   ;
 
@@ -1896,7 +1901,7 @@ inout:
   ;
 
 typed_name:
-  name data_type_with_options  { $typed_name = new_ast_typed_name($name, $data_type_with_options); }
+  sql_name data_type_with_options  { $typed_name = new_ast_typed_name($sql_name, $data_type_with_options); }
   | shape_def  { $typed_name = new_ast_typed_name(NULL, $shape_def); }
   | name shape_def  { $typed_name = new_ast_typed_name($name, $shape_def); }
   ;
@@ -1918,8 +1923,8 @@ func_params[result]:
   ;
 
 param:
-  name data_type_with_options  { $param = new_ast_param(NULL, new_ast_param_detail($name, $data_type_with_options)); }
-  | inout name data_type_with_options  { $param = new_ast_param($inout, new_ast_param_detail($name, $data_type_with_options)); }
+  sql_name data_type_with_options  { $param = new_ast_param(NULL, new_ast_param_detail($sql_name, $data_type_with_options)); }
+  | inout sql_name data_type_with_options  { $param = new_ast_param($inout, new_ast_param_detail($sql_name, $data_type_with_options)); }
   | shape_def  { $param = new_ast_param(NULL, new_ast_param_detail(NULL, $shape_def)); }
   | name shape_def  { $param = new_ast_param(NULL, new_ast_param_detail($name, $shape_def)); }
   ;

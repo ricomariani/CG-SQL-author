@@ -255,6 +255,7 @@ static void cg_json_emit_string(charbuf *output, ast_node *ast) {
 // * a double literal
 // * a string literal
 // * a name
+// * a quoted name `foo bar`
 // * null
 // String literals have to be unescaped from SQL format and reescaped into C format
 static void cg_json_attr_value(charbuf *output, ast_node *ast) {
@@ -275,7 +276,8 @@ static void cg_json_attr_value(charbuf *output, ast_node *ast) {
       cg_json_emit_string(output, ast);
     }
     else {
-      bprintf(output, "\"%s\"", str);  // an identifier
+      // an identifier or QID
+      cg_json_sql_name_ex(output, str, is_qid(ast));
     }
   }
   else if (is_ast_null(ast)) {

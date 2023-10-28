@@ -115,9 +115,12 @@ create table T3
 -- + "value" : -7
 -- + "name" : "hex"
 -- + "value" : 83
+-- + "name" : "qid"
+-- + "value" : "quoted identifier"
 @attribute(foo=bar)
 @attribute(num=-7)
 @attribute(hex=0x53)
+@attribute(qid=`quoted identifier`)
 create table T4
 (
   @attribute(cool)

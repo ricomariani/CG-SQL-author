@@ -62,12 +62,6 @@ jobs:
           args: "-x scripts/make_guide.sh all"
       - name: Change ownership of generated files to (Github) runner
         run: sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
-      - name: Prepare Github Pages — Copy selected generated files to ${{ github.workspace }}/.www
-        run: |
-          cp ${{ github.workspace }}/scripts/out/*_grammar.railroad.html ${{ github.workspace }}/.www/
-          cp ${{ github.workspace }}/scripts/out/*_guide.html ${{ github.workspace }}/.www/
-      - name: Debug — List files in ${{ github.workspace }}/.www
-        run: ls ${{ github.workspace }}/.www/
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
@@ -77,10 +71,16 @@ jobs:
         env:
           HUGO_ENVIRONMENT: production
         run: |
-          hugo \
+          ./scripts/make_official_website.sh \
             --minify \
-            --themesDir=../.. --source=exampleSite \
             --baseURL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+      - name: Prepare Github Pages — Copy selected generated files to ${{ github.workspace }}/.www
+        run: |
+          cp -r ${{ github.workspace }}/scripts/out/official_website/* ${{ github.workspace }}/.www/
+          cp ${{ github.workspace }}/scripts/out/*_grammar.railroad.html ${{ github.workspace }}/.www/
+          cp ${{ github.workspace }}/scripts/out/*_guide.html ${{ github.workspace }}/.www/
+      - name: Debug — List files in ${{ github.workspace }}/.www
+        run: ls ${{ github.workspace }}/.www/
       - name: Upload Pages
         uses: actions/upload-pages-artifact@v2
         with:

@@ -10536,7 +10536,6 @@ static void sem_table_or_subquery(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(factor, ast->left);
 
   CSTR *alias_target = NULL;
-  sem_t *sem_type_target = NULL;
 
   if (is_ast_str(factor)) {
     // [name]

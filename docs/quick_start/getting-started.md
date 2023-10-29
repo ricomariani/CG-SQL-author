@@ -1,4 +1,8 @@
-# Getting Started with CG/SQL
+---
+title: Getting Started with CG/SQL
+description: Getting Started with CG/SQL
+weight: 1
+---
 
 ## Building
 caution: Please make sure you meet the [requirements](#requirements).

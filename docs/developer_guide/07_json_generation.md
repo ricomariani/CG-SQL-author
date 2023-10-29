@@ -1,10 +1,13 @@
+---
+title: "Chapter 7: JSON Generation"
+weight: 7
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Part 7: JSON Generation
 
 ### Preface
 

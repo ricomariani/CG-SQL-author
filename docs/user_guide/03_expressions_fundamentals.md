@@ -1,10 +1,13 @@
+---
+title: "Chapter 3: Expression Fundamentals"
+weight: 3
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 3: Expression Fundamentals
 
 Until this point we've only discussed simple kinds of expressions as
 well as variables and table columns marked with `NOT NULL`. These are
@@ -1831,4 +1834,3 @@ for your getters and setters for maximum economy.  If you also implement
 the functions on the C side as macros, or inline functions in your
 `cqlrt.h` path, then array and property access can be very economical.
 There need not be any actual function calls by the time the code runs.
-

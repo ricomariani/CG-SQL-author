@@ -1,10 +1,13 @@
+---
+title: "Chapter 16: Advanced Blob Features"
+weight: 16
+---
 <!---
 -- Copyright (c) sample Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 16: Advanced Blob Features
 
 There are two large features that involve complex uses of blobs that
 are supported in the default runtime.  These are Blob Storage and Backed
@@ -933,4 +936,3 @@ especially if you want the `--rt query_plan` output to work seamlessly.
 Typically `bgetval` or `bgetval` would only be needed in the context
 of a `create index` statement and `cql_blob_get` can be used instead in
 that case.
-

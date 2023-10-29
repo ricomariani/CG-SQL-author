@@ -1,0 +1,80 @@
+theme: hextra
+baseURL: 'https://cgsql.org/'
+title: CG/SQL
+languageCode: en-us
+canonifyURLs: 'false'
+relativeURLs: 'false'
+pluralizeListTitles: 'false'
+plainIdAnchors: 'true'
+defaultContentLanguage: en
+enableInlineShortcodes: true
+markup:
+  defaultMarkdownHandler: goldmark
+  goldmark:
+    renderer:
+      unsafe: true
+  tableOfContents:
+    endLevel: 3
+    ordered: false
+    startLevel: 1
+  highlight:
+    noClasses: false
+params:
+  title: Porter
+  author: Carolyn Van Slyck
+  description: A Friendly Cloud Installer for Cloud Native Application Bundles
+  image: images/porter-twitter-card.z
+  navbar:
+    logo:
+      path: logo.png
+      width: 50
+      height: 50
+  footer:
+    displayCopyright: false
+    displayPoweredBy: false
+menu:
+  main:
+    - name: Quick Start
+      url: /docs/quick_start
+      identifier: quick_start
+      weight: 1
+    - name: Contributors
+      url: /docs/contributors
+      identifier: contributors
+      weight: 2
+    - name: User Guide
+      url: /docs/user_guide
+      identifier: user_guide
+      weight: 3
+    - name: Developer Guide
+      url: /docs/developer_guide
+      identifier: developer_guide
+      weight: 4
+    - name: Blog
+      url: https://github.com/ricomariani/CG-SQL-author/wiki/CG-SQL-Blog
+      identifier: blog
+      weight: 5
+    - name: Community
+      url: https://github.com/ricomariani/CG-SQL-author/discussions
+      identifier: community
+      weight: 5
+    - name: Docs
+      url: /docs
+      identifier: docs
+      weight: 5
+    - name: Search
+      weight: 6
+      params:
+        type: search
+    - name: GitHub
+      weight: 7
+      url: https://github.com/ricomariani/CG-SQL-author
+      params:
+        icon: github
+
+module:
+  mounts:
+    - source: ../../docs
+      target: content/docs
+    - source: ../../README.md
+      target: content/docs/_index.md

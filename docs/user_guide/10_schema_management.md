@@ -1,10 +1,13 @@
+---
+title: "Chapter 10: Schema Management"
+weight: 10
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 10: Schema Management
 
 CQL has a lot of schema knowledge already and so it's well positioned to think about schema upgrades and versioning.
 

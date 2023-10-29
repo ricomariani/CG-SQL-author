@@ -1,0 +1,128 @@
+name: CICD
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+
+jobs:
+  documentation:
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    name: Build Documentation
+    environment:
+      name: github-pages
+    permissions:
+      pages: write
+      id-token: write
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - name: Create ${{ github.workspace }}/.www directory in workspace
+        run: mkdir -p ${{ github.workspace }}/.www
+      - name: Setup java 17 (to generate railroad diagrams)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'microsoft'
+      - name: Attempt to retrieve Bottlecaps RailRoad from cache
+        id: bottlecaps-railroad
+        uses: actions/cache@v3
+        with:
+          path: ~/rr-2.0-java11
+          key: rr-2.0-java11
+      - name: Cache MISS — Download Bottlecaps RailRoad
+        if: steps.bottlecaps-railroad.outputs.cache-hit != 'true'
+        run: |
+          wget https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip -O rr-2.0-java11.zip
+          unzip rr-2.0-java11.zip -d ./rr-2.0-java11
+          mv ./rr-2.0-java11 ~/rr-2.0-java11
+      - name: Build Grammar outputs
+        run: |
+          mkdir -p ${{ github.workspace }}/sources/out
+          (cd ${{ github.workspace }}/sources/ ; make --quiet out/replacements out/json_replacements)
+          ${{ github.workspace }}/scripts/make_cql_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_query_plan_grammar_outputs.sh
+          ${{ github.workspace }}/scripts/make_json_grammar_outputs.sh
+          ls ${{ github.workspace }}/sources/out
+      - name: Swap Stubbed Sections with generated content
+        run: |
+          cp ${{ github.workspace }}/scripts/out/cql_grammar.md ${{ github.workspace }}/docs/user_guide/appendices/02_grammar.md
+          cp ${{ github.workspace }}/scripts/out/json_grammar.md ${{ github.workspace }}/docs/user_guide/appendices/05_json_schema_grammar.md
+      - name: Build Guides
+        uses: docker://pandoc/core:3.1-ubuntu
+        with:
+          options: --volume ${{ github.workspace }}:/workspace
+          entrypoint: /bin/bash
+          args: "-x scripts/make_guide.sh all"
+      - name: Change ownership of generated files to (Github) runner
+        run: sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.119.0'
+          extended: true
+      - name: Build with Hugo
+        env:
+          HUGO_ENVIRONMENT: production
+        run: |
+          ./scripts/make_official_website.sh \
+            --minify \
+            --baseURL "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+      - name: Prepare Github Pages — Copy selected generated files to ${{ github.workspace }}/.www
+        run: |
+          cp -r ${{ github.workspace }}/scripts/out/official_website/* ${{ github.workspace }}/.www/
+          cp ${{ github.workspace }}/scripts/out/*_grammar.railroad.html ${{ github.workspace }}/.www/
+          cp ${{ github.workspace }}/scripts/out/*_guide.html ${{ github.workspace }}/.www/
+      - name: Debug — List files in ${{ github.workspace }}/.www
+        run: ls ${{ github.workspace }}/.www/
+      - name: Upload Pages
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ${{ github.workspace }}/.www/
+      - name: Deploy GitHub Pages
+        uses: actions/deploy-pages@v2
+
+  test:
+    name: Run Test Suite
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/sources
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update --yes
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+            python3-pip \
+            bison \
+            clang \
+            flex \
+            gcc \
+            libsqlite3-dev \
+            luarocks \
+            lua5.4 liblua5.4-dev \
+            sqlite3 \
+            jq \
+            default-jre \
+            default-jdk
+
+          sudo pip3 install gcovr
+          sudo luarocks install lsqlite3
+      - name: Execute test script using Clang in non-interactive mode
+        run: ./test.sh --use_clang --non_interactive
+      - name: Execute test script using GCC in non-interactive mode
+        run: ./test.sh --use_gcc --non_interactive
+      - name: Execute test script in non-interactive mode (Using Amalgam)
+        run: ./test.sh --use_clang --use_amalgam --non_interactive
+      - name: Execute test script in non-interactive mode with Address Sanitizer enabled
+        run: ./test.sh --use_clang --use_asan --non_interactive
+      - name: Execute coverage script
+        run: ./cov.sh

@@ -1,10 +1,13 @@
+---
+title: "Appendix 1: Command Line Options"
+weight: 1
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 1: Command Line Options
 
 CQL has a variety of command line (CLI) options but many of them are only interesting for cql development.  Nonetheless this is a comprehensive list:
 

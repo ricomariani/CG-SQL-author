@@ -1,10 +1,13 @@
+---
+title: "Chapter 7: Result Sets"
+weight: 7
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 7: Result Sets
 
 Most of this tutorial is about the CQL language itself but here we must diverge a bit.  The purpose of the
 result set feature of CQL is to create a C interface to SQLite data.  Because of this

@@ -1,10 +1,13 @@
+---
+title: "Appendix 3: Control Directives"
+weight: 3
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 3: Control Directives
 
 The control directives are those statements that begin with `@` and they are distinguished from other statements because they influence the compiler rather than the program logic.  Some of these are of great importance and discussed elsewhere.
 

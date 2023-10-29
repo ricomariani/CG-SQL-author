@@ -1,10 +1,13 @@
+---
+title: "Chapter 2: Using Data"
+weight: 2
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 2: Using Data
 
 The point of using CQL is to facilitate access to a SQLite database so
 we'll switch gears to a slightly more complicated setup.  We'll still
@@ -346,7 +349,7 @@ end;
 
 This loop will run until there are no results left (it might not run at all if there are zero rows,
 that is not an error).  The `FETCH` construct allows you to specify target variables, but if you do
-not do so, then a synthetic structure is automatically created to capture the projection of the `select`. 
+not do so, then a synthetic structure is automatically created to capture the projection of the `select`.
 In this case the columns are `pos` and `txt`.  The automatically created storage exactly matches the
 type of the columns in the select list (which could itself be a tricky calculatation)
 In this case the `select` is quite simple and the columns of the result directly match the schema for

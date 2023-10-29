@@ -1,10 +1,13 @@
+---
+title: "Chapter 12: Testability Features"
+weight: 12
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 12: Testability Features
 
 CQL includes a number of features to make it easier to create what
 you might call "Test" procedures.  These primarily are concerned with

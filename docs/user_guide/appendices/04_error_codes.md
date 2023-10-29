@@ -1,10 +1,13 @@
+---
+title: "Appendix 4: Error Codes"
+weight: 4
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Appendix 4: Error Codes
 
 ### CQL0001: operands must be an integer type, not real
 
@@ -4248,7 +4251,7 @@ However the nested fragment(s) cannot take any arguments. The inner fragment mus
 
 In order to use a shared fragment the compiler must see the full body of the fragment, this is
 because the fragment will be inlined into the SQL in which it appears.  As a consequence it
-makes no sense to try to apply the attribute to a procedure declaration. 
+makes no sense to try to apply the attribute to a procedure declaration.
 
 Example:
 
@@ -4291,9 +4294,9 @@ Array operations from a type like `object<foo>` generate calls to
 
 `get_from_object_foo(index)` or `set_in_object_foo(index, value)`
 
->NOTE: There can be more than one index if desired e.g., `foo[a, b]`.  
+>NOTE: There can be more than one index if desired e.g., `foo[a, b]`.
 
-In order to do this and create sensible unique names the thing that has array-like behavior has to have a type kind.  
+In order to do this and create sensible unique names the thing that has array-like behavior has to have a type kind.
 
 >NOTE: This works even for things that are primitive types.  For instance you could use array notation to get
 optional fields from a task id even if the task id is an integer.  `int<task_id> not null` can have an helper

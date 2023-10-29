@@ -1,10 +1,13 @@
+---
+title: "Chapter 17: Vault Sensitive — Encoding for Privacy"
+weight: 17
+---
 <!---
 -- Copyright (c) sample Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 17: Vault Sensitive — Encoding for Privacy
 
 ### Introduction
 

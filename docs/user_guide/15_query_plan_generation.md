@@ -1,10 +1,13 @@
+---
+title: "Chapter 15: Query Plan Generation"
+weight: 15
+---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.
 --
 -- This source code is licensed under the MIT license found in the
 -- LICENSE file in the root directory of this source tree.
 -->
-## Chapter 15: Query Plan Generation
 
 CQL offers a way to run SQLite's [`EXPLAIN QUERY PLAN` command](https://www.sqlite.org/eqp.html)
 for all the SQL statements used in a CQL file using a set of special

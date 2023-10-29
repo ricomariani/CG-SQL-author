@@ -97,13 +97,25 @@ jobs:
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
-      - name: Install Test Dependencies (gcovr)
+      - name: Dependencies
         run: |
-          sudo apt-get update -y
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip
-          pip3 install gcovr
-      - name: TODO — Install dependencies
-        run: echo "TODO — Install dependencies"
+          sudo apt-get update --yes
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+            python3-pip \
+            bison \
+            clang \
+            flex \
+            gcc \
+            libsqlite3-dev \
+            luarocks \
+            lua5.4 liblua5.4-dev \
+            sqlite3 \
+            jq \
+            default-jre \
+            default-jdk
+
+          sudo pip3 install gcovr
+          sudo luarocks install lsqlite3
       - name: Execute test script using Clang in non-interactive mode
         run: ./test.sh --use_clang --non_interactive
       - name: Execute test script using GCC in non-interactive mode
@@ -114,12 +126,3 @@ jobs:
         run: ./test.sh --use_clang --use_asan --non_interactive
       - name: Execute coverage script
         run: ./cov.sh
-
-  build:
-    name: Release Cross compilation builds of CQL
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Git Checkout
-        uses: actions/checkout@v4
-      - name: TODO
-        run: echo @TODO

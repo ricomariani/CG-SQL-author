@@ -91,308 +91,308 @@ d [0-9]
 
 %%
 
-EXCLUDE{sp}NO{sp}OTHERS/{stop}   { return EXCLUDE_NO_OTHERS; }
+@ATTRIBUTE                       { return AT_ATTRIBUTE; }
+@BEGIN_SCHEMA_REGION             { return AT_BEGIN_SCHEMA_REGION; }
+@BLOB_CREATE_KEY                 { return AT_BLOB_CREATE_KEY ; }
+@BLOB_CREATE_VAL                 { return AT_BLOB_CREATE_VAL; }
+@BLOB_GET_KEY                    { return AT_BLOB_GET_KEY ; }
+@BLOB_GET_KEY_TYPE               { return AT_BLOB_GET_KEY_TYPE ; }
+@BLOB_GET_VAL                    { return AT_BLOB_GET_VAL ; }
+@BLOB_GET_VAL_TYPE               { return AT_BLOB_GET_VAL_TYPE ; }
+@BLOB_UPDATE_KEY                 { return AT_BLOB_UPDATE_KEY; }
+@BLOB_UPDATE_VAL                 { return AT_BLOB_UPDATE_VAL; }
+@COLUMNS                         { return AT_COLUMNS; }
+@CREATE                          { return AT_CREATE; }
+@DECLARE_DEPLOYABLE_REGION       { return AT_DECLARE_DEPLOYABLE_REGION; }
+@DECLARE_SCHEMA_REGION           { return AT_DECLARE_SCHEMA_REGION; }
+@DELETE                          { return AT_DELETE; }
+@DUMMY_DEFAULTS                  { return AT_DUMMY_DEFAULTS; }
+@DUMMY_NULLABLES                 { return AT_DUMMY_NULLABLES; }
+@DUMMY_SEED                      { return AT_DUMMY_SEED; }
+@ECHO                            { return AT_ECHO; }
+@EMIT_CONSTANTS                  { return AT_EMIT_CONSTANTS; }
+@EMIT_ENUMS                      { return AT_EMIT_ENUMS; }
+@EMIT_GROUP                      { return AT_EMIT_GROUP; }
+@END_SCHEMA_REGION               { return AT_END_SCHEMA_REGION; }
+@ENFORCE_NORMAL                  { return AT_ENFORCE_NORMAL; }
+@ENFORCE_POP                     { return AT_ENFORCE_POP; }
+@ENFORCE_PUSH                    { return AT_ENFORCE_PUSH; }
+@ENFORCE_RESET                   { return AT_ENFORCE_RESET; }
+@ENFORCE_STRICT                  { return AT_ENFORCE_STRICT; }
+@EPONYMOUS                       { return AT_EPONYMOUS; }
+@FILE                            { return AT_FILE; }
+@KEEP_TABLE_NAME_IN_ALIASES      { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
+@PREVIOUS_SCHEMA                 { return AT_PREVIOUS_SCHEMA; }
+@PROC                            { return AT_PROC; }
+@RC                              { return AT_RC; }
+@RECREATE                        { return AT_RECREATE; }
+@SCHEMA_AD_HOC_MIGRATION         { return AT_SCHEMA_AD_HOC_MIGRATION; }
+@SCHEMA_UPGRADE_SCRIPT           { return AT_SCHEMA_UPGRADE_SCRIPT; }
+@SCHEMA_UPGRADE_VERSION          { return AT_SCHEMA_UPGRADE_VERSION; }
+@SENSITIVE                       { return AT_SENSITIVE; }
+@UNSUB                           { return AT_UNSUB; }
+ABORT                            { return ABORT; }
+ACTION                           { return ACTION; }
+ADD                              { return ADD; }
+AFTER                            { return AFTER; }
+ALL                              { return ALL; }
+ALTER                            { return ALTER; }
+AND                              { return AND; }
+ARGUMENTS                        { return ARGUMENTS; }
+AS                               { return AS; }
+ASC                              { return ASC; }
+AUTOINCREMENT                    { return AUTOINCREMENT; }
+BEFORE                           { return BEFORE; }
+BEGIN                            { return BEGIN_; }
+BETWEEN                          { return BETWEEN; }
+BLOB                             { return BLOB; }
+BOOL                             { return BOOL_; }
+BY                               { return BY; }
+CALL                             { return CALL; }
+CASCADE                          { return CASCADE; }
+CASE                             { return CASE; }
+CAST                             { return CAST; }
+CATCH                            { return CATCH; }
+CHECK                            { return CHECK; }
+CLOSE                            { return CLOSE; }
+COLLATE                          { return COLLATE; }
+COLUMN                           { return COLUMN; }
+COMMIT                           { return COMMIT; }
+CONST                            { return CONST; }
+CONSTRAINT                       { return CONSTRAINT; }
+CONTEXT{sp}COLUMN/{stop}         { return CONTEXT_COLUMN; }
+CONTEXT{sp}TYPE/{stop}           { return CONTEXT_TYPE; }
+CONTINUE                         { return CONTINUE; }
+CREATE                           { return CREATE; }
+CROSS                            { return CROSS; }
+CURRENT{sp}ROW/{stop}            { return CURRENT_ROW; }
+CURSOR                           { return CURSOR; }
+CURSOR{sp}HAS{sp}ROW/{stop}      { return CURSOR_HAS_ROW; }
+DECLARE                          { return DECLARE; }
+DEFAULT                          { return DEFAULT; }
+DEFERRABLE                       { return DEFERRABLE; }
+DEFERRED                         { return DEFERRED; }
+DELETE                           { return DELETE; }
+DESC                             { return DESC; }
+DISTINCT                         { return DISTINCT; }
+DISTINCTROW                      { return DISTINCTROW; }
+DO                               { return DO; }
+DROP                             { return DROP; }
+ELSE                             { return ELSE; }
+ELSE{sp}IF/{stop}                { return ELSE_IF; }
+ENCODE                           { return ENCODE; }
+END                              { return END; }
+ENUM                             { return ENUM; }
+EXCEPT                           { return EXCEPT; }
 EXCLUDE{sp}CURRENT{sp}ROW/{stop} { return EXCLUDE_CURRENT_ROW; }
 EXCLUDE{sp}GROUP/{stop}          { return EXCLUDE_GROUP; }
+EXCLUDE{sp}NO{sp}OTHERS/{stop}   { return EXCLUDE_NO_OTHERS; }
 EXCLUDE{sp}TIES/{stop}           { return EXCLUDE_TIES; }
+EXCLUSIVE                        { return EXCLUSIVE; }
+EXISTS                           { return EXISTS; }
+EXPLAIN                          { return EXPLAIN; }
+FAIL                             { return FAIL; }
+FALSE                            { return FALSE_; }
+FETCH                            { return FETCH; }
+FILTER                           { return FILTER; }
+FIRST                            { return FIRST; }
+FOLLOWING                        { return FOLLOWING; }
+FOR                              { return FOR; }
+FOREIGN                          { return FOREIGN; }
+FOR{sp}EACH{sp}ROW/{stop}        { return FOR_EACH_ROW; }
+FROM                             { return FROM; }
+FROM{sp}BLOB/{stop}              { return FROM_BLOB; }
+FUNC                             { return FUNC; }
+FUNCTION                         { return FUNCTION; }
+GLOB                             { return GLOB; }
+GROUP                            { return GROUP; }
+GROUPS                           { return GROUPS; }
+HAVING                           { return HAVING; }
+HIDDEN                           { return HIDDEN; }
+IF                               { return IF; }
+IGNORE                           { return IGNORE; }
+IMMEDIATE                        { return IMMEDIATE; }
+IN                               { return IN; }
+INDEX                            { return INDEX; }
+INITIALLY                        { return INITIALLY; }
+INNER                            { return INNER; }
+INOUT                            { return INOUT; }
+INSERT                           { return INSERT; }
+INSTEAD                          { return INSTEAD; }
+INT                              { return INT_; }
+INTEGER                          { return INTEGER; }
+INTERFACE                        { return INTERFACE; }
+INTERSECT                        { return INTERSECT; }
+INTO                             { return INTO; }
+IS                               { return IS; }
+ISNULL                           { return ISNULL; }
+IS{sp}FALSE/{stop}               { return IS_FALSE; }
+IS{sp}NOT/{stop}                 { return IS_NOT; }
+IS{sp}NOT{sp}FALSE/{stop}        { return IS_NOT_FALSE; }
+IS{sp}NOT{sp}TRUE/{stop}         { return IS_NOT_TRUE; }
+IS{sp}TRUE/{stop}                { return IS_TRUE; }
+JOIN                             { return JOIN; }
+KEY                              { return KEY; }
+LAST                             { return LAST; }
+LEAVE                            { return LEAVE; }
+LEFT                             { return LEFT; }
+LET                              { return LET; }
+LIKE                             { return LIKE; }
+LIMIT                            { return LIMIT; }
+LONG                             { return LONG_; }
+LONG_INT                         { return LONG_INT; }
+LONG_INTEGER                     { return LONG_INTEGER; }
+LOOP                             { return LOOP; }
+MATCH                            { return MATCH; }
+NO                               { return NO; }
+NOT                              { return NOT; }
+NOTHING                          { return NOTHING; }
+NOTNULL                          { return NOTNULL; }
+NOT{sp}BETWEEN/{stop}            { return NOT_BETWEEN; }
+NOT{sp}DEFERRABLE/{stop}         { return NOT_DEFERRABLE; }
+NOT{sp}GLOB/{stop}               { return NOT_GLOB; }
+NOT{sp}IN/{stop}                 { return NOT_IN; }
+NOT{sp}LIKE/{stop}               { return NOT_LIKE; }
+NOT{sp}MATCH/{stop}              { return NOT_MATCH; }
+NOT{sp}REGEXP/{stop}             { return NOT_REGEXP; }
+NULL                             { return NULL_; }
+NULLS                            { return NULLS; }
+OBJECT                           { return OBJECT; }
+OF                               { return OF; }
+OFFSET                           { return OFFSET; }
+ON                               { return ON; }
+ON{sp}CONFLICT/{stop}            { return ON_CONFLICT; }
+OR                               { return OR; }
+ORDER                            { return ORDER; }
+OUT                              { return OUT; }
+OUTER                            { return OUTER; }
+OVER                             { return OVER; }
+PARTITION                        { return PARTITION; }
+PRECEDING                        { return PRECEDING; }
+PRIMARY                          { return PRIMARY; }
+PRIVATE                          { return PRIVATE; }
+PROC                             { return PROC; }
+PROCEDURE                        { return PROCEDURE; }
+QUERY{sp}PLAN/{stop}             { return QUERY_PLAN; }
+RAISE                            { return RAISE; }
+RANGE                            { return RANGE; }
+REAL                             { return REAL; }
+RECURSIVE                        { return RECURSIVE; }
+REFERENCES                       { return REFERENCES; }
+REGEXP                           { return REGEXP; }
+RELEASE                          { return RELEASE; }
+RENAME                           { return RENAME; }
+REPLACE                          { return REPLACE; }
+RESTRICT                         { return RESTRICT; }
+RETURN                           { return RETURN; }
+RIGHT                            { return RIGHT; }
+ROLLBACK                         { return ROLLBACK; }
+ROWID                            { return ROWID; }
+ROWS                             { return ROWS; }
+SAVEPOINT                        { return SAVEPOINT; }
+SELECT                           { return SELECT; }
+SET                              { return SET; }
+SIGN{sp}FUNCTION/{stop}          { return SIGN_FUNCTION; }
+STATEMENT                        { return STATEMENT; }
+SWITCH                           { return SWITCH; }
+TABLE                            { return TABLE; }
+TEMP                             { return TEMP; }
+TEXT                             { return TEXT; }
+THEN                             { return THEN; }
+THROW                            { return THROW; }
+TO                               { return TO; }
+TRANSACTION                      { return TRANSACTION; }
+TRIGGER                          { return TRIGGER; }
+TRUE                             { return TRUE_; }
+TRY                              { return TRY; }
+TYPE                             { return TYPE; }
+TYPE_CHECK                       { return TYPE_CHECK; }
+UNBOUNDED                        { return UNBOUNDED; }
+UNION                            { return UNION; }
+UNION{sp}ALL/{stop}              { return UNION_ALL; }
+UNIQUE                           { return UNIQUE; }
+UPDATE                           { return UPDATE; }
+UPSERT                           { return UPSERT; }
+USING                            { return USING; }
+VALUES                           { return VALUES; }
+VAR                              { return VAR; }
+VIEW                             { return VIEW; }
+VIRTUAL                          { return VIRTUAL; }
+WHEN                             { return WHEN; }
+WHERE                            { return WHERE; }
+WHILE                            { return WHILE; }
+WINDOW                           { return WINDOW; }
+WITH                             { return WITH; }
+WITHOUT                          { return WITHOUT; }
 
-CURRENT{sp}ROW/{stop}        { return CURRENT_ROW; }
-UNBOUNDED                    { return UNBOUNDED; }
-PRECEDING                    { return PRECEDING; }
-FOLLOWING                    { return FOLLOWING; }
-SWITCH                       { return SWITCH; }
-RANGE                        { return RANGE; }
-ENUM                         { return ENUM; }
-ROWS                         { return ROWS; }
-GROUPS                       { return GROUPS; }
-PARTITION                    { return PARTITION; }
-FILTER                       { return FILTER; }
-WINDOW                       { return WINDOW; }
-EXPLAIN                      { return EXPLAIN; }
-QUERY{sp}PLAN/{stop}         { return QUERY_PLAN; }
-SELECT                       { return SELECT; }
-CAST                         { return CAST; }
-CREATE                       { return CREATE; }
-DROP                         { return DROP; }
-TABLE                        { return TABLE; }
-TEMP                         { return TEMP; }
-COLLATE                      { return COLLATE; }
-HIDDEN                       { return HIDDEN; }
-PRIMARY                      { return PRIMARY; }
-KEY                          { return KEY; }
-IF                           { return IF; }
-WHILE                        { return WHILE; }
-CALL                         { return CALL; }
-EXISTS                       { return EXISTS; }
-UNION                        { return UNION; }
-UNION{sp}ALL/{stop}          { return UNION_ALL; }
-INTERSECT                    { return INTERSECT; }
-EXCEPT                       { return EXCEPT; }
-NOT                          { return NOT; }
-NULL                         { return NULL_; }
-NULLS                        { return NULLS; }
-TRUE                         { return TRUE_; }
-FALSE                        { return FALSE_; }
-DEFAULT                      { return DEFAULT; }
-CHECK                        { return CHECK; }
-LET                          { return LET; }
-LONG                         { return LONG_; }
-LONG_INTEGER                 { return LONG_INTEGER; }
-LONG_INT                     { return LONG_INT; }
-INT                          { return INT_; }
-INTEGER                      { return INTEGER; }
-TEXT                         { return TEXT; }
-VIRTUAL                      { return VIRTUAL; }
-WITH                         { return WITH; }
-RECURSIVE                    { return RECURSIVE; }
-WITHOUT                      { return WITHOUT; }
-ROWID                        { return ROWID; }
-AUTOINCREMENT                { return AUTOINCREMENT; }
-BOOL                         { return BOOL_; }
-REFERENCES                   { return REFERENCES; }
-FOREIGN                      { return FOREIGN; }
-REAL                         { return REAL; }
-CASCADE                      { return CASCADE; }
-ON                           { return ON; }
-ON{sp}CONFLICT/{stop}        { return ON_CONFLICT; }
-DO                           { return DO; }
-NOTHING                      { return NOTHING; }
-UPDATE                       { return UPDATE; }
-DELETE                       { return DELETE; }
-CONST                        { return CONST; }
-CONSTRAINT                   { return CONSTRAINT; }
-UNIQUE                       { return UNIQUE; }
-PRIVATE                      { return PRIVATE; }
-INDEX                        { return INDEX; }
-ALL                          { return ALL; }
-AS                           { return AS; }
-BY                           { return BY; }
-DISTINCT                     { return DISTINCT; }
-DISTINCTROW                  { return DISTINCTROW; }
-INNER                        { return INNER; }
-OUTER                        { return OUTER; }
-CROSS                        { return CROSS; }
-USING                        { return USING; }
-RIGHT                        { return RIGHT; }
-FROM                         { return FROM; }
-FROM{sp}BLOB/{stop}          { return FROM_BLOB; }
-WHERE                        { return WHERE; }
-GROUP                        { return GROUP; }
-HAVING                       { return HAVING; }
-ASC                          { return ASC; }
-DESC                         { return DESC; }
-FIRST                        { return FIRST; }
-LAST                         { return LAST; }
-LEFT                         { return LEFT; }
-JOIN                         { return JOIN; }
-SET                          { return SET; }
-OVER                         { return OVER; }
-"<<"                         { return LS; }
-">>"                         { return RS; }
-"<>"                         { return NE; }
-"!="                         { return NE_; }
-">="                         { return GE; }
-"<="                         { return LE; }
-":="                         { return ASSIGN; }
-"+="                         { return ADD_EQ; }
-"-="                         { return SUB_EQ; }
-"*="                         { return MUL_EQ; }
-"/="                         { return DIV_EQ; }
-"%="                         { return MOD_EQ; }
-"|="                         { return OR_EQ; }
-"&="                         { return AND_EQ; }
-"<<="                        { return LS_EQ; }
-">>="                        { return RS_EQ; }
-"=="                         { return EQEQ; }
-"||"                         { return CONCAT; }
-IS{sp}NOT{sp}FALSE/{stop}    { return IS_NOT_FALSE; }
-IS{sp}NOT{sp}TRUE/{stop}     { return IS_NOT_TRUE; }
-IS{sp}FALSE/{stop}           { return IS_FALSE; }
-IS{sp}TRUE/{stop}            { return IS_TRUE; }
-IS{sp}NOT/{stop}             { return IS_NOT; }
-ISNULL                       { return ISNULL; }
-NOTNULL                      { return NOTNULL; }
-IS                           { return IS; }
-AND                          { return AND; }
-ORDER                        { return ORDER; }
-CASE                         { return CASE; }
-END                          { return END; }
-WHEN                         { return WHEN; }
-ELSE                         { return ELSE; }
-THEN                         { return THEN; }
-VIEW                         { return VIEW; }
-INSERT                       { return INSERT; }
-INTO                         { return INTO; }
-VALUES                       { return VALUES; }
-OR                           { return OR; }
-LIMIT                        { return LIMIT; }
-OFFSET                       { return OFFSET; }
-PROC                         { return PROC; }
-@PROC                        { return AT_PROC; }
-@RC                          { return AT_RC; }
-PROCEDURE                    { return PROCEDURE; }
-INTERFACE                    { return INTERFACE; }
-FUNCTION                     { return FUNCTION; }
-FUNC                         { return FUNC; }
-BEGIN                        { return BEGIN_; }
-IN                           { return IN; }
-NOT{sp}IN/{stop}             { return NOT_IN; }
-TO                           { return TO; }
-FOR                          { return FOR; }
-THROW                        { return THROW; }
-TRY                          { return TRY; }
-CATCH                        { return CATCH; }
-NOT{sp}LIKE/{stop}           { return NOT_LIKE; }
-LIKE                         { return LIKE; }
-NOT{sp}MATCH/{stop}          { return NOT_MATCH; }
-MATCH                        { return MATCH; }
-NOT{sp}REGEXP/{stop}         { return NOT_REGEXP; }
-REGEXP                       { return REGEXP; }
-NOT{sp}GLOB/{stop}           { return NOT_GLOB; }
-GLOB                         { return GLOB; }
-NOT{sp}BETWEEN/{stop}        { return NOT_BETWEEN; }
-BETWEEN                      { return BETWEEN; }
-OUT                          { return OUT; }
-INOUT                        { return INOUT; }
-CURSOR                       { return CURSOR; }
-DECLARE                      { return DECLARE; }
-VAR                          { return VAR; }
-FETCH                        { return FETCH; }
-LOOP                         { return LOOP; }
-LEAVE                        { return LEAVE; }
-CONTINUE                     { return CONTINUE; }
-CLOSE                        { return CLOSE; }
-ELSE{sp}IF/{stop}            { return ELSE_IF; }
-SAVEPOINT                    { return SAVEPOINT; }
-ROLLBACK                     { return ROLLBACK; }
-RAISE                        { return RAISE; }
-FAIL                         { return FAIL; }
-ABORT                        { return ABORT; }
-COMMIT                       { return COMMIT; }
-TRANSACTION                  { return TRANSACTION; }
-RELEASE                      { return RELEASE; }
-REPLACE                      { return REPLACE; }
-IGNORE                       { return IGNORE; }
-OBJECT                       { return OBJECT; }
-BLOB                         { return BLOB; }
-UPSERT                       { return UPSERT; }
-STATEMENT                    { return STATEMENT; }
-TYPE                         { return TYPE; }
-TYPE_CHECK                   { return TYPE_CHECK; }
-@ATTRIBUTE                   { return AT_ATTRIBUTE; }
-@BEGIN_SCHEMA_REGION         { return AT_BEGIN_SCHEMA_REGION; }
-@BLOB_GET_KEY_TYPE           { return AT_BLOB_GET_KEY_TYPE ; }
-@BLOB_GET_VAL_TYPE           { return AT_BLOB_GET_VAL_TYPE ; }
-@BLOB_GET_KEY                { return AT_BLOB_GET_KEY ; }
-@BLOB_GET_VAL                { return AT_BLOB_GET_VAL ; }
-@BLOB_CREATE_KEY             { return AT_BLOB_CREATE_KEY ; }
-@BLOB_CREATE_VAL             { return AT_BLOB_CREATE_VAL; }
-@BLOB_UPDATE_KEY             { return AT_BLOB_UPDATE_KEY; }
-@BLOB_UPDATE_VAL             { return AT_BLOB_UPDATE_VAL; }
-@CREATE                      { return AT_CREATE; }
-@DECLARE_DEPLOYABLE_REGION   { return AT_DECLARE_DEPLOYABLE_REGION; }
-@DECLARE_SCHEMA_REGION       { return AT_DECLARE_SCHEMA_REGION; }
-@DELETE                      { return AT_DELETE; }
-@DUMMY_DEFAULTS              { return AT_DUMMY_DEFAULTS; }
-@DUMMY_NULLABLES             { return AT_DUMMY_NULLABLES; }
-@DUMMY_SEED                  { return AT_DUMMY_SEED; }
-@ECHO                        { return AT_ECHO; }
-@EMIT_CONSTANTS              { return AT_EMIT_CONSTANTS; }
-@EMIT_ENUMS                  { return AT_EMIT_ENUMS; }
-@EMIT_GROUP                  { return AT_EMIT_GROUP; }
-@END_SCHEMA_REGION           { return AT_END_SCHEMA_REGION; }
-@ENFORCE_NORMAL              { return AT_ENFORCE_NORMAL; }
-@ENFORCE_POP                 { return AT_ENFORCE_POP; }
-@ENFORCE_PUSH                { return AT_ENFORCE_PUSH; }
-@ENFORCE_RESET               { return AT_ENFORCE_RESET; }
-@ENFORCE_STRICT              { return AT_ENFORCE_STRICT; }
-@EPONYMOUS                   { return AT_EPONYMOUS; }
-@FILE                        { return AT_FILE; }
-@PREVIOUS_SCHEMA             { return AT_PREVIOUS_SCHEMA; }
-@RECREATE                    { return AT_RECREATE; }
-@SCHEMA_AD_HOC_MIGRATION     { return AT_SCHEMA_AD_HOC_MIGRATION; }
-@SCHEMA_UPGRADE_SCRIPT       { return AT_SCHEMA_UPGRADE_SCRIPT; }
-@SCHEMA_UPGRADE_VERSION      { return AT_SCHEMA_UPGRADE_VERSION; }
-@SENSITIVE                   { return AT_SENSITIVE; }
-@UNSUB                       { return AT_UNSUB; }
-@KEEP_TABLE_NAME_IN_ALIASES  { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
-ALTER                        { return ALTER; }
-RENAME                       { return RENAME; }
-COLUMN                       { return COLUMN; }
-@COLUMNS                     { return AT_COLUMNS; }
-ADD                          { return ADD; }
-ARGUMENTS                    { return ARGUMENTS; }
-RETURN                       { return RETURN; }
-DEFERRED                     { return DEFERRED; }
-DEFERRABLE                   { return DEFERRABLE; }
-NOT{sp}DEFERRABLE/{stop}     { return NOT_DEFERRABLE; }
-IMMEDIATE                    { return IMMEDIATE; }
-EXCLUSIVE                    { return EXCLUSIVE; }
-RESTRICT                     { return RESTRICT; }
-ACTION                       { return ACTION; }
-INITIALLY                    { return INITIALLY; }
-NO                           { return NO; }
-BEFORE                       { return BEFORE; }
-AFTER                        { return AFTER; }
-INSTEAD                      { return INSTEAD; }
-OF                           { return OF; }
-TRIGGER                      { return TRIGGER; }
-FOR{sp}EACH{sp}ROW/{stop}    { return FOR_EACH_ROW; }
-ENCODE                       { return ENCODE; }
-CONTEXT{sp}COLUMN/{stop}     { return CONTEXT_COLUMN; }
-CONTEXT{sp}TYPE/{stop}       { return CONTEXT_TYPE; }
-SIGN{sp}FUNCTION/{stop}      { return SIGN_FUNCTION; }
-CURSOR{sp}HAS{sp}ROW/{stop}  { return CURSOR_HAS_ROW; }
+"!="                             { return NE_; }
+"%="                             { return MOD_EQ; }
+"&="                             { return AND_EQ; }
+"*="                             { return MUL_EQ; }
+"+="                             { return ADD_EQ; }
+"-="                             { return SUB_EQ; }
+"/="                             { return DIV_EQ; }
+":="                             { return ASSIGN; }
+"<<"                             { return LS; }
+"<<="                            { return LS_EQ; }
+"<="                             { return LE; }
+"<>"                             { return NE; }
+"=="                             { return EQEQ; }
+">="                             { return GE; }
+">>"                             { return RS; }
+">>="                            { return RS_EQ; }
+"|="                             { return OR_EQ; }
+"||"                             { return CONCAT; }
 
-<<EOF>>                      { if (cql_finish_stream()) yyterminate(); }
-
-0x{hex}+                     { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
-0x{hex}+L                    { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
-{d}+                         { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
-{d}+L                        { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
+0x{hex}+                         { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+0x{hex}+L                        { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
+{d}+                             { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+{d}+L                            { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
 
 ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)? { yylval.sval = Strdup(yytext); return REALLIT; }
 
-`(``|[^`\n])*`               { yylval.sval = Strdup(yytext); return QID; }
-\"(\\.|[^\\"\n])*\"          { yylval.sval = Strdup(yytext); return CSTRLIT; }
-'(''|[^'\n])*'               { yylval.sval = Strdup(yytext); return STRLIT; }
-X'({hex}{hex})*'             { yylval.sval = Strdup(yytext); return BLOBLIT; }
-[-+&~|^/%*(),.;!<>:=]        { return yytext[0]; }
-\[                           { return yytext[0]; }
-\]                           { return yytext[0]; }
-[_A-Z][A-Z0-9_]*             { yylval.sval = Strdup(yytext); return ID; }
+`(``|[^`\n])*`                   { yylval.sval = Strdup(yytext); return QID; }
+\"(\\.|[^\\"\n])*\"              { yylval.sval = Strdup(yytext); return CSTRLIT; }
+'(''|[^'\n])*'                   { yylval.sval = Strdup(yytext); return STRLIT; }
+X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT; }
+[-+&~|^/%*(),.;!<>:=]            { return yytext[0]; }
+\[                               { return yytext[0]; }
+\]                               { return yytext[0]; }
+[_A-Z][A-Z0-9_]*                 { yylval.sval = Strdup(yytext); return ID; }
 
-[ \t\n]                      ;
-\-\-.*                       ;
+[ \t\n]                          ;
+\-\-.*                           ;
 
-.                            { yyerror("Unexpected %s\n", yytext); }
+.                                { yyerror("Unexpected %s\n", yytext); }
 
-^#\ {d}+\ \"[^"]*\".*        { line_directive(yytext); }
+^#\ {d}+\ \"[^"]*\".*            { line_directive(yytext); }
 ^\ *#line\ {d}+\ \"[^"]*\".* { line_directive(yytext); }
 
-"/*"                         { // sqlite supports C style comments... ignore those
-                               CHARBUF_OPEN(tmp);
-                               int c1 = 0, c2 = input();
-                               bool_t save_comment = false;
-                               if (c2 == '!' || c2 == '*') {
-                                 save_comment = true;
-                                 bputc(&tmp, '/');
-                                 bputc(&tmp, '*');
-                               }
-                               for (;;) {
-                                 if (c2 == EOF) break;
-                                 if (save_comment) {
-                                   bputc(&tmp, c2);
+"/*"                             { // sqlite supports C style comments... ignore those
+                                   CHARBUF_OPEN(tmp);
+                                   int c1 = 0, c2 = input();
+                                   bool_t save_comment = false;
+                                   if (c2 == '!' || c2 == '*') {
+                                     save_comment = true;
+                                     bputc(&tmp, '/');
+                                     bputc(&tmp, '*');
+                                   }
+                                   for (;;) {
+                                     if (c2 == EOF) break;
+                                     if (save_comment) {
+                                       bputc(&tmp, c2);
+                                     }
+                                     if (c1 == '*' && c2 == '/') break;
+                                     c1 = c2;
+                                     c2 = input();
+                                   }
+                                   if (save_comment) {
+                                     CHARBUF_OPEN(strlit);
+                                     cg_encode_c_string_literal(tmp.ptr, &strlit);
+                                     last_doc_comment = Strdup(strlit.ptr);
+                                     CHARBUF_CLOSE(strlit);
+                                   }
+                                   CHARBUF_CLOSE(tmp);
                                  }
-                                 if (c1 == '*' && c2 == '/') break;
-                                 c1 = c2;
-                                 c2 = input();
-                               }
-                               if (save_comment) {
-                                 CHARBUF_OPEN(strlit);
-                                 cg_encode_c_string_literal(tmp.ptr, &strlit);
-                                 last_doc_comment = Strdup(strlit.ptr);
-                                 CHARBUF_CLOSE(strlit);
-                               }
-                               CHARBUF_CLOSE(tmp);
-                             }
+
+<<EOF>>                          { if (cql_finish_stream()) yyterminate(); }

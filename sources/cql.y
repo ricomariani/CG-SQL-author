@@ -245,7 +245,7 @@ static void cql_reset_globals(void);
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
-%token AT_KEEP_TABLE_NAME_IN_ALIASES
+%token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 
 /* ddl stuff */
@@ -297,6 +297,8 @@ static void cql_reset_globals(void);
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
+%type <aval> macro_def_stmt opt_macro_args macro_arg macro_type macro_args stmt_list_macro_def expr_macro_def
+
 
 /* statements */
 %type <aval> stmt
@@ -485,6 +487,7 @@ any_stmt:
   | leave_stmt
   | let_stmt
   | loop_stmt
+  | macro_def_stmt
   | out_stmt
   | out_union_stmt
   | out_union_parent_child_stmt
@@ -892,6 +895,8 @@ name:
   | VIEW { $name = new_ast_str("view"); }
   | INDEX { $name = new_ast_str("index"); }
   | COLUMN { $name = new_ast_str("column"); }
+  | EXPR { $name = new_ast_str("expr"); }
+  | STMT_LIST { $name = new_ast_str("stmt_list"); }
   ;
 
 opt_sql_name:
@@ -2371,6 +2376,39 @@ blob_update_val_stmt:
 
 keep_table_name_in_aliases_stmt:
   AT_KEEP_TABLE_NAME_IN_ALIASES { $keep_table_name_in_aliases_stmt = new_ast_keep_table_name_in_aliases_stmt(); }
+
+expr_macro_def:
+  AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_args ')' {
+    $expr_macro_def = new_ast_expr_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
+
+stmt_list_macro_def:
+  AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_args ')' {
+   $stmt_list_macro_def = new_ast_stmt_list_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
+  ;
+   
+macro_def_stmt:
+  expr_macro_def BEGIN_ expr END { $macro_def_stmt = $expr_macro_def; $macro_def_stmt->right = $expr; }
+  | stmt_list_macro_def BEGIN_ stmt_list END { $macro_def_stmt = $stmt_list_macro_def; $macro_def_stmt->right = $stmt_list; }
+  ;
+
+opt_macro_args:
+    /*nil*/  { $opt_macro_args = NULL; }
+   | macro_args { $opt_macro_args = $macro_args; }
+   ;
+
+macro_args[result]:
+   macro_arg { $result = new_ast_macro_args($macro_arg, NULL); }
+  | macro_arg ',' macro_args[next] { $result = new_ast_macro_args($macro_arg, $next); }
+  ;
+
+macro_arg: name macro_type { $macro_arg = new_ast_macro_arg($name, $macro_type); }
+  ;
+
+macro_type:
+   EXPR { $macro_type = new_ast_str("EXPR"); }
+  | STMT_LIST { $macro_type = new_ast_str("STMT_LIST"); }
+  ;
+
 %%
 
 #ifndef _MSC_VER

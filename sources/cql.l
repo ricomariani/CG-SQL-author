@@ -122,6 +122,7 @@ d [0-9]
 @EPONYMOUS                       { return AT_EPONYMOUS; }
 @FILE                            { return AT_FILE; }
 @KEEP_TABLE_NAME_IN_ALIASES      { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
+@MACRO                           { return AT_MACRO; }
 @PREVIOUS_SCHEMA                 { return AT_PREVIOUS_SCHEMA; }
 @PROC                            { return AT_PROC; }
 @RC                              { return AT_RC; }
@@ -191,6 +192,7 @@ EXCLUDE{sp}TIES/{stop}           { return EXCLUDE_TIES; }
 EXCLUSIVE                        { return EXCLUSIVE; }
 EXISTS                           { return EXISTS; }
 EXPLAIN                          { return EXPLAIN; }
+EXPR                             { return EXPR; }
 FAIL                             { return FAIL; }
 FALSE                            { return FALSE_; }
 FETCH                            { return FETCH; }
@@ -294,6 +296,7 @@ SELECT                           { return SELECT; }
 SET                              { return SET; }
 SIGN{sp}FUNCTION/{stop}          { return SIGN_FUNCTION; }
 STATEMENT                        { return STATEMENT; }
+STMT_LIST                        { return STMT_LIST; }
 SWITCH                           { return SWITCH; }
 TABLE                            { return TABLE; }
 TEMP                             { return TEMP; }
@@ -358,6 +361,8 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 [-+&~|^/%*(),.;!<>:=]            { return yytext[0]; }
 \[                               { return yytext[0]; }
 \]                               { return yytext[0]; }
+\{                               { return yytext[0]; }
+\}                               { return yytext[0]; }
 [_A-Z][A-Z0-9_]*                 { yylval.sval = Strdup(yytext); return ID; }
 
 [ \t\n]                          ;

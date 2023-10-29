@@ -4780,6 +4780,51 @@ static void gen_explain_stmt(ast_node *ast) {
   gen_one_stmt(stmt_target);
 }
 
+static void gen_macro_arg(ast_node *macro_arg) {
+  Contract(is_ast_macro_arg(macro_arg));
+  EXTRACT_STRING(l, macro_arg->left);
+  EXTRACT_STRING(r, macro_arg->right);
+  gen_printf("%s %s", l, r);
+}
+
+static void gen_macro_args(ast_node *macro_args) {
+  for ( ; macro_args; macro_args = macro_args->right) {
+     Contract(is_ast_macro_args(macro_args));
+     gen_macro_arg(macro_args->left);
+     if (macro_args->right) {
+       gen_printf(", ");
+     }
+  }
+}
+
+static void gen_expr_macro(ast_node *ast) {
+  Contract(is_ast_expr_macro(ast));
+  EXTRACT_NOTNULL(macro_name_args, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_args->left);
+
+  gen_printf("@MACRO(EXPR) %s!(", name);
+  gen_macro_args(macro_name_args->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_root_expr(body);
+  END_INDENT(body_indent);
+  gen_printf("\nEND");
+}
+
+static void gen_stmt_list_macro(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro(ast));
+  EXTRACT_NOTNULL(macro_name_args, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_args->left);
+
+  gen_printf("@MACRO(STMT_LIST) %s!(", name);
+  gen_macro_args(macro_name_args->right);
+  gen_printf(")\nBEGIN\n", name);
+  gen_stmt_list(body);
+  gen_printf("END");
+}
+
 cql_data_defn( int32_t gen_stmt_level );
 
 static void gen_stmt_list(ast_node *root) {
@@ -4844,6 +4889,7 @@ cql_noexport void gen_one_stmt_and_misc_attrs(ast_node *stmt)  {
   gen_one_stmt(stmt);
 }
 
+
 // so the name doesn't otherwise conflict in the amalgam
 #undef output
 
@@ -4859,100 +4905,102 @@ cql_noexport void gen_init() {
   gen_stmts = symtab_new();
   gen_exprs = symtab_new();
 
-  STMT_INIT(expr_stmt);
-  STMT_INIT(if_stmt);
-  STMT_INIT(guard_stmt);
-  STMT_INIT(while_stmt);
-  STMT_INIT(switch_stmt);
-  STMT_INIT(leave_stmt);
-  STMT_INIT(continue_stmt);
-  STMT_INIT(return_stmt);
-  STMT_INIT(rollback_return_stmt);
-  STMT_INIT(commit_return_stmt);
-  STMT_INIT(call_stmt);
-  STMT_INIT(declare_out_call_stmt);
-  STMT_INIT(declare_vars_type);
-  STMT_INIT(let_stmt);
-  STMT_INIT(assign);
-  STMT_INIT(set_from_cursor);
-  STMT_INIT(create_proc_stmt);
-  STMT_INIT(trycatch_stmt);
-  STMT_INIT(throw_stmt);
-  STMT_INIT(create_trigger_stmt);
-  STMT_INIT(create_table_stmt);
-  STMT_INIT(create_virtual_table_stmt);
-  STMT_INIT(drop_table_stmt);
-  STMT_INIT(drop_view_stmt);
-  STMT_INIT(drop_index_stmt);
-  STMT_INIT(drop_trigger_stmt);
   STMT_INIT(alter_table_add_column_stmt);
-  STMT_INIT(create_index_stmt);
-  STMT_INIT(create_view_stmt);
-  STMT_INIT(select_stmt);
-  STMT_INIT(select_nothing_stmt);
-  STMT_INIT(with_select_stmt);
-  STMT_INIT(delete_stmt);
-  STMT_INIT(with_delete_stmt);
-  STMT_INIT(update_stmt);
-  STMT_INIT(update_cursor_stmt);
-  STMT_INIT(with_update_stmt);
-  STMT_INIT(insert_stmt);
-  STMT_INIT(with_insert_stmt);
-  STMT_INIT(upsert_stmt);
-  STMT_INIT(with_upsert_stmt);
-  STMT_INIT(upsert_update);
+  STMT_INIT(assign);
+  STMT_INIT(begin_schema_region_stmt);
+  STMT_INIT(begin_trans_stmt);
+  STMT_INIT(call_stmt);
+  STMT_INIT(close_stmt);
+  STMT_INIT(commit_return_stmt);
+  STMT_INIT(commit_trans_stmt);
   STMT_INIT(conflict_target);
-  STMT_INIT(fetch_values_stmt);
-  STMT_INIT(set_blob_from_cursor_stmt);
-  STMT_INIT(fetch_cursor_from_blob_stmt);
-  STMT_INIT(declare_enum_stmt);
+  STMT_INIT(continue_stmt);
+  STMT_INIT(create_index_stmt);
+  STMT_INIT(create_proc_stmt);
+  STMT_INIT(create_table_stmt);
+  STMT_INIT(create_trigger_stmt);
+  STMT_INIT(create_view_stmt);
+  STMT_INIT(create_virtual_table_stmt);
   STMT_INIT(declare_const_stmt);
-  STMT_INIT(declare_group_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
   STMT_INIT(declare_cursor_like_typed_names);
-  STMT_INIT(declare_named_type);
-  STMT_INIT(declare_value_cursor);
-  STMT_INIT(declare_proc_stmt);
-  STMT_INIT(declare_proc_no_check_stmt);
-  STMT_INIT(declare_interface_stmt);
-  STMT_INIT(declare_func_stmt);
-  STMT_INIT(declare_func_no_check_stmt);
-  STMT_INIT(declare_select_func_stmt);
-  STMT_INIT(declare_select_func_no_check_stmt);
-  STMT_INIT(loop_stmt);
-  STMT_INIT(fetch_stmt);
-  STMT_INIT(fetch_call_stmt);
-  STMT_INIT(begin_trans_stmt);
-  STMT_INIT(commit_trans_stmt);
-  STMT_INIT(rollback_trans_stmt);
-  STMT_INIT(proc_savepoint_stmt);
-  STMT_INIT(savepoint_stmt);
-  STMT_INIT(release_savepoint_stmt);
-  STMT_INIT(close_stmt);
-  STMT_INIT(out_stmt);
-  STMT_INIT(out_union_stmt);
-  STMT_INIT(out_union_parent_child_stmt);
-  STMT_INIT(echo_stmt);
-  STMT_INIT(schema_upgrade_version_stmt);
-  STMT_INIT(schema_upgrade_script_stmt);
-  STMT_INIT(previous_schema_stmt);
-  STMT_INIT(enforce_strict_stmt);
-  STMT_INIT(enforce_normal_stmt);
-  STMT_INIT(enforce_reset_stmt);
-  STMT_INIT(enforce_push_stmt);
-  STMT_INIT(enforce_pop_stmt);
-  STMT_INIT(declare_schema_region_stmt);
   STMT_INIT(declare_deployable_region_stmt);
-  STMT_INIT(begin_schema_region_stmt);
-  STMT_INIT(end_schema_region_stmt);
-  STMT_INIT(schema_ad_hoc_migration_stmt);
-  STMT_INIT(schema_unsub_stmt);
-  STMT_INIT(explain_stmt);
+  STMT_INIT(declare_enum_stmt);
+  STMT_INIT(declare_func_no_check_stmt);
+  STMT_INIT(declare_func_stmt);
+  STMT_INIT(declare_group_stmt);
+  STMT_INIT(declare_interface_stmt);
+  STMT_INIT(declare_named_type);
+  STMT_INIT(declare_out_call_stmt);
+  STMT_INIT(declare_proc_no_check_stmt);
+  STMT_INIT(declare_proc_stmt);
+  STMT_INIT(declare_schema_region_stmt);
+  STMT_INIT(declare_select_func_no_check_stmt);
+  STMT_INIT(declare_select_func_stmt);
+  STMT_INIT(declare_value_cursor);
+  STMT_INIT(declare_vars_type);
+  STMT_INIT(delete_stmt);
+  STMT_INIT(drop_index_stmt);
+  STMT_INIT(drop_table_stmt);
+  STMT_INIT(drop_trigger_stmt);
+  STMT_INIT(drop_view_stmt);
+  STMT_INIT(echo_stmt);
+  STMT_INIT(emit_constants_stmt);
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
-  STMT_INIT(emit_constants_stmt);
+  STMT_INIT(end_schema_region_stmt);
+  STMT_INIT(enforce_normal_stmt);
+  STMT_INIT(enforce_pop_stmt);
+  STMT_INIT(enforce_push_stmt);
+  STMT_INIT(enforce_reset_stmt);
+  STMT_INIT(enforce_strict_stmt);
+  STMT_INIT(explain_stmt);
+  STMT_INIT(expr_stmt);
+  STMT_INIT(fetch_call_stmt);
+  STMT_INIT(fetch_cursor_from_blob_stmt);
+  STMT_INIT(fetch_stmt);
+  STMT_INIT(fetch_values_stmt);
+  STMT_INIT(guard_stmt);
+  STMT_INIT(if_stmt);
+  STMT_INIT(insert_stmt);
+  STMT_INIT(leave_stmt);
+  STMT_INIT(let_stmt);
+  STMT_INIT(loop_stmt);
+  STMT_INIT(stmt_list_macro);
+  STMT_INIT(expr_macro);
+  STMT_INIT(out_stmt);
+  STMT_INIT(out_union_parent_child_stmt);
+  STMT_INIT(out_union_stmt);
+  STMT_INIT(previous_schema_stmt);
+  STMT_INIT(proc_savepoint_stmt);
+  STMT_INIT(release_savepoint_stmt);
+  STMT_INIT(return_stmt);
+  STMT_INIT(rollback_return_stmt);
+  STMT_INIT(rollback_trans_stmt);
+  STMT_INIT(savepoint_stmt);
+  STMT_INIT(schema_ad_hoc_migration_stmt);
+  STMT_INIT(schema_unsub_stmt);
+  STMT_INIT(schema_upgrade_script_stmt);
+  STMT_INIT(schema_upgrade_version_stmt);
+  STMT_INIT(select_nothing_stmt);
+  STMT_INIT(select_stmt);
+  STMT_INIT(set_blob_from_cursor_stmt);
+  STMT_INIT(set_from_cursor);
+  STMT_INIT(switch_stmt);
+  STMT_INIT(throw_stmt);
+  STMT_INIT(trycatch_stmt);
+  STMT_INIT(update_cursor_stmt);
+  STMT_INIT(update_stmt);
+  STMT_INIT(upsert_stmt);
+  STMT_INIT(upsert_update);
+  STMT_INIT(while_stmt);
+  STMT_INIT(with_delete_stmt);
+  STMT_INIT(with_insert_stmt);
+  STMT_INIT(with_select_stmt);
+  STMT_INIT(with_update_stmt);
+  STMT_INIT(with_upsert_stmt);
 
   STMT_INIT(blob_get_key_type_stmt);
   STMT_INIT(blob_get_val_type_stmt);

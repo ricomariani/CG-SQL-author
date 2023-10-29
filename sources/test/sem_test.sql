@@ -23502,7 +23502,7 @@ declare select func select_func_with_out_arg2(out out_param int!) int;
 -- + CREATE TABLE `xyz``abc`(
 -- + x INTEGER NOT NULL,
 -- + `a b` INTEGER NOT NULL
--- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `xyz``abc`}
 -- + {col_def}: x: integer notnull
 -- + {col_def}: X_aX20b: integer notnull unique_key qid
@@ -23519,8 +23519,8 @@ create table `xyz``abc`
 -- + DECLARE C CURSOR FOR SELECT *
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", C.x, C.`a b`);
--- + {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
--- + {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+-- + {declare_cursor}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+-- + {fetch_stmt}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
 -- + {dot}: C.x: integer notnull variable
 -- + {dot}: C.X_aX20b: integer notnull variable qid
 -- - error:
@@ -23538,9 +23538,9 @@ end;
 -- + DECLARE D CURSOR FOR SELECT `xyz``abc`.*
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", D.x, D.`a b`);
--- + {declare_cursor}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
--- + {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
--- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid }
+-- + {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+-- + {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
+-- + {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 create proc qid_t2()
 begin
@@ -23575,7 +23575,7 @@ end;
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
 -- + FETCH R(x, `a b`) FROM VALUES(3, 4);
 -- + {declare_cursor_like_name}: Q: select: { x: integer notnull } variable shape_storage value_cursor
--- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
+-- + {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
 create proc qid_t4()
 begin
   cursor Q like `xyz``abc`(-`a b`);
@@ -23632,7 +23632,7 @@ create table qid_ref_2 (
 -- TEST: use a primary key attribute with quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
--- + {create_table_stmt}: qid_ref_3: { X_uuX20uu: integer notnull partial_pk qid }
+-- + {create_table_stmt}: qid_ref_3: { `uu uu`: integer notnull partial_pk qid }
 -- + {name `c1`}
 -- + {name `uu uu`}: X_uuX20uu: integer notnull qid
 -- - error:
@@ -23644,7 +23644,7 @@ create table qid_ref_3 (
 -- TEST: use a primary key attribute with quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + CONSTRAINT `c1` UNIQUE (`uu uu`)
--- + {create_table_stmt}: qid_ref_4: { X_uuX20uu: integer notnull qid }
+-- + {create_table_stmt}: qid_ref_4: { `uu uu`: integer notnull qid }
 -- + {name `c1`}
 -- + {name `uu uu`}: X_uuX20uu: integer notnull qid
 -- - error:
@@ -23657,7 +23657,7 @@ create table qid_ref_4 (
 -- verify that echoing is re-emitting the escaped text
 -- + UPDATE `xyz``abc`
 -- + SET `a b` = 5;
--- + {update_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {update_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `a b`}: X_aX20b: integer notnull qid
 -- - error:
 update `xyz``abc` set `a b` = 5;
@@ -23665,28 +23665,28 @@ update `xyz``abc` set `a b` = 5;
 -- TEST: insert statement vanilla with quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(1, 5);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` values (1, 5);
 
 -- TEST: insert statement using syntaxwith quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 1 `a b`, 2 x;
 
 -- TEST: insert statement dummy seed using form
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` using 2 x @dummy_seed(500);
 
 -- TEST: insert statement dummy seed values form
 -- verify that echoing is re-emitting the escaped text
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc`(x) values(2) @dummy_seed(500);
 
@@ -23695,7 +23695,7 @@ insert into `xyz``abc`(x) values(2) @dummy_seed(500);
 -- + DECLARE C CURSOR FOR SELECT *
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(C.x, C.`a b`);
--- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+-- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `a b`}
 -- - error:
 proc quoted_from_forms()
@@ -23774,7 +23774,7 @@ end;
 -- + CREATE TABLE reuse_exotic_columns(
 -- + x INTEGER NOT NULL,
 -- + `a b` INTEGER NOT NULL
--- + {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, X_aX20b: integer notnull qid }
+-- + {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 create table reuse_exotic_columns (
   LIKE `xyz``abc`
@@ -23793,4 +23793,54 @@ create table reuse_exotic_columns (
 -- - error:
 proc qid_shape_args(AAA like `xyz``abc`, BBB like `xyz``abc`, like `xyz``abc`)
 begin
+end;
+
+create table qnamed_table(
+ `x y` int,
+ `a b` int
+);
+
+-- TEST: verifies that the QID goes all the way up to the proc result shape
+-- this is necessary so that the generated DECLARE PROC will be correct
+-- + {create_proc_stmt}: presult_1: { `x y`: integer qid, `a b`: integer qid } dml_proc
+-- - error:
+create proc presult_1()
+begin
+  select T2.* from qnamed_table T1 join qnamed_table T2;
+end;
+
+-- TEST: verifies that the QID goes all the way up to the proc result shape
+-- this is necessary so that the generated DECLARE PROC will be correct
+-- + {create_proc_stmt}: presult_2: { `x y`: integer qid } dml_proc
+-- - error:
+create proc presult_2()
+begin
+  select T1.`x y` from qnamed_table T1 join qnamed_table T2;
+end;
+
+-- TEST: verifies that the QID goes all the way up to the proc result shape
+-- this is necessary so that the generated DECLARE PROC will be correct
+-- + {create_proc_stmt}: presult_3: { `x y`: integer notnull qid } dml_proc
+-- - error:
+create proc presult_3()
+begin
+ select 1 `x y`;
+end;
+
+-- TEST: verifies that the QID goes all the way up to the proc result shape
+-- this is necessary so that the generated DECLARE PROC will be correct
+-- + {create_proc_stmt}: presult_4: { `x y`: integer qid, `a b`: integer qid } dml_proc
+-- - error:
+create proc presult_4()
+begin
+  select * from (select * from qnamed_table);
+end;
+
+-- TEST: verifies that the QID goes all the way up to the proc result shape
+-- this is necessary so that the generated DECLARE PROC will be correct
+-- +  {create_proc_stmt}: presult_5: { `x y`: integer qid, `a b`: integer qid } dml_proc
+-- - error:
+create proc presult_5()
+begin
+  select T1.* from (select * from qnamed_table) T1;
 end;

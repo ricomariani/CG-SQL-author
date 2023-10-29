@@ -88379,7 +88379,7 @@ CREATE TABLE `xyz``abc`(
   `a b` INTEGER NOT NULL UNIQUE
 );
 
-  {create_table_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -88416,14 +88416,14 @@ END;
   | {name qid_t1}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
-      | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
-      | | {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   | {select_core_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   | | {select_core}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |   | {select_expr_list_con}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |     | {select_expr_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |     | | {star}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      | {declare_cursor}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   | {select_core_list}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   | | {select_core}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | {select_expr_list}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | | {star}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
       |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
       |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
@@ -88435,8 +88435,8 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {loop_stmt}: ok
-        | {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
-        | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+        | {fetch_stmt}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+        | | {name C}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
         | {stmt_list}: ok
           | {call_stmt}: ok
             | {name printf}: ok
@@ -88467,14 +88467,14 @@ END;
   | {name qid_t2}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
-      | | {name D}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
-      | | {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   | {select_core_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   | | {select_core}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |   | {select_expr_list_con}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |     | {select_expr_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |     | | {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull qid }
+      | {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+      | | {name D}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   | {select_core_list}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   | | {select_core}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | {select_expr_list}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | | {table_star}: X_xyzX60abc: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull qid }
       |   |     |   | {name `xyz``abc`}
       |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
       |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
@@ -88487,8 +88487,8 @@ END;
       |     | {select_limit}
       |       | {select_offset}
       | {loop_stmt}: ok
-        | {fetch_stmt}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
-        | | {name D}: D: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+        | {fetch_stmt}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+        | | {name D}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
         | {stmt_list}: ok
           | {call_stmt}: ok
             | {name printf}: ok
@@ -88518,10 +88518,10 @@ END;
       | {let_stmt}: x: integer notnull variable
         | {name x}: x: integer notnull variable
         | {select_stmt}: X_aX20b: integer notnull qid
-          | {select_core_list}: select: { X_aX20b: integer notnull qid }
-          | | {select_core}: select: { X_aX20b: integer notnull qid }
-          |   | {select_expr_list_con}: select: { X_aX20b: integer notnull qid }
-          |     | {select_expr_list}: select: { X_aX20b: integer notnull qid }
+          | {select_core_list}: select: { `a b`: integer notnull qid }
+          | | {select_core}: select: { `a b`: integer notnull qid }
+          |   | {select_expr_list_con}: select: { `a b`: integer notnull qid }
+          |     | {select_expr_list}: select: { `a b`: integer notnull qid }
           |     | | {select_expr}: X_aX20b: integer notnull qid
           |     |   | {dot}: X_aX20b: integer notnull qid
           |     |     | {name `xyz``abc`}
@@ -88560,14 +88560,14 @@ END;
       |   | {shape_exprs}
       |     | {shape_expr}
       |       | {name `a b`}
-      | {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
-      | | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
-      | | {shape_def}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+      | {declare_cursor_like_name}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+      | | {name R}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
+      | | {shape_def}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
       |   | {like}: ok
       |     | {name `xyz``abc`}
       | {fetch_values_stmt}: ok
       | | {name_columns_values}
-      |   | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
+      |   | {name R}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
       |   | {columns_values}: ok
       |     | {column_spec}
       |     | | {name_list}
@@ -88593,7 +88593,7 @@ END;
       |         | {name `a b`}
       | {fetch_values_stmt}: ok
         | {name_columns_values}
-          | {name R}: R: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } variable shape_storage value_cursor
+          | {name R}: R: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } variable shape_storage value_cursor
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
@@ -88692,7 +88692,7 @@ CREATE TABLE qid_ref_2(
   CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
 );
 
-  {create_table_stmt}: qid_ref_2: { X_uuX20uu: integer notnull foreign_key qid }
+  {create_table_stmt}: qid_ref_2: { `uu uu`: integer notnull foreign_key qid }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -88724,7 +88724,7 @@ CREATE TABLE qid_ref_3(
   CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
 );
 
-  {create_table_stmt}: qid_ref_3: { X_uuX20uu: integer notnull partial_pk qid }
+  {create_table_stmt}: qid_ref_3: { `uu uu`: integer notnull partial_pk qid }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -88751,7 +88751,7 @@ CREATE TABLE qid_ref_4(
   CONSTRAINT `c1` UNIQUE (`uu uu`)
 );
 
-  {create_table_stmt}: qid_ref_4: { X_uuX20uu: integer notnull qid }
+  {create_table_stmt}: qid_ref_4: { `uu uu`: integer notnull qid }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -88776,8 +88776,8 @@ The statement ending at line XXXX
 UPDATE `xyz``abc`
 SET `a b` = 5;
 
-  {update_stmt}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
-  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  {update_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
+  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
   | {update_set}
     | {update_list}: ok
     | | {update_entry}: X_aX20b: integer notnull qid
@@ -88794,7 +88794,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES(1, 5);
   {insert_stmt}: ok
   | {insert_normal}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -88821,7 +88821,7 @@ INSERT INTO `xyz``abc`(`a b`, x) VALUES(1, 2);
   {insert_stmt}: ok
   | {insert_normal}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -88843,7 +88843,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
   |   | {int 500}: integer notnull
   |   | {int 0}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -88865,7 +88865,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
   |   | {int 500}: integer notnull
   |   | {int 0}
   | {name_columns_values}
-    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+    | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
     | {columns_values}: ok
       | {column_spec}
       | | {name_list}
@@ -88891,14 +88891,14 @@ END;
   | {name quoted_from_forms}: ok dml_proc
   | {proc_params_stmts}
     | {stmt_list}: ok
-      | {declare_cursor}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc
-      | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
-      | | {select_stmt}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   | {select_core_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   | | {select_core}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |   | {select_expr_list_con}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |     | {select_expr_list}: select: { x: integer notnull, X_aX20b: integer notnull qid }
-      |   |     | | {star}: select: { x: integer notnull, X_aX20b: integer notnull qid }
+      | {declare_cursor}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
+      | | {name C}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+      | | {select_stmt}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   | {select_core_list}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   | | {select_core}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |   | {select_expr_list_con}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | {select_expr_list}: select: { x: integer notnull, `a b`: integer notnull qid }
+      |   |     | | {star}: select: { x: integer notnull, `a b`: integer notnull qid }
       |   |     | {select_from_etc}: TABLE { X_xyzX60abc: X_xyzX60abc }
       |   |       | {table_or_subquery_list}: TABLE { X_xyzX60abc: X_xyzX60abc }
       |   |       | | {table_or_subquery}: TABLE { X_xyzX60abc: X_xyzX60abc }
@@ -88909,23 +88909,23 @@ END;
       |   | {select_orderby}
       |     | {select_limit}
       |       | {select_offset}
-      | {fetch_stmt}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
-      | | {name C}: C: select: { x: integer notnull, X_aX20b: integer notnull qid } variable dml_proc shape_storage
+      | {fetch_stmt}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
+      | | {name C}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc shape_storage
       | {insert_stmt}: ok
         | {insert_normal}
         | {name_columns_values}
-          | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+          | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
           | {columns_values}: ok
             | {column_spec}
             | | {name_list}
             |   | {name x}: x: integer notnull
             |   | {name_list}
             |     | {name `a b`}: X_aX20b: integer notnull qid
-            | {select_stmt}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
-              | {select_core_list}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
-              | | {select_core}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
+            | {select_stmt}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
+              | {select_core_list}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
+              | | {select_core}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
               |   | {select_values}
-              |   | {values}: values: { column1: integer notnull variable, column2: integer notnull variable qid }
+              |   | {values}: values: { column1: integer notnull variable, `column2`: integer notnull variable qid }
               |     | {insert_list}: ok
               |       | {dot}: C.x: integer notnull variable
               |       | | {name C}
@@ -88943,7 +88943,7 @@ The statement ending at line XXXX
 DROP TABLE `xyz``abc`;
 
   {drop_table_stmt}: ok
-  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 
 The statement ending at line XXXX
 
@@ -88979,7 +88979,7 @@ ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required '`a b`'
 
   {alter_table_add_column_stmt}: err
-  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, X_aX20b: integer notnull unique_key qid } qid
+  | {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
   | {col_def}: X_aX20b: integer qid
     | {col_def_type_attrs}: ok
       | {col_def_name_type}
@@ -89074,7 +89074,7 @@ CREATE TABLE reuse_exotic_columns(
   `a b` INTEGER NOT NULL
 );
 
-  {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, X_aX20b: integer notnull qid }
+  {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, `a b`: integer notnull qid }
   | {create_table_name_flags}
   | | {table_flags_attrs}
   | | | {int 0}
@@ -89139,4 +89139,234 @@ END;
                     | {name `a b_`}: X_aX20b_: integer notnull variable in
                     | {notnull}: integer notnull
                       | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE TABLE qnamed_table(
+  `x y` INTEGER,
+  `a b` INTEGER
+);
+
+  {create_table_stmt}: qnamed_table: { `x y`: integer qid, `a b`: integer qid }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name qnamed_table}
+  | {col_key_list}
+    | {col_def}: X_xX20y: integer qid
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |     | {name `x y`}
+    |     | {type_int}: integer
+    | {col_key_list}
+      | {col_def}: X_aX20b: integer qid
+        | {col_def_type_attrs}: ok
+          | {col_def_name_type}
+            | {name `a b`}
+            | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC presult_1 ()
+BEGIN
+  SELECT T2.*
+    FROM qnamed_table AS T1
+    INNER JOIN qnamed_table AS T2;
+END;
+
+  {create_proc_stmt}: presult_1: { `x y`: integer qid, `a b`: integer qid } dml_proc
+  | {name presult_1}: presult_1: { `x y`: integer qid, `a b`: integer qid } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { `x y`: integer qid, `a b`: integer qid }
+        | {select_core_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        | | {select_core}: select: { `x y`: integer qid, `a b`: integer qid }
+        |   | {select_expr_list_con}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | {select_expr_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | | {table_star}: T2: qnamed_table: { `x y`: integer qid, `a b`: integer qid }
+        |     |   | {name T2}
+        |     | {select_from_etc}: JOIN { T1: qnamed_table, T2: qnamed_table }
+        |       | {join_clause}: JOIN { T1: qnamed_table, T2: qnamed_table }
+        |       | | {table_or_subquery}: TABLE { T1: qnamed_table }
+        |       | | | {name qnamed_table}: TABLE { T1: qnamed_table }
+        |       | | | {opt_as_alias}
+        |       | |   | {name T1}
+        |       | | {join_target_list}
+        |       |   | {join_target}: JOIN { T1: qnamed_table, T2: qnamed_table }
+        |       |     | {int 1} {join_inner}
+        |       |     | {table_join}
+        |       |       | {table_or_subquery}: TABLE { T2: qnamed_table }
+        |       |         | {name qnamed_table}: TABLE { T2: qnamed_table }
+        |       |         | {opt_as_alias}
+        |       |           | {name T2}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC presult_2 ()
+BEGIN
+  SELECT T1.`x y`
+    FROM qnamed_table AS T1
+    INNER JOIN qnamed_table AS T2;
+END;
+
+  {create_proc_stmt}: presult_2: { `x y`: integer qid } dml_proc
+  | {name presult_2}: presult_2: { `x y`: integer qid } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { `x y`: integer qid }
+        | {select_core_list}: select: { `x y`: integer qid }
+        | | {select_core}: select: { `x y`: integer qid }
+        |   | {select_expr_list_con}: select: { `x y`: integer qid }
+        |     | {select_expr_list}: select: { `x y`: integer qid }
+        |     | | {select_expr}: X_xX20y: integer qid
+        |     |   | {dot}: X_xX20y: integer qid
+        |     |     | {name T1}
+        |     |     | {name `x y`}
+        |     | {select_from_etc}: JOIN { T1: qnamed_table, T2: qnamed_table }
+        |       | {join_clause}: JOIN { T1: qnamed_table, T2: qnamed_table }
+        |       | | {table_or_subquery}: TABLE { T1: qnamed_table }
+        |       | | | {name qnamed_table}: TABLE { T1: qnamed_table }
+        |       | | | {opt_as_alias}
+        |       | |   | {name T1}
+        |       | | {join_target_list}
+        |       |   | {join_target}: JOIN { T1: qnamed_table, T2: qnamed_table }
+        |       |     | {int 1} {join_inner}
+        |       |     | {table_join}
+        |       |       | {table_or_subquery}: TABLE { T2: qnamed_table }
+        |       |         | {name qnamed_table}: TABLE { T2: qnamed_table }
+        |       |         | {opt_as_alias}
+        |       |           | {name T2}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC presult_3 ()
+BEGIN
+  SELECT 1 AS `x y`;
+END;
+
+  {create_proc_stmt}: presult_3: { `x y`: integer notnull qid } dml_proc
+  | {name presult_3}: presult_3: { `x y`: integer notnull qid } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { `x y`: integer notnull qid }
+        | {select_core_list}: select: { `x y`: integer notnull qid }
+        | | {select_core}: select: { `x y`: integer notnull qid }
+        |   | {select_expr_list_con}: select: { `x y`: integer notnull qid }
+        |     | {select_expr_list}: select: { `x y`: integer notnull qid }
+        |     | | {select_expr}: X_xX20y: integer notnull qid
+        |     |   | {int 1}: integer notnull
+        |     |   | {opt_as_alias}
+        |     |     | {name `x y`}
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC presult_4 ()
+BEGIN
+  SELECT *
+    FROM (SELECT *
+    FROM qnamed_table);
+END;
+
+  {create_proc_stmt}: presult_4: { `x y`: integer qid, `a b`: integer qid } dml_proc
+  | {name presult_4}: presult_4: { `x y`: integer qid, `a b`: integer qid } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { `x y`: integer qid, `a b`: integer qid }
+        | {select_core_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        | | {select_core}: select: { `x y`: integer qid, `a b`: integer qid }
+        |   | {select_expr_list_con}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | {select_expr_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | | {star}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | {select_from_etc}: TABLE { select: select }
+        |       | {table_or_subquery_list}: TABLE { select: select }
+        |       | | {table_or_subquery}: TABLE { select: select }
+        |       |   | {select_stmt}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |     | {select_core_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |     | | {select_core}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |     |   | {select_expr_list_con}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |     |     | {select_expr_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |     |     | | {star}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |     |     | {select_from_etc}: TABLE { qnamed_table: qnamed_table }
+        |       |     |       | {table_or_subquery_list}: TABLE { qnamed_table: qnamed_table }
+        |       |     |       | | {table_or_subquery}: TABLE { qnamed_table: qnamed_table }
+        |       |     |       |   | {name qnamed_table}: TABLE { qnamed_table: qnamed_table }
+        |       |     |       | {select_where}
+        |       |     |         | {select_groupby}
+        |       |     |           | {select_having}
+        |       |     | {select_orderby}
+        |       |       | {select_limit}
+        |       |         | {select_offset}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE PROC presult_5 ()
+BEGIN
+  SELECT T1.*
+    FROM (SELECT *
+    FROM qnamed_table) AS T1;
+END;
+
+  {create_proc_stmt}: presult_5: { `x y`: integer qid, `a b`: integer qid } dml_proc
+  | {name presult_5}: presult_5: { `x y`: integer qid, `a b`: integer qid } dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {select_stmt}: select: { `x y`: integer qid, `a b`: integer qid }
+        | {select_core_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        | | {select_core}: select: { `x y`: integer qid, `a b`: integer qid }
+        |   | {select_expr_list_con}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | {select_expr_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |     | | {table_star}: T1: select: { `x y`: integer qid, `a b`: integer qid }
+        |     |   | {name T1}
+        |     | {select_from_etc}: TABLE { T1: select }
+        |       | {table_or_subquery_list}: TABLE { T1: select }
+        |       | | {table_or_subquery}: TABLE { T1: select }
+        |       |   | {select_stmt}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |   | | {select_core_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |   | | | {select_core}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |   | |   | {select_expr_list_con}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |   | |     | {select_expr_list}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |   | |     | | {star}: select: { `x y`: integer qid, `a b`: integer qid }
+        |       |   | |     | {select_from_etc}: TABLE { qnamed_table: qnamed_table }
+        |       |   | |       | {table_or_subquery_list}: TABLE { qnamed_table: qnamed_table }
+        |       |   | |       | | {table_or_subquery}: TABLE { qnamed_table: qnamed_table }
+        |       |   | |       |   | {name qnamed_table}: TABLE { qnamed_table: qnamed_table }
+        |       |   | |       | {select_where}
+        |       |   | |         | {select_groupby}
+        |       |   | |           | {select_having}
+        |       |   | | {select_orderby}
+        |       |   |   | {select_limit}
+        |       |   |     | {select_offset}
+        |       |   | {opt_as_alias}
+        |       |     | {name T1}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
 

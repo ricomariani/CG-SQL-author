@@ -2326,7 +2326,17 @@ static void print_sem_struct(sem_struct *sptr) {
      bprintf(&temp, "<%s>", sptr->kinds[i]);
     }
     get_sem_flags(sptr->semtypes[i], &temp);
-    cql_output("%s: %s", sptr->names[i], temp.ptr);
+    if (sptr->semtypes[i] & SEM_TYPE_QID) {
+      CHARBUF_OPEN(tmp);
+      cg_decode_qstr(&tmp, sptr->names[i]);
+      cql_output("%s", tmp.ptr);
+      CHARBUF_CLOSE(tmp);
+    }
+    else {
+      cql_output("%s", sptr->names[i]);
+    }
+
+    cql_output(": %s", temp.ptr);
     CHARBUF_CLOSE(temp);
   }
   cql_output(" }");

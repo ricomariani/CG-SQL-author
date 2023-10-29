@@ -173,7 +173,7 @@ static void sem_select_rewrite_backing(ast_node *node);
 static void sem_select_core_list(ast_node *ast);
 static void sem_query_parts(ast_node *node);
 static void sem_table_function(ast_node *node);
-static void sem_as_alias(ast_node *node, CSTR *alias_target);
+static void sem_as_alias(ast_node *node, CSTR *alias_target, ast_node *ast_target);
 static void sem_fetch_stmt(ast_node *ast);
 static void sem_fetch_values_stmt(ast_node *ast);
 static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
@@ -10367,11 +10367,15 @@ cql_noexport void sem_expr(ast_node *ast) {
 // this is done is that whoever should get the alias remembers themselves
 // as the alias target and that person then is renamed.  This is almost always
 // someone's sem->name field.
-static void sem_as_alias(ast_node *ast, CSTR *alias_target) {
+static void sem_as_alias(ast_node *ast, CSTR *alias_target, ast_node *ast_target) {
   EXTRACT_STRING(name, ast->left);
   // AS [name]
   if (alias_target) {
     *alias_target = name;
+  }
+
+  if (is_qid(ast->left) && ast_target) {
+    sem_add_flags(ast_target, SEM_TYPE_QID);
   }
 }
 
@@ -10397,7 +10401,7 @@ static void sem_select_expr(ast_node *ast) {
   ast->sem->kind = expr->sem->kind;
 
   if (opt_as_alias) {
-    sem_as_alias(opt_as_alias, &ast->sem->name);
+    sem_as_alias(opt_as_alias, &ast->sem->name, ast);
   }
 }
 
@@ -10522,6 +10526,7 @@ static void sem_table_or_subquery(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(factor, ast->left);
 
   CSTR *alias_target = NULL;
+  sem_t *sem_type_target = NULL;
 
   if (is_ast_str(factor)) {
     // [name]
@@ -10585,7 +10590,7 @@ static void sem_table_or_subquery(ast_node *ast) {
 
   EXTRACT(opt_as_alias, ast->right);
   if (opt_as_alias) {
-    sem_as_alias(opt_as_alias, alias_target);
+    sem_as_alias(opt_as_alias, alias_target, NULL);
 
     // Rename this alias definition if it is aliasing a name string (i.e. not subquery, table function)
     // for query plan analysis if enabled.

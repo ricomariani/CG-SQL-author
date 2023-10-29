@@ -4339,8 +4339,8 @@ declare proc alltypes_nullable() (
 );
 
 declare proc alltypes_notnull() (
-  t_nn bool!,
-  f_nn bool!,
+  `bool 1 notnull` bool!,
+  `bool 2 notnull` bool!,
   i_nn int!,
   l_nn long!,
   r_nn real!,
@@ -4388,7 +4388,7 @@ BEGIN_TEST(blob_serialization)
   declare cursor_both cursor like storage_both;
   fetch cursor_both using
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
-      false f_nn, true t_nn, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+      false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
   -- note: using cursor_both and cursor_both ensures codegen is canonicalizing the name
   declare blob_both blob<storage_both>;
@@ -4397,8 +4397,8 @@ BEGIN_TEST(blob_serialization)
   fetch test_cursor_both from blob_both;
 
   EXPECT(test_cursor_both);
-  EXPECT(test_cursor_both.t_nn == cursor_both.t_nn);
-  EXPECT(test_cursor_both.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_both.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
+  EXPECT(test_cursor_both.`bool 2 notnull` == cursor_both.`bool 2 notnull`);
   EXPECT(test_cursor_both.i_nn == cursor_both.i_nn);
   EXPECT(test_cursor_both.l_nn == cursor_both.l_nn);
   EXPECT(test_cursor_both.r_nn == cursor_both.r_nn);
@@ -4420,8 +4420,8 @@ BEGIN_TEST(blob_serialization)
   fetch test_cursor_notnulls from blob_notnulls;
 
   EXPECT(test_cursor_notnulls);
-  EXPECT(test_cursor_notnulls.t_nn == cursor_both.t_nn);
-  EXPECT(test_cursor_notnulls.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_notnulls.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
+  EXPECT(test_cursor_notnulls.`bool 2 notnull` == cursor_both.`bool 2 notnull`);
   EXPECT(test_cursor_notnulls.i_nn == cursor_both.i_nn);
   EXPECT(test_cursor_notnulls.l_nn == cursor_both.l_nn);
   EXPECT(test_cursor_notnulls.r_nn == cursor_both.r_nn);
@@ -4449,8 +4449,8 @@ BEGIN_TEST(blob_serialization)
   fetch test_cursor_both from blob_both;
 
   EXPECT(test_cursor_both);
-  EXPECT(test_cursor_both.t_nn == cursor_both.t_nn);
-  EXPECT(test_cursor_both.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_both.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
+  EXPECT(test_cursor_both.`bool 2 notnull` == cursor_both.`bool 2 notnull`);
   EXPECT(test_cursor_both.i_nn == cursor_both.i_nn);
   EXPECT(test_cursor_both.l_nn == cursor_both.l_nn);
   EXPECT(test_cursor_both.r_nn == cursor_both.r_nn);
@@ -4485,8 +4485,8 @@ BEGIN_TEST(blob_serialization)
 
   -- we still expect to be able to read the fields we know without error
   EXPECT(test_cursor_notnulls);
-  EXPECT(test_cursor_notnulls.t_nn == cursor_both.t_nn);
-  EXPECT(test_cursor_notnulls.f_nn == cursor_both.f_nn);
+  EXPECT(test_cursor_notnulls.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
+  EXPECT(test_cursor_notnulls.`bool 2 notnull` == cursor_both.`bool 2 notnull`);
   EXPECT(test_cursor_notnulls.i_nn == cursor_both.i_nn);
   EXPECT(test_cursor_notnulls.l_nn == cursor_both.l_nn);
   EXPECT(test_cursor_notnulls.r_nn == cursor_both.r_nn);
@@ -4530,8 +4530,8 @@ BEGIN_TEST(blob_serialization)
 
   -- note that we read the not null versions of the fields
   EXPECT(cursor_nullables);
-  EXPECT(cursor_nullables.t == cursor_both.t_nn);
-  EXPECT(cursor_nullables.f == cursor_both.f_nn);
+  EXPECT(cursor_nullables.t == cursor_both.`bool 1 notnull`);
+  EXPECT(cursor_nullables.f == cursor_both.`bool 2 notnull`);
   EXPECT(cursor_nullables.i == cursor_both.i_nn);
   EXPECT(cursor_nullables.l == cursor_both.l_nn);
   EXPECT(cursor_nullables.r == cursor_both.r_nn);
@@ -4607,7 +4607,7 @@ BEGIN_TEST(corrupt_blob_deserialization)
   declare cursor_both cursor like storage_both;
   fetch cursor_both using
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
-      false f_nn, true t_nn, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+      false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
   declare blob_both blob<storage_both>;
   set blob_both from cursor cursor_both;
@@ -4839,7 +4839,7 @@ BEGIN_TEST(clobber_blobs)
   declare cursor_both cursor like storage_both;
   fetch cursor_both using
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
-      false f_nn, true t_nn, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
+      false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
   -- storage both means nullable types and not null types
   declare my_blob blob<storage_both>;

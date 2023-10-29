@@ -3414,6 +3414,9 @@ static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, 
   // note that cursor field strings are highly duplicative but the compiler will fold these anyway
   bprintf(output, "const char *%s[] = {\n", fields.ptr);
   for (uint32_t i = 0; i < sptr->count; i++) {
+    // for consistency with debug info and Lua we use the actual encoded field
+    // name for the dynamic cursor.  The other option (using names like `an id`)
+    // is problematic.  Any particular call may decode the names if it wants to.
     bprintf(output, "  \"%s\",\n", sptr->names[i]);
   }
   bprintf(output, "};\n");

@@ -394,6 +394,25 @@ cql_noexport int32_t cg_find_first_line(ast_node *ast) {
   return cg_find_first_line_recursive(ast, ast->filename);
 }
 
+cql_noexport void cg_emit_name(charbuf *output, CSTR name, bool_t qid) {
+  if (qid) {
+    cg_decode_qstr(output, name);
+  }
+  else {
+    bprintf(output, "%s", name);
+  }
+}
+
+// emit a name or a quoted name as needed
+cql_noexport void cg_emit_name_ast(charbuf *output, ast_node *name_ast) {
+  EXTRACT_STRING(name, name_ast);
+  cg_emit_name(output, name, is_qid(name_ast));
+}
+
+cql_noexport void cg_emit_sptr_index(charbuf *output, sem_struct *sptr, uint32_t i) {
+  cg_emit_name(output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
+}
+
 cql_noexport void cg_common_cleanup() {
   SYMTAB_CLEANUP(cg_stmts);
   SYMTAB_CLEANUP(cg_funcs);

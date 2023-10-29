@@ -319,3 +319,9 @@ cql_data_decl( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 
 cql_noexport crc_t crc_charbuf(charbuf *_Nonnull input);
 cql_noexport int64_t sha256_charbuf(charbuf *_Nonnull input);
+
+// name foratting helpers
+
+cql_noexport void cg_emit_name(charbuf *_Nonnull output, CSTR _Nonnull name, bool_t qid);
+cql_noexport void cg_emit_name_ast(charbuf *_Nonnull output, ast_node *_Nonnull name_ast);
+cql_noexport void cg_emit_sptr_index(charbuf *_Nonnull output, sem_struct *_Nonnull sptr, uint32_t i);

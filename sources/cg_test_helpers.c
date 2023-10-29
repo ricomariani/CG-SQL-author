@@ -77,26 +77,6 @@ static void find_all_table_nodes(dummy_test_info *info, ast_node *node);
 
 static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed);
 
-static void cg_test_helpers_emit_name(charbuf *output, CSTR name, bool_t qid) {
-  if (qid) {
-    cg_decode_qstr(output, name);
-  }
-  else {
-    bprintf(output, "%s", name);
-  }
-}
-
-// emit a name or a quoted name as needed
-static void cg_test_helpers_emit_name_ast(charbuf *output, ast_node *name_ast) {
-  EXTRACT_STRING(name, name_ast);
-  cg_test_helpers_emit_name(output, name, is_qid(name_ast));
-}
-
-static void cg_test_helpers_emit_sptr_index(charbuf *output, sem_struct *sptr, uint32_t i) {
-  cg_test_helpers_emit_name(output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
-}
-
-
 // The dummy_table, dummy_insert, dummy_select and dummy_result_set attributions
 // will reference the original procedure by name in a LIKE clause.  In order to get its
 // result type, we need to emit a declaration for the proc because its body will not be
@@ -225,7 +205,7 @@ static void process_pending_triggers(void *_Nullable context) {
       EXTRACT_NOTNULL(trigger_def, trigger_body_vers->left);
       EXTRACT_NAME_AST(trigger_name_ast, trigger_def->left);
       bprintf(gen_drop_triggers, "DROP TRIGGER IF EXISTS ");
-      cg_test_helpers_emit_name_ast(gen_drop_triggers, trigger_name_ast);
+      cg_emit_name_ast(gen_drop_triggers, trigger_name_ast);
       bprintf(gen_drop_triggers, ";\n");
 
       // Now we need to find all the tables referenced in the triggers, because those tables
@@ -531,7 +511,7 @@ static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_a
             
             int32_t icol = sem_column_index(sptr, column_name);
             Invariant(icol >= 0);
-            cg_test_helpers_emit_sptr_index(&names, sptr, (uint32_t)icol);
+            cg_emit_sptr_index(&names, sptr, (uint32_t)icol);
             comma = ", ";
 
             symtab_add(col_syms, column_name, NULL);
@@ -571,7 +551,7 @@ static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_a
               }
             }
             bprintf(&names, "%s", comma);
-            cg_test_helpers_emit_sptr_index(&names, sptr, i);
+            cg_emit_sptr_index(&names, sptr, i);
             bprintf(&values, "%s", comma);
             comma = ", ";
 
@@ -586,7 +566,7 @@ static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_a
       }
 
       bprintf(gen_insert_tables, "INSERT OR IGNORE INTO ");
-      cg_test_helpers_emit_name_ast(gen_insert_tables, table_name_ast);
+      cg_emit_name_ast(gen_insert_tables, table_name_ast);
       bprintf(gen_insert_tables, "(%s) VALUES(%s) @dummy_seed(%d)%s;\n",
               names.ptr,
               values.ptr,
@@ -666,7 +646,7 @@ static void cg_emit_index_stmt(
     gen_statement_with_callbacks(index_ast, callback);
     bprintf(gen_create_indexes, ";\n");
     bprintf(gen_drop_indexes, "DROP INDEX IF EXISTS ");
-    cg_test_helpers_emit_name_ast(gen_drop_indexes, index_name_ast);
+    cg_emit_name_ast(gen_drop_indexes, index_name_ast);
     bprintf(gen_drop_indexes, ";\n");
   }
 }
@@ -744,7 +724,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     // backed tables are not to be dropped, they don't exist physically
     if (!is_backed(table_or_view->sem->sem_type)) {
       bprintf(&gen_drop_tables, "DROP %s IF EXISTS ", is_ast_create_table_stmt(table_or_view) ? "TABLE" : "VIEW");
-      cg_test_helpers_emit_name_ast(&gen_drop_tables, name_ast);
+      cg_emit_name_ast(&gen_drop_tables, name_ast);
       bprintf(&gen_drop_tables, ";\n");
     }
   }
@@ -810,7 +790,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     bprintf(&gen_read_tables, "CREATE PROC test_%s_read_%s()\n", proc_name, table_name);
     bprintf(&gen_read_tables, "BEGIN\n");
     bprintf(&gen_read_tables, "  SELECT * FROM ");
-    cg_test_helpers_emit_name_ast(&gen_read_tables, name_ast);
+    cg_emit_name_ast(&gen_read_tables, name_ast);
     bprintf(&gen_read_tables, ";\n", table_name);
     bprintf(&gen_read_tables, "END;\n");
   }

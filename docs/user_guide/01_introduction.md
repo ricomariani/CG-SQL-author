@@ -35,7 +35,7 @@ are allowed on which data.  Strict type checking is much more reasonable given C
 ### Getting Started
 
 Before starting this tutorial, make sure you have built the `cql`
-executable first in [Building CG/SQL](../../docs/getting-started.md)
+executable first in [Building CG/SQL](../quick_start/getting-started.md)
 
 The "Hello World" program rendered in CQL looks like this:
 
@@ -51,7 +51,7 @@ end;
 
 This very nearly works exactly as written but we'll need a little bit of glue to wire it all up.
 
-First, assuming you have [built](../../docs/getting-started#building) `cql`, you should have the power to do this:
+First, assuming you have [built](../quick_start/getting-started.md#building) `cql`, you should have the power to do this:
 
 ```bash
 $ cql --in hello.sql --cg hello.h hello.c

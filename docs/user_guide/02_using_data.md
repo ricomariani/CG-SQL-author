@@ -475,4 +475,4 @@ Which probably doesn't come up very often but it does illustrate several things:
  * You can use `WITH RECURSIVE` to create table expressions that are sequences of numbers easily, with no reference to any real data
 
 A working version of this code can be found in the `sources/demo` directory of CG/SQL project.
-Additional demo code is available in [Appendix 10](#appendix-10-a-working-example)
+Additional demo code is available in [Appendix 10](docs/user_guide/appendices/10_working_example.md)

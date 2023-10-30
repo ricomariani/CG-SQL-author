@@ -404,7 +404,7 @@ and common table expressions in general.
 
 >TIP:
 >If you use CQL's query planner on shared fragments with conditionals, the query planner will only analyze the first branch by default. You need to use `[[query_plan_branch={an_integer}]]` to modify the behavior. Read
->[Query Plan Generation](#chapter-15-query-plan-generation) for details.
+>[Query Plan Generation](./15_query_plan_generation.md) for details.
 
 ### Shared Fragments as Expressions
 

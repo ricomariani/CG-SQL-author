@@ -29,7 +29,7 @@ see below.
 ### Query Plan Generation Compilation Steps
 
 >TIP:
->The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](../../docs/playground#query-plan-playground).
+>The following steps are used in `./repl/go_query_plan.sh`, you can [run it to get a quick demonstration of this feature in action](../quick_start/playground.md#query-plan-playground).
 >The rest of the section explains how query plan generation works and some of its quirks.
 
 To execute query plans for a given CQL file, the following commands need to be run:
@@ -105,7 +105,7 @@ WHERE my_table.id = nullable(1);
 
 #### User Defined Functions
 
-_Read [Functions](#chapter-8-functions) on details about Function Types._
+_Read [Functions](./08_functions.md) on details about Function Types._
 
 Since the implementation of UDFs in a CQL file do not affect SQLite
 query plans, CQL's query plan script automatically creates no-op stubs
@@ -113,13 +113,13 @@ to be used instead.
 
 #### Conditionals in Shared Fragments
 
-_Read [CQL Query Fragments](#chapter-14-cql-shared-fragments) on details about shared fragments_
+_Read [CQL Query Fragments](./14_shared_fragments.md) on details about shared fragments_
 
 Only one branch of a conditional is chosen for query plan analysis. By
 default this will be the first branch, which is the initial
 `SELECT` statement following the `IF` conditional.  The branch
 to analyze can be configured with the `cql:query_plan_branch`
-[@attribute](#appendix-3-control-directives)
+[@attribute](./appendices/03_control_directives.md)
 
 Here's an example of `cql:query_plan_branch` being used:
 

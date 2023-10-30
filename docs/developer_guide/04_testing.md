@@ -356,7 +356,7 @@ end;
 ```
 
 This test is verifying one of the optimizations that we talked about in
-[Part 3](#result-variables).
+[Chapter 3](./03_c_code_generation.md#result-variables).
 In many cases temporary variables for results (such as function calls) can be elided.
 
 * `- cql_int32 _tmp_int_0 = 0;` : verifies that this temporary is NOT created
@@ -565,7 +565,7 @@ of the upgraders.  Before we get into that there is a preliminary topic:
 In order to ensure that it is possible to create an upgrader, CQL provides features to validate
 the current schema against the previous schema ensuring that nothing has been done that would
 make an upgrader impossible. This is more fully discussed in
-[Chapter 11](user_guide.html#chapter-11-previous-schema-validation) of the Guide.
+[Chapter 11](../user_guide/11_previous_schema_validation.md) of the Guide.
 
 "Previous Schema" validation is a form of semantic check and so its testing happens as
 described above. Importantly, as with the other back-end passes the schema upgrader does
@@ -755,9 +755,9 @@ for the varios versions includes all the supported transitions such as
 creating and deleting tables and columns, and recreating views, indicies, and triggers.
 
 All of the possible transitions are more fully discussed in
-[Chapter 10](user_guide.html#chapter-10-schema-management-features) of the Guide which pairs nicely
+[Chapter 10](../user_guide/10_schema_management.md) of the Guide which pairs nicely
 with the previous schema validions discussed in
-[Chapter 11](user_guide.html#chapter-11-previous-schema-validation).
+[Chapter 11](../user_guide/11_previous_schema_validation.md).
 
 ### Testing the `#line` directives produced by CQL
 

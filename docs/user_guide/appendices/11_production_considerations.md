@@ -108,7 +108,7 @@ codes be lost because (e.g.) a `finalize` has happened, clearing the code. You c
 for instance, your runtime caches the results of recent failed `prepare` calls. In any case,
 what you log and where you log it is entirely up to you.
 
-The `cql_error_trace` macro is described in [Internals Part 3](developer_guide.html#cleanup-and-errors)
+The `cql_error_trace` macro is described in [Internals Part 3](../../developer_guide/03_c_code_generation.md#cleanup-and-errors)
 It will typically invoke `printf` or `fprintf` or something like that to trace the origin of thrown
 exceptions and to get the error text from SQLite as soon as possible.
 

@@ -347,7 +347,7 @@ cc -o hello -I ${cgsql}/sources main.c hello.c ${cgsql}/sources/cqlrt.c -lsqlite
 ./hello
 ```
 
-Additional demo code is available in [Appendix 10](#appendix-10-a-working-example)
+Additional demo code is available in [Appendix 10](./appendices/10_working_example.md)
 
 ### Nested Result Sets (Parent/Child)
 

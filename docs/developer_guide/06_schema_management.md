@@ -25,8 +25,8 @@ of the schema to the current version.  Because of the limitations of SQL in gene
 SQLite in particular, not all transforms are possible; so additionally the system must correctly
 detect and prevent upgrades that cannot be safely performed.
 
-The full set of schema attributes and their meaning is described in [Chapter 10](user_guide.html#chapter-10-schema-management-features)
-and the full set of validations is described in [Chapter 11](user_guide.html#chapter-11-previous-schema-validation).  Briefly the
+The full set of schema attributes and their meaning is described in [Chapter 10](../user_guide/10_schema_management.md)
+and the full set of validations is described in [Chapter 11](../user_guide/11_previous_schema_validation.md).  Briefly the
 directives are:
 
 * `@create(n)`: indicates a table/column is to be created at version `n`.
@@ -643,7 +643,7 @@ There is nothing left but to `CHARBUF_CLOSE` the interim buffers we created.
 At present `cg_schema.c` accomplishes a lot and is fairly light at only 1313 lines (at present).
 It is able to do so because it can leverage heavy lifting done in the semantic analysis phase
 and schema generation that can be done like all other SQL generation by the echoing code
-discussed in [Part 1](#part-1-lexing-parsing-and-the-ast).
+discussed in [Chapter 1](./01_building_the_ast.md).
 
 Topics covered included:
 

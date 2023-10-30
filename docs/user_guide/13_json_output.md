@@ -20,7 +20,7 @@ that are re-usable.  Many CQL stored procedures are of this form (in
 practice maybe 95% are just one statement.)
 
 To use CQL in this fashion, the sequence will be something like the
-below.  See [Appendix 1](#appendix-1-command-line-options) for command
+below.  See [Appendix 1](./appendices/01_command_lines_options.md) for command
 line details.
 
 ```bash

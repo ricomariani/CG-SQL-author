@@ -1,8 +1,8 @@
 # Developer Notes on CQL Development
 
-0. We have extensive documentation at [CQL Internals](https://ricomariani.github.io/CG-SQL-author/developer_guide.html)
-1. If you aren't good with `yacc`/`lex` you probably should do some homework before you start. CQL development is all about building and walking a syntax tree.  It's possible to make local changes without knowing the details but it can be hard to figure out where to make changes without context.
-2. CQL development is basically test driven, to create a new feature:
+1. We have extensive documentation at [CQL Internals](../developer_guide/_index.md)
+2. If you aren't good with `yacc`/`lex` you probably should do some homework before you start. CQL development is all about building and walking a syntax tree.  It's possible to make local changes without knowing the details but it can be hard to figure out where to make changes without context.
+3. CQL development is basically test driven, to create a new feature:
    1. Add the language feature to `test.sql`
    2. run [`test.sh`](testing.md); it will fail due to parse error
    3. Add the syntax to `cql.y` and create the necessary tree pieces in `ast.h`
@@ -25,7 +25,7 @@
    20. run [`cov.sh`](code-coverage.md) to confirm 100% coverage
    21. sanity check the GCC build (I use a linux box for this)
 
-3. Get a solid code review and land as usual.
+4. Get a solid code review and land as usual.
 
 By the time you have done this you will have passed the tests dozens of times and you will know exactly what your code is doing to the entire battery of cql combinations.  Missing tests can be painful and cause downstream regressions so be ruthless about adding enough combinations and validating the essential parts.  The snapshot diffing is helpful but the real gating is done by the pattern matching logic.
 

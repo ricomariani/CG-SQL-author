@@ -4625,7 +4625,7 @@ This is done if the code expects to target SQLite version 3.33 or lower.
 
 ### CQL0499: alias_of attribute may only be added to a declare function statement
 
-`cql:alias_of` attributes may only be used in [`DECLARE FUNC` statements](#ordinary-scalar-functions) or [`DECLARE PROC` statements](#declaring-procedures-defined-elsewhere).
+`cql:alias_of` attributes may only be used in [`DECLARE FUNC` statements](../08_functions.md#ordinary-scalar-functions) or [`DECLARE PROC` statements](../06_importing_and_exporting_procedures.md#declaring-procedures-defined-elsewhere).
 
 -----
 

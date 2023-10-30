@@ -963,6 +963,8 @@ AST1(schema_unsub_stmt);
 AST1(schema_upgrade_version_stmt);
 AST1(select_if_nothing_throw_expr)
 AST1(select_opts)
+AST(stmt_macro_ref);
+AST(stmt_macro_arg_ref);
 AST1(table_star)
 AST1(tilde)
 AST1(type_blob)

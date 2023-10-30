@@ -56,6 +56,7 @@
 #include "sem.h"
 #include "encoders.h"
 #include "unit_tests.h"
+#include "symtab.h"
 #include "rt.h"
 
 // In order for leak sanitizer to run, main must exit normally
@@ -86,10 +87,22 @@ static void cql_usage();
 static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 static ast_node *reduce_str_chain(ast_node *str_chain);
+static void parse_init(void);
+static void parse_cleanup(void);
+static CSTR install_macro_args(ast_node *ast);
+static void new_macro_args(void);
+static void delete_macro_args(void);
+static int32_t get_macro_arg_type(CSTR name);
+static int32_t get_macro_type(CSTR name);
+static bool_t set_macro_type(CSTR name, int32_t macro_type);
+static bool_t set_macro_arg_type(CSTR name, int32_t macro_type);
+
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
 static CSTR table_comment_saved;
+static symtab *macros;
+static symtab *macro_args;
 
 int yylex();
 void yyerror(const char *s, ...);
@@ -118,6 +131,18 @@ void yyrestart(FILE *);
 // so there is one call form.  However it means an explicit error check
 #define YY_ERROR_ON_DISTINCT(x) \
   if (x) yyerror("DISTINCT not valid in this context.")
+
+#define YY_ERROR_ON_MACRO_ARG(x) \
+  if (get_macro_arg_type(x) != EOF) yyerror("expected a defined macro not a macro formal.");
+
+#define YY_ERROR_ON_MACRO(x) \
+  if (get_macro_arg_type(x) == EOF) yyerror("expected a defined macro formal not a macro.");
+
+#define YY_ERROR_ON_FAILED_ADD_MACRO(success, name) \
+  if (!success) { yyerror(dup_printf("Macro already exists '%s'.", name)); }
+
+#define YY_ERROR_ON_FAILED_MACRO_ARG(name) \
+  if (name) { yyerror(dup_printf("Macro argument already exists '%s'.", name)); }
 
 // We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
 // to see it during semantic analysis, but it cannot be allowed to appear in a
@@ -159,6 +184,7 @@ static void cql_reset_globals(void);
 %token <ival> AT_DUMMY_DEFAULTS
 %token <sval> LONGLIT
 %token <sval> REALLIT
+%token <sval> STMT_LIST_MACRO EXPR_MACRO
 
 /*
  SQLite understands the following binary operators, in order from LOWEST to HIGHEST precedence:
@@ -298,6 +324,7 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_arg macro_type macro_args stmt_list_macro_def expr_macro_def
+%type <aval> stmt_macro_ref
 
 
 /* statements */
@@ -378,6 +405,15 @@ opt_stmt_list:
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
+stmt_macro_ref :
+  STMT_LIST_MACRO ';' {
+    YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
+    $stmt_macro_ref = new_ast_stmt_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+  | STMT_LIST_MACRO '(' ')' ';' {
+    YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
+    $stmt_macro_ref = new_ast_stmt_macro_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+  ;
+
 stmt_list[result]:
   stmt {
      // We're going to do this cheesy thing with the stmt_list structures so that we can
@@ -400,7 +436,28 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
+  | stmt_macro_ref[stmt] {
+     // same cheese as above
+
+     $result = new_ast_stmt_list($stmt, NULL);
+     $result->lineno = $stmt->lineno;
+
+     // set up the tail pointer invariant to use later
+     $result->parent = $result;
+     }
   | stmt_list[slist] stmt {
+     ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
+     new_stmt->lineno = $stmt->lineno;
+
+     // use our tail pointer invariant so we can add at the tail without searching
+     ast_node *tail = $slist->parent;
+     ast_set_right(tail, new_stmt);
+
+     // re-establish the tail invariant per the above
+     $slist->parent = new_stmt;
+     $result = $slist;
+     }
+  | stmt_list[slist] stmt_macro_ref[stmt] {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -2379,16 +2436,26 @@ keep_table_name_in_aliases_stmt:
 
 expr_macro_def:
   AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_args ')' {
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_type(name, EXPR_MACRO);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    CSTR bad_name = install_macro_args($opt_macro_args);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $expr_macro_def = new_ast_expr_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
 
 stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_args ')' {
-   $stmt_list_macro_def = new_ast_stmt_list_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_type(name, STMT_LIST_MACRO);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    CSTR bad_name = install_macro_args($opt_macro_args);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $stmt_list_macro_def = new_ast_stmt_list_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
   ;
    
 macro_def_stmt:
-  expr_macro_def BEGIN_ expr END { $macro_def_stmt = $expr_macro_def; $macro_def_stmt->right = $expr; }
-  | stmt_list_macro_def BEGIN_ stmt_list END { $macro_def_stmt = $stmt_list_macro_def; $macro_def_stmt->right = $stmt_list; }
+  expr_macro_def BEGIN_ expr END { $macro_def_stmt = $expr_macro_def; $macro_def_stmt->right = $expr; delete_macro_args();}
+  | stmt_list_macro_def BEGIN_ stmt_list END { $macro_def_stmt = $stmt_list_macro_def; $macro_def_stmt->right = $stmt_list;  delete_macro_args(); }
   ;
 
 opt_macro_args:
@@ -2697,6 +2764,7 @@ int cql_main(int argc, char **argv) {
   parse_error_occurred = false;
 
   if (!setjmp(cql_for_exit)) {
+    parse_init();
     parse_cmd(argc, argv);
     ast_init();
 
@@ -2718,6 +2786,7 @@ int cql_main(int argc, char **argv) {
   parse_cleanup();
   gen_cleanup();
   rt_cleanup();
+  parse_cleanup();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can
@@ -3102,4 +3171,82 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   CHARBUF_CLOSE(tmp);
 
   return lit;
+}
+
+static void parse_init() {
+  macros = symtab_new();
+  delete_macro_args();
+}
+
+static void parse_clean() {
+  delete_macro_args();
+  symtab_delete(macros);
+  macros = NULL;
+}
+
+static void new_macro_args() {
+  delete_macro_args();
+  macro_args = symtab_new();
+}
+
+static void delete_macro_args() {
+  if (macro_args) {
+    symtab_delete(macro_args);
+    macro_args = NULL;
+  }
+}
+
+static bool_t set_macro_type(CSTR name, int32_t macro_type) {
+  return symtab_add(macros, dup_printf("%s!", name), (void *)(int64_t)macro_type);
+}
+
+static int32_t get_macro_type(CSTR name) {
+  symtab_entry *entry = symtab_find(macros, name);
+  return entry ? (int32_t)(int64_t)(entry->val) : EOF;
+}
+
+static bool_t set_macro_arg_type(CSTR name, int32_t macro_type) {
+  return symtab_add(macro_args, dup_printf("%s!", name), (void *)(int64_t)macro_type);
+}
+
+static int32_t get_macro_arg_type(CSTR name) {
+  symtab_entry *entry = symtab_find(macro_args, name);
+  return entry ? (int32_t)(int64_t)(entry->val) : EOF;
+}
+
+cql_noexport int32_t resolve_macro_name(CSTR name) {
+  if (macro_args) {
+    int32_t result = get_macro_arg_type(name);
+    if (result != EOF) {
+      return result;
+    }
+  }
+  return get_macro_type(name);
+}
+
+static CSTR install_macro_args(ast_node *macro_args) {
+  new_macro_args();
+  for ( ; macro_args; macro_args = macro_args->right) {
+    Contract(is_ast_macro_args(macro_args));
+    EXTRACT_NOTNULL(macro_arg, macro_args->left);
+
+    EXTRACT_STRING(name, macro_arg->left);
+    EXTRACT_STRING(type, macro_arg->right);
+
+    // these are the only two cases for now
+    int32_t macro_type = EOF;
+    if (!strcmp("EXPR", type)) {
+      macro_type = EXPR_MACRO;
+    }
+    else if (!strcmp("STMT_LIST", type)) {
+      macro_type = STMT_LIST_MACRO;
+    }
+    Contract(macro_type != EOF);
+    bool_t success = set_macro_arg_type(name, macro_type);
+    if (!success) {
+      return name;
+    }
+  }
+
+  return NULL;
 }

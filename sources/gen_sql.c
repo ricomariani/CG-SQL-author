@@ -4825,6 +4825,18 @@ static void gen_stmt_list_macro(ast_node *ast) {
   gen_printf("END");
 }
 
+static void gen_stmt_macro_ref(ast_node *ast) {
+  Contract(is_ast_stmt_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s()", name);
+}
+
+static void gen_stmt_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_stmt_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
 cql_data_defn( int32_t gen_stmt_level );
 
 static void gen_stmt_list(ast_node *root) {
@@ -4988,6 +5000,8 @@ cql_noexport void gen_init() {
   STMT_INIT(select_stmt);
   STMT_INIT(set_blob_from_cursor_stmt);
   STMT_INIT(set_from_cursor);
+  STMT_INIT(stmt_macro_arg_ref);
+  STMT_INIT(stmt_macro_ref);
   STMT_INIT(switch_stmt);
   STMT_INIT(throw_stmt);
   STMT_INIT(trycatch_stmt);

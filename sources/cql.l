@@ -23,6 +23,7 @@ void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
 static CSTR last_doc_comment = NULL;
+cql_noexport int32_t resolve_macro_name(const char *);
 
 #ifndef CQL_AMALGAM
 // already in the headers in the amalgam
@@ -364,6 +365,15 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 \{                               { return yytext[0]; }
 \}                               { return yytext[0]; }
 [_A-Z][A-Z0-9_]*                 { yylval.sval = Strdup(yytext); return ID; }
+[_A-Z][A-Z0-9_]*!                { int32_t result = resolve_macro_name(yytext);
+                                   if (result == EOF) {
+                                     REJECT;
+                                   }
+                                   else {
+                                     yylval.sval = Strdup(yytext);
+                                   }
+                                   return result;
+                                 }
 
 [ \t\n]                          ;
 \-\-.*                           ;

@@ -601,3 +601,5 @@ cql_noexport CSTR get_last_doc_comment();
 cql_noexport CSTR cql_builtin_text();
 
 cql_noexport void cql_setup_for_builtins(void);
+
+cql_noexport int32_t resolve_macro_type(CSTR name);

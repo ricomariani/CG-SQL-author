@@ -14,3 +14,4 @@
 # Lines that start with '#' are comments.
 .vscode
 .www
+*.code-workspace

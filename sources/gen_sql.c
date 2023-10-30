@@ -1002,6 +1002,26 @@ static void gen_expr_blob(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   gen_printf("%s", str);
 }
 
+// note that the final expression might end up with parens or not
+// but in this form no parens are needed, the replacement will
+// naturally cause parens around a lower binding macro or macro arg
+// hence we ignore pri and pri new just like for say identifiers
+static void gen_expr_macro_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_expr_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s()", name);
+}
+
+// note that the final expression might end up with parens or not
+// but in this form no parens are needed, the replacement will
+// naturally cause parens around a lower binding macro or macro arg
+// hence we ignore pri and pri new just like for say identifiers
+static void gen_expr_macro_arg_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_expr_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
 static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(str, ast);
@@ -4901,7 +4921,6 @@ cql_noexport void gen_one_stmt_and_misc_attrs(ast_node *stmt)  {
   gen_one_stmt(stmt);
 }
 
-
 // so the name doesn't otherwise conflict in the amalgam
 #undef output
 
@@ -5034,6 +5053,8 @@ cql_noexport void gen_init() {
   EXPR_INIT(blob, gen_expr_blob, "BLB", EXPR_PRI_ROOT);
   EXPR_INIT(null, gen_expr_null, "NULL", EXPR_PRI_ROOT);
   EXPR_INIT(dot, gen_expr_dot, ".", EXPR_PRI_REVERSE_APPLY);
+  EXPR_INIT(expr_macro_arg_ref, gen_expr_macro_arg_ref, "!", EXPR_PRI_ROOT);
+  EXPR_INIT(expr_macro_ref, gen_expr_macro_ref, "!", EXPR_PRI_ROOT);
   EXPR_INIT(const, gen_expr_const, "CONST", EXPR_PRI_ROOT);
   EXPR_INIT(bin_and, gen_binary, "&", EXPR_PRI_BINARY);
   EXPR_INIT(bin_or, gen_binary, "|", EXPR_PRI_BINARY);

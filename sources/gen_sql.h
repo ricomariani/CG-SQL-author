@@ -187,3 +187,4 @@ cql_noexport void gen_statement_and_attributes_with_callbacks(ast_node *_Nonnull
 cql_noexport bool_t eval_star_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_variables_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_column_callback(ast_node *_Nonnull ast);
+

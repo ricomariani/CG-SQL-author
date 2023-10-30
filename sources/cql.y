@@ -94,8 +94,8 @@ static void new_macro_args(void);
 static void delete_macro_args(void);
 static int32_t get_macro_arg_type(CSTR name);
 static int32_t get_macro_type(CSTR name);
-static bool_t set_macro_type(CSTR name, int32_t macro_type);
-static bool_t set_macro_arg_type(CSTR name, int32_t macro_type);
+static bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast);
+static bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast);
 
 
 // Set to true upon a call to `yyerror`.
@@ -324,7 +324,7 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_arg macro_type macro_args stmt_list_macro_def expr_macro_def
-%type <aval> stmt_macro_ref
+%type <aval> stmt_macro_ref expr_macro_ref
 
 
 /* statements */
@@ -412,6 +412,15 @@ stmt_macro_ref :
   | STMT_LIST_MACRO '(' ')' ';' {
     YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
     $stmt_macro_ref = new_ast_stmt_macro_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+  ;
+
+expr_macro_ref :
+  EXPR_MACRO {
+    YY_ERROR_ON_MACRO($EXPR_MACRO);
+    $expr_macro_ref = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
+  | EXPR_MACRO '(' ')' {
+    YY_ERROR_ON_MACRO_ARG($EXPR_MACRO);
+    $expr_macro_ref = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), NULL); }
   ;
 
 stmt_list[result]:
@@ -1132,6 +1141,7 @@ call:
 basic_expr:
   name  { $basic_expr = $name; }
   | QID { $basic_expr = new_ast_qstr_quoted($QID); }
+  | expr_macro_ref { $basic_expr = $expr_macro_ref; }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
@@ -2436,21 +2446,21 @@ keep_table_name_in_aliases_stmt:
 
 expr_macro_def:
   AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_args ')' {
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_type(name, EXPR_MACRO);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
     CSTR bad_name = install_macro_args($opt_macro_args);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $expr_macro_def = new_ast_expr_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
+    $expr_macro_def = new_ast_expr_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
 
 stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_args ')' {
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_type(name, STMT_LIST_MACRO);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
     CSTR bad_name = install_macro_args($opt_macro_args);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $stmt_list_macro_def = new_ast_stmt_list_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL); }
+    $stmt_list_macro_def = new_ast_stmt_list_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
    
 macro_def_stmt:
@@ -3196,22 +3206,34 @@ static void delete_macro_args() {
   }
 }
 
-static bool_t set_macro_type(CSTR name, int32_t macro_type) {
-  return symtab_add(macros, dup_printf("%s!", name), (void *)(int64_t)macro_type);
+typedef struct {
+  ast_node *payload;
+  int32_t type;
+} macro_info;
+
+static bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast) {
+  macro_info *minfo = _ast_pool_new(macro_info);
+  minfo->payload = ast;
+  minfo->type = macro_type;
+
+  return symtab_add(macros, dup_printf("%s!", name), minfo);
 }
 
 static int32_t get_macro_type(CSTR name) {
   symtab_entry *entry = symtab_find(macros, name);
-  return entry ? (int32_t)(int64_t)(entry->val) : EOF;
+  return entry ? ((macro_info *)(entry->val))->type : EOF;
 }
 
-static bool_t set_macro_arg_type(CSTR name, int32_t macro_type) {
-  return symtab_add(macro_args, dup_printf("%s!", name), (void *)(int64_t)macro_type);
+static bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast) {
+  macro_info *minfo = _ast_pool_new(macro_info);
+  minfo->payload = ast;
+  minfo->type = macro_type;
+  return symtab_add(macro_args, dup_printf("%s!", name), minfo);
 }
 
 static int32_t get_macro_arg_type(CSTR name) {
   symtab_entry *entry = symtab_find(macro_args, name);
-  return entry ? (int32_t)(int64_t)(entry->val) : EOF;
+  return entry ? ((macro_info *)(entry->val))->type : EOF;
 }
 
 cql_noexport int32_t resolve_macro_name(CSTR name) {
@@ -3242,7 +3264,7 @@ static CSTR install_macro_args(ast_node *macro_args) {
       macro_type = STMT_LIST_MACRO;
     }
     Contract(macro_type != EOF);
-    bool_t success = set_macro_arg_type(name, macro_type);
+    bool_t success = set_macro_arg_info(name, macro_type, macro_arg);
     if (!success) {
       return name;
     }

@@ -708,6 +708,8 @@ AST(explain_stmt)
 AST(expr_assign)
 AST(expr_list)
 AST(expr_macro)
+AST(expr_macro_ref);
+AST(expr_macro_arg_ref);
 AST(expr_name);
 AST(expr_names);
 AST(fetch_call_stmt)

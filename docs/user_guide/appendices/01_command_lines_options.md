@@ -110,7 +110,7 @@ cql --in test.sql --nolines --cg foo.h foo.c
 
 ### --dev
 * some codegen features only make sense during development, this enables dev mode to turn those one
-** example: [explain query plan](#chapter-15-query-plan-generation)
+** example: [explain query plan](../15_query_plan_generation.md)
 
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
@@ -161,7 +161,7 @@ These are the various outputs the compiler can produce.
 
 #### --rt schema_upgrade
 * produces a CQL schema upgrade script which can then be compiled with CQL itself
-* see the chapter on schema upgrade/migration: [Chapter 10](#chapter-10-schema-management-features)
+* see the chapter on schema upgrade/migration: [Chapter 10](../10_schema_management.md)
 * requires one output file (foo.sql)
 
 ##### --include_regions a b c
@@ -187,7 +187,7 @@ These are the various outputs the compiler can produce.
 #### --rt query_plan
 * produces CQL output which can be re-compiled by CQL as normal input
 * the output consists of a set of procedures that will emit all query plans for the DML that was in the input
-* see [Chapter 15](#chapter-15-query-plan-generation)
+* see [Chapter 15](../15_query_plan_generation.md)
 
 #### --rt stats
 * produces  a simple .csv file with node count information for AST nodes per procedure in the input

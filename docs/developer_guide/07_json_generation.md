@@ -19,7 +19,7 @@ this, we'll illustrate the key strategies used to extract the data and format th
 
 ## JSON Schema
 
-The JSON schema is described in [Chapter 13](user_guide.html#chapter-13-json-output) of the Guide and there
+The JSON schema is described in [Chapter 13](../user_guide/13_json_output.md) of the Guide and there
 is a nice diagram of its [grammar](json_grammar.railroad.html)
 for reference.  So, we won't be
 discussing all the details of the output.  Instead we're going to go over the theory of how the
@@ -279,7 +279,7 @@ static void cg_json_test_details(charbuf *output, ast_node *ast, ast_node *misc_
 All of the JSON fragments have the usual test pattern "The statement ending at line nnn".
 This means that the normal validator will be able to find comments in the test file
 and associate them with json parts.  The testing strategies are discussed in
-[Part 4](#part-4-testing).
+[Chapter 4](./04_testing.md).
 
 In addition, while in test mode, we also emit the original statement that caused
 this JSON fragment to be created. This allows the test patterns to cross check

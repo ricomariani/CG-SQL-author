@@ -45,8 +45,8 @@ to define here is not really going to be a materialized table.  As a
 result, you will not be able to (e.g.) `DROP` the table or `SELECT`
 from it, and there will be no schema upgrade for it should you request
 one. However, the usual schema maintenance rules still apply (See
-[Chapter 10](#chapter-10-schema-management-features) and
-[Chapter 11](#chapter-11-previous-schema-validation)) which help you to
+[Chapter 10](./10_schema_management.md) and
+[Chapter 11](./11_previous_schema_validation.md)) which help you to
 create compatible versions of this structure.  For instance, new columns
 can be added only at the end, and only if they are nullable. Here we add
 `source` to the schema in a hypothetical "version 6".
@@ -425,7 +425,7 @@ the _not-null_ fields in the backed table.  The hash is arbitrary but
 repeatable, any system can compute the same hash and find the records
 they want without having to share headers. The actual hash function is
 included in the open source but it's just a SHA256 reduced to 64 bits with
-some name canonicalization. The [JSON output](#chapter-13-json-output)
+some name canonicalization. The [JSON output](./13_json_output.md)
 also includes the relevant hashes so you can easily consume them without
 even having to know the hash function.
 

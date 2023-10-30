@@ -24,7 +24,7 @@ Edit as you please
 The contents of `go.sh` also offers a basic demonstration of how CQL should be typically used to transpile files into a C executable.
 
 ## Query Plan Playground
-Within the same `repl` directory, we have a script that demonstrates [CQL's query plan generation feature](../CQL_Guide/generated/user_guide.html#chapter-15-query-plan-generation) with `go.sql`.
+Within the same `repl` directory, we have a script that demonstrates [CQL's query plan generation feature](../user_guide/15_query_plan_generation.md) with `go.sql`.
 
 Run this script in the `/repl` directory of the CQL repository:
 ```bash

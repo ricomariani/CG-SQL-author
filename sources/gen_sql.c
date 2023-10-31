@@ -2320,6 +2320,20 @@ static void gen_table_or_subquery_list(ast_node *ast) {
   }
 }
 
+static void gen_cte_tables_macro_ref(ast_node *ast) {
+  Contract(is_ast_cte_tables_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_cte_tables_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_cte_tables_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
 static void gen_query_parts_macro_ref(ast_node *ast) {
   Contract(is_ast_query_parts_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
@@ -2690,18 +2704,24 @@ static void gen_cte_table(ast_node *ast)  {
 }
 
 static void gen_cte_tables(ast_node *ast, CSTR prefix) {
-  Contract(is_ast_cte_tables(ast));
 
   bool_t first = true;
-  while (ast) {
-    EXTRACT_NOTNULL(cte_table, ast->left);
 
-    // callbacks can suppress some CTE for use in shared_fragments
-    bool_t has_cte_suppress_callback = gen_callbacks && gen_callbacks->cte_suppress_callback;
+  while (ast) {
+    Contract(is_ast_cte_tables(ast));
+    EXTRACT_ANY_NOTNULL(cte_table, ast->left);
+
     bool_t handled = false;
 
-    if (has_cte_suppress_callback) {
-      handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, output);
+    if (is_ast_cte_table(cte_table)) {
+      Contract(is_ast_cte_table(cte_table));
+
+      // callbacks can suppress some CTE for use in shared_fragments
+      bool_t has_cte_suppress_callback = gen_callbacks && gen_callbacks->cte_suppress_callback;
+
+      if (has_cte_suppress_callback) {
+        handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, output);
+      }
     }
 
     if (!handled) {
@@ -2712,7 +2732,16 @@ static void gen_cte_tables(ast_node *ast, CSTR prefix) {
       else {
         gen_printf(",\n");
       }
-      gen_cte_table(cte_table);
+
+      if (is_ast_cte_tables_macro_ref(cte_table)) {
+        gen_cte_tables_macro_ref(cte_table);
+      }
+      else if (is_ast_cte_tables_macro_arg_ref(cte_table)) {
+        gen_cte_tables_macro_arg_ref(cte_table);
+      }
+      else {
+        gen_cte_table(cte_table);
+      }
     }
 
     ast = ast->right;
@@ -4916,6 +4945,20 @@ static void gen_query_parts_macro_def(ast_node *ast) {
   gen_printf("\nEND");
 }
 
+static void gen_cte_tables_macro_def(ast_node *ast) {
+  Contract(is_ast_cte_tables_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(CTE_TABLES) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_cte_tables(body, "");
+  END_INDENT(body_indent);
+  gen_printf("END");
+}
 
 static void gen_stmt_list_macro_ref(ast_node *ast) {
   Contract(is_ast_stmt_list_macro_ref(ast));
@@ -5026,6 +5069,7 @@ cql_noexport void gen_init() {
   STMT_INIT(create_trigger_stmt);
   STMT_INIT(create_view_stmt);
   STMT_INIT(create_virtual_table_stmt);
+  STMT_INIT(cte_tables_macro_def);
   STMT_INIT(declare_const_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);

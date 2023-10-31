@@ -167,6 +167,7 @@ CONTEXT{sp}TYPE/{stop}           { return CONTEXT_TYPE; }
 CONTINUE                         { return CONTINUE; }
 CREATE                           { return CREATE; }
 CROSS                            { return CROSS; }
+CTE_TABLES                       { return CTE_TABLES; }
 CURRENT{sp}ROW/{stop}            { return CURRENT_ROW; }
 CURSOR                           { return CURSOR; }
 CURSOR{sp}HAS{sp}ROW/{stop}      { return CURSOR_HAS_ROW; }

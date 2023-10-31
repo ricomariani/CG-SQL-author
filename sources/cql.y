@@ -174,7 +174,7 @@ static void cql_reset_globals(void);
 %token <ival> AT_DUMMY_DEFAULTS
 %token <sval> LONGLIT
 %token <sval> REALLIT
-%token <sval> STMT_LIST_MACRO EXPR_MACRO QUERY_PARTS_MACRO
+%token <sval> STMT_LIST_MACRO EXPR_MACRO QUERY_PARTS_MACRO CTE_TABLES_MACRO
 
 /*
  SQLite understands the following binary operators, in order from LOWEST to HIGHEST precedence:
@@ -261,7 +261,7 @@ static void cql_reset_globals(void);
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
-%token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS
+%token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 
 /* ddl stuff */
@@ -315,8 +315,8 @@ static void cql_reset_globals(void);
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
 %type <aval> opt_macro_formals macro_formals macro_formal macro_type
-%type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def
-%type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref
+%type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def
+%type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref
 
 
 /* statements */
@@ -425,6 +425,15 @@ query_parts_macro_ref :
   | QUERY_PARTS_MACRO '(' opt_macro_args ')' {
     YY_ERROR_ON_MACRO_ARG($QUERY_PARTS_MACRO);
     $$ = new_ast_query_parts_macro_ref(new_ast_str($QUERY_PARTS_MACRO), $opt_macro_args); }
+  ;
+
+cte_tables_macro_ref :
+  CTE_TABLES_MACRO {
+    YY_ERROR_ON_MACRO($CTE_TABLES_MACRO);
+    $$ = new_ast_cte_tables_macro_arg_ref(new_ast_str($CTE_TABLES_MACRO), NULL); }
+  | CTE_TABLES_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($CTE_TABLES_MACRO);
+    $$ = new_ast_cte_tables_macro_ref(new_ast_str($CTE_TABLES_MACRO), $opt_macro_args); }
   ;
 
 stmt_list[result]:
@@ -968,6 +977,7 @@ name:
   | EXPR { $name = new_ast_str("expr"); }
   | STMT_LIST { $name = new_ast_str("stmt_list"); }
   | QUERY_PARTS { $name = new_ast_str("query_parts"); }
+  | CTE_TABLES { $name = new_ast_str("cte_tables"); }
   ;
 
 opt_sql_name:
@@ -1318,6 +1328,7 @@ cte_table:
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
   | cte_decl LIKE sql_name  {
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
+  | cte_tables_macro_ref[ref] { $cte_table = $ref; }
   ;
 
 with_prefix:
@@ -2454,7 +2465,7 @@ expr_macro_def:
   AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $expr_macro_def = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    $$ = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
@@ -2463,7 +2474,7 @@ stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $stmt_list_macro_def = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    $$ = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
@@ -2473,9 +2484,19 @@ query_parts_macro_def:
   AT_MACRO '(' QUERY_PARTS ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $query_parts_macro_def = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    $$ = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+cte_tables_macro_def:
+  AT_MACRO '(' CTE_TABLES ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_cte_tables_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
    
@@ -2492,6 +2513,11 @@ macro_def_stmt:
      $macro_def_stmt = $query_parts_macro_def;
      $macro_def_stmt->right = $query_parts;
      delete_macro_formals(); }
+  | cte_tables_macro_def BEGIN_ cte_tables END {
+     $macro_def_stmt = $cte_tables_macro_def;
+     $macro_def_stmt->right = $cte_tables;
+     delete_macro_formals(); }
+  ;
   ;
 
 opt_macro_args:
@@ -2503,6 +2529,7 @@ macro_arg:
  expr { $macro_arg = new_ast_expr_macro_arg($expr); }
  | BEGIN_ stmt_list END { $macro_arg = new_ast_stmt_list_macro_arg($stmt_list); }
  | FROM '(' query_parts ')' { $macro_arg = new_ast_query_parts_macro_arg($query_parts); }
+ | WITH '(' cte_tables ')' { $macro_arg = new_ast_cte_tables_macro_arg($cte_tables); }
  ;
 
 macro_args[result]:
@@ -2527,6 +2554,7 @@ macro_type:
    EXPR { $macro_type = new_ast_str("EXPR"); }
   | STMT_LIST { $macro_type = new_ast_str("STMT_LIST"); }
   | QUERY_PARTS { $macro_type = new_ast_str("QUERY_PARTS"); }
+  | CTE_TABLES { $macro_type = new_ast_str("CTE_TABLES"); }
   ;
 
 %%

@@ -769,7 +769,7 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
           gen_misc_attrs_to_stdout(misc_attrs);
         }
 
-        gen_one_stmt_to_stdout(stmt);
+        // gen_one_stmt_to_stdout(stmt);
         cql_output("\n");
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
@@ -1151,6 +1151,9 @@ static int32_t macro_type_from_str(CSTR type) {
   else if (!strcmp("QUERY_PARTS", type)) {
     macro_type = QUERY_PARTS_MACRO;
   }
+  else if (!strcmp("CTE_TABLES", type)) {
+    macro_type = CTE_TABLES_MACRO;
+  }
   Contract(macro_type != EOF);
   return macro_type;
 }
@@ -1178,17 +1181,20 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
 static bool_t is_any_macro_def(ast_node *ast) {
   return is_ast_stmt_list_macro_def(ast) ||
          is_ast_query_parts_macro_def(ast) ||
+         is_ast_cte_tables_macro_def(ast) ||
          is_ast_expr_macro_def(ast);
 }
 
 static bool_t is_any_macro_arg_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_arg_ref(ast) ||
          is_ast_query_parts_macro_arg_ref(ast) ||
+         is_ast_cte_tables_macro_arg_ref(ast) ||
          is_ast_expr_macro_arg_ref(ast);
 }
 
 static bool_t is_any_macro_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_ref(ast) ||
+         is_ast_cte_tables_macro_ref(ast) ||
          is_ast_query_parts_macro_ref(ast) ||
          is_ast_expr_macro_ref(ast);
 }
@@ -1242,11 +1248,10 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
       }
     }
 
-    if (is_ast_stmt_list(body)) {
+    if (is_ast_stmt_list(body) || is_ast_cte_tables(body)) {
        ast_node *parent = node->parent;
        // insert the copy into the list
        ast_set_left(parent, body->left);
-
 
        // march to the end
        ast_node *end = body;

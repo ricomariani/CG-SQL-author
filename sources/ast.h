@@ -686,6 +686,9 @@ AST(cte_binding_list)
 AST(cte_decl)
 AST(cte_table)
 AST(cte_tables)
+AST(cte_tables_macro_arg_ref)
+AST(cte_tables_macro_def)
+AST(cte_tables_macro_ref)
 AST(declare_const_stmt)
 AST(declare_cursor)
 AST(declare_cursor_like_name)
@@ -929,14 +932,12 @@ AST0(nullslast)
 AST0(on)
 AST0(out)
 AST0(previous_schema_stmt);
-AST1(query_parts_macro_arg);
 AST0(return_stmt)
 AST0(rollback_return_stmt);
 AST0(schema_upgrade_script_stmt);
 AST0(select_nothing_stmt)
 AST0(select_values)
 AST0(star)
-AST1(stmt_list_macro_arg);
 AST0(throw_stmt)
 AST0(type_cursor)
 AST0(using)
@@ -949,6 +950,7 @@ AST1(close_stmt)
 AST1(column_spec);
 AST1(const)
 AST1(create_data_type);
+AST1(cte_tables_macro_arg);
 AST1(declare_out_call_stmt)
 AST1(declare_proc_no_check_stmt)
 AST1(desc)
@@ -980,6 +982,7 @@ AST1(opt_where)
 AST1(out_stmt)
 AST1(out_union_stmt)
 AST1(proc_savepoint_stmt);
+AST1(query_parts_macro_arg);
 AST1(release_savepoint_stmt);
 AST1(rollback_trans_stmt);
 AST1(savepoint_stmt);
@@ -987,6 +990,7 @@ AST1(schema_unsub_stmt);
 AST1(schema_upgrade_version_stmt);
 AST1(select_if_nothing_throw_expr)
 AST1(select_opts)
+AST1(stmt_list_macro_arg);
 AST1(table_star)
 AST1(tilde)
 AST1(type_blob)

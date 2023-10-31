@@ -25,8 +25,8 @@ cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
 cql_data_defn( char *_Nullable current_file );
 
-static symtab *macros;
-static symtab *macro_args;
+static symtab *macro_table;
+static symtab *macro_arg_table;
 
 // Helper object to just hold info in find_attribute_str(...) and find_attribute_num(...)
 typedef struct misc_attrs_type {
@@ -41,14 +41,14 @@ typedef struct misc_attrs_type {
 cql_noexport void ast_init() {
   minipool_open(&ast_pool);
   minipool_open(&str_pool);
-  macros = symtab_new();
+  macro_table = symtab_new();
   delete_macro_formals();
 }
 
 cql_noexport void ast_cleanup() {
   delete_macro_formals();
-  symtab_delete(macros);
-  macros = NULL;
+  symtab_delete(macro_table);
+  macro_table = NULL;
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
@@ -1091,13 +1091,13 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
 
 cql_noexport void new_macro_formals() {
   delete_macro_formals();
-  macro_args = symtab_new();
+  macro_arg_table = symtab_new();
 }
 
 cql_noexport void delete_macro_formals() {
-  if (macro_args) {
-    symtab_delete(macro_args);
-    macro_args = NULL;
+  if (macro_arg_table) {
+    symtab_delete(macro_arg_table);
+    macro_arg_table = NULL;
   }
 }
 
@@ -1106,11 +1106,11 @@ cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast)
   minfo->def = ast;
   minfo->type = macro_type;
 
-  return symtab_add(macros, dup_printf("%s!", name), minfo);
+  return symtab_add(macro_table, dup_printf("%s!", name), minfo);
 }
 
 cql_noexport macro_info *get_macro_info(CSTR name) {
-  symtab_entry *entry = symtab_find(macros, name);
+  symtab_entry *entry = symtab_find(macro_table, name);
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
@@ -1118,17 +1118,17 @@ cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
-  return symtab_add(macro_args, dup_printf("%s!", name), minfo);
+  return symtab_add(macro_arg_table, dup_printf("%s!", name), minfo);
 }
 
 cql_noexport macro_info *get_macro_arg_info(CSTR name) {
-  symtab_entry *entry = symtab_find(macro_args, name);
+  symtab_entry *entry = symtab_find(macro_arg_table, name);
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
 cql_noexport int32_t resolve_macro_name(CSTR name) {
   macro_info *minfo;
-  if (macro_args) {
+  if (macro_arg_table) {
     minfo = get_macro_arg_info(name);
     if (minfo) {
       return minfo->type;
@@ -1136,6 +1136,18 @@ cql_noexport int32_t resolve_macro_name(CSTR name) {
   }
   minfo = get_macro_info(name);
   return minfo ? minfo->type : EOF;
+}
+
+static int32_t macro_type_from_str(CSTR type) {
+  int32_t macro_type = EOF;
+  if (!strcmp("EXPR", type)) {
+    macro_type = EXPR_MACRO;
+  }
+  else if (!strcmp("STMT_LIST", type)) {
+    macro_type = STMT_LIST_MACRO;
+  }
+  Contract(macro_type != EOF);
+  return macro_type;
 }
 
 cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
@@ -1148,14 +1160,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
     EXTRACT_STRING(type, macro_formal->right);
 
     // these are the only two cases for now
-    int32_t macro_type = EOF;
-    if (!strcmp("EXPR", type)) {
-      macro_type = EXPR_MACRO;
-    }
-    else if (!strcmp("STMT_LIST", type)) {
-      macro_type = STMT_LIST_MACRO;
-    }
-    Contract(macro_type != EOF);
+    int32_t macro_type = macro_type_from_str(type);
     bool_t success = set_macro_arg_info(name, macro_type, macro_formal);
     if (!success) {
       return name;
@@ -1172,31 +1177,69 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
   }
 
   if (is_ast_expr_macro_ref(node) || is_ast_expr_macro_arg_ref(node)) {
-
     EXTRACT_STRING(name, node->left);
 
+    macro_info *minfo = NULL;
+
     if (is_ast_expr_macro_ref(node)) {
-      macro_info *minfo = get_macro_info(name);
-      Invariant(minfo);
-
-      ast_node *copy = ast_clone_tree(minfo->def);
-      Contract(is_ast_expr_macro_def(copy));
-      // EXTRACT_NOTNULL(macro_name_args, copy->left);
-      copy->parent = NULL;
-
-      EXTRACT_ANY_NOTNULL(body, copy->right);
-
-      body->parent = NULL;
-
-      if (node->parent->left == node) {
-         ast_set_left(node->parent, body);
+      EXTRACT(macro_args, node->right);
+      if (macro_args) {
+        // expand the call macros before using them
+        expand_macros(macro_args);
       }
-      else {
-         ast_set_right(node->parent, body);
-      }
-      expand_macros(body);
-      return;
+
+      minfo = get_macro_info(name);
     }
+    else {
+      minfo = get_macro_arg_info(name);
+    }
+    Invariant(minfo);
+
+    ast_node *copy = ast_clone_tree(minfo->def);
+
+    ast_node *body = NULL;
+    if (is_ast_expr_macro_def(copy)) {
+      body = copy->right;
+    }
+    else {
+      body = copy->left;
+    }
+
+    if (node->parent->left == node) {
+       ast_set_left(node->parent, body);
+    }
+    else {
+       ast_set_right(node->parent, body);
+    }
+
+    symtab *macro_arg_table_saved = macro_arg_table;
+
+    if (is_ast_expr_macro_ref(node)) {
+      EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
+      EXTRACT(macro_formals, macro_name_formals->right);
+      EXTRACT(macro_args, node->right);
+
+      macro_arg_table = symtab_new();
+
+      while (macro_formals && macro_args) {
+        EXTRACT_NOTNULL(macro_formal, macro_formals->left);
+        EXTRACT_STRING(name, macro_formal->left);
+        EXTRACT_ANY_NOTNULL(macro_arg, macro_args->left);
+        EXTRACT_STRING(type, macro_formal->right);
+
+        int32_t macro_type = macro_type_from_str(type);
+        set_macro_arg_info(name, macro_type, macro_arg);
+
+        // check macro_arg for compat here
+
+        macro_formals = macro_formals->right;
+        macro_args = macro_args->right;
+      }
+    }
+
+    expand_macros(body);
+    macro_arg_table = macro_arg_table_saved;
+    return;
   }
 
   // Check the left and right nodes.

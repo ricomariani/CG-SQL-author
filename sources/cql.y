@@ -2443,7 +2443,7 @@ expr_macro_def:
   AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $expr_macro_def = new_ast_expr_macro_def(new_ast_macro_name_args($name, $opt_macro_formals), NULL);
+    $expr_macro_def = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
@@ -2452,7 +2452,7 @@ stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $stmt_list_macro_def = new_ast_stmt_list_macro_def(new_ast_macro_name_args($name, $opt_macro_formals), NULL);
+    $stmt_list_macro_def = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
@@ -2494,7 +2494,7 @@ macro_formals[result]:
   | macro_formal ',' macro_formals[next] { $result = new_ast_macro_formals($macro_formal, $next); }
   ;
 
-macro_formal: name macro_type { $macro_formal = new_ast_macro_formal($name, $macro_type); }
+macro_formal: name '!' macro_type { $macro_formal = new_ast_macro_formal($name, $macro_type); }
   ;
 
 macro_type:

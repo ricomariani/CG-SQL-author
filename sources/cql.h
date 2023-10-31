@@ -80,6 +80,7 @@ typedef struct cmd_options {
   bool_t hide_builtins;
   bool_t print_ast;
   bool_t print_dot;
+  bool_t expand;
   bool_t semantic;
   bool_t codegen;
   bool_t compress;

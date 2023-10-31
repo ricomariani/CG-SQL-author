@@ -91,6 +91,9 @@ $O/json_replacements: ../scripts/grammar_utils/json_replacements.l
 $O/cql.y.o: $O/cql.y.c $O/cql.y.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$O/ast.o: ast.c $O/cql.y.h ast.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
 $O/cql.o: $O/cql.c $O/cql.y.h cql.h ast.h
 
 $O/unit_tests.o: unit_tests.c unit_tests.h

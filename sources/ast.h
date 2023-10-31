@@ -185,6 +185,20 @@ typedef struct num_ast_node {
   const char *_Nullable value;
 } num_ast_node;
 
+typedef struct {
+  ast_node *def;
+  int32_t type;
+} macro_info;
+
+cql_noexport CSTR install_macro_args(ast_node *ast);
+cql_noexport void new_macro_args(void);
+cql_noexport void delete_macro_args(void);
+cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast);
+cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast);
+cql_noexport macro_info *get_macro_arg_info(CSTR name);
+cql_noexport macro_info *get_macro_info(CSTR name);
+cql_noexport void expand_macros(ast_node *root);
+
 // from the lexer
 extern int yylineno;
 cql_data_decl( char *_Nullable current_file );
@@ -707,7 +721,7 @@ AST(eq)
 AST(explain_stmt)
 AST(expr_assign)
 AST(expr_list)
-AST(expr_macro)
+AST(expr_macro_def)
 AST(expr_macro_ref);
 AST(expr_macro_arg_ref);
 AST(expr_name);
@@ -829,7 +843,9 @@ AST(shape_exprs)
 AST(shared_cte)
 AST(stmt_and_attr)
 AST(stmt_list)
-AST(stmt_list_macro)
+AST(stmt_list_macro_def)
+AST(stmt_list_macro_ref);
+AST(stmt_list_macro_arg_ref);
 AST(str_chain)
 AST(sub)
 AST(sub_eq)
@@ -965,8 +981,6 @@ AST1(schema_unsub_stmt);
 AST1(schema_upgrade_version_stmt);
 AST1(select_if_nothing_throw_expr)
 AST1(select_opts)
-AST(stmt_macro_ref);
-AST(stmt_macro_arg_ref);
 AST1(table_star)
 AST1(tilde)
 AST1(type_blob)

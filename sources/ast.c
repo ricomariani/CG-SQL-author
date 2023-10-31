@@ -16,10 +16,17 @@
 #include "gen_sql.h"
 #include "cg_common.h"
 #include "encoders.h"
+#include "cql.y.h"
+
+// uncomment for HEX
+// #define AST_EMIT_HEX 1
 
 cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
 cql_data_defn( char *_Nullable current_file );
+
+static symtab *macros;
+static symtab *macro_args;
 
 // Helper object to just hold info in find_attribute_str(...) and find_attribute_num(...)
 typedef struct misc_attrs_type {
@@ -34,9 +41,14 @@ typedef struct misc_attrs_type {
 cql_noexport void ast_init() {
   minipool_open(&ast_pool);
   minipool_open(&str_pool);
+  macros = symtab_new();
+  delete_macro_args();
 }
 
 cql_noexport void ast_cleanup() {
+  delete_macro_args();
+  symtab_delete(macros);
+  macros = NULL;
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
@@ -300,6 +312,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   if (is_ast_str(node)) {
     EXTRACT_STRING(str, node);
 
+#ifdef AST_EMIT_HEX
+    cql_output("%llx: ", (long long)node);
+#endif
     cql_output("%s", padbuffer);
     if (is_strlit(node)) {
       cql_output("{strlit %s}", str);
@@ -319,6 +334,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   }
 
   if (is_ast_num(node)) {
+#ifdef AST_EMIT_HEX
+    cql_output("%llx: ", (long long)node);
+#endif
     cql_output("%s", padbuffer);
 
     EXTRACT_NUM_TYPE(num_type, node);
@@ -340,6 +358,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   }
 
   if (is_ast_blob(node)) {
+#ifdef AST_EMIT_HEX
+    cql_output("%llx: ", (long long)node);
+#endif
     EXTRACT_BLOBTEXT(value, node);
     cql_output("%s", padbuffer);
     cql_output("{blob %s}", value);
@@ -347,6 +368,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   }
 
   if (is_ast_int(node)) {
+#ifdef AST_EMIT_HEX
+    cql_output("%llx: ", (long long)node);
+#endif
     cql_output("%s", padbuffer);
     int_ast_node *inode = (int_ast_node *)node;
     cql_output("{int %lld}", (llint_t)inode->value);
@@ -757,6 +781,9 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
       }
     }
 
+#ifdef AST_EMIT_HEX
+    cql_output("%llx: ", (long long)node);
+#endif
     print_ast_type(node);
     if (flip && pad >= 2) {
       padbuffer[pad-2] = ' ';
@@ -1057,8 +1084,129 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   }
   ast_node *_ast = _ast_pool_new(ast_node);
   *_ast = *ast;
-  _ast->left = ast_clone_tree(ast->left);
-  _ast->right = ast_clone_tree(ast->right);
+  ast_set_left(_ast, ast_clone_tree(ast->left));
+  ast_set_right(_ast, ast_clone_tree(ast->right));
   return _ast;
+}
+
+cql_noexport void new_macro_args() {
+  delete_macro_args();
+  macro_args = symtab_new();
+}
+
+cql_noexport void delete_macro_args() {
+  if (macro_args) {
+    symtab_delete(macro_args);
+    macro_args = NULL;
+  }
+}
+
+cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast) {
+  macro_info *minfo = _ast_pool_new(macro_info);
+  minfo->def = ast;
+  minfo->type = macro_type;
+
+  return symtab_add(macros, dup_printf("%s!", name), minfo);
+}
+
+cql_noexport macro_info *get_macro_info(CSTR name) {
+  symtab_entry *entry = symtab_find(macros, name);
+  return entry ? (macro_info *)(entry->val) : NULL;
+}
+
+cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast) {
+  macro_info *minfo = _ast_pool_new(macro_info);
+  minfo->def = ast;
+  minfo->type = macro_type;
+  return symtab_add(macro_args, dup_printf("%s!", name), minfo);
+}
+
+cql_noexport macro_info *get_macro_arg_info(CSTR name) {
+  symtab_entry *entry = symtab_find(macro_args, name);
+  return entry ? (macro_info *)(entry->val) : NULL;
+}
+
+cql_noexport int32_t resolve_macro_name(CSTR name) {
+  macro_info *minfo;
+  if (macro_args) {
+    minfo = get_macro_arg_info(name);
+    if (minfo) {
+      return minfo->type;
+    }
+  }
+  minfo = get_macro_info(name);
+  return minfo ? minfo->type : EOF;
+}
+
+cql_noexport CSTR install_macro_args(ast_node *macro_args) {
+  new_macro_args();
+  for ( ; macro_args; macro_args = macro_args->right) {
+    Contract(is_ast_macro_args(macro_args));
+    EXTRACT_NOTNULL(macro_arg, macro_args->left);
+
+    EXTRACT_STRING(name, macro_arg->left);
+    EXTRACT_STRING(type, macro_arg->right);
+
+    // these are the only two cases for now
+    int32_t macro_type = EOF;
+    if (!strcmp("EXPR", type)) {
+      macro_type = EXPR_MACRO;
+    }
+    else if (!strcmp("STMT_LIST", type)) {
+      macro_type = STMT_LIST_MACRO;
+    }
+    Contract(macro_type != EOF);
+    bool_t success = set_macro_arg_info(name, macro_type, macro_arg);
+    if (!success) {
+      return name;
+    }
+  }
+
+  return NULL;
+}
+
+cql_export void expand_macros(ast_node *_Nonnull node) {
+
+  // do not recurse into macro definitions
+  if (is_ast_expr_macro_def(node) || is_ast_stmt_list_macro_def(node)) {
+    return;
+  }
+
+  if (is_ast_expr_macro_ref(node) || is_ast_expr_macro_arg_ref(node)) {
+
+    EXTRACT_STRING(name, node->left);
+
+    if (is_ast_expr_macro_ref(node)) {
+      macro_info *minfo = get_macro_info(name);
+      Invariant(minfo);
+
+      ast_node *copy = ast_clone_tree(minfo->def);
+      Contract(is_ast_expr_macro_def(copy));
+      // EXTRACT_NOTNULL(macro_name_args, copy->left);
+      copy->parent = NULL;
+
+      EXTRACT_ANY_NOTNULL(body, copy->right);
+
+      body->parent = NULL;
+
+      if (node->parent->left == node) {
+         ast_set_left(node->parent, body);
+      }
+      else {
+         ast_set_right(node->parent, body);
+      }
+      expand_macros(body);
+      return;
+    }
+  }
+
+  // Check the left and right nodes.
+  if (ast_has_left(node)) {
+    expand_macros(node->left);
+  }
+
+  if (ast_has_right(node)) {
+    expand_macros(node->right);
+  }
 }
 

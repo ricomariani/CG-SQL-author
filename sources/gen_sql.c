@@ -4817,8 +4817,8 @@ static void gen_macro_args(ast_node *macro_args) {
   }
 }
 
-static void gen_expr_macro(ast_node *ast) {
-  Contract(is_ast_expr_macro(ast));
+static void gen_expr_macro_def(ast_node *ast) {
+  Contract(is_ast_expr_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_args, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_args->left);
@@ -4832,8 +4832,8 @@ static void gen_expr_macro(ast_node *ast) {
   gen_printf("\nEND");
 }
 
-static void gen_stmt_list_macro(ast_node *ast) {
-  Contract(is_ast_stmt_list_macro(ast));
+static void gen_stmt_list_macro_def(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_args, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_args->left);
@@ -4845,14 +4845,14 @@ static void gen_stmt_list_macro(ast_node *ast) {
   gen_printf("END");
 }
 
-static void gen_stmt_macro_ref(ast_node *ast) {
-  Contract(is_ast_stmt_macro_ref(ast));
+static void gen_stmt_list_macro_ref(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s()", name);
 }
 
-static void gen_stmt_macro_arg_ref(ast_node *ast) {
-  Contract(is_ast_stmt_macro_arg_ref(ast));
+static void gen_stmt_list_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s", name);
 }
@@ -4999,8 +4999,8 @@ cql_noexport void gen_init() {
   STMT_INIT(leave_stmt);
   STMT_INIT(let_stmt);
   STMT_INIT(loop_stmt);
-  STMT_INIT(stmt_list_macro);
-  STMT_INIT(expr_macro);
+  STMT_INIT(stmt_list_macro_def);
+  STMT_INIT(expr_macro_def);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_parent_child_stmt);
   STMT_INIT(out_union_stmt);
@@ -5019,8 +5019,8 @@ cql_noexport void gen_init() {
   STMT_INIT(select_stmt);
   STMT_INIT(set_blob_from_cursor_stmt);
   STMT_INIT(set_from_cursor);
-  STMT_INIT(stmt_macro_arg_ref);
-  STMT_INIT(stmt_macro_ref);
+  STMT_INIT(stmt_list_macro_arg_ref);
+  STMT_INIT(stmt_list_macro_ref);
   STMT_INIT(switch_stmt);
   STMT_INIT(throw_stmt);
   STMT_INIT(trycatch_stmt);

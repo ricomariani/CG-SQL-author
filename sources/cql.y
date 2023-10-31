@@ -87,22 +87,10 @@ static void cql_usage();
 static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 static ast_node *reduce_str_chain(ast_node *str_chain);
-static void parse_init(void);
-static void parse_cleanup(void);
-static CSTR install_macro_args(ast_node *ast);
-static void new_macro_args(void);
-static void delete_macro_args(void);
-static int32_t get_macro_arg_type(CSTR name);
-static int32_t get_macro_type(CSTR name);
-static bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast);
-static bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast);
-
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
 static CSTR table_comment_saved;
-static symtab *macros;
-static symtab *macro_args;
 
 int yylex();
 void yyerror(const char *s, ...);
@@ -132,11 +120,13 @@ void yyrestart(FILE *);
 #define YY_ERROR_ON_DISTINCT(x) \
   if (x) yyerror("DISTINCT not valid in this context.")
 
+// if macro arg found that's an error, it should be a macro
 #define YY_ERROR_ON_MACRO_ARG(x) \
-  if (get_macro_arg_type(x) != EOF) yyerror("expected a defined macro not a macro formal.");
+  if (get_macro_arg_info(x)) yyerror("expected a defined macro not a macro formal.");
 
+// if macro arg not found that's an error, it shouldn't be a macro, it should be an arg
 #define YY_ERROR_ON_MACRO(x) \
-  if (get_macro_arg_type(x) == EOF) yyerror("expected a defined macro formal not a macro.");
+  if (!get_macro_arg_info(x)) yyerror("expected a defined macro formal not a macro.");
 
 #define YY_ERROR_ON_FAILED_ADD_MACRO(success, name) \
   if (!success) { yyerror(dup_printf("Macro already exists '%s'.", name)); }
@@ -376,6 +366,9 @@ program:
   opt_stmt_list  {
     if (!parse_error_occurred) {
       gen_init();
+      if (options.expand) {
+        expand_macros($opt_stmt_list);
+      }
       if (options.semantic) {
         sem_main($opt_stmt_list);
       }
@@ -408,10 +401,10 @@ opt_stmt_list:
 stmt_macro_ref :
   STMT_LIST_MACRO ';' {
     YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
-    $stmt_macro_ref = new_ast_stmt_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+    $stmt_macro_ref = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
   | STMT_LIST_MACRO '(' ')' ';' {
     YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
-    $stmt_macro_ref = new_ast_stmt_macro_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+    $stmt_macro_ref = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
   ;
 
 expr_macro_ref :
@@ -2448,7 +2441,7 @@ expr_macro_def:
   AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_args ')' {
     CSTR bad_name = install_macro_args($opt_macro_args);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $expr_macro_def = new_ast_expr_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL);
+    $expr_macro_def = new_ast_expr_macro_def(new_ast_macro_name_args($name, $opt_macro_args), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
@@ -2457,7 +2450,7 @@ stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_args ')' {
     CSTR bad_name = install_macro_args($opt_macro_args);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $stmt_list_macro_def = new_ast_stmt_list_macro(new_ast_macro_name_args($name, $opt_macro_args), NULL);
+    $stmt_list_macro_def = new_ast_stmt_list_macro_def(new_ast_macro_name_args($name, $opt_macro_args), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
@@ -2646,7 +2639,10 @@ static void parse_cmd(int argc, char **argv) {
       options.schema_exclusive = 1;
     } else if (strcmp(arg, "--dot") == 0) {
       options.print_dot = 1;
+    } else if (strcmp(arg, "--exp") == 0) {
+      options.expand = 1;
     } else if (strcmp(arg, "--sem") == 0) {
+      options.expand = 1;
       options.semantic = 1;
     } else if (strcmp(arg, "--compress") == 0) {
       options.compress = 1;
@@ -2774,7 +2770,6 @@ int cql_main(int argc, char **argv) {
   parse_error_occurred = false;
 
   if (!setjmp(cql_for_exit)) {
-    parse_init();
     parse_cmd(argc, argv);
     ast_init();
 
@@ -2793,7 +2788,6 @@ int cql_main(int argc, char **argv) {
   cg_c_cleanup();
   sem_cleanup();
   ast_cleanup();
-  parse_cleanup();
   gen_cleanup();
   rt_cleanup();
   parse_cleanup();
@@ -3183,92 +3177,3 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   return lit;
 }
 
-static void parse_init() {
-  macros = symtab_new();
-  delete_macro_args();
-}
-
-static void parse_clean() {
-  delete_macro_args();
-  symtab_delete(macros);
-  macros = NULL;
-}
-
-static void new_macro_args() {
-  delete_macro_args();
-  macro_args = symtab_new();
-}
-
-static void delete_macro_args() {
-  if (macro_args) {
-    symtab_delete(macro_args);
-    macro_args = NULL;
-  }
-}
-
-typedef struct {
-  ast_node *payload;
-  int32_t type;
-} macro_info;
-
-static bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast) {
-  macro_info *minfo = _ast_pool_new(macro_info);
-  minfo->payload = ast;
-  minfo->type = macro_type;
-
-  return symtab_add(macros, dup_printf("%s!", name), minfo);
-}
-
-static int32_t get_macro_type(CSTR name) {
-  symtab_entry *entry = symtab_find(macros, name);
-  return entry ? ((macro_info *)(entry->val))->type : EOF;
-}
-
-static bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast) {
-  macro_info *minfo = _ast_pool_new(macro_info);
-  minfo->payload = ast;
-  minfo->type = macro_type;
-  return symtab_add(macro_args, dup_printf("%s!", name), minfo);
-}
-
-static int32_t get_macro_arg_type(CSTR name) {
-  symtab_entry *entry = symtab_find(macro_args, name);
-  return entry ? ((macro_info *)(entry->val))->type : EOF;
-}
-
-cql_noexport int32_t resolve_macro_name(CSTR name) {
-  if (macro_args) {
-    int32_t result = get_macro_arg_type(name);
-    if (result != EOF) {
-      return result;
-    }
-  }
-  return get_macro_type(name);
-}
-
-static CSTR install_macro_args(ast_node *macro_args) {
-  new_macro_args();
-  for ( ; macro_args; macro_args = macro_args->right) {
-    Contract(is_ast_macro_args(macro_args));
-    EXTRACT_NOTNULL(macro_arg, macro_args->left);
-
-    EXTRACT_STRING(name, macro_arg->left);
-    EXTRACT_STRING(type, macro_arg->right);
-
-    // these are the only two cases for now
-    int32_t macro_type = EOF;
-    if (!strcmp("EXPR", type)) {
-      macro_type = EXPR_MACRO;
-    }
-    else if (!strcmp("STMT_LIST", type)) {
-      macro_type = STMT_LIST_MACRO;
-    }
-    Contract(macro_type != EOF);
-    bool_t success = set_macro_arg_info(name, macro_type, macro_arg);
-    if (!success) {
-      return name;
-    }
-  }
-
-  return NULL;
-}

@@ -1002,6 +1002,27 @@ static void gen_expr_blob(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   gen_printf("%s", str);
 }
 
+static void gen_macro_args(ast_node *ast) {
+  for ( ; ast; ast = ast->right) {
+    EXTRACT_ANY_NOTNULL(arg, ast->left);
+    if (is_ast_expr_macro_arg(arg)) {
+      gen_root_expr(arg->left);
+      if (ast->right) {
+       gen_printf(", ");
+      }
+    }
+    else {
+     Contract(is_ast_stmt_list_macro_arg(arg));
+     gen_printf("\nBEGIN\n");
+     gen_stmt_list(arg->left);
+     gen_printf("END");
+     if (ast->right) {
+       gen_printf(",\n");
+     }
+    }
+  }
+}
+
 // note that the final expression might end up with parens or not
 // but in this form no parens are needed, the replacement will
 // naturally cause parens around a lower binding macro or macro arg
@@ -1009,7 +1030,9 @@ static void gen_expr_blob(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 static void gen_expr_macro_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_expr_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf("%s()", name);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
 }
 
 // note that the final expression might end up with parens or not
@@ -4848,7 +4871,9 @@ static void gen_stmt_list_macro_def(ast_node *ast) {
 static void gen_stmt_list_macro_ref(ast_node *ast) {
   Contract(is_ast_stmt_list_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf("%s()", name);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
 }
 
 static void gen_stmt_list_macro_arg_ref(ast_node *ast) {

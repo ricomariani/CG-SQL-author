@@ -1170,21 +1170,36 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   return NULL;
 }
 
+static bool_t is_any_macro_def(ast_node *ast) {
+  return is_ast_stmt_list_macro_def(ast) ||
+         is_ast_expr_macro_def(ast);
+}
+
+static bool_t is_any_macro_arg_ref(ast_node *ast) {
+  return is_ast_stmt_list_macro_arg_ref(ast) ||
+         is_ast_expr_macro_arg_ref(ast);
+}
+
+static bool_t is_any_macro_ref(ast_node *ast) {
+  return is_ast_stmt_list_macro_ref(ast) ||
+         is_ast_expr_macro_ref(ast);
+}
+
 cql_export void expand_macros(ast_node *_Nonnull node) {
   // do not recurse into macro definitions
-  if (is_ast_expr_macro_def(node) || is_ast_stmt_list_macro_def(node)) {
+  if (is_any_macro_def(node)) {
     return;
   }
 
-  if (is_ast_expr_macro_ref(node) || is_ast_expr_macro_arg_ref(node)) {
+  if (is_any_macro_arg_ref(node) || is_any_macro_ref(node)) {
     EXTRACT_STRING(name, node->left);
 
     macro_info *minfo = NULL;
 
-    if (is_ast_expr_macro_ref(node)) {
+    if (is_any_macro_ref(node)) {
       EXTRACT(macro_args, node->right);
       if (macro_args) {
-        // expand the call macros before using them
+        // expand the arguments to the macro before using them
         expand_macros(macro_args);
       }
 
@@ -1193,28 +1208,48 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     else {
       minfo = get_macro_arg_info(name);
     }
+
     Invariant(minfo);
 
     ast_node *copy = ast_clone_tree(minfo->def);
 
     ast_node *body = NULL;
-    if (is_ast_expr_macro_def(copy)) {
+    if (is_any_macro_def(copy)) {
+      // macro defs like x!() have the payload on the right
       body = copy->right;
     }
     else {
+      // macro formals like x! have the payload on the right
       body = copy->left;
     }
 
-    if (node->parent->left == node) {
-       ast_set_left(node->parent, body);
+    if (is_ast_stmt_list(body)) {
+       ast_node *parent = node->parent;
+       // insert the copy into the list
+       ast_set_left(parent, body->left);
+
+
+       // march to the end
+       ast_node *end = body;
+       while (end->right) {
+         end = end->right;
+       }
+       // link the copy to whatever was at the end
+       ast_set_right(end, parent->right);
+       ast_set_right(parent, body->right);
     }
-    else {
-       ast_set_right(node->parent, body);
+    else  {
+      if (node->parent->left == node) {
+         ast_set_left(node->parent, body);
+      }
+      else {
+         ast_set_right(node->parent, body);
+      }
     }
 
     symtab *macro_arg_table_saved = macro_arg_table;
 
-    if (is_ast_expr_macro_ref(node)) {
+    if (is_any_macro_ref(node)) {
       EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
       EXTRACT(macro_formals, macro_name_formals->right);
       EXTRACT(macro_args, node->right);

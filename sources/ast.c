@@ -47,7 +47,9 @@ cql_noexport void ast_init() {
 
 cql_noexport void ast_cleanup() {
   delete_macro_formals();
-  symtab_delete(macro_table);
+  if (macro_table) {
+    symtab_delete(macro_table);
+  }
   macro_table = NULL;
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
@@ -1146,6 +1148,9 @@ static int32_t macro_type_from_str(CSTR type) {
   else if (!strcmp("STMT_LIST", type)) {
     macro_type = STMT_LIST_MACRO;
   }
+  else if (!strcmp("QUERY_PARTS", type)) {
+    macro_type = QUERY_PARTS_MACRO;
+  }
   Contract(macro_type != EOF);
   return macro_type;
 }
@@ -1172,16 +1177,19 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
 
 static bool_t is_any_macro_def(ast_node *ast) {
   return is_ast_stmt_list_macro_def(ast) ||
+         is_ast_query_parts_macro_def(ast) ||
          is_ast_expr_macro_def(ast);
 }
 
 static bool_t is_any_macro_arg_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_arg_ref(ast) ||
+         is_ast_query_parts_macro_arg_ref(ast) ||
          is_ast_expr_macro_arg_ref(ast);
 }
 
 static bool_t is_any_macro_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_ref(ast) ||
+         is_ast_query_parts_macro_ref(ast) ||
          is_ast_expr_macro_ref(ast);
 }
 
@@ -1221,6 +1229,17 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     else {
       // macro formals like x! have the payload on the right
       body = copy->left;
+    }
+
+    // the query parts are already under a table_or_subquery node
+    // because of the macro position, if there is a redunant one
+    // in the arg tree, skip it.  We don't need two such wrappers
+    // it makes extra (()) in the output
+    if (is_ast_table_or_subquery_list(body) && body->right == NULL) {
+      EXTRACT_NOTNULL(table_or_subquery, body->left);
+      if (is_ast_join_clause(table_or_subquery->left) && table_or_subquery->right == NULL) {
+        body = table_or_subquery->left;
+      }
     }
 
     if (is_ast_stmt_list(body)) {

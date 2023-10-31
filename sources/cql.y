@@ -174,7 +174,7 @@ static void cql_reset_globals(void);
 %token <ival> AT_DUMMY_DEFAULTS
 %token <sval> LONGLIT
 %token <sval> REALLIT
-%token <sval> STMT_LIST_MACRO EXPR_MACRO
+%token <sval> STMT_LIST_MACRO EXPR_MACRO QUERY_PARTS_MACRO
 
 /*
  SQLite understands the following binary operators, in order from LOWEST to HIGHEST precedence:
@@ -261,7 +261,7 @@ static void cql_reset_globals(void);
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
-%token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST
+%token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 
 /* ddl stuff */
@@ -315,8 +315,8 @@ static void cql_reset_globals(void);
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
 %type <aval> opt_macro_formals macro_formals macro_formal macro_type
-%type <aval> stmt_list_macro_def expr_macro_def
-%type <aval> stmt_macro_ref expr_macro_ref
+%type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def
+%type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref
 
 
 /* statements */
@@ -400,22 +400,31 @@ opt_stmt_list:
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
-stmt_macro_ref :
+stmt_list_macro_ref :
   STMT_LIST_MACRO ';' {
     YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
-    $stmt_macro_ref = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+    $$ = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
   | STMT_LIST_MACRO '(' opt_macro_args ')' ';' {
     YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
-    $stmt_macro_ref = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
+    $$ = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
   ;
 
 expr_macro_ref :
   EXPR_MACRO {
     YY_ERROR_ON_MACRO($EXPR_MACRO);
-    $expr_macro_ref = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
+    $$ = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
   | EXPR_MACRO '(' opt_macro_args ')' {
     YY_ERROR_ON_MACRO_ARG($EXPR_MACRO);
-    $expr_macro_ref = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
+    $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
+  ;
+
+query_parts_macro_ref :
+  QUERY_PARTS_MACRO {
+    YY_ERROR_ON_MACRO($QUERY_PARTS_MACRO);
+    $$ = new_ast_query_parts_macro_arg_ref(new_ast_str($QUERY_PARTS_MACRO), NULL); }
+  | QUERY_PARTS_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($QUERY_PARTS_MACRO);
+    $$ = new_ast_query_parts_macro_ref(new_ast_str($QUERY_PARTS_MACRO), $opt_macro_args); }
   ;
 
 stmt_list[result]:
@@ -440,7 +449,7 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
-  | stmt_macro_ref[stmt] {
+  | stmt_list_macro_ref[stmt] {
      // same cheese as above
 
      $result = new_ast_stmt_list($stmt, NULL);
@@ -461,7 +470,7 @@ stmt_list[result]:
      $slist->parent = new_stmt;
      $result = $slist;
      }
-  | stmt_list[slist] stmt_macro_ref[stmt] {
+  | stmt_list[slist] stmt_list_macro_ref[stmt] {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -958,6 +967,7 @@ name:
   | COLUMN { $name = new_ast_str("column"); }
   | EXPR { $name = new_ast_str("expr"); }
   | STMT_LIST { $name = new_ast_str("stmt_list"); }
+  | QUERY_PARTS { $name = new_ast_str("query_parts"); }
   ;
 
 opt_sql_name:
@@ -1658,6 +1668,7 @@ table_or_subquery:
   | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
   | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
+  |  query_parts_macro_ref[qp] opt_as_alias { $table_or_subquery = new_ast_table_or_subquery($qp, $opt_as_alias); }
   ;
 
 join_type:
@@ -2457,6 +2468,16 @@ stmt_list_macro_def:
     bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
+
+query_parts_macro_def:
+  AT_MACRO '(' QUERY_PARTS ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $query_parts_macro_def = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
    
 macro_def_stmt:
   expr_macro_def BEGIN_ expr END {
@@ -2466,6 +2487,10 @@ macro_def_stmt:
   | stmt_list_macro_def BEGIN_ stmt_list END {
      $macro_def_stmt = $stmt_list_macro_def;
      $macro_def_stmt->right = $stmt_list;
+     delete_macro_formals(); }
+  | query_parts_macro_def BEGIN_ query_parts END {
+     $macro_def_stmt = $query_parts_macro_def;
+     $macro_def_stmt->right = $query_parts;
      delete_macro_formals(); }
   ;
 
@@ -2477,6 +2502,7 @@ opt_macro_args:
 macro_arg:
  expr { $macro_arg = new_ast_expr_macro_arg($expr); }
  | BEGIN_ stmt_list END { $macro_arg = new_ast_stmt_list_macro_arg($stmt_list); }
+ | FROM '(' query_parts ')' { $macro_arg = new_ast_query_parts_macro_arg($query_parts); }
  ;
 
 macro_args[result]:
@@ -2500,6 +2526,7 @@ macro_formal: name '!' macro_type { $macro_formal = new_ast_macro_formal($name, 
 macro_type:
    EXPR { $macro_type = new_ast_str("EXPR"); }
   | STMT_LIST { $macro_type = new_ast_str("STMT_LIST"); }
+  | QUERY_PARTS { $macro_type = new_ast_str("QUERY_PARTS"); }
   ;
 
 %%

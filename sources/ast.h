@@ -721,11 +721,12 @@ AST(eq)
 AST(explain_stmt)
 AST(expr_assign)
 AST(expr_list)
+AST1(expr_macro_arg)
+AST(expr_macro_arg_ref)
 AST(expr_macro_def)
-AST(expr_macro_ref);
-AST(expr_macro_arg_ref);
-AST(expr_name);
-AST(expr_names);
+AST(expr_macro_ref)
+AST(expr_name)
+AST(expr_names)
 AST(fetch_call_stmt)
 AST(fetch_cursor_from_blob_stmt)
 AST(fetch_stmt)
@@ -816,6 +817,9 @@ AST(reverse_apply_poly)
 AST(reverse_apply_typed)
 AST(rs_eq)
 AST(rshift)
+AST(query_parts_macro_arg_ref)
+AST(query_parts_macro_def)
+AST(query_parts_macro_ref)
 AST(schema_ad_hoc_migration_stmt);
 AST(seed_stub)
 AST(select_core)
@@ -843,9 +847,9 @@ AST(shape_exprs)
 AST(shared_cte)
 AST(stmt_and_attr)
 AST(stmt_list)
+AST(stmt_list_macro_arg_ref);
 AST(stmt_list_macro_def)
 AST(stmt_list_macro_ref);
-AST(stmt_list_macro_arg_ref);
 AST(str_chain)
 AST(sub)
 AST(sub_eq)
@@ -907,7 +911,6 @@ AST0(end_schema_region_stmt);
 AST0(enforce_pop_stmt);
 AST0(enforce_push_stmt);
 AST0(enforce_reset_stmt);
-AST1(expr_macro_arg);
 AST0(following)
 AST0(in)
 AST0(inout)
@@ -926,6 +929,7 @@ AST0(nullslast)
 AST0(on)
 AST0(out)
 AST0(previous_schema_stmt);
+AST1(query_parts_macro_arg);
 AST0(return_stmt)
 AST0(rollback_return_stmt);
 AST0(schema_upgrade_script_stmt);

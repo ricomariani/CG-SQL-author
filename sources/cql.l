@@ -276,6 +276,7 @@ PRIMARY                          { return PRIMARY; }
 PRIVATE                          { return PRIVATE; }
 PROC                             { return PROC; }
 PROCEDURE                        { return PROCEDURE; }
+QUERY_PARTS                      { return QUERY_PARTS; }
 QUERY{sp}PLAN/{stop}             { return QUERY_PLAN; }
 RAISE                            { return RAISE; }
 RANGE                            { return RANGE; }

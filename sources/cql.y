@@ -257,8 +257,10 @@ static void cql_reset_globals(void);
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token TYPE_CHECK CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN AT_COLUMNS RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-%token AT_RC AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
-%token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
+%token AT_RC AT_PROC AT_FILE AT_LINE AT_MACRO_LINE AT_MACRO_FILE AT_TEXT AT_ATTRIBUTE AT_SENSITIVE DEFERRED
+%token NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
+%token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT
+%token AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES
@@ -314,7 +316,7 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
-%type <aval> opt_macro_formals macro_formals macro_formal macro_type
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type any_macro_arg_ref
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def
 %type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref
 
@@ -400,11 +402,18 @@ opt_stmt_list:
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
+any_macro_arg_ref:
+  stmt_list_macro_ref  { $$ = $1; }
+  | expr_macro_ref { $$ = $1; }
+  | cte_tables_macro_ref { $$ = $1; }
+  | query_parts_macro_ref { $$ = $1; }
+  ;
+
 stmt_list_macro_ref :
-  STMT_LIST_MACRO ';' {
+  STMT_LIST_MACRO {
     YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
     $$ = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
-  | STMT_LIST_MACRO '(' opt_macro_args ')' ';' {
+  | STMT_LIST_MACRO '(' opt_macro_args ')' {
     YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
     $$ = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
   ;
@@ -458,7 +467,7 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
-  | stmt_list_macro_ref[stmt] {
+  | stmt_list_macro_ref[stmt] ';' {
      // same cheese as above
 
      $result = new_ast_stmt_list($stmt, NULL);
@@ -479,7 +488,7 @@ stmt_list[result]:
      $slist->parent = new_stmt;
      $result = $slist;
      }
-  | stmt_list[slist] stmt_list_macro_ref[stmt] {
+  | stmt_list[slist] stmt_list_macro_ref[stmt] ';' {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -1123,7 +1132,11 @@ any_literal:
   | num_literal  { $any_literal = $num_literal; }
   | NULL_  { $any_literal = new_ast_null(); }
   | AT_FILE '(' str_literal ')'  { $any_literal = file_literal($str_literal); }
+  | AT_LINE  { $any_literal = new_ast_num(NUM_INT, dup_printf("%d", yylineno)); }
+  | AT_MACRO_LINE { $any_literal = new_ast_str("@MACRO_LINE"); }
+  | AT_MACRO_FILE { $any_literal = new_ast_str("@MACRO_FILE"); }
   | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
+  | AT_TEXT '(' any_macro_arg_ref ')' { $any_literal = new_ast_macro_text($any_macro_arg_ref); }
   | BLOBLIT  { $any_literal = new_ast_blob($BLOBLIT); }
   ;
 
@@ -1632,13 +1645,13 @@ select_expr_list[result]:
   ;
 
 select_expr:
-  expr opt_as_alias  { 
+  expr opt_as_alias  {
     if (is_ast_table_star($expr) || is_ast_star($expr)) {
       YY_ERROR_ON_ALIAS_PRESENT($opt_as_alias);
       $select_expr = $expr;
     }
     else {
-      $select_expr = new_ast_select_expr($expr, $opt_as_alias); 
+      $select_expr = new_ast_select_expr($expr, $opt_as_alias);
     }
   }
   | column_calculation  { $select_expr = $column_calculation; }
@@ -2499,7 +2512,7 @@ cte_tables_macro_def:
     bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
-   
+
 macro_def_stmt:
   expr_macro_def BEGIN_ expr END {
      $macro_def_stmt = $expr_macro_def;

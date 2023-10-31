@@ -73,6 +73,7 @@ static void gen_conflict_clause(ast_node *ast);
 static void gen_call_stmt(ast_node *ast);
 static void gen_shared_cte(ast_node *ast);
 static bool_t gen_found_set_kind(ast_node *ast, void *context, charbuf *buffer);
+static void gen_cte_tables(ast_node *ast, CSTR prefix);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -1028,6 +1029,39 @@ static void gen_macro_args(ast_node *ast) {
        gen_printf(",\n");
      }
     }
+  }
+}
+
+static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  ast = ast->left;
+  if (is_any_macro_ref(ast)) {
+    EXTRACT_STRING(name, ast->left);
+    gen_printf("@TEXT(%s(", name);
+    gen_macro_args(ast->right);
+    gen_printf("))", name);
+  }
+  else {
+    Contract(is_any_macro_arg_ref(ast));
+    EXTRACT_STRING(name, ast->left);
+    gen_printf("@TEXT(%s)", name);
+  }
+}
+
+cql_noexport void gen_any_macro_expansion(ast_node *ast) {
+  if (is_ast_cte_tables(ast)) {
+     gen_cte_tables(ast, "");
+  }
+  else if (is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast)) {
+     gen_query_parts(ast);
+  }
+  else if (symtab_find(gen_stmts, ast->type)) {
+     gen_one_stmt(ast);
+  }
+  else if (is_ast_stmt_list(ast)) {
+     gen_stmt_list(ast);
+  }
+  else {
+    gen_root_expr(ast);
   }
 }
 
@@ -5174,6 +5208,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(dot, gen_expr_dot, ".", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(expr_macro_arg_ref, gen_expr_macro_arg_ref, "!", EXPR_PRI_ROOT);
   EXPR_INIT(expr_macro_ref, gen_expr_macro_ref, "!", EXPR_PRI_ROOT);
+  EXPR_INIT(macro_text, gen_expr_macro_text, "!", EXPR_PRI_ROOT);
   EXPR_INIT(const, gen_expr_const, "CONST", EXPR_PRI_ROOT);
   EXPR_INIT(bin_and, gen_binary, "&", EXPR_PRI_BINARY);
   EXPR_INIT(bin_or, gen_binary, "|", EXPR_PRI_BINARY);

@@ -123,6 +123,9 @@ d [0-9]
 @EPONYMOUS                       { return AT_EPONYMOUS; }
 @FILE                            { return AT_FILE; }
 @KEEP_TABLE_NAME_IN_ALIASES      { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
+@LINE                            { return AT_LINE; }
+@MACRO_FILE                      { return AT_MACRO_FILE; }
+@MACRO_LINE                      { return AT_MACRO_LINE; }
 @MACRO                           { return AT_MACRO; }
 @PREVIOUS_SCHEMA                 { return AT_PREVIOUS_SCHEMA; }
 @PROC                            { return AT_PROC; }
@@ -132,6 +135,7 @@ d [0-9]
 @SCHEMA_UPGRADE_SCRIPT           { return AT_SCHEMA_UPGRADE_SCRIPT; }
 @SCHEMA_UPGRADE_VERSION          { return AT_SCHEMA_UPGRADE_VERSION; }
 @SENSITIVE                       { return AT_SENSITIVE; }
+@TEXT                            { return AT_TEXT; }
 @UNSUB                           { return AT_UNSUB; }
 ABORT                            { return ABORT; }
 ACTION                           { return ACTION; }

@@ -259,6 +259,10 @@ cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
 
+cql_noexport bool_t is_any_macro_def(ast_node *_Nonnull ast);
+cql_noexport bool_t is_any_macro_arg_ref(ast_node *_Nonnull ast);
+cql_noexport bool_t is_any_macro_ref(ast_node *_Nonnull ast);
+
 cql_noexport bool_t is_select_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_delete_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_insert_stmt(ast_node *_Nullable ast);
@@ -967,6 +971,7 @@ AST1(is_false)
 AST1(is_not_false)
 AST1(is_not_true)
 AST1(is_true)
+AST1(macro_text)
 AST1(not)
 AST1(notnull);
 AST1(opt_as_alias)
@@ -1008,3 +1013,4 @@ AST1(with_recursive)
 #ifndef _MSC_VER
 #pragma clang diagnostic pop
 #endif
+

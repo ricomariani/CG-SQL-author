@@ -1178,30 +1178,74 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   return NULL;
 }
 
-static bool_t is_any_macro_def(ast_node *ast) {
+cql_noexport bool_t is_any_macro_def(ast_node *ast) {
   return is_ast_stmt_list_macro_def(ast) ||
          is_ast_query_parts_macro_def(ast) ||
          is_ast_cte_tables_macro_def(ast) ||
          is_ast_expr_macro_def(ast);
 }
 
-static bool_t is_any_macro_arg_ref(ast_node *ast) {
+cql_noexport bool_t is_any_macro_arg_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_arg_ref(ast) ||
          is_ast_query_parts_macro_arg_ref(ast) ||
          is_ast_cte_tables_macro_arg_ref(ast) ||
          is_ast_expr_macro_arg_ref(ast);
 }
 
-static bool_t is_any_macro_ref(ast_node *ast) {
+cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_ref(ast) ||
          is_ast_cte_tables_macro_ref(ast) ||
          is_ast_query_parts_macro_ref(ast) ||
          is_ast_expr_macro_ref(ast);
 }
 
+static void replace_node(ast_node *old, ast_node *new) {
+  if (old->parent->left == old) {
+   ast_set_left(old->parent, new);
+  }
+  else {
+   ast_set_right(old->parent, new);
+  }
+}
+
+static int32_t macro_line = 0;
+static CSTR macro_file = "<Unknown>";
+
+
 cql_export void expand_macros(ast_node *_Nonnull node) {
   // do not recurse into macro definitions
   if (is_any_macro_def(node)) {
+    return;
+  }
+
+  if (is_ast_macro_text(node)) {
+    expand_macros(node->left);
+    gen_sql_callbacks callbacks;
+    init_gen_sql_callbacks(&callbacks);
+    callbacks.mode = gen_mode_echo;
+    CHARBUF_OPEN(tmp);
+    CHARBUF_OPEN(quote);
+    gen_set_output_buffer(&tmp);
+    gen_with_callbacks(node->left, gen_any_macro_expansion, &callbacks);
+    cg_encode_string_literal(tmp.ptr, &quote);
+    ast_node *new = new_ast_str(Strdup(quote.ptr));
+    replace_node(node, new);
+    CHARBUF_CLOSE(quote);
+    CHARBUF_CLOSE(tmp);
+  }
+  else if (is_ast_str(node)) {
+    EXTRACT_STRING(name, node);
+    if (!strcmp(name, "@MACRO_LINE")) {
+      ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", macro_line));
+      replace_node(node, num);
+    }
+    else if (!strcmp(name, "@MACRO_FILE")) {
+      CHARBUF_OPEN(tmp);
+      cg_encode_string_literal(macro_file, &tmp);
+      ast_node *new = new_ast_str(Strdup(tmp.ptr));
+      replace_node(node, new);
+      CHARBUF_CLOSE(tmp);
+    }
     return;
   }
 
@@ -1263,12 +1307,7 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
        ast_set_right(parent, body->right);
     }
     else  {
-      if (node->parent->left == node) {
-         ast_set_left(node->parent, body);
-      }
-      else {
-         ast_set_right(node->parent, body);
-      }
+      replace_node(node, body);
     }
 
     symtab *macro_arg_table_saved = macro_arg_table;
@@ -1296,8 +1335,16 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
       }
     }
 
+    int32_t macro_line_saved = macro_line;
+    CSTR macro_file_saved = macro_file;
+    macro_line = node->lineno;
+    macro_file = node->filename;
+
     expand_macros(body);
+
     macro_arg_table = macro_arg_table_saved;
+    macro_line = macro_line_saved;
+    macro_file = macro_file_saved;
     return;
   }
 

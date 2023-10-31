@@ -4827,7 +4827,7 @@ static void gen_macro_formal(ast_node *macro_formal) {
   Contract(is_ast_macro_formal(macro_formal));
   EXTRACT_STRING(l, macro_formal->left);
   EXTRACT_STRING(r, macro_formal->right);
-  gen_printf("%s %s", l, r);
+  gen_printf("%s! %s", l, r);
 }
 
 static void gen_macro_formals(ast_node *macro_formals) {

@@ -191,8 +191,8 @@ typedef struct {
 } macro_info;
 
 cql_noexport CSTR install_macro_args(ast_node *ast);
-cql_noexport void new_macro_args(void);
-cql_noexport void delete_macro_args(void);
+cql_noexport void new_macro_formals(void);
+cql_noexport void delete_macro_formals(void);
 cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast);
 cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast);
 cql_noexport macro_info *get_macro_arg_info(CSTR name);
@@ -770,8 +770,9 @@ AST(ls_eq)
 AST(lshift)
 AST(lt)
 AST(macro_arg)
-AST(macro_arg_list)
 AST(macro_args)
+AST(macro_formal)
+AST(macro_formals)
 AST(macro_name_args)
 AST(match)
 AST(misc_attr)
@@ -907,6 +908,7 @@ AST0(end_schema_region_stmt);
 AST0(enforce_pop_stmt);
 AST0(enforce_push_stmt);
 AST0(enforce_reset_stmt);
+AST1(expr_macro_arg);
 AST0(following)
 AST0(in)
 AST0(inout)
@@ -931,6 +933,7 @@ AST0(schema_upgrade_script_stmt);
 AST0(select_nothing_stmt)
 AST0(select_values)
 AST0(star)
+AST1(stmt_list_macro_arg);
 AST0(throw_stmt)
 AST0(type_cursor)
 AST0(using)

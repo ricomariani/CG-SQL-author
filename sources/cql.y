@@ -313,7 +313,9 @@ static void cql_reset_globals(void);
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
-%type <aval> macro_def_stmt opt_macro_args macro_arg macro_type macro_args stmt_list_macro_def expr_macro_def
+%type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type
+%type <aval> stmt_list_macro_def expr_macro_def
 %type <aval> stmt_macro_ref expr_macro_ref
 
 
@@ -402,18 +404,18 @@ stmt_macro_ref :
   STMT_LIST_MACRO ';' {
     YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
     $stmt_macro_ref = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
-  | STMT_LIST_MACRO '(' ')' ';' {
+  | STMT_LIST_MACRO '(' opt_macro_args ')' ';' {
     YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
-    $stmt_macro_ref = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+    $stmt_macro_ref = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
   ;
 
 expr_macro_ref :
   EXPR_MACRO {
     YY_ERROR_ON_MACRO($EXPR_MACRO);
     $expr_macro_ref = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
-  | EXPR_MACRO '(' ')' {
+  | EXPR_MACRO '(' opt_macro_args ')' {
     YY_ERROR_ON_MACRO_ARG($EXPR_MACRO);
-    $expr_macro_ref = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), NULL); }
+    $expr_macro_ref = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
   ;
 
 stmt_list[result]:
@@ -2438,27 +2440,33 @@ keep_table_name_in_aliases_stmt:
   AT_KEEP_TABLE_NAME_IN_ALIASES { $keep_table_name_in_aliases_stmt = new_ast_keep_table_name_in_aliases_stmt(); }
 
 expr_macro_def:
-  AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_args ')' {
-    CSTR bad_name = install_macro_args($opt_macro_args);
+  AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $expr_macro_def = new_ast_expr_macro_def(new_ast_macro_name_args($name, $opt_macro_args), NULL);
+    $expr_macro_def = new_ast_expr_macro_def(new_ast_macro_name_args($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
 
 stmt_list_macro_def:
-  AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_args ')' {
-    CSTR bad_name = install_macro_args($opt_macro_args);
+  AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
-    $stmt_list_macro_def = new_ast_stmt_list_macro_def(new_ast_macro_name_args($name, $opt_macro_args), NULL);
+    $stmt_list_macro_def = new_ast_stmt_list_macro_def(new_ast_macro_name_args($name, $opt_macro_formals), NULL);
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
    
 macro_def_stmt:
-  expr_macro_def BEGIN_ expr END { $macro_def_stmt = $expr_macro_def; $macro_def_stmt->right = $expr; delete_macro_args();}
-  | stmt_list_macro_def BEGIN_ stmt_list END { $macro_def_stmt = $stmt_list_macro_def; $macro_def_stmt->right = $stmt_list;  delete_macro_args(); }
+  expr_macro_def BEGIN_ expr END {
+     $macro_def_stmt = $expr_macro_def;
+     $macro_def_stmt->right = $expr;
+     delete_macro_formals(); }
+  | stmt_list_macro_def BEGIN_ stmt_list END {
+     $macro_def_stmt = $stmt_list_macro_def;
+     $macro_def_stmt->right = $stmt_list;
+     delete_macro_formals(); }
   ;
 
 opt_macro_args:
@@ -2466,12 +2474,27 @@ opt_macro_args:
    | macro_args { $opt_macro_args = $macro_args; }
    ;
 
+macro_arg:
+ expr { $macro_arg = new_ast_expr_macro_arg($expr); }
+ | BEGIN_ stmt_list END { $macro_arg = new_ast_stmt_list_macro_arg($stmt_list); }
+ ;
+
 macro_args[result]:
    macro_arg { $result = new_ast_macro_args($macro_arg, NULL); }
   | macro_arg ',' macro_args[next] { $result = new_ast_macro_args($macro_arg, $next); }
   ;
 
-macro_arg: name macro_type { $macro_arg = new_ast_macro_arg($name, $macro_type); }
+opt_macro_formals:
+    /*nil*/  { $opt_macro_formals = NULL; }
+   | macro_formals { $opt_macro_formals = $macro_formals; }
+   ;
+
+macro_formals[result]:
+   macro_formal { $result = new_ast_macro_formals($macro_formal, NULL); }
+  | macro_formal ',' macro_formals[next] { $result = new_ast_macro_formals($macro_formal, $next); }
+  ;
+
+macro_formal: name macro_type { $macro_formal = new_ast_macro_formal($name, $macro_type); }
   ;
 
 macro_type:

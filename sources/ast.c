@@ -42,11 +42,11 @@ cql_noexport void ast_init() {
   minipool_open(&ast_pool);
   minipool_open(&str_pool);
   macros = symtab_new();
-  delete_macro_args();
+  delete_macro_formals();
 }
 
 cql_noexport void ast_cleanup() {
-  delete_macro_args();
+  delete_macro_formals();
   symtab_delete(macros);
   macros = NULL;
   minipool_close(&ast_pool);
@@ -1089,12 +1089,12 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   return _ast;
 }
 
-cql_noexport void new_macro_args() {
-  delete_macro_args();
+cql_noexport void new_macro_formals() {
+  delete_macro_formals();
   macro_args = symtab_new();
 }
 
-cql_noexport void delete_macro_args() {
+cql_noexport void delete_macro_formals() {
   if (macro_args) {
     symtab_delete(macro_args);
     macro_args = NULL;
@@ -1138,14 +1138,14 @@ cql_noexport int32_t resolve_macro_name(CSTR name) {
   return minfo ? minfo->type : EOF;
 }
 
-cql_noexport CSTR install_macro_args(ast_node *macro_args) {
-  new_macro_args();
-  for ( ; macro_args; macro_args = macro_args->right) {
-    Contract(is_ast_macro_args(macro_args));
-    EXTRACT_NOTNULL(macro_arg, macro_args->left);
+cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
+  new_macro_formals();
+  for ( ; macro_formals; macro_formals = macro_formals->right) {
+    Contract(is_ast_macro_formals(macro_formals));
+    EXTRACT_NOTNULL(macro_formal, macro_formals->left);
 
-    EXTRACT_STRING(name, macro_arg->left);
-    EXTRACT_STRING(type, macro_arg->right);
+    EXTRACT_STRING(name, macro_formal->left);
+    EXTRACT_STRING(type, macro_formal->right);
 
     // these are the only two cases for now
     int32_t macro_type = EOF;
@@ -1156,7 +1156,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_args) {
       macro_type = STMT_LIST_MACRO;
     }
     Contract(macro_type != EOF);
-    bool_t success = set_macro_arg_info(name, macro_type, macro_arg);
+    bool_t success = set_macro_arg_info(name, macro_type, macro_formal);
     if (!success) {
       return name;
     }
@@ -1166,7 +1166,6 @@ cql_noexport CSTR install_macro_args(ast_node *macro_args) {
 }
 
 cql_export void expand_macros(ast_node *_Nonnull node) {
-
   // do not recurse into macro definitions
   if (is_ast_expr_macro_def(node) || is_ast_stmt_list_macro_def(node)) {
     return;

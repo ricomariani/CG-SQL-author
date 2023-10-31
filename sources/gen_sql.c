@@ -4800,18 +4800,18 @@ static void gen_explain_stmt(ast_node *ast) {
   gen_one_stmt(stmt_target);
 }
 
-static void gen_macro_arg(ast_node *macro_arg) {
-  Contract(is_ast_macro_arg(macro_arg));
-  EXTRACT_STRING(l, macro_arg->left);
-  EXTRACT_STRING(r, macro_arg->right);
+static void gen_macro_formal(ast_node *macro_formal) {
+  Contract(is_ast_macro_formal(macro_formal));
+  EXTRACT_STRING(l, macro_formal->left);
+  EXTRACT_STRING(r, macro_formal->right);
   gen_printf("%s %s", l, r);
 }
 
-static void gen_macro_args(ast_node *macro_args) {
-  for ( ; macro_args; macro_args = macro_args->right) {
-     Contract(is_ast_macro_args(macro_args));
-     gen_macro_arg(macro_args->left);
-     if (macro_args->right) {
+static void gen_macro_formals(ast_node *macro_formals) {
+  for ( ; macro_formals; macro_formals = macro_formals->right) {
+     Contract(is_ast_macro_formals(macro_formals));
+     gen_macro_formal(macro_formals->left);
+     if (macro_formals->right) {
        gen_printf(", ");
      }
   }
@@ -4824,7 +4824,7 @@ static void gen_expr_macro_def(ast_node *ast) {
   EXTRACT_STRING(name, macro_name_args->left);
 
   gen_printf("@MACRO(EXPR) %s!(", name);
-  gen_macro_args(macro_name_args->right);
+  gen_macro_formals(macro_name_args->right);
   gen_printf(")\nBEGIN\n", name);
   BEGIN_INDENT(body_indent, 2);
     gen_root_expr(body);
@@ -4839,7 +4839,7 @@ static void gen_stmt_list_macro_def(ast_node *ast) {
   EXTRACT_STRING(name, macro_name_args->left);
 
   gen_printf("@MACRO(STMT_LIST) %s!(", name);
-  gen_macro_args(macro_name_args->right);
+  gen_macro_formals(macro_name_args->right);
   gen_printf(")\nBEGIN\n", name);
   gen_stmt_list(body);
   gen_printf("END");

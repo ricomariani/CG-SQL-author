@@ -832,6 +832,9 @@ AST(seed_stub)
 AST(select_core)
 AST(select_core_compound)
 AST(select_core_list)
+AST(select_core_macro_arg_ref)
+AST(select_core_macro_def)
+AST(select_core_macro_ref)
 AST(select_expr)
 AST(select_expr_list)
 AST(select_expr_list_con)
@@ -996,6 +999,7 @@ AST1(rollback_trans_stmt);
 AST1(savepoint_stmt);
 AST1(schema_unsub_stmt);
 AST1(schema_upgrade_version_stmt);
+AST1(select_core_macro_arg);
 AST1(select_if_nothing_throw_expr)
 AST1(select_opts)
 AST1(stmt_list_macro_arg);

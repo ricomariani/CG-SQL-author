@@ -301,6 +301,7 @@ ROWID                            { return ROWID; }
 ROWS                             { return ROWS; }
 SAVEPOINT                        { return SAVEPOINT; }
 SELECT                           { return SELECT; }
+SELECT_CORE                      { return SELECT_CORE; }
 SET                              { return SET; }
 SIGN{sp}FUNCTION/{stop}          { return SIGN_FUNCTION; }
 STATEMENT                        { return STATEMENT; }

@@ -1008,26 +1008,32 @@ static void gen_macro_args(ast_node *ast) {
     EXTRACT_ANY_NOTNULL(arg, ast->left);
     if (is_ast_expr_macro_arg(arg)) {
       gen_root_expr(arg->left);
-      if (ast->right) {
-       gen_printf(", ");
-      }
     }
     else if (is_ast_query_parts_macro_arg(arg)) {
       gen_printf("FROM(");
       gen_query_parts(arg->left);
       gen_printf(")");
-      if (ast->right) {
-       gen_printf(", ");
-      }
+    }
+    else if (is_ast_select_core_macro_arg(arg)) {
+      gen_printf("ALL(");
+      gen_select_core_list(arg->left);
+      gen_printf(")");
+    }
+    else if (is_ast_cte_tables_macro_arg(arg)) {
+      gen_printf("WITH(\n");
+      BEGIN_INDENT(tables, 2);
+        gen_cte_tables(arg->left, "");
+      END_INDENT(tables);
+      gen_printf(")");
     }
     else {
-     Contract(is_ast_stmt_list_macro_arg(arg));
-     gen_printf("\nBEGIN\n");
-     gen_stmt_list(arg->left);
-     gen_printf("END");
-     if (ast->right) {
-       gen_printf(",\n");
-     }
+      Contract(is_ast_stmt_list_macro_arg(arg));
+      gen_printf("\nBEGIN\n");
+      gen_stmt_list(arg->left);
+      gen_printf("END");
+    }
+    if (ast->right) {
+      gen_printf(", ");
     }
   }
 }
@@ -1062,16 +1068,16 @@ static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri
 
 cql_noexport void gen_any_macro_expansion(ast_node *ast) {
   if (is_ast_cte_tables(ast)) {
-     gen_cte_tables(ast, "");
+    gen_cte_tables(ast, "");
   }
   else if (is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast)) {
-     gen_query_parts(ast);
+    gen_query_parts(ast);
   }
   else if (symtab_find(gen_stmts, ast->type)) {
-     gen_one_stmt(ast);
+    gen_one_stmt(ast);
   }
   else if (is_ast_stmt_list(ast)) {
-     gen_stmt_list(ast);
+    gen_stmt_list(ast);
   }
   else {
     gen_root_expr(ast);
@@ -2374,6 +2380,20 @@ static void gen_table_or_subquery_list(ast_node *ast) {
   }
 }
 
+static void gen_select_core_macro_ref(ast_node *ast) {
+  Contract(is_ast_select_core_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_select_core_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_select_core_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
 static void gen_cte_tables_macro_ref(ast_node *ast) {
   Contract(is_ast_cte_tables_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
@@ -2836,19 +2856,28 @@ static void gen_with_select_stmt(ast_node *ast) {
 
 static void gen_select_core_list(ast_node *ast) {
   Contract(is_ast_select_core_list(ast));
-  EXTRACT_NOTNULL(select_core, ast->left);
 
-  gen_select_core(select_core);
-
-  EXTRACT(select_core_compound, ast->right);
-  if (!select_core_compound) {
-    return;
+  if (is_ast_select_core_macro_ref(ast->left)) {
+    gen_select_core_macro_ref(ast->left);
   }
-  EXTRACT_OPTION(compound_operator, select_core_compound->left);
-  EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
+  else if (is_ast_select_core_macro_arg_ref(ast->left)) {
+    gen_select_core_macro_arg_ref(ast->left);
+  }
+  else {
+    EXTRACT_NOTNULL(select_core, ast->left);
 
-  gen_printf("\n%s\n", get_compound_operator_name(compound_operator));
-  gen_select_core_list(select_core_list);
+    gen_select_core(select_core);
+
+    EXTRACT(select_core_compound, ast->right);
+    if (!select_core_compound) {
+      return;
+    }
+    EXTRACT_OPTION(compound_operator, select_core_compound->left);
+    EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
+
+    gen_printf("\n%s\n", get_compound_operator_name(compound_operator));
+    gen_select_core_list(select_core_list);
+  }
 }
 
 
@@ -4984,6 +5013,21 @@ static void gen_stmt_list_macro_def(ast_node *ast) {
   gen_printf("END");
 }
 
+static void gen_select_core_macro_def(ast_node *ast) {
+  Contract(is_ast_select_core_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(SELECT_CORE) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_select_core_list(body);
+  END_INDENT(body_indent);
+  gen_printf("\nEND");
+}
+
 static void gen_query_parts_macro_def(ast_node *ast) {
   Contract(is_ast_query_parts_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
@@ -5188,6 +5232,7 @@ cql_noexport void gen_init() {
   STMT_INIT(schema_unsub_stmt);
   STMT_INIT(schema_upgrade_script_stmt);
   STMT_INIT(schema_upgrade_version_stmt);
+  STMT_INIT(select_core_macro_def);
   STMT_INIT(select_nothing_stmt);
   STMT_INIT(select_stmt);
   STMT_INIT(set_blob_from_cursor_stmt);

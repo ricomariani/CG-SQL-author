@@ -1164,6 +1164,7 @@ cql_noexport bool_t is_any_macro_def(ast_node *ast) {
   return is_ast_stmt_list_macro_def(ast) ||
          is_ast_query_parts_macro_def(ast) ||
          is_ast_cte_tables_macro_def(ast) ||
+         is_ast_select_core_macro_def(ast) ||
          is_ast_expr_macro_def(ast);
 }
 
@@ -1171,6 +1172,7 @@ cql_noexport bool_t is_any_macro_arg_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_arg_ref(ast) ||
          is_ast_query_parts_macro_arg_ref(ast) ||
          is_ast_cte_tables_macro_arg_ref(ast) ||
+         is_ast_select_core_macro_arg_ref(ast) ||
          is_ast_expr_macro_arg_ref(ast);
 }
 
@@ -1178,6 +1180,7 @@ cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_ref(ast) ||
          is_ast_cte_tables_macro_ref(ast) ||
          is_ast_query_parts_macro_ref(ast) ||
+         is_ast_select_core_macro_ref(ast) ||
          is_ast_expr_macro_ref(ast);
 }
 
@@ -1302,7 +1305,7 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
       }
     }
 
-    if (is_ast_stmt_list(body) || is_ast_cte_tables(body)) {
+    if (is_ast_stmt_list(body) || is_ast_cte_tables(body) || is_ast_select_core_list(body)) {
        ast_node *parent = node->parent;
        // insert the copy into the list
        ast_set_left(parent, body->left);

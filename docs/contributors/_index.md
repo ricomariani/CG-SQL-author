@@ -1,6 +1,5 @@
 ---
 title: Contributors
 weight: 4
+appendListOfPages: true
 ---
-
-Work in progress

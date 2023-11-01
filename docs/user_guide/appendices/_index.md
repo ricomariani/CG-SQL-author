@@ -1,6 +1,4 @@
 ---
 title: Appendices
-description: Appendices
+appendListOfPages: true
 ---
-
-Work in progress

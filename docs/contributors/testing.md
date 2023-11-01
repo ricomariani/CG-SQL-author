@@ -1,4 +1,7 @@
-# Testing CG/SQL
+---
+title: Testing CG/SQL
+testing: 3
+---
 
 Basic testing commands you should know.
 

@@ -1,6 +1,5 @@
 ---
 title: Quick Start
 weight: 1
+appendListOfPages: true
 ---
-
-Work in progress

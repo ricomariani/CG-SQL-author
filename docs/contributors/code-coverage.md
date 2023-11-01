@@ -1,4 +1,7 @@
-# Code Coverage CG/SQL
+---
+title: Code Coverage CG/SQL
+weight: 2
+---
 
 Run this command in the `/sources` directory:
 

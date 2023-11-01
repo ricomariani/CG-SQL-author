@@ -1955,6 +1955,13 @@ let select_core := 4;
 let select_expr := 5;
 let cte_tables := 6;
 
+@macro(expr) a_selection!()
+begin
+  (select 1+5)
+end;
+
+let x := @TEXT(a_selection!());
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"

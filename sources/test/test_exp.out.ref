@@ -2193,6 +2193,13 @@ LET select_expr := 5;
 
 LET cte_tables := 6;
 
+@MACRO(EXPR) a_selection!()
+BEGIN
+  ( SELECT 1 + 5 )
+END;
+
+LET x := '( SELECT 1 + 5 )';
+
 SET file := 'path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';

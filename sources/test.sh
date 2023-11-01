@@ -198,6 +198,15 @@ basic_test() {
   fi
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
+
+  echo running "${TEST_DIR}/test.sql" "with macro expansion"
+  if ! ${CQL} --echo --dev --in "${TEST_DIR}/test.sql" --exp >"${OUT_DIR}/test_exp.out"
+  then
+   echo basic parsing with expansion test failed
+   failed
+  fi
+  echo "  computing diffs (empty if none)"
+  on_diff_exit test_exp.out
 }
 
 

@@ -426,7 +426,7 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   Contract(name);
 
 #define EXTRACT_NAME_AST(name_ast, node) \
-  Contract(is_id(node)); \
+  Contract(is_id(node) || is_ast_at_id(node)); \
   ast_node *name_ast = (node);
 
 #define EXTRACT_BLOBTEXT(name, node) \
@@ -874,7 +874,6 @@ AST(table_function);
 AST(table_join);
 AST(table_or_subquery);
 AST(table_or_subquery_list);
-AST(text_arg);
 AST(text_args);
 AST(trigger_action);
 AST(trigger_body_vers);

@@ -77,6 +77,7 @@ static void gen_cte_tables(ast_node *ast, CSTR prefix);
 static void gen_select_expr_list(ast_node *ast);
 static void gen_select_expr_macro_ref(ast_node *ast);
 static void gen_select_expr_macro_arg_ref(ast_node *ast);
+static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -160,6 +161,11 @@ static void gen_name_ex(CSTR name, bool_t is_qid) {
 }
 
 static void gen_name(ast_node *ast) {
+  if (is_ast_at_id(ast)) {
+    gen_expr_at_id(ast, "", 0, 0);
+    return;
+  }
+
   EXTRACT_STRING(name, ast);
   gen_name_ex(name, is_qid(ast));
 }

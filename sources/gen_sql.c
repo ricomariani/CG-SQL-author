@@ -1088,9 +1088,6 @@ cql_noexport void gen_any_macro_expansion(ast_node *ast) {
   else if (is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast)) {
     gen_query_parts(ast);
   }
-  else if (symtab_find(gen_stmts, ast->type)) {
-    gen_one_stmt(ast);
-  }
   else if (is_ast_stmt_list(ast)) {
     gen_stmt_list(ast);
   }

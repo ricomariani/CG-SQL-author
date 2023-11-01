@@ -1,4 +1,7 @@
-# Developer Notes on CQL Development
+---
+title: Developer Notes on CQL Development
+weight: 1
+---
 
 1. We have extensive documentation at [CQL Internals](../developer_guide/_index.md)
 2. If you aren't good with `yacc`/`lex` you probably should do some homework before you start. CQL development is all about building and walking a syntax tree.  It's possible to make local changes without knowing the details but it can be hard to figure out where to make changes without context.

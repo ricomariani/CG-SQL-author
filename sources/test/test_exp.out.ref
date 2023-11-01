@@ -2078,6 +2078,13 @@ END;
 
 SELECT x + 2 AS z, x + 2 AS z;
 
+@MACRO(STMT_LIST) assert!(e! EXPR)
+BEGIN
+  IF NOT e! THEN
+    CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
+  END IF;
+END;
+
 @MACRO(EXPR) macro1!(u! EXPR)
 BEGIN
   u! + u! + 1
@@ -2086,23 +2093,6 @@ END;
 @MACRO(EXPR) macro2!(u! EXPR, v! EXPR)
 BEGIN
   u! * macro1!(v! + 5)
-END;
-
-LET x := 1;
-
-LET y := 2;
-
-LET z := x * (y + 5 + (y + 5) + 1);
-
-SET z := 1890;
-
-LET u := 1847;
-
-@MACRO(STMT_LIST) assert!(e! EXPR)
-BEGIN
-  IF NOT e! THEN
-    CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
-  END IF;
 END;
 
 @MACRO(EXPR) macro3!(q! QUERY_PARTS)
@@ -2130,14 +2120,34 @@ BEGIN
   @TEXT(q!)
 END;
 
+LET x := 1;
+
+LET y := 2;
+
+LET z := x * (y + 5 + (y + 5) + 1);
+
+SET z := 1922;
+
+LET u := 1811;
+
 LET zz := '(SELECT 1 AS x, 2 AS y) AS T';
 
 SET zz := 'T1
   INNER JOIN T2 ON T1.id = T2.id';
 
+SET zz := 'x (*) AS (SELECT 1 AS x, 2 AS y)
+';
+
+SET zz := 'SELECT 1 AS x
+  FROM foo';
+
+SET zz := '1 + 2';
+
+SET zz := '1 AS x, 2 AS y';
+
 LET zzz := 'begin
 IF NOT 7 THEN
-  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/test.sql'', 1929);
+  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/test.sql'', 1811);
 END IF;
 
 foo';
@@ -2146,15 +2156,30 @@ SET x := 5;
 
 LET uv := 5;
 
-LET zzz := 'x (*) AS (SELECT 1 AS x, 2 AS y)
+@MACRO(STMT_LIST) mondo1!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  SET zz := @TEXT(a!, b!, c!, d!, e!, f!);
+END;
+
+@MACRO(STMT_LIST) mondo2!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  mondo1!(a!, FROM(b!), ALL(c!), SELECT(d!), WITH(
+    e!
+  ), 
+  BEGIN
+    f!;
+  END);
+END;
+
+SET zz := '1 + 2x
+  INNER JOIN ySELECT 1
+  FROM foo
+UNION
+SELECT 2
+  FROM bar20 AS xxf (*) AS (SELECT 99
+  FROM yy)
+LET qq := 201;
 ';
-
-LET zzz := 'SELECT 1 AS x
-  FROM foo';
-
-LET zzz := '1 + 2';
-
-LET zzz := '1 AS x, 2 AS y';
 
 LET expr := 1;
 

@@ -78,6 +78,7 @@ static void gen_select_expr_list(ast_node *ast);
 static void gen_select_expr_macro_ref(ast_node *ast);
 static void gen_select_expr_macro_arg_ref(ast_node *ast);
 static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
+static void gen_select_expr(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -2240,11 +2241,11 @@ static void gen_select_expr_list(ast_node *ast) {
   for (ast_node *item = ast; item; item = item->right) {
     ast_node *expr = item->left;
 
-    if (is_ast_select_expr_macro_ref(ast->left)) {
-      gen_select_expr_macro_ref(ast->left);
+    if (is_ast_select_expr_macro_ref(expr)) {
+      gen_select_expr_macro_ref(expr);
     }
-    else if (is_ast_select_expr_macro_arg_ref(ast->left)) {
-      gen_select_expr_macro_arg_ref(ast->left);
+    else if (is_ast_select_expr_macro_arg_ref(expr)) {
+      gen_select_expr_macro_arg_ref(expr);
     }
     else if (is_ast_star(expr)) {
       if (!eval_star_callback(expr)) {
@@ -2819,7 +2820,6 @@ static void gen_cte_table(ast_node *ast)  {
 }
 
 static void gen_cte_tables(ast_node *ast, CSTR prefix) {
-
   bool_t first = true;
 
   while (ast) {

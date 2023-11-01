@@ -2604,12 +2604,17 @@ opt_macro_args:
    ;
 
 macro_arg:
- expr { $macro_arg = new_ast_expr_macro_arg($expr); }
- | BEGIN_ stmt_list END { $macro_arg = new_ast_stmt_list_macro_arg($stmt_list); }
- | FROM '(' query_parts ')' { $macro_arg = new_ast_query_parts_macro_arg($query_parts); }
- | WITH '(' cte_tables ')' { $macro_arg = new_ast_cte_tables_macro_arg($cte_tables); }
- | ALL '(' select_core_list ')' { $macro_arg = new_ast_select_core_macro_arg($select_core_list); }
- | SELECT '(' select_expr_list ')' { $macro_arg = new_ast_select_expr_macro_arg($select_expr_list); }
+ expr[arg] { $macro_arg = new_ast_expr_macro_arg($arg); }
+ | BEGIN_ stmt_list[arg] END { $macro_arg = new_ast_stmt_list_macro_arg($arg); }
+ |  stmt_list_macro_ref[arg]  { $macro_arg = new_ast_stmt_list_macro_arg(new_ast_stmt_list($arg, NULL)); }
+ | FROM '(' query_parts[arg] ')' { $macro_arg = new_ast_query_parts_macro_arg($arg); }
+ |  query_parts_macro_ref[arg] { $macro_arg = new_ast_query_parts_macro_arg($arg); }
+ | WITH '(' cte_tables[arg] ')' { $macro_arg = new_ast_cte_tables_macro_arg($arg); }
+ |  cte_tables_macro_ref[arg] { $macro_arg = new_ast_cte_tables_macro_arg(new_ast_cte_tables($arg, NULL)); }
+ | ALL '(' select_core_list[arg] ')' { $macro_arg = new_ast_select_core_macro_arg($arg); }
+ |  select_core_macro_ref[arg] { $macro_arg = new_ast_select_core_macro_arg(new_ast_select_core_list($arg, NULL)); }
+ | SELECT '(' select_expr_list[arg] ')' { $macro_arg = new_ast_select_expr_macro_arg($arg); }
+ |  select_expr_macro_ref[arg]  { $macro_arg = new_ast_select_expr_macro_arg(new_ast_select_expr_list($arg, NULL)); }
  ;
 
 macro_args[result]:

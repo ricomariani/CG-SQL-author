@@ -1196,7 +1196,7 @@ static void replace_node(ast_node *old, ast_node *new) {
   }
 }
 
-static int32_t macro_line = 0;
+static int32_t macro_line = -1;
 static CSTR macro_file = "<Unknown>";
 
 static void expand_text_args(charbuf *output, ast_node *text_args) {
@@ -1313,18 +1313,24 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     if (is_ast_text_args(parent)) {
       replace_node(node, body);
     }
-    else if (is_ast_stmt_list(body) || is_ast_cte_tables(body) || is_ast_select_core_list(body) || is_ast_select_expr_list(body)) {
-       // insert the copy into the list
-       ast_set_left(parent, body->left);
+    else if (
+      is_ast_stmt_list(body) ||
+      is_ast_cte_tables(body) ||
+      is_ast_select_core_list(body) ||
+      is_ast_select_expr_list(body)) {
 
-       // march to the end
-       ast_node *end = body;
-       while (end->right) {
-         end = end->right;
-       }
-       // link the copy to whatever was at the end
-       ast_set_right(end, parent->right);
-       ast_set_right(parent, body->right);
+      // insert the copy into the list
+      ast_set_left(parent, body->left);
+
+      // march to the end
+      ast_node *end = body;
+      while (end->right) {
+        end = end->right;
+      }
+
+      // link the copy to whatever was at the end
+      ast_set_right(end, parent->right);
+      ast_set_right(parent, body->right);
     }
     else  {
       replace_node(node, body);
@@ -1357,8 +1363,11 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
 
     int32_t macro_line_saved = macro_line;
     CSTR macro_file_saved = macro_file;
-    macro_line = node->lineno;
-    macro_file = node->filename;
+
+    if (macro_line == -1) {
+      macro_line = node->lineno;
+      macro_file = node->filename;
+    }
 
     expand_macros(body);
 

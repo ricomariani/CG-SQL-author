@@ -2063,6 +2063,13 @@ END;
 
 SELECT se2!(SELECT(x + 2 AS z));
 
+@MACRO(STMT_LIST) assert!(e! EXPR)
+BEGIN
+  IF NOT e! THEN
+    CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
+  END IF;
+END;
+
 @MACRO(EXPR) macro1!(u! EXPR)
 BEGIN
   u! + u! + 1
@@ -2071,23 +2078,6 @@ END;
 @MACRO(EXPR) macro2!(u! EXPR, v! EXPR)
 BEGIN
   u! * macro1!(v! + 5)
-END;
-
-LET x := 1;
-
-LET y := 2;
-
-LET z := macro2!(x, y);
-
-SET z := 1890;
-
-LET u := @MACRO_LINE;
-
-@MACRO(STMT_LIST) assert!(e! EXPR)
-BEGIN
-  IF NOT e! THEN
-    CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
-  END IF;
 END;
 
 @MACRO(EXPR) macro3!(q! QUERY_PARTS)
@@ -2115,10 +2105,31 @@ BEGIN
   @TEXT(q!)
 END;
 
+LET x := 1;
+
+LET y := 2;
+
+LET z := macro2!(x, y);
+
+SET z := 1922;
+
+LET u := @MACRO_LINE;
+
 LET zz := macro3!(FROM((SELECT 1 AS x, 2 AS y) AS T));
 
 SET zz := macro3!(FROM(T1
   INNER JOIN T2 ON T1.id = T2.id));
+
+SET zz := macro4!(WITH(
+  x (*) AS (SELECT 1 AS x, 2 AS y)
+));
+
+SET zz := macro5!(ALL(SELECT 1 AS x
+  FROM foo));
+
+SET zz := macro6!(1 + 2);
+
+SET zz := macro7!(SELECT(1 AS x, 2 AS y));
 
 LET zzz := @TEXT("begin\n", assert!(7), "\nfoo");
 
@@ -2126,16 +2137,33 @@ SET @ID("x") := 5;
 
 LET @ID(@TEXT("u", "v")) := 5;
 
-LET zzz := macro4!(WITH(
-  x (*) AS (SELECT 1 AS x, 2 AS y)
-));
+@MACRO(STMT_LIST) mondo1!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  SET zz := @TEXT(a!, b!, c!, d!, e!, f!);
+END;
 
-LET zzz := macro5!(ALL(SELECT 1 AS x
-  FROM foo));
+@MACRO(STMT_LIST) mondo2!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  mondo1!(a!, FROM(b!), ALL(c!), SELECT(d!), WITH(
+    e!
+  ), 
+  BEGIN
+    f!;
+  END);
+END;
 
-LET zzz := macro6!(1 + 2);
-
-LET zzz := macro7!(SELECT(1 AS x, 2 AS y));
+mondo2!(1 + 2, FROM(x
+  INNER JOIN y), ALL(SELECT 1
+  FROM foo
+UNION
+SELECT 2
+  FROM bar), SELECT(20 AS xx), WITH(
+  f (*) AS (SELECT 99
+    FROM yy)
+), 
+BEGIN
+  LET qq := 201;
+END);
 
 LET expr := 1;
 

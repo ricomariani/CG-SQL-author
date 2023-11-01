@@ -1873,6 +1873,13 @@ end;
 
 select se2!(select(x+2 z));
 
+@macro(stmt_list) assert!(e! expr)
+begin
+  if (not e!) then
+     call printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
+  end if;
+end;
+
 @macro(expr) macro1!(u! expr)
 begin
   u! + u! +1
@@ -1881,20 +1888,6 @@ end;
 @macro(expr) macro2!(u! expr, v! expr)
 begin
   u! * macro1!(v! + 5)
-end;
-
-let x := 1;
-let y := 2;
-let z := macro2!(x, y);
-
-set z := @LINE;
-let u := @MACRO_LINE;
-
-@macro(stmt_list) assert!(e! expr)
-begin
-  if (not e!) then
-     call printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
-  end if;
 end;
 
 @macro(expr) macro3!(q! query_parts)
@@ -1922,34 +1915,44 @@ begin
   @TEXT(q!)
 end;
 
-let zz := macro3!(from( (select 1 x, 2 y) as T));
+let x := 1;
+let y := 2;
+let z := macro2!(x, y);
 
+set z := @LINE;
+let u := @MACRO_LINE;
+
+
+let zz := macro3!(from( (select 1 x, 2 y) as T));
 set zz := macro3!(from( T1 join T2 on T1.id = T2.id));
+set zz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
+set zz := macro5!(ALL(select 1 x from foo));
+set zz := macro6!(1+2);
+set zz := macro7!(select(1 x, 2 y));
 
 let zzz := @TEXT("begin\n", assert!(7), "\nfoo");
-
 set @ID("x") := 5;
-
 let @ID(@TEXT("u", "v")) := 5;
 
-let zzz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
+@macro(stmt_list) mondo1!(a! expr, b! query_parts, c! select_core, d! select_expr, e! cte_tables, f! stmt_list)
+begin
+  set zz := @text(a!, b!, c!, d!, e!, f!);
+end;
 
-let zzz := macro5!(ALL(select 1 x from foo));
+@macro(stmt_list) mondo2!(a! expr, b! query_parts, c! select_core, d! select_expr, e! cte_tables, f! stmt_list)
+begin
+  mondo1!(a!, b!, c!, d!, e!, f!);
+end;
 
-let zzz := macro6!(1+2);
+mondo2!(1+2, from(x join y), all(select 1 from foo union select 2 from bar), select(20 xx), 
+  with(f(*) as (select 99 from yy)), begin let qq := 201; end);
 
-let zzz := macro7!(select(1 x, 2 y));
-
+-- unsure these are ok to use as identifiers
 let expr := 1;
-
 let stmt_list := 2;
-
 let query_parts := 3;
-
 let select_core := 4;
-
 let select_expr := 5;
-
 let cte_tables := 6;
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...

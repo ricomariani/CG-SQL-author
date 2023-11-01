@@ -15,31 +15,19 @@ declare end_refs integer not null;
 declare proc printf no check;
 declare proc exit no check;
 
-@macro(stmt_list) EXPECT!(pred! expr)
+@MACRO(stmt_list) EXPECT!(pred! expr)
 begin
   call errcheck(pred!, @TEXT(pred!), @MACRO_LINE);
 end;
 
 -- use this for both normal eval and SQLite eval
-@macro(stmt_list) EXPECT_SQL_TOO!(pred! expr)
+@MACRO(stmt_list) EXPECT_SQL_TOO!(pred! expr)
 begin
   call errcheck(pred!, @TEXT(pred!), @MACRO_LINE);
   call errcheck((select pred!), @TEXT(pred!), @MACRO_LINE);
 end;
 
-
-@macro(stmt_list) BEGIN_SUITE!()
-begin
-  -- for future use
-  if 0 then end if;
-end;
-
-@macro(stmt_list) END_SUITE!()
-begin
-  call end_suite();
-end;
-
-@macro(stmt_list) TEST!(x! expr, body! stmt_list)
+@MACRO(stmt_list) TEST!(x! expr, body! stmt_list)
 begin
   create procedure @ID(@TEXT("test_", x!))()
   begin 
@@ -71,6 +59,17 @@ begin
     call printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
     set fails := fails + 1;
   end if;
+end;
+
+@MACRO(stmt_list) BEGIN_SUITE!()
+begin
+  -- for future use
+  if 0 then end if;
+end;
+
+@MACRO(stmt_list) END_SUITE!()
+begin
+  call end_suite();
 end;
 
 create procedure errcheck(passed bool @sensitive, message text, line integer not null)
@@ -127,8 +126,6 @@ declare function get_blob_byte(b blob!, i int!) int!;
 declare function get_blob_size(b blob!) int!;
 declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
 
-BEGIN_SUITE!();
-
 declare function blob_from_string(str text @sensitive) create blob!;
 declare function string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;
@@ -169,6 +166,8 @@ create table backed2 (
 call make_schema();
 call _cql_init_extensions();
 
+BEGIN_SUITE!();
+
 TEST!(arithmetic,
 BEGIN
   EXPECT_SQL_TOO!((1 + 2) * 3 == 9);
@@ -190,7 +189,6 @@ BEGIN
   EXPECT_SQL_TOO!(3 % -2 == 1);
   EXPECT_SQL_TOO!(-3 % -2 == -1);
 END);
-
 
 declare side_effect_0_count int!;
 declare side_effect_1_count int!;

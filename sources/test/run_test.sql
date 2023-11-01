@@ -24,7 +24,7 @@ end;
 @MACRO(stmt_list) EXPECT_SQL_TOO!(pred! expr)
 begin
   call errcheck(pred!, @TEXT(pred!), @MACRO_LINE);
-  call errcheck((select pred!), @TEXT(pred!), @MACRO_LINE);
+  call errcheck((select pred!), @TEXT("(SELECT ", pred!, ")"), @MACRO_LINE);
 end;
 
 @MACRO(stmt_list) TEST!(x! expr, body! stmt_list)

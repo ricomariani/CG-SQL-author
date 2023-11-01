@@ -136,3 +136,10 @@ jobs:
         run: ./test.sh --use_clang --use_asan --non_interactive
       - name: Execute coverage script
         run: ./cov.sh
+      - name: Playground
+        run: |
+          ../playground/play.sh || true
+          ../playground/play.sh hello
+          ../playground/play.sh build-cql-compiler
+          ../playground/play.sh build-everything
+          ../playground/play.sh run-data-access-demo

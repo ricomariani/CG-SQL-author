@@ -7,7 +7,7 @@ set -o errexit -o nounset -o pipefail
 readonly CLI_NAME=${0##*/}
 readonly SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 readonly SCRIPT_DIR_RELATIVE=$(dirname "$0")
-readonly CQL_ROOT_DIR=$SCRIPT_DIR_RELATIVE/..
+readonly CQL_ROOT_DIR=$SCRIPT_DIR_RELATIVE/../sources
 readonly CQL=$CQL_ROOT_DIR/out/cql
 
 tty -s <&1 && IS_TTY=true || IS_TTY=false
@@ -190,7 +190,7 @@ build_cql_compiler() {
     local current_dir=$(pwd);
     echo_vv "CQL Playground — Build CQL Compiler\n" | theme
 
-    cd "$SCRIPT_DIR_RELATIVE/.." || { echo "Failed to change directory!"; return 1; }
+    cd "$CQL_ROOT_DIR" || { echo "Failed to change directory!"; return 1; }
 
     echo_vv "Cleaning up previous builds..."
     make clean || { echo "Make clean failed!"; cd "$current_dir"; return 1; }
@@ -301,21 +301,25 @@ c: $O/$(example_name)
 $O/$(example_name): $O/$(example_name).c
 ifeq ($(is_example_implemented_in_c),true)
 > if grep -q "entrypoint(void)" $O/$(example_name).h; then \
-    FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
+    CC_FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \
-cc $$FLAGS --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf "$O/$(example_name).dSYM"
+cc $$CC_FLAGS --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/$(example_name).c $(DEFAULT_C_CLIENT) $(CQL_ROOT_DIR)/cqlrt.c --output $O/$(example_name) -lsqlite3 && rm -rf "$O/$(example_name).dSYM"
 else
 > echo "$(example_name) ($(source)) is not implemented in C yet"
 endif
 
 objc: $O/$(example_name).pre.sql
+ifeq ($(shell uname),Darwin)
 > mkdir -p $O/objc
 > $(CQL) --nolines --in $O/$(example_name).pre.sql --cg $O/objc/$(example_name).h $O/objc/$(example_name).c --cqlrt $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.h
 > $(CQL) --dev --test --in $O/$(example_name).pre.sql --rt objc_mit --cg $O/objc/$(example_name)_objc.h --objc_c_include_path $O/objc/$(example_name).h
 > if grep -q "entrypoint(void)" $O/objc/$(example_name).h; then \
-    FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
+    CC_FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \
-cc $$FLAGS -x objective-c --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O/objc -I$(CQL_ROOT_DIR)/cqlrt_cf -I$(CQL_ROOT_DIR) -I$(SCRIPT_DIR_RELATIVE) $O/objc/$(example_name).c $(SCRIPT_DIR_RELATIVE)/default_client.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlholder.m --output $O/objc/$(example_name) -lsqlite3 -framework Foundation -fobjc-arc
+cc $$CC_FLAGS -framework Foundation -fobjc-arc -x objective-c --debug -DSQLITE_FILE_PATH_ABSOLUTE="\"$(SQLITE_FILE_PATH_ABSOLUTE)\"" -DCQL_TRACING_ENABLED -Wno-macro-redefined -DHEADER_FILE_FOR_SPECIFIC_EXAMPLE='"$(example_name).h"' -I$O/objc -I$(CQL_ROOT_DIR)/cqlrt_cf -I$(CQL_ROOT_DIR) -I$(SCRIPT_DIR_RELATIVE) $O/objc/$(example_name).c $(SCRIPT_DIR_RELATIVE)/default_client.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.c $(CQL_ROOT_DIR)/cqlrt_cf/cqlholder.m --output $O/objc/$(example_name) -lsqlite3
+else
+> echo "$(example_name) ($(source)) build is not implemented on systems other than MacOS — PR welcome"
+endif
 
 query_plan: $O/$(example_name).pre.sql c
 > $(CQL) --nolines --in $O/$(example_name).pre.sql --rt query_plan --cg $O/query_plan.sql;
@@ -454,7 +458,7 @@ do_run() {
         c|lua)
             if ! is_example_implemented_in "$target" "$source"; then
                 echo "WARNING: Example $example_name is not implemented in $target" | theme
-                exit 0 
+                exit 0
             fi
             ;;
     esac
@@ -645,7 +649,7 @@ is_dependency_satisfied() {
 is_example_implemented_in() {
     local runtime=$1
     local source=$2
-    
+
     # You would typically do this using the json output. We're avoiding extra dependencies and complexity
 
     case "$runtime" in

@@ -1,4 +1,7 @@
-# CQL Playground
+---
+title: Playground
+weight: 3
+---
 
 Use the [`./play.sh`](play.sh) cli command to run examples or your own small experiments.
 
@@ -117,3 +120,6 @@ Some demonstrations are atypical and requires different runtimes to cater for sp
   - adhoc_client_crud_data_access.c — An Adhoc C client for the `crud.sql` example which
   demonstrates 2-way communication between C and the stored procedure using
   auto-generated helper functions.
+
+## Fully Online Playground
+Contributor [mingodad](https://github.com/mingodad) created this wonder, all online using the CQL Amalgam, plus WASM and LUA to create a 100% [in-your-browser playground](https://mingodad.github.io/CG-SQL-Lua-playground/).

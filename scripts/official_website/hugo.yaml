@@ -20,15 +20,11 @@ markup:
   highlight:
     noClasses: false
 params:
-  title: Porter
-  author: Carolyn Van Slyck
-  description: A Friendly Cloud Installer for Cloud Native Application Bundles
-  image: images/porter-twitter-card.z
   navbar:
     logo:
       path: logo.png
-      width: 50
-      height: 50
+      width: 80
+      height: 80
   footer:
     displayCopyright: false
     displayPoweredBy: false
@@ -74,7 +70,9 @@ menu:
 
 module:
   mounts:
-    - source: ../../docs
-      target: content/docs
+    - source: ../../playground/README.md
+      target: content/docs/quick_start/playground.md
     - source: ../../README.md
       target: content/docs/_index.md
+    - source: ../../docs
+      target: content/docs

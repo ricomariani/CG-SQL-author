@@ -19769,9 +19769,9 @@ SELECT *
   |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull, z: real notnull }
   |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull, z: real notnull }
   |     | | {star}: select: { x: integer notnull, y: integer notnull, z: real notnull }
-  |     | {select_from_etc}: TABLE { a_shared_frag: a_shared_frag }
-  |       | {table_or_subquery_list}: TABLE { a_shared_frag: a_shared_frag }
-  |       | | {table_or_subquery}: TABLE { a_shared_frag: a_shared_frag }
+  |     | {select_from_etc}: TABLE { select: a_shared_frag }
+  |       | {table_or_subquery_list}: TABLE { select: a_shared_frag }
+  |       | | {table_or_subquery}: TABLE { select: a_shared_frag }
   |       |   | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       |     | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
   |       |       | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
@@ -19805,6 +19805,37 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0212: too few arguments provi
   |       |   | {shared_cte}: err
   |       |     | {call_stmt}: err
   |       |       | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT a_shared_frag.*
+  FROM (CALL a_shared_frag(1, 2));
+
+test/sem_test.sql:XXXX:1: error: in table_star : CQL0054: table not found 'a_shared_frag'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {table_star}: err
+  |     |   | {name a_shared_frag}
+  |     | {select_from_etc}: TABLE { select: a_shared_frag }
+  |       | {table_or_subquery_list}: TABLE { select: a_shared_frag }
+  |       | | {table_or_subquery}: TABLE { select: a_shared_frag }
+  |       |   | {shared_cte}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |     | {call_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |       | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |       |       | {arg_list}: ok
+  |       |         | {int 1}: integer notnull
+  |       |         | {arg_list}
+  |       |           | {int 2}: integer notnull
   |       | {select_where}
   |         | {select_groupby}
   |           | {select_having}
@@ -73833,9 +73864,9 @@ SELECT *
     |   | {select_expr_list_con}: select: { x: integer notnull }
     |     | {select_expr_list}: select: { x: integer notnull }
     |     | | {star}: select: { x: integer notnull }
-    |     | {select_from_etc}: TABLE { fragtest_0_2: fragtest_0_2 }
-    |       | {table_or_subquery_list}: TABLE { fragtest_0_2: fragtest_0_2 }
-    |       | | {table_or_subquery}: TABLE { fragtest_0_2: fragtest_0_2 }
+    |     | {select_from_etc}: TABLE { select: fragtest_0_2 }
+    |       | {table_or_subquery_list}: TABLE { select: fragtest_0_2 }
+    |       | | {table_or_subquery}: TABLE { select: fragtest_0_2 }
     |       |   | {shared_cte}: fragtest_0_2: { x: integer notnull } dml_proc
     |       |     | {call_stmt}: fragtest_0_2: { x: integer notnull } dml_proc
     |       |     | | {name fragtest_0_2}: fragtest_0_2: { x: integer notnull } dml_proc
@@ -74199,9 +74230,9 @@ SELECT *
     |   | {select_expr_list_con}: select: { x: integer notnull }
     |     | {select_expr_list}: select: { x: integer notnull }
     |     | | {star}: select: { x: integer notnull }
-    |     | {select_from_etc}: TABLE { fragtest_2_1: fragtest_2_1 }
-    |       | {table_or_subquery_list}: TABLE { fragtest_2_1: fragtest_2_1 }
-    |       | | {table_or_subquery}: TABLE { fragtest_2_1: fragtest_2_1 }
+    |     | {select_from_etc}: TABLE { select: fragtest_2_1 }
+    |       | {table_or_subquery_list}: TABLE { select: fragtest_2_1 }
+    |       | | {table_or_subquery}: TABLE { select: fragtest_2_1 }
     |       |   | {shared_cte}: fragtest_2_1: { x: integer notnull } dml_proc
     |       |     | {call_stmt}: fragtest_2_1: { x: integer notnull } dml_proc
     |       |     | | {name fragtest_2_1}: fragtest_2_1: { x: integer notnull } dml_proc
@@ -74268,9 +74299,9 @@ END;
             |   | {select_expr_list_con}: select: { x: integer notnull }
             |     | {select_expr_list}: select: { x: integer notnull }
             |     | | {star}: select: { x: integer notnull }
-            |     | {select_from_etc}: TABLE { fragtest_1_0: fragtest_1_0 }
-            |       | {table_or_subquery_list}: TABLE { fragtest_1_0: fragtest_1_0 }
-            |       | | {table_or_subquery}: TABLE { fragtest_1_0: fragtest_1_0 }
+            |     | {select_from_etc}: TABLE { select: fragtest_1_0 }
+            |       | {table_or_subquery_list}: TABLE { select: fragtest_1_0 }
+            |       | | {table_or_subquery}: TABLE { select: fragtest_1_0 }
             |       |   | {shared_cte}: fragtest_1_0: { x: integer notnull } dml_proc
             |       |     | {call_stmt}: fragtest_1_0: { x: integer notnull } dml_proc
             |       |     | | {name fragtest_1_0}: fragtest_1_0: { x: integer notnull } dml_proc

@@ -10578,6 +10578,10 @@ static void sem_table_or_subquery(ast_node *ast) {
 
     ast->sem = new_sem(SEM_TYPE_JOIN);
     ast->sem->jptr = sem_join_from_sem_struct(factor->sem->sptr);
+
+    // shared fragment within a subquery doesn't have an alias unless
+    // explicitly declared with opt_as_alias.
+    ast->sem->jptr->names[0] = "select";
     alias_target = &ast->sem->jptr->names[0];
   }
   else if (is_ast_table_function(factor)) {

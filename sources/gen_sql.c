@@ -1033,18 +1033,31 @@ static void gen_macro_args(ast_node *ast) {
 }
 
 static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  ast = ast->left;
-  if (is_any_macro_ref(ast)) {
-    EXTRACT_STRING(name, ast->left);
-    gen_printf("@TEXT(%s(", name);
-    gen_macro_args(ast->right);
-    gen_printf("))", name);
+  gen_printf("@TEXT(");
+
+  for (ast = ast->left; ast; ast = ast->right) {
+    Contract(is_ast_text_args(ast));
+    EXTRACT_ANY_NOTNULL(txt, ast->left);
+
+    if (is_ast_str(txt)) {
+      gen_root_expr(txt);
+    }
+    else if (is_any_macro_ref(txt)) {
+      EXTRACT_STRING(name, txt->left);
+      gen_printf("%s(", name);
+      gen_macro_args(txt->right);
+      gen_printf(")", name);
+    }
+    else {
+      Contract(is_any_macro_arg_ref(txt));
+      EXTRACT_STRING(name, txt->left);
+      gen_printf("%s", name);
+    }
+    if (ast->right) {
+      gen_printf(", ");
+    }
   }
-  else {
-    Contract(is_any_macro_arg_ref(ast));
-    EXTRACT_STRING(name, ast->left);
-    gen_printf("@TEXT(%s)", name);
-  }
+  gen_printf(")");
 }
 
 cql_noexport void gen_any_macro_expansion(ast_node *ast) {
@@ -1085,6 +1098,13 @@ static void gen_expr_macro_arg_ref(ast_node *ast, CSTR op, int32_t pri, int32_t 
   Contract(is_ast_expr_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s", name);
+}
+
+static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_at_id(ast));
+  gen_printf("@ID(");
+  gen_root_expr(ast->left);
+  gen_printf(")");
 }
 
 static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1159,7 +1179,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     // [[shared_fragment]]
     // proc transformer()
     // begin
-    //   with 
+    //   with
     //   source(*) like xy
     //   select source.x + 1 x, source.y + 20 y from source;
     // end;
@@ -5200,6 +5220,7 @@ cql_noexport void gen_init() {
   STMT_INIT(keep_table_name_in_aliases_stmt);
 
   EXPR_INIT(table_star, gen_expr_table_star, "T.*", EXPR_PRI_ROOT);
+  EXPR_INIT(at_id, gen_expr_at_id, "@ID", EXPR_PRI_ROOT);
   EXPR_INIT(star, gen_expr_star, "*", EXPR_PRI_ROOT);
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);
   EXPR_INIT(str, gen_expr_str, "STR", EXPR_PRI_ROOT);

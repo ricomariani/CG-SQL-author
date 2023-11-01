@@ -257,7 +257,7 @@ static void cql_reset_globals(void);
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token TYPE_CHECK CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN AT_COLUMNS RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-%token AT_RC AT_PROC AT_FILE AT_LINE AT_MACRO_LINE AT_MACRO_FILE AT_TEXT AT_ATTRIBUTE AT_SENSITIVE DEFERRED
+%token AT_ID AT_RC AT_PROC AT_FILE AT_LINE AT_MACRO_LINE AT_MACRO_FILE AT_TEXT AT_ATTRIBUTE AT_SENSITIVE DEFERRED
 %token NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT
 %token AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
@@ -277,7 +277,7 @@ static void cql_reset_globals(void);
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
 %type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
-%type <aval> col_calc col_calcs column_calculation
+%type <aval> col_calc col_calcs column_calculation text_arg text_args
 
 %type <aval> alter_table_add_column_stmt
 %type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
@@ -987,6 +987,8 @@ name:
   | STMT_LIST { $name = new_ast_str("stmt_list"); }
   | QUERY_PARTS { $name = new_ast_str("query_parts"); }
   | CTE_TABLES { $name = new_ast_str("cte_tables"); }
+  | AT_ID '(' str_literal ')' { $name = new_ast_at_id($str_literal); }
+  | AT_ID '(' AT_TEXT '(' text_args ')' ')' { $name = new_ast_at_id(new_ast_macro_text($text_args)); }
   ;
 
 opt_sql_name:
@@ -1136,9 +1138,16 @@ any_literal:
   | AT_MACRO_LINE { $any_literal = new_ast_str("@MACRO_LINE"); }
   | AT_MACRO_FILE { $any_literal = new_ast_str("@MACRO_FILE"); }
   | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
-  | AT_TEXT '(' any_macro_arg_ref ')' { $any_literal = new_ast_macro_text($any_macro_arg_ref); }
+  | AT_TEXT '(' text_args ')' { $any_literal = new_ast_macro_text($text_args); }
   | BLOBLIT  { $any_literal = new_ast_blob($BLOBLIT); }
   ;
+
+text_args:
+   text_arg { $$ = new_ast_text_args($text_arg, NULL); }
+   | text_arg ',' text_args[ta] { $$ = new_ast_text_args($text_arg, $ta); }
+   ;
+
+text_arg : str_literal | any_macro_arg_ref ;
 
 raise_expr:
   RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_IGNORE), NULL); }

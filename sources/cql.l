@@ -122,6 +122,7 @@ d [0-9]
 @ENFORCE_STRICT                  { return AT_ENFORCE_STRICT; }
 @EPONYMOUS                       { return AT_EPONYMOUS; }
 @FILE                            { return AT_FILE; }
+@ID                              { return AT_ID; }
 @KEEP_TABLE_NAME_IN_ALIASES      { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
 @LINE                            { return AT_LINE; }
 @MACRO_FILE                      { return AT_MACRO_FILE; }

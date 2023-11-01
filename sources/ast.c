@@ -1211,6 +1211,27 @@ static void replace_node(ast_node *old, ast_node *new) {
 static int32_t macro_line = 0;
 static CSTR macro_file = "<Unknown>";
 
+static void expand_text_args(charbuf *output, ast_node *text_args) {
+  for (; text_args; text_args = text_args->right) {
+    Contract(is_ast_text_args(text_args));
+    EXTRACT_ANY_NOTNULL(txt, text_args->left);
+
+    if (is_ast_str(txt)) {
+      EXTRACT_STRING(str, txt);
+      cg_decode_string_literal(str, output);
+    }
+    else {
+      expand_macros(txt);
+      txt = text_args->left;
+
+      gen_sql_callbacks callbacks;
+      init_gen_sql_callbacks(&callbacks);
+      callbacks.mode = gen_mode_echo;
+      gen_set_output_buffer(output);
+      gen_with_callbacks(txt, gen_any_macro_expansion, &callbacks);
+    }
+  }
+}
 
 cql_export void expand_macros(ast_node *_Nonnull node) {
   // do not recurse into macro definitions
@@ -1218,20 +1239,27 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     return;
   }
 
-  if (is_ast_macro_text(node)) {
+  if (is_ast_at_id(node)) {
     expand_macros(node->left);
-    gen_sql_callbacks callbacks;
-    init_gen_sql_callbacks(&callbacks);
-    callbacks.mode = gen_mode_echo;
+    EXTRACT_STRING(str, node->left);
+    CHARBUF_OPEN(tmp);
+    cg_decode_string_literal(str, &tmp);
+    // verify it is an ID
+    ast_node *new = new_ast_str(Strdup(tmp.ptr));
+    replace_node(node, new);
+    CHARBUF_CLOSE(tmp);
+    return;
+  }
+  if (is_ast_macro_text(node)) {
     CHARBUF_OPEN(tmp);
     CHARBUF_OPEN(quote);
-    gen_set_output_buffer(&tmp);
-    gen_with_callbacks(node->left, gen_any_macro_expansion, &callbacks);
+    expand_text_args(&tmp, node->left);
     cg_encode_string_literal(tmp.ptr, &quote);
     ast_node *new = new_ast_str(Strdup(quote.ptr));
     replace_node(node, new);
     CHARBUF_CLOSE(quote);
     CHARBUF_CLOSE(tmp);
+    return;
   }
   else if (is_ast_str(node)) {
     EXTRACT_STRING(name, node);

@@ -863,11 +863,13 @@ AST(sub_eq)
 AST(switch_body);
 AST(switch_case);
 AST(switch_stmt);
-AST(table_flags_attrs)
-AST(table_function)
-AST(table_join)
-AST(table_or_subquery)
-AST(table_or_subquery_list)
+AST(table_flags_attrs);
+AST(table_function);
+AST(table_join);
+AST(table_or_subquery);
+AST(table_or_subquery_list);
+AST(text_arg);
+AST(text_args);
 AST(trigger_action);
 AST(trigger_body_vers);
 AST(trigger_condition);
@@ -946,6 +948,7 @@ AST0(throw_stmt)
 AST0(type_cursor)
 AST0(using)
 AST1(asc)
+AST1(at_id);
 AST1(begin_schema_region_stmt);
 AST1(begin_trans_stmt);
 AST1(blob_get_key_type_stmt)

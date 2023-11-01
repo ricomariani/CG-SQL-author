@@ -838,6 +838,9 @@ AST(select_core_macro_ref)
 AST(select_expr)
 AST(select_expr_list)
 AST(select_expr_list_con)
+AST(select_expr_macro_arg_ref)
+AST(select_expr_macro_def)
+AST(select_expr_macro_ref)
 AST(select_from_etc)
 AST(select_groupby)
 AST(select_having)
@@ -1000,6 +1003,7 @@ AST1(savepoint_stmt);
 AST1(schema_unsub_stmt);
 AST1(schema_upgrade_version_stmt);
 AST1(select_core_macro_arg);
+AST1(select_expr_macro_arg);
 AST1(select_if_nothing_throw_expr)
 AST1(select_opts)
 AST1(stmt_list_macro_arg);

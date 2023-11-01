@@ -25077,6 +25077,7 @@ cql_noexport void sem_main(ast_node *ast) {
   NO_OP_STMT_INIT(query_parts_macro_def);
   NO_OP_STMT_INIT(cte_tables_macro_def);
   NO_OP_STMT_INIT(select_core_macro_def);
+  NO_OP_STMT_INIT(select_expr_macro_def);
 
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);

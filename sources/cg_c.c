@@ -8682,6 +8682,10 @@ cql_noexport void cg_c_init(void) {
   DDL_STMT_INIT(create_view_stmt);
   DDL_STMT_INIT(alter_table_add_column_stmt);
 
+  NO_OP_STMT_INIT(expr_macro_def);
+  NO_OP_STMT_INIT(stmt_list_macro_def);
+  NO_OP_STMT_INIT(query_parts_macro_def);
+  NO_OP_STMT_INIT(cte_tables_macro_def);
   NO_OP_STMT_INIT(enforce_reset_stmt);
   NO_OP_STMT_INIT(enforce_normal_stmt);
   NO_OP_STMT_INIT(enforce_strict_stmt);

@@ -139,9 +139,11 @@ void yyrestart(FILE *);
 // program. It would be unsafe if it could: It coerces a value from a nullable
 // type to a nonnull type without any runtime check.
 #define YY_ERROR_ON_CQL_INFERRED_NOTNULL(x) \
-  EXTRACT_STRING(proc_name, x); \
-  if (!strcmp(proc_name, "cql_inferred_notnull")) { \
-    yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+  if (is_ast_str(x)) { \
+    EXTRACT_STRING(proc_name, x); \
+    if (!strcmp(proc_name, "cql_inferred_notnull")) { \
+      yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+    } \
   }
 
 // If a column alias is present for * or T.* that's an error
@@ -2756,6 +2758,7 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;
       options.semantic = 1;
+      options.expand = 1;
     } else if (strcmp(arg, "--include_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {
@@ -3275,5 +3278,23 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   CHARBUF_CLOSE(tmp);
 
   return lit;
+}
+
+cql_noexport int32_t macro_type_from_str(CSTR type) {
+  int32_t macro_type = EOF;
+  if (!strcmp("EXPR", type)) {
+    macro_type = EXPR_MACRO;
+  }
+  else if (!strcmp("STMT_LIST", type)) {
+    macro_type = STMT_LIST_MACRO;
+  }
+  else if (!strcmp("QUERY_PARTS", type)) {
+    macro_type = QUERY_PARTS_MACRO;
+  }
+  else if (!strcmp("CTE_TABLES", type)) {
+    macro_type = CTE_TABLES_MACRO;
+  }
+  Contract(macro_type != EOF);
+  return macro_type;
 }
 

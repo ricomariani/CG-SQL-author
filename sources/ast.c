@@ -769,7 +769,7 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
           gen_misc_attrs_to_stdout(misc_attrs);
         }
 
-        // gen_one_stmt_to_stdout(stmt);
+        gen_one_stmt_to_stdout(stmt);
         cql_output("\n");
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
@@ -1138,24 +1138,6 @@ cql_noexport int32_t resolve_macro_name(CSTR name) {
   }
   minfo = get_macro_info(name);
   return minfo ? minfo->type : EOF;
-}
-
-static int32_t macro_type_from_str(CSTR type) {
-  int32_t macro_type = EOF;
-  if (!strcmp("EXPR", type)) {
-    macro_type = EXPR_MACRO;
-  }
-  else if (!strcmp("STMT_LIST", type)) {
-    macro_type = STMT_LIST_MACRO;
-  }
-  else if (!strcmp("QUERY_PARTS", type)) {
-    macro_type = QUERY_PARTS_MACRO;
-  }
-  else if (!strcmp("CTE_TABLES", type)) {
-    macro_type = CTE_TABLES_MACRO;
-  }
-  Contract(macro_type != EOF);
-  return macro_type;
 }
 
 cql_noexport CSTR install_macro_args(ast_node *macro_formals) {

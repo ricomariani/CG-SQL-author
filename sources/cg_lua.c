@@ -5411,6 +5411,10 @@ cql_noexport void cg_lua_init(void) {
   LUA_DDL_STMT_INIT(create_view_stmt);
   LUA_DDL_STMT_INIT(alter_table_add_column_stmt);
 
+  LUA_NO_OP_STMT_INIT(expr_macro_def);
+  LUA_NO_OP_STMT_INIT(stmt_list_macro_def);
+  LUA_NO_OP_STMT_INIT(query_parts_macro_def);
+  LUA_NO_OP_STMT_INIT(cte_tables_macro_def);
   LUA_NO_OP_STMT_INIT(enforce_reset_stmt);
   LUA_NO_OP_STMT_INIT(enforce_normal_stmt);
   LUA_NO_OP_STMT_INIT(enforce_strict_stmt);

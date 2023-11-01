@@ -604,3 +604,5 @@ cql_noexport CSTR cql_builtin_text();
 cql_noexport void cql_setup_for_builtins(void);
 
 cql_noexport int32_t resolve_macro_type(CSTR name);
+
+cql_noexport int32_t macro_type_from_str(CSTR type);

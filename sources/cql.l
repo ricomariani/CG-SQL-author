@@ -37,6 +37,8 @@ int fileno(FILE *);
 #pragma clang diagnostic ignored "-Wconversion"
 #endif
 
+#pragma clang diagnostic ignored "-Wmisleading-indentation"
+
 cql_noexport CSTR get_last_doc_comment() {
   CSTR result = last_doc_comment;
   last_doc_comment = NULL;

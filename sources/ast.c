@@ -744,6 +744,18 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
     return;
   }
 
+/*
+  if (ast_has_right(node) && node->right->parent != node) {
+    cql_output("%llx ast broken right", (long long)node);
+    broken(node);
+  }
+
+  if (ast_has_left(node) && node->left->parent != node) {
+    cql_output("%llx ast broken left", (long long)node);
+    broken(node);
+  }
+*/
+
   if (print_ast_value(node)) {
     return;
   }
@@ -1221,6 +1233,17 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
   }
 }
 
+static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
+   cql_error("%s:%d:1: error: in %s : %s%s%s%s\n",
+     ast->filename,
+     ast->lineno,
+     ast->type,
+     msg,
+     subj ? " '" : "",
+     subj,
+     subj ? "'" : "");
+}
+
 cql_export void expand_macros(ast_node *_Nonnull node) {
   // do not recurse into macro definitions
   if (is_any_macro_def(node)) {
@@ -1238,6 +1261,7 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     CHARBUF_CLOSE(tmp);
     return;
   }
+
   if (is_ast_macro_text(node)) {
     CHARBUF_OPEN(tmp);
     CHARBUF_OPEN(quote);
@@ -1249,7 +1273,8 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     CHARBUF_CLOSE(tmp);
     return;
   }
-  else if (is_ast_str(node)) {
+
+  if (is_ast_str(node)) {
     EXTRACT_STRING(name, node);
     if (!strcmp(name, "@MACRO_LINE")) {
       ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", macro_line));
@@ -1298,7 +1323,7 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     }
 
     // the query parts are already under a table_or_subquery node
-    // because of the macro position, if there is a redunant one
+    // because of the macro position, if there is a redundant one
     // in the arg tree, skip it.  We don't need two such wrappers
     // it makes extra (()) in the output
     if (is_ast_table_or_subquery_list(body) && body->right == NULL) {
@@ -1337,32 +1362,44 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
     }
 
     symtab *macro_arg_table_saved = macro_arg_table;
+    int32_t macro_line_saved = macro_line;
+    CSTR macro_file_saved = macro_file;
 
     if (is_any_macro_ref(node)) {
       EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
       EXTRACT(macro_formals, macro_name_formals->right);
+      EXTRACT_STRING(macro_name, macro_name_formals->left);
       EXTRACT(macro_args, node->right);
 
       macro_arg_table = symtab_new();
 
       while (macro_formals && macro_args) {
         EXTRACT_NOTNULL(macro_formal, macro_formals->left);
-        EXTRACT_STRING(name, macro_formal->left);
+        EXTRACT_STRING(formal_name, macro_formal->left);
         EXTRACT_ANY_NOTNULL(macro_arg, macro_args->left);
         EXTRACT_STRING(type, macro_formal->right);
 
         int32_t macro_type = macro_type_from_str(type);
-        set_macro_arg_info(name, macro_type, macro_arg);
+        set_macro_arg_info(formal_name, macro_type, macro_arg);
 
-        // check macro_arg for compat here
+        if (!macro_arg_valid(macro_type, macro_arg)) {
+          report_macro_error(macro_arg, "macro type mismatch in argument", formal_name);
+          goto cleanup;
+        }
 
         macro_formals = macro_formals->right;
         macro_args = macro_args->right;
       }
-    }
 
-    int32_t macro_line_saved = macro_line;
-    CSTR macro_file_saved = macro_file;
+      if (macro_formals) {
+        report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
+        goto cleanup;
+      }
+      if (macro_args) {
+        report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
+        goto cleanup;
+      }
+    }
 
     if (macro_line == -1) {
       macro_line = node->lineno;
@@ -1371,13 +1408,17 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
 
     expand_macros(body);
 
+cleanup:
+    if (macro_arg_table != macro_arg_table_saved && macro_arg_table) {
+      symtab_delete(macro_arg_table);
+    }
     macro_arg_table = macro_arg_table_saved;
     macro_line = macro_line_saved;
     macro_file = macro_file_saved;
     return;
   }
 
-  // Check the left and right nodes.
+// Check the left and right nodes.
   if (ast_has_left(node)) {
     expand_macros(node->left);
   }
@@ -1387,3 +1428,44 @@ cql_export void expand_macros(ast_node *_Nonnull node) {
   }
 }
 
+
+/*
+cql_noexport void expand_macros(ast_node *node) {
+   if (!node) return;
+
+   ast_node *cur = node;
+   ast_node *prev = node->parent;
+   ast_node *stop = prev;
+   
+   while (cur != stop) {
+     Contract(!ast_has_left(cur) || cur->left->parent == cur);
+     Contract(!ast_has_right(cur) || cur->right->parent == cur);
+
+     if (prev == cur->parent) {
+       if (!expand_action(cur)) {
+         // don't visit children
+         prev = cur;
+         cur = cur->parent;
+       }
+     }
+
+     if (prev == cur->parent && ast_has_left(cur)) {
+       prev = cur;
+       cur = cur->left;
+     }
+     else if (prev == cur->parent && ast_has_right(cur)) {
+       prev = cur;
+       cur = cur->right;
+     }
+     else if (ast_has_left(cur) && prev == cur->left && ast_has_right(cur) && cur->right != cur->left) {
+       prev = cur;
+       cur = cur->right;
+     }
+     else {
+       prev = cur;
+       cur = cur->parent;
+     }
+   }
+}
+
+*/

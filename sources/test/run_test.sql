@@ -41,7 +41,7 @@ begin
     end try;
     begin catch
       call printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(x!));
-      set fails := fails + 1; \
+      set fails := fails + 1;
       throw;
     end catch;
     if starting_fails != fails then
@@ -106,12 +106,15 @@ end;
 @blob_update_key bupdatekey offset;
 @blob_update_val bupdateval offset;
 
-#define CQL_BLOB_TYPE_BOOL   0
-#define CQL_BLOB_TYPE_INT32  1
-#define CQL_BLOB_TYPE_INT64  2
-#define CQL_BLOB_TYPE_FLOAT  3
-#define CQL_BLOB_TYPE_STRING 4
-#define CQL_BLOB_TYPE_BLOB   5
+
+declare const group blob_types (
+  CQL_BLOB_TYPE_BOOL   = 0,
+  CQL_BLOB_TYPE_INT32  = 1,
+  CQL_BLOB_TYPE_INT64  = 2,
+  CQL_BLOB_TYPE_FLOAT  = 3,
+  CQL_BLOB_TYPE_STRING = 4,
+  CQL_BLOB_TYPE_BLOB   = 5
+);
 
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
@@ -4583,7 +4586,7 @@ create table storage_one_long(
   x long!
 );
 
-#ifndef LUA_RUN_TEST
+--- #ifndef LUA_RUN_TEST
 
 TEST!(blob_serialization,
 BEGIN
@@ -4932,7 +4935,7 @@ begin
   EXPECT!(C.x == D.x);
 end;
 
-#endif // LUA_RUN_TEST
+-- #endif // LUA_RUN_TEST
 
 declare const group long_constants (
   long_const_1 = -9223372036854775807L,
@@ -4998,7 +5001,7 @@ BEGIN
 
 END);
 
-#ifndef LUA_RUN_TEST
+-- #ifndef LUA_RUN_TEST
 
 TEST!(serialization_tricky_values,
 BEGIN
@@ -5105,7 +5108,7 @@ BEGIN
   printf("1000 bad results is normal\n");
 END);
 
-#endif // LUA_RUN_TEST
+ -- #endif // LUA_RUN_TEST
 
 create proc change_arg(x text)
 begin

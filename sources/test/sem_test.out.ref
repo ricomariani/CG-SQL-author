@@ -19659,7 +19659,7 @@ SELECT *
   | | {cte_tables}: ok
   |   | {cte_table}: does_not_shadow_an_existing_table: { x: integer notnull }
   |     | {cte_decl}: does_not_shadow_an_existing_table: { x: integer notnull }
-  |     | | {name does_not_shadow_an_existing_table}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
+  |     | | {name does_not_shadow_an_existing_table}
   |     | | {name_list}
   |     |   | {name x}
   |     | {shared_cte}: does_not_shadow_an_existing_table: { x: integer notnull } dml_proc
@@ -20464,7 +20464,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was pro
   | | {cte_tables}: err
   |   | {cte_table}: err
   |     | {cte_decl}
-  |     | | {name shared_frag2}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+  |     | | {name shared_frag2}
   |     | | {star}
   |     | {shared_cte}: err
   |       | {call_stmt}: err
@@ -73662,7 +73662,7 @@ END;
           |   | {cte_tables}
           |     | {cte_table}: fragtest_0_0: { x: integer notnull }
           |       | {cte_decl}: fragtest_0_0: { x: integer notnull }
-          |       | | {name fragtest_0_0}: fragtest_0_0: { x: integer notnull } dml_proc
+          |       | | {name fragtest_0_0}
           |       | | {name_list}
           |       |   | {name x}
           |       | {shared_cte}: fragtest_0_0: { x: integer notnull } dml_proc
@@ -73739,7 +73739,7 @@ END;
           |   | {cte_tables}
           |     | {cte_table}: fragtest_0_1: { x: integer notnull }
           |       | {cte_decl}: fragtest_0_1: { x: integer notnull }
-          |       | | {name fragtest_0_1}: fragtest_0_1: { x: integer notnull } dml_proc
+          |       | | {name fragtest_0_1}
           |       | | {name_list}
           |       |   | {name x}
           |       | {shared_cte}: fragtest_0_1: { x: integer notnull } dml_proc
@@ -74022,7 +74022,7 @@ The above originated from CALL fragtest_1_0 USING possible_conflict AS source
           |   | {cte_tables}: err
           |     | {cte_table}: err
           |       | {cte_decl}
-          |       | | {name fragtest_1_0}: fragtest_1_0: { x: integer notnull } dml_proc
+          |       | | {name fragtest_1_0}
           |       | | {star}
           |       | {shared_cte}: err
           |         | {call_stmt}: err
@@ -74161,7 +74161,7 @@ END;
           |   | {cte_tables}
           |     | {cte_table}: fragtest_2_0: { x: integer notnull }
           |       | {cte_decl}: fragtest_2_0: { x: integer notnull }
-          |       | | {name fragtest_2_0}: fragtest_2_0: { x: integer notnull } dml_proc
+          |       | | {name fragtest_2_0}
           |       | | {name_list}
           |       |   | {name x}
           |       | {shared_cte}: fragtest_2_0: { x: integer notnull } dml_proc
@@ -75950,7 +75950,7 @@ END;
           |     |   | | | {cte_tables}: ok
           |     |   | |   | {cte_table}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull }
           |     |   | |     | {cte_decl}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull }
-          |     |   | |     | | {name no_args_frag}: no_args_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |     | | {name no_args_frag}
           |     |   | |     | | {name_list}
           |     |   | |     |   | {name x}
           |     |   | |     |   | {name_list}
@@ -76070,7 +76070,7 @@ END;
           |     |   | | | {cte_tables}: ok
           |     |   | |   | {cte_table}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull }
           |     |   | |     | {cte_decl}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull }
-          |     |   | |     | | {name a_shared_frag}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
+          |     |   | |     | | {name a_shared_frag}
           |     |   | |     | | {name_list}
           |     |   | |     |   | {name x}
           |     |   | |     |   | {name_list}

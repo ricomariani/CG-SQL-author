@@ -186,18 +186,18 @@ typedef struct num_ast_node {
 } num_ast_node;
 
 typedef struct {
-  ast_node *def;
+  ast_node *_Nonnull def;
   int32_t type;
 } macro_info;
 
-cql_noexport CSTR install_macro_args(ast_node *ast);
+cql_noexport CSTR _Nullable install_macro_args(ast_node *_Nonnull ast);
 cql_noexport void new_macro_formals(void);
 cql_noexport void delete_macro_formals(void);
-cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast);
-cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast);
-cql_noexport macro_info *get_macro_arg_info(CSTR name);
-cql_noexport macro_info *get_macro_info(CSTR name);
-cql_noexport void expand_macros(ast_node *root);
+cql_noexport bool_t set_macro_info(CSTR _Nonnull name, int32_t macro_type, ast_node *_Nonnull ast);
+cql_noexport bool_t set_macro_arg_info(CSTR _Nonnull name, int32_t macro_type, ast_node *_Nonnull ast);
+cql_noexport macro_info *_Nullable get_macro_arg_info(CSTR _Nonnull name);
+cql_noexport macro_info *_Nullable get_macro_info(CSTR _Nonnull name);
+cql_noexport void expand_macros(ast_node *_Nonnull root);
 
 // from the lexer
 extern int yylineno;

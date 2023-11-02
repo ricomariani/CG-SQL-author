@@ -1361,12 +1361,12 @@ cte_table:
   cte_decl AS '(' select_stmt ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt); }
   | cte_decl AS '(' shared_cte')' { $cte_table = new_ast_cte_table($cte_decl, $shared_cte); }
   | '(' call_stmt ')' {
-      ast_node *name = $call_stmt->left;
+      ast_node *name = ast_clone_tree($call_stmt->left);
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, NULL);
       $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
   | '(' call_stmt USING cte_binding_list ')' {
-      ast_node *name = $call_stmt->left;
+      ast_node *name = ast_clone_tree($call_stmt->left);
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list);
       $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
@@ -1824,12 +1824,12 @@ insert_stmt:
   insert_stmt_type sql_name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
@@ -1837,11 +1837,11 @@ insert_stmt:
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING select_stmt {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $select_stmt);
-    $insert_stmt_type->left = NULL; // dummy spec not allowed in this form
+    ast_set_left($insert_stmt_type, NULL); // dummy spec not allowed in this form
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $expr_names);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
 
@@ -2260,7 +2260,7 @@ elseif_item:
 
 elseif_list[result]:
   elseif_item  { $result = $elseif_item; }
-  | elseif_item elseif_list[el2]  { $elseif_item->right = $el2; $result = $elseif_item; }
+  | elseif_item elseif_list[el2]  { ast_set_right($elseif_item, $el2); $result = $elseif_item; }
   ;
 
 opt_elseif_list:
@@ -2574,27 +2574,27 @@ select_expr_macro_def:
 macro_def_stmt:
   expr_macro_def BEGIN_ expr END {
      $macro_def_stmt = $expr_macro_def;
-     $macro_def_stmt->right = $expr;
+     ast_set_right($macro_def_stmt, $expr);
      delete_macro_formals(); }
   | stmt_list_macro_def BEGIN_ stmt_list END {
      $macro_def_stmt = $stmt_list_macro_def;
-     $macro_def_stmt->right = $stmt_list;
+     ast_set_right($macro_def_stmt, $stmt_list);
      delete_macro_formals(); }
   | query_parts_macro_def BEGIN_ query_parts END {
      $macro_def_stmt = $query_parts_macro_def;
-     $macro_def_stmt->right = $query_parts;
+     ast_set_right($macro_def_stmt, $query_parts);
      delete_macro_formals(); }
   | cte_tables_macro_def BEGIN_ cte_tables END {
      $macro_def_stmt = $cte_tables_macro_def;
-     $macro_def_stmt->right = $cte_tables;
+     ast_set_right($macro_def_stmt, $cte_tables);
      delete_macro_formals(); }
   | select_core_macro_def BEGIN_ select_core_list END {
      $macro_def_stmt = $select_core_macro_def;
-     $macro_def_stmt->right = $select_core_list;
+     ast_set_right($macro_def_stmt, $select_core_list);
      delete_macro_formals(); }
   | select_expr_macro_def BEGIN_ select_expr_list END {
      $macro_def_stmt = $select_expr_macro_def;
-     $macro_def_stmt->right = $select_expr_list;
+     ast_set_right($macro_def_stmt, $select_expr_list);
      delete_macro_formals(); }
   ;
 
@@ -3367,3 +3367,15 @@ cql_noexport int32_t macro_type_from_str(CSTR type) {
   return macro_type;
 }
 
+cql_noexport bool_t macro_arg_valid(int32_t macro_type, ast_node *macro_arg) {
+  bool_t valid = false;
+  switch (macro_type) {
+    case EXPR_MACRO:         valid = is_ast_expr_macro_arg(macro_arg); break;
+    case STMT_LIST_MACRO:    valid = is_ast_stmt_list_macro_arg(macro_arg); break;
+    case QUERY_PARTS_MACRO:  valid = is_ast_query_parts_macro_arg(macro_arg); break;
+    case CTE_TABLES_MACRO:   valid = is_ast_cte_tables_macro_arg(macro_arg); break;
+    case SELECT_CORE_MACRO:  valid = is_ast_select_core_macro_arg(macro_arg); break;
+    case SELECT_EXPR_MACRO:  valid = is_ast_select_expr_macro_arg(macro_arg); break;
+  }
+  return valid;
+}

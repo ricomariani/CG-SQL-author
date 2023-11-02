@@ -1491,7 +1491,7 @@ cql_noexport void rewrite_printf_inserting_casts_as_needed(ast_node *ast, CSTR f
 // This uses the usual convention that ->right is the "next" pointer.
 static void add_tail(ast_node **head, ast_node **tail, ast_node *node) {
   if (*head) {
-    (*tail)->right = node;
+    ast_set_right(*tail, node);
   }
   else {
     *head = node;

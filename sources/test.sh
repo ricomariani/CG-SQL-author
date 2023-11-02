@@ -1012,14 +1012,8 @@ test_helpers_test() {
 
 run_test() {
   echo '--------------------------------- STAGE 13 -- RUN CODE TEST'
-  echo running codegen test with execution
-  if ! cc -E -x c -w "${TEST_DIR}/run_test.sql" >"${OUT_DIR}/run_test_cpp.out"
-  then
-    echo preprocessing failed.
-    failed
-  fi
 
-  if ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  if ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${TEST_DIR}/run_test.sql" --global_proc cql_startup --rt c
   then
     echo codegen failed.
     failed
@@ -1037,7 +1031,7 @@ run_test() {
     failed
   fi
 
-  if ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  if ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${TEST_DIR}/run_test.sql" --global_proc cql_startup --rt c
   then
     echo compressed codegen failed.
     failed

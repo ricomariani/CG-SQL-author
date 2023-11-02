@@ -27,7 +27,14 @@ begin
   EXPECT!((select pred!));
 end;
 
-@MACRO(stmt_list) TEST!(x! expr, body! stmt_list)
+proc lua_gated(out gated int!)
+begin
+  let result := false;
+  @echo lua, "result = true\n";
+  set gated := result;
+end;
+
+@MACRO(stmt_list) TEST_GATED!(x! expr, pred! expr, body! stmt_list)
 begin
   create procedure @ID(@TEXT("test_", x!))()
   begin 
@@ -51,14 +58,21 @@ begin
     end if;
   end;
 
-  set start_refs := get_outstanding_refs();
-  call @ID(@TEXT("test_", x!))();
-  set end_refs := get_outstanding_refs();
-  if start_refs != end_refs then
-    call printf("Test %s unbalanced refs.", @TEXT(x!));
-    call printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
-    set fails := fails + 1;
+  if not pred! then
+    set start_refs := get_outstanding_refs();
+    call @ID(@TEXT("test_", x!))();
+    set end_refs := get_outstanding_refs();
+    if start_refs != end_refs then
+      call printf("Test %s unbalanced refs.", @TEXT(x!));
+      call printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
+      set fails := fails + 1;
+    end if;
   end if;
+end;
+
+@MACRO(stmt_list) TEST!(x! expr, body! stmt_list)
+begin
+  TEST_GATED!(x!, false, body!);
 end;
 
 @MACRO(stmt_list) BEGIN_SUITE!()
@@ -4586,9 +4600,7 @@ create table storage_one_long(
   x long!
 );
 
---- #ifndef LUA_RUN_TEST
-
-TEST!(blob_serialization,
+TEST_GATED!(blob_serialization, lua_gated(), 
 BEGIN
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4787,7 +4799,8 @@ BEGIN
 
 END);
 
-TEST!(blob_serialization_null_cases,
+
+TEST_GATED!(blob_serialization_null_cases, lua_gated(),
 BEGIN
   declare cursor_nulls cursor like storage_nullable;
   fetch cursor_nulls using
@@ -4809,7 +4822,7 @@ BEGIN
 
 END);
 
-TEST!(corrupt_blob_deserialization,
+TEST_GATED!(corrupt_blob_deserialization, lua_gated(),
 BEGIN
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4853,7 +4866,7 @@ BEGIN
 
 END);
 
-TEST!(bogus_varint,
+TEST_GATED!(bogus_varint, lua_gated(),
 BEGIN
   let control_blob := (select X'490001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_int>;
@@ -4882,7 +4895,7 @@ BEGIN
   EXPECT!(caught);
 END);
 
-TEST!(bogus_varlong,
+TEST_GATED!(bogus_varlong, lua_gated(),
 BEGIN
   let control_blob := (select X'4C0001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_long>;
@@ -4934,8 +4947,6 @@ begin
   fetch D from int_blob;
   EXPECT!(C.x == D.x);
 end;
-
--- #endif // LUA_RUN_TEST
 
 declare const group long_constants (
   long_const_1 = -9223372036854775807L,
@@ -5001,9 +5012,7 @@ BEGIN
 
 END);
 
--- #ifndef LUA_RUN_TEST
-
-TEST!(serialization_tricky_values,
+TEST_GATED!(serialization_tricky_values, lua_gated(),
 BEGIN
   call round_trip_int(0);
   call round_trip_int(1);
@@ -5040,7 +5049,7 @@ END);
 declare proc rand_reset();
 declare proc corrupt_blob_with_invalid_shenanigans(b blob!);
 
-TEST!(clobber_blobs,
+TEST_GATED!(clobber_blobs, lua_gated(),
 BEGIN
   -- the point of the test is to ensure that we don't segv or get ASAN failures
   -- or leak memory when dealing with broken blobs.  Some of the blobs
@@ -5107,8 +5116,6 @@ BEGIN
   printf("blob corruption results: good: %d, bad: %d\n", good, bad);
   printf("1000 bad results is normal\n");
 END);
-
- -- #endif // LUA_RUN_TEST
 
 create proc change_arg(x text)
 begin

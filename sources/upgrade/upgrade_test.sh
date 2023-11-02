@@ -128,9 +128,7 @@ do
   # shellcheck disable=SC2086
   if ! ${CQL} ${exclusive} --in "${SCHEMA_FILE}" --cg "${CQL_FILE}" --rt schema_upgrade --global_proc "${TEST_PREFIX}"; then
     echo "Failed to generate upgrade CQL."
-    echo "cc -I./ -Iupgrade -w -E -x c ${SCHEMA_FILE} > ${TEMP_FILE} && ${CQL} -- \
-        --in ${TEMP_FILE} --cg ${CQL_FILE} --rt schema_upgrade \
-        --global_proc ${TEST_PREFIX}"
+    echo "${CQL} ${exclusive}" --in "${SCHEMA_FILE}" --cg "${CQL_FILE}" --rt schema_upgrade --global_proc "${TEST_PREFIX}"
     exit 1
   fi
 

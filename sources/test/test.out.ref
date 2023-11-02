@@ -2113,8 +2113,6 @@ LET z := macro2!(x, y);
 
 SET z := 1922;
 
-LET u := @MACRO_LINE;
-
 LET zz := macro3!(FROM((SELECT 1 AS x, 2 AS y) AS T));
 
 SET zz := macro3!(FROM(T1
@@ -2183,6 +2181,14 @@ BEGIN
 END;
 
 LET x := @TEXT(a_selection!());
+
+@MACRO(STMT_LIST) file_line!()
+BEGIN
+  LET line := @MACRO_LINE;
+  LET file := @MACRO_FILE;
+END;
+
+file_line!();
 
 SET file := 'path/I/do/not/like';
 

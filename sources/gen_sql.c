@@ -3816,12 +3816,14 @@ cql_noexport void gen_params(ast_node *ast) {
 
 static void gen_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
 
-  gen_printf("CREATE PROC %s (", name);
+  gen_printf("CREATE PROC ");
+  gen_name(name_ast);
+  gen_printf(" (");
   if (params) {
     gen_params(params);
   }
@@ -4410,15 +4412,17 @@ static void gen_loop_stmt(ast_node *ast) {
 
 static void gen_call_stmt(ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
 
-  gen_printf("CALL %s(", name);
+  gen_printf("CALL ");
+  gen_name(name_ast);
+  gen_printf("(");
   if (arg_list) {
     gen_arg_list(arg_list);
   }
 
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_declare_out_call_stmt(ast_node *ast) {

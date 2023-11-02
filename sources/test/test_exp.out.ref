@@ -2128,8 +2128,6 @@ LET z := x * (y + 5 + (y + 5) + 1);
 
 SET z := 1922;
 
-LET u := 1811;
-
 LET zz := '(SELECT 1 AS x, 2 AS y) AS T';
 
 SET zz := 'T1
@@ -2147,7 +2145,7 @@ SET zz := '1 AS x, 2 AS y';
 
 LET zzz := 'begin
 IF NOT 7 THEN
-  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/test.sql'', 1811);
+  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/test.sql'', 1932);
 END IF;
 
 foo';
@@ -2199,6 +2197,16 @@ BEGIN
 END;
 
 LET x := '( SELECT 1 + 5 )';
+
+@MACRO(STMT_LIST) file_line!()
+BEGIN
+  LET line := @MACRO_LINE;
+  LET file := @MACRO_FILE;
+END;
+
+LET line := 2;
+
+LET file := 'long/path/I/do/not/like';
 
 SET file := 'path/I/do/not/like';
 

@@ -1244,6 +1244,7 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
      subj ? "'" : "");
 }
 
+
 cql_export void expand_macros(ast_node *_Nonnull node) {
 top:
   // do not recurse into macro definitions
@@ -1317,49 +1318,11 @@ top:
     if (is_any_macro_def(copy)) {
       // macro defs like x!() have the payload on the right
       body = copy->right;
+      copy->left = body;
     }
     else {
       // macro formals like x! have the payload on the right
       body = copy->left;
-    }
-
-    // the query parts are already under a table_or_subquery node
-    // because of the macro position, if there is a redundant one
-    // in the arg tree, skip it.  We don't need two such wrappers
-    // it makes extra (()) in the output
-    if (is_ast_table_or_subquery_list(body) && body->right == NULL) {
-      EXTRACT_NOTNULL(table_or_subquery, body->left);
-      if (is_ast_join_clause(table_or_subquery->left) && table_or_subquery->right == NULL) {
-        body = table_or_subquery->left;
-      }
-    }
-
-    ast_node *parent = node->parent;
-
-    if (is_ast_text_args(parent)) {
-      replace_node(node, body);
-    }
-    else if (
-      is_ast_stmt_list(body) ||
-      is_ast_cte_tables(body) ||
-      is_ast_select_core_list(body) ||
-      is_ast_select_expr_list(body)) {
-
-      // insert the copy into the list
-      ast_set_left(parent, body->left);
-
-      // march to the end
-      ast_node *end = body;
-      while (end->right) {
-        end = end->right;
-      }
-
-      // link the copy to whatever was at the end
-      ast_set_right(end, parent->right);
-      ast_set_right(parent, body->right);
-    }
-    else  {
-      replace_node(node, body);
     }
 
     symtab *macro_arg_table_saved = macro_arg_table;
@@ -1407,7 +1370,52 @@ top:
       macro_file = node->filename;
     }
 
+    // it's hugely important to expand what you're going to replace FIRST
+    // and then slot it in.  Otherwise the recursion is n^2 depth!!!
     expand_macros(body);
+
+    // its normal for body to be a different node type
+    body = copy->left;
+
+    // the query parts are already under a table_or_subquery node
+    // because of the macro position, if there is a redundant one
+    // in the arg tree, skip it.  We don't need two such wrappers
+    // it makes extra (()) in the output
+    if (is_ast_table_or_subquery_list(body) && body->right == NULL) {
+      EXTRACT_NOTNULL(table_or_subquery, body->left);
+      if (is_ast_join_clause(table_or_subquery->left) && table_or_subquery->right == NULL) {
+        body = table_or_subquery->left;
+      }
+    }
+
+    ast_node *parent = node->parent;
+
+    if (is_ast_text_args(parent)) {
+      replace_node(node, body);
+    }
+    else if (
+      is_ast_stmt_list(body) ||
+      is_ast_cte_tables(body) ||
+      is_ast_select_core_list(body) ||
+      is_ast_select_expr_list(body)) {
+
+      // insert the copy into the list
+      ast_set_left(parent, body->left);
+
+      // march to the end
+      ast_node *end = body;
+      while (end->right) {
+        end = end->right;
+      }
+
+      // link the copy to whatever was at the end
+      ast_set_right(end, parent->right);
+      ast_set_right(parent, body->right);
+    }
+    else  {
+      replace_node(node, body);
+    }
+
 
 cleanup:
     if (macro_arg_table != macro_arg_table_saved && macro_arg_table) {
@@ -1419,8 +1427,9 @@ cleanup:
     return;
   }
 
-// Check the left and right nodes.
+  // Check the left and right nodes.
   if (ast_has_left(node)) {
+    // if there is no right we can tail on left
     if (!ast_has_right(node)) {
       node = node->left;
       goto top;
@@ -1434,45 +1443,3 @@ cleanup:
     goto top;
   }
 }
-
-
-/*
-cql_noexport void expand_macros(ast_node *node) {
-   if (!node) return;
-
-   ast_node *cur = node;
-   ast_node *prev = node->parent;
-   ast_node *stop = prev;
-   
-   while (cur != stop) {
-     Contract(!ast_has_left(cur) || cur->left->parent == cur);
-     Contract(!ast_has_right(cur) || cur->right->parent == cur);
-
-     if (prev == cur->parent) {
-       if (!expand_action(cur)) {
-         // don't visit children
-         prev = cur;
-         cur = cur->parent;
-       }
-     }
-
-     if (prev == cur->parent && ast_has_left(cur)) {
-       prev = cur;
-       cur = cur->left;
-     }
-     else if (prev == cur->parent && ast_has_right(cur)) {
-       prev = cur;
-       cur = cur->right;
-     }
-     else if (ast_has_left(cur) && prev == cur->left && ast_has_right(cur) && cur->right != cur->left) {
-       prev = cur;
-       cur = cur->right;
-     }
-     else {
-       prev = cur;
-       cur = cur->parent;
-     }
-   }
-}
-
-*/

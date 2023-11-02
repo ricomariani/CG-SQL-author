@@ -1920,7 +1920,6 @@ let y := 2;
 let z := macro2!(x, y);
 
 set z := @LINE;
-let u := @MACRO_LINE;
 
 
 let zz := macro3!(from( (select 1 x, 2 y) as T));
@@ -1962,9 +1961,17 @@ end;
 
 let x := @TEXT(a_selection!());
 
+@macro(stmt_list) file_line!()
+begin
+  let line := @MACRO_LINE;
+  let file := @MACRO_FILE;
+end;
+
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 
 # 1 "long/path/I/do/not/like"
+
+file_line!();
 
 #line 1 "long/path/I/do/not/like"
 

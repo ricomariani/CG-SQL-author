@@ -1245,6 +1245,7 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
 }
 
 cql_export void expand_macros(ast_node *_Nonnull node) {
+top:
   // do not recurse into macro definitions
   if (is_any_macro_def(node)) {
     return;
@@ -1420,11 +1421,17 @@ cleanup:
 
 // Check the left and right nodes.
   if (ast_has_left(node)) {
+    if (!ast_has_right(node)) {
+      node = node->left;
+      goto top;
+    }
     expand_macros(node->left);
   }
 
   if (ast_has_right(node)) {
-    expand_macros(node->right);
+    // tail recursion
+    node = node->right;
+    goto top;
   }
 }
 

@@ -205,7 +205,10 @@ cql_data_decl( char *_Nullable current_file );
 
 cql_data_decl ( CSTR _Nullable base_fragment_name );
 
-extern minipool *_Nullable ast_pool;
+cql_data_decl( bool_t macro_expansion_errors );
+
+cql_data_decl( minipool *_Nullable ast_pool );
+
 #define _ast_pool_new(x) _pool_new(ast_pool, x)
 #define _ast_pool_new_array(x, c) _pool_new_array(ast_pool, x, c)
 

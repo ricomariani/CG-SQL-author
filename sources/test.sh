@@ -229,6 +229,28 @@ macro_test() {
 
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_test.out
+
+  echo running macro expansion error cases
+  if ${CQL} --exp --in "${TEST_DIR}/macro_exp_errors.sql" >"${OUT_DIR}/macro_exp_errors.out" 2>"${OUT_DIR}/macro_test.err.out"
+  then
+     echo "CQL macro error test returned unexpected error code"
+     cat "${OUT_DIR}/macro_test.err.out"
+     failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit macro_test.err.out
+
+  echo running macro expansion duplicate name
+  if ${CQL} --exp --in "${TEST_DIR}/macro_test_dup_arg.sql" >"${OUT_DIR}/macro_exp_errors.out" 2>"${OUT_DIR}/macro_test_dup.err.out"
+  then
+     echo "CQL macro error test returned unexpected error code"
+     cat "${OUT_DIR}/macro_test_dup.err.out"
+     failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit macro_test_dup.err.out
 }
 
 semantic_test() {

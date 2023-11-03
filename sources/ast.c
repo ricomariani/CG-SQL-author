@@ -24,9 +24,20 @@
 cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
 cql_data_defn( char *_Nullable current_file );
+cql_data_defn( bool_t macro_expansion_errors );
 
 static symtab *macro_table;
 static symtab *macro_arg_table;
+
+typedef struct macro_state_t {
+  CSTR name;
+  CSTR file;
+  int32_t line;
+  struct macro_state_t *parent;
+  symtab *args;
+} macro_state_t;
+
+static macro_state_t macro_state;
 
 // Helper object to just hold info in find_attribute_str(...) and find_attribute_num(...)
 typedef struct misc_attrs_type {
@@ -43,6 +54,12 @@ cql_noexport void ast_init() {
   minipool_open(&str_pool);
   macro_table = symtab_new();
   delete_macro_formals();
+  macro_expansion_errors = false;
+
+  macro_state.line = -1;
+  macro_state.file = "<Unknown>";
+  macro_state.name = "None";
+  macro_state.parent = NULL;
 }
 
 cql_noexport void ast_cleanup() {
@@ -1208,9 +1225,6 @@ static void replace_node(ast_node *old, ast_node *new) {
   }
 }
 
-static int32_t macro_line = -1;
-static CSTR macro_file = "<Unknown>";
-
 static void expand_text_args(charbuf *output, ast_node *text_args) {
   for (; text_args; text_args = text_args->right) {
     Contract(is_ast_text_args(text_args));
@@ -1242,15 +1256,41 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
      subj ? " '" : "",
      subj,
      subj ? "'" : "");
+
+  macro_state_t *p = &macro_state;
+  while (p->parent) {
+    cql_error(" -> '%s' in %s:%d\n", p->name, p->file, p->line);
+    p = p->parent;
+  }
+  macro_expansion_errors = 1;
 }
 
+static CSTR get_macro_file() {
+  macro_state_t *p = &macro_state;
+  macro_state_t *prev = p;
+  while (p->parent) {
+    prev = p;
+    p = p->parent;
+  }
+  return prev->file;
+}
+
+static int32_t get_macro_line() {
+  macro_state_t *p = &macro_state;
+  macro_state_t *prev = p;
+  while (p->parent) {
+    prev = p;
+    p = p->parent;
+  }
+  return prev->line;
+}
 
 cql_export void expand_macros(ast_node *_Nonnull node) {
-top:
-  if (!options.semantic && options.test && macro_line != -1) {
+tail_recurse:
+  if (!options.semantic && options.test && macro_state.line != -1) {
     // in test mode charge the whole macro to the expansion
     // so we can attribute the AST better
-    node->lineno = macro_line;
+    node->lineno = macro_state.line;
   }
   // do not recurse into macro definitions
   if (is_any_macro_def(node)) {
@@ -1284,12 +1324,12 @@ top:
   if (is_ast_str(node)) {
     EXTRACT_STRING(name, node);
     if (!strcmp(name, "@MACRO_LINE")) {
-      ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", macro_line));
+      ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", get_macro_line()));
       replace_node(node, num);
     }
     else if (!strcmp(name, "@MACRO_FILE")) {
       CHARBUF_OPEN(tmp);
-      cg_encode_string_literal(macro_file, &tmp);
+      cg_encode_string_literal(get_macro_file(), &tmp);
       ast_node *new = new_ast_str(Strdup(tmp.ptr));
       replace_node(node, new);
       CHARBUF_CLOSE(tmp);
@@ -1330,9 +1370,7 @@ top:
       body = copy->left;
     }
 
-    symtab *macro_arg_table_saved = macro_arg_table;
-    int32_t macro_line_saved = macro_line;
-    CSTR macro_file_saved = macro_file;
+    macro_state_t macro_state_saved = macro_state;
 
     if (is_any_macro_ref(node)) {
       EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
@@ -1340,7 +1378,11 @@ top:
       EXTRACT_STRING(macro_name, macro_name_formals->left);
       EXTRACT(macro_args, node->right);
 
-      macro_arg_table = symtab_new();
+      macro_state.parent = &macro_state_saved;
+      macro_state.line = node->lineno;
+      macro_state.file = node->filename;
+      macro_state.name = macro_name;
+      macro_arg_table = macro_state.args = symtab_new();
 
       while (macro_formals && macro_args) {
         EXTRACT_NOTNULL(macro_formal, macro_formals->left);
@@ -1364,15 +1406,11 @@ top:
         report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
         goto cleanup;
       }
+
       if (macro_args) {
         report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
         goto cleanup;
       }
-    }
-
-    if (macro_line == -1) {
-      macro_line = node->lineno;
-      macro_file = node->filename;
     }
 
     // it's hugely important to expand what you're going to replace FIRST
@@ -1423,12 +1461,11 @@ top:
 
 
 cleanup:
-    if (macro_arg_table != macro_arg_table_saved && macro_arg_table) {
-      symtab_delete(macro_arg_table);
+    if (macro_state.args != macro_state_saved.args && macro_state.args) {
+      symtab_delete(macro_state.args);
     }
-    macro_arg_table = macro_arg_table_saved;
-    macro_line = macro_line_saved;
-    macro_file = macro_file_saved;
+    macro_state = macro_state_saved;
+    macro_arg_table = macro_state.args;
     return;
   }
 
@@ -1437,7 +1474,7 @@ cleanup:
     // if there is no right we can tail on left
     if (!ast_has_right(node)) {
       node = node->left;
-      goto top;
+      goto tail_recurse;
     }
     expand_macros(node->left);
   }
@@ -1445,6 +1482,6 @@ cleanup:
   if (ast_has_right(node)) {
     // tail recursion
     node = node->right;
-    goto top;
+    goto tail_recurse;
   }
 }

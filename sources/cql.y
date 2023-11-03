@@ -129,10 +129,10 @@ void yyrestart(FILE *);
   if (!get_macro_arg_info(x)) yyerror("expected a defined macro formal not a macro.");
 
 #define YY_ERROR_ON_FAILED_ADD_MACRO(success, name) \
-  if (!success) { yyerror(dup_printf("Macro already exists '%s'.", name)); }
+  if (!success) { yyerror(dup_printf("macro already exists '%s'.", name)); }
 
 #define YY_ERROR_ON_FAILED_MACRO_ARG(name) \
-  if (name) { yyerror(dup_printf("Macro argument already exists '%s'.", name)); }
+  if (name) { yyerror(dup_printf("macro argument already exists '%s'.", name)); }
 
 // We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
 // to see it during semantic analysis, but it cannot be allowed to appear in a
@@ -374,6 +374,9 @@ program:
       gen_init();
       if (options.expand) {
         expand_macros($opt_stmt_list);
+        if (macro_expansion_errors) {
+          cql_cleanup_and_exit(1);
+        }
       }
       if (options.semantic) {
         sem_main($opt_stmt_list);

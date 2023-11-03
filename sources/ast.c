@@ -1247,6 +1247,11 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
 
 cql_export void expand_macros(ast_node *_Nonnull node) {
 top:
+  if (!options.semantic && options.test && macro_line != -1) {
+    // in test mode charge the whole macro to the expansion
+    // so we can attribute the AST better
+    node->lineno = macro_line;
+  }
   // do not recurse into macro definitions
   if (is_any_macro_def(node)) {
     return;

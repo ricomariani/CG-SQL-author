@@ -2707,23 +2707,32 @@ static void gen_values(ast_node *ast) {
 }
 
 cql_noexport void gen_select_core(ast_node *ast) {
-  Contract(is_ast_select_core(ast));
-  EXTRACT_ANY(select_core_left, ast->left);
 
-  gen_select_statement_type(ast);
+  if (is_ast_select_core_macro_ref(ast)) {
+    gen_select_core_macro_ref(ast);
+  }
+  else if (is_ast_select_core_macro_arg_ref(ast)) {
+    gen_select_core_macro_arg_ref(ast);
+  }
+  else {
+    Contract(is_ast_select_core(ast));
+    EXTRACT_ANY(select_core_left, ast->left);
 
-  // select_core subtree can be a SELECT or VALUES statement
-  if (is_ast_select_values(select_core_left)) {
-    // VALUES [values]
-    EXTRACT(values, ast->right);
-    gen_values(values);
-  } else {
-    // SELECT [select_expr_list_con]
-    // We're making sure that we're in the SELECT clause of the select stmt
-    Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
-    gen_printf(" ");
-    EXTRACT_NOTNULL(select_expr_list_con, ast->right);
-    gen_select_expr_list_con(select_expr_list_con);
+    gen_select_statement_type(ast);
+
+    // select_core subtree can be a SELECT or VALUES statement
+    if (is_ast_select_values(select_core_left)) {
+      // VALUES [values]
+      EXTRACT(values, ast->right);
+      gen_values(values);
+    } else {
+      // SELECT [select_expr_list_con]
+      // We're making sure that we're in the SELECT clause of the select stmt
+      Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
+      gen_printf(" ");
+      EXTRACT_NOTNULL(select_expr_list_con, ast->right);
+      gen_select_expr_list_con(select_expr_list_con);
+    }
   }
 }
 
@@ -2895,27 +2904,19 @@ static void gen_with_select_stmt(ast_node *ast) {
 static void gen_select_core_list(ast_node *ast) {
   Contract(is_ast_select_core_list(ast));
 
-  if (is_ast_select_core_macro_ref(ast->left)) {
-    gen_select_core_macro_ref(ast->left);
-  }
-  else if (is_ast_select_core_macro_arg_ref(ast->left)) {
-    gen_select_core_macro_arg_ref(ast->left);
-  }
-  else {
-    EXTRACT_NOTNULL(select_core, ast->left);
+  EXTRACT_ANY_NOTNULL(select_core, ast->left);
 
-    gen_select_core(select_core);
+  gen_select_core(select_core);
 
-    EXTRACT(select_core_compound, ast->right);
-    if (!select_core_compound) {
-      return;
-    }
-    EXTRACT_OPTION(compound_operator, select_core_compound->left);
-    EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
-
-    gen_printf("\n%s\n", get_compound_operator_name(compound_operator));
-    gen_select_core_list(select_core_list);
+  EXTRACT(select_core_compound, ast->right);
+  if (!select_core_compound) {
+    return;
   }
+  EXTRACT_OPTION(compound_operator, select_core_compound->left);
+  EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
+
+  gen_printf("\n%s\n", get_compound_operator_name(compound_operator));
+  gen_select_core_list(select_core_list);
 }
 
 

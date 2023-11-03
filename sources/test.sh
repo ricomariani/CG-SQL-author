@@ -210,17 +210,25 @@ basic_test() {
 }
 
 
-dot_test() {
-  echo '--------------------------------- STAGE 3 -- .DOT OUTPUT TEST'
-  echo running "${TEST_DIR}/dottest.sql"
-  if ! ${CQL} --dot --hide_builtins --in "${TEST_DIR}/dottest.sql" >"${OUT_DIR}/dottest.out"
+macro_test() {
+  echo '--------------------------------- STAGE 3 -- MACRO TEST'
+  echo running macro expansion test
+  if ! ${CQL} --test --exp --ast --hide_builtins --in "${TEST_DIR}/macro_test.sql" >"${OUT_DIR}/macro_test.out" 2>"${OUT_DIR}/macro_test.err"
   then
-    echo DOT syntax test failed
+     echo "CQL macro test returned unexpected error code"
+     cat "${OUT_DIR}/macro_test.err"
+     failed
+  fi
+
+  echo validating output trees
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/macro_test.sql" "${OUT_DIR}/macro_test.out"
+  then
+    echo failed verification
     failed
   fi
 
   echo "  computing diffs (empty if none)"
-  on_diff_exit dottest.out
+  on_diff_exit macro_test.out
 }
 
 semantic_test() {
@@ -1315,6 +1323,20 @@ code_gen_lua_test() {
   on_diff_exit cg_test_lua.err
 }
 
+dot_test() {
+  echo '--------------------------------- STAGE 20 -- .DOT OUTPUT TEST'
+  echo running "${TEST_DIR}/dottest.sql"
+  if ! ${CQL} --dot --hide_builtins --in "${TEST_DIR}/dottest.sql" >"${OUT_DIR}/dottest.out"
+  then
+    echo DOT syntax test failed
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit dottest.out
+}
+
+
 
 GENERATED_TAG=generated
 AT_GENERATED_TAG="@$GENERATED_TAG"
@@ -1340,7 +1362,7 @@ fi
 # each of these will exit if anything goes wrong
 basic_test
 unit_tests
-dot_test
+macro_test
 semantic_test
 code_gen_c_test
 code_gen_objc_test
@@ -1357,6 +1379,7 @@ stats_test
 amalgam_test
 signatures_test
 code_gen_lua_test
+dot_test
 extra_tests
 
 make_clean_msg

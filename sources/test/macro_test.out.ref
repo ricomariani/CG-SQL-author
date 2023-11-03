@@ -1,0 +1,1758 @@
+{stmt_list}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) file_line!()
+BEGIN
+  LET line := @MACRO_LINE;
+  LET file := @MACRO_FILE;
+  LET mline := 34;
+  LET mfile := 'test/macro_test.sql';
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name file_line}
+  | {stmt_list}
+    | {let_stmt}
+    | | {name line}
+    | | {name @MACRO_LINE}
+    | {let_stmt}
+    | | {name file}
+    | | {name @MACRO_FILE}
+    | {let_stmt}
+    | | {name mline}
+    | | {int 34}
+    | {let_stmt}
+      | {name mfile}
+      | {strlit 'test/macro_test.sql'}
+
+The statement ending at line XXXX
+
+LET line := 43;
+
+  {let_stmt}
+  | {name line}
+  | {int 43}
+
+The statement ending at line XXXX
+
+LET file := 'test/macro_test.sql';
+
+  {let_stmt}
+  | {name file}
+  | {strlit 'test/macro_test.sql'}
+
+The statement ending at line XXXX
+
+LET mline := 34;
+
+  {let_stmt}
+  | {name mline}
+  | {int 34}
+
+The statement ending at line XXXX
+
+LET mfile := 'test/macro_test.sql';
+
+  {let_stmt}
+  | {name mfile}
+  | {strlit 'test/macro_test.sql'}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) assert!(e! EXPR)
+BEGIN
+  IF NOT e! THEN
+    CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
+  END IF;
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name assert}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name e}
+  |     | {name EXPR}
+  | {stmt_list}
+    | {if_stmt}
+      | {cond_action}
+      | | {not}
+      | | | {expr_macro_arg_ref}
+      | |   | {name e!}
+      | | {stmt_list}
+      |   | {call_stmt}
+      |     | {name printf}
+      |     | {arg_list}
+      |       | {strlit 'assert ''%s'' failed at line %s:%d
+'}
+      |       | {arg_list}
+      |         | {macro_text}
+      |         | | {text_args}
+      |         |   | {expr_macro_arg_ref}
+      |         |     | {name e!}
+      |         | {arg_list}
+      |           | {name @MACRO_FILE}
+      |           | {arg_list}
+      |             | {name @MACRO_LINE}
+      | {if_alt}
+
+The statement ending at line XXXX
+
+LET zzz := 'begin
+IF NOT 7 THEN
+  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/macro_test.sql'', 65);
+END IF;
+
+foo';
+
+  {let_stmt}
+  | {name zzz}
+  | {strlit 'begin
+IF NOT 7 THEN
+  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/macro_test.sql'', 65);
+END IF;
+
+foo'}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) expr_macro1!(x! EXPR, z! EXPR)
+BEGIN
+  x! + z!
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name expr_macro1}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name x}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |       | {name z}
+  |       | {name EXPR}
+  | {add}
+    | {expr_macro_arg_ref}
+    | | {name x!}
+    | {expr_macro_arg_ref}
+      | {name z!}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) stmt_macro1!(x! EXPR, y! STMT_LIST)
+BEGIN
+  IF x! THEN
+    y!;
+  END IF;
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name stmt_macro1}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name x}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |       | {name y}
+  |       | {name STMT_LIST}
+  | {stmt_list}
+    | {if_stmt}
+      | {cond_action}
+      | | {expr_macro_arg_ref}
+      | | | {name x!}
+      | | {stmt_list}
+      |   | {stmt_list_macro_arg_ref}
+      |     | {name y!}
+      | {if_alt}
+
+The statement ending at line XXXX
+
+DECLARE x_int INTEGER NOT NULL;
+
+  {declare_vars_type}
+  | {name_list}
+  | | {name x_int}
+  | {notnull}
+    | {type_int}
+
+The statement ending at line XXXX
+
+CREATE PROC foo ()
+BEGIN
+  IF 1 THEN
+    CALL printf("hi\n");
+  END IF;
+END;
+
+  {create_proc_stmt}
+  | {name foo}
+  | {proc_params_stmts}
+    | {stmt_list}
+      | {if_stmt}
+        | {cond_action}
+        | | {int 1}
+        | | {stmt_list}
+        |   | {call_stmt}
+        |     | {name printf}
+        |     | {arg_list}
+        |       | {strlit 'hi
+'}
+        | {if_alt}
+
+The statement ending at line XXXX
+
+CREATE TABLE first_table(
+  x INTEGER NOT NULL
+);
+
+  {create_table_stmt}
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name first_table}
+  | {col_key_list}
+    | {col_def}
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name x}
+        | | {type_int}
+        | {col_attrs_not_null}
+
+The statement ending at line XXXX
+
+CREATE TABLE second_table(
+  y INTEGER NOT NULL
+);
+
+  {create_table_stmt}
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name second_table}
+  | {col_key_list}
+    | {col_def}
+      | {col_def_type_attrs}
+        | {col_def_name_type}
+        | | {name y}
+        | | {type_int}
+        | {col_attrs_not_null}
+
+The statement ending at line XXXX
+
+@MACRO(QUERY_PARTS) qp!()
+BEGIN
+  first_table AS T1
+    INNER JOIN second_table AS T2 ON T1.x = T2.y
+END;
+
+  {query_parts_macro_def}
+  | {macro_name_formals}
+  | | {name qp}
+  | {join_clause}
+    | {table_or_subquery}
+    | | {name first_table}
+    | | {opt_as_alias}
+    |   | {name T1}
+    | {join_target_list}
+      | {join_target}
+        | {int 1} {join_inner}
+        | {table_join}
+          | {table_or_subquery}
+          | | {name second_table}
+          | | {opt_as_alias}
+          |   | {name T2}
+          | {join_cond}
+            | {on}
+            | {eq}
+              | {dot}
+              | | {name T1}
+              | | {name x}
+              | {dot}
+                | {name T2}
+                | {name y}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM (first_table AS T1
+  INNER JOIN second_table AS T2 ON T1.x = T2.y)
+  INNER JOIN second_table;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {star}
+  |     | {select_from_etc}
+  |       | {join_clause}
+  |       | | {table_or_subquery}
+  |       | | | {join_clause}
+  |       | |   | {table_or_subquery}
+  |       | |   | | {name first_table}
+  |       | |   | | {opt_as_alias}
+  |       | |   |   | {name T1}
+  |       | |   | {join_target_list}
+  |       | |     | {join_target}
+  |       | |       | {int 1} {join_inner}
+  |       | |       | {table_join}
+  |       | |         | {table_or_subquery}
+  |       | |         | | {name second_table}
+  |       | |         | | {opt_as_alias}
+  |       | |         |   | {name T2}
+  |       | |         | {join_cond}
+  |       | |           | {on}
+  |       | |           | {eq}
+  |       | |             | {dot}
+  |       | |             | | {name T1}
+  |       | |             | | {name x}
+  |       | |             | {dot}
+  |       | |               | {name T2}
+  |       | |               | {name y}
+  |       | | {join_target_list}
+  |       |   | {join_target}
+  |       |     | {int 1} {join_inner}
+  |       |     | {table_join}
+  |       |       | {table_or_subquery}
+  |       |         | {name second_table}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM (first_table AS T1
+  INNER JOIN second_table AS T2 ON T1.x = T2.y) AS T1;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {star}
+  |     | {select_from_etc}
+  |       | {table_or_subquery_list}
+  |       | | {table_or_subquery}
+  |       |   | {join_clause}
+  |       |   | | {table_or_subquery}
+  |       |   | | | {name first_table}
+  |       |   | | | {opt_as_alias}
+  |       |   | |   | {name T1}
+  |       |   | | {join_target_list}
+  |       |   |   | {join_target}
+  |       |   |     | {int 1} {join_inner}
+  |       |   |     | {table_join}
+  |       |   |       | {table_or_subquery}
+  |       |   |       | | {name second_table}
+  |       |   |       | | {opt_as_alias}
+  |       |   |       |   | {name T2}
+  |       |   |       | {join_cond}
+  |       |   |         | {on}
+  |       |   |         | {eq}
+  |       |   |           | {dot}
+  |       |   |           | | {name T1}
+  |       |   |           | | {name x}
+  |       |   |           | {dot}
+  |       |   |             | {name T2}
+  |       |   |             | {name y}
+  |       |   | {opt_as_alias}
+  |       |     | {name T1}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) sel!(e! EXPR, q! QUERY_PARTS)
+BEGIN
+  SELECT e!
+    FROM q! AS Q;
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name sel}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name e}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |       | {name q}
+  |       | {name QUERY_PARTS}
+  | {stmt_list}
+    | {select_stmt}
+      | {select_core_list}
+      | | {select_core}
+      |   | {select_expr_list_con}
+      |     | {select_expr_list}
+      |     | | {select_expr}
+      |     |   | {expr_macro_arg_ref}
+      |     |     | {name e!}
+      |     | {select_from_etc}
+      |       | {table_or_subquery_list}
+      |       | | {table_or_subquery}
+      |       |   | {query_parts_macro_arg_ref}
+      |       |   | | {name q!}
+      |       |   | {opt_as_alias}
+      |       |     | {name Q}
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT x
+  FROM (first_table AS T1
+  INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {select_expr}
+  |     |   | {name x}
+  |     | {select_from_etc}
+  |       | {table_or_subquery_list}
+  |       | | {table_or_subquery}
+  |       |   | {join_clause}
+  |       |   | | {table_or_subquery}
+  |       |   | | | {name first_table}
+  |       |   | | | {opt_as_alias}
+  |       |   | |   | {name T1}
+  |       |   | | {join_target_list}
+  |       |   |   | {join_target}
+  |       |   |     | {int 1} {join_inner}
+  |       |   |     | {table_join}
+  |       |   |       | {table_or_subquery}
+  |       |   |       | | {name second_table}
+  |       |   |       | | {opt_as_alias}
+  |       |   |       |   | {name T2}
+  |       |   |       | {join_cond}
+  |       |   |         | {on}
+  |       |   |         | {eq}
+  |       |   |           | {dot}
+  |       |   |           | | {name T1}
+  |       |   |           | | {name x}
+  |       |   |           | {dot}
+  |       |   |             | {name T2}
+  |       |   |             | {name y}
+  |       |   | {opt_as_alias}
+  |       |     | {name Q}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT x
+  FROM (first_table AS T1
+  INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {select_expr}
+  |     |   | {name x}
+  |     | {select_from_etc}
+  |       | {table_or_subquery_list}
+  |       | | {table_or_subquery}
+  |       |   | {join_clause}
+  |       |   | | {table_or_subquery}
+  |       |   | | | {name first_table}
+  |       |   | | | {opt_as_alias}
+  |       |   | |   | {name T1}
+  |       |   | | {join_target_list}
+  |       |   |   | {join_target}
+  |       |   |     | {int 1} {join_inner}
+  |       |   |     | {table_join}
+  |       |   |       | {table_or_subquery}
+  |       |   |       | | {name second_table}
+  |       |   |       | | {opt_as_alias}
+  |       |   |       |   | {name T2}
+  |       |   |       | {join_cond}
+  |       |   |         | {on}
+  |       |   |         | {eq}
+  |       |   |           | {dot}
+  |       |   |           | | {name T1}
+  |       |   |           | | {name x}
+  |       |   |           | {dot}
+  |       |   |             | {name T2}
+  |       |   |             | {name y}
+  |       |   | {opt_as_alias}
+  |       |     | {name Q}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@MACRO(CTE_TABLES) cte!()
+BEGIN
+  foo (*) AS (SELECT 1 AS x, 2 AS y),
+  bar (*) AS (SELECT 3 AS u, 4 AS v)
+END;
+
+  {cte_tables_macro_def}
+  | {macro_name_formals}
+  | | {name cte}
+  | {cte_tables}
+    | {cte_table}
+    | | {cte_decl}
+    | | | {name foo}
+    | | | {star}
+    | | {select_stmt}
+    |   | {select_core_list}
+    |   | | {select_core}
+    |   |   | {select_expr_list_con}
+    |   |     | {select_expr_list}
+    |   |     | | {select_expr}
+    |   |     | | | {int 1}
+    |   |     | | | {opt_as_alias}
+    |   |     | |   | {name x}
+    |   |     | | {select_expr_list}
+    |   |     |   | {select_expr}
+    |   |     |     | {int 2}
+    |   |     |     | {opt_as_alias}
+    |   |     |       | {name y}
+    |   |     | {select_from_etc}
+    |   |       | {select_where}
+    |   |         | {select_groupby}
+    |   |           | {select_having}
+    |   | {select_orderby}
+    |     | {select_limit}
+    |       | {select_offset}
+    | {cte_tables}
+      | {cte_table}
+        | {cte_decl}
+        | | {name bar}
+        | | {star}
+        | {select_stmt}
+          | {select_core_list}
+          | | {select_core}
+          |   | {select_expr_list_con}
+          |     | {select_expr_list}
+          |     | | {select_expr}
+          |     | | | {int 3}
+          |     | | | {opt_as_alias}
+          |     | |   | {name u}
+          |     | | {select_expr_list}
+          |     |   | {select_expr}
+          |     |     | {int 4}
+          |     |     | {opt_as_alias}
+          |     |       | {name v}
+          |     | {select_from_etc}
+          |       | {select_where}
+          |         | {select_groupby}
+          |           | {select_having}
+          | {select_orderby}
+            | {select_limit}
+              | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+vv (*) AS (SELECT 1 AS x, 2 AS y),
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v),
+uu (*) AS (SELECT 1 AS x, 2 AS y)
+SELECT *
+  FROM foo;
+
+  {with_select_stmt}
+  | {with}
+  | | {cte_tables}
+  |   | {cte_table}
+  |   | | {cte_decl}
+  |   | | | {name vv}
+  |   | | | {star}
+  |   | | {select_stmt}
+  |   |   | {select_core_list}
+  |   |   | | {select_core}
+  |   |   |   | {select_expr_list_con}
+  |   |   |     | {select_expr_list}
+  |   |   |     | | {select_expr}
+  |   |   |     | | | {int 1}
+  |   |   |     | | | {opt_as_alias}
+  |   |   |     | |   | {name x}
+  |   |   |     | | {select_expr_list}
+  |   |   |     |   | {select_expr}
+  |   |   |     |     | {int 2}
+  |   |   |     |     | {opt_as_alias}
+  |   |   |     |       | {name y}
+  |   |   |     | {select_from_etc}
+  |   |   |       | {select_where}
+  |   |   |         | {select_groupby}
+  |   |   |           | {select_having}
+  |   |   | {select_orderby}
+  |   |     | {select_limit}
+  |   |       | {select_offset}
+  |   | {cte_tables}
+  |     | {cte_table}
+  |     | | {cte_decl}
+  |     | | | {name foo}
+  |     | | | {star}
+  |     | | {select_stmt}
+  |     |   | {select_core_list}
+  |     |   | | {select_core}
+  |     |   |   | {select_expr_list_con}
+  |     |   |     | {select_expr_list}
+  |     |   |     | | {select_expr}
+  |     |   |     | | | {int 1}
+  |     |   |     | | | {opt_as_alias}
+  |     |   |     | |   | {name x}
+  |     |   |     | | {select_expr_list}
+  |     |   |     |   | {select_expr}
+  |     |   |     |     | {int 2}
+  |     |   |     |     | {opt_as_alias}
+  |     |   |     |       | {name y}
+  |     |   |     | {select_from_etc}
+  |     |   |       | {select_where}
+  |     |   |         | {select_groupby}
+  |     |   |           | {select_having}
+  |     |   | {select_orderby}
+  |     |     | {select_limit}
+  |     |       | {select_offset}
+  |     | {cte_tables}
+  |       | {cte_table}
+  |       | | {cte_decl}
+  |       | | | {name bar}
+  |       | | | {star}
+  |       | | {select_stmt}
+  |       |   | {select_core_list}
+  |       |   | | {select_core}
+  |       |   |   | {select_expr_list_con}
+  |       |   |     | {select_expr_list}
+  |       |   |     | | {select_expr}
+  |       |   |     | | | {int 3}
+  |       |   |     | | | {opt_as_alias}
+  |       |   |     | |   | {name u}
+  |       |   |     | | {select_expr_list}
+  |       |   |     |   | {select_expr}
+  |       |   |     |     | {int 4}
+  |       |   |     |     | {opt_as_alias}
+  |       |   |     |       | {name v}
+  |       |   |     | {select_from_etc}
+  |       |   |       | {select_where}
+  |       |   |         | {select_groupby}
+  |       |   |           | {select_having}
+  |       |   | {select_orderby}
+  |       |     | {select_limit}
+  |       |       | {select_offset}
+  |       | {cte_tables}
+  |         | {cte_table}
+  |           | {cte_decl}
+  |           | | {name uu}
+  |           | | {star}
+  |           | {select_stmt}
+  |             | {select_core_list}
+  |             | | {select_core}
+  |             |   | {select_expr_list_con}
+  |             |     | {select_expr_list}
+  |             |     | | {select_expr}
+  |             |     | | | {int 1}
+  |             |     | | | {opt_as_alias}
+  |             |     | |   | {name x}
+  |             |     | | {select_expr_list}
+  |             |     |   | {select_expr}
+  |             |     |     | {int 2}
+  |             |     |     | {opt_as_alias}
+  |             |     |       | {name y}
+  |             |     | {select_from_etc}
+  |             |       | {select_where}
+  |             |         | {select_groupby}
+  |             |           | {select_having}
+  |             | {select_orderby}
+  |               | {select_limit}
+  |                 | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v),
+uu (*) AS (SELECT 1 AS x, 2 AS y)
+SELECT *
+  FROM foo;
+
+  {with_select_stmt}
+  | {with}
+  | | {cte_tables}
+  |   | {cte_table}
+  |   | | {cte_decl}
+  |   | | | {name foo}
+  |   | | | {star}
+  |   | | {select_stmt}
+  |   |   | {select_core_list}
+  |   |   | | {select_core}
+  |   |   |   | {select_expr_list_con}
+  |   |   |     | {select_expr_list}
+  |   |   |     | | {select_expr}
+  |   |   |     | | | {int 1}
+  |   |   |     | | | {opt_as_alias}
+  |   |   |     | |   | {name x}
+  |   |   |     | | {select_expr_list}
+  |   |   |     |   | {select_expr}
+  |   |   |     |     | {int 2}
+  |   |   |     |     | {opt_as_alias}
+  |   |   |     |       | {name y}
+  |   |   |     | {select_from_etc}
+  |   |   |       | {select_where}
+  |   |   |         | {select_groupby}
+  |   |   |           | {select_having}
+  |   |   | {select_orderby}
+  |   |     | {select_limit}
+  |   |       | {select_offset}
+  |   | {cte_tables}
+  |     | {cte_table}
+  |     | | {cte_decl}
+  |     | | | {name bar}
+  |     | | | {star}
+  |     | | {select_stmt}
+  |     |   | {select_core_list}
+  |     |   | | {select_core}
+  |     |   |   | {select_expr_list_con}
+  |     |   |     | {select_expr_list}
+  |     |   |     | | {select_expr}
+  |     |   |     | | | {int 3}
+  |     |   |     | | | {opt_as_alias}
+  |     |   |     | |   | {name u}
+  |     |   |     | | {select_expr_list}
+  |     |   |     |   | {select_expr}
+  |     |   |     |     | {int 4}
+  |     |   |     |     | {opt_as_alias}
+  |     |   |     |       | {name v}
+  |     |   |     | {select_from_etc}
+  |     |   |       | {select_where}
+  |     |   |         | {select_groupby}
+  |     |   |           | {select_having}
+  |     |   | {select_orderby}
+  |     |     | {select_limit}
+  |     |       | {select_offset}
+  |     | {cte_tables}
+  |       | {cte_table}
+  |         | {cte_decl}
+  |         | | {name uu}
+  |         | | {star}
+  |         | {select_stmt}
+  |           | {select_core_list}
+  |           | | {select_core}
+  |           |   | {select_expr_list_con}
+  |           |     | {select_expr_list}
+  |           |     | | {select_expr}
+  |           |     | | | {int 1}
+  |           |     | | | {opt_as_alias}
+  |           |     | |   | {name x}
+  |           |     | | {select_expr_list}
+  |           |     |   | {select_expr}
+  |           |     |     | {int 2}
+  |           |     |     | {opt_as_alias}
+  |           |     |       | {name y}
+  |           |     | {select_from_etc}
+  |           |       | {select_where}
+  |           |         | {select_groupby}
+  |           |           | {select_having}
+  |           | {select_orderby}
+  |             | {select_limit}
+  |               | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v)
+SELECT *
+  FROM foo;
+
+  {with_select_stmt}
+  | {with}
+  | | {cte_tables}
+  |   | {cte_table}
+  |   | | {cte_decl}
+  |   | | | {name foo}
+  |   | | | {star}
+  |   | | {select_stmt}
+  |   |   | {select_core_list}
+  |   |   | | {select_core}
+  |   |   |   | {select_expr_list_con}
+  |   |   |     | {select_expr_list}
+  |   |   |     | | {select_expr}
+  |   |   |     | | | {int 1}
+  |   |   |     | | | {opt_as_alias}
+  |   |   |     | |   | {name x}
+  |   |   |     | | {select_expr_list}
+  |   |   |     |   | {select_expr}
+  |   |   |     |     | {int 2}
+  |   |   |     |     | {opt_as_alias}
+  |   |   |     |       | {name y}
+  |   |   |     | {select_from_etc}
+  |   |   |       | {select_where}
+  |   |   |         | {select_groupby}
+  |   |   |           | {select_having}
+  |   |   | {select_orderby}
+  |   |     | {select_limit}
+  |   |       | {select_offset}
+  |   | {cte_tables}
+  |     | {cte_table}
+  |       | {cte_decl}
+  |       | | {name bar}
+  |       | | {star}
+  |       | {select_stmt}
+  |         | {select_core_list}
+  |         | | {select_core}
+  |         |   | {select_expr_list_con}
+  |         |     | {select_expr_list}
+  |         |     | | {select_expr}
+  |         |     | | | {int 3}
+  |         |     | | | {opt_as_alias}
+  |         |     | |   | {name u}
+  |         |     | | {select_expr_list}
+  |         |     |   | {select_expr}
+  |         |     |     | {int 4}
+  |         |     |     | {opt_as_alias}
+  |         |     |       | {name v}
+  |         |     | {select_from_etc}
+  |         |       | {select_where}
+  |         |         | {select_groupby}
+  |         |           | {select_having}
+  |         | {select_orderby}
+  |           | {select_limit}
+  |             | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+vv (*) AS (SELECT 1 AS x, 2 AS y),
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v)
+SELECT *
+  FROM foo;
+
+  {with_select_stmt}
+  | {with}
+  | | {cte_tables}
+  |   | {cte_table}
+  |   | | {cte_decl}
+  |   | | | {name vv}
+  |   | | | {star}
+  |   | | {select_stmt}
+  |   |   | {select_core_list}
+  |   |   | | {select_core}
+  |   |   |   | {select_expr_list_con}
+  |   |   |     | {select_expr_list}
+  |   |   |     | | {select_expr}
+  |   |   |     | | | {int 1}
+  |   |   |     | | | {opt_as_alias}
+  |   |   |     | |   | {name x}
+  |   |   |     | | {select_expr_list}
+  |   |   |     |   | {select_expr}
+  |   |   |     |     | {int 2}
+  |   |   |     |     | {opt_as_alias}
+  |   |   |     |       | {name y}
+  |   |   |     | {select_from_etc}
+  |   |   |       | {select_where}
+  |   |   |         | {select_groupby}
+  |   |   |           | {select_having}
+  |   |   | {select_orderby}
+  |   |     | {select_limit}
+  |   |       | {select_offset}
+  |   | {cte_tables}
+  |     | {cte_table}
+  |     | | {cte_decl}
+  |     | | | {name foo}
+  |     | | | {star}
+  |     | | {select_stmt}
+  |     |   | {select_core_list}
+  |     |   | | {select_core}
+  |     |   |   | {select_expr_list_con}
+  |     |   |     | {select_expr_list}
+  |     |   |     | | {select_expr}
+  |     |   |     | | | {int 1}
+  |     |   |     | | | {opt_as_alias}
+  |     |   |     | |   | {name x}
+  |     |   |     | | {select_expr_list}
+  |     |   |     |   | {select_expr}
+  |     |   |     |     | {int 2}
+  |     |   |     |     | {opt_as_alias}
+  |     |   |     |       | {name y}
+  |     |   |     | {select_from_etc}
+  |     |   |       | {select_where}
+  |     |   |         | {select_groupby}
+  |     |   |           | {select_having}
+  |     |   | {select_orderby}
+  |     |     | {select_limit}
+  |     |       | {select_offset}
+  |     | {cte_tables}
+  |       | {cte_table}
+  |         | {cte_decl}
+  |         | | {name bar}
+  |         | | {star}
+  |         | {select_stmt}
+  |           | {select_core_list}
+  |           | | {select_core}
+  |           |   | {select_expr_list_con}
+  |           |     | {select_expr_list}
+  |           |     | | {select_expr}
+  |           |     | | | {int 3}
+  |           |     | | | {opt_as_alias}
+  |           |     | |   | {name u}
+  |           |     | | {select_expr_list}
+  |           |     |   | {select_expr}
+  |           |     |     | {int 4}
+  |           |     |     | {opt_as_alias}
+  |           |     |       | {name v}
+  |           |     | {select_from_etc}
+  |           |       | {select_where}
+  |           |         | {select_groupby}
+  |           |           | {select_having}
+  |           | {select_orderby}
+  |             | {select_limit}
+  |               | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) query!(u! CTE_TABLES)
+BEGIN
+  WITH
+  u!
+  SELECT *
+    FROM foo;
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name query}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name u}
+  |     | {name CTE_TABLES}
+  | {stmt_list}
+    | {with_select_stmt}
+      | {with}
+      | | {cte_tables}
+      |   | {cte_tables_macro_arg_ref}
+      |     | {name u!}
+      | {select_stmt}
+        | {select_core_list}
+        | | {select_core}
+        |   | {select_expr_list_con}
+        |     | {select_expr_list}
+        |     | | {star}
+        |     | {select_from_etc}
+        |       | {table_or_subquery_list}
+        |       | | {table_or_subquery}
+        |       |   | {name foo}
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+WITH
+foo (*) AS (SELECT 100 AS x, 200 AS y)
+SELECT *
+  FROM foo;
+
+  {with_select_stmt}
+  | {with}
+  | | {cte_tables}
+  |   | {cte_table}
+  |     | {cte_decl}
+  |     | | {name foo}
+  |     | | {star}
+  |     | {select_stmt}
+  |       | {select_core_list}
+  |       | | {select_core}
+  |       |   | {select_expr_list_con}
+  |       |     | {select_expr_list}
+  |       |     | | {select_expr}
+  |       |     | | | {int 100}
+  |       |     | | | {opt_as_alias}
+  |       |     | |   | {name x}
+  |       |     | | {select_expr_list}
+  |       |     |   | {select_expr}
+  |       |     |     | {int 200}
+  |       |     |     | {opt_as_alias}
+  |       |     |       | {name y}
+  |       |     | {select_from_etc}
+  |       |       | {select_where}
+  |       |         | {select_groupby}
+  |       |           | {select_having}
+  |       | {select_orderby}
+  |         | {select_limit}
+  |           | {select_offset}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {star}
+    |     | {select_from_etc}
+    |       | {table_or_subquery_list}
+    |       | | {table_or_subquery}
+    |       |   | {name foo}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+@MACRO(SELECT_CORE) selcor!(x! EXPR)
+BEGIN
+  SELECT x! + 1 AS x
+  UNION ALL
+  SELECT x! + 2 AS x
+END;
+
+  {select_core_macro_def}
+  | {macro_name_formals}
+  | | {name selcor}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name x}
+  |     | {name EXPR}
+  | {select_core_list}
+    | {select_core}
+    | | {select_expr_list_con}
+    |   | {select_expr_list}
+    |   | | {select_expr}
+    |   |   | {add}
+    |   |   | | {expr_macro_arg_ref}
+    |   |   | | | {name x!}
+    |   |   | | {int 1}
+    |   |   | {opt_as_alias}
+    |   |     | {name x}
+    |   | {select_from_etc}
+    |     | {select_where}
+    |       | {select_groupby}
+    |         | {select_having}
+    | {select_core_compound}
+      | {int 2}
+      | {select_core_list}
+        | {select_core}
+          | {select_expr_list_con}
+            | {select_expr_list}
+            | | {select_expr}
+            |   | {add}
+            |   | | {expr_macro_arg_ref}
+            |   | | | {name x!}
+            |   | | {int 2}
+            |   | {opt_as_alias}
+            |     | {name x}
+            | {select_from_etc}
+              | {select_where}
+                | {select_groupby}
+                  | {select_having}
+
+The statement ending at line XXXX
+
+@MACRO(SELECT_CORE) selcor2!(x! SELECT_CORE, y! SELECT_CORE)
+BEGIN
+  x!
+  UNION ALL
+  y!
+END;
+
+  {select_core_macro_def}
+  | {macro_name_formals}
+  | | {name selcor2}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name x}
+  |   | | {name SELECT_CORE}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |       | {name y}
+  |       | {name SELECT_CORE}
+  | {select_core_list}
+    | {select_core_macro_arg_ref}
+    | | {name x!}
+    | {select_core_compound}
+      | {int 2}
+      | {select_core_list}
+        | {select_core_macro_arg_ref}
+          | {name y!}
+
+The statement ending at line XXXX
+
+SELECT 5 + 1 AS x
+UNION ALL
+SELECT 5 + 2 AS x
+UNION ALL
+SELECT 50 + 1 AS x
+UNION ALL
+SELECT 50 + 2 AS x;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  | | | {select_expr_list_con}
+  | |   | {select_expr_list}
+  | |   | | {select_expr}
+  | |   |   | {add}
+  | |   |   | | {int 5}
+  | |   |   | | {int 1}
+  | |   |   | {opt_as_alias}
+  | |   |     | {name x}
+  | |   | {select_from_etc}
+  | |     | {select_where}
+  | |       | {select_groupby}
+  | |         | {select_having}
+  | | {select_core_compound}
+  |   | {int 2}
+  |   | {select_core_list}
+  |     | {select_core}
+  |     | | {select_expr_list_con}
+  |     |   | {select_expr_list}
+  |     |   | | {select_expr}
+  |     |   |   | {add}
+  |     |   |   | | {int 5}
+  |     |   |   | | {int 2}
+  |     |   |   | {opt_as_alias}
+  |     |   |     | {name x}
+  |     |   | {select_from_etc}
+  |     |     | {select_where}
+  |     |       | {select_groupby}
+  |     |         | {select_having}
+  |     | {select_core_compound}
+  |       | {int 2}
+  |       | {select_core_list}
+  |         | {select_core}
+  |         | | {select_expr_list_con}
+  |         |   | {select_expr_list}
+  |         |   | | {select_expr}
+  |         |   |   | {add}
+  |         |   |   | | {int 50}
+  |         |   |   | | {int 1}
+  |         |   |   | {opt_as_alias}
+  |         |   |     | {name x}
+  |         |   | {select_from_etc}
+  |         |     | {select_where}
+  |         |       | {select_groupby}
+  |         |         | {select_having}
+  |         | {select_core_compound}
+  |           | {int 2}
+  |           | {select_core_list}
+  |             | {select_core}
+  |               | {select_expr_list_con}
+  |                 | {select_expr_list}
+  |                 | | {select_expr}
+  |                 |   | {add}
+  |                 |   | | {int 50}
+  |                 |   | | {int 2}
+  |                 |   | {opt_as_alias}
+  |                 |     | {name x}
+  |                 | {select_from_etc}
+  |                   | {select_where}
+  |                     | {select_groupby}
+  |                       | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@MACRO(SELECT_EXPR) se!(x! SELECT_EXPR)
+BEGIN
+  x!, x!
+END;
+
+  {select_expr_macro_def}
+  | {macro_name_formals}
+  | | {name se}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name x}
+  |     | {name SELECT_EXPR}
+  | {select_expr_list}
+    | {select_expr_macro_arg_ref}
+    | | {name x!}
+    | {select_expr_list}
+      | {select_expr_macro_arg_ref}
+        | {name x!}
+
+The statement ending at line XXXX
+
+@MACRO(SELECT_EXPR) se2!(x! SELECT_EXPR)
+BEGIN
+  se!(SELECT(x!))
+END;
+
+  {select_expr_macro_def}
+  | {macro_name_formals}
+  | | {name se2}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name x}
+  |     | {name SELECT_EXPR}
+  | {select_expr_list}
+    | {select_expr_macro_ref}
+      | {name se!}
+      | {macro_args}
+        | {select_expr_macro_arg}
+          | {select_expr_list}
+            | {select_expr_macro_arg_ref}
+              | {name x!}
+
+The statement ending at line XXXX
+
+SELECT x + 2 AS z, x + 2 AS z;
+
+  {select_stmt}
+  | {select_core_list}
+  | | {select_core}
+  |   | {select_expr_list_con}
+  |     | {select_expr_list}
+  |     | | {select_expr}
+  |     | | | {add}
+  |     | | | | {name x}
+  |     | | | | {int 2}
+  |     | | | {opt_as_alias}
+  |     | |   | {name z}
+  |     | | {select_expr_list}
+  |     |   | {select_expr}
+  |     |     | {add}
+  |     |     | | {name x}
+  |     |     | | {int 2}
+  |     |     | {opt_as_alias}
+  |     |       | {name z}
+  |     | {select_from_etc}
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro1!(u! EXPR)
+BEGIN
+  u! + u! + 1
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro1}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name u}
+  |     | {name EXPR}
+  | {add}
+    | {add}
+    | | {expr_macro_arg_ref}
+    | | | {name u!}
+    | | {expr_macro_arg_ref}
+    |   | {name u!}
+    | {int 1}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro2!(u! EXPR, v! EXPR)
+BEGIN
+  u! * macro1!(v! + 5)
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro2}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name u}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |       | {name v}
+  |       | {name EXPR}
+  | {mul}
+    | {expr_macro_arg_ref}
+    | | {name u!}
+    | {expr_macro_ref}
+      | {name macro1!}
+      | {macro_args}
+        | {expr_macro_arg}
+          | {add}
+            | {expr_macro_arg_ref}
+            | | {name v!}
+            | {int 5}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro3!(q! QUERY_PARTS)
+BEGIN
+  @TEXT(q!)
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro3}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name q}
+  |     | {name QUERY_PARTS}
+  | {macro_text}
+    | {text_args}
+      | {query_parts_macro_arg_ref}
+        | {name q!}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro4!(q! CTE_TABLES)
+BEGIN
+  @TEXT(q!)
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro4}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name q}
+  |     | {name CTE_TABLES}
+  | {macro_text}
+    | {text_args}
+      | {cte_tables_macro_arg_ref}
+        | {name q!}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro5!(q! SELECT_CORE)
+BEGIN
+  @TEXT(q!)
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro5}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name q}
+  |     | {name SELECT_CORE}
+  | {macro_text}
+    | {text_args}
+      | {select_core_macro_arg_ref}
+        | {name q!}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro6!(q! EXPR)
+BEGIN
+  @TEXT(q!)
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro6}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name q}
+  |     | {name EXPR}
+  | {macro_text}
+    | {text_args}
+      | {expr_macro_arg_ref}
+        | {name q!}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) macro7!(q! SELECT_EXPR)
+BEGIN
+  @TEXT(q!)
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name macro7}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |     | {name q}
+  |     | {name SELECT_EXPR}
+  | {macro_text}
+    | {text_args}
+      | {select_expr_macro_arg_ref}
+        | {name q!}
+
+The statement ending at line XXXX
+
+LET x := 1;
+
+  {let_stmt}
+  | {name x}
+  | {int 1}
+
+The statement ending at line XXXX
+
+LET y := 2;
+
+  {let_stmt}
+  | {name y}
+  | {int 2}
+
+The statement ending at line XXXX
+
+LET z := x * (y + 5 + (y + 5) + 1);
+
+  {let_stmt}
+  | {name z}
+  | {mul}
+    | {name x}
+    | {add}
+      | {add}
+      | | {add}
+      | | | {name y}
+      | | | {int 5}
+      | | {add}
+      |   | {name y}
+      |   | {int 5}
+      | {int 1}
+
+The statement ending at line XXXX
+
+LET zz := '(SELECT 1 AS x, 2 AS y) AS T';
+
+  {let_stmt}
+  | {name zz}
+  | {strlit '(SELECT 1 AS x, 2 AS y) AS T'}
+
+The statement ending at line XXXX
+
+SET zz := 'T1
+  INNER JOIN T2 ON T1.id = T2.id';
+
+  {assign}
+  | {name zz}
+  | {strlit 'T1
+  INNER JOIN T2 ON T1.id = T2.id'}
+
+The statement ending at line XXXX
+
+SET zz := 'x (*) AS (SELECT 1 AS x, 2 AS y)
+';
+
+  {assign}
+  | {name zz}
+  | {strlit 'x (*) AS (SELECT 1 AS x, 2 AS y)
+'}
+
+The statement ending at line XXXX
+
+SET zz := 'SELECT 1 AS x
+  FROM foo';
+
+  {assign}
+  | {name zz}
+  | {strlit 'SELECT 1 AS x
+  FROM foo'}
+
+The statement ending at line XXXX
+
+SET zz := '1 + 2';
+
+  {assign}
+  | {name zz}
+  | {strlit '1 + 2'}
+
+The statement ending at line XXXX
+
+SET zz := '1 AS x, 2 AS y';
+
+  {assign}
+  | {name zz}
+  | {strlit '1 AS x, 2 AS y'}
+
+The statement ending at line XXXX
+
+SET x := 5;
+
+  {assign}
+  | {name x}
+  | {int 5}
+
+The statement ending at line XXXX
+
+LET uv := 5;
+
+  {let_stmt}
+  | {name uv}
+  | {int 5}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) mondo1!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  SET zz := @TEXT(a!, b!, c!, d!, e!, f!);
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name mondo1}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name a}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |     | | {name b}
+  |     | | {name QUERY_PARTS}
+  |     | {macro_formals}
+  |       | {macro_formal}
+  |       | | {name c}
+  |       | | {name SELECT_CORE}
+  |       | {macro_formals}
+  |         | {macro_formal}
+  |         | | {name d}
+  |         | | {name SELECT_EXPR}
+  |         | {macro_formals}
+  |           | {macro_formal}
+  |           | | {name e}
+  |           | | {name CTE_TABLES}
+  |           | {macro_formals}
+  |             | {macro_formal}
+  |               | {name f}
+  |               | {name STMT_LIST}
+  | {stmt_list}
+    | {assign}
+      | {name zz}
+      | {macro_text}
+        | {text_args}
+          | {expr_macro_arg_ref}
+          | | {name a!}
+          | {text_args}
+            | {query_parts_macro_arg_ref}
+            | | {name b!}
+            | {text_args}
+              | {select_core_macro_arg_ref}
+              | | {name c!}
+              | {text_args}
+                | {select_expr_macro_arg_ref}
+                | | {name d!}
+                | {text_args}
+                  | {cte_tables_macro_arg_ref}
+                  | | {name e!}
+                  | {text_args}
+                    | {stmt_list_macro_arg_ref}
+                      | {name f!}
+
+The statement ending at line XXXX
+
+@MACRO(STMT_LIST) mondo2!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  mondo1!(a!, FROM(b!), ALL(c!), SELECT(d!), WITH(
+    e!
+  ), 
+  BEGIN
+    f!;
+  END);
+END;
+
+  {stmt_list_macro_def}
+  | {macro_name_formals}
+  | | {name mondo2}
+  | | {macro_formals}
+  |   | {macro_formal}
+  |   | | {name a}
+  |   | | {name EXPR}
+  |   | {macro_formals}
+  |     | {macro_formal}
+  |     | | {name b}
+  |     | | {name QUERY_PARTS}
+  |     | {macro_formals}
+  |       | {macro_formal}
+  |       | | {name c}
+  |       | | {name SELECT_CORE}
+  |       | {macro_formals}
+  |         | {macro_formal}
+  |         | | {name d}
+  |         | | {name SELECT_EXPR}
+  |         | {macro_formals}
+  |           | {macro_formal}
+  |           | | {name e}
+  |           | | {name CTE_TABLES}
+  |           | {macro_formals}
+  |             | {macro_formal}
+  |               | {name f}
+  |               | {name STMT_LIST}
+  | {stmt_list}
+    | {stmt_list_macro_ref}
+      | {name mondo1!}
+      | {macro_args}
+        | {expr_macro_arg}
+        | | {expr_macro_arg_ref}
+        |   | {name a!}
+        | {macro_args}
+          | {query_parts_macro_arg}
+          | | {query_parts_macro_arg_ref}
+          |   | {name b!}
+          | {macro_args}
+            | {select_core_macro_arg}
+            | | {select_core_list}
+            |   | {select_core_macro_arg_ref}
+            |     | {name c!}
+            | {macro_args}
+              | {select_expr_macro_arg}
+              | | {select_expr_list}
+              |   | {select_expr_macro_arg_ref}
+              |     | {name d!}
+              | {macro_args}
+                | {cte_tables_macro_arg}
+                | | {cte_tables}
+                |   | {cte_tables_macro_arg_ref}
+                |     | {name e!}
+                | {macro_args}
+                  | {stmt_list_macro_arg}
+                    | {stmt_list}
+                      | {stmt_list_macro_arg_ref}
+                        | {name f!}
+
+The statement ending at line XXXX
+
+SET zz := '1 + 2x
+  INNER JOIN ySELECT 1
+  FROM foo
+UNION
+SELECT 2
+  FROM bar20 AS first_tablef (*) AS (SELECT 99
+  FROM second_table)
+LET qq := 201;
+';
+
+  {assign}
+  | {name zz}
+  | {strlit '1 + 2x
+  INNER JOIN ySELECT 1
+  FROM foo
+UNION
+SELECT 2
+  FROM bar20 AS first_tablef (*) AS (SELECT 99
+  FROM second_table)
+LET qq := 201;
+'}
+
+The statement ending at line XXXX
+
+@MACRO(EXPR) a_selection!()
+BEGIN
+  ( SELECT 1 + 5 )
+END;
+
+  {expr_macro_def}
+  | {macro_name_formals}
+  | | {name a_selection}
+  | {select_stmt}
+    | {select_core_list}
+    | | {select_core}
+    |   | {select_expr_list_con}
+    |     | {select_expr_list}
+    |     | | {select_expr}
+    |     |   | {add}
+    |     |     | {int 1}
+    |     |     | {int 5}
+    |     | {select_from_etc}
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET x := '( SELECT 1 + 5 )';
+
+  {let_stmt}
+  | {name x}
+  | {strlit '( SELECT 1 + 5 )'}
+

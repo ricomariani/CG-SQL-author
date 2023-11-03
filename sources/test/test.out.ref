@@ -2047,6 +2047,8 @@ END;
 @MACRO(SELECT_CORE) selcor2!(x! SELECT_CORE)
 BEGIN
   x!
+  UNION ALL
+  x!
 END;
 
 selcor2!(ALL(selcor!(5)));

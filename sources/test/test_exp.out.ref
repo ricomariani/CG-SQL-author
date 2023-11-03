@@ -2056,6 +2056,8 @@ END;
 @MACRO(SELECT_CORE) selcor2!(x! SELECT_CORE)
 BEGIN
   x!
+  UNION ALL
+  x!
 END;
 
 SELECT 5 + 1 AS x

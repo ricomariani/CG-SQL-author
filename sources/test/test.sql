@@ -1946,7 +1946,7 @@ end;
 mondo2!(1+2, from(x join y), all(select 1 from foo union select 2 from bar), select(20 xx), 
   with(f(*) as (select 99 from yy)), begin let qq := 201; end);
 
--- unsure these are ok to use as identifiers
+-- make sure these are ok to use as identifiers
 let expr := 1;
 let stmt_list := 2;
 let query_parts := 3;

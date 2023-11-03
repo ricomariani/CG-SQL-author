@@ -30,7 +30,7 @@ begin
 
   value := ifnull(
   case
-    when task_id < 0 or task_id > names.count then null
+    when task_id < 0 or task_id >= names.count then null
     when field == "name" then names[task_id]
     when field == "notes" then notes[task_id]
   end, "unknown");
@@ -42,7 +42,7 @@ begin
   let names := ifnull_throw(_names);
   let notes := ifnull_throw(_notes);
 
-  if task_id < 0 or task_id > names.count return;
+  if task_id < 0 or task_id >= names.count return;
 
   if field == "name" then
      names[task_id] := value;

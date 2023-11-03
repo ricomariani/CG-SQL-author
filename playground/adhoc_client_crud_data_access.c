@@ -14,13 +14,6 @@
   #define SQLITE_FILE_PATH_ABSOLUTE ":memory:"
 #endif
 
-#ifndef CQL_TRACING_ENABLED
-#define cql_error_trace()
-#else
-#define cql_error_trace() \
-  fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
-#endif
-
 // super cheesy error handling
 #define _E(c, x) if (!(c)) { \
   printf("!" #x "%s:%d\n", __FILE__, __LINE__); \

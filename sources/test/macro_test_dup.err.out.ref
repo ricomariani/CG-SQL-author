@@ -1,0 +1,2 @@
+test/macro_test_dup_arg.sql:XXXX:1: error: macro argument already exists 'e'.
+Parse errors found, no further passes will run.

@@ -319,3 +319,6 @@ RS_EQ                                 { put_quoted(">>="); }
 
 .                                     { putc(*yytext, stdout); }
 '.'                                   { printf("'%c'", yytext[1]); }
+
+[a-zA-Z_][a-zA-Z_0-9]*                { printf("%s", yytext); }
+

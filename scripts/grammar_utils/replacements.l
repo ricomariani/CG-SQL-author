@@ -66,6 +66,7 @@ CONTINUE                              { put_quoted("CONTINUE"); }
 CREATE                                { put_quoted("CREATE"); }
 CROSS                                 { put_quoted("CROSS"); }
 CSTRLIT                               { put_quoted("c-string-literal"); }
+CTE_TABLES                            { put_quoted("CTE_TABLES"); }
 CURSOR                                { put_quoted("CURSOR"); }
 DECLARE                               { put_quoted("DECLARE"); }
 DEFAULT                               { put_quoted("DEFAULT"); }
@@ -177,6 +178,8 @@ ROWID                                 { put_quoted("ROWID"); }
 ROWS                                  { put_quoted("ROWS"); }
 SAVEPOINT                             { put_quoted("SAVEPOINT"); }
 SELECT                                { put_quoted("SELECT"); }
+SELECT_CORE                           { put_quoted("SELECT_CORE"); }
+SELECT_EXPR                           { put_quoted("SELECT_EXPR"); }
 SET                                   { put_quoted("SET"); }
 STATEMENT                             { put_quoted("STATEMENT"); }
 STRLIT                                { put_quoted("sql-string-literal"); }
@@ -240,6 +243,11 @@ AT_ENFORCE_RESET                      { put_quoted("@ENFORCE_RESET"); }
 AT_ENFORCE_STRICT                     { put_quoted("@ENFORCE_STRICT"); }
 AT_EPONYMOUS                          { put_quoted("@EPONYMOUS"); }
 AT_FILE                               { put_quoted("@FILE"); }
+AT_ID                                 { put_quoted("@ID"); }
+AT_LINE                               { put_quoted("@LINE"); }
+AT_MACRO                              { put_quoted("@MACRO"); }
+AT_MACRO_FILE                         { put_quoted("@MACRO_FILE"); }
+AT_MACRO_LINE                         { put_quoted("@MACRO_LINE"); }
 AT_PREVIOUS_SCHEMA                    { put_quoted("@PREVIOUS_SCHEMA"); }
 AT_PROC                               { put_quoted("@PROC"); }
 AT_RC                                 { put_quoted("@RC"); }
@@ -248,9 +256,9 @@ AT_SCHEMA_AD_HOC_MIGRATION            { put_quoted("@SCHEMA_AD_HOC_MIGRATION"); 
 AT_SCHEMA_UPGRADE_SCRIPT              { put_quoted("@SCHEMA_UPGRADE_SCRIPT"); }
 AT_SCHEMA_UPGRADE_VERSION             { put_quoted("@SCHEMA_UPGRADE_VERSION"); }
 AT_SENSITIVE                          { put_quoted("@SENSITIVE"); }
+AT_TEXT                               { put_quoted("@TEXT"); }
 AT_UNSUB                              { put_quoted("@UNSUB"); }
 AT_KEEP_TABLE_NAME_IN_ALIASES         { put_quoted("@KEEP_TABLE_NAME_IN_ALIASES"); }
-AT_MACRO                              { put_quoted("@MACRO"); }
 EXPR                                  { put_quoted("EXPR"); }
 STMT_LIST                             { put_quoted("STMT_LIST"); }
 QUERY_PARTS                           { put_quoted("QUERY_PARTS"); }

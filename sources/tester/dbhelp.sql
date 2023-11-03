@@ -19,6 +19,10 @@
 @echo c, "//\n";
 @echo c, "\n";
 
+
+@echo c, "#undef cql_error_trace\n";
+@echo c, "#define cql_error_trace() fprintf(stderr, \"SQL Failure %d %s: %s %d\\n\", _rc_, sqlite3_errmsg(_db_), __FILE__, __LINE__)\n";
+
 declare proc printf no check;
 
 -- setup the table and the index
@@ -86,7 +90,15 @@ begin
 
      We need to find the number of a line in the test output that has been charged to an input line greater than the one we are on.
   */
-  set search_line := (select line from test_output where line >= line_ limit 1);
+  begin try
+    set search_line := (select line from test_output where line >= line_ limit 1);
+  end try;
+  begin catch
+    call printf("no lines come after %d\n", line_);
+    call printf("available test output lines: %d\n", (select count(*) from test_output));
+    call printf("max line number: %d\n", (select max(line) from test_output));
+    throw;
+  end catch;
 
   -- once we have it, search for matches on that line and return the number we found
   set found := (select count(*) from test_output where line = search_line and data like pattern);

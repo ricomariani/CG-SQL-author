@@ -73,6 +73,12 @@ static void gen_conflict_clause(ast_node *ast);
 static void gen_call_stmt(ast_node *ast);
 static void gen_shared_cte(ast_node *ast);
 static bool_t gen_found_set_kind(ast_node *ast, void *context, charbuf *buffer);
+static void gen_cte_tables(ast_node *ast, CSTR prefix);
+static void gen_select_expr_list(ast_node *ast);
+static void gen_select_expr_macro_ref(ast_node *ast);
+static void gen_select_expr_macro_arg_ref(ast_node *ast);
+static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
+static void gen_select_expr(ast_node *ast);
 
 #define gen_printf(...) bprintf(output, __VA_ARGS__)
 
@@ -156,6 +162,11 @@ static void gen_name_ex(CSTR name, bool_t is_qid) {
 }
 
 static void gen_name(ast_node *ast) {
+  if (is_ast_at_id(ast)) {
+    gen_expr_at_id(ast, "", 0, 0);
+    return;
+  }
+
   EXTRACT_STRING(name, ast);
   gen_name_ex(name, is_qid(ast));
 }
@@ -1002,6 +1013,124 @@ static void gen_expr_blob(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   gen_printf("%s", str);
 }
 
+static void gen_macro_args(ast_node *ast) {
+  for ( ; ast; ast = ast->right) {
+    EXTRACT_ANY_NOTNULL(arg, ast->left);
+    if (is_ast_expr_macro_arg(arg)) {
+      gen_root_expr(arg->left);
+    }
+    else if (is_ast_query_parts_macro_arg(arg)) {
+      gen_printf("FROM(");
+      gen_query_parts(arg->left);
+      gen_printf(")");
+    }
+    else if (is_ast_select_core_macro_arg(arg)) {
+      gen_printf("ALL(");
+      gen_select_core_list(arg->left);
+      gen_printf(")");
+    }
+    else if (is_ast_select_expr_macro_arg(arg)) {
+      gen_printf("SELECT(");
+      gen_select_expr_list(arg->left);
+      gen_printf(")");
+    }
+    else if (is_ast_cte_tables_macro_arg(arg)) {
+      gen_printf("WITH(\n");
+      BEGIN_INDENT(tables, 2);
+        gen_cte_tables(arg->left, "");
+      END_INDENT(tables);
+      gen_printf(")");
+    }
+    else {
+      Contract(is_ast_stmt_list_macro_arg(arg));
+      gen_printf("\nBEGIN\n");
+      gen_stmt_list(arg->left);
+      gen_printf("END");
+    }
+    if (ast->right) {
+      gen_printf(", ");
+    }
+  }
+}
+
+static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  gen_printf("@TEXT(");
+
+  for (ast = ast->left; ast; ast = ast->right) {
+    Contract(is_ast_text_args(ast));
+    EXTRACT_ANY_NOTNULL(txt, ast->left);
+
+    if (is_ast_str(txt)) {
+      gen_root_expr(txt);
+    }
+    else if (is_any_macro_ref(txt)) {
+      EXTRACT_STRING(name, txt->left);
+      gen_printf("%s(", name);
+      gen_macro_args(txt->right);
+      gen_printf(")", name);
+    }
+    else {
+      Contract(is_any_macro_arg_ref(txt));
+      EXTRACT_STRING(name, txt->left);
+      gen_printf("%s", name);
+    }
+    if (ast->right) {
+      gen_printf(", ");
+    }
+  }
+  gen_printf(")");
+}
+
+cql_noexport void gen_any_macro_expansion(ast_node *ast) {
+  if (is_ast_cte_tables(ast)) {
+    gen_cte_tables(ast, "");
+  }
+  else if (is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast)) {
+    gen_query_parts(ast);
+  }
+  else if (is_ast_stmt_list(ast)) {
+    gen_stmt_list(ast);
+  }
+  else if (is_ast_select_core_list(ast)) {
+    gen_select_core_list(ast);
+  }
+  else if (is_ast_select_expr_list(ast)) {
+    gen_select_expr_list(ast);
+  }
+  else {
+    gen_root_expr(ast);
+  }
+}
+
+// note that the final expression might end up with parens or not
+// but in this form no parens are needed, the replacement will
+// naturally cause parens around a lower binding macro or macro arg
+// hence we ignore pri and pri new just like for say identifiers
+static void gen_expr_macro_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_expr_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+// note that the final expression might end up with parens or not
+// but in this form no parens are needed, the replacement will
+// naturally cause parens around a lower binding macro or macro arg
+// hence we ignore pri and pri new just like for say identifiers
+static void gen_expr_macro_arg_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_expr_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
+static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_at_id(ast));
+  gen_printf("@ID(");
+  gen_root_expr(ast->left);
+  gen_printf(")");
+}
+
 static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(str, ast);
@@ -1074,7 +1203,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     // [[shared_fragment]]
     // proc transformer()
     // begin
-    //   with 
+    //   with
     //   source(*) like xy
     //   select source.x + 1 x, source.y + 20 y from source;
     // end;
@@ -2108,7 +2237,14 @@ static void gen_select_expr_list(ast_node *ast) {
 
   for (ast_node *item = ast; item; item = item->right) {
     ast_node *expr = item->left;
-    if (is_ast_star(expr)) {
+
+    if (is_ast_select_expr_macro_ref(expr)) {
+      gen_select_expr_macro_ref(expr);
+    }
+    else if (is_ast_select_expr_macro_arg_ref(expr)) {
+      gen_select_expr_macro_arg_ref(expr);
+    }
+    else if (is_ast_star(expr)) {
       if (!eval_star_callback(expr)) {
         gen_printf("*");
       }
@@ -2180,9 +2316,14 @@ static void gen_table_or_subquery(ast_node *ast) {
   }
   else {
     // this is all that's left
-    gen_printf("(");
-    gen_query_parts(factor);
-    gen_printf(")");
+    if (is_ast_query_parts_macro_ref(factor) || is_ast_query_parts_macro_arg_ref(factor)) {
+      gen_query_parts(factor);
+    }
+    else {
+      gen_printf("(");
+      gen_query_parts(factor);
+      gen_printf(")");
+    }
   }
 
   EXTRACT(opt_as_alias, ast->right);
@@ -2264,9 +2405,71 @@ static void gen_table_or_subquery_list(ast_node *ast) {
   }
 }
 
+static void gen_select_core_macro_ref(ast_node *ast) {
+  Contract(is_ast_select_core_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_select_core_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_select_core_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
+static void gen_select_expr_macro_ref(ast_node *ast) {
+  Contract(is_ast_select_expr_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_select_expr_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_select_expr_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
+static void gen_cte_tables_macro_ref(ast_node *ast) {
+  Contract(is_ast_cte_tables_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_cte_tables_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_cte_tables_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
+static void gen_query_parts_macro_ref(ast_node *ast) {
+  Contract(is_ast_query_parts_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_query_parts_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_query_parts_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
 static void gen_query_parts(ast_node *ast) {
   if (is_ast_table_or_subquery_list(ast)) {
     gen_table_or_subquery_list(ast);
+  }
+  else if (is_ast_query_parts_macro_ref(ast)) {
+    gen_query_parts_macro_ref(ast);
+  }
+  else if (is_ast_query_parts_macro_arg_ref(ast)) {
+    gen_query_parts_macro_arg_ref(ast);
   }
   else {
     Contract(is_ast_join_clause(ast)); // this is the only other choice
@@ -2504,23 +2707,32 @@ static void gen_values(ast_node *ast) {
 }
 
 cql_noexport void gen_select_core(ast_node *ast) {
-  Contract(is_ast_select_core(ast));
-  EXTRACT_ANY(select_core_left, ast->left);
 
-  gen_select_statement_type(ast);
+  if (is_ast_select_core_macro_ref(ast)) {
+    gen_select_core_macro_ref(ast);
+  }
+  else if (is_ast_select_core_macro_arg_ref(ast)) {
+    gen_select_core_macro_arg_ref(ast);
+  }
+  else {
+    Contract(is_ast_select_core(ast));
+    EXTRACT_ANY(select_core_left, ast->left);
 
-  // select_core subtree can be a SELECT or VALUES statement
-  if (is_ast_select_values(select_core_left)) {
-    // VALUES [values]
-    EXTRACT(values, ast->right);
-    gen_values(values);
-  } else {
-    // SELECT [select_expr_list_con]
-    // We're making sure that we're in the SELECT clause of the select stmt
-    Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
-    gen_printf(" ");
-    EXTRACT_NOTNULL(select_expr_list_con, ast->right);
-    gen_select_expr_list_con(select_expr_list_con);
+    gen_select_statement_type(ast);
+
+    // select_core subtree can be a SELECT or VALUES statement
+    if (is_ast_select_values(select_core_left)) {
+      // VALUES [values]
+      EXTRACT(values, ast->right);
+      gen_values(values);
+    } else {
+      // SELECT [select_expr_list_con]
+      // We're making sure that we're in the SELECT clause of the select stmt
+      Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
+      gen_printf(" ");
+      EXTRACT_NOTNULL(select_expr_list_con, ast->right);
+      gen_select_expr_list_con(select_expr_list_con);
+    }
   }
 }
 
@@ -2614,18 +2826,23 @@ static void gen_cte_table(ast_node *ast)  {
 }
 
 static void gen_cte_tables(ast_node *ast, CSTR prefix) {
-  Contract(is_ast_cte_tables(ast));
-
   bool_t first = true;
-  while (ast) {
-    EXTRACT_NOTNULL(cte_table, ast->left);
 
-    // callbacks can suppress some CTE for use in shared_fragments
-    bool_t has_cte_suppress_callback = gen_callbacks && gen_callbacks->cte_suppress_callback;
+  while (ast) {
+    Contract(is_ast_cte_tables(ast));
+    EXTRACT_ANY_NOTNULL(cte_table, ast->left);
+
     bool_t handled = false;
 
-    if (has_cte_suppress_callback) {
-      handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, output);
+    if (is_ast_cte_table(cte_table)) {
+      Contract(is_ast_cte_table(cte_table));
+
+      // callbacks can suppress some CTE for use in shared_fragments
+      bool_t has_cte_suppress_callback = gen_callbacks && gen_callbacks->cte_suppress_callback;
+
+      if (has_cte_suppress_callback) {
+        handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, output);
+      }
     }
 
     if (!handled) {
@@ -2636,7 +2853,16 @@ static void gen_cte_tables(ast_node *ast, CSTR prefix) {
       else {
         gen_printf(",\n");
       }
-      gen_cte_table(cte_table);
+
+      if (is_ast_cte_tables_macro_ref(cte_table)) {
+        gen_cte_tables_macro_ref(cte_table);
+      }
+      else if (is_ast_cte_tables_macro_arg_ref(cte_table)) {
+        gen_cte_tables_macro_arg_ref(cte_table);
+      }
+      else {
+        gen_cte_table(cte_table);
+      }
     }
 
     ast = ast->right;
@@ -2677,7 +2903,8 @@ static void gen_with_select_stmt(ast_node *ast) {
 
 static void gen_select_core_list(ast_node *ast) {
   Contract(is_ast_select_core_list(ast));
-  EXTRACT_NOTNULL(select_core, ast->left);
+
+  EXTRACT_ANY_NOTNULL(select_core, ast->left);
 
   gen_select_core(select_core);
 
@@ -3590,12 +3817,14 @@ cql_noexport void gen_params(ast_node *ast) {
 
 static void gen_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
 
-  gen_printf("CREATE PROC %s (", name);
+  gen_printf("CREATE PROC ");
+  gen_name(name_ast);
+  gen_printf(" (");
   if (params) {
     gen_params(params);
   }
@@ -4184,15 +4413,17 @@ static void gen_loop_stmt(ast_node *ast) {
 
 static void gen_call_stmt(ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
 
-  gen_printf("CALL %s(", name);
+  gen_printf("CALL ");
+  gen_name(name_ast);
+  gen_printf("(");
   if (arg_list) {
     gen_arg_list(arg_list);
   }
 
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_declare_out_call_stmt(ast_node *ast) {
@@ -4780,6 +5011,125 @@ static void gen_explain_stmt(ast_node *ast) {
   gen_one_stmt(stmt_target);
 }
 
+static void gen_macro_formal(ast_node *macro_formal) {
+  Contract(is_ast_macro_formal(macro_formal));
+  EXTRACT_STRING(l, macro_formal->left);
+  EXTRACT_STRING(r, macro_formal->right);
+  gen_printf("%s! %s", l, r);
+}
+
+static void gen_macro_formals(ast_node *macro_formals) {
+  for ( ; macro_formals; macro_formals = macro_formals->right) {
+     Contract(is_ast_macro_formals(macro_formals));
+     gen_macro_formal(macro_formals->left);
+     if (macro_formals->right) {
+       gen_printf(", ");
+     }
+  }
+}
+
+static void gen_expr_macro_def(ast_node *ast) {
+  Contract(is_ast_expr_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(EXPR) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_root_expr(body);
+  END_INDENT(body_indent);
+  gen_printf("\nEND");
+}
+
+static void gen_stmt_list_macro_def(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(STMT_LIST) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  gen_stmt_list(body);
+  gen_printf("END");
+}
+
+static void gen_select_core_macro_def(ast_node *ast) {
+  Contract(is_ast_select_core_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(SELECT_CORE) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_select_core_list(body);
+  END_INDENT(body_indent);
+  gen_printf("\nEND");
+}
+
+static void gen_select_expr_macro_def(ast_node *ast) {
+  Contract(is_ast_select_expr_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(SELECT_EXPR) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_select_expr_list(body);
+  END_INDENT(body_indent);
+  gen_printf("\nEND");
+}
+
+static void gen_query_parts_macro_def(ast_node *ast) {
+  Contract(is_ast_query_parts_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(QUERY_PARTS) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_query_parts(body);
+  END_INDENT(body_indent);
+  gen_printf("\nEND");
+}
+
+static void gen_cte_tables_macro_def(ast_node *ast) {
+  Contract(is_ast_cte_tables_macro_def(ast));
+  EXTRACT_NOTNULL(macro_name_formals, ast->left);
+  EXTRACT_ANY_NOTNULL(body, ast->right);
+  EXTRACT_STRING(name, macro_name_formals->left);
+
+  gen_printf("@MACRO(CTE_TABLES) %s!(", name);
+  gen_macro_formals(macro_name_formals->right);
+  gen_printf(")\nBEGIN\n", name);
+  BEGIN_INDENT(body_indent, 2);
+    gen_cte_tables(body, "");
+  END_INDENT(body_indent);
+  gen_printf("END");
+}
+
+static void gen_stmt_list_macro_ref(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s(", name);
+  gen_macro_args(ast->right);
+  gen_printf(")", name);
+}
+
+static void gen_stmt_list_macro_arg_ref(ast_node *ast) {
+  Contract(is_ast_stmt_list_macro_arg_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+  gen_printf("%s", name);
+}
+
 cql_data_defn( int32_t gen_stmt_level );
 
 static void gen_stmt_list(ast_node *root) {
@@ -4859,100 +5209,108 @@ cql_noexport void gen_init() {
   gen_stmts = symtab_new();
   gen_exprs = symtab_new();
 
-  STMT_INIT(expr_stmt);
-  STMT_INIT(if_stmt);
-  STMT_INIT(guard_stmt);
-  STMT_INIT(while_stmt);
-  STMT_INIT(switch_stmt);
-  STMT_INIT(leave_stmt);
-  STMT_INIT(continue_stmt);
-  STMT_INIT(return_stmt);
-  STMT_INIT(rollback_return_stmt);
-  STMT_INIT(commit_return_stmt);
-  STMT_INIT(call_stmt);
-  STMT_INIT(declare_out_call_stmt);
-  STMT_INIT(declare_vars_type);
-  STMT_INIT(let_stmt);
-  STMT_INIT(assign);
-  STMT_INIT(set_from_cursor);
-  STMT_INIT(create_proc_stmt);
-  STMT_INIT(trycatch_stmt);
-  STMT_INIT(throw_stmt);
-  STMT_INIT(create_trigger_stmt);
-  STMT_INIT(create_table_stmt);
-  STMT_INIT(create_virtual_table_stmt);
-  STMT_INIT(drop_table_stmt);
-  STMT_INIT(drop_view_stmt);
-  STMT_INIT(drop_index_stmt);
-  STMT_INIT(drop_trigger_stmt);
   STMT_INIT(alter_table_add_column_stmt);
-  STMT_INIT(create_index_stmt);
-  STMT_INIT(create_view_stmt);
-  STMT_INIT(select_stmt);
-  STMT_INIT(select_nothing_stmt);
-  STMT_INIT(with_select_stmt);
-  STMT_INIT(delete_stmt);
-  STMT_INIT(with_delete_stmt);
-  STMT_INIT(update_stmt);
-  STMT_INIT(update_cursor_stmt);
-  STMT_INIT(with_update_stmt);
-  STMT_INIT(insert_stmt);
-  STMT_INIT(with_insert_stmt);
-  STMT_INIT(upsert_stmt);
-  STMT_INIT(with_upsert_stmt);
-  STMT_INIT(upsert_update);
+  STMT_INIT(assign);
+  STMT_INIT(begin_schema_region_stmt);
+  STMT_INIT(begin_trans_stmt);
+  STMT_INIT(call_stmt);
+  STMT_INIT(close_stmt);
+  STMT_INIT(commit_return_stmt);
+  STMT_INIT(commit_trans_stmt);
   STMT_INIT(conflict_target);
-  STMT_INIT(fetch_values_stmt);
-  STMT_INIT(set_blob_from_cursor_stmt);
-  STMT_INIT(fetch_cursor_from_blob_stmt);
-  STMT_INIT(declare_enum_stmt);
+  STMT_INIT(continue_stmt);
+  STMT_INIT(create_index_stmt);
+  STMT_INIT(create_proc_stmt);
+  STMT_INIT(create_table_stmt);
+  STMT_INIT(create_trigger_stmt);
+  STMT_INIT(create_view_stmt);
+  STMT_INIT(create_virtual_table_stmt);
+  STMT_INIT(cte_tables_macro_def);
   STMT_INIT(declare_const_stmt);
-  STMT_INIT(declare_group_stmt);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_cursor_like_name);
   STMT_INIT(declare_cursor_like_select);
   STMT_INIT(declare_cursor_like_typed_names);
-  STMT_INIT(declare_named_type);
-  STMT_INIT(declare_value_cursor);
-  STMT_INIT(declare_proc_stmt);
-  STMT_INIT(declare_proc_no_check_stmt);
-  STMT_INIT(declare_interface_stmt);
-  STMT_INIT(declare_func_stmt);
-  STMT_INIT(declare_func_no_check_stmt);
-  STMT_INIT(declare_select_func_stmt);
-  STMT_INIT(declare_select_func_no_check_stmt);
-  STMT_INIT(loop_stmt);
-  STMT_INIT(fetch_stmt);
-  STMT_INIT(fetch_call_stmt);
-  STMT_INIT(begin_trans_stmt);
-  STMT_INIT(commit_trans_stmt);
-  STMT_INIT(rollback_trans_stmt);
-  STMT_INIT(proc_savepoint_stmt);
-  STMT_INIT(savepoint_stmt);
-  STMT_INIT(release_savepoint_stmt);
-  STMT_INIT(close_stmt);
-  STMT_INIT(out_stmt);
-  STMT_INIT(out_union_stmt);
-  STMT_INIT(out_union_parent_child_stmt);
-  STMT_INIT(echo_stmt);
-  STMT_INIT(schema_upgrade_version_stmt);
-  STMT_INIT(schema_upgrade_script_stmt);
-  STMT_INIT(previous_schema_stmt);
-  STMT_INIT(enforce_strict_stmt);
-  STMT_INIT(enforce_normal_stmt);
-  STMT_INIT(enforce_reset_stmt);
-  STMT_INIT(enforce_push_stmt);
-  STMT_INIT(enforce_pop_stmt);
-  STMT_INIT(declare_schema_region_stmt);
   STMT_INIT(declare_deployable_region_stmt);
-  STMT_INIT(begin_schema_region_stmt);
-  STMT_INIT(end_schema_region_stmt);
-  STMT_INIT(schema_ad_hoc_migration_stmt);
-  STMT_INIT(schema_unsub_stmt);
-  STMT_INIT(explain_stmt);
+  STMT_INIT(declare_enum_stmt);
+  STMT_INIT(declare_func_no_check_stmt);
+  STMT_INIT(declare_func_stmt);
+  STMT_INIT(declare_group_stmt);
+  STMT_INIT(declare_interface_stmt);
+  STMT_INIT(declare_named_type);
+  STMT_INIT(declare_out_call_stmt);
+  STMT_INIT(declare_proc_no_check_stmt);
+  STMT_INIT(declare_proc_stmt);
+  STMT_INIT(declare_schema_region_stmt);
+  STMT_INIT(declare_select_func_no_check_stmt);
+  STMT_INIT(declare_select_func_stmt);
+  STMT_INIT(declare_value_cursor);
+  STMT_INIT(declare_vars_type);
+  STMT_INIT(delete_stmt);
+  STMT_INIT(drop_index_stmt);
+  STMT_INIT(drop_table_stmt);
+  STMT_INIT(drop_trigger_stmt);
+  STMT_INIT(drop_view_stmt);
+  STMT_INIT(echo_stmt);
+  STMT_INIT(emit_constants_stmt);
   STMT_INIT(emit_enums_stmt);
   STMT_INIT(emit_group_stmt);
-  STMT_INIT(emit_constants_stmt);
+  STMT_INIT(end_schema_region_stmt);
+  STMT_INIT(enforce_normal_stmt);
+  STMT_INIT(enforce_pop_stmt);
+  STMT_INIT(enforce_push_stmt);
+  STMT_INIT(enforce_reset_stmt);
+  STMT_INIT(enforce_strict_stmt);
+  STMT_INIT(explain_stmt);
+  STMT_INIT(expr_stmt);
+  STMT_INIT(fetch_call_stmt);
+  STMT_INIT(fetch_cursor_from_blob_stmt);
+  STMT_INIT(fetch_stmt);
+  STMT_INIT(fetch_values_stmt);
+  STMT_INIT(guard_stmt);
+  STMT_INIT(if_stmt);
+  STMT_INIT(insert_stmt);
+  STMT_INIT(leave_stmt);
+  STMT_INIT(let_stmt);
+  STMT_INIT(loop_stmt);
+  STMT_INIT(stmt_list_macro_def);
+  STMT_INIT(expr_macro_def);
+  STMT_INIT(out_stmt);
+  STMT_INIT(out_union_parent_child_stmt);
+  STMT_INIT(out_union_stmt);
+  STMT_INIT(previous_schema_stmt);
+  STMT_INIT(proc_savepoint_stmt);
+  STMT_INIT(query_parts_macro_def);
+  STMT_INIT(release_savepoint_stmt);
+  STMT_INIT(return_stmt);
+  STMT_INIT(rollback_return_stmt);
+  STMT_INIT(rollback_trans_stmt);
+  STMT_INIT(savepoint_stmt);
+  STMT_INIT(schema_ad_hoc_migration_stmt);
+  STMT_INIT(schema_unsub_stmt);
+  STMT_INIT(schema_upgrade_script_stmt);
+  STMT_INIT(schema_upgrade_version_stmt);
+  STMT_INIT(select_core_macro_def);
+  STMT_INIT(select_expr_macro_def);
+  STMT_INIT(select_nothing_stmt);
+  STMT_INIT(select_stmt);
+  STMT_INIT(set_blob_from_cursor_stmt);
+  STMT_INIT(set_from_cursor);
+  STMT_INIT(stmt_list_macro_arg_ref);
+  STMT_INIT(stmt_list_macro_ref);
+  STMT_INIT(switch_stmt);
+  STMT_INIT(throw_stmt);
+  STMT_INIT(trycatch_stmt);
+  STMT_INIT(update_cursor_stmt);
+  STMT_INIT(update_stmt);
+  STMT_INIT(upsert_stmt);
+  STMT_INIT(upsert_update);
+  STMT_INIT(while_stmt);
+  STMT_INIT(with_delete_stmt);
+  STMT_INIT(with_insert_stmt);
+  STMT_INIT(with_select_stmt);
+  STMT_INIT(with_update_stmt);
+  STMT_INIT(with_upsert_stmt);
 
   STMT_INIT(blob_get_key_type_stmt);
   STMT_INIT(blob_get_val_type_stmt);
@@ -4966,12 +5324,16 @@ cql_noexport void gen_init() {
   STMT_INIT(keep_table_name_in_aliases_stmt);
 
   EXPR_INIT(table_star, gen_expr_table_star, "T.*", EXPR_PRI_ROOT);
+  EXPR_INIT(at_id, gen_expr_at_id, "@ID", EXPR_PRI_ROOT);
   EXPR_INIT(star, gen_expr_star, "*", EXPR_PRI_ROOT);
   EXPR_INIT(num, gen_expr_num, "NUM", EXPR_PRI_ROOT);
   EXPR_INIT(str, gen_expr_str, "STR", EXPR_PRI_ROOT);
   EXPR_INIT(blob, gen_expr_blob, "BLB", EXPR_PRI_ROOT);
   EXPR_INIT(null, gen_expr_null, "NULL", EXPR_PRI_ROOT);
   EXPR_INIT(dot, gen_expr_dot, ".", EXPR_PRI_REVERSE_APPLY);
+  EXPR_INIT(expr_macro_arg_ref, gen_expr_macro_arg_ref, "!", EXPR_PRI_ROOT);
+  EXPR_INIT(expr_macro_ref, gen_expr_macro_ref, "!", EXPR_PRI_ROOT);
+  EXPR_INIT(macro_text, gen_expr_macro_text, "!", EXPR_PRI_ROOT);
   EXPR_INIT(const, gen_expr_const, "CONST", EXPR_PRI_ROOT);
   EXPR_INIT(bin_and, gen_binary, "&", EXPR_PRI_BINARY);
   EXPR_INIT(bin_or, gen_binary, "|", EXPR_PRI_BINARY);

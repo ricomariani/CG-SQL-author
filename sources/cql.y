@@ -56,6 +56,7 @@
 #include "sem.h"
 #include "encoders.h"
 #include "unit_tests.h"
+#include "symtab.h"
 #include "rt.h"
 
 // In order for leak sanitizer to run, main must exit normally
@@ -119,14 +120,30 @@ void yyrestart(FILE *);
 #define YY_ERROR_ON_DISTINCT(x) \
   if (x) yyerror("DISTINCT not valid in this context.")
 
+// if macro arg found that's an error, it should be a macro
+#define YY_ERROR_ON_MACRO_ARG(x) \
+  if (get_macro_arg_info(x)) yyerror("expected a defined macro not a macro formal.");
+
+// if macro arg not found that's an error, it shouldn't be a macro, it should be an arg
+#define YY_ERROR_ON_MACRO(x) \
+  if (!get_macro_arg_info(x)) yyerror("expected a defined macro formal not a macro.");
+
+#define YY_ERROR_ON_FAILED_ADD_MACRO(success, name) \
+  if (!success) { yyerror(dup_printf("macro already exists '%s'.", name)); }
+
+#define YY_ERROR_ON_FAILED_MACRO_ARG(name) \
+  if (name) { yyerror(dup_printf("macro argument already exists '%s'.", name)); }
+
 // We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
 // to see it during semantic analysis, but it cannot be allowed to appear in a
 // program. It would be unsafe if it could: It coerces a value from a nullable
 // type to a nonnull type without any runtime check.
 #define YY_ERROR_ON_CQL_INFERRED_NOTNULL(x) \
-  EXTRACT_STRING(proc_name, x); \
-  if (!strcmp(proc_name, "cql_inferred_notnull")) { \
-    yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+  if (is_ast_str(x)) { \
+    EXTRACT_STRING(proc_name, x); \
+    if (!strcmp(proc_name, "cql_inferred_notnull")) { \
+      yyerror("Call to internal function is not allowed 'cql_inferred_notnull'"); \
+    } \
   }
 
 // If a column alias is present for * or T.* that's an error
@@ -159,6 +176,7 @@ static void cql_reset_globals(void);
 %token <ival> AT_DUMMY_DEFAULTS
 %token <sval> LONGLIT
 %token <sval> REALLIT
+%token <sval> STMT_LIST_MACRO EXPR_MACRO QUERY_PARTS_MACRO CTE_TABLES_MACRO SELECT_CORE_MACRO SELECT_EXPR_MACRO
 
 /*
  SQLite understands the following binary operators, in order from LOWEST to HIGHEST precedence:
@@ -241,11 +259,13 @@ static void cql_reset_globals(void);
 %token SAVEPOINT ROLLBACK COMMIT TRANSACTION RELEASE ARGUMENTS
 %token TYPE_CHECK CAST WITH RECURSIVE REPLACE IGNORE ADD COLUMN AT_COLUMNS RENAME ALTER
 %token AT_ECHO AT_CREATE AT_RECREATE AT_DELETE AT_SCHEMA_UPGRADE_VERSION AT_PREVIOUS_SCHEMA AT_SCHEMA_UPGRADE_SCRIPT
-%token AT_RC AT_PROC AT_FILE AT_ATTRIBUTE AT_SENSITIVE DEFERRED NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
-%token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
+%token AT_ID AT_RC AT_PROC AT_FILE AT_LINE AT_MACRO_LINE AT_MACRO_FILE AT_TEXT AT_ATTRIBUTE AT_SENSITIVE DEFERRED
+%token NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
+%token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT
+%token AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
 %token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
-%token AT_KEEP_TABLE_NAME_IN_ALIASES
+%token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 
 /* ddl stuff */
@@ -259,7 +279,7 @@ static void cql_reset_globals(void);
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
 %type <aval> pk_def fk_def unq_def check_def fk_target_options opt_module_args opt_conflict_clause
-%type <aval> col_calc col_calcs column_calculation
+%type <aval> col_calc col_calcs column_calculation text_arg text_args
 
 %type <aval> alter_table_add_column_stmt
 %type <aval> create_index_stmt create_table_stmt create_view_stmt create_virtual_table_stmt
@@ -297,6 +317,11 @@ static void cql_reset_globals(void);
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
+%type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type any_macro_arg_ref
+%type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
+%type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref select_core_macro_ref select_expr_macro_ref
+
 
 /* statements */
 %type <aval> stmt
@@ -347,6 +372,12 @@ program:
   opt_stmt_list  {
     if (!parse_error_occurred) {
       gen_init();
+      if (options.expand) {
+        expand_macros($opt_stmt_list);
+        if (macro_expansion_errors) {
+          cql_cleanup_and_exit(1);
+        }
+      }
       if (options.semantic) {
         sem_main($opt_stmt_list);
       }
@@ -376,6 +407,69 @@ opt_stmt_list:
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
+any_macro_arg_ref:
+  stmt_list_macro_ref  { $$ = $1; }
+  | expr_macro_ref { $$ = $1; }
+  | cte_tables_macro_ref { $$ = $1; }
+  | select_core_macro_ref { $$ = $1; }
+  | select_expr_macro_ref { $$ = $1; }
+  | query_parts_macro_ref { $$ = $1; }
+  ;
+
+stmt_list_macro_ref :
+  STMT_LIST_MACRO {
+    YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
+    $$ = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
+  | STMT_LIST_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
+    $$ = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
+  ;
+
+expr_macro_ref :
+  EXPR_MACRO {
+    YY_ERROR_ON_MACRO($EXPR_MACRO);
+    $$ = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
+  | EXPR_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($EXPR_MACRO);
+    $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
+  ;
+
+query_parts_macro_ref :
+  QUERY_PARTS_MACRO {
+    YY_ERROR_ON_MACRO($QUERY_PARTS_MACRO);
+    $$ = new_ast_query_parts_macro_arg_ref(new_ast_str($QUERY_PARTS_MACRO), NULL); }
+  | QUERY_PARTS_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($QUERY_PARTS_MACRO);
+    $$ = new_ast_query_parts_macro_ref(new_ast_str($QUERY_PARTS_MACRO), $opt_macro_args); }
+  ;
+
+cte_tables_macro_ref :
+  CTE_TABLES_MACRO {
+    YY_ERROR_ON_MACRO($CTE_TABLES_MACRO);
+    $$ = new_ast_cte_tables_macro_arg_ref(new_ast_str($CTE_TABLES_MACRO), NULL); }
+  | CTE_TABLES_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($CTE_TABLES_MACRO);
+    $$ = new_ast_cte_tables_macro_ref(new_ast_str($CTE_TABLES_MACRO), $opt_macro_args); }
+  ;
+
+select_core_macro_ref :
+  SELECT_CORE_MACRO {
+    YY_ERROR_ON_MACRO($SELECT_CORE_MACRO);
+    $$ = new_ast_select_core_macro_arg_ref(new_ast_str($SELECT_CORE_MACRO), NULL); }
+  | SELECT_CORE_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($SELECT_CORE_MACRO);
+    $$ = new_ast_select_core_macro_ref(new_ast_str($SELECT_CORE_MACRO), $opt_macro_args); }
+  ;
+
+select_expr_macro_ref :
+  SELECT_EXPR_MACRO {
+    YY_ERROR_ON_MACRO($SELECT_EXPR_MACRO);
+    $$ = new_ast_select_expr_macro_arg_ref(new_ast_str($SELECT_EXPR_MACRO), NULL); }
+  | SELECT_EXPR_MACRO '(' opt_macro_args ')' {
+    YY_ERROR_ON_MACRO_ARG($SELECT_EXPR_MACRO);
+    $$ = new_ast_select_expr_macro_ref(new_ast_str($SELECT_EXPR_MACRO), $opt_macro_args); }
+  ;
+
 stmt_list[result]:
   stmt {
      // We're going to do this cheesy thing with the stmt_list structures so that we can
@@ -398,7 +492,28 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
+  | stmt_list_macro_ref[stmt] ';' {
+     // same cheese as above
+
+     $result = new_ast_stmt_list($stmt, NULL);
+     $result->lineno = $stmt->lineno;
+
+     // set up the tail pointer invariant to use later
+     $result->parent = $result;
+     }
   | stmt_list[slist] stmt {
+     ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
+     new_stmt->lineno = $stmt->lineno;
+
+     // use our tail pointer invariant so we can add at the tail without searching
+     ast_node *tail = $slist->parent;
+     ast_set_right(tail, new_stmt);
+
+     // re-establish the tail invariant per the above
+     $slist->parent = new_stmt;
+     $result = $slist;
+     }
+  | stmt_list[slist] stmt_list_macro_ref[stmt] ';' {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -485,6 +600,7 @@ any_stmt:
   | leave_stmt
   | let_stmt
   | loop_stmt
+  | macro_def_stmt
   | out_stmt
   | out_union_stmt
   | out_union_parent_child_stmt
@@ -892,6 +1008,14 @@ name:
   | VIEW { $name = new_ast_str("view"); }
   | INDEX { $name = new_ast_str("index"); }
   | COLUMN { $name = new_ast_str("column"); }
+  | EXPR { $name = new_ast_str("expr"); }
+  | STMT_LIST { $name = new_ast_str("stmt_list"); }
+  | QUERY_PARTS { $name = new_ast_str("query_parts"); }
+  | CTE_TABLES { $name = new_ast_str("cte_tables"); }
+  | SELECT_CORE { $name = new_ast_str("select_core"); }
+  | SELECT_EXPR { $name = new_ast_str("select_expr"); }
+  | AT_ID '(' str_literal ')' { $name = new_ast_at_id($str_literal); }
+  | AT_ID '(' AT_TEXT '(' text_args ')' ')' { $name = new_ast_at_id(new_ast_macro_text($text_args)); }
   ;
 
 opt_sql_name:
@@ -1037,9 +1161,20 @@ any_literal:
   | num_literal  { $any_literal = $num_literal; }
   | NULL_  { $any_literal = new_ast_null(); }
   | AT_FILE '(' str_literal ')'  { $any_literal = file_literal($str_literal); }
+  | AT_LINE  { $any_literal = new_ast_num(NUM_INT, dup_printf("%d", yylineno)); }
+  | AT_MACRO_LINE { $any_literal = new_ast_str("@MACRO_LINE"); }
+  | AT_MACRO_FILE { $any_literal = new_ast_str("@MACRO_FILE"); }
   | AT_PROC  { $any_literal = new_ast_str("@PROC"); }
+  | AT_TEXT '(' text_args ')' { $any_literal = new_ast_macro_text($text_args); }
   | BLOBLIT  { $any_literal = new_ast_blob($BLOBLIT); }
   ;
+
+text_args:
+   text_arg { $$ = new_ast_text_args($text_arg, NULL); }
+   | text_arg ',' text_args[ta] { $$ = new_ast_text_args($text_arg, $ta); }
+   ;
+
+text_arg : str_literal | any_macro_arg_ref ;
 
 raise_expr:
   RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_IGNORE), NULL); }
@@ -1070,6 +1205,7 @@ call:
 basic_expr:
   name  { $basic_expr = $name; }
   | QID { $basic_expr = new_ast_qstr_quoted($QID); }
+  | expr_macro_ref { $basic_expr = $expr_macro_ref; }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
@@ -1228,12 +1364,12 @@ cte_table:
   cte_decl AS '(' select_stmt ')'  { $cte_table = new_ast_cte_table($cte_decl, $select_stmt); }
   | cte_decl AS '(' shared_cte')' { $cte_table = new_ast_cte_table($cte_decl, $shared_cte); }
   | '(' call_stmt ')' {
-      ast_node *name = $call_stmt->left;
+      ast_node *name = ast_clone_tree($call_stmt->left);
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, NULL);
       $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
   | '(' call_stmt USING cte_binding_list ')' {
-      ast_node *name = $call_stmt->left;
+      ast_node *name = ast_clone_tree($call_stmt->left);
       ast_node *cte_decl =  new_ast_cte_decl(name, new_ast_star());
       ast_node *shared_cte = new_ast_shared_cte($call_stmt, $cte_binding_list);
       $cte_table = new_ast_cte_table(cte_decl, shared_cte); }
@@ -1241,6 +1377,7 @@ cte_table:
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
   | cte_decl LIKE sql_name  {
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
+  | cte_tables_macro_ref[ref] { $cte_table = $ref; }
   ;
 
 with_prefix:
@@ -1274,8 +1411,11 @@ select_core_list[result]:
   select_core { $result = new_ast_select_core_list($select_core, NULL); }
   | select_core compound_operator select_core_list[list] {
      ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
-     $result = new_ast_select_core_list($select_core, select_core_compound);
-  }
+     $result = new_ast_select_core_list($select_core, select_core_compound); }
+  | select_core_macro_ref { $result = new_ast_select_core_list($select_core_macro_ref, NULL); }
+  | select_core_macro_ref compound_operator select_core_list[list] {
+     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
+     $result = new_ast_select_core_list($select_core_macro_ref, select_core_compound); }
   ;
 
 values[result]:
@@ -1541,16 +1681,18 @@ select_opts:
 select_expr_list[result]:
   select_expr  { $result = new_ast_select_expr_list($select_expr, NULL); }
   | select_expr ',' select_expr_list[sel]  { $result = new_ast_select_expr_list($select_expr, $sel); }
+  | select_expr_macro_ref  { $result = new_ast_select_expr_list($select_expr_macro_ref, NULL); }
+  | select_expr_macro_ref ',' select_expr_list[sel]  { $result = new_ast_select_expr_list($select_expr_macro_ref, $sel); }
   ;
 
 select_expr:
-  expr opt_as_alias  { 
+  expr opt_as_alias  {
     if (is_ast_table_star($expr) || is_ast_star($expr)) {
       YY_ERROR_ON_ALIAS_PRESENT($opt_as_alias);
       $select_expr = $expr;
     }
     else {
-      $select_expr = new_ast_select_expr($expr, $opt_as_alias); 
+      $select_expr = new_ast_select_expr($expr, $opt_as_alias);
     }
   }
   | column_calculation  { $select_expr = $column_calculation; }
@@ -1591,6 +1733,7 @@ table_or_subquery:
   | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
   | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
+  |  query_parts_macro_ref[qp] opt_as_alias { $table_or_subquery = new_ast_table_or_subquery($qp, $opt_as_alias); }
   ;
 
 join_type:
@@ -1684,12 +1827,12 @@ insert_stmt:
   insert_stmt_type sql_name opt_column_spec select_stmt opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $select_stmt);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name opt_column_spec from_shape opt_insert_dummy_spec  {
     struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, columns_values);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values);  }
   | insert_stmt_type sql_name DEFAULT VALUES  {
     struct ast_node *default_columns_values = new_ast_default_columns_values();
@@ -1697,11 +1840,11 @@ insert_stmt:
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING select_stmt {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $select_stmt);
-    $insert_stmt_type->left = NULL; // dummy spec not allowed in this form
+    ast_set_left($insert_stmt_type, NULL); // dummy spec not allowed in this form
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   | insert_stmt_type sql_name USING expr_names opt_insert_dummy_spec {
     struct ast_node *name_columns_values = new_ast_name_columns_values($sql_name, $expr_names);
-    $insert_stmt_type->left = $opt_insert_dummy_spec;
+    ast_set_left($insert_stmt_type, $opt_insert_dummy_spec);
     $insert_stmt = new_ast_insert_stmt($insert_stmt_type, name_columns_values); }
   ;
 
@@ -2120,7 +2263,7 @@ elseif_item:
 
 elseif_list[result]:
   elseif_item  { $result = $elseif_item; }
-  | elseif_item elseif_list[el2]  { $elseif_item->right = $el2; $result = $elseif_item; }
+  | elseif_item elseif_list[el2]  { ast_set_right($elseif_item, $el2); $result = $elseif_item; }
   ;
 
 opt_elseif_list:
@@ -2371,6 +2514,139 @@ blob_update_val_stmt:
 
 keep_table_name_in_aliases_stmt:
   AT_KEEP_TABLE_NAME_IN_ALIASES { $keep_table_name_in_aliases_stmt = new_ast_keep_table_name_in_aliases_stmt(); }
+
+expr_macro_def:
+  AT_MACRO '(' EXPR ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+
+stmt_list_macro_def:
+  AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+query_parts_macro_def:
+  AT_MACRO '(' QUERY_PARTS ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+cte_tables_macro_def:
+  AT_MACRO '(' CTE_TABLES ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_cte_tables_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+select_core_macro_def:
+  AT_MACRO '(' SELECT_CORE ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_select_core_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+select_expr_macro_def:
+  AT_MACRO '(' SELECT_EXPR ')' name '!' '(' opt_macro_formals ')' {
+    CSTR bad_name = install_macro_args($opt_macro_formals);
+    YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
+    $$ = new_ast_select_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
+    EXTRACT_STRING(name, $name);
+    bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
+    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+macro_def_stmt:
+  expr_macro_def BEGIN_ expr END {
+     $macro_def_stmt = $expr_macro_def;
+     ast_set_right($macro_def_stmt, $expr);
+     delete_macro_formals(); }
+  | stmt_list_macro_def BEGIN_ stmt_list END {
+     $macro_def_stmt = $stmt_list_macro_def;
+     ast_set_right($macro_def_stmt, $stmt_list);
+     delete_macro_formals(); }
+  | query_parts_macro_def BEGIN_ query_parts END {
+     $macro_def_stmt = $query_parts_macro_def;
+     ast_set_right($macro_def_stmt, $query_parts);
+     delete_macro_formals(); }
+  | cte_tables_macro_def BEGIN_ cte_tables END {
+     $macro_def_stmt = $cte_tables_macro_def;
+     ast_set_right($macro_def_stmt, $cte_tables);
+     delete_macro_formals(); }
+  | select_core_macro_def BEGIN_ select_core_list END {
+     $macro_def_stmt = $select_core_macro_def;
+     ast_set_right($macro_def_stmt, $select_core_list);
+     delete_macro_formals(); }
+  | select_expr_macro_def BEGIN_ select_expr_list END {
+     $macro_def_stmt = $select_expr_macro_def;
+     ast_set_right($macro_def_stmt, $select_expr_list);
+     delete_macro_formals(); }
+  ;
+
+opt_macro_args:
+    /*nil*/  { $opt_macro_args = NULL; }
+   | macro_args { $opt_macro_args = $macro_args; }
+   ;
+
+macro_arg:
+ expr[arg] { $macro_arg = new_ast_expr_macro_arg($arg); }
+ | BEGIN_ stmt_list[arg] END { $macro_arg = new_ast_stmt_list_macro_arg($arg); }
+ |  stmt_list_macro_ref[arg]  { $macro_arg = new_ast_stmt_list_macro_arg(new_ast_stmt_list($arg, NULL)); }
+ | FROM '(' query_parts[arg] ')' { $macro_arg = new_ast_query_parts_macro_arg($arg); }
+ |  query_parts_macro_ref[arg] { $macro_arg = new_ast_query_parts_macro_arg($arg); }
+ | WITH '(' cte_tables[arg] ')' { $macro_arg = new_ast_cte_tables_macro_arg($arg); }
+ |  cte_tables_macro_ref[arg] { $macro_arg = new_ast_cte_tables_macro_arg(new_ast_cte_tables($arg, NULL)); }
+ | ALL '(' select_core_list[arg] ')' { $macro_arg = new_ast_select_core_macro_arg($arg); }
+ |  select_core_macro_ref[arg] { $macro_arg = new_ast_select_core_macro_arg(new_ast_select_core_list($arg, NULL)); }
+ | SELECT '(' select_expr_list[arg] ')' { $macro_arg = new_ast_select_expr_macro_arg($arg); }
+ |  select_expr_macro_ref[arg]  { $macro_arg = new_ast_select_expr_macro_arg(new_ast_select_expr_list($arg, NULL)); }
+ ;
+
+macro_args[result]:
+   macro_arg { $result = new_ast_macro_args($macro_arg, NULL); }
+  | macro_arg ',' macro_args[next] { $result = new_ast_macro_args($macro_arg, $next); }
+  ;
+
+opt_macro_formals:
+    /*nil*/  { $opt_macro_formals = NULL; }
+   | macro_formals { $opt_macro_formals = $macro_formals; }
+   ;
+
+macro_formals[result]:
+   macro_formal { $result = new_ast_macro_formals($macro_formal, NULL); }
+  | macro_formal ',' macro_formals[next] { $result = new_ast_macro_formals($macro_formal, $next); }
+  ;
+
+macro_formal: name '!' macro_type { $macro_formal = new_ast_macro_formal($name, $macro_type); }
+  ;
+
+macro_type:
+   EXPR { $macro_type = new_ast_str("EXPR"); }
+  | STMT_LIST { $macro_type = new_ast_str("STMT_LIST"); }
+  | QUERY_PARTS { $macro_type = new_ast_str("QUERY_PARTS"); }
+  | CTE_TABLES { $macro_type = new_ast_str("CTE_TABLES"); }
+  | SELECT_CORE { $macro_type = new_ast_str("SELECT_CORE"); }
+  | SELECT_EXPR { $macro_type = new_ast_str("SELECT_EXPR"); }
+  ;
+
 %%
 
 #ifndef _MSC_VER
@@ -2531,7 +2807,10 @@ static void parse_cmd(int argc, char **argv) {
       options.schema_exclusive = 1;
     } else if (strcmp(arg, "--dot") == 0) {
       options.print_dot = 1;
+    } else if (strcmp(arg, "--exp") == 0) {
+      options.expand = 1;
     } else if (strcmp(arg, "--sem") == 0) {
+      options.expand = 1;
       options.semantic = 1;
     } else if (strcmp(arg, "--compress") == 0) {
       options.compress = 1;
@@ -2545,6 +2824,7 @@ static void parse_cmd(int argc, char **argv) {
       a = gather_arg_params(a, argc, argv, &options.file_names_count, &options.file_names);
       options.codegen = 1;
       options.semantic = 1;
+      options.expand = 1;
     } else if (strcmp(arg, "--include_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {
@@ -2677,9 +2957,9 @@ int cql_main(int argc, char **argv) {
   cg_c_cleanup();
   sem_cleanup();
   ast_cleanup();
-  parse_cleanup();
   gen_cleanup();
   rt_cleanup();
+  parse_cleanup();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can
@@ -3064,4 +3344,41 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   CHARBUF_CLOSE(tmp);
 
   return lit;
+}
+
+cql_noexport int32_t macro_type_from_str(CSTR type) {
+  int32_t macro_type = EOF;
+  if (!strcmp("EXPR", type)) {
+    macro_type = EXPR_MACRO;
+  }
+  else if (!strcmp("STMT_LIST", type)) {
+    macro_type = STMT_LIST_MACRO;
+  }
+  else if (!strcmp("QUERY_PARTS", type)) {
+    macro_type = QUERY_PARTS_MACRO;
+  }
+  else if (!strcmp("CTE_TABLES", type)) {
+    macro_type = CTE_TABLES_MACRO;
+  }
+  else if (!strcmp("SELECT_CORE", type)) {
+    macro_type = SELECT_CORE_MACRO;
+  }
+  else if (!strcmp("SELECT_EXPR", type)) {
+    macro_type = SELECT_EXPR_MACRO;
+  }
+  Contract(macro_type != EOF);
+  return macro_type;
+}
+
+cql_noexport bool_t macro_arg_valid(int32_t macro_type, ast_node *macro_arg) {
+  bool_t valid = false;
+  switch (macro_type) {
+    case EXPR_MACRO:         valid = is_ast_expr_macro_arg(macro_arg); break;
+    case STMT_LIST_MACRO:    valid = is_ast_stmt_list_macro_arg(macro_arg); break;
+    case QUERY_PARTS_MACRO:  valid = is_ast_query_parts_macro_arg(macro_arg); break;
+    case CTE_TABLES_MACRO:   valid = is_ast_cte_tables_macro_arg(macro_arg); break;
+    case SELECT_CORE_MACRO:  valid = is_ast_select_core_macro_arg(macro_arg); break;
+    case SELECT_EXPR_MACRO:  valid = is_ast_select_expr_macro_arg(macro_arg); break;
+  }
+  return valid;
 }

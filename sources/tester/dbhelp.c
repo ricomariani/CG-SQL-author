@@ -7,6 +7,7 @@
 
 #include "dbhelp.h"
 
+#ifndef _MSC_VER
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
@@ -16,6 +17,7 @@
 #pragma clang diagnostic ignored "-Wliteral-conversion"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-function"
+#endif
 extern cql_object_ref _Nonnull cql_partition_create(void);
 extern cql_bool cql_partition_cursor(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key, cql_dynamic_cursor *_Nonnull value);
 extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, cql_dynamic_cursor *_Nonnull key);
@@ -23,6 +25,11 @@ extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
 extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
 extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
+extern cql_object_ref _Nonnull create_cql_string_list(void);
+extern cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_, cql_string_ref _Nonnull value_);
+extern cql_string_ref _Nullable get_from_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 get_object_cql_string_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
 extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 
@@ -33,8 +40,10 @@ extern CQL_WARN_UNUSED cql_code dbhelp_source(sqlite3 *_Nonnull _db_, sqlite3_st
 // while things are still otherwise broken.  Rebuild with 'regen.sh'
 //
 
+#undef cql_error_trace
+#define cql_error_trace() fprintf(stderr, "SQL Failure %d %s: %s %d\n", _rc_, sqlite3_errmsg(_db_), __FILE__, __LINE__)
 
-// Generated from dbhelp.sql:40
+// Generated from dbhelp.sql:44
 
 /*
 CREATE PROC dbhelp_setup ()
@@ -83,7 +92,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:50
+// Generated from dbhelp.sql:54
 
 /*
 CREATE PROC dbhelp_prev_line (line_ INTEGER NOT NULL, OUT prev INTEGER NOT NULL)
@@ -135,7 +144,7 @@ CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:57
+// Generated from dbhelp.sql:61
 
 /*
 CREATE PROC dbhelp_add (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -170,7 +179,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:64
+// Generated from dbhelp.sql:68
 
 /*
 CREATE PROC dbhelp_add_source (line INTEGER NOT NULL, data TEXT NOT NULL)
@@ -205,7 +214,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:74
+// Generated from dbhelp.sql:78
 
 /*
 CREATE PROC dbhelp_dump_output (line_ INTEGER NOT NULL)
@@ -266,15 +275,25 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:93
+// Generated from dbhelp.sql:105
 
 /*
 CREATE PROC dbhelp_find (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
 BEGIN
-  SET search_line := ( SELECT line
-    FROM test_output
-    WHERE line >= line_
-  LIMIT 1 );
+  BEGIN TRY
+    SET search_line := ( SELECT line
+      FROM test_output
+      WHERE line >= line_
+    LIMIT 1 );
+  END TRY;
+  BEGIN CATCH
+    CALL printf("no lines come after %d\n", line_);
+    CALL printf("available test output lines: %d\n", ( SELECT count(*)
+      FROM test_output ));
+    CALL printf("max line number: %d\n", ( SELECT max(line)
+      FROM test_output ));
+    THROW;
+  END CATCH;
   SET found := ( SELECT count(*)
     FROM test_output
     WHERE line = search_line AND data LIKE pattern );
@@ -289,22 +308,54 @@ CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
 
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
+  cql_int32 _tmp_int_0 = 0;
+  cql_nullable_int32 _tmp_n_int_0 = { .is_null = 1 };
   sqlite3_stmt *_temp_stmt = NULL;
 
   *search_line = 0; // set out arg to non-garbage
   *found = 0; // set out arg to non-garbage
-  _rc_ = cql_prepare(_db_, &_temp_stmt,
-    "SELECT line "
-      "FROM test_output "
-      "WHERE line >= ? "
-    "LIMIT 1");
-  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
-                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, line_);
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = sqlite3_step(_temp_stmt);
-  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
-    *search_line = sqlite3_column_int(_temp_stmt, 0);
-  cql_finalize_stmt(&_temp_stmt);
+  // try
+  {
+    _rc_ = cql_prepare(_db_, &_temp_stmt,
+      "SELECT line "
+        "FROM test_output "
+        "WHERE line >= ? "
+      "LIMIT 1");
+    cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, line_);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto catch_start_2; }
+    _rc_ = sqlite3_step(_temp_stmt);
+    if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto catch_start_2; }
+      *search_line = sqlite3_column_int(_temp_stmt, 0);
+    cql_finalize_stmt(&_temp_stmt);
+    goto catch_end_2;
+  }
+  catch_start_2: {
+    int32_t _rc_thrown_1 = _rc_;
+    printf("no lines come after %d\n", line_);
+    _rc_ = cql_prepare(_db_, &_temp_stmt,
+      "SELECT count(*) "
+        "FROM test_output");
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp_stmt);
+    if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+      _tmp_int_0 = sqlite3_column_int(_temp_stmt, 0);
+    cql_finalize_stmt(&_temp_stmt);
+    printf("available test output lines: %d\n", _tmp_int_0);
+    _rc_ = cql_prepare(_db_, &_temp_stmt,
+      "SELECT max(line) "
+        "FROM test_output");
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    _rc_ = sqlite3_step(_temp_stmt);
+    if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+      cql_column_nullable_int32(_temp_stmt, 0, &_tmp_n_int_0);
+    cql_finalize_stmt(&_temp_stmt);
+    printf("max line number: %d\n", _tmp_n_int_0.value);
+    _rc_ = cql_best_error(_rc_thrown_1);
+    cql_error_trace();
+    goto cql_cleanup;
+  }
+  catch_end_2:;
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "SELECT count(*) "
       "FROM test_output "
@@ -326,7 +377,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:103
+// Generated from dbhelp.sql:115
 
 /*
 CREATE PROC dbhelp_dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL)
@@ -388,7 +439,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:109
+// Generated from dbhelp.sql:121
 
 /*
 CREATE PROC dbhelp_source ()

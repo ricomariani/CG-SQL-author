@@ -23,6 +23,7 @@ void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
 static CSTR last_doc_comment = NULL;
+cql_noexport int32_t resolve_macro_name(const char *);
 
 #ifndef CQL_AMALGAM
 // already in the headers in the amalgam
@@ -35,6 +36,8 @@ int fileno(FILE *);
 #pragma clang diagnostic ignored "-Wunused-function"
 #pragma clang diagnostic ignored "-Wconversion"
 #endif
+
+#pragma clang diagnostic ignored "-Wmisleading-indentation"
 
 cql_noexport CSTR get_last_doc_comment() {
   CSTR result = last_doc_comment;
@@ -121,7 +124,12 @@ d [0-9]
 @ENFORCE_STRICT                  { return AT_ENFORCE_STRICT; }
 @EPONYMOUS                       { return AT_EPONYMOUS; }
 @FILE                            { return AT_FILE; }
+@ID                              { return AT_ID; }
 @KEEP_TABLE_NAME_IN_ALIASES      { return AT_KEEP_TABLE_NAME_IN_ALIASES; }
+@LINE                            { return AT_LINE; }
+@MACRO_FILE                      { return AT_MACRO_FILE; }
+@MACRO_LINE                      { return AT_MACRO_LINE; }
+@MACRO                           { return AT_MACRO; }
 @PREVIOUS_SCHEMA                 { return AT_PREVIOUS_SCHEMA; }
 @PROC                            { return AT_PROC; }
 @RC                              { return AT_RC; }
@@ -130,6 +138,7 @@ d [0-9]
 @SCHEMA_UPGRADE_SCRIPT           { return AT_SCHEMA_UPGRADE_SCRIPT; }
 @SCHEMA_UPGRADE_VERSION          { return AT_SCHEMA_UPGRADE_VERSION; }
 @SENSITIVE                       { return AT_SENSITIVE; }
+@TEXT                            { return AT_TEXT; }
 @UNSUB                           { return AT_UNSUB; }
 ABORT                            { return ABORT; }
 ACTION                           { return ACTION; }
@@ -165,6 +174,7 @@ CONTEXT{sp}TYPE/{stop}           { return CONTEXT_TYPE; }
 CONTINUE                         { return CONTINUE; }
 CREATE                           { return CREATE; }
 CROSS                            { return CROSS; }
+CTE_TABLES                       { return CTE_TABLES; }
 CURRENT{sp}ROW/{stop}            { return CURRENT_ROW; }
 CURSOR                           { return CURSOR; }
 CURSOR{sp}HAS{sp}ROW/{stop}      { return CURSOR_HAS_ROW; }
@@ -191,6 +201,7 @@ EXCLUDE{sp}TIES/{stop}           { return EXCLUDE_TIES; }
 EXCLUSIVE                        { return EXCLUSIVE; }
 EXISTS                           { return EXISTS; }
 EXPLAIN                          { return EXPLAIN; }
+EXPR                             { return EXPR; }
 FAIL                             { return FAIL; }
 FALSE                            { return FALSE_; }
 FETCH                            { return FETCH; }
@@ -273,6 +284,7 @@ PRIMARY                          { return PRIMARY; }
 PRIVATE                          { return PRIVATE; }
 PROC                             { return PROC; }
 PROCEDURE                        { return PROCEDURE; }
+QUERY_PARTS                      { return QUERY_PARTS; }
 QUERY{sp}PLAN/{stop}             { return QUERY_PLAN; }
 RAISE                            { return RAISE; }
 RANGE                            { return RANGE; }
@@ -291,9 +303,12 @@ ROWID                            { return ROWID; }
 ROWS                             { return ROWS; }
 SAVEPOINT                        { return SAVEPOINT; }
 SELECT                           { return SELECT; }
+SELECT_CORE                      { return SELECT_CORE; }
+SELECT_EXPR                      { return SELECT_EXPR; }
 SET                              { return SET; }
 SIGN{sp}FUNCTION/{stop}          { return SIGN_FUNCTION; }
 STATEMENT                        { return STATEMENT; }
+STMT_LIST                        { return STMT_LIST; }
 SWITCH                           { return SWITCH; }
 TABLE                            { return TABLE; }
 TEMP                             { return TEMP; }
@@ -358,7 +373,18 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 [-+&~|^/%*(),.;!<>:=]            { return yytext[0]; }
 \[                               { return yytext[0]; }
 \]                               { return yytext[0]; }
+\{                               { return yytext[0]; }
+\}                               { return yytext[0]; }
 [_A-Z][A-Z0-9_]*                 { yylval.sval = Strdup(yytext); return ID; }
+[_A-Z][A-Z0-9_]*!                { int32_t result = resolve_macro_name(yytext);
+                                   if (result == EOF) {
+                                     REJECT;
+                                   }
+                                   else {
+                                     yylval.sval = Strdup(yytext);
+                                   }
+                                   return result;
+                                 }
 
 [ \t\n]                          ;
 \-\-.*                           ;

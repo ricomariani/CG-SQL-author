@@ -183,6 +183,7 @@ cql_noexport void gen_with_callbacks(ast_node *_Nonnull ast, gen_func fn, gen_sq
 cql_noexport void gen_col_def_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_statement_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_statement_and_attributes_with_callbacks(ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
+cql_noexport void gen_any_macro_expansion(ast_node *_Nonnull ast);
 
 cql_noexport bool_t eval_star_callback(ast_node *_Nonnull ast);
 cql_noexport bool_t eval_variables_callback(ast_node *_Nonnull ast);

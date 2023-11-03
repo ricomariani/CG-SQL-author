@@ -24867,6 +24867,12 @@ cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull as
   return ast->left->sem->name;
 }
 
+// This is for the macro def statments that have no meaning in this pass
+// macros are already expanded
+static void sem_no_op_stmt(ast_node *stmt) {
+  record_ok(stmt);
+}
+
 // Most codegen types are not compatible with previous schema generation because it adds stuff to the AST
 // and that stuff isn't even fully type evaluated.  So the best thing to do is punt on codegen if we
 // did that sort of validation.
@@ -24879,6 +24885,9 @@ cql_noexport void exit_on_validating_schema() {
 
 #undef STMT_INIT
 #define STMT_INIT(x) symtab_add(syms, k_ast_ ## x, (void *)sem_ ## x)
+
+#undef NO_OP_STMT_INIT
+#define NO_OP_STMT_INIT(x) symtab_add(syms, k_ast_ ## x, (void*)sem_no_op_stmt)
 
 #undef FUNC_INIT
 #define FUNC_INIT(x) symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x)
@@ -25062,6 +25071,13 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(blob_update_val_stmt);
 
   STMT_INIT(keep_table_name_in_aliases_stmt);
+
+  NO_OP_STMT_INIT(expr_macro_def);
+  NO_OP_STMT_INIT(stmt_list_macro_def);
+  NO_OP_STMT_INIT(query_parts_macro_def);
+  NO_OP_STMT_INIT(cte_tables_macro_def);
+  NO_OP_STMT_INIT(select_core_macro_def);
+  NO_OP_STMT_INIT(select_expr_macro_def);
 
   AGGR_FUNC_INIT(max);
   AGGR_FUNC_INIT(min);

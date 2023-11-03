@@ -1957,10 +1957,9 @@ DECLARE x_int INTEGER NOT NULL;
 
 CREATE PROC foo ()
 BEGIN
-  bar!(1, 
-  BEGIN
+  IF 1 THEN
     CALL printf("hi\n");
-  END);
+  END IF;
 END;
 
 CREATE TABLE xx(
@@ -1984,16 +1983,21 @@ BEGIN
 END;
 
 SELECT *
-  FROM qp!()
+  FROM (xx AS T1
+  INNER JOIN yy AS T2 ON T1.x = T2.y)
   INNER JOIN yy;
 
 SELECT *
-  FROM qp!() AS T1;
+  FROM (xx AS T1
+  INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
 
-sel!(x, FROM(qp!()));
+SELECT x
+  FROM (xx AS T1
+  INNER JOIN yy AS T2 ON T1.x = T2.y) AS Q;
 
 SELECT *
-  FROM qp!() AS T1;
+  FROM (xx AS T1
+  INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
 
 @MACRO(CTE_TABLES) cte!()
 BEGIN
@@ -2003,25 +2007,29 @@ END;
 
 WITH
 vv (*) AS (SELECT 1 AS x, 2 AS y),
-cte!(),
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v),
 uu (*) AS (SELECT 1 AS x, 2 AS y)
 SELECT *
   FROM foo;
 
 WITH
-cte!(),
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v),
 uu (*) AS (SELECT 1 AS x, 2 AS y)
 SELECT *
   FROM foo;
 
 WITH
-cte!()
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v)
 SELECT *
   FROM foo;
 
 WITH
 vv (*) AS (SELECT 1 AS x, 2 AS y),
-cte!()
+foo (*) AS (SELECT 1 AS x, 2 AS y),
+bar (*) AS (SELECT 3 AS u, 4 AS v)
 SELECT *
   FROM foo;
 
@@ -2033,9 +2041,10 @@ BEGIN
     FROM foo;
 END;
 
-query!(WITH(
-  foo (*) AS (SELECT 100 AS x, 200 AS y)
-));
+WITH
+foo (*) AS (SELECT 100 AS x, 200 AS y)
+SELECT *
+  FROM foo;
 
 @MACRO(SELECT_CORE) selcor!(x! EXPR)
 BEGIN
@@ -2051,7 +2060,13 @@ BEGIN
   x!
 END;
 
-selcor2!(ALL(selcor!(5)));
+SELECT 5 + 1 AS x
+UNION ALL
+SELECT 5 + 2 AS x
+UNION ALL
+SELECT 5 + 1 AS x
+UNION ALL
+SELECT 5 + 2 AS x;
 
 @MACRO(SELECT_EXPR) se!(x! SELECT_EXPR)
 BEGIN
@@ -2063,7 +2078,7 @@ BEGIN
   se!(SELECT(x!))
 END;
 
-SELECT se2!(SELECT(x + 2 AS z));
+SELECT x + 2 AS z, x + 2 AS z;
 
 @MACRO(STMT_LIST) assert!(e! EXPR)
 BEGIN
@@ -2111,31 +2126,35 @@ LET x := 1;
 
 LET y := 2;
 
-LET z := macro2!(x, y);
+LET z := x * (y + 5 + (y + 5) + 1);
 
 SET z := 1922;
 
-LET zz := macro3!(FROM((SELECT 1 AS x, 2 AS y) AS T));
+LET zz := '(SELECT 1 AS x, 2 AS y) AS T';
 
-SET zz := macro3!(FROM(T1
-  INNER JOIN T2 ON T1.id = T2.id));
+SET zz := 'T1
+  INNER JOIN T2 ON T1.id = T2.id';
 
-SET zz := macro4!(WITH(
-  x (*) AS (SELECT 1 AS x, 2 AS y)
-));
+SET zz := 'x (*) AS (SELECT 1 AS x, 2 AS y)
+';
 
-SET zz := macro5!(ALL(SELECT 1 AS x
-  FROM foo));
+SET zz := 'SELECT 1 AS x
+  FROM foo';
 
-SET zz := macro6!(1 + 2);
+SET zz := '1 + 2';
 
-SET zz := macro7!(SELECT(1 AS x, 2 AS y));
+SET zz := '1 AS x, 2 AS y';
 
-LET zzz := @TEXT("begin\n", assert!(7), "\nfoo");
+LET zzz := 'begin
+IF NOT 7 THEN
+  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/test.sql'', 1932);
+END IF;
 
-SET @ID("x") := 5;
+foo';
 
-LET @ID(@TEXT("u", "v")) := 5;
+SET x := 5;
+
+LET uv := 5;
 
 @MACRO(STMT_LIST) mondo1!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
 BEGIN
@@ -2152,18 +2171,15 @@ BEGIN
   END);
 END;
 
-mondo2!(1 + 2, FROM(x
-  INNER JOIN y), ALL(SELECT 1
+SET zz := '1 + 2x
+  INNER JOIN ySELECT 1
   FROM foo
 UNION
 SELECT 2
-  FROM bar), SELECT(20 AS xx), WITH(
-  f (*) AS (SELECT 99
-    FROM yy)
-), 
-BEGIN
-  LET qq := 201;
-END);
+  FROM bar20 AS xxf (*) AS (SELECT 99
+  FROM yy)
+LET qq := 201;
+';
 
 LET expr := 1;
 
@@ -2182,7 +2198,7 @@ BEGIN
   ( SELECT 1 + 5 )
 END;
 
-LET x := @TEXT(a_selection!());
+LET x := '( SELECT 1 + 5 )';
 
 @MACRO(STMT_LIST) file_line!()
 BEGIN
@@ -2190,7 +2206,9 @@ BEGIN
   LET file := @MACRO_FILE;
 END;
 
-file_line!();
+LET line := 2;
+
+LET file := 'long/path/I/do/not/like';
 
 SET file := 'path/I/do/not/like';
 

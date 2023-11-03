@@ -198,20 +198,59 @@ basic_test() {
   fi
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
+
+  echo running "${TEST_DIR}/test.sql" "with macro expansion"
+  if ! ${CQL} --echo --dev --in "${TEST_DIR}/test.sql" --exp >"${OUT_DIR}/test_exp.out"
+  then
+   echo basic parsing with expansion test failed
+   failed
+  fi
+  echo "  computing diffs (empty if none)"
+  on_diff_exit test_exp.out
 }
 
 
-dot_test() {
-  echo '--------------------------------- STAGE 3 -- .DOT OUTPUT TEST'
-  echo running "${TEST_DIR}/dottest.sql"
-  if ! ${CQL} --dot --hide_builtins --in "${TEST_DIR}/dottest.sql" >"${OUT_DIR}/dottest.out"
+macro_test() {
+  echo '--------------------------------- STAGE 3 -- MACRO TEST'
+  echo running macro expansion test
+  if ! ${CQL} --test --exp --ast --hide_builtins --in "${TEST_DIR}/macro_test.sql" >"${OUT_DIR}/macro_test.out" 2>"${OUT_DIR}/macro_test.err"
   then
-    echo DOT syntax test failed
+     echo "CQL macro test returned unexpected error code"
+     cat "${OUT_DIR}/macro_test.err"
+     failed
+  fi
+
+  echo validating output trees
+  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/macro_test.sql" "${OUT_DIR}/macro_test.out"
+  then
+    echo failed verification
     failed
   fi
 
   echo "  computing diffs (empty if none)"
-  on_diff_exit dottest.out
+  on_diff_exit macro_test.out
+
+  echo running macro expansion error cases
+  if ${CQL} --exp --in "${TEST_DIR}/macro_exp_errors.sql" >"${OUT_DIR}/macro_exp_errors.out" 2>"${OUT_DIR}/macro_test.err.out"
+  then
+     echo "CQL macro error test returned unexpected error code"
+     cat "${OUT_DIR}/macro_test.err.out"
+     failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit macro_test.err.out
+
+  echo running macro expansion duplicate name
+  if ${CQL} --exp --in "${TEST_DIR}/macro_test_dup_arg.sql" >"${OUT_DIR}/macro_exp_errors.out" 2>"${OUT_DIR}/macro_test_dup.err.out"
+  then
+     echo "CQL macro error test returned unexpected error code"
+     cat "${OUT_DIR}/macro_test_dup.err.out"
+     failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit macro_test_dup.err.out
 }
 
 semantic_test() {
@@ -1003,14 +1042,8 @@ test_helpers_test() {
 
 run_test() {
   echo '--------------------------------- STAGE 13 -- RUN CODE TEST'
-  echo running codegen test with execution
-  if ! cc -E -x c -w "${TEST_DIR}/run_test.sql" >"${OUT_DIR}/run_test_cpp.out"
-  then
-    echo preprocessing failed.
-    failed
-  fi
 
-  if ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  if ! ${CQL} --nolines --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" --in "${TEST_DIR}/run_test.sql" --global_proc cql_startup --rt c
   then
     echo codegen failed.
     failed
@@ -1028,7 +1061,7 @@ run_test() {
     failed
   fi
 
-  if ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${OUT_DIR}/run_test_cpp.out" --global_proc cql_startup --rt c
+  if ! ${CQL} --compress --cg "${OUT_DIR}/run_test_compressed.h" "${OUT_DIR}/run_test_compressed.c" --in "${TEST_DIR}/run_test.sql" --global_proc cql_startup --rt c
   then
     echo compressed codegen failed.
     failed
@@ -1312,6 +1345,20 @@ code_gen_lua_test() {
   on_diff_exit cg_test_lua.err
 }
 
+dot_test() {
+  echo '--------------------------------- STAGE 20 -- .DOT OUTPUT TEST'
+  echo running "${TEST_DIR}/dottest.sql"
+  if ! ${CQL} --dot --hide_builtins --in "${TEST_DIR}/dottest.sql" >"${OUT_DIR}/dottest.out"
+  then
+    echo DOT syntax test failed
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit dottest.out
+}
+
+
 
 GENERATED_TAG=generated
 AT_GENERATED_TAG="@$GENERATED_TAG"
@@ -1337,7 +1384,7 @@ fi
 # each of these will exit if anything goes wrong
 basic_test
 unit_tests
-dot_test
+macro_test
 semantic_test
 code_gen_c_test
 code_gen_objc_test
@@ -1354,6 +1401,7 @@ stats_test
 amalgam_test
 signatures_test
 code_gen_lua_test
+dot_test
 extra_tests
 
 make_clean_msg

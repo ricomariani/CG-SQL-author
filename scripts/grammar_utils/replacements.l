@@ -250,6 +250,10 @@ AT_SCHEMA_UPGRADE_VERSION             { put_quoted("@SCHEMA_UPGRADE_VERSION"); }
 AT_SENSITIVE                          { put_quoted("@SENSITIVE"); }
 AT_UNSUB                              { put_quoted("@UNSUB"); }
 AT_KEEP_TABLE_NAME_IN_ALIASES         { put_quoted("@KEEP_TABLE_NAME_IN_ALIASES"); }
+AT_MACRO                              { put_quoted("@MACRO"); }
+EXPR                                  { put_quoted("EXPR") }
+STMT_LIST                             { put_quoted("STMT_LIST"); }
+QUERY_PARTS                           { put_quoted("QUERY_PARTS") }
 CONTEXT_COLUMN                        { put_quoted("CONTEXT COLUMN"); }
 CONTEXT_TYPE                          { put_quoted("CONTEXT TYPE"); }
 CURRENT_ROW                           { put_quoted("CURRENT ROW"); }

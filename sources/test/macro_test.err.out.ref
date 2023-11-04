@@ -1,9 +1,14 @@
 test/macro_exp_errors.sql:XXXX:1: error: in macro_formal : not enough arguments to macro 'exp'
- -> 'exp' in test/macro_exp_errors.sql:6
+ -> 'exp!' in test/macro_exp_errors.sql:6
 test/macro_exp_errors.sql:XXXX:1: error: in expr_macro_arg : too many arguments to macro 'exp'
- -> 'exp' in test/macro_exp_errors.sql:7
+ -> 'exp!' in test/macro_exp_errors.sql:7
 test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type mismatch in argument 'e'
- -> 'exp' in test/macro_exp_errors.sql:11
+ -> 'exp!' in test/macro_exp_errors.sql:11
 test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier 'foo bar'
 test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier ' foo'
 test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier ''
+test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type mismatch in argument 'e'
+ -> 'exp!' in test/macro_exp_errors.sql:21
+ -> 'sel1!' in test/macro_exp_errors.sql:26
+ -> 'sel2!' in test/macro_exp_errors.sql:31
+ -> 'sel3!' in test/macro_exp_errors.sql:34

@@ -1259,7 +1259,7 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
 
   macro_state_t *p = &macro_state;
   while (p->parent) {
-    cql_error(" -> '%s' in %s:%d\n", p->name, p->file, p->line);
+    cql_error(" -> '%s!' in %s:%d\n", p->name, p->file, p->line);
     p = p->parent;
   }
   macro_expansion_errors = 1;

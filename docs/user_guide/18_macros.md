@@ -11,18 +11,18 @@ weight: 18
 
 ### Introduction
 
-Macros are a recent introduction to the CQL language, previously
+Macros are a recent introduction to the CQL language; previously
 any macro-type functionality was provided by running the C Pre-Processor
-over the input file before processing.  Indeed this practice is still in
-many examples.   However it is less than idea.
+over the input file before processing. Indeed the practice of using
+`cpp` or `cc -E` is still in many examples.  However it is less than ideal.
 
- * It's not possible to create automatic code formatting with text based replacement
- * Macros are easily abused creating statement fragments in weird places that are hard to understand
- * The usual problems with text replacement and order of operations means that macro arguments frequently have to be wrapped to avoid errors
+ * It's not possible to create automatic code formatting tools with text based macro replacement
+ * Macros are easily abused, creating statement fragments in weird places that are hard to understand
+ * The usual problems with text replacement and order of operations means that macro arguments frequently have to be wrapped to avoid non-obvious errors
  * Debugging problems in the macros is very difficult with line information being unhelpful and pre-processed output being nearly unreadable
 
 To address these problems CQL introduces the notion of structured macros.
-That is, a macro the describes the sort of thing it intends to produce
+That is, a macro that describes the sort of thing it intends to produce
 and the kinds of things it consumes.  This allows for reasonable
 syntax and type checking and much better error reporting.
 
@@ -43,7 +43,8 @@ assert!(foo < bar);
 
 ### Types of Macros and Macro Arguments
 
-The example in the introduction is a macro that produces a statement list. It can be used anywhere a statement list would be valid.
+The example in the introduction is a macro that produces a statement list.
+It can be used anywhere a statement list would be valid.
 The full list of macro types is as follows:
 
 |Type|Notes                                                  |
@@ -180,7 +181,8 @@ SELECT T1.x + T1.y AS A, T2.u / T2.v * 100 AS pct
 
 If certain column extractions are common you can easily make a macro
 that lets you pull out the columns you want.  This can be readily
-generalized.
+generalized.  This becomes very useful when it's normal to extract
+(e.g.) the same 20 columns from various queries.
 
 ```sql
 @MACRO(SELECT_EXPR) foo!(t1! EXPR, t2! EXPR)
@@ -197,7 +199,7 @@ SELECT X.x + X.y AS A, Y.u / Y.v * 100 AS pct
   INNER JOIN Y ON X.id = Y.id;
 ```
 
-In this case we have provided the table names as arguments rather than
+In this second case we have provided the table names as arguments rather than
 hard coding them.
 
 *stmt_list*
@@ -233,9 +235,9 @@ This rounds out all of the macro types.
 #### Passing Macro Arguments
 
 In order to avoid language ambiguity and to allow macro fragments like
-a `cte_table` in unusual locations, when specifying the values of macro
-arguments the type of the argument that is not an expression, the type
-must be introduced.  We do this as follows:
+a `cte_table` in unusual locations.  The code must specify the type
+of the macro argument.  Expressions are the defaul type, the others
+use a function-like syntax to do the job.
 
 |Type|Syntax                                                 |
 |---:|:------------------------------------------------------|
@@ -247,7 +249,7 @@ must be introduced.  We do this as follows:
 |stmt_list|begin statement1; statement2; end                 |
 
 With these forms the type of macro argument is unambiguous and
-can be immediately checked against the macro.
+can be immediately checked against the macro requirements.
 
 #### Stringification
 
@@ -362,4 +364,3 @@ And of course additonal diagnostics can be readily added
 (and they are present in the real code). For instance
 all of the tricks used in the `assert!` macro would
 be helpful in the `expect!` macro.
-

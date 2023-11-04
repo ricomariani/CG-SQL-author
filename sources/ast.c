@@ -1285,6 +1285,204 @@ static int32_t get_macro_line() {
   return prev->line;
 }
 
+static void expand_at_id(ast_node *ast) {
+  Contract(is_ast_at_id(ast));
+
+  expand_macros(ast->left);
+  EXTRACT_STRING(str, ast->left);
+  CHARBUF_OPEN(tmp);
+  cg_decode_string_literal(str, &tmp);
+
+  CSTR p = tmp.ptr;
+  bool_t ok = true;
+
+  if (p[0] == '_' || (p[0] >= 'a' && p[0] <= 'z') || (p[0] >= 'A' && p[0] <= 'Z')) {
+    p++;
+    while (p[0]) {
+      if (p[0] == '_' ||
+         (p[0] >= 'a' && p[0] <= 'z') ||
+         (p[0] >= 'A' && p[0] <= 'Z') ||
+         (p[0] >= '0' && p[0] <= '9')) {
+            p++;
+           continue;
+      }
+      ok = false;
+      break;
+    }
+  }
+  else {
+     ok = false;
+  }
+
+  if (!ok) {
+    report_macro_error(ast, "@ID expansion is not a valid identifier", tmp.ptr);
+  }
+
+  replace_node(ast, new_ast_str(Strdup(tmp.ptr)));
+  CHARBUF_CLOSE(tmp);
+}
+
+static void expand_at_text(ast_node *ast) {
+  Contract(is_ast_macro_text(ast));
+
+  CHARBUF_OPEN(tmp);
+  CHARBUF_OPEN(quote);
+  expand_text_args(&tmp, ast->left);
+  cg_encode_string_literal(tmp.ptr, &quote);
+  ast_node *new = new_ast_str(Strdup(quote.ptr));
+  replace_node(ast, new);
+  CHARBUF_CLOSE(quote);
+  CHARBUF_CLOSE(tmp);
+}
+
+static void expand_special_ids(ast_node *ast) {
+  Contract(is_ast_str(ast));
+  EXTRACT_STRING(name, ast);
+
+  if (!strcmp(name, "@MACRO_LINE")) {
+    ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", get_macro_line()));
+    replace_node(ast, num);
+  }
+  else if (!strcmp(name, "@MACRO_FILE")) {
+    CHARBUF_OPEN(tmp);
+    cg_encode_string_literal(get_macro_file(), &tmp);
+    ast_node *new = new_ast_str(Strdup(tmp.ptr));
+    replace_node(ast, new);
+    CHARBUF_CLOSE(tmp);
+  }
+}
+
+static void expand_macro_refs(ast_node *ast) {
+  Contract(is_any_macro_arg_ref(ast) || is_any_macro_ref(ast));
+  EXTRACT_STRING(name, ast->left);
+
+  macro_info *minfo = NULL;
+
+  if (is_any_macro_ref(ast)) {
+    EXTRACT(macro_args, ast->right);
+    if (macro_args) {
+      // expand the arguments to the macro before using them
+      expand_macros(macro_args);
+    }
+
+    minfo = get_macro_info(name);
+  }
+  else {
+    minfo = get_macro_arg_info(name);
+  }
+
+  Invariant(minfo);
+
+  ast_node *copy = ast_clone_tree(minfo->def);
+
+  ast_node *body = NULL;
+  if (is_any_macro_def(copy)) {
+    // macro defs like x!() have the payload on the right
+    body = copy->right;
+    copy->left = body;
+  }
+  else {
+    // macro formals like x! have the payload on the right
+    body = copy->left;
+  }
+
+  macro_state_t macro_state_saved = macro_state;
+
+  if (is_any_macro_ref(ast)) {
+    EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
+    EXTRACT(macro_formals, macro_name_formals->right);
+    EXTRACT_STRING(macro_name, macro_name_formals->left);
+    EXTRACT(macro_args, ast->right);
+
+    macro_state.parent = &macro_state_saved;
+    macro_state.line = ast->lineno;
+    macro_state.file = ast->filename;
+    macro_state.name = macro_name;
+    macro_arg_table = macro_state.args = symtab_new();
+
+    while (macro_formals && macro_args) {
+      EXTRACT_NOTNULL(macro_formal, macro_formals->left);
+      EXTRACT_STRING(formal_name, macro_formal->left);
+      EXTRACT_ANY_NOTNULL(macro_arg, macro_args->left);
+      EXTRACT_STRING(type, macro_formal->right);
+
+      int32_t macro_type = macro_type_from_str(type);
+      set_macro_arg_info(formal_name, macro_type, macro_arg);
+
+      if (!macro_arg_valid(macro_type, macro_arg)) {
+        report_macro_error(macro_arg, "macro type mismatch in argument", formal_name);
+        goto cleanup;
+      }
+
+      macro_formals = macro_formals->right;
+      macro_args = macro_args->right;
+    }
+
+    if (macro_formals) {
+      report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
+      goto cleanup;
+    }
+
+    if (macro_args) {
+      report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
+      goto cleanup;
+    }
+  }
+
+  // it's hugely important to expand what you're going to replace FIRST
+  // and then slot it in.  Otherwise the recursion is n^2 depth!!!
+  expand_macros(body);
+
+  // its normal for body to be a different node type
+  body = copy->left;
+
+  // the query parts are already under a table_or_subquery node
+  // because of the macro position, if there is a redundant one
+  // in the arg tree, skip it.  We don't need two such wrappers
+  // it makes extra (()) in the output
+  if (is_ast_table_or_subquery_list(body) && body->right == NULL) {
+    EXTRACT_NOTNULL(table_or_subquery, body->left);
+    if (is_ast_join_clause(table_or_subquery->left) && table_or_subquery->right == NULL) {
+      body = table_or_subquery->left;
+    }
+  }
+
+  ast_node *parent = ast->parent;
+
+  if (is_ast_text_args(parent)) {
+    replace_node(ast, body);
+  }
+  else if (
+    is_ast_stmt_list(body) ||
+    is_ast_cte_tables(body) ||
+    is_ast_select_core_list(body) ||
+    is_ast_select_expr_list(body)) {
+
+    // insert the copy into the list
+    ast_set_left(parent, body->left);
+
+    // march to the end
+    ast_node *end = body;
+    while (end->right) {
+      end = end->right;
+    }
+
+    // link the copy to whatever was at the end
+    ast_set_right(end, parent->right);
+    ast_set_right(parent, body->right);
+  }
+  else  {
+    replace_node(ast, body);
+  }
+
+cleanup:
+  if (macro_state.args != macro_state_saved.args && macro_state.args) {
+    symtab_delete(macro_state.args);
+  }
+  macro_state = macro_state_saved;
+  macro_arg_table = macro_state.args;
+}
+
 cql_export void expand_macros(ast_node *_Nonnull node) {
 tail_recurse:
   if (!options.semantic && options.test && macro_state.line != -1) {
@@ -1297,175 +1495,25 @@ tail_recurse:
     return;
   }
 
+  // handle @ID
   if (is_ast_at_id(node)) {
-    expand_macros(node->left);
-    EXTRACT_STRING(str, node->left);
-    CHARBUF_OPEN(tmp);
-    cg_decode_string_literal(str, &tmp);
-    // verify it is an ID
-    ast_node *new = new_ast_str(Strdup(tmp.ptr));
-    replace_node(node, new);
-    CHARBUF_CLOSE(tmp);
+    expand_at_id(node);
     return;
   }
 
+  // handle @TEXT
   if (is_ast_macro_text(node)) {
-    CHARBUF_OPEN(tmp);
-    CHARBUF_OPEN(quote);
-    expand_text_args(&tmp, node->left);
-    cg_encode_string_literal(tmp.ptr, &quote);
-    ast_node *new = new_ast_str(Strdup(quote.ptr));
-    replace_node(node, new);
-    CHARBUF_CLOSE(quote);
-    CHARBUF_CLOSE(tmp);
+    expand_at_text(node);
     return;
   }
 
   if (is_ast_str(node)) {
-    EXTRACT_STRING(name, node);
-    if (!strcmp(name, "@MACRO_LINE")) {
-      ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", get_macro_line()));
-      replace_node(node, num);
-    }
-    else if (!strcmp(name, "@MACRO_FILE")) {
-      CHARBUF_OPEN(tmp);
-      cg_encode_string_literal(get_macro_file(), &tmp);
-      ast_node *new = new_ast_str(Strdup(tmp.ptr));
-      replace_node(node, new);
-      CHARBUF_CLOSE(tmp);
-    }
+    expand_special_ids(node);
     return;
   }
 
   if (is_any_macro_arg_ref(node) || is_any_macro_ref(node)) {
-    EXTRACT_STRING(name, node->left);
-
-    macro_info *minfo = NULL;
-
-    if (is_any_macro_ref(node)) {
-      EXTRACT(macro_args, node->right);
-      if (macro_args) {
-        // expand the arguments to the macro before using them
-        expand_macros(macro_args);
-      }
-
-      minfo = get_macro_info(name);
-    }
-    else {
-      minfo = get_macro_arg_info(name);
-    }
-
-    Invariant(minfo);
-
-    ast_node *copy = ast_clone_tree(minfo->def);
-
-    ast_node *body = NULL;
-    if (is_any_macro_def(copy)) {
-      // macro defs like x!() have the payload on the right
-      body = copy->right;
-      copy->left = body;
-    }
-    else {
-      // macro formals like x! have the payload on the right
-      body = copy->left;
-    }
-
-    macro_state_t macro_state_saved = macro_state;
-
-    if (is_any_macro_ref(node)) {
-      EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
-      EXTRACT(macro_formals, macro_name_formals->right);
-      EXTRACT_STRING(macro_name, macro_name_formals->left);
-      EXTRACT(macro_args, node->right);
-
-      macro_state.parent = &macro_state_saved;
-      macro_state.line = node->lineno;
-      macro_state.file = node->filename;
-      macro_state.name = macro_name;
-      macro_arg_table = macro_state.args = symtab_new();
-
-      while (macro_formals && macro_args) {
-        EXTRACT_NOTNULL(macro_formal, macro_formals->left);
-        EXTRACT_STRING(formal_name, macro_formal->left);
-        EXTRACT_ANY_NOTNULL(macro_arg, macro_args->left);
-        EXTRACT_STRING(type, macro_formal->right);
-
-        int32_t macro_type = macro_type_from_str(type);
-        set_macro_arg_info(formal_name, macro_type, macro_arg);
-
-        if (!macro_arg_valid(macro_type, macro_arg)) {
-          report_macro_error(macro_arg, "macro type mismatch in argument", formal_name);
-          goto cleanup;
-        }
-
-        macro_formals = macro_formals->right;
-        macro_args = macro_args->right;
-      }
-
-      if (macro_formals) {
-        report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
-        goto cleanup;
-      }
-
-      if (macro_args) {
-        report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
-        goto cleanup;
-      }
-    }
-
-    // it's hugely important to expand what you're going to replace FIRST
-    // and then slot it in.  Otherwise the recursion is n^2 depth!!!
-    expand_macros(body);
-
-    // its normal for body to be a different node type
-    body = copy->left;
-
-    // the query parts are already under a table_or_subquery node
-    // because of the macro position, if there is a redundant one
-    // in the arg tree, skip it.  We don't need two such wrappers
-    // it makes extra (()) in the output
-    if (is_ast_table_or_subquery_list(body) && body->right == NULL) {
-      EXTRACT_NOTNULL(table_or_subquery, body->left);
-      if (is_ast_join_clause(table_or_subquery->left) && table_or_subquery->right == NULL) {
-        body = table_or_subquery->left;
-      }
-    }
-
-    ast_node *parent = node->parent;
-
-    if (is_ast_text_args(parent)) {
-      replace_node(node, body);
-    }
-    else if (
-      is_ast_stmt_list(body) ||
-      is_ast_cte_tables(body) ||
-      is_ast_select_core_list(body) ||
-      is_ast_select_expr_list(body)) {
-
-      // insert the copy into the list
-      ast_set_left(parent, body->left);
-
-      // march to the end
-      ast_node *end = body;
-      while (end->right) {
-        end = end->right;
-      }
-
-      // link the copy to whatever was at the end
-      ast_set_right(end, parent->right);
-      ast_set_right(parent, body->right);
-    }
-    else  {
-      replace_node(node, body);
-    }
-
-
-cleanup:
-    if (macro_state.args != macro_state_saved.args && macro_state.args) {
-      symtab_delete(macro_state.args);
-    }
-    macro_state = macro_state_saved;
-    macro_arg_table = macro_state.args;
+    expand_macro_refs(node);
     return;
   }
 

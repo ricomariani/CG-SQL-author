@@ -9,3 +9,9 @@ let z := exp!(1,2);
 @LINE+exp!(1);
 
 let z := exp!(select(1 x));
+
+@ID(@TEXT("foo bar"));
+
+@ID(@TEXT(" foo"));
+
+@ID(@TEXT(""));

@@ -126,6 +126,43 @@ value at runtime.
 The generated code for nullable types is considerably less efficient
 and so it should be avoided if that is reasonably possible.
 
+#### Quoted Identifiers
+
+In places where a SQL name is allowed, such as a table name, column name,
+index name, trigger name, or constraint name, a back quoted identifier
+may be used.  This allows for access and creation of more flexible names.
+
+Example:
+
+```sql
+
+  create table `my table` (
+    `a column` integer
+  );
+```
+
+Since SQL names "leak" into the language via cursors, other places
+a SQL name might appear have similar flexibility.  For instanc,
+names of variables, and columns in cursors can have exotic names.
+
+When rendered to SQL the name will be emitted like
+
+```sql
+  [my table]
+```
+
+and if the name goes to C or Lua it has to be escaped and as rendered
+like so:
+
+```C
+  X_aX20table
+```
+
+Where non-identifier characters are escaped into hex.  This is
+invisible to users of CQL but the C or Lua interface to such
+columns necessarily uses the escaped names.  While this is less
+than perfect, it is the only way to allow access to any legal SQL name.
+
 #### LET Statement
 
 You can declare and initialize a variable in one step using the `LET`

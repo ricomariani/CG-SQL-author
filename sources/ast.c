@@ -1330,6 +1330,8 @@ static void expand_at_text(ast_node *ast) {
   expand_text_args(&tmp, ast->left);
   cg_encode_string_literal(tmp.ptr, &quote);
   ast_node *new = new_ast_str(Strdup(quote.ptr));
+  str_ast_node *sast = (str_ast_node *)new;
+  sast->str_type = STR_CSTR;  // use C style literals because newlines etc. are likely
   replace_node(ast, new);
   CHARBUF_CLOSE(quote);
   CHARBUF_CLOSE(tmp);

@@ -57,11 +57,7 @@ begin
 end;
 
 -- an assertion... but converted to a string
--- + LET zzz := 'begin
--- + IF NOT 7 THEN
--- +   CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/macro_test.sql'', %);
--- + END IF
--- + foo'
+-- + LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%%s' failed at line %%s:%d\\n\", \"7\", 'test/macro_test.sql', 61);\nEND IF;\n\nfoo";
 let zzz := @TEXT("begin\n", assert!(7), "\nfoo");
 
 -- TEST: expression macro
@@ -373,30 +369,27 @@ let y := 2;
 let z := macro2!(x, y);
 
 -- TEST: query parts as text (table factor)
--- + LET zz := '(SELECT 1 AS x, 2 AS y) AS T';
+-- + LET zz := "(SELECT 1 AS x, 2 AS y) AS T";
 let zz := macro3!(from( (select 1 x, 2 y) as T));
 
 -- TEST: query parts as text (join)
--- + SET zz := 'T1
--- +   INNER JOIN T2 ON T1.id = T2.id';
+-- + SET zz := "T1\n  INNER JOIN T2 ON T1.id = T2.id";
 set zz := macro3!(from( T1 join T2 on T1.id = T2.id));
 
 -- TEST: cte tables as text
--- + SET zz := 'x (*) AS (SELECT 1 AS x, 2 AS y)
--- + ';
+-- + SET zz := "x (*) AS (SELECT 1 AS x, 2 AS y)\n"
 set zz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
 
 -- TEST: select core list as text
--- + SET zz := 'SELECT 1 AS x
--- + FROM foo';
+-- + SET zz := "SELECT 1 AS x\n  FROM foo";
 set zz := macro5!(ALL(select 1 x from foo));
 
 -- TEST: expression as text
--- + SET zz := '1 + 2';
+-- + SET zz := "1 + 2";
 set zz := macro6!(1+2);
 
 -- TEST: select expressions as text
--- + SET zz := '1 AS x, 2 AS y';
+-- + SET zz := "1 AS x, 2 AS y";
 set zz := macro7!(select(1 x, 2 y));
 
 -- TEST: ID to make a string into an identifier
@@ -433,15 +426,7 @@ begin
 end;
 
 -- TEST: make a big chunk of text
--- + SET zz := '1 + 2x
--- +   INNER JOIN ySELECT 1
--- +   FROM foo
--- + UNION
--- + SELECT 2
--- +   FROM bar20 AS first_tablef (*) AS (SELECT 99
--- +   FROM second_table)
--- + LET qq := 201;
--- + ';
+-- + SET zz := "1 + 2x\n  INNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS first_tablef (*) AS (SELECT 99\n  FROM second_table)\nLET qq := 201;\n";
 mondo2!(1+2, from(x join y), all(select 1 from foo union select 2 from bar), select(20 first_table), 
   with(f(*) as (select 99 from second_table)), begin let qq := 201; end);
 
@@ -460,5 +445,5 @@ end;
 -- the parens are the important part, it has to be an expression not a statement
 -- even though it's quoted
 --
--- + LET x := '( SELECT 1 + 5 )';
+-- + LET x := "( SELECT 1 + 5 )";
 let x := @TEXT(a_selection!());

@@ -2130,27 +2130,19 @@ LET z := x * (y + 5 + (y + 5) + 1);
 
 SET z := 1922;
 
-LET zz := '(SELECT 1 AS x, 2 AS y) AS T';
+LET zz := "(SELECT 1 AS x, 2 AS y) AS T";
 
-SET zz := 'T1
-  INNER JOIN T2 ON T1.id = T2.id';
+SET zz := "T1\n  INNER JOIN T2 ON T1.id = T2.id";
 
-SET zz := 'x (*) AS (SELECT 1 AS x, 2 AS y)
-';
+SET zz := "x (*) AS (SELECT 1 AS x, 2 AS y)\n";
 
-SET zz := 'SELECT 1 AS x
-  FROM foo';
+SET zz := "SELECT 1 AS x\n  FROM foo";
 
-SET zz := '1 + 2';
+SET zz := "1 + 2";
 
-SET zz := '1 AS x, 2 AS y';
+SET zz := "1 AS x, 2 AS y";
 
-LET zzz := 'begin
-IF NOT 7 THEN
-  CALL printf("assert ''%s'' failed at line %s:%d\n", ''7'', ''test/test.sql'', 1932);
-END IF;
-
-foo';
+LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/test.sql', 1932);\nEND IF;\n\nfoo";
 
 SET x := 5;
 
@@ -2171,15 +2163,7 @@ BEGIN
   END);
 END;
 
-SET zz := '1 + 2x
-  INNER JOIN ySELECT 1
-  FROM foo
-UNION
-SELECT 2
-  FROM bar20 AS xxf (*) AS (SELECT 99
-  FROM yy)
-LET qq := 201;
-';
+SET zz := "1 + 2x\n  INNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS xxf (*) AS (SELECT 99\n  FROM yy)\nLET qq := 201;\n";
 
 LET expr := 1;
 
@@ -2198,7 +2182,7 @@ BEGIN
   ( SELECT 1 + 5 )
 END;
 
-LET x := '( SELECT 1 + 5 )';
+LET x := "( SELECT 1 + 5 )";
 
 @MACRO(STMT_LIST) file_line!()
 BEGIN

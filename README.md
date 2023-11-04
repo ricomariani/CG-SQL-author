@@ -8,12 +8,12 @@ The full system also includes features for managing and upgrading schema, creati
 
 ### Essential Documentation
 
-- [Introduction](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/introduction.md)
-- [CG/SQL User's Guide](https://ricomariani.github.io/CG-SQL-author/user_guide.html#chapter-1-introduction)
-- [CG/SQL Developer's Guide](https://ricomariani.github.io/CG-SQL-author/developer_guide.html)
-- [Getting Started with CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/getting-started.md)
-- [Writing a Hello World Program](https://ricomariani.github.io/CG-SQL-author/user_guide.html#getting-started)
-- [Playground](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/playground.md)
+- [Introduction](https://ricomariani.github.io/CG-SQL-author/docs/quick_start/introduction/)
+- [CG/SQL User's Guide HTML](https://ricomariani.github.io/CG-SQL-author/user_guide.html#chapter-1-introduction)
+- [CG/SQL Developer's Guide HTML](https://ricomariani.github.io/CG-SQL-author/developer_guide.html)
+- [Getting Started with CG/SQL](https://ricomariani.github.io/CG-SQL-author/docs/quick_start/getting-started/)
+- [Writing a Hello World Program](https://ricomariani.github.io/CG-SQL-author/docs/user_guide/01_introduction/#getting-started)
+- [Playground](https://ricomariani.github.io/CG-SQL-author/docs/quick_start/playground/)
 - [Examples](https://github.com/ricomariani/CG-SQL-author/wiki/Examples)
 
 ### Grammar Diagrams
@@ -26,9 +26,9 @@ The full system also includes features for managing and upgrading schema, creati
 
 ### For Contributors
 - [Contributing](https://github.com/ricomariani/CG-SQL-author/blob/main/CONTRIBUTING.md)
-- [Typical Dev Cycle](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/dev_notes.md)
-- [Testing CG/SQL](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/testing.md)
-- [Code Coverage](https://github.com/ricomariani/CG-SQL-author/blob/main/docs/code-coverage.md)
+- [Typical Dev Cycle](https://ricomariani.github.io/CG-SQL-author/docs/contributors/dev_notes/)
+- [Testing CG/SQL](https://ricomariani.github.io/CG-SQL-author/docs/contributors/testing/)
+- [Code Coverage](https://ricomariani.github.io/CG-SQL-author/docs/contributors/code-coverage/)
 
 ### Notes and Archived Resources
 - [Latest Updates Blog](https://github.com/ricomariani/CG-SQL-author/wiki/CG-SQL-Blog)

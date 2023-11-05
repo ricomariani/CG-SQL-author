@@ -632,7 +632,7 @@ any_stmt:
   ;
 
 explain_stmt:
-  EXPLAIN opt_query_plan explain_target  { $explain_stmt = new_ast_explain_stmt(new_ast_opt($opt_query_plan), $explain_target); }
+  EXPLAIN opt_query_plan explain_target  { $explain_stmt = new_ast_explain_stmt(new_ast_option($opt_query_plan), $explain_target); }
   ;
 
 opt_query_plan:
@@ -667,7 +667,7 @@ schema_upgrade_script_stmt:
 
 schema_upgrade_version_stmt:
   AT_SCHEMA_UPGRADE_VERSION '(' INTLIT ')'  {
-    $schema_upgrade_version_stmt = new_ast_schema_upgrade_version_stmt(new_ast_opt(atoi($INTLIT))); }
+    $schema_upgrade_version_stmt = new_ast_schema_upgrade_version_stmt(new_ast_option(atoi($INTLIT))); }
   ;
 
 set_stmt:
@@ -708,22 +708,22 @@ opt_delete_version_attr:
   ;
 
 drop_table_stmt:
-  DROP TABLE IF EXISTS sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_opt(1), $sql_name);  }
+  DROP TABLE IF EXISTS sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(new_ast_option(1), $sql_name);  }
   | DROP TABLE sql_name  { $drop_table_stmt = new_ast_drop_table_stmt(NULL, $sql_name);  }
   ;
 
 drop_view_stmt:
-  DROP VIEW IF EXISTS sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_opt(1), $sql_name);  }
+  DROP VIEW IF EXISTS sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(new_ast_option(1), $sql_name);  }
   | DROP VIEW sql_name  { $drop_view_stmt = new_ast_drop_view_stmt(NULL, $sql_name);  }
   ;
 
 drop_index_stmt:
-  DROP INDEX IF EXISTS sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_opt(1), $sql_name);  }
+  DROP INDEX IF EXISTS sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(new_ast_option(1), $sql_name);  }
   | DROP INDEX sql_name  { $drop_index_stmt = new_ast_drop_index_stmt(NULL, $sql_name);  }
   ;
 
 drop_trigger_stmt:
-  DROP TRIGGER IF EXISTS sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_opt(1), $sql_name);  }
+  DROP TRIGGER IF EXISTS sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(new_ast_option(1), $sql_name);  }
   | DROP TRIGGER sql_name  { $drop_trigger_stmt = new_ast_drop_trigger_stmt(NULL, $sql_name);  }
   ;
 
@@ -731,7 +731,7 @@ create_virtual_table_stmt: CREATE VIRTUAL TABLE opt_vtab_flags sql_name[table_na
                            USING name[module_name] opt_module_args
                            AS '(' col_key_list ')' opt_delete_version_attr {
     int flags = $opt_vtab_flags;
-    struct ast_node *flags_node = new_ast_opt(flags);
+    struct ast_node *flags_node = new_ast_option(flags);
     struct ast_node *name = $table_name;
     struct ast_node *col_key_list = $col_key_list;
     struct ast_node *version_info = $opt_delete_version_attr ? $opt_delete_version_attr : new_ast_recreate_attr(NULL, NULL);
@@ -756,7 +756,7 @@ create_table_prefix_opt_temp:
 create_table_stmt:
   create_table_prefix_opt_temp opt_if_not_exists sql_name '(' col_key_list ')' opt_no_rowid version_attrs_opt_recreate  {
     int flags = $create_table_prefix_opt_temp | $opt_if_not_exists | $opt_no_rowid;
-    struct ast_node *flags_node = new_ast_opt(flags);
+    struct ast_node *flags_node = new_ast_option(flags);
     struct ast_node *name = $sql_name;
     struct ast_node *col_key_list = $col_key_list;
     struct ast_node *table_flags_attrs = new_ast_table_flags_attrs(flags_node, $version_attrs_opt_recreate);
@@ -889,7 +889,7 @@ pk_def:
 
 opt_conflict_clause:
   /* nil */ { $opt_conflict_clause = NULL; }
-  | conflict_clause { $opt_conflict_clause = new_ast_opt($conflict_clause); }
+  | conflict_clause { $opt_conflict_clause = new_ast_option($conflict_clause); }
   ;
 
 conflict_clause:
@@ -948,7 +948,7 @@ fk_def:
 
 fk_target_options:
   REFERENCES sql_name '(' sql_name_list ')' opt_fk_options  {
-    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($sql_name, $sql_name_list), new_ast_opt($opt_fk_options)); }
+    $fk_target_options = new_ast_fk_target_options(new_ast_fk_target($sql_name, $sql_name_list), new_ast_option($opt_fk_options)); }
   ;
 
 unq_def:
@@ -986,7 +986,7 @@ create_index_stmt:
     ast_node *create_index_on_list = new_ast_create_index_on_list($tbl_name, $idx_name);
     ast_node *index_names_and_attrs = new_ast_index_names_and_attrs($indexed_columns, $opt_where);
     ast_node *connector = new_ast_connector(index_names_and_attrs, $opt_delete_version_attr);
-    ast_node *flags_names_attrs = new_ast_flags_names_attrs(new_ast_opt(flags), connector);
+    ast_node *flags_names_attrs = new_ast_flags_names_attrs(new_ast_option(flags), connector);
     $create_index_stmt = new_ast_create_index_stmt(create_index_on_list, flags_names_attrs);
   }
   ;
@@ -1080,12 +1080,12 @@ col_attrs[result]:
 
 version_annotation:
   '(' INTLIT ',' name ')'  {
-    $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), $name); }
+    $version_annotation = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), $name); }
   | '(' INTLIT ',' name[lhs] ':' name[rhs] ')'  {
     ast_node *dot = new_ast_dot($lhs, $rhs);
-    $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), dot); }
+    $version_annotation = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), dot); }
   | '(' INTLIT ')'  {
-    $version_annotation = new_ast_version_annotation(new_ast_opt(atoi($INTLIT)), NULL); }
+    $version_annotation = new_ast_version_annotation(new_ast_option(atoi($INTLIT)), NULL); }
   ;
 
 opt_kind:
@@ -1177,10 +1177,10 @@ text_args:
 text_arg : str_literal | any_macro_arg_ref ;
 
 raise_expr:
-  RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_IGNORE), NULL); }
-  | RAISE '(' ROLLBACK ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_ROLLBACK), $expr); }
-  | RAISE '(' ABORT ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_ABORT), $expr); }
-  | RAISE '(' FAIL ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_opt(RAISE_FAIL), $expr); }
+  RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_IGNORE), NULL); }
+  | RAISE '(' ROLLBACK ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_ROLLBACK), $expr); }
+  | RAISE '(' ABORT ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_ABORT), $expr); }
+  | RAISE '(' FAIL ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_FAIL), $expr); }
   ;
 
 opt_distinct: /*empty*/ { $opt_distinct = NULL; }
@@ -1410,11 +1410,11 @@ select_stmt_no_with:
 select_core_list[result]:
   select_core { $result = new_ast_select_core_list($select_core, NULL); }
   | select_core compound_operator select_core_list[list] {
-     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
+     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_option($compound_operator), $list);
      $result = new_ast_select_core_list($select_core, select_core_compound); }
   | select_core_macro_ref { $result = new_ast_select_core_list($select_core_macro_ref, NULL); }
   | select_core_macro_ref compound_operator select_core_list[list] {
-     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_opt($compound_operator), $list);
+     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_option($compound_operator), $list);
      $result = new_ast_select_core_list($select_core_macro_ref, select_core_compound); }
   ;
 
@@ -1481,7 +1481,7 @@ opt_frame_spec:
     int32_t frame_boundary_opts_flags = (int32_t)((int_ast_node *)($frame_boundary_opts)->left)->value;
     int32_t flags = $frame_type | frame_boundary_opts_flags | $frame_exclude;
     ast_node *expr_list = $frame_boundary_opts->right;
-    $opt_frame_spec = new_ast_opt_frame_spec(new_ast_opt(flags), expr_list);
+    $opt_frame_spec = new_ast_opt_frame_spec(new_ast_option(flags), expr_list);
   }
   ;
 
@@ -1508,28 +1508,28 @@ frame_boundary_opts:
   | BETWEEN frame_boundary_start AND frame_boundary_end  {
     int32_t flags = (int32_t)(((int_ast_node *)$frame_boundary_start->left)->value | ((int_ast_node *)$frame_boundary_end->left)->value);
     ast_node *expr_list = new_ast_expr_list($frame_boundary_start->right, $frame_boundary_end->right);
-    $frame_boundary_opts = new_ast_frame_boundary_opts(new_ast_opt(flags), expr_list);
+    $frame_boundary_opts = new_ast_frame_boundary_opts(new_ast_option(flags), expr_list);
   }
   ;
 
 frame_boundary_start:
-  UNBOUNDED PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_UNBOUNDED), NULL); }
-  | expr PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_PRECEDING), $expr); }
-  | CURRENT_ROW  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_CURRENT_ROW), NULL); }
-  | expr FOLLOWING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_opt(FRAME_BOUNDARY_START_FOLLOWING), $expr); }
+  UNBOUNDED PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_UNBOUNDED), NULL); }
+  | expr PRECEDING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_PRECEDING), $expr); }
+  | CURRENT_ROW  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_CURRENT_ROW), NULL); }
+  | expr FOLLOWING  { $frame_boundary_start = new_ast_frame_boundary_start(new_ast_option(FRAME_BOUNDARY_START_FOLLOWING), $expr); }
   ;
 
 frame_boundary_end:
-  expr PRECEDING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_PRECEDING), $expr); }
-  | CURRENT_ROW  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_CURRENT_ROW), NULL); }
-  | expr FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_FOLLOWING), $expr); }
-  | UNBOUNDED FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_opt(FRAME_BOUNDARY_END_UNBOUNDED), NULL); }
+  expr PRECEDING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_PRECEDING), $expr); }
+  | CURRENT_ROW  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_CURRENT_ROW), NULL); }
+  | expr FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_FOLLOWING), $expr); }
+  | UNBOUNDED FOLLOWING  { $frame_boundary_end = new_ast_frame_boundary_end(new_ast_option(FRAME_BOUNDARY_END_UNBOUNDED), NULL); }
   ;
 
 frame_boundary:
-  UNBOUNDED PRECEDING  { $frame_boundary = new_ast_frame_boundary(new_ast_opt(FRAME_BOUNDARY_UNBOUNDED), NULL); }
-  | expr PRECEDING  { $frame_boundary = new_ast_frame_boundary(new_ast_opt(FRAME_BOUNDARY_PRECEDING), $expr); }
-  | CURRENT_ROW  { $frame_boundary = new_ast_frame_boundary(new_ast_opt(FRAME_BOUNDARY_CURRENT_ROW), NULL); }
+  UNBOUNDED PRECEDING  { $frame_boundary = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_UNBOUNDED), NULL); }
+  | expr PRECEDING  { $frame_boundary = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_PRECEDING), $expr); }
+  | CURRENT_ROW  { $frame_boundary = new_ast_frame_boundary(new_ast_option(FRAME_BOUNDARY_CURRENT_ROW), NULL); }
   ;
 
 opt_partition_by:
@@ -1556,8 +1556,8 @@ window_name_defn:
   ;
 
 region_spec:
-    name  { $region_spec = new_ast_region_spec($name, new_ast_opt(PUBLIC_REGION)); }
-  | name PRIVATE  { $region_spec = new_ast_region_spec($name, new_ast_opt(PRIVATE_REGION)); }
+    name  { $region_spec = new_ast_region_spec($name, new_ast_option(PUBLIC_REGION)); }
+  | name PRIVATE  { $region_spec = new_ast_region_spec($name, new_ast_option(PRIVATE_REGION)); }
   ;
 
 region_list[result]:
@@ -1584,7 +1584,7 @@ end_schema_region_stmt:
   ;
 
 schema_unsub_stmt:
-  AT_UNSUB  '(' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_opt(1), $name)); }
+  AT_UNSUB  '(' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_option(1), $name)); }
   ;
 
 schema_ad_hoc_migration_stmt:
@@ -1747,7 +1747,7 @@ join_type:
   ;
 
 join_target: join_type JOIN table_or_subquery opt_join_cond  {
-      struct ast_node *asti_join_type = new_ast_opt($join_type);
+      struct ast_node *asti_join_type = new_ast_option($join_type);
       struct ast_node *table_join = new_ast_table_join($table_or_subquery, $opt_join_cond);
       $join_target = new_ast_join_target(asti_join_type, table_join); }
   ;
@@ -1768,7 +1768,7 @@ table_function:
 
 create_view_stmt:
   CREATE opt_temp VIEW opt_if_not_exists sql_name AS select_stmt opt_delete_version_attr  {
-  struct ast_node *flags = new_ast_opt($opt_temp | $opt_if_not_exists);
+  struct ast_node *flags = new_ast_option($opt_temp | $opt_if_not_exists);
   struct ast_node *name_and_select = new_ast_name_and_select($sql_name, $select_stmt);
   struct ast_node *view_and_attrs = new_ast_view_and_attrs(name_and_select, $opt_delete_version_attr);
   $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
@@ -1786,7 +1786,7 @@ delete_stmt:
 opt_insert_dummy_spec:
   /*nil*/  { $opt_insert_dummy_spec = NULL; }
   | AT_DUMMY_SEED '(' expr ')' dummy_modifier  {
-    $opt_insert_dummy_spec = new_ast_insert_dummy_spec($expr, new_ast_opt($dummy_modifier)); }
+    $opt_insert_dummy_spec = new_ast_insert_dummy_spec($expr, new_ast_option($dummy_modifier)); }
   ;
 
 dummy_modifier:
@@ -2001,25 +2001,25 @@ declare_proc_no_check_stmt:
 
 declare_proc_stmt:
   DECLARE procedure name '(' params ')'  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_BASIC));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_BASIC));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
   | DECLARE procedure name '(' params ')' '(' typed_names ')'  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_DML));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure name '(' params ')' USING TRANSACTION  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_USES_DML));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
   | DECLARE procedure name '(' params ')' OUT '(' typed_names ')'  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure name '(' params ')' OUT '(' typed_names ')' USING TRANSACTION  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT | PROC_FLAG_USES_DML));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure name '(' params ')' OUT UNION '(' typed_names ')'  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   | DECLARE procedure name '(' params ')' OUT UNION '(' typed_names ')' USING TRANSACTION  {
-      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_opt(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION | PROC_FLAG_USES_DML));
+      ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   ;
 
@@ -2127,11 +2127,11 @@ switch_stmt:
   SWITCH expr switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
-    $switch_stmt = new_ast_switch_stmt(new_ast_opt(0), switch_body);  }
+    $switch_stmt = new_ast_switch_stmt(new_ast_option(0), switch_body);  }
   | SWITCH expr ALL VALUES switch_case switch_cases {
     ast_node *cases = new_ast_switch_case($switch_case, $switch_cases);
     ast_node *switch_body = new_ast_switch_body($expr, cases);
-    $switch_stmt = new_ast_switch_stmt(new_ast_opt(1), switch_body);  }
+    $switch_stmt = new_ast_switch_stmt(new_ast_option(1), switch_body);  }
   ;
 
 switch_case:
@@ -2291,8 +2291,8 @@ transaction_mode:
   ;
 
 begin_trans_stmt:
-  BEGIN_ transaction_mode TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_opt($transaction_mode)); }
-  | BEGIN_ transaction_mode { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_opt($transaction_mode)); }
+  BEGIN_ transaction_mode TRANSACTION  { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
+  | BEGIN_ transaction_mode { $begin_trans_stmt = new_ast_begin_trans_stmt(new_ast_option($transaction_mode)); }
   ;
 
 rollback_trans_stmt:
@@ -2350,7 +2350,7 @@ create_trigger_stmt:
   CREATE opt_temp TRIGGER opt_if_not_exists trigger_def opt_delete_version_attr  {
     int flags = $opt_temp | $opt_if_not_exists;
     $create_trigger_stmt = new_ast_create_trigger_stmt(
-        new_ast_opt(flags),
+        new_ast_option(flags),
         new_ast_trigger_body_vers($trigger_def, $opt_delete_version_attr)); }
   ;
 
@@ -2359,7 +2359,7 @@ trigger_def:
   $trigger_def = new_ast_trigger_def(
         $n1,
         new_ast_trigger_condition(
-          new_ast_opt($trigger_condition),
+          new_ast_option($trigger_condition),
           new_ast_trigger_op_target(
             $trigger_operation,
             new_ast_trigger_target_action(
@@ -2375,9 +2375,9 @@ trigger_condition:
  ;
 
 trigger_operation:
-  DELETE  { $trigger_operation = new_ast_trigger_operation(new_ast_opt(TRIGGER_DELETE), NULL); }
-  | INSERT  { $trigger_operation = new_ast_trigger_operation(new_ast_opt(TRIGGER_INSERT), NULL); }
-  | UPDATE opt_of  { $trigger_operation = new_ast_trigger_operation(new_ast_opt(TRIGGER_UPDATE), $opt_of); }
+  DELETE  { $trigger_operation = new_ast_trigger_operation(new_ast_option(TRIGGER_DELETE), NULL); }
+  | INSERT  { $trigger_operation = new_ast_trigger_operation(new_ast_option(TRIGGER_INSERT), NULL); }
+  | UPDATE opt_of  { $trigger_operation = new_ast_trigger_operation(new_ast_option(TRIGGER_UPDATE), $opt_of); }
   ;
 
 opt_of:
@@ -2388,7 +2388,7 @@ opt_of:
 trigger_action:
   opt_foreachrow opt_when_expr BEGIN_ trigger_stmts END  {
   $trigger_action = new_ast_trigger_action(
-        new_ast_opt($opt_foreachrow),
+        new_ast_option($opt_foreachrow),
         new_ast_trigger_when_stmts($opt_when_expr, $trigger_stmts)); }
   ;
 
@@ -2431,28 +2431,28 @@ trigger_update_stmt:
   ;
 
 enforcement_options:
-  FOREIGN KEY ON UPDATE  { $enforcement_options = new_ast_opt(ENFORCE_FK_ON_UPDATE); }
-  | FOREIGN KEY ON DELETE  { $enforcement_options = new_ast_opt(ENFORCE_FK_ON_DELETE); }
-  | JOIN  { $enforcement_options = new_ast_opt(ENFORCE_STRICT_JOIN); }
-  | UPSERT STATEMENT  { $enforcement_options = new_ast_opt(ENFORCE_UPSERT_STMT); }
-  | WINDOW function  { $enforcement_options = new_ast_opt(ENFORCE_WINDOW_FUNC); }
-  | WITHOUT ROWID  { $enforcement_options = new_ast_opt(ENFORCE_WITHOUT_ROWID); }
-  | TRANSACTION { $enforcement_options = new_ast_opt(ENFORCE_TRANSACTION); }
-  | SELECT IF NOTHING { $enforcement_options = new_ast_opt(ENFORCE_SELECT_IF_NOTHING); }
-  | INSERT SELECT { $enforcement_options = new_ast_opt(ENFORCE_INSERT_SELECT); }
-  | TABLE FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_TABLE_FUNCTION); }
-  | ENCODE CONTEXT_COLUMN { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_COLUMN); }
-  | ENCODE CONTEXT_TYPE INTEGER { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER); }
-  | ENCODE CONTEXT_TYPE LONG_INTEGER { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER); }
-  | ENCODE CONTEXT_TYPE REAL { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_REAL); }
-  | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
-  | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
-  | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_opt(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
-  | IS_TRUE { $enforcement_options = new_ast_opt(ENFORCE_IS_TRUE); }
-  | CAST { $enforcement_options = new_ast_opt(ENFORCE_CAST); }
-  | SIGN_FUNCTION { $enforcement_options = new_ast_opt(ENFORCE_SIGN_FUNCTION); }
-  | CURSOR_HAS_ROW { $enforcement_options = new_ast_opt(ENFORCE_CURSOR_HAS_ROW); }
-  | UPDATE FROM { $enforcement_options = new_ast_opt(ENFORCE_UPDATE_FROM); }
+  FOREIGN KEY ON UPDATE  { $enforcement_options = new_ast_option(ENFORCE_FK_ON_UPDATE); }
+  | FOREIGN KEY ON DELETE  { $enforcement_options = new_ast_option(ENFORCE_FK_ON_DELETE); }
+  | JOIN  { $enforcement_options = new_ast_option(ENFORCE_STRICT_JOIN); }
+  | UPSERT STATEMENT  { $enforcement_options = new_ast_option(ENFORCE_UPSERT_STMT); }
+  | WINDOW function  { $enforcement_options = new_ast_option(ENFORCE_WINDOW_FUNC); }
+  | WITHOUT ROWID  { $enforcement_options = new_ast_option(ENFORCE_WITHOUT_ROWID); }
+  | TRANSACTION { $enforcement_options = new_ast_option(ENFORCE_TRANSACTION); }
+  | SELECT IF NOTHING { $enforcement_options = new_ast_option(ENFORCE_SELECT_IF_NOTHING); }
+  | INSERT SELECT { $enforcement_options = new_ast_option(ENFORCE_INSERT_SELECT); }
+  | TABLE FUNCTION { $enforcement_options = new_ast_option(ENFORCE_TABLE_FUNCTION); }
+  | ENCODE CONTEXT_COLUMN { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_COLUMN); }
+  | ENCODE CONTEXT_TYPE INTEGER { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER); }
+  | ENCODE CONTEXT_TYPE LONG_INTEGER { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER); }
+  | ENCODE CONTEXT_TYPE REAL { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_REAL); }
+  | ENCODE CONTEXT_TYPE BOOL_ { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_BOOL); }
+  | ENCODE CONTEXT_TYPE TEXT { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_TEXT); }
+  | ENCODE CONTEXT_TYPE BLOB { $enforcement_options = new_ast_option(ENFORCE_ENCODE_CONTEXT_TYPE_BLOB); }
+  | IS_TRUE { $enforcement_options = new_ast_option(ENFORCE_IS_TRUE); }
+  | CAST { $enforcement_options = new_ast_option(ENFORCE_CAST); }
+  | SIGN_FUNCTION { $enforcement_options = new_ast_option(ENFORCE_SIGN_FUNCTION); }
+  | CURSOR_HAS_ROW { $enforcement_options = new_ast_option(ENFORCE_CURSOR_HAS_ROW); }
+  | UPDATE FROM { $enforcement_options = new_ast_option(ENFORCE_UPDATE_FROM); }
   ;
 
 enforce_strict_stmt:
@@ -2476,8 +2476,8 @@ enforce_pop_stmt:
   ;
 
 opt_use_offset:
-  /* nil */ { $opt_use_offset = new_ast_opt(0); }
-  | OFFSET  { $opt_use_offset = new_ast_opt(1); }
+  /* nil */ { $opt_use_offset = new_ast_option(0); }
+  | OFFSET  { $opt_use_offset = new_ast_option(1); }
   ;
 
 blob_get_key_type_stmt:
@@ -3338,7 +3338,7 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   // this just forces the literal to be echoed as a C literal
   // so that it is prettier in the echoed output, otherwise no difference
   // all literals are stored in SQL format.
-  ((str_ast_node *)lit)->str_type = STR_CSTR;
+  ((str_ast_node *)lit)->str_type = STRING_TYPE_C;
 
   CHARBUF_CLOSE(result);
   CHARBUF_CLOSE(tmp);

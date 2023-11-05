@@ -21,6 +21,15 @@
 // uncomment for HEX
 // #define AST_EMIT_HEX 1
 
+// uncomment to check parent values as the ast is walked
+// #define EMIT_BROKEN_AST_WARNING 1
+
+// uncomment to print the AST only
+//    this is helpful if the ast is temporarily broken and
+//    you want to look at it without getting asserts in
+//    the gen_one_statement code path
+// #define SUPPRESS_STATEMENT_ECHO
+
 cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
 cql_data_defn( char *_Nullable current_file );
@@ -49,6 +58,7 @@ typedef struct misc_attrs_type {
   uint32_t count;
 } misc_attrs_type;
 
+// initialization for the ast and macro expansion pass
 cql_noexport void ast_init() {
   minipool_open(&ast_pool);
   minipool_open(&str_pool);
@@ -73,68 +83,103 @@ cql_noexport void ast_cleanup() {
   run_lazy_frees();
 }
 
+// When a rewrite begins outside the context of normal parsing we do not
+// know what file and line number should be attributed to the new nodes.
+// This tells us.
 cql_noexport void ast_set_rewrite_info(int32_t lineno, CSTR filename) {
   yylineno = lineno;
   current_file = (char *)filename;
 }
 
+// When we're done with a rewrite we do not want the old info to linger
+// so it is immediately cleaned up.  The macros assert that the state is clean.
 cql_noexport void ast_reset_rewrite_info() {
   yylineno = -1;
   current_file = NULL;
 }
 
+// Any number node
 cql_noexport bool_t is_ast_num(ast_node *node) {
   return node && (node->type == k_ast_num);
 }
 
+// The integer node is not for numeric integers in the grammar
+// This is used where there is an enumeration of values like
+// a join type that can be represented as an int.  We don't
+// store numbers like this because it would require us to
+// faithfully parse all the hard cases and since we're just
+// going to re-emit them anyway it seems silly to avoid
+// lossless encode and decode when we can just store the string.
+// Hence this is not for numerics.
 cql_noexport bool_t is_ast_int(ast_node *node) {
   return node && (node->type == k_ast_int);
 }
 
+
+// Any of the various string payloads
+// * identifiers
+// * string literals
+// * quoted string literals
+// * macro names
 cql_noexport bool_t is_ast_str(ast_node *node) {
   return node && (node->type == k_ast_str);
 }
 
+// A blob literal, only valid in SQL contexts.
+// We don't allow blob literals in other contexts
+// because there is no way to emit such a literal
+// without a runtime initializer which we aren't
+// willing to do.
 cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
 
+// This is a quoted identifier `foo bar`
 cql_noexport bool_t is_qid(ast_node *node) {
-  return is_ast_str(node) && ((str_ast_node *)node)->str_type == STR_QSTR;
+  return is_ast_str(node) && ((str_ast_node *)node)->str_type == STRING_TYPE_QUOTED_ID;
 }
 
+// The special @RC node
 cql_noexport bool_t is_at_rc(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node *)node)->value);
 }
 
+// The special @PROC node
 cql_noexport bool_t is_proclit(ast_node *node) {
   return is_ast_str(node) && !Strcasecmp("@PROC", ((str_ast_node *)node)->value);
 }
 
+// Any string literal (they are alway normalized to SQL format, 'xyz')
 cql_noexport bool_t is_strlit(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] == '\'';
 }
 
+// Any normal identifier (could be `foo`)
 cql_noexport bool_t is_id(ast_node *node) {
   return is_ast_str(node) && ((str_ast_node *)node)->value[0] != '\'';
 }
 
+// The root name types foo and foo.bar
 cql_noexport bool_t is_id_or_dot(ast_node *node) {
   return is_id(node) || is_ast_dot(node);
 }
 
+// Any of the leaf types
 cql_noexport bool_t is_primitive(ast_node *node) {
   return is_ast_num(node) || is_ast_str(node) || is_ast_blob(node) || is_ast_int(node);
 }
 
+// Any of the procedure types (create or declare)
 cql_noexport bool_t is_proc(ast_node *node) {
   return is_ast_create_proc_stmt(node) || is_ast_declare_proc_stmt(node);
 }
 
+// Any of the region types
 cql_noexport bool_t is_region(ast_node *ast) {
   return is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast);
 }
 
+// Any of the select forms
 cql_noexport bool_t is_select_stmt(ast_node *ast) {
   return is_ast_select_stmt(ast) ||
          is_ast_explain_stmt(ast) ||
@@ -142,16 +187,19 @@ cql_noexport bool_t is_select_stmt(ast_node *ast) {
          is_ast_with_select_stmt(ast);
 }
 
+// Any of the delete forms
 cql_noexport bool_t is_delete_stmt(ast_node *ast) {
   return is_ast_delete_stmt(ast) ||
          is_ast_with_delete_stmt(ast);
 }
 
+// Any of the update forms
 cql_noexport bool_t is_update_stmt(ast_node *ast) {
   return is_ast_update_stmt(ast) ||
          is_ast_with_update_stmt(ast);
 }
 
+// Any of the insert forms
 cql_noexport bool_t is_insert_stmt(ast_node *ast) {
   return is_ast_insert_stmt(ast) ||
          is_ast_with_insert_stmt(ast) ||
@@ -159,6 +207,11 @@ cql_noexport bool_t is_insert_stmt(ast_node *ast) {
          is_ast_with_upsert_stmt(ast);
 }
 
+// True if there is left node and it is not null
+// This is handy for tree walks.  Primtives have
+// and they are normally processed as ast_node *
+// even though they are not.  They have effectively
+// a common base type.  But left/right is not in it.
 cql_noexport bool_t ast_has_left(ast_node *node) {
   if (is_primitive(node)) {
     return false;
@@ -166,6 +219,7 @@ cql_noexport bool_t ast_has_left(ast_node *node) {
   return (node->left != NULL);
 }
 
+// As above, right node.
 cql_noexport bool_t ast_has_right(ast_node *node) {
   if (is_primitive(node)) {
     return false;
@@ -173,6 +227,10 @@ cql_noexport bool_t ast_has_right(ast_node *node) {
   return (node->right != NULL);
 }
 
+// Sets the right node but also sets the parent node of the node
+// on the right to the new parent.  Always use this helper because
+// code invariably forgets to set the parent causing a broken tree
+// otherwise.
 cql_noexport void ast_set_right(ast_node *parent, ast_node *right)  {
   parent->right = right;
   if (right) {
@@ -180,6 +238,7 @@ cql_noexport void ast_set_right(ast_node *parent, ast_node *right)  {
   }
 }
 
+// As above, left node.
 cql_noexport void ast_set_left(ast_node *parent, ast_node *left) {
   parent->left = left;
   if (left) {
@@ -187,6 +246,9 @@ cql_noexport void ast_set_left(ast_node *parent, ast_node *left) {
   }
 }
 
+// Create a new ast node witht he given left and right.
+// Sets the file and line number from the global state
+// Sets the parent node of the provided children to the new node.
 cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right) {
   Contract(current_file && yylineno > 0);
   ast_node *ast = _ast_pool_new(ast_node);
@@ -203,7 +265,10 @@ cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right
   return ast;
 }
 
-cql_noexport ast_node *new_ast_opt(int32_t value) {
+// Reflecting the fact that this is information about a
+// fact in the AST and not a number it's called new_ast_option
+// for option.
+cql_noexport ast_node *new_ast_option(int32_t value) {
   Contract(current_file && yylineno > 0);
   int_ast_node *iast = _ast_pool_new(int_ast_node);
   iast->type = k_ast_int;
@@ -214,6 +279,9 @@ cql_noexport ast_node *new_ast_opt(int32_t value) {
   return (ast_node *)iast;
 }
 
+// Create a new string node for a string literal
+// These are sql literals by default so we use
+// that string type.
 cql_noexport ast_node *new_ast_str(CSTR value) {
   Contract(current_file && yylineno > 0);
   Contract(value);
@@ -223,10 +291,18 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
   sast->lineno = yylineno;
   sast->filename = current_file;
   sast->sem = NULL;
-  sast->str_type = STR_SQL;
+  sast->str_type = STRING_TYPE_SQL;
   return (ast_node *)sast;
 }
 
+// Create a new numberic node.  As discussed above
+// the numeric is encoded in string form.  We do not
+// even try to normalize it.  This is especially important
+// for floating point literals.  We do not want to lose
+// anything between the CQL code and the target compiler.
+// We assume that floating point processing might be slightly
+// different in C vs. SQLite or Lua.  Hence we keep the constant
+// fixed.
 cql_noexport ast_node *new_ast_num(int32_t num_type, CSTR value) {
   Contract(current_file && yylineno > 0);
   Contract(value);
@@ -241,6 +317,8 @@ cql_noexport ast_node *new_ast_num(int32_t num_type, CSTR value) {
   return (ast_node *)nast;
 }
 
+// Creates a new blob literal.  As with numerics we
+// simply store the text of the literal and pass it through.
 cql_noexport ast_node *new_ast_blob(CSTR value) {
   Contract(current_file && yylineno > 0);
   str_ast_node *sast = _ast_pool_new(str_ast_node);
@@ -249,12 +327,13 @@ cql_noexport ast_node *new_ast_blob(CSTR value) {
   sast->lineno = yylineno;
   sast->filename = current_file;
   sast->sem = NULL;
-  sast->str_type = STR_SQL;
   return (ast_node *)sast;
 }
 
-// Get the compound operator name. crash if compound operation integer is
-// invalid
+// Get the compound operator name.
+// As with almost all other aspects of the AST the AST is known
+// to be good by contract and this is enforced.  Any badly
+// formed AST is not tolerated anywhere which keeps it clean.
 cql_noexport CSTR get_compound_operator_name(int32_t compound_operator) {
   CSTR result = NULL;
 
@@ -294,22 +373,40 @@ cql_noexport CSTR convert_cstrlit(CSTR cstr) {
   return result;
 }
 
+// Just like SQL string literal but we record
+// that the origin of the string was the C format.
+// When we decode this node we will format it
+// in the C way.  But in the AST it's stored in
+// the SQL way.
 cql_noexport ast_node *new_ast_cstr(CSTR value) {
   value = convert_cstrlit(value);
   str_ast_node *sast = (str_ast_node *)new_ast_str(value);
-  sast->str_type = STR_CSTR;
+  sast->str_type = STRING_TYPE_C;
   return (ast_node *)sast;
 }
 
+// This makes a new QID node starting from already escaped
+// ID text.  So for instance `a b` is X_aX20b.  We do
+// not escaped the text again or wrap it in quotes.
+// We verify that it looks like escaped text.
 cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
   Contract(value);
   Contract(value[0] != '`');
 
   str_ast_node *sast = (str_ast_node *)new_ast_str(value);
-  sast->str_type = STR_QSTR;
+  sast->str_type = STRING_TYPE_QUOTED_ID;
   return (ast_node *)sast;
 }
 
+// This makes a new QID node starting form the quoted
+// identifier like `a b`.  We have to escape it first
+// and then we store that name.  Lots of the code is
+// oblivious to the fact that the id was escaped.  e.g.
+// All the C  and Lua codegen correctly uses the escaped
+// name and never deals with unescaping.  This means
+// the bulk of the compiler doesn't have to know about
+// the escaping.  The exceptions are the forgatting code
+// in gen_sql and the ast building code in rewrite.c
 cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
   Contract(value);
   Contract(value[0] == '`');
@@ -323,8 +420,12 @@ cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
   return result;
 }
 
+// for indenting, it just holds spaces.
 static char padbuffer[4096];
 
+
+// Emits the value of the node if it is a leaf node.
+// Returns true such a value was emitted.
 cql_noexport bool_t print_ast_value(struct ast_node *node) {
   bool_t ret = false;
 
@@ -391,6 +492,9 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
     cql_output("%llx: ", (long long)node);
 #endif
     cql_output("%s", padbuffer);
+
+    // The join type case is common enough that we have special code for it.
+    // The rest are just formatted as a number.
     int_ast_node *inode = (int_ast_node *)node;
     cql_output("{int %lld}", (llint_t)inode->value);
     if (node->parent->type == k_ast_join_target) {
@@ -421,6 +525,7 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
   return ret;
 }
 
+// Prints the node type and the semantic info if there is any
 cql_noexport void print_ast_type(ast_node *node) {
   cql_output("%s", padbuffer);
   cql_output("{%s}", node->type);
@@ -697,6 +802,11 @@ cql_noexport uint32_t find_identity_columns(
   return find_attribute_str(misc_attr_list, callback, context, "identity");
 }
 
+// Helper function to select out the cql:alias_of attribute
+// This is really only interesting to C codegen.  It forces the compiler
+// to emit an extra #define as well as the function prototype so that
+// some common native function can implement several equivalent but
+// perhaps different by CQL type external functions.
 cql_noexport uint32_t find_cql_alias_of(
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
@@ -761,7 +871,8 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
     return;
   }
 
-/*
+// Verifies that the parent pointer is corrent
+#ifdef EMIT_BROKEN_AST_WARNING
   if (ast_has_right(node) && node->right->parent != node) {
     cql_output("%llx ast broken right", (long long)node);
     broken(node);
@@ -771,7 +882,7 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
     cql_output("%llx ast broken left", (long long)node);
     broken(node);
   }
-*/
+#endif
 
   if (print_ast_value(node)) {
     return;
@@ -798,7 +909,9 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
           gen_misc_attrs_to_stdout(misc_attrs);
         }
 
+#ifndef SUPPRESS_STATEMENT_ECHO
         gen_one_stmt_to_stdout(stmt);
+#endif
         cql_output("\n");
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
@@ -1120,11 +1233,16 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   return _ast;
 }
 
+// a new macro body context has happened, clear
+// the existing context and make a new symbol table
+// for macro arguments.  This will be the x! and y!
+// in @macro(expr) foo!(x! expr, y! expr)
 cql_noexport void new_macro_formals() {
   delete_macro_formals();
   macro_arg_table = symtab_new();
 }
 
+// The macro body has ended, clean the symbol table
 cql_noexport void delete_macro_formals() {
   if (macro_arg_table) {
     symtab_delete(macro_arg_table);
@@ -1132,6 +1250,14 @@ cql_noexport void delete_macro_formals() {
   }
 }
 
+// A new macro definition has appeared we need to record:
+//  * The name
+//  * The type
+//  * the ast node of the body
+// The name in the table will be foo! so we add the ! to the symbol name
+// From this point on foo! will resolve to a macro so it's not possible
+// to redeclare foo! -- any such attempt will not look like an indentifer
+// followed by a macro name.
 cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast) {
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
@@ -1140,11 +1266,15 @@ cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast)
   return symtab_add(macro_table, dup_printf("%s!", name), minfo);
 }
 
+// Recover the macro info given the name (if it exists).
 cql_noexport macro_info *get_macro_info(CSTR name) {
   symtab_entry *entry = symtab_find(macro_table, name);
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
+// As above, but for macro arguments.  These are the formal arguments
+// of any macro. The processing is the same except that it goes in a different table.
+// Duplicates lead to errors.
 cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast) {
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
@@ -1152,11 +1282,14 @@ cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *
   return symtab_add(macro_arg_table, dup_printf("%s!", name), minfo);
 }
 
+// Recover the macro info given the name (if it exists).
 cql_noexport macro_info *get_macro_arg_info(CSTR name) {
   symtab_entry *entry = symtab_find(macro_arg_table, name);
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
+// Look for the name first as an argument and then as a macro body.
+// Note that at this point name will have the ! at the end already.
 cql_noexport int32_t resolve_macro_name(CSTR name) {
   macro_info *minfo;
   if (macro_arg_table) {
@@ -1169,6 +1302,8 @@ cql_noexport int32_t resolve_macro_name(CSTR name) {
   return minfo ? minfo->type : EOF;
 }
 
+// A new macro is being defined.  We need to add the types of
+// all of the parameter formals into the parameter table
 cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   new_macro_formals();
   for ( ; macro_formals; macro_formals = macro_formals->right) {
@@ -1189,6 +1324,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   return NULL;
 }
 
+// Like it sounds, any of the macro definition types.
 cql_noexport bool_t is_any_macro_def(ast_node *ast) {
   return is_ast_stmt_list_macro_def(ast) ||
          is_ast_query_parts_macro_def(ast) ||
@@ -1198,6 +1334,8 @@ cql_noexport bool_t is_any_macro_def(ast_node *ast) {
          is_ast_expr_macro_def(ast);
 }
 
+// Like it sounds, any of the macro ref types
+// This is foo!(..) for any foo
 cql_noexport bool_t is_any_macro_arg_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_arg_ref(ast) ||
          is_ast_query_parts_macro_arg_ref(ast) ||
@@ -1207,6 +1345,8 @@ cql_noexport bool_t is_any_macro_arg_ref(ast_node *ast) {
          is_ast_expr_macro_arg_ref(ast);
 }
 
+// Like it sounds, any of the macro argument ref types
+// This is foo! for any foo.
 cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
   return is_ast_stmt_list_macro_ref(ast) ||
          is_ast_cte_tables_macro_ref(ast) ||
@@ -1216,6 +1356,17 @@ cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
          is_ast_expr_macro_ref(ast);
 }
 
+// Replaces the new node for the old node in the tree by
+// swapping it in as the child of the old node's parent.
+// This isn't the preferred way to do node swapping,
+// we normally wish to avoid changing the identify of
+// the current node so in rewrite.c we almost always do
+// old->type = new->type and then change the left and right
+// but in this case it's normal, even common, for the node
+// type to change to one of the leaf types and they are
+// different sizes so we have to use the more general mechanism.
+// This means we might have to refetch parent->left or right
+// to get the new value of the node.
 static void replace_node(ast_node *old, ast_node *new) {
   if (old->parent->left == old) {
    ast_set_left(old->parent, new);
@@ -1223,6 +1374,105 @@ static void replace_node(ast_node *old, ast_node *new) {
   else {
    ast_set_right(old->parent, new);
   }
+}
+
+
+// This is the trickier macro expansion case.  It happens for all
+// the list types. Let's make it concrete by discussing it for
+// statements and statement lists.  The grammar allows a statement
+// list macro to appear anywhere a statement can appear.  Statements
+// always happen inside of statement lists.  It sort of has to be
+// that way because you want these to all work:
+//
+// while true         while true        while true
+// begin              begin             begin
+//   foo!();            other stuff;      foo!();
+//   other stuff;       foo!();         end;
+// end;               end;
+//
+// So basically the statement macro which is itself a list
+// is in the tree where a statement belongs.  Let's make a quick picture:
+//
+// stmt_list[1]  <--- "parent" arg points here
+//   macro!
+//   stmt_list[2]  --> this could be nulll
+//     other_stuff
+//     NULL;
+//
+// After macro! is expanded we get this picture:
+//
+//     stmt_list[3]
+//       macro_body[1]
+//       stmt_list [4]  --> this could be nulll
+//         macro_body[2]
+//         NULL         --> final right pointer must link in
+//
+// We need to thread these together
+// where macro! was in the tree macro_body[1] must go
+// stmt_list[1]->right must be changed to point to stmt_list[4]
+// The final right pointer (stmt_list[4] in this case) must
+// point to stmt_list[2] to continue the chain.  The first left node
+// of the body must become the first left node of the existing parent.
+// 
+// This (which never actually fully exists)
+//
+// stmt_list[1]  <--- "parent" arg points here
+//     stmt_list[3]
+//       macro_body[1]
+//       stmt_list [4]  --> this could be nulll
+//         macro_body[2]
+//         NULL         --> final right pointer must link in
+//   stmt_list[2]  --> this could be nulll
+//     other_stuff
+//     NULL;
+//
+// Becomes:
+//
+// stmt_list[1]  <--- "parent" arg points here
+//   macro_body[1]
+//   stmt_list [4]  --> this could be nulll
+//     macro_body[2]
+//     stmt_list[2]  --> this could be nulll
+//       other_stuff
+//       NULL;
+//
+// i.e., it looks like an noraml statement list again.
+// To do this we only need to change 3 pointers.
+// As it happens, "it just works" even if some of those
+// lists are abbreviated. For in stance maybe there is no
+// stmt_list[4] or maybe there is no stmt_list[2].  These
+// both just cut the list short just like they should.
+//
+// The same logic works for all the list types because they all
+// have exactly the same shape.  In CQL, lists are a chain of right
+// pointers with the payload on the left.
+static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
+  // if it isn't one of the list types, don't use this method
+  if (!(
+    is_ast_stmt_list(new) ||
+    is_ast_cte_tables(new) ||
+    is_ast_select_core_list(new) ||
+    is_ast_select_expr_list(new))) {
+      return false;
+  }
+
+  // OK we have something that is like a list node already and
+  // it is located where an item should be.  We just need to
+  // unwrap it. 
+
+  // insert the new item into the list
+  ast_set_left(parent, new->left);
+
+  // march to the end of the "new" list
+  ast_node *end = new;
+  while (end->right) {
+    end = end->right;
+  }
+
+  // link the end of the new list to what came after the new item
+  ast_set_right(end, parent->right);
+  ast_set_right(parent, new->right);
+  return true;
 }
 
 static void expand_text_args(charbuf *output, ast_node *text_args) {
@@ -1331,7 +1581,7 @@ static void expand_at_text(ast_node *ast) {
   cg_encode_string_literal(tmp.ptr, &quote);
   ast_node *new = new_ast_str(Strdup(quote.ptr));
   str_ast_node *sast = (str_ast_node *)new;
-  sast->str_type = STR_CSTR;  // use C style literals because newlines etc. are likely
+  sast->str_type = STRING_TYPE_C;  // use C style literals because newlines etc. are likely
   replace_node(ast, new);
   CHARBUF_CLOSE(quote);
   CHARBUF_CLOSE(tmp);
@@ -1454,24 +1704,8 @@ static void expand_macro_refs(ast_node *ast) {
   if (is_ast_text_args(parent)) {
     replace_node(ast, body);
   }
-  else if (
-    is_ast_stmt_list(body) ||
-    is_ast_cte_tables(body) ||
-    is_ast_select_core_list(body) ||
-    is_ast_select_expr_list(body)) {
-
-    // insert the copy into the list
-    ast_set_left(parent, body->left);
-
-    // march to the end
-    ast_node *end = body;
-    while (end->right) {
-      end = end->right;
-    }
-
-    // link the copy to whatever was at the end
-    ast_set_right(end, parent->right);
-    ast_set_right(parent, body->right);
+  else if (spliced_macro_into_list(parent, body)) {
+    // done
   }
   else  {
     replace_node(ast, body);

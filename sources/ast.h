@@ -161,9 +161,9 @@ typedef struct int_ast_node {
   int64_t value;
 } int_ast_node;
 
-#define STR_SQL 0
-#define STR_CSTR 1
-#define STR_QSTR 2
+#define STRING_TYPE_SQL 0
+#define STRING_TYPE_C 1
+#define STRING_TYPE_QUOTED_ID 2
 
 typedef struct str_ast_node {
   const char *_Nonnull type;
@@ -250,7 +250,7 @@ cql_noexport void ast_cleanup(void);
 
 cql_noexport ast_node *_Nonnull new_ast(const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
 cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_opt(int32_t value);
+cql_noexport ast_node *_Nonnull new_ast_option(int32_t value);
 cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
 cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);

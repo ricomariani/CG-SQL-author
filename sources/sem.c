@@ -12063,7 +12063,7 @@ static bool sem_create_migration_proc_prototype(ast_node *origin, CSTR name)
   AST_REWRITE_INFO_SET(origin->lineno, origin->filename);
 
   ast_node *ast_name = new_ast_str(name);
-  ast_node *proc_name_flags = new_ast_proc_name_type(ast_name, new_ast_opt(PROC_FLAG_USES_DML));
+  ast_node *proc_name_flags = new_ast_proc_name_type(ast_name, new_ast_option(PROC_FLAG_USES_DML));
   ast_node *declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts(NULL, NULL));
 
   AST_REWRITE_INFO_RESET();
@@ -13037,7 +13037,7 @@ static bool_t sem_validate_version_attrs(version_attrs_info *vers_info) {
       // cons up a fake v1 delete annotation for the vers_info
       if (ast->right) {
         AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
-        ast_node *version_annotation = new_ast_version_annotation(new_ast_opt(1), NULL);
+        ast_node *version_annotation = new_ast_version_annotation(new_ast_option(1), NULL);
         AST_REWRITE_INFO_RESET();
 
         vers_info->delete_version_ast = version_annotation;

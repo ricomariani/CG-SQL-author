@@ -52,7 +52,7 @@ BEGIN
   fetch C;
 
   out union
-    call User(C.id, C.name, C.gender, C.birth_year) join 
+    call User(C.id, C.name, C.gender, C.birth_year) join
     call User(C.id, C.name, C.gender, C.birth_year) using (id) AS subUser1 and
     call User(C.id, C.name, C.gender, C.birth_year) using (id) AS subUser2 and
     call User(C.id, C.name, C.gender, C.birth_year) using (id) AS subUser3 and
@@ -61,65 +61,56 @@ BEGIN
   ;
 END;
 
+@macro(stmt_list) bench!(name! expr, s! stmt_list)
+begin
+  i := 0;
+  timer:::start();
+  while i <= number_of_iterations
+  begin
+    s!;
+    i += 1;
+  end;
+  timer:::stop();
+  printf("Timings for calling %s:\n", name!);
+  timer:::print();
+  printf("\n\n");
+end;
+
 @attribute(playground:not_implemented_in_lua)
 CREATE PROC entrypoint ()
 BEGIN
   let timer := create_timer();
+  let i := 0;
 
   let number_of_iterations := 1000000;
   printf("Context:\nNumber of iterations: %d\n\n", number_of_iterations);
-  
-  let i := 0;
-  timer:::start();
-  while i <= number_of_iterations
+
+  bench!("Fetching Like  User from values",
   begin
     declare C1 cursor LIKE User;
     fetch C1 FROM VALUES(1, "Bob", gender_type.male, 1990);
-    i += 1;
-  end;
-  timer:::stop();
-  printf("Timings for Fetching User Like from values:\n");
-  timer:::print();
-  printf("\n\n");
+  end);
 
-
-  i := 0;
-  timer:::start();
-  while i <= number_of_iterations
+  bench!("calling User",
   begin
     let user_boxed_1 := User(1, "Bob", gender_type.male, 1990);
-    i += 1;
-  end;
-  timer:::stop();
-  printf("Timings for calling User():\n");
-  timer:::print();
-  printf("\n\n");
+  end);
 
-
-  i := 0;
-  timer:::start();
-  while i <= number_of_iterations
+  bench!("calling Nested_user_5()",
   begin
     let user_boxed_2 := Nested_User_5(1, "Bob", gender_type.male, 1990);
-    i += 1;
-  end;
-  timer:::stop();
-  printf("Timings for calling Nested_User_5():\n");
-  timer:::print();
-  printf("\n\n");
+  end);
+
 
 
   declare encoded_user OBJECT<encoded_user>;
   let user_boxed := encoded_user:::decode();
-  i := 0;
-  timer:::start();
-  while i <= number_of_iterations
+
+  bench!("calling user_and_themselves",
   begin
-    cursor C2 for call user_and_themselves(user_boxed);
-    fetch C2;
-    i += 1;
-  end;
-  timer:::stop();
-  printf("Timings for calling user_and_themselves():\n");
-  timer:::print();
-END;
+      cursor C2 for call user_and_themselves(user_boxed);
+      fetch C2;
+  end);
+
+end;
+

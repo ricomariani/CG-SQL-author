@@ -1475,6 +1475,11 @@ static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
   return true;
 }
 
+// The arguments to @TEXT are either string literals, which we expand
+// using the decode function or else they are macro pieces which we
+// expand using gen_any_macro_expansion.  Either way they land
+// unencoded into the output buffer.   The @TEXT handler will
+// then quote them.
 static void expand_text_args(charbuf *output, ast_node *text_args) {
   for (; text_args; text_args = text_args->right) {
     Contract(is_ast_text_args(text_args));
@@ -1497,6 +1502,9 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
   }
 }
 
+// Report a macro-related error at the given spot with the given message
+// We walk up the chain of macro expansions and report all those too
+// because macro debugging is hard without this info.
 static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
    cql_error("%s:%d:1: error: in %s : %s%s%s%s\n",
      ast->filename,
@@ -1515,6 +1523,10 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
   macro_expansion_errors = 1;
 }
 
+// for @MACRO_FILE -- this gives us the file in which macro
+// expansion began. Very useful for assert macros and such.
+// Note that @MACRO_FILE doesn't yet support path trimming
+// like @FILE but it will.
 static CSTR get_macro_file() {
   macro_state_t *p = &macro_state;
   macro_state_t *prev = p;
@@ -1525,6 +1537,8 @@ static CSTR get_macro_file() {
   return prev->file;
 }
 
+// for @MACRO_LINE -- this gives us the line in which macro
+// expansion began. Very useful for assert macros and such.
 static int32_t get_macro_line() {
   macro_state_t *p = &macro_state;
   macro_state_t *prev = p;
@@ -1535,6 +1549,18 @@ static int32_t get_macro_line() {
   return prev->line;
 }
 
+// @ID(x) will take a given string and covert it into an identifier.
+// Which is to say it will decode the string and verify that it is
+// a legal identifier.  This operation is only interesting
+// if the body of the @ID is @TEXT.  Any other body wouldn't have
+// needed wrapping in the first place.  On interesting trick you
+// can do with @ID is this.   The "bar" in "foo.bar" is NOT an
+// expression, it's only a name.  Therefore an EXPR macro cannot
+// be used there.  i.e.  foo.bar! doesn't work.  BUT foo.@ID(bar!)
+// can work. Currently it has to be @ID(@TEXT(bar!)) but this 
+// will soon change.  @ID could assume the @TEXT if there is not
+// one there.  @ID *is* a valid name so it can go in places
+// expr! could not go.
 static void expand_at_id(ast_node *ast) {
   Contract(is_ast_at_id(ast));
 
@@ -1572,6 +1598,9 @@ static void expand_at_id(ast_node *ast) {
   CHARBUF_CLOSE(tmp);
 }
 
+// Use the helper to concatenate the arguments then encode them as a string.
+// We use C style literals because newlines etc. are likely in the output
+// and so the resulting literal will be much more readable if it is escaped.
 static void expand_at_text(ast_node *ast) {
   Contract(is_ast_macro_text(ast));
 
@@ -1581,12 +1610,16 @@ static void expand_at_text(ast_node *ast) {
   cg_encode_string_literal(tmp.ptr, &quote);
   ast_node *new = new_ast_str(Strdup(quote.ptr));
   str_ast_node *sast = (str_ast_node *)new;
-  sast->str_type = STRING_TYPE_C;  // use C style literals because newlines etc. are likely
+  sast->str_type = STRING_TYPE_C;  
   replace_node(ast, new);
   CHARBUF_CLOSE(quote);
   CHARBUF_CLOSE(tmp);
 }
 
+// Handles the special identifiers @MACRO_LINE and @MACRO_FILE
+// which need treatment in the macro pass.  @FILE and @LINE to not
+// require the macro stack so they can be handled later like all
+// the other constants.
 static void expand_special_ids(ast_node *ast) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(name, ast);
@@ -1604,6 +1637,13 @@ static void expand_special_ids(ast_node *ast) {
   }
 }
 
+// Here we handle a discovered macro reference
+// We have to do several things:
+//  * clone the body of the macro or arg
+//  * set up the macro arguments for expansion if it is a macro ref
+//  * validate the arguments if necessary
+//  * recursively expand the macro body
+//  * link in the expanded body into the correct spot with one of the helpers
 static void expand_macro_refs(ast_node *ast) {
   Contract(is_any_macro_arg_ref(ast) || is_any_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
@@ -1641,6 +1681,9 @@ static void expand_macro_refs(ast_node *ast) {
   macro_state_t macro_state_saved = macro_state;
 
   if (is_any_macro_ref(ast)) {
+    // It's a macro reference, we need to set up the argument values
+    // We'll save the current macro args and replace them with the
+    // new after validation.  The type and number must be correct.
     EXTRACT_NOTNULL(macro_name_formals, minfo->def->left);
     EXTRACT(macro_formals, macro_name_formals->right);
     EXTRACT_STRING(macro_name, macro_name_formals->left);
@@ -1682,7 +1725,7 @@ static void expand_macro_refs(ast_node *ast) {
   }
 
   // it's hugely important to expand what you're going to replace FIRST
-  // and then slot it in.  Otherwise the recursion is n^2 depth!!!
+  // and then slot it in. Otherwise the recursion is n^2 depth!!!
   expand_macros(body);
 
   // its normal for body to be a different node type
@@ -1719,6 +1762,11 @@ cleanup:
   macro_arg_table = macro_state.args;
 }
 
+// This is the main recursive workhorse.  It expands macros
+// and macro related constructs in place.  Later passes do not
+// see macros except for the macro definition nodes.  Which could
+// actually have been removed also but we don't.  Maybe we will
+// some day.  Later passes ignore those.
 cql_export void expand_macros(ast_node *_Nonnull node) {
 tail_recurse:
   if (!options.semantic && options.test && macro_state.line != -1) {
@@ -1743,11 +1791,13 @@ tail_recurse:
     return;
   }
 
+  // handle @MACRO_LINE and @MACRO_FILE
   if (is_ast_str(node)) {
     expand_special_ids(node);
     return;
   }
 
+  // expand macros and macro arguments in place
   if (is_any_macro_arg_ref(node) || is_any_macro_ref(node)) {
     expand_macro_refs(node);
     return;
@@ -1755,7 +1805,10 @@ tail_recurse:
 
   // Check the left and right nodes.
   if (ast_has_left(node)) {
-    // if there is no right we can tail on left
+    // If there is no right child we can do tail recursion on the left
+    // this helps a little but it isn't that important, the
+    // next one is the one that really matters.  There are lots of
+    // AST1 nodes in the AST schema, this hits all of those.
     if (!ast_has_right(node)) {
       node = node->left;
       goto tail_recurse;
@@ -1763,6 +1816,9 @@ tail_recurse:
     expand_macros(node->left);
   }
 
+  // tail recursion here is super important becuase the statement list
+  // and be very long and it is a chain of right pointers.  There might
+  // be hundreds or even thousands of top level statements in a file.
   if (ast_has_right(node)) {
     // tail recursion
     node = node->right;

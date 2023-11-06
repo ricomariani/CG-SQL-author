@@ -272,8 +272,8 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   CHARBUF_OPEN(proc);
   CHARBUF_OPEN(body);
   CHARBUF_OPEN(sql);
-  CHARBUF_OPEN(json_STRING_TYPE_SQL);
-  CHARBUF_OPEN(c_STRING_TYPE_SQL);
+  CHARBUF_OPEN(json_str);
+  CHARBUF_OPEN(c_str);
 
   gen_set_output_buffer(&sql);
   gen_statement_with_callbacks(stmt, cg_qp_callbacks);
@@ -284,7 +284,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // the statement.  That's all fine and well but actually the text we want is for the
   // JSON output we will create.  So we have to JSON encode the sql and then quote
   // the JSON as a C string.
-  cg_encode_json_string_literal(sql.ptr, &json_STRING_TYPE_SQL);
+  cg_encode_json_string_literal(sql.ptr, &json_str);
 
   // Now that we have the JSON string we need all of that in a C string, including the
   // quotes. So we use the single character helper to build a buffer with new quotes.  Note
@@ -295,12 +295,12 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // that's technically what we need but actually JSON encoding followed by another
   // round of JSON encoding necessarily produces the same output. This code once did two JSON
   // encodings it was only pedantically wrong.
-  bprintf(&c_STRING_TYPE_SQL, "\"");
-  for (uint32_t i = 1; i < json_STRING_TYPE_SQL.used - 2; i++) {
-    // json_STRING_TYPE_SQL can have no control characters, but it might have quotes and backslashes
-    cg_encode_char_as_c_string_literal(json_STRING_TYPE_SQL.ptr[i], &c_STRING_TYPE_SQL);
+  bprintf(&c_str, "\"");
+  for (uint32_t i = 1; i < json_str.used - 2; i++) {
+    // json_str can have no control characters, but it might have quotes and backslashes
+    cg_encode_char_as_c_string_literal(json_str.ptr[i], &c_str);
   }
-  bprintf(&c_STRING_TYPE_SQL, "\"");
+  bprintf(&c_str, "\"");
 
   bprintf(&body, "LET query_plan_trivial_object := trivial_object();\n");
   bprintf(&body, "LET query_plan_trivial_blob := trivial_blob();\n\n");
@@ -310,7 +310,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // so that we correctly generate a JSON fragment as a result of running this code.  The JSON
   // string has escaped any quotes etc. that were in the original SQL.
   bprintf(&body, "DECLARE stmt TEXT NOT NULL;\n");
-  bprintf(&body, "SET stmt := %s;\n", c_STRING_TYPE_SQL.ptr);
+  bprintf(&body, "SET stmt := %s;\n", c_str.ptr);
 
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
   if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
@@ -336,8 +336,8 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
 
   bprintf(query_plans, "%s", proc.ptr);
 
-  CHARBUF_CLOSE(c_STRING_TYPE_SQL);
-  CHARBUF_CLOSE(json_STRING_TYPE_SQL);
+  CHARBUF_CLOSE(c_str);
+  CHARBUF_CLOSE(json_str);
   CHARBUF_CLOSE(sql);
   CHARBUF_CLOSE(body);
   CHARBUF_CLOSE(proc);

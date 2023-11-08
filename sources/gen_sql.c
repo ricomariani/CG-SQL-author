@@ -1053,35 +1053,37 @@ static void gen_macro_args(ast_node *ast) {
   }
 }
 
-static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  gen_printf("@TEXT(");
-
-  for (ast = ast->left; ast; ast = ast->right) {
+static void gen_text_args(ast_node *ast) {
+  for (; ast; ast = ast->right) {
     Contract(is_ast_text_args(ast));
     EXTRACT_ANY_NOTNULL(txt, ast->left);
 
-    if (is_ast_str(txt)) {
-      gen_root_expr(txt);
-    }
-    else if (is_any_macro_ref(txt)) {
+    if (is_any_macro_ref(txt)) {
       EXTRACT_STRING(name, txt->left);
       gen_printf("%s(", name);
       gen_macro_args(txt->right);
       gen_printf(")", name);
     }
-    else {
-      Contract(is_any_macro_arg_ref(txt));
+    else if (is_any_macro_arg_ref(txt)) {
       EXTRACT_STRING(name, txt->left);
       gen_printf("%s", name);
+    }
+    else {
+      gen_root_expr(txt);
     }
     if (ast->right) {
       gen_printf(", ");
     }
   }
+}
+
+static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  gen_printf("@TEXT(");
+  gen_text_args(ast->left);
   gen_printf(")");
 }
 
-cql_noexport void gen_any_macro_expansion(ast_node *ast) {
+cql_noexport void gen_any_text_arg(ast_node *ast) {
   if (is_ast_cte_tables(ast)) {
     gen_cte_tables(ast, "");
   }
@@ -1127,7 +1129,7 @@ static void gen_expr_macro_arg_ref(ast_node *ast, CSTR op, int32_t pri, int32_t 
 static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_at_id(ast));
   gen_printf("@ID(");
-  gen_root_expr(ast->left);
+  gen_text_args(ast->left);
   gen_printf(")");
 }
 

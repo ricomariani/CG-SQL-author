@@ -1932,6 +1932,8 @@ set zz := macro7!(select(1 x, 2 y));
 let zzz := @TEXT("begin\n", assert!(7), "\nfoo");
 set @ID("x") := 5;
 let @ID(@TEXT("u", "v")) := 5;
+set @ID(w,x,y,z) := 6;
+set @ID(wx) := 7;
 
 @macro(stmt_list) mondo1!(a! expr, b! query_parts, c! select_core, d! select_expr, e! cte_tables, f! stmt_list)
 begin
@@ -1966,6 +1968,8 @@ begin
   let line := @MACRO_LINE;
   let file := @MACRO_FILE;
 end;
+
+let z := @TEXT(1+5);
 
 --- keep this at the end because the line numbers will be whack after this so syntax errors will be annoying...
 

@@ -1485,11 +1485,15 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
     Contract(is_ast_text_args(text_args));
     EXTRACT_ANY_NOTNULL(txt, text_args->left);
 
-    if (is_ast_str(txt)) {
+    // string literals are handled specially because we need to
+    // strip the quotes from them!
+    if (is_strlit(txt)) {
       EXTRACT_STRING(str, txt);
       cg_decode_string_literal(str, output);
     }
     else {
+      // everything else we just expand as usual
+
       expand_macros(txt);
       txt = text_args->left;
 
@@ -1497,7 +1501,7 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
       init_gen_sql_callbacks(&callbacks);
       callbacks.mode = gen_mode_echo;
       gen_set_output_buffer(output);
-      gen_with_callbacks(txt, gen_any_macro_expansion, &callbacks);
+      gen_with_callbacks(txt, gen_any_text_arg, &callbacks);
     }
   }
 }
@@ -1564,12 +1568,11 @@ static int32_t get_macro_line() {
 static void expand_at_id(ast_node *ast) {
   Contract(is_ast_at_id(ast));
 
+  CHARBUF_OPEN(str);
   expand_macros(ast->left);
-  EXTRACT_STRING(str, ast->left);
-  CHARBUF_OPEN(tmp);
-  cg_decode_string_literal(str, &tmp);
+  expand_text_args(&str, ast->left);
 
-  CSTR p = tmp.ptr;
+  CSTR p = str.ptr;
   bool_t ok = true;
 
   if (p[0] == '_' || (p[0] >= 'a' && p[0] <= 'z') || (p[0] >= 'A' && p[0] <= 'Z')) {
@@ -1591,11 +1594,11 @@ static void expand_at_id(ast_node *ast) {
   }
 
   if (!ok) {
-    report_macro_error(ast, "@ID expansion is not a valid identifier", tmp.ptr);
+    report_macro_error(ast, "@ID expansion is not a valid identifier", str.ptr);
   }
 
-  replace_node(ast, new_ast_str(Strdup(tmp.ptr)));
-  CHARBUF_CLOSE(tmp);
+  replace_node(ast, new_ast_str(Strdup(str.ptr)));
+  CHARBUF_CLOSE(str);
 }
 
 // Use the helper to concatenate the arguments then encode them as a string.
@@ -1695,6 +1698,9 @@ static void expand_macro_refs(ast_node *ast) {
     macro_state.name = macro_name;
     macro_arg_table = macro_state.args = symtab_new();
 
+    // Loop over each formal, we match the type of the argument
+    // that is provided against the formal that is required.
+    // The number arguments and type of arguments must match exactly.
     while (macro_formals && macro_args) {
       EXTRACT_NOTNULL(macro_formal, macro_formals->left);
       EXTRACT_STRING(formal_name, macro_formal->left);
@@ -1713,11 +1719,13 @@ static void expand_macro_refs(ast_node *ast) {
       macro_args = macro_args->right;
     }
 
+    // formals left -> not enough args
     if (macro_formals) {
       report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
       goto cleanup;
     }
 
+    // args left -> too many args
     if (macro_args) {
       report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
       goto cleanup;

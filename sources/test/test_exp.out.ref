@@ -2148,6 +2148,10 @@ SET x := 5;
 
 LET uv := 5;
 
+SET wxyz := 6;
+
+SET wx := 7;
+
 @MACRO(STMT_LIST) mondo1!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
 BEGIN
   SET zz := @TEXT(a!, b!, c!, d!, e!, f!);
@@ -2189,6 +2193,8 @@ BEGIN
   LET line := @MACRO_LINE;
   LET file := @MACRO_FILE;
 END;
+
+LET z := "1 + 5";
 
 LET line := 2;
 

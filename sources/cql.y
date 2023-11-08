@@ -318,7 +318,7 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
-%type <aval> opt_macro_formals macro_formals macro_formal macro_type any_macro_arg_ref
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
 %type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref select_core_macro_ref select_expr_macro_ref
 
@@ -407,9 +407,8 @@ opt_stmt_list:
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
-any_macro_arg_ref:
+non_expr_macro_ref:
   stmt_list_macro_ref  { $$ = $1; }
-  | expr_macro_ref { $$ = $1; }
   | cte_tables_macro_ref { $$ = $1; }
   | select_core_macro_ref { $$ = $1; }
   | select_expr_macro_ref { $$ = $1; }
@@ -1014,8 +1013,7 @@ name:
   | CTE_TABLES { $name = new_ast_str("cte_tables"); }
   | SELECT_CORE { $name = new_ast_str("select_core"); }
   | SELECT_EXPR { $name = new_ast_str("select_expr"); }
-  | AT_ID '(' str_literal ')' { $name = new_ast_at_id($str_literal); }
-  | AT_ID '(' AT_TEXT '(' text_args ')' ')' { $name = new_ast_at_id(new_ast_macro_text($text_args)); }
+  | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
   ;
 
 opt_sql_name:
@@ -1174,7 +1172,7 @@ text_args:
    | text_arg ',' text_args[ta] { $$ = new_ast_text_args($text_arg, $ta); }
    ;
 
-text_arg : str_literal | any_macro_arg_ref ;
+text_arg : expr | non_expr_macro_ref ;
 
 raise_expr:
   RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_IGNORE), NULL); }

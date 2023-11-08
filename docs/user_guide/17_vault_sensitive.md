@@ -230,10 +230,10 @@ There are similar functions in the runtime like `cql_encode_double`
 with a similar signature.
 
 The default encodings are very lame and only useful for
-testing.  Like many things in `cqlrt.c` you should [replace
-them](developer_guide.html#part-5-cql-runtime) with something
+testing.  Like many things in `cqlrt.c` you should
+[replace them](../developer_guide/05_cql_runtime.md) with something
 appropriate for your environment.  See the section on [encoding sensitive
-columns](developer_guide.html#encoding-of-sensitive-columns).
+columns](../developer_guide/05_cql_runtime.md#encoding-of-sensitive-columns).
 
 Even very simple encoders can help avoid mistakes because they force the
 use of the decoder and that usage gives you a "code smell" to look for.

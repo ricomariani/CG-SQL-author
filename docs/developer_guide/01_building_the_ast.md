@@ -12,8 +12,8 @@ weight: 1
 ### Preface
 
 The following is a summary of the implementation theory of the CQL compiler.  This is
-an adjunct to the [Guide proper](user_guide.html), which describes the language, and to a lesser extent
-the code that the compiler generates.
+an adjunct to the [Guide proper](https://ricomariani.github.io/CG-SQL-author/docs/user_guide/),
+which describes the language, and to a lesser extent the code that the compiler generates.
 
 The actual code is heavily commented, so it's better to read the code to see the details
 of how any particular operation happens rather than try to guess from the language specification
@@ -30,7 +30,7 @@ The grammar is a large subset of the SQLite dialect of SQL augmented with contro
 directives.  As a consequence, it's a useful asset in-and-of-itself. If you're looking for an
 economical SQL grammar, you could do a lot worse than start with the one CQL uses.  The grammar is
 of course in the usual `.y` format that bison consumes but it's also extracted into more readable
-versions for use in the [railroad diagram](cql_grammar.railroad.html)
+versions for use in the [railroad diagram](https://ricomariani.github.io/CG-SQL-author/cql_grammar.railroad.html)
 and the Guide documentation.  Any of those sources would be a good starting place for a modest SQL
 project in need of a grammar.
 
@@ -323,7 +323,7 @@ for non-trivial examples those pictures are so large as to be unreadable whereas
 remains readable even up to several hundred lines of output. The text is also readily searchable, and diffable.
 The test suites for semantic analysis do pattern matching on the text of the AST to verify correctness.
 
-We'll discuss semantic analysis in [Chapter 2](02_semantic_analysis.md)
+We'll discuss semantic analysis in [Chapter 2](./02_semantic_analysis.md)
 
 ### AST definitions
 

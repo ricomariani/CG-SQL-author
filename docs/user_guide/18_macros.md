@@ -156,8 +156,7 @@ ORDER BY x;
 ```
 
 A `select_core` macro can be a useful way to specify a set of tables
-and values while leaving filtering and priortization open for
-customization.
+and values while leaving filtering and sorting open for customization.
 
 *select_expr*
 
@@ -303,14 +302,14 @@ END IF;
 ```
 
 Note that here the macro was invoked on line 9 of myfile.sql.  `@LINE`
-would have been much less useful, reporitng the line of the `printf`.
+would have been much less useful, reporting the line of the `printf`.
 
 #### Token Pasting
 
 You can create new tokens with a two step process:
 
   * `@TEXT` will create a string from one or more parts.
-  * `@ID` will make a new identifier from a string
+  * `@ID` will make a new identifier from one or more parts.
 
 
 This can be used to create very powerful code-helpers.  Consider this code,
@@ -327,7 +326,7 @@ end;
 
 @MACRO(stmt_list) TEST!(x! expr, body! stmt_list)
 begin
-  create procedure @ID(@TEXT("test_", x!))()
+  create procedure @ID("test_", x!)()
   begin
     begin try
       body!;
@@ -360,7 +359,7 @@ BEGIN
 END;
 ```
 
-And of course additonal diagnostics can be readily added
+And of course additional diagnostics can be readily added
 (and they are present in the real code). For instance
 all of the tricks used in the `assert!` macro would
 be helpful in the `expect!` macro.

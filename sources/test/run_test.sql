@@ -30,13 +30,15 @@ end;
 proc lua_gated(out gated int!)
 begin
   let result := false;
+  -- emits code to set the boolean to true but only in Lua output
+  -- this is super cheesy but until we have @IF it's all we can do
   @echo lua, "result = true\n";
   set gated := result;
 end;
 
 @MACRO(stmt_list) TEST_GATED!(x! expr, pred! expr, body! stmt_list)
 begin
-  create procedure @ID(@TEXT("test_", x!))()
+  create procedure @ID("test_", x!)()
   begin 
     begin try 
       set tests := tests + 1; 

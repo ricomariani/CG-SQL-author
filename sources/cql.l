@@ -84,7 +84,7 @@ int cql_include_index = 0;
 static void cql_setup_for_include(CSTR str) {
   if ( cql_include_index >= MAX_INCLUDES ) {
     fprintf( stderr, "includes nested too deeply.\n" );
-    exit( 1 );
+    exit(1);
   }
   cql_include_state *inc = &cql_includes[cql_include_index];
 
@@ -94,10 +94,33 @@ static void cql_setup_for_include(CSTR str) {
   cql_include_index++;
 
   CHARBUF_OPEN(name);
+  CHARBUF_OPEN(path);
+
   cg_decode_c_string_literal(str, &name);
+  CSTR opened_name = name.ptr;
   yyin = fopen(name.ptr, "r");
+
+  if (!yyin) {
+     for (int i = 0; i < options.include_paths_count; i++) {
+        bclear(&path);
+        bprintf(&path, "%s/%s", options.include_paths[i], name.ptr);
+        yyin = fopen(path.ptr, "r");
+        if (yyin) {
+           opened_name = path.ptr;
+           break;
+        }
+     }
+  }
+
+  if (!yyin) {
+     fprintf(stderr, "unable to open %s\n", str);
+     exit(1);
+  }
+
   yylineno = 1;
-  current_file = Strdup(name.ptr);
+  current_file = Strdup(opened_name);
+
+  CHARBUF_CLOSE(path);
   CHARBUF_CLOSE(name);
 
   yy_switch_to_buffer(yy_create_buffer( yyin, YY_BUF_SIZE ) );

@@ -2823,6 +2823,8 @@ static void parse_cmd(int argc, char **argv) {
       options.codegen = 1;
       options.semantic = 1;
       options.expand = 1;
+    } else if (strcmp(arg, "--include_paths") == 0) {
+      a = gather_arg_params(a, argc, argv, &options.include_paths_count, &options.include_paths);
     } else if (strcmp(arg, "--include_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {

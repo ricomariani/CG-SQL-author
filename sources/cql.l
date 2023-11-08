@@ -1,4 +1,7 @@
 %option noyywrap nodefault yylineno case-insensitive never-interactive
+
+%x at_inc
+
 %{
 
 /*
@@ -67,22 +70,44 @@ cql_noexport void cql_setup_for_builtins() {
   cql_builtins_processing = true;
 }
 
-static bool_t cql_finish_stream() {
+#define MAX_INCLUDES 10
+
+typedef struct {
+  YY_BUFFER_STATE buf;
+  int32_t line_saved;
+  char *filename_saved;
+} cql_include_state;
+
+cql_include_state cql_includes[MAX_INCLUDES];
+int cql_include_index = 0;
+
+static void cql_setup_for_include(CSTR str) {
+  if ( cql_include_index >= MAX_INCLUDES ) {
+    fprintf( stderr, "includes nested too deeply.\n" );
+    exit( 1 );
+  }
+  cql_include_state *inc = &cql_includes[cql_include_index];
+
+  inc->buf = YY_CURRENT_BUFFER;
+  inc->line_saved = yylineno;
+  inc->filename_saved = current_file;
+  cql_include_index++;
+
+  CHARBUF_OPEN(name);
+  cg_decode_c_string_literal(str, &name);
+  yyin = fopen(name.ptr, "r");
+  yylineno = 1;
+  current_file = Strdup(name.ptr);
+  CHARBUF_CLOSE(name);
+
+  yy_switch_to_buffer(yy_create_buffer( yyin, YY_BUF_SIZE ) );
+}
+
+static void cql_finish_stream() {
   // when we read the end of the temporary buffer we switch to the main buffer
-  if (cql_builtins_processing) {
-    cql_builtins_processing = false;
-    yy_delete_buffer(YY_CURRENT_BUFFER);
-    yy_switch_to_buffer(cql_main_buffer);
-    return false;
-  }
-
-  if (cql_delete_main_buffer) {
-    yy_delete_buffer(YY_CURRENT_BUFFER);
-    cql_delete_main_buffer = false;
-  }
-
-  // nothing further to process, terminate
-  return true;
+  cql_builtins_processing = false;
+  yy_delete_buffer(YY_CURRENT_BUFFER);
+  yy_switch_to_buffer(cql_main_buffer);
 }
 
 %}
@@ -93,6 +118,10 @@ hex [0-9A-F]
 d [0-9]
 
 %%
+
+@INCLUDE                         { BEGIN(at_inc); }
+<at_inc>{sp}*
+<at_inc>\"(\\.|[^\\"\n])*\"      { cql_setup_for_include(yytext); BEGIN(INITIAL); }
 
 @ATTRIBUTE                       { return AT_ATTRIBUTE; }
 @BEGIN_SCHEMA_REGION             { return AT_BEGIN_SCHEMA_REGION; }
@@ -392,7 +421,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 .                                { yyerror("Unexpected %s\n", yytext); }
 
 ^#\ {d}+\ \"[^"]*\".*            { line_directive(yytext); }
-^\ *#line\ {d}+\ \"[^"]*\".* { line_directive(yytext); }
+^\ *#line\ {d}+\ \"[^"]*\".*     { line_directive(yytext); }
 
 "/*"                             { // sqlite supports C style comments... ignore those
                                    CHARBUF_OPEN(tmp);
@@ -421,4 +450,23 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                    CHARBUF_CLOSE(tmp);
                                  }
 
-<<EOF>>                          { if (cql_finish_stream()) yyterminate(); }
+<<EOF>>                          {
+                                   if (cql_builtins_processing)  {
+                                     cql_finish_stream();
+                                   }
+                                   else if (!cql_include_index) {
+                                     if (cql_delete_main_buffer) {
+                                        yy_delete_buffer(YY_CURRENT_BUFFER);
+                                        cql_delete_main_buffer = false;
+                                     }
+                                     yyterminate();
+                                   }
+                                   else {
+                                     yy_delete_buffer(YY_CURRENT_BUFFER);
+                                     cql_include_state *inc = &cql_includes[--cql_include_index];
+                                     yy_switch_to_buffer(inc->buf);
+                                     yylineno = inc->line_saved;
+                                     current_file = inc->filename_saved;
+                                   }
+                                 }
+

@@ -2823,6 +2823,8 @@ static void parse_cmd(int argc, char **argv) {
       options.codegen = 1;
       options.semantic = 1;
       options.expand = 1;
+    } else if (strcmp(arg, "--include_paths") == 0) {
+      a = gather_arg_params(a, argc, argv, &options.include_paths_count, &options.include_paths);
     } else if (strcmp(arg, "--include_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {
@@ -2941,6 +2943,7 @@ int cql_main(int argc, char **argv) {
     ast_init();
 
     // add the builtin declares before we process the real input
+    cql_reset_open_includes();
     cql_setup_for_builtins();
 
     if (options.run_unit_tests) {
@@ -2958,6 +2961,7 @@ int cql_main(int argc, char **argv) {
   gen_cleanup();
   rt_cleanup();
   parse_cleanup();
+  cql_cleanup_open_includes();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can
@@ -2973,7 +2977,8 @@ int cql_main(int argc, char **argv) {
 // Use the longjmp buffer with the indicated code, see the comments above
 // for why this has to be this way.  Note we do this in one line so that
 // we don't get bogus code coverage errors for not covering the trialing brace
-void cql_cleanup_and_exit(int32_t code) { release_open_charbufs(); cql_exit_code = code;  longjmp(cql_for_exit, 1); }
+_Noreturn void cql_cleanup_and_exit(int32_t code)
+{ release_open_charbufs(); cql_exit_code = code;  longjmp(cql_for_exit, 1); }
 
 static void cql_exit_on_parse_errors() {
   cql_error("Parse errors found, no further passes will run.\n");

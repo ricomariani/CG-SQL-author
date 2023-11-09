@@ -2113,7 +2113,7 @@ LET y := 2;
 
 LET z := macro2!(x, y);
 
-SET z := 1922;
+SET z := 151;
 
 LET zz := macro3!(FROM((SELECT 1 AS x, 2 AS y) AS T));
 

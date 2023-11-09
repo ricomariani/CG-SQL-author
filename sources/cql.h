@@ -608,3 +608,6 @@ cql_noexport void cql_setup_for_builtins(void);
 cql_noexport int32_t macro_type_from_str(CSTR type);
 
 cql_noexport bool_t macro_arg_valid(int32_t type, struct ast_node *ast);
+
+cql_noexport void cql_cleanup_open_includes(void);
+cql_noexport void cql_reset_open_includes(void);

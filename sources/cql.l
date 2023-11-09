@@ -76,15 +76,31 @@ typedef struct {
   YY_BUFFER_STATE buf;
   int32_t line_saved;
   char *filename_saved;
+  bool_t active;
 } cql_include_state;
 
 cql_include_state cql_includes[MAX_INCLUDES];
 int cql_include_index = 0;
 
+cql_noexport void cql_reset_open_includes() {
+  cql_include_index = 0;
+  memset(cql_includes, 0, sizeof(cql_includes));
+}
+
+cql_noexport void cql_cleanup_open_includes() {
+  for (int32_t i = 0; i < MAX_INCLUDES; i++) {
+     cql_include_state *inc = &cql_includes[i];
+     if (inc->active) {
+       yy_delete_buffer(inc->buf);
+     }
+  }
+  cql_reset_open_includes();
+}
+
 static void cql_setup_for_include(CSTR str) {
   if ( cql_include_index >= MAX_INCLUDES ) {
     fprintf( stderr, "includes nested too deeply.\n" );
-    exit(1);
+    cql_cleanup_and_exit(1);
   }
   cql_include_state *inc = &cql_includes[cql_include_index];
 
@@ -114,7 +130,7 @@ static void cql_setup_for_include(CSTR str) {
 
   if (!yyin) {
      fprintf(stderr, "unable to open %s\n", str);
-     exit(1);
+     cql_cleanup_and_exit(1);
   }
 
   yylineno = 1;

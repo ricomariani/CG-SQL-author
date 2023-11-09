@@ -307,7 +307,7 @@ endif
 objc: $(source)
 ifeq ($(shell uname),Darwin)
 > mkdir -p $O/objc
-> $(CQL) --nolines --in $(source) --cg $O/objc/$(example_name).h $O/objc/$(example_name).c --cqlrt $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.h
+> $(CQL) --nolines --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --cg $O/objc/$(example_name).h $O/objc/$(example_name).c --cqlrt $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.h
 > $(CQL) --dev --test --in $(source) --rt objc_mit --cg $O/objc/$(example_name)_objc.h --objc_c_include_path $O/objc/$(example_name).h
 > if grep -q "entrypoint(void)" $O/objc/$(example_name).h; then \
     CC_FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
@@ -318,8 +318,8 @@ else
 endif
 
 query_plan: $(source) c
-> $(CQL) --nolines --in $(source) --rt query_plan --cg $O/query_plan.sql;
-> $(CQL) --nolines --dev --in $O/query_plan.sql --cg $O/query_plan.h $O/query_plan.c;
+> $(CQL) --nolines --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt query_plan --cg $O/query_plan.sql;
+> $(CQL) --nolines --dev --include_paths $(SCRIPT_DIR_RELATIVE) --in $O/query_plan.sql --cg $O/query_plan.h $O/query_plan.c;
 > cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.c -o $O/query_plan.o;
 > cc --compile -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $(CQL_ROOT_DIR)/query_plan_test.c -o $O/query_plan_test.o;
 > cc --debug --optimize -I$O -I$(SCRIPT_DIR_RELATIVE) -I$(CQL_ROOT_DIR) $O/query_plan.o $O/query_plan_test.o $(CQL_ROOT_DIR)/cqlrt.c --output $O/query_plan -lsqlite3 && rm -rf "$O/query_plan.dSYM";
@@ -330,34 +330,34 @@ $O/cqlrt.lua:
 lua: $O/$(example_name).lua
 $O/$(example_name).lua: $(source) $O/cqlrt.lua
 ifeq ($(is_example_implemented_in_lua),true)
-> $(CQL) --in $(source) --rt lua --cg $O/$(example_name).lua && cat $(SCRIPT_DIR_RELATIVE)/default_client.lua >> $O/$(example_name).lua
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt lua --cg $O/$(example_name).lua && cat $(SCRIPT_DIR_RELATIVE)/default_client.lua >> $O/$(example_name).lua
 else
 > echo "$(example_name) ($(source)) is not implemented in Lua yet"
 endif
 
 schema_upgrade: $O/schema_upgrade.sql
 $O/schema_upgrade.sql: $(source)
-> $(CQL) --in $(source) --rt schema_upgrade --cg $O/schema_upgrade.sql --global_proc entrypoint
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt schema_upgrade --cg $O/schema_upgrade.sql --global_proc entrypoint
 
 cql_json_schema: $O/cql_json_schema.json
 $O/cql_json_schema.json: $(source)
-> $(CQL) --in $(source) --rt json_schema --cg $O/cql_json_schema.json
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt json_schema --cg $O/cql_json_schema.json
 
 schema: $O/schema.sql
 $O/schema.sql: $(source)
-> $(CQL) --in $(source) --rt schema --cg $O/schema.sql
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt schema --cg $O/schema.sql
 
 stats: $O/stats.csv
 $O/stats.csv: $(source)
-> $(CQL) --in $(source) --rt stats --cg $O/stats.csv
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --rt stats --cg $O/stats.csv
 
 ast: $O/ast.txt
 $O/ast.txt: $(source)
-> $(CQL) --in $(source) --sem --ast --hide_builtins > $O/ast.txt # remove builtin spam
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --sem --ast --hide_builtins > $O/ast.txt # remove builtin spam
 
 ast_dot: $O/ast.dot
 $O/ast.dot: $(source)
-> $(CQL) --in $(source) --dot --hide_builtins > $O/ast.dot # remove builtin spam
+> $(CQL) --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --dot --hide_builtins > $O/ast.dot # remove builtin spam
 
 cql_sql_schema: $O/cql_sql_schema.sql
 $O/cql_sql_schema.sql: $O/cql_json_schema.json

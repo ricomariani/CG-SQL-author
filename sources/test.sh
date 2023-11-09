@@ -217,6 +217,17 @@ basic_test() {
 
   echo "  computing diffs (empty if none)"
   on_diff_exit include_not_found.err
+
+  echo testing include files nested too deeply
+
+  if ${CQL} --in "${TEST_DIR}/include_files_infinite_nesting.sql" --include_paths test 2>"${OUT_DIR}/include_nesting.err"
+  then
+    echo "error code should have indicated failure"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit include_nesting.err
 }
 
 

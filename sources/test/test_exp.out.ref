@@ -2128,7 +2128,7 @@ LET y := 2;
 
 LET z := x * (y + 5 + (y + 5) + 1);
 
-SET z := 1922;
+SET z := 151;
 
 LET zz := "(SELECT 1 AS x, 2 AS y) AS T";
 
@@ -2142,7 +2142,7 @@ SET zz := "1 + 2";
 
 SET zz := "1 AS x, 2 AS y";
 
-LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/test.sql', 1932);\nEND IF;\n\nfoo";
+LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_basic_parse_test.sql', 161);\nEND IF;\n\nfoo";
 
 SET x := 5;
 

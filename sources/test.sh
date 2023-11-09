@@ -191,7 +191,7 @@ basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
   echo running "${TEST_DIR}/test.sql"
   # exercising the non --in path (i.e. read from stdin)
-  if ! ${CQL} --echo --dev < "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
+  if ! ${CQL} --echo --dev --include_paths "${TEST_DIR}"  < "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
   then
    echo basic parsing test failed
    failed
@@ -200,13 +200,23 @@ basic_test() {
   on_diff_exit test.out
 
   echo running "${TEST_DIR}/test.sql" "with macro expansion"
-  if ! ${CQL} --echo --dev --in "${TEST_DIR}/test.sql" --exp >"${OUT_DIR}/test_exp.out"
+  if ! ${CQL} --echo --dev --include_paths "${TEST_DIR}" --in "${TEST_DIR}/test.sql" --exp >"${OUT_DIR}/test_exp.out"
   then
    echo basic parsing with expansion test failed
    failed
   fi
   echo "  computing diffs (empty if none)"
   on_diff_exit test_exp.out
+
+  echo testing include file not found
+  if ${CQL} --in "${TEST_DIR}/test_include_file_not_found.sql" 2>"${OUT_DIR}/include_not_found.err"
+  then
+    echo "error code should have indicated failure"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit include_not_found.err
 }
 
 

@@ -1,4 +1,4 @@
-#include <utils/timer.sql>
+@include "utils/timer.sql"
 
 DECLARE PROC printf NO CHECK;
 

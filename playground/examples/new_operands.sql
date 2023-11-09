@@ -7,19 +7,25 @@
 
 DECLARE PROC printf NO CHECK;
 
-#define DUMP(stmt) stmt; printf("%-30s -> x is now %d\n", #stmt, x)
+@macro(stmt_list) DUMP!(exp! expr)
+begin
+  exp!;
+  printf("%-30s -> x is now %d\n", @TEXT(exp!), x);
+end;
 
 create proc entrypoint()
 begin
-  DUMP(declare x integer not null);
-  DUMP(x := 100);
-  DUMP(x *= 2);
-  DUMP(x += 25);
-  DUMP(x -= 15);
-  DUMP(x /= 3);
-  DUMP(x %= 8);
-  DUMP(x |= 11);
-  DUMP(x &= 7);
-  DUMP(x <<= 3);
-  DUMP(x >>= 1);
+  declare x integer not null;
+
+  DUMP!(x);
+  DUMP!(x := 100);
+  DUMP!(x *= 2);
+  DUMP!(x += 25);
+  DUMP!(x -= 15);
+  DUMP!(x /= 3);
+  DUMP!(x %= 8);
+  DUMP!(x |= 11);
+  DUMP!(x &= 7);
+  DUMP!(x <<= 3);
+  DUMP!(x >>= 1);
 end;

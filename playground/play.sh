@@ -290,12 +290,8 @@ gitignore: $O/.gitignore
 $O/.gitignore:
 > @echo '*' > $O/.gitignore
 
-preprocessed: $O/$(example_name).pre.sql
-$O/$(example_name).pre.sql: $(source)
-> cc -I$O -I$(SCRIPT_DIR_RELATIVE) --preprocess --language=c $(source) > $O/$(example_name).pre.sql
-
-$O/$(example_name).c: $O/$(example_name).pre.sql
-> $(CQL) --nolines --in $O/$(example_name).pre.sql --cg $O/$(example_name).h $O/$(example_name).c $O/$(example_name)_imports.sql --generate_exports --cqlrt $(CQL_ROOT_DIR)/cqlrt.h
+$O/$(example_name).c: $(source)
+> $(CQL) --nolines --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --cg $O/$(example_name).h $O/$(example_name).c $O/$(example_name)_imports.sql --generate_exports --cqlrt $(CQL_ROOT_DIR)/cqlrt.h
 
 c: $O/$(example_name)
 $O/$(example_name): $O/$(example_name).c

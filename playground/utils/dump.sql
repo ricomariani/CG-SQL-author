@@ -27,7 +27,29 @@ create procedure dump_object(value object, out result object)   begin set result
 create procedure dump_blob(value blob, out result blob)         begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
 create procedure dump_null(value integer, out result integer)   begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
 
-#define DUMP(x) printf("Dumping: `%s`:\n", #x); (x)::dump(); printf("\n")
-#define EXAMPLE(x, ...) call printf("%25s --> %-7s%-20.20s %s\n", #x, (x)::get_type(), (x)::format(), "" __VA_ARGS__)
-#define ERROR(x, ...) call printf("%25s --> ERROR %s\n", #x, "" __VA_ARGS__)
-#define _(x, ...) call printf(x "\n", ##__VA_ARGS__)
+@macro(stmt_list) DUMP!(x! expr)
+begin
+  printf("Dumping: `%s`:\n", @TEXT(x!));
+  x!::dump();
+  printf("\n");
+end;
+
+@macro(stmt_list) EXAMPLE_NOTE!(x! expr, note! expr)
+begin
+  call printf("%25s --> %-7s%-20.20s %s\n", @TEXT(x!), x!::get_type(), x!::format(), note!);
+end;
+
+@macro(stmt_list) EXAMPLE!(x! expr)
+begin
+  EXAMPLE_NOTE!(x!, "");
+end;
+
+@macro(stmt_list) ERROR!(x! expr, note! expr)
+begin
+  call printf("%25s --> ERROR %s\n", @TEXT(x!), note!);
+end;
+
+@macro(stmt_list) _!(x! expr)
+begin
+  printf("%s\n", x!);
+end;

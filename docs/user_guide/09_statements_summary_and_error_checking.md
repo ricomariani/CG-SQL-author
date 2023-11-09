@@ -21,77 +21,121 @@ examples and suggested remediation.
 
 ### The Primary SQL Statements
 
-These are, roughly, the statements that involve the database.
+These are, roughly, the statements that involve the database.  In each case
+we will review the major verifications that happen for each of the statements.
+Because they are directly forwarded to SQLite for execution the details
+of how they work are literally the SQLite details.  So in this document
+all we really need to discuss is the additional validations.
 
 #### The `SELECT` Statement
-Top level statement list processing for select.  This is easily the hardest
-statement to process. Each clause has its own set of complex rules and
-the result of previous clauses constrains the next in a complex fashion.
-Among the things that are verified:
+
+Sqlite reference: https://www.sqlite.org/lang_select.html
+
+Verifications:
+
 * the mentioned tables exist and have the mentioned columns
 * the columns are type compatible in their context
-* any variables in the expressions are compatible
+* any variables in the expressions are compatible in context
 * aggregate functions are used only in places where aggregation makes sense
-* column and table names are unambiguous, especially when self-joins are involved
+* column and table names are unambiguous
 * compound selects (e.g. with UNION) are type-consistent in all the fragments
 * the projection of a select has unique column labels if they are used
 
-#### The `SELECT *` Statement
-`SELECT *` is special in that it creates its own struct type by assembling
-all the columns of all the tables in the select's join result.  CQL rewrites these
+
+####  Details of `SELECT *` 
+
+`SELECT *` is special in that it creates its own result type by assembling
+all the columns of the result of the `FROM` clause.  CQL rewrites these
 column names into a new `SELECT` with the specific columns explicitly listed.
-While this makes the program slightly bigger it means that logically deleted columns
+While this makes the program slightly bigger, it means that logically deleted columns
 are never present in results because `SELECT *` won't select them and attempting
 to use a logically deleted column results in an error.
 
+Also, in the event that the schema changes after the program was compiled
+the `*` will not include those new columns.  It will refer to the columns
+as they existed in the schema at the time the program was compiled.  This
+vastly improves schema and program interoperability.
+
 #### The `CREATE TABLE` Statement
-Unlike the other parts of DDL we actually deeply care about the tables.
-We have to grab all the columns and column types out of it and create
-the appropriate structure type for the table.
-Along the way we validate a bunch of stuff like:
-* verify unique table name
-* no duplicate column names
-* recursive correctness of constraints (see constraints discussion below)
+
+Sqlite reference: https://www.sqlite.org/lang_createtable.html
+
+Unlike the other parts of DDL the compiler actually deeply cares about tables.
+It has to extract all the columns and column types out of the table.  This
+information is necessary to properly validate all the other statements.
+
+Verifications:
+
+* Verify a unique table name
+* No duplicate column names
+* The data is recorded to be emitted in JSON and schema output
+* Correctness of constraints, see below
+* Other details do not participate in further semantic analysis
 
 ##### The `UNIQUE KEY` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  Again, we use the usual helpers
-for name lookup within the context of the table that contains the constraint.
+
+  * A column so marked becomes a valid target for the `references` part of a foreign key
+  * If it is a separate constraint (i.e. not part of the column definition) then its name must be unique if it has one
 
 ##### The `FOREIGN KEY` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  Again, we use the usual helpers
-for name lookup within the context of the table with the foreign key.
- Note that the foreign key has to be validated against two tables to fully validate it.
+
+  * The referenced target must be a valid table
+  * The referenced columns must exist and be either a unique key or a primary key
+  * If it is a separate constraint (i.e. not part of the column definition) then its name must be unique if it has one
 
 ##### The `PRIMARY KEY` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  Again, we use the usual helpers
-for name lookup within the context of the table with the primary key.
+
+  * A column so marked becomes a valid target for the `references` part of a foreign key
+  * The column(s) implicitly become `not null`
+  * If it is a separate constraint (i.e. not part of the column definition) then its name must be unique if it has one
+
+##### AUTOINCREMENT
+
+   * A column marked auto-increment must be declared as either `integer primary key` or `long integer primary key`
+   * If `long integer` (or one of its aliases) is specified then the SQLite output will be changed to `integer`
+   * A Sqlite `integer` can hold a 64 bit value, so `long integer` in this context only refers to:
+      * how the column should be fetched, and
+      * how big the variable that holds the result should be
 
 ##### The `CHECK` Clause
-Similar to other constraints, we don't actually do anything with this
-other than offer some validation.  The `CHECK` clause is validated
-after the entire table has been processed so that even if it appears
-early in the table, the clause can use any columns defined later in the
-table.
+
+  * The `CHECK` clause must be validated after the entire table has been processed
+  * The clause may appear as part of a column definition early in the table and refer to columns later in the table
+  * The result of the check clause must be a valid numeric expression
 
 #### The `CREATE INDEX` Statement
-CQL doesn't really do anything with indices but it does validate that they
-make sense (so we lookup all the names of all the columns and so forth.)
+
+Sqlite reference: https://www.sqlite.org/lang_createindex.html
+
+The compiler doesn't really do anything with indices but it does validate that they
+make sense:
+
+  * it should have unique name
+  * it should reference a table that exists
+  * the columns in the index should match columns in the table
+  * indexes on expressions have valid expressions
 
 #### The `CREATE VIEW` Statement
+
+Sqlite reference: https://www.sqlite.org/lang_createview.html
+
 Create view analysis is very simple because the `select` analysis does
 the heavy lifting.  All the compiler has to do is validate that the view
-is unique, then validate the select statement.
+is unique, then validate the select statement as usual.
 
-Additionally, views must not be allowed to have any NULL type columns;
-all nulls must be converted to some type with a CAST.   e.g. `create
-view foo as select NULL n` is not valid.  NULL is not a real storage type.
+Like most other top level select statements, in a view the select must
+have these two additional properties:
+
+  * every column must have a name (implied or otherwise)
+  * no column may be of type `NULL` 
+     * any NULL literal converted to some type exact type with a CAST.
+     * i.e. `create view foo as select NULL n` is not valid     
 
 #### The `CREATE TRIGGER` Statement
 
-The create trigger statement is quite a beast, and validations include:
+Sqlite reference: https://www.sqlite.org/lang_createtrigger.html
+
+The create trigger statement is significant, validations include:
 
  * The trigger name must be unique
  * For `insert` the "new.*" table is available in expressions/statement
@@ -355,14 +399,14 @@ CREATE VIRTUAL TABLE virt_table USING my_module;
 
 ##### Case 2 Example
 
-```
+```sql
 create virtual table virt_table using my_module(foo, 'goo', (1.5, (bar, baz))) as (
   id integer not null,
   name text
 );
 ```
 
-```
+```sql
 CREATE VIRTUAL TABLE virt_table USING my_module(foo, "goo", (1.5, (bar, baz)));
 ```
 
@@ -375,7 +419,7 @@ parsed and validated.
 This case recognizes the popular choice that the arguments are often
 the actual schema declaration for the table in question. So:
 
-```
+```sql
 create virtual table virt_table using my_module(arguments following) as (
   id integer not null,
   name text
@@ -384,7 +428,7 @@ create virtual table virt_table using my_module(arguments following) as (
 
 becomes
 
-```
+```sql
 CREATE VIRTUAL TABLE virt_table USING my_module(
   id INTEGER NOT NULL,
   name TEXT
@@ -438,6 +482,7 @@ Semantic analysis of stored procedures is fairly easy at the core:
  * set the current proc in flight (this not allowed to nest)
  * recurse on the statement list and prop errors
  * record the name of the procedure for callers
+
 In addition, while processing the statement:
  * we determine if it uses the database; this will change the emitted signature of the proc to include a `sqlite3 *db`
      input argument and it will return a sqlite error code (e.g. `SQLITE_OK`)
@@ -481,6 +526,7 @@ down to a `C` `switch` statement.  These are:
    * there can be no `ELSE` clause
 
 #### The `DECLARE PROCEDURE` Statement
+
 There are three forms of this declaration:
 * a regular procedure with no DML
    * e.g. `declare proc X(id integer);`
@@ -491,20 +537,24 @@ There are three forms of this declaration:
 The main validations here are that there are no duplicate parameter names, or return value columns.
 
 #### The `DECLARE FUNCTION` Statement
+
 Function declarations are similar to procedures; there must be a return type
 (use proc if there is none).  The `DECLARE SELECT FUNCTION` form indicates a function
 visible to SQLite; other functions are usable in the `call` statement.
 
 #### The `DECLARE` Variable Statement
+
 This declares a new local or global variable that is not a cursor.
 The type is computed with the same helper that is used for analyzing
 column definitions.  Once we have the type we walk the list of variable
-names, check them for duplicates and such (see above) and assign their type.  The canonical
-name of the variable is defined here. If it is later used with a different casing the output
-will always be as declared.   e.g. `declare Foo integer;  set foo = 1;` is legal but the output
+names, check them for duplicates and such (see above) and assign their type.
+The canonical name of the variable is defined here. If it is later used with
+a different casing the output will always be as declared.
+e.g. `declare Foo integer;  set foo = 1;` is legal but the output
 will always contain the variable written as `Foo`.
 
 #### The `DECLARE` Cursor Statement
+
 There are two forms of the declare cursor, both of which allow CQL to infer the exact type of the cursor.
   * `declare foo cursor for select etc.`
     * the type of the cursor is the net struct type of the select list
@@ -519,6 +569,7 @@ and then pull out the structure type of that thing and use it for the cursor's s
  then of course this declaration will generate errors.
 
 #### The `DECLARE` Value Cursor Statement
+
 This statement declares a cursor that will be based on the return type of a procedure.
 When using this form the cursor is also fetched, hence the name.  The fetch result of
 the stored proc will be used for the value.  At this point, we use its type only.
@@ -527,18 +578,21 @@ the stored proc will be used for the value.  At this point, we use its type only
 * the cursor name must be unique
 
 #### The `WHILE` Statement
+
 While semantic analysis is super simple.
  * the condition must be numeric
  * the statement list must be error-free
  * loop_depth is increased allowing the use of interior leave/continue
 
 #### The `LOOP` Statement
+
 Loop analysis is just as simple as "while" -- because the loop_stmt
 literally has an embedded fetch, you simply use the fetch helper to
 validate that the fetch is good and then visit the statement list.
 Loop depth is increased as it is with while.
 
 #### The `CALL` Statement
+
 There are three ways that a call can happen:
   * signatures of procedures that we know in full:
     * call foo();
@@ -581,8 +635,8 @@ to use this form if no `OUT` variables needed to be declared.
 
 The fetch statement has two forms:
 
-  * fetch C into var1, var2, var3 etc.
-  * fetch C;
+  * `fetch C into var1, var2, var3 etc.`
+  * `fetch C;`
 
 The second form is the so-called automatic cursor form.
 
@@ -608,7 +662,7 @@ No analysis needed here other than that the two statement lists are ok.
 
 #### The `CLOSE` CURSOR Statement
 
-For close [cursor], we just validate that the name is in fact a cursor
+For `close cursor`, we just validate that the name is in fact a cursor
 and it is not a boxed cursor.  Boxed cursor lifetime is managed by the
 box object so manually closing it is not allowed.  Instead, the usual
 reference-counting semantics apply; the boxed cursor variable typically falls out of
@@ -616,7 +670,7 @@ scope and is released, or is perhaps set to NULL to release its reference early.
 
 #### The `OUT` CURSOR Statement
 
-For out [cursor], we first validate that the name is a cursor
+For `out cursor`, we first validate that the name is a cursor
 then we set the output type of the procedure we're in accordingly.
 
 ### The "Meta" Statements
@@ -864,8 +918,8 @@ does not remove `NOT NULL`.
 
 Coalesce requires type compatibility between all of its arguments.
 The result is a not null type if we find a not null item in the list.
-There should be nothing after that item.  Note that ifnull and coalesce
-are really the same thing except ifnull must have exactly two arguments.
+There should be nothing after that item.  Note that `ifnull` and `coalesce`
+are really the same thing except `ifnull` must have exactly two arguments.
 
 #### The `IN` AND `NOT IN` Expressions
 
@@ -1015,7 +1069,7 @@ kind of join.
 
 Let's take a quick look.  First some sample data:
 
-```
+```sql
 create table A( id integer, a text, b text);
 create table B( id integer, c text, d text);
 
@@ -1026,7 +1080,8 @@ insert into B values(2, 'c2', 'd2');
 ```
 
 Now let's look at the normal join; this is our reference:
-```
+
+```sql
 select * from A T1 inner join B T2 on T1.id = T2.id;
 
 result:
@@ -1039,7 +1094,7 @@ As expected, you get all the columns of A, and all the columns of B.  The 'id' c
 
 However, with the `USING` syntax:
 
-```
+```sql
 select * T1 inner join B T2 using (id);
 
 result:
@@ -1052,7 +1107,7 @@ is not so simple as that.  It seems that what hapened was that the `*`
 expansion has not included two copies of the `id`.  The following cases
 show that both copies of `id` are still logically in the join.
 
-```
+```sql
 select T1.*, 'xxx', T2.* from A T1 inner join B T2 using (id);
 
 result:

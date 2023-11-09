@@ -30,7 +30,7 @@ cql --in input.sql --rt json_schema --cg out.json
 The output contains many different sections for the various
 types of entities that CQL can process.  There is a full
 description of the possible outputs available in [diagram
-form](https://ricomariani.github.io/CG-SQL-author/diagrams/json_output_railroad_diagram.html)
+form](https://ricomariani.github.io/CG-SQL-author/json_grammar.railroad.html)
 
 In the balance of this chapter we'll deal with the contents of the
 sections and their meaning rather than the specifics of the format,

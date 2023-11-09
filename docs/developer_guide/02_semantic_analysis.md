@@ -52,7 +52,7 @@ talk about how errors are created, recorded, and reported.
 
 ### Decorated AST examples
 
-Recalling the AST output from [Chapter 1](01_building_the_ast.md), this is what that same tree
+Recalling the AST output from [Chapter 1](./01_building_the_ast.md), this is what that same tree
 looks like with semantic information attached:
 
 ```

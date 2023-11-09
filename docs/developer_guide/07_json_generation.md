@@ -354,7 +354,7 @@ The next fragment emits two optional pieces that are present in many types of ob
   * `cg_json_emit_region_info` emits two things:
     * the view's region
     * the "deployment region" of that region if any (regions are contained in deployable groups)
-    * see [Chapter 10](user_guide.html#schema-regions) for more info on regions and deployment regions
+    * see [Chapter 10](../user_guide/10_schema_management.md#schema-regions) for more info on regions and deployment regions
 
 * if there are any miscellaneous attributes they are emitted
   * we'll use `cg_json_misc_attrs` as our general formatting example when we get to that

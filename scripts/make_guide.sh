@@ -37,13 +37,15 @@ target="$OUT/$guide_type.md"
 
 touch $target
 for source in $sources; do
+    source_path_from_guide_folder=${source#"$SCRIPT_DIR_RELATIVE/../docs/$guide_type/"}
+
     if [ "$FORCE_BUILD" != "true" ] && grep -q "<!-- I_AM_A_STUB -->" "$source"; then
         echo "ERROR: $source is a stub, please replace it before building" >&2
         exit 1
     fi
 
 # Replaces front matter section (Yaml header delimitted by ---) with a markdown title header
-    awk -v cli_name="$CLI_NAME" -f - $source <<'EOF' >> "$target"
+    awk -v cli_name="$CLI_NAME" -v source_path="$source_path_from_guide_folder" -f - "$source" <<'EOF' >> "$target"
 BEGIN {
     FS = "\n";
     front_matter_delimiter_count = 0;
@@ -64,7 +66,11 @@ in_front_matter() && /title:/ {
     next;
 }
 
-in_markdown() { print }
+in_markdown() {
+    gsub(/\]\(\.[^\.]/, "](./" source_path "/../");
+    gsub(/\]\(\.\./, "](./" source_path "/../..");
+    print;
+}
 
 END { print "\n" }
 EOF
@@ -86,7 +92,21 @@ pandoc $source \
     --wrap=none \
     --from markdown \
     --to html \
-    --output $target
+    --output $target \
+    --lua-filter <(cat <<EOF
+function Link(element)
+    -- If it is not a relative url to a markdown file, do not override the url
+    if string.match(element.target, "^%.(.*)%.md") == nil then
+        return element
+    end
+
+    -- Convert relative urls to markdown files to official website urls
+    element.target = "https://ricomariani.github.io/CG-SQL-author/docs/$guide_type/" .. string.gsub(element.target, "%.md", "")
+
+    return element
+end
+EOF
+    )
 
 # change margins to be more reader friendly
 sed -e "s/max-width: 36em;/max-width: 70em;/" <$target >$target.tmp

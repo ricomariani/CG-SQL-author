@@ -23,7 +23,7 @@ in many environments only one thread is doing all the data access.  But if you p
 between threads this is something you'll want to address.  `CQLRT` is designed to be replacable.  In fact
 there is another version included in the distribution `cqlrt_cf` that is more friendly to iOS and CoreFoundation.
 This alternate version is an excellent demonstration of what is possible.  There are more details
-in [Internals Part 5: CQL Runtime](developer_guide.html#part-5-cql-runtime)
+in [Internals Part 5: CQL Runtime](../../developer_guide/05_cql_runtime.md)
 
 #### Statement Caching
 

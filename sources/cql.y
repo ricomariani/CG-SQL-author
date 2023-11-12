@@ -1119,6 +1119,7 @@ data_type_any:
     CSTR type = dup_printf("%s SET", AST_STR($name));
     $data_type_any = new_ast_type_object(new_ast_str(type)); }
   | ID { $data_type_any = new_ast_str($ID); }
+  | AT_ID '(' text_args ')' { $data_type_any = new_ast_at_id($text_args); }
   ;
 
 not_null: NOT NULL_ | '!'
@@ -2936,6 +2937,25 @@ cql_noexport CSTR cql_builtin_text() {
     "DECLARE FUNC get_object_cql_string_list_count(list cql_string_list!) INT!;"
     "@attribute(cql:builtin)"
     "DECLARE FUNC add_object_cql_string_list(list cql_string_list!, string TEXT!) cql_string_list!;"
+
+    "@attribute(cql:builtin)"
+    "TYPE @ID('bool') bool;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('int') int;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('integer') int;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('long') long;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('real') real;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('text') text;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('object') object;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('blob') blob;"
+    "@attribute(cql:builtin)"
+    "TYPE @ID('long_int') long;"
     ;
 }
 

@@ -307,8 +307,6 @@ void gen_data_type(ast_node *ast) {
   } else if (is_ast_type_cursor(ast)) {
     gen_printf("CURSOR");
   } else {
-    Contract(is_ast_str(ast));
-    EXTRACT_STRING(name, ast);
     bool_t suppress = false;
     if (gen_callbacks) {
       gen_sql_callback callback = gen_callbacks->named_type_callback;
@@ -321,7 +319,8 @@ void gen_data_type(ast_node *ast) {
       }
     }
     if (!suppress) {
-      gen_printf("%s", name);
+      EXTRACT_NAME_AST(name_ast, ast);
+      gen_name(name_ast);
     }
     return;
   }
@@ -4221,10 +4220,12 @@ static void gen_declare_cursor_like_typed_names(ast_node *ast) {
 
 static void gen_declare_named_type(ast_node *ast) {
   Contract(is_ast_declare_named_type(ast));
-  EXTRACT_STRING(name, ast->left);
+  EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
 
-  gen_printf("DECLARE %s TYPE ", name);
+  gen_printf("DECLARE ");
+  gen_name(name_ast);
+  gen_printf(" TYPE ");
   gen_data_type(data_type);
 }
 

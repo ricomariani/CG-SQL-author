@@ -347,6 +347,141 @@ DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, 
 
 The statement ending at line XXXX
 
+@ATTRIBUTE(cql:builtin)
+DECLARE bool TYPE BOOL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: bool
+    | {name bool}: bool
+    | {type_bool}: bool
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE int TYPE INTEGER;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: integer
+    | {name int}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE integer TYPE INTEGER;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: integer
+    | {name integer}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE long TYPE LONG_INT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: longint
+    | {name long}: longint
+    | {type_long}: longint
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE real TYPE REAL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: real
+    | {name real}: real
+    | {type_real}: real
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE text TYPE TEXT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: text
+    | {name text}: text
+    | {type_text}: text
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE object TYPE OBJECT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: object
+    | {name object}: object
+    | {type_object}: object
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE blob TYPE BLOB;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: blob
+    | {name blob}: blob
+    | {type_blob}: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE long_int TYPE LONG_INT;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: longint
+    | {name long_int}: longint
+    | {type_long}: longint
+
+The statement ending at line XXXX
+
 EXPLAIN
 SELECT 1;
 

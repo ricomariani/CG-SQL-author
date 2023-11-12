@@ -1,31 +1,55 @@
 DECLARE PROC printf NO CHECK;
 
-create procedure get_type_bool(value bool,        out result text not null) begin set result := "(bool)"; end;
-create procedure get_type_int(value int,          out result text not null) begin set result := "(int)"; end;
-create procedure get_type_long(value long,        out result text not null) begin set result := "(long)"; end;
-create procedure get_type_real(value real,        out result text not null) begin set result := "(real)"; end;
-create procedure get_type_text(value text,        out result text not null) begin set result := "(text)"; end;
-create procedure get_type_object(value object,    out result text not null) begin set result := "(obj)"; end;
-create procedure get_type_blob(value blob,        out result text not null) begin set result := "(blob)"; end;
-create procedure get_type_null(value integer,     out result text not null) begin set result := "(null)"; end;
+@macro(stmt_list) dumper_procs!(t! expr, eval! expr)
+begin
+  -- this generates a procedure called (e.g.) get_type_bool that returns the type
+  proc @ID("get_type_", t!)(value @ID(t!), out result text not null)
+  begin
+     set result := @TEXT("(", t!, ")");
+  end;
 
-create procedure format_bool(value bool,        out result text not null) begin set result := case when value is null then "NULL" when value then "TRUE" else "FALSE" end; end;
-create procedure format_int(value int,          out result text not null) begin set result := case when value is null then "NULL" else printf("%d", value) end; end;
-create procedure format_long(value long,        out result text not null) begin set result := case when value is null then "NULL" else printf("%lld", value) end; end;
-create procedure format_real(value real,        out result text not null) begin set result := case when value is null then "NULL" else printf("%g", value) end; end;
-create procedure format_text(value text,        out result text not null) begin set result := case when value is null then "NULL" else value end; end;
-create procedure format_object(value object,    out result text not null) begin set result := case when value is null then "NULL" else printf("%s", "[Object]") end; end;
-create procedure format_blob(value blob,        out result text not null) begin set result := case when value is null then "NULL" else printf("%s", "[Blob]") end; end;
-create procedure format_null(value integer,     out result text not null) begin set result := "NULL"; end;
+  -- this generates a procedure called (e.g.) format_bool returns the value as text
+  proc @ID("format_", t!)(value @ID(t!), out result text not null)
+  begin
+    set result := case
+     when value is null then "NULL"
+     else eval!
+     end;
+  end;
 
-create procedure dump_bool(value bool, out result bool)         begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_int(value int, out result int)            begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_long(value long, out result long)         begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_real(value real, out result real)         begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_text(value text, out result text)         begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_object(value object, out result object)   begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_blob(value blob, out result blob)         begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
-create procedure dump_null(value integer, out result integer)   begin set result := value; call printf("%-7s %s\n", value::get_type(), value::format()); end;
+  -- this generates a procedure called (e.g.) dump_bool prints the type and value
+  proc @ID("dump_", t!)(value @ID(t!), out result @ID(t!))
+  begin
+    set result := value;
+    call printf("%-7s %s\n", value::get_type(), value::format());
+  end;
+end;
+
+dumper_procs!("bool", case when value then "TRUE" else "FALSE" end);
+dumper_procs!("int", printf("%d", value));
+dumper_procs!("long", printf("%lld", value));
+dumper_procs!("real", printf("%g", value));
+dumper_procs!("text", value);
+dumper_procs!("object", "[Object]");
+dumper_procs!("blob", "[Blob]");
+
+-- null is different than the others because there is no declarable type null.
+-- so value is of type "integer"
+proc get_type_null(value integer, out result text not null)
+begin
+  set result := "(null)";
+end;
+
+proc format_null(value integer, out result text not null)
+begin
+ set result := "NULL";
+end;
+
+proc dump_null(value integer, out result integer)
+begin
+  set result := value;
+  call printf("%-7s %s\n", value::get_type(), value::format());
+end;
 
 @macro(stmt_list) DUMP!(x! expr)
 begin

@@ -1,6 +1,10 @@
 %option noyywrap nodefault yylineno case-insensitive never-interactive
 
 %x at_inc
+%x skipping
+%x skipping_c_comment
+%x ifdef
+%x ifndef
 
 %{
 
@@ -78,10 +82,25 @@ typedef struct {
   char *filename_saved;
 } cql_include_state;
 
-cql_include_state cql_includes[MAX_INCLUDES];
-int cql_include_index = 0;
+static cql_include_state cql_includes[MAX_INCLUDES];
+static int cql_include_index = 0;
+static int cql_ifdef_depth = 0;
+
+typedef struct cql_ifdef_state_t {
+  bool_t process_else;
+  bool_t processing;
+  struct cql_ifdef_state_t *prev;
+} cql_ifdef_state_t;
+
+static cql_ifdef_state_t *cql_ifdef_state;
 
 cql_noexport void cql_reset_open_includes() {
+  while (cql_ifdef_state) {
+     cql_ifdef_state_t *prev = cql_ifdef_state->prev;
+     free(cql_ifdef_state);
+     cql_ifdef_state = prev;
+  }
+
   cql_include_index = 0;
   memset(cql_includes, 0, sizeof(cql_includes));
 }
@@ -154,11 +173,103 @@ sp [ \t]+
 hex [0-9A-F]
 d [0-9]
 
+id [_A-Z][A-Z0-9_]*
+qid `(``|[^`\n])*`
+cstrlit \"(\\.|[^\\"\n])*\"
+strlit '(''|[^'\n])*'
+reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
+
 %%
+
+@IFDEF                           { BEGIN(ifdef); }
+<ifdef>{sp}*
+<ifdef>{id}                      { 
+                                   cql_ifdef_state_t *new_state = _new(cql_ifdef_state_t);
+                                   new_state->prev = cql_ifdef_state;
+                                   new_state->processing = cql_is_defined(yytext); 
+                                   new_state->process_else = !new_state->processing;
+                                   cql_ifdef_state = new_state;
+
+                                   if (cql_ifdef_state->processing) {
+                                     BEGIN(INITIAL);
+                                   }
+                                   else {
+                                     BEGIN(skipping);
+                                   }
+                                 }
+
+@IFNDEF                          { BEGIN(ifndef); }
+<ifndef>{sp}*
+<ifndef>{id}                     { 
+                                   cql_ifdef_state_t *new_state = _new(cql_ifdef_state_t);
+                                   new_state->prev = cql_ifdef_state;
+                                   new_state->processing = !cql_is_defined(yytext); 
+                                   new_state->process_else = !new_state->processing;
+                                   cql_ifdef_state = new_state;
+
+                                   if (cql_ifdef_state->processing) {
+                                     BEGIN(INITIAL);
+                                   }
+                                   else {
+                                     BEGIN(skipping);
+                                   }
+                                 }
+
+@ELSE                            {
+                                   if (cql_ifdef_state) {
+                                     cql_ifdef_state->processing = false;
+                                     BEGIN(skipping);
+                                   }
+                                 }
+
+@ENDIF                           {
+                                   if (cql_ifdef_state) {
+                                     cql_ifdef_state = cql_ifdef_state->prev;
+                                     // it is not possible to go from processing to not processing
+                                     // so there is never a transition here
+                                   }
+                                 }
+
+<skipping>@IFDEF                 {
+                                   cql_ifdef_state_t *new_state = _new(cql_ifdef_state_t);
+                                   new_state->prev = cql_ifdef_state;
+                                   new_state->processing = false;
+                                   new_state->process_else = false;
+                                   cql_ifdef_state = new_state;
+                                 }
+                                   
+<skipping>@ELSE                  {
+                                   if (cql_ifdef_state->process_else) {
+                                     cql_ifdef_state->processing = true;
+                                     BEGIN(INITIAL);
+                                   }
+                                 }
+
+<skipping>@ENDIF                 {
+                                   cql_ifdef_state = cql_ifdef_state->prev;
+                                   if (!cql_ifdef_state || cql_ifdef_state->processing) {
+                                     BEGIN(INITIAL);
+                                   }
+                                 }
+
+<skipping>"/*"                   { BEGIN(skipping_c_comment); }
+<skipping_c_comment>.
+<skipping_c_comment>[\n]
+<skipping_c_comment>"*/"         { BEGIN(skipping); }
+
+<skipping>--.*\n
+<skipping>{qid}
+<skipping>{strlit}
+<skipping>{cstrlit}
+<skipping>.
+<skipping>[\n]
 
 @INCLUDE                         { BEGIN(at_inc); }
 <at_inc>{sp}*
-<at_inc>\"(\\.|[^\\"\n])*\"      { cql_setup_for_include(yytext); BEGIN(INITIAL); }
+<at_inc>{cstrlit}                {
+                                   cql_setup_for_include(yytext);
+                                   BEGIN(INITIAL);
+                                 }
 
 @ATTRIBUTE                       { return AT_ATTRIBUTE; }
 @BEGIN_SCHEMA_REGION             { return AT_BEGIN_SCHEMA_REGION; }
@@ -425,24 +536,39 @@ WITHOUT                          { return WITHOUT; }
 "|="                             { return OR_EQ; }
 "||"                             { return CONCAT; }
 
-0x{hex}+                         { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
-0x{hex}+L                        { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
-{d}+                             { char *s = Strdup(yytext); yylval.sval = s; errno = 0; return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
-{d}+L                            { char *s = Strdup(yytext); s[strlen(s)-1] = 0; /* remove the L */ yylval.sval = s; return LONGLIT; }
+0x{hex}+                         { char *s = Strdup(yytext);
+                                   yylval.sval = s;
+                                   errno = 0;
+                                   return (strtoll(s+2, NULL, 16) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
 
-({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)? { yylval.sval = Strdup(yytext); return REALLIT; }
+0x{hex}+L                        { char *s = Strdup(yytext);
+                                   s[strlen(s)-1] = 0; /* remove the L */
+                                   yylval.sval = s;
+                                   return LONGLIT; }
 
-`(``|[^`\n])*`                   { yylval.sval = Strdup(yytext); return QID; }
-\"(\\.|[^\\"\n])*\"              { yylval.sval = Strdup(yytext); return CSTRLIT; }
-'(''|[^'\n])*'                   { yylval.sval = Strdup(yytext); return STRLIT; }
+{d}+                             { char *s = Strdup(yytext);
+                                   yylval.sval = s;
+                                   errno = 0;
+                                   return (strtoll(s, NULL, 10) <= 0x7fffffff  && errno == 0) ? INTLIT: LONGLIT; }
+
+{d}+L                            { char *s = Strdup(yytext);
+                                   s[strlen(s)-1] = 0; /* remove the L */
+                                   yylval.sval = s;
+                                   return LONGLIT; }
+
+{reallit}                        { yylval.sval = Strdup(yytext); return REALLIT; }
+{qid}                            { yylval.sval = Strdup(yytext); return QID; }
+{cstrlit}                        { yylval.sval = Strdup(yytext); return CSTRLIT; }
+{strlit}                         { yylval.sval = Strdup(yytext); return STRLIT; }
 X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT; }
+
 [-+&~|^/%*(),.;!<>:=]            { return yytext[0]; }
 \[                               { return yytext[0]; }
 \]                               { return yytext[0]; }
 \{                               { return yytext[0]; }
 \}                               { return yytext[0]; }
-[_A-Z][A-Z0-9_]*                 { yylval.sval = Strdup(yytext); return ID; }
-[_A-Z][A-Z0-9_]*!                { int32_t result = resolve_macro_name(yytext);
+{id}                             { yylval.sval = Strdup(yytext); return ID; }
+{id}!                            { int32_t result = resolve_macro_name(yytext);
                                    if (result == EOF) {
                                      REJECT;
                                    }

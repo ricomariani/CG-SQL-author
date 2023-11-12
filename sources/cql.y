@@ -92,6 +92,10 @@ static ast_node *reduce_str_chain(ast_node *str_chain);
 static bool_t parse_error_occurred;
 static CSTR table_comment_saved;
 
+static void cql_setup_defines(void);
+static void cql_cleanup_defines(void);
+static void cql_add_define(CSTR name);
+
 int yylex();
 void yyerror(const char *s, ...);
 void yyset_in(FILE *);
@@ -2825,6 +2829,8 @@ static void parse_cmd(int argc, char **argv) {
       options.expand = 1;
     } else if (strcmp(arg, "--include_paths") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_paths_count, &options.include_paths);
+    } else if (strcmp(arg, "--defines") == 0) {
+      a = gather_arg_params(a, argc, argv, &options.defines_count, &options.defines);
     } else if (strcmp(arg, "--include_regions") == 0) {
       a = gather_arg_params(a, argc, argv, &options.include_regions_count, &options.include_regions);
     } else if (strcmp(arg, "--exclude_regions") == 0) {
@@ -2943,6 +2949,7 @@ int cql_main(int argc, char **argv) {
     ast_init();
 
     // add the builtin declares before we process the real input
+    cql_setup_defines();
     cql_reset_open_includes();
     cql_setup_for_builtins();
 
@@ -2962,6 +2969,7 @@ int cql_main(int argc, char **argv) {
   rt_cleanup();
   parse_cleanup();
   cql_cleanup_open_includes();
+  cql_cleanup_defines();
 
 #ifdef CQL_AMALGAM
   // the variables need to be set back to zero so we can
@@ -3384,4 +3392,35 @@ cql_noexport bool_t macro_arg_valid(int32_t macro_type, ast_node *macro_arg) {
     case SELECT_EXPR_MACRO:  valid = is_ast_select_expr_macro_arg(macro_arg); break;
   }
   return valid;
+}
+
+static symtab *defines;
+
+static void cql_setup_defines() {
+  Contract(!defines);
+  defines = symtab_new();
+
+  cql_add_define(dup_printf("__rt__%s", options.rt));
+
+  for (int32_t i = 0; i < options.defines_count; i++) {
+    cql_add_define(options.defines[i]);
+  }
+}
+
+static void cql_cleanup_defines() {
+  if (defines) {
+    symtab_delete(defines);
+    defines = NULL;
+  }
+}
+
+static void cql_add_define(CSTR name) {
+  Contract(defines);
+  symtab_add(defines, name, (void*)1);
+}
+
+cql_noexport bool_t cql_is_defined(CSTR name) {
+  Contract(defines);
+  symtab_entry *entry = symtab_find(defines, name);
+  return entry && entry->val;
 }

@@ -29,11 +29,13 @@ end;
 
 proc lua_gated(out gated int!)
 begin
-  let result := false;
-  -- emits code to set the boolean to true but only in Lua output
-  -- this is super cheesy but until we have @IF it's all we can do
-  @echo lua, "result = true\n";
-  set gated := result;
+
+  @ifdef __rt__lua
+    set gated := true;
+  @else
+    set gated := false;
+  @endif
+
 end;
 
 @MACRO(stmt_list) TEST_GATED!(x! expr, pred! expr, body! stmt_list)

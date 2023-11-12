@@ -1,0 +1,15 @@
+LET foo_defined := 1;
+
+LET nested_foo_defined := 1;
+
+LET not_goo_defined := 1;
+
+LET foo_defined_no_else := 1;
+
+LET goo_not_defined_no_else := 1;
+
+LET foo_else := 1;
+
+goo_not_defined := 1;
+
+goo_not_defined_after_c_comment := 1;

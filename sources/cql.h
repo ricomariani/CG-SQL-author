@@ -94,6 +94,8 @@ typedef struct cmd_options {
   uint32_t file_names_count;
   char **include_paths;
   uint32_t include_paths_count;
+  char **defines;
+  uint32_t defines_count;
   char **include_regions;
   uint32_t include_regions_count;
   char **exclude_regions;
@@ -611,3 +613,5 @@ cql_noexport bool_t macro_arg_valid(int32_t type, struct ast_node *ast);
 
 cql_noexport void cql_cleanup_open_includes(void);
 cql_noexport void cql_reset_open_includes(void);
+
+cql_noexport bool_t cql_is_defined(CSTR name);

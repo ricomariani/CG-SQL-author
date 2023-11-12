@@ -228,6 +228,16 @@ basic_test() {
 
   echo "  computing diffs (empty if none)"
   on_diff_exit include_nesting.err
+
+  if ! ${CQL} --in "${TEST_DIR}/test_ifdef.sql" --echo --defines foo >"${OUT_DIR}/test_ifdef.out" 2>"${OUT_DIR}/test_ifdef.err"
+  then
+    echo "basic parsing with ifdefs failed"
+    cat "${OUT_DIR}/test_ifdef.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit test_ifdef.out
 }
 
 

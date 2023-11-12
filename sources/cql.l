@@ -84,7 +84,6 @@ typedef struct {
 
 static cql_include_state cql_includes[MAX_INCLUDES];
 static int cql_include_index = 0;
-static int cql_ifdef_depth = 0;
 
 typedef struct cql_ifdef_state_t {
   bool_t process_else;
@@ -95,17 +94,17 @@ typedef struct cql_ifdef_state_t {
 static cql_ifdef_state_t *cql_ifdef_state;
 
 cql_noexport void cql_reset_open_includes() {
+  cql_include_index = 0;
+  memset(cql_includes, 0, sizeof(cql_includes));
+}
+
+cql_noexport void cql_cleanup_open_includes() {
   while (cql_ifdef_state) {
      cql_ifdef_state_t *prev = cql_ifdef_state->prev;
      free(cql_ifdef_state);
      cql_ifdef_state = prev;
   }
 
-  cql_include_index = 0;
-  memset(cql_includes, 0, sizeof(cql_includes));
-}
-
-cql_noexport void cql_cleanup_open_includes() {
   for (int32_t i = 0; i < cql_include_index; i++) {
      cql_include_state *inc = &cql_includes[i];
      yy_delete_buffer(inc->buf);
@@ -224,7 +223,9 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 
 @ENDIF                           {
                                    if (cql_ifdef_state) {
-                                     cql_ifdef_state = cql_ifdef_state->prev;
+                                     cql_ifdef_state_t *prev = cql_ifdef_state->prev;
+                                     free(cql_ifdef_state);
+                                     cql_ifdef_state = prev;
                                      // it is not possible to go from processing to not processing
                                      // so there is never a transition here
                                    }
@@ -246,7 +247,9 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
                                  }
 
 <skipping>@ENDIF                 {
-                                   cql_ifdef_state = cql_ifdef_state->prev;
+                                   cql_ifdef_state_t *prev = cql_ifdef_state->prev;
+                                   free(cql_ifdef_state);
+                                   cql_ifdef_state = prev;
                                    if (!cql_ifdef_state || cql_ifdef_state->processing) {
                                      BEGIN(INITIAL);
                                    }

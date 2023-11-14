@@ -1,5 +1,5 @@
 ---
-title: "Chapter 18: Macros"
+title: "Chapter 18: Pre-processing"
 weight: 18
 ---
 <!---
@@ -11,20 +11,62 @@ weight: 18
 
 ### Introduction
 
-Macros are a recent introduction to the CQL language; previously
-any macro-type functionality was provided by running the C Pre-Processor
+Pre-processing features are a recent introduction to the CQL language; previously
+any pre-processing functionality was provided by running the C Pre-Processor
 over the input file before processing. Indeed the practice of using
 `cpp` or `cc -E` is still in many examples.  However it is less than ideal.
 
+ * It creates an unnatural dependence in the compile chain
+ * The lexical rules for CQL and C are not fully compatible so `cc -E` often gives specious warnings
  * It's not possible to create automatic code formatting tools with text based macro replacement
  * Macros are easily abused, creating statement fragments in weird places that are hard to understand
  * The usual problems with text replacement and order of operations means that macro arguments frequently have to be wrapped to avoid non-obvious errors
  * Debugging problems in the macros is very difficult with line information being unhelpful and pre-processed output being nearly unreadable
 
-To address these problems CQL introduces the notion of structured macros.
-That is, a macro that describes the sort of thing it intends to produce
-and the kinds of things it consumes.  This allows for reasonable
-syntax and type checking and much better error reporting.
+To address these problems CQL introduces pre-processing features including
+structured macros. That is, macros that describe the sort of thing they intends
+to produce and the kinds of things they consume.  This allows for reasonable
+syntax and type checking and much better error reporting.  This in addition to
+the usual pre-processing features.
+
+### Conditional Compilation
+
+Users can "define" conditional compilation switches using `--defines x y z`
+on the command line.  Additionally, if `--rt foo` is specified then
+`__rt__foo` will be defined.
+
+>NOTE: that if `-cg` is specified but no `--rt` is specified then
+>the default is `--rt c` and so `__rt__c` will be
+>defined.  
+
+The syntax is the familiar:
+
+```
+@ifdef name
+ ... this code will be processed if "name" is defined
+@else
+... this code will be processed if "name" is not defined
+@endif
+```
+
+The `@else` is optional and the construct nests as one would expect.  `@ifndef` is also available and simply reverses the sense of the condition.
+
+This construct can appear anywhere in the token stream.
+
+### Text Includes
+
+Pulling in common headers is also supported.  The syntax is
+
+```
+@include "any/path/foo.sql"
+```
+
+In addition to the current directory any paths specified with `--include_paths x y z` will be checked.
+
+
+>NOTE: For now, this construct can appear anywhere in the token stream. However, inline uses (like in the middle of an expression) are astonishingly "rude" and limitations that force more sensible locations are likely to appear in the future.  It is recommended that `@include` happen at the statement level. If any expression inclusion is needed a combination of `@include` and macros (see below) is recommended.
+
+### Macros
 
 A typical macro declaration might look like this:
 
@@ -71,7 +113,6 @@ end;
 -- all or part of the cte tables in the with clause
 with foo!() select * from x join y;
 ```
-
 
 *expr*
 
@@ -309,7 +350,8 @@ would have been much less useful, reporting the line of the `printf`.
 You can create new tokens with a two step process:
 
   * `@TEXT` will create a string from one or more parts.
-  * `@ID` will make a new identifier from one or more parts.
+  * `@ID` will make a new identifier from one or more parts
+    * If the parts do not concatenate into a valid identifier an error is generated.
 
 
 This can be used to create very powerful code-helpers.  Consider this code,
@@ -324,15 +366,15 @@ begin
   end if;
 end;
 
-@MACRO(stmt_list) TEST!(x! expr, body! stmt_list)
+@MACRO(stmt_list) TEST!(name! expr, body! stmt_list)
 begin
-  create procedure @ID("test_", x!)()
+  create procedure @ID("test_", name!)()
   begin
     begin try
       body!;
     end try;
     begin catch
-      call printf("Test failed %s\n", @TEXT(x!));
+      call printf("Test failed %s\n", @TEXT(name!));
       throw;
     end catch;
   end;
@@ -363,3 +405,33 @@ And of course additional diagnostics can be readily added
 (and they are present in the real code). For instance
 all of the tricks used in the `assert!` macro would
 be helpful in the `expect!` macro.
+
+### Macros for Types
+
+There is no macro form that can stand in for a type name.  However,
+identifiers are legal types and so `@ID(...)` is an excellent
+construct for creating type names from expressions like strings
+or identifiers.
+
+For instance:
+
+```sql
+@macro(stmt_list) make_var!(x! expr, t! expr)
+begin
+   declare @id(t!,"_var") @id(t!);
+   set @id(t!,"_var") := x!;
+end;
+
+-- declares real_var as an real and stores 1+5 in it
+make_var!(1+5, "real");
+
+--- this generates
+
+DECLARE real_var real;
+SET real_var := 1 + 5;
+```
+
+Since @id(...) can go anywhere an identifier can go, it is totally
+suitable for use for type names but also for procedure names, table
+names, any identifer.  As mentioned above `@id` will generate an
+error if the expression does not make a legal normal identifier.

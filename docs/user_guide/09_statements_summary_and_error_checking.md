@@ -93,6 +93,7 @@ Verifications:
 
    * A column marked auto-increment must be declared as either `integer primary key` or `long integer primary key`
    * If `long integer` (or one of its aliases) is specified then the SQLite output will be changed to `integer`
+   * This special transform is necessary because SQLite insists on *exactly* `integer primary key autoincrement`
    * A Sqlite `integer` can hold a 64 bit value, so `long integer` in this context only refers to:
       * how the column should be fetched, and
       * how big the variable that holds the result should be
@@ -135,7 +136,7 @@ have these two additional properties:
 
 Sqlite reference: https://www.sqlite.org/lang_createtrigger.html
 
-The create trigger statement is significant, validations include:
+The create trigger statement more complex than many. Validations include:
 
  * The trigger name must be unique
  * For `insert` the "new.*" table is available in expressions/statement
@@ -150,52 +151,74 @@ The create trigger statement is significant, validations include:
 
 #### The `DROP TABLE` Statement
 
-This is the basic checking for the drop table statement:
+Sqlite reference: https://www.sqlite.org/lang_droptable.html
 
-* the table must exist in some version
-* it has to be a table and not a view
+Validations:
+
+* the table name must have been previously mentioned in a `create table` statement
+* recall that DDL that is not in a procedure only declares schema it doesn't create it, therefore you can declare an entity you intend to drop
 
 #### The `DROP VIEW` Statement
 
-This is the basic checking for the drop view statement:
+Sqlite reference: https://www.sqlite.org/lang_dropview.html
 
-* the view must exist in some version
-* it has to be a view and not a table
+Validations:
+
+* the view name must have been previously mentioned in a `create view` statement
+* recall that DDL that is not in a procedure only declares schema it doesn't create it, therefore you can declare an entity you intend to drop
+
 
 #### The `DROP INDEX` Statement
 
-This is the basic checking for the drop index statement:
+Sqlite reference: https://www.sqlite.org/lang_dropindex.html
 
-* the index must exist in some version
-* it could be deleted now, that's ok, but the name has to be valid
+* the index name must have been previously mentioned in a `create index` statement
+* recall that DDL that is not in a procedure only declares schema it doesn't create it, therefore you can declare an entity you intend to drop
 
 #### The `DROP TRIGGER` Statement
 
-This is the basic checking for the drop trigger statement
+Sqlite reference: https://www.sqlite.org/lang_droptrigger.html
 
-* the trigger  must exist in some version
-* it could be deleted now, that's ok, but the name has to be valid
+* the index name must have been previously mentioned in a `create trigger` statement
+* recall that DDL that is not in a procedure only declares schema it doesn't create it, therefore you can declare an entity you intend to drop
 
-#### The `RAISE` Statement
+#### The `RAISE` Function
+
+Sqlite reference: https://sqlite.org/syntax/raise-function.html
 
 CQL validates that `RAISE` is being used in the context of a trigger
-and that it has the correct arguments
+and that it has valid arguments
 
 #### The `ALTER TABLE ADD COLUMN` Statement
 
-To validate `alter table add column` we check the following:
+Sqlite reference: https://sqlite.org/lang_altertable.html
 
-* the table must exist and not be a view (in any version)
-* the column definition of the new column must be self-consistent
+CQL supports only `alter table add column`, validations include:
+
+* the table must exist
+* the column definition of the new column must be valid
+  * all the normal rules for column definitions in create table are checked
+  * e.g., foreign keys exist if present, check constraints are valid expressions
 * no auto-increment columns may be added
 * added columns must be either nullable or have a default value
+* the added column should already exist in the declared version of the table, see below
 
->NOTE: Alter statements are typically used in the context of migration,
->so it's possible the table that is mentioned is condemned in a future
->version.  We still have to run the intervening upgrade steps so basically
->DDL gets to ignore the current deadness of the table as in context it
->might be "not dead yet".  This will be more obvious in the context of
->the schema maintenance features. (q.v.)
+The CQL compiler expects that the declared form of a table is complete, which means
+it already includes any column that the user intends to add.  This is important
+to create a singular view of the schema throughout the compilation.  The purpose
+of `alter table add column` is then in some sense to make the reality of the
+physical schema match the declared schema.  This is what the built in schema upgrader
+does and likewise any schema alteration that a user might want to do should be
+similar -- make the real schema match the declared schema.  This puts CQL in the
+strange position of validating that the added column is _already declared_ and
+that the details match.
+
+>NOTE: `Alter` statements are typically used in the context of migration,
+>so it is possible the table or column mentioned is condemned in a future
+>version.  The compiler still has to run the intervening upgrade steps
+>so basically the validation must ignore the current "deadness" of the table
+>or column as in context it might be "not dead yet".  This will be more obvious
+>in the context of the schema maintenance features. (q.v.)
 
 #### The `DELETE` Statement
 
@@ -303,7 +326,7 @@ begin
 end;
 ```
 
-This form is not quite syntactic sugar because there are some interesting rules:
+This form is more than syntactic sugar because there are some interesting rules:
 
 * the `proc savepoint` form must be used at the top level of the procedure, hence no `leave` or `continue` may escape it
 * within `begin`/`end` the `return` form may not be used; you must use `rollback return` or `commit return` (see below)

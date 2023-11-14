@@ -264,7 +264,7 @@ do_build() {
     # The file is static: `'EOF'` disables variable expansion
     # `.RECIPEPREFIX = > ` Emulated with sed for unsupported on macos's old make
     # It avoids mixing indentation strategies and improves default output indentation
-    <<'EOF' cat | sed -E 's/(^> )/\t/g' | tee ./out/Makefile | make \
+    <<'EOF' cat | sed -E 's/(^> )/\t/g' | tee $SCRIPT_DIR_RELATIVE/out/Makefile | make \
     $MAKE_FLAGS \
     --makefile - \
     SQLITE_FILE_PATH_ABSOLUTE="$resolved_sqlite_file_path_absolute" \
@@ -537,7 +537,7 @@ watch() {
     echo_vvv -e "WARNING: Make the output less noisy with the \`-v\` option\n" | theme
     echo_vv -e "Watching file(s): $sql_files\n"
 
-    ls -d $sources | SHELL="/bin/bash" entr -s "./play.sh $rest --rebuild"
+    ls -d $sources | SHELL="/bin/bash" entr -s "$SCRIPT_DIR_RELATIVE/play.sh $rest --rebuild"
 }
 
 clean() {

@@ -222,80 +222,98 @@ that the details match.
 
 #### The `DELETE` Statement
 
-The delete analyzer sets up a scope for the table being deleted and then
-validates the WHERE clause, if present, against that scope.  Additionally,
-we verify that the table actually was defined and is not a view.
+SQLite reference: https://sqlite.org/lang_delete.html
+
+Verifications:
+
+* the table name refers to an existing table
+* if present, the `WHERE` clause is a valid numeric expression
 
 #### The `UPDATE` Statement
 
-The update analyzer sets up the scope for the table(s) being updated.
-If there are optional clauses (e.g. `LIMIT`), they are evaluated just
-like in a select statement with those same helper methods.  Expression
-fragments are evaluated similarly as in a select statement.
+SQLite reference: https://sqlite.org/lang_update.html
+
+* the table name refers to an existing table
+* the updated columns exist and are not duplicated
+* every column update expression is valid and type compatible with the column it updates
+* additional clauses such as `WHERE`, `LIMIT`, etc. are numeric
+* the `ORDER BY` clause is a valid ordering clause (no duplicate columns)
+* the `RETURNING` clause is not supported at this time
+* the `FROM` clause is supported and validated as in the select statement
+  * the evaluation proceeds as though the target table had an unrestricted join to the `FROM` clause
+  * it's normal to include a `WHERE` clause so as to not get a cross product
+
+The example in the SQLite documentation makes the `FROM` semenatics clear:
+
+```SQL
+UPDATE inventory
+   SET quantity = quantity - daily.amt
+  FROM (SELECT sum(quantity) AS amt, itemId FROM sales GROUP BY 2) AS daily
+ WHERE inventory.itemId = daily.itemId;
+```
+
+`inventory` was joined against `daily` (a nested select) and the join condition appears in the `WHERE` clause.
+
 
 #### The `INSERT` Statement
 
-We check that the table exists and then we walk the columns and the
-value list to make sure they are valid for the table. Also, we cannot
-insert into a view.
+SQLite reference: https://sqlite.org/lang_insert.html
 
-Details:
+Verifications:
+
+* The target table must exist.
 * The column list specifies the columns we will provide; they must exist and be unique.
-* The columns specified must suffice to insert a row (all not nulls and not default present.)
-* The insert list specifies the values that are to be inserted.
-* The type of each value must match the type of the column.
-* Auto-increment columns may be specified as NULL.
-* If there are too many or too few columns, that is considered an error.
+* The columns values specified must be type compatible with the corresponding columns.
+* Auto-increment columns may be specified as NULL even though the column is not nullable.
 * If no columns are specified, that is the same as if all columns had been specified, in table order.
+* If the specified columns do not include a value for all not null columns with no default value then
+  * if present, `@dummy_seed` is be used to generate missing column values, (Chapter 12 covers this in greater detail)
+  * an error is generated for the first missing value
 
 #### The `THROW` Statement
 
-Throw can literally go anywhere, so it's always ok.
+`Throw` can appear in any statement context, so it is always valid.
 
 #### The `BEGIN TRANSACTION` Statement
 
-Begin transaction can go anywhere, so it's always ok.
+SQLite reference: https://www.sqlite.org/lang_transaction.html
 
-The sqlite documentation can be helpful here (CQL syntax is a subset).
-See: https://www.sqlite.org/lang_transaction.html
+`Begin Transaction` can appear in any statement context, so it is always valid.
+
 
 #### The `COMMIT TRANSACTION` Statement
 
-Commit transaction can go anywhere, so it's always ok.
+SQLite reference: https://www.sqlite.org/lang_transaction.html
 
-The sqlite documentation can be helpful here (CQL syntax is a subset).
-See: https://www.sqlite.org/lang_transaction.html
+`Commit Transaction` can appear in any statement context, so it is always valid.
 
 #### The `ROLLBACK TRANSACTION` Statement
 
-Rollback transaction can go anywhere but if you're using the format where
-you rollback to a particular save point, then the compiler must have seen
-that savepoint name in a `savepoint` statement previously. Otherwise,
-it's an error.
+SQLite reference: https://www.sqlite.org/lang_transaction.html
 
-The sqlite documentation can be helpful here again (CQL syntax is
-a subset).  See: https://www.sqlite.org/lang_transaction.html
+`Rollback transaction` can appear in any statement context, but if you're
+using the format where you rollback to a particular save point, then the compiler
+verifies that it has seen the save point name in a previous `Savepoint` statement.
 
 #### The `SAVEPOINT` Statement
 
-The `savepoint` statement can go anywhere but we do record this savepoint
-name as having been seen, so that we can verify it in rollback.  So this
-is sort of a weak declaration of the savepoint name.
+SQLite reference: https://www.sqlite.org/lang_savepoint.html
 
-The sqlite documentation can be helpful here (CQL syntax is a subset).
-https://www.sqlite.org/lang_savepoint.html
+The `Savepoint` an appear in any statement context.  The save point name
+is recorded, so that the compiler can verify it in a `rollback`.  This
+is statement is like a weak declaration of the save point name.
 
 #### The `RELEASE SAVEPOINT` Statement
 
-Release savepoint can go anywhere but we must have seen that name in a
-previous `savepoint` statement, otherwise it's an error.
+SQLite reference: https://www.sqlite.org/lang_savepoint.html
 
-The sqlite documentation can be helpful here (CQL syntax is a subset). https://www.sqlite.org/lang_savepoint.html
+`Release Savepoint` can appear in any statement context. The compiler
+verifies that it has seen the save point name in a previous `Savepoint` statement.
 
 #### The `PROCEDURE SAVEPOINT` Statement
 
-A common pattern is to have a savepoint associated with a particular
-procedure. The savepoint's scope is the same as the procedure's scope.
+A common pattern is to have a save point associated with a particular
+procedure. The save point's scope is the same as the procedure's scope.
 More precisely
 
 ```sql

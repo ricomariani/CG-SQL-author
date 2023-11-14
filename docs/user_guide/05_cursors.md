@@ -946,14 +946,14 @@ we could just as easily have done something like this:
 >if they originated as part of a shape bundle do identify the shape source
 >for tools that might need that information.
 
-### The COLUMNS/LIKE construct in the SELECT statement
+### The @COLUMNS construct in the SELECT statement
 
 The select list of a `SELECT` statement already has complex syntax and functionality,
 but it is a very interesting place to use shapes.  To make it possible to use
-shape notations and not confuse them with standard SQL the `COLUMNS` construct was
+shape notations and not confuse that notation with standard SQL the `@COLUMNS` construct was
 added to the language.  This allows for a sugared syntax for extracting columns in bulk.
 
-The `COLUMNS` clause is like of a generalization of the `select T.*`
+The `@COLUMNS` clause is like of a generalization of the `select T.*`
 with shape slicing and type-checking.  The forms are discussed below:
 
 
@@ -1092,7 +1092,7 @@ mentioned, a NULL value is used if it is legal to do so.  For example,
 `fetch C(a) from values(1)` might turn into `fetch C(a,b,c,d) from values (1, NULL, NULL, NULL)`
 
 In addition to the automatic NULL you may add the annotation
-`@dummy_seed([long integer expression])`. If this annotion is present
+`@dummy_seed([long integer expression])`. If this annotation is present
 then:
 
 * the expression is evaluated and stored in the hidden variable _seed_
@@ -1292,7 +1292,7 @@ Important Notes:
 
 * the underlying SQLite statement is shared by all references to it.  Unboxing does not reset the cursor's position.  It is possible, even desirable, to have different procedures advancing the same cursor
 * there is no operation for "peeking" at a cursor without advancing it; if your code requires that you inspect the row and then delegate it, you can do this simply by passing the cursor data as a value rather than the cursor statement.  Boxing and unboxing are for cases where you need to stream data out of the cursor in helper procedures
-* durably storing a boxed cursor (e.g. in a global) could lead to all manner of problems -- it is *exactly* like holding on to a `sqlite3_stmt *` for a long time with all the same problems because that is exactly is happening
+* durably storing a boxed cursor (e.g. in a global) could lead to all manner of problems -- it SQLite terms is *exactly* like holding on to a `sqlite3_stmt *` for a long time with all the same problems, because that is exactly is happening
 
 Summarizing, the main reason for using the boxing patterns is to allow
 for standard helper procedures that can get a cursor from a variety

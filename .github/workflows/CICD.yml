@@ -143,3 +143,4 @@ jobs:
           ../playground/play.sh build-cql-compiler
           ../playground/play.sh build-everything
           ../playground/play.sh run-data-access-demo
+          ../playground/play.sh run c ../playground/examples/*.sql

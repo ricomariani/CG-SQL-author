@@ -41,7 +41,6 @@ Verifications:
 * compound selects (e.g. with UNION) are type-consistent in all the fragments
 * the projection of a select has unique column labels if they are used
 
-
 ####  Details of `SELECT *` 
 
 `SELECT *` is special in that it creates its own result type by assembling
@@ -71,6 +70,8 @@ Verifications:
 * The data is recorded to be emitted in JSON and schema output
 * Correctness of constraints, see below
 * Other details do not participate in further semantic analysis
+
+See [below](#the-create-virtual-table-statement) for `CREATE VIRTUAL TABLE` which has many special considerations.
 
 ##### The `UNIQUE KEY` Clause
 
@@ -390,13 +391,14 @@ can think of it as merging the savepoint into the transaction in flight.
 
 #### The `CREATE VIRTUAL TABLE` Statement
 
-The SQLite `CREATE VIRTUAL TABLE` form
-(https://sqlite.org/lang_createvtab.html) is problematic from CQL because:
+Sqlite reference: https://sqlite.org/lang_createvtab.html
+
+The SQLite `CREATE VIRTUAL TABLE` form is problematic for CQL because:
 
 * it is not parseable, because the module arguments can be literally anything (or nothing), even a letter to your grandma
 * the arguments do not necessarily say anything about the table's schema at all, but they often do
 
-So in this area CQL substaintially departs from the standard syntax to this form:
+So in this area CQL departs from the standard syntax to this form:
 
 ```sql
 create virtual table virt_table using my_module [(module arguments)]  as (
@@ -406,16 +408,16 @@ create virtual table virt_table using my_module [(module arguments)]  as (
 ```
 
 The part after the `AS` is used by CQL as a table declaration for the
-virtual table.  The grammar for that is exactly the same as a normal
+virtual table.  The grammar for that section is exactly the same as a normal
 `CREATE TABLE` statement.  However, that part is not transmitted to
-SQLite; when the table is created, SQLite sees only the part it cares
+SQLite. When the virtual table is created, SQLite sees only the part it cares
 about, which is the part before the `AS`.
 
 In order to have strict parsing rules, the module arguments follow one
 of these forms:
 
-1. no arguments at all
-2. a list of identifiers, constants, and parenthesized sublists, just like in the `@attribute` form
+1. no arguments at all, or
+2. a list of identifiers, constants, and parenthesized sub-lists, just like in the `@attribute` form, or
 3. the words `arguments following`
 
 
@@ -485,7 +487,7 @@ Virtual tables go into their own section in the JSON and they include
 the `module` and `moduleArgs` entries; they are additionally marked
 `isVirtual` in case you want to use the same processing code for
 virtual tables as normal tables.  The JSON format is otherwise the same,
-although some things can't happen in virtual tables (e.g. there is no
+although some things can't happen in virtual tables (e.g., there is no
 `TEMP` option so `"isTemp"` must be false in the JSON.)
 
 For purposes of schema processing, virtual tables are on the `@recreate`
@@ -498,21 +500,21 @@ does not support any of those things.
 
 CQL supports the notion of [eponymous virtual
 tables](https://www.sqlite.org/vtab.html#epovtab).  If you intend to
-register the virtual table's module in this fashion, you can use `create
-virtual table @eponymous ...` to declare this to CQL.  The only effect
-this has is to ensure that CQL will not try to drop this table during
+register the virtual table's module in this fashion, you can use
+`create virtual table @eponymous ...` to declare this to CQL.  The only
+effect this has is to ensure that CQL will not try to drop this table during
 schema maintenance as dropping such a table is an invalid operation.
 In all other ways, the fact that the table is eponymous makes no
 difference.
 
-Finally, because virtual tables are on the `@recreate` plan, you may not
+Finally, because virtual tables are always on the `@recreate` plan, you may not
 have foreign keys that reference virtual tables. Such keys seem like a
 bad idea in any case.
 
-
 ### The Primary Procedure Statements
 
-These are the statements which form the language of procedures, and do not involve the database.
+These are the statements which form the language of procedures, and do not
+involve the database.
 
 #### The `CREATE PROCEDURE` Statement
 
@@ -591,7 +593,7 @@ column definitions.  Once we have the type we walk the list of variable
 names, check them for duplicates and such (see above) and assign their type.
 The canonical name of the variable is defined here. If it is later used with
 a different casing the output will always be as declared.
-e.g. `declare Foo integer;  set foo = 1;` is legal but the output
+e.g. `declare Foo integer; set foo = 1;` is legal but the output
 will always contain the variable written as `Foo`.
 
 #### The `DECLARE` Cursor Statement
@@ -795,23 +797,34 @@ at that schema version.
 
 Switch to strict mode for the indicated item.  The choices and their meanings are:
 
-  * "FOREIGN KEY ON DELETE" indicates there must be some `ON DELETE` action in every FK
-  * "FOREIGN KEY ON UPDATE" indicates there must be some `ON UPDATE` action in every FK
-  * "INSERT SELECT" indicates that insert with `SELECT` for values may not include top level joins (avoiding a SQLite bug)
-  * "IS TRUE" indicates that `IS TRUE` `IS FALSE` `IS NOT TRUE` `IS NOT FALSE` may not be used (*)
-  * "JOIN" indicates only ANSI style joins may be used, and "from A,B" is rejected
-  * "PROCEDURE" indicates no calls to undeclared procedures (like loose printf calls)
-  * "SELECT IF NOTHING" indicates `(select ...)` expressions must include an `IF NOTHING` clause if they have a `FROM` part
-  * "TABLE FUNCTIONS" indicates table valued functions cannot be used on left/right joins (avoiding a SQLite bug)
-  * "TRANSACTION" indicates no transactions may be started, committed, or aborted
-  * "UPSERT" indicates no upsert statement may be used (*)
-  * "WINDOW FUNCTION" indicates no window functions may be used (*)
-  * "WITHOUT ROWID" indicates `WITHOUT ROWID` may not be used
+  * `CAST` indicates that casts that would be a no-op should instead generate errors (e.g. `cast(1 as int)`)
+  * `CURSOR HAS ROW` indicates that cursors with storage must first be tested to see if they have a row before non-null fields are accessed
+  * `ENCODE CONTEXT COLUMN` indicates that an encode context must be specified in when `vault_sensitive` is used
+  * `ENCODE CONTEXT TYPE` _type_ specifies the required type of encode context columns
+  * `FOREIGN KEY ON DELETE` indicates there must be some `ON DELETE` action in every FK
+  * `FOREIGN KEY ON UPDATE` indicates there must be some `ON UPDATE` action in every FK
+  * `INSERT SELECT` indicates that insert with `SELECT` for values may not include top level joins (avoiding a SQLite bug)
+  * `INSERT SELECT` indicates that insert with select may not include joins (**)
+  * `IS TRUE`` indicates that `IS TRUE` `IS FALSE` `IS NOT TRUE` `IS NOT FALSE` may not be used (*)
+  * `JOIN` indicates only ANSI style joins may be used, and "from A,B" is rejected
+  * `PROCEDURE` indicates no calls to undeclared procedures (like loose printf calls)
+  * `SELECT IF NOTHING` indicates `(select ...)` expressions must include an `IF NOTHING` clause if they have a `FROM` part
+  * `SIGN FUNCTION` indicates that the `sign` function may not be used (*)
+  * `TABLE FUNCTION` indicates table valued functions cannot be used on left/right joins (avoiding a SQLite bug)
+  * `TRANSACTION` indicates no transactions may be started, committed, or aborted
+  * `UPDATE FROM` indicates that the `update` with a `from` clause may not be used (*)
+  * `UPSERT` indicates no upsert statement may be used (*)
+  * `WINDOW FUNCTION` indicates no window functions may be used (*)
+  * `WITHOUT ROWID` indicates `WITHOUT ROWID` may not be used
 
 The items marked with * are present so that features can be disabled to
 target downlevel versions of SQLite that may not have those features.
 
-Most of the strict options were discovered via "The School of Hard Knocks", they are all recommended.
+The items marked with ** are present so that features can be disabled to
+target downlevel versions of SQLite where this feature has bugs.
+
+Most of the strict options were discovered via "The School of Hard Knocks", they are all recommended except for the (*) items
+where the target SQLite version is known.
 
 See the grammar details for exact syntax.
 
@@ -1144,9 +1157,9 @@ result:
 2|a2|b2|c2|d2
 ```
 The `id` column is now appearing exactly once.  However, the situation
-is not so simple as that.  It seems that what hapened was that the `*`
-expansion has not included two copies of the `id`.  The following cases
-show that both copies of `id` are still logically in the join.
+is not so simple as that.  It seems that the `*` expansion has not included
+two copies of `id` but the following cases show that both copies of `id`
+are still logically in the join.
 
 ```sql
 select T1.*, 'xxx', T2.* from A T1 inner join B T2 using (id);
@@ -1157,7 +1170,6 @@ result:
 2|a2|b2|xxx|2|c2|d2
 ```
 The `T2.id` column is part of the join, it just wasn't part of the `*`
-
 
 In fact, looking further:
 

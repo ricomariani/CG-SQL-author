@@ -37,6 +37,7 @@ cql_noexport void bprintf(charbuf *b, const char *format, ...);
 cql_noexport CSTR dup_printf(const char *format, ...);
 cql_noexport void bputc(charbuf *b, char c);
 cql_noexport void bindent(charbuf *output, charbuf *input, int32_t indent);
+cql_noexport void bindent_if_many(charbuf *output, charbuf *input, int32_t indent);
 cql_noexport bool_t breadline(charbuf *output, CSTR *data);
 
 #define CHARBUF_OPEN(x) \
@@ -67,4 +68,3 @@ cql_noexport bool_t breadline(charbuf *output, CSTR *data);
   output = name##_saved; \
   bindent(output, &name, name##_level); \
   CHARBUF_CLOSE(name);
-

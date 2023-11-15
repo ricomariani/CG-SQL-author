@@ -117,6 +117,16 @@ cql_noexport void bputc(charbuf *b, char c) {
  b->ptr[b->used++] = 0; // put a new null in place, for sure room for this
 }
 
+cql_noexport void bindent_if_many(charbuf *output, charbuf *input, int32_t indent) {
+  if (indent && strchr(input->ptr, '\n')) {
+    bputc(output, '\n');
+    bindent(output, input, indent);
+  }
+  else {
+    bprintf(output, "%s", input->ptr);
+  }
+}
+
 cql_noexport void bindent(charbuf *output, charbuf *input, int32_t indent) {
   if (indent == 0) {
     bprintf(output, "%s", input->ptr);

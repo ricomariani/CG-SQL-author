@@ -57,7 +57,7 @@
 -- + CREATE INDEX backing_index ON backing (bgetkey_type(k));
 -- + @attribute(cql:backed_by=backing)
 -- + CREATE TABLE backed(
--- + SET stmt := "WITH\\nbacked (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
+-- + SET stmt := "WITH\\n  backed (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
 -- + SELECT CAST(1L AS INTEGER);
 -- + SELECT CAST(1.0 AS INTEGER);
 -- + SELECT CAST(1 AS REAL);

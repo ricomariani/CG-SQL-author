@@ -155,27 +155,27 @@ SELECT a AS b, c AS d
 
 SELECT a, b
   FROM c
-  INNER JOIN d;
+    INNER JOIN d;
 
 SELECT a, b
   FROM c
-  INNER JOIN d ON e = f;
+    INNER JOIN d ON e = f;
 
 SELECT a, b
   FROM c
-  INNER JOIN d ON e.f = g.h;
+    INNER JOIN d ON e.f = g.h;
 
 SELECT a, b
   FROM c
-  LEFT OUTER JOIN d ON e.f = g.h;
+    LEFT OUTER JOIN d ON e.f = g.h;
 
 SELECT P.thread_key, P.contact_id, P.is_admin, P.nickname, P.read_watermark_timestamp_ms, P.delivered_watermark_timestamp_ms, C.profile_picture_url, C.profile_picture_fallback_url, C.profile_picture_url_expiration_timestamp_ms, C.name, C.is_messenger_user
   FROM participants AS P
-  LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id;
+    LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id;
 
 SELECT T.thread_key, T.thread_type, UTN.thread_name AS thread_name, T.thread_picture_url, T.mute_expire_time_ms
   FROM threads AS T
-  LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
+    LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
 
 SELECT *
   FROM foo;
@@ -185,7 +185,7 @@ SELECT a
 
 SELECT T.thread_key, T.thread_type, UTN.thread_name AS thread_name, T.thread_picture_url, T.mute_expire_time_ms
   FROM threads AS T
-  LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
+    LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
 
 SELECT 2 <> 3;
 
@@ -241,7 +241,7 @@ SELECT b
 CREATE VIEW _self_thread_name AS
 SELECT UI.facebook_user_id AS thread_key, C.name AS thread_name
   FROM _user_info AS UI,
-contacts AS C
+  contacts AS C
   WHERE UI.facebook_user_id = C.id;
 
 DELETE FROM a;
@@ -259,15 +259,15 @@ SELECT 12.3;
 CREATE VIEW zzz AS
 SELECT DISTINCT a, b AS c, d
   FROM e AS E
-  LEFT OUTER JOIN f AS F ON F.g = e.g
-  LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
+    LEFT OUTER JOIN f AS F ON F.g = e.g
+    LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
 ORDER BY o.p DESC;
 
 CREATE VIEW thread_messages AS
 SELECT DISTINCT M.message_id, M.thread_key, M.offline_threading_id, M.sender_id, M.send_status, C.name, C.profile_picture_url, C.profile_picture_fallback_url, C.profile_picture_url_expiration_timestamp_ms, M.body, M.sticker_id, M.timestamp_ms, A.has_xma OR A.has_media AS has_attachment, M.is_admin_message
   FROM messages AS M
-  LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
-  LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
+    LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
+    LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
 ORDER BY M.timestamp_ms DESC;
 
 SELECT *
@@ -282,15 +282,17 @@ LIMIT 20
 OFFSET 7;
 
 SELECT a
-  FROM (SELECT b
-  FROM c) AS X;
+  FROM (
+    SELECT b
+      FROM c) AS X;
 
 CREATE VIEW unread_not_muted_threads_count AS
 SELECT count(*) AS count
-  FROM (SELECT *
-  FROM threads
-ORDER BY last_activity_timestamp_ms DESC
-LIMIT 20) AS T
+  FROM (
+    SELECT *
+      FROM threads
+    ORDER BY last_activity_timestamp_ms DESC
+    LIMIT 20) AS T
   WHERE T.last_activity_timestamp_ms > T.last_read_watermark_timestamp_ms AND (T.mute_expire_time_ms >= 0 AND T.mute_expire_time_ms - strftime('%s', 'now') * 1000 <= 0) AND T.folder_name = 'inbox';
 
 CREATE TABLE pending_tasks(
@@ -573,7 +575,7 @@ SELECT 1 AND 3 IN (3, 4);
 
 SELECT x, y
   FROM T
-  INNER JOIN Y USING (a, b, c);
+    INNER JOIN Y USING (a, b, c);
 
 UPDATE X
 SET x = 1,
@@ -595,27 +597,27 @@ SELECT ALL x, y
 
 SELECT a, b
   FROM X
-  INNER JOIN Y;
+    INNER JOIN Y;
 
 SELECT a, b
   FROM X
-  LEFT JOIN Y;
+    LEFT JOIN Y;
 
 SELECT a, b
   FROM X AS XX
-  RIGHT JOIN Y;
+    RIGHT JOIN Y;
 
 SELECT a, b
   FROM X
-  RIGHT OUTER JOIN Y;
+    RIGHT OUTER JOIN Y;
 
 SELECT a, b
   FROM X
-  LEFT OUTER JOIN Y;
+    LEFT OUTER JOIN Y;
 
 SELECT a, b
   FROM X
-  CROSS JOIN Y;
+    CROSS JOIN Y;
 
 SELECT CASE 1 WHEN 1 THEN 'a'
 WHEN 2 THEN 'b'
@@ -624,8 +626,8 @@ END;
 
 SELECT x
   FROM (A,
-B,
-C);
+  B,
+  C);
 
 SELECT x
   FROM A
@@ -710,27 +712,29 @@ DECLARE test CURSOR FOR CALL foo(1, 2);
 
 SELECT *
   FROM foo
-  WHERE EXISTS (SELECT *
-  FROM bar);
+  WHERE EXISTS (
+  SELECT *
+    FROM bar);
 
 SELECT *
   FROM foo
-  WHERE NOT EXISTS (SELECT *
-  FROM bar);
+  WHERE NOT EXISTS (
+  SELECT *
+    FROM bar);
 
 FETCH my_cursor;
 
 SELECT a
   FROM (X
-  INNER JOIN Y)
-  LEFT OUTER JOIN (W
-  INNER JOIN Q);
+    INNER JOIN Y)
+    LEFT OUTER JOIN (W
+    INNER JOIN Q);
 
 SELECT a
   FROM (X
-  INNER JOIN Y)
-  LEFT OUTER JOIN (W
-  INNER JOIN Q);
+    INNER JOIN Y)
+    LEFT OUTER JOIN (W
+    INNER JOIN Q);
 
 SELECT a, b
   FROM x
@@ -792,38 +796,46 @@ OFFSET 3;
 
 SELECT nullable(1);
 
-WITH
-x (a, b) AS (SELECT 1, 2)
+  WITH
+  x (a, b) AS (
+    SELECT 1, 2)
 SELECT a, b
   FROM x;
 
-WITH
-x (a, b) AS (SELECT 1, 2),
-y (c, d) AS (SELECT 5.4, 7.3)
+  WITH
+  x (a, b) AS (
+    SELECT 1, 2),
+  y (c, d) AS (
+    SELECT 5.4, 7.3)
 SELECT a, b
   FROM x
-  INNER JOIN y ON x.a = y.c;
+    INNER JOIN y ON x.a = y.c;
 
-WITH
-x (a, b) AS (SELECT 1, 2)
+  WITH
+  x (a, b) AS (
+    SELECT 1, 2)
 SELECT *
   FROM x AS X
-  INNER JOIN (WITH
-y (a, b) AS (SELECT 1, 3)
-SELECT *
-  FROM y) AS Y ON X.a = y.A;
+    INNER JOIN (
+      WITH
+      y (a, b) AS (
+        SELECT 1, 3)
+    SELECT *
+      FROM y) AS Y ON X.a = y.A;
 
-WITH RECURSIVE
-cnt (x) AS (SELECT 1
-UNION ALL
-SELECT x + 1
-  FROM cnt
-LIMIT 20)
+  WITH RECURSIVE
+  cnt (x) AS (
+    SELECT 1
+    UNION ALL
+    SELECT x + 1
+      FROM cnt
+    LIMIT 20)
 SELECT x
   FROM cnt;
 
 SELECT T.*
-  FROM (SELECT 1) AS T;
+  FROM (
+    SELECT 1) AS T;
 
 DECLARE FUNC foo (x INTEGER, y TEXT NOT NULL) INTEGER NOT NULL;
 
@@ -984,14 +996,16 @@ CREATE TABLE foo3(
   id INTEGER
 ) @RECREATE(foo3_group) @DELETE;
 
-WITH
-x (a, b) AS (SELECT 111, 222)
+  WITH
+  x (a, b) AS (
+    SELECT 111, 222)
 INSERT INTO foo VALUES(( SELECT a
   FROM x ), ( SELECT b
   FROM x ));
 
-WITH RECURSIVE
-x (a, b) AS (SELECT 111, 222)
+  WITH RECURSIVE
+  x (a, b) AS (
+    SELECT 111, 222)
 INSERT INTO foo(a, b) VALUES(( SELECT a
   FROM x ), ( SELECT b
   FROM x ));
@@ -1111,13 +1125,15 @@ CREATE TABLE with_sensitive(
   name TEXT @SENSITIVE
 );
 
-WITH
-x (a, b) AS (SELECT 1, 2)
+  WITH
+  x (a, b) AS (
+    SELECT 1, 2)
 DELETE FROM foo WHERE foo.id IN (SELECT *
   FROM x);
 
-WITH
-x (a, b) AS (SELECT 1, 2)
+  WITH
+  x (a, b) AS (
+    SELECT 1, 2)
 UPDATE foo
 SET xyzzy = 7
   WHERE foo.id IN (SELECT *
@@ -1175,7 +1191,7 @@ DECLARE SELECT FUNC garbonzo (id INTEGER) (t TEXT);
 
 SELECT *
   FROM garbonzo(1, 2, 3) AS T1
-  INNER JOIN xyzzy() AS T2 ON T1.id = T2.id;
+    INNER JOIN xyzzy() AS T2 ON T1.id = T2.id;
 
 CREATE TRIGGER deleted_trigger
   AFTER INSERT ON target_table2
@@ -1261,8 +1277,9 @@ UPDATE CURSOR d(a, b) FROM VALUES(1, 'x');
 
 UPDATE CURSOR d USING 1 AS a, 'x' AS b;
 
-WITH
-foo (*) AS (SELECT 1 AS x, '2' AS y)
+  WITH
+  foo (*) AS (
+    SELECT 1 AS x, '2' AS y)
 SELECT *
   FROM foo;
 
@@ -1697,24 +1714,24 @@ DECLARE CONST GROUP foo (
 
 @EMIT_CONSTANTS foo;
 
-WITH
-foo (*) AS (CALL bar(1, 2) USING a AS x, b AS y)
+  WITH
+  foo (*) AS (CALL bar(1, 2) USING a AS x, b AS y)
 SELECT *
   FROM foo;
 
-WITH
-foo (*) AS (CALL bar(1, 2))
+  WITH
+  foo (*) AS (CALL bar(1, 2))
 SELECT *
   FROM foo;
 
 CALL foo(*);
 
-WITH
-bar (*) AS (CALL bar(1, 5) USING goo AS too),
-tar (*) AS (CALL tar(3) USING soo AS woo, goo AS too)
+  WITH
+  bar (*) AS (CALL bar(1, 5) USING goo AS too),
+  tar (*) AS (CALL tar(3) USING soo AS woo, goo AS too)
 SELECT *
   FROM bar,
-tar;
+  tar;
 
 SELECT *
   FROM (CALL foo() USING stuff AS source);
@@ -1763,8 +1780,9 @@ BEGIN
   DECLARE R CURSOR LIKE V;
   FETCH R FROM VALUES(FROM C LIKE T, FROM D);
   UPDATE CURSOR R FROM VALUES(FROM C LIKE T, FROM D);
-  DECLARE S CURSOR FOR WITH
-  cte (l, m, n, o) AS (VALUES(FROM C LIKE T, FROM D))
+  DECLARE S CURSOR FOR   WITH
+    cte (l, m, n, o) AS (
+      VALUES(FROM C LIKE T, FROM D))
   SELECT *
     FROM cte;
   FETCH S;
@@ -1984,65 +2002,80 @@ END;
 
 SELECT *
   FROM (xx AS T1
-  INNER JOIN yy AS T2 ON T1.x = T2.y)
-  INNER JOIN yy;
+    INNER JOIN yy AS T2 ON T1.x = T2.y)
+    INNER JOIN yy;
 
 SELECT *
   FROM (xx AS T1
-  INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
+    INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
 
 SELECT x
   FROM (xx AS T1
-  INNER JOIN yy AS T2 ON T1.x = T2.y) AS Q;
+    INNER JOIN yy AS T2 ON T1.x = T2.y) AS Q;
 
 SELECT *
   FROM (xx AS T1
-  INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
+    INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
 
 @MACRO(CTE_TABLES) cte!()
 BEGIN
-  foo (*) AS (SELECT 1 AS x, 2 AS y),
-  bar (*) AS (SELECT 3 AS u, 4 AS v)
+  foo (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  bar (*) AS (
+    SELECT 3 AS u, 4 AS v)
 END;
 
-WITH
-vv (*) AS (SELECT 1 AS x, 2 AS y),
-foo (*) AS (SELECT 1 AS x, 2 AS y),
-bar (*) AS (SELECT 3 AS u, 4 AS v),
-uu (*) AS (SELECT 1 AS x, 2 AS y)
+  WITH
+  vv (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  foo (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  bar (*) AS (
+    SELECT 3 AS u, 4 AS v),
+  uu (*) AS (
+    SELECT 1 AS x, 2 AS y)
 SELECT *
   FROM foo;
 
-WITH
-foo (*) AS (SELECT 1 AS x, 2 AS y),
-bar (*) AS (SELECT 3 AS u, 4 AS v),
-uu (*) AS (SELECT 1 AS x, 2 AS y)
+  WITH
+  foo (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  bar (*) AS (
+    SELECT 3 AS u, 4 AS v),
+  uu (*) AS (
+    SELECT 1 AS x, 2 AS y)
 SELECT *
   FROM foo;
 
-WITH
-foo (*) AS (SELECT 1 AS x, 2 AS y),
-bar (*) AS (SELECT 3 AS u, 4 AS v)
+  WITH
+  foo (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  bar (*) AS (
+    SELECT 3 AS u, 4 AS v)
 SELECT *
   FROM foo;
 
-WITH
-vv (*) AS (SELECT 1 AS x, 2 AS y),
-foo (*) AS (SELECT 1 AS x, 2 AS y),
-bar (*) AS (SELECT 3 AS u, 4 AS v)
+  WITH
+  vv (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  foo (*) AS (
+    SELECT 1 AS x, 2 AS y),
+  bar (*) AS (
+    SELECT 3 AS u, 4 AS v)
 SELECT *
   FROM foo;
 
 @MACRO(STMT_LIST) query!(u! CTE_TABLES)
 BEGIN
-  WITH
-  u!
+    WITH
+    u!
   SELECT *
     FROM foo;
 END;
 
-WITH
-foo (*) AS (SELECT 100 AS x, 200 AS y)
+  WITH
+  foo (*) AS (
+    SELECT 100 AS x, 200 AS y)
 SELECT *
   FROM foo;
 
@@ -2130,11 +2163,11 @@ LET z := x * (y + 5 + (y + 5) + 1);
 
 SET z := 151;
 
-LET zz := "(SELECT 1 AS x, 2 AS y) AS T";
+LET zz := "(\n  SELECT 1 AS x, 2 AS y) AS T";
 
 SET zz := "T1\n  INNER JOIN T2 ON T1.id = T2.id";
 
-SET zz := "x (*) AS (SELECT 1 AS x, 2 AS y)\n";
+SET zz := "x (*) AS (\n  SELECT 1 AS x, 2 AS y)\n";
 
 SET zz := "SELECT 1 AS x\n  FROM foo";
 
@@ -2167,7 +2200,7 @@ BEGIN
   END);
 END;
 
-SET zz := "1 + 2x\n  INNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS xxf (*) AS (SELECT 99\n  FROM yy)\nLET qq := 201;\n";
+SET zz := "1 + 2x\n  INNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS xxf (*) AS (\n  SELECT 99\n    FROM yy)\nLET qq := 201;\n";
 
 LET expr := 1;
 

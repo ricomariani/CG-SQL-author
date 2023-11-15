@@ -906,8 +906,10 @@ static void gen_expr_exists(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
   Contract(is_ast_exists_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
 
-  gen_printf("EXISTS (");
-  gen_select_stmt(select_stmt);
+  gen_printf("EXISTS (\n");
+  BEGIN_INDENT(sel, 2);
+    gen_select_stmt(select_stmt);
+  END_INDENT(sel);
   gen_printf(")");
 }
 
@@ -2291,8 +2293,10 @@ static void gen_table_or_subquery(ast_node *ast) {
     }
   }
   else if (is_ast_select_stmt(factor) || is_ast_with_select_stmt(factor)) {
-    gen_printf("(");
+    gen_printf("(\n");
+    BEGIN_INDENT(sel, 2);
     gen_select_stmt(factor);
+    END_INDENT(sel);
     gen_printf(")");
   }
   else if (is_ast_shared_cte(factor)) {
@@ -2620,8 +2624,11 @@ static void gen_select_from_etc(ast_node *ast) {
   EXTRACT(opt_select_window, select_having->right);
 
   if (query_parts) {
-    gen_printf ("\n  FROM ");
-    gen_query_parts(query_parts);
+    gen_printf ("\n");
+    BEGIN_INDENT(from, 2);
+      gen_printf("FROM ");
+      gen_query_parts(query_parts);
+    END_INDENT(from);
   }
   if (opt_where) {
     gen_opt_where(opt_where);
@@ -2808,20 +2815,26 @@ static void gen_cte_table(ast_node *ast)  {
       gen_name(cte_body->left);
     }
    else {
-     gen_printf("(");
-     gen_select_stmt(cte_body->left);
+     gen_printf("(\n");
+     BEGIN_INDENT(cte_indent, 2);
+       gen_select_stmt(cte_body->left);
+     END_INDENT(cte_indent);
      gen_printf(")");
    }
    return;
   }
 
   gen_printf(" AS (");
+
   if (is_ast_shared_cte(cte_body)) {
     gen_shared_cte(cte_body);
   }
   else {
-    // the only other alternative is the select statement form
-    gen_select_stmt(cte_body);
+    gen_printf("\n");
+    BEGIN_INDENT(cte_indent, 2);
+      // the only other alternative is the select statement form
+      gen_select_stmt(cte_body);
+    END_INDENT(cte_indent);
   }
   gen_printf(")");
 }
@@ -2889,8 +2902,9 @@ static void gen_with_prefix(ast_node *ast) {
     Contract(is_ast_with_recursive(ast));
     prefix = "WITH RECURSIVE\n";
   }
-
-  gen_cte_tables(cte_tables, prefix);
+  BEGIN_INDENT(cte_indent, 2);
+    gen_cte_tables(cte_tables, prefix);
+  END_INDENT(cte_indent);
 }
 
 static void gen_with_select_stmt(ast_node *ast) {

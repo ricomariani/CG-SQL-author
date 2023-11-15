@@ -267,16 +267,11 @@ they might be applied when performing a `+` operation.
 
 ### Preprocessing Features
 
-CQL does not include its own pre-processor but it is designed to consume
-the output of the C pre-processor.  To do this, you can either write the
-output of the pre-processor to a temporary file and read it into CQL as
-usual or you can set up a pipeline something like this:
+CQL includes its own pre-processor, it is described in [Chapter 18](./18_pre_processing/).  While it is
+still possible to use the C pre-processor in front of CQL as was once necessary this practice is now
+deprecated.  The usual pre-processor features are supported:
 
-```bash
-$ cc -x c -E your_program.sql | cql --cg your_program.h your_program.c
-```
-
-The above causes the C compiler to invoke only the pre-processor `-E`
-and to treat the input as though it were C code `-x c` even though it
-is in a `.sql` file. Later examples will assume that you have configured
-CQL to be used with the C pre-processor as above.
+  * macros (`@macro`)
+  * including files (`@include`)
+  * conditional compilation (`@ifdef`, `@ifndef`)
+  * token pasting (`@text` and `@id`)

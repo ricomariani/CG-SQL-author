@@ -35,6 +35,12 @@ declare function starts_with_text(haystack text!, needle text!) bool!;
 declare function index_of_text(haystack text!, needle text!) int!;
 declare function contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
 
+var sql_name text;
+var result_name text;
+var attempts int!;
+var errors int!;
+var tests int!;
+
 -- setup the table and the index
 [[private]]
 proc setup()
@@ -52,11 +58,6 @@ begin
   );
 
   create index __idx__source_lines on source_input (line);
-
-  create table args(
-    name text!,
-    value text!    
-  );
 end;
 
 [[private]]
@@ -125,7 +126,7 @@ end;
 proc print_error_message(buffer text!, line int!, expected int!)
 begin
   printf("\n%s:%d error: expected '%s' %spresent", 
-    (select value from args where name = 'sql_name'),
+    sql_name,
     line,
     buffer, 
     case when expected != 0 then "" else "not " end);
@@ -154,10 +155,6 @@ begin
   result := true;
 end;
 
-var attempts int!;
-var errors int!;
-var tests int!;
-
 proc match_actual(buffer text!, line int!) 
 begin
   var search_line int!;
@@ -171,7 +168,7 @@ begin
   -- the standard test prefix it just counts tests, this doesn't mean anything
   -- but it's a useful statistic
   if buffer::starts_with("-- TEST:") then
-    tests := 1;
+    tests += 1;
   end if;
 
   if buffer::starts_with("-- - ") then
@@ -220,8 +217,8 @@ begin
   -- repeat the error so it's at the end also
   print_error_message(buffer, line, expected);
   
-  printf("test file: %s\n", (select value from args where name = 'sql_name'));
-  printf("result file: %s\n", (select value from args where name = 'result_name'));
+  printf("test file: %s\n", sql_name);
+  printf("result file: %s\n", result_name);
   printf("\n");
 end;
 
@@ -259,8 +256,8 @@ end;
 [[private]]
 proc read_test_results(result_name text!)
 begin
-  let result := cql_fopen(result_name, "r");
-  if result is null then
+  let result_file := cql_fopen(result_name, "r");
+  if result_file is null then
     printf("unable to open file '%s'\n", result_name);
     throw;
   end if;
@@ -273,7 +270,7 @@ begin
 
   while true
   begin
-    let data := result:::readline();
+    let data := result_file:::readline();
     if data is null leave;
 
     -- lines in the output that start with the key_string demark 
@@ -297,8 +294,8 @@ end;
 [[private]]
 proc read_test_file(sql_name text!)
 begin
-  let sql := cql_fopen(sql_name, "r");
-  if sql is null then
+  let sql_file := cql_fopen(sql_name, "r");
+  if sql_file is null then
     printf("unable to open file '%s'\n", sql_name);
     throw;
   end if;
@@ -307,13 +304,12 @@ begin
   
   while true
   begin
-    let data := sql:::readline();
+    let data := sql_file:::readline();
     if data is null leave;
 
     insert into source_input values (line, data);
     line += 1;
   end;
-  sql := null;
 end;
 
 [[private]]
@@ -324,11 +320,9 @@ begin
 end;
 
 [[private]]
-proc parse_args(args cql_string_list!, out sql_name text!, out result_name text!)
+proc parse_args(args cql_string_list!)
 begin
   let argc := args.count;
-  set sql_name := "";
-  set result_name := "";
 
   if argc != 3 then
     printf("usage cql-verify foo.sql foo.out\n");
@@ -340,20 +334,15 @@ begin
   -- store the test and output file names
   set sql_name := ifnull_throw(args[1]);
   set result_name := ifnull_throw(args[2]);
-
-  insert into args values("sql_name", sql_name);
-  insert into args values("result_name", result_name);
 end;
 
 -- main entry point
 proc dbhelp_main(args cql_string_list!)
 begin
-  var sql_name text!;
-  var result_name text!;
   call setup();
-  call parse_args(args, sql_name, result_name);
+  call parse_args(args);
 
-  if sql_name != "" and result_name != "" then
+  if sql_name is not null and result_name is not null then
     call load_data(sql_name, result_name);
     call process();
   end if;

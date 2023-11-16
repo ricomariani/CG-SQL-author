@@ -104,7 +104,7 @@ create table second_table(
 -- + @MACRO(QUERY_PARTS) qp!()
 -- + BEGIN
 -- +   first_table AS T1
--- +     INNER JOIN second_table AS T2 ON T1.x = T2.y
+-- +   INNER JOIN second_table AS T2 ON T1.x = T2.y
 -- + END;
 @macro(query_parts) qp!()
 begin
@@ -114,15 +114,17 @@ end;
 -- TEST: make a select statement...
 -- use macro in a join clause
 -- + SELECT *
--- + FROM (first_table AS T1
--- + INNER JOIN second_table AS T2 ON T1.x = T2.y)
--- + INNER JOIN second_table;
+-- +   FROM (
+-- +     first_table AS T1
+-- +     INNER JOIN second_table AS T2 ON T1.x = T2.y)
+-- +   INNER JOIN second_table;
 select * from qp!() inner join second_table;
 
 -- TEST: use macro as a table
 -- + SELECT *
--- + FROM (first_table AS T1
--- + INNER JOIN second_table AS T2 ON T1.x = T2.y) AS T1;
+-- +   FROM (
+-- +     first_table AS T1
+-- +     INNER JOIN second_table AS T2 ON T1.x = T2.y) AS T1;
 select * from qp!() as T1;
 
 -- TEST: statement macro that assembles query parts
@@ -138,23 +140,28 @@ end;
 
 -- TEST: expand a full select statement with nested macros as args
 -- + SELECT x
--- + FROM (first_table AS T1
--- + INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
+-- +   FROM (
+-- +     first_table AS T1
+-- +     INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
 sel!(x, from( qp!() ));
 
 -- TEST: expand a full select statement with nested macros as args
 -- arg typing is optional for variables, it can be inferred
 -- + SELECT x
--- + FROM (first_table AS T1
--- + INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
+-- +   FROM (
+-- +     first_table AS T1
+-- +     INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
 sel!(x, qp!());
-
 
 -- TEST: cte tables macro
 -- + @MACRO(CTE_TABLES) cte!()
 -- + BEGIN
--- +   foo (*) AS (SELECT 1 AS x, 2 AS y),
--- +   bar (*) AS (SELECT 3 AS u, 4 AS v)
+-- +   foo (*) AS (
+-- +     SELECT 1 AS x, 2 AS y
+-- +   ),
+-- +   bar (*) AS (
+-- +     SELECT 3 AS u, 4 AS v
+-- +   )
 -- + END;
 @macro(cte_tables) cte!()
 begin
@@ -164,10 +171,18 @@ end;
 
 -- TEST use cte tables
 -- + WITH
--- + vv (*) AS (SELECT 1 AS x, 2 AS y),
--- + foo (*) AS (SELECT 1 AS x, 2 AS y),
--- + bar (*) AS (SELECT 3 AS u, 4 AS v),
--- + uu (*) AS (SELECT 1 AS x, 2 AS y)
+-- +   vv (*) AS (
+-- +     SELECT 1 AS x, 2 AS y
+-- +   ),
+-- +   foo (*) AS (
+-- +     SELECT 1 AS x, 2 AS y
+-- +   ),
+-- +   bar (*) AS (
+-- +     SELECT 3 AS u, 4 AS v
+-- +   ),
+-- +   uu (*) AS (
+-- +     SELECT 1 AS x, 2 AS y
+-- +   )
 -- + SELECT *
 -- +   FROM foo;
 with
@@ -178,9 +193,15 @@ select * from foo;
 
 -- TEST: cte tables at the front of the list
 -- + WITH
--- + foo (*) AS (SELECT 1 AS x, 2 AS y),
--- + bar (*) AS (SELECT 3 AS u, 4 AS v),
--- + uu (*) AS (SELECT 1 AS x, 2 AS y)
+-- +   foo (*) AS (
+-- +     SELECT 1 AS x, 2 AS y
+-- +   ),
+-- +   bar (*) AS (
+-- +     SELECT 3 AS u, 4 AS v
+-- +   ),
+-- +   uu (*) AS (
+-- +     SELECT 1 AS x, 2 AS y
+-- +   )
 -- + SELECT *
 -- +   FROM foo;
 with
@@ -190,8 +211,12 @@ select * from foo;
 
 -- TEST: cte tables macro as the only element
 -- + WITH
--- + foo (*) AS (SELECT 1 AS x, 2 AS y),
--- + bar (*) AS (SELECT 3 AS u, 4 AS v)
+-- +  foo (*) AS (
+-- +    SELECT 1 AS x, 2 AS y
+-- +  ),
+-- +  bar (*) AS (
+-- +    SELECT 3 AS u, 4 AS v
+-- +  )
 -- + SELECT *
 -- +   FROM foo;
 with
@@ -200,11 +225,17 @@ select * from foo;
 
 -- TEST: cte tables macro at the end of the list
 -- + WITH
--- + vv (*) AS (SELECT 1 AS x, 2 AS y),
--- + foo (*) AS (SELECT 1 AS x, 2 AS y),
--- + bar (*) AS (SELECT 3 AS u, 4 AS v)
--- + SELECT *
--- +   FROM foo;
+-- +  vv (*) AS (
+-- +    SELECT 1 AS x, 2 AS y
+-- +  ),
+-- +  foo (*) AS (
+-- +    SELECT 1 AS x, 2 AS y
+-- +  ),
+-- +  bar (*) AS (
+-- +    SELECT 3 AS u, 4 AS v
+-- +  )
+-- +SELECT *
+-- +  FROM foo;
 with
 vv(*) as (select 1 x, 2 y),
 cte!()
@@ -225,7 +256,9 @@ end;
 
 -- TEST: use cte tables as a macro arg
 -- + WITH
--- + foo (*) AS (SELECT 100 AS x, 200 AS y)
+-- + foo (*) AS (
+-- +   SELECT 100 AS x, 200 AS y
+-- + )
 -- + SELECT *
 -- +   FROM foo;
 query!(with( foo(*) as (select 100 x, 200 y)));
@@ -373,11 +406,11 @@ let z := macro2!(x, y);
 let zz := macro3!(from( (select 1 x, 2 y) as T));
 
 -- TEST: query parts as text (join)
--- + SET zz := "T1\n  INNER JOIN T2 ON T1.id = T2.id";
+-- + SET zz := "T1\nINNER JOIN T2 ON T1.id = T2.id";
 set zz := macro3!(from( T1 join T2 on T1.id = T2.id));
 
 -- TEST: cte tables as text
--- + SET zz := "x (*) AS (SELECT 1 AS x, 2 AS y)\n"
+-- + SET zz := "x (*) AS (\n  SELECT 1 AS x, 2 AS y\n)\n";
 set zz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
 
 -- TEST: select core list as text
@@ -403,11 +436,11 @@ let @ID(@TEXT("u", "v")) := 5;
 -- TEST: macro with all the arg types and forwarded with the simple syntax (convert to text)
 -- + @MACRO(STMT_LIST) mondo1!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
 -- + BEGIN
--- +   SET zz := @TEXT(a!, b!, c!, d!, e!, f!);
+-- +   SET zz := @TEXT(a!, "___", b!, "___", c!, "___", d!, "___", e!, "___", f!);
 -- + END;
 @macro(stmt_list) mondo1!(a! expr, b! query_parts, c! select_core, d! select_expr, e! cte_tables, f! stmt_list)
 begin
-  set zz := @text(a!, b!, c!, d!, e!, f!);
+  set zz := @text(a!, "___", b!, "___", c!, "___", d!, "___", e!, "___", f!);
 end;
 
 -- TEST: macro with all the arg types and forwarded with the simple syntax
@@ -426,10 +459,15 @@ begin
 end;
 
 -- TEST: make a big chunk of text
--- + SET zz := "1 + 2x\n  INNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS first_tablef (*) AS (SELECT 99\n  FROM second_table)\nLET qq := 201;\n";
-mondo2!(1+2, from(x join y), all(select 1 from foo union select 2 from bar), select(20 first_table), 
-  with(f(*) as (select 99 from second_table)), begin let qq := 201; end);
-
+-- SET zz := "1 + 2___x\nINNER JOIN y___SELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar___20 AS first_table___f (*) AS (\n  SELECT 99\n    FROM second_table\n)\n___LET qq := 201;\n";
+mondo2!(
+  1+2,
+  from(x join y),
+  all(select 1 from foo union select 2 from bar), 
+  select(20 first_table), 
+  with(f(*) as (select 99 from second_table)), 
+  begin let qq := 201; end
+);
 
 -- TEST: tricky case to make sure that the selection is properly wrapped as an expression
 -- + @MACRO(EXPR) a_selection!()

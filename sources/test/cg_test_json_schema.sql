@@ -489,7 +489,7 @@ end;
 -- TEST: an update statement and with clause
 -- + "name" : "update_with_proc",
 -- + "table" : "Foo",
--- + "statement" : "WITH names (n) AS (VALUES('this'), ('that')) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
+-- + "statement" : "WITH names (n) AS ( VALUES('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
 -- + "statementArgs" : [ "name_" ]
 create proc update_with_proc(id_ integer not null, name_ text)
 begin
@@ -791,7 +791,7 @@ end;
 -- + ],
 -- + "name" : "with_upsert_proc",
 -- + "usesTables" : [ "T3" ],
--- + "statement" : "WITH data (id) AS (VALUES(1), (2), (3)) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
+-- + "statement" : "WITH data (id) AS ( VALUES(1), (2), (3) ) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
 create proc with_upsert_proc()
@@ -808,7 +808,7 @@ end;
 -- + "insertTables" : [ "T3" ],
 -- + "usesTables" : [ "T3" ],
 -- + "table" : "T3",
--- + "statement" : "WITH data (id) AS (VALUES(1), (2), (?)) INSERT INTO T3(id) SELECT id FROM data",
+-- + "statement" : "WITH data (id) AS ( VALUES(1), (2), (?) ) INSERT INTO T3(id) SELECT id FROM data",
 -- + "statementArgs" : [ "x" ],
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
@@ -1066,7 +1066,7 @@ end;
 -- +         "name" : "v",
 -- +         "type" : "integer",
 -- +         "isNotNull" : 1
--- +   "statement" : "WITH nums (i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1), vals (v) AS (SELECT i FROM nums) SELECT v FROM vals",
+-- +   "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT v FROM vals",
 -- +   "statementArgs" : [  ]
 create procedure with_select_proc()
 begin

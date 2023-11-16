@@ -893,8 +893,8 @@ The statement ending at line XXXX
 CREATE PROC MyAdHocMigration ()
 BEGIN
   UPDATE foo
-  SET id = 1
-    WHERE id = 2;
+    SET id = 1
+      WHERE id = 2;
 END;
 
   {create_proc_stmt}: ok dml_proc

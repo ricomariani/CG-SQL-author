@@ -6718,7 +6718,8 @@ end;
 
 -- TEST: try to use the non-column insert syntax on a table with deleted columns
 -- we should get a fully formed insert on the non deleted column
--- + INSERT INTO hides_id_not_name(name) VALUES('x');
+-- + INSERT INTO hides_id_not_name(name)
+-- +   VALUES('x');
 -- + {name hides_id_not_name}: hides_id_not_name: { name: text }
 insert into hides_id_not_name values('x');
 
@@ -12321,7 +12322,9 @@ update cursor X(one) from values (2);
 -- TEST -- CTE * rewrite
 -- This is just sugar so all we have to do is verify that we
 -- did the rewrite correctly
--- + some_cte (a, b, c) AS (SELECT 1 AS a, 'b' AS b, 3.0 AS c)
+-- + some_cte (a, b, c) AS (
+-- +   SELECT 1 AS a, 'b' AS b, 3.0 AS c
+-- + )
 -- + {with_select_stmt}: select: { a: integer notnull, b: text notnull, c: real notnull }
 -- - error:
 with some_cte(*) as (select 1 a, 'b' b, 3.0 c)
@@ -12407,7 +12410,8 @@ fetch nully_cursor(like not_a_symbol) from values (1, 2);
 declare id_name_cursor cursor like select 1 id, 'x' name;
 
 -- TEST: rewrite the columns of an insert from a cursor source
--- + INSERT INTO bar(id, name) VALUES(1, 'x');
+-- + INSERT INTO bar(id, name)
+-- +   VALUES(1, 'x');
 -- + {insert_stmt}: ok
 -- - error:
 insert into bar(like id_name_cursor) values(1, 'x');
@@ -13223,7 +13227,12 @@ END;
 
 -- TEST: complex floating point and integer literals
 -- first verify round trip through the AST
--- + SELECT 2147483647 AS a, 2147483648L AS b, 3.4e11 AS c, .001e+5 AS d, .4e-9 AS e;
+-- + SELECT
+-- +    2147483647 AS a,
+-- +    2147483648L AS b,
+-- +    3.4e11 AS c,
+-- +    .001e+5 AS d,
+-- +    .4e-9 AS e;
 -- + {int 2147483647}: integer notnull
 -- + {longint 2147483648}: longint notnull
 -- + {dbl 3.4e11}: real notnull
@@ -13772,7 +13781,14 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 
 -- TEST: call cql_cursor_format on a auto cursor
 -- + {create_proc_stmt}: ok dml_proc
--- + DECLARE c1 CURSOR FOR SELECT TRUE AS a, 1 AS b, 99L AS c, 'x' AS d, nullable(1.1) AS e, CAST('y' AS BLOB) AS f;
+-- + DECLARE c1 CURSOR FOR
+-- +  SELECT
+-- +     TRUE AS a,
+-- +     1 AS b,
+-- +     99L AS c,
+-- +     'x' AS d,
+-- +     nullable(1.1) AS e,
+-- +     CAST('y' AS BLOB) AS f;
 -- + FETCH c1;
 -- this is a normal function call now
 -- + SET a_string := cql_cursor_format(c1);
@@ -16774,7 +16790,8 @@ end;
 -- TEST: try the select using form
 -- we only need to verify the rewrite, all else is normal processing
 -- {insert_stmt}: ok
--- + INSERT INTO with_kind(id, cost, value) SELECT 1 AS id, 3.5 AS cost, 4.8 AS value;
+-- + INSERT INTO with_kind(id, cost, value)
+-- +   SELECT 1 AS id, 3.5 AS cost, 4.8 AS value;
 -- - error:
 insert into with_kind using
   select 1 id, 3.5 cost, 4.8 value;
@@ -16796,10 +16813,13 @@ insert into with_kind using
 -- TEST: try the select using form (and with clause)
 -- we only need to verify the rewrite, all else is normal processing
 -- {insert_stmt}: ok
--- + INSERT INTO with_kind(id, cost, value) WITH
--- + goo (x) AS (SELECT 1)
--- + SELECT goo.x AS id, 3.5 AS cost, 4.8 AS value
--- + FROM goo;
+-- + INSERT INTO with_kind(id, cost, value)
+-- + WITH
+-- +   goo (x) AS (
+-- +     SELECT 1
+-- +   )
+-- +   SELECT goo.x AS id, 3.5 AS cost, 4.8 AS value
+-- +   FROM goo;
 -- - error:
 insert into with_kind using
    with goo(x) as (select 1)
@@ -20185,7 +20205,12 @@ select @columns(simple_shape like with_kind) from simple_shape;
 select @columns(like foo);
 
 -- TEST: ensure that consecutive column rewrites link up properly
--- + SELECT 1 AS y, T.id, T.t, T.u, 1 AS x
+-- + SELECT
+-- +   1 AS y,
+-- +   T.id,
+-- +   T.t,
+-- +   T.u,
+-- +   1 AS x
 -- - error:
 select 1 y, @columns(distinct T.id), @columns(T.t, T.u), 1 x from simple_shape2 T;
 
@@ -20444,12 +20469,18 @@ create table Shape_uvxy (like Shape_xy, like Shape_uv);
 -- TEST: expand various insert_list forms using the FROM syntax
 -- these are all rewrites so we verify that the rewrite was correct
 -- these four forms are exhaustive
--- + INSERT INTO Shape_xy(x, y) VALUES(C.x, C.y);
--- + INSERT INTO Shape_xy(x, y) VALUES(1, 2), (3, 4), (C.x, C.y);
+-- + INSERT INTO Shape_xy(x, y)
+-- +   VALUES(C.x, C.y);
+-- + INSERT INTO Shape_xy(x, y)
+-- +   VALUES(1, 2), (3, 4), (C.x, C.y);
 -- + FETCH R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
 -- + UPDATE CURSOR R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
--- + cte1 (l, m, n, o) AS (VALUES(C.x, C.y, D.u, D.v))
--- + cte2 (l, m, n, o) AS (VALUES(1, 2, '3', '4'), (C.x, C.y, D.u, D.v))
+-- + cte1 (l, m, n, o) AS (
+-- +   VALUES(C.x, C.y, D.u, D.v)
+-- + )
+-- + cte2 (l, m, n, o) AS (
+-- +  VALUES(1, 2, '3', '4'), (C.x, C.y, D.u, D.v)
+-- + )
 -- - error:
 create proc ShapeTrix()
 begin
@@ -21397,7 +21428,9 @@ create table bt_default(
 
 -- TEST: generate defaults for pk2 and y but pk1 and x
 -- + WITH
--- + _vals (pk1, x) AS (VALUES(1, 2))
+-- + _vals (pk1, x) AS (
+-- +   VALUES(1, 2)
+-- + )
 -- + INSERT INTO simple_backing_table(k, v)
 -- + cql_blob_create(bt_default, V.pk1, bt_default.pk1, 99, bt_default.pk2),
 -- + cql_blob_create(bt_default, V.x, bt_default.x, 42, bt_default.y)
@@ -21411,7 +21444,9 @@ insert into bt_default(pk1,x) values (1, 2);
 -- verify rewrite
 -- + {with_upsert_stmt}: ok
 -- + WITH
--- + _vals (id, name) AS (VALUES(1, 'foo'))
+-- + _vals (id, name) AS (
+-- +  VALUES(1, 'foo')
+-- + )
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- + FROM _vals AS V
@@ -21447,10 +21482,13 @@ INSERT INTO bogus_table_not_present VALUES(1,2) on conflict(id) do nothing;
 -- + {update_stmt}: simple_backing_table: { k: blob notnull primary_key, v: blob notnull } backing
 -- + WITH
 -- + basic_table (rowid, id, name) AS (CALL _basic_table()),
--- + a_useless_cte (x, y) AS (SELECT 1, 2),
--- + _vals (id, name) AS (SELECT id + 3, name
--- + FROM basic_table
--- + WHERE id < 100)
+-- + a_useless_cte (x, y) AS (
+-- +  SELECT 1, 2
+-- + ),
+-- + _vals (id, name) AS (
+-- +   SELECT id + 3, name
+-- +   FROM basic_table
+-- +   WHERE id < 100)
 -- + INSERT INTO simple_backing_table(k, v)
 -- + SELECT cql_blob_create(basic_table, V.id, basic_table.id), cql_blob_create(basic_table, V.name, basic_table.name)
 -- + FROM _vals AS V
@@ -22782,14 +22820,16 @@ end;
 -- +   DECLARE __result__0 BOOL NOT NULL;
 -- +   DECLARE __key__0 CURSOR LIKE test_child(x);
 -- +   LET __partition__0 := cql_partition_create();
--- +   DECLARE __child_cursor__0 CURSOR FOR CALL test_child(1);
+-- +   DECLARE __child_cursor__0 CURSOR FOR
+-- +     CALL test_child(1);
 -- +   LOOP FETCH __child_cursor__0
 -- +   BEGIN
 -- +     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
 -- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
 -- +   END;
 -- +   DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, my_child OBJECT<test_child SET> NOT NULL);
--- +   DECLARE __parent__0 CURSOR FOR CALL test_parent(2);
+-- +   DECLARE __parent__0 CURSOR FOR
+-- +     CALL test_parent(2);
 -- +   LOOP FETCH __parent__0
 -- +   BEGIN
 -- +     FETCH __key__0(x) FROM VALUES(__parent__0.x);
@@ -23522,7 +23562,8 @@ create table `xyz``abc`
 
 -- TEST: make a cursor on an exotic name and fetch from it
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE C CURSOR FOR SELECT *
+-- + DECLARE C CURSOR FOR
+-- +   SELECT *
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", C.x, C.`a b`);
 -- + {declare_cursor}: C: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
@@ -23541,7 +23582,8 @@ end;
 
 -- TEST: Test several expansions
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE D CURSOR FOR SELECT `xyz``abc`.*
+-- + DECLARE D CURSOR FOR
+-- +   SELECT `xyz``abc`.*
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", D.x, D.`a b`);
 -- + {declare_cursor}: D: select: { x: integer notnull, `a b`: integer notnull qid } variable dml_proc
@@ -23670,7 +23712,8 @@ update `xyz``abc` set `a b` = 5;
 
 -- TEST: insert statement vanilla with quoted names
 -- verify that echoing is re-emitting the escaped text
--- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(1, 5);
+-- + INSERT INTO `xyz``abc`(x, `a b`)
+-- +   VALUES(1, 5);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- - error:
 insert into `xyz``abc` values (1, 5);
@@ -23698,9 +23741,11 @@ insert into `xyz``abc`(x) values(2) @dummy_seed(500);
 
 -- TEST: create a cursor and expand it using the from form
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE C CURSOR FOR SELECT *
+-- + DECLARE C CURSOR FOR
+-- +   SELECT *
 -- + FROM `xyz``abc`;
--- + INSERT INTO `xyz``abc`(x, `a b`) VALUES(C.x, C.`a b`);
+-- + INSERT INTO `xyz``abc`(x, `a b`)
+-- +   VALUES(C.x, C.`a b`);
 -- + {name `xyz``abc`}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `a b`}
 -- - error:
@@ -23762,7 +23807,8 @@ end;
 
 -- TEST: boxed cursor constructs and unusual box object
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE C CURSOR FOR SELECT 1 AS x;
+-- + DECLARE C CURSOR FOR
+-- +  SELECT 1 AS x;
 -- + DECLARE `box obj` OBJECT<C CURSOR>;
 -- + SET `box obj` FROM CURSOR C;
 -- + {name `box obj`}: X_boxX20obj: object<C CURSOR> variable
@@ -23850,3 +23896,9 @@ create proc presult_5()
 begin
   select T1.* from (select * from qnamed_table) T1;
 end;
+
+-- TEST: verifies identifier creation based resolution
+-- + DECLARE foobar2 REAL;
+-- + {declare_vars_type}: real
+-- + {name foobar2}: foobar2: real variable
+declare @ID("foo", "bar", "2") @id("real");

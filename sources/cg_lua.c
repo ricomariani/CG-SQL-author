@@ -2584,7 +2584,7 @@ static bool_t cg_lua_capture_variables(ast_node *ast, void *context, charbuf *bu
   list_item **head = (list_item**)context;
   add_item_to_list(head, ast);
 
-  bprintf(buffer, "?");
+  gen_printf("?");
   return true;
 }
 
@@ -2619,7 +2619,7 @@ static bool_t cg_lua_table_rename(ast_node *ast, void *context, charbuf *buffer)
   if (entry) {
     EXTRACT(cte_binding, entry->val);
     EXTRACT_STRING(actual, cte_binding->left);
-    bprintf(buffer, "%s", actual);
+    gen_printf("%s", actual);
     handled = true;
   }
 
@@ -2868,7 +2868,7 @@ static bool_t cg_lua_inline_func(ast_node *call_ast, void *context, charbuf *buf
   proc_arg_aliases = NULL;
   proc_cte_aliases = NULL;
 
-  bprintf(buffer, "(");
+  gen_printf("(");
 
   // Emit a fragment from a statement, note that this can nest
   cg_lua_fragment_stmt(stmt, buffer);
@@ -2883,7 +2883,7 @@ static bool_t cg_lua_inline_func(ast_node *call_ast, void *context, charbuf *buf
     // args are evaluated once which could be important if there
     // are SQL functions with side-effects being used (highly rare)
     // or expensive functions.
-    bprintf(buffer, " FROM (SELECT ");
+    gen_printf(" FROM (SELECT ");
 
     while (params) {
       Invariant(is_ast_params(params));
@@ -2897,19 +2897,19 @@ static bool_t cg_lua_inline_func(ast_node *call_ast, void *context, charbuf *buf
       EXTRACT_STRING(param_name, param_name_ast);
 
       gen_root_expr(expr);
-      bprintf(buffer, " %s", param_name);
+      gen_printf(" %s", param_name);
       if (params->right) {
-        bprintf(buffer, ", ");
+        gen_printf(", ");
       }
 
       // guaranteed to stay in lock step
       params = params->right;
       arg_list = arg_list->right;
     }
-    bprintf(buffer, ")");
+    gen_printf(")");
   }
 
-  bprintf(buffer, ")");
+  gen_printf(")");
   cg_lua_emit_one_frag(buffer);
 
   return true;

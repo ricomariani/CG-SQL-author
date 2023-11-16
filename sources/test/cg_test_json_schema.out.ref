@@ -3251,16 +3251,17 @@
       WHEN old.id > 1 AND new.id < 3
     BEGIN
     UPDATE Foo
-    SET id = 7
-      WHERE name > old.name AND name < new.name;
+      SET id = 7
+        WHERE name > old.name AND name < new.name;
 
-    INSERT INTO Foo(id, name) VALUES(7, 'goo');
+    INSERT INTO Foo(id, name)
+      VALUES(7, 'goo');
     END
 
     ,
     {
       "name" : "trigger3",
-      "CRC" : "6621399856062205043",
+      "CRC" : "-1599636186644474341",
       "target" : "MyView",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -3766,13 +3767,17 @@
     CREATE PROC with_select_proc ()
     BEGIN
     WITH
-    nums (i) AS (SELECT 0
-    UNION ALL
-    SELECT i + 1
-      FROM nums
-    LIMIT 1),
-    vals (v) AS (SELECT i
-      FROM nums)
+      nums (i) AS (
+        SELECT 0
+        UNION ALL
+        SELECT i + 1
+          FROM nums
+        LIMIT 1
+      ),
+      vals (v) AS (
+        SELECT i
+          FROM nums
+      )
     SELECT *
       FROM vals;
     END
@@ -3791,7 +3796,7 @@
           "isNotNull" : 1
         }
       ],
-      "statement" : "WITH nums (i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1), vals (v) AS (SELECT i FROM nums) SELECT v FROM vals",
+      "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT v FROM vals",
       "statementArgs" : [  ]
     },
 
@@ -4001,7 +4006,9 @@
     CREATE PROC uses_deleted_view_alias ()
     BEGIN
     WITH
-    deleted_view (x, y) AS (SELECT 1 AS x, 2 AS y)
+      deleted_view (x, y) AS (
+        SELECT 1 AS x, 2 AS y
+      )
     SELECT *
       FROM deleted_view;
     END
@@ -4025,7 +4032,7 @@
           "isNotNull" : 1
         }
       ],
-      "statement" : "WITH deleted_view (x, y) AS (SELECT 1 AS x, 2 AS y) SELECT x, y FROM deleted_view",
+      "statement" : "WITH deleted_view (x, y) AS ( SELECT 1 AS x, 2 AS y ) SELECT x, y FROM deleted_view",
       "statementArgs" : [  ]
     },
 
@@ -4116,7 +4123,8 @@
 
     CREATE PROC insert_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
-    INSERT OR REPLACE INTO Foo(id, name) VALUES(id_, name_);
+    INSERT OR REPLACE INTO Foo(id, name)
+      VALUES(id_, name_);
     END
 
     {
@@ -4200,7 +4208,8 @@
 
     CREATE PROC insert_with_select ()
     BEGIN
-    INSERT INTO T3(id) SELECT 1;
+    INSERT INTO T3(id)
+      SELECT 1;
     END
 
     {
@@ -4222,9 +4231,10 @@
 
     CREATE PROC insert_compound ()
     BEGIN
-    INSERT INTO T3(id) VALUES(1)
-    UNION ALL
-    SELECT 1 AS column1;
+    INSERT INTO T3(id)
+      VALUES(1)
+      UNION ALL
+      SELECT 1 AS column1;
     END
 
     {
@@ -4246,7 +4256,8 @@
 
     CREATE PROC insert_multi_value ()
     BEGIN
-    INSERT INTO T3(id) VALUES(1), (2), (3);
+    INSERT INTO T3(id)
+      VALUES(1), (2), (3);
     END
 
     {
@@ -4268,10 +4279,11 @@
 
     CREATE PROC upsert_proc ()
     BEGIN
-    INSERT INTO T3(id) VALUES(1)
+    INSERT INTO T3(id)
+      VALUES(1)
     ON CONFLICT DO UPDATE
-    SET id = 1
-      WHERE id = 9;
+      SET id = 1
+        WHERE id = 9;
     END
 
     {
@@ -4294,13 +4306,16 @@
     CREATE PROC with_upsert_proc ()
     BEGIN
     WITH
-    data (id) AS (VALUES(1), (2), (3))
-    INSERT INTO T3(id) SELECT id
-      FROM data
-      WHERE 1
+      data (id) AS (
+        VALUES(1), (2), (3)
+      )
+    INSERT INTO T3(id)
+      SELECT id
+        FROM data
+        WHERE 1
     ON CONFLICT DO UPDATE
-    SET id = 1
-      WHERE id = 9;
+      SET id = 1
+        WHERE id = 9;
     END
 
     {
@@ -4312,7 +4327,7 @@
       "insertTables" : [ "T3" ],
       "usesTables" : [ "T3" ],
       "table" : "T3",
-      "statement" : "WITH data (id) AS (VALUES(1), (2), (3)) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
+      "statement" : "WITH data (id) AS ( VALUES(1), (2), (3) ) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
       "statementArgs" : [  ],
       "statementType" : "INSERT",
       "columns" : [ "id" ]
@@ -4323,9 +4338,12 @@
     CREATE PROC with_insert_proc (x INTEGER NOT NULL)
     BEGIN
     WITH
-    data (id) AS (VALUES(1), (2), (x))
-    INSERT INTO T3(id) SELECT *
-      FROM data;
+      data (id) AS (
+        VALUES(1), (2), (x)
+      )
+    INSERT INTO T3(id)
+      SELECT *
+        FROM data;
     END
 
     {
@@ -4343,7 +4361,7 @@
       "insertTables" : [ "T3" ],
       "usesTables" : [ "T3" ],
       "table" : "T3",
-      "statement" : "WITH data (id) AS (VALUES(1), (2), (?)) INSERT INTO T3(id) SELECT id FROM data",
+      "statement" : "WITH data (id) AS ( VALUES(1), (2), (?) ) INSERT INTO T3(id) SELECT id FROM data",
       "statementArgs" : [ "x" ],
       "statementType" : "INSERT",
       "columns" : [ "id" ]
@@ -4356,10 +4374,10 @@
     CREATE PROC update_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     UPDATE foO
-    SET name = name_
-      WHERE id = id_
-    ORDER BY name
-    LIMIT 1;
+      SET name = name_
+        WHERE id = id_
+      ORDER BY name
+      LIMIT 1;
     END
 
     {
@@ -4392,11 +4410,13 @@
     CREATE PROC update_with_proc (id_ INTEGER NOT NULL, name_ TEXT)
     BEGIN
     WITH
-    names (n) AS (VALUES("this"), ("that"))
+      names (n) AS (
+        VALUES("this"), ("that")
+      )
     UPDATE foO
-    SET name = name_
-      WHERE name IN (SELECT *
-      FROM names);
+      SET name = name_
+        WHERE name IN (SELECT *
+        FROM names);
     END
 
     {
@@ -4420,7 +4440,7 @@
       "updateTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "WITH names (n) AS (VALUES('this'), ('that')) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
+      "statement" : "WITH names (n) AS ( VALUES('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
       "statementArgs" : [ "name_" ]
     }
   ],
@@ -4457,7 +4477,9 @@
     CREATE PROC delete_with_values (name_ TEXT)
     BEGIN
     WITH
-    names (n) AS (VALUES("this"), ("that"))
+      names (n) AS (
+        VALUES("this"), ("that")
+      )
     DELETE FROM foO WHERE name IN (SELECT *
       FROM names);
     END
@@ -4477,7 +4499,7 @@
       "deleteTables" : [ "Foo" ],
       "usesTables" : [ "Foo" ],
       "table" : "Foo",
-      "statement" : "WITH names (n) AS (VALUES('this'), ('that')) DELETE FROM foO WHERE name IN (SELECT n FROM names)",
+      "statement" : "WITH names (n) AS ( VALUES('this'), ('that') ) DELETE FROM foO WHERE name IN (SELECT n FROM names)",
       "statementArgs" : [  ]
     }
   ],
@@ -4855,7 +4877,8 @@
     BEGIN
     END;
 
-    DECLARE c CURSOR FOR SELECT 1 AS x;
+    DECLARE c CURSOR FOR
+      SELECT 1 AS x;
 
     LOOP FETCH c
     BEGIN
@@ -4940,7 +4963,7 @@
     CREATE PROC shared_frag_user ()
     BEGIN
     WITH
-    shared (id) AS (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
+      shared (id) AS (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
     SELECT *
       FROM shared
     UNION ALL

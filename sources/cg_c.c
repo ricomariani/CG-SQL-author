@@ -49,7 +49,7 @@ static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_pa
 static void cg_refs_offset(charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
 static void cg_col_offsets(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
 static void cg_declare_simple_var(sem_t sem_type, CSTR name);
-static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type);
+static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type);
 cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output);
 
 cql_noexport void cg_c_init(void);
@@ -4232,7 +4232,7 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
   list_item **head = (list_item**)context;
   add_item_to_list(head, ast);
 
-  bprintf(buffer, "?");
+  gen_printf("?");
   return true;
 }
 
@@ -4267,7 +4267,7 @@ static bool_t cg_table_rename(ast_node *ast, void *context, charbuf *buffer) {
   if (entry) {
     EXTRACT(cte_binding, entry->val);
     EXTRACT_STRING(actual, cte_binding->left);
-    bprintf(buffer, "%s", actual);
+    gen_printf("%s", actual);
     handled = true;
   }
 
@@ -4786,7 +4786,7 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
   proc_arg_aliases = NULL;
   proc_cte_aliases = NULL;
 
-  bprintf(buffer, "(");
+  gen_printf("(");
 
   // Emit a fragment from a statement, note that this can nest
   cg_fragment_stmt(stmt, buffer);
@@ -4801,7 +4801,7 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
     // args are evaluated once which could be important if there
     // are SQL functions with side-effects being used (highly rare)
     // or expensive functions.
-    bprintf(buffer, " FROM (SELECT ");
+    gen_printf(" FROM (SELECT ");
 
     while (params) {
       Invariant(is_ast_params(params));
@@ -4815,19 +4815,19 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
       EXTRACT_STRING(param_name, param_name_ast);
 
       gen_root_expr(expr);
-      bprintf(buffer, " %s", param_name);
+      gen_printf(" %s", param_name);
       if (params->right) {
-        bprintf(buffer, ", ");
+        gen_printf(", ");
       }
 
       // guaranteed to stay in lock step
       params = params->right;
       arg_list = arg_list->right;
     }
-    bprintf(buffer, ")");
+    gen_printf(")");
   }
 
-  bprintf(buffer, ")");
+  gen_printf(")");
   cg_emit_one_frag(buffer);
 
   return true;
@@ -7487,7 +7487,7 @@ static void cg_stmt_list(ast_node *head) {
 // not a storage class) and certainly nothing that is
 // a struct or sentinel type.  Likewise objects cannot
 // be the result of a select, so that's out too.
-static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type) {
+static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
 
@@ -7495,32 +7495,32 @@ static void cg_data_type(charbuf *buffer, bool_t encode, sem_t sem_type) {
 
   switch (core_type) {
     case SEM_TYPE_INTEGER:
-      bprintf(buffer, "CQL_DATA_TYPE_INT32");
+      bprintf(output, "CQL_DATA_TYPE_INT32");
       break;
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(buffer, "CQL_DATA_TYPE_INT64");
+      bprintf(output, "CQL_DATA_TYPE_INT64");
       break;
     case SEM_TYPE_REAL:
-      bprintf(buffer, "CQL_DATA_TYPE_DOUBLE");
+      bprintf(output, "CQL_DATA_TYPE_DOUBLE");
       break;
     case SEM_TYPE_BOOL:
-      bprintf(buffer, "CQL_DATA_TYPE_BOOL");
+      bprintf(output, "CQL_DATA_TYPE_BOOL");
       break;
     case SEM_TYPE_TEXT:
-      bprintf(buffer, "CQL_DATA_TYPE_STRING");
+      bprintf(output, "CQL_DATA_TYPE_STRING");
       break;
     case SEM_TYPE_BLOB:
-      bprintf(buffer, "CQL_DATA_TYPE_BLOB");
+      bprintf(output, "CQL_DATA_TYPE_BLOB");
       break;
     case SEM_TYPE_OBJECT:
-      bprintf(buffer, "CQL_DATA_TYPE_OBJECT");
+      bprintf(output, "CQL_DATA_TYPE_OBJECT");
       break;
   }
   if (is_not_nullable(sem_type)) {
-    bprintf(buffer, " | CQL_DATA_TYPE_NOT_NULL");
+    bprintf(output, " | CQL_DATA_TYPE_NOT_NULL");
   }
   if (encode) {
-    bprintf(buffer, " | CQL_DATA_TYPE_ENCODED");
+    bprintf(output, " | CQL_DATA_TYPE_ENCODED");
   }
 }
 
@@ -7585,27 +7585,27 @@ static void cg_proc_result_set_getter(function_info *info) {
     info->row_struct_type,
     rt->cql_result_set_get_data);
 
-  CHARBUF_OPEN(cast_buffer);
+  CHARBUF_OPEN(cast_tmp);
 
   // cast the data type in the buffer to the correct result type
   if (is_result_set_type(info->ret_type, info->ret_kind)) {
-    bprintf(&cast_buffer, "(");
-    cg_result_set_type_from_kind(&cast_buffer, info->ret_type, info->ret_kind);
-    bprintf(&cast_buffer, ")");
+    bprintf(&cast_tmp, "(");
+    cg_result_set_type_from_kind(&cast_tmp, info->ret_type, info->ret_kind);
+    bprintf(&cast_tmp, ")");
   }
 
   // Single row result set is always data[0]
   // And data->field looks nicer than data[0].field
   if (info->uses_out) {
     bprintf(d, "  return %sdata->%s%s;\n",
-      cast_buffer.ptr, info->col, info->value_suffix ? info->value_suffix : "");
+      cast_tmp.ptr, info->col, info->value_suffix ? info->value_suffix : "");
   }
   else {
     bprintf(d, "  return %sdata[row].%s%s;\n",
-    cast_buffer.ptr, info->col, info->value_suffix ? info->value_suffix : "");
+    cast_tmp.ptr, info->col, info->value_suffix ? info->value_suffix : "");
   }
 
-  CHARBUF_CLOSE(cast_buffer);
+  CHARBUF_CLOSE(cast_tmp);
 
   bprintf(d, "}\n");
 

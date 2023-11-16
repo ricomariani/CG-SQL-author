@@ -2767,8 +2767,9 @@ BEGIN
   CREATE TRIGGER IF NOT EXISTS trig
     AFTER INSERT ON trig_test_t1
   BEGIN
-  INSERT OR IGNORE INTO trig_test_tx(ak) SELECT pk
-    FROM trig_test_t3;
+  INSERT OR IGNORE INTO trig_test_tx(ak)
+    SELECT pk
+      FROM trig_test_t3;
   END;
 END;
 

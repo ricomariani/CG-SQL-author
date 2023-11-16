@@ -1227,7 +1227,8 @@ begin
 end;
 
 -- TEST: insert or replace form
--- +  "INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5)"
+-- + "INSERT OR REPLACE INTO bar(id, type) "
+-- +   "VALUES(1, 5)");
 insert or replace into bar(id, type) values (1,5);
 
 -- TEST: insert default from
@@ -1235,7 +1236,8 @@ insert or replace into bar(id, type) values (1,5);
 insert into foo default values;
 
 -- TEST: insert from stored procedure
--- + "INSERT INTO bar(id, type) VALUES(?, ?)"
+-- + "INSERT INTO bar(id, type) "
+-- +   "VALUES(?, ?)");
 -- + cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
 create proc insert_values(id_ integer not null, type_ integer)
 begin
@@ -1305,10 +1307,13 @@ begin
 end;
 
 -- TEST: simple DML statements for json_schema cg
--- +2 "INSERT INTO foo(id) VALUES(NULL)"
+-- + "INSERT INTO foo(id) "
+-- +   "VALUES(NULL)");
+-- + "INSERT INTO foo(id) "
+-- +   "VALUES(NULL)");
 -- + "UPDATE bar "
--- + "SET name = 'bar' "
--- + "DELETE FROM foo WHERE id = 1"
+-- +   "SET name = 'bar' "
+-- +     "WHERE name = 'baz'");
 create proc misc_dml_proc()
 begin
   insert into foo values(NULL);
@@ -1485,8 +1490,10 @@ declare blob_var_notnull blob not null;
 set blob_var_notnull := blob_notnull_func();
 
 -- TEST: bind a nullable blob and a not null blob
--- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
--- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
+-- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
+-- +   VALUES(0, blob_var, blob_var_notnull);
+-- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) "
+-- +   "VALUES(0, ?, ?)");
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
 -- +               CQL_DATA_TYPE_BLOB, blob_var,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, blob_var_notnull);
@@ -1850,17 +1857,23 @@ end;
 -- TEST: use with-insert form
 -- +  _rc_ = cql_exec(_db_,
 -- + "WITH "
--- + "x (a) AS (SELECT 111) "
--- + "INSERT INTO foo(id) VALUES(ifnull(( SELECT a "
--- + "FROM x ), 0))");
+-- +   "x (a) AS ( "
+-- +     "SELECT 111 "
+-- +   ") "
+-- + "INSERT INTO foo(id) "
+-- +   "VALUES(ifnull(( SELECT a "
+-- +     "FROM x ), 0))");
 with x(a) as (select 111)
 insert into foo values ( ifnull((select a from x), 0));
 
 -- TEST: use insert from select (put this in a proc to force the schema utils to walk it)
 -- + "WITH "
--- + "x (a) AS (SELECT 111) "
--- + "INSERT INTO foo(id) SELECT a "
--- + "FROM x"
+-- +   "x (a) AS ( "
+-- +     "SELECT 111 "
+-- +   ") "
+-- + "INSERT INTO foo(id) "
+-- +   "SELECT a "
+-- +     "FROM x");
 create proc with_inserter()
 begin
   with x(a) as (select 111)
@@ -2291,10 +2304,12 @@ end;
 
 -- TEST: with delete form
 -- + _rc_ = cql_exec(_db_,
--- +   "WITH "
--- +   "x (a) AS (SELECT 111) "
--- +   "DELETE FROM foo WHERE id IN (SELECT a "
--- +     "FROM x)");
+-- + "WITH "
+-- +   "x (a) AS ( "
+-- +     "SELECT 111 "
+-- +   ") "
+-- + "DELETE FROM foo WHERE id IN (SELECT a "
+-- +   "FROM x)");
 create proc with_deleter()
 begin
   with x(a) as (select 111)
@@ -2303,12 +2318,14 @@ end;
 
 -- TEST: with update form
 -- + _rc_ = cql_exec(_db_,
--- +  "WITH "
--- +  "x (a) AS (SELECT 111) "
--- +  "UPDATE bar "
--- +  "SET name = 'xyzzy' "
--- +    "WHERE id IN (SELECT a "
--- +    "FROM x)");
+-- + "WITH "
+-- +   "x (a) AS ( "
+-- +     "SELECT 111 "
+-- +   ") "
+-- + "UPDATE bar "
+-- +   "SET name = 'xyzzy' "
+-- +     "WHERE id IN (SELECT a "
+-- +     "FROM x)");
 create proc with_updater()
 begin
   with x(a) as (select 111)
@@ -2438,10 +2455,10 @@ END;
 
 -- TEST: try to use a WITH_SELECT form in a select expression
 -- +  _rc_ = cql_prepare(_db_, &_temp_stmt,
--- +   "WITH "
--- +   "threads2 (count) AS (SELECT 1) "
--- +   "SELECT COUNT(*) "
--- +     "FROM threads2");
+-- + "WITH "
+-- +   "threads2 (count) AS ( "
+-- +     "SELECT 1 "
+-- +   ") "
 create proc use_with_select()
 begin
    declare x integer;
@@ -2460,12 +2477,13 @@ begin
 end;
 
 -- TEST: codegen upsert statement with update statement
--- + "INSERT INTO foo(id) SELECT id "
--- + "FROM bar "
--- + "WHERE 1 "
+-- + "INSERT INTO foo(id) "
+-- +   "SELECT id "
+-- +     "FROM bar "
+-- +     "WHERE 1 "
 -- + "ON CONFLICT (id) DO UPDATE "
--- + "SET id = 10 "
--- + "WHERE id <> 10"
+-- +   "SET id = 10 "
+-- +     "WHERE id <> 10");
 -- + cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
 create proc upsert_do_something()
 BEGIN
@@ -2475,13 +2493,16 @@ END;
 -- TEST: codegen with upsert statement form
 -- + cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
 -- + "WITH "
--- + "names (id) AS (VALUES(1), (5), (3), (12)) "
--- + "INSERT INTO foo(id) SELECT id "
--- +   "FROM names "
--- +   "WHERE 1 "
+-- +   "names (id) AS ( "
+-- +     "VALUES(1), (5), (3), (12) "
+-- +   ") "
+-- + "INSERT INTO foo(id) "
+-- +   "SELECT id "
+-- +     "FROM names "
+-- +     "WHERE 1 "
 -- + "ON CONFLICT (id) DO UPDATE "
--- + "SET id = 10 "
--- +   "WHERE id <> 10");
+-- +   "SET id = 10 "
+-- +     "WHERE id <> 10");
 create proc with_upsert_form()
 BEGIN
  with names(id) as (values (1), (5), (3), (12))
@@ -2489,8 +2510,9 @@ BEGIN
 END;
 
 -- TEST: codegen upsert statement with do nothing
--- + "INSERT INTO foo(id) VALUES(?) "
--- + "ON CONFLICT DO NOTHING"
+-- + "INSERT INTO foo(id) "
+-- +   "VALUES(?) "
+-- +  "ON CONFLICT DO NOTHING");
 -- + cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
 create proc upsert_do_nothing(id_ integer not null)
 BEGIN
@@ -2501,9 +2523,11 @@ END;
 -- + _seed_ = 1337;
 -- + _rc_ = cql_exec(_db_,
 -- + "WITH "
--- + "some_cte (id) AS (SELECT 1 AS id) "
+-- +   "some_cte (id) AS ( "
+-- +     "SELECT 1 AS id "
+-- +   ") "
 -- + "INSERT INTO bar(id) VALUES(ifnull(( SELECT id "
--- + "FROM some_cte ), 0))");
+-- +   "FROM some_cte ), 0))");
 -- + if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 with some_cte(id) as (select 1 id)
 insert into bar(id)
@@ -2831,14 +2855,17 @@ end;
 -- in particular the newline would get messed up because we thought
 -- it was a line break in non-quoted SQL which can be replaced with a space
 -- note the newline is escaped and present
--- + "INSERT INTO bar(id, name) VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
+-- + "INSERT INTO bar(id, name) "
+-- note that the newline has no extra spaces after it even though we are indenting
+-- +   "VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
 create proc pretty_print_with_quote()
 begin
   insert into bar(id, name) values(1, "it's high noon\r\n\f\b\t\v");
 end;
 
 -- TEST: string literal with hex forms
--- + "INSERT INTO bar(id, name) VALUES(1, '\x01\x02\xa1\x1bg')");
+-- + "INSERT INTO bar(id, name) "
+-- +   "VALUES(1, '\x01\x02\xa1\x1bg')");
 create proc hex_quote()
 begin
   insert into bar(id, name) values(1, "\x01\x02\xA1\x1b\x00\xg");
@@ -3767,13 +3794,14 @@ end;
 
 -- TEST: insert into the table, verify autoexpand is correct there, too
 -- only "y" should be inserted here
--- + _rc_ = cql_exec(_db_,
--- + "INSERT INTO virtual_with_hidden(vy) VALUES(1)");
+-- + "INSERT INTO virtual_with_hidden(vy) "
+-- +   "VALUES(1)");
 insert into virtual_with_hidden values(1);
 
 -- TEST: you can use the hidden column if you do it by name
 -- + _rc_ = cql_exec(_db_,
--- + "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)");
+-- + "INSERT INTO virtual_with_hidden(vx, vy) "
+-- +    "VALUES(1, 2)");
 insert into virtual_with_hidden(vx, vy) values(1,2);
 
 -- TEST: get row from the bar table or else -1
@@ -4801,8 +4829,10 @@ end;
 --
 -- root fragment 0 always present
 -- + "WITH "
--- +   "some_cte (id) AS (SELECT ?), "
--- +   "shared_conditional (x) AS (",
+-- +    "some_cte (id) AS ( "
+-- +      "SELECT ? "
+-- +    "), "
+-- +    "shared_conditional (x) AS (",
 --
 -- option 1 fragment 1
 -- + "SELECT ?",
@@ -4935,7 +4965,7 @@ end;
 -- +  "(",
 --
 -- fragment 2 present if x <= 5
--- +  "WITH "
+-- +  "  WITH "
 -- +    "shared_conditional (x) AS (",
 --
 -- fragment 3 present if x == 1
@@ -5355,7 +5385,13 @@ create table backed2(
 );
 
 -- TEST: cql_blob_get should expand to the correct calls and hash codes
--- + "SELECT bgetkey(k, 0), bgetval(v, 1055660242183705531), bgetval(v, -7635294210585028660), bgetval(v, -9155171551243524439), bgetval(v, -6946718245010482247), bgetval(v, -3683705396192132539) "
+-- + SELECT
+-- + bgetkey(k, 0),
+-- + bgetval(v, 1055660242183705531),
+-- + bgetval(v, -7635294210585028660),
+-- + bgetval(v, -9155171551243524439),
+-- + bgetval(v, -6946718245010482247),
+-- + bgetval(v, -3683705396192132539)
 create proc use_cql_blob_get_backed()
 begin
   declare C cursor for select
@@ -5368,7 +5404,12 @@ begin
 end;
 
 -- TEST: cql_blob_get should expand to the correct calls and hash codes
--- + "SELECT bgetkey(k, 1), bgetkey(k, 0), bgetval(v, -9155171551243524439), bgetval(v, 4605090824299507084), bgetval(v, -6946718245010482247) "
+-- + SELECT
+-- + bgetkey(k, 1),
+-- + bgetkey(k, 0),
+-- + bgetval(v, -9155171551243524439),
+-- + bgetval(v, 4605090824299507084),
+-- + bgetval(v, -6946718245010482247)
 create proc use_cql_blob_get_backed2()
 begin
   declare C cursor for select
@@ -5454,8 +5495,12 @@ begin
 end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
--- + one (x) AS (SELECT 1),
--- + two (x) AS (SELECT 2)
+-- + one (x) AS (
+-- + SELECT 1
+-- + ),
+-- + two (x) AS (
+-- + SELECT 2
+-- + )
 -- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
 -- + SELECT rowid,
 -- + bgetkey(T.k, 0)
@@ -5477,8 +5522,12 @@ begin
 end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
--- + one (x) AS (SELECT 1),
--- + two (x) AS (SELECT 2)
+-- + one (x) AS (
+-- + SELECT 1
+-- + ),
+-- + two (x) AS (
+-- + SELECT 2
+-- + )
 -- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
 -- + SELECT rowid
 -- + bgetkey(T.k, 0)
@@ -5502,13 +5551,14 @@ end;
 
 -- TEST: select expression with backed table
 -- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid
--- + bgetkey(T.k, 0)
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
+-- + bgetval(T.v, -7635294210585028660),
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
 -- + SELECT flag
 -- + FROM backed
@@ -5545,7 +5595,14 @@ end;
 @blob_get_val bgetval offset;
 
 -- TEST: we should get value indexes 0, 1, 2, 3, 4 not hashes
--- + SELECT rowid, bgetval(T.v, 0), bgetval(T.v, 1), bgetval(T.v, 2), bgetval(T.v, 3), bgetval(T.v, 4), bgetkey(T.k, 0)
+-- + SELECT
+-- + rowid,
+-- + bgetval(T.v, 0),
+-- + bgetval(T.v, 1),
+-- + bgetval(T.v, 2),
+-- + bgetval(T.v, 3),
+-- + bgetval(T.v, 4),
+-- + bgetkey(T.k, 0)
 create proc use_backed_table_select_expr_value_offsets(out x bool not null)
 begin
   set x := (select flag from backed);
@@ -5562,8 +5619,11 @@ create table small_backed(
 );
 
 -- TEST: simple insert with values
--- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7))
--- + INSERT INTO backing(k, v) SELECT
+-- + _vals (pk, x, y) AS (
+-- + VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)
+-- + )
+-- + INSERT INTO backing(k, v)
+-- + SELECT
 -- + bcreatekey(-4190907309554122430, V.pk, 1),
 -- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + FROM _vals AS V
@@ -5573,11 +5633,18 @@ begin
 end;
 
 -- TEST: simple with-insert using values
--- + U (x, y, z) AS (VALUES(1, '2', 3.14))
--- + V (x, y, z) AS (VALUES(1, '2', 3.14))
--- + _vals (pk, x, y) AS (SELECT x, y, z
--- + FROM V)
--- + INSERT INTO backing(k, v) SELECT
+-- + U (x, y, z) AS (
+-- + VALUES(1, '2', 3.14)
+-- + )
+-- + V (x, y, z) AS (
+-- + VALUES(1, '2', 3.14)
+-- + )
+-- + _vals (pk, x, y) AS (
+-- + SELECT x, y, z
+-- + FROM V
+-- + )
+-- + INSERT INTO backing(k, v)
+-- + SELECT
 -- + bcreatekey(-4190907309554122430, V.pk, 1)
 -- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
 -- + FROM _vals AS V
@@ -5590,8 +5657,11 @@ begin
 end;
 
 -- TEST: simple insert using form
--- + _vals (pk, x, y) AS (VALUES(1, '2', 3.14))
--- + INSERT INTO backing(k, v) SELECT
+-- + _vals (pk, x, y) AS (
+-- + VALUES(1, '2', 3.14)
+-- + )
+-- + INSERT INTO backing(k, v)
+-- + SELECT
 -- + bcreatekey(-4190907309554122430, V.pk, 1)
 -- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + FROM _vals AS V
@@ -5602,12 +5672,19 @@ end;
 
 -- TEST: insert from a select
 -- + small_backed (rowid, pk, x, y) AS (
--- + SELECT rowid, bgetkey(T.k, 0) AS pk, bgetval(T.v, 7953209610392031882) AS x, bgetval(T.v, 3032304244189539277) AS y
+-- + SELECT
+-- + rowid,
+-- + bgetkey(T.k, 0) AS pk,
+-- + bgetval(T.v, 7953209610392031882) AS x,
+-- + bgetval(T.v, 3032304244189539277) AS y
 -- + FROM backing AS T
 -- + WHERE bgetkey_type(T.k) = -4190907309554122430
--- + _vals (pk, x, y) AS (SELECT pk + 1000, B.x || 'x', B.y + 50
--- + FROM small_backed AS B)
--- + INSERT INTO backing(k, v) SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
+-- + _vals (pk, x, y) AS (
+-- + SELECT pk + 1000, B.x || 'x', B.y + 50
+-- + FROM small_backed AS B
+-- + )
+-- + INSERT INTO backing(k, v)
+-- + SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + bcreatekey(-4190907309554122430, V.pk, 1)
 -- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
 -- + FROM _vals AS V
@@ -5630,7 +5707,9 @@ end;
 -- + small_backed (rowid, pk, x, y)
 -- + DELETE FROM backing WHERE rowid IN (SELECT rowid
 -- + FROM small_backed)
--- + v (x) AS (VALUES(1)
+-- + v (x) AS (
+-- +  VALUES(1
+-- + )
 create proc delete_from_backed_no_where_clause()
 begin
   with v(x) as (values(1)) -- force the with select form
@@ -5660,7 +5739,9 @@ begin
 end;
 
 -- TEST: simple update into backed table value only, using with clause
--- + V (x) AS (VALUES(1))
+-- + V (x) AS (
+-- +   VALUES(1)
+-- + )
 -- + UPDATE backing
 -- + SET v = bupdateval(v, -6946718245010482247, 'goo', 4)
 -- + WHERE rowid IN (SELECT rowid

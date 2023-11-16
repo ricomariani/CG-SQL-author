@@ -169,7 +169,7 @@ SELECT a, b
   FROM c
   LEFT OUTER JOIN d ON e.f = g.h;
 
-SELECT 
+SELECT
     P.thread_key,
     P.contact_id,
     P.is_admin,
@@ -184,7 +184,7 @@ SELECT
   FROM participants AS P
   LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id;
 
-SELECT 
+SELECT
     T.thread_key,
     T.thread_type,
     UTN.thread_name AS thread_name,
@@ -199,7 +199,7 @@ SELECT *
 SELECT a
   FROM b;
 
-SELECT 
+SELECT
     T.thread_key,
     T.thread_type,
     UTN.thread_name AS thread_name,
@@ -222,7 +222,7 @@ SELECT a, b
   FROM c
 ORDER BY f;
 
-SELECT 
+SELECT
     C.id AS contact_id,
     C.contact_type,
     C.profile_picture_url,
@@ -293,7 +293,7 @@ SELECT DISTINCT a, b AS c, d
 ORDER BY o.p DESC;
 
 CREATE VIEW thread_messages AS
-SELECT DISTINCT 
+SELECT DISTINCT
     M.message_id,
     M.thread_key,
     M.offline_threading_id,
@@ -2031,6 +2031,8 @@ foo(q).r;
 foo::bar().baz;
 
 column := 1;
+
+DECLARE foo int;
 
 @MACRO(EXPR) foo!(x! EXPR, z! EXPR)
 BEGIN

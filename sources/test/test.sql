@@ -1769,5 +1769,7 @@ foo::bar().baz;
 
 column := 1;
 
+declare @id("foo") @id("int");
+
 @include "macro_basic_parse_test.sql"
 @include "line_directive_parse_test.sql"

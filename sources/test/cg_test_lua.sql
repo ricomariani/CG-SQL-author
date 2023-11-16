@@ -868,7 +868,7 @@ end;
 -- TEST: create a simple with statement
 -- + local C_fields_ = { "a", "b", "c" }
 -- + local C_types_ = "III"
--- + "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
+-- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
 -- +  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
 create proc with_stmt_using_cursor()
@@ -880,7 +880,7 @@ begin
 end;
 
 -- TEST: with statement top level
--- + "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
+-- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 create proc with_stmt()
 begin
@@ -888,7 +888,7 @@ begin
 end;
 
 -- TEST: with recursive statement top level
--- + "WITH RECURSIVE X (a, b, c) AS (SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6) SELECT a, b, c FROM X"
+-- + "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT a, b, c FROM X"
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
 create proc with_recursive_stmt()
 begin
@@ -1390,7 +1390,8 @@ declare blob_var_notnull blob not null;
 set blob_var_notnull := blob_notnull_func();
 
 -- TEST: bind a nullable blob and a not null blob
--- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
+-- + INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
+-- +   VALUES(0, blob_var, blob_var_notnull);
 -- + "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)"
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "bB", blob_var, blob_var_notnull)
 insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_var_notnull);
@@ -1730,12 +1731,12 @@ end;
 
 -- TEST: use with-insert form
 -- +  _rc_ = cql_exec(_db_,
--- + "WITH x (a) AS (SELECT 111) INSERT INTO foo(id) VALUES(ifnull(( SELECT a FROM x ), 0))"
+-- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) VALUES(ifnull(( SELECT a FROM x ), 0))"
 with x(a) as (select 111)
 insert into foo values ( ifnull((select a from x), 0));
 
 -- TEST: use insert from select (put this in a proc to force the schema utils to walk it)
--- + "WITH x (a) AS (SELECT 111) INSERT INTO foo(id) SELECT a FROM x")
+-- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT a FROM x")
 create proc with_inserter()
 begin
   with x(a) as (select 111)
@@ -2200,7 +2201,7 @@ begin
 end;
 
 -- TEST: with delete form
--- +  "WITH x (a) AS (SELECT 111) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
+-- +  "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
 create proc with_deleter()
 begin
   with x(a) as (select 111)
@@ -2208,7 +2209,7 @@ begin
 end;
 
 -- TEST: with update form
--- +  "WITH x (a) AS (SELECT 111) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)"
+-- +  "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)"
 create proc with_updater()
 begin
   with x(a) as (select 111)
@@ -2331,7 +2332,7 @@ BEGIN
 END;
 
 -- TEST: try to use a WITH_SELECT form in a select expression
--- + "WITH threads2 (count) AS (SELECT 1) SELECT COUNT(*) FROM threads2"
+-- + "WITH threads2 (count) AS ( SELECT 1 ) SELECT COUNT(*) FROM threads2"
 -- + _tmp_int_0 = cql_get_value(_temp_stmt, 0)
 -- + x = _tmp_int_0
 create proc use_with_select()
@@ -2363,7 +2364,7 @@ END;
 
 -- TEST: codegen with upsert statement form
 -- + function with_upsert_form(_db_)
--- + "WITH names (id) AS (VALUES(1), (5), (3), (12)) INSERT INTO foo(id)
+-- + "WITH names (id) AS ( VALUES(1), (5), (3), (12) ) INSERT INTO foo(id)
 -- + SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
 create proc with_upsert_form()
 BEGIN
@@ -2381,7 +2382,7 @@ END;
 
 -- TEST: codegen with-insert with a seed
 -- + _seed_ = 1337
--- + "WITH some_cte (id) AS (SELECT 1 AS id) INSERT INTO bar(id) VALUES(ifnull(( SELECT id FROM some_cte ), 0))"
+-- + "WITH some_cte (id) AS ( SELECT 1 AS id ) INSERT INTO bar(id) VALUES(ifnull(( SELECT id FROM some_cte ), 0))"
 with some_cte(id) as (select 1 id)
 insert into bar(id)
 values (ifnull((select id from some_cte), 0))
@@ -4599,7 +4600,7 @@ end;
 -- + 5, _preds_1,
 --
 -- root fragment 0 always present
--- + "WITH some_cte (id) AS (SELECT ?), shared_conditional (x) AS (",
+-- + "WITH some_cte (id) AS ( SELECT ? ), shared_conditional (x) AS (",
 --
 -- option 1 fragment 1
 -- + "SELECT ?",
@@ -4726,7 +4727,7 @@ end;
 -- +  "(",
 --
 -- fragment 2 present if x <= 5
--- +  "WITH shared_conditional (x) AS (",
+-- + "  WITH shared_conditional (x) AS (",
 --
 -- fragment 3 present if x == 1
 -- first variable binding v[0] = pred[3]

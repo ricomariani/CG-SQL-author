@@ -1565,7 +1565,7 @@ DECLARE PROC plugh (id INTEGER);
 /*
 CREATE PROC complex_return ()
 BEGIN
-  SELECT 
+  SELECT
       TRUE AS _bool,
       2 AS _integer,
       CAST(3 AS LONG_INT) AS _longint,
@@ -1678,7 +1678,7 @@ CQL_WARN_UNUSED cql_code complex_return(sqlite3 *_Nonnull _db_, sqlite3_stmt *_N
   cql_error_prepare();
 
   _rc_ = cql_prepare(_db_, _result_stmt,
-    "SELECT  "
+    "SELECT "
         "1, "
         "2, "
         "CAST(3 AS LONG_INT), "
@@ -8232,7 +8232,7 @@ CQL_WARN_UNUSED cql_code pretty_print_with_quote(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "INSERT INTO bar(id, name) "
-      "VALUES(1, 'it''s high noon\r\n  \f\b\t\v')");
+      "VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -17426,7 +17426,7 @@ cql_cleanup:
 CREATE PROC use_cql_blob_get_backed ()
 BEGIN
   DECLARE C CURSOR FOR
-    SELECT 
+    SELECT
         cql_blob_get(k, backed.pk),
         cql_blob_get(v, backed.flag),
         cql_blob_get(v, backed.storage),
@@ -17448,7 +17448,7 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT  "
+    "SELECT "
         "bgetkey(k, 0), "
         "bgetval(v, 1055660242183705531), "
         "bgetval(v, -7635294210585028660), "
@@ -17472,7 +17472,7 @@ cql_cleanup:
 CREATE PROC use_cql_blob_get_backed2 ()
 BEGIN
   DECLARE C CURSOR FOR
-    SELECT 
+    SELECT
         cql_blob_get(k, backed2.pk1),
         cql_blob_get(k, backed2.pk2),
         cql_blob_get(v, backed2.id),
@@ -17493,7 +17493,7 @@ CQL_WARN_UNUSED cql_code use_cql_blob_get_backed2(sqlite3 *_Nonnull _db_) {
   sqlite3_stmt *C_stmt = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT  "
+    "SELECT "
         "bgetkey(k, 1), "
         "bgetkey(k, 0), "
         "bgetval(v, -9155171551243524439), "
@@ -17579,7 +17579,7 @@ CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "backed2 (rowid, pk1, pk2, flag, id, name, extra) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetkey(T.k, 1), "
           "bgetkey(T.k, 0), "
@@ -17736,7 +17736,7 @@ CQL_WARN_UNUSED cql_code use_generated_fragment(sqlite3 *_Nonnull _db_, sqlite3_
     3, NULL,
   "WITH "
       "_backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -17891,7 +17891,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly(sqlite3 *_Nonnull _db_, sqlit
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -17942,7 +17942,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_cursor(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18103,7 +18103,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_directly_in_with_select(sqlite3 *_Nonn
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18166,7 +18166,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_with_select_and_cursor(sqlite3 *_Nonnu
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18225,7 +18225,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr(sqlite3 *_Nonnull _db_, cq
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18283,7 +18283,7 @@ static CQL_WARN_UNUSED cql_code explain_query_plan_backed(sqlite3 *_Nonnull _db_
   "EXPLAIN QUERY PLAN "
     "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18336,7 +18336,7 @@ CQL_WARN_UNUSED cql_code use_backed_table_select_expr_value_offsets(sqlite3 *_No
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 0), "
           "bgetval(T.v, 1), "
@@ -18531,7 +18531,7 @@ CQL_WARN_UNUSED cql_code inserted_backed_from_select(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "small_backed (rowid, pk, x, y) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetkey(T.k, 0) AS pk, "
           "bgetval(T.v, 7953209610392031882) AS x, "
@@ -18582,7 +18582,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "small_backed (rowid, pk, x, y) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetkey(T.k, 0), "
           "bgetval(T.v, 7953209610392031882), "
@@ -18631,7 +18631,7 @@ CQL_WARN_UNUSED cql_code delete_from_backed_no_where_clause(sqlite3 *_Nonnull _d
     3, NULL,
   "WITH "
       "small_backed (rowid, pk, x, y) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetkey(T.k, 0), "
           "bgetval(T.v, 7953209610392031882), "
@@ -18736,7 +18736,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18793,7 +18793,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18850,7 +18850,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "
@@ -18906,7 +18906,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
     3, NULL,
   "WITH "
       "backed (rowid, flag, id, name, age, storage, pk) AS (",
-  "SELECT  "
+  "SELECT "
           "rowid, "
           "bgetval(T.v, 1055660242183705531), "
           "bgetval(T.v, -9155171551243524439), "

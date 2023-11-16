@@ -23896,3 +23896,9 @@ create proc presult_5()
 begin
   select T1.* from (select * from qnamed_table) T1;
 end;
+
+-- TEST: verifies identifier creation based resolution
+-- + DECLARE foobar2 REAL;
+-- + {declare_vars_type}: real
+-- + {name foobar2}: foobar2: real variable
+declare @ID("foo", "bar", "2") @id("real");

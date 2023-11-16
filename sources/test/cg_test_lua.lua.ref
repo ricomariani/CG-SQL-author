@@ -448,13 +448,15 @@ end
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC easy_fetch ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT *
-    FROM bar;
+  DECLARE C CURSOR FOR
+    SELECT *
+      FROM bar;
   FETCH C;
   CALL printf("%d %s\n", C.id, C.name);
-  DECLARE C2 CURSOR FOR SELECT *
-    FROM bar
-    WHERE C AND id = C.id;
+  DECLARE C2 CURSOR FOR
+    SELECT *
+      FROM bar
+      WHERE C AND id = C.id;
 END;
 --]]
 
@@ -566,7 +568,8 @@ DECLARE PROC xyzzy (id INTEGER) (A INTEGER NOT NULL);
 --[[
 CREATE PROC xyzzy_test ()
 BEGIN
-  DECLARE xyzzy_cursor CURSOR FOR CALL xyzzy(1);
+  DECLARE xyzzy_cursor CURSOR FOR
+    CALL xyzzy(1);
 END;
 --]]
 
@@ -598,7 +601,13 @@ DECLARE PROC plugh (id INTEGER);
 --[[
 CREATE PROC complex_return ()
 BEGIN
-  SELECT TRUE AS _bool, 2 AS _integer, CAST(3 AS LONG_INT) AS _longint, 3.0 AS _real, 'xyz' AS _text, CAST(NULL AS BOOL) AS _nullable_bool;
+  SELECT
+      TRUE AS _bool,
+      2 AS _integer,
+      CAST(3 AS LONG_INT) AS _longint,
+      3.0 AS _real,
+      'xyz' AS _text,
+      CAST(NULL AS BOOL) AS _nullable_bool;
 END;
 --]]
 
@@ -849,10 +858,13 @@ end
 --[[
 CREATE PROC with_stmt_using_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR WITH
-  X (a, b, c) AS (SELECT 1, 2, 3)
-  SELECT *
-    FROM X;
+  DECLARE C CURSOR FOR
+    WITH
+      X (a, b, c) AS (
+        SELECT 1, 2, 3
+      )
+    SELECT *
+      FROM X;
   FETCH C;
 END;
 --]]
@@ -865,7 +877,7 @@ function with_stmt_using_cursor(_db_)
   local C_types_ = "III"
 
   _rc_, C_stmt = cql_prepare(_db_, 
-    "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
+    "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
@@ -884,7 +896,9 @@ end
 CREATE PROC with_stmt ()
 BEGIN
   WITH
-  X (a, b, c) AS (SELECT 1, 2, 3)
+    X (a, b, c) AS (
+      SELECT 1, 2, 3
+    )
   SELECT *
     FROM X;
 END;
@@ -894,7 +908,7 @@ function with_stmt(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "WITH X (a, b, c) AS (SELECT 1, 2, 3) SELECT a, b, c FROM X")
+    "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -923,9 +937,11 @@ end
 CREATE PROC with_recursive_stmt ()
 BEGIN
   WITH RECURSIVE
-  X (a, b, c) AS (SELECT 1, 2, 3
-  UNION ALL
-  SELECT 4, 5, 6)
+    X (a, b, c) AS (
+      SELECT 1, 2, 3
+      UNION ALL
+      SELECT 4, 5, 6
+    )
   SELECT *
     FROM X;
 END;
@@ -935,7 +951,7 @@ function with_recursive_stmt(_db_)
   local _rc_ = CQL_OK
   local _result_stmt = nil
   _rc_, _result_stmt = cql_prepare(_db_, 
-    "WITH RECURSIVE X (a, b, c) AS (SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6) SELECT a, b, c FROM X")
+    "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT a, b, c FROM X")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -1035,7 +1051,8 @@ end
 --[[
 CREATE PROC outint_nullable (OUT output INTEGER, OUT result BOOL NOT NULL)
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1;
+  DECLARE C CURSOR FOR
+    SELECT 1;
   FETCH C INTO output;
   SET result := C;
 END;
@@ -1071,7 +1088,8 @@ end
 --[[
 CREATE PROC outint_notnull (OUT output INTEGER NOT NULL, OUT result BOOL NOT NULL)
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1;
+  DECLARE C CURSOR FOR
+    SELECT 1;
   FETCH C INTO output;
   SET result := C;
 END;
@@ -1238,7 +1256,8 @@ end
 --[[
 CREATE PROC insert_values (id_ INTEGER NOT NULL, type_ INTEGER)
 BEGIN
-  INSERT INTO bar(id, type) VALUES(id_, type_);
+  INSERT INTO bar(id, type)
+    VALUES(id_, type_);
 END;
 --]]
 
@@ -1375,11 +1394,13 @@ end
 --[[
 CREATE PROC misc_dml_proc ()
 BEGIN
-  INSERT INTO foo(id) VALUES(NULL);
-  INSERT INTO foo(id) VALUES(NULL);
+  INSERT INTO foo(id)
+    VALUES(NULL);
+  INSERT INTO foo(id)
+    VALUES(NULL);
   UPDATE bar
-  SET name = 'bar'
-    WHERE name = 'baz';
+    SET name = 'bar'
+      WHERE name = 'baz';
   DELETE FROM foo WHERE id = 1;
 END;
 --]]
@@ -1571,8 +1592,9 @@ end
 --[[
 CREATE PROC out_cursor_proc ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT bar.*, 'xyzzy' AS extra1, 'plugh' AS extra2
-    FROM bar;
+  DECLARE C CURSOR FOR
+    SELECT bar.*, 'xyzzy' AS extra1, 'plugh' AS extra2
+      FROM bar;
   FETCH C;
   OUT C;
 END;
@@ -1712,7 +1734,7 @@ CREATE PROC thread_theme_info_list (thread_key_ LONG_INT NOT NULL)
 BEGIN
   SELECT *
     FROM (SELECT thread_key
-    FROM threads) AS T;
+        FROM threads) AS T;
 END;
 --]]
 
@@ -1829,7 +1851,8 @@ end
 CREATE PROC no_cleanup_label_needed_proc ()
 BEGIN
   BEGIN TRY
-    DECLARE C CURSOR FOR SELECT 1 AS N;
+    DECLARE C CURSOR FOR
+      SELECT 1 AS N;
     FETCH C;
   END TRY;
   BEGIN CATCH
@@ -2201,16 +2224,19 @@ end
 CREATE PROC with_inserter ()
 BEGIN
   WITH
-  x (a) AS (SELECT 111)
-  INSERT INTO foo(id) SELECT *
-    FROM x;
+    x (a) AS (
+      SELECT 111
+    )
+  INSERT INTO foo(id)
+    SELECT *
+      FROM x;
 END;
 --]]
 
 function with_inserter(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS (SELECT 111) INSERT INTO foo(id) SELECT a FROM x")
+    "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT a FROM x")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -2303,7 +2329,8 @@ end
 --[[
 CREATE PROC loop_statement_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS A;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS A;
   LOOP FETCH C
   BEGIN
     CALL printf("%d\n", C.A);
@@ -2342,7 +2369,8 @@ end
 --[[
 CREATE PROC loop_statement_not_auto_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS A;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS A;
   DECLARE A_ INTEGER NOT NULL;
   LOOP FETCH C INTO A_
   BEGIN
@@ -2412,7 +2440,8 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR CALL simple_select();
+    DECLARE C CURSOR FOR
+      CALL simple_select();
     FETCH C;
   END;
 END;
@@ -2456,7 +2485,8 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR CALL simple_select();
+    DECLARE C CURSOR FOR
+      CALL simple_select();
     FETCH C;
   END;
 END;
@@ -2500,7 +2530,8 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR CALL simple_select();
+    DECLARE C CURSOR FOR
+      CALL simple_select();
     DECLARE box OBJECT<C CURSOR>;
     SET box FROM CURSOR C;
     DECLARE D CURSOR FOR box;
@@ -2573,7 +2604,8 @@ end
 --[[
 CREATE PROC out_union_dml_helper ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS x;
   FETCH C;
   OUT UNION C;
 END;
@@ -2614,7 +2646,8 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR CALL out_union_helper();
+    DECLARE C CURSOR FOR
+      CALL out_union_helper();
     FETCH C;
   END;
 END;
@@ -2961,7 +2994,8 @@ end
 @ATTRIBUTE(cql:identity=(id))
 CREATE PROC out_cursor_identity ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS id, 2 AS data;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS id, 2 AS data;
   FETCH C;
   OUT C;
 END;
@@ -3046,7 +3080,9 @@ end
 CREATE PROC with_deleter ()
 BEGIN
   WITH
-  x (a) AS (SELECT 111)
+    x (a) AS (
+      SELECT 111
+    )
   DELETE FROM foo WHERE id IN (SELECT *
     FROM x);
 END;
@@ -3055,7 +3091,7 @@ END;
 function with_deleter(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS (SELECT 111) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
+    "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3069,18 +3105,20 @@ end
 CREATE PROC with_updater ()
 BEGIN
   WITH
-  x (a) AS (SELECT 111)
+    x (a) AS (
+      SELECT 111
+    )
   UPDATE bar
-  SET name = 'xyzzy'
-    WHERE id IN (SELECT *
-    FROM x);
+    SET name = 'xyzzy'
+      WHERE id IN (SELECT *
+      FROM x);
 END;
 --]]
 
 function with_updater(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS (SELECT 111) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)")
+    "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3223,12 +3261,13 @@ end
 --[[
 CREATE PROC settings_info ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count, SUM(A.switch_account_badge_count) AS switch_account_badge_count
-    FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
-    FROM unread_pending_threads AS P
-  UNION ALL
-  SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
-    FROM switch_account_badges AS S) AS A;
+  DECLARE C CURSOR FOR
+    SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count, SUM(A.switch_account_badge_count) AS switch_account_badge_count
+      FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
+          FROM unread_pending_threads AS P
+        UNION ALL
+        SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
+          FROM switch_account_badges AS S) AS A;
 END;
 --]]
 
@@ -3335,8 +3374,10 @@ end
 CREATE PROC use_with_select ()
 BEGIN
   DECLARE x INTEGER;
-  SET x := ( WITH
-  threads2 (count) AS (SELECT 1 AS foo)
+  SET x := (   WITH
+    threads2 (count) AS (
+      SELECT 1 AS foo
+    )
   SELECT COUNT(*)
     FROM threads2 );
 END;
@@ -3349,7 +3390,7 @@ function use_with_select(_db_)
   local _temp_stmt = nil
 
   _rc_, _temp_stmt = cql_prepare(_db_, 
-    "WITH threads2 (count) AS (SELECT 1) SELECT COUNT(*) FROM threads2")
+    "WITH threads2 (count) AS ( SELECT 1 ) SELECT COUNT(*) FROM threads2")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_step(_temp_stmt)
   if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -3370,8 +3411,9 @@ end
 --[[
 CREATE PROC rowset_object_reader (rowset OBJECT<rowset>)
 BEGIN
-  DECLARE C CURSOR FOR SELECT *
-    FROM ReadFromRowset(rowset);
+  DECLARE C CURSOR FOR
+    SELECT *
+      FROM ReadFromRowset(rowset);
 END;
 --]]
 
@@ -3400,12 +3442,13 @@ end
 --[[
 CREATE PROC upsert_do_something ()
 BEGIN
-  INSERT INTO foo(id) SELECT id
-    FROM bar
-    WHERE 1
+  INSERT INTO foo(id)
+    SELECT id
+      FROM bar
+      WHERE 1
   ON CONFLICT (id) DO UPDATE
-  SET id = 10
-    WHERE id <> 10;
+    SET id = 10
+      WHERE id <> 10;
 END;
 --]]
 
@@ -3426,20 +3469,23 @@ end
 CREATE PROC with_upsert_form ()
 BEGIN
   WITH
-  names (id) AS (VALUES(1), (5), (3), (12))
-  INSERT INTO foo(id) SELECT id
-    FROM names
-    WHERE 1
+    names (id) AS (
+      VALUES(1), (5), (3), (12)
+    )
+  INSERT INTO foo(id)
+    SELECT id
+      FROM names
+      WHERE 1
   ON CONFLICT (id) DO UPDATE
-  SET id = 10
-    WHERE id <> 10;
+    SET id = 10
+      WHERE id <> 10;
 END;
 --]]
 
 function with_upsert_form(_db_)
   local _rc_ = CQL_OK
   _rc_ = cql_exec(_db_,
-    "WITH names (id) AS (VALUES(1), (5), (3), (12)) INSERT INTO foo(id) SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10")
+    "WITH names (id) AS ( VALUES(1), (5), (3), (12) ) INSERT INTO foo(id) SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -3452,7 +3498,8 @@ end
 --[[
 CREATE PROC upsert_do_nothing (id_ INTEGER NOT NULL)
 BEGIN
-  INSERT INTO foo(id) VALUES(id_)
+  INSERT INTO foo(id)
+    VALUES(id_)
   ON CONFLICT DO NOTHING;
 END;
 --]]
@@ -3600,7 +3647,8 @@ end
 --[[
 CREATE PROC out_union_reader ()
 BEGIN
-  DECLARE c CURSOR FOR CALL out_union_two();
+  DECLARE c CURSOR FOR
+    CALL out_union_two();
   LOOP FETCH C
   BEGIN
     CALL printf("%d %s\n", C.x, C.y);
@@ -3641,7 +3689,8 @@ end
 --[[
 CREATE PROC out_union_from_select ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x, '2' AS y;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS x, '2' AS y;
   FETCH C;
   OUT UNION C;
   OUT UNION C;
@@ -3681,7 +3730,8 @@ end
 --[[
 CREATE PROC out_union_dml_reader ()
 BEGIN
-  DECLARE c CURSOR FOR CALL out_union_from_select();
+  DECLARE c CURSOR FOR
+    CALL out_union_from_select();
   LOOP FETCH C
   BEGIN
     CALL printf("%d %s\n", C.x, C.y);
@@ -3754,7 +3804,8 @@ end
 --[[
 CREATE PROC read_out_union_values (a INTEGER NOT NULL, b INTEGER NOT NULL)
 BEGIN
-  DECLARE C CURSOR FOR CALL out_union_values(a, b);
+  DECLARE C CURSOR FOR
+    CALL out_union_values(a, b);
   FETCH C;
 END;
 --]]
@@ -3791,8 +3842,9 @@ end
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC out_union_dml ()
 BEGIN
-  DECLARE x CURSOR FOR SELECT *
-    FROM radioactive;
+  DECLARE x CURSOR FOR
+    SELECT *
+      FROM radioactive;
   FETCH x;
   OUT UNION x;
 END;
@@ -3829,7 +3881,8 @@ end
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC out_union_dml_for_call ()
 BEGIN
-  DECLARE C CURSOR FOR CALL out_union_dml();
+  DECLARE C CURSOR FOR
+    CALL out_union_dml();
   FETCH C;
 END;
 --]]
@@ -4070,7 +4123,8 @@ BEGIN
   WHILE 1
   BEGIN
   END;
-  DECLARE c CURSOR FOR SELECT 1 AS x;
+  DECLARE c CURSOR FOR
+    SELECT 1 AS x;
   LOOP FETCH c
   BEGIN
   END;
@@ -4176,7 +4230,8 @@ end
 --[[
 CREATE PROC pretty_print_with_quote ()
 BEGIN
-  INSERT INTO bar(id, name) VALUES(1, "it's high noon\r\n\f\b\t\v");
+  INSERT INTO bar(id, name)
+    VALUES(1, "it's high noon\r\n\f\b\t\v");
 END;
 --]]
 
@@ -4196,7 +4251,8 @@ end
 --[[
 CREATE PROC hex_quote ()
 BEGIN
-  INSERT INTO bar(id, name) VALUES(1, "\x01\x02\xa1\x1bg");
+  INSERT INTO bar(id, name)
+    VALUES(1, "\x01\x02\xa1\x1bg");
 END;
 --]]
 
@@ -4447,7 +4503,8 @@ end
 --[[
 CREATE PROC early_out_rc_cleared (OUT x INTEGER)
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS x;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS x;
   FETCH C;
   IF C THEN
     RETURN;
@@ -4720,8 +4777,9 @@ end
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC vault_cursor_proc ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT name
-    FROM vault_mixed_sensitive;
+  DECLARE C CURSOR FOR
+    SELECT name
+      FROM vault_mixed_sensitive;
   FETCH c;
 END;
 --]]
@@ -4866,8 +4924,9 @@ end
 --[[
 CREATE PROC try_boxing (OUT result OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR SELECT *
-    FROM bar;
+  DECLARE C CURSOR FOR
+    SELECT *
+      FROM bar;
   SET result FROM CURSOR C;
 END;
 --]]
@@ -6376,7 +6435,8 @@ end
 --[[
 CREATE PROC use_private_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR CALL private_out_union();
+  DECLARE C CURSOR FOR
+    CALL private_out_union();
   LOOP FETCH C
   BEGIN
     CALL printf("%d\n", C.a_field);
@@ -6444,7 +6504,8 @@ end
 --[[
 CREATE PROC use_no_getters_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR CALL no_getters_out_union();
+  DECLARE C CURSOR FOR
+    CALL no_getters_out_union();
   LOOP FETCH C
   BEGIN
     CALL printf("%d\n", C.a_field);
@@ -6512,7 +6573,8 @@ end
 --[[
 CREATE PROC use_suppress_results_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR CALL suppress_results_out_union();
+  DECLARE C CURSOR FOR
+    CALL suppress_results_out_union();
   LOOP FETCH C
   BEGIN
     CALL printf("%d\n", C.a_field);
@@ -6703,8 +6765,9 @@ end
 --[[
 CREATE PROC try_catch_rc ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 'foo' AS extra2
-    FROM bar;
+  DECLARE C CURSOR FOR
+    SELECT 'foo' AS extra2
+      FROM bar;
   BEGIN TRY
     FETCH C;
   END TRY;
@@ -7180,8 +7243,9 @@ local false_test = false
 --[[
 CREATE PROC BigFormat ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT *
-    FROM big_data;
+  DECLARE C CURSOR FOR
+    SELECT *
+      FROM big_data;
   LOOP FETCH C
   BEGIN
     LET s := cql_cursor_format(C);
@@ -7522,7 +7586,7 @@ end
 CREATE PROC foo ()
 BEGIN
   WITH
-  shared_frag (shared_something) AS (CALL shared_frag())
+    shared_frag (shared_something) AS (CALL shared_frag())
   SELECT *
     FROM shared_frag;
 END;
@@ -7567,8 +7631,10 @@ end
 CREATE PROC shared_conditional_user (x INTEGER NOT NULL)
 BEGIN
   WITH
-  some_cte (id) AS (SELECT x),
-  shared_conditional (x) AS (CALL shared_conditional(1))
+    some_cte (id) AS (
+      SELECT x
+    ),
+    shared_conditional (x) AS (CALL shared_conditional(1))
   SELECT bar.*
     FROM bar
     INNER JOIN some_cte ON x = 5;
@@ -7609,7 +7675,7 @@ function shared_conditional_user(_db_, x)
   _rc_, _result_stmt = cql_prepare_var(_db_, 
     5, _preds_1,
     {
-    "WITH some_cte (id) AS (SELECT ?), shared_conditional (x) AS (",
+    "WITH some_cte (id) AS ( SELECT ? ), shared_conditional (x) AS (",
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
@@ -7646,7 +7712,7 @@ end
 CREATE PROC nested_shared_stuff ()
 BEGIN
   WITH
-  nested_shared_proc (x) AS (CALL nested_shared_proc(1))
+    nested_shared_proc (x) AS (CALL nested_shared_proc(1))
   SELECT *
     FROM nested_shared_proc;
 END;
@@ -7693,7 +7759,7 @@ function nested_shared_stuff(_db_)
     8, _preds_1,
     {
     "WITH nested_shared_proc (x) AS (",
-    "WITH shared_conditional (x) AS (",
+    "  WITH shared_conditional (x) AS (",
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
@@ -7780,7 +7846,7 @@ function use_nested_select_shared_frag_form(_db_)
     {
     "SELECT x FROM (",
     "(",
-    "WITH shared_conditional (x) AS (",
+    "  WITH shared_conditional (x) AS (",
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
@@ -7867,7 +7933,8 @@ end
 --[[
 CREATE PROC blob_serialization_test ()
 BEGIN
-  DECLARE C CURSOR FOR SELECT 1 AS id, 'foo' AS name;
+  DECLARE C CURSOR FOR
+    SELECT 1 AS id, 'foo' AS name;
   FETCH C;
   DECLARE B BLOB<structured_storage>;
   SET B FROM CURSOR C;
@@ -8024,7 +8091,8 @@ DECLARE PROC some_redeclared_out_proc () OUT (x INTEGER) USING TRANSACTION;
 --[[
 CREATE PROC some_redeclared_out_proc ()
 BEGIN
-  DECLARE c CURSOR FOR SELECT nullable(1) AS x;
+  DECLARE c CURSOR FOR
+    SELECT nullable(1) AS x;
   FETCH c;
   OUT c;
 END;
@@ -8082,7 +8150,8 @@ DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INTEGER) USING TRANS
 --[[
 CREATE PROC some_redeclared_out_union_proc ()
 BEGIN
-  DECLARE c CURSOR FOR SELECT nullable(1) AS x;
+  DECLARE c CURSOR FOR
+    SELECT nullable(1) AS x;
   FETCH c;
   OUT UNION c;
 END;
@@ -8198,7 +8267,8 @@ end
 --[[
 CREATE PROC mutated_in_arg3 (x TEXT)
 BEGIN
-  DECLARE C CURSOR FOR SELECT "x" AS x;
+  DECLARE C CURSOR FOR
+    SELECT "x" AS x;
   FETCH C INTO x;
 END;
 --]]
@@ -8377,7 +8447,7 @@ CREATE PROC explain_equery_plan_backed (OUT x BOOL NOT NULL)
 BEGIN
   EXPLAIN QUERY PLAN
   WITH
-  backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
+    backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
   SELECT *
     FROM backed;
 END;
@@ -8416,7 +8486,7 @@ BEGIN
     SET i := i + 1;
   END;
   LET x := ( SELECT EXISTS (SELECT 1
-    FROM foo) );
+      FROM foo) );
 END;
 --]]
 
@@ -8469,14 +8539,15 @@ BEGIN
   LET i := 0;
   WHILE i < 10
   BEGIN
-    DECLARE C CURSOR FOR SELECT *
-      FROM foo
-      WHERE id = i;
+    DECLARE C CURSOR FOR
+      SELECT *
+        FROM foo
+        WHERE id = i;
     FETCH C;
     SET i := i + 1;
   END;
   LET x := ( SELECT EXISTS (SELECT 1
-    FROM foo) );
+      FROM foo) );
 END;
 --]]
 
@@ -9170,9 +9241,10 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  DECLARE foo_cursor CURSOR FOR SELECT id, i2
-    FROM foo
-    WHERE id = i0_nullable;
+  DECLARE foo_cursor CURSOR FOR
+    SELECT id, i2
+      FROM foo
+      WHERE id = i0_nullable;
   --]]
   _rc_, foo_cursor_stmt = cql_prepare(_db_, 
     "SELECT id, ? FROM foo WHERE id = ?")
@@ -9194,7 +9266,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  DECLARE basic_cursor CURSOR FOR SELECT 1, 2.5;
+  DECLARE basic_cursor CURSOR FOR
+    SELECT 1, 2.5;
   --]]
   _rc_, basic_cursor_stmt = cql_prepare(_db_, 
     "SELECT 1, 2.5")
@@ -9237,7 +9310,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  DECLARE exchange_cursor CURSOR FOR SELECT arg2, arg1;
+  DECLARE exchange_cursor CURSOR FOR
+    SELECT arg2, arg1;
   --]]
   _rc_, exchange_cursor_stmt = cql_prepare(_db_, 
     "SELECT ?, ?")
@@ -9763,7 +9837,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5);
+  INSERT OR REPLACE INTO bar(id, type)
+    VALUES(1, 5);
   --]]
   _rc_ = cql_exec(_db_,
     "INSERT OR REPLACE INTO bar(id, type) VALUES(1, 5)")
@@ -9782,7 +9857,7 @@ function cql_startup(_db_)
 
   --[[
   SET b2 := ( SELECT EXISTS (SELECT *
-    FROM bar) );
+      FROM bar) );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT EXISTS (SELECT * FROM bar)")
@@ -9796,8 +9871,9 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  DECLARE expanded_select CURSOR FOR SELECT *
-    FROM bar;
+  DECLARE expanded_select CURSOR FOR
+    SELECT *
+      FROM bar;
   --]]
   _rc_, expanded_select_stmt = cql_prepare(_db_, 
     "SELECT id, name, rate, type, size FROM bar")
@@ -9806,8 +9882,9 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  DECLARE table_expanded_select CURSOR FOR SELECT bar.*
-    FROM bar;
+  DECLARE table_expanded_select CURSOR FOR
+    SELECT bar.*
+      FROM bar;
   --]]
   _rc_, table_expanded_select_stmt = cql_prepare(_db_, 
     "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size FROM bar")
@@ -10052,7 +10129,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, blob_var, blob_var_notnull);
+  INSERT INTO blob_table(blob_id, b_nullable, b_notnull)
+    VALUES(0, blob_var, blob_var_notnull);
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "INSERT INTO blob_table(blob_id, b_nullable, b_notnull) VALUES(0, ?, ?)")
@@ -10107,12 +10185,15 @@ function cql_startup(_db_)
 
   --[[
   WITH
-  x (a) AS (SELECT 111)
-  INSERT INTO foo(id) VALUES(ifnull(( SELECT a
-    FROM x ), 0));
+    x (a) AS (
+      SELECT 111
+    )
+  INSERT INTO foo(id)
+    VALUES(ifnull(( SELECT a
+      FROM x ), 0));
   --]]
   _rc_ = cql_exec(_db_,
-    "WITH x (a) AS (SELECT 111) INSERT INTO foo(id) VALUES(ifnull(( SELECT a FROM x ), 0))")
+    "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) VALUES(ifnull(( SELECT a FROM x ), 0))")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -10132,7 +10213,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  DECLARE global_cursor CURSOR FOR SELECT 1 AS a, 2 AS b;
+  DECLARE global_cursor CURSOR FOR
+    SELECT 1 AS a, 2 AS b;
   --]]
   _rc_, global_cursor_stmt = cql_prepare(_db_, 
     "SELECT 1, 2")
@@ -10253,13 +10335,15 @@ function cql_startup(_db_)
 
   --[[
   WITH
-  some_cte (id) AS (SELECT 1 AS id)
+    some_cte (id) AS (
+      SELECT 1 AS id
+    )
   INSERT INTO bar(id) VALUES(ifnull(( SELECT id
     FROM some_cte ), 0)) @DUMMY_SEED(1337);
   --]]
   _seed_ = 1337
   _rc_ = cql_exec(_db_,
-    "WITH some_cte (id) AS (SELECT 1 AS id) INSERT INTO bar(id) VALUES(ifnull(( SELECT id FROM some_cte ), 0))")
+    "WITH some_cte (id) AS ( SELECT 1 AS id ) INSERT INTO bar(id) VALUES(ifnull(( SELECT id FROM some_cte ), 0))")
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 
   -- The statement ending at line XXXX
@@ -10267,7 +10351,7 @@ function cql_startup(_db_)
   --[[
   INSERT INTO bar(id) VALUES(1) @DUMMY_SEED(1338)
   ON CONFLICT (id) DO UPDATE
-  SET id = 10;
+    SET id = 10;
   --]]
   _seed_ = 1338
   _rc_ = cql_exec(_db_,
@@ -10560,7 +10644,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  INSERT INTO virtual_with_hidden(vy) VALUES(1);
+  INSERT INTO virtual_with_hidden(vy)
+    VALUES(1);
   --]]
   _rc_ = cql_exec(_db_,
     "INSERT INTO virtual_with_hidden(vy) VALUES(1)")
@@ -10569,7 +10654,8 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2);
+  INSERT INTO virtual_with_hidden(vx, vy)
+    VALUES(1, 2);
   --]]
   _rc_ = cql_exec(_db_,
     "INSERT INTO virtual_with_hidden(vx, vy) VALUES(1, 2)")

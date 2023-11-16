@@ -15726,7 +15726,7 @@ The statement ending at line XXXX
 
 SELECT 1 AS x, 2 AS x, 3 AS y
 UNION ALL
-SELECT 
+SELECT
     0 AS u,
     1 AS x,
     2 AS x,
@@ -21350,7 +21350,7 @@ The statement ending at line XXXX
 
 WITH
   some_cte (x, y, z, u) AS (
-    SELECT 
+    SELECT
         1 AS x,
         2 AS y,
         3.0 AS z,
@@ -22999,7 +22999,7 @@ SELECT 0 AS _first, T.*, 3 AS _last
 
 The statement ending at line XXXX
 
-SELECT 
+SELECT
     0 AS _first,
     T.*,
     S.*,
@@ -33643,7 +33643,7 @@ The statement ending at line XXXX
 
 CREATE PROC get_sensitive ()
 BEGIN
-  SELECT 
+  SELECT
       1 AS safe,
       info + 1 AS sensitive_1,
       name AS sensitive_2,
@@ -45013,7 +45013,7 @@ SELECT id,
 
 The statement ending at line XXXX
 
-SELECT 
+SELECT
   lag(cost, 1, id) OVER ()
   FROM with_kind;
 
@@ -45481,7 +45481,7 @@ SELECT id,
 
 The statement ending at line XXXX
 
-SELECT 
+SELECT
   first_value(id) OVER () AS first
   FROM with_kind;
 
@@ -45515,7 +45515,7 @@ SELECT
 
 The statement ending at line XXXX
 
-SELECT 
+SELECT
   last_value(id) OVER () AS last
   FROM with_kind;
 
@@ -45549,7 +45549,7 @@ SELECT
 
 The statement ending at line XXXX
 
-SELECT 
+SELECT
   nth_value(id, 5) OVER () AS nth
   FROM with_kind;
 
@@ -49782,7 +49782,7 @@ The statement ending at line XXXX
 
 CREATE PROC exotic_literals ()
 BEGIN
-  SELECT 
+  SELECT
       2147483647 AS a,
       2147483648L AS b,
       3.4e11 AS c,
@@ -52255,7 +52255,7 @@ The statement ending at line XXXX
 CREATE PROC print_call_cql_cursor_format ()
 BEGIN
   DECLARE c1 CURSOR FOR
-    SELECT 
+    SELECT
         TRUE AS a,
         1 AS b,
         99L AS c,
@@ -65064,7 +65064,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_correctly_handle_nested_selects ()
 BEGIN
-  SELECT 
+  SELECT
       ( SELECT xn ),
       ( SELECT yn
         FROM tnull ),
@@ -75229,7 +75229,7 @@ test/sem_test.sql:XXXX:1: error: in select_expr_list_con : CQL0053: select colum
 
 The statement ending at line XXXX
 
-SELECT 
+SELECT
     1 AS y,
     T.id,
     T.t,
@@ -89805,4 +89805,13 @@ END;
         | {select_orderby}
           | {select_limit}
             | {select_offset}
+
+The statement ending at line XXXX
+
+DECLARE foobar2 REAL;
+
+  {declare_vars_type}: real
+  | {name_list}: foobar2: real variable
+  | | {name foobar2}: foobar2: real variable
+  | {type_real}: real
 

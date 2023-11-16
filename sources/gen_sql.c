@@ -39,9 +39,6 @@ typedef struct gen_expr_dispatch {
   int32_t pri_new;
 } gen_expr_dispatch;
 
-// for INDENT macros
-#define output gen_output
-
 static symtab *gen_stmts;
 static symtab *gen_exprs;
 static charbuf *gen_output;
@@ -84,13 +81,13 @@ static int32_t gen_indent = 0;
 static int32_t pending_indent = 0;
 
 #define GEN_BEGIN_INDENT(name, level) \
-  int32_t name##_level = level; \
-  gen_indent += name##_level; \
+  int32_t name##_level = gen_indent; \
+  gen_indent += level; \
   pending_indent = gen_indent;
 
 #define GEN_END_INDENT(name) \
-  gen_indent -= name##_level; \
-  if (pending_indent) pending_indent = gen_indent;
+  gen_indent = name##_level; \
+  if (pending_indent > gen_indent) pending_indent = gen_indent;
 
 cql_noexport void gen_printf(const char *format, ...) {
  CHARBUF_OPEN(tmp);
@@ -112,15 +109,21 @@ cql_noexport void gen_printf(const char *format, ...) {
  CHARBUF_CLOSE(tmp);
 }
 
+static void gen_literal(CSTR literal) {
+  for (int32_t i = 0; i < pending_indent; i++) bputc(gen_output, ' ');
+  pending_indent = 0;
+  bprintf(gen_output, "%s", literal);
+}
+
 cql_noexport void gen_to_stdout(ast_node *ast, gen_func fn) {
   gen_callbacks = NULL;
-  charbuf *gen_saved = output;
+  charbuf *gen_saved = gen_output;
   CHARBUF_OPEN(sql_out);
   gen_set_output_buffer(&sql_out);
   (*fn)(ast);
   cql_output("%s", sql_out.ptr);
   CHARBUF_CLOSE(sql_out);
-  output = gen_saved;
+  gen_output = gen_saved;
 }
 
 static bool_t suppress_attributes() {
@@ -172,7 +175,7 @@ cql_noexport void gen_statement_and_attributes_with_callbacks(ast_node *ast, gen
 }
 
 cql_noexport void gen_set_output_buffer(struct charbuf *buffer) {
-  output = buffer;
+  gen_output = buffer;
 }
 
 static void gen_name_ex(CSTR name, bool_t is_qid) {
@@ -897,10 +900,10 @@ static void gen_uminus(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   // we don't ever want -- in the output because that's a comment
   CHARBUF_OPEN(tmp);
-  charbuf *saved = output;
-  output = &tmp;
+  charbuf *saved = gen_output;
+  gen_output = &tmp;
   gen_expr(ast->left, pri_new);
-  output = saved;
+  gen_output = saved;
 
   if (tmp.ptr[0] == '-') {
     gen_printf(" ");
@@ -1177,7 +1180,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
       // Note: str is the lexeme, so it is either still quoted and escaped
       // or if it was a c string literal it was already normalized to SQL form.
       // In both cases we can just print.
-      gen_printf("%s", str);
+      gen_literal(str);
     }
     else {
       // If was originally a c string literal re-encode it for echo output
@@ -1189,7 +1192,7 @@ static void gen_expr_str(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
       cg_decode_string_literal(str, &decoded);
       cg_encode_c_string_literal(decoded.ptr, &encoded);
 
-      gen_printf("%s", encoded.ptr);
+      gen_literal(encoded.ptr);
       CHARBUF_CLOSE(encoded);
       CHARBUF_CLOSE(decoded);
     }
@@ -1229,7 +1232,7 @@ static void gen_expr_dot(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   bool_t handled = false;
 
   if (has_table_rename_callback) {
-    handled = gen_callbacks->table_rename_callback(left, gen_callbacks->table_rename_context, output);
+    handled = gen_callbacks->table_rename_callback(left, gen_callbacks->table_rename_context, gen_output);
   }
 
   if (handled) {
@@ -1791,7 +1794,7 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   bool_t has_func_callback = gen_callbacks && gen_callbacks->func_callback;
 
   if (has_func_callback) {
-    bool_t handled = gen_callbacks->func_callback(ast, gen_callbacks->func_context, output);
+    bool_t handled = gen_callbacks->func_callback(ast, gen_callbacks->func_context, gen_output);
 
     if (handled) {
       return;
@@ -2338,7 +2341,7 @@ static void gen_table_or_subquery(ast_node *ast) {
     bool_t handled = false;
 
     if (has_table_rename_callback) {
-      handled = gen_callbacks->table_rename_callback(factor, gen_callbacks->table_rename_context, output);
+      handled = gen_callbacks->table_rename_callback(factor, gen_callbacks->table_rename_context, gen_output);
     }
 
     if (!handled) {
@@ -2362,7 +2365,7 @@ static void gen_table_or_subquery(ast_node *ast) {
     bool_t has_table_function_callback = gen_callbacks && gen_callbacks->table_function_callback;
     bool_t handled_table_function = false;
     if (has_table_function_callback) {
-      handled_table_function = gen_callbacks->table_function_callback(factor, gen_callbacks->table_function_context, output);
+      handled_table_function = gen_callbacks->table_function_callback(factor, gen_callbacks->table_function_context, gen_output);
     }
 
     if (!handled_table_function) {
@@ -2793,7 +2796,8 @@ cql_noexport void gen_select_core(ast_node *ast) {
       // SELECT [select_expr_list_con]
       // We're making sure that we're in the SELECT clause of the select stmt
       Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
-      gen_printf(" ");
+      // rico gen_printf(" ");
+      pending_indent = 1; // this gives us a single space before the select list if needed
       EXTRACT_NOTNULL(select_expr_list_con, ast->right);
       gen_select_expr_list_con(select_expr_list_con);
     }
@@ -2844,7 +2848,7 @@ static void gen_shared_cte(ast_node *ast) {
   bool_t handled = false;
 
   if (has_cte_procs_callback) {
-    handled = gen_callbacks->cte_proc_callback(ast, gen_callbacks->cte_proc_context, output);
+    handled = gen_callbacks->cte_proc_callback(ast, gen_callbacks->cte_proc_context, gen_output);
   }
 
   if (!handled) {
@@ -2912,7 +2916,7 @@ static void gen_cte_tables(ast_node *ast, CSTR prefix) {
       bool_t has_cte_suppress_callback = gen_callbacks && gen_callbacks->cte_suppress_callback;
 
       if (has_cte_suppress_callback) {
-        handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, output);
+        handled = gen_callbacks->cte_suppress_callback(cte_table, gen_callbacks->cte_suppress_context, gen_output);
       }
     }
 
@@ -2959,7 +2963,6 @@ static void gen_with_prefix(ast_node *ast) {
     Contract(is_ast_with_recursive(ast));
     prefix = "WITH RECURSIVE\n";
   }
-  charbuf *output_saved = output;
   GEN_BEGIN_INDENT(cte_indent, 2);
     pending_indent -= 2;
     gen_cte_tables(cte_tables, prefix);
@@ -3063,7 +3066,7 @@ static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist) {
   bool_t handled = false;
 
   if (if_not_exists_callback) {
-    handled = gen_callbacks->if_not_exists_callback(ast, gen_callbacks->if_not_exists_context, output);
+    handled = gen_callbacks->if_not_exists_callback(ast, gen_callbacks->if_not_exists_context, gen_output);
   }
 
   if (if_not_exist && !handled) {

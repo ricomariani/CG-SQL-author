@@ -684,10 +684,10 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT \\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table   AS two";
+  SET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table   AS two";
   INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
-  SELECT 
+  SELECT
       one.id,
       one.t,
       one.b,

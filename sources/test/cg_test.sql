@@ -2856,7 +2856,8 @@ end;
 -- it was a line break in non-quoted SQL which can be replaced with a space
 -- note the newline is escaped and present
 -- + "INSERT INTO bar(id, name) "
--- +   "VALUES(1, 'it''s high noon\r\n  \f\b\t\v')");
+-- note that the newline has no extra spaces after it even though we are indenting
+-- +   "VALUES(1, 'it''s high noon\r\n\f\b\t\v')");
 create proc pretty_print_with_quote()
 begin
   insert into bar(id, name) values(1, "it's high noon\r\n\f\b\t\v");

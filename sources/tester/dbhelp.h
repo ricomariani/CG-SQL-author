@@ -52,3 +52,6 @@ cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
   row1, \
   (cql_result_set_ref)(rs2), \
   row2)
+
+// Generated from dbhelp.sql:208
+extern CQL_WARN_UNUSED cql_code dbhelp_main(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args);

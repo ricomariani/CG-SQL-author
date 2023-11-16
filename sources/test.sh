@@ -80,6 +80,14 @@ sem_check() {
   fi
 }
 
+cql_verify() {
+  if ! "${OUT_DIR}/cql-verify" "$1" "$2"
+  then
+    echo failed verification: cql-verify "$1" "$2"
+    failed
+  fi
+}
+
 errors_documented() {
   echo '--------------------------------- VERIFYING ALL ERRORS DOCUMENTED'
   grep '"CQL[0-9][0-9][0-9][0-9]:' sem.c rewrite.c printf.c | sed -e 's/[.]c://' -e 's/:.*//' -e "s/.*CQL/CQL/" | sort -u >"${OUT_DIR}/errs_used.txt"
@@ -252,11 +260,7 @@ macro_test() {
   fi
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/macro_test.sql" "${OUT_DIR}/macro_test.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/macro_test.sql" "${OUT_DIR}/macro_test.out"
 
   echo "  computing diffs (empty if none)"
   on_diff_exit macro_test.out
@@ -295,11 +299,7 @@ semantic_test() {
   fi
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test.sql" "${OUT_DIR}/sem_test.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/sem_test.sql" "${OUT_DIR}/sem_test.out"
 
   echo running dev semantic analysis test
   if ! sem_check --sem --ast --in "${TEST_DIR}/sem_test_dev.sql" >"${OUT_DIR}/sem_test_dev.out" 2>"${OUT_DIR}/sem_test_dev.err"
@@ -310,11 +310,7 @@ semantic_test() {
   fi
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_dev.sql" "${OUT_DIR}/sem_test_dev.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/sem_test_dev.sql" "${OUT_DIR}/sem_test_dev.out"
 
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test.out
@@ -334,11 +330,7 @@ code_gen_c_test() {
   fi
 
   echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c.c"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c.c"
 
   echo testing for successful compilation of generated C
   rm -f out/cg_test_c.o
@@ -366,11 +358,7 @@ code_gen_c_test() {
   fi
 
   echo validating codegen for globals
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_c_globals.sql" "${OUT_DIR}/cg_test_c_globals.h"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_c_globals.sql" "${OUT_DIR}/cg_test_c_globals.h"
 
   echo running codegen test with type getters enabled
   if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c_with_type_getters.h" "${OUT_DIR}/cg_test_c_with_type_getters.c" --in "${TEST_DIR}/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_type_getters  2>"${OUT_DIR}/cg_test_c.err"
@@ -381,11 +369,7 @@ code_gen_c_test() {
   fi
 
   echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_c_type_getters.sql" "${OUT_DIR}/cg_test_c_with_type_getters.h"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_c_type_getters.sql" "${OUT_DIR}/cg_test_c_with_type_getters.h"
 
   echo testing for successful compilation of generated C with type getters
   rm -f out/cg_test_c_with_type_getters.o
@@ -404,11 +388,7 @@ code_gen_c_test() {
   fi
 
   echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c_with_namespace.c"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c_with_namespace.c"
 
   echo running codegen test with c_include_path specified
   if ! ${CQL} --dev --test --cg "${OUT_DIR}/cg_test_c_with_header.h" "${OUT_DIR}/cg_test_c_with_header.c" --in "${TEST_DIR}/cg_test.sql" --global_proc cql_startup --c_include_path "somewhere/something.h" 2>"${OUT_DIR}/cg_test_c.err"
@@ -419,11 +399,7 @@ code_gen_c_test() {
   fi
 
   echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c_with_header.c"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c_with_header.c"
 
   echo "  computing diffs (empty if none)"
   on_diff_exit cg_test_c.c
@@ -650,11 +626,8 @@ schema_migration_test() {
   fi
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_migrate.sql" "${OUT_DIR}/sem_test_migrate.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/sem_test_migrate.sql" "${OUT_DIR}/sem_test_migrate.out"
+
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test_migrate.out
   on_diff_exit sem_test_migrate.err
@@ -668,11 +641,7 @@ schema_migration_test() {
      failed
   fi;
 
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/schema_version_error.sql" "${OUT_DIR}/schema_version_error.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/schema_version_error.sql" "${OUT_DIR}/schema_version_error.out"
 
   echo '---------------------------------'
   echo running semantic analysis for previous schema error checks test
@@ -684,11 +653,7 @@ schema_migration_test() {
   fi;
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test_prev.sql" "${OUT_DIR}/sem_test_prev.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_version "${TEST_DIR}/sem_test_prev.sql" "${OUT_DIR}/sem_test_prev.out"
 
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test_prev.out
@@ -705,11 +670,7 @@ schema_migration_test() {
   fi
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_schema_upgrade.sql" "${OUT_DIR}/cg_test_schema_upgrade.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_schema_upgrade.sql" "${OUT_DIR}/cg_test_schema_upgrade.out"
 
   echo "  compiling the upgrade script with CQL"
   if ! ${CQL} --cg "${OUT_DIR}/cg_test_schema_upgrade.h" "${OUT_DIR}/cg_test_schema_upgrade.c" --in "${OUT_DIR}/cg_test_schema_upgrade.out"
@@ -999,11 +960,7 @@ json_schema_test() {
   fi
 
   echo validating json output
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_json_schema.sql" "${OUT_DIR}/cg_test_json_schema.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_json_schema.sql" "${OUT_DIR}/cg_test_json_schema.out"
 
   json_validate "${TEST_DIR}/cg_test_json_schema.sql"
 
@@ -1029,11 +986,7 @@ test_helpers_test() {
   fi
 
   echo validating test helpers output
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_test_helpers.sql" "${OUT_DIR}/cg_test_test_helpers.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_test_helpers.sql" "${OUT_DIR}/cg_test_test_helpers.out"
 
   echo validating test helpers cql codegen
   echo "  computing diffs (empty if none)"
@@ -1150,11 +1103,7 @@ query_plan_test() {
   fi
 
   echo validating test
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_query_plan.sql" "${OUT_DIR}/cg_test_query_plan.out"
-  then
-    echo failed verification
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_query_plan.sql" "${OUT_DIR}/cg_test_query_plan.out"
 
   echo validating query plan codegen
   echo "  computing diffs (empty if none)"
@@ -1350,11 +1299,7 @@ code_gen_lua_test() {
   fi
 
   echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test_lua.sql" "${OUT_DIR}/cg_test_lua.lua"
-  then
-    echo "ERROR: failed verification"
-    failed
-  fi
+  cql_verify "${TEST_DIR}/cg_test_lua.sql" "${OUT_DIR}/cg_test_lua.lua"
 
 #  echo testing for successful compilation of generated lua
 #  if ! lua out/cg_test_lua.lua

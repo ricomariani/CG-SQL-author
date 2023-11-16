@@ -9,6 +9,7 @@
 
 #include "cqlrt.h"
 #include "dbhelp.h"
+#include "cqlhelp.h"
 
 // super cheesy error handling
 #define E(x) \
@@ -121,74 +122,13 @@ error:
 }
 
 int main(int argc, char **argv) {
-  if (argc != 3) {
-    printf("usage cql-verify foo.sql foo.out\n");
-    printf("cql-verify is a test tool.  It processes the input foo.sql\n");
-    printf("looking for patterns to match in the CQL output foo.out\n");
-    exit(0);
-  }
-
-  // store the test and output file names
-  sql_name = argv[1];
-  result_name = argv[2];
-
-  FILE *sql = fopen(sql_name, "r");
-  if (!sql) {
-    fprintf(stderr, "unable to open file '%s'\n", sql_name);
-  }
-
-  FILE *result = fopen(result_name, "r");
-  if (!result) {
-    fprintf(stderr, "unable to open file '%s'\n", result_name);
-  }
-
+  cql_object_ref args = create_arglist(argc, argv);
+  
   E(sqlite3_open(":memory:", &db));
 
-  E(dbhelp_setup(db));
+  E(dbhelp_main(db, args));
 
-  char buffer[40960];  // good enough for test purposes
-  int32_t line = 0;
-
-  int32_t len = strlen(prefix);
-
-  while (fgets(buffer, sizeof(buffer), result)) {
-
-    // lines in the output that start with the prefix demark 
-    // output that corresponds to the given input line
-    const char *p = strstr(buffer, prefix);
-
-    // change the line ever time we find such a marker
-    // these do not necessarily go in ascending order!
-    if (p) {
-      line = atoi(p + len);
-    }
-
-    // add the indicated text to the database indexed by the line it was on
-    cql_string_ref ref = cql_string_ref_new(buffer);
-
-    if (line != 0) {
-      E(dbhelp_add(db, line, ref));
-    }
-
-    cql_string_release(ref);
-  }
-
-  fclose(result);
-
-  // now we're going to read the entire test file and store it in
-  // the database indexed by line.  We're going to do this so that
-  // we can go backwards for forwards in the lines easily using
-  // the database.  We can select ranges of lines, that sort of thing.
-
-  line = 1;
-
-  while (fgets(buffer, sizeof(buffer), sql)) {
-    cql_string_ref ref = cql_string_ref_new(buffer);
-    E(dbhelp_add_source(db, line, ref));
-    cql_string_release(ref);
-    line++;
-  }
-  fclose(sql);
+  cql_object_release(args);
 
   // this procedure gets us all of the lines and the data on those lines in order
   dbhelp_source_result_set_ref result_set;
@@ -198,7 +138,7 @@ int main(int argc, char **argv) {
   cql_int32 count = dbhelp_source_result_count(result_set);
   for (cql_int32 i = 0; i < count; i++) {
     cql_string_ref ref;
-    line = dbhelp_source_get_line(result_set, i);
+    cql_int32 line = dbhelp_source_get_line(result_set, i);
     ref = dbhelp_source_get_data(result_set, i);
 
     // this is a single line of text from the test file

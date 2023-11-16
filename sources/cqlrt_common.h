@@ -417,7 +417,7 @@ CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
 
 // String list helpers
 CQL_EXPORT cql_object_ref _Nonnull create_cql_string_list(void);
-CQL_EXPORT cql_object_ref _Nonnull object_cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+CQL_EXPORT cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
 CQL_EXPORT int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list);
 CQL_EXPORT cql_string_ref _Nonnull get_from_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index);
 CQL_EXPORT cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value);

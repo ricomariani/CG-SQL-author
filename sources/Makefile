@@ -238,17 +238,20 @@ upgrade_test: $(UPGRADE_OBJS) $O/upgrade_test.o $O/upgrade_validate.o $O/downgra
 query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o
 	$(CC) $(CFLAGS) -o $O/query_plan_test $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o $(SQLITE_LINK)
 
-test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o
+test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o 
 	$(CC) $(CFLAGS) -o $O/test_helpers_test $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o $(SQLITE_LINK)
 
 $O/dbhelp.o: tester/dbhelp.c tester/dbhelp.h
 	$(CC) -o $@ -c $(CFLAGS) tester/dbhelp.c
 
 $O/main.o: tester/main.c
-	$(CC) -o $@ -c $(CFLAGS) tester/main.c
+	$(CC) -o $@ -c $(CFLAGS) $<
 
-cql-verify: $O/main.o $O/cqlrt.o $O/dbhelp.o $(SQLITE_OBJ)
-	$(CC) $(CFLAGS) -I. -o $O/cql-verify $O/main.o $O/cqlrt.o $O/dbhelp.o $(SQLITE_LINK)
+$O/cqlhelp.o: tester/cqlhelp.c
+	$(CC) -o $@ -c $(CFLAGS) $<
+
+cql-verify: $O/main.o $O/cqlrt.o $O/dbhelp.o $O/cqlhelp.o $(SQLITE_OBJ)
+	$(CC) $(CFLAGS) -I. -o $O/cql-verify $O/cqlhelp.o $O/main.o $O/cqlrt.o $O/dbhelp.o $(SQLITE_LINK)
 
 $O/linetest.o: linetester/linetest.c linetester/linetest.h
 	$(CC) -o $@ -c $(CFLAGS) linetester/linetest.c

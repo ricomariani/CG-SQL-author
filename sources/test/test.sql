@@ -1711,9 +1711,9 @@ end;
 
 -- valid identifier even though it's a keyword
 let view := 5;
-
--- valid identifier even though it's a keyword
 let add := 7;
+let after := 9;
+let before := 11;
 
 add := add + 1;
 

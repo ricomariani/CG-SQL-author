@@ -1959,6 +1959,10 @@ LET view := 5;
 
 LET add := 7;
 
+LET after := 9;
+
+LET before := 11;
+
 add := add + 1;
 
 add += 5;

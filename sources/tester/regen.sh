@@ -8,9 +8,9 @@
 
 set -euo pipefail
 
-#pushd ..
-# make clean && make
-#popd
+pushd ..
+make clean && make
+popd
 
 ../out/cql --nolines --in dbhelp.sql --cg dbhelp.h dbhelp.c
 

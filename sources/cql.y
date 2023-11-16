@@ -1008,6 +1008,8 @@ name:
   | FIRST { $name = new_ast_str("first"); }
   | LAST { $name = new_ast_str("last"); }
   | ADD { $name = new_ast_str("add"); }
+  | AFTER { $name = new_ast_str("after"); }
+  | BEFORE { $name = new_ast_str("before"); }
   | VIEW { $name = new_ast_str("view"); }
   | INDEX { $name = new_ast_str("index"); }
   | COLUMN { $name = new_ast_str("column"); }

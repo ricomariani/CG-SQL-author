@@ -9,49 +9,56 @@
 #include "cqlrt.h"
 
 
-// Generated from dbhelp.sql:44
-extern CQL_WARN_UNUSED cql_code dbhelp_setup(sqlite3 *_Nonnull _db_);
+// Generated from dbhelp.sql:60
+// static CQL_WARN_UNUSED cql_code setup(sqlite3 *_Nonnull _db_);
 
-// Generated from dbhelp.sql:54
-extern CQL_WARN_UNUSED cql_code dbhelp_prev_line(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_int32 *_Nonnull prev);
+// Generated from dbhelp.sql:71
+// static CQL_WARN_UNUSED cql_code prev_line(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_int32 *_Nonnull prev);
 
-// Generated from dbhelp.sql:61
-extern CQL_WARN_UNUSED cql_code dbhelp_add(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data);
+// Generated from dbhelp.sql:82
+// static CQL_WARN_UNUSED cql_code dump_output(sqlite3 *_Nonnull _db_, cql_int32 line_);
 
-// Generated from dbhelp.sql:68
-extern CQL_WARN_UNUSED cql_code dbhelp_add_source(sqlite3 *_Nonnull _db_, cql_int32 line, cql_string_ref _Nonnull data);
-
-// Generated from dbhelp.sql:78
-extern CQL_WARN_UNUSED cql_code dbhelp_dump_output(sqlite3 *_Nonnull _db_, cql_int32 line_);
-
-// Generated from dbhelp.sql:105
-extern CQL_WARN_UNUSED cql_code dbhelp_find(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found);
-
-// Generated from dbhelp.sql:115
-extern CQL_WARN_UNUSED cql_code dbhelp_dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2);
+// Generated from dbhelp.sql:110
+// static CQL_WARN_UNUSED cql_code find(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found);
 
 // Generated from dbhelp.sql:121
-#define CRC_dbhelp_source -2582919431962037637L
+// static CQL_WARN_UNUSED cql_code dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2);
 
-extern cql_string_ref _Nonnull dbhelp_source_stored_procedure_name;
+// Generated from dbhelp.sql:140
+// static CQL_WARN_UNUSED cql_code print_error_message(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull buffer, cql_int32 line, cql_int32 expected);
 
-#define dbhelp_source_data_types_count 2
+// Generated from dbhelp.sql:155
+// static void match_multiline(cql_string_ref _Nonnull buffer, cql_bool *_Nonnull result);
 
-#ifndef result_set_type_decl_dbhelp_source_result_set
-#define result_set_type_decl_dbhelp_source_result_set 1
-cql_result_set_type_decl(dbhelp_source_result_set, dbhelp_source_result_set_ref);
-#endif
-extern cql_int32 dbhelp_source_get_line(dbhelp_source_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_string_ref _Nonnull dbhelp_source_get_data(dbhelp_source_result_set_ref _Nonnull result_set, cql_int32 row);
-extern cql_int32 dbhelp_source_result_count(dbhelp_source_result_set_ref _Nonnull result_set);
-extern CQL_WARN_UNUSED cql_code dbhelp_source_fetch_results(sqlite3 *_Nonnull _db_, dbhelp_source_result_set_ref _Nullable *_Nonnull result_set);
-#define dbhelp_source_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
-#define dbhelp_source_row_equal(rs1, row1, rs2, row2) \
-cql_result_set_get_meta((cql_result_set_ref)(rs1))->rowsEqual( \
-  (cql_result_set_ref)(rs1), \
-  row1, \
-  (cql_result_set_ref)(rs2), \
-  row2)
+// Generated from dbhelp.sql:157
+extern cql_int32 attempts;
 
-// Generated from dbhelp.sql:208
+// Generated from dbhelp.sql:158
+extern cql_int32 errors;
+
+// Generated from dbhelp.sql:159
+extern cql_int32 tests;
+
+// Generated from dbhelp.sql:226
+extern CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull buffer, cql_int32 line);
+
+// Generated from dbhelp.sql:238
+// static CQL_WARN_UNUSED cql_code do_match(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull buffer, cql_int32 line);
+
+// Generated from dbhelp.sql:253
+// static CQL_WARN_UNUSED cql_code process(sqlite3 *_Nonnull _db_);
+
+// Generated from dbhelp.sql:291
+// static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull result_name);
+
+// Generated from dbhelp.sql:317
+// static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull sql_name);
+
+// Generated from dbhelp.sql:324
+// static CQL_WARN_UNUSED cql_code load_data(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull sql_name, cql_string_ref _Nonnull result_name);
+
+// Generated from dbhelp.sql:346
+// static CQL_WARN_UNUSED cql_code parse_args(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args, cql_string_ref _Nullable *_Nonnull sql_name, cql_string_ref _Nullable *_Nonnull result_name);
+
+// Generated from dbhelp.sql:360
 extern CQL_WARN_UNUSED cql_code dbhelp_main(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args);

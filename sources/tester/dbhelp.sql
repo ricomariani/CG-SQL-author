@@ -25,8 +25,19 @@
 
 declare proc printf no check;
 
+declare function cql_fopen(name text!, mode text!) create object<file>;
+declare function readline_object_file(f object<file>!) create text;
+declare function atoi_at_text(str text!, `offset` int!) int!;
+declare function len_text(self text!) int!;
+declare function octet_text(self text!, `offset` int!) int!;
+declare function after_text(self text, `offset` int!) create text;
+declare function starts_with_text(haystack text!, needle text!) bool!;
+declare function index_of_text(haystack text!, needle text!) int!;
+declare function contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
+
 -- setup the table and the index
-create procedure dbhelp_setup()
+[[private]]
+proc setup()
 begin
   create table test_output(
      line integer not null,
@@ -41,9 +52,15 @@ begin
   );
 
   create index __idx__source_lines on source_input (line);
+
+  create table args(
+    name text!,
+    value text!    
+  );
 end;
 
-create procedure dbhelp_prev_line(line_ integer not null, out prev integer not null)
+[[private]]
+proc prev_line(line_ integer not null, out prev integer not null)
 begin
   begin try
      set prev := (select ifnull(max(line),-1) from test_output where line < line_);
@@ -53,33 +70,21 @@ begin
   end catch;
 end;
 
--- add a row to the output table (test_output)
--- this comes from the test output/results file
-create procedure dbhelp_add(line integer not null, data text not null)
-begin
-  insert into test_output values (line, data);
-end;
-
--- add a row to the input table (source_input)
--- these comes from the test/input .sql file
-create procedure dbhelp_add_source(line integer not null, data text not null)
-begin
-  insert into source_input values (line, data);
-end;
-
 -- dump all the output lines that were associated with the given input line
-create procedure dbhelp_dump_output(line_ integer not null)
+[[private]]
+proc dump_output(line_ integer not null)
 begin
   declare C cursor for select * from test_output where line = line_;
   loop fetch C
   begin
-    call printf('%s', C.data);
+    call printf("%s\n", C.data);
   end;
 end;
 
 -- find the statement that came after line_
 -- search the results of that statement for the indicated pattern
-create proc dbhelp_find(line_ integer not null, pattern text not null, out search_line integer not null, out found integer not null)
+[[private]]
+proc find(line_ integer not null, pattern text not null, out search_line integer not null, out found integer not null)
 begin
   /* the pattern match line is before the statement that generates the output like so:
 
@@ -101,58 +106,159 @@ begin
   end catch;
 
   -- once we have it, search for matches on that line and return the number we found
-  set found := (select count(*) from test_output where line = search_line and data like pattern);
+  set found := (select count(*) from test_output where line = search_line and data like ("%" || pattern || "%"));
 end;
 
 -- dump all of the input lines starting from line1 up to but not including line2
-create procedure dbhelp_dump_source(line1 integer not null, line2 integer not null)
+[[private]]
+proc dump_source(line1 integer not null, line2 integer not null)
 begin
   declare C cursor for select * from source_input where line > line1 and line <= line2;
   loop fetch C
   begin
-    call printf('%s', C.data);
+    call printf("%s\n", C.data);
   end;
 end;
 
--- make a rowset with all of the input lines
-create procedure dbhelp_source()
+-- if anything goes wrong matching, we use this to print the error
+[[private]]
+proc print_error_message(buffer text!, line int!, expected int!)
 begin
-  select * from source_input;
+  printf("\n%s:%d error: expected '%s' %spresent", 
+    (select value from args where name = 'sql_name'),
+    line,
+    buffer, 
+    case when expected != 0 then "" else "not " end);
+
+  -- this indicates we expected a certain exact number of matches
+  if expected != 0 then
+    printf(" %s%d times\n", 
+      case when expected == -1 then "at least " else "" end, 
+      case when expected == -1 then 1 else expected end);
+  end if;
+  printf("\n");
 end;
 
-declare function cql_fopen(name text!, mode text!) create object<file>;
-declare function readline_object_file(f object<file>!) create text;
-declare function atoi_at_text(str text!, `offset` int!) int!;
-declare function len_text(self text!) int!;
-declare function starts_with_text(haystack text!, needle text!) bool!;
-declare function index_of_text(haystack text!, needle text!) int!;
-
-proc dbhelp_main(args cql_string_list!)
+[[private]]
+proc match_multiline(buffer text!, out result bool!)
 begin
-  let argc := args.count;
-  let i := 0;
+  result := false;
 
-  if argc != 3 then
-    printf("usage cql-verify foo.sql foo.out\n");
-    printf("cql-verify is a test tool.  It processes the input foo.sql\n");
-    printf("looking for patterns to match in the CQL output foo.out\n");
-    throw;
+  if buffer::len() < 7 return;
+  if not buffer::starts_with("-- +") return;
+  let digit := buffer::octet(4);
+  let space := buffer::octet(5);
+  if space != 32 return;
+  if digit < 48 or digit > 48+9 return;
+
+  result := true;
+end;
+
+var attempts int!;
+var errors int!;
+var tests int!;
+
+proc match_actual(buffer text!, line int!) 
+begin
+  var search_line int!;
+  var count int!;
+  var expected int!;
+  var pattern text;
+
+  -- the comments encode the matches, early out if that fails
+  if not buffer::starts_with("-- ") return;
+
+  -- the standard test prefix it just counts tests, this doesn't mean anything
+  -- but it's a useful statistic
+  if buffer::starts_with("-- TEST:") then
+    tests := 1;
   end if;
 
-  dbhelp_setup();
-
-  let prefix := "The statement ending at line ";
-
-  -- store the test and output file names
-  let sql_name := ifnull_throw(args[1]);
-  let result_name := ifnull_throw(args[2]);
-
-  let sql := cql_fopen(sql_name, "r");
-  if sql is null then
-    printf("unable to open file '%s'\n", sql_name);
-    throw;
+  if buffer::starts_with("-- - ") then
+    -- found -- - foo
+    -- negation, none expected
+    pattern := buffer::after(5);
+    expected := 0;
+  else if buffer::starts_with("-- + ") then
+    -- -- + foo
+    -- at least one is expected, any number will do
+    pattern := buffer::after(5);
+    expected := -1;
+  else if match_multiline(buffer) then
+    -- -- +7 foo
+    -- an exact match (single digit matches)
+    expected := buffer::octet(4) - 48;
+    pattern := buffer::after(6);
+  else 
+    -- any other line is just a normal comment, ignore it
+    return;
   end if;
 
+  attempts += 1;
+
+  -- search among all the matching lines
+  call find(line, ifnull_throw(pattern), search_line, count);
+  if expected == count OR (expected == -1 AND count > 0) return;
+
+  -- print error corresponding to the pattern
+  errors += 1;
+  print_error_message(buffer, line, expected);
+  printf("found:\n");
+
+  -- dump all the text associated with this line (this could be many lines)
+  -- it's all the output associated with this test case
+  call dump_output(search_line);
+
+  -- find the line that ended the previous test block
+  var prev int!;
+  call prev_line(search_line, prev);
+
+  -- dump everything from there to here, that's the test case
+  printf("\nThe corresponding test case is:\n");
+  call dump_source(prev, search_line);
+
+  -- repeat the error so it's at the end also
+  print_error_message(buffer, line, expected);
+  
+  printf("test file: %s\n", (select value from args where name = 'sql_name'));
+  printf("result file: %s\n", (select value from args where name = 'result_name'));
+  printf("\n");
+end;
+
+[[private]]
+proc do_match(buffer text!, line int!) 
+begin
+  begin try
+     match_actual(buffer, line);
+  end try;
+  begin catch
+    printf("unexpected sqlite error\n");
+    throw;
+  end catch;
+end;
+
+[[private]]
+create proc process()
+begin
+  -- this procedure gets us all of the lines and the data on those lines in order
+  declare C cursor for select * from source_input;
+
+  -- get the count of rows (lines) and start looping
+  loop fetch C
+  begin
+    do_match(C.data, C.line);
+  end;
+
+  printf("Verification results: %d tests matched %d patterns of which %d were errors.\n", tests, attempts, errors);
+end;
+
+-- first we read the test results, we're looking for sentinel lines
+-- that tell us where in the input these results came from
+-- each result will be charged to the input line it is associated
+-- with.  The key_string introduces those lines
+[[private]]
+proc read_test_results(result_name text!)
+begin
   let result := cql_fopen(result_name, "r");
   if result is null then
     printf("unable to open file '%s'\n", result_name);
@@ -161,23 +267,19 @@ begin
 
   let line := 0;
 
-  let len := prefix::len();
-  var data text;
+  let key_string := "The statement ending at line ";
 
-  -- first we read the test results, we're looking for sentinel lines
-  -- that tell us where in the input these results came from
-  -- each result will be charged to the input line it is associated
-  -- with.  The prefix introduces those lines
+  let len := key_string::len();
 
   while true
   begin
-    set data := result:::readline();
+    let data := result:::readline();
     if data is null leave;
 
-    -- lines in the output that start with the prefix demark 
+    -- lines in the output that start with the key_string demark 
     -- output that corresponds to the given input line
 
-    let loc := data::index_of(prefix);
+    let loc := data::index_of(key_string);
     
     if loc >= 0 then
       line := data::atoi_at(loc + len);
@@ -186,24 +288,73 @@ begin
     -- add the indicated text to the database indexed by the line it was on
     insert into test_output values (line, data);
   end;
-  result := null;
+end;
 
-  -- now we're going to read the entire test file and store it in
-  -- the database indexed by line.  We're going to do this so that
-  -- we can go backwards for forwards in the lines easily using
-  -- the database.  We can select ranges of lines, that sort of thing.
+-- now we're going to read the entire test file and store it in
+-- the database indexed by line.  We're going to do this so that
+-- we can go backwards for forwards in the lines easily using
+-- the database.  We can select ranges of lines, that sort of thing.
+[[private]]
+proc read_test_file(sql_name text!)
+begin
+  let sql := cql_fopen(sql_name, "r");
+  if sql is null then
+    printf("unable to open file '%s'\n", sql_name);
+    throw;
+  end if;
 
-  set line := 1;
+  let line := 1;
   
   while true
   begin
-    set data := sql:::readline();
+    let data := sql:::readline();
     if data is null leave;
 
     insert into source_input values (line, data);
     line += 1;
   end;
   sql := null;
-
 end;
 
+[[private]]
+proc load_data(sql_name text!, result_name text!)
+begin
+  call read_test_results(result_name);
+  call read_test_file(sql_name);
+end;
+
+[[private]]
+proc parse_args(args cql_string_list!, out sql_name text!, out result_name text!)
+begin
+  let argc := args.count;
+  set sql_name := "";
+  set result_name := "";
+
+  if argc != 3 then
+    printf("usage cql-verify foo.sql foo.out\n");
+    printf("cql-verify is a test tool.  It processes the input foo.sql\n");
+    printf("looking for patterns to match in the CQL output foo.out\n");
+    return;
+  end if;
+
+  -- store the test and output file names
+  set sql_name := ifnull_throw(args[1]);
+  set result_name := ifnull_throw(args[2]);
+
+  insert into args values("sql_name", sql_name);
+  insert into args values("result_name", result_name);
+end;
+
+-- main entry point
+proc dbhelp_main(args cql_string_list!)
+begin
+  var sql_name text!;
+  var result_name text!;
+  call setup();
+  call parse_args(args, sql_name, result_name);
+
+  if sql_name != "" and result_name != "" then
+    call load_data(sql_name, result_name);
+    call process();
+  end if;
+end;

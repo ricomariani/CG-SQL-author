@@ -35,11 +35,24 @@ cql_string_ref readline_object_file(cql_object_ref file_ref) {
   FILE *f = cql_file_get(file_ref);
   char buf[4096];
   if (fgets(buf, sizeof(buf), f)) {
+     int len = strlen(buf);
+     if (len) buf[len-1] = 0;
      return cql_string_ref_new(buf);
   }
   else {
      return NULL;
   }
+}
+
+cql_string_ref after_text(cql_string_ref text, cql_int32 index) {
+  cql_string_ref result = NULL;
+  if (text) {
+    cql_alloc_cstr(t, text);
+    result = cql_string_ref_new(t + index);
+    cql_free_cstr(t, text);
+  }
+
+  return result;
 }
 
 cql_object_ref create_arglist(int argc, char **argv) {
@@ -75,6 +88,16 @@ cql_int32 len_text(cql_string_ref text) {
   return result;
 }
 
+cql_int32 octet_text(cql_string_ref text, cql_int32 index) {
+  cql_int32 result = 0;
+  if (text) {
+    cql_alloc_cstr(t, text);
+    result = t[index];
+    cql_free_cstr(t, text);
+  }
+  return result;
+}
+
 cql_bool starts_with_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle) {
   cql_alloc_cstr(h, haystack);
   cql_alloc_cstr(n, needle);
@@ -99,6 +122,19 @@ cql_int32 index_of_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnul
   if (loc) {
     result = loc - h;
   }
+
+  cql_free_cstr(n, needle);
+  cql_free_cstr(h, haystack);
+
+  return result;
+}
+
+cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle, cql_int32 index) {
+  cql_alloc_cstr(h, haystack);
+  cql_alloc_cstr(n, needle);
+
+  int len = strlen(n);
+  cql_bool result = strncmp(h + index, n, len) == 0;
 
   cql_free_cstr(n, needle);
   cql_free_cstr(h, haystack);

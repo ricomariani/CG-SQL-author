@@ -4727,7 +4727,7 @@ end;
 -- +  "(",
 --
 -- fragment 2 present if x <= 5
--- + "  WITH shared_conditional (x) AS (",
+-- + " WITH shared_conditional (x) AS (",
 --
 -- fragment 3 present if x == 1
 -- first variable binding v[0] = pred[3]

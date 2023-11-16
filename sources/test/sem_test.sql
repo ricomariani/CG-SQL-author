@@ -8327,7 +8327,7 @@ create view ViewShape as select TRUE a, 2.5 b, 'xyz' c;
 -- + CREATE PROC like_a_view (a_ BOOL NOT NULL, b_ REAL NOT NULL, c_ TEXT NOT NULL)
 -- +   SELECT *
 -- +     FROM ViewShape AS v
--- +     WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
+-- +   WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
 -- +   {create_proc_stmt}: like_a_view: { a: bool notnull, b: real notnull, c: text notnull } dml_proc
 create proc like_a_view(like ViewShape)
 begin

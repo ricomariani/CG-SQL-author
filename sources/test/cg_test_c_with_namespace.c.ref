@@ -1705,10 +1705,10 @@ BEGIN
     WHERE id IN (SELECT id
     FROM bar
     WHERE rate = rate_
-  ORDER BY name
-  LIMIT limit_
-  OFFSET offset_)
-  ORDER BY id;
+    ORDER BY name
+    LIMIT limit_
+    OFFSET offset_)
+    ORDER BY id;
 END;
 */
 
@@ -1771,10 +1771,10 @@ CQL_WARN_UNUSED cql_code hierarchical_query(sqlite3 *_Nonnull _db_, sqlite3_stmt
       "WHERE id IN (SELECT id "
       "FROM bar "
       "WHERE rate = ? "
-    "ORDER BY name "
-    "LIMIT ? "
-    "OFFSET ?) "
-    "ORDER BY id");
+      "ORDER BY name "
+      "LIMIT ? "
+      "OFFSET ?) "
+      "ORDER BY id");
   cql_multibind(&_rc_, _db_, _result_stmt, 3,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, rate_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, limit_,
@@ -1799,10 +1799,10 @@ BEGIN
     WHERE id NOT IN (SELECT id
     FROM bar
     WHERE rate = rate_
-  ORDER BY name
-  LIMIT limit_
-  OFFSET offset_)
-  ORDER BY id;
+    ORDER BY name
+    LIMIT limit_
+    OFFSET offset_)
+    ORDER BY id;
 END;
 */
 
@@ -1865,10 +1865,10 @@ CQL_WARN_UNUSED cql_code hierarchical_unmatched_query(sqlite3 *_Nonnull _db_, sq
       "WHERE id NOT IN (SELECT id "
       "FROM bar "
       "WHERE rate = ? "
-    "ORDER BY name "
-    "LIMIT ? "
-    "OFFSET ?) "
-    "ORDER BY id");
+      "ORDER BY name "
+      "LIMIT ? "
+      "OFFSET ?) "
+      "ORDER BY id");
   cql_multibind(&_rc_, _db_, _result_stmt, 3,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, rate_,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, limit_,
@@ -3123,7 +3123,7 @@ BEGIN
     VALUES(NULL);
   UPDATE bar
     SET name = 'bar'
-      WHERE name = 'baz';
+    WHERE name = 'baz';
   DELETE FROM foo WHERE id = 1;
 END;
 */
@@ -3148,7 +3148,7 @@ CQL_WARN_UNUSED cql_code misc_dml_proc(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_exec(_db_,
     "UPDATE bar "
       "SET name = 'bar' "
-        "WHERE name = 'baz'");
+      "WHERE name = 'baz'");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = cql_exec(_db_,
     "DELETE FROM foo WHERE id = 1");
@@ -3750,7 +3750,7 @@ CREATE PROC thread_theme_info_list (thread_key_ LONG_INT NOT NULL)
 BEGIN
   SELECT *
     FROM (SELECT thread_key
-        FROM threads) AS T;
+          FROM threads) AS T;
 END;
 */
 
@@ -3810,7 +3810,7 @@ CQL_WARN_UNUSED cql_code thread_theme_info_list(sqlite3 *_Nonnull _db_, sqlite3_
   _rc_ = cql_prepare(_db_, _result_stmt,
     "SELECT thread_key "
       "FROM (SELECT thread_key "
-          "FROM threads) AS T");
+            "FROM threads) AS T");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -6279,7 +6279,7 @@ BEGIN
     )
   UPDATE bar
     SET name = 'xyzzy'
-      WHERE id IN (SELECT *
+    WHERE id IN (SELECT *
       FROM x);
 END;
 */
@@ -6300,7 +6300,7 @@ CQL_WARN_UNUSED cql_code with_updater(sqlite3 *_Nonnull _db_) {
       ") "
     "UPDATE bar "
       "SET name = 'xyzzy' "
-        "WHERE id IN (SELECT a "
+      "WHERE id IN (SELECT a "
         "FROM x)");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -6593,10 +6593,10 @@ BEGIN
   DECLARE C CURSOR FOR
     SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count, SUM(A.switch_account_badge_count) AS switch_account_badge_count
       FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
-          FROM unread_pending_threads AS P
-        UNION ALL
-        SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
-          FROM switch_account_badges AS S) AS A;
+            FROM unread_pending_threads AS P
+          UNION ALL
+          SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
+            FROM switch_account_badges AS S) AS A;
 END;
 */
 
@@ -6613,10 +6613,10 @@ CQL_WARN_UNUSED cql_code settings_info(sqlite3 *_Nonnull _db_) {
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT SUM(A.unread_pending_thread_count), SUM(A.switch_account_badge_count) "
       "FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count "
-          "FROM unread_pending_threads AS P "
-        "UNION ALL "
-        "SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count "
-          "FROM switch_account_badges AS S) AS A");
+            "FROM unread_pending_threads AS P "
+          "UNION ALL "
+          "SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count "
+            "FROM switch_account_badges AS S) AS A");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -6724,7 +6724,7 @@ BEGIN
   UNION ALL
   SELECT foo.id, 2 AS x
     FROM foo
-  ORDER BY id;
+    ORDER BY id;
 END;
 */
 
@@ -6794,7 +6794,7 @@ CQL_WARN_UNUSED cql_code top_level_select_alias_used_in_orderby(sqlite3 *_Nonnul
     "UNION ALL "
     "SELECT foo.id, 2 "
       "FROM foo "
-    "ORDER BY id");
+      "ORDER BY id");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -6901,7 +6901,7 @@ BEGIN
       WHERE 1
   ON CONFLICT (id) DO UPDATE
     SET id = 10
-      WHERE id <> 10;
+    WHERE id <> 10;
 END;
 */
 
@@ -6921,7 +6921,7 @@ CQL_WARN_UNUSED cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
         "WHERE 1 "
     "ON CONFLICT (id) DO UPDATE "
       "SET id = 10 "
-        "WHERE id <> 10");
+      "WHERE id <> 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -6946,7 +6946,7 @@ BEGIN
       WHERE 1
   ON CONFLICT (id) DO UPDATE
     SET id = 10
-      WHERE id <> 10;
+    WHERE id <> 10;
 END;
 */
 
@@ -6970,7 +6970,7 @@ CQL_WARN_UNUSED cql_code with_upsert_form(sqlite3 *_Nonnull _db_) {
         "WHERE 1 "
     "ON CONFLICT (id) DO UPDATE "
       "SET id = 10 "
-        "WHERE id <> 10");
+      "WHERE id <> 10");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -7769,7 +7769,7 @@ BEGIN
     WHERE 0
   UNION
   SELECT 2
-  LIMIT 1 );
+    LIMIT 1 );
 END;
 */
 
@@ -7790,7 +7790,7 @@ CQL_WARN_UNUSED cql_code compound_select_expr(sqlite3 *_Nonnull _db_) {
       "WHERE 0 "
     "UNION "
     "SELECT 2 "
-    "LIMIT 1");
+      "LIMIT 1");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = sqlite3_step(_temp_stmt);
   if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
@@ -15575,7 +15575,7 @@ BEGIN
     shared_conditional (x) AS (CALL shared_conditional(1))
   SELECT bar.*
     FROM bar
-    INNER JOIN some_cte ON x = 5;
+      INNER JOIN some_cte ON x = 5;
 END;
 */
 
@@ -15723,7 +15723,7 @@ CQL_WARN_UNUSED cql_code shared_conditional_user(sqlite3 *_Nonnull _db_, sqlite3
   ") "
     "SELECT bar.id, bar.name, bar.rate, bar.type, bar.size "
       "FROM bar "
-      "INNER JOIN some_cte ON ? = 5"
+        "INNER JOIN some_cte ON ? = 5"
   );
   cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, x,
@@ -15867,7 +15867,7 @@ CQL_WARN_UNUSED cql_code nested_shared_stuff(sqlite3 *_Nonnull _db_, sqlite3_stm
     8, _preds_1,
   "WITH "
       "nested_shared_proc (x) AS (",
-  "  WITH "
+  " WITH "
         "shared_conditional (x) AS (",
   "SELECT ?",
   "SELECT ? + ?",
@@ -16006,15 +16006,15 @@ CQL_WARN_UNUSED cql_code use_nested_select_shared_frag_form(sqlite3 *_Nonnull _d
   "SELECT x "
       "FROM (",
   "(",
-  "  WITH "
-        "shared_conditional (x) AS (",
+  " WITH "
+          "shared_conditional (x) AS (",
   "SELECT ?",
   "SELECT ? + ?",
   "SELECT ? + ? + ?",
   ") "
-      "SELECT x "
-        "FROM shared_conditional "
-        "WHERE ? = 5",
+        "SELECT x "
+          "FROM shared_conditional "
+          "WHERE ? = 5",
   "SELECT ? AS x",
   ")",
   ")"
@@ -17560,7 +17560,7 @@ BEGIN
     backed2 (rowid, pk1, pk2, flag, id, name, extra) AS (CALL _backed2())
   UPDATE backing
     SET k = cql_blob_update(k, 5, backed2.pk1, 7, backed2.pk2)
-      WHERE rowid IN (SELECT rowid
+    WHERE rowid IN (SELECT rowid
       FROM backed2
       WHERE pk1 = 3 AND pk2 = 11);
 END;
@@ -17592,7 +17592,7 @@ CQL_WARN_UNUSED cql_code update_backed2(sqlite3 *_Nonnull _db_) {
   ") "
     "UPDATE backing "
       "SET k = bupdatekey(k, 1, 5, 0, 7) "
-        "WHERE rowid IN (SELECT rowid "
+      "WHERE rowid IN (SELECT rowid "
         "FROM backed2 "
         "WHERE pk1 = 3 AND pk2 = 11)"
   );
@@ -18717,7 +18717,7 @@ BEGIN
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   UPDATE backing
     SET v = cql_blob_update(v, 'foo', backed.name)
-      WHERE rowid IN (SELECT rowid
+    WHERE rowid IN (SELECT rowid
       FROM backed
       WHERE name = 'one');
 END;
@@ -18749,7 +18749,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_value(sqlite3 *_Nonnull _db_) {
   ") "
     "UPDATE backing "
       "SET v = bupdateval(v, -6946718245010482247, 'foo', 4) "
-        "WHERE rowid IN (SELECT rowid "
+      "WHERE rowid IN (SELECT rowid "
         "FROM backed "
         "WHERE name = 'one')"
   );
@@ -18774,7 +18774,7 @@ BEGIN
     )
   UPDATE backing
     SET v = cql_blob_update(v, 'goo', backed.name)
-      WHERE rowid IN (SELECT rowid
+    WHERE rowid IN (SELECT rowid
       FROM backed
       WHERE name = 'with_update');
 END;
@@ -18809,7 +18809,7 @@ CQL_WARN_UNUSED cql_code update_backed_with_clause(sqlite3 *_Nonnull _db_) {
       ") "
     "UPDATE backing "
       "SET v = bupdateval(v, -6946718245010482247, 'goo', 4) "
-        "WHERE rowid IN (SELECT rowid "
+      "WHERE rowid IN (SELECT rowid "
         "FROM backed "
         "WHERE name = 'with_update')"
   );
@@ -18831,7 +18831,7 @@ BEGIN
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   UPDATE backing
     SET k = cql_blob_update(k, 100, backed.pk)
-      WHERE rowid IN (SELECT rowid
+    WHERE rowid IN (SELECT rowid
       FROM backed
       WHERE name = 'two');
 END;
@@ -18863,7 +18863,7 @@ CQL_WARN_UNUSED cql_code update_backed_set_key(sqlite3 *_Nonnull _db_) {
   ") "
     "UPDATE backing "
       "SET k = bupdatekey(k, 0, 100) "
-        "WHERE rowid IN (SELECT rowid "
+      "WHERE rowid IN (SELECT rowid "
         "FROM backed "
         "WHERE name = 'two')"
   );
@@ -18885,11 +18885,11 @@ BEGIN
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
   UPDATE backing
     SET k = cql_blob_update(k, 100, backed.pk), v = cql_blob_update(v, 77, backed.age)
-      WHERE rowid IN (SELECT rowid
+    WHERE rowid IN (SELECT rowid
       FROM backed
       WHERE name = 'three'
-    ORDER BY age
-    LIMIT 7);
+      ORDER BY age
+      LIMIT 7);
 END;
 */
 
@@ -18919,11 +18919,11 @@ CQL_WARN_UNUSED cql_code update_backed_set_both(sqlite3 *_Nonnull _db_) {
   ") "
     "UPDATE backing "
       "SET k = bupdatekey(k, 0, 100), v = bupdateval(v, -3683705396192132539, 77, 3) "
-        "WHERE rowid IN (SELECT rowid "
+      "WHERE rowid IN (SELECT rowid "
         "FROM backed "
         "WHERE name = 'three' "
-      "ORDER BY age "
-      "LIMIT 7)"
+        "ORDER BY age "
+        "LIMIT 7)"
   );
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;

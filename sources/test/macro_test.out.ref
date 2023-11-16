@@ -275,9 +275,9 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (
-    first_table AS T1
-    INNER JOIN second_table AS T2 ON T1.x = T2.y)
-  INNER JOIN second_table;
+      first_table AS T1
+      INNER JOIN second_table AS T2 ON T1.x = T2.y)
+    INNER JOIN second_table;
 
   {select_stmt}
   | {select_core_list}
@@ -327,8 +327,8 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (
-    first_table AS T1
-    INNER JOIN second_table AS T2 ON T1.x = T2.y) AS T1;
+      first_table AS T1
+      INNER JOIN second_table AS T2 ON T1.x = T2.y) AS T1;
 
   {select_stmt}
   | {select_core_list}
@@ -416,8 +416,8 @@ The statement ending at line XXXX
 
 SELECT x
   FROM (
-    first_table AS T1
-    INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
+      first_table AS T1
+      INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
 
   {select_stmt}
   | {select_core_list}
@@ -464,8 +464,8 @@ The statement ending at line XXXX
 
 SELECT x
   FROM (
-    first_table AS T1
-    INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
+      first_table AS T1
+      INNER JOIN second_table AS T2 ON T1.x = T2.y) AS Q;
 
   {select_stmt}
   | {select_core_list}

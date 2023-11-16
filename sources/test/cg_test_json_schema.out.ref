@@ -3117,12 +3117,12 @@
     The statement ending at line XXXX
 
     CREATE INDEX MyPartialIndex ON Foo (id * id)
-      WHERE id < 1000
+    WHERE id < 1000
 
     ,
     {
       "name" : "MyPartialIndex",
-      "CRC" : "1187239216548262958",
+      "CRC" : "-3201573252572160653",
       "table" : "Foo",
       "isUnique" : 0,
       "ifNotExists" : 0,
@@ -3252,7 +3252,7 @@
     BEGIN
     UPDATE Foo
       SET id = 7
-        WHERE name > old.name AND name < new.name;
+      WHERE name > old.name AND name < new.name;
 
     INSERT INTO Foo(id, name)
       VALUES(7, 'goo');
@@ -3261,7 +3261,7 @@
     ,
     {
       "name" : "trigger3",
-      "CRC" : "-1599636186644474341",
+      "CRC" : "1697192564179557363",
       "target" : "MyView",
       "isTemp" : 0,
       "ifNotExists" : 0,
@@ -3562,9 +3562,9 @@
       WHERE name LIKE pattern AND name <> reject
       GROUP BY name
       HAVING name > reject
-    ORDER BY pattern
-    LIMIT 1
-    OFFSET 3;
+      ORDER BY pattern
+      LIMIT 1
+      OFFSET 3;
     END
 
     {
@@ -3611,7 +3611,7 @@
     BEGIN
     SELECT *
       FROM Foo AS T1
-      INNER JOIN T5 ON T1.id = id_ AND T1.id = T5.l;
+        INNER JOIN T5 ON T1.id = id_ AND T1.id = T5.l;
     END
 
     {
@@ -3772,7 +3772,7 @@
         UNION ALL
         SELECT i + 1
           FROM nums
-        LIMIT 1
+          LIMIT 1
       ),
       vals (v) AS (
         SELECT i
@@ -4283,7 +4283,7 @@
       VALUES(1)
     ON CONFLICT DO UPDATE
       SET id = 1
-        WHERE id = 9;
+      WHERE id = 9;
     END
 
     {
@@ -4315,7 +4315,7 @@
         WHERE 1
     ON CONFLICT DO UPDATE
       SET id = 1
-        WHERE id = 9;
+      WHERE id = 9;
     END
 
     {
@@ -4375,9 +4375,9 @@
     BEGIN
     UPDATE foO
       SET name = name_
-        WHERE id = id_
+      WHERE id = id_
       ORDER BY name
-      LIMIT 1;
+        LIMIT 1;
     END
 
     {
@@ -4415,7 +4415,7 @@
       )
     UPDATE foO
       SET name = name_
-        WHERE name IN (SELECT *
+      WHERE name IN (SELECT *
         FROM names);
     END
 

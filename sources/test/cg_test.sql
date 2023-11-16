@@ -4965,7 +4965,7 @@ end;
 -- +  "(",
 --
 -- fragment 2 present if x <= 5
--- +  "  WITH "
+-- +  " WITH "
 -- +    "shared_conditional (x) AS (",
 --
 -- fragment 3 present if x == 1

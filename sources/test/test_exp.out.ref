@@ -124,13 +124,13 @@ CREATE TABLE T(
 CREATE INDEX thread_key_contact_id ON participants (thread_key, contact_id);
 
 CREATE INDEX thread_key_contact_id ON participants (thread_key, contact_id)
-  WHERE contact_id > 50;
+WHERE contact_id > 50;
 
 CREATE INDEX thread_key_contact_id ON participants (thread_key + contact_id, contact_id % 5)
-  WHERE contact_id > 50;
+WHERE contact_id > 50;
 
 CREATE INDEX thread_key_contact_id ON participants (thread_key COLLATE some_collation, contact_id % 5)
-  WHERE contact_id > 50;
+WHERE contact_id > 50;
 
 SELECT 2 * 3;
 
@@ -155,19 +155,19 @@ SELECT a AS b, c AS d
 
 SELECT a, b
   FROM c
-  INNER JOIN d;
+    INNER JOIN d;
 
 SELECT a, b
   FROM c
-  INNER JOIN d ON e = f;
+    INNER JOIN d ON e = f;
 
 SELECT a, b
   FROM c
-  INNER JOIN d ON e.f = g.h;
+    INNER JOIN d ON e.f = g.h;
 
 SELECT a, b
   FROM c
-  LEFT OUTER JOIN d ON e.f = g.h;
+    LEFT OUTER JOIN d ON e.f = g.h;
 
 SELECT
     P.thread_key,
@@ -182,7 +182,7 @@ SELECT
     C.name,
     C.is_messenger_user
   FROM participants AS P
-  LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id;
+    LEFT OUTER JOIN contacts AS C ON C.id = P.contact_id;
 
 SELECT
     T.thread_key,
@@ -191,7 +191,7 @@ SELECT
     T.thread_picture_url,
     T.mute_expire_time_ms
   FROM threads AS T
-  LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
+    LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
 
 SELECT *
   FROM foo;
@@ -206,7 +206,7 @@ SELECT
     T.thread_picture_url,
     T.mute_expire_time_ms
   FROM threads AS T
-  LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
+    LEFT OUTER JOIN _unified_thread_name AS UTN ON UTN.thread_key = T.thread_key;
 
 SELECT 2 <> 3;
 
@@ -220,7 +220,7 @@ SELECT a, b
 
 SELECT a, b
   FROM c
-ORDER BY f;
+  ORDER BY f;
 
 SELECT
     C.id AS contact_id,
@@ -232,7 +232,7 @@ SELECT
     C.rank
   FROM contacts AS C
   WHERE C.name IS NOT NULL AND C.name <> ''
-ORDER BY C.name;
+  ORDER BY C.name;
 
 SELECT y IS NULL;
 
@@ -269,7 +269,7 @@ SELECT b
 CREATE VIEW _self_thread_name AS
 SELECT UI.facebook_user_id AS thread_key, C.name AS thread_name
   FROM _user_info AS UI,
-  contacts AS C
+    contacts AS C
   WHERE UI.facebook_user_id = C.id;
 
 DELETE FROM a;
@@ -288,9 +288,9 @@ SELECT 12.3;
 CREATE VIEW zzz AS
 SELECT DISTINCT a, b AS c, d
   FROM e AS E
-  LEFT OUTER JOIN f AS F ON F.g = e.g
-  LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
-ORDER BY o.p DESC;
+    LEFT OUTER JOIN f AS F ON F.g = e.g
+    LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
+  ORDER BY o.p DESC;
 
 CREATE VIEW thread_messages AS
 SELECT DISTINCT
@@ -309,31 +309,31 @@ SELECT DISTINCT
     A.has_xma OR A.has_media AS has_attachment,
     M.is_admin_message
   FROM messages AS M
-  LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
-  LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
-ORDER BY M.timestamp_ms DESC;
+    LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
+    LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
+  ORDER BY M.timestamp_ms DESC;
 
 SELECT *
   FROM threads
-ORDER BY last_activity_timestamp_ms DESC
-LIMIT 20;
+  ORDER BY last_activity_timestamp_ms DESC
+  LIMIT 20;
 
 SELECT *
   FROM threads
-ORDER BY last_activity_timestamp_ms DESC
-LIMIT 20
-OFFSET 7;
+  ORDER BY last_activity_timestamp_ms DESC
+  LIMIT 20
+  OFFSET 7;
 
 SELECT a
   FROM (SELECT b
-      FROM c) AS X;
+        FROM c) AS X;
 
 CREATE VIEW unread_not_muted_threads_count AS
 SELECT count(*) AS count
   FROM (SELECT *
-      FROM threads
-    ORDER BY last_activity_timestamp_ms DESC
-    LIMIT 20) AS T
+        FROM threads
+        ORDER BY last_activity_timestamp_ms DESC
+        LIMIT 20) AS T
   WHERE T.last_activity_timestamp_ms > T.last_read_watermark_timestamp_ms AND (T.mute_expire_time_ms >= 0 AND T.mute_expire_time_ms - strftime('%s', 'now') * 1000 <= 0) AND T.folder_name = 'inbox';
 
 CREATE TABLE pending_tasks(
@@ -359,11 +359,11 @@ UPDATE a
 
 UPDATE a
   SET x = 1, y = 2
-    WHERE z = 3;
+  WHERE z = 3;
 
 UPDATE a
   SET x = 1, y = 2
-    WHERE z = 3;
+  WHERE z = 3;
 
 SET a1 := 20;
 
@@ -617,12 +617,12 @@ SELECT 1 AND 3 IN (3, 4);
 
 SELECT x, y
   FROM T
-  INNER JOIN Y USING (a, b, c);
+    INNER JOIN Y USING (a, b, c);
 
 UPDATE X
   SET x = 1, y = 2
-    WHERE z = 5
-  LIMIT 3;
+  WHERE z = 5
+    LIMIT 3;
 
 SELECT *
   FROM foo
@@ -638,27 +638,27 @@ SELECT ALL x, y
 
 SELECT a, b
   FROM X
-  INNER JOIN Y;
+    INNER JOIN Y;
 
 SELECT a, b
   FROM X
-  LEFT JOIN Y;
+    LEFT JOIN Y;
 
 SELECT a, b
   FROM X AS XX
-  RIGHT JOIN Y;
+    RIGHT JOIN Y;
 
 SELECT a, b
   FROM X
-  RIGHT OUTER JOIN Y;
+    RIGHT OUTER JOIN Y;
 
 SELECT a, b
   FROM X
-  LEFT OUTER JOIN Y;
+    LEFT OUTER JOIN Y;
 
 SELECT a, b
   FROM X
-  CROSS JOIN Y;
+    CROSS JOIN Y;
 
 SELECT CASE 1 WHEN 1 THEN 'a'
 WHEN 2 THEN 'b'
@@ -667,17 +667,17 @@ END;
 
 SELECT x
   FROM (
-    A,
-    B,
-    C);
+      A,
+      B,
+      C);
 
 SELECT x
   FROM A
-ORDER BY x ASC;
+  ORDER BY x ASC;
 
 SELECT x
   FROM A
-ORDER BY x DESC;
+  ORDER BY x DESC;
 
 SELECT x, y
   FROM A
@@ -686,7 +686,7 @@ SELECT x, y
 UPDATE bar
   SET x = 1
   ORDER BY a
-  LIMIT 5;
+    LIMIT 5;
 
 CALL foo();
 
@@ -768,31 +768,31 @@ FETCH my_cursor;
 
 SELECT a
   FROM (
-    X
-    INNER JOIN Y)
-  LEFT OUTER JOIN (
-    W
-    INNER JOIN Q);
+      X
+      INNER JOIN Y)
+    LEFT OUTER JOIN (
+      W
+      INNER JOIN Q);
 
 SELECT a
   FROM (
-    X
-    INNER JOIN Y)
-  LEFT OUTER JOIN (
-    W
-    INNER JOIN Q);
+      X
+      INNER JOIN Y)
+    LEFT OUTER JOIN (
+      W
+      INNER JOIN Q);
 
 SELECT a, b
   FROM x
-ORDER BY a, b;
+  ORDER BY a, b;
 
 SELECT a, b
   FROM x
-ORDER BY a ASC, b DESC;
+  ORDER BY a ASC, b DESC;
 
 SELECT a, b
   FROM x
-ORDER BY a ASC NULLS LAST, b DESC NULLS FIRST;
+  ORDER BY a ASC NULLS LAST, b DESC NULLS FIRST;
 
 SELECT CAST(1 AS TEXT);
 
@@ -836,9 +836,9 @@ UNION
 SELECT 4 AS a, 5, 6
 UNION
 SELECT 7 AS a, 8, 9
-ORDER BY a
-LIMIT 2
-OFFSET 3;
+  ORDER BY a
+  LIMIT 2
+  OFFSET 3;
 
 SELECT nullable(1);
 
@@ -858,7 +858,7 @@ WITH
   )
 SELECT a, b
   FROM x
-  INNER JOIN y ON x.a = y.c;
+    INNER JOIN y ON x.a = y.c;
 
 WITH
   x (a, b) AS (
@@ -866,12 +866,12 @@ WITH
   )
 SELECT *
   FROM x AS X
-  INNER JOIN (    WITH
-      y (a, b) AS (
-        SELECT 1, 3
-      )
-    SELECT *
-      FROM y) AS Y ON X.a = y.A;
+    INNER JOIN (      WITH
+        y (a, b) AS (
+          SELECT 1, 3
+        )
+      SELECT *
+        FROM y) AS Y ON X.a = y.A;
 
 WITH RECURSIVE
   cnt (x) AS (
@@ -879,7 +879,7 @@ WITH RECURSIVE
     UNION ALL
     SELECT x + 1
       FROM cnt
-    LIMIT 20
+      LIMIT 20
   )
 SELECT x
   FROM cnt;
@@ -1146,7 +1146,7 @@ CREATE TRIGGER trigger3
 BEGIN
   UPDATE goo
     SET foo = bar
-      WHERE miz = wiz;
+    WHERE miz = wiz;
   INSERT INTO stew
     VALUES(1);
 END;
@@ -1199,7 +1199,7 @@ WITH
   )
 UPDATE foo
   SET xyzzy = 7
-    WHERE foo.id IN (SELECT *
+  WHERE foo.id IN (SELECT *
     FROM x);
 
 @ENFORCE_STRICT FOREIGN KEY ON UPDATE;
@@ -1254,7 +1254,7 @@ DECLARE SELECT FUNC garbonzo (id INTEGER) (t TEXT);
 
 SELECT *
   FROM garbonzo(1, 2, 3) AS T1
-  INNER JOIN xyzzy() AS T2 ON T1.id = T2.id;
+    INNER JOIN xyzzy() AS T2 ON T1.id = T2.id;
 
 CREATE TRIGGER deleted_trigger
   AFTER INSERT ON target_table2
@@ -1271,9 +1271,9 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO foo(id)
   VALUES(1)
 ON CONFLICT (id) 
-  WHERE id = 10 DO UPDATE
+WHERE id = 10 DO UPDATE
   SET id = id + 1
-    WHERE id = 20;
+  WHERE id = 20;
 
 INSERT INTO foo(id)
   VALUES(1)
@@ -1333,7 +1333,7 @@ SELECT id,
   WINDOW 
     win1 AS (), 
     win2 AS ()
-ORDER BY id;
+  ORDER BY id;
 
 CREATE PROC foo (x INTEGER, y INTEGER)
 BEGIN
@@ -1799,7 +1799,7 @@ WITH
   tar (*) AS (CALL tar(3) USING soo AS woo, goo AS too)
 SELECT *
   FROM bar,
-  tar;
+    tar;
 
 SELECT *
   FROM (CALL foo() USING stuff AS source);
@@ -1942,9 +1942,10 @@ CREATE TABLE backing(
 @ENFORCE_STRICT UPDATE FROM;
 
 UPDATE foo
-  SET name = baz.nameFROM bar
+  SET name = baz.name
+  FROM bar
   INNER JOIN baz ON bar.id = baz.id
-    WHERE bar.name = 'x' AND foo.id = bar.id;
+  WHERE bar.name = 'x' AND foo.id = bar.id;
 
 @ATTRIBUTE(cql:private)
 @ATTRIBUTE(cql:potato=bar)
@@ -2077,24 +2078,24 @@ END;
 
 SELECT *
   FROM (
-    xx AS T1
-    INNER JOIN yy AS T2 ON T1.x = T2.y)
-  INNER JOIN yy;
+      xx AS T1
+      INNER JOIN yy AS T2 ON T1.x = T2.y)
+    INNER JOIN yy;
 
 SELECT *
   FROM (
-    xx AS T1
-    INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
+      xx AS T1
+      INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
 
 SELECT x
   FROM (
-    xx AS T1
-    INNER JOIN yy AS T2 ON T1.x = T2.y) AS Q;
+      xx AS T1
+      INNER JOIN yy AS T2 ON T1.x = T2.y) AS Q;
 
 SELECT *
   FROM (
-    xx AS T1
-    INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
+      xx AS T1
+      INNER JOIN yy AS T2 ON T1.x = T2.y) AS T1;
 
 @MACRO(CTE_TABLES) cte!()
 BEGIN

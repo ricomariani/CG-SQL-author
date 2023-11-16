@@ -259,7 +259,7 @@ The statement ending at line XXXX
 
 SELECT T1.id, name
   FROM foo AS T1
-  INNER JOIN bar AS T2 ON T1.id = T2.id
+    INNER JOIN bar AS T2 ON T1.id = T2.id
   WHERE rate > 0;
 
   {select_stmt}: select: { id: integer notnull, name: text }
@@ -312,7 +312,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  LEFT JOIN foo AS T2;
+    LEFT JOIN foo AS T2;
 
   {select_stmt}: select: { id: integer notnull, id: integer }
   | {select_core_list}: select: { id: integer notnull, id: integer }
@@ -345,7 +345,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  CROSS JOIN foo AS T2 ON T1.id = T2.id;
+    CROSS JOIN foo AS T2 ON T1.id = T2.id;
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull }
@@ -387,7 +387,7 @@ The statement ending at line XXXX
 
 SELECT name
   FROM foo,
-  bar;
+    bar;
 
   {select_stmt}: select: { name: text }
   | {select_core_list}: select: { name: text }
@@ -414,8 +414,8 @@ The statement ending at line XXXX
 
 SELECT name
   FROM foo AS T1,
-  bar AS T1,
-  bar AS T1;
+    bar AS T1,
+    bar AS T1;
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery_list : CQL0016: duplicate table name in join 'T1'
 
@@ -453,7 +453,7 @@ The statement ending at line XXXX
 
 SELECT id
   FROM foo,
-  bar;
+    bar;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0065: identifier is ambiguous 'id'
 
@@ -482,7 +482,7 @@ The statement ending at line XXXX
 
 SELECT not_found
   FROM foo,
-  bar;
+    bar;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
 
@@ -1629,7 +1629,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo,
-  bar;
+    bar;
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -2079,7 +2079,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-ORDER BY count(id);
+  ORDER BY count(id);
 
   {select_stmt}: select: { id: integer notnull }
   | {select_core_list}: select: { id: integer notnull }
@@ -3461,7 +3461,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (SELECT 1 AS id1, 'x' AS name) AS Item
-  INNER JOIN (SELECT 1 AS id2, 'b' AS brand) AS ItemBrand ON ItemBrand.id2 = Item.id1;
+    INNER JOIN (SELECT 1 AS id2, 'b' AS brand) AS ItemBrand ON ItemBrand.id2 = Item.id1;
 
   {select_stmt}: select: { id1: integer notnull, name: text notnull, id2: integer notnull, brand: text notnull }
   | {select_core_list}: select: { id1: integer notnull, name: text notnull, id2: integer notnull, brand: text notnull }
@@ -3697,8 +3697,8 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (
-    foo,
-    bar);
+      foo,
+      bar);
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -3726,8 +3726,8 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (
-    foo,
-    foo);
+      foo,
+      foo);
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery_list : CQL0016: duplicate table name in join 'foo'
 
@@ -3757,12 +3757,12 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  INNER JOIN bar AS T2 ON T1.id = T2.id
+    INNER JOIN bar AS T2 ON T1.id = T2.id
   WHERE T2.id > 5
   GROUP BY T2.name
   HAVING T2.name = 'x'
-ORDER BY T2.rate
-LIMIT 5;
+  ORDER BY T2.rate
+  LIMIT 5;
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -3830,10 +3830,10 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-  INNER JOIN bar AS T2 ON 'v'
+    INNER JOIN bar AS T2 ON 'v'
   WHERE 'w'
   HAVING 'x'
-LIMIT 'y';
+  LIMIT 'y';
 
 test/sem_test.sql:XXXX:1: error: in on : CQL0015: expected numeric expression 'ON'
 
@@ -3877,7 +3877,7 @@ SELECT *
   FROM foo
   WHERE 'w'
   HAVING 'x'
-LIMIT 'y';
+  LIMIT 'y';
 
 test/sem_test.sql:XXXX:1: error: in opt_where : CQL0015: expected numeric expression 'WHERE'
 test/sem_test.sql:XXXX:1: error: in opt_having : CQL0099: HAVING clause requires GROUP BY clause
@@ -3910,8 +3910,8 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-ORDER BY bogus
-LIMIT 'y';
+  ORDER BY bogus
+  LIMIT 'y';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 test/sem_test.sql:XXXX:1: error: in opt_limit : CQL0015: expected numeric expression 'LIMIT'
@@ -4827,7 +4827,7 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0172: name list has duplicate name 
 The statement ending at line XXXX
 
 CREATE INDEX index_7 ON foo (id + id)
-  WHERE id < 100;
+WHERE id < 100;
 
   {create_index_stmt}: ok
   | {create_index_on_list}
@@ -4850,7 +4850,7 @@ CREATE INDEX index_7 ON foo (id + id)
 The statement ending at line XXXX
 
 CREATE INDEX index_8 ON foo (id)
-  WHERE NOT 'x';
+WHERE NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -4872,7 +4872,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE INDEX index_9 ON foo (id)
-  WHERE x = 5;
+WHERE x = 5;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'x'
 
@@ -4895,7 +4895,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'x'
 The statement ending at line XXXX
 
 CREATE INDEX index_10 ON foo (id)
-  WHERE 'hi';
+WHERE 'hi';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0015: expected numeric expression 'WHERE'
 
@@ -6325,7 +6325,7 @@ The statement ending at line XXXX
 
 SELECT id
   FROM foo
-ORDER BY id, NOT 'x';
+  ORDER BY id, NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -8518,7 +8518,7 @@ The statement ending at line XXXX
 
 UPDATE foo
   SET id = 1
-    WHERE id = 2;
+  WHERE id = 2;
 
   {update_stmt}: foo: { id: integer notnull primary_key autoinc }
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -8591,7 +8591,7 @@ The statement ending at line XXXX
 
 UPDATE foo
   SET id = 1
-    WHERE NOT 'x';
+  WHERE NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -8613,7 +8613,7 @@ The statement ending at line XXXX
 
 UPDATE foo
   SET id = 1
-  LIMIT 'x';
+    LIMIT 'x';
 
 test/sem_test.sql:XXXX:1: error: in opt_limit : CQL0015: expected numeric expression 'LIMIT'
 
@@ -8635,7 +8635,7 @@ The statement ending at line XXXX
 UPDATE foo
   SET id = 1
   ORDER BY NOT 'x'
-  LIMIT 2;
+    LIMIT 2;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -8697,7 +8697,7 @@ The statement ending at line XXXX
 
 UPDATE foo
   SET id = 1L
-    WHERE id = 2;
+  WHERE id = 2;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG_INT' in 1L
 
@@ -9156,7 +9156,7 @@ The statement ending at line XXXX
 
 SELECT id, rate
   FROM (SELECT id, rate
-      FROM bar);
+        FROM bar);
 
   {select_stmt}: select: { id: integer notnull, rate: longint }
   | {select_core_list}: select: { id: integer notnull, rate: longint }
@@ -9202,7 +9202,7 @@ The statement ending at line XXXX
 
 SELECT id, rate
   FROM (SELECT *
-      FROM bar);
+        FROM bar);
 
   {select_stmt}: select: { id: integer notnull, rate: longint }
   | {select_core_list}: select: { id: integer notnull, rate: longint }
@@ -11520,13 +11520,13 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  INNER JOIN bar AS T2 ON T1.id = T2.id
+    INNER JOIN bar AS T2 ON T1.id = T2.id
   WHERE T2.id > 5
   GROUP BY T2.name, T2.id
   HAVING T2.name = 'x'
-ORDER BY T2.rate
-LIMIT 5
-OFFSET 7;
+  ORDER BY T2.rate
+  LIMIT 5
+  OFFSET 7;
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -11601,13 +11601,13 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  INNER JOIN bar AS T2 ON T1.id = T2.id
+    INNER JOIN bar AS T2 ON T1.id = T2.id
   WHERE T2.id > 5
   GROUP BY T2.name
   HAVING T2.name = 'x'
-ORDER BY T2.rate
-LIMIT 5
-OFFSET 'x';
+  ORDER BY T2.rate
+  LIMIT 5
+  OFFSET 'x';
 
 test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0015: expected numeric expression 'OFFSET'
 
@@ -12207,7 +12207,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  INNER JOIN foo AS T2 USING (id);
+    INNER JOIN foo AS T2 USING (id);
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull }
@@ -12244,7 +12244,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  INNER JOIN foo AS T2 USING (id, id);
+    INNER JOIN foo AS T2 USING (id, id);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'id'
 
@@ -12285,7 +12285,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  INNER JOIN foo AS T2 USING (id, idx);
+    INNER JOIN foo AS T2 USING (id, idx);
 
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0096: join using column not found on the left side of the join 'idx'
 
@@ -12326,7 +12326,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM bar AS T1
-  INNER JOIN foo AS T2 USING (id, name);
+    INNER JOIN foo AS T2 USING (id, name);
 
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0097: join using column not found on the right side of the join 'name'
 
@@ -12421,7 +12421,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM payload1
-  INNER JOIN payload2 USING (id);
+    INNER JOIN payload2 USING (id);
 
   {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
   | {select_core_list}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
@@ -12454,7 +12454,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM payload1
-  LEFT OUTER JOIN payload2 USING (id);
+    LEFT OUTER JOIN payload2 USING (id);
 
   {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer, data2: integer }
   | {select_core_list}: select: { id: integer notnull, data1: integer notnull, id: integer, data2: integer }
@@ -12487,7 +12487,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM payload1
-  RIGHT OUTER JOIN payload2 USING (id);
+    RIGHT OUTER JOIN payload2 USING (id);
 
   {select_stmt}: select: { id: integer, data1: integer, id: integer notnull, data2: integer notnull }
   | {select_core_list}: select: { id: integer, data1: integer, id: integer notnull, data2: integer notnull }
@@ -12520,7 +12520,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM payload1
-  CROSS JOIN payload2 USING (id);
+    CROSS JOIN payload2 USING (id);
 
   {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
   | {select_core_list}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
@@ -12553,11 +12553,11 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (
-    foo AS A,
-    foo AS B)
-  INNER JOIN (
-    foo AS C,
-    foo AS D);
+      foo AS A,
+      foo AS B)
+    INNER JOIN (
+      foo AS C,
+      foo AS D);
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull, id: integer notnull, id: integer notnull }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull, id: integer notnull, id: integer notnull }
@@ -12604,9 +12604,9 @@ The statement ending at line XXXX
 
 SELECT id
   FROM (
-    foo
-    INNER JOIN bar ON NOT 'x')
-  INNER JOIN foo ON 1;
+      foo
+      INNER JOIN bar ON NOT 'x')
+    INNER JOIN foo ON 1;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -12990,7 +12990,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM join_clause_1
-  INNER JOIN join_clause_2 USING (id);
+    INNER JOIN join_clause_2 USING (id);
 
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0098: left/right column types in join USING(...) do not match exactly 'id'
 
@@ -13073,7 +13073,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-LIMIT last_insert_rowid();
+  LIMIT last_insert_rowid();
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'last_insert_rowid'
 
@@ -13172,7 +13172,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-LIMIT changes();
+  LIMIT changes();
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'changes'
 
@@ -13264,7 +13264,7 @@ The statement ending at line XXXX
 
 SELECT 1
   FROM (SELECT 1)
-LIMIT printf('%s %d', 'x', 5) = 'x';
+  LIMIT printf('%s %d', 'x', 5) = 'x';
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'printf'
 
@@ -13316,7 +13316,7 @@ The statement ending at line XXXX
 
 UPDATE foo
   SET id = 1, id = 3
-    WHERE id = 2;
+  WHERE id = 2;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0153: duplicate target column name in update statement 'id'
 
@@ -13377,7 +13377,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT id
   FROM foo
-LIMIT sum(1) );
+  LIMIT sum(1) );
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'sum'
 
@@ -13498,8 +13498,8 @@ The statement ending at line XXXX
 
 SELECT *
   FROM A1 AS T1
-  LEFT OUTER JOIN B1 AS T2 ON T1.foo = t2.foo
-  LEFT OUTER JOIN C1 AS T3 ON T2.foo = t3.foo;
+    LEFT OUTER JOIN B1 AS T2 ON T1.foo = t2.foo
+    LEFT OUTER JOIN C1 AS T3 ON T2.foo = t3.foo;
 
   {select_stmt}: select: { foo: integer, foo: integer, foo: integer }
   | {select_core_list}: select: { foo: integer, foo: integer, foo: integer }
@@ -15101,9 +15101,9 @@ The statement ending at line XXXX
 
 SELECT *
   FROM (
-    AA1 AS A,
-    BB2 AS B)
-  LEFT OUTER JOIN CC3 AS C ON C.id3 = A.id1;
+      AA1 AS A,
+      BB2 AS B)
+    LEFT OUTER JOIN CC3 AS C ON C.id3 = A.id1;
 
   {select_stmt}: select: { id1: integer notnull, id2: integer notnull, id3: integer }
   | {select_core_list}: select: { id1: integer notnull, id2: integer notnull, id3: integer }
@@ -19033,18 +19033,18 @@ WITH
   )
 SELECT *
   FROM x AS X
-  INNER JOIN (    WITH
-      y (a, b) AS (
-        SELECT 1, 3
-      )
-    SELECT *
-      FROM y) AS Y ON X.a = Y.a
-  INNER JOIN (    WITH
-      y (a, b) AS (
-        SELECT 1, 3
-      )
-    SELECT *
-      FROM y) AS Z ON X.a = Z.a;
+    INNER JOIN (      WITH
+        y (a, b) AS (
+          SELECT 1, 3
+        )
+      SELECT *
+        FROM y) AS Y ON X.a = Y.a
+    INNER JOIN (      WITH
+        y (a, b) AS (
+          SELECT 1, 3
+        )
+      SELECT *
+        FROM y) AS Z ON X.a = Z.a;
 
   {with_select_stmt}: select: { a: integer notnull, b: integer notnull, a: integer notnull, b: integer notnull, a: integer notnull, b: integer notnull }
   | {with}
@@ -19218,7 +19218,7 @@ WITH RECURSIVE
     UNION ALL
     SELECT current + 1
       FROM cnt
-    LIMIT 10
+      LIMIT 10
   )
 SELECT current
   FROM cnt;
@@ -19295,14 +19295,14 @@ WITH
         UNION ALL
         SELECT *
           FROM baz
-        LIMIT 5
+          LIMIT 5
       )
     SELECT *
       FROM baz
   )
 SELECT *
   FROM another_cte
-  INNER JOIN some_cte;
+    INNER JOIN some_cte;
 
   {with_select_stmt}: select: { x: real notnull, y: real notnull, u: integer notnull, v: integer notnull }
   | {with}
@@ -22179,12 +22179,12 @@ BEGIN
       SELECT id
         FROM foo
         WHERE id = id_
-      LIMIT 20
+        LIMIT 20
     ),
     t2 (x, y, z) AS (
       SELECT t1.id, name, rate
         FROM bar
-        INNER JOIN t1 ON t1.id = bar.id
+          INNER JOIN t1 ON t1.id = bar.id
     )
   SELECT *
     FROM t2;
@@ -22491,7 +22491,7 @@ WITH RECURSIVE
     UNION ALL
     SELECT current + 1
       FROM cnt
-    LIMIT 10
+      LIMIT 10
   )
 SELECT current
   FROM cnt;
@@ -22567,7 +22567,7 @@ WITH RECURSIVE
     UNION ALL
     SELECT current + 1
       FROM cnt
-    LIMIT 10
+      LIMIT 10
   )
 SELECT current
   FROM cnt;
@@ -22708,7 +22708,7 @@ WITH RECURSIVE
     UNION ALL
     SELECT current + 1
       FROM cnt
-    LIMIT 10
+      LIMIT 10
   )
 SELECT NOT 'x';
 
@@ -23005,7 +23005,7 @@ SELECT
     S.*,
     3 AS _last
   FROM (SELECT 1 AS A, 2 AS B) AS T,
-  (SELECT 1 AS C) AS S;
+    (SELECT 1 AS C) AS S;
 
   {select_stmt}: select: { _first: integer notnull, A: integer notnull, B: integer notnull, C: integer notnull, _last: integer notnull }
   | {select_core_list}: select: { _first: integer notnull, A: integer notnull, B: integer notnull, C: integer notnull, _last: integer notnull }
@@ -25572,7 +25572,7 @@ BEGIN
   DECLARE C CURSOR FOR
     SELECT *
       FROM foo AS T1
-      INNER JOIN foo AS T2 ON T1.id = T2.id;
+        INNER JOIN foo AS T2 ON T1.id = T2.id;
   FETCH C;
 END;
 
@@ -25628,7 +25628,7 @@ CREATE PROC bogus_result_duplicate_names ()
 BEGIN
   SELECT *
     FROM foo AS T1
-    INNER JOIN foo AS T2 ON T1.id = T2.id;
+      INNER JOIN foo AS T2 ON T1.id = T2.id;
 END;
 
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0180: duplicate column name in result not allowed 'id'
@@ -29128,7 +29128,7 @@ The statement ending at line XXXX
 
 SELECT T1.rowid
   FROM foo AS T1,
-  bar AS T2;
+    bar AS T2;
 
   {select_stmt}: select: { rowid: longint notnull }
   | {select_core_list}: select: { rowid: longint notnull }
@@ -29161,7 +29161,7 @@ The statement ending at line XXXX
 
 SELECT T1.rowid
   FROM foo AS T2,
-  foo AS T3;
+    foo AS T3;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'T1.rowid'
 
@@ -29196,7 +29196,7 @@ The statement ending at line XXXX
 
 SELECT rowid
   FROM foo AS T1,
-  foo AS T2;
+    foo AS T2;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowid'
 
@@ -32246,7 +32246,7 @@ CREATE PROC simple_alias_order_by ()
 BEGIN
   SELECT id AS bar_id
     FROM bar
-  ORDER BY bar_id;
+    ORDER BY bar_id;
 END;
 
   {create_proc_stmt}: simple_alias_order_by: { bar_id: integer notnull } dml_proc
@@ -32286,7 +32286,7 @@ BEGIN
   UNION ALL
   SELECT 2 AS sort_order_value, id
     FROM bar
-  ORDER BY sort_order_value, id;
+    ORDER BY sort_order_value, id;
 END;
 
   {create_proc_stmt}: complex_alias_order_by: { sort_order_value: integer notnull, id: integer notnull } dml_proc
@@ -32527,7 +32527,7 @@ CREATE TRIGGER trigger3
 BEGIN
   UPDATE bar
     SET id = 7
-      WHERE rate > old.b AND rate < new.b;
+    WHERE rate > old.b AND rate < new.b;
   INSERT INTO bar(id, name, rate)
     VALUES(7, 'goo', 17L);
 END;
@@ -32616,7 +32616,7 @@ CREATE TRIGGER trigger3
 BEGIN
   UPDATE bar
     SET id = 7
-      WHERE rate > old.b AND rate < new.b;
+    WHERE rate > old.b AND rate < new.b;
   INSERT INTO bar(id, name, rate)
     VALUES(7, 'goo', 17L);
 END;
@@ -32712,7 +32712,7 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CREATE TRIGGER trigger
 BEGIN
 UPDATE bar
   SET id = 7
-    WHERE rate > old.b AND rate < new.b;
+  WHERE rate > old.b AND rate < new.b;
 
 INSERT INTO bar(id, name, rate)
   VALUES(7, 'goo', 17L);
@@ -33722,7 +33722,7 @@ DECLARE _sens INTEGER @SENSITIVE;
 The statement ending at line XXXX
 
 SELECT 1 AS safe
-LIMIT _sens;
+  LIMIT _sens;
 
   {select_stmt}: select: { safe: integer notnull sensitive }
   | {select_core_list}: select: { safe: integer notnull sensitive }
@@ -33746,7 +33746,7 @@ LIMIT _sens;
 The statement ending at line XXXX
 
 SELECT 1 AS safe
-LIMIT 1;
+  LIMIT 1;
 
   {select_stmt}: select: { safe: integer notnull }
   | {select_core_list}: select: { safe: integer notnull }
@@ -33770,8 +33770,8 @@ LIMIT 1;
 The statement ending at line XXXX
 
 SELECT 1 AS safe
-LIMIT 1
-OFFSET _sens;
+  LIMIT 1
+  OFFSET _sens;
 
   {select_stmt}: select: { safe: integer notnull sensitive }
   | {select_core_list}: select: { safe: integer notnull sensitive }
@@ -33797,8 +33797,8 @@ OFFSET _sens;
 The statement ending at line XXXX
 
 SELECT 1 AS safe
-LIMIT 1
-OFFSET 1;
+  LIMIT 1
+  OFFSET 1;
 
   {select_stmt}: select: { safe: integer notnull }
   | {select_core_list}: select: { safe: integer notnull }
@@ -34772,7 +34772,7 @@ SELECT key_, sort_key
 UNION
 SELECT key_, sort_key
   FROM b
-ORDER BY sort_key, key_;
+  ORDER BY sort_key, key_;
 
   {select_stmt}: UNION: { key_: integer notnull, sort_key: integer notnull }
   | {select_core_list}: UNION: { key_: integer notnull, sort_key: integer notnull }
@@ -34827,7 +34827,7 @@ SELECT key_, sort_key
 UNION
 SELECT key_, sort_key
   FROM b
-ORDER BY 2, key_;
+  ORDER BY 2, key_;
 
   {select_stmt}: UNION: { key_: integer notnull, sort_key: integer notnull }
   | {select_core_list}: UNION: { key_: integer notnull, sort_key: integer notnull }
@@ -34882,7 +34882,7 @@ SELECT key_, sort_key
 UNION
 SELECT key_, sort_key
   FROM b
-ORDER BY 1 + 1, key_;
+  ORDER BY 1 + 1, key_;
 
 test/sem_test.sql:XXXX:1: error: in add : CQL0398: compound select cannot be ordered by the result of an expression
 
@@ -34941,8 +34941,8 @@ SELECT a.key_, a.sort_key
 UNION ALL
 SELECT b.key_, b.sort_key
   FROM a
-  INNER JOIN b ON b.a_key_ = a.key_
-ORDER BY sort_key, key_;
+    INNER JOIN b ON b.a_key_ = a.key_
+  ORDER BY sort_key, key_;
 
   {select_stmt}: UNION ALL: { key_: integer notnull, sort_key: integer notnull }
   | {select_core_list}: UNION ALL: { key_: integer notnull, sort_key: integer notnull }
@@ -35020,10 +35020,10 @@ SELECT a.key_, a.sort_key
 UNION ALL
 SELECT b.key_, b.sort_key
   FROM a
-  INNER JOIN b ON b.a_key_ = a.key_
-ORDER BY a_key_
-LIMIT 2
-OFFSET 3;
+    INNER JOIN b ON b.a_key_ = a.key_
+  ORDER BY a_key_
+  LIMIT 2
+  OFFSET 3;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'a_key_'
 
@@ -35104,8 +35104,8 @@ SELECT a.key_, a.sort_key
 UNION ALL
 SELECT b.key_, b.sort_key
   FROM a
-  INNER JOIN b ON b.a_key_ = a.key_
-ORDER BY b.a_key_;
+    INNER JOIN b ON b.a_key_ = a.key_
+  ORDER BY b.a_key_;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'b.a_key_'
 
@@ -35181,7 +35181,7 @@ The statement ending at line XXXX
 
 SELECT T1.id
   FROM bar AS T1
-  INNER JOIN with_sensitive AS T2 ON T1.id = T2.id AND T2.info = 1;
+    INNER JOIN with_sensitive AS T2 ON T1.id = T2.id AND T2.info = 1;
 
   {select_stmt}: select: { id: integer notnull sensitive }
   | {select_core_list}: select: { id: integer notnull sensitive }
@@ -35232,7 +35232,7 @@ The statement ending at line XXXX
 
 SELECT T1.id
   FROM bar AS T1
-  INNER JOIN with_sensitive AS T2 ON T1.id = T2.id;
+    INNER JOIN with_sensitive AS T2 ON T1.id = T2.id;
 
   {select_stmt}: select: { id: integer notnull }
   | {select_core_list}: select: { id: integer notnull }
@@ -35277,7 +35277,7 @@ The statement ending at line XXXX
 
 SELECT T1.id
   FROM with_sensitive AS T1
-  INNER JOIN with_sensitive AS T2 USING (info);
+    INNER JOIN with_sensitive AS T2 USING (info);
 
   {select_stmt}: select: { id: integer sensitive }
   | {select_core_list}: select: { id: integer sensitive }
@@ -35317,7 +35317,7 @@ The statement ending at line XXXX
 
 SELECT T1.id
   FROM with_sensitive AS T1
-  INNER JOIN with_sensitive AS T2 USING (id);
+    INNER JOIN with_sensitive AS T2 USING (id);
 
   {select_stmt}: select: { id: integer }
   | {select_core_list}: select: { id: integer }
@@ -35503,7 +35503,7 @@ The statement ending at line XXXX
 
 UPDATE bar
   SET id = coalesce(_sens, 0)
-    WHERE name = 'x';
+  WHERE name = 'x';
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive expression to non-sensitive target 'id'
 
@@ -35874,7 +35874,7 @@ BEGIN
     )
   UPDATE bar
     SET name = 'xyzzy'
-      WHERE id IN (SELECT *
+    WHERE id IN (SELECT *
       FROM x);
 END;
 
@@ -35958,7 +35958,7 @@ BEGIN
     )
   UPDATE bar
     SET name = 'xyzzy'
-      WHERE id IN (SELECT *
+    WHERE id IN (SELECT *
       FROM x);
 END;
 
@@ -36044,7 +36044,7 @@ BEGIN
     )
   UPDATE not_valid_table
     SET name = 'xyzzy'
-      WHERE id IN (SELECT *
+    WHERE id IN (SELECT *
       FROM x);
 END;
 
@@ -38900,7 +38900,7 @@ The statement ending at line XXXX
 CREATE VIEW a_view_in_dep_region AS
 SELECT T1.id AS id1, T2.id AS id2
   FROM a_table_in_root_region AS T1
-  INNER JOIN a_table_in_dep_region AS T2 USING (id);
+    INNER JOIN a_table_in_dep_region AS T2 USING (id);
 
   {create_view_stmt}: a_view_in_dep_region: { id1: integer, id2: integer }
   | {int 0}
@@ -39144,7 +39144,7 @@ The statement ending at line XXXX
 CREATE VIEW bogus_view_in_dep2_region AS
 SELECT T1.id AS id1, T2.id AS id2
   FROM a_table_in_root_region AS T1
-  INNER JOIN a_table_in_dep_region AS T2 USING (id);
+    INNER JOIN a_table_in_dep_region AS T2 USING (id);
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined (object is in schema region 'dep_region' not accessible from region 'dep2_region') 'a_table_in_dep_region'
 
@@ -40843,7 +40843,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo,
-  bar;
+    bar;
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery_list : CQL0263: non-ANSI joins are forbidden if strict join mode is enabled
 
@@ -40890,7 +40890,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-OFFSET 1;
+  OFFSET 1;
 
 test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0271: OFFSET clause may only be used if LIMIT is also present
 
@@ -41226,9 +41226,9 @@ BEGIN
   INSERT INTO foo(id)
     VALUES(1)
   ON CONFLICT (id) 
-    WHERE id = 10 DO UPDATE
+  WHERE id = 10 DO UPDATE
     SET id = id + 1
-      WHERE id = 20;
+    WHERE id = 20;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -41380,7 +41380,7 @@ BEGIN
   INSERT INTO foo(id)
     SELECT id
       FROM (SELECT *
-          FROM bar)
+            FROM bar)
   ON CONFLICT (id) DO NOTHING;
 END;
 
@@ -41492,7 +41492,7 @@ BEGIN
   INSERT INTO foo(id)
     VALUES(1)
   ON CONFLICT (id) 
-    WHERE bogus = 1 DO NOTHING;
+  WHERE bogus = 1 DO NOTHING;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
@@ -41539,7 +41539,7 @@ BEGIN
   BEGIN
     UPDATE
       SET id = 1
-        WHERE id = 9;
+      WHERE id = 9;
   END;
 END;
 
@@ -43282,7 +43282,7 @@ BEGIN
     WHERE 0
   UNION
   SELECT 2
-  LIMIT 1 );
+    LIMIT 1 );
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -43562,7 +43562,7 @@ The statement ending at line XXXX
 EXPLAIN QUERY PLAN
 SELECT *
   FROM foo
-  INNER JOIN bar
+    INNER JOIN bar
   WHERE foo.id = 1;
 
   {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
@@ -43601,7 +43601,7 @@ The statement ending at line XXXX
 EXPLAIN QUERY PLAN
 UPDATE bar
   SET id = 1
-    WHERE name = 'Stella';
+  WHERE name = 'Stella';
 
   {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
   | {int 2}
@@ -43679,7 +43679,7 @@ DECLARE c CURSOR FOR
   EXPLAIN QUERY PLAN
   SELECT *
     FROM foo
-    INNER JOIN bar;
+      INNER JOIN bar;
 
   {declare_cursor}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
   | {name c}: c: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull } variable dml_proc
@@ -44044,7 +44044,7 @@ SELECT id,
   WINDOW 
     win1 AS (), 
     win2 AS ()
-ORDER BY id;
+  ORDER BY id;
 
   {select_stmt}: select: { id: integer notnull, _anon: integer notnull, _anon: integer notnull }
   | {select_core_list}: select: { id: integer notnull, _anon: integer notnull, _anon: integer notnull }
@@ -47131,7 +47131,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM bar
-ORDER BY name COLLATE nocase;
+  ORDER BY name COLLATE nocase;
 
   {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
   | {select_core_list}: select: { id: integer notnull, name: text, rate: longint }
@@ -60207,7 +60207,7 @@ The statement ending at line XXXX
 
 SET val_avg := ( SELECT avg(id) AS col
   FROM foo
-LIMIT 1 - 1 );
+  LIMIT 1 - 1 );
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 
@@ -60248,7 +60248,7 @@ CREATE PROC val_avg_proc (lim INTEGER)
 BEGIN
   LET val_avg := ( SELECT avg(id) AS col
     FROM foo
-  LIMIT lim );
+    LIMIT lim );
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
@@ -60295,7 +60295,7 @@ The statement ending at line XXXX
 
 SET val_avg := ( SELECT avg(id) AS col
   FROM foo
-LIMIT 2 + 4 * 10 );
+  LIMIT 2 + 4 * 10 );
 
   {assign}: val_avg: real variable was_set
   | {name val_avg}: val_avg: real variable was_set
@@ -60334,8 +60334,8 @@ The statement ending at line XXXX
 
 SET val_avg := ( SELECT avg(id) AS col
   FROM foo
-LIMIT 2 + 4 * 10
-OFFSET 1 );
+  LIMIT 2 + 4 * 10
+  OFFSET 1 );
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 
@@ -61048,7 +61048,7 @@ The statement ending at line XXXX
 INSERT INTO foo(id)
   SELECT 1
     FROM (SELECT 1) AS T1
-    INNER JOIN (SELECT 2) AS T2;
+      INNER JOIN (SELECT 2) AS T2;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
 
@@ -61219,7 +61219,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-  INNER JOIN tvf(1);
+    INNER JOIN tvf(1);
 
   {select_stmt}: select: { id: integer notnull, foo: text }
   | {select_core_list}: select: { id: integer notnull, foo: text }
@@ -61251,7 +61251,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo
-  LEFT JOIN tvf(1);
+    LEFT JOIN tvf(1);
 
 test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 
@@ -61285,7 +61285,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM tvf(1)
-  RIGHT JOIN foo;
+    RIGHT JOIN foo;
 
 test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
 
@@ -61319,7 +61319,7 @@ The statement ending at line XXXX
 
 SELECT *
   FROM foo AS T1
-  CROSS JOIN foo AS T2;
+    CROSS JOIN foo AS T2;
 
   {select_stmt}: select: { id: integer notnull, id: integer notnull }
   | {select_core_list}: select: { id: integer notnull, id: integer notnull }
@@ -64936,7 +64936,7 @@ CREATE PROC improvements_work_for_select_table_star ()
 BEGIN
   SELECT tnull.*, another_table_with_nullables.xn AS xn0, another_table_with_nullables.zn
     FROM tnull
-    INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
+      INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
     WHERE tnull.xn IS NOT NULL AND yn IS NOT NULL AND zn IS NOT NULL;
 END;
 
@@ -65301,7 +65301,7 @@ CREATE PROC improvements_work_on_join_results ()
 BEGIN
   SELECT tnull.xn AS xn0
     FROM tnull
-    INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
+      INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn
     WHERE tnull.xn IS NOT NULL;
 END;
 
@@ -65363,7 +65363,7 @@ CREATE PROC improvements_do_not_work_for_on_clauses ()
 BEGIN
   SELECT tnull.xn AS xn0
     FROM tnull
-    INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn AND tnull.xn IS NOT NULL;
+      INNER JOIN another_table_with_nullables ON tnull.xn = another_table_with_nullables.xn AND tnull.xn IS NOT NULL;
 END;
 
   {create_proc_stmt}: improvements_do_not_work_for_on_clauses: { xn0: integer } dml_proc
@@ -74461,7 +74461,7 @@ BEGIN
     fragtest_2_0 (x) AS (CALL fragtest_2_0())
   SELECT source.x
     FROM source
-    INNER JOIN fragtest_2_0;
+      INNER JOIN fragtest_2_0;
 END;
 
   {stmt_and_attr}: ok
@@ -74928,7 +74928,7 @@ The statement ending at line XXXX
 
 SELECT T1.id, T1.t
   FROM simple_shape2 AS T1
-  INNER JOIN simple_shape2 AS T2;
+    INNER JOIN simple_shape2 AS T2;
 
   {select_stmt}: select: { id: integer, t: text }
   | {select_core_list}: select: { id: integer, t: text }
@@ -74969,7 +74969,7 @@ The statement ending at line XXXX
 
 SELECT T1.id, T1.t, T1.u
   FROM simple_shape2 AS T1
-  INNER JOIN simple_shape2 AS T2;
+    INNER JOIN simple_shape2 AS T2;
 
   {select_stmt}: select: { id: integer, t: text, u: text }
   | {select_core_list}: select: { id: integer, t: text, u: text }
@@ -75015,7 +75015,7 @@ The statement ending at line XXXX
 
 SELECT T1.id, T1.t, T1.u
   FROM simple_shape2 AS T1
-  INNER JOIN simple_shape2 AS T2;
+    INNER JOIN simple_shape2 AS T2;
 
   {select_stmt}: select: { id: integer, t: text, u: text }
   | {select_core_list}: select: { id: integer, t: text, u: text }
@@ -75582,7 +75582,7 @@ BEGIN
       UNION ALL
       SELECT i + 1 AS i
         FROM N
-      LIMIT 20
+        LIMIT 20
     )
   SELECT inline_math(i, i + 3) AS result
     FROM N;
@@ -80974,7 +80974,7 @@ INSERT INTO simple_backing_table(k, v)
     FROM _vals AS V
 ON CONFLICT (k) DO UPDATE
   SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
-    WHERE rowid IN (SELECT rowid
+  WHERE rowid IN (SELECT rowid
     FROM basic_table
     WHERE id < 100);
 
@@ -81196,7 +81196,7 @@ INSERT INTO simple_backing_table(k, v)
     FROM _vals AS V
 ON CONFLICT (k) DO UPDATE
   SET k = cql_blob_update(k, cql_blob_get(k, basic_table.id) + 1, basic_table.id)
-    WHERE rowid IN (SELECT rowid
+  WHERE rowid IN (SELECT rowid
     FROM basic_table
     WHERE id < 100);
 
@@ -86557,7 +86557,7 @@ WITH
   simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
 UPDATE dummy_table_for_backed_test
   SET id = id + 1
-    WHERE id IN (SELECT id
+  WHERE id IN (SELECT id
     FROM simple_backed_table);
 
   {with_update_stmt}: dummy_table_for_backed_test: { id: integer }
@@ -86692,9 +86692,10 @@ CREATE TABLE update_test_2(
 The statement ending at line XXXX
 
 UPDATE update_from_target
-  SET name = update_test_2.nameFROM update_test_1
+  SET name = update_test_2.name
+  FROM update_test_1
   INNER JOIN update_test_2 ON update_test_1.id = update_test_2.id
-    WHERE update_test_1.name = 'x' AND update_from_target.id = update_test_1.id;
+  WHERE update_test_1.name = 'x' AND update_from_target.id = update_test_1.id;
 
   {update_stmt}: update_from_target: { id: integer notnull primary_key, name: text }
   | {name update_from_target}: update_from_target: { id: integer notnull primary_key, name: text }
@@ -86744,7 +86745,8 @@ UPDATE update_from_target
 The statement ending at line XXXX
 
 UPDATE update_from_target
-  SET name = update_test_2.nameFROM table_does_not_exist;
+  SET name = update_test_2.name
+  FROM table_does_not_exist;
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined 'table_does_not_exist'
 
@@ -86767,7 +86769,8 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
 The statement ending at line XXXX
 
 UPDATE simple_backed_table
-  SET id = 5FROM update_test_1;
+  SET id = 5
+  FROM update_test_1;
 
 test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0497: FROM clause not supported when updating backed table 'simple_backed_table'
 
@@ -86795,7 +86798,8 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 UPDATE update_from_target
-  SET name = update_test_2.nameFROM update_test_1;
+  SET name = update_test_2.name
+  FROM update_test_1;
 
 test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 
@@ -88221,10 +88225,10 @@ The statement ending at line XXXX
 CALL set_in_object_dot_storage(storage, ( SELECT 'id'
 UNION ALL
 SELECT 'id'
-LIMIT 1 ), get_from_object_dot_storage(storage, ( SELECT 'id'
+  LIMIT 1 ), get_from_object_dot_storage(storage, ( SELECT 'id'
 UNION ALL
 SELECT 'id'
-LIMIT 1 )) + 1);
+  LIMIT 1 )) + 1);
 
   {call_stmt}: ok
   | {name set_in_object_dot_storage}: ok
@@ -89607,7 +89611,7 @@ CREATE PROC presult_1 ()
 BEGIN
   SELECT T2.*
     FROM qnamed_table AS T1
-    INNER JOIN qnamed_table AS T2;
+      INNER JOIN qnamed_table AS T2;
 END;
 
   {create_proc_stmt}: presult_1: { `x y`: integer qid, `a b`: integer qid } dml_proc
@@ -89648,7 +89652,7 @@ CREATE PROC presult_2 ()
 BEGIN
   SELECT T1.`x y`
     FROM qnamed_table AS T1
-    INNER JOIN qnamed_table AS T2;
+      INNER JOIN qnamed_table AS T2;
 END;
 
   {create_proc_stmt}: presult_2: { `x y`: integer qid } dml_proc
@@ -89719,7 +89723,7 @@ CREATE PROC presult_4 ()
 BEGIN
   SELECT *
     FROM (SELECT *
-        FROM qnamed_table);
+          FROM qnamed_table);
 END;
 
   {create_proc_stmt}: presult_4: { `x y`: integer qid, `a b`: integer qid } dml_proc
@@ -89764,7 +89768,7 @@ CREATE PROC presult_5 ()
 BEGIN
   SELECT T1.*
     FROM (SELECT *
-        FROM qnamed_table) AS T1;
+          FROM qnamed_table) AS T1;
 END;
 
   {create_proc_stmt}: presult_5: { `x y`: integer qid, `a b`: integer qid } dml_proc

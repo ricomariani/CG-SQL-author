@@ -786,7 +786,7 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CREATE TRIGGER trigger
 BEGIN
 UPDATE bar
   SET id = 7
-    WHERE rate > old.b AND rate < new.b;
+  WHERE rate > old.b AND rate < new.b;
 
 INSERT INTO bar(id, name, rate)
   VALUES(7, 'goo', 17L);

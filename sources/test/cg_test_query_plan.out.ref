@@ -88,11 +88,11 @@ BEGIN
   CREATE VIEW my_view AS
   SELECT *
     FROM `table one`
-    INNER JOIN t2 USING (id);
+      INNER JOIN t2 USING (id);
   CREATE VIEW my_view_using_table_alias AS
   SELECT foo.*, bar.id AS id2, bar.rowid AS rowid
     FROM `table one` AS foo
-    INNER JOIN t2 AS bar USING (id);
+      INNER JOIN t2 AS bar USING (id);
   CREATE TRIGGER my_trigger
     AFTER INSERT ON `table one`
     WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 1
@@ -168,7 +168,7 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT *\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\nORDER BY name ASC";
+  SET stmt := "SELECT *\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT *
@@ -179,7 +179,7 @@ BEGIN
   UNION
   SELECT id
     FROM t3)
-  ORDER BY name ASC;
+    ORDER BY name ASC;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(1, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -210,12 +210,12 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "UPDATE `table one`\\n  SET id = 1, name = '1'\\n    WHERE name IN (SELECT T.NAME\\n    FROM t3 AS T)";
+  SET stmt := "UPDATE `table one`\\n  SET id = 1, name = '1'\\n  WHERE name IN (SELECT T.NAME\\n    FROM t3 AS T)";
   INSERT INTO sql_temp(id, sql) VALUES(3, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   UPDATE `table one`
     SET id = 1, name = '1'
-      WHERE name IN (SELECT T.NAME
+    WHERE name IN (SELECT T.NAME
       FROM t3 AS T);
   LOOP FETCH C
   BEGIN
@@ -229,7 +229,7 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT T.*\\n      FROM t2 AS T\\n  )\\nUPDATE `table one`\\n  SET id = 1, name = '1'\\n    WHERE name IN (SELECT name\\n    FROM some_cte)";
+  SET stmt := "WITH\\n  some_cte (id, name) AS (\\n    SELECT T.*\\n      FROM t2 AS T\\n  )\\nUPDATE `table one`\\n  SET id = 1, name = '1'\\n  WHERE name IN (SELECT name\\n    FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(4, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
@@ -239,7 +239,7 @@ BEGIN
     )
   UPDATE `table one`
     SET id = 1, name = '1'
-      WHERE name IN (SELECT name
+    WHERE name IN (SELECT name
       FROM some_cte);
   LOOP FETCH C
   BEGIN
@@ -253,12 +253,12 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "DELETE FROM `table one` WHERE name IN (SELECT foo.name\\n  FROM t2 AS foo\\n  INNER JOIN t3 USING (name))";
+  SET stmt := "DELETE FROM `table one` WHERE name IN (SELECT foo.name\\n  FROM t2 AS foo\\n    INNER JOIN t3 USING (name))";
   INSERT INTO sql_temp(id, sql) VALUES(5, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   DELETE FROM `table one` WHERE name IN (SELECT foo.name
     FROM t2 AS foo
-    INNER JOIN t3 USING (name));
+      INNER JOIN t3 USING (name));
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(5, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -271,14 +271,14 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT foo.name\\n      FROM t2 AS foo\\n      INNER JOIN t3 USING (id)\\n  )\\nDELETE FROM `table one` WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
+  SET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT foo.name\\n      FROM t2 AS foo\\n        INNER JOIN t3 USING (id)\\n  )\\nDELETE FROM `table one` WHERE name NOT IN (SELECT *\\n  FROM some_cte)";
   INSERT INTO sql_temp(id, sql) VALUES(6, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (name) AS (
       SELECT foo.name
         FROM t2 AS foo
-        INNER JOIN t3 USING (id)
+          INNER JOIN t3 USING (id)
     )
   DELETE FROM `table one` WHERE name NOT IN (SELECT *
     FROM some_cte);
@@ -462,14 +462,14 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT t2.name\\n      FROM t2\\n      INNER JOIN t3 USING (id)\\n  )\\nSELECT *\\n  FROM some_cte";
+  SET stmt := "WITH\\n  some_cte (name) AS (\\n    SELECT t2.name\\n      FROM t2\\n        INNER JOIN t3 USING (id)\\n  )\\nSELECT *\\n  FROM some_cte";
   INSERT INTO sql_temp(id, sql) VALUES(16, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   WITH
     some_cte (name) AS (
       SELECT t2.name
         FROM t2
-        INNER JOIN t3 USING (id)
+          INNER JOIN t3 USING (id)
     )
   SELECT *
     FROM some_cte;
@@ -520,12 +520,12 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n  _foo";
+  SET stmt := "SELECT 1 AS n\\n  FROM foo_,\\n    _foo";
   INSERT INTO sql_temp(id, sql) VALUES(19, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT 1 AS n
     FROM foo_,
-    _foo;
+      _foo;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(19, C.iselectid, C.iorder, C.ifrom, C.zdetail);
@@ -684,7 +684,7 @@ BEGIN
   LET query_plan_trivial_blob := trivial_blob();
 
   DECLARE stmt TEXT NOT NULL;
-  SET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table   AS two";
+  SET stmt := "SELECT\\n    one.id,\\n    one.t,\\n    one.b,\\n    one.r,\\n    two.id AS id_,\\n    two.t AS t_,\\n    two.b AS b_,\\n    two.r AS r_\\n  FROM select_virtual_table AS one,\\nselect_virtual_table     AS two";
   INSERT INTO sql_temp(id, sql) VALUES(24, stmt);
   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
   SELECT
@@ -697,7 +697,7 @@ BEGIN
       two.b AS b_,
       two.r AS r_
     FROM select_virtual_table AS one,
-  select_virtual_table   AS two;
+  select_virtual_table     AS two;
   LOOP FETCH C
   BEGIN
     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(24, C.iselectid, C.iorder, C.ifrom, C.zdetail);

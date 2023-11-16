@@ -648,10 +648,10 @@ BEGIN
     WHERE id IN (SELECT id
     FROM bar
     WHERE rate = rate_
-  ORDER BY name
-  LIMIT limit_
-  OFFSET offset_)
-  ORDER BY id;
+    ORDER BY name
+    LIMIT limit_
+    OFFSET offset_)
+    ORDER BY id;
 END;
 --]]
 
@@ -698,10 +698,10 @@ BEGIN
     WHERE id NOT IN (SELECT id
     FROM bar
     WHERE rate = rate_
-  ORDER BY name
-  LIMIT limit_
-  OFFSET offset_)
-  ORDER BY id;
+    ORDER BY name
+    LIMIT limit_
+    OFFSET offset_)
+    ORDER BY id;
 END;
 --]]
 
@@ -1400,7 +1400,7 @@ BEGIN
     VALUES(NULL);
   UPDATE bar
     SET name = 'bar'
-      WHERE name = 'baz';
+    WHERE name = 'baz';
   DELETE FROM foo WHERE id = 1;
 END;
 --]]
@@ -1734,7 +1734,7 @@ CREATE PROC thread_theme_info_list (thread_key_ LONG_INT NOT NULL)
 BEGIN
   SELECT *
     FROM (SELECT thread_key
-        FROM threads) AS T;
+          FROM threads) AS T;
 END;
 --]]
 
@@ -3110,7 +3110,7 @@ BEGIN
     )
   UPDATE bar
     SET name = 'xyzzy'
-      WHERE id IN (SELECT *
+    WHERE id IN (SELECT *
       FROM x);
 END;
 --]]
@@ -3264,10 +3264,10 @@ BEGIN
   DECLARE C CURSOR FOR
     SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count, SUM(A.switch_account_badge_count) AS switch_account_badge_count
       FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
-          FROM unread_pending_threads AS P
-        UNION ALL
-        SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
-          FROM switch_account_badges AS S) AS A;
+            FROM unread_pending_threads AS P
+          UNION ALL
+          SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
+            FROM switch_account_badges AS S) AS A;
 END;
 --]]
 
@@ -3337,7 +3337,7 @@ BEGIN
   UNION ALL
   SELECT foo.id, 2 AS x
     FROM foo
-  ORDER BY id;
+    ORDER BY id;
 END;
 --]]
 
@@ -3448,7 +3448,7 @@ BEGIN
       WHERE 1
   ON CONFLICT (id) DO UPDATE
     SET id = 10
-      WHERE id <> 10;
+    WHERE id <> 10;
 END;
 --]]
 
@@ -3478,7 +3478,7 @@ BEGIN
       WHERE 1
   ON CONFLICT (id) DO UPDATE
     SET id = 10
-      WHERE id <> 10;
+    WHERE id <> 10;
 END;
 --]]
 
@@ -3922,7 +3922,7 @@ BEGIN
     WHERE 0
   UNION
   SELECT 2
-  LIMIT 1 );
+    LIMIT 1 );
 END;
 --]]
 
@@ -7637,7 +7637,7 @@ BEGIN
     shared_conditional (x) AS (CALL shared_conditional(1))
   SELECT bar.*
     FROM bar
-    INNER JOIN some_cte ON x = 5;
+      INNER JOIN some_cte ON x = 5;
 END;
 --]]
 
@@ -7759,7 +7759,7 @@ function nested_shared_stuff(_db_)
     8, _preds_1,
     {
     "WITH nested_shared_proc (x) AS (",
-    "  WITH shared_conditional (x) AS (",
+    " WITH shared_conditional (x) AS (",
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",
@@ -7846,7 +7846,7 @@ function use_nested_select_shared_frag_form(_db_)
     {
     "SELECT x FROM (",
     "(",
-    "  WITH shared_conditional (x) AS (",
+    " WITH shared_conditional (x) AS (",
     "SELECT ?",
     "SELECT ? + ?",
     "SELECT ? + ? + ?",

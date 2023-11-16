@@ -55,7 +55,7 @@ static void gen_version_attrs(ast_node *_Nullable ast);
 static void gen_col_def(ast_node *_Nonnull ast);
 static void gen_query_parts(ast_node *ast);
 static void gen_select_stmt(ast_node *_Nonnull ast);
-static void gen_opt_where_without_new_line(ast_node *ast);
+static void gen_opt_where(ast_node *ast);
 static void gen_opt_orderby(ast_node *ast);
 static void gen_shape_arg(ast_node *ast);
 static void gen_insert_list(ast_node *_Nullable ast);
@@ -65,7 +65,6 @@ static void gen_opt_filter_clause(ast_node *ast);
 static void gen_if_not_exists(ast_node *ast, bool_t if_not_exist);
 static void gen_shape_def(ast_node *ast);
 static void gen_expr_names(ast_node *ast);
-static void gen_opt_where(ast_node *ast);
 static void gen_conflict_clause(ast_node *ast);
 static void gen_call_stmt(ast_node *ast);
 static void gen_shared_cte(ast_node *ast);
@@ -417,6 +416,7 @@ static void gen_create_index_stmt(ast_node *ast) {
   gen_indexed_columns(indexed_columns);
   gen_printf(")");
   if (opt_where) {
+    gen_printf("\n");
     gen_opt_where(opt_where);
   }
   gen_version_attrs(attrs);
@@ -1818,7 +1818,7 @@ static void gen_opt_filter_clause(ast_node *ast) {
   EXTRACT_NOTNULL(opt_where, ast->left);
 
   gen_printf(" FILTER (");
-  gen_opt_where_without_new_line(opt_where);
+  gen_opt_where(opt_where);
   gen_printf(")");
 }
 
@@ -2594,11 +2594,6 @@ static void gen_orderby_list(ast_node *ast) {
 }
 
 static void gen_opt_where(ast_node *ast) {
-  gen_printf("\n  ");
-  gen_opt_where_without_new_line(ast);
-}
-
-static void gen_opt_where_without_new_line(ast_node *ast) {
   Contract(is_ast_opt_where(ast));
 
   gen_printf("WHERE ");
@@ -2624,14 +2619,14 @@ static void gen_opt_orderby(ast_node *ast) {
 static void gen_opt_limit(ast_node *ast) {
   Contract(is_ast_opt_limit(ast));
 
-  gen_printf("\nLIMIT ");
+  gen_printf("\n  LIMIT ");
   gen_root_expr(ast->left);
 }
 
 static void gen_opt_offset(ast_node *ast) {
   Contract(is_ast_opt_offset(ast));
 
-  gen_printf("\nOFFSET ");
+  gen_printf("\n  OFFSET ");
   gen_root_expr(ast->left);
 }
 
@@ -2684,12 +2679,13 @@ static void gen_select_from_etc(ast_node *ast) {
 
   if (query_parts) {
     gen_printf("\n  FROM ");
-    GEN_BEGIN_INDENT(from, 2);
+    GEN_BEGIN_INDENT(from, 4);
       pending_indent = 0;
       gen_query_parts(query_parts);
     GEN_END_INDENT(from);
   }
   if (opt_where) {
+    gen_printf("\n  ");
     gen_opt_where(opt_where);
   }
   if (opt_groupby) {
@@ -2713,7 +2709,7 @@ static void gen_select_orderby(ast_node *ast) {
   EXTRACT(opt_offset, select_offset->left);
 
   if (opt_orderby) {
-    gen_printf("\n");
+    gen_printf("\n  ");
     gen_opt_orderby(opt_orderby);
   }
   if (opt_limit) {
@@ -3517,10 +3513,11 @@ static void gen_update_stmt(ast_node *ast) {
   gen_printf("\nSET ");
   gen_update_list(update_list);
   if (query_parts) {
-    gen_printf("FROM ");
+    gen_printf("\nFROM ");
     gen_query_parts(query_parts);
   }
   if (opt_where) {
+    gen_printf("\n");
     gen_opt_where(opt_where);
   }
   if (opt_orderby) {
@@ -4981,6 +4978,7 @@ static void gen_conflict_target(ast_node *ast) {
     gen_printf(") ");
   }
   if (opt_where) {
+    gen_printf("\n");
     gen_opt_where(opt_where);
     gen_printf(" ");
   }

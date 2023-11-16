@@ -239,12 +239,18 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
   Contract(str);
 
   const char squote = '\'';
+  bool_t atStart = 1;
   bool_t inQuote = 0;
   bool_t multi_line = !!(flags & PRETTY_QUOTE_MULTI_LINE);
   bool_t for_json = !!(flags & PRETTY_QUOTE_JSON);
 
   bputc(output, '"');
   for (CSTR p = str; p[0]; p++) {
+    // trim leading spaces down to one
+    if (atStart && p[0] == ' ' && p[1] == ' ') {
+       continue;
+    }
+    atStart = 0;
     // figure out if we're in quoted sql text, if we are then any newlines we see
     // are part of the string not part of our multi-line formatting.  They have to be escaped.
     if (!inQuote && p[0] == squote) {
@@ -329,6 +335,7 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
     cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
     return;
   }
+
   // Otherwise, we want the SQL string to be new-line separated and indented for readability
   CHARBUF_OPEN(temp_output);
   bprintf(&temp_output, "\n  ");

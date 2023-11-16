@@ -53,7 +53,7 @@ static bool_t qp_table_function_callback(
 {
   Contract(is_ast_table_function(ast));
   EXTRACT_STRING(name, ast->left);
-  bprintf(output, "%s", name);
+  gen_printf("%s", name);
 
   if (!symtab_add(virtual_tables, name, NULL)) {
     // This virtual table is already created
@@ -105,44 +105,44 @@ static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf 
   bool_t nullable = is_nullable(sem_type) && !is_inferred_notnull(sem_type);
 
   if (nullable) {
-    bprintf(output, "nullable(");
+    gen_printf("nullable(");
   }
 
   if (is_bool(sem_type)) {
-    bprintf(output, "true");
+    gen_printf("true");
   }
   else if (is_long(sem_type)) {
-    bprintf(output, "1L");
+    gen_printf("1L");
   }
   else if (is_real(sem_type)) {
     bprintf(output, "1.0");
   }
   else if (is_numeric(sem_type)) {
-    bprintf(output, "1");
+    gen_printf("1");
   }
   else if (is_text(sem_type)) {
-    bprintf(output, "'1'");
+    gen_printf("'1'");
   }
   else if (is_object(sem_type)) {
     if (native_context) {
-       bprintf(output, "trivial_object()");
+       gen_printf("trivial_object()");
     }
     else {
-       bprintf(output, "query_plan_trivial_object");
+       gen_printf("query_plan_trivial_object");
     }
   }
   else {
     Contract(is_blob(sem_type));
     if (native_context) {
-       bprintf(output, "trivial_blob()");
+       gen_printf("trivial_blob()");
     }
     else {
-      bprintf(output, "query_plan_trivial_blob");
+      gen_printf("query_plan_trivial_blob");
     }
   }
 
   if (nullable) {
-    bprintf(output, ")");
+    gen_printf(")");
   }
 }
 

@@ -1,5 +1,6 @@
 ---
 title: "Appendix 6: CQL In 20 Minutes"
+weight: 6
 ---
 <!---
 -- Copyright (c) Meta Platforms, Inc. and affiliates.

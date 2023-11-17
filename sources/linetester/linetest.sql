@@ -21,8 +21,25 @@
 
 declare procedure printf no check;
 
+declare function cql_fopen(name text!, mode text!) create object<file>;
+declare function readline_object_file(f object<file>!) create text;
+declare function atoi_at_text(str text, `offset` int!) int!;
+declare function len_text(self text) int!;
+declare function octet_text(self text, `offset` int!) int!;
+declare function after_text(self text, `offset` int!) create text;
+declare function starts_with_text(haystack text!, needle text!) bool!;
+declare function index_of_text(haystack text!, needle text!) int!;
+declare function contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
+
+var proc_count int!;
+var compares int!;
+var errors int!;
+var expected_name text;
+var actual_name text;
+
 -- setup the table and the index
-create procedure linetest_setup()
+[[private]]
+proc setup()
 begin
   create table linedata(
      source text not null,
@@ -39,22 +56,15 @@ begin
 end;
 
 -- add a row to the results table
-create procedure linetest_add(like linedata)
+[[private]]
+proc add_linedata(like linedata)
 begin
   insert into linedata from arguments;
   insert or ignore into procs from arguments(like procs);
 end;
 
-create procedure linetest_dump()
-begin
-  declare C cursor for select * from linedata;
-  loop fetch C
-  begin
-    call printf("%s %s %4d %3d %s\n", C.source, C.procname, C.physical_line, C.line, C.data);
-  end;
-end;
-
-create proc dump_proc_records(source_ text not null, procname_ text not null)
+[[private]]
+proc dump_proc_records(source_ text not null, procname_ text not null)
 begin
   declare C cursor for select * from linedata where procname = procname_ and source = source_;
   loop fetch C
@@ -63,7 +73,8 @@ begin
   end;
 end;
 
-create proc dump(procname text not null)
+[[private]]
+proc dump(procname text not null)
 begin
   call printf("%s: difference encountered\n", procname);
   call printf("<<<< EXPECTED\n");
@@ -72,15 +83,13 @@ begin
   call dump_proc_records("act", procname);
 end;
 
-create procedure compare_lines(
-  out procs integer not null,
-  out compares integer not null,
-  out errors integer not null)
+[[private]]
+proc compare_lines()
 begin
   declare p cursor for select * from procs;
   loop fetch p
   begin
-    set procs := procs + 1;
+    proc_count += 1;
 
     declare actual cursor for
       select * from linedata where
@@ -106,7 +115,7 @@ begin
           call printf("  actual: %5d %s\n", actual.line, actual.data);
           call printf("\nDifferences at:\n line %d in expected\n line %d in actual", expected.physical_line, actual.physical_line);
           call printf("\n");
-          set errors := errors + 1;
+          errors += 1;
           leave;
       end if;
       fetch actual;
@@ -119,7 +128,7 @@ begin
           call printf("\nRan out of lines in actual:\n");
           call printf("\nDifferences at:\n line %d in expected\n", expected.physical_line);
           call printf("\n");
-          set errors := errors + 1;
+          errors += 1;
       end if;
 
       if (not expected) then
@@ -127,8 +136,148 @@ begin
           call printf("\nRan out of lines in expected:\n");
           call printf("\nDifferences at:\n line %d in actual\n", actual.physical_line);
           call printf("\n");
-          set errors := errors + 1;
+          errors += 1;
       end if;
     end if;
   end;
 end;
+
+[[private]]
+proc read_file(input_name text!, source text!)
+begin
+  let prefix1 := '#define _PROC_ ';
+  let prefix2 := '#undef _PROC_';
+  let prefix3 := '#line ';
+  let prefix4 := '# ';
+
+  let prefix1_len := prefix1::len();
+  let prefix2_len := prefix2::len();
+  let prefix3_len := prefix3::len();
+  let prefix4_len := prefix4::len();
+
+  let input_file := cql_fopen(input_name, "r");
+  if input_file is null then
+    printf("unable to open file '%s'\n", input_name);
+    throw;
+  end if;
+
+  let base_at_next_line := false;
+  let line := 0;
+  let line_base := 0;
+  let physical_line := 0;
+  var procname text;
+
+  while true
+  begin
+    let data := input_file:::readline();
+    if data is null leave;
+
+    physical_line += 1;
+
+    if data::starts_with(prefix1) then
+      -- we keep the name quotes and all, it doesn't matter
+      -- as long as it's unique
+      procname := data::after(prefix1_len);
+      base_at_next_line := true;
+      line := 0;
+    end if;
+
+    if data::starts_with(prefix2) then
+      procname := NULL;
+      line := 0;
+      line_base := 0;
+    end if;
+
+    let line_start := -1;
+
+    let p3 := data::index_of(prefix3);
+    if p3 >= 0 then
+      line_start := p3 + prefix3_len;
+    end if;
+
+    let p4 := data::index_of(prefix4);
+    if p4 >= 0 then
+      line_start := p4 + prefix4_len;
+    end if;
+    
+    if line_start >= 0 then
+      line := data::atoi_at(line_start);
+      if (base_at_next_line) then
+        line_base := line - 1;
+        base_at_next_line := false;
+      end if;
+      line -= line_base;
+      continue;
+    end if;
+
+    if procname is null continue;
+    add_linedata(source, procname, line, data, physical_line);
+  end;
+end;
+
+[[private]]
+proc parse_args(args cql_string_list!)
+begin
+  let argc := args.count;
+
+  if argc != 3 then
+    printf("usage cql-linetest expected actual\n");
+    printf("cql-linetest is a test tool.  It processes the input files\n");
+    printf("normalizing the lines to the start of each procedure\n");
+    printf("and verifies that the line numbers are as expected\n");
+    return;
+  end if;
+
+  set expected_name := ifnull_throw(args[1]);
+  set actual_name := ifnull_throw(args[2]);
+end;
+
+-- main entry point
+proc linetest_main(args cql_string_list!)
+begin
+  call setup();
+  call parse_args(args);
+
+  if expected_name is null return;
+  read_file(expected_name, "exp");
+
+  if actual_name is null return;
+  read_file(actual_name, "act");
+
+  compare_lines();
+
+  printf("\n");
+  if errors then
+    printf("EXPECTED INPUT FILE: %s\n", expected_name);
+    printf("  ACTUAL INPUT FILE: %s\n", actual_name);
+  end if;
+
+  printf("Verification results: %d procedures matched %d patterns of which %d were errors.\n",
+     proc_count, compares, errors);
+end;
+
+@echo c, 
+"\n" '#include "cqlhelp.h"'
+"\n"
+"\n" '// super cheesy error handling'
+"\n" '#define E(x) \'
+"\n" 'if (SQLITE_OK != (x)) { \'
+"\n" ' fprintf(stderr, "error encountered at: %s (%s:%d)\n", #x, __FILE__, __LINE__); \'
+"\n" ' fprintf(stderr, "sqlite3_errmsg: %s\n", sqlite3_errmsg(db)); \'
+"\n" ' errors = -1; \'
+"\n" ' goto error; \'
+"\n" '}'
+"\n"
+"\n" 'int main(int argc, char **argv) {'
+"\n" '  cql_object_ref args = create_arglist(argc, argv);'
+"\n" 
+"\n" '  sqlite3 *db = NULL;'
+"\n" '  E(sqlite3_open(":memory:", &db));'
+"\n" '  E(linetest_main(db, args));'
+"\n"
+"\n" 'error:'
+"\n" '  if (db) sqlite3_close(db);'
+"\n" '  cql_object_release(args);'
+"\n" '  exit(errors);'
+"\n" '}'
+"\n";

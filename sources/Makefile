@@ -251,13 +251,10 @@ cql-verify: $O/cqlrt.o $O/cql-verify.o $O/cqlhelp.o $(SQLITE_OBJ)
 	$(CC) $(CFLAGS) -I. -o $O/cql-verify $O/cqlhelp.o $O/cqlrt.o $O/cql-verify.o $(SQLITE_LINK)
 
 $O/linetest.o: linetester/linetest.c linetester/linetest.h
-	$(CC) -o $@ -c $(CFLAGS) linetester/linetest.c
+	$(CC) -o $@ -c $(CFLAGS) -Itester linetester/linetest.c
 
-$O/linetest_main.o: linetester/linetest_main.c
-	$(CC) -o $@ -c $(CFLAGS) $<
-
-cql-linetest: linetester/linetest_main.c $O/linetest_main.o $O/cqlrt.o $O/linetest.o $(SQLITE_OBJ)
-	$(CC) $(CFLAGS) -I. -o $O/cql-linetest $O/linetest_main.o $O/cqlrt.o $O/linetest.o $(SQLITE_LINK)
+cql-linetest: $O/cqlrt.o $O/linetest.o $(SQLITE_OBJ) $O/cqlhelp.o
+	$(CC) $(CFLAGS) -I. -o $O/cql-linetest $O/cqlrt.o $O/linetest.o $O/cqlhelp.o $(SQLITE_LINK)
 
 json-test: $O/json_test
 

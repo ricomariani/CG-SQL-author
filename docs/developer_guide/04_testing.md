@@ -89,8 +89,8 @@ unremarkable stuff.
 ```bash
 basic_test() {
   echo '--------------------------------- STAGE 2 -- BASIC PARSING TEST'
-  echo running "${TEST_DIR}/test.sql"
-  if ! ${CQL} --dev --in "${TEST_DIR}/test.sql" >"${OUT_DIR}/test.out"
+  echo running "$T/test.sql"
+  if ! ${CQL} --dev --in "$T/test.sql" >"$O/test.out"
   then
    echo basic parsing test failed
    failed
@@ -117,15 +117,15 @@ First let's look at the shell script:
 semantic_test() {
   echo '--------------------------------- STAGE 4 -- SEMANTIC ANALYSIS TEST'
   echo running semantic analysis test
-  if ! sem_check --sem --ast --dev --in "${TEST_DIR}/sem_test.sql" >"${OUT_DIR}/sem_test.out" 2>"${OUT_DIR}/sem_test.err"
+  if ! sem_check --sem --ast --dev --in "$T/sem_test.sql" >"$O/sem_test.out" 2>"$O/sem_test.err"
   then
      echo "CQL semantic analysis returned unexpected error code"
-     cat "${OUT_DIR}/sem_test.err"
+     cat "$O/sem_test.err"
      failed
   fi
 
   echo validating output trees
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/sem_test.sql" "${OUT_DIR}/sem_test.out"
+  if ! "$O/cql-verify" "$T/sem_test.sql" "$O/sem_test.out"
   then
     echo failed verification
     failed
@@ -406,17 +406,17 @@ Let's take a quick look at the part of `test_common.sh` that runs this:
 code_gen_c_test() {
   echo '--------------------------------- STAGE 5 -- C CODE GEN TEST'
   echo running codegen test
-  if ! ${CQL} --test --cg "${OUT_DIR}/cg_test_c.h" "${OUT_DIR}/cg_test_c.c" \
-    "${OUT_DIR}/cg_test_exports.out" --in "${TEST_DIR}/cg_test.sql" \
-    --global_proc cql_startup --generate_exports 2>"${OUT_DIR}/cg_test_c.err"
+  if ! ${CQL} --test --cg "$O/cg_test_c.h" "$O/cg_test_c.c" \
+    "$O/cg_test_exports.out" --in "$T/cg_test.sql" \
+    --global_proc cql_startup --generate_exports 2>"$O/cg_test_c.err"
   then
     echo "ERROR:"
-    cat "${OUT_DIR}/cg_test_c.err"
+    cat "$O/cg_test_c.err"
     failed
   fi
 
   echo validating codegen
-  if ! "${OUT_DIR}/cql-verify" "${TEST_DIR}/cg_test.sql" "${OUT_DIR}/cg_test_c.c"
+  if ! "$O/cql-verify" "$T/cg_test.sql" "$O/cg_test_c.c"
   then
     echo "ERROR: failed verification"
     failed
@@ -466,14 +466,14 @@ less than 90s on my laptop.
 run_test() {
   echo '--------------------------------- STAGE 13 -- RUN CODE TEST'
   echo running codegen test with execution
-  if ! cc -E -x c -w "${TEST_DIR}/run_test.sql" \
-    >"${OUT_DIR}/run_test_cpp.out"
+  if ! cc -E -x c -w "$T/run_test.sql" \
+    >"$O/run_test_cpp.out"
   then
     echo preprocessing failed.
     failed
   elif ! ${CQL} --nolines \
-    --cg "${OUT_DIR}/run_test.h" "${OUT_DIR}/run_test.c" \
-    --in "${OUT_DIR}/run_test_cpp.out" \
+    --cg "$O/run_test.h" "$O/run_test.c" \
+    --in "$O/run_test_cpp.out" \
     --global_proc cql_startup --rt c
   then
     echo codegen failed.
@@ -482,7 +482,7 @@ run_test() {
   then
     echo build failed
     failed
-  elif ! (echo "  executing tests"; "./${OUT_DIR}/a.out")
+  elif ! (echo "  executing tests"; "./$O/a.out")
   then
     echo tests failed
     failed

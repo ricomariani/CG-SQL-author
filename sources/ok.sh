@@ -4,8 +4,8 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-OUT_DIR="out"
-TEST_DIR="test"
+O="out"
+T="test"
 
 copy_extras() {
   echo "no extra files to copy at this time"
@@ -15,8 +15,8 @@ copy_extras() {
 source common/test_helpers.sh || exit 1
 
 copy_ref() {
-  normalize_lines "${OUT_DIR}/$1" 2>/dev/null
-  cp "${OUT_DIR}/$1" "${TEST_DIR}/$1.ref" 2>/dev/null
+  normalize_lines "$O/$1" 2>/dev/null
+  cp "$O/$1" "${T}/$1.ref" 2>/dev/null
 }
 
 copy_ref alt_cqlrt.err

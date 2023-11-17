@@ -4,12 +4,12 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-OUT_DIR="out"
-TEST_DIR="test"
-CQL_FILE="${OUT_DIR}/generated_upgrade_test.cql"
-SCHEMA_FILE="${OUT_DIR}/generated_upgrade_test_schema.sql"
+O="out"
+T="test"
+CQL_FILE="$O/generated_upgrade_test.cql"
+SCHEMA_FILE="$O/generated_upgrade_test_schema.sql"
 TEST_PREFIX="test"
-CQL="./${OUT_DIR}/cql"
+CQL="./$O/cql"
 ERROR_TRACE=0
 
 DIR="$( dirname -- "$0"; )"
@@ -40,26 +40,26 @@ set_exclusive() {
 }
 
 # Delete databases (if they exist).
-rm -f ${OUT_DIR}/*.db
+rm -f $O/*.db
 
 # Delete upgraders if they exist
-rm -f ${OUT_DIR}/generated_upgrader*
-rm -f ${OUT_DIR}/upgrade?
+rm -f $O/generated_upgrader*
+rm -f $O/upgrade?
 
 echo "compiling the shared schema validator to C"
 
-cp upgrade/upgrade_validate.sql "${OUT_DIR}/upgrade_validate.sql"
+cp upgrade/upgrade_validate.sql "$O/upgrade_validate.sql"
 
  # set ERROR_TRACE to get verbose tracing in the upgrader
 if [ "${ERROR_TRACE}" != "0" ]
 then
-   cat upgrade/errortrace.inc "${OUT_DIR}/upgrade_validate.sql" >"${OUT_DIR}/x"
-   mv "${OUT_DIR}/x" "${OUT_DIR}/upgrade_validate.sql"
+   cat upgrade/errortrace.inc "$O/upgrade_validate.sql" >"$O/x"
+   mv "$O/x" "$O/upgrade_validate.sql"
 fi
 
-if ! ${CQL} --in ${OUT_DIR}/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c; then
+if ! ${CQL} --in $O/upgrade_validate.sql --cg $O/upgrade_validate.h $O/upgrade_validate.c; then
   echo failed compiling upgrade validator
-  echo ${CQL} --in upgrade/upgrade_validate.sql --cg ${OUT_DIR}/upgrade_validate.h ${OUT_DIR}/upgrade_validate.c
+  echo ${CQL} --in upgrade/upgrade_validate.sql --cg $O/upgrade_validate.h $O/upgrade_validate.c
   exit 1;
 fi
 
@@ -69,8 +69,8 @@ for i in {0..4}
 do
   set_exclusive $i
 
-  if ! ${CQL} ${exclusive} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"; then
-    echo ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "${OUT_DIR}/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"
+  if ! ${CQL} ${exclusive} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "$O/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"; then
+    echo ${CQL} --in "upgrade/SchemaPersistentV$i.sql" --rt schema_upgrade --cg "$O/generated_upgrader$i.sql" --global_proc "$TEST_PREFIX"
     echo "failed generating upgrade to version $i CQL"
     exit 1
   fi
@@ -78,12 +78,12 @@ do
   # set ERROR_TRACE to get verbose tracing in the upgrader
   if [ "${ERROR_TRACE}" != "0" ]
   then
-    cat upgrade/errortrace.inc "${OUT_DIR}/generated_upgrader$i.sql" >"${OUT_DIR}/x"
-    mv "${OUT_DIR}/x" "${OUT_DIR}/generated_upgrader$i.sql"
+    cat upgrade/errortrace.inc "$O/generated_upgrader$i.sql" >"$O/x"
+    mv "$O/x" "$O/generated_upgrader$i.sql"
   fi
 
-  if ! ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --compress --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"; then
-    echo ${CQL} --in "${OUT_DIR}/generated_upgrader$i.sql" --compress --cg "${OUT_DIR}/generated_upgrade$i.h" "${OUT_DIR}/generated_upgrade$i.c"
+  if ! ${CQL} --in "$O/generated_upgrader$i.sql" --compress --cg "$O/generated_upgrade$i.h" "$O/generated_upgrade$i.c"; then
+    echo ${CQL} --in "$O/generated_upgrader$i.sql" --compress --cg "$O/generated_upgrade$i.h" "$O/generated_upgrade$i.c"
     echo "failed C from the upgrader $i"
     exit 1
   fi
@@ -100,8 +100,8 @@ fi
 for i in {0..4}
 do
   echo "testing upgrade to v$i from scratch"
-  if ! "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" > "${OUT_DIR}/upgrade_schema_v$i.out"; then
-    echo "${OUT_DIR}/upgrade$i" "${OUT_DIR}/test_$i.db" ">" "${OUT_DIR}/upgrade_schema_v$i.out"
+  if ! "$O/upgrade$i" "$O/test_$i.db" > "$O/upgrade_schema_v$i.out"; then
+    echo "$O/upgrade$i" "$O/test_$i.db" ">" "$O/upgrade_schema_v$i.out"
     echo "failed generating schema from scratch"
     echo "see log file above for details"
     exit 1
@@ -135,12 +135,12 @@ do
   # set ERROR_TRACE to get verbose tracing in the upgrader
   if [ "${ERROR_TRACE}" != "0" ]
   then
-    cat upgrade/errortrace.inc "${CQL_FILE}" >"${OUT_DIR}/x"
-    mv "${OUT_DIR}/x" "${CQL_FILE}"
+    cat upgrade/errortrace.inc "${CQL_FILE}" >"$O/x"
+    mv "$O/x" "${CQL_FILE}"
   fi
 
-  if ! diff "${OUT_DIR}/generated_upgrader$i.sql" "${CQL_FILE}" ; then
-    echo diff "${OUT_DIR}/generated_upgrader$i.sql" "${CQL_FILE}"
+  if ! diff "$O/generated_upgrader$i.sql" "${CQL_FILE}" ; then
+    echo diff "$O/generated_upgrader$i.sql" "${CQL_FILE}"
     echo "The upgrader from $j to $i was different than with no previous schema specified $i!"
     exit 1
   fi
@@ -154,25 +154,25 @@ do
 
       echo "Upgrade from nothing to v$j, then to v$i -- must match direct update to v$i"
 
-      rm -f "${OUT_DIR}/test.db"
-      if ! ${OUT_DIR}/upgrade$j "${OUT_DIR}/test.db" > ${OUT_DIR}/partial.out; then
-        echo ${OUT_DIR}/upgrade$j "${OUT_DIR}/test.db > ${OUT_DIR}/partial.out"
+      rm -f "$O/test.db"
+      if ! $O/upgrade$j "$O/test.db" > $O/partial.out; then
+        echo $O/upgrade$j "$O/test.db > $O/partial.out"
         echo "initial step to version $j" failed
       fi
 
-      if ! diff "${OUT_DIR}/upgrade_schema_v$j.out" "${OUT_DIR}/partial.out";  then
-        echo diff "${OUT_DIR}/upgrade_schema_v$j.out" "${OUT_DIR}/partial.out"
+      if ! diff "$O/upgrade_schema_v$j.out" "$O/partial.out";  then
+        echo diff "$O/upgrade_schema_v$j.out" "$O/partial.out"
         echo going from nothing to $j was different when the upgrader was run again!
         exit 1
       fi
 
-      if ! ${OUT_DIR}/upgrade$i "${OUT_DIR}/test.db" > ${OUT_DIR}/final.out; then
-        echo ${OUT_DIR}/upgrade$i "${OUT_DIR}/test.db > ${OUT_DIR}/final.out"
+      if ! $O/upgrade$i "$O/test.db" > $O/final.out; then
+        echo $O/upgrade$i "$O/test.db > $O/final.out"
         echo "initial step to version $i" failed
       fi
 
-      if ! diff "${OUT_DIR}/upgrade_schema_v$i.out" "${OUT_DIR}/final.out";  then
-        echo diff "${OUT_DIR}/upgrade_schema_v$i.out" "${OUT_DIR}/final.out"
+      if ! diff "$O/upgrade_schema_v$i.out" "$O/final.out";  then
+        echo diff "$O/upgrade_schema_v$i.out" "$O/final.out"
         echo going from $j to $i was different than going directly to $i
         exit 1
       fi
@@ -188,9 +188,9 @@ echo "Testing downgrade"
 
 # Run the downgrade test binary on the test db which now has the v3 format
 # the upgrader needed was already built and the downgrade test hardness was already linked
-if ! (./${OUT_DIR}/downgrade_test "${OUT_DIR}/test.db"); then
+if ! (./$O/downgrade_test "$O/test.db"); then
   echo "Downgrade test failed."
-  echo "./${OUT_DIR}/downgrade_test ${OUT_DIR}/test.db"
+  echo "./$O/downgrade_test $O/test.db"
   exit 1
 fi
 

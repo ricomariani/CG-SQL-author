@@ -8,7 +8,7 @@ COV_EXTRA_ARGS=""
 
 COV_ARGS="${COV_COVERAGE_ARGS}"
 
-OUT_DIR="out"
+O="out"
 
 GCOVR=gcovr
 
@@ -28,12 +28,12 @@ coverage() {
     return 1
   fi
 
-  echo generating ${OUT_DIR}/report.html
+  echo generating $O/report.html
   if ! "${GCOVR}" \
             -g -k \
             --html \
             --html-details \
-            -o ${OUT_DIR}/report.html \
+            -o $O/report.html \
             ${COV_EXTRA_ARGS} \
             -e test \
             -e cql-verify \
@@ -54,10 +54,10 @@ coverage() {
     return 1
   fi
 
-  echo generating ${OUT_DIR}/report.txt
+  echo generating $O/report.txt
   if ! "${GCOVR}" \
               -g -k \
-              -o ${OUT_DIR}/report.txt \
+              -o $O/report.txt \
               ${COV_EXTRA_ARGS} \
               -e test \
               -e cql-verify \
@@ -89,6 +89,6 @@ then
   exit 1
 fi
 
-cat "${OUT_DIR}/report.txt"
+cat "$O/report.txt"
 exit 0
 

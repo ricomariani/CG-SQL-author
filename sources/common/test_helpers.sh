@@ -66,5 +66,5 @@ Don't just accept to make the error go away; you have to really understand the d
 }
 
 on_diff_exit() {
-   __on_diff_exit "${TEST_DIR}/$1.ref" "${OUT_DIR}/$1"
+   __on_diff_exit "$T/$1.ref" "$O/$1"
 }

@@ -2037,6 +2037,8 @@ foo::bar().baz;
 
 column := 1;
 
+@ECHO c, "foobar";
+
 DECLARE foo int;
 
 @MACRO(EXPR) foo!(x! EXPR, z! EXPR)

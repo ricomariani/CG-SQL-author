@@ -1769,6 +1769,8 @@ foo::bar().baz;
 
 column := 1;
 
+@echo c, @text("foo", "bar");
+
 declare @id("foo") @id("int");
 
 @include "macro_basic_parse_test.sql"

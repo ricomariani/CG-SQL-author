@@ -27,9 +27,9 @@ declare proc printf no check;
 
 declare function cql_fopen(name text!, mode text!) create object<file>;
 declare function readline_object_file(f object<file>!) create text;
-declare function atoi_at_text(str text!, `offset` int!) int!;
-declare function len_text(self text!) int!;
-declare function octet_text(self text!, `offset` int!) int!;
+declare function atoi_at_text(str text, `offset` int!) int!;
+declare function len_text(self text) int!;
+declare function octet_text(self text, `offset` int!) int!;
 declare function after_text(self text, `offset` int!) create text;
 declare function starts_with_text(haystack text!, needle text!) bool!;
 declare function index_of_text(haystack text!, needle text!) int!;

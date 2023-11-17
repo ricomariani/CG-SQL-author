@@ -2344,6 +2344,7 @@ release_savepoint_stmt:
 
 echo_stmt:
   AT_ECHO name ',' str_literal  { $echo_stmt = new_ast_echo_stmt($name, $str_literal); }
+  | AT_ECHO name ',' AT_TEXT '(' text_args ')' { $echo_stmt = new_ast_echo_stmt($name, new_ast_macro_text($text_args)); }
   ;
 
 alter_table_add_column_stmt:

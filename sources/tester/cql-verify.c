@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include "dbhelp.h"
+#include "cql-verify.h"
 
 #ifndef _MSC_VER
 #pragma clang diagnostic push
@@ -61,42 +61,42 @@ cql_string_literal(_literal_10_The_statement_ending_at_line_read_test_results, "
 #undef cql_error_trace
 #define cql_error_trace() fprintf(stderr, "SQL Failure %d %s: %s %d\n", _rc_, sqlite3_errmsg(_db_), __FILE__, __LINE__)
 
-// Generated from dbhelp.sql:38
+// Generated from cql-verify.sql:38
 
 /*
 DECLARE sql_name TEXT;
 */
 cql_string_ref sql_name = NULL;
 
-// Generated from dbhelp.sql:39
+// Generated from cql-verify.sql:39
 
 /*
 DECLARE result_name TEXT;
 */
 cql_string_ref result_name = NULL;
 
-// Generated from dbhelp.sql:40
+// Generated from cql-verify.sql:40
 
 /*
 DECLARE attempts INTEGER NOT NULL;
 */
 cql_int32 attempts = 0;
 
-// Generated from dbhelp.sql:41
+// Generated from cql-verify.sql:41
 
 /*
 DECLARE errors INTEGER NOT NULL;
 */
 cql_int32 errors = 0;
 
-// Generated from dbhelp.sql:42
+// Generated from cql-verify.sql:42
 
 /*
 DECLARE tests INTEGER NOT NULL;
 */
 cql_int32 tests = 0;
 
-// Generated from dbhelp.sql:61
+// Generated from cql-verify.sql:61
 
 /*
 @ATTRIBUTE(cql:private)
@@ -146,7 +146,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:72
+// Generated from cql-verify.sql:72
 
 /*
 @ATTRIBUTE(cql:private)
@@ -197,7 +197,7 @@ static CQL_WARN_UNUSED cql_code prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:83
+// Generated from cql-verify.sql:83
 
 /*
 @ATTRIBUTE(cql:private)
@@ -260,7 +260,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:111
+// Generated from cql-verify.sql:111
 
 /*
 @ATTRIBUTE(cql:private)
@@ -359,7 +359,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:122
+// Generated from cql-verify.sql:122
 
 /*
 @ATTRIBUTE(cql:private)
@@ -423,7 +423,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:141
+// Generated from cql-verify.sql:141
 
 /*
 @ATTRIBUTE(cql:private)
@@ -487,7 +487,7 @@ static void print_error_message(cql_string_ref _Nonnull buffer, cql_int32 line, 
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:156
+// Generated from cql-verify.sql:156
 
 /*
 @ATTRIBUTE(cql:private)
@@ -544,7 +544,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:223
+// Generated from cql-verify.sql:223
 
 /*
 CREATE PROC match_actual (buffer TEXT NOT NULL, line INTEGER NOT NULL)
@@ -681,7 +681,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:235
+// Generated from cql-verify.sql:235
 
 /*
 @ATTRIBUTE(cql:private)
@@ -724,7 +724,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:250
+// Generated from cql-verify.sql:250
 
 /*
 @ATTRIBUTE(cql:private)
@@ -784,7 +784,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:288
+// Generated from cql-verify.sql:288
 
 /*
 @ATTRIBUTE(cql:private)
@@ -878,7 +878,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:313
+// Generated from cql-verify.sql:313
 
 /*
 @ATTRIBUTE(cql:private)
@@ -958,7 +958,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:320
+// Generated from cql-verify.sql:320
 
 /*
 @ATTRIBUTE(cql:private)
@@ -986,7 +986,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:337
+// Generated from cql-verify.sql:337
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1042,7 +1042,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from dbhelp.sql:349
+// Generated from cql-verify.sql:349
 
 /*
 CREATE PROC dbhelp_main (args OBJECT<cql_string_list> NOT NULL)
@@ -1080,4 +1080,28 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+#include "cqlhelp.h"
+
+// super cheesy error handling
+#define E(x) \
+if (SQLITE_OK != (x)) { \
+ fprintf(stderr, "error encountered at: %s (%s:%d)\n", #x, __FILE__, __LINE__); \
+ fprintf(stderr, "sqlite3_errmsg: %s\n", sqlite3_errmsg(db)); \
+ errors = -1; \
+ goto error; \
+}
+
+int main(int argc, char **argv) {
+  cql_object_ref args = create_arglist(argc, argv);
+
+  sqlite3 *db = NULL;
+  E(sqlite3_open(":memory:", &db));
+  E(dbhelp_main(db, args));
+
+error:
+  if (db) sqlite3_close(db);
+  cql_object_release(args);
+  exit(errors);
+}
 #pragma clang diagnostic pop

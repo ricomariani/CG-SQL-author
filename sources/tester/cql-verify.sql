@@ -347,3 +347,29 @@ begin
     call process();
   end if;
 end;
+ 
+@echo c, 
+"\n" '#include "cqlhelp.h"'
+"\n"
+"\n" '// super cheesy error handling'
+"\n" '#define E(x) \'
+"\n" 'if (SQLITE_OK != (x)) { \'
+"\n" ' fprintf(stderr, "error encountered at: %s (%s:%d)\n", #x, __FILE__, __LINE__); \'
+"\n" ' fprintf(stderr, "sqlite3_errmsg: %s\n", sqlite3_errmsg(db)); \'
+"\n" ' errors = -1; \'
+"\n" ' goto error; \'
+"\n" '}'
+"\n"
+"\n" 'int main(int argc, char **argv) {'
+"\n" '  cql_object_ref args = create_arglist(argc, argv);'
+"\n" 
+"\n" '  sqlite3 *db = NULL;'
+"\n" '  E(sqlite3_open(":memory:", &db));'
+"\n" '  E(dbhelp_main(db, args));'
+"\n"
+"\n" 'error:'
+"\n" '  if (db) sqlite3_close(db);'
+"\n" '  cql_object_release(args);'
+"\n" '  exit(errors);'
+"\n" '}'
+"\n";

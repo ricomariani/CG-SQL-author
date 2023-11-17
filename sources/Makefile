@@ -241,17 +241,17 @@ query_plan_test: $O/query_plan_test.o $O/cqlrt.o $O/query_plan.o
 test_helpers_test: $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o 
 	$(CC) $(CFLAGS) -o $O/test_helpers_test $O/test_helpers_test.o $O/cqlrt.o $O/test_helpers.o $(SQLITE_LINK)
 
-$O/cql-verify.o: tester/cql-verify.c tester/cql-verify.h
-	$(CC) -o $@ -c $(CFLAGS) tester/cql-verify.c
+$O/cql-verify.o: cql-verify/cql-verify.c cql-verify/cql-verify.h
+	$(CC) -o $@ -c $(CFLAGS) cql-verify/cql-verify.c
 
-$O/cqlhelp.o: tester/cqlhelp.c
+$O/cqlhelp.o: cql-verify/cqlhelp.c
 	$(CC) -o $@ -c $(CFLAGS) $<
 
 cql-verify: $O/cqlrt.o $O/cql-verify.o $O/cqlhelp.o $(SQLITE_OBJ)
 	$(CC) $(CFLAGS) -I. -o $O/cql-verify $O/cqlhelp.o $O/cqlrt.o $O/cql-verify.o $(SQLITE_LINK)
 
 $O/linetest.o: linetester/linetest.c linetester/linetest.h
-	$(CC) -o $@ -c $(CFLAGS) -Itester linetester/linetest.c
+	$(CC) -o $@ -c $(CFLAGS) -Icql-verify linetester/linetest.c
 
 cql-linetest: $O/cqlrt.o $O/linetest.o $(SQLITE_OBJ) $O/cqlhelp.o
 	$(CC) $(CFLAGS) -I. -o $O/cql-linetest $O/cqlrt.o $O/linetest.o $O/cqlhelp.o $(SQLITE_LINK)

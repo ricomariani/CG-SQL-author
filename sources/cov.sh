@@ -36,7 +36,7 @@ coverage() {
             -o ${OUT_DIR}/report.html \
             ${COV_EXTRA_ARGS} \
             -e test \
-            -e tester \
+            -e cql-verify \
             -e linetester \
             -e json_test \
             -e out \
@@ -60,7 +60,7 @@ coverage() {
               -o ${OUT_DIR}/report.txt \
               ${COV_EXTRA_ARGS} \
               -e test \
-              -e tester \
+              -e cql-verify \
               -e linetester \
               -e json_test \
               -e out \

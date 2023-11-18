@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
--- *  note to readers
--- *
--- *  This file contains test cases for the parser only
--- *  as such there are many things here that can be parsed legally
--- *  but are semantically invalid or meaningless.
--- *
--- *  The purpose of these test cases is to exercise all the legal
--- *  parse paths only so don't worry about that business.
--- *
--- *  You cannot expect correct output if you also add the --sem flag to cql
--- *  it will start to whine about all the mistakes.
+-- note to readers
+-- 
+-- This file contains test cases for the parser only
+-- as such there are many things here that can be parsed legally
+-- but are semantically invalid or meaningless.
+-- 
+-- The purpose of these test cases is to exercise all the legal
+-- parse paths only so don't worry about that business.
+-- 
+-- You cannot expect correct output if you also add the --sem flag to cql
+-- it will start to whine about all the mistakes.
 
 -- create very simple table
 create table foo(id int);

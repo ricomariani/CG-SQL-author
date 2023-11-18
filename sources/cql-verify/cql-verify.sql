@@ -141,6 +141,18 @@ begin
   end if;
 end;
 
+-- search for a match on the same rowid as the last match we found
+[[private]]
+proc find_same(line_ int!, pattern text!, out search_line int!, out found int!)
+begin
+  set found := (
+    select data like ("%" || pattern || "%")
+      from test_output
+      where rowid = last_rowid
+      if nothing false);
+end;
+
+
 -- find the statement that came after line_
 -- search the results of that statement for the indicated pattern
 [[private]]
@@ -241,6 +253,11 @@ begin
     -- at least one is expected, matches have to be in order!
     pattern := buffer::after(5);
     expected_count := -1;
+  else if buffer::starts_with("-- = ") then
+    -- -- + foo
+    -- at least one is expected, matches have to be in order!
+    pattern := buffer::after(5);
+    expected_count := -2;
   else if match_multiline(buffer) then
     -- -- +7 foo
     -- an exact match (single digit matches)
@@ -257,6 +274,9 @@ begin
 
   if expected_count == -1 then
     call find_next(line, pat, search_line, found);
+    if found == 1 return;
+  else if expected_count == -2 then
+    call find_same(line, pat, search_line, found);
     if found == 1 return;
   else
     -- search among all the matching lines

@@ -119,7 +119,7 @@ end;
 -- + static inline void simple_container_proc_set_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
 -- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
 -- + static inline void simple_container_proc_set_a_to_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
--- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
+-- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 0);
 -- + static inline cql_int32 simple_container_proc_get_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- +   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
 -- + static inline void simple_container_proc_set_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {

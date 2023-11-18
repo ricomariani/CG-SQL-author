@@ -3497,7 +3497,7 @@
     {
       "name" : "crazy_string",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 161,
+      "definedOnLine" : 164,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3524,7 +3524,7 @@
     {
       "name" : "a_query",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 343,
+      "definedOnLine" : 356,
       "args" : [
         {
           "name" : "pattern",
@@ -3570,7 +3570,7 @@
     {
       "name" : "bigger_query",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 378,
+      "definedOnLine" : 391,
       "args" : [
         {
           "name" : "pattern",
@@ -3617,7 +3617,7 @@
     {
       "name" : "joiner",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 622,
+      "definedOnLine" : 641,
       "args" : [
         {
           "name" : "id_",
@@ -3682,7 +3682,7 @@
     {
       "name" : "radioactive_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 771,
+      "definedOnLine" : 791,
       "args" : [
       ],
       "fromTables" : [ "radioactive" ],
@@ -3714,7 +3714,7 @@
     {
       "name" : "object_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 828,
+      "definedOnLine" : 848,
       "args" : [
         {
           "name" : "anObject",
@@ -3745,7 +3745,7 @@
     {
       "name" : "proc_inside_region",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1055,
+      "definedOnLine" : 1075,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3785,7 +3785,7 @@
     {
       "name" : "with_select_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1071,
+      "definedOnLine" : 1091,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3810,7 +3810,7 @@
     {
       "name" : "json_escapes",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1153,
+      "definedOnLine" : 1173,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3836,7 +3836,7 @@
     {
       "name" : "use_view",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1196,
+      "definedOnLine" : 1217,
       "args" : [
       ],
       "fromTables" : [ "Foo" ],
@@ -3871,7 +3871,7 @@
     {
       "name" : "null_attribute",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1204,
+      "definedOnLine" : 1225,
       "args" : [
       ],
       "fromTables" : [ "Foo" ],
@@ -3909,7 +3909,7 @@
     {
       "name" : "shared_frag_user_function_style",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1430,
+      "definedOnLine" : 1451,
       "args" : [
       ],
       "fromTables" : [ "T2" ],
@@ -3936,7 +3936,7 @@
     {
       "name" : "high_bit_escapes",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1439,
+      "definedOnLine" : 1460,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -3962,7 +3962,7 @@
     {
       "name" : "potato",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1458,
+      "definedOnLine" : 1479,
       "args" : [
         {
           "name" : "i",
@@ -4016,7 +4016,7 @@
     {
       "name" : "uses_deleted_view_alias",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1492,
+      "definedOnLine" : 1513,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4047,7 +4047,7 @@
     {
       "name" : "test_interface1_implementation_correct",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1541,
+      "definedOnLine" : 1562,
       "args" : [
         {
           "name" : "id_",
@@ -4096,7 +4096,7 @@
     {
       "name" : "generate_quoted_items",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1897,
+      "definedOnLine" : 1943,
       "args" : [
       ],
       "fromTables" : [ "abc def" ],
@@ -4130,7 +4130,7 @@
     {
       "name" : "insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 395,
+      "definedOnLine" : 408,
       "args" : [
         {
           "name" : "id_",
@@ -4174,7 +4174,7 @@
     {
       "name" : "dummy_insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 603,
+      "definedOnLine" : 622,
       "args" : [
         {
           "name" : "seed_",
@@ -4215,7 +4215,7 @@
     {
       "name" : "insert_with_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 720,
+      "definedOnLine" : 740,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4240,7 +4240,7 @@
     {
       "name" : "insert_compound",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 738,
+      "definedOnLine" : 758,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4263,7 +4263,7 @@
     {
       "name" : "insert_multi_value",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 755,
+      "definedOnLine" : 775,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4289,7 +4289,7 @@
     {
       "name" : "upsert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 784,
+      "definedOnLine" : 804,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4321,7 +4321,7 @@
     {
       "name" : "with_upsert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 797,
+      "definedOnLine" : 817,
       "args" : [
       ],
       "insertTables" : [ "T3" ],
@@ -4349,7 +4349,7 @@
     {
       "name" : "with_insert_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 815,
+      "definedOnLine" : 835,
       "args" : [
         {
           "name" : "x",
@@ -4383,7 +4383,7 @@
     {
       "name" : "update_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 484,
+      "definedOnLine" : 502,
       "args" : [
         {
           "name" : "id_",
@@ -4422,7 +4422,7 @@
     {
       "name" : "update_with_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 494,
+      "definedOnLine" : 512,
       "args" : [
         {
           "name" : "id_",
@@ -4456,7 +4456,7 @@
     {
       "name" : "delete_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 468,
+      "definedOnLine" : 486,
       "args" : [
         {
           "name" : "name_",
@@ -4487,7 +4487,7 @@
     {
       "name" : "delete_with_values",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 474,
+      "definedOnLine" : 492,
       "args" : [
         {
           "name" : "name_",
@@ -4517,7 +4517,7 @@
     {
       "name" : "with_complex_args",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 358,
+      "definedOnLine" : 371,
       "args" : [
         {
           "binding" : "out",
@@ -4556,7 +4556,7 @@
     {
       "name" : "atypical_noreturn",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 403,
+      "definedOnLine" : 416,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4577,7 +4577,7 @@
     {
       "name" : "typical_outresult",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 419,
+      "definedOnLine" : 432,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4608,7 +4608,7 @@
     {
       "name" : "typical_out_union_result",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 437,
+      "definedOnLine" : 451,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4636,7 +4636,7 @@
     {
       "name" : "typical_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 454,
+      "definedOnLine" : 472,
       "args" : [
       ],
       "fromTables" : [ "T5" ],
@@ -4676,7 +4676,7 @@
     {
       "name" : "proc_args_1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 852,
+      "definedOnLine" : 872,
       "args" : [
         {
           "name" : "arg1_x",
@@ -4704,7 +4704,7 @@
     {
       "name" : "proc_args_2",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 859,
+      "definedOnLine" : 879,
       "args" : [
         {
           "name" : "id_",
@@ -4732,7 +4732,7 @@
     {
       "name" : "proc_args_3",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 868,
+      "definedOnLine" : 888,
       "args" : [
         {
           "name" : "x_",
@@ -4760,7 +4760,7 @@
     {
       "name" : "proc_args_4",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 876,
+      "definedOnLine" : 896,
       "args" : [
         {
           "name" : "id_",
@@ -4788,7 +4788,7 @@
     {
       "name" : "proc_args_5",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 883,
+      "definedOnLine" : 903,
       "args" : [
         {
           "name" : "arg1_x",
@@ -4816,7 +4816,7 @@
     {
       "name" : "proc_args_6",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 891,
+      "definedOnLine" : 911,
       "args" : [
         {
           "name" : "foo_",
@@ -4850,7 +4850,7 @@
     {
       "name" : "empty_proc",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1094,
+      "definedOnLine" : 1114,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4893,7 +4893,7 @@
     {
       "name" : "empty_blocks",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1107,
+      "definedOnLine" : 1127,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -4912,7 +4912,7 @@
     {
       "name" : "proc_with_deps",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1144,
+      "definedOnLine" : 1164,
       "args" : [
         {
           "binding" : "out",
@@ -4937,7 +4937,7 @@
     {
       "name" : "using_kinds",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1334,
+      "definedOnLine" : 1355,
       "args" : [
         {
           "name" : "list",
@@ -4974,7 +4974,7 @@
     {
       "name" : "shared_frag_user",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1391,
+      "definedOnLine" : 1412,
       "args" : [
       ],
       "fromTables" : [ "Foo", "T1", "T2", "T6" ],
@@ -5005,7 +5005,7 @@
     {
       "name" : "shared_frag_user_nested_select",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1409,
+      "definedOnLine" : 1430,
       "args" : [
       ],
       "fromTables" : [ "Foo", "T1", "T2", "T6" ],
@@ -5032,7 +5032,7 @@
     {
       "name" : "string_literal_attr",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1448,
+      "definedOnLine" : 1469,
       "args" : [
       ],
       "usesTables" : [  ],
@@ -6010,7 +6010,7 @@
     {
       "name" : "interface1",
       "definedInFile" : "cg_test_json_schema.sql",
-      "definedOnLine" : 1538,
+      "definedOnLine" : 1559,
       "attributes" : [
         {
           "name" : "cql:java_package",

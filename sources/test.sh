@@ -657,7 +657,7 @@ schema_migration_test() {
   fi;
 
   echo validating output trees
-  cql_version "$T/sem_test_prev.sql" "$O/sem_test_prev.out"
+  cql_verify "$T/sem_test_prev.sql" "$O/sem_test_prev.out"
 
   echo "  computing diffs (empty if none)"
   on_diff_exit sem_test_prev.out

@@ -74,15 +74,24 @@ end;
 
 -- dump all the output lines that were associated with the given input line
 [[private]]
-proc dump_output(line_ int!)
+proc dump_output(line_ int!, pat text!)
 begin
-  declare C cursor for select * from test_output where line = line_;
+  let p := (select "%" || pat || "%");
+  declare C cursor for
+    select rowid, line, data
+    from test_output where line = line_;
   loop fetch C
   begin
-    call printf("%s\n", C.data);
+    printf(
+      "%3s%s\n",
+      case when last_rowid == C.rowid
+           then ">  "
+           when C.data like p then "!  "
+           else "" end,
+      C.data
+    );
   end;
 end;
-
 
 -- find the line number of the statement that came after line_
 [[private]]
@@ -95,15 +104,16 @@ begin
      3:  -- - bar
      4:  select something where something;  <-- we need this line number, e.g. 4
 
-     We need to find the number of a line in the test output that has been charged to an input line greater than the one we are on.
+     We need to find the number of a line in the test output that has been charged
+     to an input line greater than the one we are on.
   */
   begin try
     set search_line := (select line from test_output where line >= line_ limit 1);
   end try;
   begin catch
-    call printf("no lines come after %d\n", line_);
-    call printf("available test output lines: %d\n", (select count(*) from test_output));
-    call printf("max line number: %d\n", (select max(line) from test_output));
+    printf("no lines come after %d\n", line_);
+    printf("available test output lines: %d\n", (select count(*) from test_output));
+    printf("max line number: %d\n", (select max(line) from test_output));
     throw;
   end catch;
 end;
@@ -142,16 +152,20 @@ begin
   set found := (select count(*) from test_output where line = search_line and data like ("%" || pattern || "%"));
 end;
 
-
-
 -- dump all of the input lines starting from line1 up to but not including line2
 [[private]]
-proc dump_source(line1 int!, line2 int!)
+proc dump_source(line1 int!, line2 int!, current_line int!)
 begin
-  declare C cursor for select * from source_input where line > line1 and line <= line2;
+  declare C cursor for
+    select line, data
+      from source_input 
+      where line > line1 and line <= line2;
   loop fetch C
   begin
-    call printf("%s\n", C.data);
+    printf("%5s %05d: %s\n",
+      case when C.line == current_line then "FAIL" else "" end,
+      C.line, 
+      C.data);
   end;
 end;
 
@@ -197,7 +211,14 @@ begin
   var pattern text;
 
   -- the comments encode the matches, early out if that fails
-  if not buffer::starts_with("-- ") return;
+  if not buffer::starts_with("-- ") then
+    -- lines can be out of order or re-visited
+    -- we don't want a segment of rows that is later in the file
+    -- to prevent later matching.  This can happen with 
+    -- # line directives in the stream and it does
+    last_rowid := 0;
+    return;
+  end if;
 
   -- the standard test prefix it just counts tests, this doesn't mean anything
   -- but it's a useful statistic
@@ -250,7 +271,7 @@ begin
 
   -- dump all the text associated with this line (this could be many lines)
   -- it's all the output associated with this test case
-  call dump_output(search_line);
+  call dump_output(search_line, pat);
 
   -- find the line that ended the previous test block
   var prev int!;
@@ -258,12 +279,12 @@ begin
 
   -- dump everything from there to here, that's the test case
   printf("\nThe corresponding test case is:\n");
-  call dump_source(prev, search_line);
+  call dump_source(prev, search_line, line);
 
   -- repeat the error so it's at the end also
   print_error_message(pat, line, expected_count);
   
-  printf("test file: %s\n", sql_name);
+  printf("test file:%d %s\n", line, sql_name);
   printf("result file: %s\n", result_name);
   printf("\n");
 end;

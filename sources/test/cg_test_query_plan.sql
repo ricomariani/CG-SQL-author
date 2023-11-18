@@ -6,64 +6,349 @@
  */
 
 -- TEST: query plan
--- +1 DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
--- +1 DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
--- + CREATE PROC create_schema()
--- + CREATE TABLE `table one`
--- + CREATE TABLE t2
--- + CREATE TABLE t3
--- + CREATE TABLE t4
--- + CREATE TABLE t5
--- + CREATE TABLE scan_ok
--- + CREATE TABLE sql_temp
--- + CREATE TABLE plan_temp
--- + CREATE TABLE no_table_scan
--- + CREATE TABLE ok_table_scan
--- + CREATE TABLE foo
--- + CREATE TABLE foo_
--- + CREATE TABLE _foo
--- +17 CREATE PROC populate_query_plan_%()
--- + CREATE PROC populate_table_scan_alert_table(table_ text not null)
--- + CREATE PROC populate_b_tree_alert_table()
--- + CALL populate_table_scan_alert_table(C.table_name);
--- + CALL populate_b_tree_alert_table()
--- +17 INSERT INTO sql_temp(id, sql)
--- +17 INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%, C.iselectid, C.iorder, C.ifrom, C.zdetail);
--- +17 DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
--- +1 INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%, "use_ok_table_scan_attr", "#scan_ok#,#t3#");
--- + CREATE PROC print_sql_statement(sql_id integer not null)
--- + CREATE PROC print_query_plan_stat(id_ integer not null)
--- + CREATE PROC print_query_plan_graph(id_ integer not null)
--- + CREATE PROC print_query_plan(sql_id integer not null)
--- + CREATE PROC print_query_violation()
--- + CALL print_sql_statement(sql_id);
--- + CALL print_query_plan_stat(sql_id);
--- + CALL print_query_plan_graph(sql_id);
--- + CREATE PROC query_plan()
--- + CALL create_schema();
--- +17 CALL populate_query_plan_%();
--- + CREATE PROC populate_no_table_scan()
--- +1  INSERT OR IGNORE INTO no_table_scan(table_name)
--- +1  INSERT OR IGNORE INTO table_scan_alert
--- + SELECT ifnull(nullable(1), 42) AS nullable_result;
--- + CREATE PROC split_commas (str text)
--- + CREATE PROC ids_from_string (str text)
--- + I (id) AS (CALL ids_from_string('1')),
--- + E (id) AS (CALL ids_from_string('1'))
+-- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+-- + DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
+-- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
+-- + DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT, b BLOB, r REAL);
 -- + @attribute(cql:deterministic)
 -- + DECLARE SELECT FUNC bgetkey_type (x BLOB NOT NULL) LONG_INT NOT NULL;
--- + @attribute(cql:backing_table)
--- + CREATE TABLE backing(
--- + CREATE INDEX backing_index ON backing (bgetkey_type(k));
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bgetval_type (x BLOB NOT NULL) LONG_INT NOT NULL;
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bgetval NO CHECK BLOB;
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bcreatekey NO CHECK BLOB;
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bcreateval NO CHECK BLOB;
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
+-- + @attribute(cql:deterministic)
+-- + DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
+-- + DECLARE SELECT FUNC stuff () INTEGER NOT NULL;
+-- + CREATE PROC create_schema()
+-- + BEGIN
+-- +   call cql_create_udf_stub("is_declare_func_enabled");
+-- +   call cql_create_udf_stub("is_declare_func_wall");
+-- +   call cql_create_udf_stub("array_num_at");
+-- +   call cql_create_udf_stub("select_virtual_table");
+-- +   call cql_create_udf_stub("bgetkey_type");
+-- +   call cql_create_udf_stub("bgetval_type");
+-- +   call cql_create_udf_stub("bgetkey");
+-- +   call cql_create_udf_stub("bgetval");
+-- +   call cql_create_udf_stub("bcreatekey");
+-- +   call cql_create_udf_stub("bcreateval");
+-- +   call cql_create_udf_stub("bupdatekey");
+-- +   call cql_create_udf_stub("bupdateval");
+-- +   call cql_create_udf_stub("stuff");
+-- +   CREATE TABLE `table one`(
+-- +     id INTEGER PRIMARY KEY,
+-- +     name TEXT
+-- +   );
+-- +   CREATE TABLE t2(
+-- +     id INTEGER PRIMARY KEY,
+-- +     name TEXT
+-- +   );
+-- +   CREATE TABLE t3(
+-- +     id INTEGER PRIMARY KEY,
+-- +     name TEXT
+-- +   );
+-- +   CREATE TABLE t4(
+-- +     id LONG_INT PRIMARY KEY AUTOINCREMENT,
+-- +     data BLOB
+-- +   );
+-- +   CREATE TABLE t5(
+-- +     id LONG_INT,
+-- +     FOREIGN KEY (id) REFERENCES t4 (id) ON UPDATE CASCADE ON DELETE CASCADE
+-- +   );
+-- +   CREATE TABLE scan_ok(
+-- +     id INTEGER
+-- +   );
+-- +   CREATE TABLE foo(
+-- +     id INTEGER
+-- +   );
+-- +   CREATE TABLE _foo(
+-- +     id INTEGER
+-- +   );
+-- +   CREATE TABLE foo_(
+-- +     id INTEGER
+-- +   );
+-- +   CREATE INDEX `table one index` ON `table one` (name, id);
+-- +   CREATE INDEX it4 ON t4 (data, id);
+-- +   CREATE VIEW my_view AS
+-- +   SELECT *
+-- +     FROM `table one`
+-- +       INNER JOIN t2 USING (id);
+-- +   CREATE VIEW my_view_using_table_alias AS
+-- +   SELECT foo.*, bar.id AS id2, bar.rowid AS rowid
+-- +     FROM `table one` AS foo
+-- +       INNER JOIN t2 AS bar USING (id);
+-- +   CREATE TRIGGER my_trigger
+-- +     AFTER INSERT ON `table one`
+-- +     WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 1
+-- +   BEGIN
+-- +   DELETE FROM t2 WHERE id > new.id;
+-- +   END;
+-- +   CREATE TABLE virtual_table(
+-- +     id INTEGER,
+-- +     t TEXT,
+-- +     b BLOB,
+-- +     r REAL
+-- +   );
+-- +   CREATE TABLE C(
+-- +     id INTEGER NOT NULL,
+-- +     name TEXT
+-- +   );
+-- +   CREATE TABLE select_virtual_table (
+-- +     id INTEGER,
+-- +     t TEXT,
+-- +     b BLOB,
+-- +     r REAL
+-- +   );
+-- +   @attribute(cql:backing_table)
+-- +   CREATE TABLE backing(
+-- +     k BLOB PRIMARY KEY,
+-- +     v BLOB NOT NULL
+-- +   );
+-- +   CREATE INDEX backing_index ON backing (bgetkey_type(k));
+-- +   CREATE TABLE sql_temp(
+-- +     id INT NOT NULL PRIMARY KEY,
+-- +     sql TEXT NOT NULL
+-- +   ) WITHOUT ROWID;
+-- +   CREATE TABLE plan_temp(
+-- +     iselectid INT NOT NULL,
+-- +     iorder INT NOT NULL,
+-- +     ifrom INT NOT NULL,
+-- +     zdetail TEXT NOT NULL,
+-- +     sql_id INT NOT NULL,
+-- +     FOREIGN KEY (sql_id) REFERENCES sql_temp(id)
+-- +   );
+-- +   CREATE TABLE no_table_scan(
+-- +     table_name TEXT NOT NULL PRIMARY KEY
+-- +   );
+-- +   CREATE TABLE table_scan_alert(
+-- +     info TEXT NOT NULL
+-- +   );
+-- +   CREATE TABLE b_tree_alert(
+-- +     info TEXT NOT NULL
+-- +   );
+-- +   CREATE TABLE ok_table_scan(
+-- +     sql_id INT NOT NULL PRIMARY KEY,
+-- +     proc_name TEXT NOT NULL,
+-- +     table_names TEXT NOT NULL
+-- +   ) WITHOUT ROWID;
+-- + END;
+--
 -- + @attribute(cql:backed_by=backing)
 -- + CREATE TABLE backed(
--- + SET stmt := "WITH\\n  backed (rowid, id, name) AS (CALL _backed())\\nSELECT *\\n  FROM backed\\n  WHERE name = 'x'";
--- + SELECT CAST(1L AS INTEGER);
--- + SELECT CAST(1.0 AS INTEGER);
--- + SELECT CAST(1 AS REAL);
--- + SELECT CAST(true AS INTEGER);
--- - Error
-
+-- +   id INTEGER PRIMARY KEY,
+-- +   name TEXT
+-- + );
+-- + CREATE PROC populate_no_table_scan()
+-- + BEGIN
+-- +   INSERT OR IGNORE INTO no_table_scan(table_name) VALUES
+-- +     ("table one"),
+-- +     ("t2"),
+-- +     ("scan_ok"),
+-- +     ("foo");
+-- + END;
+--
+-- + CREATE PROC populate_query_plan_1()
+-- + BEGIN
+-- +   LET query_plan_trivial_object := trivial_object();
+-- +   LET query_plan_trivial_blob := trivial_blob();
+--
+-- +   DECLARE stmt TEXT NOT NULL;
+-- +   SET stmt := "SELECT *\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
+-- +   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
+-- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+-- +   SELECT *
+-- +     FROM `table one`
+-- +     WHERE name = 'Nelly' AND id IN (SELECT id
+-- +     FROM t2
+-- +     WHERE id = 1
+-- +   UNION
+-- +   SELECT id
+-- +     FROM t3)
+-- +     ORDER BY name ASC;
+-- +   LOOP FETCH C
+-- +   BEGIN
+-- +     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(1, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+-- +   END;
+-- + END;
+--
+-- + CREATE PROC populate_query_plan_2()
+-- + CREATE PROC populate_query_plan_20()
+--
+-- + @attribute(cql:shared_fragment)
+-- + CREATE PROC split_commas (str TEXT)
+-- + BEGIN
+-- + WITH
+-- +   splitter (tok, rest) AS (
+-- +     SELECT "", IFNULL(str || ",", "")
+-- +     UNION ALL
+-- +     SELECT substr(rest, 1, instr(rest, ",") - 1), substr(rest, instr(rest, ",") + 1)
+-- +       FROM splitter
+-- +       WHERE rest <> ""
+-- +   )
+-- + SELECT tok
+-- +   FROM splitter
+-- +   WHERE tok <> "";
+-- + END;
+--
+-- + @attribute(cql:shared_fragment)
+-- + CREATE PROC ids_from_string (str TEXT)
+-- + BEGIN
+-- + WITH
+-- +   toks (tok) AS (CALL split_commas(str))
+-- + SELECT CAST(tok AS LONG_INT) AS id
+-- +   FROM toks;
+-- + END;
+--
+-- + CREATE PROC populate_query_plan_21()
+-- + BEGIN
+-- +   LET query_plan_trivial_object := trivial_object();
+-- +   LET query_plan_trivial_blob := trivial_blob();
+--
+-- +   DECLARE stmt TEXT NOT NULL;
+-- +   SET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT C.*\\n  FROM C\\n  WHERE C.id IN (SELECT *\\n  FROM I) AND C.id NOT IN (SELECT *\\n  FROM E)";
+-- +   INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
+-- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
+-- +   WITH
+-- +     I (id) AS (CALL ids_from_string('1')),
+-- +     E (id) AS (CALL ids_from_string('1'))
+-- +   SELECT C.*
+-- +     FROM C
+-- +     WHERE C.id IN (SELECT *
+-- +     FROM I) AND C.id NOT IN (SELECT *
+-- +     FROM E);
+-- +   LOOP FETCH C
+-- +   BEGIN
+-- +     INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(21, C.iselectid, C.iorder, C.ifrom, C.zdetail);
+-- +   END;
+-- + END;
+--
+-- + @attribute(cql:shared_fragment)
+-- + @attribute(cql:query_plan_branch=11)
+-- + CREATE PROC frag1 (x INTEGER)
+-- + BEGIN
+-- + SELECT 2 AS a;
+-- + END;
+--
+-- + @attribute(cql:shared_fragment)
+-- + @attribute(cql:query_plan_branch=4)
+-- + CREATE PROC frag2 (y INTEGER)
+-- + BEGIN
+-- + SELECT 40 AS b;
+-- + END;
+-- 
+-- + @attribute(cql:shared_fragment)
+-- + CREATE PROC frag3 (z INTEGER)
+-- + BEGIN
+-- + SELECT 100 AS c;
+-- + END;
+-- 
+-- + @attribute(cql:shared_fragment)
+-- + CREATE PROC frag_with_select ()
+-- + BEGIN
+-- + WITH
+-- +   cte (a) AS (
+-- +     SELECT 1 AS a
+-- +   )
+-- + SELECT *
+-- +   FROM cte;
+-- + END;
+-- 
+-- + @attribute(cql:shared_fragment)
+-- + @attribute(cql:query_plan_branch=2)
+-- + CREATE PROC frag_with_select_nothing ()
+-- + BEGIN
+-- + SELECT 1 AS a;
+-- + END;
+-- 
+-- + @attribute(cql:shared_fragment)
+-- + CREATE PROC frag (v INTEGER NOT NULL)
+-- + BEGIN
+-- + SELECT v AS val;
+-- + END;
+-- 
+-- + CREATE PROC populate_query_plan_40()
+--
+-- + CREATE PROC populate_table_scan_alert_table(table_ text not null)
+-- + BEGIN
+-- +   INSERT OR IGNORE INTO table_scan_alert
+-- +     SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp
+-- +     WHERE ( zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_) OR 
+-- +             zdetail GLOB ('*[Ss][Cc][Aa][Nn]* ' || table_ || ' *')
+-- +           )
+-- +     AND sql_id NOT IN (
+-- +       SELECT sql_id from ok_table_scan
+-- +         WHERE table_names GLOB ('*#' || table_ || '#*')
+-- +     ) GROUP BY table_;
+-- + END;
+-- 
+-- + CREATE PROC populate_b_tree_alert_table()
+-- + END;
+-- 
+-- + CREATE PROC print_query_plan_graph(id_ integer not null)
+-- + BEGIN
+-- +   DECLARE C CURSOR FOR
+-- +   WITH RECURSIVE
+-- +     plan_chain(iselectid,  zdetail, level) AS (
+-- +      SELECT 0 as  iselectid, 'QUERY PLAN' as  zdetail, 0 as level
+-- +      UNION ALL
+-- +      SELECT plan_temp.iselectid, plan_temp.zdetail, plan_chain.level+1 as level
+-- +       FROM plan_temp JOIN plan_chain ON plan_temp.iorder=plan_chain.iselectid WHERE plan_temp.sql_id = id_
+-- +      ORDER BY 3 DESC
+-- +     )
+-- +     SELECT
+-- +      level,
+-- +      substr('                              ', 1, max(level - 1, 0)*3) ||
+-- +      substr('|.............................', 1, min(level, 1)*3) ||
+-- +      zdetail as graph_line FROM plan_chain;
+--
+-- +   CALL printf("   \"plan\" : \"");
+-- +   LOOP FETCH C
+-- +   BEGIN
+-- +     CALL printf("%s%s", IIF(C.level, "\\n", ""), C.graph_line);
+-- +   END;
+-- +   CALL printf("\"\n");
+-- + END;
+-- 
+-- + CREATE PROC print_query_plan(sql_id integer not null)
+-- + BEGIN
+-- +   CALL printf("  {\n");
+-- +   CALL printf("   \"id\" : %d,\n", sql_id);
+-- +   CALL print_sql_statement(sql_id);
+-- +   CALL print_query_plan_stat(sql_id);
+-- +   CALL print_query_plan_graph(sql_id);
+-- +   CALL printf("  }");
+-- + END;
+--  
+-- + CREATE PROC query_plan()
+-- + BEGIN
+-- +   CALL create_schema();
+-- +   BEGIN TRY
+-- +     CALL populate_no_table_scan();
+-- +   END TRY;
+-- +   BEGIN CATCH
+-- +     CALL printf("failed populating no_table_scan table\n");
+-- +     THROW;
+-- +   END CATCH;
+-- +   CALL printf("{\n");
+-- +   CALL print_query_violation();
+-- +   CALL printf("\"plans\" : [\n");
+-- +   LET q := 1;
+-- +   WHILE q <=
+-- +   BEGIN
+-- +     CALL printf("%s", IIF(q == 1, "", ",\n"));
+-- +     CALL print_query_plan(q);
+-- +     SET q := q + 1;
+-- +   END;
+-- +   CALL printf("\n]\n");
+-- +   CALL printf("}");
+-- + END;
 @attribute(cql:no_table_scan)
 create table `table one`(id int primary key, name text);
 

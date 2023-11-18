@@ -458,7 +458,6 @@ declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 
 -- TEST: fetch a cursor
 -- + _rc_ = sqlite3_step(foo_cursor_stmt);
--- + _rc_ = sqlite3_step(foo_cursor_stmt);
 -- + _foo_cursor_has_row_ = _rc_ == SQLITE_ROW;
 -- + cql_multifetch(_rc_, foo_cursor_stmt, 2,
 -- +                CQL_DATA_TYPE_INT32, &i0_nullable,
@@ -741,15 +740,20 @@ set b0_nullable := 'b' not between null and 'c';
 
 -- TEST: this procedure will have a structured semantic type
 -- + cql_string_proc_name(with_result_set_stored_procedure_name, "with_result_set");
--- + cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
--- + #define with_result_set_refs_offset cql_offsetof(with_result_set_row, name) // count = 1
 -- + cql_int32 with_result_set_get_id(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_string_ref _Nullable with_result_set_get_name(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_bool with_result_set_get_rate_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_int64 with_result_set_get_rate_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- + cql_bool with_result_set_get_type_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_int32 with_result_set_get_type_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- + cql_bool with_result_set_get_size_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- + cql_double with_result_set_get_size_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
+-- + uint8_t with_result_set_data_types[with_result_set_data_types_count] = {
+-- + #define with_result_set_refs_offset cql_offsetof(with_result_set_row, name) // count = 1
+-- + static cql_uint16 with_result_set_col_offsets[] = { 5,
 -- + cql_int32 with_result_set_result_count(with_result_set_result_set_ref _Nonnull result_set) {
 -- + CQL_WARN_UNUSED cql_code with_result_set_fetch_results(sqlite3 *_Nonnull _db_, with_result_set_result_set_ref _Nullable *_Nonnull result_set) {
+-- + cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 -- + if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);
 create procedure with_result_set()
 begin
@@ -757,7 +761,6 @@ begin
 end;
 
 -- TEST: grabs values from a view that is backed by a table
--- + cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 -- - .refs_count = 0,
 -- - .refs_offset = 0,
 -- + cql_int32 select_from_view_get_id(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row) {
@@ -765,6 +768,7 @@ end;
 -- + cql_int32 select_from_view_get_type_value(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + cql_int32 select_from_view_result_count(select_from_view_result_set_ref _Nonnull result_set) {
 -- + CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, select_from_view_result_set_ref _Nullable *_Nonnull result_set) {
+-- + cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 create proc select_from_view()
 begin
   select id, type from baz;
@@ -882,7 +886,7 @@ set s := printf('%d and %d', 3, 4);
 
 -- TEST: printf inserts casts for numeric types (but only as needed)
 -- + sqlite3_mprintf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", ((cql_int64)(4)), _tmp_n_int64_%.value,
--- + ((cql_int64)!!(1)), _64(0), ((cql_int32)!!(0)), 0, _64(6), 7, 0.0, 0.0, NULL, ((cql_double)(8)));
+-- * ((cql_int64)!!(1)), _64(0), ((cql_int32)!!(0)), 0, _64(6), 7, 0.0, 0.0, NULL, ((cql_double)(8)));
 set s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 4, nullable(5), true, null, false, null, 6L, 7, 0.0, null, null, 8);
 
 -- TEST: printf doesn't insert casts when used in SQL
@@ -1166,8 +1170,8 @@ set obj_var2 := ifnull_crash(obj_func());
 -- TEST: assign nullable to object with helper or throw
 -- + cql_set_object_ref(&_tmp_n_object_0, obj_func());
 -- + if (!_tmp_n_object_0) {
--- +   cql_error_trace();
 -- +   _rc_ = SQLITE_ERROR;
+-- +   cql_error_trace();
 -- +   goto cql_cleanup;
 -- + }
 -- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
@@ -1236,9 +1240,9 @@ insert or replace into bar(id, type) values (1,5);
 insert into foo default values;
 
 -- TEST: insert from stored procedure
+-- + cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
 -- + "INSERT INTO bar(id, type) "
 -- +   "VALUES(?, ?)");
--- + cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
 create proc insert_values(id_ integer not null, type_ integer)
 begin
   insert into bar(id, type) values (id_, type_);
@@ -1323,8 +1327,7 @@ begin
 end;
 
 -- TEST: use dummy data
--- + INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_)
--- + @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+-- + INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123;
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 5,
@@ -1517,6 +1520,7 @@ begin
 end;
 
 -- TEST: create an output struct proc
+-- + DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
 -- + #define out_cursor_proc_C_refs_offset cql_offsetof(out_cursor_proc_C_row, name) // count = 3
 -- + memset(_result_, 0, sizeof(*_result_));
 -- + out_cursor_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = out_cursor_proc_C_refs_offset };
@@ -1528,7 +1532,6 @@ end;
 -- + _result_->size = C.size;
 -- + cql_set_string_ref(&_result_->extra1, C.extra1);
 -- + cql_set_string_ref(&_result_->extra2, C.extra2);
--- + DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
 create proc out_cursor_proc()
 begin
   declare C cursor for select bar.*, 'xyzzy' extra1, 'plugh' extra2 from bar;
@@ -1613,6 +1616,8 @@ begin
 end;
 
 -- TEST: value cursor fetch
+-- This should not be a dml proc, it doesn't actually use the db
+-- + fetch_values_dummy(void) {
 -- + _seed_ = 123;
 -- + C._has_row_ = 1;
 -- + C.id = _seed_;
@@ -1624,8 +1629,6 @@ end;
 -- + cql_set_notnull(C.rate, _seed_);
 -- + cql_set_notnull(C.type, _seed_);
 -- + cql_set_notnull(C.size, (cql_double)(_seed_));
--- This should not be a dml proc, it doesn't actually use the db
--- + fetch_values_dummy(void)
 -- - _rc_
 -- - cql_cleanup
 create proc fetch_values_dummy()
@@ -1643,13 +1646,13 @@ end;
 -- + cql_nullable_double xx;
 -- + cql_string_ref _Nullable name;
 -- + cql_string_ref _Nullable yy;
+-- + fetch_values_extended(void) {
 -- + fetch_values_extended_C_row C = { ._refs_count_ = 2, ._refs_offset_ = fetch_values_extended_C_refs_offset };
 -- + cql_set_string_ref(&C.name, _tmp_text_0);
 -- + cql_set_notnull(C.rate, _seed_);
 -- + cql_set_notnull(C.type, _seed_);
 -- + cql_set_notnull(C.size, (cql_double)(_seed_));
 -- + cql_set_notnull(C.xx, (cql_double)(_seed_));
--- + fetch_values_extended(void)
 create proc fetch_values_extended()
 begin
   declare C cursor like (like bar, xx real, yy text);
@@ -1694,6 +1697,7 @@ begin
 end;
 
 -- TEST: void cursor fetcher
+-- + DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
 -- + void out_no_db(out_no_db_row *_Nonnull _result_) {
 -- + memset(_result_, 0, sizeof(*_result_));
 -- + out_no_db_C_row C = { 0 };
@@ -1703,7 +1707,6 @@ end;
 -- + _result_->_has_row_ = C._has_row_;
 -- + _result_->A = C.A;
 -- + _result_->B = C.B;
--- + DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
 create proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
@@ -1712,9 +1715,9 @@ begin
 end;
 
 -- TEST: declare cursor like cursor
+-- + memset(_result_, 0, sizeof(*_result_));
 -- + declare_cursor_like_cursor_C0_row C0 = { 0 };
 -- + declare_cursor_like_cursor_C1_row C1 = { 0 };
--- + memset(_result_, 0, sizeof(*_result_));
 -- + C1._has_row_ = 1;
 -- + C1.A = 3;
 -- + C1.B = (cql_double)(12);
@@ -1738,7 +1741,6 @@ end;
 -- + _result_->a = C.a;
 -- + cql_set_string_ref(&_result_->b, C.b);
 -- + cql_teardown_row(C);
--- - Error
 create proc declare_cursor_like_proc()
 begin
   declare C cursor like fetcher_proc;
@@ -1747,8 +1749,8 @@ end;
 
 -- TEST: declare a cursor like a table
 -- + void declare_cursor_like_table(declare_cursor_like_table_row *_Nonnull _result_) {
--- + declare_cursor_like_table_C_row C = { ._refs_count_ = 1, ._refs_offset_ = declare_cursor_like_table_C_refs_offset };
 -- + memset(_result_, 0, sizeof(*_result_));
+-- + declare_cursor_like_table_C_row C = { ._refs_count_ = 1, ._refs_offset_ = declare_cursor_like_table_C_refs_offset };
 -- + _result_->_has_row_ = C._has_row_;
 -- + _result_->_refs_offset_ = declare_cursor_like_table_refs_offset;
 -- + _result_->id = C.id;
@@ -1757,7 +1759,6 @@ end;
 -- + _result_->type = C.type;
 -- + _result_->size = C.size;
 -- + cql_teardown_row(C);
--- - Error
 create proc declare_cursor_like_table()
 begin
   declare C cursor like bar;
@@ -1771,7 +1772,6 @@ end;
 -- + _result_->f1 = C.f1;
 -- + _result_->f2 = C.f2;
 -- + _result_->f3 = C.f3;
--- - Error
 create proc declare_cursor_like_view()
 begin
   declare C cursor like MyView;
@@ -1784,13 +1784,14 @@ end;
 -- but they have to be escaped due to being embedded in a c string
 -- the ones with a leading space are the echoed sql, the strings are not C escaped there
 -- so this checks both paths
--- +  DELETE FROM bar WHERE name LIKE "\n\n";
+-- + DELETE FROM bar WHERE name LIKE "\n\n";
+-- + DELETE FROM bar WHERE name = ' '' \n '' \';
+-- + DELETE FROM bar WHERE name <> "'";
+-- + DELETE FROM bar WHERE name >= '\';
+--
 -- + "DELETE FROM bar WHERE name LIKE '\n\n'"
--- +  DELETE FROM bar WHERE name = ' '' \n '' \';
 -- + "DELETE FROM bar WHERE name = ' '' \\n '' \\'"
--- +  DELETE FROM bar WHERE name <> "'";
 -- + "DELETE FROM bar WHERE name <> ''''"
--- +  DELETE FROM bar WHERE name >= '\';
 -- + "DELETE FROM bar WHERE name >= '\\'"
 create proc weird_quoting()
 begin
@@ -1894,10 +1895,7 @@ set r2 := (select SqlUserFunc(123));
 -- and we have to be able to correctly code gen two different like args cases in different locations.
 -- It's hard to think of a real use case for this but I want to make sure the rewriter doesn't screw it up.
 --
--- + cql_code multi_rewrite(sqlite3 *_Nonnull _db_,
--- + cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_,
--- + cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_,
--- + cql_nullable_double size_, cql_int32 *_Nonnull out_arg)
+-- + cql_code multi_rewrite(sqlite3 *_Nonnull _db_, cql_int32 blob_id_, cql_blob_ref _Nonnull b_notnull_, cql_blob_ref _Nullable b_nullable_, cql_int32 id_, cql_string_ref _Nullable name_, cql_nullable_int64 rate_, cql_nullable_int32 type_, cql_nullable_double size_, cql_int32 *_Nonnull out_arg)
 -- + "INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(?, ?, ?)"
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 3,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, blob_id_,
@@ -1999,12 +1997,12 @@ end;
 -- one release in cleanup, one before the fetch
 -- +2 cql_object_release(C_object_);
 -- one release in cleanup
--- +1 cql_object_release(D_object_);
--- +1 cql_object_release(box);
 -- + C_object_ = cql_box_stmt(C_stmt);
 -- + cql_set_object_ref(&box, C_object_);
 -- + D_stmt = cql_unbox_stmt(D_object_);
--- + C_object_ = cql_box_stmt(C_stmt);
+-- + cql_object_release(C_object_);
+-- + cql_object_release(box);
+-- + cql_object_release(D_object_);
 create proc call_in_loop_boxed()
 begin
   declare i integer;
@@ -2244,8 +2242,8 @@ begin
 end;
 
 -- TEST: null on lhs of NOT IN
--- + cql_set_null(*b);
 -- + DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
+-- + cql_set_null(*b);
 create proc not_in_test(x integer, out b bool)
 begin
   set b := NULL NOT IN (1);
@@ -2477,6 +2475,7 @@ begin
 end;
 
 -- TEST: codegen upsert statement with update statement
+-- + cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
 -- + "INSERT INTO foo(id) "
 -- +   "SELECT id "
 -- +     "FROM bar "
@@ -2484,7 +2483,6 @@ end;
 -- + "ON CONFLICT (id) DO UPDATE "
 -- +   "SET id = 10 "
 -- +     "WHERE id <> 10");
--- + cql_code upsert_do_something(sqlite3 *_Nonnull _db_) {
 create proc upsert_do_something()
 BEGIN
  insert into foo select id from bar where 1 on conflict(id) do update set id=10 where id != 10;
@@ -2510,10 +2508,10 @@ BEGIN
 END;
 
 -- TEST: codegen upsert statement with do nothing
+-- + cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
 -- + "INSERT INTO foo(id) "
 -- +   "VALUES(?) "
 -- +  "ON CONFLICT DO NOTHING");
--- + cql_code upsert_do_nothing(sqlite3 *_Nonnull _db_, cql_int32 id_) {
 create proc upsert_do_nothing(id_ integer not null)
 BEGIN
  insert into foo(id) values(id_) on conflict do nothing;
@@ -2589,11 +2587,13 @@ end;
 -- TEST: create a result set from rows values
 -- + DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
 -- + void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnull _result_set_) {
--- + cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
--- +2 cql_retain_row(C);
--- +2 if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+-- + cql_profile_start(CRC_out_union_two, &out_union_two_perf_index);
+-- + cql_retain_row(C);
+-- + if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
+-- + cql_retain_row(C);
+-- + if (C._has_row_) cql_bytebuf_append(&_rows_, (const void *)&C, sizeof(C));
 -- + cql_results_from_data(SQLITE_OK, &_rows_, &out_union_two_info, (cql_result_set_ref *)_result_set_);
 -- + cql_teardown_row(C);
 create proc out_union_two()
@@ -2940,19 +2940,19 @@ end;
 -- + extern void emit_setters_with_nullables_set_i_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int32 new_value) {
 -- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value);
 -- + extern void emit_setters_with_nullables_set_i_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value);
+-- +  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 2);
 -- + extern void emit_setters_with_nullables_set_l_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int64 new_value) {
 -- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value);
 -- + extern void emit_setters_with_nullables_set_l_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value);
+-- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 3);
 -- + extern void emit_setters_with_nullables_set_b_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_bool new_value) {
 -- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value);
 -- + extern void emit_setters_with_nullables_set_b_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value);
+-- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 4);
 -- + extern void emit_setters_with_nullables_set_d_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_double new_value) {
 -- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value);
 -- + extern void emit_setters_with_nullables_set_d_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value);
+-- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 5);
 -- + extern void emit_setters_with_nullables_set_t(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_string_ref _Nullable new_value) {
 -- +   cql_result_set_set_string_col((cql_result_set_ref)result_set, 0, 6, new_value);
 -- + extern void emit_setters_with_nullables_set_bl(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_blob_ref _Nullable new_value) {
@@ -3158,8 +3158,8 @@ begin
 end;
 
 -- TEST: simple unbox
--- + C_stmt = cql_unbox_stmt(C_object_);
 -- + cql_set_object_ref(&C_object_, boxed_cursor);
+-- + C_stmt = cql_unbox_stmt(C_object_);
 -- + _rc_ = sqlite3_step(C_stmt);
 -- + cql_object_release(C_object_);
 -- - cql_finalize_stmt(&C);
@@ -3620,8 +3620,8 @@ end;
 -- + cql_int32 e4 = 0;
 -- + cql_int32 e5 = 0;
 -- + cql_int32 e6 = 0;
--- + e0 = SQLITE_OK;
 -- + err = SQLITE_OK;
+-- + e0 = SQLITE_OK;
 -- + int32_t _rc_thrown_1 = _rc_;
 -- + err = _rc_thrown_1;
 -- + e1 = _rc_thrown_1;
@@ -3861,7 +3861,6 @@ set t0_nullable := (select name from bar if nothing "");
 -- + }
 set t2 := (select name from bar if nothing or null "garbonzo");
 
-
 -- TEST: verify private exports and binding
 -- + DECLARE PROC private_proc (OUT x INTEGER);
 -- + static void private_proc(cql_nullable_int32 *_Nonnull x)
@@ -3872,8 +3871,8 @@ begin
 end;
 
 -- TEST: verify that getters are not present on private out union but the fetcher is
--- + .crc = CRC_private_out_union,
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+-- + .crc = CRC_private_out_union,
 -- + DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
 -- + static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
@@ -3910,8 +3909,8 @@ begin
 end;
 
 -- TEST: verify that getters are not present on no getters out union but the fetcher is
--- + .crc = CRC_no_getters_out_union,
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+-- + .crc = CRC_no_getters_out_union,
 -- + DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
 -- - static void
 -- + void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
@@ -3940,8 +3939,8 @@ begin
 end;
 
 -- TEST: verify that getters are not present on suppress results out union but the fetcher is
--- + .crc = CRC_suppress_results_out_union,
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
+-- + .crc = CRC_suppress_results_out_union,
 -- + DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
 -- - static void
 -- + void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
@@ -4074,14 +4073,16 @@ end;
 -- + case 1:
 -- + case 3:
 -- + i2 = 30;
--- four code blocks one each for (1,3) and (4), (5), and default
--- +4 break;
+-- + break;
 -- + case 4:
 -- + i2 = 40;
--- + default:
--- + i2 = 50;
+-- + break;
 -- case 5 must be present because there is a default, so it needs the case label and break;
 -- + case 5:
+-- + break;
+-- + default:
+-- + i2 = 50;
+-- + break;
 -- + }
 switch i2
   when 1, 3 then
@@ -5422,8 +5423,7 @@ end;
 
 -- TEST insert into backed2 -- keys should be the correct offsets
 -- + INSERT INTO backing(k, v)
--- + SELECT bcreatekey(3942979045122214775, V.pk2, 1, V.pk1, 1),
--- + bcreateval(3942979045122214775, 1055660242183705531, V.flag, 0, -9155171551243524439, V.id, 2, -6946718245010482247, V.name, 4, 4605090824299507084, V.extra, 1)
+-- + SELECT bcreatekey(3942979045122214775, V.pk2, 1, V.pk1, 1), bcreateval(3942979045122214775, 1055660242183705531, V.flag, 0, -9155171551243524439, V.id, 2, -6946718245010482247, V.name, 4, 4605090824299507084, V.extra, 1)
 create proc insert_into_backed2()
 begin
   insert into backed2 values(1, 2, true, 1000, 'hi', 5);
@@ -5439,17 +5439,18 @@ end;
 
 -- TEST: we should have created a shared fragment called _backed
 -- + _backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid,
--- + bgetkey(T.k, 0)
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
+-- + bgetval(T.v, -7635294210585028660),
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM _backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
 create proc use_generated_fragment()
 begin
   with (call _backed())
@@ -5458,17 +5459,18 @@ end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
 -- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid,
--- + bgetkey(T.k, 0)
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
+-- + bgetval(T.v, -7635294210585028660),
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
 create proc use_backed_table_directly()
 begin
   select * from backed;
@@ -5476,17 +5478,18 @@ end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
 -- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid,
--- + bgetkey(T.k, 0)
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
+-- + bgetval(T.v, -7635294210585028660),
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is a NOT result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_with_cursor()
@@ -5495,26 +5498,27 @@ begin
 end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
 -- + one (x) AS (
 -- + SELECT 1
 -- + ),
 -- + two (x) AS (
 -- + SELECT 2
 -- + )
--- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid,
--- + bgetkey(T.k, 0)
+-- verify this is a result set proc
+-- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
+-- + bgetval(T.v, -7635294210585028660),
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- verify this is a result set proc
--- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_directly_in_with_select()
 begin
   with one(*) as (select 1 x), two(*) as (select 2 x)
@@ -5522,24 +5526,26 @@ begin
 end;
 
 -- TEST: we swap in the shared fragment and get the columns from it
+-- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
 -- + one (x) AS (
 -- + SELECT 1
 -- + ),
 -- + two (x) AS (
 -- + SELECT 2
 -- + )
--- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid
--- + bgetkey(T.k, 0)
+-- + "backed (rowid, flag, id, name, age, storage, pk) AS ("
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
 -- + bgetval(T.v, -7635294210585028660
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_with_select_and_cursor()
@@ -5560,9 +5566,9 @@ end;
 -- + bgetval(T.v, -7635294210585028660),
 -- + bgetkey(T.k, 0)
 -- + FROM backing AS T
+-- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + SELECT flag
 -- + FROM backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
 create proc use_backed_table_select_expr(out x bool not null)
@@ -5571,20 +5577,22 @@ begin
 end;
 
 -- TEST: explain query plan with replacement
--- + EXPLAIN QUERY PLAN
 -- + backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
--- + SELECT rowid
--- + bgetkey(T.k, 0)
+-- verify this is a result set proc
+-- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+-- + EXPLAIN QUERY PLAN
+-- + SELECT
+-- + rowid,
 -- + bgetval(T.v, 1055660242183705531),
 -- + bgetval(T.v, -9155171551243524439),
 -- + bgetval(T.v, -6946718245010482247),
 -- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
+-- + bgetval(T.v, -7635294210585028660),
+-- + bgetkey(T.k, 0)
 -- + FROM backing AS T
--- + FROM backed
 -- + WHERE bgetkey_type(T.k) = -5417664364642960231
--- verify this is a result set proc
--- + sqlite3_stmt *_Nullable *_Nonnull _result_stmt
+-- + SELECT rowid, flag, id, name, age, storage, pk
+-- + FROM backed
 @attribute(cql:private)
 create proc explain_query_plan_backed(out x bool not null)
 begin
@@ -5623,9 +5631,7 @@ create table small_backed(
 -- + VALUES(1, '2', 3.14), (4, '5', 6), (7, '8', 9.7)
 -- + )
 -- + INSERT INTO backing(k, v)
--- + SELECT
--- + bcreatekey(-4190907309554122430, V.pk, 1),
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
+-- + SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values()
 begin
@@ -5643,11 +5649,9 @@ end;
 -- + SELECT x, y, z
 -- + FROM V
 -- + )
--- + INSERT INTO backing(k, v)
--- + SELECT
--- + bcreatekey(-4190907309554122430, V.pk, 1)
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
--- + FROM _vals AS V
+-- + "INSERT INTO backing(k, v) "
+-- + "SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
+-- + "FROM _vals AS V"
 create proc insert_backed_values_using_with()
 begin
   with
@@ -5661,9 +5665,7 @@ end;
 -- + VALUES(1, '2', 3.14)
 -- + )
 -- + INSERT INTO backing(k, v)
--- + SELECT
--- + bcreatekey(-4190907309554122430, V.pk, 1)
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
+-- + SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
 -- + FROM _vals AS V
 create proc insert_backed_values_using_form()
 begin
@@ -5685,8 +5687,6 @@ end;
 -- + )
 -- + INSERT INTO backing(k, v)
 -- + SELECT bcreatekey(-4190907309554122430, V.pk, 1), bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3)
--- + bcreatekey(-4190907309554122430, V.pk, 1)
--- + bcreateval(-4190907309554122430, 7953209610392031882, V.x, 4, 3032304244189539277, V.y, 3) "
 -- + FROM _vals AS V
 create proc inserted_backed_from_select()
 begin
@@ -5708,7 +5708,7 @@ end;
 -- + DELETE FROM backing WHERE rowid IN (SELECT rowid
 -- + FROM small_backed)
 -- + v (x) AS (
--- +  VALUES(1
+-- + VALUES(1)
 -- + )
 create proc delete_from_backed_no_where_clause()
 begin
@@ -5740,7 +5740,7 @@ end;
 
 -- TEST: simple update into backed table value only, using with clause
 -- + V (x) AS (
--- +   VALUES(1)
+-- + VALUES(1)
 -- + )
 -- + UPDATE backing
 -- + SET v = bupdateval(v, -6946718245010482247, 'goo', 4)
@@ -5766,8 +5766,7 @@ end;
 
 -- TEST: update key and value, add other clauses
 -- + UPDATE backing
--- + SET k = bupdatekey(k, 0, 100)
--- + v = bupdateval(v, -3683705396192132539, 77, 3)
+-- + SET k = bupdatekey(k, 0, 100), v = bupdateval(v, -3683705396192132539, 77, 3)
 -- + WHERE rowid IN (SELECT rowid
 -- + FROM backed
 -- + WHERE name = 'three'
@@ -5898,9 +5897,9 @@ declare function stew3 no check text not null;
 -- + cql_alloc_cstr(_cstr_%, y);
 -- + q = stew2(1, _cstr_%);
 -- + cql_free_cstr(_cstr_%, y);
--- + cql_string_release(q);
 -- + cql_string_release(y);
 -- + cql_string_release(z);
+-- + cql_string_release(q);
 create proc no_check_func_calls()
 begin
   let x := stew1(0, 'x');
@@ -5929,9 +5928,6 @@ begin
 end;
 
 -- TEST: make a cursor on an exotic name and fetch from it
--- + _rc_ = cql_prepare(_db_, &C_stmt,
--- + "SELECT x, [a b] "
--- + "FROM [xyz`abc]");
 -- + typedef struct qid_t1_C_row {
 -- +   cql_bool _has_row_;
 -- +   cql_uint16 _refs_count_;
@@ -5939,6 +5935,9 @@ end;
 -- +   cql_int32 x;
 -- +   cql_int32 X_aX20b;
 -- + } qid_t1_C_row;
+-- + _rc_ = cql_prepare(_db_, &C_stmt,
+-- + "SELECT x, [a b] "
+-- + "FROM [xyz`abc]");
 -- +  printf("%d %d", C.x, C.X_aX20b);
 create proc qid_t1()
 begin

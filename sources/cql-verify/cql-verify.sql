@@ -157,12 +157,12 @@ end;
 
 -- if anything goes wrong matching, we use this to print the error
 [[private]]
-proc print_error_message(buffer text!, line int!, expected int!)
+proc print_error_message(pattern text!, line int!, expected int!)
 begin
   printf("\n%s:%d error: expected '%s' %spresent", 
     sql_name,
     line,
-    buffer, 
+    pattern, 
     case when expected != 0 then "" else "not " end);
 
   -- this indicates we expected a certain exact number of matches
@@ -192,8 +192,8 @@ end;
 proc match_actual(buffer text!, line int!) 
 begin
   var search_line int!;
-  var count int!;
-  var expected int!;
+  var found int!;
+  var expected_count int!;
   var pattern text;
 
   -- the comments encode the matches, early out if that fails
@@ -209,22 +209,22 @@ begin
     -- found -- - foo
     -- negation, none expected
     pattern := buffer::after(5);
-    expected := 0;
+    expected_count := 0;
   else if buffer::starts_with("-- * ") then
     -- -- * foo
     -- at least one is expected, any number will do, any buffer order
     pattern := buffer::after(5);
-    expected := 1;
+    expected_count := 1;
   else if buffer::starts_with("-- + ") then
     -- -- + foo
     -- at least one is expected, matches have to be in order!
     pattern := buffer::after(5);
-    expected := -1;
+    expected_count := -1;
   else if match_multiline(buffer) then
     -- -- +7 foo
     -- an exact match (single digit matches)
-    expected := buffer::octet(4) - 48;
     pattern := buffer::after(6);
+    expected_count := buffer::octet(4) - 48;
   else 
     -- any other line is just a normal comment, ignore it
     return;
@@ -232,18 +232,20 @@ begin
 
   attempts += 1;
 
-  if expected == -1 then
-    call find_next(line, ifnull_throw(pattern), search_line, count);
-    if count == 1 return;
+  let pat := ifnull_throw(pattern);
+
+  if expected_count == -1 then
+    call find_next(line, pat, search_line, found);
+    if found == 1 return;
   else
     -- search among all the matching lines
-    call find_count(line, ifnull_throw(pattern), search_line, count);
-    if expected == count return;
+    call find_count(line, pat, search_line, found);
+    if expected_count == found return;
   end if;
 
   -- print error corresponding to the pattern
   errors += 1;
-  print_error_message(buffer, line, expected);
+  print_error_message(pat, line, expected_count);
   printf("found:\n");
 
   -- dump all the text associated with this line (this could be many lines)
@@ -259,7 +261,7 @@ begin
   call dump_source(prev, search_line);
 
   -- repeat the error so it's at the end also
-  print_error_message(buffer, line, expected);
+  print_error_message(pat, line, expected_count);
   
   printf("test file: %s\n", sql_name);
   printf("result file: %s\n", result_name);

@@ -482,7 +482,7 @@ select c where 1;
 -- TEST: a WHERE clause can refer to the FROM
 -- + {select_stmt}: select: { id: integer notnull }
 -- + {opt_where}: bool notnull
--- - Error
+-- - error:
 select * from foo where id > 1000;
 
 -- TEST: a WHERE clause cannot refer to the SELECT list
@@ -519,7 +519,8 @@ window w as (order by y);
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
 -- + {groupby_list}: err
--- +1 error: % function may not appear in this context 'count'
+-- * error: % function may not appear in this context 'count'
+-- +1 error:
 select * from foo group by count(id);
 
 -- TEST: ORDER BY should be able to have aggregate functions
@@ -540,7 +541,7 @@ select id as name from bar where name like "%foo%";
 -- TEST: using a qualified reference avoids the error above
 -- + {select_stmt}: select: { name: integer notnull }
 -- + {opt_where}: bool
--- - Error
+-- - error:
 select id as name from bar where bar.name like "%foo%";
 
 -- TEST: a WHERE clause cannot refer to the FROM if what it refers to in the
@@ -556,7 +557,7 @@ where id > (select count(rate) from bar where name like "%foo%");
 -- TEST: again, using a qualified reference avoids the error above
 -- + {select_stmt}: select: { name: integer notnull }
 -- + {opt_where}: bool
--- - Error
+-- - error:
 select id as name
 from bar
 where id > (select count(rate) from bar where bar.name like "%foo%");
@@ -565,14 +566,17 @@ where id > (select count(rate) from bar where bar.name like "%foo%");
 -- FROM shadows an alias in any enclosing SELECT list
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
--- * error: % must use qualified form to avoid ambiguity with alias 'name'
+-- +2 error: % must use qualified form to avoid ambiguity with alias 'name'
+-- +2 error:
 select id as name, name from bar group by name having count(name) > 10;
 
 -- TEST: a HAVING clause cannot refer to the FROM if what it refers to in the
 -- FROM shadows an alias in any enclosing SELECT list
 -- + {select_stmt}: err
 -- + {opt_having}: err
--- * error: % must use qualified form to avoid ambiguity with alias 'name'
+-- +2 error: % must use qualified form to avoid ambiguity with alias 'name'
+-- both instances are flagged
+-- +2 error:
 select id as name, name from bar group by name having count(name) > 10;
 
 -- TEST: a WINDOW clause cannot refer to the FROM if what it refers to in the
@@ -586,50 +590,50 @@ from bar
 window w as (order by name);
 
 -- TEST: select * from bogus table doesn't give more errors
--- * error: % table/view not defined 'goo'
--- +1 error:
 -- + {select_stmt}: err
 -- + {table_or_subquery}: err
+-- * error: % table/view not defined 'goo'
+-- +1 error:
 select * from goo;
 
 -- TEST: add a table with some big stuff
--- - error:
 -- + {col_def}: l: longint
 -- + {col_def}: r: real
+-- - error:
 create table big (
   l LONG integer,
   r REAL
 );
 
 -- TEST: create a long int
--- - error:
 -- + {select_stmt}: select: { l: longint }
+-- - error:
 select l from big;
 
 -- TEST: long * int -> long
--- - error:
 -- + {select_stmt}: select: { _anon: longint }
 -- + {select_from_etc}: TABLE { big: big }
+-- - error:
 select l * 1 from big;
 
 -- TEST: long * bool -> long (nullables)
--- - error:
 -- + {select_stmt}: select: { _anon: longint }
 -- + {select_from_etc}: TABLE { big: big }
+-- - error:
 select l * (1==1) from big;
 
 -- TEST: long * real -> real (nullables)
--- - error:
 -- + {select_stmt}: select: { _anon: real }
 -- + {select_from_etc}: TABLE { big: big }
+-- - error:
 select l * 2.0 from big;
 
 -- TEST: not x is an error, no cascade error reported just one error
+-- + {select_stmt}: err
+-- + {not}: err
+-- + {eq}: err
 -- * error: % incompatible types in expression '='
 -- +1 error:
--- + {select_stmt}: err
--- + {eq}: err
--- + {not}: err
 select not 'x' == 1;
 
 -- TEST: `when` expression must be valid
@@ -640,43 +644,44 @@ select case
 end;
 
 -- TEST: ok to have two different strings
--- - error:
 -- note there was no else case, so nullable result
 -- + {select_stmt}: select: { _anon: text }
 -- + {case_list}: text
--- +2 {when}: text notnull
+-- + {when}: text notnull
+-- + {when}: text notnull
+-- - error:
 select case
   when 1 = 2 then 'foo'
   when 3 = 4 then 'bar'
 end;
 
 -- TEST: can't combine a string and a number
--- * error: % incompatible types in expression 'then'
--- +1 error:
 -- + {select_stmt}: err
 -- + {case_expr}: err
 -- + {case_list}: err
+-- * error: % incompatible types in expression 'then'
+-- +1 error:
 select case
   when 1 = 2 then 'foo'
   when 3 = 4 then 2
 end;
 
 -- TEST: when expression should be a boolean
--- * error: % incompatible types in expression 'when'
--- +1 error:
 -- + {select_stmt}: err
 -- + {case_expr}: err
 -- + {strlit 'x'}: err
+-- * error: % incompatible types in expression 'when'
+-- +1 error:
 select case
   when 'x' then 'foo'
 end;
 
 -- TEST: when expression cannot be a constant null — Not to be confused with else
--- * error: % WHEN expression must not be a constant NULL but can be of a nullable type
--- +1 error:
 -- + {select_stmt}: err
 -- + {case_expr}: err
 -- + {null}: null
+-- * error: % WHEN expression must not be a constant NULL but can be of a nullable type
+-- +1 error:
 select case "x"
   when null then 'foo'
   when "x" then 'foo'
@@ -684,11 +689,11 @@ select case "x"
 end;
 
 -- TEST: when expression cannot be a constant null — Not to be confused with else
--- * error: % WHEN expression must not be a constant NULL but can be of a nullable type
--- +1 error:
 -- + {select_stmt}: err
 -- + {case_expr}: err
 -- + {null}: null
+-- * error: % WHEN expression must not be a constant NULL but can be of a nullable type
+-- +1 error:
 select case
   when null then 'foo'
   when "x" then 'foo'
@@ -696,58 +701,58 @@ select case
 end;
 
 -- TEST: ok to compare strings to each other
--- - error:
 -- note the result type is nullable, there was no else case!
 -- + {select_stmt}: select: { _anon: integer }
 -- + {case_expr}: integer
+-- - error:
 select case 'x'
   when 'y' then 1
   when 'z' then 2
 end;
 
 -- TEST: ok to compare a real to an int
--- - error:
 -- note the result type is nullable, there was no else case!
 -- + {select_stmt}: select: { _anon: integer }
 -- + {case_expr}: integer
+-- - error:
 select case 2
   when 1.0 then 1
   when 3 then 2
 end;
 
 -- TEST: can't compare a string and a number
--- * error: % incompatible types in expression 'when'
--- +1 error:
 -- + {select_stmt}: err
 -- + case_expr}: err
 -- + {strlit 'x'}: err
+-- * error: % incompatible types in expression 'when'
+-- +1 error:
 select case 3
   when 'x' then 1
 end;
 
 -- TEST: int combines with real to give real
--- - error:
 -- {select_stmt}: select: { _anon: real notnull }
 -- {case_expr}: real notnull
+-- - error:
 select case 4
   when 1 then 1
   else 2.0
 end;
 
 -- TEST: null combines with int to give nullable int
--- - error:
 -- + {select_stmt}: select: { _anon: integer }
 -- + {case_expr}: integer
 -- - {case_expr}: integer notnull
+-- - error:
 select case 5
   when 0 then null
   when 1 then 1
 end;
 
 -- TEST: real combines with real to give real
--- - error:
 -- + {select_stmt}: select: { _anon: real notnull }
 -- + {case_expr}: real notnull
+-- - error:
 select case 6
   when 0 then 1.0
   else 2.0
@@ -755,201 +760,202 @@ end;
 
 
 -- TEST: bool combines with null to give nullable bool
--- - error:
 -- + {select_stmt}: select: { _anon: bool }
 -- + {case_expr}: bool
 -- - {case_expr}: bool notnull
+-- - error:
 select case 7
   when 0 then (1==2)
   else null
 end;
 
 -- TEST: else statement not compatible type with when
--- * error: % incompatible types in expression 'else'
--- +1 error:
 -- + {select_stmt}: err
 -- + {case_expr}: err
 -- + {strlit 'bar'}: err
+-- * error: % incompatible types in expression 'else'
+-- +1 error:
 select case 8
   when 0 then 1
   else 'bar'
 end;
 
 -- TEST: case statement has expression type error
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {case_expr}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select case NOT 'x'
 when 1 then 0
 end;
 
 -- TEST: ranges ok as integer
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {between}: bool notnull
+-- - error:
 select 1 between 0 and 2;
 
 -- TEST: ranges ok as string
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {between}: bool notnull
+-- - error:
 select 'x' between 'a' and 'z';
 
 -- TEST: string cannot be compared to integers
--- * error: % incompatible types in expression 'BETWEEN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {between}: err
+-- * error: % incompatible types in expression 'BETWEEN'
+-- +1 error:
 select 'x' between 2 and 3;
 
 -- TEST: string cannot be compared to integers -- second item
--- * error: % incompatible types in expression 'BETWEEN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {between}: err
+-- * error: % incompatible types in expression 'BETWEEN'
+-- +1 error:
 select 'x' between null and 3;
 
 -- TEST: null can be compared to anything
--- - error:
 -- note nullable result
 -- + {select_stmt}: select: { _anon: bool }
 -- + {between}: bool
+-- - error:
 select null between 1 and 2;
 
 -- TEST: range items must be comparable to each other
--- * error: % incompatible types in expression 'BETWEEN/AND'
--- +1 error:
 -- + {select_stmt}: err
 -- + {between}: err
+-- * error: % incompatible types in expression 'BETWEEN/AND'
+-- +1 error:
 select null between 1 and 'x';
 
 -- TEST: don't re-report errors if there is already a failure in the expression
 -- Note: here we also verify that NOT is weaker than between hence requires the parens stay
 -- + SELECT (NOT 'x') BETWEEN 1122 AND 3344;
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {between}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select (NOT 'x') between 1122 and 3344;
 
 -- TEST: ranges ok as integer (NOT BETWEEN)
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {not_between}: bool notnull
+-- - error:
 select 1 not between 0 and 2;
 
 -- TEST: ranges ok as string
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {not_between}: bool notnull
+-- - error:
 select 'x' not between 'a' and 'z';
 
 -- TEST: string cannot be compared to integers
--- * error: % incompatible types in expression 'NOT BETWEEN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_between}: err
+-- * error: % incompatible types in expression 'NOT BETWEEN'
+-- +1 error:
 select 'x' not between 2 and 3;
 
 -- TEST: string cannot be compared to integers -- second item
--- * error: % incompatible types in expression 'NOT BETWEEN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_between}: err
+-- * error: % incompatible types in expression 'NOT BETWEEN'
+-- +1 error:
 select 'x' not between null and 3;
 
 -- TEST: null can be compared to anything
--- - error:
 -- note nullable result
 -- + {select_stmt}: select: { _anon: bool }
 -- + {not_between}: bool
+-- - error:
 select null not between 1 and 2;
 
 -- TEST: range items must be comparable to each other
--- * error: % incompatible types in expression 'NOT BETWEEN/AND'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_between}: err
+-- * error: % incompatible types in expression 'NOT BETWEEN/AND'
+-- +1 error:
 select null not between 1 and 'x';
 
 -- TEST: don't re-report errors if there is already a failure in the expression
 -- Note: here we also verify that NOT is weaker than not between hence requires the parens stay
 -- + SELECT (NOT 'x') NOT BETWEEN 1122 AND 3344;
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_between}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select (NOT 'x') not between 1122 and 3344;
 
 -- TEST: nested select statement in the from clause
--- - error:
--- +2 {select_stmt}: select: { id: integer notnull, name: text notnull }
+-- + {select_stmt}: select: { id: integer notnull, name: text notnull }
 -- + {select_from_etc}: TABLE { Item: select }
 -- + {select_stmt}: select: { id: integer notnull, name: text notnull }
+-- - error:
 select * from ( select 1 as id, 'x' as name ) as Item;
 
 -- TEST: nested select statement with join
--- - error:
 -- + {select_stmt}: select: { id1: integer notnull, name: text notnull, id2: integer notnull, brand: text notnull }
 -- + {select_stmt}: select: { id1: integer notnull, name: text notnull }
 -- + {select_stmt}: select: { id2: integer notnull, brand: text notnull }
 -- + {join_cond}: JOIN { Item: select, ItemBrand: select }
+-- - error:
 select * from
 ( select 1 as id1, 'x' as name ) as Item
 inner join (select 1 as id2, 'b' as brand) as ItemBrand
 on ItemBrand.id2 = Item.id1;
 
 -- TEST: nested select expression
--- - error:
 -- + {select_stmt}: select: { result: integer notnull }
 -- + {select_expr}: result: integer notnull
 -- + {select_stmt}: unused: integer notnull
+-- - error:
 select (select 1 as unused) as result;
 
 -- TEST: nested select expression with wrong # of items
--- * error: % nested select expression must return exactly one column
--- +1 error:
 -- + {select_stmt}: err
 -- + {select_expr}: err
 -- + {select_expr_list_con}: select: { _anon: integer notnull, _anon: integer notnull }
+-- * error: % nested select expression must return exactly one column
+-- +1 error:
 select (select 1, 2);
 
 -- TEST: nested select used for simple math
--- - error:
 -- + {select_stmt}: select: { _anon: integer notnull }
 -- + {select_expr}: integer notnull
+-- - error:
 select 1 * (select 1);
 
 -- TEST: nested select used for string concat
--- - error:
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {select_expr}: integer notnull
+-- - error:
 select (select 1) || (select 2);
 
 -- TEST: multiple table refs
--- - error:
 -- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- + {select_from_etc}: JOIN { foo: foo, bar: bar }
+-- - error:
 select * from (foo, bar);
 
 -- TEST: duplicate table refs
--- * error: % duplicate table name in join 'foo'
--- +1 error:
 -- + {select_stmt}: err
 -- + {select_from_etc}: err
--- +2 {table_or_subquery}: TABLE { foo: foo }
+-- + {table_or_subquery}: TABLE { foo: foo }
+-- + {table_or_subquery}: TABLE { foo: foo }
+-- * error: % duplicate table name in join 'foo'
+-- +1 error:
 select * from (foo, foo);
 
 -- TEST: full join with all expression options (except offset which was added later)
--- - error:
 -- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
 -- + {opt_where}: bool notnull
 -- + {opt_groupby}: ok
 -- + {opt_having}: bool
 -- + {opt_orderby}: ok
 -- + {opt_limit}: integer notnull
+-- - error:
 select * from foo as T1
 inner join bar as T2 on T1.id = T2.id
 where T2.id > 5
@@ -959,10 +965,10 @@ order by T2.rate
 limit 5;
 
 -- TEST: join with bogus ON expression type
--- * error: % expected numeric expression 'ON'
--- +1 error:
 -- + {select_stmt}: err
 -- + {on}: err
+-- * error: % expected numeric expression 'ON'
+-- +1 error:
 select * from foo
 inner join bar as T2 on 'v'
 where 'w'
@@ -974,7 +980,7 @@ limit 'y';
 -- * error: % expected numeric expression 'WHERE'
 -- * error: % expected numeric expression 'HAVING'
 -- * error: % HAVING clause requires GROUP BY clause
--- +3 Error
+-- +3 error:
 -- + {select_stmt}: err
 select * from foo
 where 'w'
@@ -982,209 +988,231 @@ having 'x'
 limit 'y';
 
 -- TEST: select with bogus order by x limit x
+-- + {select_stmt}: err
 -- * error: % name not found 'bogus'
 -- * error: % expected numeric expression 'LIMIT'
--- +2 Error
--- + {select_stmt}: err
+-- +2 error:
 select * from foo
 order by bogus limit 'y';
 
 -- TEST: force the case where a nested select has an error
 --       the top level select should be marked with an error
+-- + {select_stmt}: err
+-- + {select_stmt}: err
+-- + {not}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- +2 {select_stmt}: err
--- + {not}: err
 select (select not 'x');
 
 -- TEST: basic IN statement -- null is ok anywhere
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {in_pred}: bool notnull
 -- +2 {int 1}: integer notnull
 -- +1 {int 2}: integer notnull
 -- + {null}: null
+-- - error:
 select 1 in (1, 2, null);
 
 -- TEST: can't match strings against a number
--- * error: % incompatible types in expression 'IN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {in_pred}: err
+-- * error: % incompatible types in expression 'IN'
+-- +1 error:
 select 1 in ('x', 2);
 
 -- TEST: simple string works
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- note null in the list changes nothing
 -- + {in_pred}: bool notnull
 -- +2 {strlit 'x'}: text notnull
 -- +1 {strlit 'y'}: text notnull
 -- +1 {null}: null
+-- - error:
 select 'x' in ('x', 'y', null);
 
 -- TEST: string can't be matched against number
--- * error: % incompatible types in expression 'IN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {in_pred}: err
+-- * error: % incompatible types in expression 'IN'
+-- +1 error:
 select 'x' in ('x', 1);
 
 -- TEST: null can match against numbers
--- - error:
 -- nullable result! CG will make the answer null
 -- + {select_stmt}: select: { _anon: bool }
 -- + {expr_list}: integer notnull
+-- - error:
 select null in (1, 2);
 
 -- TEST: null can match against strings
--- - error:
 -- nullable result! CG will make the answer null
 -- + {select_stmt}: select: { _anon: bool }
 -- + {expr_list}: text notnull
+-- - error:
 select null in ('x', 'y', null);
 
 -- TEST: numbers are ok and so are strings, but you can't mix and match
--- * error: % incompatible types in expression 'IN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {in_pred}: err
+-- * error: % incompatible types in expression 'IN'
+-- +1 error:
 select null in (1, 'x');
 
 -- TEST: no casade errors if the left arg of in has an error
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {in_pred}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select (not 'x') in (1, 'x');
 
 -- TEST: no casade errors if the predicate has an error
 --       "select distinct" used here just to force that option to run
 --       semantic analysis does not care about it (so verify successfully ignored?)
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {in_pred}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select distinct 1 in (1, not 'x', 'y');
 
 -- TEST: basic NOT IN statement -- null is ok anywhere
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {not_in}: bool notnull
--- +2 {int 1}: integer notnull
--- +1 {int 2}: integer notnull
+-- + {int 1}: integer notnull
+-- + {int 1}: integer notnull
+-- + {int 2}: integer notnull
 -- + {null}: null
+-- - error:
 select 1 not in (1, 2, null);
 
 -- TEST: can't match strings against a number
--- * error: % incompatible types in expression 'NOT IN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_in}: err
+-- * error: % incompatible types in expression 'NOT IN'
+-- +1 error:
 select 1 not in ('x', 2);
 
 -- TEST: simple string works
--- - error:
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- note null in the list changes nothing
 -- + {not_in}: bool notnull
--- +2 {strlit 'x'}: text notnull
--- +1 {strlit 'y'}: text notnull
--- +1 {null}: null
+-- + {strlit 'x'}: text notnull
+-- + {strlit 'x'}: text notnull
+-- + {strlit 'y'}: text notnull
+-- + {null}: null
+-- - error:
 select 'x' not in ('x', 'y', null);
 
 -- TEST: string can't be matched against number
--- * error: % incompatible types in expression 'NOT IN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_in}: err
+-- * error: % incompatible types in expression 'NOT IN'
+-- +1 error:
 select 'x' not in ('x', 1);
 
 -- TEST: null can match against numbers
--- - error:
 -- nullable result! CG will make the answer null
 -- + {select_stmt}: select: { _anon: bool }
 -- + {expr_list}: integer notnull
+-- - error:
 select null not in (1, 2);
 
 -- TEST: null can match against strings
--- - error:
 -- nullable result! CG will make the answer null
 -- + {select_stmt}: select: { _anon: bool }
 -- + {expr_list}: text notnull
+-- - error:
 select null not in ('x', 'y', null);
 
 -- TEST: numbers are ok and so are strings, but you can't mix and match
--- * error: % incompatible types in expression 'NOT IN'
--- +1 error:
 -- + {select_stmt}: err
 -- + {not_in}: err
+-- * error: % incompatible types in expression 'NOT IN'
+-- +1 error:
 select null not in (1, 'x');
 
 -- TEST: create a view
--- - error:
 -- + {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- + {name MyView}
 -- + {select_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+-- - error:
 create view MyView as select 1 as f1, 2 as f2, 3 as f3;
 
 -- TEST: create a view -- exact duplicate is allowed
--- - error:
 -- + {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- + {name MyView}
 -- + {select_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
+-- - error:
 create view MyView as select 1 as f1, 2 as f2, 3 as f3;
 
 -- TEST: try to use the view
--- - error:
 -- + {select_stmt}: select: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- + select_from_etc}: TABLE { ViewAlias: MyView }
+-- - error:
 select f1, f2, ViewAlias.f3 from MyView as ViewAlias;
 
 -- TEST: try to make a duplicate view (re-use a view)
--- * error: % duplicate table/view name 'MyView'
+-- + Incompatible declarations found
+-- + CREATE VIEW MyView AS
+-- + SELECT 1 AS f1, 2 AS f2, 3 AS f3
+-- + CREATE VIEW MyView AS
+-- + SELECT 1 AS y
+-- + The above must be identical.
+--
 -- + {create_view_stmt}: err
 -- + {name MyView}: err
+-- * error: % duplicate table/view name 'MyView'
+-- includes diagnostics
+-- +3 error:
 create view MyView as select 1 y;
 
 -- TEST: try to make a duplicate view (re-use a table)
--- * error: % duplicate table/view name 'foo'
+-- + Incompatible declarations found
+-- + CREATE TABLE foo(
+-- + id INTEGER PRIMARY KEY AUTOINCREMENT
+-- + )
+-- + CREATE VIEW foo AS
+-- + SELECT 2 AS x
+-- + The above must be identical.
+--
 -- + {create_view_stmt}: err
+-- * error: % duplicate table/view name 'foo'
+-- +3 error:
 create view foo as select 2 x;
 
 -- TEST: no error cascade (one error, just the internal error)
+-- + {create_view_stmt}: err
+-- - error: % duplicate
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- - error: % duplicate
--- + {create_view_stmt}: err
 create view MyView as select NOT 'x';
 
 -- TEST: this view create will fail with one error
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {create_view_stmt}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 create view V as select NOT 'x';
 
 -- TEST: can't select from V, it failed.
--- * error: % table/view not defined 'V'
 -- + {select_stmt}: err
 -- + {select_from_etc}: err
 -- + {table_or_subquery}: err
+-- * error: % table/view not defined 'V'
+-- +1 error:
 select * from V;
 
 -- TEST: create an index
--- - error:
 -- + {create_index_stmt}: ok
 -- + {name id}: id: integer notnull
+-- - error:
 create index index_1 on foo(id);
 
 -- TEST: exact duplicate index is ok
--- - error:
 -- + {create_index_stmt}: ok alias
 -- + {name id}: id: integer notnull
+-- - error:
 create index index_1 on foo(id);
 
 -- TEST: exact duplicate index is ok
@@ -1194,21 +1222,21 @@ create index index_1 on foo(id);
 create index index_4 on foo(id) @delete(1, AMigrateProc);
 
 -- TEST: try to create a duplicate index
+-- + {create_index_stmt}: err
 -- * error: % duplicate index name 'index_1'
--- -- + {create_index_stmt}: err
 create index index_1 on bar(id);
 
 -- TEST: try to create an index on a table that doesn't exist
+-- + {create_index_stmt}: err
 -- * error: % create index table name not found 'doesNotExist'
 -- +1 error:
--- + {create_index_stmt}: err
 create index index_2 on doesNotExist(id);
 
 -- TEST: try to create an index on columns that do not exist
--- * error: % name not found 'doesNotExist'
--- +1 error:
 -- + {create_index_stmt}: err
 -- + {name doesNotExist}: err
+-- * error: % name not found 'doesNotExist'
+-- +1 error:
 create index index_3 on foo(doesNotExist);
 
 -- TEST: index on a basic expression
@@ -1260,27 +1288,27 @@ create index index_9 on foo(id) where x = 5;
 create index index_10 on foo(id) where 'hi';
 
 -- TEST: validate primary key columns, ok
--- - error:
 -- + {create_table_stmt}: simple_pk_table: { id: integer notnull partial_pk }
+-- - error:
 create table simple_pk_table(
   id integer not null,
   PRIMARY KEY (id)
 );
 
 -- TEST: validate primary key columns, bogus name
+-- + {create_table_stmt}: err
+-- + {name pk_col_not_exist}: err
 -- * error: % name not found 'pk_col_not_exist'
 -- +1 error:
--- + {create_table_stmt}: err
--- +  {name pk_col_not_exist}: err
 create table baz(
   id integer not null,
   PRIMARY KEY (pk_col_not_exist)
 );
 
 -- TEST: validate PK not duplicated
+-- + {create_table_stmt}: err
 -- * error: % more than one primary key in table 'baz'
 -- +1 error:
--- + {create_table_stmt}: err
 create table baz(
   id integer not null,
   PRIMARY KEY (id),
@@ -1288,9 +1316,9 @@ create table baz(
 );
 
 -- TEST: validate simple unique key
--- - error:
 -- + {create_table_stmt}: simple_ak_table: { id: integer notnull }
 -- + {name ak1}
+-- - error:
 create table simple_ak_table (
   id integer not null,
   CONSTRAINT ak1 UNIQUE (id)
@@ -1412,9 +1440,9 @@ create table baz_expr_uk_bogus (
 );
 
 -- TEST: validate duplicate unique key
+-- + {create_table_stmt}: err
 -- * error: % duplicate constraint name in table 'ak1'
 -- +1 error:
--- + {create_table_stmt}: err
 create table baz_dup_uk (
   id integer PRIMARY KEY AUTOINCREMENT not null,
   CONSTRAINT ak1 UNIQUE (id),
@@ -1422,9 +1450,9 @@ create table baz_dup_uk (
 );
 
 -- TEST: validate duplicate primary unique key
+-- + {create_table_stmt}: err
 -- * error: % duplicate constraint name in table 'pk1'
 -- +1 error:
--- + {create_table_stmt}: err
 create table baz_dup_pk (
   id integer not null,
   CONSTRAINT pk1 PRIMARY KEY (id),
@@ -1432,9 +1460,9 @@ create table baz_dup_pk (
 );
 
 -- TEST: validate duplicate in group of unique key
+-- + {create_table_stmt}: err
 -- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
--- + {create_table_stmt}: err
 create table baz_2 (
   id integer PRIMARY KEY AUTOINCREMENT not null,
   name text,
@@ -1443,37 +1471,45 @@ create table baz_2 (
 );
 
 -- TEST: validate unique key columns
--- * error: % name not found 'ak_col_not_exist'
--- +1 error:
 -- + {create_table_stmt}: err
 -- + {name ak_col_not_exist}: err
+-- * error: % name not found 'ak_col_not_exist'
+-- +1 error:
 create table baz (
   id integer PRIMARY KEY AUTOINCREMENT not null,
   CONSTRAINT ak1 UNIQUE (ak_col_not_exist)
 );
 
 -- TEST: validate group of unique key columns
--- * error: % name not found 'ak_col_not_exist'
--- +1 error:
 -- + {create_table_stmt}: err
 -- + {name ak_col_not_exist}: err
+-- * error: % name not found 'ak_col_not_exist'
+-- +1 error:
 create table baz_3 (
   id integer PRIMARY KEY AUTOINCREMENT not null,
   UNIQUE (ak_col_not_exist)
 );
 
 -- TEST: make a valid FK
--- - error:
 -- + {create_table_stmt}: fk_table: { id: integer foreign_key }
--- +2 {name_list}
--- +2 {name id}: id: integer
+-- + {name_list}
+-- + {name id}: id: integer
+-- + {name_list}
+-- + {name id}: id: integer
+-- - error:
 create table fk_table (
   id integer,
   FOREIGN KEY (id) REFERENCES foo(id)
 );
 
 -- TEST: make a valid FK
+-- + {create_table_stmt}: err
+-- + {fk_def}: ok
+-- + {name x}
+-- + {fk_def}
+-- + {name x}
 -- * error: % duplicate constraint name in table 'x'
+-- +1 error:
 create table fk_table_dup (
   id integer,
   constraint x foreign key (id) references foo(id),
@@ -1481,39 +1517,40 @@ create table fk_table_dup (
 );
 
 -- TEST: make an FK that refers to a bogus column in the current table
+-- + {create_table_stmt}: err
 -- * error: % name not found 'bogus'
 -- +1 error:
--- + {create_table_stmt}: err
 create table baz (
   id integer,
   FOREIGN KEY (bogus) REFERENCES foo(id)
 );
 
 -- TEST: make an FK that refers to a bogus column in the reference table
+-- + {create_table_stmt}: err
 -- * error: % name not found 'bogus'
 -- +1 error:
--- + {create_table_stmt}: err
 create table baz (
   id integer,
   FOREIGN KEY (id) REFERENCES foo(bogus)
 );
 
 -- TEST: make an FK that refers to a bogus table
+-- create_table_stmt}: err
 -- * error: % foreign key refers to non-existent table 'bogus'
 -- +1 error:
--- create_table_stmt}: err
 create table baz (
   id integer,
   FOREIGN KEY (id) REFERENCES bogus(id)
 );
 
 -- TEST: well formed if statement
+-- + {if_stmt}: integer notnull
+-- + {cond_action}: integer notnull
+-- + {stmt_list}: ok
+-- + {if_alt}: ok
+-- + {else}: ok
+-- + {stmt_list}: ok
 -- - error:
--- +1 {if_stmt}: integer notnull
--- +1 {cond_action}: integer notnull
--- +1 {if_alt}: ok
--- +1 {else}: ok
--- +2 {stmt_list}: ok
 if 1 then
   select 1;
 else
@@ -1521,42 +1558,42 @@ else
 end if;
 
 -- TEST: if with bad predicate
+-- + {if_stmt}: err
+-- + {cond_action}: err
+-- - {stmt_list}: err
 -- * error: % expected numeric expression in IF predicate
 -- +1 error:
--- +1 {if_stmt}: err
--- +1 {cond_action}: err
--- - {stmt_list}: err
 if 'x' then
   select 1;
 end if;
 
 -- TEST: if with error predicate, no double error reporting
+-- + {if_stmt}: err
+-- + {cond_action}: err
+-- - {stmt_list}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- +1 {if_stmt}: err
--- +1 {cond_action}: err
--- - {stmt_list}: err
 if not 'x' then
   select 1;
 end if;
 
 -- TEST: if with bogus statement list, no double error reporting
+-- + {if_stmt}: err
+-- + {cond_action}: err
+-- + {stmt_list}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- +1 {if_stmt}: err
--- +1 {cond_action}: err
--- +1 {stmt_list}: err
 if 1 then
   select not 'x';
 end if;
 
 -- TEST: if with bogus statement list in else block, no double error reporting
+-- + {if_stmt}: err
+-- + {cond_action}: integer notnull
+-- + {if_alt}: err
+-- + {else}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- +1 {if_stmt}: err
--- +1 {cond_action}: integer notnull
--- +1 {if_alt}: err
--- +1 {else}: err
 if 1 then
   select 1;
 else
@@ -1564,12 +1601,13 @@ else
 end if;
 
 -- TEST: if with else if clause
+-- + {if_stmt}: integer notnull
+-- + {cond_action}: integer notnull
+-- + {if_alt}: ok
+-- + {elseif}: integer notnull
+-- + {cond_action}: integer notnull
+-- + {else}: ok
 -- - error:
--- +1 {if_stmt}: integer notnull
--- +2 {cond_action}: integer notnull
--- +1 {if_alt}: ok
--- +1 {elseif}: integer notnull
--- +1 {else}: ok
 if 1 then
  select 1;
 else if 2 then
@@ -1579,12 +1617,12 @@ else
 end if;
 
 -- TEST: if with else if clause bogus expression type
+-- + {if_stmt}: err
+-- + {cond_action}: integer notnull
+-- + {if_alt}: err
+-- + {cond_action}: err
 -- * error: % expected numeric expression in IF predicate
 -- +1 error:
--- +1 {if_stmt}: err
--- +1 {if_alt}: err
--- +1 {cond_action}: integer notnull
--- +1 {cond_action}: err
 if 1 then
  select 1;
 else if '2' then
@@ -1595,12 +1633,12 @@ end if;
 
 -- TEST: create an error down the else if list and make sure it props to the front of the list
 --       that causes the whole statement to be correctly reported as having an error
--- * error: % expected numeric expression in IF predicate
--- +1 error:
 -- +1 {if_stmt}: err
 -- +1 {if_alt}: err
 -- +3 {cond_action}: integer notnull
 -- +1 {cond_action}: err
+-- * error: % expected numeric expression in IF predicate
+-- +1 error:
 if 1 then
   select 1;
 else if 2 then
@@ -1612,22 +1650,22 @@ else if '4'
 end if;
 
 -- TEST: force an error in the group by clause, this error must spoil the whole statement
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {opt_groupby}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select id from foo group by id, not 'x';
 
 -- TEST: force an error in the order by clause, this error must spoil the whole statement
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {select_stmt}: err
 -- + {opt_orderby}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select id from foo order by id, not 'x';
 
 -- TEST: smallish table to cover some missing cases, bool field and an int with default
--- - error:
 -- + {create_table_stmt}: booly: { id: integer has_default, flag: bool }
+-- - error:
 create table booly (
   id integer DEFAULT 8675309,
   flag BOOL
@@ -1639,11 +1677,12 @@ declare enum ints integer (
 );
 
 -- TEST: use const expr where normally literals go in default value
--- + {col_attrs_default}: err
--- + {const}: err
 -- + x INTEGER DEFAULT -1,
 -- + y INTEGER DEFAULT CONST(1 / 0)
+-- + {col_attrs_default}: err
+-- + {const}: err
 -- * error: % evaluation of constant failed
+-- +1 error:
 create table bad_constants_table(
   x integer default const(ints.negative_one),
   y integer default const(1/0)
@@ -1698,8 +1737,8 @@ set bool_x := const(2 is true);
 set bool_x := const(2 is not true);
 
 -- TEST: eval error bubbles up
--- + {assign}: err
 -- + SET bool_x := CONST(1 / 0 IS TRUE);
+-- + {assign}: err
 -- * error: % evaluation of constant failed
 set bool_x := const(1/0 is true);
 
@@ -1741,20 +1780,20 @@ set bool_x := const(null is not false);
 
 -- TEST: 1/0 is not false -> error
 -- not rewritten due to error
--- + {assign}: err
 -- + SET bool_x := CONST(1 / 0 IS NOT FALSE);
+-- + {assign}: err
 -- * error: % evaluation of constant failed
 set bool_x := const(1/0 is not false);
 
 -- TEST: 1/0 is not false -> error
 -- not rewritten due to error
--- + {assign}: err
 -- + SET bool_x := CONST(1 / 0 IS NOT TRUE);
+-- + {assign}: err
 -- * error: % evaluation of constant failed
 set bool_x := const(1/0 is not true);
 
 -- TEST: null is not false
--- rewritten as "0"
+-- rewritten as FALSE
 -- + SET bool_x := FALSE;
 -- - error:
 set bool_x := const(null is false);
@@ -1763,6 +1802,7 @@ set bool_x := const(null is false);
 -- + SET bool_x := CONST(1 / 0 IS FALSE);
 -- + {assign}: err
 -- * error: % evaluation of constant failed
+-- +1 error:
 set bool_x := const(1/0 is false);
 
 -- TEST: internal const expression
@@ -1831,17 +1871,17 @@ LET fal := false;
 SET fal := const(FALSE AND TRUE);
 
 -- TEST: verify the correct types are extracted, also cover the final select option
--- - error:
 -- + {select_stmt}: select: { id: integer, flag: bool }
 -- + {select_opts}
 -- + {distinctrow}
+-- - error:
 select distinctrow id, flag from booly;
 
 -- TEST: make variables (X/Y are nullable)
--- - error:
 -- + {declare_vars_type}: integer
 -- + {name X}: X: integer variable
 -- + {name Y}: Y: integer variable
+-- - error:
 declare X, Y integer;
 
 -- TEST: make variables (X/Y are not null)
@@ -1863,21 +1903,21 @@ declare X integer;
 set X := @RC;
 
 -- TEST: try to declare a variable that hides a table
--- * error: % global variable hides table/view name 'foo'
--- +1 error:
 -- + {declare_vars_type}: err
 -- + {name foo}: err
+-- * error: % global variable hides table/view name 'foo'
+-- +1 error:
 declare foo integer;
 
 -- TEST: try to access a variable
--- - error:
 -- + {select_stmt}: select: { Y: integer variable }
 -- + {name Y}: Y: integer variable
+-- - error:
 select Y;
 
 -- TEST: create a cursor with select statement
--- - error:
 -- + {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+-- - error:
 declare my_cursor cursor for select 1 as one, 2 as two;
 
 -- TEST: create a cursor with primitive kinds
@@ -1937,10 +1977,10 @@ declare reduced_cursor3 cursor like extended_cursor(-id);
 declare reduced_cursor4 cursor like extended_cursor(-id, -xx, -yy, -value, -cost);
 
 -- TEST: try to create a duplicate cursor
--- * error: % duplicate variable name in the same scope 'my_cursor'
--- +1 error:
 -- + {declare_cursor}: err
 -- + {name my_cursor}: err
+-- * error: % duplicate variable name in the same scope 'my_cursor'
+-- +1 error:
 declare my_cursor cursor for select 1;
 
 -- TEST: try to create a duplicate cursor using like syntax
@@ -1950,12 +1990,12 @@ declare my_cursor cursor for select 1;
 declare extended_cursor cursor like ( x integer );
 
 -- TEST: the select statement is bogus, error cascade halted so the duplicate name is not reported
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- - duplicate
 -- + {declare_cursor}: err
 -- + {select_stmt}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 declare my_cursor cursor for select not 'x';
 
 -- TEST: the type list is bogus, this fails before the duplicate name detection
@@ -1965,14 +2005,16 @@ declare my_cursor cursor for select not 'x';
 declare extended_cursor cursor like ( x integer, x integer );
 
 -- TEST: standard loop with leave
--- - error:
 -- + {loop_stmt}: ok
 -- + {leave_stmt}: ok
+-- - error:
 loop fetch my_cursor into X, Y begin
   leave;
 end;
 
 -- TEST: loop with leave, leave not the last statement
+-- + {leave_stmt}: err
+-- + leave_stmt}: ok
 -- * error: in leave_stmt % statement should be the last thing in a statement list
 -- +1 error:
 while 1
@@ -1982,6 +2024,8 @@ begin
 end;
 
 -- TEST: loop with continue, continue not the last statement
+-- + {continue_stmt}: err
+-- + leave_stmt}: ok
 -- * error: in continue_stmt % statement should be the last thing in a statement list
 -- +1 error:
 while 1
@@ -1991,44 +2035,44 @@ begin
 end;
 
 -- TEST: standard loop with continue
--- - error:
 -- + {loop_stmt}: ok
 -- + {continue_stmt}: ok
+-- - error:
 loop fetch my_cursor into X, Y begin
   continue;
 end;
 
 -- TEST: try to loop over a scalar
--- * error: % not a cursor 'X'
--- +1 error:
 -- + {loop_stmt}: err
 -- + {fetch_stmt}: err
 -- + {name X}: err
+-- * error: % not a cursor 'X'
+-- +1 error:
 loop fetch X into y begin
   leave;
 end;
 
 -- TEST: try to loop over something that isn't present
--- * error: % name not found 'not_a_variable'
--- +1 error:
 -- + {loop_stmt}: err
 -- + {fetch_stmt}: err
 -- + {name not_a_variable}: err
+-- * error: % name not found 'not_a_variable'
+-- +1 error:
 loop fetch not_a_variable into x
 begin
   leave;
 end;
 
 -- TEST: try to leave outside of a loop
+-- + {leave_stmt}: err
 -- * error: % leave must be inside of a 'loop', 'while', or 'switch' statement
 -- +1 error:
--- + {leave_stmt}: err
 leave;
 
 -- TEST: try to continue outside of a loop
+-- + {continue_stmt}: err
 -- * error: % continue must be inside of a 'loop' or 'while' statement
 -- +1 error:
--- + {continue_stmt}: err
 continue;
 
 -- TEST: legal return out of a procedure
@@ -2066,6 +2110,9 @@ begin
 end;
 
 -- TEST: return must be the last statement (attr form)
+-- + {create_proc_stmt}: err
+-- + {return_stmt}: err
+-- + {return_stmt}: ok
 -- * error: in return_stmt % statement should be the last thing in a statement list
 -- +1 error:
 create proc return_not_last_with_attr()
@@ -2078,6 +2125,9 @@ begin
 end;
 
 -- TEST: return must be the last statement (no attr form)
+-- + {create_proc_stmt}: err
+-- + {return_stmt}: err
+-- + {return_stmt}: ok
 -- * error: in return_stmt % statement should be the last thing in a statement list
 -- +1 error:
 create proc return_not_last_no_attr()
@@ -2089,11 +2139,14 @@ begin
 end;
 
 -- TEST: return outside of any proc
+-- + {return_stmt}: err
 -- * error: % return statement should be in a procedure and not at the top level
 -- +1 error:
 return;
 
 -- TEST: return at top level, that's just goofy
+-- + {create_proc_stmt}: err
+-- + {return_stmt}: err
 -- * error: % return statement should be in a procedure and not at the top level
 -- +1 error:
 create proc return_at_top_level()
@@ -2102,24 +2155,24 @@ begin
 end;
 
 -- TEST: loop must prop errors inside it up so the overall loop is a semantic failure
+-- {loop_stmt}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- {loop_stmt}: err
 loop fetch my_cursor into X, Y
 begin
  select not 'X';
 end;
 
 -- TEST: close a valid cursor
--- - error:
 -- + {close_stmt}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+-- - error:
 close my_cursor;
 
 -- TEST: close invalid cursor
--- * error: % not a cursor 'X'
--- +1 error:
 -- + {close_stmt}: err
 -- + {name X}: err
+-- * error: % not a cursor 'X'
+-- +1 error:
 close X;
 
 -- TEST: close boxed cursor
@@ -2153,83 +2206,83 @@ begin
 end;
 
 -- TEST: a working delete
--- - error:
 -- + {delete_stmt}: ok
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- + {opt_where}: bool notnull
+-- - error:
 delete from foo where id = 33;
 
 -- TEST: delete from bogus table
+-- + {delete_stmt}: err
 -- * error: % table in delete statement does not exist 'bogus_table'
 -- +1 error:
--- + {delete_stmt}: err
 delete from bogus_table;
 
 -- TEST: delete from a view
+-- + {delete_stmt}: err
 -- * error: % cannot delete from a view 'MyView'
 -- +1 error:
--- + {delete_stmt}: err
 delete from MyView;
 
 -- TEST: delete with bogus expression
--- * error: % name not found 'missing_column'
--- +1 error:
 -- + {delete_stmt}: err
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- + {name missing_column}: err
+-- * error: % name not found 'missing_column'
+-- +1 error:
 delete from foo where missing_column = 1;
 
 -- TEST: regular insert
--- - error:
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {int 1}: integer notnull
 -- + {strlit 'bazzle'}: text notnull
 -- + {int 3}: integer notnull
+-- - error:
 insert into bar values (1, 'bazzle', 3);
 
 -- TEST: replace statement
--- - error:
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {int 1}: integer notnull
 -- + {strlit 'bazzle'}: text notnull
 -- + {int 3}: integer notnull
+-- - error:
 replace into bar values (1, 'bazzle', 3);
 
 -- TEST: insert or fail
--- - error:
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {int 1}: integer notnull
 -- + {strlit 'bazzle'}: text notnull
 -- + {int 3}: integer notnull
+-- - error:
 insert or fail into bar values (1, 'bazzle', 3);
 
 -- TEST: insert or rollback
--- - error:
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {int 1}: integer notnull
 -- + {strlit 'bazzle'}: text notnull
 -- + {int 3}: integer notnull
+-- - error:
 insert or rollback into bar values (1, 'bazzle', 3);
 
 -- TEST: insert or abort
--- - error:
 -- + {insert_stmt}: ok
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {int 1}: integer notnull
 -- + {strlit 'bazzle'}: text notnull
 -- + {int 3}: integer notnull
+-- - error:
 insert or abort into bar values (1, 'bazzle', 3);
 
 -- TEST: insert default values
--- - error:
 -- + {insert_stmt}: ok
 -- + {name_columns_values}
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- + {default_columns_values}
+-- - error:
 insert into foo default values;
 
 -- TEST: insert default values
@@ -2239,65 +2292,63 @@ insert into foo default values;
 insert into bar default values;
 
 -- TEST: insert into a table that isn't there
--- * error: % table in insert statement does not exist 'bogus_table'
--- +1 error:
 -- + {insert_stmt}: err
 -- + {name bogus_table}
+-- * error: % table in insert statement does not exist 'bogus_table'
+-- +1 error:
 insert into bogus_table values (1);
 
 -- TEST: insert into a view
+-- + {insert_stmt}: err
+-- + {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- * error: % cannot insert into a view 'MyView'
 -- +1 error:
--- + {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
--- + {insert_stmt}: err
 insert into MyView values (1);
 
 -- TEST: insert with errors -- note that id is a field name of bar but it must not be found
--- * error: % name not found 'id'
--- +1 error:
 -- + {insert_stmt}: err
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {name id}: err
+-- * error: % name not found 'id'
+-- +1 error:
 insert into bar values (id, 'bazzle', 3);
 
 -- TEST: insert into foo, one column, it is autoinc, so use NULL
--- - error:
 -- + {insert_stmt}: ok
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
+-- - error:
 insert into foo values (NULL);
 
 -- TEST: insert into bar, type mismatch
--- * error: % incompatible types in expression 'id'
--- +1 error:
 -- + {insert_stmt}: err
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {strlit 'string is wrong'}: err
+-- * error: % incompatible types in expression 'id'
+-- +1 error:
 insert into bar values ('string is wrong', 'string', 1);
 
 -- TEST: insert into bar, type mismatch, 2 is wrong
--- * error: % incompatible types in expression 'name'
--- +1 error:
 -- + {insert_stmt}: err
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {int 2}: err
+-- * error: % incompatible types in expression 'name'
+-- +1 error:
 insert into bar values (1, 2, 3);
 
 -- TEST: insert too many columns
--- +1 error:
--- +1 error:
--- * error: % count of columns differs from count of values
 -- + {insert_stmt}: err
 -- + {name foo}: foo: { id: integer notnull primary_key autoinc }
+-- * error: % count of columns differs from count of values
+-- +1 error:
 insert into foo values(NULL, 2);
 
 -- TEST: insert too few columns
--- +1 error:
--- +1 error:
--- * error: % select statement with VALUES clause requires a non empty list of values
 -- + {insert_stmt}: err
+-- + {name foo}: foo: { id: integer notnull primary_key autoinc }
 -- + {select_stmt}: err
 -- + {select_core}: err
--- + {name foo}: foo: { id: integer notnull primary_key autoinc }
+-- * error: % select statement with VALUES clause requires a non empty list of values
+-- +1 error:
 insert into foo values();
 
 -- TEST: insert into bar, null not allowed in non-null field
@@ -2307,56 +2358,56 @@ insert into foo values();
 insert into bar values (null, 'string', 1);
 
 -- TEST: table cannot have more than one autoinc
+-- + {create_table_stmt}: err
 -- * error: % table can only have one autoinc column 'id2'
 -- +1 error:
--- + {create_table_stmt}: err
 create table two_autoincs_is_bad(
   id1 integer PRIMARY KEY AUTOINCREMENT not null,
   id2 integer PRIMARY KEY AUTOINCREMENT not null
 );
 
 -- TEST: valid assignment
--- - error:
 -- + {assign}: X: integer variable
+-- - error:
 set X := 1;
 
 -- TEST: bogus variable name
--- * error: % variable not found 'XX'
--- +1 error:
 -- + {assign}: err
 -- + {name XX}
+-- * error: % variable not found 'XX'
+-- +1 error:
 set XX := 1;
 
 -- TEST: try to assign a cursor
--- * error: % cannot set a cursor 'my_cursor'
--- +1 error:
 -- + {assign}: err
 -- + {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
+-- * error: % cannot set a cursor 'my_cursor'
+-- +1 error:
 set my_cursor := 1;
 
 -- TEST: variable type mismatch
--- * error: % incompatible types in expression 'X'
--- +1 error:
 -- + {assign}: err
 -- + {name X}: err
+-- * error: % incompatible types in expression 'X'
+-- +1 error:
 set X := 'x';
 
 -- TEST: null ok with everything
--- - error:
 -- + {assign}: X: integer variable
 -- + {null}: null
+-- - error:
 set X := null;
 
 -- TEST: error propagates up, no other reported error
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {assign}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 set X := not 'x';
 
 -- TEST: simple cursor and fetch test
--- - error:
 -- + {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
+-- - error:
 declare fetch_cursor cursor for select 1, 'foo', null;
 
 -- setup variables for the upcoming tests
@@ -2368,94 +2419,109 @@ declare a_nullable text;
 declare an_long long integer;
 
 -- TEST: ok to fetch_stmt
--- - error:
 -- + {fetch_stmt}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
 -- + {name an_int}: an_int: integer variable
 -- + {name a_string}: a_string: text variable
 -- + {name a_nullable}: a_nullable: text variable
+-- - error:
 fetch fetch_cursor into an_int, a_string, a_nullable;
 
 -- TEST: fetch too few columns
+-- + {fetch_stmt}: err
 -- * error: % number of variables did not match count of columns in cursor 'fetch_cursor'
 -- +1 error:
--- + {fetch_stmt}: err
 fetch fetch_cursor into an_int, a_string;
 
 -- TEST: fetch too many columns
+-- + {fetch_stmt}: err
 -- * error: % number of variables did not match count of columns in cursor 'fetch_cursor'
 -- +1 error:
--- + {fetch_stmt}: err
 fetch fetch_cursor into an_int, a_string, a_nullable, a_string2;
 
 -- TEST: fetch an int into a string
--- * error: % incompatible types in expression 'a_string2'
--- +1 error:
 -- + {fetch_stmt}: err
 -- + {name a_string2}: err
+-- * error: % incompatible types in expression 'a_string2'
+-- +1 error:
 fetch fetch_cursor into a_string2, a_string, a_nullable;
 
 -- TEST: fetch a string into an int
--- * error: % incompatible types in expression 'an_int2'
--- +1 error:
 -- + {fetch_stmt}: err
 -- + {name an_int2}: err
+-- * error: % incompatible types in expression 'an_int2'
+-- +1 error:
 fetch fetch_cursor into an_int, an_int2, a_nullable;
 
 -- TEST: fetch using a bogus cursor
--- * error: % name not found 'not_a_cursor'
--- +1 error:
 -- + {fetch_stmt}: err
 -- + {name not_a_cursor}: err
+-- * error: % name not found 'not_a_cursor'
+-- +1 error:
 fetch not_a_cursor into i;
 
 -- TEST: fetch into a variable that doesn't exist
+-- + {fetch_stmt}: err
 -- * error: % FETCH variable not found 'non_existent_variable'
 -- +1 error:
--- + {fetch_stmt}: err
 fetch fetch_cursor into non_existent_variable;
 
 -- TEST: fetch into variables, duplicate in the list
+-- + {fetch_stmt}: err
+-- + {name fetch_cursor}
+-- + {name var_id}
+-- + {name var_id}
 -- * error: % duplicate name in list 'var_id'
 -- +1 error:
--- + {fetch_stmt}: err
--- +2 {name var_id}
 fetch fetch_cursor into var_id, var_id;
 
 -- TEST: create an index, duplicate name in index list
+-- + {create_index_stmt}: err
+-- + {name index_7}
+-- + {name foo}
+-- + {indexed_columns}: err
+-- + {name id}: id: integer notnull
+-- + {name id}: err
 -- * error: % name list has duplicate name 'id'
 -- +1 error:
--- + {create_index_stmt}: err
--- +2 {name id}
 create index index_7 on foo(id, id);
 
 -- TEST: validate no duplictes allowed in unique key
--- * error: % name list has duplicate name 'key_id'
--- +1 error:
 -- + {create_table_stmt}: err
 -- key_id shows up in its definition once, then 2 more times due to duplication
--- +3 {name key_id}
+-- + {name key_id}
+-- + {unq_def}
+-- + {name key_id}: key_id: integer notnull
+-- + {name key_id}: err
+-- * error: % name list has duplicate name 'key_id'
+-- +1 error:
 create table bad_table (
   key_id integer PRIMARY KEY AUTOINCREMENT not null,
   CONSTRAINT ak1 UNIQUE (key_id, key_id)
 );
 
 -- TEST: validate no duplictes allowed in group of unique key
--- * error: % name list has duplicate name 'key_id'
--- +1 error:
 -- + {create_table_stmt}: err
 -- key_id shows up in its definition once, then 2 more times due to duplication
--- +3 {name key_id}
+-- + {name key_id}
+-- + {unq_def}
+-- + {name key_id}: key_id: integer notnull
+-- + {name key_id}
+-- * error: % name list has duplicate name 'key_id'
+-- +1 error:
 create table bad_table_2 (
   key_id integer PRIMARY KEY AUTOINCREMENT not null,
   UNIQUE (key_id, key_id)
 );
 
 -- TEST: make an FK with duplicate id in the columns
--- * error: % name list has duplicate name 'col_id'
--- +1 error:
 -- + {create_table_stmt}: err
 -- col_id shows up in its definition once, then 2 more times due to duplication
--- +3 {name col_id}
+-- + {name col_id}
+-- + {fk_def}
+-- + {name col_id}: col_id: integer
+-- + {name col_id}: err
+-- * error: % name list has duplicate name 'col_id'
+-- +1 error:
 create table bad_table (
   col_id integer,
   FOREIGN KEY (col_id, col_id) REFERENCES foo(id)
@@ -2467,10 +2533,12 @@ create table ref_target (
 );
 
 -- TEST: make an FK with duplicate id in the reference columns
+-- + {create_table_stmt}: err
+-- + {fk_target}
+-- + {name ref_id1}
+-- + {name ref_id1}
 -- * error: % name list has duplicate name 'ref_id1'
 -- +1 error:
--- + {create_table_stmt}: err
--- +2 {name ref_id1}
 create table bad_table (
   id1 integer,
   id2 integer,
@@ -2478,19 +2546,19 @@ create table bad_table (
 );
 
 -- TEST: try to use a cursor as a value -- you get the "cursor has row" boolean
--- - error:
 -- + {assign}: X: integer variable
 -- + {name X}: X: integer variable
 -- + {name my_cursor}: _my_cursor_has_row_: bool notnull variable
+-- - error:
 set X := my_cursor;
 
 -- TEST: valid update
--- - error:
 -- + {update_stmt}: foo: { id: integer notnull primary_key autoinc }
 -- + {opt_where}: bool notnull
 -- + {eq}: bool notnull
 -- + {name id}: id: integer notnull
 -- + {int 2}: integer notnull
+-- - error:
 update foo set id = 1 where id = 2;
 
 -- TEST: update with kind matching, ok to update
@@ -2506,50 +2574,49 @@ update with_kind set cost = price_d;
 update with_kind set cost = price_e;
 
 -- TEST: update with view
+-- + {update_stmt}: err
 -- * error: % cannot update a view 'myView'
 -- +1 error:
--- + {update_stmt}: err
 update myView set id = 1;
 
 -- TEST: update with bogus where
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {update_stmt}: err
 -- + {opt_where}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 update foo set id = 1 where not 'x';
 
 -- TEST: update with bogus limit
--- * error: % expected numeric expression 'LIMIT'
--- +1 error:
 -- + {update_stmt}: err
 -- + {opt_limit}: err
 -- + {strlit 'x'}: err
+-- * error: % expected numeric expression 'LIMIT'
+-- +1 error:
 update foo set id = 1 limit 'x';
 
 -- TEST: update with bogus order by
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {update_stmt}: err
 -- + {opt_orderby}: err
--- + {update_stmt}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 update foo set id = 1 order by not 'x' limit 2;
 
 -- TEST: update with bogus column specified
--- * error: % name not found 'non_existent_column'
--- +1 error:
 -- + {update_stmt}: err
 -- + {name non_existent_column}: err
+-- * error: % name not found 'non_existent_column'
+-- +1 error:
 update foo set non_existent_column = 1;
 
 -- TEST: update with type mismatch (number <- string)
--- * error: % incompatible types in expression 'id'
--- +1 error:
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name id}: id: integer notnull
 -- + {strlit 'x'}: err
+-- * error: % incompatible types in expression 'id'
+-- +1 error:
 update foo set id = 'x';
 
 -- TEST: update with loss of precision
@@ -2561,113 +2628,120 @@ update foo set id = 'x';
 update foo set id = 1L where id = 2;
 
 -- TEST: update with string type mismatch (string <- number)
--- * error: % incompatible types in expression 'name'
--- +1 error:
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
 -- + {name name}: name: text
 -- + {int 2}: err
+-- * error: % incompatible types in expression 'name'
+-- +1 error:
 update bar set name = 2;
 
 -- TEST: update not null column to constant null
--- * error: % cannot assign/copy possibly null expression to not null target 'id'
--- +1 error:
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {name id}: id: integer notnull
 -- + {null}: null
+-- * error: % cannot assign/copy possibly null expression to not null target 'id'
+-- +1 error:
 update bar set id = null;
 
 -- TEST: try to use a variable in an update
--- * error: % name not found 'X'
--- +1 error:
 -- + {update_stmt}: err
 -- + {update_entry}: err
 -- + {name X}: err
+-- * error: % name not found 'X'
+-- +1 error:
 update bar set X = 1;
 
 -- TEST: update nullable column to constant null
--- - error:
 -- + {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- + {update_list}: ok
 -- + {update_entry}: rate: longint
 -- + {null}: null
+-- - error:
 update bar set rate = null;
 
 -- TEST: update column to error, no extra errors reported
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
 -- + {update_stmt}: err
 -- + {not}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 update bar set id = not 'x';
 
 -- TEST: simple procedure
--- - error:
 -- + {create_proc_stmt}: ok dml_proc
 -- + {delete_stmt}: ok
+-- - error:
 create procedure proc1()
 begin
   delete from foo;
 end;
 
 -- TEST: duplicate proc name
--- * error: % duplicate stored proc name 'proc1'
 -- + {create_proc_stmt}: err
 -- + {name proc1}
+-- * error: % duplicate stored proc name 'proc1'
+-- +1 error:
 create procedure proc1()
 begin
   delete from foo;
 end;
 
 -- TEST: procedure with arguments
--- - error:
+-- Here we're going to check that the parens came out right in the walk
+-- This is a case where precedence is equal and left to right
+-- The parents force it to be right to left, we have to honor that even though
+-- all priorities in sight are equal
+-- + DELETE FROM foo WHERE arg1 = ('x' IN (arg2));
 -- + {create_proc_stmt}: ok dml_proc
 -- + {delete_stmt}: ok
 -- + {eq}: bool
 -- + {name arg1}: arg1: integer variable in
 -- + {in_pred}: bool notnull
 -- + {name arg2}: arg2: text variable in
--- Here we're going to check that the parens came out right in the walk
--- This is a case where precedence is equal and left to right
--- The parents force it to be right to left, we have to honor that even though
--- all priorities in sight are equal
--- + DELETE FROM foo WHERE arg1 = ('x' IN (arg2));
+-- - error:
 create procedure proc2(arg1 INT, arg2 text)
 begin
  delete from foo where arg1 == ('x' in (arg2));
 end;
 
 -- TEST: try to use locals that are gone
+-- + {select_stmt}: err
 -- * error: % name not found 'arg1'
+-- +1 error:
 select arg1;
+
+-- TEST: try to use locals that are gone
+-- + {select_stmt}: err
 -- * error: % name not found 'arg2'
+-- +1 error:
 select arg2;
 
 -- TEST: procedure with duplicate arguments
--- * error: % duplicate parameter name 'arg1'
--- +1 error:
 -- + {create_proc_stmt}: err
 -- + {params}: err
+-- * error: % duplicate parameter name 'arg1'
+-- +1 error:
 create procedure proc3(arg1 INT, arg1 text)
 begin
   call anything(arg1, arg2);
 end;
 
 -- TEST: proc name no longer available even though there were errors
+-- + {create_proc_stmt}: err
 -- * error: % duplicate stored proc name 'proc3'
 -- +1 error:
--- + {create_proc_stmt}: err
 create procedure proc3()
 begin
   throw; -- whatever, anything
 end;
 
 -- TEST: throw not at the end of a block
+-- + {create_proc_stmt}: err
 -- * error: % statement should be the last thing in a statement list
 -- +1 error:
--- + {create_proc_stmt}: err
 create procedure proc_throw_not_at_end()
 begin
   throw;
@@ -2693,13 +2767,13 @@ end;
 declare proc anything no check;
 
 -- TEST: procedure call with arguments mixing in/out legally
--- - error:
 -- + {create_proc_stmt}: ok
 -- + {params}: ok
 -- + {call_stmt}: ok
 -- + {name anything}: ok
 -- + {name arg1}: arg1: integer variable in
 -- + {name arg3}: arg3: real variable in out
+-- - error:
 create procedure proc4(in arg1 integer, out arg2 text, inout arg3 real)
 begin
   call anything(arg1, arg3);
@@ -2711,6 +2785,7 @@ end;
 -- + {params}: ok
 -- + {declare_vars_type}: err
 -- + {name arg1}: err
+-- +1 error:
 create procedure proc5(in arg1 integer, out arg2 text, inout arg3 real)
 begin
   declare arg1 int;
@@ -2719,113 +2794,114 @@ end;
 -- TEST: try to select out a whole table by table name
 -- The name is not in scope
 -- * error: % name not found 'bar'
+-- +1 error:
 select bar from bar as T;
 
 -- TEST: try to select a whole table by aliased table name
 -- The name is not in scope
 -- * error: % name not found 'T'
+-- +1 error:
 select T from bar as T;
 
 -- TEST: goofy nested select to verify name reachability
--- - error:
 -- the nested table matches the outer table
--- +2 {select_stmt}: select: { id: integer notnull, rate: longint }
+-- + {select_stmt}: select: { id: integer notnull, rate: longint }
+-- + {select_stmt}: select: { id: integer notnull, rate: longint }
 -- + {select_from_etc}: TABLE { bar: bar }
+-- - error:
 select id, rate from (select id, rate from bar);
 
 -- TEST: slighly less goofy nested select to verify name reachability
--- - error:
 -- + {select_stmt}: select: { id: integer notnull, rate: longint }
 -- the nested select had more columns
 -- + {select_stmt}: select: { id: integer notnull, name: text, rate: longint }
 -- + {select_from_etc}: TABLE { bar: bar }
+-- - error:
 select id, rate from (select * from bar);
 
 -- TEST: use the table name as its scope
 -- + {select_stmt}: select: { id: integer notnull }
--- + select_from_etc}: TABLE { foo: foo }
 -- + {dot}: id: integer notnull
+-- + {select_from_etc}: TABLE { foo: foo }
 -- - error:
 select foo.id from foo;
 
 -- TEST: error: try to use the table name as its scope after aliasing
--- * error: in dot % name not found 'foo.id'
--- + {select_from_etc}: TABLE { T1: foo }
--- + {dot}: err
 -- + {select_stmt}: err
+-- + {dot}: err
+-- + {name foo}
 -- + {name id}
+-- + {select_from_etc}: TABLE { T1: foo }
+-- * error: in dot % name not found 'foo.id'
+-- +1 error:
 select foo.id from foo as T1;
 
 -- make a not null variable for the next test
 declare int_nn int not null;
 
 -- TEST: bogus assignment
+-- + {assign}: err
 -- * error: % cannot assign/copy possibly null expression to not null target 'int_nn'
 -- +1 error:
--- + {assign}: err
 set int_nn := NULL;
 
 -- TEST: call external method with args
--- - error:
 -- + {call_stmt}: ok
 -- + {name printf}: ok
 -- + {strlit 'Hello, world'}: text notnull
+-- - error:
 call printf('Hello, world');
 
 -- TEST: call known method with correct args (zero)
--- - error:
 -- + {call_stmt}: ok dml_proc
 -- + {name proc1}: ok dml_proc
+-- - error:
 call proc1();
 
 -- TEST: call known method with correct args (two)
--- - error:
--- + {name proc2}: ok dml_proc
 -- + {call_stmt}: ok dml_proc
+-- + {name proc2}: ok dml_proc
 -- + {int 1}: integer notnull
 -- + {strlit 'foo'}: text notnull
+-- - error:
 call proc2(1, 'foo');
 
 -- TEST: call known method with correct bogus int (arg1 should be an int)
+-- + {call_stmt}: err
+-- + {name proc2}: ok dml_proc
+-- + {strlit 'bar'}: err
 -- * error: % incompatible types in expression 'arg1'
 -- +1 error:
--- + {name proc2}: ok dml_proc
--- + {call_stmt}: err
--- + {strlit 'bar'}: err
--- + {name proc2}: ok dml_proc
 call proc2('bar', 'foo');
 
 -- TEST: call known method with bogus string  (arg2 should be a string)
+-- + {call_stmt}: err
+-- + {name proc2}: ok dml_proc
+-- + {int 2}: err
 -- * error: % incompatible types in expression 'arg2'
 -- +1 error:
--- + {name proc2}: ok dml_proc
--- + {call_stmt}: err
--- + {int 2}: err
--- + {name proc2}: ok dml_proc
 call proc2(1, 2);
 
 -- TEST: call known method with too many args
--- * error: % too many arguments provided to procedure 'proc2'
--- +1 error:
--- + {name proc2}: ok dml_proc
 -- + {call_stmt}: err
 -- + {name proc2}: ok dml_proc
+-- * error: % too many arguments provided to procedure 'proc2'
+-- +1 error:
 call proc2(1, 'foo', 1);
 
 -- TEST: call known method with too few args
--- * error: % too few arguments provided to procedure 'proc2'
--- +1 error:
--- + {name proc2}: ok dml_proc
 -- + {call_stmt}: err
 -- + {name proc2}: ok dml_proc
+-- * error: % too few arguments provided to procedure 'proc2'
+-- +1 error:
 call proc2(1);
 
 -- TEST: call on a method that had errors
--- * error: % procedure had errors, can't call 'proc3'
--- +1 error:
 -- + {call_stmt}: err
 -- + {name proc3}
 -- - {name proc3}: ok
+-- * error: % procedure had errors, can't call 'proc3'
+-- +1 error:
 call proc3(1, 'foo');
 
 -- test method with some out arguments, used in tests below
@@ -2834,62 +2910,62 @@ begin
 end;
 
 -- TEST: can't use an integer for inout arg
--- * error: % expected a variable name for OUT or INOUT argument 'arg2'
 -- + {call_stmt}: err
+-- * error: % expected a variable name for OUT or INOUT argument 'arg2'
 -- +1 error:
 call proc_with_output(1, 2, X);
 
 -- TEST: can't use an integer for out arg
--- * error: % expected a variable name for OUT or INOUT argument 'arg3'
 -- + {call_stmt}: err
+-- * error: % expected a variable name for OUT or INOUT argument 'arg3'
 -- +1 error:
 call proc_with_output(1, X, 3);
 
 -- TEST: out values satisfied
--- - error:
 -- + {call_stmt}: ok
 -- + {int 1}: integer notnull
 -- + {name X}: X: integer variable
 -- + {name Y}: Y: integer variable
+-- - error:
 call proc_with_output(1, X, Y);
 
 -- TEST: try to use an in/out arg in an out slot -> ok
--- - error:
 -- + {create_proc_stmt}: ok
--- + {name proc_with_output}: ok
 -- + {param_detail}: arg1: integer variable in out
+-- + {name proc_with_output}: ok
 -- + {name arg1}: arg1: integer variable in out
+-- - error:
 create procedure test_proc2(inout arg1 integer)
 begin
   call proc_with_output(1, X, arg1);
 end;
 
 -- TEST: try to use an out arg in an out slot -> ok
--- - error:
 -- + {create_proc_stmt}: ok
--- + {name proc_with_output}: ok
 -- + {param_detail}: arg1: integer variable out
+-- + {name proc_with_output}: ok
 -- + {name arg1}: arg1: integer variable out
+-- - error:
 create procedure test_proc3(out arg1 integer)
 begin
   call proc_with_output(1, X, arg1);
 end;
 
 -- TEST: a variable may not be passed as both an INOUT and OUT argument
--- * error: % variable passed as OUT or INOUT argument must not be aliased 'X'
+-- * error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- + {call_stmt}: err
 -- +1 error:
 call proc_with_output(1, X, X);
 
 -- TEST: a variable may not be passed as both an IN and INOUT argument
--- * error: % variable passed as OUT or INOUT argument must not be aliased 'X'
 -- + {call_stmt}: err
+-- * error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- +1 error:
 call proc_with_output(X, X, Y);
 
 -- TEST: a variable may not be passed as both an IN and OUT argument
--- * error: % variable passed as OUT or INOUT argument must not be aliased 'X'
 -- + {call_stmt}: err
+-- * error: % OUT or INOUT argument cannot be used again in same call 'X'
 -- +1 error:
 call proc_with_output(X, Y, X);
 
@@ -2949,12 +3025,12 @@ select count(this_does_not_exist) from foo;
 select count(distinct id) c from foo;
 
 -- TEST: try count distinct function with filter clause
--- - error:
 -- + {select_stmt}: select: { c: integer notnull }
 -- + {name count}: integer notnull
 -- + {distinct}
 -- + {arg_list}: ok
 -- + {name id}: id: integer notnull
+-- - error:
 select count(distinct id) filter (where id = 0) as c from foo;
 
 -- TEST: try count distinct function with star
@@ -2966,30 +3042,30 @@ select count(distinct id) filter (where id = 0) as c from foo;
 select count(distinct *) from foo;
 
 -- TEST: try sum functions
--- - error:
 -- + {select_stmt}: select: { s: integer }
 -- + {name sum}: integer
+-- - error:
 select sum(id) s from foo;
 
 -- TEST: try total functions
--- - error:
 -- + {select_stmt}: select: { t: real notnull }
 -- + {name total}: real notnull
+-- - error:
 select total(id) t from foo;
 
 -- TEST: try sum functions with too many param
--- * error: % function got incorrect number of arguments 'total'
--- +1 error:
 -- + {select_stmt}: err
 -- + {name total}: err
+-- * error: % function got incorrect number of arguments 'total'
+-- +1 error:
 select total(id, rate) from bar;
 
 -- TEST: try sum functions with star -- bogus
--- * error: % argument can only be used in count(*) '*'
--- +1 error:
--- + {star}: err
 -- + {select_stmt}: err
 -- + {name sum}
+-- + {star}: err
+-- * error: % argument can only be used in count(*) '*'
+-- +1 error:
 select sum(*) from foo;
 
 -- TEST: try average, this should give a real
@@ -3005,38 +3081,38 @@ select avg(id) a from foo;
 select min(id) m from foo;
 
 -- TEST: bogus number of arguments in count
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'count'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select count(1,2) from foo);
 
 -- TEST: bogus number of arguments in max
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'max'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select max() from foo);
 
 -- TEST: bogus number of arguments in sign
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'sign'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select sign());
 
 -- TEST: bogus number of arguments in sign
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'sign'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select sign(1,2));
 
 -- TEST: argument in sign is not numeric
+-- + {assign}: err
+-- + {call}: err
 -- * error: % argument must be numeric 'sign'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select sign('x'));
 
 -- TEST: sign may accept a real arg
@@ -3055,38 +3131,38 @@ let nl := (select sign(nullable(-1.0)));
 let ssnl := (select sign(sensitive(nullable(1))));
 
 -- TEST: bogus number of arguments in round
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'round'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select round());
 
 -- TEST: round outside of normal context
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function may not appear in this context 'round'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := round();
 
 -- TEST: bogus number of arguments in round
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'round'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select round(1,2,3));
 
 -- TEST: round second arg not numeric
+-- + {assign}: err
+-- + {call}: err
 -- * error: % second argument must be numeric 'round'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select round(1.5,'x'));
 
 -- TEST: round must get a real arg in position 1
+-- + {assign}: err
+-- + {call}: err
 -- * error: % first argument must be of type real 'round'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select round(1,2));
 
 -- TEST: round must get a real arg in position 1
@@ -3126,24 +3202,24 @@ let SNR := (select round(nullable(1.0), sensitive(1)));
 set ll := (select round(1.0, 2.0));
 
 -- TEST: bogus number of arguments in average
+-- + {assign}: err
+-- + {call}: err
 -- * error: % function got incorrect number of arguments 'avg'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select avg(1,2) from foo);
 
 -- TEST: bogus string type in average
+-- + {assign}: err
+-- + {call}: err
 -- * error: % argument must be numeric 'avg'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select avg('foo') from foo);
 
 -- TEST: bogus null literal in average
+-- + {assign}: err
+-- + {call}: err
 -- * error: % argument must be numeric 'avg'
 -- +1 error:
--- + {call}: err
--- + {assign}: err
 set X := (select avg(null) from foo);
 
 -- TEST: assign select where statement to nullable variable
@@ -3380,6 +3456,7 @@ declare curs cursor for call proc1();
 -- + {opt_orderby}: ok
 -- + {opt_limit}: integer notnull
 -- + {opt_offset}: integer notnull
+-- - error:
 select * from foo as T1
 inner join bar as T2 on T1.id = T2.id
 where T2.id > 5
@@ -3390,10 +3467,10 @@ limit 5
 offset 7;
 
 -- TEST: full join with all expression options and bogus offset
--- * error: % expected numeric expression 'OFFSET'
--- +1 error:
 -- + {select_stmt}: err
 -- + {opt_offset}: err
+-- * error: % expected numeric expression 'OFFSET'
+-- +1 error:
 select * from foo as T1
 inner join bar as T2 on T1.id = T2.id
 where T2.id > 5
@@ -3404,29 +3481,35 @@ limit 5
 offset 'x';
 
 -- TEST: You can't aggregate if there is no FROM clause, try that out for count
+-- + {select_stmt}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'count'
+-- +1 error:
 select count(1);
 
 -- TEST: checking use of aggregates in the wrong context (not allowed in where)
+-- + {select_stmt}: err
 -- * error: % function may not appear in this context 'count'
 -- +1 error:
--- + {select_stmt}: err
 select * from foo where count(*) == 1;
 
 -- TEST: You can't aggregate if there is no FROM clause, try that out for max
+-- + {select_stmt}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'max'
+-- +1 error:
 select max(1);
 
 -- TEST: You can't aggregate if there is no FROM clause, try that out for avg
+-- + {select_stmt}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'avg'
+-- +1 error:
 select avg(1);
 
 -- TEST: assign a not null to a nullable output, that's ok.
 -- + {create_proc_stmt}: ok
--- - error:
 -- + {param_detail}: result: integer variable out
 -- + {assign}: result: integer variable out
 -- + {int 5}: integer notnull
+-- - error:
 create proc out_proc(out result integer)
 begin
   set result := 5;
@@ -3434,18 +3517,23 @@ end;
 
 -- TEST: Set up a not null int for the tested
 -- + {name my_int}: my_int: integer notnull variable
+-- - error:
 declare my_int int not null;
 
 -- TEST: my_int is not nullable, must be exact match in out parameter, ordinarily this would be compatible
 -- * error: % cannot assign/copy possibly null expression to not null target 'my_int'
+-- +1 error:
 call out_proc(my_int);
 
 -- TEST: my_real is real, must be exact match in out parameter, ordinarily this would be compatible
 -- + {name my_real}: my_real: real variable
+-- - error:
 declare my_real real;
 
 -- TEST: Try to make the call with a bogus out arg now
+-- + {call_stmt}: err
 -- * error: % proc out parameter: arg must be an exact type match (expected integer; found real) 'my_real'
+-- +1 error:
 call out_proc(my_real);
 
 -- TEST: try an exists clause
@@ -3462,30 +3550,30 @@ select * from foo where exists (select * from foo);
 select * from foo where not exists (select * from foo);
 
 -- TEST: try an exists clause with an error
--- * error: % string operand not allowed in 'NOT'
--- only one error reported
--- +1 error:
 -- + {exists_expr}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select * from foo where exists (select not 'x' from foo);
 
 -- TEST: try a not exists clause with an error
--- * error: % string operand not allowed in 'NOT'
--- only one error reported
--- +1 error:
 -- + {exists_expr}: err
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select * from foo where not exists (select not 'x' from foo);
 
 -- TEST: try to use exists in a bogus place
--- * error: % exists_expr % function may not appear in this context 'exists'
--- + {exists_expr}: err
 -- + {assign}: err
+-- + {exists_expr}: err
+-- * error: % exists_expr % function may not appear in this context 'exists'
+-- +1 error:
 set X := exists(select * from foo);
 
 -- TEST: try to use not exists in a bogus place
--- * error: % function may not appear in this context 'exists'
+-- + {assign}: err
 -- + {not}: err
 -- + {exists_expr}: err
--- + {assign}: err
+-- * error: % function may not appear in this context 'exists'
+-- +1 error:
 set X := not exists(select * from foo);
 
 -- TEST: release a savepoint out of the blue
@@ -3516,7 +3604,7 @@ fetch shape_storage;
 -- + {dot}: shape_storage.one: integer notnull variable
 -- + {name shape_storage}
 -- + {name one}
--- -Error
+-- - error:
 select shape_storage.one;
 
 -- TEST: a field that is not present
@@ -3556,14 +3644,14 @@ select * from foo as T1 inner join foo as T2 using(id, idx);
 -- +1 error:
 select * from bar as T1 inner join foo as T2 using(id, name);
 
--- TEST: helper tables for different join types
+-- helper tables for different join types
 
 -- {create_table_stmt}: payload1: { id: integer notnull, data1: integer notnull }
--- -Error
+-- - error:
 create table payload1 (id integer not null, data1 integer not null);
 
 -- {create_table_stmt}: payload2: { id: integer notnull, data2: integer notnull }
--- -Error
+-- - error:
 create table payload2 (id integer not null, data2 integer not null);
 
 -- TEST: all not null
@@ -3593,10 +3681,14 @@ select * from payload1 cross join payload2 using (id);
 select * from (foo A, foo B) inner join (foo C, foo D);
 
 -- TEST: select with embedded error in an interior join
+-- + {select_stmt}: err
+-- + {select_from_etc}: err
+-- + {join_clause}: err
+-- + {table_or_subquery}: err
+-- + {join_clause}: err
+-- + {table_or_subquery}: TABLE { foo: foo }
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
--- + {select_stmt}: err
--- +2 {join_clause}: err
 select id from (foo inner join bar on not 'x') inner join foo on 1;
 
 -- TEST: simple ifnull : note X is nullable
@@ -3612,55 +3704,59 @@ select ifnull(X, 0);
 -- + {name X}: X: integer variable
 -- + {name Y}: Y: integer variable
 -- + {dbl 1.5%}: real notnull
+-- - error:
 select coalesce(X, Y, 1.5);
 
 -- TEST: null in a coalesce is obviously wrong
--- * error: % Null literal is useless in function 'coalesce'
+-- + {select_stmt}: err
 -- + {call}: err
 -- + {null}: err
--- + {select_stmt}: err
+-- * error: % Null literal is useless in function 'coalesce'
+-- +1 error:
 select coalesce(X, null, 1.5);
 
 -- TEST: not null before the end is obviously wrong
--- * error: % encountered arg known to be not null before the end of the list
 -- +1 error:
 -- + {call}: err
 -- + {name coalesce}
+-- * error: % encountered arg known to be not null before the end of the list
+-- +1 error:
 select coalesce(X, 5, 1.5);
 
 -- TEST: wrong number of args (too many)
--- * error: % Incorrect number of arguments 'ifnull'
 -- + {call}: err
 -- + {name ifnull}
+-- * error: % Incorrect number of arguments 'ifnull'
 -- +1 error:
 select ifnull(X, 5, 1.5);
 
 -- TEST: wrong number of args (too few)
--- * error: % Too few arguments provided 'ifnull'
 -- + {call}: err
 -- + {name ifnull}
+-- * error: % Too few arguments provided 'ifnull'
 -- +1 error:
 select ifnull(5);
 
 -- TEST: not compatible args in ifnull
--- * error: % incompatible types in expression 'ifnull'
 -- + {call}: err
 -- + {name ifnull}
+-- * error: % incompatible types in expression 'ifnull'
 -- +1 error:
 select ifnull(X, 'hello');
 
 -- TEST: error in expression in ifnull
--- * error: % string operand not allowed in 'NOT'
 -- + {call}: err
 -- + {name ifnull}
 -- + {arg_list}: err
+-- * error: % string operand not allowed in 'NOT'
 -- +1 error:
 select ifnull(not 'x', not 'hello');
 
 -- TEST: make make an FK with the column count wrong
--- * error: % number of columns on both sides of a foreign key must match
 -- + {create_table_stmt}: err
--- + fk_def}: err
+-- + {fk_def}: err
+-- * error: % number of columns on both sides of a foreign key must match
+-- +1 error:
 create table fk_table_2 (
   id1 integer,
   id2 integer,
@@ -3668,9 +3764,10 @@ create table fk_table_2 (
 );
 
 -- TEST: make make an FK with the column types not matching
--- * error: % exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
 -- + {create_table_stmt}: err
--- + fk_def}: err
+-- + {fk_def}: err
+-- * error: % exact type of both sides of a foreign key must match (expected real; found integer notnull) 'id'
+-- +1 error:
 create table fk_table_2 (
   id REAL,
   FOREIGN KEY (id) REFERENCES foo(id)
@@ -3689,11 +3786,12 @@ create table join_clause_2 (
 );
 
 -- TEST: join using syntax with column type mismatch test
--- * error: % left/right column types in join USING(...) do not match exactly 'id'
+-- + {select_stmt}: err
+-- + {join_clause}: err
 -- + {table_or_subquery}: TABLE { join_clause_1: join_clause_1 }
 -- + {table_or_subquery}: TABLE { join_clause_2: join_clause_2 }
--- + {join_clause}: err
--- + {select_stmt}: err
+-- * error: % left/right column types in join USING(...) do not match exactly 'id'
+-- +1 error:
 select * from join_clause_1 inner join join_clause_2 using(id);
 
 -- TEST: use last insert rowid, validate it's ok
@@ -3703,15 +3801,17 @@ select * from join_clause_1 inner join join_clause_2 using(id);
 select last_insert_rowid();
 
 -- TEST: last_insert_row doesn't take args
--- * error: % function got incorrect number of arguments 'last_insert_rowid'
--- + {name last_insert_rowid}: err
 -- + {select_stmt}: err
+-- + {name last_insert_rowid}: err
+-- * error: % function got incorrect number of arguments 'last_insert_rowid'
+-- +1 error:
 select last_insert_rowid(1);
 
 -- TEST: last_insert_rowid is not ok in a limit
--- * error: % function may not appear in this context 'last_insert_rowid'
--- + {call}: err
 -- + {select_stmt}: err
+-- + {call}: err
+-- * error: % function may not appear in this context 'last_insert_rowid'
+-- +1 error:
 select * from foo limit last_insert_rowid();
 
 -- declare result for last_insert_rowid
@@ -3732,15 +3832,17 @@ set rowid_result := last_insert_rowid();
 select changes();
 
 -- TEST: changes doesn't take args
--- * error: % function got incorrect number of arguments 'changes'
--- + {name changes}: err
 -- + {select_stmt}: err
+-- + {name changes}: err
+-- * error: % function got incorrect number of arguments 'changes'
+-- +1 error:
 select changes(1);
 
 -- TEST: changes is not ok in a limit
--- * error: % function may not appear in this context 'changes'
--- + {call}: err
 -- + {select_stmt}: err
+-- + {call}: err
+-- * error: % function may not appear in this context 'changes'
+-- +1 error:
 select * from foo limit changes();
 
 -- declare result for changes function
@@ -3768,9 +3870,9 @@ select printf('%s %d', 'x', 5);
 set a_string := printf('Hello');
 
 -- TEST: printf is not ok in a limit
--- * error: % function may not appear in this context 'printf'
--- + {opt_limit}: err
 -- + {select_stmt}: err
+-- + {opt_limit}: err
+-- * error: % function may not appear in this context 'printf'
 select 1 from (select 1) limit printf('%s %d', 'x', 5) == 'x';
 
 -- TEST: update with duplicate columns
@@ -4264,8 +4366,8 @@ end;
 
 -- TEST: duplicate declaration, all matches
 -- + DECLARE PROC decl1 (id INTEGER);
--- + param}: id: integer variable in
 -- + {declare_proc_stmt}: ok
+-- + {param}: id: integer variable in
 -- - error:
 declare proc decl1(id integer);
 
@@ -4342,17 +4444,18 @@ union all
 select 3 as A, 4 as B;
 
 -- TEST: force the various diagnostic forms
--- + {select_stmt}: err
--- * error: % additional difference diagnostic info:
--- + sem_test.sql:% error: likely end location of the 1st item
+-- + error: % if multiple selects, all must have the same column count
+-- + error: % additional difference diagnostic info:
+-- + error: likely end location of the 1st item
 -- +   this item has 3 columns
--- + sem_test.sql:% error: likely end location of the 2nd item
+-- + error: likely end location of the 2nd item
 -- +   this item has 4 columns
 -- + duplicate column in 1st: x integer notnull
 -- + duplicate column in 2nd: x integer notnull
 -- + only in 1st: y integer notnull
 -- + only in 2nd: u integer notnull
 -- + only in 2nd: z integer notnull
+-- + {select_stmt}: err
 -- diagnostics also present
 -- +4 error:
 select 1 as x, 2 as x, 3 as y
@@ -4533,15 +4636,15 @@ select const(case when x then 2 end);
 select const(~1.3);
 
 -- TEST: error should flow through
--- + {const}: err
 -- + SELECT CONST(~(1 / 0));
+-- + {const}: err
 -- * error: % evaluation of constant failed
 -- +1 error:
 select const(~(1/0));
 
 -- TEST: error should flow through
--- + {const}: err
 -- + SELECT CONST(-(1 / 0));
+-- + {const}: err
 -- * error: % evaluation of constant failed
 -- +1 error:
 select const(-(1/0));
@@ -4583,20 +4686,20 @@ select const(x + 0);
 select const(0 + x);
 
 -- TEST: null handling for +
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null + 0);
 
 -- TEST: null handling for +
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 + null);
 
 -- TEST: bool handling for +
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT TRUE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(true + false);
 
@@ -4613,20 +4716,20 @@ select const(x - 0);
 select const(0 - x);
 
 -- TEST: null handling for -
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null - 0);
 
 -- TEST: null handling for -
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 - null);
 
 -- TEST: bool handling for -
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT TRUE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(true - false);
 
@@ -4643,20 +4746,20 @@ select const(x * 0);
 select const(0 * x);
 
 -- TEST: null handling for *
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null * 0);
 
 -- TEST: null handling for *
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 * null);
 
 -- TEST: bool handling for *
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(true * false);
 
@@ -4673,20 +4776,20 @@ select const(x / 1);
 select const(1 / x);
 
 -- TEST: null handling for /
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null / 1);
 
 -- TEST: null handling for /
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(1 / null);
 
 -- TEST: bool handling for /
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false / true);
 
@@ -4703,20 +4806,20 @@ select const(x % 1);
 select const(1 % x);
 
 -- TEST: null handling for %
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null % 1);
 
 -- TEST: null handling for %
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(1 % null);
 
 -- TEST: bool handling for %
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false % true);
 
@@ -4733,26 +4836,26 @@ select const(x == 1);
 select const(1 == x);
 
 -- TEST: null handling for == (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const((not null) == 0);
 
 -- TEST: null handling for == (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 == not null);
 
 -- TEST: null handling for +
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 + null);
 
 -- TEST: bool handling for ==
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false == true);
 
@@ -4769,20 +4872,20 @@ select const(x != 1);
 select const(1 != x);
 
 -- TEST: null handling for == (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const((not null) != 0);
 
 -- TEST: null handling for != (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 != not null);
 
 -- TEST: bool handling for !=
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT TRUE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false != true);
 
@@ -4799,20 +4902,20 @@ select const(x <= 1);
 select const(1 <= x);
 
 -- TEST: null handling for <= (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const((not null) <= 0);
 
 -- TEST: null handling for <= (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 <= not null);
 
 -- TEST: bool handling for <=
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT TRUE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false <= true);
 
@@ -4829,20 +4932,20 @@ select const(x >= 1);
 select const(1 >= x);
 
 -- TEST: null handling for >= (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const((not null) >= 0);
 
 -- TEST: null handling for >= (don't use a literal null)
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 >= not null);
 
 -- TEST: bool handling for >=
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false >= true);
 
@@ -4859,20 +4962,20 @@ select const(x > 1);
 select const(1 > x);
 
 -- TEST: null handling for >
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null > 1);
 
 -- TEST: null handling for >
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(1 > null);
 
 -- TEST: bool handling for >
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false > true);
 
@@ -4889,20 +4992,20 @@ select const(x < 1);
 select const(1 < x);
 
 -- TEST: null handling for <
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null < 1);
 
 -- TEST: null handling for <
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(1 < null);
 
 -- TEST: bool handling for <
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT TRUE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false < true);
 
@@ -4919,20 +5022,20 @@ select const(x << 1);
 select const(1 << x);
 
 -- TEST: null handling for <<
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null << 0);
 
 -- TEST: null handling for <<
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 << null);
 
 -- TEST: bool handling for <<
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false << true);
 
@@ -4949,20 +5052,20 @@ select const(x >> 1);
 select const(1 >> x);
 
 -- TEST: null handling for >>
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null >> 0);
 
 -- TEST: null handling for >>
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 >> null);
 
 -- TEST: bool handling for >>
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false >> true);
 
@@ -4979,20 +5082,20 @@ select const(x | 1);
 select const(1 | x);
 
 -- TEST: null handling for |
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null | 0);
 
 -- TEST: null handling for |
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 | null);
 
 -- TEST: bool handling for |
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT TRUE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false | true);
 
@@ -5009,20 +5112,20 @@ select const(x & 1);
 select const(1 & x);
 
 -- TEST: null handling for &
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(null & 0);
 
 -- TEST: null handling for &
--- + {select_stmt}: select: { _anon: null }
 -- + SELECT NULL;
+-- + {select_stmt}: select: { _anon: null }
 -- - error:
 select const(0 & null);
 
 -- TEST: bool handling for &
--- + {select_stmt}: select: { _anon: bool notnull }
 -- + SELECT FALSE;
+-- + {select_stmt}: select: { _anon: bool notnull }
 -- - error:
 select const(false & true);
 
@@ -5434,7 +5537,7 @@ end;
 
 -- TEST: cannot call shared fragments outside of a SQL context
 -- + {call_stmt}: err
--- + shared fragments may not be called outside of a SQL statement 'a_shared_frag'
+-- * error: % shared fragments may not be called outside of a SQL statement 'a_shared_frag'
 -- +1 error:
 call a_shared_frag();
 
@@ -5468,8 +5571,8 @@ declare proc frag_type() (id integer<job>, name text);
 -- + {misc_attrs}: ok
 -- + {name cql}
 -- + {name shared_fragment}
--- + {cte_table}: source: { id: integer<job>, name: text }
 -- + {create_proc_stmt}: shared_frag3: { id: integer<job>, name: text } dml_proc
+-- + {cte_table}: source: { id: integer<job>, name: text }
 -- - error:
 @attribute(cql:shared_fragment)
 create proc shared_frag3()
@@ -5791,8 +5894,11 @@ select not 'x';
 -- TEST: verify the shape of tree with many unions
 -- here we're checking to make sure Y is loose at the end of the chain
 -- and the two X variables came before in the tree
--- +2 |   | {name X}: X: integer variable
--- + | {name Y}: Y: integer variable
+-- + {name X}: X: integer variable
+-- + {select_core_compound}
+-- + {name X}: X: integer variable
+-- + {select_core_compound}
+-- + {name Y}: Y: integer variable
 select X as A
 union all
 select X as A
@@ -5800,30 +5906,31 @@ union all
 select Y as A;
 
 -- TEST: verify that we can create a view that is based on a CTE
--- -Error
 -- + {with_select_stmt}: view_with_cte: { x: integer notnull }
 -- + {cte_table}: goo: { x: integer notnull }
+-- - error:
 create view view_with_cte as
 with
- goo(x) as (select 1)
+goo(x) as (select 1)
 select * from goo;
 
 -- TEST: verify that we can use non-simple selects inside of an IN
--- - error:
+-- + {select_expr}: A: bool notnull
 -- + {in_pred}: bool notnull
 -- + {select_stmt}: _anon: integer
+-- - error:
 select 1 in (select 1 union all select 2 union all select 3) as A;
 
 -- TEST: use table.* syntax to get one table
--- - error:
 -- + {select_stmt}: select: { _first: integer notnull, A: integer notnull, B: integer notnull, _last: integer notnull }
 -- + {table_star}: T: select: { A: integer notnull, B: integer notnull }
+-- - error:
 select 0 as _first, T.*, 3 as _last from (select 1 as A, 2 as B) as T;
 
 -- TEST: use table.* syntax to get two tables
--- - error:
--- + {table_star}: T: select: { A: integer notnull, B: integer notnull }
 -- + {select_stmt}: select: { _first: integer notnull, A: integer notnull, B: integer notnull, C: integer notnull, _last: integer notnull }
+-- + {table_star}: T: select: { A: integer notnull, B: integer notnull }
+-- - error:
 select 0 as _first, T.*, S.*, 3 as _last from (select 1 as A, 2 as B) as T, (select 1 as C) as S;
 
 -- TEST: try to use T.* with no from clause
@@ -5837,10 +5944,10 @@ select T.*;
 select T.* from (select 1) as U;
 
 -- TEST: simple test for declare function
--- + name simple_func}: real notnull
--- + {param}: arg1: integer notnull variable in
--- + {params}: ok
 -- + DECLARE FUNC simple_func (arg1 integer not null) REAL not null;
+-- + name simple_func}: real notnull
+-- + {params}: ok
+-- + {param}: arg1: integer notnull variable in
 -- - error:
 declare function simple_func(arg1 integer not null) real not null;
 
@@ -5894,15 +6001,15 @@ declare real_result real;
 set real_result := simple_func(1);
 
 -- TEST: function call with bogus arg type
--- + {call}: err
 -- + {assign}: err
+-- + {call}: err
 -- * error: % incompatible types in expression 'arg1'
 -- +1 error:
 set real_result := simple_func('xx');
 
 -- TEST: function call with invalid args
--- + {call}: err
 -- + {assign}: err
+-- + {call}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
 set real_result := simple_func(not 'xx');
@@ -6254,8 +6361,8 @@ insert into booly(id) values(1);
 -- TEST: insert into a view (with columns)
 -- * error: % cannot insert into a view 'MyView'
 -- +1 error:
--- + {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- + {insert_stmt}: err
+-- + {name MyView}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 insert into MyView(id) values (1);
 
 -- TEST: insert into non existent table
@@ -6481,13 +6588,14 @@ create table migrate_annotions_delete_out_of_order(
 );
 
 -- TEST: create a table with versioning
+-- + {create_table_stmt}: versioned_table: { id: integer } deleted @create(1) @delete(3)
+-- + {int 0}
 -- + {create_attr}
 -- + {int 1}
 -- + {name table_create_proc}
 -- + {delete_attr}
--- + {int 2}
+-- + {int 3}
 -- + {name table_delete_proc}
--- + deleted
 -- - error:
 create table versioned_table(
    id integer @create(2)
@@ -6695,9 +6803,9 @@ select text, text2 from table_with_text_as_name;
 
 -- TEST: extract a column named text -- brutal renames
 -- + {select_stmt}: select: { text: text, other_text: text }
--- + {select_from_etc}: TABLE { table_with_text_as_name: table_with_text_as_name }
 -- + {name text2}: text2: text
 -- + {name text}: text: text
+-- + {select_from_etc}: TABLE { table_with_text_as_name: table_with_text_as_name }
 -- - error:
 select text2 as text, text as other_text from table_with_text_as_name;
 
@@ -6748,8 +6856,8 @@ alter table trickier_alter_target add column id integer;
 alter table trickier_alter_target add column something_deleted text;
 
 -- TEST: try to add 'added' -> works!
--- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
 -- + alter_table_add_column_stmt}: ok
+-- + {name trickier_alter_target}: trickier_alter_target: { id: integer notnull partial_pk, added: text }
 -- + {col_def}: added: text
 -- - error:
 alter table trickier_alter_target add column added text;
@@ -6757,7 +6865,7 @@ alter table trickier_alter_target add column added text;
 -- TEST: select as table with error
 -- + {select_stmt}: err
 -- + {table_or_subquery}: err
--- + string operand not allowed in 'NOT'
+-- * error: % string operand not allowed in 'NOT'
 -- +1 error:
 select * from (select not 'x' X);
 
@@ -7058,13 +7166,13 @@ begin
 end;
 
 -- TEST: try to make a dummy blob -- not supported
+-- + INSERT INTO blob_table_test(b) VALUES(CAST(printf('b_%d', _seed_) AS BLOB)) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- + {insert_stmt}: ok
 -- + {cast_expr}: blob notnull
 -- + {call}: text notnull
 -- + {name printf}: text notnull
 -- + {strlit 'b_%d'}: text notnull
 -- + {name _seed_}: _seed_: integer notnull variable
--- + INSERT INTO blob_table_test(b) VALUES(CAST(printf('b_%d', _seed_) AS BLOB)) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- - error:
 insert into blob_table_test() values() @dummy_seed(1) @dummy_nullables;
 
@@ -7369,8 +7477,8 @@ end;
 
 -- TEST: create a proc that calls a dml proc as a function, must become a dml proc itself
 -- - error:
--- + {assign}: a: integer notnull variable out
 -- + {create_proc_stmt}: ok dml_proc
+-- + {assign}: a: integer notnull variable out
 create proc should_be_dml(out a integer not null)
 begin
   set a := dml_func();
@@ -7540,8 +7648,8 @@ begin
 end;
 
 -- TEST: fetch cursor from values provide null for blob (works)
--- + fetch_values_stmt}: ok
 -- + FETCH C(B) FROM VALUES(NULL) @DUMMY_SEED(123);
+-- + fetch_values_stmt}: ok
 -- - error:
 create proc fetch_values_blob_dummy_with_null()
 begin
@@ -7779,8 +7887,8 @@ declare X cursor like select 1 A, 2.5 B, 'x' C;
 select rowid from foo;
 
 -- TEST: pull a rowid from a particular table
--- + {select_stmt}: select: { rowid: longint notnull }
 -- + SELECT T1.rowid
+-- + {select_stmt}: select: { rowid: longint notnull }
 -- - error:
 select T1.rowid from foo T1, bar T2;
 
@@ -7807,8 +7915,12 @@ begin
 end;
 
 -- TEST: create table with misc attributes
+-- + @ATTRIBUTE(foo)
+-- + @ATTRIBUTE(goo)
+-- + @ATTRIBUTE(num=-9)
+-- + CREATE TABLE misc_attr_table(
+-- + @ATTRIBUTE(bar=baz)
 -- + {stmt_and_attr}
--- + {create_table_stmt}: misc_attr_table: { id: integer notnull }
 -- +4 {misc_attrs}
 -- +4 {misc_attr}
 -- +1 {name foo}
@@ -7818,10 +7930,7 @@ end;
 -- +1 {name num}
 -- +1 {uminus}
 -- +1 {int 9}
--- + @ATTRIBUTE(foo)
--- + @ATTRIBUTE(goo)
--- + @ATTRIBUTE(num=-9)
--- + @ATTRIBUTE(bar=baz)
+-- + {create_table_stmt}: misc_attr_table: { id: integer notnull }
 @attribute(foo)
 @attribute(goo)
 @attribute(num=-9)
@@ -7906,9 +8015,10 @@ create table bogus_autoinc_type(id bool primary key autoincrement);
 create table bogus_without_rowid(id integer primary key autoincrement) without rowid;
 
 -- TEST: create a table that is going to be on the recreate plan
+-- + CREATE TABLE recreatable(
+-- + @RECREATE;
 -- + {create_table_stmt}: recreatable: { id: integer notnull primary_key, name: text } @recreate
--- +  @RECREATE;
--- +  {recreate_attr}
+-- + {recreate_attr}
 -- - error:
 create table recreatable(
   id integer primary key,
@@ -7916,9 +8026,10 @@ create table recreatable(
 ) @recreate;
 
 -- TEST: create a table that is going to be on the recreate plan, try to version a column in it
+-- + CREATE TABLE column_marked_delete_on_recreate_table(
+-- + @RECREATE;
 -- + {create_table_stmt}: err
--- +  @RECREATE;
--- +  {recreate_attr}
+-- + {recreate_attr}
 -- * error: % columns in a table marked @recreate cannot have @create or @delete 'id'
 create table column_marked_delete_on_recreate_table(
   id integer primary key @create(2),
@@ -7943,12 +8054,12 @@ end;
 -- + {with_insert_stmt}: ok
 -- + {cte_table}: x: { a: integer notnull, b: text notnull, c: longint notnull }
 -- + {insert_stmt}: ok
--- + {select_stmt}: a: integer
--- + {select_stmt}: b: text
--- + {select_stmt}: c: longint
 -- + {insert_normal}
 -- + {name_columns_values}
 -- + {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+-- + {select_stmt}: a: integer
+-- + {select_stmt}: b: text
+-- + {select_stmt}: c: longint
 create proc with_insert_form()
 begin
   with x(a,b,c) as (select 12, 'foo', 35L)
@@ -8098,23 +8209,23 @@ declare select func foo(x integer, x integer) integer;
 -- AST rewritten
 -- + CREATE PROC arg_fetcher (arg1 TEXT NOT NULL, arg2 INTEGER NOT NULL, arg3 REAL NOT NULL)
 -- + FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
--- +  | {fetch_values_stmt}: ok
--- +  | {name_columns_values}
--- +  | {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
--- +  | {columns_values}: ok
--- +  | {column_spec}
--- +  | | {name_list}
--- +  |   | {name A}: A: text notnull
--- +  |   | {name_list}
--- +  |     | {name B}: B: integer notnull
--- +  |     | {name_list}
--- +  |       | {name C}: C: real notnull
--- +  | {insert_list}
--- +  | {name arg1}: arg1: text notnull variable in
--- +  | {insert_list}
--- +  | {name arg2}: arg2: integer notnull variable in
--- +  | {insert_list}
--- +  | {name arg3}: arg3: real notnull variable in
+-- + {fetch_values_stmt}: ok
+-- + {name_columns_values}
+-- + {name curs}: curs: select: { A: text notnull, B: integer notnull, C: real notnull } variable shape_storage value_cursor
+-- + {columns_values}: ok
+-- + {column_spec}
+-- + {name_list}
+-- + {name A}: A: text notnull
+-- + {name_list}
+-- + {name B}: B: integer notnull
+-- + {name_list}
+-- + {name C}: C: real notnull
+-- + {insert_list}
+-- + {dot}: arg1: text notnull variable in
+-- + {insert_list}
+-- + {dot}: arg2: integer notnull variable in
+-- + {insert_list}
+-- + {dot}: arg3: real notnull variable in
 create proc arg_fetcher(arg1 text not null, arg2 integer not null, arg3 real not null)
 begin
   declare curs cursor like select 'x' A, 1 B, 3.5 C;
@@ -9775,7 +9886,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % autotest attribute name is not valid 'bar'
 -- * error: % autotest has incorrect format 'found nested attributes that don't start with dummy_test'
--- +2 Error
+-- +2 error:
 @attribute(cql:autotest=(dummy_test, bar, ((id, name),(1, 'x'))))
 create proc autotest_dummy_test_not_nested_2()
 begin
@@ -12025,7 +12136,7 @@ select id, lag(id, 1, 0) over () from foo;
 -- + {select_stmt}: err
 -- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'some_key'
 -- * error: % first and third arguments must be compatible in function 'lag'
--- +2 Error
+-- +2 error:
 select lag(cost, 1, id) over () from with_kind;
 
 -- TEST lag with non integer offset
@@ -12105,7 +12216,7 @@ select id, lag(id | " ") over () from foo;
 -- + {name lag}
 -- + {arg_list}: err
 -- * error: % first and third arguments must be compatible in function 'lag'
--- +2 Error
+-- +2 error:
 select id, lag(id, 0, 0.7) over () from foo;
 
 -- TEST: test lag() window function with no param
@@ -14382,7 +14493,7 @@ declare proc test_shape() (x integer_things);
 
 -- TEST: ensure that the type kind is preserved on cursor read
 -- + {name z}: z: integer<integer_things> notnull variable
--- -Error
+-- - error:
 create proc enum_users()
 begin
    declare C cursor like test_shape;
@@ -14413,7 +14524,7 @@ end;
 -- proof that the b_x arg has the right type
 -- + {name v}: v: integer<integer_things> notnull variable
 -- rewrite includes the KIND
--- -Error
+-- - error:
 create proc enum_in_bundle(b like test_shape)
 begin
   let u := b.x;
@@ -14504,7 +14615,7 @@ declare enum long_things long_int (
 -- + {declare_enum_stmt}: err
 -- * error: % enum definitions do not match 'long_things'
 -- there will be three reports, 1 each for the two versions and one overall error
--- +3 Error
+-- +3 error:
 declare enum long_things integer (
   foo
 );
@@ -15715,7 +15826,7 @@ end;
 -- + {stmt_and_attr}: err
 -- * error: % vault_sensitive column does not exist in result set 'bogus'
 -- * error: % vault_sensitive column does not exist in result set 'nan'
--- +2 Error
+-- +2 error:
 @attribute(cql:vault_sensitive=(bogus, (nan)))
 create proc vault_sensitive_with_invalid_encode_context_columns()
 begin
@@ -23058,7 +23169,7 @@ end;
 
 -- TEST: cannot use the above proc as a result set because it's private
 -- * error: % object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc SET'
--- +1 Error
+-- +1 error:
 proc use_invalid_result_set()
 begin
   declare x object<invalid_child_proc set>;
@@ -23066,7 +23177,7 @@ end;
 
 -- TEST: cannot use the above proc as a result set because it's private
 -- * error: % object<T SET> has a T that is not a public procedure with a result set 'invalid_child_proc_2 SET'
--- +1 Error
+-- +1 error:
 proc use_invalid_result_set2()
 begin
   declare x object<invalid_child_proc_2 set>;

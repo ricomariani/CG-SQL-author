@@ -61,10 +61,14 @@ begin
   -- we can never generate the literal -9223372036854775808
   -- if we do it gets converted to a float
 
-  @echo lua, "\n-- this code gen would be wrong, note the expect says ~=\n";
-  @echo lua, "-- we should expect == here but min_long will be rounded\n";
-  @echo lua, "-- we must generate (-9223372036854775807-1) as above\n";
-  @echo lua, "expect(-1 ~= -9223372036854775808 + 9223372036854775807)\n";
+  @echo lua, '
+  
+  -- this code gen would be wrong, note the expect says ~=
+  -- we should expect == here but min_long will be rounded
+  -- we must generate (-9223372036854775807-1) as above
+  expect(-1 ~= -9223372036854775808 + 9223372036854775807)
+
+  ';
 
 end;
 

@@ -106,11 +106,14 @@ begin
   call exit(fails);
 end;
 
-/* Useful code for getting more verbose errors 
-@echo c,"#undef cql_error_trace\n";
-@echo c,'#define cql_error_trace() \
-  fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))';
-@echo c,"\n\n";
+/* Enable this code if you want to get verbose errors from the run tests
+
+@echo c, '
+
+#undef cql_error_trace
+#define cql_error_trace() 
+  fprintf(stderr, "Error at %s:%d in %s: %d %s\n", __FILE__, __LINE__, _PROC_, _rc_, sqlite3_errmsg(_db_))
+';
 */
 
 -- for the test cases, all the blob function will be offset based rather than hash based
@@ -6590,9 +6593,13 @@ END);
 END_SUITE();
 
 -- manually force tracing on by redefining the macros
-@echo c,"#undef cql_error_trace\n";
-@echo c,"#define cql_error_trace() run_test_trace_callback(_PROC_, __FILE__, __LINE__)\n";
-@echo c,"void run_test_trace_callback(const char *proc, const char *file, int32_t line);\n";
+@echo c, '
+#undef cql_error_trace
+#define cql_error_trace() run_test_trace_callback(_PROC_, __FILE__, __LINE__)
+
+// we will call this to verify that tracing worked
+void run_test_trace_callback(const char *proc, const char *file, int32_t line);
+';
 
 -- this table will never actually be created, only declared
 -- hence it is a good source of db errors
@@ -6625,7 +6632,9 @@ begin
   set j := "text";
 end;
 
-@echo c,"#undef cql_error_trace\n";
-@echo c,"#define cql_error_trace()\n";
+@echo c, '
+#undef cql_error_trace
+#define cql_error_trace()
+';
 
 @emit_enums;

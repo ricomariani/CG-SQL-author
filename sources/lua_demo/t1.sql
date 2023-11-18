@@ -85,17 +85,21 @@ end;
 
 declare proc read_stuff() using transaction;
 
-@echo lua, "function read_stuff(db)\n";
-@echo lua, "  local rc\n";
-@echo lua, "  local result\n";
-@echo lua, "  rc, result = use_f_fetch_results(db, 5)\n";
-@echo lua, "  print(rc, #result, result[1].x)\n";
-@echo lua, "  rc, result = out_stmt_dml_proc_fetch_results(db)\n";
-@echo lua, "  print(rc, #result, result[1].x)\n";
-@echo lua, "  result = out_stmt_proc_fetch_results()\n";
-@echo lua, "  print(#result, result[1].x)\n";
-@echo lua, "  return rc\n";
-@echo lua, "end\n\n";
+@echo lua, '
+
+function read_stuff(db)
+  local rc
+  local result
+  rc, result = use_f_fetch_results(db, 5)
+  print(rc, #result, result[1].x)
+  rc, result = out_stmt_dml_proc_fetch_results(db)
+  print(rc, #result, result[1].x)
+  result = out_stmt_proc_fetch_results()
+  print(#result, result[1].x)
+  return rc
+end
+
+';
 
 create proc go()
 begin

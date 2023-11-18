@@ -40,28 +40,29 @@ var result_name text;
 var attempts int!;
 var errors int!;
 var tests int!;
+var last_rowid long!;
 
 -- setup the table and the index
 [[private]]
 proc setup()
 begin
   create table test_output(
-     line integer not null,
-     data text not null
+     line int!,
+     data text!
   );
 
   create index __idx__test_lines on test_output (line);
 
   create table source_input(
-     line integer not null,
-     data text not null
+     line int!,
+     data text!
   );
 
   create index __idx__source_lines on source_input (line);
 end;
 
 [[private]]
-proc prev_line(line_ integer not null, out prev integer not null)
+proc prev_line(line_ int!, out prev int!)
 begin
   begin try
      set prev := (select ifnull(max(line),-1) from test_output where line < line_);
@@ -73,19 +74,28 @@ end;
 
 -- dump all the output lines that were associated with the given input line
 [[private]]
-proc dump_output(line_ integer not null)
+proc dump_output(line_ int!, pat text!)
 begin
-  declare C cursor for select * from test_output where line = line_;
+  let p := (select "%" || pat || "%");
+  declare C cursor for
+    select rowid, line, data
+    from test_output where line = line_;
   loop fetch C
   begin
-    call printf("%s\n", C.data);
+    printf(
+      "%3s%s\n",
+      case when last_rowid == C.rowid
+           then ">  "
+           when C.data like p then "!  "
+           else "" end,
+      C.data
+    );
   end;
 end;
 
--- find the statement that came after line_
--- search the results of that statement for the indicated pattern
+-- find the line number of the statement that came after line_
 [[private]]
-proc find(line_ integer not null, pattern text not null, out search_line integer not null, out found integer not null)
+proc find_search_line(line_ int!, out search_line int!)
 begin
   /* the pattern match line is before the statement that generates the output like so:
 
@@ -94,17 +104,61 @@ begin
      3:  -- - bar
      4:  select something where something;  <-- we need this line number, e.g. 4
 
-     We need to find the number of a line in the test output that has been charged to an input line greater than the one we are on.
+     We need to find the number of a line in the test output that has been charged
+     to an input line greater than the one we are on.
   */
   begin try
     set search_line := (select line from test_output where line >= line_ limit 1);
   end try;
   begin catch
-    call printf("no lines come after %d\n", line_);
-    call printf("available test output lines: %d\n", (select count(*) from test_output));
-    call printf("max line number: %d\n", (select max(line) from test_output));
+    printf("no lines come after %d\n", line_);
+    printf("available test output lines: %d\n", (select count(*) from test_output));
+    printf("max line number: %d\n", (select max(line) from test_output));
     throw;
   end catch;
+end;
+
+-- find the statement that came after line_
+-- search the results of that statement for the indicated pattern
+-- find the next match, the matches have to be in order
+[[private]]
+proc find_next(line_ int!, pattern text!, out search_line int!, out found int!)
+begin
+  call find_search_line(line_, search_line);
+
+  -- once we have it, search for matches on that line and return the number we found
+  declare C cursor for
+    select rowid
+      from test_output
+      where line = search_line and data like ("%" || pattern || "%") and rowid > last_rowid;
+
+  fetch C;
+  if C then
+    set last_rowid := C.rowid;
+    set found := 1;
+  else
+    set found := 0;
+  end if;
+end;
+
+-- search for a match on the same rowid as the last match we found
+[[private]]
+proc find_same(line_ int!, pattern text!, out search_line int!, out found int!)
+begin
+  set found := (
+    select data like ("%" || pattern || "%")
+      from test_output
+      where rowid = last_rowid
+      if nothing false);
+end;
+
+
+-- find the statement that came after line_
+-- search the results of that statement for the indicated pattern
+[[private]]
+proc find_count(line_ int!, pattern text!, out search_line int!, out found int!)
+begin
+  call find_search_line(line_, search_line);
 
   -- once we have it, search for matches on that line and return the number we found
   set found := (select count(*) from test_output where line = search_line and data like ("%" || pattern || "%"));
@@ -112,23 +166,29 @@ end;
 
 -- dump all of the input lines starting from line1 up to but not including line2
 [[private]]
-proc dump_source(line1 integer not null, line2 integer not null)
+proc dump_source(line1 int!, line2 int!, current_line int!)
 begin
-  declare C cursor for select * from source_input where line > line1 and line <= line2;
+  declare C cursor for
+    select line, data
+      from source_input 
+      where line > line1 and line <= line2;
   loop fetch C
   begin
-    call printf("%s\n", C.data);
+    printf("%5s %05d: %s\n",
+      case when C.line == current_line then "FAIL" else "" end,
+      C.line, 
+      C.data);
   end;
 end;
 
 -- if anything goes wrong matching, we use this to print the error
 [[private]]
-proc print_error_message(buffer text!, line int!, expected int!)
+proc print_error_message(pattern text!, line int!, expected int!)
 begin
   printf("\n%s:%d error: expected '%s' %spresent", 
     sql_name,
     line,
-    buffer, 
+    pattern, 
     case when expected != 0 then "" else "not " end);
 
   -- this indicates we expected a certain exact number of matches
@@ -158,12 +218,19 @@ end;
 proc match_actual(buffer text!, line int!) 
 begin
   var search_line int!;
-  var count int!;
-  var expected int!;
+  var found int!;
+  var expected_count int!;
   var pattern text;
 
   -- the comments encode the matches, early out if that fails
-  if not buffer::starts_with("-- ") return;
+  if not buffer::starts_with("-- ") then
+    -- lines can be out of order or re-visited
+    -- we don't want a segment of rows that is later in the file
+    -- to prevent later matching.  This can happen with 
+    -- # line directives in the stream and it does
+    last_rowid := 0;
+    return;
+  end if;
 
   -- the standard test prefix it just counts tests, this doesn't mean anything
   -- but it's a useful statistic
@@ -175,17 +242,27 @@ begin
     -- found -- - foo
     -- negation, none expected
     pattern := buffer::after(5);
-    expected := 0;
+    expected_count := 0;
+  else if buffer::starts_with("-- * ") then
+    -- -- * foo
+    -- at least one is expected, any number will do, any buffer order
+    pattern := buffer::after(5);
+    expected_count := 1;
   else if buffer::starts_with("-- + ") then
     -- -- + foo
-    -- at least one is expected, any number will do
+    -- at least one is expected, matches have to be in order!
     pattern := buffer::after(5);
-    expected := -1;
+    expected_count := -1;
+  else if buffer::starts_with("-- = ") then
+    -- -- + foo
+    -- at least one is expected, matches have to be in order!
+    pattern := buffer::after(5);
+    expected_count := -2;
   else if match_multiline(buffer) then
     -- -- +7 foo
     -- an exact match (single digit matches)
-    expected := buffer::octet(4) - 48;
     pattern := buffer::after(6);
+    expected_count := buffer::octet(4) - 48;
   else 
     -- any other line is just a normal comment, ignore it
     return;
@@ -193,18 +270,28 @@ begin
 
   attempts += 1;
 
-  -- search among all the matching lines
-  call find(line, ifnull_throw(pattern), search_line, count);
-  if expected == count OR (expected == -1 AND count > 0) return;
+  let pat := ifnull_throw(pattern);
+
+  if expected_count == -1 then
+    call find_next(line, pat, search_line, found);
+    if found == 1 return;
+  else if expected_count == -2 then
+    call find_same(line, pat, search_line, found);
+    if found == 1 return;
+  else
+    -- search among all the matching lines
+    call find_count(line, pat, search_line, found);
+    if expected_count == found return;
+  end if;
 
   -- print error corresponding to the pattern
   errors += 1;
-  print_error_message(buffer, line, expected);
+  print_error_message(pat, line, expected_count);
   printf("found:\n");
 
   -- dump all the text associated with this line (this could be many lines)
   -- it's all the output associated with this test case
-  call dump_output(search_line);
+  call dump_output(search_line, pat);
 
   -- find the line that ended the previous test block
   var prev int!;
@@ -212,12 +299,12 @@ begin
 
   -- dump everything from there to here, that's the test case
   printf("\nThe corresponding test case is:\n");
-  call dump_source(prev, search_line);
+  call dump_source(prev, search_line, line);
 
   -- repeat the error so it's at the end also
-  print_error_message(buffer, line, expected);
+  print_error_message(pat, line, expected_count);
   
-  printf("test file: %s\n", sql_name);
+  printf("test file:%d %s\n", line, sql_name);
   printf("result file: %s\n", result_name);
   printf("\n");
 end;
@@ -370,6 +457,6 @@ end;
 "\n" 'error:'
 "\n" '  if (db) sqlite3_close(db);'
 "\n" '  cql_object_release(args);'
-"\n" '  exit(errors);'
+"\n" '  exit(errors ? 1 : 0);'
 "\n" '}'
 "\n";

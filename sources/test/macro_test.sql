@@ -5,16 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
--- *  note to readers
--- *
--- *  This file contains test cases for the macro expansion only
--- *  as such there are many things here that can be parsed legally
--- *  but are semantically invalid or meaningless.
--- *
--- *  The purpose of these test cases is to exercise all the legal
--- *  macro paths only so don't worry about that business.
+-- note to readers
+-- 
+-- This file contains test cases for the macro expansion only
+-- as such there are many things here that can be parsed legally
+-- but are semantically invalid or meaningless.
+-- 
+-- The purpose of these test cases is to exercise all the legal
+-- macro paths only so don't worry about that business.
 
--- do not insert tests before this the line numbers matter in the first test
+-- do not insert tests before this one the line numbers matter in the first test
 
 -- TEST: macro definition that uses the current file and line number
 -- we will verify the line numbers.  Don't move this code or the test

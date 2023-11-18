@@ -518,11 +518,11 @@ set i2 := case when 1 then 100 when 2 then 200 else 300 end;
 -- TEST: a simple in expression
 -- +  repeat
 -- +    _tmp_int_1 = 3
--- +    _tmp_bool_0 = false
+-- +    _tmp_bool_0 = true
 -- +    if _tmp_int_1 == 1 then break end
 -- +    if _tmp_int_1 == 2 then break end
 -- +    if _tmp_int_1 == 4 then break end
--- +    _tmp_bool_0 = true
+-- +    _tmp_bool_0 = false
 -- + until true
 -- + i2 = cql_to_num(_tmp_bool_0)
 set i2 := 3 in (1, 2, null, 4);
@@ -1112,8 +1112,8 @@ begin
 end;
 
 -- TEST: echo something to the output
--- + Garbonzo
--- + chick pea
+-- + @echo lua, "local Garbonzo -- a chick pea\n";
+-- + local Garbonzo % chick pea
 @echo lua, "local Garbonzo -- a chick pea\n";
 
 -- TEST: echo all the escape characters that are supported
@@ -1125,7 +1125,7 @@ end;
 -- + function echo_test()
 -- + s = "before echo"
 -- + s = "omg echo"
--- + s = "before echo"
+-- + s = "after echo"
 create proc echo_test()
 begin
   declare s text;
@@ -1216,7 +1216,8 @@ begin
 end;
 
 -- TEST: simple DML statements for json_schema cg
--- +2 "INSERT INTO foo(id) VALUES(NULL)"
+-- + "INSERT INTO foo(id) VALUES(NULL)"
+-- + "INSERT INTO foo(id) VALUES(NULL)"
 -- + "UPDATE bar SET name = 'bar' WHERE name = 'baz'"
 -- + "DELETE FROM foo WHERE id = 1"
 create proc misc_dml_proc()
@@ -1229,7 +1230,7 @@ end;
 
 -- TEST: use dummy data
 -- + INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_)
--- + @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
+-- = @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 -- + _seed_ = 123
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", _seed_, _seed_, _seed_, _seed_, _seed_)
@@ -1569,12 +1570,14 @@ end;
 
 -- TEST: no cleanup label needed proc
 -- + function no_cleanup_label_needed_proc(_db_)
--- - cql_cleanup
 -- + if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto catch_start_2; end
 -- + if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto catch_start_2; end
 -- + goto catch_end_2
+-- + catch_start_2:
+-- + do
+-- + end
 -- + ::catch_end_2::
--- + catch_start%:
+-- - cql_cleanup
 create proc no_cleanup_label_needed_proc()
 begin
   begin try
@@ -1604,20 +1607,27 @@ begin
 end;
 
 -- TEST: void cursor fetcher
+-- + function out_no_db()
+-- +   local _result_ = nil
+-- +   local C = { _has_row_ = false }
+-- +   C._has_row_ = true
+-- +   C.A = 3
+-- +   C.B = cql_to_float(12)
+-- +   _result_ = cql_clone_row(C)
+-- +   return _result_
+-- + end
+--
 -- + function out_no_db_fetch_results()
--- + local C = { _has_row_ = false }
--- + C._has_row_ = true
--- + C.A = 3
--- + C.B = cql_to_float(12)
--- + _result_ = cql_clone_row(C)
--- + return _result_
+-- + ::cql_cleanup::
+-- +   return result_set
+-- + end
+
 create proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
   fetch C(A,B) from values(3,12);
   out C;
 end;
-
 -- TEST: declare cursor like cursor
 -- + local C0 = { _has_row_ = false }
 -- + local C1 = { _has_row_ = false }
@@ -1669,13 +1679,17 @@ end;
 -- but they have to be escaped due to being embedded in a c string
 -- the ones with a leading space are the echoed sql, the strings are not C escaped there
 -- so this checks both paths
+--
+-- normal echo
 -- +  DELETE FROM bar WHERE name LIKE "\n\n";
--- + "DELETE FROM bar WHERE name LIKE '\n\n'"
 -- +  DELETE FROM bar WHERE name = ' '' \n '' \';
--- + "DELETE FROM bar WHERE name = ' '' \\n '' \\'"
 -- +  DELETE FROM bar WHERE name <> "'";
--- + "DELETE FROM bar WHERE name <> ''''"
 -- +  DELETE FROM bar WHERE name >= '\';
+-- 
+-- escaped for sql
+-- + "DELETE FROM bar WHERE name LIKE '\n\n'"
+-- + "DELETE FROM bar WHERE name = ' '' \\n '' \\'"
+-- + "DELETE FROM bar WHERE name <> ''''"
 -- + "DELETE FROM bar WHERE name >= '\\'"
 create proc weird_quoting()
 begin
@@ -2292,11 +2306,11 @@ create table unread_pending_threads(unread_pending_thread_count integer);
 
 -- TEST: nested select table should not have column aliases removed
 -- + "SELECT SUM(A.unread_pending_thread_count), SUM(A.switch_account_badge_count)
--- + FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
--- + FROM unread_pending_threads AS P
--- + UNION ALL
--- + SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
--- + FROM switch_account_badges AS S) AS A"
+-- = FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
+-- = FROM unread_pending_threads AS P
+-- = UNION ALL
+-- = SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
+-- = FROM switch_account_badges AS S) AS A"
 CREATE PROC settings_info ()
 BEGIN
   declare C cursor for
@@ -2356,7 +2370,7 @@ end;
 -- TEST: codegen upsert statement with update statement
 -- + function upsert_do_something(_db_)
 -- + "INSERT INTO foo(id) SELECT id FROM bar WHERE 1
--- + ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
+-- = ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
 create proc upsert_do_something()
 BEGIN
  insert into foo select id from bar where 1 on conflict(id) do update set id=10 where id != 10;
@@ -2365,7 +2379,7 @@ END;
 -- TEST: codegen with upsert statement form
 -- + function with_upsert_form(_db_)
 -- + "WITH names (id) AS ( VALUES(1), (5), (3), (12) ) INSERT INTO foo(id)
--- + SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
+-- = SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
 create proc with_upsert_form()
 BEGIN
  with names(id) as (values (1), (5), (3), (12))
@@ -2485,9 +2499,9 @@ end;
 
 -- TEST: reading from out union again, this time a DML proc (uses select)
 -- slightly different call path
+-- + _rc_, c_result_set_ = out_union_from_select_fetch_results(_db_)
 -- + c_row_num_ = 0
 -- + c_row_count_ = #(c_result_set_)
--- + _rc_, c_result_set_ = out_union_from_select_fetch_results(_db_)
 create proc out_union_dml_reader()
 begin
   declare c cursor for call out_union_from_select();
@@ -3469,8 +3483,8 @@ end;
 -- TEST: ensure that we use the right result code for thrown and storage
 -- this code samples the @rc value at various places, the different names
 -- allow us to be sure that we're using the right code in each scope.
--- + e0 = CQL_OK
 -- + err = CQL_OK
+-- + e0 = CQL_OK
 -- + local _rc_thrown_1 = _rc_
 -- + err = _rc_thrown_1
 -- + e1 = _rc_thrown_1
@@ -3605,8 +3619,7 @@ begin
 end;
 
 -- TEST: the cursor here should not have the out arg form of y
--- + local y
--- + y = 0
+-- + local y = 0
 -- + C.x = 1
 -- + C.y = 1
 -- + C.y = out_arg_cursor(C.x)
@@ -4468,7 +4481,7 @@ end;
 -- proc as func case (args)
 -- + _tmp_n_int_0 = f3(0)
 -- + _tmp_n_int_1 = f3(1)
--- + tmp_n_int_2 = f3(2)
+-- + _tmp_n_int_2 = f3(2)
 -- + s = cql_add(cql_add(_tmp_n_int_0, _tmp_n_int_1), _tmp_n_int_2)
 create proc multi_call_temp_reuse()
 begin
@@ -4493,8 +4506,8 @@ end;
 -- breaking this into fragments for readability
 --
 -- + if cql_shortcircuit_and(cql_gt(a, b),
--- + function() return cql_shortcircuit_or(cql_lt(a, c),
--- + function() return c == nil end) end) then
+-- = function() return cql_shortcircuit_or(cql_lt(a, c),
+-- = function() return c == nil end) end) then
 -- + c = a
 -- + end
 create proc and_preserves_temps(a long, b long, c long)
@@ -4511,8 +4524,8 @@ end;
 -- breaking this into fragments for readability
 --
 -- + if cql_shortcircuit_or(cql_lt(c, 0),
--- + function() return cql_shortcircuit_and(cql_gt(a, c),
--- + function() return cql_gt(b, c) end) end) then
+-- = function() return cql_shortcircuit_and(cql_gt(a, c),
+-- = function() return cql_gt(b, c) end) end) then
 -- + c = a
 -- + end
 create proc or_preserves_temps(a long, b long, c long)
@@ -4899,18 +4912,18 @@ end;
 -- NOTE that this is not idempotent, you put these in ONE place
 -- or weirdness ensues.  Same as in C.  Note that we only
 -- have to emit declarations for cursors and not null scalars
--- - local
--- - gr_text =
--- - gr_bool =
--- - gr_integer =
--- + gr_not_null_integer = 0
--- + gr_not_null_bool = false
 -- + gr_cursor = { _has_row_ = false }
 -- + gr_cursor_fields_ = { "x", "y" }
 -- + gr_cursor_types_ = "IS"
+-- + gr_not_null_integer = 0
+-- + gr_not_null_bool = false
 -- + gr_blob_cursor = { _has_row_ = false }
 -- + gr_blob_cursor_fields_ = { "id", "name" }
 -- + gr_blob_cursor_types_ = "IS"
+-- - local
+-- - gr_integer =
+-- - gr_bool =
+-- - gr_text =
 @emit_group var_group;
 
 -- TEST: use the global cursor for serialization
@@ -5100,17 +5113,20 @@ create table backed(
 
 -- TEST: explain query plan with replacement
 -- + EXPLAIN QUERY PLAN
+-- + WITH
 -- + backed (rowid, pk, flag, id, name, age, storage) AS (CALL _backed())
--- + SELECT rowid, bgetkey(T.k, 0),
--- + bgetval(T.v, 1055660242183705531),
--- + bgetval(T.v, -9155171551243524439),
--- + bgetval(T.v, -6946718245010482247),
--- + bgetval(T.v, -3683705396192132539),
--- + bgetval(T.v, -7635294210585028660
--- + FROM backing AS T
--- + SELECT rowid, pk, flag, id, name, age, storage
--- + FROM backed
--- + WHERE bgetkey_type(T.k) = -5417664364642960231
+-- + SELECT *
+-- +   FROM backed;
+-- + "EXPLAIN QUERY PLAN WITH backed (rowid, pk, flag, id, name, age, storage) AS (",
+-- + "SELECT rowid, bgetkey(T.k, 0),
+-- = bgetval(T.v, 1055660242183705531),
+-- = bgetval(T.v, -9155171551243524439),
+-- = bgetval(T.v, -6946718245010482247),
+-- = bgetval(T.v, -3683705396192132539),
+-- = bgetval(T.v, -7635294210585028660
+-- = FROM backing AS T
+-- = WHERE bgetkey_type(T.k) = -5417664364642960231
+-- + ") SELECT rowid, pk, flag, id, name, age, storage FROM backed"
 @attribute(cql:private)
 create proc explain_equery_plan_backed(out x bool not null)
 begin

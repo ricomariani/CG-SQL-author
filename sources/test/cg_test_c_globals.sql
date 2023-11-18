@@ -24,7 +24,6 @@ create table blobshape(
 -- + } c_row;
 -- + extern c_row c;
 -- + extern cql_nullable_int32 x;
--- + #endif
 -- + typedef struct serialized_cursor_row {
 -- + cql_bool _has_row_;
 -- + cql_uint16 _refs_count_;
@@ -34,6 +33,7 @@ create table blobshape(
 -- + } serialized_cursor_row;
 -- + extern serialized_cursor_row serialized_cursor;
 -- + extern cql_dynamic_cursor serialized_cursor_dyn;
+-- + #endif
 declare group foo
 begin
   declare c cursor like select 1 x;

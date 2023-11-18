@@ -39,16 +39,21 @@ extern cql_string_ref _Nullable after_text(cql_string_ref _Nullable self, cql_in
 extern cql_bool starts_with_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle);
 extern cql_int32 index_of_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle);
 extern cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle, cql_int32 offset);
-cql_string_literal(_literal_1_print_error_message, "");
-cql_string_literal(_literal_2_not_print_error_message, "not ");
-cql_string_literal(_literal_3_at_least_print_error_message, "at least ");
-cql_string_literal(_literal_4_match_multiline, "-- +");
-cql_string_literal(_literal_5_match_actual, "-- ");
-cql_string_literal(_literal_6_TEST_match_actual, "-- TEST:");
-cql_string_literal(_literal_7_match_actual, "-- - ");
-cql_string_literal(_literal_8_match_actual, "-- + ");
-cql_string_literal(_literal_9_r_read_test_results, "r");
-cql_string_literal(_literal_10_The_statement_ending_at_line_read_test_results, "The statement ending at line ");
+cql_string_literal(_literal_1_dump_output, ">  ");
+cql_string_literal(_literal_2_dump_output, "!  ");
+cql_string_literal(_literal_3_dump_output, "");
+cql_string_literal(_literal_4_FAIL_dump_source, "FAIL");
+cql_string_literal(_literal_5_not_print_error_message, "not ");
+cql_string_literal(_literal_6_at_least_print_error_message, "at least ");
+cql_string_literal(_literal_7_match_multiline, "-- +");
+cql_string_literal(_literal_8_match_actual, "-- ");
+cql_string_literal(_literal_9_TEST_match_actual, "-- TEST:");
+cql_string_literal(_literal_10_match_actual, "-- - ");
+cql_string_literal(_literal_11_match_actual, "-- * ");
+cql_string_literal(_literal_12_match_actual, "-- + ");
+cql_string_literal(_literal_13_match_actual, "-- = ");
+cql_string_literal(_literal_14_r_read_test_results, "r");
+cql_string_literal(_literal_15_The_statement_ending_at_line_read_test_results, "The statement ending at line ");
 
 
 //
@@ -96,7 +101,14 @@ DECLARE tests INTEGER NOT NULL;
 */
 cql_int32 tests = 0;
 
-// Generated from cql-verify.sql:61
+// Generated from cql-verify.sql:43
+
+/*
+DECLARE last_rowid LONG_INT NOT NULL;
+*/
+cql_int64 last_rowid = 0;
+
+// Generated from cql-verify.sql:62
 
 /*
 @ATTRIBUTE(cql:private)
@@ -146,7 +158,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:72
+// Generated from cql-verify.sql:73
 
 /*
 @ATTRIBUTE(cql:private)
@@ -197,19 +209,23 @@ static CQL_WARN_UNUSED cql_code prev_line(sqlite3 *_Nonnull _db_, cql_int32 line
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:83
+// Generated from cql-verify.sql:94
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC dump_output (line_ INTEGER NOT NULL)
+CREATE PROC dump_output (line_ INTEGER NOT NULL, pat TEXT NOT NULL)
 BEGIN
+  LET p := ( SELECT "%" || pat || "%" );
   DECLARE C CURSOR FOR
-    SELECT *
+    SELECT rowid, line, data
       FROM test_output
       WHERE line = line_;
   LOOP FETCH C
   BEGIN
-    CALL printf("%s\n", C.data);
+    CALL printf("%3s%s\n", CASE WHEN last_rowid = C.rowid THEN ">  "
+    WHEN C.data LIKE p THEN "!  "
+    ELSE ""
+    END, C.data);
   END;
 END;
 */
@@ -220,19 +236,32 @@ typedef struct dump_output_C_row {
   cql_bool _has_row_;
   cql_uint16 _refs_count_;
   cql_uint16 _refs_offset_;
+  cql_int64 rowid;
   cql_int32 line;
   cql_string_ref _Nonnull data;
 } dump_output_C_row;
 
 #define dump_output_C_refs_offset cql_offsetof(dump_output_C_row, data) // count = 1
-static CQL_WARN_UNUSED cql_code dump_output(sqlite3 *_Nonnull _db_, cql_int32 line_) {
+static CQL_WARN_UNUSED cql_code dump_output(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pat) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
+  cql_string_ref p = NULL;
+  sqlite3_stmt *_temp_stmt = NULL;
   sqlite3_stmt *C_stmt = NULL;
   dump_output_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dump_output_C_refs_offset };
+  cql_string_ref _tmp_text_0 = NULL;
 
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT '%' || ? || '%'");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, pat);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW) { cql_error_trace(); goto cql_cleanup; }
+    cql_column_string_ref(_temp_stmt, 0, &p);
+  cql_finalize_stmt(&_temp_stmt);
   _rc_ = cql_prepare(_db_, &C_stmt,
-    "SELECT line, data "
+    "SELECT rowid, line, data "
       "FROM test_output "
       "WHERE line = ?");
   cql_multibind(&_rc_, _db_, &C_stmt, 1,
@@ -241,30 +270,47 @@ static CQL_WARN_UNUSED cql_code dump_output(sqlite3 *_Nonnull _db_, cql_int32 li
   for (;;) {
     _rc_ = sqlite3_step(C_stmt);
     C._has_row_ = _rc_ == SQLITE_ROW;
-    cql_multifetch(_rc_, C_stmt, 2,
+    cql_multifetch(_rc_, C_stmt, 3,
+                   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.rowid,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.line,
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.data);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     if (!C._has_row_) break;
-    cql_alloc_cstr(_cstr_1, C.data);
-    printf("%s\n", _cstr_1);
-    cql_free_cstr(_cstr_1, C.data);
+    do {
+      if (last_rowid == C.rowid) {
+        cql_set_string_ref(&_tmp_text_0, _literal_1_dump_output);
+        break;
+      }
+      if (cql_string_like(C.data, p) == 0) {
+        cql_set_string_ref(&_tmp_text_0, _literal_2_dump_output);
+        break;
+      }
+      cql_set_string_ref(&_tmp_text_0, _literal_3_dump_output);
+    } while (0);
+    cql_alloc_cstr(_cstr_1, _tmp_text_0);
+    cql_alloc_cstr(_cstr_2, C.data);
+    printf("%3s%s\n", _cstr_1, _cstr_2);
+    cql_free_cstr(_cstr_1, _tmp_text_0);
+    cql_free_cstr(_cstr_2, C.data);
   }
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_error_report();
+  cql_string_release(p);
+  cql_finalize_stmt(&_temp_stmt);
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
+  cql_string_release(_tmp_text_0);
   return _rc_;
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:111
+// Generated from cql-verify.sql:119
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC find (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
+CREATE PROC find_search_line (line_ INTEGER NOT NULL, OUT search_line INTEGER NOT NULL)
 BEGIN
   BEGIN TRY
     SET search_line := ( SELECT line
@@ -280,14 +326,11 @@ BEGIN
       FROM test_output ));
     THROW;
   END CATCH;
-  SET found := ( SELECT count(*)
-    FROM test_output
-    WHERE line = search_line AND data LIKE "%" || pattern || "%" );
 END;
 */
 
-#define _PROC_ "find"
-static CQL_WARN_UNUSED cql_code find(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found) {
+#define _PROC_ "find_search_line"
+static CQL_WARN_UNUSED cql_code find_search_line(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_int32 *_Nonnull search_line) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
   cql_int32 _tmp_int_0 = 0;
@@ -295,7 +338,6 @@ static CQL_WARN_UNUSED cql_code find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
   sqlite3_stmt *_temp_stmt = NULL;
 
   *search_line = 0; // set out arg to non-garbage
-  *found = 0; // set out arg to non-garbage
   // try
   {
     _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -338,6 +380,157 @@ static CQL_WARN_UNUSED cql_code find(sqlite3 *_Nonnull _db_, cql_int32 line_, cq
     goto cql_cleanup;
   }
   catch_end_2:;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// Generated from cql-verify.sql:142
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC find_next (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
+BEGIN
+  CALL find_search_line(line_, search_line);
+  DECLARE C CURSOR FOR
+    SELECT rowid
+      FROM test_output
+      WHERE line = search_line AND data LIKE "%" || pattern || "%" AND rowid > last_rowid;
+  FETCH C;
+  IF C THEN
+    SET last_rowid := C.rowid;
+    SET found := 1;
+  ELSE
+    SET found := 0;
+  END IF;
+END;
+*/
+
+#define _PROC_ "find_next"
+
+typedef struct find_next_C_row {
+  cql_bool _has_row_;
+  cql_uint16 _refs_count_;
+  cql_uint16 _refs_offset_;
+  cql_int64 rowid;
+} find_next_C_row;
+static CQL_WARN_UNUSED cql_code find_next(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *C_stmt = NULL;
+  find_next_C_row C = { 0 };
+
+  *search_line = 0; // set out arg to non-garbage
+  *found = 0; // set out arg to non-garbage
+  _rc_ = find_search_line(_db_, line_, search_line);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = cql_prepare(_db_, &C_stmt,
+    "SELECT rowid "
+      "FROM test_output "
+      "WHERE line = ? AND data LIKE '%' || ? || '%' AND rowid > ?");
+  cql_multibind(&_rc_, _db_, &C_stmt, 3,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, *search_line,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, pattern,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, last_rowid);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(C_stmt);
+  C._has_row_ = _rc_ == SQLITE_ROW;
+  cql_multifetch(_rc_, C_stmt, 1,
+                 CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, &C.rowid);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  if (C._has_row_) {
+    last_rowid = C.rowid;
+    *found = 1;
+  }
+  else {
+    *found = 0;
+  }
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&C_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// Generated from cql-verify.sql:153
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC find_same (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
+BEGIN
+  SET found := ( SELECT data LIKE "%" || pattern || "%"
+    FROM test_output
+    WHERE rowid = last_rowid IF NOTHING FALSE );
+END;
+*/
+
+#define _PROC_ "find_same"
+static CQL_WARN_UNUSED cql_code find_same(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  cql_bool _tmp_bool_0 = 0;
+  cql_bool _tmp_bool_1 = 0;
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  *search_line = 0; // set out arg to non-garbage
+  *found = 0; // set out arg to non-garbage
+  _rc_ = cql_prepare(_db_, &_temp_stmt,
+    "SELECT data LIKE '%' || ? || '%' "
+      "FROM test_output "
+      "WHERE rowid = ?");
+  cql_multibind(&_rc_, _db_, &_temp_stmt, 2,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, pattern,
+                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT64, last_rowid);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+  _rc_ = sqlite3_step(_temp_stmt);
+  if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  if (_rc_ == SQLITE_ROW) {
+    _tmp_bool_1 = sqlite3_column_int(_temp_stmt, 0) != 0;
+    _tmp_bool_0 = _tmp_bool_1;
+  }
+  else {
+    _tmp_bool_0 = 0;
+  }
+  cql_finalize_stmt(&_temp_stmt);
+  *found = _tmp_bool_0;
+  _rc_ = SQLITE_OK;
+
+cql_cleanup:
+  cql_error_report();
+  cql_finalize_stmt(&_temp_stmt);
+  return _rc_;
+}
+#undef _PROC_
+
+// Generated from cql-verify.sql:165
+
+/*
+@ATTRIBUTE(cql:private)
+CREATE PROC find_count (line_ INTEGER NOT NULL, pattern TEXT NOT NULL, OUT search_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
+BEGIN
+  CALL find_search_line(line_, search_line);
+  SET found := ( SELECT count(*)
+    FROM test_output
+    WHERE line = search_line AND data LIKE "%" || pattern || "%" );
+END;
+*/
+
+#define _PROC_ "find_count"
+static CQL_WARN_UNUSED cql_code find_count(sqlite3 *_Nonnull _db_, cql_int32 line_, cql_string_ref _Nonnull pattern, cql_int32 *_Nonnull search_line, cql_int32 *_Nonnull found) {
+  cql_code _rc_ = SQLITE_OK;
+  cql_error_prepare();
+  sqlite3_stmt *_temp_stmt = NULL;
+
+  *search_line = 0; // set out arg to non-garbage
+  *found = 0; // set out arg to non-garbage
+  _rc_ = find_search_line(_db_, line_, search_line);
+  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = cql_prepare(_db_, &_temp_stmt,
     "SELECT count(*) "
       "FROM test_output "
@@ -359,19 +552,21 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:122
+// Generated from cql-verify.sql:182
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL)
+CREATE PROC dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL, current_line INTEGER NOT NULL)
 BEGIN
   DECLARE C CURSOR FOR
-    SELECT *
+    SELECT line, data
       FROM source_input
       WHERE line > line1 AND line <= line2;
   LOOP FETCH C
   BEGIN
-    CALL printf("%s\n", C.data);
+    CALL printf("%5s %05d: %s\n", CASE WHEN C.line = current_line THEN "FAIL"
+    ELSE ""
+    END, C.line, C.data);
   END;
 END;
 */
@@ -387,11 +582,12 @@ typedef struct dump_source_C_row {
 } dump_source_C_row;
 
 #define dump_source_C_refs_offset cql_offsetof(dump_source_C_row, data) // count = 1
-static CQL_WARN_UNUSED cql_code dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2) {
+static CQL_WARN_UNUSED cql_code dump_source(sqlite3 *_Nonnull _db_, cql_int32 line1, cql_int32 line2, cql_int32 current_line) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
   sqlite3_stmt *C_stmt = NULL;
   dump_source_C_row C = { ._refs_count_ = 1, ._refs_offset_ = dump_source_C_refs_offset };
+  cql_string_ref _tmp_text_0 = NULL;
 
   _rc_ = cql_prepare(_db_, &C_stmt,
     "SELECT line, data "
@@ -409,9 +605,18 @@ static CQL_WARN_UNUSED cql_code dump_source(sqlite3 *_Nonnull _db_, cql_int32 li
                    CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.data);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     if (!C._has_row_) break;
-    cql_alloc_cstr(_cstr_2, C.data);
-    printf("%s\n", _cstr_2);
-    cql_free_cstr(_cstr_2, C.data);
+    do {
+      if (C.line == current_line) {
+        cql_set_string_ref(&_tmp_text_0, _literal_4_FAIL_dump_source);
+        break;
+      }
+      cql_set_string_ref(&_tmp_text_0, _literal_3_dump_output);
+    } while (0);
+    cql_alloc_cstr(_cstr_3, _tmp_text_0);
+    cql_alloc_cstr(_cstr_4, C.data);
+    printf("%5s %05d: %s\n", _cstr_3, C.line, _cstr_4);
+    cql_free_cstr(_cstr_3, _tmp_text_0);
+    cql_free_cstr(_cstr_4, C.data);
   }
   _rc_ = SQLITE_OK;
 
@@ -419,17 +624,18 @@ cql_cleanup:
   cql_error_report();
   cql_finalize_stmt(&C_stmt);
   cql_teardown_row(C);
+  cql_string_release(_tmp_text_0);
   return _rc_;
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:141
+// Generated from cql-verify.sql:201
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC print_error_message (buffer TEXT NOT NULL, line INTEGER NOT NULL, expected INTEGER NOT NULL)
+CREATE PROC print_error_message (pattern TEXT NOT NULL, line INTEGER NOT NULL, expected INTEGER NOT NULL)
 BEGIN
-  CALL printf("\n%s:%d error: expected '%s' %spresent", sql_name, line, buffer, CASE WHEN expected <> 0 THEN ""
+  CALL printf("\n%s:%d error: expected '%s' %spresent", sql_name, line, pattern, CASE WHEN expected <> 0 THEN ""
   ELSE "not "
   END);
   IF expected <> 0 THEN
@@ -444,31 +650,31 @@ END;
 */
 
 #define _PROC_ "print_error_message"
-static void print_error_message(cql_string_ref _Nonnull buffer, cql_int32 line, cql_int32 expected) {
+static void print_error_message(cql_string_ref _Nonnull pattern, cql_int32 line, cql_int32 expected) {
   cql_string_ref _tmp_text_0 = NULL;
   cql_int32 _tmp_int_1 = 0;
 
   do {
     if (expected != 0) {
-      cql_set_string_ref(&_tmp_text_0, _literal_1_print_error_message);
+      cql_set_string_ref(&_tmp_text_0, _literal_3_dump_output);
       break;
     }
-    cql_set_string_ref(&_tmp_text_0, _literal_2_not_print_error_message);
+    cql_set_string_ref(&_tmp_text_0, _literal_5_not_print_error_message);
   } while (0);
-  cql_alloc_cstr(_cstr_3, sql_name);
-  cql_alloc_cstr(_cstr_4, buffer);
-  cql_alloc_cstr(_cstr_5, _tmp_text_0);
-  printf("\n%s:%d error: expected '%s' %spresent", _cstr_3, line, _cstr_4, _cstr_5);
-  cql_free_cstr(_cstr_3, sql_name);
-  cql_free_cstr(_cstr_4, buffer);
-  cql_free_cstr(_cstr_5, _tmp_text_0);
+  cql_alloc_cstr(_cstr_5, sql_name);
+  cql_alloc_cstr(_cstr_6, pattern);
+  cql_alloc_cstr(_cstr_7, _tmp_text_0);
+  printf("\n%s:%d error: expected '%s' %spresent", _cstr_5, line, _cstr_6, _cstr_7);
+  cql_free_cstr(_cstr_5, sql_name);
+  cql_free_cstr(_cstr_6, pattern);
+  cql_free_cstr(_cstr_7, _tmp_text_0);
   if (expected != 0) {
     do {
       if (expected == - 1) {
-        cql_set_string_ref(&_tmp_text_0, _literal_3_at_least_print_error_message);
+        cql_set_string_ref(&_tmp_text_0, _literal_6_at_least_print_error_message);
         break;
       }
-      cql_set_string_ref(&_tmp_text_0, _literal_1_print_error_message);
+      cql_set_string_ref(&_tmp_text_0, _literal_3_dump_output);
     } while (0);
     do {
       if (expected == - 1) {
@@ -477,9 +683,9 @@ static void print_error_message(cql_string_ref _Nonnull buffer, cql_int32 line, 
       }
       _tmp_int_1 = expected;
     } while (0);
-    cql_alloc_cstr(_cstr_6, _tmp_text_0);
-    printf(" %s%d times\n", _cstr_6, _tmp_int_1);
-    cql_free_cstr(_cstr_6, _tmp_text_0);
+    cql_alloc_cstr(_cstr_8, _tmp_text_0);
+    printf(" %s%d times\n", _cstr_8, _tmp_int_1);
+    cql_free_cstr(_cstr_8, _tmp_text_0);
   }
   printf("\n");
 
@@ -487,7 +693,7 @@ static void print_error_message(cql_string_ref _Nonnull buffer, cql_int32 line, 
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:156
+// Generated from cql-verify.sql:216
 
 /*
 @ATTRIBUTE(cql:private)
@@ -525,7 +731,7 @@ static void match_multiline(cql_string_ref _Nonnull buffer, cql_bool *_Nonnull r
   if (_tmp_int_1 < 7) {
     goto cql_cleanup; // return
   }
-  _tmp_bool_1 = starts_with_text(buffer, _literal_4_match_multiline);
+  _tmp_bool_1 = starts_with_text(buffer, _literal_7_match_multiline);
   if (! _tmp_bool_1) {
     goto cql_cleanup; // return
   }
@@ -544,16 +750,17 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:223
+// Generated from cql-verify.sql:310
 
 /*
 CREATE PROC match_actual (buffer TEXT NOT NULL, line INTEGER NOT NULL)
 BEGIN
   DECLARE search_line INTEGER NOT NULL;
-  DECLARE count INTEGER NOT NULL;
-  DECLARE expected INTEGER NOT NULL;
+  DECLARE found INTEGER NOT NULL;
+  DECLARE expected_count INTEGER NOT NULL;
   DECLARE pattern TEXT;
   IF NOT starts_with_text(buffer, "-- ") THEN
+    SET last_rowid := 0;
     RETURN;
   END IF;
   IF starts_with_text(buffer, "-- TEST:") THEN
@@ -561,31 +768,50 @@ BEGIN
   END IF;
   IF starts_with_text(buffer, "-- - ") THEN
     SET pattern := after_text(buffer, 5);
-    SET expected := 0;
+    SET expected_count := 0;
+  ELSE IF starts_with_text(buffer, "-- * ") THEN
+    SET pattern := after_text(buffer, 5);
+    SET expected_count := 1;
   ELSE IF starts_with_text(buffer, "-- + ") THEN
     SET pattern := after_text(buffer, 5);
-    SET expected := -1;
+    SET expected_count := -1;
+  ELSE IF starts_with_text(buffer, "-- = ") THEN
+    SET pattern := after_text(buffer, 5);
+    SET expected_count := -2;
   ELSE IF match_multiline(buffer) THEN
-    SET expected := octet_text(buffer, 4) - 48;
     SET pattern := after_text(buffer, 6);
+    SET expected_count := octet_text(buffer, 4) - 48;
   ELSE
     RETURN;
   END IF;
   SET attempts := attempts + 1;
-  CALL find(line, ifnull_throw(pattern), search_line, count);
-  IF expected = count OR expected = -1 AND count > 0 THEN
-    RETURN;
+  LET pat := ifnull_throw(pattern);
+  IF expected_count = -1 THEN
+    CALL find_next(line, pat, search_line, found);
+    IF found = 1 THEN
+      RETURN;
+    END IF;
+  ELSE IF expected_count = -2 THEN
+    CALL find_same(line, pat, search_line, found);
+    IF found = 1 THEN
+      RETURN;
+    END IF;
+  ELSE
+    CALL find_count(line, pat, search_line, found);
+    IF expected_count = found THEN
+      RETURN;
+    END IF;
   END IF;
   SET errors := errors + 1;
-  CALL print_error_message(buffer, line, expected);
+  CALL print_error_message(pat, line, expected_count);
   CALL printf("found:\n");
-  CALL dump_output(search_line);
+  CALL dump_output(search_line, pat);
   DECLARE prev INTEGER NOT NULL;
   CALL prev_line(search_line, prev);
   CALL printf("\nThe corresponding test case is:\n");
-  CALL dump_source(prev, search_line);
-  CALL print_error_message(buffer, line, expected);
-  CALL printf("test file: %s\n", sql_name);
+  CALL dump_source(prev, search_line, line);
+  CALL print_error_message(pat, line, expected_count);
+  CALL printf("test file:%d %s\n", line, sql_name);
   CALL printf("result file: %s\n", result_name);
   CALL printf("\n");
 END;
@@ -598,47 +824,65 @@ CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_ref _No
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
   cql_int32 search_line = 0;
-  cql_int32 count = 0;
-  cql_int32 expected = 0;
+  cql_int32 found = 0;
+  cql_int32 expected_count = 0;
   cql_string_ref pattern = NULL;
   cql_bool _tmp_bool_1 = 0;
   cql_bool _tmp_bool_0 = 0;
   cql_int32 _tmp_int_1 = 0;
+  cql_string_ref pat = NULL;
   cql_int32 prev = 0;
 
-  _tmp_bool_1 = starts_with_text(buffer, _literal_5_match_actual);
+  _tmp_bool_1 = starts_with_text(buffer, _literal_8_match_actual);
   if (! _tmp_bool_1) {
+    last_rowid = 0;
     _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
     goto cql_cleanup; // return
   }
-  _tmp_bool_0 = starts_with_text(buffer, _literal_6_TEST_match_actual);
+  _tmp_bool_0 = starts_with_text(buffer, _literal_9_TEST_match_actual);
   if (_tmp_bool_0) {
     tests = tests + 1;
   }
-  _tmp_bool_0 = starts_with_text(buffer, _literal_7_match_actual);
+  _tmp_bool_0 = starts_with_text(buffer, _literal_10_match_actual);
   if (_tmp_bool_0) {
     cql_string_release(pattern);
     pattern = after_text(buffer, 5);
-    expected = 0;
+    expected_count = 0;
   }
   else {
-    _tmp_bool_0 = starts_with_text(buffer, _literal_8_match_actual);
+    _tmp_bool_0 = starts_with_text(buffer, _literal_11_match_actual);
     if (_tmp_bool_0) {
       cql_string_release(pattern);
       pattern = after_text(buffer, 5);
-      expected = - 1;
+      expected_count = 1;
     }
     else {
-      match_multiline(buffer, &_tmp_bool_1);
-      if (_tmp_bool_1) {
-        _tmp_int_1 = octet_text(buffer, 4);
-        expected = _tmp_int_1 - 48;
+      _tmp_bool_0 = starts_with_text(buffer, _literal_12_match_actual);
+      if (_tmp_bool_0) {
         cql_string_release(pattern);
-        pattern = after_text(buffer, 6);
+        pattern = after_text(buffer, 5);
+        expected_count = - 1;
       }
       else {
-        _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
-        goto cql_cleanup; // return
+        _tmp_bool_1 = starts_with_text(buffer, _literal_13_match_actual);
+        if (_tmp_bool_1) {
+          cql_string_release(pattern);
+          pattern = after_text(buffer, 5);
+          expected_count = - 2;
+        }
+        else {
+          match_multiline(buffer, &_tmp_bool_1);
+          if (_tmp_bool_1) {
+            cql_string_release(pattern);
+            pattern = after_text(buffer, 6);
+            _tmp_int_1 = octet_text(buffer, 4);
+            expected_count = _tmp_int_1 - 48;
+          }
+          else {
+            _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
+            goto cql_cleanup; // return
+          }
+        }
       }
     }
   }
@@ -648,40 +892,62 @@ CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_ref _No
     cql_error_trace();
     goto cql_cleanup;
   }
-  _rc_ = find(_db_, line, pattern, &search_line, &count);
-  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  if (expected == count || expected == - 1 && count > 0) {
-    _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
-    goto cql_cleanup; // return
+  cql_set_string_ref(&pat, pattern);
+  if (expected_count == - 1) {
+    _rc_ = find_next(_db_, line, pat, &search_line, &found);
+    if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+    if (found == 1) {
+      _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
+      goto cql_cleanup; // return
+    }
+  }
+  else {
+    if (expected_count == - 2) {
+      _rc_ = find_same(_db_, line, pat, &search_line, &found);
+      if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+      if (found == 1) {
+        _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
+        goto cql_cleanup; // return
+      }
+    }
+    else {
+      _rc_ = find_count(_db_, line, pat, &search_line, &found);
+      if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
+      if (expected_count == found) {
+        _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
+        goto cql_cleanup; // return
+      }
+    }
   }
   errors = errors + 1;
-  print_error_message(buffer, line, expected);
+  print_error_message(pat, line, expected_count);
   printf("found:\n");
-  _rc_ = dump_output(_db_, search_line);
+  _rc_ = dump_output(_db_, search_line, pat);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = prev_line(_db_, search_line, &prev);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   printf("\nThe corresponding test case is:\n");
-  _rc_ = dump_source(_db_, prev, search_line);
+  _rc_ = dump_source(_db_, prev, search_line, line);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  print_error_message(buffer, line, expected);
-  cql_alloc_cstr(_cstr_7, sql_name);
-  printf("test file: %s\n", _cstr_7);
-  cql_free_cstr(_cstr_7, sql_name);
-  cql_alloc_cstr(_cstr_8, result_name);
-  printf("result file: %s\n", _cstr_8);
-  cql_free_cstr(_cstr_8, result_name);
+  print_error_message(pat, line, expected_count);
+  cql_alloc_cstr(_cstr_9, sql_name);
+  printf("test file:%d %s\n", line, _cstr_9);
+  cql_free_cstr(_cstr_9, sql_name);
+  cql_alloc_cstr(_cstr_10, result_name);
+  printf("result file: %s\n", _cstr_10);
+  cql_free_cstr(_cstr_10, result_name);
   printf("\n");
   _rc_ = SQLITE_OK;
 
 cql_cleanup:
   cql_error_report();
   cql_string_release(pattern);
+  cql_string_release(pat);
   return _rc_;
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:235
+// Generated from cql-verify.sql:322
 
 /*
 @ATTRIBUTE(cql:private)
@@ -724,7 +990,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:250
+// Generated from cql-verify.sql:337
 
 /*
 @ATTRIBUTE(cql:private)
@@ -784,7 +1050,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:288
+// Generated from cql-verify.sql:375
 
 /*
 @ATTRIBUTE(cql:private)
@@ -827,17 +1093,17 @@ static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_st
   sqlite3_stmt *_temp1_stmt = NULL;
 
   cql_object_release(result_file);
-  result_file = cql_fopen(result_name, _literal_9_r_read_test_results);
+  result_file = cql_fopen(result_name, _literal_14_r_read_test_results);
   if (!result_file) {
-    cql_alloc_cstr(_cstr_9, result_name);
-    printf("unable to open file '%s'\n", _cstr_9);
-    cql_free_cstr(_cstr_9, result_name);
+    cql_alloc_cstr(_cstr_11, result_name);
+    printf("unable to open file '%s'\n", _cstr_11);
+    cql_free_cstr(_cstr_11, result_name);
     _rc_ = cql_best_error(SQLITE_OK);
     cql_error_trace();
     goto cql_cleanup;
   }
   line = 0;
-  cql_set_string_ref(&key_string, _literal_10_The_statement_ending_at_line_read_test_results);
+  cql_set_string_ref(&key_string, _literal_15_The_statement_ending_at_line_read_test_results);
   len = len_text(key_string);
   for (;;) {
     if (!(1)) break;
@@ -878,7 +1144,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:313
+// Generated from cql-verify.sql:400
 
 /*
 @ATTRIBUTE(cql:private)
@@ -913,11 +1179,11 @@ static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_strin
   sqlite3_stmt *_temp1_stmt = NULL;
 
   cql_object_release(sql_file);
-  sql_file = cql_fopen(sql_name, _literal_9_r_read_test_results);
+  sql_file = cql_fopen(sql_name, _literal_14_r_read_test_results);
   if (!sql_file) {
-    cql_alloc_cstr(_cstr_10, sql_name);
-    printf("unable to open file '%s'\n", _cstr_10);
-    cql_free_cstr(_cstr_10, sql_name);
+    cql_alloc_cstr(_cstr_12, sql_name);
+    printf("unable to open file '%s'\n", _cstr_12);
+    cql_free_cstr(_cstr_12, sql_name);
     _rc_ = cql_best_error(SQLITE_OK);
     cql_error_trace();
     goto cql_cleanup;
@@ -958,7 +1224,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:320
+// Generated from cql-verify.sql:407
 
 /*
 @ATTRIBUTE(cql:private)
@@ -986,7 +1252,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:337
+// Generated from cql-verify.sql:424
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1042,7 +1308,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:349
+// Generated from cql-verify.sql:436
 
 /*
 CREATE PROC dbhelp_main (args OBJECT<cql_string_list> NOT NULL)
@@ -1102,6 +1368,6 @@ int main(int argc, char **argv) {
 error:
   if (db) sqlite3_close(db);
   cql_object_release(args);
-  exit(errors);
+  exit(errors ? 1 : 0);
 }
 #pragma clang diagnostic pop

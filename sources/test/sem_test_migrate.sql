@@ -12,7 +12,7 @@
 -- TEST: mondo table with assorted thingies that should be deleted
 -- See below for the fields and why
 -- + {create_table_stmt}: foo: { id: integer notnull, rate: longint, id2: integer, name: text }
--- - Error
+-- - error:
 create table foo(
   id integer not null,               -- not deleted
   rate long int @delete(5, deletor), -- not deleted
@@ -24,15 +24,15 @@ create table foo(
 
 -- TEST: try to create an index on a column that's been not created yet
 -- + {create_index_stmt}: ok
--- - Error
+-- - error:
 create index recent_index on foo(name_2);
 
 -- TEST: try to create a table with an FK on a column that doesn't exist yet
 -- this must be allowed to succeed as the table decl is ok
 -- + {create_table_stmt}: fk_not_there_yet: { id: integer, text1: text foreign_key, text2: text }
--- + {fk_def}: ok
 -- + {col_attrs_fk}: ok
--- - Error
+-- + {fk_def}: ok
+-- - error:
 create table fk_not_there_yet(
  id integer,
  text1 text references foo(name_2),
@@ -41,13 +41,13 @@ create table fk_not_there_yet(
 );
 
 -- TEST: try to read a missing field
--- + error: % name not found 'rate_2'
+-- * error: % name not found 'rate_2'
 -- +1 error:
 select rate_2 from foo;
 
 -- TEST: try to declare 'deletor' but it doesn't do anything
 -- + {create_proc_stmt}: err
--- + error: % procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
+-- * error: % procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
 -- +1 error:
 create proc deletor()
 begin
@@ -62,7 +62,7 @@ create table bar(
 
 -- TEST: try to make an upgrade proc with args
 -- + {create_proc_stmt}: err
--- + error: % procedure previously declared as schema upgrade proc, it can have no args 'name_creator'
+-- * error: % procedure previously declared as schema upgrade proc, it can have no args 'name_creator'
 -- +1 error:
 create proc name_creator(i integer)
 begin
@@ -71,7 +71,7 @@ end;
 
 -- TEST: create a table that is not yet visible in this schema version
 -- + {create_table_stmt}: t1: { id: integer } deleted
--- - Error
+-- - error:
 create table t1(
  id integer
 ) @create(7);
@@ -79,14 +79,14 @@ create table t1(
 -- TEST: create a table that is visible in this schema version
 -- + {create_table_stmt}: t2: { id: integer }
 -- - deleted
--- - Error
+-- - error:
 create table t2(
  id integer
 ) @create(5);
 
 -- TEST: create a table that is deleted in this schema version
 -- + {create_table_stmt}: t3: { id: integer } deleted
--- - Error
+-- - error:
 create table t3(
  id integer
 ) @delete(4);
@@ -94,33 +94,33 @@ create table t3(
 -- TEST: create a table that is not yet deleted in this schema version
 -- + {create_table_stmt}: t4: { id: integer }
 -- - deleted
--- - Error
+-- - error:
 create table t4(
  id integer
 ) @delete(5);
 
 -- TEST: t1 is not visible in this schema version (v5)
 -- + {delete_stmt}: err
--- + error: % table in delete statement does not exist (not visible in schema version 5) 't1'
+-- * error: % table in delete statement does not exist (not visible in schema version 5) 't1'
 -- +1 error:
 delete from t1;
 
 -- TEST: t2 is visible in this schema version (v5)
 -- + {delete_stmt}: ok
 -- + {name t2}: t2: { id: integer }
--- - Error
+-- - error:
 delete from t2;
 
 -- TEST: t3 is not visible in this schema version (v5)
 -- + {delete_stmt}: err
--- + error: % table in delete statement does not exist (not visible in schema version 5) 't3'
+-- * error: % table in delete statement does not exist (not visible in schema version 5) 't3'
 -- +1 error:
 delete from t3;
 
 -- TEST: t4 is visible in this schema version (v5)
 -- + {delete_stmt}: ok
 -- + {name t4}: t4: { id: integer }
--- - Error
+-- - error:
 delete from t4;
 
 -- TEST: create a trigger, triggers are ignored in this context because they might refer to things
@@ -128,7 +128,7 @@ delete from t4;
 -- because they are validated in the normal contexts.  So even though this trigger is full of
 -- bogus references no errors are generated
 -- + {create_trigger_stmt}: ok
--- - Error
+-- - error:
 create trigger will_not_be_processed_trigger
    after insert on lol_table
 begin
@@ -137,19 +137,19 @@ end;
 
 -- TEST: declare an ad hoc migrator
 -- + {schema_ad_hoc_migration_stmt}: ok @create(5)
--- - Error
+-- - error:
 @schema_ad_hoc_migration(5, MyAdHocMigration);
 
 -- TEST: createe the ad hoc migrator, this forces validation of the adhoc type
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name MyAdHocMigration}: ok dml_proc
--- - Error
+-- - error:
 create proc MyAdHocMigration()
 begin
   update foo set id = 1 where id = 2;
 end;
 
 -- TEST: try to switch to previous schema validation mode in a migrate script
--- + error: % switching to previous schema validation mode not allowed if @schema_upgrade_version was used
+-- * error: % switching to previous schema validation mode not allowed if @schema_upgrade_version was used
 -- +1 error:
 @previous_schema;

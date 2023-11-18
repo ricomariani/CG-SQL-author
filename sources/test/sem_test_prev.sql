@@ -116,13 +116,13 @@ create table t_new_table_ok(a int not null, b int) @create(26);
 
 -- TEST: create new table without annotation (error)
 -- + {create_table_stmt}: err
--- + error: % new table must be added with @create(26) or later 't_new_table_no_annotation'
+-- * error: % new table must be added with @create(26) or later 't_new_table_no_annotation'
 -- +1 error:
 create table t_new_table_no_annotation(a int not null, b int);
 
 -- TEST: create new table stale annotation (error)
 -- + {create_table_stmt}: err
--- + error: % new table must be added with @create(26) or later 't_new_table_stale_annotation'
+-- * error: % new table must be added with @create(26) or later 't_new_table_stale_annotation'
 -- +1 error:
 create table t_new_table_stale_annotation(a int not null, b int) @create(2);
 
@@ -223,7 +223,7 @@ create table recreate_deleted_in_the_past
 
 -- TEST : the new version of this table is ok on the create plan but the version number is too small
 -- + {create_table_stmt}: err
--- + error: % Table must leave @recreate management with @create(26) or later 'recreate_created_in_the_past'
+-- * error: % Table must leave @recreate management with @create(26) or later 'recreate_created_in_the_past'
 -- +1 error:
 create table recreate_created_in_the_past
 (
@@ -257,8 +257,8 @@ begin
 end;
 
 -- TEST: trigger deleted correctly
--- + {create_trigger_stmt}: ok
 -- + END @DELETE(2);
+-- + {create_trigger_stmt}: ok
 -- - error:
 create trigger trigger_will_be_deleted
   before delete on foo
@@ -294,7 +294,7 @@ create table t_several_columns_added_interleaved(
 -- TEST: we're trying to create an ad hoc rule in the past... not allowed
 -- this item is not present in the previous schema
 -- + {schema_ad_hoc_migration_stmt}: err
--- + error: % new ad hoc rule must be added at version 26 or later 'MigrateInThePast'
+-- * error: % new ad hoc rule must be added at version 26 or later 'MigrateInThePast'
 -- +1 error:
 @schema_ad_hoc_migration(3, MigrateInThePast);
 
@@ -308,25 +308,25 @@ create table t_several_columns_added_interleaved(
 
 -- TEST: creating a table that will move to a different deployment region
 -- + {create_table_stmt}: err
--- + error: % object's deployment region changed from 'different_region' to 'base' 'TChanging'
+-- * error: % object's deployment region changed from 'different_region' to 'base' 'TChanging'
 -- +1 error:
 create table TChanging(id integer);
 
 -- TEST: creating an index that will move to a different deployment region
 -- + {create_index_stmt}: err
--- + error: % object's deployment region changed from 'different_region' to 'base' 'IChanging'
+-- * error: % object's deployment region changed from 'different_region' to 'base' 'IChanging'
 -- +1 error:
 create index IChanging on TChanging(id);
 
 -- TEST: creating a view that will move to a different deployment region
 -- + {create_view_stmt}: err
--- + error: % object's deployment region changed from 'different_region' to 'base' 'VChanging'
+-- * error: % object's deployment region changed from 'different_region' to 'base' 'VChanging'
 -- +1 error:
 create view VChanging as select * from TChanging;
 
 -- TEST: creating a trigger that will move to a different deployment region
 -- + {create_trigger_stmt}: err
--- + error: % object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
+-- * error: % object's deployment region changed from 'different_region' to 'base' 'TrigChanging'
 -- +1 error:
 create trigger TrigChanging
   before delete on foo
@@ -336,7 +336,7 @@ end;
 
 -- TEST: creating an ad hoc migration that will move to a different deployment region
 -- + {schema_ad_hoc_migration_stmt}: err
--- + error: % object's deployment region changed from 'different_region' to 'base' 'AdHocChanging'
+-- * error: % object's deployment region changed from 'different_region' to 'base' 'AdHocChanging'
 -- +1 error:
 @schema_ad_hoc_migration(2, AdHocChanging);
 
@@ -349,7 +349,7 @@ end;
 -- TEST: even though this table's deployment region was not known when it was declared we
 -- still figured it out later because the errors are deferred
 -- + {create_table_stmt}: err
--- + error: % object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
+-- * error: % object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
 -- +1 error:
 create table TableWithDeferredOwner(id integer);
 @end_schema_region;
@@ -555,7 +555,7 @@ create table column_deleted_in_this_table(
 );
 
 -- TEST: tries a bogus "undelete" operation
--- + error: % column current delete version not equal to previous delete version 'being_undeleted'
+-- * error: % column current delete version not equal to previous delete version 'being_undeleted'
 create table column_undeleted_in_this_table(
   id integer,
   being_undeleted text @delete(6)
@@ -570,31 +570,31 @@ create table become_sensitive(
 
 -- TEST: previous schema created table at v1
 -- + {create_table_stmt}: err
--- + error: % current create version not equal to previous create version for 't_create_verison_changed'
+-- * error: % current create version not equal to previous create version for 't_create_verison_changed'
 -- +1 error:
 create table t_create_verison_changed(id integer) @create(2);
 
 -- TEST: previous schema deleted table at v1
 -- + {create_table_stmt}: err
--- + error: % current delete version not equal to previous delete version for 't_delete_verison_changed'
+-- * error: % current delete version not equal to previous delete version for 't_delete_verison_changed'
 -- +1 error:
 create table t_delete_verison_changed(id integer) @delete(2);
 
 -- TEST: previous schema deleted table at v1
 -- + {create_table_stmt}: err
--- + error: % table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
+-- * error: % table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
 -- +1 error:
 create table t_not_present_in_new_schema(id integer);
 
 -- TEST: previous table is now a view
 -- + {create_table_stmt}: err
--- + error: % object was a table but is now a view 't_became_a_view'
+-- * error: % object was a table but is now a view 't_became_a_view'
 -- +1 error:
 create table t_became_a_view(id integer);
 
 -- TEST: previous schema created table at v1
 -- + {create_table_stmt}: err
--- + error: % current create version not equal to previous create version for 't_created_in_wrong_version'
+-- * error: % current create version not equal to previous create version for 't_created_in_wrong_version'
 -- +1 error:
 create table t_created_in_wrong_version(id integer);
 
@@ -605,37 +605,37 @@ create table t_was_correctly_deleted(id integer);
 
 -- TEST: column name changed between schema
 -- + {create_table_stmt}: err
--- + error: % column name is different between previous and current schema 'id_'
+-- * error: % column name is different between previous and current schema 'id_'
 -- +1 error:
 create table t_column_name_changed(id integer);
 
 -- TEST: column type changed between schema
 -- + {create_table_stmt}: err
--- + error: % column type is different between previous and current schema 'id'
+-- * error: % column type is different between previous and current schema 'id'
 -- +1 error:
 create table t_column_type_changed(id integer);
 
 -- TEST: column attribute changed between schema (same error)
 -- + {create_table_stmt}: err
--- + error: % column type is different between previous and current schema 'id'
+-- * error: % column type is different between previous and current schema 'id'
 -- +1 error:
 create table t_column_attribute_changed(id integer);
 
 -- TEST: column delete version number changed
 -- + {create_table_stmt}: err
--- + error: % column current delete version not equal to previous delete version 'id2'
+-- * error: % column current delete version not equal to previous delete version 'id2'
 -- +1 error:
 create table t_column_delete_version_changed(id integer, id2 integer @delete(2));
 
 -- TEST: column create version number changed
 -- + {create_table_stmt}: err
--- + error: % column current create version not equal to previous create version 'id2'
+-- * error: % column current create version not equal to previous create version 'id2'
 -- +1 error:
 create table t_column_create_version_changed(id integer, id2 integer @create(2));
 
 -- TEST: column default value changed
 -- + {create_table_stmt}: err
--- + error: % column current default value not equal to previous default value 'id2'
+-- * error: % column current default value not equal to previous default value 'id2'
 create table t_column_default_value_changed(id integer, id2 integer not null default 1);
 
 -- TEST: column default value did not change
@@ -654,24 +654,24 @@ create table t_additional_attribute_present(a int not null, b int, primary key (
 
 -- TEST: create table with additional attribute (doesn't match)
 -- + {create_table_stmt}: err
--- + error: in pk_def % table has a facet that is different in the previous and current schema 't_additional_attribute_mismatch'
+-- * error: in pk_def % table has a facet that is different in the previous and current schema 't_additional_attribute_mismatch'
 create table t_additional_attribute_mismatch(a int not null, b int not null, primary key (a,b));
 
 -- TEST: columns were removed
 -- + {create_table_stmt}: err
--- + error: % a column was removed from the table rather than marked with @delete 'id2'
+-- * error: % a column was removed from the table rather than marked with @delete 'id2'
 -- +1 error:
 create table t_columns_removed(id integer, id2 integer);
 
 -- TEST: new table has added facet not present in the previous
 -- + {create_table_stmt}: err
--- + error: % table has a new non-column facet in the current schema 't_attribute_added
+-- * error: % table has a new non-column facet in the current schema 't_attribute_added
 -- +1 error:
 create table t_attribute_added(a int not null);
 
 -- TEST: new table with additional column and no @create
 -- + {create_table_stmt}: err
--- + error: % table has columns added without marking them @create 't_additional_column'
+-- * error: % table has columns added without marking them @create 't_additional_column'
 -- +1 error:
 create table t_additional_column(a int not null);
 
@@ -684,13 +684,13 @@ create table t_additional_column_ok(a int not null, b int @create(2));
 
 -- TEST: new table changes a flag like TEMP
 -- + {create_table_stmt}: err
--- + error: % table create statement attributes different than previous version 't_becomes_temp_table'
+-- * error: % table create statement attributes different than previous version 't_becomes_temp_table'
 -- +1 error:
 create table t_becomes_temp_table(a int not null, b int);
 
 -- TEST: table added a column with @delete and @create
 -- + {create_table_stmt}: err
--- + error: % table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
+-- * error: % table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
 -- +1 error:
 create table t_new_table_create_and_delete(a int not null);
 
@@ -702,42 +702,42 @@ create table t_new_table_create_and_delete(a int not null);
 create table t_new_legit_column(a int not null);
 
 -- TEST: create table but previous version had no create migration proc
--- + error: % @create procedure changed in object 'with_create_migrator'
--- + {create_table_stmt}: err
 -- + @CREATE(1);
+-- * error: % @create procedure changed in object 'with_create_migrator'
+-- + {create_table_stmt}: err
 -- +1 error:
 create table with_create_migrator(id integer) @create(1);
 
 -- TEST: create table but previous version had different create migration proc
--- + error: % @create procedure changed in object 'with_create_migrator'
--- + {create_table_stmt}: err
 -- + @CREATE(1, ADifferentCreateMigrator);
+-- * error: % @create procedure changed in object 'with_create_migrator'
+-- + {create_table_stmt}: err
 -- +1 error:
 create table with_create_migrator(id integer) @create(1, ADifferentCreateMigrator);
 
 -- TEST: delete table but previous version had no delete migration proc
--- + error: % @delete procedure changed in object 'with_delete_migrator'
--- + {create_table_stmt}: err
 -- + @DELETE(1);
+-- * error: % @delete procedure changed in object 'with_delete_migrator'
+-- + {create_table_stmt}: err
 -- +1 error:
 create table with_delete_migrator(id integer) @delete(1);
 
 -- TEST: create table but previous version had different migration proc
--- + error: % @delete procedure changed in object 'with_delete_migrator'
--- + {create_table_stmt}: err
 -- + @DELETE(1, ADifferentDeleteMigrator);
+-- * error: % @delete procedure changed in object 'with_delete_migrator'
+-- + {create_table_stmt}: err
 -- +1 error:
 create table with_delete_migrator(id integer) @delete(1, ADifferentDeleteMigrator);
 
 -- TEST: create a view in the previous schema, it becomes a table in the current (above) schema
 -- + {create_view_stmt}: err
--- + error: % object was a view but is now a table 'view_becomes_a_table'
+-- * error: % object was a view but is now a table 'view_becomes_a_table'
 -- +1 error:
 create view view_becomes_a_table as select 1 X;
 
 -- TEST: create a view in the previous schema that is absent entirely in the new schema
 -- + {create_view_stmt}: err
--- + error: % view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
+-- * error: % view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
 -- +1 error:
 create view view_was_zomg_deleted as select 1 X;
 
@@ -747,13 +747,13 @@ create view view_was_zomg_deleted as select 1 X;
 create temp view view_was_temp_but_now_it_is_not as select 1 X;
 
 -- TEST: create an index that is now totally gone in the new schema
--- + error: % index was present but now it does not exist (use @delete instead) 'this_index_was_deleted_with_no_annotation'
+-- * error: % index was present but now it does not exist (use @delete instead) 'this_index_was_deleted_with_no_annotation'
 -- +1 error:
 create index this_index_was_deleted_with_no_annotation on foo(id);
 
 -- TEST: create a table with a column def that has a create different migrator
 -- + {create_table_stmt}: err
--- + error: % column @create procedure changed 'id2'
+-- * error: % column @create procedure changed 'id2'
 -- +1 error:
 create table create_column_migrate_test(
  id int unique,
@@ -762,7 +762,7 @@ create table create_column_migrate_test(
 
 -- TEST: create a table with a column def that has a delete different migrator
 -- + {create_table_stmt}: err
--- + error: % column @delete procedure changed 'id2'
+-- * error: % column @delete procedure changed 'id2'
 -- +1 error:
 create table delete_column_migrate_test(
  id int,
@@ -770,7 +770,7 @@ create table delete_column_migrate_test(
 );
 
 -- TEST : create a table with an interesting complex facet, different from the above
--- + error: % table has a facet that is different in the previous and current schema 'fk_facet'
+-- * error: % table has a facet that is different in the previous and current schema 'fk_facet'
 create table fk_facet
 (
  id int,
@@ -778,7 +778,7 @@ create table fk_facet
 );
 
 -- TEST : new version of this table is on the recreate plan, this is not valid
--- + error: % current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
+-- * error: % current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
 -- +1 error:
 create table cannot_change_to_recreate
 (
@@ -803,7 +803,7 @@ create table ok_to_create_recreate_table
 
 -- TEST: the new version of this table is on the create plan, but missing cql:from_recreate
 -- + {create_table_stmt}: err
--- + error: % table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
+-- * error: % table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
 -- +1 error:
 create table not_ok_to_create_recreate_table
 (
@@ -833,7 +833,7 @@ create table recreate_feel_the_power
 ) @recreate;
 
 -- TEST: recreate disappeared
--- + error: % table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
+-- * error: % table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
 -- +1 error:
 create table disapparing_recreate
 (
@@ -841,7 +841,7 @@ create table disapparing_recreate
 ) @recreate;
 
 -- TEST: try to remove a trigger without marking it @delete
--- + error: % trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
+-- * error: % trigger was present but now it does not exist (use @delete instead) 'trigger_removed_with_no_annotation'
 -- +1 error:
 create trigger trigger_removed_with_no_annotation
   before delete on foo
@@ -861,7 +861,7 @@ begin
 end;
 
 -- TEST: remove a facet from the schema
--- + error: % non-column facets have been removed from the table 't_removed_facet'
+-- * error: % non-column facets have been removed from the table 't_removed_facet'
 -- +1 error:
 create table t_removed_facet(
   id integer not null,
@@ -869,7 +869,7 @@ create table t_removed_facet(
 );
 
 -- TEST: column different in not a typical way
--- + error: % table has a column that is different in the previous and current schema 'id'
+-- * error: % table has a column that is different in the previous and current schema 'id'
 create table t_subtle_column_change(
   id integer references create_column_migrate_test(id) on delete cascade
 );
@@ -883,13 +883,13 @@ create table t_several_columns_added_interleaved(
 );
 
 -- TEST: verify that you can't simply remove an existing migration
--- + error: % ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
+-- * error: % ad hoc schema migration directive was removed; this is not allowed 'WhoopsItsGone'
 -- +1 error:
 @schema_ad_hoc_migration(1, WhoopsItsGone);
 
 -- TEST: verify that you can't simply remove an existing migration
 -- + {schema_ad_hoc_migration_stmt}: err
--- + error: % ad hoc schema migration directive version number changed 'WhoopsItChanged'
+-- * error: % ad hoc schema migration directive version number changed 'WhoopsItChanged'
 -- +1 error:
 @schema_ad_hoc_migration(1, WhoopsItChanged);
 
@@ -1006,7 +1006,7 @@ declare enum foo_enum integer (
 );
 
 -- TEST: the value of 'a' has changed
--- + error: % table has a column that is different in the previous and current schema 'x'
+-- * error: % table has a column that is different in the previous and current schema 'x'
 create table foo_with_check(
  x integer check (x == foo_enum.a)
 );
@@ -1023,7 +1023,7 @@ create virtual table deleted_virtual using my_virtual(goo) as (
   id integer
 );
 
--- + error: % current schema can't go back to @recreate semantics for 'undead_virtual'
+-- * error: % current schema can't go back to @recreate semantics for 'undead_virtual'
 -- +1 error:
 create virtual table undead_virtual using my_virtual(goo) as (
   id integer
@@ -1036,7 +1036,7 @@ create virtual table changing_virtual using my_virtual(goo) as (
 );
 
 -- TEST: changing the delete version is bad
--- + error: % current delete version not equal to previous delete version for 'delete_change_virtual'
+-- * error: % current delete version not equal to previous delete version for 'delete_change_virtual'
 -- +1 error:
 create virtual table delete_change_virtual using my_virtual(goo) as (
   id integer
@@ -1080,7 +1080,7 @@ create table conflict_clause_pk(
 
 -- TEST: this table was on the recreate plan, it needs to stay on that plan
 -- + {create_table_stmt}: err
--- + error: % table was marked @delete but it needs to be marked @recreate @delete 'dropping_this'
+-- * error: % table was marked @delete but it needs to be marked @recreate @delete 'dropping_this'
 -- +1 error:
 create table dropping_this
 (
@@ -1123,7 +1123,7 @@ create table backed (
 
 -- TEST: previous table was recreate, it tries to go to baseline in this test
 -- + {create_table_stmt}: err
--- + error: % table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'transitioning_to_baseline'
+-- * error: % table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'transitioning_to_baseline'
 -- +1 error:
 create table transitioning_to_baseline(
  x integer,

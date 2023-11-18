@@ -7,11 +7,10 @@
 
 -- TEST: declare a base region
 -- + "name" : "region0"
--- + "using" : [  ]
--- + "usingPrivately" : [  ]
--- + "name" : "region0",
 -- + "isDeployableRoot" : 0,
 -- + "deployedInRegion" : "region2",
+-- + "using" : [  ]
+-- + "usingPrivately" : [  ]
 @declare_schema_region region0;
 
 -- TEST: declare an orphan region
@@ -29,18 +28,18 @@
 -- TEST: simple table with 2 columns
 -- validating the basic shape of the output
 -- + "name" : "Foo"
+-- + "region" : "region0",
+-- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "MyIndexWithAttributes" ],
 -- + "columns" : [
 -- + "name" : "id"
 -- + "type" : "integer",
 -- + "kind" : "ident",
--- +1 "isNotNull" : 1
+-- + "isNotNull" : 1
 -- + "name" : "name"
--- +1 "type" : "text"
+-- + "type" : "text"
 -- + "primaryKey" : [
 -- + "foreignKeys" : [
 -- + "uniqueKeys" : [
--- + "indices" : [ "region_0_index", "MyIndex", "MyOtherIndex", "MyExpressionIndex", "MyPartialIndex", "MyIndexWithAttributes" ],
--- + "region" : "region0",
 create table Foo
 (
   id int<ident> not null,
@@ -69,10 +68,10 @@ create index region_0_index on Foo(name, id);
 -- + "name" : "T2"
 -- + "name" : "id"
 -- + "type" : "integer",
+-- + "isNotNull" : 1
 -- + "isPrimaryKey" : 1
 -- + "isAutoIncrement" : 1
 -- + "primaryKey" : [ "id" ],
--- + "isNotNull" : 1
 -- - "region"
 create table T2
 (
@@ -94,10 +93,10 @@ create table T2
 -- + "name" : "T3"
 -- + "name" : "id"
 -- + "type" : "integer",
--- + "isUniqueKey" : 1
 -- + "isNotNull" : 1
--- + "isAutoIncrement" : 0
 -- - "isPrimaryKey" : 1
+-- + "isUniqueKey" : 1
+-- + "isAutoIncrement" : 0
 create table T3
 (
   id integer unique not null
@@ -105,10 +104,7 @@ create table T3
 
 -- TEST: force some misc attributes
 -- + "name" : "T4"
--- + "name" : "id"
--- +2 "attributes" : [
--- + "name" : "cool"
--- + "value" : 1
+-- + "attributes" : [
 -- + "name" : "foo"
 -- + "value" : "bar"
 -- + "name" : "num"
@@ -117,6 +113,11 @@ create table T3
 -- + "value" : 83
 -- + "name" : "qid"
 -- + "value" : "quoted identifier"
+-- + "columns" : [
+-- + "name" : "id"
+-- + "attributes" : [
+-- + "name" : "cool"
+-- + "value" : 1
 @attribute(foo=bar)
 @attribute(num=-7)
 @attribute(hex=0x53)
@@ -134,17 +135,19 @@ create table T4
 
 -- TEST: use strange string escapes
 -- + "name" : "T5"
--- + "name" : "r"
--- + "type" : "real"
--- + "name" : "b"
--- + "type" : "bool"
--- + "name" : "bl"
--- + "type" : "blob"
--- + "name" : "l"
--- + "type" : "long"
 -- + "name" : "crazy"
 -- + "value" : "\\ ' \u0007 \b \f \n \t \r \u000b \\ \" "
+-- + "name" : "r"
+-- + "type" : "real"
+-- + "name" : "bl"
+-- + "type" : "blob"
+-- + "name" : "b"
+-- + "type" : "bool"
+-- + "name" : "l"
+-- + "type" : "long"
 @attribute(crazy="\\ ' \a \b \f \n \t \r \v \\ \" ")
+-- "  this here to fix the vscode syntax coloring...
+-- the backlash quote fools it
 create table T5
 (
   r real,
@@ -162,6 +165,8 @@ create proc crazy_string()
 begin
   select "\\ ' \a \b \f \n \t \r \v \\ \" " as crazy;
 end;
+
+-- "  this here to fix the vscode syntax coloring...
 
 -- TEST: use long constant attributes and compound name
 -- + "name" : "T6"
@@ -192,8 +197,8 @@ create table T7a (
 -- + "addedVersion" : 1,
 -- + "addedMigrationProc" : "t7_col_create"
 -- + "isDeleted" : 1,
--- + "deletedMigrationProc" : "t7_col_delete"
 -- + "deletedVersion" : 3
+-- + "deletedMigrationProc" : "t7_col_delete"
 create table T7b (
   id integer @create(1, t7_col_create) @delete(3, t7_col_delete)
 );
@@ -252,23 +257,31 @@ create table T9 (
 
 -- TEST: create an fk
 -- + "name" : "T10"
+-- + "primaryKey" : [ "id1", "id2" ],
+-- + "primaryKeySortOrders" : [ "desc", "asc" ],
 -- + "primaryKeyName" : "pk1",
+-- + "foreignKeys" : [
+-- + {
+-- + "name" : "fk1",
 -- + "columns" : [ "id1", "id2" ],
--- + "name" : "fk1"
 -- + "referenceTable" : "T9",
--- + "referenceColumns" : [ "id2", "id3" ]
--- + "name" : "uk1"
--- + "columns" : [ "id2", "id3" ]
--- + "columns" : [ "id1", "id2" ]
--- + "name" : "id1_uk"
--- + "columns" : [ "id1" ]
--- + "columns" : [ "id3", "id4" ]
--- + "name" : "id4_uk"
--- + "columns" : [ "id4" ]
--- pk columns are not null
--- +2 "isNotNull" : 1,
--- other columns are nullable
--- +2 "isNotNull" : 0,
+-- + "referenceColumns" : [ "id2", "id3" ],
+-- + "onUpdate" : "NO ACTION",
+-- + "onDelete" : "NO ACTION",
+-- + "isDeferred" : 0
+-- + }
+-- + ],
+-- + "name" : "id1_uk",
+-- + "columns" : [ "id1" ],
+-- + "sortOrders" : [ "" ]
+-- + "name" : "id4_uk",
+-- + "columns" : [ "id4" ],
+-- + "sortOrders" : [ "" ]
+-- + "name" : "uk1",
+-- + "columns" : [ "id2", "id3" ],
+-- + "sortOrders" : [ "", "" ]
+-- + "columns" : [ "id3", "id4" ],
+-- + "sortOrders" : [ "", "" ]
 create table T10 (
   id1 integer unique,
   id2 integer,
@@ -347,14 +360,14 @@ end;
 
 -- TEST: complex parameters
 -- + "name" : "with_complex_args"
+-- + "binding" : "out",
 -- + "name" : "pattern",
 -- + "type" : "text",
 -- + "isNotNull" : 1
--- + "binding" : "out",
+-- + "binding" : "inout",
 -- + "name" : "arg",
 -- + "type" : "real",
 -- + "isNotNull" : 0
--- +  "binding" : "inout",
 create proc with_complex_args(out pattern text not null, inout arg real)
 begin
   set pattern := "text";
@@ -408,14 +421,14 @@ end;
 -- TEST: general form with single row result
 -- + "name" : "typical_outresult",
 -- + "usesTables" : [  ],
--- - "hasSelectResult"
--- + "hasOutResult" : 1,
--- - "hasOutUnionResult"
 -- + "projection" : [
 -- + "name" : "A",
 -- + "type" : "integer",
 -- + "isNotNull" : 1
+-- + "hasOutResult" : 1,
 -- + "usesDatabase" : 0
+-- - "hasSelectResult"
+-- - "hasOutUnionResult"
 create proc typical_outresult()
 begin
   declare C cursor like select 1 A;
@@ -426,14 +439,15 @@ end;
 -- TEST: general form with single row result
 -- + "name" : "typical_out_union_result",
 -- + "usesTables" : [  ],
--- - "hasSelectResult"
--- - "hasOutResult"
--- + "hasOutUnionResult" : 1,
 -- + "projection" : [
 -- + "name" : "A",
 -- + "type" : "integer",
 -- + "isNotNull" : 1
+-- + ]
+-- + "hasOutUnionResult" : 1,
 -- + "usesDatabase" : 0
+-- - "hasSelectResult"
+-- - "hasOutResult"
 create proc typical_out_union_result()
 begin
   declare C cursor like select 1 A;
@@ -445,12 +459,16 @@ end;
 -- TEST: general form with full result set
 -- + "name" : "typical_select",
 -- + "args" : [
+-- + ],
+-- + "fromTables" : [ "T5" ],
 -- + "usesTables" : [ "T5" ],
+-- + "projection" : [
+--    projected columns
+-- + ],
 -- + "hasSelectResult" : 1,
+-- + "usesDatabase" : 1
 -- - "hasOutResult"
 -- - "hasOutUnionResult"
--- + "projection" : [
--- + "usesDatabase" : 1
 create proc typical_select()
 begin
   -- this declare forces this to be a non-single-statement proc
@@ -540,9 +558,9 @@ create index MyPartialIndex on Foo(id*id) where id < 1000;
 -- TEST: an index
 -- + "name" : "YetAnotherIndex",
 -- + "table" : "Foo",
--- + "columns" : [ "id" ],
 -- + "isDeleted" : 1,
 -- + "deletedVersion" : 1
+-- + "columns" : [ "id" ],
 create index YetAnotherIndex on Foo(id) @delete(1);
 
 -- TEST: an index with attributes
@@ -561,7 +579,6 @@ create index MyIndexWithAttributes on Foo(id);
 -- TEST: a view
 -- + "name" : "MyView",
 -- + "isDeleted" : 0
--- + "select" : "SELECT id, name FROM Foo",
 -- + "name" : "id",
 -- + "type" : "integer",
 -- + "kind" : "ident",
@@ -569,6 +586,8 @@ create index MyIndexWithAttributes on Foo(id);
 -- + "name" : "name",
 -- + "type" : "text",
 -- + "isNotNull" : 0
+-- + "select" : "SELECT id, name FROM Foo",
+-- + "selectArgs" : [  ],
 -- + "fromTables" : [ "Foo" ],
 -- + "usesTables" : [ "Foo" ]
 create view MyView as select * from Foo;
@@ -625,13 +644,14 @@ begin
 end;
 
 -- TEST: declare database with attributes
+-- + "name" : "my_other_attribute",
+-- + "value" : ["any", ["tree", "of"], "values"]
 -- + "name" : "dbname",
 -- + "value" : "fred.sql"
 -- + "name" : "dbfile",
 -- + "value" : "test/cg_test_json_schema.sql"
--- + "name" : "my_other_attribute",
--- + "value" : ["any", ["tree", "of"], "values"]
 -- this is in the next block, it should not appear here
+-- there was such bleeding once upon a time
 -- - yowsa
 @attribute(my_other_attribute = ('any', ('tree', 'of'), 'values'))
 @attribute(dbname = 'fred.sql')
@@ -787,9 +807,9 @@ begin
 end;
 
 -- TEST: with upsert statement
+-- + "name" : "with_upsert_proc",
 -- + "args" : [
 -- + ],
--- + "name" : "with_upsert_proc",
 -- + "usesTables" : [ "T3" ],
 -- + "statement" : "WITH data (id) AS ( VALUES(1), (2), (3) ) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
 -- + "statementArgs" : [  ],
@@ -901,10 +921,10 @@ end;
 -- TEST: declare a region with two dependencies (forces the comma in output)
 -- + @DECLARE_DEPLOYABLE_REGION region2 USING region1, region0
 -- +  "name" : "region2"
+-- +  "isDeployableRoot" : 1,
+-- +  "deployedInRegion" : "region2",
 -- +  "using" : [ "region1", "region0" ]
 -- +  "usingPrivately" : [ 0, 0 ]
--- + "isDeployableRoot" : 1,
--- + "deployedInRegion" : "region2",
 @declare_deployable_region region2 using region1, region0;
 
 -- TEST: basic delete trigger
@@ -919,8 +939,8 @@ end;
 -- + "whenExprArgs" : [  ],
 -- + "statement" : "CREATE TEMP TRIGGER IF NOT EXISTS trigger1 BEFORE DELETE ON Foo FOR EACH ROW WHEN old.id = 3 BEGIN DELETE FROM Foo WHERE id = id + 1;  DELETE FROM Foo WHERE id = old.id; END",
 -- + "statementArgs" : [  ],
--- + "usesTables" : [ "Foo" ]
 -- + "deleteTables" : [ "Foo" ],
+-- + "usesTables" : [ "Foo" ]
 -- - "insertTables"
 -- - "updateTables"
 create temp trigger if not exists trigger1
@@ -941,8 +961,8 @@ end;
 -- + "isInsertTrigger" : 1,
 -- + "statement" : "CREATE TRIGGER trigger2 AFTER INSERT ON Foo BEGIN DELETE FROM Foo WHERE id > new.id; END",
 -- + "statementArgs" : [  ],
--- + "usesTables" : [ "Foo" ]
 -- + "deleteTables" : [ "Foo" ],
+-- + "usesTables" : [ "Foo" ]
 -- - "insertTables"
 -- - "updateTables"
 create trigger trigger2
@@ -1139,8 +1159,8 @@ declare proc other_proc();
 
 -- TEST: check proc to proc usage
 -- + "name" : "proc_with_deps",
--- + "usesTables" : [  ],
 -- + "usesProcedures" : [ "other_proc", "proc_as_func" ]
+-- + "usesTables" : [  ],
 create proc proc_with_deps(out x integer not null)
 begin
   -- note unusal casing, the JSON output should use the canonical name in the dependencies
@@ -1155,6 +1175,7 @@ begin
   select "\\\r\n\t\b\f\"\x01" quoted_text;
 end;
 
+-- " this is here to fix the coloring for vscode
 -- TEST: ad-hoc migration proc
 -- + "name" : "ad_hoc_migration_proc_1",
 -- + "version" : 1
@@ -1168,11 +1189,11 @@ end;
 -- TEST: ad-hoc migration proc for recreate group
 -- + "name" : "a_migration_proc",
 -- + "CRC" : "%",
--- + "onRecreateOf" : "a_recreate_group"
 -- + "attributes" : [
 -- +    "name" : "test_attribute",
 -- +    "value" : "hello"
 -- + ],
+-- + "onRecreateOf" : "a_recreate_group"
 @attribute(test_attribute=hello)
 @schema_ad_hoc_migration for @recreate(a_recreate_group, a_migration_proc);
 
@@ -1190,9 +1211,9 @@ end;
 @schema_ad_hoc_migration(3, ad_hoc_migration_proc_3);
 
 -- TEST: make sure we can walk dependencies from a view to a table
--- + "usesTables" : [ "Foo" ],
--- + "usesViews" : [ "MyView" ],
 -- + "fromTables" : [ "Foo" ],
+-- + "usesViews" : [ "MyView" ],
+-- + "usesTables" : [ "Foo" ],
 create proc use_view()
 begin
   select * from MyView;
@@ -1284,7 +1305,6 @@ create virtual table a_third_virtual_table using a_module (arguments following) 
 
 -- TEST: delete a virtual table
 -- + "ifNotExists" : 0,
--- + "isVirtual" : 1,
 -- + "isDeleted" : 1,
 -- + "deletedVersion" : 2,
 -- + "isRecreated": 0,
@@ -1299,26 +1319,27 @@ create virtual table a_deleted_virtual_table using a_module (arguments following
 
 
 -- TEST: table level check expression
+-- 3 names (one for the constraint)
+-- +3 "name"
 -- + "checkExpressions" : [
 -- + "name" : "x",
 -- + "checkExpr" : "v > 5",
 -- + "checkExprArgs" : [  ]
--- 3 names (one for the constraint)
--- +3 "name"
 create table with_check_constraints(
   v integer,
   constraint x check(v > 5)
 );
 
 -- TEST: table level check expression
+-- only 2 names (one for the constraint removed)
+-- + "name" : "with_unnamed_check_constraints",
+-- + "name" : "w",
+-- +2 "name" :
+-- + "type" : "integer",
+-- + "kind" : "meters",
 -- + "checkExpressions" : [
 -- + "checkExpr" : "w > 5",
 -- + "checkExprArgs" : [  ]
--- only 2 names (one for the constraint removed)
--- +2 "name"
--- + "name" : "w",
--- + "type" : "integer",
--- + "kind" : "meters",
 create table with_unnamed_check_constraints(
   w integer<meters>,
   check(w > 5)
@@ -1433,9 +1454,9 @@ begin
 end;
 
 -- TEST: these are not valid characters in a JSON string, they have to be escaped
--- + "statement" : "SELECT '\u00a1\u00a2' AS t"
 -- + SELECT "\xa1\xa2" AS t;
 -- + "name" : "high_bit_escapes",
+-- + "statement" : "SELECT '\u00a1\u00a2' AS t"
 create proc high_bit_escapes()
 begin
   select "\xa1\xa2" t;
@@ -1638,31 +1659,54 @@ CREATE TABLE ends_with_underscore_ (
 
 -- TEST: check declare proc that take all possible parameter types
 -- + "args" : [
--- + "name" : "t"
--- + "name" : "i"
--- + "name" : "l"
--- + "name" : "r"
--- + "name" : "bl"
--- + "name" : "str"
--- + "name" : "obj"
--- + "name" : "t_nn"
--- + "name" : "i_nn"
--- + "name" : "l_nn"
--- + "name" : "r_nn"
--- + "name" : "bl_nn"
--- + "name" : "str_nn"
--- + "name" : "obj_nn"
--- +2 "type" : "bool"
--- +2 "type" : "integer"
--- +2 "type" : "long"
--- +2 "type" : "real"
--- +2 "type" : "text"
--- +2 "type" : "object"
--- +7 "isNotNull" : 1
--- + "usesDatabase" : 1
+-- + "name" : "t",
+-- + "type" : "bool",
+-- + "isNotNull" : 0
+-- + "name" : "i",
+-- + "type" : "integer",
+-- + "isNotNull" : 0
+-- + "name" : "l",
+-- + "type" : "long",
+-- + "isNotNull" : 0
+-- + "name" : "r",
+-- + "type" : "real",
+-- + "isNotNull" : 0
+-- + "name" : "bl",
+-- + "type" : "blob",
+-- + "isNotNull" : 0
+-- + "name" : "str",
+-- + "type" : "text",
+-- + "isNotNull" : 0
+-- + "name" : "obj",
+-- + "type" : "object",
+-- + "isNotNull" : 0
+-- + "name" : "t_nn",
+-- + "type" : "bool",
+-- + "isNotNull" : 1
+-- + "name" : "i_nn",
+-- + "type" : "integer",
+-- + "isNotNull" : 1
+-- + "name" : "l_nn",
+-- + "type" : "long",
+-- + "isNotNull" : 1
+-- + "name" : "r_nn",
+-- + "type" : "real",
+-- + "isNotNull" : 1
+-- + "name" : "bl_nn",
+-- + "type" : "blob",
+-- + "isNotNull" : 1
+-- + "name" : "str_nn",
+-- + "type" : "text",
+-- + "isNotNull" : 1
+-- + "name" : "obj_nn",
+-- + "type" : "object",
+-- + "isNotNull" : 1
+-- + ],
 -- + "attributes" : [
 -- + "name" : "foo"
 -- + "value" : "bar"
+-- + ],
+-- + "usesDatabase" : 1
 @attribute(foo=bar)
 DECLARE PROC decl_proc_take_all_type_proc (
   t BOOL,
@@ -1733,11 +1777,13 @@ DECLARE SELECT FUNCTION NoCheckSelectFunc NO CHECK REAL;
 -- TEST: check proc with like as an argument
 -- + "args" : [
 -- + "name" : "id"
--- + "name" : "first"
--- + "name" : "middle"
--- + "name" : "last"
 -- + "type" : "integer"
--- +3 "type" : "text"
+-- + "name" : "first"
+-- + "type" : "text"
+-- + "name" : "middle"
+-- + "type" : "text"
+-- + "name" : "last"
+-- + "type" : "text"
 DECLARE PROC proc_with_like() (id INTEGER, LIKE name);
 
 -- TEST: check procs with no check included in their section
@@ -1856,20 +1902,20 @@ DECLARE FUNCTION func_return_bool_notnull() BOOL not null;
 
 -- TEST: check declare function that returns a create blob.
 -- + "returnType" : {
--- + "createsObject" : 1
 -- + "type" : "blob"
+-- + "createsObject" : 1
 DECLARE FUNCTION func_create_blob() CREATE BLOB;
 
 -- TEST: check declare function that returns a create text.
 -- + "returnType" : {
--- + "createsObject" : 1
 -- + "type" : "text"
+-- + "createsObject" : 1
 DECLARE FUNCTION func_create_text() CREATE TEXT;
 
 -- TEST: check declare function that returns a create object.
 -- + "returnType" : {
--- + "createsObject" : 1
 -- + "type" : "object"
+-- + "createsObject" : 1
 DECLARE FUNCTION func_create_object() CREATE OBJECT;
 
 -- TEST: create a table with exotic name and columns

@@ -54,26 +54,26 @@ extern cql_int64 last_rowid;
 // Generated from cql-verify.sql:190
 // static void match_multiline(cql_string_ref _Nonnull buffer, cql_bool *_Nonnull result);
 
-// Generated from cql-verify.sql:262
+// Generated from cql-verify.sql:267
 extern CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull buffer, cql_int32 line);
 
-// Generated from cql-verify.sql:274
+// Generated from cql-verify.sql:279
 // static CQL_WARN_UNUSED cql_code do_match(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull buffer, cql_int32 line);
 
-// Generated from cql-verify.sql:289
+// Generated from cql-verify.sql:294
 // static CQL_WARN_UNUSED cql_code process(sqlite3 *_Nonnull _db_);
 
-// Generated from cql-verify.sql:327
+// Generated from cql-verify.sql:332
 // static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull result_name);
 
-// Generated from cql-verify.sql:352
+// Generated from cql-verify.sql:357
 // static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull sql_name);
 
-// Generated from cql-verify.sql:359
+// Generated from cql-verify.sql:364
 // static CQL_WARN_UNUSED cql_code load_data(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull sql_name, cql_string_ref _Nonnull result_name);
 
-// Generated from cql-verify.sql:376
+// Generated from cql-verify.sql:381
 // static CQL_WARN_UNUSED cql_code parse_args(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args);
 
-// Generated from cql-verify.sql:388
+// Generated from cql-verify.sql:393
 extern CQL_WARN_UNUSED cql_code dbhelp_main(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args);

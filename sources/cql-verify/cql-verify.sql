@@ -414,6 +414,6 @@ end;
 "\n" 'error:'
 "\n" '  if (db) sqlite3_close(db);'
 "\n" '  cql_object_release(args);'
-"\n" '  exit(errors);'
+"\n" '  exit(errors ? 1 : 0);'
 "\n" '}'
 "\n";

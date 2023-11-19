@@ -75,8 +75,7 @@ build the compiler.
 
 As mentioned above, `test.sh` normally allows the user to accept or reject differences in output, but
 this is automatically disabled in non-terminal environments, and manually disabled if the script is
-run with `--non_interactive`. `ok.sh` can be run to copy all of the outputs from the most recent test
-run over the previous references.
+run with `--non_interactive`.
 
 To get the coverage report, use `cov.sh` which in turn launches `test.sh` with suitable flags
 and then assembles the coverage report using `gcovr`.
@@ -191,8 +190,8 @@ immediately before this code.  Let's look at each line:
   * the test output from the statement under test must include indicated text
   * this happens to be the text for the AST of `declare_proc_no_check_stmt` after semantic success
   * there is no type info hence the `ok` designation (recall `SEM_TYPE_OK`)
-* `-- Error` : the comment starts with `" - "`, this is a trigger
-  * the test output from the statement under test must NOT include indicated text
+* `-- error:` : the comment starts with `" - "`, this is a trigger
+  * the test output from the statement under test must NOT include the indicated text
   * in this case that means no reported erros
 
 Easy enough.  Now does this happen?
@@ -223,7 +222,7 @@ Let's look at another example:
 -- + {col_def}: id: integer<some_key>
 -- + {col_def}: cost: real<dollars>
 -- + {col_def}: value: real<dollars>
--- - Error
+-- - error:
 create table with_kind(
   id integer<some_key>,
   cost real<dollars>,
@@ -235,7 +234,7 @@ This reads pretty easily now:
 
 * `{create_table_stmt}` : the struct type of the table must be an exact match for what is expected
 * `{col_def}` : there are 3 different `{col_def}` nodes, one for each column
-* `- Error` : there are no reported errors
+* `- error:` : there are no reported errors
 
 So there are no errors reported nor are there any in the AST.  At least the part of the AST that was
 checked.  The AST actually had other stuff too but it's normal to just test the "essential" stuff.
@@ -283,7 +282,33 @@ CREATE TABLE with_kind(
 
 As you can see there was potentially a lot more than could have been verified but those view key lines were
 selected because their correctness really implies the rest.  In fact just the `{create_table_stmt}` line
-really was enough to know that everthing was fine.
+really was enough to know that everthing was fine.  Matching large swaths of the AST is a very bad idea
+in general because:
+
+* it makes the tests brittle
+* it adds little value
+* it hides the essence of what is being tested
+
+Instead focus on matching the parts of the AST, or other output, that reflect the correctness
+of the output. This can be just one or two ast lines that show that the type was computed
+correctly or that an error was recorded correctly.
+
+#### Test Case Matching Rules
+
+The complete syntax for matching rules is as follows:
+
+```
+-- match and advance the current match pointer
+-- + foo       --> match foo, searching forward from the last match with +
+
+-- these forms do not change the current search position
+-- +[0-9] foo  --> match foo anywhere, but demand exactly n matches
+-- - foo       --> shorthand for +0 foo (demand no matches)
+-- * foo       --> shorthand for +1 foo (demand 1 match, anywhere)
+-- = foo       --> match foo on the same line as the last match with +
+```
+
+### A more complex example
 
 Let's look at one more example, this time on that is checking for errors.  Many tests check for
 errors because correctly reporting errors is the primary job of `sem.c`.  It's fair to say that
@@ -292,10 +317,10 @@ more ways to write code incorrectly than correctly.  Here's the test:
 
 ```SQL
 -- TEST: join with bogus ON expression type
--- + Error % expected numeric expression 'ON'
--- +1 Error
 -- + {select_stmt}: err
 -- + {on}: err
+-- * error: % expected numeric expression 'ON'
+-- +1 error:
 select * from foo
 inner join bar as T2 on 'v'
 where 'w'
@@ -303,35 +328,18 @@ having 'x'
 limit 'y';
 ```
 
-* `+ Error % expected numeric expression 'ON'` : there must be a reported Error message with the indicated error text
-* `+1 Error` : this indicates that there must be *exactly* 1 match for the pattern "Error" (i.e. exactly one error)
+* `* error: % expected numeric expression 'ON'` : there must be a reported error message with the indicated error text
+* `+1 error:` : this indicates that there must be *exactly* 1 match for the pattern "error:" (i.e. exactly one error)
   * note that there are several problems with the test statement but error processing is supposed to stop after the first
-* `-- + {on}: err` : verifies that the ON clause was marked as being in error
+  * most test cases verify precise errors and error counts
 * `-- + {select_stmt}: err` : verifies that the error correctly propogated up to the top level statement
-
-Note that the patterns can be in any order and every pattern is matched against the whole input so for instance:
-
-```
--- + {on}: err
--- + {on}: err
-```
-
-The above does not imply that there are two such `{on}` nodes.  The second line will match the same text as the first.
-To to enforce that there were exactly two matches you use:
-
-```
--- +2 {on}: err
-```
-
-There is no syntax for "at least two matches" though one could easily be added.  So far it hasn't been especially
-necessary.
+* `-- + {on}: err` : verifies that the ON clause was marked as being in error
 
 As we'll see this simple pattern is used in many other tests.  All that is required for it work is output with
-lines of the form "The statement ending at line XXXX"
-
-The `sem_test_dev.sql` test file is a set of tests that are run with the `--dev` flag passed to CQL.  This
-is the mode where certain statements that are prohibited in production code are verified.  This file is
-very small indeed and the exact prohibitions are left as an exercise to the reader.
+lines of the form "The statement ending at line XXXX". For instance,  `sem_test_dev.sql` test file is a set of
+tests that are run with the `--dev` flag passed to CQL.  This is the mode where certain statements that are
+prohibited in production code are verified.  This file is very small indeed and the exact prohibitions are left
+as an exercise to the reader.  There are many such files in the test suite.
 
 ### Code Generation Tests
 

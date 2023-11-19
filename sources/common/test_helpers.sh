@@ -49,8 +49,9 @@ __on_diff_exit() {
     if [ "$NON_INTERACTIVE" == 1 ] || [ ! -t 0 ] || [ ! -t 1 ];
     then
       echo "When running: diff $*"
-      echo "The above differences were detected. If these are expected then run ok.sh to proceed."
-      echo "Don't just run ok.sh to make the error go away; you have to really understand the diff first!"
+      echo "The above differences were detected. If these are expected copy the test output to the reference."
+      echo "You can also re-run the tests without specifying --non_interactive to affirm the updates."
+      echo "Don't just accept the changes to make the error go away; you have to really understand the diff first!"
       echo " "
       failed
     else

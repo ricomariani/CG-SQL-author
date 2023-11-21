@@ -2074,18 +2074,21 @@ static void gen_expr_case(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
   EXTRACT_ANY(else_expr, connector->right);
 
   // case is like parens already, you never need more parens
-  gen_printf("CASE ");
+  gen_printf("CASE");
   if (expr) {
+    gen_printf(" ");
     // case can have expression or just when clauses
     gen_root_expr(expr);
-    gen_printf(" ");
   }
+  gen_printf("\n");
+  GEN_BEGIN_INDENT(case_list, 2);
   gen_case_list(case_list);
   if (else_expr) {
     gen_printf("ELSE ");
     gen_root_expr(else_expr);
     gen_printf("\n");
   }
+  GEN_END_INDENT(case_list);
   gen_printf("END");
 }
 

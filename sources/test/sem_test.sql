@@ -13766,7 +13766,8 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_col with cursor with fetch value and same shape
--- + SET a_string := CASE WHEN c1.x IS NOT c2.x THEN 'x'
+-- + SET a_string := CASE
+-- + WHEN c1.x IS NOT c2.x THEN 'x'
 -- + WHEN c1.y IS NOT c2.y THEN 'y'
 -- + END;
 -- + {create_proc_stmt}: ok dml_proc
@@ -13782,7 +13783,8 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_col from another func
--- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN 'x'
+-- + CALL printf(CASE
+-- + WHEN c1.x IS NOT c2.x THEN 'x'
 -- + WHEN c1.y IS NOT c2.y THEN 'y'
 -- + END);
 -- + {create_proc_stmt}: ok dml_proc
@@ -13798,14 +13800,19 @@ begin
 end;
 
 -- TEST: call cql_cursor_diff_val from another func
--- + CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
+-- + CALL printf(CASE
+-- + WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE
+-- + WHEN c1.x IS NULL THEN 'null'
 -- + ELSE printf('%d', c1.x)
--- + END, CASE WHEN c2.x IS NULL THEN 'null'
+-- + END, CASE
+-- + WHEN c2.x IS NULL THEN 'null'
 -- + ELSE printf('%d', c2.x)
 -- + END)
--- + WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN nullable(c1.y) IS NULL THEN 'null'
+-- + WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE
+-- + WHEN nullable(c1.y) IS NULL THEN 'null'
 -- + ELSE printf('%s', c1.y)
--- + END, CASE WHEN nullable(c2.y) IS NULL THEN 'null'
+-- + END, CASE
+-- + WHEN nullable(c2.y) IS NULL THEN 'null'
 -- + ELSE printf('%s', c2.y)
 -- + END)
 -- + END);
@@ -14333,7 +14340,8 @@ begin
 end;
 
 -- TEST: test rewrite for IIF func
--- + SELECT CASE WHEN an_int IS NULL THEN 3
+-- + SELECT CASE
+-- + WHEN an_int IS NULL THEN 3
 -- + ELSE 2
 -- + END;
 -- + {select_stmt}: select: { _anon: integer notnull }
@@ -14377,7 +14385,9 @@ select iif('x', 2, 3);
 select iif(an_int is null, 2, x'23');
 
 -- TEST: test rewrite for IIF func out of sql context
--- + SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 4 THEN 5
+-- + SET an_int := CASE
+-- + WHEN an_int IS NULL THEN CASE
+-- + WHEN 4 THEN 5
 -- + ELSE 6
 -- + END
 -- + ELSE 2
@@ -16132,7 +16142,8 @@ begin
 end;
 
 -- TEST: ensure that ifnull parses properly after else, it's not "else if"
--- + SELECT CASE WHEN 1 THEN 2
+-- + SELECT CASE
+-- + WHEN 1 THEN 2
 -- + ELSE ifnull(x, y)
 -- + END;
 -- + {call}: integer

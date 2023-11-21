@@ -4686,7 +4686,8 @@ CREATE PROC blob_no_else ()
 BEGIN
   DECLARE b BLOB;
   DECLARE b1 BLOB;
-  SET b := CASE b WHEN b THEN b1
+  SET b := CASE b
+    WHEN b THEN b1
   END;
 END;
 */
@@ -20447,9 +20448,10 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET i2 := CASE WHEN 1 THEN 100
-  WHEN 2 THEN 200
-  ELSE 300
+  SET i2 := CASE
+    WHEN 1 THEN 100
+    WHEN 2 THEN 200
+    ELSE 300
   END;
   */
   do {
@@ -20886,8 +20888,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET i2 := CASE obj_var WHEN obj_var THEN 1
-  ELSE 2
+  SET i2 := CASE obj_var
+    WHEN obj_var THEN 1
+    ELSE 2
   END;
   */
   do {
@@ -20904,8 +20907,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET obj_var := CASE 1 WHEN 1 THEN obj_var2
-  ELSE NULL
+  SET obj_var := CASE 1
+    WHEN 1 THEN obj_var2
+    ELSE NULL
   END;
   */
   do {
@@ -21211,8 +21215,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET i2 := CASE blob_var WHEN blob_var THEN 1
-  ELSE 2
+  SET i2 := CASE blob_var
+    WHEN blob_var THEN 1
+    ELSE 2
   END;
   */
   do {
@@ -21229,8 +21234,9 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET blob_var := CASE 1 WHEN 1 THEN blob_var2
-  ELSE NULL
+  SET blob_var := CASE 1
+    WHEN 1 THEN blob_var2
+    ELSE NULL
   END;
   */
   do {
@@ -21319,7 +21325,8 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET obj_var := CASE WHEN 1 THEN obj_var
+  SET obj_var := CASE
+    WHEN 1 THEN obj_var
   END;
   */
   do {

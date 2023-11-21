@@ -2608,7 +2608,8 @@ test/sem_test.sql:XXXX:1: error: in eq : CQL0009: incompatible types in expressi
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 'x' LIKE 42 THEN 'foo'
+SELECT CASE
+  WHEN 'x' LIKE 42 THEN 'foo'
 END;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0043: right operand must be a string in 'LIKE'
@@ -2637,8 +2638,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0043: right operand must be a strin
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 1 = 2 THEN 'foo'
-WHEN 3 = 4 THEN 'bar'
+SELECT CASE
+  WHEN 1 = 2 THEN 'foo'
+  WHEN 3 = 4 THEN 'bar'
 END;
 
   {select_stmt}: select: { _anon: text }
@@ -2671,8 +2673,9 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 1 = 2 THEN 'foo'
-WHEN 3 = 4 THEN 2
+SELECT CASE
+  WHEN 1 = 2 THEN 'foo'
+  WHEN 3 = 4 THEN 2
 END;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'then'
@@ -2707,7 +2710,8 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 'x' THEN 'foo'
+SELECT CASE
+  WHEN 'x' THEN 'foo'
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'when'
@@ -2734,9 +2738,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-SELECT CASE "x" WHEN NULL THEN 'foo'
-WHEN "x" THEN 'foo'
-WHEN "y" THEN 'bar'
+SELECT CASE "x"
+  WHEN NULL THEN 'foo'
+  WHEN "x" THEN 'foo'
+  WHEN "y" THEN 'bar'
 END;
 
 test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
@@ -2772,9 +2777,10 @@ test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must no
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN NULL THEN 'foo'
-WHEN "x" THEN 'foo'
-WHEN "y" THEN 'bar'
+SELECT CASE
+  WHEN NULL THEN 'foo'
+  WHEN "x" THEN 'foo'
+  WHEN "y" THEN 'bar'
 END;
 
 test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must not be a constant NULL but can be of a nullable type
@@ -2809,8 +2815,9 @@ test/sem_test.sql:XXXX:1: error: in case_list : CQL0501: WHEN expression must no
 
 The statement ending at line XXXX
 
-SELECT CASE 'x' WHEN 'y' THEN 1
-WHEN 'z' THEN 2
+SELECT CASE 'x'
+  WHEN 'y' THEN 1
+  WHEN 'z' THEN 2
 END;
 
   {select_stmt}: select: { _anon: integer }
@@ -2840,8 +2847,9 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE 2 WHEN 1.0 THEN 1
-WHEN 3 THEN 2
+SELECT CASE 2
+  WHEN 1.0 THEN 1
+  WHEN 3 THEN 2
 END;
 
   {select_stmt}: select: { _anon: integer }
@@ -2871,7 +2879,8 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE 3 WHEN 'x' THEN 1
+SELECT CASE 3
+  WHEN 'x' THEN 1
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'when'
@@ -2899,8 +2908,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-SELECT CASE 4 WHEN 1 THEN 1
-ELSE 2.0
+SELECT CASE 4
+  WHEN 1 THEN 1
+  ELSE 2.0
 END;
 
   {select_stmt}: select: { _anon: real notnull }
@@ -2927,8 +2937,9 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE 5 WHEN 0 THEN NULL
-WHEN 1 THEN 1
+SELECT CASE 5
+  WHEN 0 THEN NULL
+  WHEN 1 THEN 1
 END;
 
   {select_stmt}: select: { _anon: integer }
@@ -2958,8 +2969,9 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE 6 WHEN 0 THEN 1.0
-ELSE 2.0
+SELECT CASE 6
+  WHEN 0 THEN 1.0
+  ELSE 2.0
 END;
 
   {select_stmt}: select: { _anon: real notnull }
@@ -2986,8 +2998,9 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE 7 WHEN 0 THEN 1 = 2
-ELSE NULL
+SELECT CASE 7
+  WHEN 0 THEN 1 = 2
+  ELSE NULL
 END;
 
   {select_stmt}: select: { _anon: bool }
@@ -3016,8 +3029,9 @@ END;
 
 The statement ending at line XXXX
 
-SELECT CASE 8 WHEN 0 THEN 1
-ELSE 'bar'
+SELECT CASE 8
+  WHEN 0 THEN 1
+  ELSE 'bar'
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'else'
@@ -3046,7 +3060,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-SELECT CASE NOT 'x' WHEN 1 THEN 0
+SELECT CASE NOT 'x'
+  WHEN 1 THEN 0
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -16464,7 +16479,8 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
 
 The statement ending at line XXXX
 
-SELECT CONST(CASE x WHEN 1 THEN 2
+SELECT CONST(CASE x
+  WHEN 1 THEN 2
 END);
 
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
@@ -16493,7 +16509,8 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
 
 The statement ending at line XXXX
 
-SELECT CONST(CASE 1 WHEN x THEN 2
+SELECT CONST(CASE 1
+  WHEN x THEN 2
 END);
 
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
@@ -16522,7 +16539,8 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
 
 The statement ending at line XXXX
 
-SELECT CONST(CASE 1 WHEN 1 THEN x
+SELECT CONST(CASE 1
+  WHEN 1 THEN x
 END);
 
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
@@ -16551,7 +16569,8 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
 
 The statement ending at line XXXX
 
-SELECT CONST(CASE WHEN x THEN 2
+SELECT CONST(CASE
+  WHEN x THEN 2
 END);
 
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
@@ -23601,8 +23620,9 @@ test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: incompatible types in exp
 
 The statement ending at line XXXX
 
-SET X := CASE obj_var WHEN obj_var THEN 2
-ELSE 3
+SET X := CASE obj_var
+  WHEN obj_var THEN 2
+  ELSE 3
 END;
 
   {assign}: X: integer variable was_set
@@ -23618,8 +23638,9 @@ END;
 
 The statement ending at line XXXX
 
-SET obj_var := CASE 1 WHEN 1 THEN obj_var
-ELSE NULL
+SET obj_var := CASE 1
+  WHEN 1 THEN obj_var
+  ELSE NULL
 END;
 
   {assign}: obj_var: object variable was_set
@@ -23959,8 +23980,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET bar_obj := CASE 1 WHEN 1 THEN bar_obj
-WHEN 2 THEN foo_obj
+SET bar_obj := CASE 1
+  WHEN 1 THEN bar_obj
+  WHEN 2 THEN foo_obj
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
@@ -23981,8 +24003,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET bar_obj := CASE 1 WHEN 1 THEN bar_object
-WHEN 2 THEN foo_obj
+SET bar_obj := CASE 1
+  WHEN 1 THEN bar_object
+  WHEN 2 THEN foo_obj
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bar_object'
@@ -24003,8 +24026,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bar_object'
 
 The statement ending at line XXXX
 
-SET bar_obj := CASE 1 WHEN 1 THEN bar_obj
-ELSE foo_obj
+SET bar_obj := CASE 1
+  WHEN 1 THEN bar_obj
+  ELSE foo_obj
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'Bar' vs. 'Foo'
@@ -24022,8 +24046,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET bar_obj := CASE 1 WHEN 1 THEN bar_obj
-ELSE foo_object
+SET bar_obj := CASE 1
+  WHEN 1 THEN bar_obj
+  ELSE foo_object
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'foo_object'
@@ -24041,9 +24066,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'foo_object'
 
 The statement ending at line XXXX
 
-SET bar_obj := CASE 1 WHEN 1 THEN bar_obj
-WHEN 2 THEN bar_obj
-ELSE bar_obj
+SET bar_obj := CASE 1
+  WHEN 1 THEN bar_obj
+  WHEN 2 THEN bar_obj
+  ELSE bar_obj
 END;
 
   {assign}: bar_obj: object<Bar> variable was_set
@@ -26518,8 +26544,9 @@ test/sem_test.sql:XXXX:1: error: in in_pred : CQL0009: incompatible types in exp
 
 The statement ending at line XXXX
 
-SET X := CASE blob_var WHEN blob_var THEN 2
-ELSE 3
+SET X := CASE blob_var
+  WHEN blob_var THEN 2
+  ELSE 3
 END;
 
   {assign}: X: integer variable was_set
@@ -26535,8 +26562,9 @@ END;
 
 The statement ending at line XXXX
 
-SET blob_var := CASE 1 WHEN 1 THEN blob_var
-ELSE NULL
+SET blob_var := CASE 1
+  WHEN 1 THEN blob_var
+  ELSE NULL
 END;
 
   {assign}: blob_var: blob variable was_set
@@ -28155,8 +28183,9 @@ The statement ending at line XXXX
 CREATE PROC blob_out ()
 BEGIN
   DECLARE C CURSOR FOR
-    SELECT CASE WHEN 1 THEN CAST('x' AS BLOB)
-    ELSE NULL
+    SELECT CASE
+      WHEN 1 THEN CAST('x' AS BLOB)
+      ELSE NULL
     END AS B;
   FETCH C;
   OUT C;
@@ -33899,8 +33928,9 @@ SET _sens := ( SELECT 1 IN (SELECT info
 
 The statement ending at line XXXX
 
-SET _sens := nullable(CASE 0 WHEN 1 THEN 2
-ELSE 3
+SET _sens := nullable(CASE 0
+  WHEN 1 THEN 2
+  ELSE 3
 END);
 
   {assign}: _sens: integer variable sensitive was_set
@@ -33921,8 +33951,9 @@ END);
 
 The statement ending at line XXXX
 
-SET _sens := nullable(CASE _sens WHEN 1 THEN 2
-ELSE 3
+SET _sens := nullable(CASE _sens
+  WHEN 1 THEN 2
+  ELSE 3
 END);
 
   {assign}: _sens: integer variable sensitive was_set
@@ -33943,8 +33974,9 @@ END);
 
 The statement ending at line XXXX
 
-SET _sens := nullable(CASE 0 WHEN _sens THEN 2
-ELSE 3
+SET _sens := nullable(CASE 0
+  WHEN _sens THEN 2
+  ELSE 3
 END);
 
   {assign}: _sens: integer variable sensitive was_set
@@ -33965,8 +33997,9 @@ END);
 
 The statement ending at line XXXX
 
-SET _sens := nullable(CASE 0 WHEN 1 THEN _sens
-ELSE 3
+SET _sens := nullable(CASE 0
+  WHEN 1 THEN _sens
+  ELSE 3
 END);
 
   {assign}: _sens: integer variable sensitive was_set
@@ -33987,8 +34020,9 @@ END);
 
 The statement ending at line XXXX
 
-SET _sens := nullable(CASE 0 WHEN 1 THEN 2
-ELSE _sens
+SET _sens := nullable(CASE 0
+  WHEN 1 THEN 2
+  ELSE _sens
 END);
 
   {assign}: _sens: integer variable sensitive was_set
@@ -51383,8 +51417,9 @@ BEGIN
     SELECT 1 AS x, 'y' AS y;
   FETCH c1;
   FETCH c2;
-  SET a_string := CASE WHEN c1.x IS NOT c2.x THEN 'x'
-  WHEN c1.y IS NOT c2.y THEN 'y'
+  SET a_string := CASE
+    WHEN c1.x IS NOT c2.x THEN 'x'
+    WHEN c1.y IS NOT c2.y THEN 'y'
   END;
 END;
 
@@ -51477,8 +51512,9 @@ BEGIN
     SELECT 1 AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
-  CALL printf(CASE WHEN c1.x IS NOT c2.x THEN 'x'
-  WHEN c1.y IS NOT c2.y THEN 'y'
+  CALL printf(CASE
+    WHEN c1.x IS NOT c2.x THEN 'x'
+    WHEN c1.y IS NOT c2.y THEN 'y'
   END);
 END;
 
@@ -51572,16 +51608,21 @@ BEGIN
     SELECT nullable(1) AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
-  CALL printf(CASE WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE WHEN c1.x IS NULL THEN 'null'
-  ELSE printf('%d', c1.x)
-  END, CASE WHEN c2.x IS NULL THEN 'null'
-  ELSE printf('%d', c2.x)
-  END)
-  WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE WHEN nullable(c1.y) IS NULL THEN 'null'
-  ELSE printf('%s', c1.y)
-  END, CASE WHEN nullable(c2.y) IS NULL THEN 'null'
-  ELSE printf('%s', c2.y)
-  END)
+  CALL printf(CASE
+    WHEN c1.x IS NOT c2.x THEN printf('column:%s c1:%s c2:%s', 'x', CASE
+      WHEN c1.x IS NULL THEN 'null'
+      ELSE printf('%d', c1.x)
+    END, CASE
+      WHEN c2.x IS NULL THEN 'null'
+      ELSE printf('%d', c2.x)
+    END)
+    WHEN c1.y IS NOT c2.y THEN printf('column:%s c1:%s c2:%s', 'y', CASE
+      WHEN nullable(c1.y) IS NULL THEN 'null'
+      ELSE printf('%s', c1.y)
+    END, CASE
+      WHEN nullable(c2.y) IS NULL THEN 'null'
+      ELSE printf('%s', c2.y)
+    END)
   END);
 END;
 
@@ -53671,8 +53712,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 't
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN an_int IS NULL THEN 3
-ELSE 2
+SELECT CASE
+  WHEN an_int IS NULL THEN 3
+  ELSE 2
 END;
 
   {select_stmt}: select: { _anon: integer notnull }
@@ -53734,8 +53776,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN not_found THEN 2
-ELSE 3
+SELECT CASE
+  WHEN not_found THEN 2
+  ELSE 3
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
@@ -53763,8 +53806,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 1 THEN not_found
-ELSE 3
+SELECT CASE
+  WHEN 1 THEN not_found
+  ELSE 3
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
@@ -53792,8 +53836,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 1 THEN 2
-ELSE not_found
+SELECT CASE
+  WHEN 1 THEN 2
+  ELSE not_found
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
@@ -53821,8 +53866,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_found'
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 'x' THEN 2
-ELSE 3
+SELECT CASE
+  WHEN 'x' THEN 2
+  ELSE 3
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in expression 'iif'
@@ -53850,8 +53896,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN an_int IS NULL THEN 2
-ELSE x'23'
+SELECT CASE
+  WHEN an_int IS NULL THEN 2
+  ELSE x'23'
 END;
 
 test/sem_test.sql:XXXX:1: error: in blb : CQL0012: incompatible types in expression 'iif'
@@ -53881,10 +53928,12 @@ test/sem_test.sql:XXXX:1: error: in blb : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-SET an_int := CASE WHEN an_int IS NULL THEN CASE WHEN 4 THEN 5
-ELSE 6
-END
-ELSE 2
+SET an_int := CASE
+  WHEN an_int IS NULL THEN CASE
+    WHEN 4 THEN 5
+    ELSE 6
+  END
+  ELSE 2
 END;
 
   {assign}: an_int: integer variable was_set
@@ -57735,8 +57784,9 @@ DECLARE v1, v2, v3 INTEGER<v>;
 
 The statement ending at line XXXX
 
-SET x1 := CASE WHEN 1 THEN x1
-ELSE x1
+SET x1 := CASE
+  WHEN 1 THEN x1
+  ELSE x1
 END;
 
   {assign}: x1: integer<x_coord> variable was_set
@@ -57751,8 +57801,9 @@ END;
 
 The statement ending at line XXXX
 
-SET x1 := CASE WHEN 1 THEN x1
-ELSE y1
+SET x1 := CASE
+  WHEN 1 THEN x1
+  ELSE y1
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
@@ -57769,8 +57820,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET v1 := CASE x1 WHEN x2 THEN v1
-ELSE v2
+SET v1 := CASE x1
+  WHEN x2 THEN v1
+  ELSE v2
 END;
 
   {assign}: v1: integer<v> variable was_set
@@ -57786,9 +57838,10 @@ END;
 
 The statement ending at line XXXX
 
-SET v1 := CASE x1 WHEN x2 THEN v1
-WHEN y1 THEN v2
-ELSE v3
+SET v1 := CASE x1
+  WHEN x2 THEN v1
+  WHEN y1 THEN v2
+  ELSE v3
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
@@ -59251,8 +59304,9 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0364: vault_sensitive annota
 
 The statement ending at line XXXX
 
-SELECT CASE WHEN 1 THEN 2
-ELSE ifnull(x, y)
+SELECT CASE
+  WHEN 1 THEN 2
+  ELSE ifnull(x, y)
 END;
 
   {select_stmt}: select: { _anon: integer }
@@ -63291,12 +63345,14 @@ CREATE PROC improvements_work_in_case_expressions ()
 BEGIN
   DECLARE a INTEGER;
   DECLARE b INTEGER;
-  LET x0 := CASE WHEN a IS NOT NULL THEN a + a
-  ELSE 42
+  LET x0 := CASE
+    WHEN a IS NOT NULL THEN a + a
+    ELSE 42
   END;
-  LET y0 := CASE WHEN b IS NULL THEN 42
-  WHEN 0 THEN b + b
-  ELSE b + b
+  LET y0 := CASE
+    WHEN b IS NULL THEN 42
+    WHEN 0 THEN b + b
+    ELSE b + b
   END;
   LET x1 := a;
   LET y1 := b;
@@ -63388,8 +63444,9 @@ The statement ending at line XXXX
 CREATE PROC improvements_do_not_work_in_case_expressions_with_matching ()
 BEGIN
   DECLARE a INTEGER;
-  LET x := CASE FALSE WHEN a IS NOT NULL THEN a + a
-  ELSE 42
+  LET x := CASE FALSE
+    WHEN a IS NOT NULL THEN a + a
+    ELSE 42
   END;
 END;
 
@@ -63422,11 +63479,13 @@ CREATE PROC improvements_work_in_iif_expressions ()
 BEGIN
   DECLARE a INTEGER;
   DECLARE b INTEGER;
-  LET x0 := CASE WHEN a IS NOT NULL THEN a + a
-  ELSE 42
+  LET x0 := CASE
+    WHEN a IS NOT NULL THEN a + a
+    ELSE 42
   END;
-  LET y0 := CASE WHEN b IS NULL THEN 42
-  ELSE b + b
+  LET y0 := CASE
+    WHEN b IS NULL THEN 42
+    ELSE b + b
   END;
   LET x1 := a;
   LET y1 := b;
@@ -64626,8 +64685,9 @@ CREATE PROC improvements_work_for_globals ()
 BEGIN
   IF some_global IS NOT NULL THEN
     LET x0 := some_global;
-    LET x1 := CASE WHEN 0 THEN some_global
-    ELSE some_global
+    LET x1 := CASE
+      WHEN 0 THEN some_global
+      ELSE some_global
     END;
     CALL some_external_thing();
     LET x2 := some_global;
@@ -64650,8 +64710,9 @@ BEGIN
       RETURN;
     END IF;
     LET x9 := some_global;
-    LET x10 := CASE WHEN 0 THEN returns_int_not_null()
-    ELSE some_global
+    LET x10 := CASE
+      WHEN 0 THEN returns_int_not_null()
+      ELSE some_global
     END;
     DECLARE c CURSOR FETCH FROM CALL out_cursor_proc();
     LET x11 := some_global;

@@ -2042,6 +2042,8 @@ foo::bar().baz;
 
 column := 1;
 
+LET z := 1 IN ();
+
 @ECHO c, @TEXT("foo", "bar");
 
 DECLARE @ID("foo") @ID("int");

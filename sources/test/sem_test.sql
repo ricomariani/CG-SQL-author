@@ -24056,6 +24056,14 @@ begin
   select T1.* from (select * from qnamed_table) T1;
 end;
 
+-- TEST: the IN expression can have an empty match list
+-- + LET in_pred_empty := 1 IN ();
+-- + {let_stmt}: in_pred_empty: bool notnull variable
+-- + {in_pred}: bool notnull
+-- - {expr_list}
+-- - error;
+let in_pred_empty := 1 in ();
+
 -- TEST: verifies identifier creation based resolution
 -- + DECLARE foobar2 REAL;
 -- + {declare_vars_type}: real

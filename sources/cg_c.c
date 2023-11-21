@@ -1924,7 +1924,7 @@ static void cg_expr_in_pred_or_not_in(
   ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_in_pred(ast) || is_ast_not_in(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left)
-  EXTRACT_NOTNULL(expr_list, ast->right);
+  EXTRACT(expr_list, ast->right);
 
   // [expr] [NOT] IN ( [expr_list] )
 

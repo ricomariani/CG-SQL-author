@@ -89873,6 +89873,15 @@ END;
 
 The statement ending at line XXXX
 
+LET in_pred_empty := 1 IN ();
+
+  {let_stmt}: in_pred_empty: bool notnull variable
+  | {name in_pred_empty}: in_pred_empty: bool notnull variable
+  | {in_pred}: bool notnull
+    | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
 DECLARE foobar2 REAL;
 
   {declare_vars_type}: real

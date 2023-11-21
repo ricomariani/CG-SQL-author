@@ -314,7 +314,7 @@ static void cql_reset_globals(void);
 %type <aval> schema_unsub_stmt
 
 /* expressions and types */
-%type <aval> expr basic_expr math_expr expr_list typed_name typed_names case_list shape_arguments
+%type <aval> expr basic_expr math_expr opt_expr_list expr_list typed_name typed_names case_list shape_arguments
 %type <aval> name name_list sql_name_list opt_sql_name_list opt_name_list opt_sql_name
 %type <aval> data_type_any data_type_numeric data_type_with_options opt_kind
 
@@ -1264,9 +1264,9 @@ math_expr[result]:
   | math_expr[lhs] NE_ math_expr[rhs]  { $result = new_ast_ne($lhs, $rhs); }
   | math_expr[lhs] GE math_expr[rhs]  { $result = new_ast_ge($lhs, $rhs); }
   | math_expr[lhs] LE math_expr[rhs]  { $result = new_ast_le($lhs, $rhs); }
-  | math_expr[lhs] NOT_IN '(' expr_list ')'  { $result = new_ast_not_in($lhs, $expr_list); }
+  | math_expr[lhs] NOT_IN '(' opt_expr_list ')'  { $result = new_ast_not_in($lhs, $opt_expr_list); }
   | math_expr[lhs] NOT_IN '(' select_stmt ')'  { $result = new_ast_not_in($lhs, $select_stmt); }
-  | math_expr[lhs] IN '(' expr_list ')'  { $result = new_ast_in_pred($lhs, $expr_list); }
+  | math_expr[lhs] IN '(' opt_expr_list ')'  { $result = new_ast_in_pred($lhs, $opt_expr_list); }
   | math_expr[lhs] IN '(' select_stmt ')'  { $result = new_ast_in_pred($lhs, $select_stmt); }
   | math_expr[lhs] LIKE math_expr[rhs]  { $result = new_ast_like($lhs, $rhs); }
   | math_expr[lhs] NOT_LIKE math_expr[rhs] { $result = new_ast_not_like($lhs, $rhs); }
@@ -1317,6 +1317,11 @@ arg_exprs[result]:
 arg_list[result]:
   /* nil */  { $result = NULL; }
   | arg_exprs { $result = $arg_exprs; }
+  ;
+
+opt_expr_list:
+  /* nil */ { $opt_expr_list = NULL; }
+  | expr_list { $opt_expr_list = $expr_list; }
   ;
 
 expr_list[result]:

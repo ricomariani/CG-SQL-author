@@ -1295,7 +1295,10 @@ static void gen_expr_in_pred(ast_node *ast, CSTR op, int32_t pri, int32_t pri_ne
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" IN (");
-  if (is_ast_expr_list(ast->right)) {
+  if (ast->right == NULL) {
+    /* nothing */
+  }
+  else if (is_ast_expr_list(ast->right)) {
     EXTRACT_NOTNULL(expr_list, ast->right);
     gen_expr_list(expr_list);
   }
@@ -1313,7 +1316,10 @@ static void gen_expr_not_in(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf(" NOT IN (");
-  if (is_ast_expr_list(ast->right)) {
+  if (ast->right == NULL) {
+    /* nothing */
+  }
+  else if (is_ast_expr_list(ast->right)) {
     EXTRACT_NOTNULL(expr_list, ast->right);
     gen_expr_list(expr_list);
   }

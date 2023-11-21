@@ -1769,6 +1769,8 @@ foo::bar().baz;
 
 column := 1;
 
+let z := 1 in ();
+
 @echo c, @text("foo", "bar");
 
 declare @id("foo") @id("int");

@@ -7359,7 +7359,10 @@ static void sem_expr_in_pred_or_not_in(ast_node *ast, CSTR cstr) {
   CSTR kind_needed = needle->sem->kind;
   sem_t combined_flags = not_nullable_flag(sem_type_needed) | sensitive_flag(sem_type_needed);
 
-  if (is_ast_expr_list(ast->right)) {
+  if (ast->right == NULL) {
+    // empty in list, nothing to validate
+  }
+  else if (is_ast_expr_list(ast->right)) {
     EXTRACT_NOTNULL(expr_list, ast->right);
 
     // make sure the items are all of some comparable type

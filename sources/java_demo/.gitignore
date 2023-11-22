@@ -14,7 +14,4 @@
 
 # Lines that start with '#' are comments.
 
-/out
-*.gcda
-*.gcno
-.pbcopy.swp
+out

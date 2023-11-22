@@ -7,6 +7,12 @@
 # exit when any command fails
 set -e
 
+S=$(cd $(dirname "$0"); pwd)
+O=$S/out
+R=$S/..
+
+mkdir -p $O
+
 if [ "${JAVA_HOME}" == "" ] ;
 then
   echo "JAVA_HOME must be set to your JDK dir"
@@ -29,11 +35,11 @@ fi
 if [ "$(uname)" == "Linux" ];
 then
   # linux path variation and -fPIC for .so output
-  CC="${CC} -I.. -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -fPIC"
+  CC="${CC} -I $O -I $R -I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux -fPIC"
   SUFFIX=so
 else
   # assuming clang elsewhere (e.g. Mac)
-  CC="${CC} -I.. -I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin"
+  CC="${CC} -I $O -I $R -I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin"
   SUFFIX=jnilib
 fi
 
@@ -42,32 +48,34 @@ then
   echo building sqlite amalgam
   CC="${CC} -I${SQLITE_PATH}"
   SQLITE_LINK=sqlite3-all.o
-  ${CC} -c -o sqlite3-all.o ${SQLITE_PATH}/sqlite3-all.c
+  ${CC} -c -o $O/sqlite3-all.o ${SQLITE_PATH}/sqlite3-all.c
 else
   SQLITE_LINK=-lsqlite3
 fi
 
 echo "building cql"
-(cd .. ; make)
+(cd $O/../.. ; make)
+CQL=$R/out/cql
 
 echo "making directories"
 
-mkdir -p com/acme/cgsql
-mkdir -p sample
+mkdir -p $O/sample
 
 echo generating stored procs
-cc -E -x c Sample.sql >Sample.pre
-../out/cql --in Sample.pre --cg Sample.h Sample.c
-../out/cql --in Sample.pre --rt json_schema --cg sample/Sample.json
-./cqljava.py sample/Sample.json --package sample --class Sample >sample/Sample.java
+cc -E -x c Sample.sql >$O/Sample.pre
+pushd $O >/dev/null
+${CQL} --in Sample.pre --cg Sample.h Sample.c
+${CQL} --in Sample.pre --rt json_schema --cg Sample.json
+../cqljava.py Sample.json --package sample --class Sample >sample/Sample.java
+popd >/dev/null
 
 echo "regenerating JNI .h file"
-javac -h . com/acme/cgsql/CQLResultSet.java
-javac -h . TestResult.java
+javac -h $O -d $O com/acme/cgsql/CQLResultSet.java
+javac -h $O -d $O TestResult.java
 
 echo "adding license headers to generated files"
 
-cat <<EOF >__tmp1
+cat <<EOF >$O/__tmp1
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -77,29 +85,31 @@ cat <<EOF >__tmp1
 
 EOF
 
-cat __tmp1 com_acme_cgsql_CQLResultSet.h >__tmp2
-mv __tmp2 com_acme_cgsql_CQLResultSet.h
+cat $O/__tmp1 $O/com_acme_cgsql_CQLResultSet.h >$O/__tmp2
+mv $O/__tmp2 $O/com_acme_cgsql_CQLResultSet.h
 
-cat __tmp1 TestResult.h >__tmp2
-mv __tmp2 TestResult.h
+cat $O/__tmp1 $O/TestResult.h >$O/__tmp2
+mv $O/__tmp2 $O/TestResult.h
 
-rm __tmp1
+rm $O/__tmp1
 
 echo "compiling native code"
-${CC} -c com_acme_cgsql_CQLResultSet.c
-${CC} -c TestResult.c
+pushd $O >/dev/null
+${CC} -c ../com_acme_cgsql_CQLResultSet.c
+${CC} -c ../TestResult.c
 ${CC} -c Sample.c
 
-${CC} -o libTestResult.${SUFFIX} -shared TestResult.o Sample.o ../cqlrt.c ${SQLITE_LINK}
-${CC} -o libCQLResultSet.${SUFFIX} -shared com_acme_cgsql_CQLResultSet.o ../cqlrt.c ${SQLITE_LINK}
+${CC} -o libTestResult.${SUFFIX} -shared TestResult.o Sample.o $R/cqlrt.c ${SQLITE_LINK}
+${CC} -o libCQLResultSet.${SUFFIX} -shared com_acme_cgsql_CQLResultSet.o $R/cqlrt.c ${SQLITE_LINK}
+
+popd >/dev/null
 
 echo making .class files
+javac -d $O CGSQLMain.java TestResult.java com/acme/cgsql/CQLResultSet.java com/acme/cgsql/CQLViewModel.java com/acme/cgsql/EncodedString.java $O/sample/Sample.java
 
-javac CGSQLMain.java TestResult.java com/acme/cgsql/CQLResultSet.java com/acme/cgsql/CQLViewModel.java com/acme/cgsql/EncodedString.java sample/Sample.java
 
 echo "executing"
-LIBPATH=.
-java -Djava.library.path=${LIBPATH}  CGSQLMain TestResult sample/Sample CQLViewModel com/acme/cgsql/CQLResultSet
+(cd $O ; java -Djava.library.path=. CGSQLMain TestResult sample/Sample CQLViewModel com/acme/cgsql/CQLResultSet)
 
 echo "run clean.sh to remove build artifacts"
 echo "done"

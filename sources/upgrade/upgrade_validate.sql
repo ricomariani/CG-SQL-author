@@ -10,6 +10,11 @@
 
 declare proc test_cql_get_facet_version(facet text not null, out version long not null) using transaction;
 declare proc printf no check;
+declare proc printf_stderr no check;
+
+@echo c, '
+#define printf_stderr(...) fprintf(stderr, __VA_ARGS__)
+';
 
 -- declare sqlite_master --
 create table sqlite_master (
@@ -32,12 +37,12 @@ begin
   switch version_
   when 0,2,4 then
     if present is null then
-      call printf("ERROR! %s should have been present in v%d\n", name_, version_);
+      printf_stderr("ERROR! %s should have been present in v%d\n", name_, version_);
       throw;
     end if;
   else
     if present is not null then
-      call printf("ERROR! %s should have been unsubscribed in v%d\n", name_, version_);
+      printf_stderr("ERROR! %s should have been unsubscribed in v%d\n", name_, version_);
       throw;
     end if;
   end;
@@ -51,28 +56,31 @@ create proc validate_transition()
 begin
   let version := cast(test_cql_get_facet_version("cql_schema_version") as integer);
 
-  call printf("reference results for version %d\n\n", version);
+  printf("reference results for version %d\n\n", version);
 
   declare C cursor for select * from sqlite_master order by name;
   loop fetch C
   begin
-    call printf("----- [%s] -----\n\n", C.name);
-    call printf("type: %s\n", C.type);
-    call printf("tbl_name: [%s]\n", C.tbl_name);
+    printf("----- [%s] -----\n\n", C.name);
+    printf("type: %s\n", C.type);
+    printf("tbl_name: [%s]\n", C.tbl_name);
 
     -- Canonicalize and put in the split markers so we get some useful line breaks consistently
     -- Different SQLite versions will either preserve whitespace or not so this is an effort to
     -- normalize.  It's not perfect but it doesn't need to be, it only needs to work for
     -- schema the test will ever see.
 
-    let s := (select replace(C.sql, "\n", " "));
-    set s := (select replace(s, " ,", ","));
-    set s := (select replace(s, " )", ")"));
-    set s := (select replace(s, "( ", "("));
-    set s := (select replace(s, "  ", " "));
-    set s := (select replace(s, ",", ",$"));
-    set s := (select replace(s, "(", "($"));
-
+    let s := (
+       select C.sql
+         :replace("\n", " ")
+         :replace(" ,", ",")
+         :replace(" )", ")")
+         :replace("( ", "(")
+         :replace("  ", " ")
+         :replace(",", ",$")
+         :replace( "(", "($")
+    );
+ 
     -- split the string at the $ marks
     declare lines cursor for
       with split(line, str) as (
@@ -90,10 +98,10 @@ begin
       let i := 0;
       while i < indent
       begin
-        call printf("  ");
+        printf("  ");
         set i := i + 1;
       end;
-      call printf("%s\n", lines.line);
+      printf("%s\n", lines.line);
 
       -- trailing ( starts indent
       -- trailing ) ends indent
@@ -111,12 +119,12 @@ begin
       end if;
     end;
 
-    call printf("\n");
+    printf("\n");
   end;
 
   call verify_object_present_in_even_versions(version, 'test_for_unsub');
-  call verify_object_present_in_even_versions(version, 'test_for_unsub_index');
-  call verify_object_present_in_even_versions(version, 'test_for_unsub_trigger');
+  call verify_object_present_in_even_versions(version, 'test for unsub index');
+  call verify_object_present_in_even_versions(version, 'test for unsub trigger');
   call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub');
   call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub_index');
   call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub_trigger');
@@ -131,25 +139,25 @@ begin
   switch version
   when 0 then
     if recreate_sql is null or recreate_sql not like '%xyzzy INTEGER%' then
-      call printf("ERROR! test_this_table_will_become_create should have a column named xyzzy in v%d\n", version);
+      printf_stderr("ERROR! test_this_table_will_become_create should have a column named xyzzy in v%d\n", version);
       throw;
     end if;
   when 1,2 then
     if recreate_sql is null or recreate_sql like '%xyzzy%' then
-      call printf("ERROR! test_this_table_will_become_create should not have a column named xyzzy in v%d\n", version);
+      printf_stderr("ERROR! test_this_table_will_become_create should not have a column named xyzzy in v%d\n", version);
       throw;
     end if;
     if recreate_sql not like '%id INTEGER PRIMARY KEY%' then
-      call printf("ERROR! test_this_table_will_become_create should have a column named id in v%d\n", version);
+      printf_stderr("ERROR! test_this_table_will_become_create should have a column named id in v%d\n", version);
       throw;
     end if;
   when 3,4 then
     if recreate_sql is not null then
-      call printf("ERROR! test_this_table_will_become_create be deleted in v%d\n", version);
+      printf_stderr("ERROR! test_this_table_will_become_create be deleted in v%d\n", version);
       throw;
     end if;
   else
-    call printf("ERROR! unexpected schema version v%d\n", version);
+    printf_stderr("ERROR! unexpected schema version v%d\n", version);
     throw;
   end;
 end;

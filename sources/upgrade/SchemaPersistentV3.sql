@@ -75,10 +75,10 @@ CREATE TABLE test_for_unsub(
 );
 
 -- making an index for the table, this will appear and disappear
-CREATE INDEX test_for_unsub_index ON test_for_unsub(x);
+CREATE INDEX `test for unsub index` ON test_for_unsub(x);
 
 -- making a trigger for the table, this will appear and disappear
-CREATE TRIGGER test_for_unsub_trigger
+CREATE TRIGGER `test for unsub trigger`
   BEFORE DELETE ON test_for_unsub
   WHEN old.unsub_id = 3
 BEGIN

@@ -2801,7 +2801,6 @@ cql_noexport void gen_select_core(ast_node *ast) {
       // SELECT [select_expr_list_con]
       // We're making sure that we're in the SELECT clause of the select stmt
       Contract(select_core_left == NULL || is_ast_select_opts(select_core_left));
-      // rico gen_printf(" ");
       pending_indent = 1; // this gives us a single space before the select list if needed
       EXTRACT_NOTNULL(select_expr_list_con, ast->right);
       gen_select_expr_list_con(select_expr_list_con);

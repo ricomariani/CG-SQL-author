@@ -29,13 +29,16 @@ begin
     -- normalize.  It's not perfect but it doesn't need to be, it only needs to work for
     -- schema the test will ever see.
 
-    let s := (select replace(C.sql, "\n", " "));
-    set s := (select replace(s, " ,", ","));
-    set s := (select replace(s, " )", ")"));
-    set s := (select replace(s, "( ", "("));
-    set s := (select replace(s, "  ", " "));
-    set s := (select replace(s, ",", ",$"));
-    set s := (select replace(s, "(", "($"));
+    let s := (
+      select C.sql
+        :replace("\n", " ")
+        :replace(" ,", ",")
+        :replace(" )", ")")
+        :replace("( ", "(")
+        :replace("  ", " ")
+        :replace(",", ",$")
+        :replace("(", "($")
+    );
 
     -- split the string at the $ marks
     declare lines cursor for

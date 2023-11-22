@@ -118,6 +118,19 @@ tbl_name: [staying_view]
 CREATE VIEW staying_view AS SELECT id,
 name  FROM g1
 
+----- [test for unsub index] -----
+
+type: index
+tbl_name: [test_for_unsub]
+CREATE INDEX [test for unsub index] ON test_for_unsub (
+  x)
+
+----- [test for unsub trigger] -----
+
+type: trigger
+tbl_name: [test_for_unsub]
+CREATE TRIGGER [test for unsub trigger]  BEFORE DELETE ON test_for_unsub  WHEN old.unsub_id = 3 BEGIN DELETE FROM test_for_unsub WHERE unsub_id = 3; END
+
 ----- [test_cql_schema_facets] -----
 
 type: table
@@ -142,19 +155,6 @@ tbl_name: [test_for_unsub]
 CREATE TABLE test_for_unsub(
   unsub_id INTEGER,
   x TEXT)
-
------ [test_for_unsub_index] -----
-
-type: index
-tbl_name: [test_for_unsub]
-CREATE INDEX test_for_unsub_index ON test_for_unsub (
-  x)
-
------ [test_for_unsub_trigger] -----
-
-type: trigger
-tbl_name: [test_for_unsub]
-CREATE TRIGGER test_for_unsub_trigger  BEFORE DELETE ON test_for_unsub  WHEN old.unsub_id = 3 BEGIN DELETE FROM test_for_unsub WHERE unsub_id = 3; END
 
 ----- [test_recreate_table_B] -----
 

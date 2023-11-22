@@ -35,7 +35,6 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
 static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *creates);
 static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *creates);
 static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, recreate_annotation *recreates, size_t count);
-static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast);
 
 // We declare all schema we might depend on in this upgrade (this is the include list)
 // e.g. we need all our dependent tables so that we can legally use them in an FK
@@ -60,6 +59,30 @@ static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast);
 // we'll use this flag to remember if the table is presently in the unsubscribed
 // state as we move through the upgrade process.
 #define SCHEMA_FLAG_UNSUB SEM_TYPE_NOTNULL
+
+static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  if (is_qid(ast)) {
+    cg_decode_qstr(output, name);
+  }
+  else {
+    bprintf(output, "%s", name);
+  }
+}
+
+static void cg_schema_name_quoted(charbuf *output, ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  CHARBUF_OPEN(tmp);
+  if (is_qid(ast)) {
+    cg_unquote_encoded_qstr(&tmp, name);
+  }
+  else {
+    bprintf(&tmp, "%s", name);
+  }
+  cg_encode_c_string_literal(tmp.ptr, output);
+  CHARBUF_CLOSE(tmp);
+}
+
 
 // If the mode is SCHEMA_TO_DECLARE then we include all the regions we are upgrading
 // and all their dependencies.
@@ -1104,11 +1127,12 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     EXTRACT_STRING(table_name, table_name_ast);
 
     if (names.used > 1) {
-      bprintf(&names, ",\n      '%s'", index_name);
+      bprintf(&names, ",\n      ");
     }
     else {
-      bprintf(&names, "\n      '%s'", index_name);
+      bprintf(&names, "\n      ");
     }
+    cg_schema_name_quoted(&names, index_name_ast);
 
     // We need the table ast for various checks so get it eagerly
     ast_node *table_ast = find_table_or_view_even_deleted(table_name);
@@ -1675,16 +1699,6 @@ static llint_t cg_schema_compute_crc(
     CHARBUF_CLOSE(all_schema_no_virtual_tables);
   }
   return schema_crc;
-}
-
-static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast) {
-  EXTRACT_STRING(name, ast);
-  if (is_qid(ast)) {
-    cg_decode_qstr(output, name);
-  }
-  else {
-    bprintf(output, "%s", name);
-  }
 }
 
 // Main entry point for schema upgrade code-gen.

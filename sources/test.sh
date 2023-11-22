@@ -50,7 +50,13 @@ do
     NON_INTERACTIVE=1
     shift 1
   else
-     echo "Usage: test.sh [--coverage] [--use_amalgam] [--non_interactive]"
+     echo "Usage: test.sh"
+     echo "  --use_asan"
+     echo "  --use_gcc"
+     echo "  --use_clang"
+     echo "  --coverage"
+     echo "  --use_amalgam"
+     echo "  --non_interactive"
      exit 1
   fi
 done

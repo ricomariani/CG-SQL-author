@@ -52,7 +52,7 @@ echo "building cql"
 
 echo "making directories"
 
-mkdir -p com/facebook/cgsql
+mkdir -p com/acme/cgsql
 mkdir -p sample
 
 echo generating stored procs
@@ -62,7 +62,7 @@ cc -E -x c Sample.sql >Sample.pre
 ./cqljava.py sample/Sample.json --package sample --class Sample >sample/Sample.java
 
 echo "regenerating JNI .h file"
-javac -h . com/facebook/cgsql/CQLResultSet.java
+javac -h . com/acme/cgsql/CQLResultSet.java
 javac -h . TestResult.java
 
 echo "adding license headers to generated files"
@@ -77,8 +77,8 @@ cat <<EOF >__tmp1
 
 EOF
 
-cat __tmp1 com_facebook_cgsql_CQLResultSet.h >__tmp2
-mv __tmp2 com_facebook_cgsql_CQLResultSet.h
+cat __tmp1 com_acme_cgsql_CQLResultSet.h >__tmp2
+mv __tmp2 com_acme_cgsql_CQLResultSet.h
 
 cat __tmp1 TestResult.h >__tmp2
 mv __tmp2 TestResult.h
@@ -86,20 +86,20 @@ mv __tmp2 TestResult.h
 rm __tmp1
 
 echo "compiling native code"
-${CC} -c com_facebook_cgsql_CQLResultSet.c
+${CC} -c com_acme_cgsql_CQLResultSet.c
 ${CC} -c TestResult.c
 ${CC} -c Sample.c
 
 ${CC} -o libTestResult.${SUFFIX} -shared TestResult.o Sample.o ../cqlrt.c ${SQLITE_LINK}
-${CC} -o libCQLResultSet.${SUFFIX} -shared com_facebook_cgsql_CQLResultSet.o ../cqlrt.c ${SQLITE_LINK}
+${CC} -o libCQLResultSet.${SUFFIX} -shared com_acme_cgsql_CQLResultSet.o ../cqlrt.c ${SQLITE_LINK}
 
 echo making .class files
 
-javac CGSQLMain.java TestResult.java com/facebook/cgsql/CQLResultSet.java com/facebook/cgsql/CQLViewModel.java com/facebook/cgsql/EncodedString.java sample/Sample.java
+javac CGSQLMain.java TestResult.java com/acme/cgsql/CQLResultSet.java com/acme/cgsql/CQLViewModel.java com/acme/cgsql/EncodedString.java sample/Sample.java
 
 echo "executing"
 LIBPATH=.
-java -Djava.library.path=${LIBPATH} CGSQLMain TestResult com/facebook/cgsql/CQLResultSet CQLViewModel sample/Sample
+java -Djava.library.path=${LIBPATH}  CGSQLMain TestResult sample/Sample CQLViewModel com/acme/cgsql/CQLResultSet
 
 echo "run clean.sh to remove build artifacts"
 echo "done"

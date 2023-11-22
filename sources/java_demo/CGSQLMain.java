@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import com.facebook.cgsql.CQLResultSet;
+import com.acme.cgsql.CQLResultSet;
 import java.nio.charset.StandardCharsets;
 import sample.*;
 

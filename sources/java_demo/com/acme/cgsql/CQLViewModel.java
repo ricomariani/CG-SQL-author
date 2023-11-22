@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.facebook.cgsql;
+package com.acme.cgsql;
 
 /**
  * Super class extended by all CQL based view models.

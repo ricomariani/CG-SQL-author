@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.facebook.cgsql;
+package com.acme.cgsql;
 
 /**
  * EncodedString is a simple class that encapsulates the encoded string from a ResultSet to restrict

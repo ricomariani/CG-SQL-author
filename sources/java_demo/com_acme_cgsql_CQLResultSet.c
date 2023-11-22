@@ -7,26 +7,26 @@
 
 // !!! THIS FILE IS NOT AUTO GENERATED, only the .h file is !!!
 
-#include "com_facebook_cgsql_CQLResultSet.h"
+#include "com_acme_cgsql_CQLResultSet.h"
 #include "cqlrt.h"
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    close
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_facebook_cgsql_CQLResultSet_close
+JNIEXPORT void JNICALL Java_com_acme_cgsql_CQLResultSet_close
   (JNIEnv *env, jobject thiz, jlong rs) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
   cql_result_set_release(ref);
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getBoolean
  * Signature: (JII)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_getBoolean
+JNIEXPORT jboolean JNICALL Java_com_acme_cgsql_CQLResultSet_getBoolean
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -34,11 +34,11 @@ JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_getBoolean
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getInteger
  * Signature: (JII)I
  */
-JNIEXPORT jint JNICALL Java_com_facebook_cgsql_CQLResultSet_getInteger
+JNIEXPORT jint JNICALL Java_com_acme_cgsql_CQLResultSet_getInteger
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -46,11 +46,11 @@ JNIEXPORT jint JNICALL Java_com_facebook_cgsql_CQLResultSet_getInteger
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getLong
  * Signature: (JII)J
  */
-JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_getLong
+JNIEXPORT jlong JNICALL Java_com_acme_cgsql_CQLResultSet_getLong
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -58,11 +58,11 @@ JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_getLong
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getString
  * Signature: (JII)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_com_facebook_cgsql_CQLResultSet_getString
+JNIEXPORT jstring JNICALL Java_com_acme_cgsql_CQLResultSet_getString
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -74,11 +74,11 @@ JNIEXPORT jstring JNICALL Java_com_facebook_cgsql_CQLResultSet_getString
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getDouble
  * Signature: (JII)D
  */
-JNIEXPORT jdouble JNICALL Java_com_facebook_cgsql_CQLResultSet_getDouble
+JNIEXPORT jdouble JNICALL Java_com_acme_cgsql_CQLResultSet_getDouble
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -86,11 +86,11 @@ JNIEXPORT jdouble JNICALL Java_com_facebook_cgsql_CQLResultSet_getDouble
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getBlob
  * Signature: (JII)[B
  */
-JNIEXPORT jbyteArray JNICALL Java_com_facebook_cgsql_CQLResultSet_getBlob
+JNIEXPORT jbyteArray JNICALL Java_com_acme_cgsql_CQLResultSet_getBlob
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -104,11 +104,11 @@ JNIEXPORT jbyteArray JNICALL Java_com_facebook_cgsql_CQLResultSet_getBlob
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    copyChildResultSet
- * Signature: (JII)Lcom/facebook/cgsql/CQLResultSet;
+ * Signature: (JII)Lcom/acme/cgsql/CQLResultSet;
  */
-JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copyChildResultSet
+JNIEXPORT jlong JNICALL Java_com_acme_cgsql_CQLResultSet_copyChildResultSet
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
 
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
@@ -120,11 +120,11 @@ JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copyChildResultSet
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    isNull
  * Signature: (JII)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_isNull
+JNIEXPORT jboolean JNICALL Java_com_acme_cgsql_CQLResultSet_isNull
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -132,11 +132,11 @@ JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_isNull
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getCount
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_com_facebook_cgsql_CQLResultSet_getCount
+JNIEXPORT jint JNICALL Java_com_acme_cgsql_CQLResultSet_getCount
   (JNIEnv *env, jobject thiz, jlong rs) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -144,11 +144,11 @@ JNIEXPORT jint JNICALL Java_com_facebook_cgsql_CQLResultSet_getCount
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    rowHashCode
  * Signature: (JI)J
  */
-JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_rowHashCode
+JNIEXPORT jlong JNICALL Java_com_acme_cgsql_CQLResultSet_rowHashCode
   (JNIEnv *env, jobject thiz, jlong rs, jint row) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
@@ -156,11 +156,11 @@ JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_rowHashCode
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    rowsEqual
  * Signature: (JIJI)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_rowsEqual
+JNIEXPORT jboolean JNICALL Java_com_acme_cgsql_CQLResultSet_rowsEqual
   (JNIEnv *env, jobject thiz, jlong rs1, jint row1, jlong rs2, jint row2) {
 
   cql_result_set_ref ref1 = (cql_result_set_ref)(rs1);
@@ -170,11 +170,11 @@ JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_rowsEqual
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    rowsSame
  * Signature: (JIJI)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_rowsSame
+JNIEXPORT jboolean JNICALL Java_com_acme_cgsql_CQLResultSet_rowsSame
   (JNIEnv *env, jobject thiz, jlong rs1, jint row1, jlong rs2, jint row2) {
 
   cql_result_set_ref ref1 = (cql_result_set_ref)(rs1);
@@ -184,11 +184,11 @@ JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_rowsSame
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    copy
  * Signature: (JII)J
  */
-JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copy
+JNIEXPORT jlong JNICALL Java_com_acme_cgsql_CQLResultSet_copy
   (JNIEnv *env, jobject thiz, jlong rs, jint row, jint count) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
   cql_result_set_ref refNew = NULL;
@@ -197,11 +197,11 @@ JNIEXPORT jlong JNICALL Java_com_facebook_cgsql_CQLResultSet_copy
 }
 
 /*
- * Class:     com_facebook_cgsql_CQLResultSet
+ * Class:     com_acme_cgsql_CQLResultSet
  * Method:    getIsEncoded
  * Signature: (JI)Z
  */
-JNIEXPORT jboolean JNICALL Java_com_facebook_cgsql_CQLResultSet_getIsEncoded
+JNIEXPORT jboolean JNICALL Java_com_acme_cgsql_CQLResultSet_getIsEncoded
   (JNIEnv *env, jobject thiz, jlong rs, jint col) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
   return cql_result_set_get_is_encoded_col(ref, col);

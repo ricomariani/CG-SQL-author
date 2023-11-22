@@ -224,9 +224,9 @@ def main():
 
         print(f"package {package_name};\n\n")
 
-        print("import com.facebook.cgsql.CQLResultSet;\n")
-        print("import com.facebook.cgsql.CQLViewModel;\n")
-        print("import com.facebook.cgsql.EncodedString;\n")
+        print("import com.acme.cgsql.CQLResultSet;\n")
+        print("import com.acme.cgsql.CQLViewModel;\n")
+        print("import com.acme.cgsql.EncodedString;\n")
 
         print(f"public class {class_name}")
         print("{")

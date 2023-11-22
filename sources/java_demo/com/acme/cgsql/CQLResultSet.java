@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-package com.facebook.cgsql;
+package com.acme.cgsql;
 
 /**
  * CQLResultSet is a simple utility class that holds a native cql_result_set_ref

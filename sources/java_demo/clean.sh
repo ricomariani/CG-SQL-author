@@ -9,11 +9,11 @@ rm -f CQLResultSet.java
 rm -f TestResult.h
 rm -f TestResult.class
 rm -f TestResult.o
-rm -f com/facebook/cgsql/CQLResultSet.class
-rm -f com/facebook/cgsql/CQLViewModel.class
-rm -f com/facebook/cgsql/EncodedString.class
-rm -f com_facebook_cgsql_CQLResultSet.h
-rm -f com_facebook_cgsql_CQLResultSet.o
+rm -f com/acme/cgsql/CQLResultSet.class
+rm -f com/acme/cgsql/CQLViewModel.class
+rm -f com/acme/cgsql/EncodedString.class
+rm -f com_acme_cgsql_CQLResultSet.h
+rm -f com_acme_cgsql_CQLResultSet.o
 rm -f Sample.c
 rm -f Sample.h
 rm -f Sample.o

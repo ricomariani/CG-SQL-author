@@ -274,10 +274,10 @@ CREATE VIEW IF NOT EXISTS qq AS
     FROM c;
 
 CREATE VIEW _self_thread_name AS
-  SELECT UI.facebook_user_id AS thread_key, C.name AS thread_name
+  SELECT UI.acme_user_id AS thread_key, C.name AS thread_name
     FROM _user_info AS UI,
       contacts AS C
-    WHERE UI.facebook_user_id = C.id;
+    WHERE UI.acme_user_id = C.id;
 
 DELETE FROM a;
 

@@ -4410,7 +4410,7 @@ test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expr
 The statement ending at line XXXX
 
 CREATE VIEW MyView AS
-SELECT 1 AS f1, 2 AS f2, 3 AS f3;
+  SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
   | {int 0}
@@ -4448,7 +4448,7 @@ SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 The statement ending at line XXXX
 
 CREATE VIEW AViewWithColSpec(x, y) AS
-SELECT 1, 2;
+  SELECT 1, 2;
 
   {create_view_stmt}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
   | {int 0}
@@ -4481,7 +4481,7 @@ SELECT 1, 2;
 The statement ending at line XXXX
 
 CREATE VIEW AViewWithColSpec2(x) AS
-SELECT 1, 2;
+  SELECT 1, 2;
 
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0101: too few column names specified in view 'AViewWithColSpec2'
 
@@ -4514,7 +4514,7 @@ test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0101: too few column n
 The statement ending at line XXXX
 
 CREATE VIEW AViewWithColSpec3(x, y, z) AS
-SELECT 1, 2;
+  SELECT 1, 2;
 
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0102: too many column names specified in view 'AViewWithColSpec3'
 
@@ -4551,7 +4551,7 @@ test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0102: too many column 
 The statement ending at line XXXX
 
 CREATE VIEW AViewWithColSpec3(x, x) AS
-SELECT 1, 2;
+  SELECT 1, 2;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'x'
 
@@ -4586,7 +4586,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'x'
 The statement ending at line XXXX
 
 CREATE VIEW AViewWithColSpec3(x) AS
-SELECT NULL;
+  SELECT NULL;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result '_anon'
 
@@ -4616,7 +4616,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0056: NULL expression has n
 The statement ending at line XXXX
 
 CREATE VIEW MyView AS
-SELECT 1 AS f1, 2 AS f2, 3 AS f3;
+  SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
   | {int 0}
@@ -4687,13 +4687,13 @@ SELECT f1, f2, ViewAlias.f3
 The statement ending at line XXXX
 
 CREATE VIEW MyView AS
-SELECT 1 AS y;
+  SELECT 1 AS y;
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW MyView AS
-SELECT 1 AS f1, 2 AS f2, 3 AS f3
+  SELECT 1 AS f1, 2 AS f2, 3 AS f3
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW MyView AS
-SELECT 1 AS y
+  SELECT 1 AS y
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'MyView'
 
@@ -4723,14 +4723,14 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'My
 The statement ending at line XXXX
 
 CREATE VIEW foo AS
-SELECT 2 AS x;
+  SELECT 2 AS x;
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
   id INTEGER PRIMARY KEY AUTOINCREMENT
 )
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW foo AS
-SELECT 2 AS x
+  SELECT 2 AS x
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'foo'
 
@@ -4760,7 +4760,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'fo
 The statement ending at line XXXX
 
 CREATE VIEW MyView AS
-SELECT NOT 'x';
+  SELECT NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -4789,7 +4789,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE VIEW V AS
-SELECT NOT 'x';
+  SELECT NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -23020,12 +23020,12 @@ SELECT Y AS A;
 The statement ending at line XXXX
 
 CREATE VIEW view_with_cte AS
-WITH
-  goo (x) AS (
-    SELECT 1
-  )
-SELECT *
-  FROM goo;
+  WITH
+    goo (x) AS (
+      SELECT 1
+    )
+  SELECT *
+    FROM goo;
 
   {create_view_stmt}: view_with_cte: { x: integer notnull }
   | {int 0}
@@ -24647,7 +24647,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 The statement ending at line XXXX
 
 CREATE TEMP VIEW temp_view AS
-SELECT 1 AS A, 2 AS B;
+  SELECT 1 AS A, 2 AS B;
 
   {create_view_stmt}: temp_view: { A: integer notnull, B: integer notnull }
   | {int 1}
@@ -25471,14 +25471,14 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0160: table in insert statement doe
 The statement ending at line XXXX
 
 CREATE VIEW versioned_table AS
-SELECT 1 AS x;
+  SELECT 1 AS x;
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE versioned_table(
   id INTEGER @CREATE(2)
 ) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc)
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW versioned_table AS
-SELECT 1 AS x
+  SELECT 1 AS x
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'versioned_table'
 
@@ -26135,8 +26135,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE VIEW view_with_version AS
-SELECT *
-  FROM bar @DELETE(2);
+  SELECT *
+    FROM bar @DELETE(2);
 
   {create_view_stmt}: view_with_version: { id: integer notnull, name: text, rate: longint } deleted @delete(2)
   | {int 0}
@@ -31604,7 +31604,7 @@ END;
 The statement ending at line XXXX
 
 CREATE VIEW ViewShape AS
-SELECT TRUE AS a, 2.5 AS b, 'xyz' AS c;
+  SELECT TRUE AS a, 2.5 AS b, 'xyz' AS c;
 
   {create_view_stmt}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
   | {int 0}
@@ -31743,7 +31743,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the se
 The statement ending at line XXXX
 
 CREATE VIEW MyBogusView AS
-SELECT 1, 2;
+  SELECT 1, 2;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the select must have a name
 
@@ -32140,7 +32140,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0142: duplicate column name 'f1'
 The statement ending at line XXXX
 
 CREATE TEMP VIEW bogus_temp_view_with_versioning AS
-SELECT 1 AS x @DELETE(1);
+  SELECT 1 AS x @DELETE(1);
 
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_view_with_versioning'
 
@@ -39113,9 +39113,9 @@ CREATE TABLE a_table_in_dep_region(
 The statement ending at line XXXX
 
 CREATE VIEW a_view_in_dep_region AS
-SELECT T1.id AS id1, T2.id AS id2
-  FROM a_table_in_root_region AS T1
-    INNER JOIN a_table_in_dep_region AS T2 USING (id);
+  SELECT T1.id AS id1, T2.id AS id2
+    FROM a_table_in_root_region AS T1
+      INNER JOIN a_table_in_dep_region AS T2 USING (id);
 
   {create_view_stmt}: a_view_in_dep_region: { id1: integer, id2: integer }
   | {int 0}
@@ -39330,8 +39330,8 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE VIEW ok_view_in_dep2_region AS
-SELECT *
-  FROM a_table_in_root_region;
+  SELECT *
+    FROM a_table_in_root_region;
 
   {create_view_stmt}: ok_view_in_dep2_region: { id: integer }
   | {int 0}
@@ -39359,9 +39359,9 @@ SELECT *
 The statement ending at line XXXX
 
 CREATE VIEW bogus_view_in_dep2_region AS
-SELECT T1.id AS id1, T2.id AS id2
-  FROM a_table_in_root_region AS T1
-    INNER JOIN a_table_in_dep_region AS T2 USING (id);
+  SELECT T1.id AS id1, T2.id AS id2
+    FROM a_table_in_root_region AS T1
+      INNER JOIN a_table_in_dep_region AS T2 USING (id);
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined (object is in schema region 'dep_region' not accessible from region 'dep2_region') 'a_table_in_dep_region'
 
@@ -39417,8 +39417,8 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
 The statement ending at line XXXX
 
 CREATE VIEW bogus_due_to_non_region_object AS
-SELECT *
-  FROM bar;
+  SELECT *
+    FROM bar;
 
 test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not defined (while in schema region 'dep2_region', accessing an object that isn't in a region is invalid) 'bar'
 
@@ -40972,7 +40972,7 @@ The statement ending at line XXXX
 CREATE PROC invalid_ddl_5 ()
 BEGIN
   CREATE VIEW inv_5 AS
-  SELECT 1 AS f1 @DELETE(2);
+    SELECT 1 AS f1 @DELETE(2);
 END;
 
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0396: versioning attributes may not be used on DDL inside a procedure 'inv_5'
@@ -47436,7 +47436,7 @@ CREATE TABLE IF NOT EXISTS foo(
 The statement ending at line XXXX
 
 CREATE VIEW IF NOT EXISTS MyView AS
-SELECT 1 AS f1, 2 AS f2, 3 AS f3;
+  SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
   | {int 2}
@@ -84260,8 +84260,8 @@ CREATE TABLE used_by_a_view(
 The statement ending at line XXXX
 
 CREATE VIEW uses_a_table AS
-SELECT *
-  FROM used_by_a_view;
+  SELECT *
+    FROM used_by_a_view;
 
   {create_view_stmt}: uses_a_table: { id: integer }
   | {int 0}
@@ -84307,8 +84307,8 @@ CREATE TABLE used_by_a_deleted_view(
 The statement ending at line XXXX
 
 CREATE VIEW uses_a_table_but_deleted AS
-SELECT *
-  FROM used_by_a_deleted_view @DELETE(2);
+  SELECT *
+    FROM used_by_a_deleted_view @DELETE(2);
 
   {create_view_stmt}: uses_a_table_but_deleted: { id: integer } deleted @delete(2)
   | {int 0}
@@ -84508,8 +84508,8 @@ CREATE TABLE unsub_with_views_test_table(
 The statement ending at line XXXX
 
 CREATE VIEW unsub_with_views_v1 AS
-SELECT *
-  FROM unsub_with_views_test_table;
+  SELECT *
+    FROM unsub_with_views_test_table;
 
   {create_view_stmt}: unsub_with_views_v1: { id: integer }
   | {int 0}
@@ -84537,8 +84537,8 @@ SELECT *
 The statement ending at line XXXX
 
 CREATE VIEW unsub_with_views_v2 AS
-SELECT *
-  FROM unsub_with_views_v1;
+  SELECT *
+    FROM unsub_with_views_v1;
 
   {create_view_stmt}: unsub_with_views_v2: { id: integer }
   | {int 0}
@@ -84566,8 +84566,8 @@ SELECT *
 The statement ending at line XXXX
 
 CREATE VIEW unsub_with_views_v3 AS
-SELECT *
-  FROM unsub_with_views_v1;
+  SELECT *
+    FROM unsub_with_views_v1;
 
   {create_view_stmt}: unsub_with_views_v3: { id: integer }
   | {int 0}
@@ -84595,8 +84595,8 @@ SELECT *
 The statement ending at line XXXX
 
 CREATE VIEW unsub_with_views_v4 AS
-SELECT *
-  FROM unsub_with_views_test_table;
+  SELECT *
+    FROM unsub_with_views_test_table;
 
   {create_view_stmt}: unsub_with_views_v4: { id: integer }
   | {int 0}
@@ -84624,8 +84624,8 @@ SELECT *
 The statement ending at line XXXX
 
 CREATE VIEW unsub_with_views_v5 AS
-SELECT *
-  FROM unsub_with_views_v4;
+  SELECT *
+    FROM unsub_with_views_v4;
 
   {create_view_stmt}: unsub_with_views_v5: { id: integer }
   | {int 0}
@@ -89309,7 +89309,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found '`a b`'
 The statement ending at line XXXX
 
 CREATE VIEW `view` AS
-SELECT 1 AS x;
+  SELECT 1 AS x;
 
   {create_view_stmt}: view: { x: integer notnull }
   | {int 0}

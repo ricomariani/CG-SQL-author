@@ -696,7 +696,7 @@ CREATE TABLE t_delete_verison_changed(
 The statement ending at line XXXX
 
 CREATE VIEW t_became_a_view AS
-SELECT 1 AS id;
+  SELECT 1 AS id;
 
   {create_view_stmt}: err
   | {int 0}
@@ -1349,7 +1349,7 @@ CREATE TABLE view_becomes_a_table(
 The statement ending at line XXXX
 
 CREATE VIEW view_was_temp_but_now_it_is_not AS
-SELECT 1 AS X;
+  SELECT 1 AS X;
 
   {create_view_stmt}: view_was_temp_but_now_it_is_not: { X: integer notnull }
   | {int 0}
@@ -1377,7 +1377,7 @@ SELECT 1 AS X;
 The statement ending at line XXXX
 
 CREATE VIEW view_created_with_no_annotation AS
-SELECT 1 AS X;
+  SELECT 1 AS X;
 
   {create_view_stmt}: view_created_with_no_annotation: { X: integer notnull }
   | {int 0}
@@ -1942,8 +1942,8 @@ test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0311: object's d
 The statement ending at line XXXX
 
 CREATE VIEW VChanging AS
-SELECT *
-  FROM TChanging;
+  SELECT *
+    FROM TChanging;
 
 test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'VChanging'
 
@@ -3601,7 +3601,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure change
 The statement ending at line XXXX
 
 CREATE VIEW view_becomes_a_table AS
-SELECT 1 AS X;
+  SELECT 1 AS X;
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0105: object was a view but is now a table 'view_becomes_a_table'
 
@@ -3631,7 +3631,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0105: object was
 The statement ending at line XXXX
 
 CREATE VIEW view_was_zomg_deleted AS
-SELECT 1 AS X;
+  SELECT 1 AS X;
 
 test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0104: view was present but now it does not exist (use @delete instead) 'view_was_zomg_deleted'
 
@@ -3661,7 +3661,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0104: view was pr
 The statement ending at line XXXX
 
 CREATE TEMP VIEW view_was_temp_but_now_it_is_not AS
-SELECT 1 AS X;
+  SELECT 1 AS X;
 
   {create_view_stmt}: ok
   | {int 1}
@@ -4234,8 +4234,8 @@ CREATE INDEX IChanging ON TChanging (id);
 The statement ending at line XXXX
 
 CREATE VIEW VChanging AS
-SELECT *
-  FROM TChanging;
+  SELECT *
+    FROM TChanging;
 
   {create_view_stmt}: err
   | {int 0}
@@ -4812,7 +4812,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version n
 The statement ending at line XXXX
 
 CREATE TEMP VIEW this_view_is_gone AS
-SELECT 1 AS x;
+  SELECT 1 AS x;
 
   {create_view_stmt}: ok
   | {int 1}

@@ -1163,7 +1163,7 @@ cql_cleanup:
 CREATE PROC make_view ()
 BEGIN
   CREATE VIEW MyView AS
-  SELECT 1 AS f1, 2 AS f2, 3 AS f3;
+    SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 END;
 */
 
@@ -1178,7 +1178,7 @@ CQL_WARN_UNUSED cql_code make_view(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "CREATE VIEW MyView AS "
-    "SELECT 1 AS f1, 2 AS f2, 3 AS f3");
+      "SELECT 1 AS f1, 2 AS f2, 3 AS f3");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -6559,8 +6559,8 @@ cql_cleanup:
 CREATE PROC view_creator ()
 BEGIN
   CREATE VIEW alias_preserved AS
-  SELECT CAST(5 AS INTEGER) AS plugh, T.xyzzy AS five
-    FROM (SELECT 1 AS xyzzy) AS T;
+    SELECT CAST(5 AS INTEGER) AS plugh, T.xyzzy AS five
+      FROM (SELECT 1 AS xyzzy) AS T;
 END;
 */
 
@@ -6575,8 +6575,8 @@ CQL_WARN_UNUSED cql_code view_creator(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "CREATE VIEW alias_preserved AS "
-    "SELECT (5) AS plugh, T.xyzzy AS five "
-      "FROM (SELECT 1 AS xyzzy) AS T");
+      "SELECT (5) AS plugh, T.xyzzy AS five "
+        "FROM (SELECT 1 AS xyzzy) AS T");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -19609,7 +19609,7 @@ void qid_t4b(void) {
 CREATE PROC qid_t5 ()
 BEGIN
   CREATE VIEW `view` AS
-  SELECT 1 AS x;
+    SELECT 1 AS x;
 END;
 */
 
@@ -19624,7 +19624,7 @@ CQL_WARN_UNUSED cql_code qid_t5(sqlite3 *_Nonnull _db_) {
 
   _rc_ = cql_exec(_db_,
     "CREATE VIEW [view] AS "
-    "SELECT 1 AS x");
+      "SELECT 1 AS x");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

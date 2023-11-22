@@ -63,6 +63,7 @@ static int32_t trace_received = 0;
     if (_VA_ARG_COUNT(__VA_ARGS__) != 0 && (_VA_ARG_FIRST(__VA_ARGS__)) != NULL) { \
       printf(__VA_ARGS__); \
     } \
+    printf("failed at %s:%d rc=%d\n", __FILE__, __LINE__, rc_); \
     return rc_; \
   } \
 }
@@ -1788,7 +1789,7 @@ void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
 // We will make sure the function succesfully drops and recreates with SQLITE_OK.
 cql_code test_cql_rebuild_recreate_group(sqlite3 *db) {
   cql_string_ref tables = cql_string_ref_new(" CREATE TABLE g1( id INTEGER PRIMARY KEY, name TEXT ); "
-                                            "CREATE TABLE use_g1( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT); "
+                                            "CREATE TABLE [use g1]( id INTEGER PRIMARY KEY REFERENCES g1 (id), name2 TEXT); "
                                             "CREATE TABLE foo(y text DEFAULT 'it''s, ('); "
                                             "CREATE TABLE g2( id INTEGER PRIMARY KEY ); "
                                             "CREATE TABLE use_g2( id INTEGER PRIMARY KEY REFERENCES g2 (id)); ");

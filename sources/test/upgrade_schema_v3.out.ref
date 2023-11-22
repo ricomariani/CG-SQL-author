@@ -4,8 +4,8 @@ reference results for version 3
 
 type: view
 tbl_name: [extra view]
-CREATE VIEW [extra view] AS SELECT id,
-name  FROM g1
+CREATE VIEW [extra view] AS  SELECT id,
+name   FROM g1
 
 ----- [extra_index] -----
 
@@ -65,8 +65,8 @@ CREATE TRIGGER staying_trigger  BEFORE DELETE ON g1 BEGIN SELECT 1; END
 
 type: view
 tbl_name: [staying_view]
-CREATE VIEW staying_view AS SELECT id,
-name  FROM g1
+CREATE VIEW staying_view AS  SELECT id,
+name   FROM g1
 
 ----- [test_cql_schema_facets] -----
 
@@ -98,14 +98,14 @@ CREATE TABLE test_recreate_table_B(
 
 type: view
 tbl_name: [test_view]
-CREATE VIEW test_view AS SELECT colA,
-colB  FROM test_create_table_C
+CREATE VIEW test_view AS  SELECT colA,
+colB   FROM test_create_table_C
 
------ [use_g1] -----
+----- [use g1] -----
 
 type: table
-tbl_name: [use_g1]
-CREATE TABLE use_g1(
+tbl_name: [use g1]
+CREATE TABLE [use g1](
   id INTEGER PRIMARY KEY REFERENCES g1 (
     id),
   name2 TEXT)

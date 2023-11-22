@@ -122,7 +122,7 @@ begin
     printf("\n");
   end;
 
-  call verify_object_present_in_even_versions(version, 'test_for_unsub');
+  call verify_object_present_in_even_versions(version, 'test for unsub');
   call verify_object_present_in_even_versions(version, 'test for unsub index');
   call verify_object_present_in_even_versions(version, 'test for unsub trigger');
   call verify_object_present_in_even_versions(version, 'recreate_test_for_unsub');

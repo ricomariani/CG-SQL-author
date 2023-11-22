@@ -262,22 +262,22 @@ SELECT CASE
 END AS h;
 
 CREATE VIEW a AS
-SELECT b
-  FROM c;
+  SELECT b
+    FROM c;
 
 CREATE VIEW a(x) AS
-SELECT b
-  FROM c;
+  SELECT b
+    FROM c;
 
 CREATE VIEW IF NOT EXISTS qq AS
-SELECT b
-  FROM c;
+  SELECT b
+    FROM c;
 
 CREATE VIEW _self_thread_name AS
-SELECT UI.facebook_user_id AS thread_key, C.name AS thread_name
-  FROM _user_info AS UI,
-    contacts AS C
-  WHERE UI.facebook_user_id = C.id;
+  SELECT UI.facebook_user_id AS thread_key, C.name AS thread_name
+    FROM _user_info AS UI,
+      contacts AS C
+    WHERE UI.facebook_user_id = C.id;
 
 DELETE FROM a;
 
@@ -293,32 +293,32 @@ SELECT T.mute_expire_time_ms - (julianday('now') - 2440587.5) * 86400000 > 0 OR 
 SELECT 12.3;
 
 CREATE VIEW zzz AS
-SELECT DISTINCT a, b AS c, d
-  FROM e AS E
-    LEFT OUTER JOIN f AS F ON F.g = e.g
-    LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
-  ORDER BY o.p DESC;
+  SELECT DISTINCT a, b AS c, d
+    FROM e AS E
+      LEFT OUTER JOIN f AS F ON F.g = e.g
+      LEFT OUTER JOIN x AS X ON y.z = q.w AND h.j = k.l
+    ORDER BY o.p DESC;
 
 CREATE VIEW thread_messages AS
-SELECT DISTINCT
-    M.message_id,
-    M.thread_key,
-    M.offline_threading_id,
-    M.sender_id,
-    M.send_status,
-    C.name,
-    C.profile_picture_url,
-    C.profile_picture_fallback_url,
-    C.profile_picture_url_expiration_timestamp_ms,
-    M.body,
-    M.sticker_id,
-    M.timestamp_ms,
-    A.has_xma OR A.has_media AS has_attachment,
-    M.is_admin_message
-  FROM messages AS M
-    LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
-    LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
-  ORDER BY M.timestamp_ms DESC;
+  SELECT DISTINCT
+      M.message_id,
+      M.thread_key,
+      M.offline_threading_id,
+      M.sender_id,
+      M.send_status,
+      C.name,
+      C.profile_picture_url,
+      C.profile_picture_fallback_url,
+      C.profile_picture_url_expiration_timestamp_ms,
+      M.body,
+      M.sticker_id,
+      M.timestamp_ms,
+      A.has_xma OR A.has_media AS has_attachment,
+      M.is_admin_message
+    FROM messages AS M
+      LEFT OUTER JOIN contacts AS C ON C.id = M.sender_id
+      LEFT OUTER JOIN attachments AS A ON A.message_id = M.message_id AND A.thread_key = M.thread_key
+    ORDER BY M.timestamp_ms DESC;
 
 SELECT *
   FROM threads
@@ -336,12 +336,12 @@ SELECT a
         FROM c) AS X;
 
 CREATE VIEW unread_not_muted_threads_count AS
-SELECT count(*) AS count
-  FROM (SELECT *
-        FROM threads
-        ORDER BY last_activity_timestamp_ms DESC
-        LIMIT 20) AS T
-  WHERE T.last_activity_timestamp_ms > T.last_read_watermark_timestamp_ms AND (T.mute_expire_time_ms >= 0 AND T.mute_expire_time_ms - strftime('%s', 'now') * 1000 <= 0) AND T.folder_name = 'inbox';
+  SELECT count(*) AS count
+    FROM (SELECT *
+          FROM threads
+          ORDER BY last_activity_timestamp_ms DESC
+          LIMIT 20) AS T
+    WHERE T.last_activity_timestamp_ms > T.last_read_watermark_timestamp_ms AND (T.mute_expire_time_ms >= 0 AND T.mute_expire_time_ms - strftime('%s', 'now') * 1000 <= 0) AND T.folder_name = 'inbox';
 
 CREATE TABLE pending_tasks(
   task_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -921,7 +921,7 @@ INSERT OR IGNORE INTO foo(a, b)
   VALUES(1, 2);
 
 CREATE TEMP VIEW foo AS
-SELECT 1 AS A;
+  SELECT 1 AS A;
 
 ALTER TABLE foo ADD COLUMN bar INTEGER NOT NULL;
 
@@ -963,8 +963,8 @@ SELECT text
 @SCHEMA_UPGRADE_SCRIPT;
 
 CREATE VIEW foo AS
-SELECT 1
-  FROM bar @DELETE(2);
+  SELECT 1
+    FROM bar @DELETE(2);
 
 SELECT 3147483647L;
 

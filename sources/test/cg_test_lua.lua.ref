@@ -364,7 +364,7 @@ end
 CREATE PROC make_view ()
 BEGIN
   CREATE VIEW MyView AS
-  SELECT 1 AS f1, 2 AS f2, 3 AS f3;
+    SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 END;
 --]]
 
@@ -3241,8 +3241,8 @@ end
 CREATE PROC view_creator ()
 BEGIN
   CREATE VIEW alias_preserved AS
-  SELECT CAST(5 AS INTEGER) AS plugh, T.xyzzy AS five
-    FROM (SELECT 1 AS xyzzy) AS T;
+    SELECT CAST(5 AS INTEGER) AS plugh, T.xyzzy AS five
+      FROM (SELECT 1 AS xyzzy) AS T;
 END;
 --]]
 

@@ -1268,49 +1268,54 @@ static void emit_recreate_group_drops(charbuf *drops_buf, CSTR gname, symtab* re
   CSTR *table_names_array = (CSTR *) (buf->ptr);
   // accumulate drops in reverse order because we want drop order and the symtab stored create order
   for (int32_t i = (int32_t)count-1; i >= 0; i--) {
-    bprintf(drops_buf, "  DROP TABLE IF EXISTS %s;\n", table_names_array[i]);
+    ast_node *table_ast = find_table_or_view_even_deleted(table_names_array[i]);
+    Contract(is_ast_create_table_stmt(table_ast));
+    ast_node *table_name_ast = sem_get_name_ast(table_ast);
+    bprintf(drops_buf, "  DROP TABLE IF EXISTS ");
+    cg_schema_name_as_cql_string(drops_buf, table_name_ast);
+    bprintf(drops_buf, ";\n");
   }
 }
 
 // Set to keep track of which functions we have emitted group_drops functions for
 static symtab *group_drop_funcs;
 
-static void emit_group_drop(CSTR target_name, charbuf *decls, symtab *recreate_group_drops) {
-  if (symtab_find(group_drop_funcs, target_name)) {
+static void emit_group_drop(CSTR group_name, charbuf *decls, symtab *recreate_group_drops) {
+  if (symtab_find(group_drop_funcs, group_name)) {
     return;
   }
 
-  symtab_add(group_drop_funcs, target_name, NULL);
+  symtab_add(group_drop_funcs, group_name, NULL);
 
   CHARBUF_OPEN(out);
 
   bprintf(&out, "\n@attribute(cql:private)");
-  bprintf(&out, "\nCREATE PROC %s_%s_group_drop()\n", global_proc_name, target_name);
+  bprintf(&out, "\nCREATE PROC %s_%s_group_drop()\n", global_proc_name, group_name);
   bprintf(&out, "BEGIN\n");
 
-  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, target_name);
+  bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, group_name);
   size_t ref_count = buf->used / sizeof(CSTR);
-  CSTR *sources = (CSTR *)buf->ptr;
+  CSTR *dependent_groups = (CSTR *)buf->ptr;
 
   if (ref_count) {
     bprintf(&out, "  -- drop all dependent tables\n");
   }
 
   for (uint32_t iref = 0; iref < ref_count; iref++) {
-    CSTR src_name = sources[iref];
+    CSTR src_group = dependent_groups[iref];
     // recurse to get the new delete function, output does not interleave
     // as we are writing into a temp buffer "out"
-    emit_group_drop(src_name, decls, recreate_group_drops);
+    emit_group_drop(src_group, decls, recreate_group_drops);
 
     // call it...
-    bprintf(&out, "  CALL %s_%s_group_drop();\n", global_proc_name, src_name);
+    bprintf(&out, "  CALL %s_%s_group_drop();\n", global_proc_name, src_group);
   }
 
   if (ref_count) {
     bprintf(&out, "\n");
   }
 
-  emit_recreate_group_drops(&out, target_name, recreate_group_drops);
+  emit_recreate_group_drops(&out, group_name, recreate_group_drops);
   bprintf(&out, "END;\n");
 
   bprintf(decls, "%s", out.ptr);

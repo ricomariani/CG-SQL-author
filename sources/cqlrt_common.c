@@ -4171,8 +4171,10 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
 {
   cql_object_ref list = create_cql_string_list();
   cql_alloc_cstr(c_str, str);
+
   if (strlen(c_str) == 0) goto cleanup;
-  char* lineStart = (char*)(c_str);
+  
+  const char *lineStart = c_str;
   // skip leading whitespace
   while (lineStart[0] == ' ') {
     lineStart++;
@@ -4187,7 +4189,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
   cql_int32 bytes;
 
   bool in_quote = false;
-  char *p;
+  const char *p;
   for (p = lineStart; *p; p++) {
     if (in_quote) {
       if (p[0] == '\'') {
@@ -4218,10 +4220,11 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
       }
     }
   }
+
   // The last statement is pending because we have been adding statements to the list after seeing
   // the entire statement i.e. beginning of the next statement. We must flush it here.
   bytes = (cql_int32)(p - lineStart);
-  char* temp = malloc(bytes + 1);
+  char *temp = malloc(bytes + 1);
   memcpy(temp, lineStart, bytes);
   temp[bytes] = '\0';
   currLine = cql_string_ref_new(temp);
@@ -4238,49 +4241,62 @@ cleanup:
 // characters uptil atleast the first "(" if it exists
 static char* _Nonnull _cql_create_table_name_from_table_creation_statement(cql_string_ref _Nonnull create)
 {
-  char* p;
+  char *p;
   // https://cgsql.dev/program-diagram#create_virtual_table_stmt
   // table name always preceeds "USING "
   cql_alloc_cstr(c_create, create);
-  if (!strncmp("CREATE VIRTUAL TABLE ", c_create, sizeof("CREATE VIRTUAL TABLE ") - 1)) p = strstr(c_create, "USING ");
-  // https://cgsql.dev/program-diagram#create_table_stmt
-  // table name always preceeds the first open paren
-  else p = strchr(c_create, '(');
-  cql_free_cstr(c_create, create);
+
+  // These cannot go into recreate groups so this case can't happen
+  cql_bool virtual_table = !strncmp("CREATE VIRTUAL TABLE ", c_create, sizeof("CREATE VIRTUAL TABLE ") - 1);
+  cql_contract(!virtual_table);
+  p = strchr(c_create, '(');
+
   // backspace spaces (if they exist) between table name preceeding pattern. We don't
   // want extra spaces in our table names.
   while (p[-1] == ' ') p--;
-  char* lineStart = p;
-  // find space preceeding table name
-  while (lineStart[-1] != ' ') {
+  const char *lineStart = p;
+
+  if (lineStart[-1] == ']') {
+    while (lineStart[-1] != '[') {
+      lineStart--;
+    }
     lineStart--;
   }
+  else {
+    // find space preceeding table name
+    while (lineStart[-1] != ' ') {
+      lineStart--;
+    }
+  }
+
   cql_int32 bytes = (cql_int32)(p - lineStart);
-  char* table_name = malloc(bytes + 1);
+  char *table_name = malloc(bytes + 1);
   memcpy(table_name, lineStart, bytes);
   table_name[bytes] = '\0';
+
+  cql_free_cstr(c_create, create);
   return table_name;
 }
 
 // This function is passed in an index creation statement generated from the CQL upgrader.
 // We need this helper to be able to map indices to tables.
-static char* _Nonnull _cql_create_table_name_from_index_creation_statement(cql_string_ref _Nonnull index_create)
+static char *_Nonnull _cql_create_table_name_from_index_creation_statement(cql_string_ref _Nonnull index_create)
 {
   // table name follows "ON " in the create_index_stmt pattern
   // table name is followed by an open paren
   // https://cgsql.dev/program-diagram#create_index_stmt
   cql_alloc_cstr(c_index_create, index_create);
-  char* lineStart = strstr(c_index_create, "ON ") + strlen("ON ");
-  cql_free_cstr(c_index_create, index_create);
-  char* q = strchr(lineStart, '('); // add space logic
+  const char *lineStart = strstr(c_index_create, "ON ") + strlen("ON ");
+  const char *q = strchr(lineStart, '('); // add space logic
   // backspace spaces between index name and (
   while (q[-1] == ' ') {
     q--;
   }
   cql_int32 index_bytes = (cql_int32)(q - lineStart);
-  char* index_table_name = malloc(index_bytes + 1);
+  char *index_table_name = malloc(index_bytes + 1);
   memcpy(index_table_name, lineStart, index_bytes);
   index_table_name[index_bytes] = '\0';
+  cql_free_cstr(c_index_create, index_create);
   return index_table_name;
 }
 

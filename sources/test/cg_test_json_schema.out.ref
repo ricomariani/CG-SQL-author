@@ -2762,12 +2762,12 @@
     The statement ending at line XXXX
 
     CREATE VIEW region_0_view AS
-    SELECT *
-      FROM Foo
+      SELECT *
+        FROM Foo
 
     {
       "name" : "region_0_view",
-      "CRC" : "-263622307595949124",
+      "CRC" : "-671179869019290295",
       "isTemp" : 0,
       "isDeleted" : 0,
       "region" : "region0",
@@ -2794,13 +2794,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW MyView AS
-    SELECT *
-      FROM Foo
+      SELECT *
+        FROM Foo
 
     ,
     {
       "name" : "MyView",
-      "CRC" : "5545408966671198580",
+      "CRC" : "1603543019513087516",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -2825,13 +2825,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW MyOtherView AS
-    SELECT *
-      FROM MyView
+      SELECT *
+        FROM MyView
 
     ,
     {
       "name" : "MyOtherView",
-      "CRC" : "-1954362021923391672",
+      "CRC" : "-4030706286080909447",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -2859,13 +2859,13 @@
     @ATTRIBUTE(my_attribute=('any', ('tree', 'of'), 'values'))
     @ATTRIBUTE(my_single_attribute='other_value')
     CREATE VIEW MyViewWithAttributes AS
-    SELECT *
-      FROM Foo
+      SELECT *
+        FROM Foo
 
     ,
     {
       "name" : "MyViewWithAttributes",
-      "CRC" : "-9082436836613299712",
+      "CRC" : "-2882156276960008654",
       "isTemp" : 0,
       "isDeleted" : 0,
       "attributes" : [
@@ -2900,13 +2900,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW ADeletedView AS
-    SELECT *
-      FROM Foo @DELETE(1)
+      SELECT *
+        FROM Foo @DELETE(1)
 
     ,
     {
       "name" : "ADeletedView",
-      "CRC" : "5607046996685579612",
+      "CRC" : "-4577997065803697620",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
@@ -2932,13 +2932,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW ADeletedViewWithMigrationProc AS
-    SELECT *
-      FROM Foo @DELETE(1, view_delete)
+      SELECT *
+        FROM Foo @DELETE(1, view_delete)
 
     ,
     {
       "name" : "ADeletedViewWithMigrationProc",
-      "CRC" : "4784911562823482846",
+      "CRC" : "-2367085062760299014",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 1,
@@ -2965,13 +2965,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW my_view AS
-    SELECT 1 AS foo, T1.*
-      FROM T1
+      SELECT 1 AS foo, T1.*
+        FROM T1
 
     ,
     {
       "name" : "my_view",
-      "CRC" : "7283511863245639543",
+      "CRC" : "7265233238016895804",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [
@@ -3000,12 +3000,12 @@
     The statement ending at line XXXX
 
     CREATE VIEW deleted_view AS
-    SELECT 1 AS x @DELETE(2)
+      SELECT 1 AS x @DELETE(2)
 
     ,
     {
       "name" : "deleted_view",
-      "CRC" : "-5750924639555741080",
+      "CRC" : "521780298378962157",
       "isTemp" : 0,
       "isDeleted" : 1,
       "deletedVersion" : 2,
@@ -3024,13 +3024,13 @@
     The statement ending at line XXXX
 
     CREATE VIEW `a view` AS
-    SELECT *
-      FROM `abc def`
+      SELECT *
+        FROM `abc def`
 
     ,
     {
       "name" : "a view",
-      "CRC" : "-4116429888159671067",
+      "CRC" : "-3967341778028795069",
       "isTemp" : 0,
       "isDeleted" : 0,
       "projection" : [

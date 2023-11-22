@@ -53,7 +53,7 @@ create table g1(
   name text
 ) @recreate(gr1);
 
-create table use_g1(
+create table `use g1`(
   `an id` integer primary key references g1(`an id`),
   name2 text
 ) @recreate(gr1);

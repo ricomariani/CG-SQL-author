@@ -115,21 +115,29 @@ CREATE TRIGGER staying_trigger  BEFORE DELETE ON g1 BEGIN SELECT 1; END
 
 type: view
 tbl_name: [staying_view]
-CREATE VIEW staying_view AS SELECT id,
-name  FROM g1
+CREATE VIEW staying_view AS  SELECT id,
+name   FROM g1
+
+----- [test for unsub] -----
+
+type: table
+tbl_name: [test for unsub]
+CREATE TABLE [test for unsub](
+  unsub_id INTEGER,
+  x TEXT)
 
 ----- [test for unsub index] -----
 
 type: index
-tbl_name: [test_for_unsub]
-CREATE INDEX [test for unsub index] ON test_for_unsub (
+tbl_name: [test for unsub]
+CREATE INDEX [test for unsub index] ON [test for unsub] (
   x)
 
 ----- [test for unsub trigger] -----
 
 type: trigger
-tbl_name: [test_for_unsub]
-CREATE TRIGGER [test for unsub trigger]  BEFORE DELETE ON test_for_unsub  WHEN old.unsub_id = 3 BEGIN DELETE FROM test_for_unsub WHERE unsub_id = 3; END
+tbl_name: [test for unsub]
+CREATE TRIGGER [test for unsub trigger]  BEFORE DELETE ON [test for unsub]  WHEN old.unsub_id = 3 BEGIN DELETE FROM [test for unsub] WHERE unsub_id = 3; END
 
 ----- [test_cql_schema_facets] -----
 
@@ -148,14 +156,6 @@ CREATE TABLE test_create_table_C(
   colB LONG_INT,
   colC LONG_INT)
 
------ [test_for_unsub] -----
-
-type: table
-tbl_name: [test_for_unsub]
-CREATE TABLE test_for_unsub(
-  unsub_id INTEGER,
-  x TEXT)
-
 ----- [test_recreate_table_B] -----
 
 type: table
@@ -169,14 +169,14 @@ CREATE TABLE test_recreate_table_B(
 
 type: view
 tbl_name: [test_view]
-CREATE VIEW test_view AS SELECT colA,
-colB  FROM test_create_table_C
+CREATE VIEW test_view AS  SELECT colA,
+colB   FROM test_create_table_C
 
------ [use_g1] -----
+----- [use g1] -----
 
 type: table
-tbl_name: [use_g1]
-CREATE TABLE use_g1(
+tbl_name: [use g1]
+CREATE TABLE [use g1](
   id INTEGER PRIMARY KEY REFERENCES g1 (
     id),
   name2 TEXT)

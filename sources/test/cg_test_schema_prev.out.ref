@@ -37,7 +37,7 @@ CREATE TABLE g1(
 @end_schema_region;
 
 @begin_schema_region shared;
-CREATE TABLE use_g1(
+CREATE TABLE `use g1`(
   `an id` INTEGER PRIMARY KEY REFERENCES g1 (`an id`),
   name2 TEXT
 ) @RECREATE(gr1);
@@ -229,38 +229,38 @@ CREATE TABLE some_table(
 
 @begin_schema_region shared;
 CREATE VIEW shared_view AS
-SELECT *
-  FROM `quoted foo`;
+  SELECT *
+    FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW live_view AS
-SELECT *
-  FROM `quoted foo`;
+  SELECT *
+    FROM `quoted foo`;
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE VIEW dead_view AS
-SELECT *
-  FROM `quoted foo` @DELETE(2, DeadViewMigration);
+  SELECT *
+    FROM `quoted foo` @DELETE(2, DeadViewMigration);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE VIEW another_live_view AS
-SELECT *
-  FROM table2;
+  SELECT *
+    FROM table2;
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE VIEW `foo view unsubscribed` AS
-SELECT *
-  FROM some_table;
+  SELECT *
+    FROM some_table;
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE VIEW `foo view normal` AS
-SELECT *
-  FROM some_table;
+  SELECT *
+    FROM some_table;
 @end_schema_region;
 
 @begin_schema_region shared;

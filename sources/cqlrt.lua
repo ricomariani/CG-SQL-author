@@ -882,13 +882,16 @@ function _cql_create_table_name_from_table_creation_statement(create)
   local virtual_table_prefix = "CREATE VIRTUAL TABLE "
   local i = 0
   local space = string.byte(" ")
+  local close_bracket = string.byte("]")
+  local open_bracket = string.byte("[")
   local start = 1
   while string.byte(create, start) == space do
     start = start + 1;
   end
 
   if start == string.find(create, virtual_table_prefix, start) then
-    i = string.find(create, "USING ")
+    print("invariant violated, virtual tables cannot go into recreate groups")
+    exit_on_error();
   else
     i = string.find(create, "[(]")  -- it's a pattern
   end
@@ -898,8 +901,19 @@ function _cql_create_table_name_from_table_creation_statement(create)
   end
 
   local lineStartIt = i
-  while string.byte(create, lineStartIt - 1) ~= space do
+
+
+  if string.byte(create, lineStartIt - 1) == close_bracket then
+    -- handle [foo bar] names
+    while string.byte(create, lineStartIt - 1) ~= open_bracket do
+      lineStartIt = lineStartIt - 1;
+    end
     lineStartIt = lineStartIt - 1;
+  else
+    -- handle normal names (go back to the space)
+    while string.byte(create, lineStartIt - 1) ~= space do
+      lineStartIt = lineStartIt - 1;
+    end
   end
 
   return string.sub(create, lineStartIt, i-1)

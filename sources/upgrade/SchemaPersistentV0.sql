@@ -25,7 +25,7 @@ CREATE TABLE g1(
   name TEXT
 ) @recreate(gr1);
 
-CREATE TABLE use_g1(
+CREATE TABLE `use g1`(
   id INTEGER PRIMARY KEY REFERENCES g1(id),
   name2 TEXT
 ) @recreate(gr1);
@@ -36,20 +36,20 @@ CREATE TABLE test_this_table_will_become_create(
 ) @recreate;
 
 -- we will be unsubscribing and resubscribing this table in later versions
-CREATE TABLE test_for_unsub(
+CREATE TABLE `test for unsub`(
   unsub_id integer,
   x text
 );
 
 -- making an index for the table, this will appear and disappear
-CREATE INDEX `test for unsub index` ON test_for_unsub(x);
+CREATE INDEX `test for unsub index` ON `test for unsub`(x);
 
 -- making a trigger for the table, this will appear and disappear
 CREATE TRIGGER `test for unsub trigger`
-  BEFORE DELETE ON test_for_unsub
+  BEFORE DELETE ON `test for unsub`
   WHEN old.unsub_id = 3
 BEGIN
-  DELETE FROM test_for_unsub WHERE unsub_id = 3;
+  DELETE FROM `test for unsub` WHERE unsub_id = 3;
 END;
 
 -- we will be unsubscribing and resubscribing this table in later versions

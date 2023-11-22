@@ -192,8 +192,8 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-  SELECT *
-    FROM `table C`;
+    SELECT *
+      FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc7_create_triggers()
@@ -325,8 +325,8 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-  SELECT *
-    FROM `table C`;
+    SELECT *
+      FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc13_create_triggers()
@@ -461,8 +461,8 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-  SELECT *
-    FROM `table C`;
+    SELECT *
+      FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc14_create_triggers()
@@ -577,8 +577,8 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-  SELECT *
-    FROM `table C`;
+    SELECT *
+      FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc15_create_triggers()
@@ -802,8 +802,8 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS `Foo View` AS
-  SELECT *
-    FROM `table C`;
+    SELECT *
+      FROM `table C`;
 END;
 
 CREATE PROC test_sample_proc17_create_triggers()
@@ -1172,10 +1172,10 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
-  SELECT *
-    FROM `table C`
-    WHERE name IN (SELECT id_
-    FROM primary_as_column);
+    SELECT *
+      FROM `table C`
+      WHERE name IN (SELECT id_
+      FROM primary_as_column);
 END;
 
 CREATE PROC test_sample_proc21_create_triggers()
@@ -1310,10 +1310,10 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
-  SELECT *
-    FROM `table C`
-    WHERE name IN (SELECT id_
-    FROM primary_as_column);
+    SELECT *
+      FROM `table C`
+      WHERE name IN (SELECT id_
+      FROM primary_as_column);
 END;
 
 CREATE PROC test_sample_proc22_create_triggers()
@@ -1447,10 +1447,10 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE VIEW IF NOT EXISTS Complex_view AS
-  SELECT *
-    FROM `table C`
-    WHERE name IN (SELECT id_
-    FROM primary_as_column);
+    SELECT *
+      FROM `table C`
+      WHERE name IN (SELECT id_
+      FROM primary_as_column);
 END;
 
 CREATE PROC test_sample_proc23_create_triggers()

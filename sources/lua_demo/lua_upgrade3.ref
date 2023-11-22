@@ -101,11 +101,11 @@ tbl_name: [test_view]
 CREATE VIEW test_view AS SELECT colA,
 colB FROM test_create_table_C
 
------ [use_g1] -----
+----- [use g1] -----
 
 type: table
-tbl_name: [use_g1]
-CREATE TABLE use_g1(
+tbl_name: [use g1]
+CREATE TABLE [use g1](
   id INTEGER PRIMARY KEY REFERENCES g1 (
     id),
   name2 TEXT)

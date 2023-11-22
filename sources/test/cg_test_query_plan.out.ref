@@ -86,13 +86,13 @@ BEGIN
   CREATE INDEX `table one index` ON `table one` (name, id);
   CREATE INDEX it4 ON t4 (data, id);
   CREATE VIEW my_view AS
-  SELECT *
-    FROM `table one`
-      INNER JOIN t2 USING (id);
+    SELECT *
+      FROM `table one`
+        INNER JOIN t2 USING (id);
   CREATE VIEW my_view_using_table_alias AS
-  SELECT foo.*, bar.id AS id2, bar.rowid AS rowid
-    FROM `table one` AS foo
-      INNER JOIN t2 AS bar USING (id);
+    SELECT foo.*, bar.id AS id2, bar.rowid AS rowid
+      FROM `table one` AS foo
+        INNER JOIN t2 AS bar USING (id);
   CREATE TRIGGER my_trigger
     AFTER INSERT ON `table one`
     WHEN is_declare_func_enabled() AND is_declare_func_wall(new.id) = 1

@@ -3110,8 +3110,10 @@ static void gen_create_view_stmt(ast_node *ast) {
     gen_printf(")");
   }
   gen_printf(" AS\n");
+  GEN_BEGIN_INDENT(sel, 2);
   gen_select_stmt(select_stmt);
   gen_version_attrs(attrs);
+  GEN_END_INDENT(sel);
 }
 
 static void gen_create_trigger_stmt(ast_node *ast) {

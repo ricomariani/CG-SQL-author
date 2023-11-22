@@ -20,9 +20,9 @@ begin
   declare C cursor for select * from sqlite_master order by name;
   loop fetch C
   begin
-    call printf("----- %s -----\n\n", C.name);
+    call printf("----- [%s] -----\n\n", C.name);
     call printf("type: %s\n", C.type);
-    call printf("tbl_name: %s\n", C.tbl_name);
+    call printf("tbl_name: [%s]\n", C.tbl_name);
 
     -- Canonicalize and put in the split markers so we get some useful line breaks consistently
     -- Different SQLite versions will either preserve whitespace or not so this is an effort to

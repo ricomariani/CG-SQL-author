@@ -35,6 +35,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
 static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *creates);
 static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *creates);
 static void cg_schema_manage_recreate_tables(charbuf *output, charbuf *decls, recreate_annotation *recreates, size_t count);
+static void cg_schema_name_as_cql_string(charbuf *output, ast_node *ast);
 
 // We declare all schema we might depend on in this upgrade (this is the include list)
 // e.g. we need all our dependent tables so that we can legally use them in an FK
@@ -307,7 +308,7 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "CREATE PROCEDURE %s_drop_table_helper(table_name TEXT NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS %%s', table_name));\n");
+  bprintf(decls, "  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%%s]', table_name));\n");
   bprintf(decls, "  -- remove the table from our dictionary marking it dropped\n");
   bprintf(decls, "  IF %s_tables_dict_ IS NULL THROW;\n", global_proc_name);
   bprintf(decls, "  LET added := cql_string_dictionary_add(%s_tables_dict_, table_name, '');\n", global_proc_name);
@@ -911,7 +912,9 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     // This covers deleted or unsubscribed
     bool_t table_deleted = is_deleted(table_ast);
 
-    bprintf(&drop, "  DROP TRIGGER IF EXISTS %s;\n", name);
+    bprintf(&drop, "  DROP TRIGGER IF EXISTS ");
+    cg_schema_name_as_cql_string(&drop, trigger_name_ast);
+    bprintf(&drop, ";\n");
     (*drops)++;
 
     // if not deleted, emit the create
@@ -942,7 +945,7 @@ static void cg_schema_manage_triggers(charbuf *output, int32_t *drops, int32_t *
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_triggers();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER %%s;', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP TRIGGER [%%s];', C.name));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -993,16 +996,18 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     }
 
     EXTRACT_OPTION(flags, ast->left);
-    EXTRACT(view_and_attrs, ast->right);
-    EXTRACT(name_and_select, view_and_attrs->left);
-    EXTRACT_NAME_AST(name_ast, name_and_select->left);
-    EXTRACT_STRING(name, name_ast);
+    EXTRACT_NOTNULL(view_and_attrs, ast->right);
+    EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
+    EXTRACT_NOTNULL(view_details, view_details_select->left);
+    EXTRACT_NAME_AST(name_ast, view_details->left);
 
     if (flags & VIEW_IS_TEMP) {
       continue;
     }
 
-    bprintf(&drop, "  DROP VIEW IF EXISTS %s;\n", name);
+    bprintf(&drop, "  DROP VIEW IF EXISTS ");
+    cg_schema_name_as_cql_string(&drop, name_ast);
+    bprintf(&drop, ";\n");
     (*drops)++;
 
     // This covers deleted or unsubscribed
@@ -1035,7 +1040,7 @@ static void cg_schema_manage_views(charbuf *output, int32_t *drops, int32_t *cre
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_all_views();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW %%s;', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP VIEW [%%s];', C.name));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -1113,7 +1118,9 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
 
     if (table_deleted || ast->sem->delete_version > 0) {
       // delete only, we're done here
-      bprintf(&drop, "  DROP INDEX IF EXISTS %s;\n", index_name);
+      bprintf(&drop, "  DROP INDEX IF EXISTS ");
+      cg_schema_name_as_cql_string(&drop, index_name_ast);
+      bprintf(&drop, ";\n");
       bprintf(&drop, "  CALL %s_cql_set_facet_version('%s_index_crc', -1);\n", global_proc_name, index_name);
       (*drops)++;
       continue;
@@ -1141,7 +1148,9 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     llint_t index_crc = (llint_t)crc_charbuf(&make_index);
 
     bprintf(&drop, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, index_crc);
-    bprintf(&drop, "    DROP INDEX IF EXISTS %s;\n", index_name);
+    bprintf(&drop, "    DROP INDEX IF EXISTS ");
+    cg_schema_name_as_cql_string(&drop, index_name_ast);
+    bprintf(&drop, ";\n");
     bprintf(&drop, "  END IF;\n");
 
     bprintf(&create, "  IF cql_facet_find(%s_facets, '%s_index_crc') != %lld THEN\n", global_proc_name, index_name, index_crc);
@@ -1181,7 +1190,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     bprintf(output, "  DECLARE C CURSOR FOR CALL %s_cql_get_unknown_indices();\n", global_proc_name);
     bprintf(output, "  LOOP FETCH C\n");
     bprintf(output, "  BEGIN\n");
-    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX %%s;', C.name));\n");
+    bprintf(output, "    CALL cql_exec_internal(printf('DROP INDEX [%%s];', C.name));\n");
     bprintf(output, "  END;\n");
     bprintf(output, "END;\n\n");
 
@@ -2000,9 +2009,15 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
         break;
       }
 
-      case SCHEMA_ANNOTATION_DELETE_TABLE:
-        bprintf(&drops, "  DROP TABLE IF EXISTS %s; --@delete\n", target_name);
+      case SCHEMA_ANNOTATION_DELETE_TABLE: {
+        ast_node *table = note->target_ast;
+        Contract(is_ast_create_table_stmt(table));
+        ast_node *table_name_ast = sem_get_name_ast(table);
+        bprintf(&drops, "  DROP TABLE IF EXISTS ");
+        cg_schema_name_as_cql_string(&drops, table_name_ast);
+        bprintf(&drops, "; --@delete\n");
         break;
+      }
 
       // Note: @create is invalid for INDEX/VIEW/TRIGGER so there can be no such annotation
 
@@ -2061,10 +2076,12 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
     // we only set the UNSUB flag on the tables that were in scope for this upgrade anyway.
 
     EXTRACT_NOTNULL(create_table_name_flags, ast->left);
-    EXTRACT_STRING(table_name, create_table_name_flags->right);
+    EXTRACT_NAME_AST(table_name_ast, create_table_name_flags->right);
 
     if (ast->sem->sem_type & SCHEMA_FLAG_UNSUB) {
-      bprintf(&drops, "  DROP TABLE IF EXISTS %s; --@unsub\n", table_name);
+      bprintf(&drops, "  DROP TABLE IF EXISTS ");
+      cg_schema_name_as_cql_string(&drops, table_name_ast);
+      bprintf(&drops, "; --@unsub\n");
     }
   }
 

@@ -1497,10 +1497,11 @@ static void cg_json_views(charbuf *output) {
     cg_json_test_details(output, ast, misc_attrs);
 
     EXTRACT_OPTION(flags, ast->left);
-    EXTRACT(view_and_attrs, ast->right);
-    EXTRACT(name_and_select, view_and_attrs->left);
-    EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-    EXTRACT_NAME_AST(name_ast, name_and_select->left);
+    EXTRACT_NOTNULL(view_and_attrs, ast->right);
+    EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
+    EXTRACT_NOTNULL(view_details, view_details_select->left);
+    EXTRACT_ANY_NOTNULL(select_stmt, view_details_select->right);
+    EXTRACT_NAME_AST(name_ast, view_details->left);
 
     if (i > 0) {
       bprintf(output, ",\n");

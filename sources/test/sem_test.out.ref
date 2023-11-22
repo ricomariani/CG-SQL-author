@@ -4415,8 +4415,9 @@ SELECT 1 AS f1, 2 AS f2, 3 AS f3;
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name MyView}
+    | {view_details_select}
+      | {view_details}
+      | | {name MyView}
       | {select_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
         | {select_core_list}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
         | | {select_core}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
@@ -4446,14 +4447,183 @@ SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
 The statement ending at line XXXX
 
+CREATE VIEW AViewWithColSpec(x, y) AS
+SELECT 1, 2;
+
+  {create_view_stmt}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+  | {int 0}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name AViewWithColSpec}
+      | | {name_list}
+      |   | {name x}
+      |   | {name_list}
+      |     | {name y}
+      | {select_stmt}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+        | {select_core_list}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+        | | {select_core}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+        |   | {select_expr_list_con}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+        |     | {select_expr_list}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+        |     | | {select_expr}: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: integer notnull
+        |     |     | {int 2}: integer notnull
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW AViewWithColSpec2(x) AS
+SELECT 1, 2;
+
+test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0101: too few column names specified in view 'AViewWithColSpec2'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name AViewWithColSpec2}
+      | | {name_list}
+      |   | {name x}
+      | {select_stmt}: AViewWithColSpec2: { x: integer notnull, _anon: integer notnull }
+        | {select_core_list}: AViewWithColSpec2: { x: integer notnull, _anon: integer notnull }
+        | | {select_core}: AViewWithColSpec2: { x: integer notnull, _anon: integer notnull }
+        |   | {select_expr_list_con}: AViewWithColSpec2: { x: integer notnull, _anon: integer notnull }
+        |     | {select_expr_list}: AViewWithColSpec2: { x: integer notnull, _anon: integer notnull }
+        |     | | {select_expr}: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: integer notnull
+        |     |     | {int 2}: integer notnull
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW AViewWithColSpec3(x, y, z) AS
+SELECT 1, 2;
+
+test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0102: too many column names specified in view 'AViewWithColSpec3'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name AViewWithColSpec3}
+      | | {name_list}
+      |   | {name x}
+      |   | {name_list}
+      |     | {name y}
+      |     | {name_list}
+      |       | {name z}
+      | {select_stmt}: AViewWithColSpec3: { x: integer notnull, y: integer notnull }
+        | {select_core_list}: AViewWithColSpec3: { x: integer notnull, y: integer notnull }
+        | | {select_core}: AViewWithColSpec3: { x: integer notnull, y: integer notnull }
+        |   | {select_expr_list_con}: AViewWithColSpec3: { x: integer notnull, y: integer notnull }
+        |     | {select_expr_list}: AViewWithColSpec3: { x: integer notnull, y: integer notnull }
+        |     | | {select_expr}: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: integer notnull
+        |     |     | {int 2}: integer notnull
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW AViewWithColSpec3(x, x) AS
+SELECT 1, 2;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'x'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name AViewWithColSpec3}
+      | | {name_list}
+      |   | {name x}
+      |   | {name_list}
+      |     | {name x}
+      | {select_stmt}: select: { _anon: integer notnull, _anon: integer notnull }
+        | {select_core_list}: select: { _anon: integer notnull, _anon: integer notnull }
+        | | {select_core}: select: { _anon: integer notnull, _anon: integer notnull }
+        |   | {select_expr_list_con}: select: { _anon: integer notnull, _anon: integer notnull }
+        |     | {select_expr_list}: select: { _anon: integer notnull, _anon: integer notnull }
+        |     | | {select_expr}: integer notnull
+        |     | | | {int 1}: integer notnull
+        |     | | {select_expr_list}
+        |     |   | {select_expr}: integer notnull
+        |     |     | {int 2}: integer notnull
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
+CREATE VIEW AViewWithColSpec3(x) AS
+SELECT NULL;
+
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result '_anon'
+
+  {create_view_stmt}: err
+  | {int 0}
+  | {view_and_attrs}
+    | {view_details_select}
+      | {view_details}
+      | | {name AViewWithColSpec3}
+      | | {name_list}
+      |   | {name x}
+      | {select_stmt}: err
+        | {select_core_list}: select: { _anon: null }
+        | | {select_core}: select: { _anon: null }
+        |   | {select_expr_list_con}: select: { _anon: null }
+        |     | {select_expr_list}: select: { _anon: null }
+        |     | | {select_expr}: null
+        |     |   | {null}: null
+        |     | {select_from_etc}: ok
+        |       | {select_where}
+        |         | {select_groupby}
+        |           | {select_having}
+        | {select_orderby}
+          | {select_limit}
+            | {select_offset}
+
+The statement ending at line XXXX
+
 CREATE VIEW MyView AS
 SELECT 1 AS f1, 2 AS f2, 3 AS f3;
 
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name MyView}
+    | {view_details_select}
+      | {view_details}
+      | | {name MyView}
       | {select_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
         | {select_core_list}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
         | | {select_core}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
@@ -4530,8 +4700,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'My
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name MyView}: err
+    | {view_details_select}
+      | {view_details}
+      | | {name MyView}: err
       | {select_stmt}: MyView: { y: integer notnull }
         | {select_core_list}: MyView: { y: integer notnull }
         | | {select_core}: MyView: { y: integer notnull }
@@ -4566,8 +4737,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'fo
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name foo}: err
+    | {view_details_select}
+      | {view_details}
+      | | {name foo}: err
       | {select_stmt}: foo: { x: integer notnull }
         | {select_core_list}: foo: { x: integer notnull }
         | | {select_core}: foo: { x: integer notnull }
@@ -4595,8 +4767,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name MyView}
+    | {view_details_select}
+      | {view_details}
+      | | {name MyView}
       | {select_stmt}: err
         | {select_core_list}: err
         | | {select_core}: err
@@ -4623,8 +4796,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name V}
+    | {view_details_select}
+      | {view_details}
+      | | {name V}
       | {select_stmt}: err
         | {select_core_list}: err
         | | {select_core}: err
@@ -22856,8 +23030,9 @@ SELECT *
   {create_view_stmt}: view_with_cte: { x: integer notnull }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name view_with_cte}
+    | {view_details_select}
+      | {view_details}
+      | | {name view_with_cte}
       | {with_select_stmt}: view_with_cte: { x: integer notnull }
         | {with}
         | | {cte_tables}: ok
@@ -24477,8 +24652,9 @@ SELECT 1 AS A, 2 AS B;
   {create_view_stmt}: temp_view: { A: integer notnull, B: integer notnull }
   | {int 1}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name temp_view}
+    | {view_details_select}
+      | {view_details}
+      | | {name temp_view}
       | {select_stmt}: temp_view: { A: integer notnull, B: integer notnull }
         | {select_core_list}: temp_view: { A: integer notnull, B: integer notnull }
         | | {select_core}: temp_view: { A: integer notnull, B: integer notnull }
@@ -25309,8 +25485,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 've
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name versioned_table}: err
+    | {view_details_select}
+      | {view_details}
+      | | {name versioned_table}: err
       | {select_stmt}: versioned_table: { x: integer notnull }
         | {select_core_list}: versioned_table: { x: integer notnull }
         | | {select_core}: versioned_table: { x: integer notnull }
@@ -25964,8 +26141,9 @@ SELECT *
   {create_view_stmt}: view_with_version: { id: integer notnull, name: text, rate: longint } deleted @delete(2)
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-    | | {name view_with_version}
+    | {view_details_select}
+    | | {view_details}
+    | | | {name view_with_version}
     | | {select_stmt}: view_with_version: { id: integer notnull, name: text, rate: longint }
     |   | {select_core_list}: view_with_version: { id: integer notnull, name: text, rate: longint }
     |   | | {select_core}: view_with_version: { id: integer notnull, name: text, rate: longint }
@@ -31431,8 +31609,9 @@ SELECT TRUE AS a, 2.5 AS b, 'xyz' AS c;
   {create_view_stmt}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name ViewShape}
+    | {view_details_select}
+      | {view_details}
+      | | {name ViewShape}
       | {select_stmt}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
         | {select_core_list}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
         | | {select_core}: ViewShape: { a: bool notnull, b: real notnull, c: text notnull }
@@ -31571,8 +31750,9 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the se
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name MyBogusView}
+    | {view_details_select}
+      | {view_details}
+      | | {name MyBogusView}
       | {select_stmt}: err
         | {select_core_list}: select: { _anon: integer notnull, _anon: integer notnull }
         | | {select_core}: select: { _anon: integer notnull, _anon: integer notnull }
@@ -31967,8 +32147,9 @@ test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0139: temp objects may
   {create_view_stmt}: err
   | {int 1}
   | {view_and_attrs}
-    | {name_and_select}
-    | | {name bogus_temp_view_with_versioning}
+    | {view_details_select}
+    | | {view_details}
+    | | | {name bogus_temp_view_with_versioning}
     | | {select_stmt}: select: { x: integer notnull }
     |   | {select_core_list}: select: { x: integer notnull }
     |   | | {select_core}: select: { x: integer notnull }
@@ -38939,8 +39120,9 @@ SELECT T1.id AS id1, T2.id AS id2
   {create_view_stmt}: a_view_in_dep_region: { id1: integer, id2: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name a_view_in_dep_region}
+    | {view_details_select}
+      | {view_details}
+      | | {name a_view_in_dep_region}
       | {select_stmt}: a_view_in_dep_region: { id1: integer, id2: integer }
         | {select_core_list}: a_view_in_dep_region: { id1: integer, id2: integer }
         | | {select_core}: a_view_in_dep_region: { id1: integer, id2: integer }
@@ -39154,8 +39336,9 @@ SELECT *
   {create_view_stmt}: ok_view_in_dep2_region: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name ok_view_in_dep2_region}
+    | {view_details_select}
+      | {view_details}
+      | | {name ok_view_in_dep2_region}
       | {select_stmt}: ok_view_in_dep2_region: { id: integer }
         | {select_core_list}: ok_view_in_dep2_region: { id: integer }
         | | {select_core}: ok_view_in_dep2_region: { id: integer }
@@ -39185,8 +39368,9 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name bogus_view_in_dep2_region}
+    | {view_details_select}
+      | {view_details}
+      | | {name bogus_view_in_dep2_region}
       | {select_stmt}: err
         | {select_core_list}: err
         | | {select_core}: err
@@ -39241,8 +39425,9 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name bogus_due_to_non_region_object}
+    | {view_details_select}
+      | {view_details}
+      | | {name bogus_due_to_non_region_object}
       | {select_stmt}: err
         | {select_core_list}: err
         | | {select_core}: err
@@ -40799,8 +40984,9 @@ test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0396: versioning attri
       | {create_view_stmt}: err
         | {int 0}
         | {view_and_attrs}
-          | {name_and_select}
-          | | {name inv_5}
+          | {view_details_select}
+          | | {view_details}
+          | | | {name inv_5}
           | | {select_stmt}: select: { f1: integer notnull }
           |   | {select_core_list}: select: { f1: integer notnull }
           |   | | {select_core}: select: { f1: integer notnull }
@@ -47255,8 +47441,9 @@ SELECT 1 AS f1, 2 AS f2, 3 AS f3;
   {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } alias
   | {int 2}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name MyView}
+    | {view_details_select}
+      | {view_details}
+      | | {name MyView}
       | {select_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
         | {select_core_list}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
         | | {select_core}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
@@ -84079,8 +84266,9 @@ SELECT *
   {create_view_stmt}: uses_a_table: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name uses_a_table}
+    | {view_details_select}
+      | {view_details}
+      | | {name uses_a_table}
       | {select_stmt}: uses_a_table: { id: integer }
         | {select_core_list}: uses_a_table: { id: integer }
         | | {select_core}: uses_a_table: { id: integer }
@@ -84125,8 +84313,9 @@ SELECT *
   {create_view_stmt}: uses_a_table_but_deleted: { id: integer } deleted @delete(2)
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-    | | {name uses_a_table_but_deleted}
+    | {view_details_select}
+    | | {view_details}
+    | | | {name uses_a_table_but_deleted}
     | | {select_stmt}: uses_a_table_but_deleted: { id: integer }
     |   | {select_core_list}: uses_a_table_but_deleted: { id: integer }
     |   | | {select_core}: uses_a_table_but_deleted: { id: integer }
@@ -84325,8 +84514,9 @@ SELECT *
   {create_view_stmt}: unsub_with_views_v1: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name unsub_with_views_v1}
+    | {view_details_select}
+      | {view_details}
+      | | {name unsub_with_views_v1}
       | {select_stmt}: unsub_with_views_v1: { id: integer }
         | {select_core_list}: unsub_with_views_v1: { id: integer }
         | | {select_core}: unsub_with_views_v1: { id: integer }
@@ -84353,8 +84543,9 @@ SELECT *
   {create_view_stmt}: unsub_with_views_v2: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name unsub_with_views_v2}
+    | {view_details_select}
+      | {view_details}
+      | | {name unsub_with_views_v2}
       | {select_stmt}: unsub_with_views_v2: { id: integer }
         | {select_core_list}: unsub_with_views_v2: { id: integer }
         | | {select_core}: unsub_with_views_v2: { id: integer }
@@ -84381,8 +84572,9 @@ SELECT *
   {create_view_stmt}: unsub_with_views_v3: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name unsub_with_views_v3}
+    | {view_details_select}
+      | {view_details}
+      | | {name unsub_with_views_v3}
       | {select_stmt}: unsub_with_views_v3: { id: integer }
         | {select_core_list}: unsub_with_views_v3: { id: integer }
         | | {select_core}: unsub_with_views_v3: { id: integer }
@@ -84409,8 +84601,9 @@ SELECT *
   {create_view_stmt}: unsub_with_views_v4: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name unsub_with_views_v4}
+    | {view_details_select}
+      | {view_details}
+      | | {name unsub_with_views_v4}
       | {select_stmt}: unsub_with_views_v4: { id: integer }
         | {select_core_list}: unsub_with_views_v4: { id: integer }
         | | {select_core}: unsub_with_views_v4: { id: integer }
@@ -84437,8 +84630,9 @@ SELECT *
   {create_view_stmt}: unsub_with_views_v5: { id: integer }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name unsub_with_views_v5}
+    | {view_details_select}
+      | {view_details}
+      | | {name unsub_with_views_v5}
       | {select_stmt}: unsub_with_views_v5: { id: integer }
         | {select_core_list}: unsub_with_views_v5: { id: integer }
         | | {select_core}: unsub_with_views_v5: { id: integer }
@@ -89120,8 +89314,9 @@ SELECT 1 AS x;
   {create_view_stmt}: view: { x: integer notnull }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name `view`}
+    | {view_details_select}
+      | {view_details}
+      | | {name `view`}
       | {select_stmt}: view: { x: integer notnull }
         | {select_core_list}: view: { x: integer notnull }
         | | {select_core}: view: { x: integer notnull }

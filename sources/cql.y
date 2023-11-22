@@ -1594,7 +1594,7 @@ end_schema_region_stmt:
   ;
 
 schema_unsub_stmt:
-  AT_UNSUB  '(' name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_option(1), $name)); }
+  AT_UNSUB  '(' sql_name ')' { $schema_unsub_stmt = new_ast_schema_unsub_stmt(new_ast_version_annotation(new_ast_option(1), $sql_name)); }
   ;
 
 schema_ad_hoc_migration_stmt:
@@ -1778,10 +1778,17 @@ table_function:
 
 create_view_stmt:
   CREATE opt_temp VIEW opt_if_not_exists sql_name AS select_stmt opt_delete_version_attr  {
-  struct ast_node *flags = new_ast_option($opt_temp | $opt_if_not_exists);
-  struct ast_node *name_and_select = new_ast_name_and_select($sql_name, $select_stmt);
-  struct ast_node *view_and_attrs = new_ast_view_and_attrs(name_and_select, $opt_delete_version_attr);
+    ast_node *flags = new_ast_option($opt_temp | $opt_if_not_exists);
+    ast_node *view_details = new_ast_view_details($sql_name, NULL);
+    ast_node *view_details_select = new_ast_view_details_select(view_details, $select_stmt);
+    ast_node *view_and_attrs = new_ast_view_and_attrs(view_details_select, $opt_delete_version_attr);
   $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
+  | CREATE opt_temp VIEW opt_if_not_exists sql_name '(' name_list ')' AS select_stmt opt_delete_version_attr  {
+    ast_node *flags = new_ast_option($opt_temp | $opt_if_not_exists);
+    ast_node *view_details = new_ast_view_details($sql_name, $name_list);
+    ast_node *view_details_select = new_ast_view_details_select(view_details, $select_stmt);
+    ast_node *view_and_attrs = new_ast_view_and_attrs(view_details_select, $opt_delete_version_attr);
+    $create_view_stmt = new_ast_create_view_stmt(flags, view_and_attrs); }
   ;
 
 with_delete_stmt:

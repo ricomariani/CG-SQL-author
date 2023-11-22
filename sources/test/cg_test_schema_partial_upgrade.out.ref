@@ -267,7 +267,7 @@ DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
 
 CREATE PROCEDURE test_drop_table_helper(table_name TEXT NOT NULL)
 BEGIN
-  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS %s', table_name));
+  CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%s]', table_name));
   -- remove the table from our dictionary marking it dropped
   IF test_tables_dict_ IS NULL THROW;
   LET added := cql_string_dictionary_add(test_tables_dict_, table_name, '');

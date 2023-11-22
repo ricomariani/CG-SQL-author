@@ -1139,6 +1139,35 @@ select null not in (1, 'x');
 -- - error:
 create view MyView as select 1 as f1, 2 as f2, 3 as f3;
 
+-- TEST: create a view with column list
+-- + {create_view_stmt}: AViewWithColSpec: { x: integer notnull, y: integer notnull }
+-- - error:
+create view AViewWithColSpec(x, y) as select 1, 2;
+
+-- TEST: create a view with column list (too few columns)
+-- + {create_view_stmt}: err
+-- * error: % too few column names specified in view 'AViewWithColSpec2'
+-- +1 error:
+create view AViewWithColSpec2(x) as select 1, 2;
+
+-- TEST: create a view with column list (too many columns)
+-- + {create_view_stmt}: err
+-- * error: % too many column names specified in view 'AViewWithColSpec3'
+-- +1 error:
+create view AViewWithColSpec3(x,y,z) as select 1, 2;
+
+-- TEST: create a view with column list (duplicate columns)
+-- + {create_view_stmt}: err
+-- * error: % duplicate name in list 'x'
+-- +1 error:
+create view AViewWithColSpec3(x,x) as select 1, 2;
+
+-- TEST: create a view with null columns
+-- + {create_view_stmt}: err
+-- * error: % NULL expression has no type to imply the type of the select result '_anon'
+-- +1 error:
+create view AViewWithColSpec3(x) as select NULL;
+
 -- TEST: create a view -- exact duplicate is allowed
 -- + {create_view_stmt}: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
 -- + {name MyView}
@@ -6417,7 +6446,8 @@ insert into bar(id) values('x');
 -- + {create_view_stmt}: temp_view: { A: integer notnull, B: integer notnull }
 -- this is the temp flag
 -- + {int 1}
--- + {name_and_select}
+-- + {view_details_select}
+-- + {view_details}
 -- + {name temp_view}
 -- + {select_stmt}: temp_view: { A: integer notnull, B: integer notnull }
 -- - error:

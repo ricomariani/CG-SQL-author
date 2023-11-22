@@ -178,11 +178,11 @@ CREATE VIEW another_live_view AS
 SELECT *
   FROM table2;
 
-CREATE VIEW foo_view_unsubscribed AS
+CREATE VIEW [foo view unsubscribed] AS
 SELECT *
   FROM some_table;
 
-CREATE VIEW foo_view_normal AS
+CREATE VIEW [foo view normal] AS
 SELECT *
   FROM some_table;
 

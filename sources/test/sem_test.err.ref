@@ -82,6 +82,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
 test/sem_test.sql:XXXX:1: error: in not_in : CQL0009: incompatible types in expression 'NOT IN'
 test/sem_test.sql:XXXX:1: error: in not_in : CQL0012: incompatible types in expression 'NOT IN'
+test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0101: too few column names specified in view 'AViewWithColSpec2'
+test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0102: too many column names specified in view 'AViewWithColSpec3'
+test/sem_test.sql:XXXX:1: error: in str : CQL0206: duplicate name in list 'x'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0056: NULL expression has no type to imply the type of the select result '_anon'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW MyView AS
 SELECT 1 AS f1, 2 AS f2, 3 AS f3

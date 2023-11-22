@@ -202,6 +202,9 @@ select case when a = 2 then 3 when b = 4 then (select c from d where e = f) else
 -- simple create view
 create view a as select b from c;
 
+-- simple create view with columns spec
+create view a(x) as select b from c;
+
 -- simple create view
 create view if not exists qq as select b from c;
 

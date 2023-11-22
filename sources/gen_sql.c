@@ -3089,10 +3089,12 @@ static void gen_create_view_stmt(ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT_OPTION(flags, ast->left);
   EXTRACT(view_and_attrs, ast->right);
-  EXTRACT(name_and_select, view_and_attrs->left);
+  EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
+  EXTRACT_NOTNULL(view_details, view_details_select->left);
+  EXTRACT(name_list, view_details->right);
   EXTRACT_ANY(attrs, view_and_attrs->right);
-  EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-  EXTRACT_NAME_AST(name_ast, name_and_select->left);
+  EXTRACT_ANY_NOTNULL(select_stmt, view_details_select->right);
+  EXTRACT_NAME_AST(name_ast, view_details->left);
 
   bool_t if_not_exist = !!(flags & VIEW_IF_NOT_EXISTS);
 
@@ -3103,6 +3105,11 @@ static void gen_create_view_stmt(ast_node *ast) {
   gen_printf("VIEW ");
   gen_if_not_exists(ast, if_not_exist);
   gen_name(name_ast);
+  if (name_list) {
+    gen_printf("(");
+    gen_name_list(name_list);
+    gen_printf(")");
+  }
   gen_printf(" AS\n");
   gen_select_stmt(select_stmt);
   gen_version_attrs(attrs);
@@ -4918,10 +4925,10 @@ static void gen_end_schema_region_stmt(ast_node *ast) {
 static void gen_schema_unsub_stmt(ast_node *ast) {
   Contract(is_ast_schema_unsub_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
-  EXTRACT_STRING(name, version_annotation->right);
+  EXTRACT_NAME_AST(name_ast, version_annotation->right);
 
   gen_printf("@UNSUB(");
-  gen_printf("%s", name);
+  gen_name(name_ast);
   gen_printf(")");
 }
 

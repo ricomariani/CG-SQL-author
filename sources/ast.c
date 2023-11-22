@@ -1119,8 +1119,10 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
       } else {
         Contract(is_ast_create_view_stmt(table_or_view));
         EXTRACT_NOTNULL(view_and_attrs, table_or_view->right);
-        EXTRACT_NOTNULL(name_and_select, view_and_attrs->left);
-        EXTRACT_STRING(canonical_name, name_and_select->left);
+        EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
+        EXTRACT_NOTNULL(view_details, view_details_select->left);
+        EXTRACT_STRING(canonical_name, view_details->left);
+        // rico
 
         if (symtab_add(callbacks->visited_any_table, canonical_name, table_or_view)) {
           // Report the view itself

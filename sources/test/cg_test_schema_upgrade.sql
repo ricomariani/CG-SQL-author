@@ -353,9 +353,9 @@ create index us2 on unsub_outer(name_outer);
 
 create table some_table(`an id` integer);
 
-create view foo_view_unsubscribed as select * from some_table;
-create view foo_view_normal as select * from some_table;
+create view `foo view unsubscribed` as select * from some_table;
+create view `foo view normal` as select * from some_table;
 
-@unsub(foo_view_unsubscribed);
+@unsub(`foo view unsubscribed`);
 
 @end_schema_region;

@@ -215,6 +215,7 @@ static CSTR sem_combine_kinds(ast_node *ast, CSTR current_kind);
 static bool_t sem_select_stmt_is_mixed_results(ast_node *ast);
 static bool_t sem_verify_legal_variable_name(ast_node *variable, CSTR name);
 static void sem_verify_no_anon_columns(ast_node *ast);
+static void sem_verify_no_null_columns(ast_node *ast);
 static bool_t sem_verify_no_duplicate_names(ast_node *name_list);
 static bool_t sem_verify_no_duplicate_shape_exprs(ast_node *shape_exprs);
 static sem_t *find_mutable_type(CSTR name, CSTR scope);
@@ -3933,9 +3934,10 @@ cql_noexport ast_node *sem_get_name_ast(ast_node *ast) {
 
   // the only other option
   Contract(is_ast_create_view_stmt(ast));
-  EXTRACT(view_and_attrs, ast->right);
-  EXTRACT(name_and_select, view_and_attrs->left);
-  EXTRACT_NAME_AST(view_name_ast, name_and_select->left);
+  EXTRACT_NOTNULL(view_and_attrs, ast->right);
+  EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
+  EXTRACT_NOTNULL(view_details, view_details_select->left);
+  EXTRACT_NAME_AST(view_name_ast, view_details->left);
   return view_name_ast;
 }
 
@@ -12793,8 +12795,9 @@ static void sem_validate_previous_view(ast_node *prev_view) {
   Contract(is_ast_create_view_stmt(prev_view));
   EXTRACT_OPTION(prev_flags, prev_view->left);
   EXTRACT_NAMED(prev_view_and_attrs, view_and_attrs, prev_view->right);
-  EXTRACT_NAMED(prev_name_and_select, name_and_select, prev_view_and_attrs->left);
-  EXTRACT_NAME_AST(prev_name_ast, prev_name_and_select->left);
+  EXTRACT_NAMED(prev_view_details_select, view_details_select, prev_view_and_attrs->left);
+  EXTRACT_NAMED(prev_view_details, view_details, prev_view_details_select->left);
+  EXTRACT_NAME_AST(prev_name_ast, prev_view_details->left);
   EXTRACT_STRING(name, prev_name_ast);
 
   bool_t is_temp = !! (prev_flags & VIEW_IS_TEMP);
@@ -12910,10 +12913,12 @@ static void sem_create_view_stmt(ast_node *ast) {
   Contract(!current_joinscope);  // I don't belong inside a select(!)
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT(view_and_attrs, ast->right);
-  EXTRACT(name_and_select, view_and_attrs->left);
+  EXTRACT_NOTNULL(view_details_select, view_and_attrs->left);
+  EXTRACT_NOTNULL(view_details, view_details_select->left);
   EXTRACT_ANY(attrs, view_and_attrs->right);
-  EXTRACT_ANY_NOTNULL(select_stmt, name_and_select->right);
-  EXTRACT_NAME_AST(name_ast, name_and_select->left);
+  EXTRACT_ANY_NOTNULL(select_stmt, view_details_select->right);
+  EXTRACT_NAME_AST(name_ast, view_details->left);
+  EXTRACT(name_list, view_details->right);
   EXTRACT_STRING(name, name_ast);
 
   // if we're validating a previous view we don't want to parse the contents, we only want
@@ -12954,10 +12959,24 @@ static void sem_create_view_stmt(ast_node *ast) {
     return;
   }
 
-  sem_verify_no_anon_no_null_columns(select_stmt);
-  if (is_error(select_stmt)) {
+  if (name_list && !sem_verify_no_duplicate_names(name_list)) {
     record_error(ast);
     return;
+  }
+
+  if (name_list) {
+    sem_verify_no_null_columns(select_stmt);
+    if (is_error(select_stmt)) {
+      record_error(ast);
+      return;
+    }
+  }
+  else {
+    sem_verify_no_anon_no_null_columns(select_stmt);
+    if (is_error(select_stmt)) {
+      record_error(ast);
+      return;
+    }
   }
 
   version_attrs_info vers_info;
@@ -12983,6 +13002,31 @@ static void sem_create_view_stmt(ast_node *ast) {
   ast->sem->sem_type |= vers_info.flags;
   ast->sem->delete_version = vers_info.delete_version;
   ast->sem->region = current_region;
+
+  if (name_list) {
+    sem_struct *sptr = ast->sem->sptr;
+    ast_node *item = name_list;
+  
+    for (uint32_t i = 0; i < sptr->count; i++) {
+      if (!item) {
+        report_error(ast, "CQL0101: too few column names specified in view", name);
+        record_error(ast);
+        return;
+      }
+  
+      // use the names from the VIEW decl rather than the select
+      EXTRACT_STRING(col_name, item->left);
+      sptr->names[i] = col_name;
+  
+      item = item->right;
+    }
+
+    if (item) {
+      report_error(ast, "CQL0102: too many column names specified in view", name);
+      record_error(ast);
+      return;
+    }
+  }
 
   if (ast->sem->delete_version > 0) {
     ast->sem->sem_type |= SEM_TYPE_DELETED;

@@ -87,7 +87,7 @@ END;
 @unsub(recreate_test_for_unsub);
 
 -- extra items that will disappear when we switch to exclusive mode
-CREATE VIEW extra_view AS SELECT * FROM g1;
+CREATE VIEW `extra view` AS SELECT * FROM g1;
 
 CREATE INDEX extra_index ON g1(id);
 

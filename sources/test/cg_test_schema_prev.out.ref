@@ -252,13 +252,13 @@ SELECT *
 @end_schema_region;
 
 @begin_schema_region other;
-CREATE VIEW foo_view_unsubscribed AS
+CREATE VIEW `foo view unsubscribed` AS
 SELECT *
   FROM some_table;
 @end_schema_region;
 
 @begin_schema_region other;
-CREATE VIEW foo_view_normal AS
+CREATE VIEW `foo view normal` AS
 SELECT *
   FROM some_table;
 @end_schema_region;
@@ -381,6 +381,6 @@ END;
 @end_schema_region;
 
 @begin_schema_region other;
-@UNSUB(foo_view_unsubscribed);
+@UNSUB(`foo view unsubscribed`);
 @end_schema_region;
 

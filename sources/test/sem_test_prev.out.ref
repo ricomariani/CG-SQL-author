@@ -701,8 +701,9 @@ SELECT 1 AS id;
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name t_became_a_view}
+    | {view_details_select}
+      | {view_details}
+      | | {name t_became_a_view}
       | {select_stmt}: t_became_a_view: { id: integer notnull }
         | {select_core_list}: t_became_a_view: { id: integer notnull }
         | | {select_core}: t_became_a_view: { id: integer notnull }
@@ -1353,8 +1354,9 @@ SELECT 1 AS X;
   {create_view_stmt}: view_was_temp_but_now_it_is_not: { X: integer notnull }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name view_was_temp_but_now_it_is_not}
+    | {view_details_select}
+      | {view_details}
+      | | {name view_was_temp_but_now_it_is_not}
       | {select_stmt}: view_was_temp_but_now_it_is_not: { X: integer notnull }
         | {select_core_list}: view_was_temp_but_now_it_is_not: { X: integer notnull }
         | | {select_core}: view_was_temp_but_now_it_is_not: { X: integer notnull }
@@ -1380,8 +1382,9 @@ SELECT 1 AS X;
   {create_view_stmt}: view_created_with_no_annotation: { X: integer notnull }
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name view_created_with_no_annotation}
+    | {view_details_select}
+      | {view_details}
+      | | {name view_created_with_no_annotation}
       | {select_stmt}: view_created_with_no_annotation: { X: integer notnull }
         | {select_core_list}: view_created_with_no_annotation: { X: integer notnull }
         | | {select_core}: view_created_with_no_annotation: { X: integer notnull }
@@ -1947,8 +1950,9 @@ test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0311: object's de
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name VChanging}
+    | {view_details_select}
+      | {view_details}
+      | | {name VChanging}
       | {select_stmt}: VChanging: { id: integer }
         | {select_core_list}: VChanging: { id: integer }
         | | {select_core}: VChanging: { id: integer }
@@ -3604,8 +3608,9 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0105: object was
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name view_becomes_a_table}
+    | {view_details_select}
+      | {view_details}
+      | | {name view_becomes_a_table}
       | {select_stmt}
         | {select_core_list}
         | | {select_core}
@@ -3633,8 +3638,9 @@ test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0104: view was pr
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name view_was_zomg_deleted}
+    | {view_details_select}
+      | {view_details}
+      | | {name view_was_zomg_deleted}
       | {select_stmt}
         | {select_core_list}
         | | {select_core}
@@ -3660,8 +3666,9 @@ SELECT 1 AS X;
   {create_view_stmt}: ok
   | {int 1}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name view_was_temp_but_now_it_is_not}
+    | {view_details_select}
+      | {view_details}
+      | | {name view_was_temp_but_now_it_is_not}
       | {select_stmt}
         | {select_core_list}
         | | {select_core}
@@ -4233,8 +4240,9 @@ SELECT *
   {create_view_stmt}: err
   | {int 0}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name VChanging}
+    | {view_details_select}
+      | {view_details}
+      | | {name VChanging}
       | {select_stmt}
         | {select_core_list}
         | | {select_core}
@@ -4809,8 +4817,9 @@ SELECT 1 AS x;
   {create_view_stmt}: ok
   | {int 1}
   | {view_and_attrs}
-    | {name_and_select}
-      | {name this_view_is_gone}
+    | {view_details_select}
+      | {view_details}
+      | | {name this_view_is_gone}
       | {select_stmt}
         | {select_core_list}
         | | {select_core}

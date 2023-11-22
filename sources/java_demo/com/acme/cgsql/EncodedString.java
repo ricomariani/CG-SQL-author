@@ -23,4 +23,9 @@ public class EncodedString {
   public EncodedString(String value) {
     mValue = value;
   }
+
+  @Override
+  public String toString() {
+    return "[secret]";
+  }
 }

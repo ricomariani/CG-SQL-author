@@ -36,16 +36,18 @@ public class CGSQLMain {
       String s = new String(bytes, StandardCharsets.UTF_8);
       System.out.println(
           String.format(
-              "Row %d: name:%s blob:%s age:%d(encoded = %s) thing:%f key1:%s key2:%s(encoded = %s)",
+              "Row %d: name:%s blob:%s age:%-7d(%s) thing:%f key1:%s key2:%s(%s)",
               i,
               data.get_name(i),
               s,
               data.get_age(i),
-              Boolean.toString(data.get_age_IsEncoded()),
+              data.get_age_IsEncoded() ? "encoded" : "clear",
               data.get_thing(i),
               data.get_key1(i),
               data.get_key2(i),
-              Boolean.toString(data.get_key2_IsEncoded())));
+              data.get_key2_IsEncoded() ? "encoded" : "clear"
+         )
+     );
 
       Sample.ChildViewModel child = new Sample.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.getCount(); j++) {

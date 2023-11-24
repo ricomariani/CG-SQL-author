@@ -112,6 +112,11 @@ cql --in test.sql --nolines --cg foo.h foo.c
 * some codegen features only make sense during development, this enables dev mode to turn those one
 ** example: [explain query plan](../15_query_plan_generation.md)
 
+### --exp
+* runs macro expansion without semantic analysis
+* combined with `--echo` this is kind of like `cc -E` it can give you a view of what happened after the pre-processing
+* combined with `--ast` it is a useful test tool (its primary function)
+
 ### --c_include_namespace
 * for the C codegen runtimes, it determines the header namespace (as in #include "namespace/file.h") that goes into the output C file
 * if this option is used, it is prefixed to the first argment to --cg to form the include path in the C file
@@ -146,6 +151,10 @@ These are the various outputs the compiler can produce.
 * the output file `foo_exports.sql` includes procedure declarations for the contents of `foo.sql`
 * basically automatically generates the CQL header file you need to access the procedures in the input from some other file
  * if it were C it would be like auto-generating `foo.h` from `foo.c`
+
+#### --rt lua
+* requires one output file (foo.lua)
+* this is the standard Lua compilation of the sql file
 
 #### --rt objc
 * objective C wrappers for result sets produced by the stored procedures in the input

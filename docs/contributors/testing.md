@@ -8,7 +8,7 @@ Basic testing commands you should know.
 While standing in the `/sources` directory you may use `test.sh` and with these important options.
 
 |Command|Details|
-|:------|:------|
+|:--------------------|:------|
 |`./test.sh` | Build the compiler and run the suite. This is the bread an butter of the dev cycle.|
 |`--use_amalgam`| Build the compiler from the amalgam and then tests it as above.|
 |`--use_asan`| Enable address sanitizer.  Great for finding memory safety issues.|

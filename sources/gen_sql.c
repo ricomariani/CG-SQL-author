@@ -4835,6 +4835,10 @@ static void gen_enforcement_options(ast_node *ast) {
       gen_printf("UPDATE FROM");
       break;
 
+    case ENFORCE_AND_OR_NOT_NULL_CHECK:
+      gen_printf("AND OR NOT NULL CHECK");
+      break;
+
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);

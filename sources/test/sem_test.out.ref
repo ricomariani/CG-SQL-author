@@ -90084,3 +90084,201 @@ DECLARE foobar2 REAL;
   | | {name foobar2}: foobar2: real variable
   | {type_real}: real
 
+The statement ending at line XXXX
+
+@ENFORCE_STRICT AND OR NOT NULL CHECK;
+
+  {enforce_strict_stmt}: ok
+  | {int 23}
+
+The statement ending at line XXXX
+
+CREATE PROC nullability_improvement_with_logical_operators ()
+BEGIN
+  LET nullable1 := nullable(1);
+  LET nullable2 := nullable(2);
+  LET nullable3 := nullable(3);
+  LET inferred_not_null1 := nullable1 IS NOT NULL AND nullable1 > 0;
+  LET inferred_not_null2 := nullable1 IS NULL OR nullable1 <= 0;
+  LET inferred_not_null3 := nullable1 IS NOT NULL AND nullable2 IS NOT NULL AND nullable3 IS NOT NULL AND nullable1 + nullable2 + nullable3 > 3;
+  LET should_be_nullable := nullable1;
+  LET should_be_nullable2 := nullable1 IS NOT NULL AND nullable1 > 3 OR nullable1 < 0;
+END;
+
+  {create_proc_stmt}: ok
+  | {name nullability_improvement_with_logical_operators}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {let_stmt}: nullable1: integer variable
+      | | {name nullable1}: nullable1: integer variable
+      | | {call}: integer
+      |   | {name nullable}: integer
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {int 1}: integer notnull
+      | {let_stmt}: nullable2: integer variable
+      | | {name nullable2}: nullable2: integer variable
+      | | {call}: integer
+      |   | {name nullable}: integer
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {int 2}: integer notnull
+      | {let_stmt}: nullable3: integer variable
+      | | {name nullable3}: nullable3: integer variable
+      | | {call}: integer
+      |   | {name nullable}: integer
+      |   | {call_arg_list}
+      |     | {call_filter_clause}
+      |     | {arg_list}: ok
+      |       | {int 3}: integer notnull
+      | {let_stmt}: inferred_not_null1: bool notnull variable
+      | | {name inferred_not_null1}: inferred_not_null1: bool notnull variable
+      | | {and}: bool notnull
+      |   | {is_not}: bool notnull
+      |   | | {name nullable1}: nullable1: integer variable
+      |   | | {null}: null
+      |   | {gt}: bool notnull
+      |     | {call}: nullable1: integer notnull variable
+      |     | | {name cql_inferred_notnull}: nullable1: integer notnull variable
+      |     | | {call_arg_list}
+      |     |   | {call_filter_clause}
+      |     |   | {arg_list}: ok
+      |     |     | {name nullable1}: nullable1: integer inferred_notnull variable
+      |     | {int 0}: integer notnull
+      | {let_stmt}: inferred_not_null2: bool notnull variable
+      | | {name inferred_not_null2}: inferred_not_null2: bool notnull variable
+      | | {or}: bool notnull
+      |   | {is}: bool notnull
+      |   | | {name nullable1}: nullable1: integer variable
+      |   | | {null}: null
+      |   | {le}: bool notnull
+      |     | {call}: nullable1: integer notnull variable
+      |     | | {name cql_inferred_notnull}: nullable1: integer notnull variable
+      |     | | {call_arg_list}
+      |     |   | {call_filter_clause}
+      |     |   | {arg_list}: ok
+      |     |     | {name nullable1}: nullable1: integer inferred_notnull variable
+      |     | {int 0}: integer notnull
+      | {let_stmt}: inferred_not_null3: bool notnull variable
+      | | {name inferred_not_null3}: inferred_not_null3: bool notnull variable
+      | | {and}: bool notnull
+      |   | {and}: bool notnull
+      |   | | {and}: bool notnull
+      |   | | | {is_not}: bool notnull
+      |   | | | | {name nullable1}: nullable1: integer variable
+      |   | | | | {null}: null
+      |   | | | {is_not}: bool notnull
+      |   | |   | {name nullable2}: nullable2: integer variable
+      |   | |   | {null}: null
+      |   | | {is_not}: bool notnull
+      |   |   | {name nullable3}: nullable3: integer variable
+      |   |   | {null}: null
+      |   | {gt}: bool notnull
+      |     | {add}: integer notnull
+      |     | | {add}: integer notnull
+      |     | | | {call}: nullable1: integer notnull variable
+      |     | | | | {name cql_inferred_notnull}: nullable1: integer notnull variable
+      |     | | | | {call_arg_list}
+      |     | | |   | {call_filter_clause}
+      |     | | |   | {arg_list}: ok
+      |     | | |     | {name nullable1}: nullable1: integer inferred_notnull variable
+      |     | | | {call}: nullable2: integer notnull variable
+      |     | |   | {name cql_inferred_notnull}: nullable2: integer notnull variable
+      |     | |   | {call_arg_list}
+      |     | |     | {call_filter_clause}
+      |     | |     | {arg_list}: ok
+      |     | |       | {name nullable2}: nullable2: integer inferred_notnull variable
+      |     | | {call}: nullable3: integer notnull variable
+      |     |   | {name cql_inferred_notnull}: nullable3: integer notnull variable
+      |     |   | {call_arg_list}
+      |     |     | {call_filter_clause}
+      |     |     | {arg_list}: ok
+      |     |       | {name nullable3}: nullable3: integer inferred_notnull variable
+      |     | {int 3}: integer notnull
+      | {let_stmt}: should_be_nullable: integer variable
+      | | {name should_be_nullable}: should_be_nullable: integer variable
+      | | {name nullable1}: nullable1: integer variable
+      | {let_stmt}: should_be_nullable2: bool variable
+        | {name should_be_nullable2}: should_be_nullable2: bool variable
+        | {or}: bool
+          | {and}: bool notnull
+          | | {is_not}: bool notnull
+          | | | {name nullable1}: nullable1: integer variable
+          | | | {null}: null
+          | | {gt}: bool notnull
+          |   | {call}: nullable1: integer notnull variable
+          |   | | {name cql_inferred_notnull}: nullable1: integer notnull variable
+          |   | | {call_arg_list}
+          |   |   | {call_filter_clause}
+          |   |   | {arg_list}: ok
+          |   |     | {name nullable1}: nullable1: integer inferred_notnull variable
+          |   | {int 3}: integer notnull
+          | {lt}: bool
+            | {name nullable1}: nullable1: integer variable
+            | {int 0}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC cursor_nullability_improvement_with_logical_operators ()
+BEGIN
+  DECLARE c CURSOR FOR
+    SELECT *
+      FROM has_row_check_table;
+  FETCH c;
+  LET x := c AND c.a = "hi";
+  LET y := NOT c OR c.a = "";
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name cursor_nullability_improvement_with_logical_operators}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {select_stmt}: select: { a: text notnull, b: text }
+      |   | {select_core_list}: select: { a: text notnull, b: text }
+      |   | | {select_core}: select: { a: text notnull, b: text }
+      |   |   | {select_expr_list_con}: select: { a: text notnull, b: text }
+      |   |     | {select_expr_list}: select: { a: text notnull, b: text }
+      |   |     | | {star}: select: { a: text notnull, b: text }
+      |   |     | {select_from_etc}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {table_or_subquery_list}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | | {table_or_subquery}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       |   | {name has_row_check_table}: TABLE { has_row_check_table: has_row_check_table }
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | | {name c}: c: select: { a: text notnull, b: text } variable dml_proc shape_storage
+      | {let_stmt}: x: bool notnull variable
+      | | {name x}: x: bool notnull variable
+      | | {and}: bool notnull
+      |   | {name c}: c._has_row_: bool notnull variable
+      |   | {eq}: bool notnull
+      |     | {dot}: c.a: text notnull variable
+      |     | | {name c}
+      |     | | {name a}
+      |     | {strlit 'hi'}: text notnull
+      | {let_stmt}: y: bool notnull variable
+        | {name y}: y: bool notnull variable
+        | {or}: bool notnull
+          | {not}: bool notnull
+          | | {name c}: c._has_row_: bool notnull variable
+          | {eq}: bool notnull
+            | {dot}: c.a: text notnull variable
+            | | {name c}
+            | | {name a}
+            | {strlit ''}: text notnull
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL AND OR NOT NULL CHECK;
+
+  {enforce_normal_stmt}: ok
+  | {int 23}
+

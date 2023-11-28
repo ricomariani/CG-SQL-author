@@ -24099,3 +24099,63 @@ let in_pred_empty := 1 in ();
 -- + {declare_vars_type}: real
 -- + {name foobar2}: foobar2: real variable
 declare @ID("foo", "bar", "2") @id("real");
+
+
+-- TEST: enable nullability analysis on logical expressions.
+-- + {enforce_strict_stmt}: ok
+-- + | {int 23}
+-- - error:
+@enforce_strict and or not null check;
+
+
+
+-- TEST: non null improvements with logical operators
+-- + {let_stmt}: inferred_not_null1: bool notnull variable
+-- + {let_stmt}: inferred_not_null2: bool notnull variable
+-- + {let_stmt}: inferred_not_null3: bool notnull variable
+-- + {let_stmt}: should_be_nullable: integer variable
+-- + {let_stmt}: should_be_nullable2: bool variable
+-- - error:
+create proc nullability_improvement_with_logical_operators() begin
+  let nullable1 := nullable(1);
+  let nullable2 := nullable(2);
+  let nullable3 := nullable(3);
+
+  -- nullable1 is inferred not null when there is an not null AND check.
+  let inferred_not_null1 := nullable1 is not null and nullable1 > 0;
+
+  -- nullable1 is inferred not null when there is a null OR check.
+  let inferred_not_null2 := nullable1 is null or nullable1 <= 0;
+
+  -- null improvements should stack
+  let inferred_not_null3 := nullable1 is not null and
+    nullable2 is not null and
+    nullable3 is not null and
+    (nullable1 + nullable2 + nullable3) > 3;
+
+  -- null improvements are gone in other statements.
+  let should_be_nullable := nullable1;
+
+  -- null improvements can lose effect in outer expression.
+  let should_be_nullable2 := (nullable1 is not null and nullable1 > 3) or nullable1 < 0;
+end;
+
+-- TEST: cursor improvement with logical operators
+-- + {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
+-- - error:
+create proc cursor_nullability_improvement_with_logical_operators() begin
+  declare c cursor for select * from has_row_check_table;
+  fetch c;
+
+  -- Nullability improvement with AND.
+  let x := c and c.a == "hi";
+
+  -- Negative nullability improvement with OR.
+  let y := not c or c.a == "";
+end;
+
+-- TEST: disable nullability analysis on logical expressions.
+-- + {enforce_normal_stmt}: ok
+-- + | {int 23}
+-- - error:
+@enforce_normal and or not null check;

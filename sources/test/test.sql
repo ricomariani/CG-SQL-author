@@ -1780,3 +1780,5 @@ declare @id("foo") @id("int");
 
 @include "macro_basic_parse_test.sql"
 @include "line_directive_parse_test.sql"
+
+@enforce_strict and or not null check;

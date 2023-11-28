@@ -2332,3 +2332,5 @@ SET file := 'path/I/do/not/like';
 SET file := 'long/path/I/do/not/like';
 
 SET file := 'long/path/I/do/not/like';
+
+@ENFORCE_STRICT AND OR NOT NULL CHECK;

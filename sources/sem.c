@@ -240,6 +240,7 @@ static ast_node *sem_synthesize_current_locals();
 static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
+static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -285,6 +286,7 @@ struct enforcement_options {
   bool_t strict_sign_function;        // the SQLite sign function may not be used (as it is absent in <3.35.0)
   bool_t strict_cursor_has_row;       // auto cursors require a has-row check before certain fields are accessed
   bool_t strict_update_from;          // the UPDATE statement may not include a FROM clause (absent in <3.33.0)
+  bool_t strict_and_or_not_null_check; // nullability analysis on AND/OR logical expressions
 };
 
 static struct enforcement_options enforcement;
@@ -4798,6 +4800,30 @@ static bool_t sem_binary_prep(ast_node *ast, sem_t *core_type_left, sem_t *core_
   sem_expr(left);
   sem_expr(right);
 
+  return sem_binary_prep_helper(ast, left, right, core_type_left, core_type_right, combined_flags);
+}
+
+// Same as sem_binary_prep, but with flow analysis for AND/OR logical operators.
+static bool_t sem_binary_prep_with_flow_analysis(ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags, CSTR op) {
+  Contract(!strcmp(op, "OR") || !strcmp(op, "AND"));
+
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right);
+
+  FLOW_PUSH_CONTEXT_BRANCH();
+  sem_expr(left);
+  if (!strcmp(op, "AND")) {
+    sem_set_improvements_for_true_condition(left);
+  } else if (!strcmp(op, "OR")) {
+    sem_set_improvements_for_false_condition(left);
+  }
+  sem_expr(right);
+  FLOW_POP_CONTEXT_BRANCH();
+
+  return sem_binary_prep_helper(ast, left, right, core_type_left, core_type_right, combined_flags);
+}
+
+static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
   if (is_error(left) || is_error(right)) {
     record_error(ast);
     *core_type_left = SEM_TYPE_ERROR;
@@ -4960,7 +4986,16 @@ static void sem_binary_integer_math(ast_node *ast, CSTR op) {
 // text type inputs result in an error.
 static void sem_binary_logical(ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
-  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
+
+  bool_t has_error;
+  if (enforcement.strict_and_or_not_null_check) {
+    FLOW_PUSH_CONTEXT_BRANCH_GROUP();
+    has_error = !sem_binary_prep_with_flow_analysis(ast, &core_type_left, &core_type_right, &combined_flags, op);
+    FLOW_POP_CONTEXT_BRANCH_GROUP();
+  } else {
+    has_error = !sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags);
+  }
+  if (has_error) {
     return;
   }
 
@@ -24034,6 +24069,10 @@ static void sem_enforcement_options(ast_node *ast, bool_t strict) {
 
     case ENFORCE_UPDATE_FROM:
       enforcement.strict_update_from = strict;
+      break;
+
+    case ENFORCE_AND_OR_NOT_NULL_CHECK:
+      enforcement.strict_and_or_not_null_check = strict;
       break;
 
     default:

@@ -2471,6 +2471,7 @@ enforcement_options:
   | SIGN_FUNCTION { $enforcement_options = new_ast_option(ENFORCE_SIGN_FUNCTION); }
   | CURSOR_HAS_ROW { $enforcement_options = new_ast_option(ENFORCE_CURSOR_HAS_ROW); }
   | UPDATE FROM { $enforcement_options = new_ast_option(ENFORCE_UPDATE_FROM); }
+  | AND OR NOT NULL_ CHECK { $enforcement_options = new_ast_option(ENFORCE_AND_OR_NOT_NULL_CHECK); }
   ;
 
 enforce_strict_stmt:

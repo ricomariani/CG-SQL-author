@@ -8765,6 +8765,22 @@ function no_check_test_proc()
   x = stew1(z)
 
 end
+
+-- The statement ending at line XXXX
+
+--[[
+CREATE PROC declare_constant_variable ()
+BEGIN
+  CONST const_variable := 1;
+END;
+--]]
+
+function declare_constant_variable()
+  local const_variable = 0
+
+  const_variable = 1
+
+end
 local this_is_the_end = 0
 
 -- The statement ending at line XXXX

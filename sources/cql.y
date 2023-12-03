@@ -353,7 +353,7 @@ static void cql_reset_globals(void);
 %type <aval> savepoint_stmt
 %type <aval> schema_upgrade_script_stmt
 %type <aval> schema_upgrade_version_stmt
-%type <aval> set_stmt let_stmt
+%type <aval> set_stmt let_stmt const_stmt
 %type <aval> switch_stmt switch_cases switch_case
 %type <aval> throw_stmt
 %type <aval> trycatch_stmt
@@ -554,6 +554,7 @@ any_stmt:
   | close_stmt
   | commit_return_stmt
   | commit_trans_stmt
+  | const_stmt
   | continue_stmt
   | create_index_stmt
   | create_proc_stmt
@@ -681,6 +682,10 @@ set_stmt:
 
 let_stmt:
   LET sql_name ASSIGN expr  { $let_stmt = new_ast_let_stmt($sql_name, $expr); }
+  ;
+
+const_stmt:
+  CONST sql_name ASSIGN expr  { $const_stmt = new_ast_const_stmt($sql_name, $expr); }
   ;
 
 version_attrs_opt_recreate:

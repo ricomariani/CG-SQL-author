@@ -90282,3 +90282,64 @@ The statement ending at line XXXX
   {enforce_normal_stmt}: ok
   | {int 23}
 
+The statement ending at line XXXX
+
+CONST a_constant_variable := 1;
+
+  {const_stmt}: a_constant_variable: integer notnull variable constant
+  | {name a_constant_variable}: a_constant_variable: integer notnull variable constant
+  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC try_modifying_constant_variables ()
+BEGIN
+  CONST cant_change := 1;
+  SET cant_change := 2;
+  CALL using_rc(cant_change);
+  DECLARE my_cursor CURSOR FOR
+    SELECT 1 AS one;
+  FETCH fetch_cursor INTO cant_change;
+END;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+
+  {create_proc_stmt}: err
+  | {name try_modifying_constant_variables}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {const_stmt}: cant_change: integer notnull variable was_set constant
+      | | {name cant_change}: cant_change: integer notnull variable was_set constant
+      | | {int 1}: integer notnull
+      | {assign}: err
+      | | {name cant_change}: err
+      | | {int 2}: integer notnull
+      | {call_stmt}: err
+      | | {name using_rc}: ok dml_proc
+      | | {arg_list}: ok
+      |   | {name cant_change}: cant_change: integer notnull variable was_set constant
+      | {declare_cursor}: my_cursor: select: { one: integer notnull } variable dml_proc
+      | | {name my_cursor}: my_cursor: select: { one: integer notnull } variable dml_proc
+      | | {select_stmt}: select: { one: integer notnull }
+      |   | {select_core_list}: select: { one: integer notnull }
+      |   | | {select_core}: select: { one: integer notnull }
+      |   |   | {select_expr_list_con}: select: { one: integer notnull }
+      |   |     | {select_expr_list}: select: { one: integer notnull }
+      |   |     | | {select_expr}: one: integer notnull
+      |   |     |   | {int 1}: integer notnull
+      |   |     |   | {opt_as_alias}
+      |   |     |     | {name one}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: err
+        | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
+        | {name_list}
+          | {name cant_change}: cant_change: integer notnull variable was_set constant
+

@@ -24159,3 +24159,33 @@ end;
 -- + | {int 23}
 -- - error:
 @enforce_normal and or not null check;
+
+-- TEST: declare constant variables
+-- + {const_stmt}: a_constant_variable: integer notnull variable constant
+-- + | {name a_constant_variable}: a_constant_variable: integer notnull variable constant
+-- - error:
+const a_constant_variable := 1;
+
+-- TEST: constant variables cannot be changed
+-- + error: % Cannot re-assign value to constant variable 'cant_change'
+-- + error: % Cannot re-assign value to constant variable 'cant_change'
+-- + error: % Cannot re-assign value to constant variable 'cant_change'
+-- + {const_stmt}: cant_change: integer notnull variable was_set constant
+-- + {assign}: err
+-- + {call_stmt}: err
+-- + {fetch_stmt}: err
+-- +3 error:
+create proc try_modifying_constant_variables()
+begin
+  const cant_change := 1;
+
+  -- set assignment not allowed
+  set cant_change := 2;
+
+  -- assignment to out arg not allowed
+  call using_rc(cant_change);
+
+  -- fetch into variable not allowed
+  declare my_cursor cursor for select 1 as one;
+  fetch fetch_cursor into cant_change;
+end;

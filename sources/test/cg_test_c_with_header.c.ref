@@ -19662,6 +19662,28 @@ cql_cleanup:
   return _rc_;
 }
 #undef _PROC_
+
+// The statement ending at line XXXX
+
+/*
+CREATE PROC declare_constant_variable ()
+BEGIN
+  CONST const_variable := 1;
+END;
+*/
+
+#define _PROC_ "declare_constant_variable"
+/*
+export:
+DECLARE PROC declare_constant_variable ();
+*/
+void declare_constant_variable(void) {
+  cql_int32 const_variable = 0;
+
+  const_variable = 1;
+
+}
+#undef _PROC_
 cql_int32 this_is_the_end = 0;
 
 // The statement ending at line XXXX

@@ -6032,6 +6032,14 @@ begin
   create index `abc def` ON `xyz``abc` (`a b` asc);
 end;
 
+-- TEST: declare constant variable
+-- + cql_int32 const_variable = 0;
+-- + const_variable = 1;
+create proc declare_constant_variable()
+begin
+  const const_variable := 1;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

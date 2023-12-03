@@ -192,7 +192,7 @@ typedef struct schema_annotation {
 #define SEM_TYPE_PARTIAL_PK    _64(0x800000000000) // set if column is a primary key
 #define SEM_TYPE_QID          _64(0x1000000000000) // set if column has a `quoted` name
 #define SEM_TYPE_CONSTANT     _64(0x2000000000000) // set for variables marked immutable and cannot be reassigned
-#define SEM_TYPE_FLAGS        _64(0x2FFFFFFFFFF00) // all the flag bits we have so far
+#define SEM_TYPE_FLAGS        _64(0x3FFFFFFFFFF00) // all the flag bits we have so far
 
 #define SEM_EXPR_CONTEXT_NONE           0x0001
 #define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002

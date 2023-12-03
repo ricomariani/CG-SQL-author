@@ -1782,3 +1782,5 @@ declare @id("foo") @id("int");
 @include "line_directive_parse_test.sql"
 
 @enforce_strict and or not null check;
+
+const a_const_variable := 1;

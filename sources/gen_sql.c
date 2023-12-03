@@ -3843,6 +3843,17 @@ static void gen_let_stmt(ast_node *ast) {
   gen_root_expr(expr);
 }
 
+static void gen_const_stmt(ast_node *ast) {
+  Contract(is_ast_const_stmt(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_ANY_NOTNULL(expr, ast->right);
+
+  gen_printf("CONST ");
+  gen_name(name_ast);
+  gen_printf(" := ");
+  gen_root_expr(expr);
+}
+
 static void gen_opt_inout(ast_node *ast) {
   if (is_ast_in(ast)) {
     gen_printf("IN ");
@@ -5325,6 +5336,7 @@ cql_noexport void gen_init() {
   STMT_INIT(commit_return_stmt);
   STMT_INIT(commit_trans_stmt);
   STMT_INIT(conflict_target);
+  STMT_INIT(const_stmt);
   STMT_INIT(continue_stmt);
   STMT_INIT(create_index_stmt);
   STMT_INIT(create_proc_stmt);

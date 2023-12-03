@@ -2065,7 +2065,7 @@ static void cg_lua_if_stmt(ast_node *ast) {
 // is used all over the place for assigning to scratch variables.  All
 // we have to do here is pull the name and types out of the ast.
 static void cg_lua_assign(ast_node *ast) {
-  Contract(is_ast_assign(ast) || is_ast_let_stmt(ast));
+  Contract(is_ast_assign(ast) || is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
@@ -2086,12 +2086,19 @@ static void cg_lua_assign(ast_node *ast) {
 // In the LET statement, we declare the variable based on type, emit that
 // then do the usual SET codegen.
 static void cg_lua_let_stmt(ast_node *ast) {
-  Contract(is_ast_let_stmt(ast));
+  Contract(is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
 
   cg_lua_declare_simple_var(name_ast->sem->sem_type, name);
   cg_lua_assign(ast);
+}
+
+// In the CONST statement, emit the same codegen as LET statement.
+// Immutability enforcement is done during semantic analysis.
+static void cg_lua_const_stmt(ast_node *ast) {
+  Contract(is_ast_const_stmt(ast));
+  cg_lua_let_stmt(ast);
 }
 
 // Walk all the params of a stored proc and emit each one with a comma where needed.
@@ -5484,6 +5491,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(declare_vars_type);
   LUA_STMT_INIT(assign);
   LUA_STMT_INIT(let_stmt);
+  LUA_STMT_INIT(const_stmt);
   LUA_STMT_INIT(set_from_cursor);
   LUA_STMT_INIT(create_proc_stmt);
   LUA_STMT_INIT(trycatch_stmt);

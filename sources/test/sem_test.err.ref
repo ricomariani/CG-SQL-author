@@ -1698,4 +1698,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0112: index in drop statement was n
 test/sem_test.sql:XXXX:1: error: in str : CQL0113: trigger in drop statement was not declared '`abc def`'
 test/sem_test.sql:XXXX:1: error: in str : CQL0110: view in drop statement does not exist '`vvv v`'
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required '`a b`'
+test/sem_test.sql:XXXX:1: error: in num : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
 semantic errors present; no code gen.

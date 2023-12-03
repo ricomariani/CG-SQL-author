@@ -678,6 +678,7 @@ AST(concat);
 AST(cond_action)
 AST(conflict_target)
 AST(connector)
+AST(const_stmt)
 AST(const_value)
 AST(const_values)
 AST(create_attr)

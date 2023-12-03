@@ -1220,6 +1220,10 @@ cql_noexport bool_t is_inout_parameter(sem_t sem_type) {
   return is_in_parameter(sem_type) && is_out_parameter(sem_type);
 }
 
+cql_noexport bool_t is_constant(sem_t sem_type) {
+ return !!(sem_type & SEM_TYPE_CONSTANT);
+}
+
 cql_noexport bool_t has_out_stmt_result(ast_node *ast) {
   sem_t sem_type = ast->sem->sem_type;
   return !!(sem_type & SEM_TYPE_USES_OUT);
@@ -2314,6 +2318,9 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
   if (sem_type & SEM_TYPE_QID) {
     bprintf(out, " qid");
   }
+  if (sem_type & SEM_TYPE_CONSTANT) {
+    bprintf(out, " constant");
+  }
 }
 
 // For debug/test output, prettyprint a structure type
@@ -2878,6 +2885,10 @@ error:
 // * the variable type must be bigger than the expression type
 // Here ast is used only to give a place to put any errors.
 cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
+  if (is_constant(sem_type_needed)) {
+    report_error(ast, "CQL0502: Cannot re-assign value to constant variable", var_name);
+    return false;
+  }
   if (!sem_verify_compat(ast, sem_type_needed, sem_type_found, var_name)) {
     return false;
   }
@@ -17909,13 +17920,13 @@ static void sem_assign(ast_node *ast) {
 }
 
 static void sem_let_stmt(ast_node *ast) {
-  Contract(is_ast_let_stmt(ast));
+  Contract(is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
 
   EXTRACT_ANY_NOTNULL(variable, ast->left)
   EXTRACT_STRING(name, variable);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  // LET [name] := [expr]
+  // LET [name] := [expr] or CONST [name] := [expr]
   if (!sem_verify_legal_variable_name(variable, name)) {
     record_error(ast);
     return;
@@ -17945,6 +17956,16 @@ static void sem_let_stmt(ast_node *ast) {
   variable->sem->name = name;
   variable->sem->kind = expr->sem->kind;
   add_variable(name, variable);
+}
+
+// CONST variable declaration are equivalent to LET declarations, but
+// the variable ast has the extra CONST sem_type flag, which marks it immutable
+static void sem_const_stmt(ast_node *ast) {
+  Contract(is_ast_const_stmt(ast));
+  sem_let_stmt(ast);
+
+  EXTRACT_ANY_NOTNULL(variable, ast->left)
+  variable->sem->sem_type |= SEM_TYPE_CONSTANT;
 }
 
 // In/out processing for a procedure just decodes the AST into the sem_type
@@ -25064,6 +25085,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_out_call_stmt);
   STMT_INIT(declare_vars_type);
   STMT_INIT(let_stmt);
+  STMT_INIT(const_stmt);
   STMT_INIT(assign);
   STMT_INIT(set_from_cursor);
   STMT_INIT(misc_attrs);

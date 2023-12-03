@@ -4661,3 +4661,7 @@ In a `CASE` statement each `WHEN` expression must not be a constant NULL. For ex
 
 When the case expression `color` evaluates to NULL, it does not match with an expression that evaluates to NULL.
 Consequently, the CASE statement will default to the ELSE clause, provided it is defined.
+
+### CQL0502: Cannot re-assign value to constant variable.
+
+When you declare variables with the `const` syntax, they cannot be re-assigned a new value (e.g. with a `set` statement, are being passed to an out argument). Declare these variables with a `let` statement instead if you would like to mutate them.

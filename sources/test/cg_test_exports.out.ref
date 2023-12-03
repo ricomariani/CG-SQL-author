@@ -282,4 +282,5 @@ DECLARE PROC qid_t4a ();
 DECLARE PROC qid_t4b ();
 DECLARE PROC qid_t5 () USING TRANSACTION;
 DECLARE PROC qid_t6 () USING TRANSACTION;
+DECLARE PROC declare_constant_variable ();
 DECLARE PROC end_proc ();

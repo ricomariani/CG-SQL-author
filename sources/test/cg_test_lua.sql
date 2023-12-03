@@ -5240,6 +5240,14 @@ begin
   set x := stew1(z);
 end;
 
+-- TEST: declare constant variable
+-- + local const_variable = 0
+-- + const_variable = 1
+create proc declare_constant_variable()
+begin
+  const const_variable := 1;
+end;
+
 --------------------------------------------------------------------
 -------------------- add new tests before this point ---------------
 --------------------------------------------------------------------

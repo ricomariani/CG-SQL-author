@@ -271,6 +271,7 @@ static void cql_reset_globals(void);
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
+%token BEGIN_INCLUDE END_INCLUDE
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -515,6 +516,23 @@ stmt_list[result]:
      // re-establish the tail invariant per the above
      $slist->parent = new_stmt;
      $result = $slist;
+     }
+  | opt_stmt_list[slist] BEGIN_INCLUDE stmt_list[slist2] END_INCLUDE {
+       ast_node *slist = $slist;
+       ast_node *slist2 = $slist2;
+       $result = $slist2;
+       if ($slist) {
+         // use our tail pointer invariant so we can add at the tail without searching
+         ast_node *tail = $slist->parent;
+
+         // re-establish the tail invariant per the above
+         $slist->parent = $slist2->parent;
+
+         // link in the new list (note that this will changee the parent pointer saved above)
+         ast_set_right(tail, $slist2);
+
+         $result = $slist;
+       }
      }
   | stmt_list[slist] stmt_list_macro_ref[stmt] ';' {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);

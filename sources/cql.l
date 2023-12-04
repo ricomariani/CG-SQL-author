@@ -267,7 +267,10 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 <skipping>.
 <skipping>[\n]
 
-@INCLUDE                         { BEGIN(at_inc); }
+@INCLUDE                         {
+                                   BEGIN(at_inc);
+                                   return BEGIN_INCLUDE;
+                                 }
 <at_inc>{sp}*
 <at_inc>{cstrlit}                {
                                    cql_setup_for_include(yytext);
@@ -633,6 +636,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                      yy_switch_to_buffer(inc->buf);
                                      yylineno = inc->line_saved;
                                      current_file = inc->filename_saved;
+                                     return END_INCLUDE;
                                    }
                                  }
 

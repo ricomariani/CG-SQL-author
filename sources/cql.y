@@ -518,8 +518,6 @@ stmt_list[result]:
      $result = $slist;
      }
   | opt_stmt_list[slist] BEGIN_INCLUDE stmt_list[slist2] END_INCLUDE {
-       ast_node *slist = $slist;
-       ast_node *slist2 = $slist2;
        $result = $slist2;
        if ($slist) {
          // use our tail pointer invariant so we can add at the tail without searching

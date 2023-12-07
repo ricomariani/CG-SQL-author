@@ -7689,7 +7689,6 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_inline, bool_t is_set_null)
 {
   charbuf *h = info->headers;
-  charbuf *d = info->defs;
   charbuf *out = NULL;
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(

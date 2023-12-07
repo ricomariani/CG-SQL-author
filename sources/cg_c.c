@@ -7549,77 +7549,6 @@ typedef struct function_info {
   CSTR value_suffix;
 } function_info;
 
-// Using the information above we emit a column getter.  The essence of this
-// is to reach into the data field of the result set and index the requested row
-// then fetch the column.  There's two parts to this:
-// * First we need to compute the name of the getter, it's fairly simple coming
-//   from the name of the procedure that had the select and the field name that we
-//   are getting.
-// * Second we emit the body of the getter there's a few cases here
-//   * for fragments, we don't do our own getting, the master assembled query knows
-//     all the pieces so we delegate to it;  but we need to emit a declaration for
-//     the getter in the master query
-//   * for normal rowsets it's foo->data[i].column
-//   * for single row result sets it's just foo->data->column; there is only the one row
-static void cg_proc_result_set_getter(function_info *info) {
-  charbuf *h = info->headers;
-  charbuf *d = info->defs;
-
-  CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
-    col_getter_sym,
-    "",
-    info->name,
-    "_get_",
-    info->col,
-    info->sym_suffix);
-
-  CHARBUF_OPEN(func_decl);
-  cg_col_reader_type(&func_decl, info->ret_type, info->ret_kind, col_getter_sym.ptr);
-  bprintf(&func_decl, "(%s _Nonnull result_set", info->result_set_ref_type);
-
-  // a procedure that uses OUT gives exactly one row, so no index in the API
-  if (!info->uses_out) {
-    bprintf(&func_decl, ", %s row", rt->cql_int32);
-  }
-
-  bprintf(&func_decl, ")");
-  bprintf(h, "%s%s;\n", rt->symbol_visibility, func_decl.ptr);
-  bprintf(d, "\n%s {\n", func_decl.ptr);
-
-  bprintf(d,
-    "  %s *data = (%s *)%s((cql_result_set_ref)result_set);\n",
-    info->row_struct_type,
-    info->row_struct_type,
-    rt->cql_result_set_get_data);
-
-  CHARBUF_OPEN(cast_tmp);
-
-  // cast the data type in the buffer to the correct result type
-  if (is_result_set_type(info->ret_type, info->ret_kind)) {
-    bprintf(&cast_tmp, "(");
-    cg_result_set_type_from_kind(&cast_tmp, info->ret_type, info->ret_kind);
-    bprintf(&cast_tmp, ")");
-  }
-
-  // Single row result set is always data[0]
-  // And data->field looks nicer than data[0].field
-  if (info->uses_out) {
-    bprintf(d, "  return %sdata->%s%s;\n",
-      cast_tmp.ptr, info->col, info->value_suffix ? info->value_suffix : "");
-  }
-  else {
-    bprintf(d, "  return %sdata[row].%s%s;\n",
-    cast_tmp.ptr, info->col, info->value_suffix ? info->value_suffix : "");
-  }
-
-  CHARBUF_CLOSE(cast_tmp);
-
-  bprintf(d, "}\n");
-
-  CHARBUF_CLOSE(func_decl);
-  CHARBUF_CLOSE(col_getter_sym);
-}
-
 // The inlineable version of the getter can be generated instead of the opened coded version as above
 // This type inlines well because it uses a small number of standard helpers to do the fetching.
 // The situation is not so different from the original open coded case above.
@@ -7663,6 +7592,8 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 
   // The inline body will all go into the header file in the normal case.
   // Note it's ok for these to be static inline because they have a different name
+  bprintf(h, "#ifndef _%s_inline_\n", col_getter_sym.ptr);
+  bprintf(h, "#define _%s_inline_\n\n", col_getter_sym.ptr);
   bprintf(h, "\nstatic inline %s {\n", func_decl.ptr);
   out = h;
 
@@ -7717,6 +7648,7 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   }
   bprintf(out, "((cql_result_set_ref)result_set, %s, %d)%s;\n", row, info->col_index, trailing_string);
   bprintf(out, "}\n");
+  bprintf(h, "\n#endif\n\n");
 
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(col_getter_sym);
@@ -7724,8 +7656,6 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 
 #define DO_EMIT_SET_NULL true
 #define DONT_EMIT_SET_NULL false
-#define DO_USE_INLINE true
-#define DONT_USE_INLINE false
 
 // This function generate a inline or export version of a setter by using the function_info
 // passed in
@@ -7752,13 +7682,9 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 //  cql_set_null(new_value_);
 //  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
 // }
-// use_inline arg is about the function visibility, on true will generate a static inline function
-// vs a extern function on false
-static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_inline, bool_t is_set_null)
+static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_set_null)
 {
-  charbuf *h = info->headers;
-  charbuf *d = info->defs;
-  charbuf *out = NULL;
+  charbuf *out = info->headers;
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
@@ -7775,27 +7701,15 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_i
   }
 
   CHARBUF_OPEN(func_decl);
-  if (use_inline) {
-    bprintf(&func_decl, "static inline void %s", col_getter_sym.ptr);
-  } else {
-    bprintf(&func_decl, "%svoid %s", rt->symbol_visibility, col_getter_sym.ptr);
-  }
+
+  bprintf(&func_decl, "#ifndef _%s_inline_\n", col_getter_sym.ptr);
+  bprintf(&func_decl, "#define _%s_inline_\n\n", col_getter_sym.ptr);
+  bprintf(&func_decl, "static inline void %s", col_getter_sym.ptr);
   bprintf(&func_decl, "(%s _Nonnull result_set", info->result_set_ref_type);
 
   // a procedure that uses OUT gives exactly one row, so no index in the API
   if (!info->uses_out) {
     bprintf(&func_decl, ", %s row", rt->cql_int32);
-  }
-
-  if (use_inline) {
-    out = h;
-  } else {
-    if (is_set_null) {
-      bprintf(h, "%s);\n", func_decl.ptr);
-    } else {
-      bprintf(h, "%s, %s);\n", func_decl.ptr, var_decl.ptr);
-    }
-    out = d;
   }
 
   if (is_set_null) {
@@ -7853,6 +7767,7 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_i
   }
 
   bprintf(out, "}\n");
+  bprintf(out, "\n#endif\n");
 
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(var_decl);
@@ -8048,14 +7963,12 @@ static void cg_proc_result_set(ast_node *ast) {
           data_types_sym.ptr,
           data_types_count_sym.ptr);
 
-  // If we are generating the typed getters, setup the function tables.
-  if (options.generate_type_getters) {
-    bprintf(h,
-      "\n%suint8_t %s[%s];\n",
-      rt->symbol_visibility,
-      data_types_sym.ptr,
-      data_types_count_sym.ptr);
-  }
+  // we always use typed getters, setup the function tables.
+  bprintf(h,
+    "\n%suint8_t %s[%s];\n",
+    rt->symbol_visibility,
+    data_types_sym.ptr,
+    data_types_count_sym.ptr);
 
   bprintf(h, "\n");
 
@@ -8109,66 +8022,33 @@ static void cg_proc_result_set(ast_node *ast) {
       .ret_kind = kind,
     };
 
-    if (options.generate_type_getters) {
-      if (col_is_nullable && !is_ref_type(sem_type)) {
-        info.ret_type = SEM_TYPE_BOOL | SEM_TYPE_NOTNULL;
-        info.name_type = SEM_TYPE_NULL;
-        info.sym_suffix = "_is_null";
-        cg_proc_result_set_type_based_getter(&info);
-
-        info.ret_type = core_type | SEM_TYPE_NOTNULL;
-        info.name_type = core_type;
-        info.sym_suffix = "_value";
-        cg_proc_result_set_type_based_getter(&info);
-
-        if (emit_setters) {
-          info.name_type = core_type;
-          cg_proc_result_set_setter(&info, DO_USE_INLINE, DONT_EMIT_SET_NULL);
-
-          // set null setter
-          info.sym_suffix = "_to_null";
-          cg_proc_result_set_setter(&info, DO_USE_INLINE, DO_EMIT_SET_NULL);
-        }
-      }
-      else {
-        info.ret_type = sem_type;
-        info.name_type = core_type;
-        info.sym_suffix = NULL;
-        cg_proc_result_set_type_based_getter(&info);
-        if (emit_setters) {
-          cg_proc_result_set_setter(&info, DO_USE_INLINE, DONT_EMIT_SET_NULL);
-        }
-      }
-    }
-    else if (col_is_nullable && is_numeric(sem_type)) {
+    if (col_is_nullable && !is_ref_type(sem_type)) {
       info.ret_type = SEM_TYPE_BOOL | SEM_TYPE_NOTNULL;
+      info.name_type = SEM_TYPE_NULL;
       info.sym_suffix = "_is_null";
-      info.value_suffix = ".is_null";
-      cg_proc_result_set_getter(&info);
+      cg_proc_result_set_type_based_getter(&info);
 
-      info.ret_type = core_type | SEM_TYPE_NOTNULL,
+      info.ret_type = core_type | SEM_TYPE_NOTNULL;
+      info.name_type = core_type;
       info.sym_suffix = "_value";
-      info.value_suffix = ".value";
-      cg_proc_result_set_getter(&info);
+      cg_proc_result_set_type_based_getter(&info);
 
       if (emit_setters) {
         info.name_type = core_type;
-        cg_proc_result_set_setter(&info, DONT_USE_INLINE, DONT_EMIT_SET_NULL);
+        cg_proc_result_set_setter(&info, DONT_EMIT_SET_NULL);
 
         // set null setter
         info.sym_suffix = "_to_null";
-        cg_proc_result_set_setter(&info, DONT_USE_INLINE, DO_EMIT_SET_NULL);
+        cg_proc_result_set_setter(&info, DO_EMIT_SET_NULL);
       }
     }
     else {
       info.ret_type = sem_type;
+      info.name_type = core_type;
       info.sym_suffix = NULL;
-      info.value_suffix = NULL;
-      cg_proc_result_set_getter(&info);
-
+      cg_proc_result_set_type_based_getter(&info);
       if (emit_setters) {
-        info.name_type = core_type;
-        cg_proc_result_set_setter(&info, DONT_USE_INLINE, DONT_EMIT_SET_NULL);
+        cg_proc_result_set_setter(&info, DONT_EMIT_SET_NULL);
       }
     }
 
@@ -8193,9 +8073,7 @@ static void cg_proc_result_set(ast_node *ast) {
     }
   }
 
-  if (options.generate_type_getters) {
-    bprintf(h, "\n");
-  }
+  bprintf(h, "\n");
 
   CHARBUF_OPEN(is_null_getter);
 

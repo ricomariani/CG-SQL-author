@@ -84,7 +84,6 @@ typedef struct cmd_options {
   bool_t semantic;
   bool_t codegen;
   bool_t compress;
-  bool_t generate_type_getters;
   bool_t generate_exports;
   bool_t run_unit_tests;
   bool_t nolines;
@@ -174,10 +173,6 @@ typedef struct rtdata {
 
   // The case to use for symbols.
   cg_symbol_case symbol_case;
-
-  // If enabled, generic type-based getters are used by the generated code, registering the callback function
-  // pointers when creating the result set objects.
-  bool_t generate_type_getters;
 
   // If enabled, macros will be generated to test equality between 2 list/index pairs.
   bool_t generate_equality_macros;
@@ -379,7 +374,7 @@ typedef struct rtdata {
   //   refOffsets:  unsigned short *refOffsets (offsets to all of the references in a row)
   //   rowsize:     size_t rowsize  (the size of each row in bytes)
   //
-  // The following getter callbacks are only used when generate_type_getters is true.
+  // The following getter callbacks are used to fetch values in the typed getters
   //   getBoolean:  Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
   //   getDouble:   double (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
   //   getInt32:    int32_t (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
@@ -427,7 +422,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_data;
 
   // Generic bool value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -437,7 +432,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_bool;
 
   // Generic double value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -447,7 +442,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_double;
 
   // Generic int32 value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -457,7 +452,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_int32;
 
   // Generic int64 value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -467,7 +462,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_int64;
 
   // Generic string value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -477,7 +472,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_string;
 
   // Generic object value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -487,7 +482,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_object;
 
   // Generic blob value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -497,7 +492,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_blob;
 
   // Generic is_null value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param row The row number to fetch the value for.
@@ -507,7 +502,7 @@ typedef struct rtdata {
   const char *cql_result_set_get_is_null;
 
   // Generic is_encoded value getter on base result set object.
-  // NOTE: This is only used when generate_type_getters is true.  This function should call through to the
+  // NOTE: This function should call through to the
   // inline type getters that are passed into the ctor for the result set.
   // @param result_set The cql result_set object.
   // @param col The column to fetch the value for.

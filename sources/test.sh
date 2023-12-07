@@ -371,7 +371,7 @@ code_gen_c_test() {
   cql_verify "$T/cg_test_c_globals.sql" "$O/cg_test_c_globals.h"
 
   echo running codegen test with type getters enabled
-  if ! ${CQL} --test --cg "$O/cg_test_c_with_type_getters.h" "$O/cg_test_c_with_type_getters.c" --in "$T/cg_test_c_type_getters.sql" --global_proc cql_startup --generate_type_getters  2>"$O/cg_test_c.err"
+  if ! ${CQL} --test --cg "$O/cg_test_c_with_type_getters.h" "$O/cg_test_c_with_type_getters.c" --in "$T/cg_test_c_type_getters.sql" --global_proc cql_startup 2>"$O/cg_test_c.err"
   then
     echo "ERROR:"
     cat "$O/cg_test_c.err"

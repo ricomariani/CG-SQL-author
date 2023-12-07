@@ -74,7 +74,3 @@ Result Types (--rt *) These are the various outputs the compiler can produce.
 --generate_exports
   requires another output file to --cg; it contains the procedure declarations for the input
   used with --rt c
---generate_type_getters
-  emits rowset accessors using shared type getters instead of individual functions
-  this makes them more interoperable if they share columns
-  used with --rt c

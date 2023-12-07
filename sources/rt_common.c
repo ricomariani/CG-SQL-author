@@ -45,7 +45,6 @@ static rtdata rt_c = {
     RT_IP_NOTICE("--")
     RT_AUTOGEN("--") "\n",
   .symbol_case = cg_symbol_case_snake,
-  .generate_type_getters = 0,
   .generate_equality_macros = 1,
   .symbol_prefix = "",
   .symbol_visibility = "extern ",
@@ -120,7 +119,6 @@ static rtdata rt_lua = {
   .source_wrapper_end = "",
   .exports_prefix = "",
   .symbol_case = cg_symbol_case_snake,
-  .generate_type_getters = 0,
   .generate_equality_macros = 1,
   .symbol_prefix = ""
 };
@@ -138,7 +136,6 @@ static rtdata rt_objc = {
   .header_wrapper_begin = "\nNS_ASSUME_NONNULL_BEGIN\n",
   .header_wrapper_end = "\nNS_ASSUME_NONNULL_END\n",
   .symbol_case = RT_OBJC_CASE,
-  .generate_type_getters = 1,
   .generate_equality_macros = 1,
   .symbol_prefix = RT_SYM_PREFIX,
   .impl_symbol_prefix = RT_IMPL_SYMBOL_PREFIX,
@@ -167,7 +164,6 @@ static rtdata rt_objc_mit = {
   .header_wrapper_begin = "\nNS_ASSUME_NONNULL_BEGIN\n",
   .header_wrapper_end = "\nNS_ASSUME_NONNULL_END\n",
   .symbol_case = cg_symbol_case_snake,
-  .generate_type_getters = 1,
   .generate_equality_macros = 1,
   .symbol_prefix = "CGS_",
   .impl_symbol_prefix = "",
@@ -272,11 +268,6 @@ cql_noexport rtdata *find_rtdata(CSTR name) {
        break;
     }
     i++;
-  }
-
-  // the result type can override this, we don't want to check both places so normalize to the option.
-  if (rt_) {
-    options.generate_type_getters |= rt_->generate_type_getters;
   }
 
   return rt_;

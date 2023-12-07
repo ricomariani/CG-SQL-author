@@ -60,70 +60,166 @@ extern uint8_t selector_data_types[selector_data_types_count];
 #define result_set_type_decl_selector_result_set 1
 cql_result_set_type_decl(selector_result_set, selector_result_set_ref);
 #endif
+#ifndef _selector_get_f1_inline_
+#define _selector_get_f1_inline_
+
 
 static inline cql_int32 selector_get_f1(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
 }
 
+#endif
+
+#ifndef _selector_get_f2_inline_
+#define _selector_get_f2_inline_
+
+
 static inline cql_string_ref _Nonnull selector_get_f2(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
 }
+
+#endif
+
+#ifndef _selector_get_f3_inline_
+#define _selector_get_f3_inline_
+
 
 static inline cql_double selector_get_f3(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 2);
 }
 
+#endif
+
+#ifndef _selector_get_f4_inline_
+#define _selector_get_f4_inline_
+
+
 static inline cql_bool selector_get_f4(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 3);
 }
+
+#endif
+
+#ifndef _selector_get_f5_inline_
+#define _selector_get_f5_inline_
+
 
 static inline cql_int64 selector_get_f5(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 4);
 }
 
+#endif
+
+#ifndef _selector_get_f6_inline_
+#define _selector_get_f6_inline_
+
+
 static inline cql_blob_ref _Nonnull selector_get_f6(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
 }
+
+#endif
+
+#ifndef _selector_get_g1_is_null_inline_
+#define _selector_get_g1_is_null_inline_
+
 
 static inline cql_bool selector_get_g1_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 6);
 }
 
+#endif
+
+#ifndef _selector_get_g1_value_inline_
+#define _selector_get_g1_value_inline_
+
+
 static inline cql_int32 selector_get_g1_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
 }
+
+#endif
+
+#ifndef _selector_get_g2_inline_
+#define _selector_get_g2_inline_
+
 
 static inline cql_string_ref _Nullable selector_get_g2(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 7) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 7);
 }
 
+#endif
+
+#ifndef _selector_get_g3_is_null_inline_
+#define _selector_get_g3_is_null_inline_
+
+
 static inline cql_bool selector_get_g3_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 8);
 }
+
+#endif
+
+#ifndef _selector_get_g3_value_inline_
+#define _selector_get_g3_value_inline_
+
 
 static inline cql_double selector_get_g3_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 8);
 }
 
+#endif
+
+#ifndef _selector_get_g4_is_null_inline_
+#define _selector_get_g4_is_null_inline_
+
+
 static inline cql_bool selector_get_g4_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 9);
 }
+
+#endif
+
+#ifndef _selector_get_g4_value_inline_
+#define _selector_get_g4_value_inline_
+
 
 static inline cql_bool selector_get_g4_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 9);
 }
 
+#endif
+
+#ifndef _selector_get_g5_is_null_inline_
+#define _selector_get_g5_is_null_inline_
+
+
 static inline cql_bool selector_get_g5_is_null(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 10);
 }
+
+#endif
+
+#ifndef _selector_get_g5_value_inline_
+#define _selector_get_g5_value_inline_
+
 
 static inline cql_int64 selector_get_g5_value(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 10);
 }
 
+#endif
+
+#ifndef _selector_get_g6_inline_
+#define _selector_get_g6_inline_
+
+
 static inline cql_blob_ref _Nullable selector_get_g6(selector_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 11) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 11);
 }
+
+#endif
+
 
 extern cql_int32 selector_result_count(selector_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector_result_set_ref _Nullable *_Nonnull result_set);
@@ -148,10 +244,16 @@ extern uint8_t emit_object_result_set_data_types[emit_object_result_set_data_typ
 #define result_set_type_decl_emit_object_result_set_result_set 1
 cql_result_set_type_decl(emit_object_result_set_result_set, emit_object_result_set_result_set_ref);
 #endif
+#ifndef _emit_object_result_set_get_o_inline_
+#define _emit_object_result_set_get_o_inline_
+
 
 static inline cql_object_ref _Nonnull emit_object_result_set_get_o(emit_object_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_object_col((cql_result_set_ref)result_set, row, 0);
 }
+
+#endif
+
 
 extern cql_int32 emit_object_result_set_result_count(emit_object_result_set_result_set_ref _Nonnull result_set);
 #define emit_object_result_set_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)
@@ -176,70 +278,166 @@ extern uint8_t sproc_copy_func_data_types[sproc_copy_func_data_types_count];
 #define result_set_type_decl_sproc_copy_func_result_set 1
 cql_result_set_type_decl(sproc_copy_func_result_set, sproc_copy_func_result_set_ref);
 #endif
+#ifndef _sproc_copy_func_get_f1_inline_
+#define _sproc_copy_func_get_f1_inline_
+
 
 static inline cql_int32 sproc_copy_func_get_f1(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_f2_inline_
+#define _sproc_copy_func_get_f2_inline_
+
+
 static inline cql_string_ref _Nonnull sproc_copy_func_get_f2(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 1);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_f3_inline_
+#define _sproc_copy_func_get_f3_inline_
+
 
 static inline cql_double sproc_copy_func_get_f3(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 2);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_f4_inline_
+#define _sproc_copy_func_get_f4_inline_
+
+
 static inline cql_bool sproc_copy_func_get_f4(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 3);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_f5_inline_
+#define _sproc_copy_func_get_f5_inline_
+
 
 static inline cql_int64 sproc_copy_func_get_f5(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 4);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_f6_inline_
+#define _sproc_copy_func_get_f6_inline_
+
+
 static inline cql_blob_ref _Nonnull sproc_copy_func_get_f6(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 5);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_g1_is_null_inline_
+#define _sproc_copy_func_get_g1_is_null_inline_
+
 
 static inline cql_bool sproc_copy_func_get_g1_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 6);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_g1_value_inline_
+#define _sproc_copy_func_get_g1_value_inline_
+
+
 static inline cql_int32 sproc_copy_func_get_g1_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 6);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_g2_inline_
+#define _sproc_copy_func_get_g2_inline_
+
 
 static inline cql_string_ref _Nullable sproc_copy_func_get_g2(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 7) ? NULL : cql_result_set_get_string_col((cql_result_set_ref)result_set, row, 7);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_g3_is_null_inline_
+#define _sproc_copy_func_get_g3_is_null_inline_
+
+
 static inline cql_bool sproc_copy_func_get_g3_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 8);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_g3_value_inline_
+#define _sproc_copy_func_get_g3_value_inline_
+
 
 static inline cql_double sproc_copy_func_get_g3_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_double_col((cql_result_set_ref)result_set, row, 8);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_g4_is_null_inline_
+#define _sproc_copy_func_get_g4_is_null_inline_
+
+
 static inline cql_bool sproc_copy_func_get_g4_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 9);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_g4_value_inline_
+#define _sproc_copy_func_get_g4_value_inline_
+
 
 static inline cql_bool sproc_copy_func_get_g4_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_bool_col((cql_result_set_ref)result_set, row, 9);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_g5_is_null_inline_
+#define _sproc_copy_func_get_g5_is_null_inline_
+
+
 static inline cql_bool sproc_copy_func_get_g5_is_null(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 10);
 }
+
+#endif
+
+#ifndef _sproc_copy_func_get_g5_value_inline_
+#define _sproc_copy_func_get_g5_value_inline_
+
 
 static inline cql_int64 sproc_copy_func_get_g5_value(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int64_col((cql_result_set_ref)result_set, row, 10);
 }
 
+#endif
+
+#ifndef _sproc_copy_func_get_g6_inline_
+#define _sproc_copy_func_get_g6_inline_
+
+
 static inline cql_blob_ref _Nullable sproc_copy_func_get_g6(sproc_copy_func_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 11) ? NULL : cql_result_set_get_blob_col((cql_result_set_ref)result_set, row, 11);
 }
+
+#endif
+
 
 extern cql_int32 sproc_copy_func_result_count(sproc_copy_func_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, sproc_copy_func_result_set_ref _Nullable *_Nonnull result_set);
@@ -270,15 +468,26 @@ extern uint8_t emit_object_with_setters_data_types[emit_object_with_setters_data
 #define result_set_type_decl_emit_object_with_setters_result_set 1
 cql_result_set_type_decl(emit_object_with_setters_result_set, emit_object_with_setters_result_set_ref);
 #endif
+#ifndef _emit_object_with_setters_get_o_inline_
+#define _emit_object_with_setters_get_o_inline_
+
 
 static inline cql_object_ref _Nonnull emit_object_with_setters_get_o(emit_object_with_setters_result_set_ref _Nonnull result_set) {
   return cql_result_set_get_object_col((cql_result_set_ref)result_set, 0, 0);
 }
 
+#endif
+
+
+#ifndef _emit_object_with_setters_set_o_inline_
+#define _emit_object_with_setters_set_o_inline_
+
 static inline void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
   cql_contract_argument_notnull((void *)new_value, 2);
   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
 }
+
+#endif
 
 extern cql_int32 emit_object_with_setters_result_count(emit_object_with_setters_result_set_ref _Nonnull result_set);
 extern void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set_ref _Nullable *_Nonnull result_set, cql_object_ref _Nonnull o);
@@ -303,14 +512,26 @@ extern uint8_t simple_child_proc_data_types[simple_child_proc_data_types_count];
 #define result_set_type_decl_simple_child_proc_result_set 1
 cql_result_set_type_decl(simple_child_proc_result_set, simple_child_proc_result_set_ref);
 #endif
+#ifndef _simple_child_proc_get_x_inline_
+#define _simple_child_proc_get_x_inline_
+
 
 static inline cql_int32 simple_child_proc_get_x(simple_child_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
 }
 
+#endif
+
+#ifndef _simple_child_proc_get_y_inline_
+#define _simple_child_proc_get_y_inline_
+
+
 static inline cql_int32 simple_child_proc_get_y(simple_child_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
 }
+
+#endif
+
 
 extern cql_int32 simple_child_proc_result_count(simple_child_proc_result_set_ref _Nonnull result_set);
 extern CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_, simple_child_proc_result_set_ref _Nullable *_Nonnull result_set);
@@ -335,38 +556,82 @@ extern uint8_t simple_container_proc_data_types[simple_container_proc_data_types
 #define result_set_type_decl_simple_container_proc_result_set 1
 cql_result_set_type_decl(simple_container_proc_result_set, simple_container_proc_result_set_ref);
 #endif
+#ifndef _simple_container_proc_get_a_is_null_inline_
+#define _simple_container_proc_get_a_is_null_inline_
+
 
 static inline cql_bool simple_container_proc_get_a_is_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 0);
 }
 
+#endif
+
+#ifndef _simple_container_proc_get_a_value_inline_
+#define _simple_container_proc_get_a_value_inline_
+
+
 static inline cql_int32 simple_container_proc_get_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 0);
 }
+
+#endif
+
+
+#ifndef _simple_container_proc_set_a_value_inline_
+#define _simple_container_proc_set_a_value_inline_
 
 static inline void simple_container_proc_set_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
 }
 
+#endif
+
+#ifndef _simple_container_proc_set_a_to_null_inline_
+#define _simple_container_proc_set_a_to_null_inline_
+
 static inline void simple_container_proc_set_a_to_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 0);
 }
+
+#endif
+#ifndef _simple_container_proc_get_b_inline_
+#define _simple_container_proc_get_b_inline_
+
 
 static inline cql_int32 simple_container_proc_get_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   return cql_result_set_get_int32_col((cql_result_set_ref)result_set, row, 1);
 }
 
+#endif
+
+
+#ifndef _simple_container_proc_set_b_inline_
+#define _simple_container_proc_set_b_inline_
+
 static inline void simple_container_proc_set_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
   cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 1, new_value);
 }
+
+#endif
+#ifndef _simple_container_proc_get_c_inline_
+#define _simple_container_proc_get_c_inline_
+
 
 static inline simple_child_proc_result_set_ref _Nullable simple_container_proc_get_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
   return (simple_child_proc_result_set_ref _Nullable )(cql_result_set_get_is_null_col((cql_result_set_ref)result_set, row, 2) ? NULL : cql_result_set_get_object_col((cql_result_set_ref)result_set, row, 2));
 }
 
+#endif
+
+
+#ifndef _simple_container_proc_set_c_inline_
+#define _simple_container_proc_set_c_inline_
+
 static inline void simple_container_proc_set_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, simple_child_proc_result_set_ref _Nullable new_value) {
   cql_result_set_set_object_col((cql_result_set_ref)result_set, row, 2, (cql_object_ref)new_value);
 }
+
+#endif
 
 extern cql_int32 simple_container_proc_result_count(simple_container_proc_result_set_ref _Nonnull result_set);
 #define simple_container_proc_row_hash(result_set, row) cql_result_set_get_meta((cql_result_set_ref)(result_set))->rowHash((cql_result_set_ref)(result_set), row)

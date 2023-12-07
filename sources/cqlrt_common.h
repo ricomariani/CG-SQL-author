@@ -84,7 +84,7 @@ typedef struct cql_nullable_bool {
 
 typedef long long llint_t;
 
-// These macros are only used when generate_type_getters is enabled.
+// These macros are used for the typed getters
 #define CQL_DATA_TYPE_INT32     1       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_INT64     2       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_DOUBLE    3       // note these are array offsets, do not reorder them!

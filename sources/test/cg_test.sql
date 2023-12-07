@@ -740,14 +740,6 @@ set b0_nullable := 'b' not between null and 'c';
 
 -- TEST: this procedure will have a structured semantic type
 -- + cql_string_proc_name(with_result_set_stored_procedure_name, "with_result_set");
--- + cql_int32 with_result_set_get_id(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_string_ref _Nullable with_result_set_get_name(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_bool with_result_set_get_rate_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_int64 with_result_set_get_rate_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_bool with_result_set_get_type_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_int32 with_result_set_get_type_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_bool with_result_set_get_size_is_null(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_double with_result_set_get_size_value(with_result_set_result_set_ref _Nonnull result_set, cql_int32 row) {
 -- + uint8_t with_result_set_data_types[with_result_set_data_types_count] = {
 -- + #define with_result_set_refs_offset cql_offsetof(with_result_set_row, name) // count = 1
 -- + static cql_uint16 with_result_set_col_offsets[] = { 5,
@@ -763,10 +755,7 @@ end;
 -- TEST: grabs values from a view that is backed by a table
 -- - .refs_count = 0,
 -- - .refs_offset = 0,
--- + cql_int32 select_from_view_get_id(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_bool select_from_view_get_type_is_null(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_int32 select_from_view_get_type_value(select_from_view_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_int32 select_from_view_result_count(select_from_view_result_set_ref _Nonnull result_set) {
+ -- + cql_int32 select_from_view_result_count(select_from_view_result_set_ref _Nonnull result_set) {
 -- + CQL_WARN_UNUSED cql_code select_from_view_fetch_results(sqlite3 *_Nonnull _db_, select_from_view_result_set_ref _Nullable *_Nonnull result_set) {
 -- + cql_code select_from_view(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
 create proc select_from_view()
@@ -2896,26 +2885,9 @@ begin
 end;
 
 -- TEST: emit an object result set with setters with not null values
--- + extern void emit_object_with_setters_set_o(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
--- +   cql_contract_argument_notnull((void *)new_value, 2);
--- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
--- + extern void emit_object_with_setters_set_x(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_object_ref _Nonnull new_value) {
--- +   cql_contract_argument_notnull((void *)new_value, 2);
--- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 1, new_value);
--- + extern void emit_object_with_setters_set_i(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int32 new_value) {
--- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value);
--- + extern void emit_object_with_setters_set_l(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_int64 new_value) {
--- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value);
--- + extern void emit_object_with_setters_set_b(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_bool new_value) {
--- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value);
--- + extern void emit_object_with_setters_set_d(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_double new_value) {
--- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value);
--- + extern void emit_object_with_setters_set_t(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_string_ref _Nonnull new_value) {
--- +   cql_contract_argument_notnull((void *)new_value, 2);
--- +   cql_result_set_set_string_col((cql_result_set_ref)result_set, 0, 6, new_value);
--- + extern void emit_object_with_setters_set_bl(emit_object_with_setters_result_set_ref _Nonnull result_set, cql_blob_ref _Nonnull new_value) {
--- +   cql_contract_argument_notnull((void *)new_value, 2);
--- +   cql_result_set_set_blob_col((cql_result_set_ref)result_set, 0, 7, new_value);
+-- all this stuff goes in the header file so it's no longer present here
+-- - emit_object_with_setters_get_o
+-- - emit_object_with_setters_set_o
 @attribute(cql:emit_setters)
 create proc emit_object_with_setters(
   o object not null,
@@ -2933,30 +2905,9 @@ begin
 end;
 
 -- TEST: emit an object result set with setters with nullable values
--- + extern void emit_setters_with_nullables_set_o(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_object_ref _Nullable new_value) {
--- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 0, new_value);
--- + extern void emit_setters_with_nullables_set_x(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_object_ref _Nullable new_value) {
--- +   cql_result_set_set_object_col((cql_result_set_ref)result_set, 0, 1, new_value);
--- + extern void emit_setters_with_nullables_set_i_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int32 new_value) {
--- +   cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value);
--- + extern void emit_setters_with_nullables_set_i_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +  cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 2);
--- + extern void emit_setters_with_nullables_set_l_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_int64 new_value) {
--- +   cql_result_set_set_int64_col((cql_result_set_ref)result_set, 0, 3, new_value);
--- + extern void emit_setters_with_nullables_set_l_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 3);
--- + extern void emit_setters_with_nullables_set_b_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_bool new_value) {
--- +   cql_result_set_set_bool_col((cql_result_set_ref)result_set, 0, 4, new_value);
--- + extern void emit_setters_with_nullables_set_b_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 4);
--- + extern void emit_setters_with_nullables_set_d_value(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_double new_value) {
--- +   cql_result_set_set_double_col((cql_result_set_ref)result_set, 0, 5, new_value);
--- + extern void emit_setters_with_nullables_set_d_to_null(emit_setters_with_nullables_result_set_ref _Nonnull result_set) {
--- +   cql_result_set_set_to_null_col((cql_result_set_ref)result_set, 0, 5);
--- + extern void emit_setters_with_nullables_set_t(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_string_ref _Nullable new_value) {
--- +   cql_result_set_set_string_col((cql_result_set_ref)result_set, 0, 6, new_value);
--- + extern void emit_setters_with_nullables_set_bl(emit_setters_with_nullables_result_set_ref _Nonnull result_set, cql_blob_ref _Nullable new_value) {
--- +  cql_result_set_set_blob_col((cql_result_set_ref)result_set, 0, 7, new_value);
+-- all this stuff goes in the header file so it's no longer present here
+-- - emit_setters_with_nullables_get_o
+-- - emit_setters_with_nullables_set_o
 @attribute(cql:emit_setters)
 create proc emit_setters_with_nullables(
   o object,
@@ -2975,17 +2926,14 @@ end;
 
 
 -- TEST: emit an object result set not out and setters
--- + extern void no_out_with_setters_set_id(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value)
--- + extern void no_out_with_setters_set_name(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_string_ref _Nullable new_value)
--- + extern void no_out_with_setters_set_rate_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int64 new_value)
--- + extern void no_out_with_setters_set_type_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value)
--- + extern void no_out_with_setters_set_size_value(no_out_with_setters_result_set_ref _Nonnull result_set, cql_int32 row, cql_double new_value)
+-- all this stuff goes in the header file so it's no longer present here
+-- - no_out_with_setters_get_id
+-- - no_out_with_setters_set_id
 @attribute(cql:emit_setters)
 create proc no_out_with_setters()
 begin
   select * from bar;
 end;
-
 
 -- TEST: no result set items should be generated at all
 -- - CQL_DATA_TYPE
@@ -5316,22 +5264,9 @@ begin
 end;
 
 -- TEST: emit getters and setters for a simple result set set type
--- + cql_bool simple_container_proc_get_a_is_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + return data[row].a.is_null;
--- + cql_int32 simple_container_proc_get_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + return data[row].a.value;
--- + extern void simple_container_proc_set_a_value(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
--- + cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 0, new_value);
--- + extern void simple_container_proc_set_a_to_null(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + cql_result_set_set_to_null_col((cql_result_set_ref)result_set, row, 0);
--- + cql_int32 simple_container_proc_get_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + return data[row].b;
--- + void simple_container_proc_set_b(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 new_value) {
--- + cql_result_set_set_int32_col((cql_result_set_ref)result_set, row, 1, new_value);
--- + simple_child_proc_result_set_ref _Nullable simple_container_proc_get_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row) {
--- + return (simple_child_proc_result_set_ref _Nullable )data[row].c;
--- + extern void simple_container_proc_set_c(simple_container_proc_result_set_ref _Nonnull result_set, cql_int32 row, simple_child_proc_result_set_ref _Nullable new_value) {
--- + cql_result_set_set_object_col((cql_result_set_ref)result_set, row, 2, (cql_object_ref)new_value);
+-- this stuff all goes in the header now, should be nothing here
+-- - simple_container_proc_get_a_is_null
+-- - simple_container_proc_get_a_value
 @attribute(cql:emit_setters)
 create proc simple_container_proc()
 begin

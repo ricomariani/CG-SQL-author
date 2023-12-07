@@ -7656,8 +7656,6 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 
 #define DO_EMIT_SET_NULL true
 #define DONT_EMIT_SET_NULL false
-#define DO_USE_INLINE true
-#define DONT_USE_INLINE false
 
 // This function generate a inline or export version of a setter by using the function_info
 // passed in
@@ -7684,9 +7682,7 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 //  cql_set_null(new_value_);
 //  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
 // }
-// use_inline arg is about the function visibility, on true will generate a static inline function
-// vs a extern function on false
-static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_inline, bool_t is_set_null)
+static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_set_null)
 {
   charbuf *out = info->headers;
 
@@ -7771,10 +7767,7 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_i
   }
 
   bprintf(out, "}\n");
-
-  if (use_inline) {
-    bprintf(out, "\n#endif\n");
-  }
+  bprintf(out, "\n#endif\n");
 
   CHARBUF_CLOSE(func_decl);
   CHARBUF_CLOSE(var_decl);
@@ -8042,11 +8035,11 @@ static void cg_proc_result_set(ast_node *ast) {
 
       if (emit_setters) {
         info.name_type = core_type;
-        cg_proc_result_set_setter(&info, DO_USE_INLINE, DONT_EMIT_SET_NULL);
+        cg_proc_result_set_setter(&info, DONT_EMIT_SET_NULL);
 
         // set null setter
         info.sym_suffix = "_to_null";
-        cg_proc_result_set_setter(&info, DO_USE_INLINE, DO_EMIT_SET_NULL);
+        cg_proc_result_set_setter(&info, DO_EMIT_SET_NULL);
       }
     }
     else {
@@ -8055,7 +8048,7 @@ static void cg_proc_result_set(ast_node *ast) {
       info.sym_suffix = NULL;
       cg_proc_result_set_type_based_getter(&info);
       if (emit_setters) {
-        cg_proc_result_set_setter(&info, DO_USE_INLINE, DONT_EMIT_SET_NULL);
+        cg_proc_result_set_setter(&info, DONT_EMIT_SET_NULL);
       }
     }
 

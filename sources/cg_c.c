@@ -7688,8 +7688,7 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 // vs a extern function on false
 static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_inline, bool_t is_set_null)
 {
-  charbuf *h = info->headers;
-  charbuf *out = NULL;
+  charbuf *out = info->headers;
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
     col_getter_sym,
@@ -7716,8 +7715,6 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t use_i
   if (!info->uses_out) {
     bprintf(&func_decl, ", %s row", rt->cql_int32);
   }
-
-  out = h;
 
   if (is_set_null) {
     bprintf(out, "\n%s) {\n", func_decl.ptr);

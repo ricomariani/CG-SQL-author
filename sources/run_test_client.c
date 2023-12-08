@@ -37,6 +37,8 @@ cql_code test_all_column_some_encoded_field_with_encode_context(sqlite3 *db);
 cql_code test_all_column_encoded_runtime_turn_on_off(sqlite3 *db);
 cql_code test_cql_contract_argument_notnull_tripwires(sqlite3 *db);
 cql_code test_cql_rebuild_recreate_group(sqlite3 *db);
+cql_code test_cql_parent_child(sqlite3 *db);
+
 void take_bool(cql_nullable_bool x, cql_nullable_bool y);
 void take_bool_not_null(cql_bool x, cql_bool y);
 
@@ -200,6 +202,11 @@ cql_code run_client(sqlite3 *db) {
   SQL_E(test_cql_rebuild_recreate_group(db));
   E(!cql_outstanding_refs,
     "outstanding refs in test_cql_rebuild_recreate_group: %d\n",
+    cql_outstanding_refs);
+
+  SQL_E(test_cql_parent_child(db));
+  E(!cql_outstanding_refs,
+    "outstanding refs in test_cql_parent_child: %d\n",
     cql_outstanding_refs);
 
   return SQLITE_OK;
@@ -1818,4 +1825,56 @@ void take_bool(cql_nullable_bool x, cql_nullable_bool y)
 void take_bool_not_null(cql_bool x, cql_bool y)
 {
   _EXPECT(x == y, "not nullable bool normalization error\n");
+}
+
+cql_code test_cql_parent_child(sqlite3 *db) {
+  printf("Running parent/child rowset test\n");
+  tests++;
+
+  cql_code rc = TestParentChildInit(db);
+  E(rc == SQLITE_OK, "expected successful table init\n");
+
+  TestParentChild_result_set_ref parent;
+
+  rc = TestParentChild_fetch_results(db, &parent);
+  E(rc == SQLITE_OK, "expected to fetch results from tables succesfully\n");
+
+  cql_int32 count = TestParentChild_result_count(parent);
+  E(count == 2, "expected two rows\n");
+
+  for (int i = 0; i < count; i++) {
+    cql_int32 roomID = TestParentChild_get_roomID(parent, i);
+     cql_string_ref name_ref = TestParentChild_get_name(parent, i);
+
+     cql_alloc_cstr(cstr, name_ref);
+
+     if (roomID == 1) {
+       E(!strcmp(cstr, "foo"), "expected room to be 'foo'");
+     }
+     else {
+       E(!strcmp(cstr, "bar"), "expected room to be 'bar'");
+     }
+
+     cql_free_cstr(cstr, name_ref);
+
+     // note that the shape of the result set from the Parent/Child will be
+     // slightly different than the shape of child if you call it directly
+     // because the partitioning logic will add the columns `has_row`, 
+     // `refs_count` and `refs_offset`.  But this is supposed to be no problem.
+     // We verify the accessors work in this case with the code below
+
+     TestChild_result_set_ref child = TestParentChild_get_test_tasks(parent, i);
+     cql_int32 children = TestChild_result_count(child);
+
+     for (int j = 0; j < children; j++) {
+       cql_int32 child_room = TestChild_get_roomID(child, j);
+       cql_int32 child_task = TestChild_get_thisIsATask(child, j);
+
+       E(child_room == roomID, "expected matching parent and child room id\n");
+       E(child_task == 100*roomID + j, "child task did not match expected formula\n");
+     }
+  }
+  cql_result_set_release(parent);
+
+  return SQLITE_OK;
 }

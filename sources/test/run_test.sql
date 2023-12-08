@@ -6638,3 +6638,37 @@ end;
 ';
 
 @emit_enums;
+
+
+-- parent child test case
+proc TestParentChildInit()
+begin
+  create table test_tasks(
+   taskID int!,
+   roomID int!
+  );
+
+  create table test_rooms (
+    roomID int!,
+    name text
+  );
+
+  insert into test_rooms values (1, "foo"), (2, "bar");
+  insert into test_tasks values (100,1), (101,1), (200,2);
+end;
+
+[[private]]
+proc TestParent()
+begin
+  SELECT roomID, name FROM test_rooms ORDER BY name;
+end;
+
+proc TestChild()
+begin
+  SELECT roomID, test_tasks.taskID as thisIsATask FROM test_tasks;
+end;
+
+proc TestParentChild()
+begin
+  out union call TestParent() join call TestChild() using (roomID) as test_tasks;
+end;

@@ -271,7 +271,7 @@ static void cql_reset_globals(void);
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
-%token BEGIN_INCLUDE END_INCLUDE
+%left BEGIN_INCLUDE END_INCLUDE
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -323,7 +323,7 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
-%type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref top_level_stmts opt_top_level_stmts
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
 %type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref select_core_macro_ref select_expr_macro_ref
 
@@ -373,39 +373,74 @@ static void cql_reset_globals(void);
 
 %%
 
-program:
-  opt_stmt_list  {
+program: opt_top_level_stmts[stmts] {
     if (!parse_error_occurred) {
       gen_init();
       if (options.expand) {
-        expand_macros($opt_stmt_list);
+        expand_macros($stmts);
         if (macro_expansion_errors) {
           cql_cleanup_and_exit(1);
         }
       }
       if (options.semantic) {
-        sem_main($opt_stmt_list);
+        sem_main($stmts);
       }
       if (options.codegen) {
-        rt->code_generator($opt_stmt_list);
+        rt->code_generator($stmts);
       }
       else if (options.print_ast) {
-        print_root_ast($opt_stmt_list);
+        print_root_ast($stmts);
         cql_output("\n");
       } else if (options.print_dot) {
         cql_output("\ndigraph parse {");
-        print_dot($opt_stmt_list);
+        print_dot($stmts);
         cql_output("\n}\n");
       }
       else if (options.echo_input) {
-        gen_stmt_list_to_stdout($opt_stmt_list);
+        gen_stmt_list_to_stdout($stmts);
       }
       if (options.semantic) {
-        cql_exit_on_semantic_errors($opt_stmt_list);
+        cql_exit_on_semantic_errors($stmts);
       }
     }
   }
   ;
+
+opt_top_level_stmts[result]:
+  /*nil*/ { $result = NULL; }
+  | top_level_stmts { $result = $top_level_stmts; }
+  ;
+
+top_level_stmts[result]:
+  stmt_list { $result = $stmt_list; }
+  | opt_top_level_stmts[s1] BEGIN_INCLUDE top_level_stmts[s2] END_INCLUDE opt_top_level_stmts[s3] {
+       $result = $s2;
+       if ($s1) {
+         // use our tail pointer invariant so we can add at the tail without searching
+         ast_node *tail = $s1->parent;
+
+         // re-establish the tail invariant per the above
+         $s1->parent = $s2->parent;
+
+         // link in the new list (note that this will changee the parent pointer saved above)
+         ast_set_right(tail, $s2);
+
+         $result = $s1;
+       }
+
+       if ($s3) {
+         // use our tail pointer invariant so we can add at the tail without searching
+         ast_node *tail = $result->parent;
+
+         // re-establish the tail invariant per the above
+         $result->parent = $s3->parent;
+
+         // link in the new list (note that this will changee the parent pointer saved above)
+         ast_set_right(tail, $s3);
+       }
+     }
+  ;
+
 
 opt_stmt_list:
   /*nil*/  { $opt_stmt_list = NULL; }
@@ -516,21 +551,6 @@ stmt_list[result]:
      // re-establish the tail invariant per the above
      $slist->parent = new_stmt;
      $result = $slist;
-     }
-  | opt_stmt_list[slist] BEGIN_INCLUDE stmt_list[slist2] END_INCLUDE {
-       $result = $slist2;
-       if ($slist) {
-         // use our tail pointer invariant so we can add at the tail without searching
-         ast_node *tail = $slist->parent;
-
-         // re-establish the tail invariant per the above
-         $slist->parent = $slist2->parent;
-
-         // link in the new list (note that this will changee the parent pointer saved above)
-         ast_set_right(tail, $slist2);
-
-         $result = $slist;
-       }
      }
   | stmt_list[slist] stmt_list_macro_ref[stmt] ';' {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);

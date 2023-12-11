@@ -241,6 +241,7 @@ static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
+static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -16411,61 +16412,7 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     Contract(is_ast_columns_values(columns_values));
   }
 
-  rewrite_empty_column_list(columns_values, cursor->sem->sptr);
-
-  rewrite_like_column_spec_if_needed(columns_values);
-  if (is_error(columns_values)) {
-    record_error(ast);
-    return;
-  }
-
-  rewrite_from_shape_if_needed(ast, columns_values);
-  if (is_error(ast)) {
-    return;
-  }
-
-  EXTRACT_NOTNULL(column_spec, columns_values->left);
-  EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
-  EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
-
-  // if there are any FROM C(like shape) thing in the values list, expand them
-  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
-    record_error(ast);
-    return;
-  }
-
-  // count values
-  uint32_t cols = 0;
-
-  for (ast_node *item = insert_list; item; item = item->right) {
-    cols++;
-  }
-
-  sem_join *jptr = sem_join_from_sem_struct(cursor->sem->sptr);
-
-  // check the column names for uniqueness, build a symbol table of them
-  name_check check;
-  init_name_check(&check, name_list, jptr);
-  bool_t valid = sem_name_check(&check);
-
-  // Ensure that the number of values matches the number of columns.
-  if (valid && check.count != cols) {
-    report_error(ast, "CQL0157: count of columns differs from count of values", NULL);
-    valid = 0;
-  }
-
-  if (valid) {
-    valid = sem_validate_compatible_cols_vals(name_list, insert_list);
-  }
-
-  destroy_name_check(&check);
-
-  if (valid) {
-    record_ok(ast);
-  }
-  else {
-    record_error(ast);
-  }
+  rewrite_column_values_for_update_stmts(ast, columns_values, cursor->sem->sptr);
 }
 
 // Top level WITH-UPDATE form -- create the CTE context and then process
@@ -24972,6 +24919,73 @@ cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull as
   }
 
   return ast->left->sem->name;
+}
+
+// Helper for doing series of potential rewrites on column_values node for
+// update and update cursor statements.
+static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr) {
+  // Any parent ast node to attach sem_err if needed.
+  Contract(ast);
+  // columns_values ast node to validate and rewrite
+  Contract(columns_values);
+  // Underlying table or cursor struct being updated by columns_values ast.
+  Contract(sptr);
+
+  rewrite_empty_column_list(columns_values, sptr);
+
+  rewrite_like_column_spec_if_needed(columns_values);
+  if (is_error(columns_values)) {
+    record_error(ast);
+    return;
+  }
+
+  rewrite_from_shape_if_needed(ast, columns_values);
+  if (is_error(ast)) {
+    return;
+  }
+
+  EXTRACT_NOTNULL(column_spec, columns_values->left);
+  EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
+  EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+
+  // if there are any FROM C(like shape) thing in the values list, expand them
+  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
+    record_error(ast);
+    return;
+  }
+
+  // count values
+  uint32_t cols = 0;
+
+  for (ast_node *item = insert_list; item; item = item->right) {
+    cols++;
+  }
+
+  sem_join *jptr = sem_join_from_sem_struct(sptr);
+
+  // check the column names for uniqueness, build a symbol table of them
+  name_check check;
+  init_name_check(&check, name_list, jptr);
+  bool_t valid = sem_name_check(&check);
+
+  // Ensure that the number of values matches the number of columns.
+  if (valid && check.count != cols) {
+    report_error(ast, "CQL0157: count of columns differs from count of values", NULL);
+    valid = 0;
+  }
+
+  if (valid) {
+    valid = sem_validate_compatible_cols_vals(name_list, insert_list);
+  }
+
+  destroy_name_check(&check);
+
+  if (valid) {
+    record_ok(ast);
+  }
+  else {
+    record_error(ast);
+  }
 }
 
 // This is for the macro def statments that have no meaning in this pass

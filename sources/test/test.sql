@@ -17,6 +17,9 @@
 -- You cannot expect correct output if you also add the --sem flag to cql
 -- it will start to whine about all the mistakes.
 
+@include "macro_basic_parse_test.sql"
+@include "line_directive_parse_test.sql"
+
 -- create very simple table
 create table foo(id int);
 
@@ -1777,9 +1780,6 @@ let z := 1 in ();
 @echo c, @text("foo", "bar");
 
 declare @id("foo") @id("int");
-
-@include "macro_basic_parse_test.sql"
-@include "line_directive_parse_test.sql"
 
 @enforce_strict and or not null check;
 

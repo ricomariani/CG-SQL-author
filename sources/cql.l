@@ -277,6 +277,8 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
                                    BEGIN(INITIAL);
                                  }
 
+@@BEGIN_INCLUDE@@                { return BEGIN_INCLUDE; }
+@@END_INCLUDE@@                  { return END_INCLUDE; }
 @ATTRIBUTE                       { return AT_ATTRIBUTE; }
 @BEGIN_SCHEMA_REGION             { return AT_BEGIN_SCHEMA_REGION; }
 @BLOB_CREATE_KEY                 { return AT_BLOB_CREATE_KEY ; }

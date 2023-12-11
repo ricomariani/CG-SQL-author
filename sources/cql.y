@@ -323,7 +323,8 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
-%type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref top_level_stmts opt_top_level_stmts
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref
+%type <aval> top_level_stmts include_stmts include_section
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
 %type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref select_core_macro_ref select_expr_macro_ref
 
@@ -373,7 +374,7 @@ static void cql_reset_globals(void);
 
 %%
 
-program: opt_top_level_stmts[stmts] {
+program: top_level_stmts[stmts] {
     if (!parse_error_occurred) {
       gen_init();
       if (options.expand) {
@@ -406,41 +407,44 @@ program: opt_top_level_stmts[stmts] {
   }
   ;
 
-opt_top_level_stmts[result]:
-  /*nil*/ { $result = NULL; }
-  | top_level_stmts { $result = $top_level_stmts; }
-  ;
-
-top_level_stmts[result]:
-  stmt_list { $result = $stmt_list; }
-  | opt_top_level_stmts[s1] BEGIN_INCLUDE top_level_stmts[s2] END_INCLUDE opt_top_level_stmts[s3] {
+  top_level_stmts[result]:
+    /*nil */  { $result = NULL; }
+    | include_stmts { $result = $include_stmts; }
+    | stmt_list { $result = $stmt_list; }
+    | include_stmts[s1] stmt_list[s2] {
        $result = $s2;
        if ($s1) {
          // use our tail pointer invariant so we can add at the tail without searching
+         // the re-stablish the invariant
          ast_node *tail = $s1->parent;
-
-         // re-establish the tail invariant per the above
          $s1->parent = $s2->parent;
-
-         // link in the new list (note that this will changee the parent pointer saved above)
          ast_set_right(tail, $s2);
-
          $result = $s1;
+      }
+   }
+   ;
+
+include_section: BEGIN_INCLUDE top_level_stmts END_INCLUDE { $include_section = $top_level_stmts; }
+   ;
+
+include_stmts[result]:
+    include_section[s1] { $result = $s1; }
+    | include_section[s1] include_stmts[s2] {
+       if (!$s1) {
+         $result = $s2;
        }
-
-       if ($s3) {
-         // use our tail pointer invariant so we can add at the tail without searching
-         ast_node *tail = $result->parent;
-
-         // re-establish the tail invariant per the above
-         $result->parent = $s3->parent;
-
-         // link in the new list (note that this will changee the parent pointer saved above)
-         ast_set_right(tail, $s3);
-       }
-     }
-  ;
-
+       else {
+         $result = $s1;
+         if ($s2) {
+           // use our tail pointer invariant so we can add at the tail without searching
+           // the re-establish the invariant
+           ast_node *tail = $s1->parent;
+           $s1->parent = $s2->parent;
+           ast_set_right(tail, $s2);
+        }
+      }
+    }
+    ;
 
 opt_stmt_list:
   /*nil*/  { $opt_stmt_list = NULL; }
@@ -455,7 +459,7 @@ non_expr_macro_ref:
   | query_parts_macro_ref { $$ = $1; }
   ;
 
-stmt_list_macro_ref :
+stmt_list_macro_ref:
   STMT_LIST_MACRO {
     YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
     $$ = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
@@ -464,7 +468,7 @@ stmt_list_macro_ref :
     $$ = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
   ;
 
-expr_macro_ref :
+expr_macro_ref:
   EXPR_MACRO {
     YY_ERROR_ON_MACRO($EXPR_MACRO);
     $$ = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
@@ -473,7 +477,7 @@ expr_macro_ref :
     $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
   ;
 
-query_parts_macro_ref :
+query_parts_macro_ref:
   QUERY_PARTS_MACRO {
     YY_ERROR_ON_MACRO($QUERY_PARTS_MACRO);
     $$ = new_ast_query_parts_macro_arg_ref(new_ast_str($QUERY_PARTS_MACRO), NULL); }
@@ -482,7 +486,7 @@ query_parts_macro_ref :
     $$ = new_ast_query_parts_macro_ref(new_ast_str($QUERY_PARTS_MACRO), $opt_macro_args); }
   ;
 
-cte_tables_macro_ref :
+cte_tables_macro_ref:
   CTE_TABLES_MACRO {
     YY_ERROR_ON_MACRO($CTE_TABLES_MACRO);
     $$ = new_ast_cte_tables_macro_arg_ref(new_ast_str($CTE_TABLES_MACRO), NULL); }
@@ -491,7 +495,7 @@ cte_tables_macro_ref :
     $$ = new_ast_cte_tables_macro_ref(new_ast_str($CTE_TABLES_MACRO), $opt_macro_args); }
   ;
 
-select_core_macro_ref :
+select_core_macro_ref:
   SELECT_CORE_MACRO {
     YY_ERROR_ON_MACRO($SELECT_CORE_MACRO);
     $$ = new_ast_select_core_macro_arg_ref(new_ast_str($SELECT_CORE_MACRO), NULL); }
@@ -500,7 +504,7 @@ select_core_macro_ref :
     $$ = new_ast_select_core_macro_ref(new_ast_str($SELECT_CORE_MACRO), $opt_macro_args); }
   ;
 
-select_expr_macro_ref :
+select_expr_macro_ref:
   SELECT_EXPR_MACRO {
     YY_ERROR_ON_MACRO($SELECT_EXPR_MACRO);
     $$ = new_ast_select_expr_macro_arg_ref(new_ast_str($SELECT_EXPR_MACRO), NULL); }
@@ -851,7 +855,7 @@ check_def:
   | CHECK '(' expr ')'  { $check_def = new_ast_check_def(NULL, $expr); }
   ;
 
-shape_exprs[result] :
+shape_exprs[result]:
   shape_expr ',' shape_exprs[next] { $result = new_ast_shape_exprs($shape_expr, $next); }
   | shape_expr { $result = new_ast_shape_exprs($shape_expr, NULL); }
   ;
@@ -2964,6 +2968,7 @@ static void parse_cmd(int argc, char **argv) {
 
 cql_noexport CSTR cql_builtin_text() {
   return
+    "@@begin_include@@"
     "@attribute(cql:builtin)"
     "DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;"
     "@attribute(cql:builtin)"
@@ -3011,6 +3016,7 @@ cql_noexport CSTR cql_builtin_text() {
     "TYPE @ID('blob') blob;"
     "@attribute(cql:builtin)"
     "TYPE @ID('long_int') long;"
+    "@@end_include@@"
     ;
 }
 

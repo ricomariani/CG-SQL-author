@@ -247,6 +247,7 @@ basic_test() {
   echo "  computing diffs (empty if none)"
   on_diff_exit include_nesting.err
 
+  echo "testing ifdef"
   if ! ${CQL} --in "$T/test_ifdef.sql" --echo --defines foo >"$O/test_ifdef.out" 2>"$O/test_ifdef.err"
   then
     echo "basic parsing with ifdefs failed"
@@ -256,6 +257,18 @@ basic_test() {
 
   echo "  computing diffs (empty if none)"
   on_diff_exit test_ifdef.out
+
+  echo "testing empty include file"
+
+  if ! ${CQL} --in "$T/include_empty.sql" --echo --include_paths test >"$O/include_empty.out" 2>"$O/include_empty.err"
+  then
+    echo "empty include file failed"
+    cat "$O/include_empty.err"
+    failed
+  fi
+
+  echo "  computing diffs (empty if none)"
+  on_diff_exit include_empty.out
 }
 
 

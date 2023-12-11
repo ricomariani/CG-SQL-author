@@ -12481,7 +12481,7 @@ update cursor my_cursor(one) from values (2);
 -- TEST -- like statement can't be resolved in an update statement
 -- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
-update cursor my_cursor(like not_a_symbol) from values(1);
+update cursor small_cursor(like not_a_symbol) from values(1);
 
 -- TEST -- not a cursor
 -- + {update_cursor_stmt}: err

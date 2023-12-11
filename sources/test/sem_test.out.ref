@@ -46490,21 +46490,21 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 
   {update_cursor_stmt}: err
   | {name my_cursor}: err
-  | {columns_values}: ok
+  | {columns_values}
     | {column_spec}
     | | {name_list}
     |   | {name one}
-    | {insert_list}: ok
+    | {insert_list}
       | {int 2}
 
 The statement ending at line XXXX
 
-UPDATE CURSOR my_cursor(LIKE not_a_symbol) FROM VALUES(1);
+UPDATE CURSOR small_cursor(LIKE not_a_symbol) FROM VALUES(1);
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
   {update_cursor_stmt}: err
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {columns_values}: err
     | {column_spec}
     | | {shape_def}: err

@@ -16395,6 +16395,16 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     return;
   }
 
+  sem_t sem_type = cursor->sem->sem_type;
+
+  // We can't do this if the cursor was not used with the auto syntax
+  if (!is_auto_cursor(sem_type)) {
+    report_error(cursor, "CQL0067: cursor was not used with 'fetch [cursor]'", name);
+    record_error(cursor);
+    record_error(ast);
+    return;
+  }
+
   // expr_names node is a sugar syntax we need to rewrite [USING ...] part to [FROM VALUES(...)]
   if (is_ast_expr_names(columns_values)) {
     rewrite_expr_names_to_columns_values(columns_values);
@@ -16420,16 +16430,6 @@ static void sem_update_cursor_stmt(ast_node *ast) {
 
   // if there are any FROM C(like shape) thing in the values list, expand them
   if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
-    record_error(ast);
-    return;
-  }
-
-  sem_t sem_type = cursor->sem->sem_type;
-
-  // We can't do this if the cursor was not used with the auto syntax
-  if (!is_auto_cursor(sem_type)) {
-    report_error(cursor, "CQL0067: cursor was not used with 'fetch [cursor]'", name);
-    record_error(cursor);
     record_error(ast);
     return;
   }

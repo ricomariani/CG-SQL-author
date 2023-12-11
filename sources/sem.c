@@ -16214,7 +16214,7 @@ static void sem_update_stmt(ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
   EXTRACT_ANY(name_ast, ast->left);
   EXTRACT_NOTNULL(update_set, ast->right);
-  EXTRACT_NOTNULL(update_list, update_set->left);
+  EXTRACT_ANY_NOTNULL(update_list, update_set->left);
   EXTRACT_NOTNULL(update_from, update_set->right);
   EXTRACT_NOTNULL(update_where, update_from->right);
   EXTRACT_NOTNULL(update_orderby, update_where->right);
@@ -16303,6 +16303,47 @@ static void sem_update_stmt(ast_node *ast) {
     }
 
     from_jptr = query_parts->sem->jptr;
+  }
+
+  if (is_ast_columns_values(update_list)) {
+    // UPDATE table_name[opt_column_spec] [from_shape]
+    ast_node *columns_values = update_list;
+
+    rewrite_column_values_for_update_stmts(ast, columns_values, table_ast->sem->sptr);
+
+    if (is_error(ast)) {
+      goto cleanup;
+    }
+
+    EXTRACT_NOTNULL(column_spec, columns_values->left);
+    EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
+    EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+
+    AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
+
+    ast_node *new_update_list_head = new_ast_update_list(NULL, NULL); // fake list head
+    ast_node *curr_update_list = new_update_list_head;
+    ast_node *name_item = NULL;
+    ast_node *insert_item = NULL;
+    for (
+      name_item = name_list, insert_item = insert_list;
+      name_item && insert_item;
+      name_item = name_item->right, insert_item = insert_item->right
+    ) {
+      EXTRACT_STRING(name, name_item->left);
+      EXTRACT_ANY_NOTNULL(expr, insert_item->left);
+      ast_node *new_update_list = new_ast_update_list(
+        new_ast_update_entry(new_ast_str(name), expr),
+        NULL
+      );
+      ast_set_right(curr_update_list, new_update_list);
+      curr_update_list = curr_update_list->right;
+    }
+
+    update_list = new_update_list_head->right;
+    ast_set_left(update_set, update_list);
+
+    AST_REWRITE_INFO_RESET();
   }
 
   // we can't push the from jptr yet because

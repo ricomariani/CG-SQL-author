@@ -87076,6 +87076,183 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FRO
 
 The statement ending at line XXXX
 
+CREATE PROC test_update_from_shape (id_ INTEGER NOT NULL, name_ TEXT)
+BEGIN
+  UPDATE update_test_1
+    SET id = id_, name = name_
+    WHERE id = locals.id
+    ORDER BY update_test_1.id
+      LIMIT 1;
+  DECLARE C CURSOR LIKE update_test_1;
+  FETCH C(id, name) FROM VALUES(1, "foo");
+  UPDATE update_test_1
+    SET id = C.id, name = C.name
+    WHERE id = locals.id
+    ORDER BY update_test_1.id
+      LIMIT 1;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_update_from_shape}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id_: integer notnull variable in
+    | | | {param_detail}: id_: integer notnull variable in
+    | |   | {name id_}: id_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: name_: text variable in
+    |     | {param_detail}: name_: text variable in
+    |       | {name name_}: name_: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {update_stmt}: ok
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {update_list}: ok
+      |   | | {update_entry}: id: integer notnull
+      |   | | | {name id}: id: integer notnull
+      |   | | | {dot}: id_: integer notnull variable in
+      |   | |   | {name ARGUMENTS}
+      |   | |   | {name id}
+      |   | | {update_list}
+      |   |   | {update_entry}: name: text
+      |   |     | {name name}: name: text
+      |   |     | {dot}: name_: text variable in
+      |   |       | {name ARGUMENTS}
+      |   |       | {name name}
+      |   | {update_from}
+      |     | {update_where}
+      |       | {opt_where}: bool notnull
+      |       | | {eq}: bool notnull
+      |       |   | {name id}: id: integer notnull
+      |       |   | {dot}: id_: integer notnull variable in
+      |       |     | {name locals}
+      |       |     | {name id}
+      |       | {update_orderby}
+      |         | {opt_orderby}: ok
+      |         | | {orderby_list}: ok
+      |         |   | {orderby_item}
+      |         |     | {dot}: id: integer notnull
+      |         |       | {name update_test_1}
+      |         |       | {name id}
+      |         | {opt_limit}: integer notnull
+      |           | {int 1}: integer notnull
+      | {declare_cursor_like_name}: C: update_test_1: { id: integer notnull primary_key, name: text } variable shape_storage value_cursor
+      | | {name C}: C: update_test_1: { id: integer notnull primary_key, name: text } variable shape_storage value_cursor
+      | | {shape_def}: update_test_1: { id: integer notnull primary_key, name: text }
+      |   | {like}: ok
+      |     | {name update_test_1}
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name C}: C: update_test_1: { id: integer notnull primary_key, name: text } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name id}: id: integer notnull
+      |     |   | {name_list}
+      |     |     | {name name}: name: text
+      |     | {insert_list}: ok
+      |       | {int 1}: integer notnull
+      |       | {insert_list}
+      |         | {strlit 'foo'}: text notnull
+      | {update_stmt}: ok
+        | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: id: integer notnull
+          | | | {name id}: id: integer notnull
+          | | | {dot}: C.id: integer notnull variable primary_key
+          | |   | {name C}
+          | |   | {name id}
+          | | {update_list}
+          |   | {update_entry}: name: text
+          |     | {name name}: name: text
+          |     | {dot}: C.name: text variable
+          |       | {name C}
+          |       | {name name}
+          | {update_from}
+            | {update_where}
+              | {opt_where}: bool notnull
+              | | {eq}: bool notnull
+              |   | {name id}: id: integer notnull
+              |   | {dot}: id_: integer notnull variable in
+              |     | {name locals}
+              |     | {name id}
+              | {update_orderby}
+                | {opt_orderby}: ok
+                | | {orderby_list}: ok
+                |   | {orderby_item}
+                |     | {dot}: id: integer notnull
+                |       | {name update_test_1}
+                |       | {name id}
+                | {opt_limit}: integer notnull
+                  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE PROC test_update_from_shape_errors (id_ INTEGER NOT NULL, name_ TEXT)
+BEGIN
+  UPDATE update_test_1    (name, id) ARGUMENTS.id, ARGUMENTS.name;
+  UPDATE update_test_1    (id, name) FROM cursor_not_exist;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cursor_not_exist'
+
+  {create_proc_stmt}: err
+  | {name test_update_from_shape_errors}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id_: integer notnull variable in
+    | | | {param_detail}: id_: integer notnull variable in
+    | |   | {name id_}: id_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: name_: text variable in
+    |     | {param_detail}: name_: text variable in
+    |       | {name name_}: name_: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: err
+      | {update_stmt}: err
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {columns_values}: ok
+      |   | | {column_spec}
+      |   | | | {name_list}
+      |   | |   | {name name}: name: text
+      |   | |   | {name_list}
+      |   | |     | {name id}: id: integer notnull
+      |   | | {insert_list}: ok
+      |   |   | {dot}: err
+      |   |   | | {name ARGUMENTS}
+      |   |   | | {name id}
+      |   |   | {insert_list}
+      |   |     | {dot}
+      |   |       | {name ARGUMENTS}
+      |   |       | {name name}
+      |   | {update_from}
+      |     | {update_where}
+      |       | {update_orderby}
+      | {update_stmt}: err
+        | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+        | {update_set}
+          | {columns_values}: ok
+          | | {column_spec}
+          | | | {name_list}
+          | |   | {name id}
+          | |   | {name_list}
+          | |     | {name name}
+          | | {from_shape}
+          |   | {name cursor_not_exist}: err
+          | {update_from}
+            | {update_where}
+              | {update_orderby}
+
+The statement ending at line XXXX
+
 @ATTRIBUTE(cql:alias_of=some_native_func)
 DECLARE FUNC an_alias_func (x INTEGER NOT NULL) INTEGER NOT NULL;
 

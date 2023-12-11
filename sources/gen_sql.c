@@ -3511,7 +3511,7 @@ static void gen_update_cursor_stmt(ast_node *ast) {
 static void gen_update_stmt(ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
   EXTRACT_NOTNULL(update_set, ast->right);
-  EXTRACT_NOTNULL(update_list, update_set->left);
+  EXTRACT_ANY_NOTNULL(update_list, update_set->left);
   EXTRACT_NOTNULL(update_from, update_set->right);
   EXTRACT_NOTNULL(update_where, update_from->right);
   EXTRACT_ANY(query_parts, update_from->left);
@@ -3527,8 +3527,24 @@ static void gen_update_stmt(ast_node *ast) {
     gen_name(name_ast);
   }
   GEN_BEGIN_INDENT(up, 2);
-  gen_printf("\nSET ");
-  gen_update_list(update_list);
+
+  if (is_ast_columns_values(update_list)) {
+    // UPDATE table_name[opt_column_spec] [from_shape]
+    EXTRACT(column_spec, update_list->left);
+    EXTRACT_ANY_NOTNULL(from_shape_or_insert_list, update_list->right);
+    gen_column_spec(column_spec);
+    gen_printf(" ");
+    if (is_ast_from_shape(from_shape_or_insert_list)) {
+      gen_from_shape(from_shape_or_insert_list);
+    } else {
+      gen_insert_list(from_shape_or_insert_list);
+    }
+  } else {
+    // UPDATE table_name SET [update_list] FROM [query_parts]
+    gen_printf("\nSET ");
+    gen_update_list(update_list);
+  }
+
   if (query_parts) {
     gen_printf("\nFROM ");
     gen_query_parts(query_parts);

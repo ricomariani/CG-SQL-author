@@ -2354,3 +2354,8 @@ DECLARE foo int;
 @ENFORCE_STRICT AND OR NOT NULL CHECK;
 
 CONST a_const_variable := 1;
+
+UPDATE some_table  (LIKE bar) FROM ARGUMENTS(LIKE bar)
+  WHERE id = locals.id
+  ORDER BY some_table.id
+    LIMIT 1;

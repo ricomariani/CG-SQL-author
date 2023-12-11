@@ -23152,6 +23152,74 @@ update simple_backed_table set id = 5 from update_test_1;
 -- +1 error:
 UPDATE update_from_target SET name = update_test_2.name FROM update_test_1;
 
+-- TEST: update with from shape sugar
+-- Validate first update statement codegen
+-- + {update_set}
+-- + {update_list}: ok
+-- + {update_entry}: id: integer notnull
+-- + {name id}: id: integer notnull
+-- + {dot}: id_: integer notnull variable in
+-- + {name ARGUMENTS}
+-- + {name id}
+-- + {update_list}
+-- + {update_entry}: name: text
+-- + {name name}: name: text
+-- + {dot}: name_: text variable in
+-- + {name ARGUMENTS}
+-- + {name name}
+-- Validate second update statement codegen
+-- + {update_set}
+-- + {update_list}: ok
+-- + {update_entry}: id: integer notnull
+-- + {name id}: id: integer notnull
+-- + {dot}: C.id: integer notnull variable primary_key
+-- + {name C}
+-- + {name id}
+-- + {update_list}
+-- + {update_entry}: name: text
+-- + {name name}: name: text
+-- + {dot}: C.name: text variable
+-- + {name C}
+-- + {name name}
+-- - error:
+proc test_update_from_shape(like update_test_1)
+begin
+  -- Update statement from arguments
+  update update_test_1(like update_test_1)
+  from arguments
+  where id = locals.id
+  order by update_test_1.id
+  limit 1;
+
+  -- Update statement from a cursor
+  declare C cursor like update_test_1;
+  fetch C from values(1, "foo");
+  update update_test_1(like update_test_1)
+  from C
+  where id = locals.id
+  order by update_test_1.id
+  limit 1;
+end;
+
+-- TEST: update from_shape sugar error handling
+-- + error: % incompatible types in expression 'name'
+-- + error: % name not found 'cursor_not_exist'
+-- + {dot}: err
+-- + {name ARGUMENTS}
+-- + {name id}
+-- + {name cursor_not_exist}: err
+-- +2 error:
+proc test_update_from_shape_errors(like update_test_1)
+begin
+  -- Swapped ordering of columns lead to incompatible types.
+  update update_test_1(name, id)
+  from arguments;
+
+  -- Use of non existent shape
+  update update_test_1
+  from cursor_not_exist;
+end;
+
 -- TEST: cql:alias_of attribution on declare_func_stmt
 -- + {stmt_and_attr}: ok
 -- + {misc_attrs}: ok

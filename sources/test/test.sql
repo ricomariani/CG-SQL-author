@@ -1792,3 +1792,9 @@ declare @id("foo") @id("int");
 @enforce_strict and or not null check;
 
 const a_const_variable := 1;
+
+update some_table(like bar)
+from arguments (like bar)
+where id = locals.id
+order by some_table.id
+limit 1;

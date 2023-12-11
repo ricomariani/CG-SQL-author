@@ -1942,6 +1942,14 @@ update_stmt:
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
     $update_stmt = new_ast_update_stmt($sql_name, list); }
+  | UPDATE sql_name opt_column_spec from_shape opt_where opt_orderby opt_limit  {
+    struct ast_node *limit = $opt_limit;
+    struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
+    struct ast_node *where = new_ast_update_where($opt_where, orderby);
+    struct ast_node *from = new_ast_update_from(NULL, where);
+    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $from_shape);
+    struct ast_node *list = new_ast_update_set(columns_values, from);
+    $update_stmt = new_ast_update_stmt($sql_name, list); }
   ;
 
 update_entry:

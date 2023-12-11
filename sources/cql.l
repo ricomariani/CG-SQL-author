@@ -25,12 +25,17 @@
 #include <cql.h>
 #include <charbuf.h>
 #include <encoders.h>
+#include <symtab.h>
 
 void yyerror(const char *s, ...);
 void line_directive(const char *);
 char *Strdup(const char *);
 static CSTR last_doc_comment = NULL;
+
+
 cql_noexport int32_t resolve_macro_name(const char *);
+static bool_t cql_already_processed_file(CSTR);
+static void cql_record_processed_file(CSTR);
 
 #ifndef CQL_AMALGAM
 // already in the headers in the amalgam
@@ -93,9 +98,15 @@ typedef struct cql_ifdef_state_t {
 
 static cql_ifdef_state_t *cql_ifdef_state;
 
+static symtab *processed_files;
+
 cql_noexport void cql_reset_open_includes() {
   cql_include_index = 0;
   memset(cql_includes, 0, sizeof(cql_includes));
+  if (processed_files) { 
+    symtab_delete(processed_files);
+    processed_files = NULL;
+  }
 }
 
 cql_noexport void cql_cleanup_open_includes() {
@@ -113,7 +124,11 @@ cql_noexport void cql_cleanup_open_includes() {
 }
 
 static void cql_setup_for_include(CSTR str) {
-  if ( cql_include_index >= MAX_INCLUDES ) {
+  if (!processed_files) {
+    processed_files = symtab_new();
+  }
+
+  if (cql_include_index >= MAX_INCLUDES) {
     cql_error("%s:%d includes nested too deeply.\n", current_file, yylineno);
     cql_cleanup_and_exit(4);
   }
@@ -127,19 +142,40 @@ static void cql_setup_for_include(CSTR str) {
 
   CHARBUF_OPEN(name);
   CHARBUF_OPEN(path);
+  char resolved_path[PATH_MAX];  // PATH_MAX is defined in limits.h
 
   cg_decode_c_string_literal(str, &name);
+
+  yyin = NULL;
+
   CSTR opened_name = name.ptr;
-  yyin = fopen(name.ptr, "r");
+
+  // Call realpath to resolve the pathname
+  char *abspath = realpath(name.ptr, resolved_path);
+  if (abspath) {
+    if (cql_already_processed_file(abspath)) {
+      yy_switch_to_buffer(yy_scan_string(""));
+      goto done;
+    }
+    yyin = fopen(abspath, "r");
+  }
 
   if (!yyin) {
      for (int i = 0; i < options.include_paths_count; i++) {
         bclear(&path);
         bprintf(&path, "%s/%s", options.include_paths[i], name.ptr);
-        yyin = fopen(path.ptr, "r");
-        if (yyin) {
-           opened_name = path.ptr;
-           break;
+        abspath = realpath(path.ptr, resolved_path);
+        if (abspath) {
+          if (cql_already_processed_file(abspath)) {
+            yy_switch_to_buffer(yy_scan_string(""));
+            goto done;
+          }
+
+          yyin = fopen(path.ptr, "r");
+          if (yyin) {
+            opened_name = path.ptr;
+            break;
+          }
         }
      }
   }
@@ -149,13 +185,16 @@ static void cql_setup_for_include(CSTR str) {
      cql_cleanup_and_exit(1);
   }
 
+  cql_record_processed_file(abspath);
+  yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+
+done:
+
   yylineno = 1;
   current_file = Strdup(opened_name);
-
+  
   CHARBUF_CLOSE(path);
   CHARBUF_CLOSE(name);
-
-  yy_switch_to_buffer(yy_create_buffer( yyin, YY_BUF_SIZE ) );
 }
 
 static void cql_finish_stream() {
@@ -163,6 +202,16 @@ static void cql_finish_stream() {
   cql_builtins_processing = false;
   yy_delete_buffer(YY_CURRENT_BUFFER);
   yy_switch_to_buffer(cql_main_buffer);
+}
+
+static void cql_record_processed_file(CSTR str) {
+  Contract(processed_files);
+  symtab_add(processed_files, Strdup(str), NULL);
+}
+
+static bool_t cql_already_processed_file(CSTR str) {
+  Contract(processed_files);
+  return !!symtab_find(processed_files, str);
 }
 
 %}

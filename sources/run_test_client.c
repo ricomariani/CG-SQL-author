@@ -1876,5 +1876,6 @@ cql_code test_cql_parent_child(sqlite3 *db) {
   }
   cql_result_set_release(parent);
 
+  tests_passed++;
   return SQLITE_OK;
 }

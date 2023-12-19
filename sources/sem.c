@@ -16306,8 +16306,15 @@ static void sem_update_stmt(ast_node *ast) {
   }
 
   if (is_ast_columns_values(update_list)) {
-    // UPDATE table_name[opt_column_spec] [from_shape]
+    // UPDATE table_name SET ([opt_column_spec]) := [from_shape]
     ast_node *columns_values = update_list;
+    EXTRACT_NOTNULL(column_spec, columns_values->left);
+    bool_t is_column_spec_empty = !column_spec->left;
+
+    if (is_column_spec_empty) {
+      report_error(columns_values, "CQL0503: Cannot use an empty column list for an UPDATE statement", NULL);
+      goto cleanup;
+    }
 
     rewrite_column_values_for_update_stmts(ast, columns_values, table_ast->sem->sptr);
 
@@ -16315,35 +16322,9 @@ static void sem_update_stmt(ast_node *ast) {
       goto cleanup;
     }
 
-    EXTRACT_NOTNULL(column_spec, columns_values->left);
-    EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
-    EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+    update_list = rewrite_column_values_as_update_list(columns_values);
 
-    AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
-
-    ast_node *new_update_list_head = new_ast_update_list(NULL, NULL); // fake list head
-    ast_node *curr_update_list = new_update_list_head;
-    ast_node *name_item = NULL;
-    ast_node *insert_item = NULL;
-    for (
-      name_item = name_list, insert_item = insert_list;
-      name_item && insert_item;
-      name_item = name_item->right, insert_item = insert_item->right
-    ) {
-      EXTRACT_STRING(name, name_item->left);
-      EXTRACT_ANY_NOTNULL(expr, insert_item->left);
-      ast_node *new_update_list = new_ast_update_list(
-        new_ast_update_entry(new_ast_str(name), expr),
-        NULL
-      );
-      ast_set_right(curr_update_list, new_update_list);
-      curr_update_list = curr_update_list->right;
-    }
-
-    update_list = new_update_list_head->right;
     ast_set_left(update_set, update_list);
-
-    AST_REWRITE_INFO_RESET();
   }
 
   // we can't push the from jptr yet because
@@ -16437,6 +16418,35 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     return;
   }
 
+  // expr_names node is a sugar syntax we need to rewrite [USING ...] part to [FROM VALUES(...)]
+  if (is_ast_expr_names(columns_values)) {
+    rewrite_expr_names_to_columns_values(columns_values);
+    Contract(is_ast_columns_values(columns_values));
+  }
+
+  rewrite_empty_column_list(columns_values, cursor->sem->sptr);
+
+  rewrite_like_column_spec_if_needed(columns_values);
+  if (is_error(columns_values)) {
+    record_error(ast);
+    return;
+  }
+
+  rewrite_from_shape_if_needed(ast, columns_values);
+  if (is_error(ast)) {
+    return;
+  }
+
+  EXTRACT_NOTNULL(column_spec, columns_values->left);
+  EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
+  EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+
+  // if there are any FROM C(like shape) thing in the values list, expand them
+  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
+    record_error(ast);
+    return;
+  }
+
   sem_t sem_type = cursor->sem->sem_type;
 
   // We can't do this if the cursor was not used with the auto syntax
@@ -16447,13 +16457,38 @@ static void sem_update_cursor_stmt(ast_node *ast) {
     return;
   }
 
-  // expr_names node is a sugar syntax we need to rewrite [USING ...] part to [FROM VALUES(...)]
-  if (is_ast_expr_names(columns_values)) {
-    rewrite_expr_names_to_columns_values(columns_values);
-    Contract(is_ast_columns_values(columns_values));
+  // count values
+  uint32_t cols = 0;
+
+  for (ast_node *item = insert_list; item; item = item->right) {
+    cols++;
   }
 
-  rewrite_column_values_for_update_stmts(ast, columns_values, cursor->sem->sptr);
+  sem_join *jptr = sem_join_from_sem_struct(cursor->sem->sptr);
+
+  // check the column names for uniqueness, build a symbol table of them
+  name_check check;
+  init_name_check(&check, name_list, jptr);
+  bool_t valid = sem_name_check(&check);
+
+  // Ensure that the number of values matches the number of columns.
+  if (valid && check.count != cols) {
+    report_error(ast, "CQL0157: count of columns differs from count of values", NULL);
+    valid = 0;
+  }
+
+  if (valid) {
+    valid = sem_validate_compatible_cols_vals(name_list, insert_list);
+  }
+
+  destroy_name_check(&check);
+
+  if (valid) {
+    record_ok(ast);
+  }
+  else {
+    record_error(ast);
+  }
 }
 
 // Top level WITH-UPDATE form -- create the CTE context and then process
@@ -24972,16 +25007,9 @@ static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_n
   // Underlying table or cursor struct being updated by columns_values ast.
   Contract(sptr);
 
-  rewrite_empty_column_list(columns_values, sptr);
-
   rewrite_like_column_spec_if_needed(columns_values);
   if (is_error(columns_values)) {
     record_error(ast);
-    return;
-  }
-
-  rewrite_from_shape_if_needed(ast, columns_values);
-  if (is_error(ast)) {
     return;
   }
 
@@ -24995,37 +25023,10 @@ static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_n
     return;
   }
 
-  // count values
-  uint32_t cols = 0;
-
-  for (ast_node *item = insert_list; item; item = item->right) {
-    cols++;
-  }
-
-  sem_join *jptr = sem_join_from_sem_struct(sptr);
-
-  // check the column names for uniqueness, build a symbol table of them
-  name_check check;
-  init_name_check(&check, name_list, jptr);
-  bool_t valid = sem_name_check(&check);
-
-  // Ensure that the number of values matches the number of columns.
-  if (valid && check.count != cols) {
+  // check if length of columns to update and provided values match
+  for ( ; name_list && insert_list; name_list = name_list->right, insert_list = insert_list->right) {}
+  if (name_list || insert_list) {
     report_error(ast, "CQL0157: count of columns differs from count of values", NULL);
-    valid = 0;
-  }
-
-  if (valid) {
-    valid = sem_validate_compatible_cols_vals(name_list, insert_list);
-  }
-
-  destroy_name_check(&check);
-
-  if (valid) {
-    record_ok(ast);
-  }
-  else {
-    record_error(ast);
   }
 }
 

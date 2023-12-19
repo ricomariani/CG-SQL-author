@@ -3528,20 +3528,20 @@ static void gen_update_stmt(ast_node *ast) {
   }
   GEN_BEGIN_INDENT(up, 2);
 
+  gen_printf("\nSET ");
   if (is_ast_columns_values(update_list)) {
-    // UPDATE table_name[opt_column_spec] [from_shape]
+    // UPDATE table_name SET ([opt_column_spec]) = ([from_shape])
     EXTRACT(column_spec, update_list->left);
     EXTRACT_ANY_NOTNULL(from_shape_or_insert_list, update_list->right);
+
     gen_column_spec(column_spec);
-    gen_printf(" ");
-    if (is_ast_from_shape(from_shape_or_insert_list)) {
-      gen_from_shape(from_shape_or_insert_list);
-    } else {
-      gen_insert_list(from_shape_or_insert_list);
-    }
+    gen_printf(" = ");
+
+    gen_printf("(");
+    gen_insert_list(from_shape_or_insert_list);
+    gen_printf(")");
   } else {
     // UPDATE table_name SET [update_list] FROM [query_parts]
-    gen_printf("\nSET ");
     gen_update_list(update_list);
   }
 

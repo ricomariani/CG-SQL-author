@@ -2337,7 +2337,9 @@ DECLARE @ID("foo") @ID("int");
 
 CONST a_const_variable := 1;
 
-UPDATE some_table  (LIKE bar) FROM ARGUMENTS(LIKE bar)
-  WHERE id = locals.id
+UPDATE some_table
+  SET (LIKE some_table(-id)) = (FROM ARGUMENTS LIKE bar, baz.one, baz.two, baz.three)
+  FROM baz
+  WHERE some_table.id = locals.id AND some_table.id = baz.id
   ORDER BY some_table.id
     LIMIT 1;

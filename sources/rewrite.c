@@ -3856,4 +3856,34 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_
   
 }
 
+cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_Nonnull columns_values) {
+    EXTRACT_NOTNULL(column_spec, columns_values->left);
+    EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
+    EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+
+    AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
+
+    ast_node *new_update_list_head = new_ast_update_list(NULL, NULL); // fake list head
+    ast_node *curr_update_list = new_update_list_head;
+    ast_node *name_item = NULL;
+    ast_node *insert_item = NULL;
+    for (
+      name_item = name_list, insert_item = insert_list;
+      name_item && insert_item;
+      name_item = name_item->right, insert_item = insert_item->right
+    ) {
+      EXTRACT_STRING(name, name_item->left);
+      EXTRACT_ANY_NOTNULL(expr, insert_item->left);
+      ast_node *new_update_list = new_ast_update_list(
+        new_ast_update_entry(new_ast_str(name), expr),
+        NULL
+      );
+      ast_set_right(curr_update_list, new_update_list);
+      curr_update_list = curr_update_list->right;
+    }
+
+    AST_REWRITE_INFO_RESET();
+
+    return new_update_list_head->right;
+}
 #endif

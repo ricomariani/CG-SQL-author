@@ -4665,3 +4665,19 @@ Consequently, the CASE statement will default to the ELSE clause, provided it is
 ### CQL0502: Cannot re-assign value to constant variable.
 
 When you declare variables with the `const` syntax, they cannot be re-assigned a new value (e.g. with a `set` statement, are being passed to an out argument). Declare these variables with a `let` statement instead if you would like to mutate them.
+
+### CQL0503: Cannot use an empty column list for an UPDATE statement
+
+When you use an UPDATE statement with a shape like this:
+```sql
+update some_table
+set () = (from my_cursor)
+where some_table.id = my_cursor.id
+```
+
+The column list after the `set` cannot be empty. A list of columns, or a shape, must be provided:
+```sql
+update some_table
+set (like my_cursor) = (from my_cursor)
+where some_table.id = my_cursor.id
+```

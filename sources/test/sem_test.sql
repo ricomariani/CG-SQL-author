@@ -20366,7 +20366,7 @@ select @columns(simple_shape like this_is_not_a_shape) from simple_shape;
 select @columns(like this_is_not_a_shape) from simple_shape;
 
 -- TEST: these columns don't exist, but the shapes are valid...
--- + SELECT COLUMNS(LIKE with_kind)
+-- + SELECT @COLUMNS(LIKE with_kind)
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
 -- errors during expansion, the columns node stays in the tree
@@ -20376,7 +20376,7 @@ select @columns(like with_kind) from simple_shape;
 
 -- TEST: these columns don't exist, but the shapes are valid...
 -- expansion failed so the COLUMNS node is not replaced
--- + SELECT COLUMNS(simple_shape LIKE with_kind)
+-- + SELECT @COLUMNS(simple_shape LIKE with_kind)
 -- + {select_stmt}: err
 -- + {select_expr_list_con}: err
 -- * error: % name not found 'simple_shape.cost'

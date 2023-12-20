@@ -241,6 +241,7 @@ static CSTR find_column_kind(CSTR table_name, CSTR column_name);
 static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
+static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -16213,7 +16214,7 @@ static void sem_update_stmt(ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
   EXTRACT_ANY(name_ast, ast->left);
   EXTRACT_NOTNULL(update_set, ast->right);
-  EXTRACT_NOTNULL(update_list, update_set->left);
+  EXTRACT_ANY_NOTNULL(update_list, update_set->left);
   EXTRACT_NOTNULL(update_from, update_set->right);
   EXTRACT_NOTNULL(update_where, update_from->right);
   EXTRACT_NOTNULL(update_orderby, update_where->right);
@@ -16302,6 +16303,28 @@ static void sem_update_stmt(ast_node *ast) {
     }
 
     from_jptr = query_parts->sem->jptr;
+  }
+
+  if (is_ast_columns_values(update_list)) {
+    // UPDATE table_name SET ([opt_column_spec]) := [from_shape]
+    ast_node *columns_values = update_list;
+    EXTRACT_NOTNULL(column_spec, columns_values->left);
+    bool_t is_column_spec_empty = !column_spec->left;
+
+    if (is_column_spec_empty) {
+      report_error(columns_values, "CQL0503: Cannot use an empty column list for an UPDATE statement", NULL);
+      goto cleanup;
+    }
+
+    rewrite_column_values_for_update_stmts(ast, columns_values, table_ast->sem->sptr);
+
+    if (is_error(ast)) {
+      goto cleanup;
+    }
+
+    update_list = rewrite_column_values_as_update_list(columns_values);
+
+    ast_set_left(update_set, update_list);
   }
 
   // we can't push the from jptr yet because
@@ -24972,6 +24995,39 @@ cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull as
   }
 
   return ast->left->sem->name;
+}
+
+// Helper for doing series of potential rewrites on column_values node for
+// update and update cursor statements.
+static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr) {
+  // Any parent ast node to attach sem_err if needed.
+  Contract(ast);
+  // columns_values ast node to validate and rewrite
+  Contract(columns_values);
+  // Underlying table or cursor struct being updated by columns_values ast.
+  Contract(sptr);
+
+  rewrite_like_column_spec_if_needed(columns_values);
+  if (is_error(columns_values)) {
+    record_error(ast);
+    return;
+  }
+
+  EXTRACT_NOTNULL(column_spec, columns_values->left);
+  EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
+  EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+
+  // if there are any FROM C(like shape) thing in the values list, expand them
+  if (!rewrite_shape_forms_in_list_if_needed(insert_list)) {
+    record_error(ast);
+    return;
+  }
+
+  // check if length of columns to update and provided values match
+  for ( ; name_list && insert_list; name_list = name_list->right, insert_list = insert_list->right) {}
+  if (name_list || insert_list) {
+    report_error(ast, "CQL0157: count of columns differs from count of values", NULL);
+  }
 }
 
 // This is for the macro def statments that have no meaning in this pass

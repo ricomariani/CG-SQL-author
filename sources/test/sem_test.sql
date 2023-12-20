@@ -12481,7 +12481,7 @@ update cursor my_cursor(one) from values (2);
 -- TEST -- like statement can't be resolved in an update statement
 -- * error: % must be a cursor, proc, table, or view 'not_a_symbol'
 -- +1 error:
-update cursor my_cursor(like not_a_symbol) from values(1);
+update cursor small_cursor(like not_a_symbol) from values(1);
 
 -- TEST -- not a cursor
 -- + {update_cursor_stmt}: err
@@ -23151,6 +23151,209 @@ update simple_backed_table set id = 5 from update_test_1;
 -- * error: % strict UPDATE ... FROM validation requires that the UPDATE statement not include a FROM clause
 -- +1 error:
 UPDATE update_from_target SET name = update_test_2.name FROM update_test_1;
+
+@ENFORCE_NORMAL UPDATE FROM;
+
+-- TEST: update with from shape sugar
+-- Validate first update statement codegen
+-- + {update_set}
+-- + {update_list}: ok
+-- + {update_entry}: id: integer notnull
+-- + {name id}: id: integer notnull
+-- + {dot}: id_: integer notnull variable in
+-- + {name ARGUMENTS}
+-- + {name id}
+-- + {update_list}
+-- + {update_entry}: name: text
+-- + {name name}: name: text
+-- + {dot}: name_: text variable in
+-- + {name ARGUMENTS}
+-- + {name name}
+-- Validate second update statement codegen
+-- + {update_set}
+-- + {update_list}: ok
+-- + {update_entry}: id: integer notnull
+-- + {name id}: id: integer notnull
+-- + {dot}: C.id: integer notnull variable primary_key
+-- + {name C}
+-- + {name id}
+-- + {update_list}
+-- + {update_entry}: name: text
+-- + {name name}: name: text
+-- + {dot}: C.name: text variable
+-- + {name C}
+-- + {name name}
+-- - error:
+proc test_update_from_shape(like update_test_1)
+begin
+  -- Update statement from arguments
+  update update_test_1
+  set (like update_test_1) = (from arguments)
+  where id = locals.id
+  order by update_test_1.id
+  limit 1;
+
+  -- Update statement from a cursor
+  declare C cursor like update_test_1;
+  fetch C from values(1, "foo");
+  update update_test_1
+  set (like update_test_1) = (from C)
+  where id = locals.id
+  order by update_test_1.id
+  limit 1;
+end;
+
+-- Test table for next test.
+create table update_stmt_table(
+  id integer primary key,
+  name text,
+  a text,
+  b text,
+  c text,
+  x integer,
+  y integer,
+  z integer
+);
+
+-- TEST: update from an insert list
+-- + {update_list}: ok
+-- + {update_entry}: name: text
+-- + {name name}: name: text
+-- + {dot}: name_: text variable in
+-- + {name locals}
+-- + {name name}
+-- + {update_list}
+-- + {update_entry}: a: text
+-- + {name a}: a: text
+-- + {dot}: cur.a: text variable
+-- + {name cur}
+-- + {name a}
+-- + {update_list}
+-- + {update_entry}: b: text
+-- + {name b}: b: text
+-- + {dot}: cur.b: text variable
+-- + {name cur}
+-- + {name b}
+-- + {update_list}
+-- + {update_entry}: c: text
+-- + {name c}: c: text
+-- + {dot}: cur.c: text variable
+-- + {name cur}
+-- + {name c}
+-- + {update_list}
+-- + {update_entry}: x: integer
+-- + {name x}: x: integer
+-- + {int 1}: integer notnull
+-- + {update_list}
+-- + {update_entry}: y: integer
+-- + {name y}: y: integer
+-- + {int 2}: integer notnull
+-- + {update_list}
+-- + {update_entry}: z: integer
+-- + {name z}: z: integer
+-- + {int 3}: integer notnull
+-- - error:
+proc test_update_from_insert_list(like update_stmt_table(id, name))
+begin
+  declare cur cursor like update_stmt_table(a, b, c);
+  fetch cur from values("a", "b", "c");
+  
+  update update_stmt_table
+  set (like update_stmt_table(-id)) = (locals.name, from cur, 1, 2, 3)
+  where id = locals.id
+  order by update_stmt_table.id
+  limit 1;
+end;
+
+-- Test table for next test.
+create table aux_table(
+  id integer primary key,
+  x integer,
+  y integer,
+  z integer
+);
+
+-- TEST: Update with a shape and a FROM clause
+-- + {update_list}: ok
+-- + {update_entry}: name: text
+-- + {name name}: name: text
+-- + {dot}: updates_name: text variable in
+-- + {name updates}
+-- + {name name}
+-- + {update_list}
+-- + {update_entry}: a: text
+-- + {name a}: a: text
+-- + {dot}: updates_a: text variable in
+-- + {name updates}
+-- + {name a}
+-- + {update_list}
+-- + {update_entry}: b: text
+-- + {name b}: b: text
+-- + {dot}: updates_b: text variable in
+-- + {name updates}
+-- + {name b}
+-- + {update_list}
+-- + {update_entry}: c: text
+-- + {name c}: c: text
+-- + {dot}: updates_c: text variable in
+-- + {name updates}
+-- + {name c}
+-- + {update_list}
+-- + {update_entry}: x: integer
+-- + {name x}: x: integer
+-- + {dot}: x: integer
+-- + {name aux_table}
+-- + {name x}
+-- + {update_list}
+-- + {update_entry}: y: integer
+-- + {name y}: y: integer
+-- + {dot}: y: integer
+-- + {name aux_table}
+-- + {name y}
+-- + {update_list}
+-- + {update_entry}: z: integer
+-- + {name z}: z: integer
+-- + {dot}: z: integer
+-- + {name aux_table}
+-- + {name z}
+-- - error:
+proc test_update_with_shape_and_from_clause(id integer, updates like update_stmt_table(name, a, b, c))
+begin
+  update update_stmt_table
+  set (like update_stmt_table(-id)) = (from updates, aux_table.x, aux_table.y, aux_table.z)
+  from aux_table
+  where aux_table.id = update_stmt_table.id and update_stmt_table.id = locals.id;
+end;
+
+-- TEST: update from_shape sugar error handling
+-- + error: % incompatible types in expression 'name'
+-- + error: % name not found 'cursor_not_exist'
+-- + error: % must be a cursor, proc, table, or view 'cursor_not_exist'
+-- + error: % Cannot use an empty column list for an UPDATE statement
+-- + error: % count of columns differs from count of values
+-- + {dot}: err
+-- + {name ARGUMENTS}
+-- + {name id}
+-- + {name cursor_not_exist}: err
+-- +5 error:
+proc test_update_from_shape_errors(like update_test_1)
+begin
+  -- Swapped ordering of columns lead to incompatible types.
+  update update_test_1
+  set (name, id) = (from arguments);
+
+  -- Use of non existent shape in values
+  update update_test_1 set (id, name) = (from cursor_not_exist);
+
+  -- Use of non existent shape in column spec
+  update update_test_1 set (like cursor_not_exist) = (from arguments);
+
+  -- Empty column list is not allowed
+  update update_test_1 set () = (from arguments);
+
+  -- Count of columns differ from count of values
+  update update_test_1 set (id) = (from arguments);
+end;
 
 -- TEST: cql:alias_of attribution on declare_func_stmt
 -- + {stmt_and_attr}: ok

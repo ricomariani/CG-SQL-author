@@ -46499,12 +46499,12 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 
 The statement ending at line XXXX
 
-UPDATE CURSOR my_cursor(LIKE not_a_symbol) FROM VALUES(1);
+UPDATE CURSOR small_cursor(LIKE not_a_symbol) FROM VALUES(1);
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 
   {update_cursor_stmt}: err
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc fetch_into
+  | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {columns_values}: err
     | {column_spec}
     | | {shape_def}: err
@@ -87073,6 +87073,573 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0498: strict UPDATE ... FRO
       |   | {name update_test_1}
       | {update_where}
         | {update_orderby}
+
+The statement ending at line XXXX
+
+@ENFORCE_NORMAL UPDATE FROM;
+
+  {enforce_normal_stmt}: ok
+  | {int 22}
+
+The statement ending at line XXXX
+
+CREATE PROC test_update_from_shape (id_ INTEGER NOT NULL, name_ TEXT)
+BEGIN
+  UPDATE update_test_1
+    SET id = id_, name = name_
+    WHERE id = locals.id
+    ORDER BY update_test_1.id
+      LIMIT 1;
+  DECLARE C CURSOR LIKE update_test_1;
+  FETCH C(id, name) FROM VALUES(1, "foo");
+  UPDATE update_test_1
+    SET id = C.id, name = C.name
+    WHERE id = locals.id
+    ORDER BY update_test_1.id
+      LIMIT 1;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_update_from_shape}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id_: integer notnull variable in
+    | | | {param_detail}: id_: integer notnull variable in
+    | |   | {name id_}: id_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: name_: text variable in
+    |     | {param_detail}: name_: text variable in
+    |       | {name name_}: name_: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {update_stmt}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {update_list}: ok
+      |   | | {update_entry}: id: integer notnull
+      |   | | | {name id}: id: integer notnull
+      |   | | | {dot}: id_: integer notnull variable in
+      |   | |   | {name ARGUMENTS}
+      |   | |   | {name id}
+      |   | | {update_list}
+      |   |   | {update_entry}: name: text
+      |   |     | {name name}: name: text
+      |   |     | {dot}: name_: text variable in
+      |   |       | {name ARGUMENTS}
+      |   |       | {name name}
+      |   | {update_from}
+      |     | {update_where}
+      |       | {opt_where}: bool notnull
+      |       | | {eq}: bool notnull
+      |       |   | {name id}: id: integer notnull
+      |       |   | {dot}: id_: integer notnull variable in
+      |       |     | {name locals}
+      |       |     | {name id}
+      |       | {update_orderby}
+      |         | {opt_orderby}: ok
+      |         | | {orderby_list}: ok
+      |         |   | {orderby_item}
+      |         |     | {dot}: id: integer notnull
+      |         |       | {name update_test_1}
+      |         |       | {name id}
+      |         | {opt_limit}: integer notnull
+      |           | {int 1}: integer notnull
+      | {declare_cursor_like_name}: C: update_test_1: { id: integer notnull primary_key, name: text } variable shape_storage value_cursor
+      | | {name C}: C: update_test_1: { id: integer notnull primary_key, name: text } variable shape_storage value_cursor
+      | | {shape_def}: update_test_1: { id: integer notnull primary_key, name: text }
+      |   | {like}: ok
+      |     | {name update_test_1}
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name C}: C: update_test_1: { id: integer notnull primary_key, name: text } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name id}: id: integer notnull
+      |     |   | {name_list}
+      |     |     | {name name}: name: text
+      |     | {insert_list}: ok
+      |       | {int 1}: integer notnull
+      |       | {insert_list}
+      |         | {strlit 'foo'}: text notnull
+      | {update_stmt}: update_test_1: { id: integer notnull primary_key, name: text }
+        | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: id: integer notnull
+          | | | {name id}: id: integer notnull
+          | | | {dot}: C.id: integer notnull variable primary_key
+          | |   | {name C}
+          | |   | {name id}
+          | | {update_list}
+          |   | {update_entry}: name: text
+          |     | {name name}: name: text
+          |     | {dot}: C.name: text variable
+          |       | {name C}
+          |       | {name name}
+          | {update_from}
+            | {update_where}
+              | {opt_where}: bool notnull
+              | | {eq}: bool notnull
+              |   | {name id}: id: integer notnull
+              |   | {dot}: id_: integer notnull variable in
+              |     | {name locals}
+              |     | {name id}
+              | {update_orderby}
+                | {opt_orderby}: ok
+                | | {orderby_list}: ok
+                |   | {orderby_item}
+                |     | {dot}: id: integer notnull
+                |       | {name update_test_1}
+                |       | {name id}
+                | {opt_limit}: integer notnull
+                  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE update_stmt_table(
+  id INTEGER PRIMARY KEY,
+  name TEXT,
+  a TEXT,
+  b TEXT,
+  c TEXT,
+  x INTEGER,
+  y INTEGER,
+  z INTEGER
+);
+
+  {create_table_stmt}: update_stmt_table: { id: integer notnull primary_key, name: text, a: text, b: text, c: text, x: integer, y: integer, z: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name update_stmt_table}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: name: text
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name name}
+      |     | {type_text}: text
+      | {col_key_list}
+        | {col_def}: a: text
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name a}
+        |     | {type_text}: text
+        | {col_key_list}
+          | {col_def}: b: text
+          | | {col_def_type_attrs}: ok
+          |   | {col_def_name_type}
+          |     | {name b}
+          |     | {type_text}: text
+          | {col_key_list}
+            | {col_def}: c: text
+            | | {col_def_type_attrs}: ok
+            |   | {col_def_name_type}
+            |     | {name c}
+            |     | {type_text}: text
+            | {col_key_list}
+              | {col_def}: x: integer
+              | | {col_def_type_attrs}: ok
+              |   | {col_def_name_type}
+              |     | {name x}
+              |     | {type_int}: integer
+              | {col_key_list}
+                | {col_def}: y: integer
+                | | {col_def_type_attrs}: ok
+                |   | {col_def_name_type}
+                |     | {name y}
+                |     | {type_int}: integer
+                | {col_key_list}
+                  | {col_def}: z: integer
+                    | {col_def_type_attrs}: ok
+                      | {col_def_name_type}
+                        | {name z}
+                        | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC test_update_from_insert_list (id_ INTEGER NOT NULL, name_ TEXT)
+BEGIN
+  DECLARE cur CURSOR LIKE update_stmt_table(a, b, c);
+  FETCH cur(a, b, c) FROM VALUES("a", "b", "c");
+  UPDATE update_stmt_table
+    SET name = locals.name, a = cur.a, b = cur.b, c = cur.c, x = 1, y = 2, z = 3
+    WHERE id = locals.id
+    ORDER BY update_stmt_table.id
+      LIMIT 1;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_update_from_insert_list}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id_: integer notnull variable in
+    | | | {param_detail}: id_: integer notnull variable in
+    | |   | {name id_}: id_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: name_: text variable in
+    |     | {param_detail}: name_: text variable in
+    |       | {name name_}: name_: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: ok
+      | {declare_cursor_like_name}: cur: select: { a: text, b: text, c: text } variable shape_storage value_cursor
+      | | {name cur}: cur: select: { a: text, b: text, c: text } variable shape_storage value_cursor
+      | | {shape_def}: select: { a: text, b: text, c: text }
+      |   | {like}: ok
+      |   | | {name update_stmt_table}
+      |   | {shape_exprs}
+      |     | {shape_expr}
+      |     | | {name a}
+      |     | | {name a}
+      |     | {shape_exprs}
+      |       | {shape_expr}
+      |       | | {name b}
+      |       | | {name b}
+      |       | {shape_exprs}
+      |         | {shape_expr}
+      |           | {name c}
+      |           | {name c}
+      | {fetch_values_stmt}: ok
+      | | {name_columns_values}
+      |   | {name cur}: cur: select: { a: text, b: text, c: text } variable shape_storage value_cursor
+      |   | {columns_values}: ok
+      |     | {column_spec}
+      |     | | {name_list}
+      |     |   | {name a}: a: text
+      |     |   | {name_list}
+      |     |     | {name b}: b: text
+      |     |     | {name_list}
+      |     |       | {name c}: c: text
+      |     | {insert_list}: ok
+      |       | {strlit 'a'}: text notnull
+      |       | {insert_list}
+      |         | {strlit 'b'}: text notnull
+      |         | {insert_list}
+      |           | {strlit 'c'}: text notnull
+      | {update_stmt}: update_stmt_table: { id: integer notnull primary_key, name: text, a: text, b: text, c: text, x: integer, y: integer, z: integer }
+        | {name update_stmt_table}: update_stmt_table: { id: integer notnull primary_key, name: text, a: text, b: text, c: text, x: integer, y: integer, z: integer }
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: name: text
+          | | | {name name}: name: text
+          | | | {dot}: name_: text variable in
+          | |   | {name locals}
+          | |   | {name name}
+          | | {update_list}
+          |   | {update_entry}: a: text
+          |   | | {name a}: a: text
+          |   | | {dot}: cur.a: text variable
+          |   |   | {name cur}
+          |   |   | {name a}
+          |   | {update_list}
+          |     | {update_entry}: b: text
+          |     | | {name b}: b: text
+          |     | | {dot}: cur.b: text variable
+          |     |   | {name cur}
+          |     |   | {name b}
+          |     | {update_list}
+          |       | {update_entry}: c: text
+          |       | | {name c}: c: text
+          |       | | {dot}: cur.c: text variable
+          |       |   | {name cur}
+          |       |   | {name c}
+          |       | {update_list}
+          |         | {update_entry}: x: integer
+          |         | | {name x}: x: integer
+          |         | | {int 1}: integer notnull
+          |         | {update_list}
+          |           | {update_entry}: y: integer
+          |           | | {name y}: y: integer
+          |           | | {int 2}: integer notnull
+          |           | {update_list}
+          |             | {update_entry}: z: integer
+          |               | {name z}: z: integer
+          |               | {int 3}: integer notnull
+          | {update_from}
+            | {update_where}
+              | {opt_where}: bool notnull
+              | | {eq}: bool notnull
+              |   | {name id}: id: integer notnull
+              |   | {dot}: id_: integer notnull variable in
+              |     | {name locals}
+              |     | {name id}
+              | {update_orderby}
+                | {opt_orderby}: ok
+                | | {orderby_list}: ok
+                |   | {orderby_item}
+                |     | {dot}: id: integer notnull
+                |       | {name update_stmt_table}
+                |       | {name id}
+                | {opt_limit}: integer notnull
+                  | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+CREATE TABLE aux_table(
+  id INTEGER PRIMARY KEY,
+  x INTEGER,
+  y INTEGER,
+  z INTEGER
+);
+
+  {create_table_stmt}: aux_table: { id: integer notnull primary_key, x: integer, y: integer, z: integer }
+  | {create_table_name_flags}
+  | | {table_flags_attrs}
+  | | | {int 0}
+  | | {name aux_table}
+  | {col_key_list}
+    | {col_def}: id: integer notnull primary_key
+    | | {col_def_type_attrs}: ok
+    |   | {col_def_name_type}
+    |   | | {name id}
+    |   | | {type_int}: integer
+    |   | {col_attrs_pk}: ok
+    |     | {autoinc_and_conflict_clause}
+    | {col_key_list}
+      | {col_def}: x: integer
+      | | {col_def_type_attrs}: ok
+      |   | {col_def_name_type}
+      |     | {name x}
+      |     | {type_int}: integer
+      | {col_key_list}
+        | {col_def}: y: integer
+        | | {col_def_type_attrs}: ok
+        |   | {col_def_name_type}
+        |     | {name y}
+        |     | {type_int}: integer
+        | {col_key_list}
+          | {col_def}: z: integer
+            | {col_def_type_attrs}: ok
+              | {col_def_name_type}
+                | {name z}
+                | {type_int}: integer
+
+The statement ending at line XXXX
+
+CREATE PROC test_update_with_shape_and_from_clause (id INTEGER, updates_name TEXT, updates_a TEXT, updates_b TEXT, updates_c TEXT)
+BEGIN
+  UPDATE update_stmt_table
+    SET name = updates.name, a = updates.a, b = updates.b, c = updates.c, x = aux_table.x, y = aux_table.y, z = aux_table.z
+    FROM aux_table
+    WHERE aux_table.id = update_stmt_table.id AND update_stmt_table.id = locals.id;
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name test_update_with_shape_and_from_clause}: ok dml_proc
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id: integer variable in
+    | | | {param_detail}: id: integer variable in
+    | |   | {name id}: id: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: updates_name: text variable in
+    |   | | {param_detail}: updates_name: text variable in
+    |   |   | {name updates_name}: updates_name: text variable in
+    |   |   | {type_text}: text
+    |   | {params}
+    |     | {param}: updates_a: text variable in
+    |     | | {param_detail}: updates_a: text variable in
+    |     |   | {name updates_a}: updates_a: text variable in
+    |     |   | {type_text}: text
+    |     | {params}
+    |       | {param}: updates_b: text variable in
+    |       | | {param_detail}: updates_b: text variable in
+    |       |   | {name updates_b}: updates_b: text variable in
+    |       |   | {type_text}: text
+    |       | {params}
+    |         | {param}: updates_c: text variable in
+    |           | {param_detail}: updates_c: text variable in
+    |             | {name updates_c}: updates_c: text variable in
+    |             | {type_text}: text
+    | {stmt_list}: ok
+      | {update_stmt}: update_stmt_table: { id: integer notnull primary_key, name: text, a: text, b: text, c: text, x: integer, y: integer, z: integer }
+        | {name update_stmt_table}: update_stmt_table: { id: integer notnull primary_key, name: text, a: text, b: text, c: text, x: integer, y: integer, z: integer }
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: name: text
+          | | | {name name}: name: text
+          | | | {dot}: updates_name: text variable in
+          | |   | {name updates}
+          | |   | {name name}
+          | | {update_list}
+          |   | {update_entry}: a: text
+          |   | | {name a}: a: text
+          |   | | {dot}: updates_a: text variable in
+          |   |   | {name updates}
+          |   |   | {name a}
+          |   | {update_list}
+          |     | {update_entry}: b: text
+          |     | | {name b}: b: text
+          |     | | {dot}: updates_b: text variable in
+          |     |   | {name updates}
+          |     |   | {name b}
+          |     | {update_list}
+          |       | {update_entry}: c: text
+          |       | | {name c}: c: text
+          |       | | {dot}: updates_c: text variable in
+          |       |   | {name updates}
+          |       |   | {name c}
+          |       | {update_list}
+          |         | {update_entry}: x: integer
+          |         | | {name x}: x: integer
+          |         | | {dot}: x: integer
+          |         |   | {name aux_table}
+          |         |   | {name x}
+          |         | {update_list}
+          |           | {update_entry}: y: integer
+          |           | | {name y}: y: integer
+          |           | | {dot}: y: integer
+          |           |   | {name aux_table}
+          |           |   | {name y}
+          |           | {update_list}
+          |             | {update_entry}: z: integer
+          |               | {name z}: z: integer
+          |               | {dot}: z: integer
+          |                 | {name aux_table}
+          |                 | {name z}
+          | {update_from}
+            | {table_or_subquery_list}: TABLE { aux_table: aux_table }
+            | | {table_or_subquery}: TABLE { aux_table: aux_table }
+            |   | {name aux_table}: TABLE { aux_table: aux_table }
+            | {update_where}
+              | {opt_where}: bool
+              | | {and}: bool
+              |   | {eq}: bool notnull
+              |   | | {dot}: id: integer notnull
+              |   | | | {name aux_table}
+              |   | | | {name id}
+              |   | | {dot}: id: integer notnull
+              |   |   | {name update_stmt_table}
+              |   |   | {name id}
+              |   | {eq}: bool
+              |     | {dot}: id: integer notnull
+              |     | | {name update_stmt_table}
+              |     | | {name id}
+              |     | {dot}: id: integer variable in
+              |       | {name locals}
+              |       | {name id}
+              | {update_orderby}
+
+The statement ending at line XXXX
+
+CREATE PROC test_update_from_shape_errors (id_ INTEGER NOT NULL, name_ TEXT)
+BEGIN
+  UPDATE update_test_1
+    SET name = ARGUMENTS.id, id = ARGUMENTS.name;
+  UPDATE update_test_1
+    SET (id, name) = (FROM cursor_not_exist);
+  UPDATE update_test_1
+    SET (LIKE cursor_not_exist) = (FROM ARGUMENTS);
+  UPDATE update_test_1
+    SET () = (FROM ARGUMENTS);
+  UPDATE update_test_1
+    SET id = id_;
+END;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'name'
+test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cursor_not_exist'
+test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'cursor_not_exist'
+test/sem_test.sql:XXXX:1: error: in columns_values : CQL0503: Cannot use an empty column list for an UPDATE statement
+test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0157: count of columns differs from count of values
+
+  {create_proc_stmt}: err
+  | {name test_update_from_shape_errors}: err
+  | {proc_params_stmts}
+    | {params}: ok
+    | | {param}: id_: integer notnull variable in
+    | | | {param_detail}: id_: integer notnull variable in
+    | |   | {name id_}: id_: integer notnull variable in
+    | |   | {notnull}: integer notnull
+    | |     | {type_int}: integer
+    | | {params}
+    |   | {param}: name_: text variable in
+    |     | {param_detail}: name_: text variable in
+    |       | {name name_}: name_: text variable in
+    |       | {type_text}: text
+    | {stmt_list}: err
+      | {update_stmt}: err
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {update_list}: err
+      |   | | {update_entry}: err
+      |   | | | {name name}: name: text
+      |   | | | {dot}: err
+      |   | |   | {name ARGUMENTS}
+      |   | |   | {name id}
+      |   | | {update_list}
+      |   |   | {update_entry}
+      |   |     | {name id}
+      |   |     | {dot}
+      |   |       | {name ARGUMENTS}
+      |   |       | {name name}
+      |   | {update_from}
+      |     | {update_where}
+      |       | {update_orderby}
+      | {update_stmt}: err
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {columns_values}: ok
+      |   | | {column_spec}
+      |   | | | {name_list}
+      |   | |   | {name id}
+      |   | |   | {name_list}
+      |   | |     | {name name}
+      |   | | {insert_list}: err
+      |   |   | {from_shape}
+      |   |     | {name cursor_not_exist}: err
+      |   | {update_from}
+      |     | {update_where}
+      |       | {update_orderby}
+      | {update_stmt}: err
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {columns_values}: err
+      |   | | {column_spec}
+      |   | | | {shape_def}: err
+      |   | |   | {like}: err
+      |   | |     | {name cursor_not_exist}: err
+      |   | | {insert_list}
+      |   |   | {from_shape}
+      |   |     | {name ARGUMENTS}
+      |   | {update_from}
+      |     | {update_where}
+      |       | {update_orderby}
+      | {update_stmt}: err
+      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+      | | {update_set}
+      |   | {columns_values}
+      |   | | {column_spec}
+      |   | | {insert_list}
+      |   |   | {from_shape}
+      |   |     | {name ARGUMENTS}
+      |   | {update_from}
+      |     | {update_where}
+      |       | {update_orderby}
+      | {update_stmt}: update_test_1: { id: integer notnull primary_key, name: text }
+        | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
+        | {update_set}
+          | {update_list}: ok
+          | | {update_entry}: id: integer notnull
+          |   | {name id}: id: integer notnull
+          |   | {dot}: id_: integer notnull variable in
+          |     | {name ARGUMENTS}
+          |     | {name id}
+          | {update_from}
+            | {update_where}
+              | {update_orderby}
 
 The statement ending at line XXXX
 

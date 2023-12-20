@@ -2354,3 +2354,10 @@ DECLARE foo int;
 @ENFORCE_STRICT AND OR NOT NULL CHECK;
 
 CONST a_const_variable := 1;
+
+UPDATE some_table
+  SET (LIKE some_table(-id)) = (FROM ARGUMENTS LIKE bar, baz.one, baz.two, baz.three)
+  FROM baz
+  WHERE some_table.id = locals.id AND some_table.id = baz.id
+  ORDER BY some_table.id
+    LIMIT 1;

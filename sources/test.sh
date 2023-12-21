@@ -214,6 +214,12 @@ basic_test() {
    echo basic parsing test failed
    failed
   fi
+  if ! ${CQL} --echo --dev --in "$O/test.out"
+  then
+     echo "Echo output does not parse again correctly"
+     failed
+  fi
+
   echo "  computing diffs (empty if none)"
   on_diff_exit test.out
 

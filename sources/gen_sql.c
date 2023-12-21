@@ -2263,7 +2263,7 @@ static void gen_col_calcs(ast_node *ast) {
 
 static void gen_column_calculation(ast_node *ast) {
   Contract(is_ast_column_calculation(ast));
-  gen_printf("COLUMNS(");
+  gen_printf("@COLUMNS(");
   if (ast->right) {
     gen_printf("DISTINCT ");
   }
@@ -4765,7 +4765,7 @@ static void gen_schema_upgrade_version_stmt(ast_node *ast) {
   Contract(is_ast_schema_upgrade_version_stmt(ast));
   EXTRACT_OPTION(vers, ast->left);
 
-  gen_printf("@SCHEMA_UPGRADE (%d)", vers);
+  gen_printf("@SCHEMA_UPGRADE_VERSION (%d)", vers);
 }
 
 static void gen_previous_schema_stmt(ast_node *ast) {

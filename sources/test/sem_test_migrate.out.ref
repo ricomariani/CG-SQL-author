@@ -482,7 +482,7 @@ DECLARE long_int TYPE LONG_INT;
 
 The statement ending at line XXXX
 
-@SCHEMA_UPGRADE (5);
+@SCHEMA_UPGRADE_VERSION (5);
 
   {schema_upgrade_version_stmt}: ok
   | {int 5}

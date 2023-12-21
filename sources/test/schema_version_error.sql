@@ -6,7 +6,7 @@
  */
 
 -- TEST : set up for schema upgrade
--- + @SCHEMA_UPGRADE (2);
+-- + @SCHEMA_UPGRADE_VERSION (2);
 -- + {schema_upgrade_version_stmt}: ok
 -- + {int 2}
 -- - error:

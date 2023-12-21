@@ -24815,7 +24815,7 @@ The statement ending at line XXXX
 
 CREATE PROC bogus_version ()
 BEGIN
-  @SCHEMA_UPGRADE (11);
+  @SCHEMA_UPGRADE_VERSION (11);
 END;
 
 test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0230: schema upgrade version declaration must be outside of any proc
@@ -24829,7 +24829,7 @@ test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0230: schem
 
 The statement ending at line XXXX
 
-@SCHEMA_UPGRADE (11);
+@SCHEMA_UPGRADE_VERSION (11);
 
 test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schema upgrade version declaration must come before any tables are declared
 
@@ -24838,7 +24838,7 @@ test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0231: schem
 
 The statement ending at line XXXX
 
-@SCHEMA_UPGRADE (0);
+@SCHEMA_UPGRADE_VERSION (0);
 
 test/sem_test.sql:XXXX:1: error: in schema_upgrade_version_stmt : CQL0228: schema upgrade version must be a positive integer
 

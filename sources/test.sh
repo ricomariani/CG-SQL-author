@@ -214,13 +214,17 @@ basic_test() {
    echo basic parsing test failed
    failed
   fi
-  if ! ${CQL} --echo --dev --in "$O/test.out"
+  if ! ${CQL} --echo --dev --in "$O/test.out" >"$O/test.out2"
   then
      echo "Echo output does not parse again correctly"
      failed
   fi
 
   echo "  computing diffs (empty if none)"
+  on_diff_exit test.out
+
+  echo "  computing diffs second parsing (empty if none)"
+  mv "$O/test.out2" "$O/test.out"
   on_diff_exit test.out
 
   echo running "$T/test.sql" "with macro expansion"

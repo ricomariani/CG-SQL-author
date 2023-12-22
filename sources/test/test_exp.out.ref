@@ -7,7 +7,7 @@ END;
 BEGIN
   IF x! THEN
     y!;
-  END IF;
+  END;
 END;
 
 DECLARE x_int INTEGER NOT NULL;
@@ -16,7 +16,7 @@ CREATE PROC foo ()
 BEGIN
   IF 1 THEN
     CALL printf("hi\n");
-  END IF;
+  END;
 END;
 
 CREATE TABLE xx(
@@ -175,7 +175,7 @@ SELECT x + 2 AS z, x + 2 AS z;
 BEGIN
   IF NOT e! THEN
     CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
-  END IF;
+  END;
 END;
 
 @MACRO(EXPR) macro1!(u! EXPR)
@@ -233,7 +233,7 @@ SET zz := "1 + 2";
 
 SET zz := "1 AS x, 2 AS y";
 
-LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_basic_parse_test.sql', 161);\nEND IF;\n\nfoo";
+LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_basic_parse_test.sql', 161);\nEND;\n\nfoo";
 
 SET x := 5;
 
@@ -735,7 +735,7 @@ CLOSE a;
 IF x > 20 THEN
   UPDATE x
     SET y = z;
-END IF;
+END;
 
 IF x > 20 THEN
   UPDATE x
@@ -743,7 +743,7 @@ IF x > 20 THEN
 ELSE
   UPDATE w
     SET k = m;
-END IF;
+END;
 
 IF a > 1 THEN
   DELETE FROM b;
@@ -753,37 +753,37 @@ ELSE IF d > 3 THEN
   DELETE FROM e;
 ELSE
   DELETE FROM f;
-END IF;
+END;
 
 IF 1 IN (1, 2) THEN
   DELETE FROM b;
 ELSE
   DELETE FROM c;
-END IF;
+END;
 
 IF 1 NOT IN (1, 2) THEN
   DELETE FROM b;
 ELSE
   DELETE FROM c;
-END IF;
+END;
 
 IF 1 NOT IN (SELECT 1) THEN
   DELETE FROM b;
 ELSE
   DELETE FROM c;
-END IF;
+END;
 
 IF 'x' LIKE 'y' THEN
   DELETE FROM b;
-END IF;
+END;
 
 IF 1 BETWEEN 0 AND 2 AND 3 IN (3, 4) THEN
   DELETE FROM b;
-END IF;
+END;
 
 IF 3 NOT BETWEEN 1 AND 2 AND 1 NOT IN (2, 3) THEN
   DELETE FROM b;
-END IF;
+END;
 
 IF x IS NOT NULL COMMIT RETURN;
 
@@ -1725,7 +1725,7 @@ BEGIN
       ROLLBACK RETURN;
     ELSE
       COMMIT RETURN;
-    END IF;
+    END;
   END;
 END;
 
@@ -2365,4 +2365,8 @@ TRY
   LET x := 5;
 CATCH
   x := 7;
+END;
+
+IF x THEN
+  LET u := 5;
 END;

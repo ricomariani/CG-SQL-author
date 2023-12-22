@@ -2325,6 +2325,10 @@ if_stmt:
     struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
     struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
     $if_stmt = new_ast_if_stmt(cond_action, if_alt); }
+  | IF expr THEN opt_stmt_list opt_elseif_list opt_else END {
+    struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
+    struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
+    $if_stmt = new_ast_if_stmt(cond_action, if_alt); }
   ;
 
 opt_else:

@@ -4862,16 +4862,16 @@
     CREATE PROC empty_blocks ()
     BEGIN
     IF 1 THEN
-    END IF;
+    END;
 
     IF 2 THEN
     ELSE
-    END IF;
+    END;
 
     IF 3 THEN
     ELSE IF 4 THEN
     ELSE
-    END IF;
+    END;
 
     WHILE 1
     BEGIN

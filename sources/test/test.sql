@@ -1805,3 +1805,7 @@ try
 catch
   x := 7;
 end;
+
+if x then 
+  let u := 5;
+end;

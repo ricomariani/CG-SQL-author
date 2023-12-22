@@ -6087,7 +6087,7 @@ IF 1 THEN
   SELECT 1;
 ELSE
   SELECT 2;
-END IF;
+END;
 
   {if_stmt}: integer notnull
   | {cond_action}: integer notnull
@@ -6129,7 +6129,7 @@ The statement ending at line XXXX
 
 IF 'x' THEN
   SELECT 1;
-END IF;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0150: expected numeric expression in IF predicate
 
@@ -6157,7 +6157,7 @@ The statement ending at line XXXX
 
 IF NOT 'x' THEN
   SELECT 1;
-END IF;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -6186,7 +6186,7 @@ The statement ending at line XXXX
 
 IF 1 THEN
   SELECT NOT 'x';
-END IF;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -6217,7 +6217,7 @@ IF 1 THEN
   SELECT 1;
 ELSE
   SELECT NOT 'x';
-END IF;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -6266,7 +6266,7 @@ ELSE IF 2 THEN
   SELECT 2;
 ELSE
   SELECT 3;
-END IF;
+END;
 
   {if_stmt}: integer notnull
   | {cond_action}: integer notnull
@@ -6330,7 +6330,7 @@ ELSE IF '2' THEN
   SELECT 2;
 ELSE
   SELECT 3;
-END IF;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0150: expected numeric expression in IF predicate
 
@@ -6398,7 +6398,7 @@ ELSE IF 3 THEN
   SELECT 3;
 ELSE IF '4' THEN
   SELECT 4;
-END IF;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0150: expected numeric expression in IF predicate
 
@@ -7482,7 +7482,7 @@ BEGIN
   IF 1 THEN
     @ATTRIBUTE(goo)
     RETURN;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -7528,7 +7528,7 @@ CREATE PROC return_no_attr ()
 BEGIN
   IF 1 THEN
     RETURN;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -7550,7 +7550,7 @@ BEGIN
     @ATTRIBUTE(goo)
     RETURN;
     RETURN;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0308: statement should be the last thing in a statement list
@@ -7578,7 +7578,7 @@ BEGIN
   IF 1 THEN
     RETURN;
     RETURN;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0308: statement should be the last thing in a statement list
@@ -11215,7 +11215,7 @@ BEGIN
     SELECT 1 AS A, 2.5 AS B;
   ELSE
     SELECT 3 AS A, 4.7 AS B;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: with_matching_result: { A: integer notnull, B: real notnull } dml_proc
@@ -11285,7 +11285,7 @@ BEGIN
     SELECT 1 AS A, 2.5 AS B;
   ELSE
     SELECT 3 AS A, 4 AS B;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0061: in multiple select/out statements, all columns must be an exact type match (expected real notnull; found integer notnull) 'B'
@@ -11357,7 +11357,7 @@ BEGIN
     SELECT 1 AS A, 2.5 AS B;
   ELSE
     SELECT 3 AS A;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0057: in multiple select/out statements, all must have the same column count
@@ -11433,7 +11433,7 @@ BEGIN
     SELECT i AS A;
   ELSE
     SELECT X AS A;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0062: in multiple select/out statements, all columns must be an exact type match (including nullability) (expected integer notnull; found integer) 'A'
@@ -11496,7 +11496,7 @@ BEGIN
     SELECT i AS A;
   ELSE
     SELECT 2 AS A;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: with_ok_flags: { A: integer notnull } dml_proc
@@ -11557,7 +11557,7 @@ BEGIN
     SELECT 1 AS A;
   ELSE
     SELECT 2 AS B;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0058: in multiple select/out statements, all column names must be identical so they have unambiguous names; error in column 1: 'A' vs. 'B'
@@ -20119,7 +20119,7 @@ BEGIN
     SELECT 1 AS x;
   ELSE
     SELECT NOTHING;
-  END IF;
+  END;
 END;
 
   {stmt_and_attr}: ok
@@ -20181,7 +20181,7 @@ BEGIN
     SELECT 1 AS x;
   ELSE
     SELECT NOTHING;
-  END IF;
+  END;
 END;
 
   {stmt_and_attr}: ok
@@ -20234,7 +20234,7 @@ BEGIN
       X (x, y, z) LIKE a_shared_frag
     SELECT *
       FROM X;
-  END IF;
+  END;
 END;
 
   {stmt_and_attr}: ok
@@ -20328,7 +20328,7 @@ BEGIN
     WITH
       bogus_cte (id) LIKE foo
     SELECT 1 AS x;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0057: bogus_cte, all must have the same column count
@@ -20429,7 +20429,7 @@ BEGIN
     SELECT 1 AS x;
   ELSE
     SELECT 1 AS x;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_two_selects'
@@ -20509,7 +20509,7 @@ BEGIN
     DECLARE x INTEGER;
   ELSE
     SELECT 1 AS x;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0443: shared fragments with conditionals must have exactly SELECT, or WITH...SELECT in each statement list 'bogus_conditional_non_select'
@@ -20560,7 +20560,7 @@ BEGIN
   IF 1 THEN
   ELSE
     SELECT 1 AS x;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in cond_action : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_clause'
@@ -20606,7 +20606,7 @@ BEGIN
   IF 1 THEN
     SELECT 1 AS x;
   ELSE
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in if_stmt : CQL0443: shared fragments with conditionals must have exactly one SELECT, or WITH...SELECT in each statement list 'bogus_conditional_empty_else_clause'
@@ -51321,7 +51321,7 @@ BEGIN
   DECLARE C CURSOR FOR
     SELECT 1 AS x;
   IF C THEN
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fetch [cursor]' 'C'
@@ -54167,7 +54167,7 @@ BEGIN
       ROLLBACK RETURN;
     ELSE
       COMMIT RETURN;
-    END IF;
+    END;
   END;
 END;
 
@@ -54228,7 +54228,7 @@ BEGIN
     PROC SAVEPOINT
     BEGIN
     END;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in proc_savepoint_stmt : CQL0351: statement should be in a procedure and at the top level
@@ -54250,7 +54250,7 @@ CREATE PROC rollback_return_invalid ()
 BEGIN
   IF 1 THEN
     ROLLBACK RETURN;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in rollback_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
@@ -54272,7 +54272,7 @@ CREATE PROC commit_return_invalid ()
 BEGIN
   IF 1 THEN
     COMMIT RETURN;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in commit_return_stmt : CQL0350: statement must appear inside of a PROC SAVEPOINT block
@@ -61778,7 +61778,7 @@ The statement ending at line XXXX
 SWITCH z
   WHEN 1 THEN
     IF NOT "x" THEN
-    END IF;
+    END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -62989,8 +62989,8 @@ BEGIN
       LET x3 := a;
     ELSE
       LET x4 := a;
-    END IF;
-  END IF;
+    END;
+  END;
   LET x5 := a;
 END;
 
@@ -63073,9 +63073,9 @@ BEGIN
       IF b IS NOT NULL THEN
         DECLARE c2 CURSOR FOR
           SELECT a AS a2, b AS b2, c AS c2;
-      END IF;
-    END IF;
-  END IF;
+      END;
+    END;
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -63272,10 +63272,10 @@ BEGIN
       LET x4 := a;
       LET y4 := b;
       SET b := NULL;
-    END IF;
+    END;
     LET x5 := a;
     LET y5 := b;
-  END IF;
+  END;
   LET x6 := a;
   LET y6 := b;
 END;
@@ -63441,7 +63441,7 @@ BEGIN
   IF 0 THEN
     SET a := 42;
     LET x0 := a;
-  END IF;
+  END;
   LET x1 := a;
 END;
 
@@ -63482,8 +63482,8 @@ BEGIN
     LET x0 := a;
     IF 1 THEN
       SET a := NULL;
-    END IF;
-  END IF;
+    END;
+  END;
   LET x1 := a;
 END;
 
@@ -63777,14 +63777,14 @@ BEGIN
     CALL sets_out(a, x);
     LET x2 := a;
     LET y2 := b;
-  END IF;
+  END;
   IF a IS NOT NULL AND b IS NOT NULL THEN
     LET x3 := a;
     LET y3 := b;
     CALL sets_out(a, b);
     LET x4 := a;
     LET y4 := b;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -63943,14 +63943,14 @@ BEGIN
     FETCH c INTO a, x;
     LET x2 := a;
     LET y2 := b;
-  END IF;
+  END;
   IF a IS NOT NULL AND b IS NOT NULL THEN
     LET x3 := a;
     LET y3 := b;
     FETCH c INTO a, b;
     LET x4 := a;
     LET y4 := b;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -64109,7 +64109,7 @@ BEGIN
     FETCH c;
     LET x2 := c.xn;
     LET y2 := c.yn;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -64208,7 +64208,7 @@ BEGIN
     FETCH c_local(xn, yn) FROM VALUES(0, 0);
     LET x2 := c_local.xn;
     LET y2 := c_local.yn;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -64316,7 +64316,7 @@ BEGIN
     FETCH c_global(xn, yn) FROM VALUES(0, 0);
     LET x2 := c_global.xn;
     LET y2 := c_global.yn;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -64453,13 +64453,13 @@ BEGIN
     LET y2 := c_global.yn;
     IF c_global.xn IS NULL OR c_global.yn IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x3 := c_global.xn;
     LET y3 := c_global.yn;
     CALL proc1();
     LET x4 := c_global.xn;
     LET y4 := c_global.yn;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -64602,7 +64602,7 @@ CREATE PROC improvements_work_for_in_args (a INTEGER)
 BEGIN
   IF a IS NOT NULL THEN
     LET x := a;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -64654,7 +64654,7 @@ BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
     CALL requires_notnull_out(a);
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must be an exact type match (even nullability) (expected integer notnull; found integer) 'a'
@@ -64703,7 +64703,7 @@ BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
     CALL requires_notnull_inout(a);
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly null expression to not null target 'a'
@@ -64735,7 +64735,7 @@ BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
     SELECT 1 + a AS b;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: improvements_work_in_sql: { b: integer notnull } dml_proc
@@ -64784,7 +64784,7 @@ BEGIN
   DECLARE a INTEGER;
   IF a + 1 IS NOT NULL THEN
     LET b := a;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -64880,18 +64880,18 @@ BEGIN
     LET x4 := some_global;
     IF some_global IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x5 := some_global;
     CALL requires_not_nulls(some_global, some_global, some_global);
     LET x6 := some_global;
     IF some_global IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x7 := some_global;
     LET x8 := returns_int_not_null() + some_global;
     IF some_global IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x9 := some_global;
     LET x10 := CASE
       WHEN 0 THEN returns_int_not_null()
@@ -64901,9 +64901,9 @@ BEGIN
     LET x11 := some_global;
     IF some_global IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x12 := some_global;
-  END IF;
+  END;
   LET x13 := some_global;
 END;
 
@@ -65501,7 +65501,7 @@ BEGIN
   DECLARE xn INTEGER;
   IF xn IS NULL THEN
     RETURN;
-  END IF;
+  END;
   SELECT *
     FROM tnull;
 END;
@@ -65671,7 +65671,7 @@ BEGIN
     LET y1 := c.yn;
     LET x2 := d.xn;
     LET y2 := d.yn;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -65780,7 +65780,7 @@ BEGIN
     LET x1 := c.a;
     LET x2 := d.a;
     DECLARE e CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -65904,7 +65904,7 @@ BEGIN
     LET x0 := args.a;
     DECLARE c CURSOR FETCH FROM CALL returns_nullable_int();
     LET x1 := c.a;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -65957,7 +65957,7 @@ BEGIN
       )
     SELECT b
       FROM some_cte;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: improvements_work_within_ctes: { b: integer notnull } dml_proc
@@ -66029,9 +66029,9 @@ BEGIN
     IF 1 THEN
       IF a IS NULL THEN
         COMMIT RETURN;
-      END IF;
+      END;
       LET x0 := a;
-    END IF;
+    END;
     LET x1 := a;
   END;
 END;
@@ -66080,7 +66080,7 @@ BEGIN
   BEGIN
     IF a IS NULL THEN
       CONTINUE;
-    END IF;
+    END;
     LET x0 := a;
   END;
   LET x1 := a;
@@ -66126,7 +66126,7 @@ BEGIN
   BEGIN
     IF a IS NULL THEN
       LEAVE;
-    END IF;
+    END;
     LET x0 := a;
   END;
   LET x1 := a;
@@ -66171,9 +66171,9 @@ BEGIN
   IF 1 THEN
     IF a IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x0 := a;
-  END IF;
+  END;
   LET x1 := a;
 END;
 
@@ -66220,9 +66220,9 @@ BEGIN
     IF 1 THEN
       IF a IS NULL THEN
         ROLLBACK RETURN;
-      END IF;
+      END;
       LET x0 := a;
-    END IF;
+    END;
     LET x1 := a;
   END;
 END;
@@ -66272,9 +66272,9 @@ BEGIN
     IF 1 THEN
       IF a IS NULL THEN
         THROW;
-      END IF;
+      END;
       LET x0 := a;
-    END IF;
+    END;
     LET x1 := a;
   END;
 END;
@@ -66325,9 +66325,9 @@ BEGIN
   IF 1 THEN
     IF c.a IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x0 := c.a;
-  END IF;
+  END;
   LET x1 := c.a;
 END;
 
@@ -66398,11 +66398,11 @@ BEGIN
   IF 1 THEN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x0 := a;
     LET y0 := b;
     LET z0 := c;
-  END IF;
+  END;
   LET x1 := a;
   LET y1 := b;
   LET z1 := c;
@@ -66488,7 +66488,7 @@ CREATE PROC guard_improvements_only_work_for_outermost_ors (a INTEGER, b INTEGER
 BEGIN
   IF a IS NULL AND (b IS NULL OR c IS NULL) THEN
     RETURN;
-  END IF;
+  END;
   LET x := a;
   LET y := b;
   LET z := c;
@@ -66545,7 +66545,7 @@ CREATE PROC guard_improvements_only_work_for_is_null (a INTEGER)
 BEGIN
   IF NOT a THEN
     RETURN;
-  END IF;
+  END;
   LET x := a;
 END;
 
@@ -66575,7 +66575,7 @@ CREATE PROC guard_improvements_handle_semantic_issues_like_if ()
 BEGIN
   IF some_undefined_variable IS NULL THEN
     RETURN;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'some_undefined_variable'
@@ -66603,11 +66603,11 @@ BEGIN
   IF 1 THEN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
       RETURN;
-    END IF;
+    END;
     LET x0 := a;
     LET y0 := b;
     LET z0 := c;
-  END IF;
+  END;
   LET x1 := a;
   LET y1 := b;
   LET z1 := c;
@@ -66695,11 +66695,11 @@ BEGIN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
       CALL printf("Hello, world!\n");
       RETURN;
-    END IF;
+    END;
     LET x0 := a;
     LET y0 := b;
     LET z0 := c;
-  END IF;
+  END;
   LET x1 := a;
   LET y1 := b;
   LET z1 := c;
@@ -66790,9 +66790,9 @@ BEGIN
     IF a IS NULL THEN
       SET a := NULL;
       RETURN;
-    END IF;
+    END;
     LET x0 := a;
-  END IF;
+  END;
   LET x1 := a;
 END;
 
@@ -66840,7 +66840,7 @@ BEGIN
   IF a IS NULL THEN
     RETURN;
   ELSE
-  END IF;
+  END;
   LET x := a;
 END;
 
@@ -66873,7 +66873,7 @@ BEGIN
   IF a IS NULL THEN
     RETURN;
   ELSE IF 1 THEN
-  END IF;
+  END;
   LET x := a;
 END;
 
@@ -66909,7 +66909,7 @@ BEGIN
     RETURN;
   ELSE IF a IS NULL THEN
     RETURN;
-  END IF;
+  END;
   LET x := a;
 END;
 
@@ -66961,7 +66961,7 @@ BEGIN
     LET x3 := a;
     LET y3 := b;
     LET z3 := c;
-  END IF;
+  END;
   LET x4 := a;
   LET y4 := b;
   LET z4 := c;
@@ -67085,7 +67085,7 @@ BEGIN
   LET x0 := a;
   IF a IS NULL THEN
     RETURN;
-  END IF;
+  END;
   LET x1 := a;
   IF 0 THEN
     SET a := NULL;
@@ -67096,7 +67096,7 @@ BEGIN
     LET x4 := a;
   ELSE
     LET x5 := a;
-  END IF;
+  END;
   LET x6 := a;
 END;
 
@@ -67179,7 +67179,7 @@ BEGIN
   DECLARE c INTEGER;
   IF a IS NULL OR b IS NULL OR c IS NULL THEN
     RETURN;
-  END IF;
+  END;
   LET x0 := a;
   LET y0 := b;
   LET z0 := c;
@@ -67212,14 +67212,14 @@ BEGIN
           LET x4 := a;
           LET y4 := b;
           LET z4 := c;
-        END IF;
+        END;
         LET x5 := a;
         LET y5 := b;
         LET z5 := c;
         SET a := 42;
         SET b := 42;
         SET c := 42;
-      END IF;
+      END;
       LET x6 := a;
       LET y6 := b;
       LET z6 := c;
@@ -67227,7 +67227,7 @@ BEGIN
       LET x7 := a;
       LET y7 := b;
       LET z7 := c;
-    END IF;
+    END;
     LET x8 := a;
     LET y8 := b;
     LET z8 := c;
@@ -67235,7 +67235,7 @@ BEGIN
     LET x9 := a;
     LET y9 := b;
     LET z9 := c;
-  END IF;
+  END;
   LET x10 := a;
   LET y10 := b;
   LET z10 := c;
@@ -67564,7 +67564,7 @@ BEGIN
   DECLARE d INTEGER;
   IF b IS NULL THEN
     RETURN;
-  END IF;
+  END;
   SET c := 42;
   LET x0 := a;
   LET y0 := b;
@@ -67580,13 +67580,13 @@ BEGIN
       SET c := NULL;
       IF c IS NOT NULL THEN
         LET dummy := 0;
-      END IF;
+      END;
       SET d := 42;
       LET x2 := a;
       LET y2 := b;
       LET z2 := c;
       LET w2 := d;
-    END IF;
+    END;
     LET x3 := a;
     LET y3 := b;
     LET z3 := c;
@@ -67597,7 +67597,7 @@ BEGIN
     LET y4 := b;
     LET z4 := c;
     LET w4 := d;
-  END IF;
+  END;
   LET x5 := a;
   LET y5 := b;
   LET z5 := c;
@@ -67807,7 +67807,7 @@ BEGIN
     SET a := 100;
   ELSE
     SET a := 100;
-  END IF;
+  END;
   LET x1 := a;
   IF 0 THEN
     SET a := 100;
@@ -67815,7 +67815,7 @@ BEGIN
     SET a := NULL;
   ELSE
     SET a := 100;
-  END IF;
+  END;
   LET x2 := a;
 END;
 
@@ -67919,26 +67919,26 @@ BEGIN
     ELSE
       SET a := NULL;
       SET a := 42;
-    END IF;
+    END;
   ELSE IF 0 THEN
     SET a := 42;
   ELSE
     SET a := NULL;
     SET a := NULL;
     SET a := 42;
-  END IF;
+  END;
   LET x0 := a;
   SET a := NULL;
   LET x1 := a;
   IF 0 THEN
     SET a := 42;
-  END IF;
+  END;
   LET x2 := a;
   IF 0 THEN
     SET a := 42;
   ELSE IF 0 THEN
     SET a := 42;
-  END IF;
+  END;
   LET x3 := a;
 END;
 
@@ -68267,7 +68267,7 @@ BEGIN
       SET a := NULL;
       IF 0 THEN
         LEAVE;
-      END IF;
+      END;
       SET a := 1;
       WHILE 0
       BEGIN
@@ -68276,12 +68276,12 @@ BEGIN
           SET b := 1;
         ELSE
           SET b := 1;
-        END IF;
+        END;
       END;
     ELSE
       SET a := 1;
       SET b := 1;
-    END IF;
+    END;
     LET x1 := a;
     LET y1 := b;
   END;
@@ -68299,11 +68299,11 @@ BEGIN
       SET a := NULL;
       IF 0 THEN
         LEAVE;
-      END IF;
+      END;
       SET a := 1;
     ELSE
       SET b := 1;
-    END IF;
+    END;
   END;
   LET x4 := a;
   LET y4 := b;
@@ -68315,10 +68315,10 @@ BEGIN
       SET c := NULL;
       IF 0 THEN
         ROLLBACK RETURN;
-      END IF;
+      END;
       SET c := 1;
     ELSE
-    END IF;
+    END;
   END;
   LET z := c;
 END;
@@ -68551,10 +68551,10 @@ BEGIN
       SET a := NULL;
       IF 0 THEN
         THROW;
-      END IF;
+      END;
       SET a := 1;
     ELSE
-    END IF;
+    END;
     LET x0 := a;
   CATCH
     LET x1 := a;
@@ -68875,21 +68875,21 @@ BEGIN
     SET a := 1;
   ELSE
     SET a := 1;
-  END IF;
+  END;
   LET x0 := a;
   IF 0 THEN
     SET a := 1;
   ELSE IF 0 THEN
   ELSE
     SET a := 1;
-  END IF;
+  END;
   LET x1 := a;
   IF 0 THEN
     SET a := 1;
   ELSE IF 0 THEN
     SET a := 1;
   ELSE
-  END IF;
+  END;
   LET x2 := a;
 END;
 
@@ -68968,7 +68968,7 @@ BEGIN
     SET a := 1;
   ELSE
     THROW;
-  END IF;
+  END;
   LET x0 := a;
   SET a := NULL;
   WHILE 0
@@ -68983,7 +68983,7 @@ BEGIN
         RETURN;
       ELSE
         SET a := 1;
-      END IF;
+      END;
     ELSE IF 0 THEN
       LEAVE;
     ELSE IF 0 THEN
@@ -68993,11 +68993,11 @@ BEGIN
         SET a := NULL;
         SET a := NULL;
         SET a := 1;
-      END IF;
+      END;
     ELSE
       SET a := NULL;
       CONTINUE;
-    END IF;
+    END;
     LET x1 := a;
   END;
   LET x2 := a;
@@ -69006,10 +69006,10 @@ BEGIN
       THROW;
     ELSE
       RETURN;
-    END IF;
+    END;
   ELSE
     SET a := 1;
-  END IF;
+  END;
   LET x3 := a;
 END;
 
@@ -69152,7 +69152,7 @@ BEGIN
   DECLARE c INTEGER;
   IF b IS NULL THEN
     RETURN;
-  END IF;
+  END;
   LET x0 := a;
   LET y0 := b;
   LET z0 := b;
@@ -69627,7 +69627,7 @@ CREATE PROC out_args_must_be_initialized_before_return (OUT a TEXT NOT NULL)
 BEGIN
   IF 0 THEN
     RETURN;
-  END IF;
+  END;
   SET a := "text";
 END;
 
@@ -69678,16 +69678,16 @@ BEGIN
                 SET a := "text";
               ELSE
                 SET a := "text";
-              END IF;
+              END;
             ELSE
               SET a := "text";
           END;
-        END IF;
-      END IF;
+        END;
+      END;
     ELSE
       SET a := "text";
-    END IF;
-  END IF;
+    END;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -69808,16 +69808,16 @@ BEGIN
               IF 0 THEN
               ELSE
                 SET a := "text";
-              END IF;
+              END;
             ELSE
               SET a := "text";
           END;
-        END IF;
-      END IF;
+        END;
+      END;
     ELSE
       SET a := "text";
-    END IF;
-  END IF;
+    END;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull reference OUT parameter possibly not always initialized 'a'
@@ -70143,7 +70143,7 @@ BEGIN
   IF X.id IS NOT NULL AND Y.id IS NOT NULL THEN
     LET x_ := X.id;
     LET y_ := Y.id;
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -70292,7 +70292,7 @@ BEGIN
     CALL requires_int_notnull(b0_b);
     CALL requires_int_notnull(b1.b);
     CALL requires_int_notnull(b1_b);
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}: ok
@@ -73903,7 +73903,7 @@ BEGIN
     SELECT *
       FROM source
       WHERE x = bb;
-  END IF;
+  END;
 END;
 
   {stmt_and_attr}: ok
@@ -83257,12 +83257,12 @@ BEGIN
   LET x0 := c.a;
   IF c THEN
     LET x1 := c.a;
-  END IF;
+  END;
   LET x2 := c.a;
   IF NOT c THEN
     LET dummy := "hello";
     RETURN;
-  END IF;
+  END;
   LET x3 := c.a;
 END;
 
@@ -83471,13 +83471,13 @@ BEGIN
   FETCH c;
   IF NOT c THEN
     RETURN;
-  END IF;
+  END;
   LET x0 := c.a;
   FETCH c;
   LET x1 := c.a;
   IF c THEN
     LET x2 := c.a;
-  END IF;
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference type accessed before verifying that the cursor has a row 'c.a'
@@ -83602,7 +83602,7 @@ BEGIN
   FETCH c0;
   IF NOT c0 THEN
     RETURN;
-  END IF;
+  END;
   LOOP FETCH c1
   BEGIN
     LET x0 := c0.a;
@@ -84875,7 +84875,7 @@ BEGIN
   DECLARE c_ INTEGER;
   IF a_ IS NULL OR b IS NULL OR locals.c IS NULL THEN
     RETURN;
-  END IF;
+  END;
   CALL requires_not_nulls(a_, b, c_);
   CALL requires_not_nulls(LOCALS.a, LOCALS.b, LOCALS.c);
   CALL requires_not_nulls(LOCALS.a_, LOCALS.b, LOCALS.c_);

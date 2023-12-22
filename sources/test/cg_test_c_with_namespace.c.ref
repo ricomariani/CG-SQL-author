@@ -723,7 +723,7 @@ CREATE PROC test (i INTEGER NOT NULL)
 BEGIN
   IF i THEN
     CALL puts('true');
-  END IF;
+  END;
 END;
 */
 
@@ -747,7 +747,7 @@ CREATE PROC proc_with_return_guard (a INTEGER)
 BEGIN
   IF a IS NOT NULL THEN
     RETURN;
-  END IF;
+  END;
   LET x := a;
 END;
 */
@@ -6555,7 +6555,7 @@ BEGIN
   ELSE
     FETCH C FROM CALL p1();
     FETCH C FROM CALL p2();
-  END IF;
+  END;
 END;
 */
 
@@ -7434,7 +7434,7 @@ CREATE PROC use_return_no_error_flow ()
 BEGIN
   IF 1 THEN
     RETURN;
-  END IF;
+  END;
 END;
 */
 
@@ -7477,14 +7477,14 @@ void empty_proc(void) {
 CREATE PROC empty_blocks ()
 BEGIN
   IF 1 THEN
-  END IF;
+  END;
   IF 2 THEN
   ELSE
-  END IF;
+  END;
   IF 3 THEN
   ELSE IF 4 THEN
   ELSE
-  END IF;
+  END;
   WHILE 1
   BEGIN
   END;
@@ -8206,7 +8206,7 @@ BEGIN
   FETCH C;
   IF C THEN
     RETURN;
-  END IF;
+  END;
 END;
 */
 
@@ -9563,7 +9563,7 @@ BEGIN
   BEGIN
     IF 1 THEN
       COMMIT RETURN;
-    END IF;
+    END;
   END;
 END;
 */
@@ -9623,7 +9623,7 @@ BEGIN
   BEGIN
     IF 1 THEN
       ROLLBACK RETURN;
-    END IF;
+    END;
   END;
 END;
 */
@@ -12711,7 +12711,7 @@ BEGIN
   DECLARE a INTEGER;
   IF a IS NOT NULL THEN
     SELECT a + 1 AS b;
-  END IF;
+  END;
 END;
 */
 
@@ -12789,7 +12789,7 @@ BEGIN
   IF a IS NOT NULL THEN
     LET b := a;
     SET a := 0;
-  END IF;
+  END;
 END;
 */
 
@@ -13647,7 +13647,7 @@ CREATE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT)
 BEGIN
   IF a > b AND (a < c OR c IS NULL) THEN
     SET c := a;
-  END IF;
+  END;
 END;
 */
 
@@ -13700,7 +13700,7 @@ CREATE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT)
 BEGIN
   IF c < 0 OR a > c AND b > c THEN
     SET c := a;
-  END IF;
+  END;
 END;
 */
 
@@ -13849,7 +13849,7 @@ BEGIN
     SELECT x + x AS x;
   ELSE
     SELECT x + x + x AS x;
-  END IF;
+  END;
 END;
 */
 
@@ -14008,7 +14008,7 @@ BEGIN
       WHERE x_ = 5;
   ELSE
     SELECT x_ AS x;
-  END IF;
+  END;
 END;
 */
 
@@ -14328,7 +14328,7 @@ BEGIN
     SELECT id_ AS id1, 'x' AS text1;
   ELSE
     SELECT NOTHING;
-  END IF;
+  END;
 END;
 */
 
@@ -18175,7 +18175,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     SET i2 := 2;
   ELSE
     SET i2 := 3;
-  END IF;
+  END;
   */
   if (1) {
     i2 = 1;
@@ -18199,7 +18199,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     SET i2 := 2;
   ELSE
     SET i2 := 3;
-  END IF;
+  END;
   */
   if (1) {
     i2 = 1;
@@ -20062,7 +20062,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
     WHEN 1 THEN
       IF i2 THEN
         LEAVE;
-      END IF;
+      END;
       SET i2 := 999;
     ELSE
       SET i2 := 1;

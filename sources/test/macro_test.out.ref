@@ -65,7 +65,7 @@ The statement ending at line XXXX
 BEGIN
   IF NOT e! THEN
     CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
-  END IF;
+  END;
 END;
 
   {stmt_list_macro_def}
@@ -100,14 +100,14 @@ END;
 
 The statement ending at line XXXX
 
-LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_test.sql', 61);\nEND IF;\n\nfoo";
+LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_test.sql', 61);\nEND;\n\nfoo";
 
   {let_stmt}
   | {name zzz}
   | {strlit 'begin
 IF NOT 7 THEN
   CALL printf("assert ''%s'' failed at line %s:%d\n", "7", ''test/macro_test.sql'', 61);
-END IF;
+END;
 
 foo'}
 
@@ -141,7 +141,7 @@ The statement ending at line XXXX
 BEGIN
   IF x! THEN
     y!;
-  END IF;
+  END;
 END;
 
   {stmt_list_macro_def}
@@ -181,7 +181,7 @@ CREATE PROC foo ()
 BEGIN
   IF 1 THEN
     CALL printf("hi\n");
-  END IF;
+  END;
 END;
 
   {create_proc_stmt}

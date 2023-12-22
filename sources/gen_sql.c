@@ -3406,7 +3406,7 @@ static void gen_if_stmt(ast_node *ast) {
     gen_stmt_list(stmt_list);
   }
 
-  gen_printf("END IF");
+  gen_printf("END");
 }
 
 static void gen_guard_stmt(ast_node *ast) {

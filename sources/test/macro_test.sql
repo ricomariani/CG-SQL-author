@@ -47,7 +47,7 @@ file_line!();
 -- + BEGIN
 -- +   IF NOT e! THEN
 -- +     CALL printf("assert '%s' failed at line %s:%d\n", @TEXT(e!), @MACRO_FILE, @MACRO_LINE);
--- +   END IF;
+-- +   END;
 -- + END;
 @macro(stmt_list) assert!(e! expr)
 begin
@@ -57,7 +57,7 @@ begin
 end;
 
 -- an assertion... but converted to a string
--- + LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%%s' failed at line %%s:%d\\n\", \"7\", 'test/macro_test.sql', 61);\nEND IF;\n\nfoo";
+-- + LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%%s' failed at line %%s:%d\\n\", \"7\", 'test/macro_test.sql', 61);\nEND;\n\nfoo";
 let zzz := @TEXT("begin\n", assert!(7), "\nfoo");
 
 -- TEST: expression macro
@@ -72,7 +72,7 @@ end;
 -- + @MACRO(STMT_LIST) stmt_macro1!(x! EXPR, y! STMT_LIST)
 -- + IF x! THEN
 -- +   y!;
--- + END IF;
+-- + END;
 @macro(stmt_list) stmt_macro1!(x! expr, y! stmt_list)
 begin
   if x! then y!; end if;
@@ -86,7 +86,7 @@ var x_int int!;
 -- TEST: expand statement list macro
 -- + IF 1 THEN
 -- + CALL printf("hi\n");
--- + END IF;
+-- + END;
 create proc foo()
 begin
   stmt_macro1!(1, begin call printf("hi\n"); end);

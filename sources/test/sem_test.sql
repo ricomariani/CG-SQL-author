@@ -23259,10 +23259,10 @@ begin
   fetch cur from values("a", "b", "c");
   
   update update_stmt_table
-  set (like update_stmt_table(-id)) = (locals.name, from cur, 1, 2, 3)
-  where id = locals.id
-  order by update_stmt_table.id
-  limit 1;
+    set (like update_stmt_table(-id)) = (locals.name, from cur, 1, 2, 3)
+    where id = locals.id
+    order by update_stmt_table.id
+    limit 1;
 end;
 
 -- Test table for next test.
@@ -23325,30 +23325,56 @@ begin
   where aux_table.id = update_stmt_table.id and update_stmt_table.id = locals.id;
 end;
 
--- TEST: update from_shape sugar error handling
--- + error: % incompatible types in expression 'name'
--- + error: % name not found 'cursor_not_exist'
--- + error: % must be a cursor, proc, table, or view 'cursor_not_exist'
--- + error: % count of columns differs from count of values
+-- TEST: update from_shape sugar error handling, type mismatch
+-- + {update_stmt}: err
+-- + {update_list}: err
+-- + {update_entry}: err
 -- + {dot}: err
 -- + {name ARGUMENTS}
 -- + {name id}
--- + {name cursor_not_exist}: err
--- +4 error:
-proc test_update_from_shape_errors(like update_test_1)
+-- * error: % incompatible types in expression 'name'
+-- +1 error:
+proc test_update_from_shape_errors0(like update_test_1)
 begin
   -- Swapped ordering of columns lead to incompatible types.
   update update_test_1
   set (name, id) = (from arguments);
+end;
 
+-- TEST: update from_shape sugar error handling, FROM invalid
+-- + {update_stmt}: err
+-- + {insert_list}: err
+-- + {name cursor_not_exist}: err
+-- * error: % name not found 'cursor_not_exist'
+-- +1 error:
+proc test_update_from_shape_errors1(like update_test_1)
+begin
   -- Use of non existent shape in values
   update update_test_1 set (id, name) = (from cursor_not_exist);
+end;
 
+-- TEST: update from_shape sugar error handling invalid like shape
+-- + {update_stmt}: err
+-- + {columns_values}: err
+-- + {shape_def}: err
+-- + {name cursor_not_exist}: err
+-- * error: % must be a cursor, proc, table, or view 'cursor_not_exist'
+-- +1 error:
+proc test_update_from_shape_errors2(like update_test_1)
+begin
   -- Use of non existent shape in column spec
   update update_test_1 set (like cursor_not_exist) = (from arguments);
+end;
 
-  -- Count of columns differ from count of values
-  update update_test_1 set (id) = (from arguments);
+-- TEST: update from_shape sugar error handling, missing count
+-- + SET (id, name) = (ARGUMENTS.id);
+-- + {update_stmt}: err
+-- * error: % count of columns differs from count of values
+-- +1 error:
+proc test_update_from_shape_errors3(id int!)
+begin
+   -- Count of columns differ from count of values
+  update update_test_1 set (id, name) = (from arguments);
 end;
 
 -- TEST: cql:alias_of attribution on declare_func_stmt

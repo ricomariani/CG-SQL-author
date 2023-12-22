@@ -25021,6 +25021,8 @@ static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_n
   for ( ; name_list && insert_list; name_list = name_list->right, insert_list = insert_list->right) {}
   if (name_list || insert_list) {
     report_error(ast, "CQL0157: count of columns differs from count of values", NULL);
+    record_error(ast);
+    return;
   }
 }
 

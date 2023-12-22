@@ -4694,12 +4694,11 @@ static void gen_trycatch_stmt(ast_node *ast) {
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
 
-  gen_printf("BEGIN TRY\n");
+  gen_printf("TRY\n");
   gen_stmt_list(try_list);
-  gen_printf("END TRY;\n");
-  gen_printf("BEGIN CATCH\n");
+  gen_printf("CATCH\n");
   gen_stmt_list(catch_list);
-  gen_printf("END CATCH");
+  gen_printf("END");
 }
 
 static void gen_close_stmt(ast_node *ast) {

@@ -4884,10 +4884,9 @@
     BEGIN
     END;
 
-    BEGIN TRY
-    END TRY;
-    BEGIN CATCH
-    END CATCH;
+    TRY
+    CATCH
+    END;
     END
 
     {

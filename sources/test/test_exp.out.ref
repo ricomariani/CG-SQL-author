@@ -1001,12 +1001,11 @@ CALL foo(2);
 
 CREATE PROC foo ()
 BEGIN
-  BEGIN TRY
+  TRY
     SELECT 'try';
-  END TRY;
-  BEGIN CATCH
+  CATCH
     SELECT 'catch';
-  END CATCH;
+  END;
 END;
 
 BEGIN;
@@ -2361,3 +2360,9 @@ UPDATE some_table
   WHERE some_table.id = locals.id AND some_table.id = baz.id
   ORDER BY some_table.id
     LIMIT 1;
+
+TRY
+  LET x := 5;
+CATCH
+  x := 7;
+END;

@@ -241,13 +241,12 @@ end
 --[[
 CREATE PROC throwing ()
 BEGIN
-  BEGIN TRY
+  TRY
     DELETE FROM bar;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("error\n");
     THROW;
-  END CATCH;
+  END;
 END;
 --]]
 
@@ -1850,14 +1849,13 @@ end
 --[[
 CREATE PROC no_cleanup_label_needed_proc ()
 BEGIN
-  BEGIN TRY
+  TRY
     DECLARE C CURSOR FOR
       SELECT 1 AS N;
     FETCH C;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     DECLARE x INTEGER;
-  END CATCH;
+  END;
 END;
 --]]
 
@@ -1896,14 +1894,13 @@ end
 --[[
 CREATE PROC no_code_after_catch ()
 BEGIN
-  BEGIN TRY
+  TRY
     @ATTRIBUTE(foo)
     DECLARE x INTEGER;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     @ATTRIBUTE(bar)
     DECLARE y INTEGER;
-  END CATCH;
+  END;
 END;
 --]]
 
@@ -4029,12 +4026,11 @@ DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER NOT NULL);
 --[[
 CREATE PROC use_return ()
 BEGIN
-  BEGIN TRY
+  TRY
     SELECT 1 AS x;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     RETURN;
-  END CATCH;
+  END;
 END;
 --]]
 
@@ -4129,10 +4125,9 @@ BEGIN
   LOOP FETCH c
   BEGIN
   END;
-  BEGIN TRY
-  END TRY;
-  BEGIN CATCH
-  END CATCH;
+  TRY
+  CATCH
+  END;
 END;
 --]]
 
@@ -4190,14 +4185,12 @@ end
 --[[
 CREATE PROC tail_catch ()
 BEGIN
-  BEGIN TRY
-  END TRY;
-  BEGIN CATCH
-    BEGIN TRY
-    END TRY;
-    BEGIN CATCH
-    END CATCH;
-  END CATCH;
+  TRY
+  CATCH
+    TRY
+    CATCH
+    END;
+  END;
 END;
 --]]
 
@@ -6013,33 +6006,30 @@ CREATE PROC rc_test ()
 BEGIN
   LET err := @RC;
   LET e0 := @RC;
-  BEGIN TRY
-    BEGIN TRY
+  TRY
+    TRY
       CREATE TABLE whatever_anything(
         id INTEGER
       );
-    END TRY;
-    BEGIN CATCH
+    CATCH
       SET err := @RC;
       LET e1 := @RC;
-      BEGIN TRY
+      TRY
         LET e2 := @RC;
         CREATE TABLE whatever_anything(
           id INTEGER
         );
-      END TRY;
-      BEGIN CATCH
+      CATCH
         LET e3 := @RC;
         SET err := @RC;
         THROW;
-      END CATCH;
+      END;
       LET e4 := @RC;
-    END CATCH;
-  END TRY;
-  BEGIN CATCH
+    END;
+  CATCH
     LET e5 := @RC;
     CALL printf("Error %d\n", err);
-  END CATCH;
+  END;
   LET e6 := @RC;
 END;
 --]]
@@ -6115,21 +6105,19 @@ end
 --[[
 CREATE PROC rc_test_lazy1 ()
 BEGIN
-  BEGIN TRY
+  TRY
     CREATE TABLE whatever_anything(
       id INTEGER
     );
-  END TRY;
-  BEGIN CATCH
-    BEGIN TRY
+  CATCH
+    TRY
       CREATE TABLE whatever_anything(
         id INTEGER
       );
-    END TRY;
-    BEGIN CATCH
+    CATCH
       THROW;
-    END CATCH;
-  END CATCH;
+    END;
+  END;
 END;
 --]]
 
@@ -6174,21 +6162,19 @@ end
 --[[
 CREATE PROC rc_test_lazy2 ()
 BEGIN
-  BEGIN TRY
+  TRY
     CREATE TABLE whatever_anything(
       id INTEGER
     );
-  END TRY;
-  BEGIN CATCH
-    BEGIN TRY
+  CATCH
+    TRY
       CREATE TABLE whatever_anything(
         id INTEGER
       );
-    END TRY;
-    BEGIN CATCH
+    CATCH
       LET err := @RC;
-    END CATCH;
-  END CATCH;
+    END;
+  END;
 END;
 --]]
 
@@ -6769,11 +6755,10 @@ BEGIN
   DECLARE C CURSOR FOR
     SELECT 'foo' AS extra2
       FROM bar;
-  BEGIN TRY
+  TRY
     FETCH C;
-  END TRY;
-  BEGIN CATCH
-  END CATCH;
+  CATCH
+  END;
 END;
 --]]
 

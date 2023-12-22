@@ -1799,3 +1799,9 @@ from baz
 where some_table.id = locals.id and some_table.id = baz.id
 order by some_table.id
 limit 1;
+
+try 
+  let x := 5;
+catch
+  x := 7;
+end;

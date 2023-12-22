@@ -9166,14 +9166,13 @@ The statement ending at line XXXX
 
 CREATE PROC throw_before_out ()
 BEGIN
-  BEGIN TRY
+  TRY
     DECLARE C CURSOR FOR
       SELECT 1 AS x;
     FETCH C;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     THROW;
-  END CATCH;
+  END;
   OUT C;
 END;
 
@@ -11094,12 +11093,11 @@ END;
 
 The statement ending at line XXXX
 
-BEGIN TRY
+TRY
   SELECT 1;
-END TRY;
-BEGIN CATCH
+CATCH
   THROW;
-END CATCH;
+END;
 
   {trycatch_stmt}: ok
   | {stmt_list}: ok
@@ -11122,12 +11120,11 @@ END CATCH;
 
 The statement ending at line XXXX
 
-BEGIN TRY
+TRY
   SELECT NOT 'x';
-END TRY;
-BEGIN CATCH
+CATCH
   THROW;
-END CATCH;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -11153,12 +11150,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-BEGIN TRY
+TRY
   THROW;
-END TRY;
-BEGIN CATCH
+CATCH
   SELECT NOT 'x';
-END CATCH;
+END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -68550,7 +68546,7 @@ CREATE PROC try_keeps_all_unsets_and_ignores_all_sets ()
 BEGIN
   DECLARE a INTEGER;
   SET a := 1;
-  BEGIN TRY
+  TRY
     IF 0 THEN
       SET a := NULL;
       IF 0 THEN
@@ -68560,11 +68556,10 @@ BEGIN
     ELSE
     END IF;
     LET x0 := a;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     LET x1 := a;
     SET a := 1;
-  END CATCH;
+  END;
   LET x2 := a;
 END;
 
@@ -69975,12 +69970,11 @@ BEGIN
   SET rc := 0;
   @ATTRIBUTE(cql:try_is_proc_body)
   @ATTRIBUTE(some_other_attribute)
-  BEGIN TRY
+  TRY
     SET a := "text";
-  END TRY;
-  BEGIN CATCH
+  CATCH
     SET rc := 1;
-  END CATCH;
+  END;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -70030,11 +70024,10 @@ BEGIN
   SET rc := 0;
   @ATTRIBUTE(some_other_attribute)
   @ATTRIBUTE(cql:try_is_proc_body)
-  BEGIN TRY
-  END TRY;
-  BEGIN CATCH
+  TRY
+  CATCH
     SET rc := 1;
-  END CATCH;
+  END;
   SET a := "text";
 END;
 
@@ -70084,15 +70077,13 @@ The statement ending at line XXXX
 CREATE PROC try_is_proc_body_may_only_appear_once ()
 BEGIN
   @ATTRIBUTE(cql:try_is_proc_body)
-  BEGIN TRY
-  END TRY;
-  BEGIN CATCH
-  END CATCH;
+  TRY
+  CATCH
+  END;
   @ATTRIBUTE(cql:try_is_proc_body)
-  BEGIN TRY
-  END TRY;
-  BEGIN CATCH
-  END CATCH;
+  TRY
+  CATCH
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0446: @attribute(cql:try_is_proc_body) cannot be used more than once per procedure
@@ -70121,10 +70112,9 @@ The statement ending at line XXXX
 CREATE PROC try_is_proc_body_accepts_no_values ()
 BEGIN
   @ATTRIBUTE(cql:try_is_proc_body=(foo))
-  BEGIN TRY
-  END TRY;
-  BEGIN CATCH
-  END CATCH;
+  TRY
+  CATCH
+  END;
 END;
 
 test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: @attribute(cql:try_is_proc_body) accepts no values

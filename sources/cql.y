@@ -2250,6 +2250,7 @@ throw_stmt:
 
 trycatch_stmt:
   BEGIN_ TRY opt_stmt_list[osl1] END TRY ';' BEGIN_ CATCH opt_stmt_list[osl2] END CATCH  { $trycatch_stmt = new_ast_trycatch_stmt($osl1, $osl2); }
+  | TRY opt_stmt_list[osl1] CATCH opt_stmt_list[osl2] END { $trycatch_stmt = new_ast_trycatch_stmt($osl1, $osl2); }
   ;
 
 continue_stmt:

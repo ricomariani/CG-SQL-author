@@ -3460,14 +3460,36 @@ static void gen_update_entry(ast_node *ast) {
 static void gen_update_list(ast_node *ast) {
   Contract(is_ast_update_list(ast));
 
+  int32_t count = 0;
   for (ast_node *item = ast; item; item = item->right) {
-    Contract(is_ast_update_list(item));
-    EXTRACT_NOTNULL(update_entry, item->left);
+    count++;
+  }
 
-    gen_update_entry(update_entry);
-    if (item->right) {
-      gen_printf(", ");
+  if (count <= 4) {
+    gen_printf(" ");
+    for (ast_node *item = ast; item; item = item->right) {
+      Contract(is_ast_update_list(item));
+      EXTRACT_NOTNULL(update_entry, item->left);
+
+      gen_update_entry(update_entry);
+      if (item->right) {
+        gen_printf(", ");
+      }
     }
+  }
+  else {
+    GEN_BEGIN_INDENT(set_indent, 2);
+    gen_printf("\n");
+    for (ast_node *item = ast; item; item = item->right) {
+      Contract(is_ast_update_list(item));
+      EXTRACT_NOTNULL(update_entry, item->left);
+  
+      gen_update_entry(update_entry);
+      if (item->right) {
+        gen_printf(",\n");
+      }
+    }
+    GEN_END_INDENT(set_indent);
   }
 }
 
@@ -3528,12 +3550,13 @@ static void gen_update_stmt(ast_node *ast) {
   }
   GEN_BEGIN_INDENT(up, 2);
 
-  gen_printf("\nSET ");
+  gen_printf("\nSET");
   if (is_ast_columns_values(update_list)) {
     // UPDATE table_name SET ([opt_column_spec]) = ([from_shape])
     EXTRACT(column_spec, update_list->left);
     EXTRACT_ANY_NOTNULL(from_shape_or_insert_list, update_list->right);
 
+    gen_printf(" ");
     gen_column_spec(column_spec);
     gen_printf(" = ");
 

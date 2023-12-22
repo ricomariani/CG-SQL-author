@@ -87273,7 +87273,14 @@ BEGIN
   DECLARE cur CURSOR LIKE update_stmt_table(a, b, c);
   FETCH cur(a, b, c) FROM VALUES("a", "b", "c");
   UPDATE update_stmt_table
-    SET name = locals.name, a = cur.a, b = cur.b, c = cur.c, x = 1, y = 2, z = 3
+    SET
+      name = locals.name,
+      a = cur.a,
+      b = cur.b,
+      c = cur.c,
+      x = 1,
+      y = 2,
+      z = 3
     WHERE id = locals.id
     ORDER BY update_stmt_table.id
       LIMIT 1;
@@ -87431,7 +87438,14 @@ The statement ending at line XXXX
 CREATE PROC test_update_with_shape_and_from_clause (id INTEGER, updates_name TEXT, updates_a TEXT, updates_b TEXT, updates_c TEXT)
 BEGIN
   UPDATE update_stmt_table
-    SET name = updates.name, a = updates.a, b = updates.b, c = updates.c, x = aux_table.x, y = aux_table.y, z = aux_table.z
+    SET
+      name = updates.name,
+      a = updates.a,
+      b = updates.b,
+      c = updates.c,
+      x = aux_table.x,
+      y = aux_table.y,
+      z = aux_table.z
     FROM aux_table
     WHERE aux_table.id = update_stmt_table.id AND update_stmt_table.id = locals.id;
 END;

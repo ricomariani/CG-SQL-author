@@ -23329,13 +23329,12 @@ end;
 -- + error: % incompatible types in expression 'name'
 -- + error: % name not found 'cursor_not_exist'
 -- + error: % must be a cursor, proc, table, or view 'cursor_not_exist'
--- + error: % Cannot use an empty column list for an UPDATE statement
 -- + error: % count of columns differs from count of values
 -- + {dot}: err
 -- + {name ARGUMENTS}
 -- + {name id}
 -- + {name cursor_not_exist}: err
--- +5 error:
+-- +4 error:
 proc test_update_from_shape_errors(like update_test_1)
 begin
   -- Swapped ordering of columns lead to incompatible types.
@@ -23347,9 +23346,6 @@ begin
 
   -- Use of non existent shape in column spec
   update update_test_1 set (like cursor_not_exist) = (from arguments);
-
-  -- Empty column list is not allowed
-  update update_test_1 set () = (from arguments);
 
   -- Count of columns differ from count of values
   update update_test_1 set (id) = (from arguments);

@@ -299,7 +299,8 @@ static void cql_reset_globals(void);
 
 /* dml stuff */
 %type <aval> with_delete_stmt delete_stmt
-%type <aval> insert_stmt with_insert_stmt insert_list_item insert_list insert_stmt_type opt_column_spec opt_insert_dummy_spec expr_names expr_name
+%type <aval> insert_stmt with_insert_stmt insert_list_item insert_list insert_stmt_type
+%type <aval> column_spec opt_column_spec opt_insert_dummy_spec expr_names expr_name
 %type <aval> with_prefix with_select_stmt cte_table cte_tables cte_binding_list cte_binding cte_decl shared_cte
 %type <aval> select_expr select_expr_list select_opts select_stmt select_core values explain_stmt explain_target
 %type <aval> select_stmt_no_with select_core_list
@@ -1879,6 +1880,11 @@ opt_column_spec:
   | '(' shape_def ')'  { $opt_column_spec = new_ast_column_spec($shape_def); }
   ;
 
+column_spec:
+  '(' sql_name_list ')'  { $column_spec = new_ast_column_spec($sql_name_list); }
+  | '(' shape_def ')'  { $column_spec = new_ast_column_spec($shape_def); }
+  ;
+
 from_shape:
   FROM CURSOR name opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, $name); }
   | FROM name opt_column_spec  { $from_shape = new_ast_from_shape($opt_column_spec, $name); }
@@ -1942,12 +1948,12 @@ update_stmt:
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
     struct ast_node *list = new_ast_update_set($update_list, from);
     $update_stmt = new_ast_update_stmt($sql_name, list); }
-  | UPDATE sql_name SET opt_column_spec '=' '(' insert_list ')' opt_from_query_parts opt_where opt_orderby opt_limit  {
+  | UPDATE sql_name SET column_spec '=' '(' insert_list ')' opt_from_query_parts opt_where opt_orderby opt_limit  {
     struct ast_node *limit = $opt_limit;
     struct ast_node *orderby = new_ast_update_orderby($opt_orderby, limit);
     struct ast_node *where = new_ast_update_where($opt_where, orderby);
     struct ast_node *from = new_ast_update_from($opt_from_query_parts, where);
-    struct ast_node *columns_values = new_ast_columns_values($opt_column_spec, $insert_list);
+    struct ast_node *columns_values = new_ast_columns_values($column_spec, $insert_list);
     struct ast_node *list = new_ast_update_set(columns_values, from);
     $update_stmt = new_ast_update_stmt($sql_name, list); }
   ;

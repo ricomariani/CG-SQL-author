@@ -16306,15 +16306,9 @@ static void sem_update_stmt(ast_node *ast) {
   }
 
   if (is_ast_columns_values(update_list)) {
-    // UPDATE table_name SET ([opt_column_spec]) := [from_shape]
-    ast_node *columns_values = update_list;
+    // UPDATE table_name SET ([column_spec]) := [from_shape]
+    EXTRACT_NOTNULL(columns_values, update_list);
     EXTRACT_NOTNULL(column_spec, columns_values->left);
-    bool_t is_column_spec_empty = !column_spec->left;
-
-    if (is_column_spec_empty) {
-      report_error(columns_values, "CQL0503: Cannot use an empty column list for an UPDATE statement", NULL);
-      goto cleanup;
-    }
 
     rewrite_column_values_for_update_stmts(ast, columns_values, table_ast->sem->sptr);
 

@@ -87558,15 +87558,12 @@ BEGIN
   UPDATE update_test_1
     SET (LIKE cursor_not_exist) = (FROM ARGUMENTS);
   UPDATE update_test_1
-    SET () = (FROM ARGUMENTS);
-  UPDATE update_test_1
     SET id = id_;
 END;
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in expression 'name'
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cursor_not_exist'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'cursor_not_exist'
-test/sem_test.sql:XXXX:1: error: in columns_values : CQL0503: Cannot use an empty column list for an UPDATE statement
 test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0157: count of columns differs from count of values
 
   {create_proc_stmt}: err
@@ -87625,17 +87622,6 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0157: count of columns diff
       |   | | | {shape_def}: err
       |   | |   | {like}: err
       |   | |     | {name cursor_not_exist}: err
-      |   | | {insert_list}
-      |   |   | {from_shape}
-      |   |     | {name ARGUMENTS}
-      |   | {update_from}
-      |     | {update_where}
-      |       | {update_orderby}
-      | {update_stmt}: err
-      | | {name update_test_1}: update_test_1: { id: integer notnull primary_key, name: text }
-      | | {update_set}
-      |   | {columns_values}
-      |   | | {column_spec}
       |   | | {insert_list}
       |   |   | {from_shape}
       |   |     | {name ARGUMENTS}

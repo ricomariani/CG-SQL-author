@@ -273,6 +273,9 @@ bundles of arguments or columns of cursors to be easily updated.  Consider this 
 
 The usual shape forms are supported, so `C` could be `ARGUMENTS` or `LOCALS` etc.
 
+As with all the other sugared syntax forms, the statement is automatically converted to the normal
+form.  SQLite will never see the sugar, nor indeed to later stages of the compiler.
+
 #### The `INSERT` Statement
 
 SQLite reference: https://sqlite.org/lang_insert.html

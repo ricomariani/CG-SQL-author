@@ -301,7 +301,7 @@ which will be emitted before the `proc_body`.  By the time `cg_stmt_list` is inv
 `cg_main_output` variable will be pointing to the procedure body, thus any statements
 will go into there rather than being accumulated at the global level.
 
->NOTE: it's possible to have code that is not in a procedure (see [`--global_proc`](../user_guide/appendices/01_command_lines_options.md#--global_proc-name)).
+>NOTE: it's possible to have code that is not in a procedure (see [`--global_proc`](./appendices/01_command_lines_options.md#--global_proc-name)).
 
 In general, it's very useful to have different buffers open at the same time.  New local variables
 or scratch variables can be added to their own buffer. New cleanup steps that are necessary can be added to

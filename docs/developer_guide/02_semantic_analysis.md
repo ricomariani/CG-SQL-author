@@ -168,7 +168,7 @@ These break into a few categories:
 * `PENDING` is used sometimes while a type computation is in progress
   * this type doesn't appear in the AST, but has its own unique value so as to not conflict with any others
 * `REGION` is used to identify AST fragments that correspond to schema regions
-   * see [Chapter 10](../user_guide/10_schema_management.md) of the Guide for more information on regions
+   * see [Chapter 10](./10_schema_management.md) of the Guide for more information on regions
 * `CORE` is the mask for the core parts, `0xf` would do the job but for easy reading in the debugger we use `0xff`
   * new core types are not added very often, adding a new one is usually a sign that you are doing something wrong
 
@@ -1929,7 +1929,7 @@ typedef struct sem_struct {
 
 The structure is nothing more than an array of names, types and kinds with a count.  But it creates the notion of
 what's usually called a "shape" in the codebase. Shapes can be used in a variety of ways as is described in
-[Chapter 5](../user_guide/05_cursors.md#reshaping-data-cursor-like-forms) of the CQL Guide. But before we get
+[Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms) of the CQL Guide. But before we get
 into shapes, let's look at an example of how a structure type is created.
 
 The code that follows is the back end of `sem_create_table_stmt`.  At this point the bulk of the analysis is
@@ -2011,7 +2011,7 @@ of the arguments of a procedure and use them like a shape. All of these things a
 
 There are many cases where you want to be able to capture or re-use something with a known shape and you don't
 want to have to fully re-declare the thing.  CQL uses the `LIKE` construct to do these sorts of things.  This is
-more fully explained in [Chapter 5](../user_guide/05_cursors.md#reshaping-data-cursor-like-forms) of the Guide,
+more fully explained in [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms) of the Guide,
 but for now let's look at two different cases that are of interest.
 
 First, a cursor:
@@ -2198,7 +2198,7 @@ By way of example, you'll see these two patterns in the code:
 ### Schema Regions
 
 We touched briefly on schema regions earlier in this section.  The purpose and language for regions
-is described more fully in [Chapter 10](../user_guide/10_schema_management.md#schema-regions) of the Guide.
+is described more fully in [Chapter 10](./10_schema_management.md#schema-regions) of the Guide.
 In this section we'll deal with how they are implemented and what you should expect to see in the code.
 
 When a region declaration is found this method is used:

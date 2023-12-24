@@ -15,7 +15,7 @@ make
 ```
 
 This compiles CQL and puts the result at `out/cql`. Now you can run it to show available command options (also
-[documented here](../user_guide/appendices/01_command_lines_options.md):
+[documented here](./user_guide/appendices/01_command_lines_options.md):
 
 ```bash
 $ out/cql
@@ -25,9 +25,9 @@ You might want to alias the location of `out/cql`. For example, by using the `al
 
 ## Next Steps
 
-- Go to the [first chapter of the CQL Guide](../user_guide/01_introduction.md#getting-started) to write your first CQL program!
-The [second chapter](../user_guide/02_using_data.md#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
-- [CQL Language Cheatsheet](../user_guide/appendices/06_cql_in_20_minutes.md)
+- Go to the [first chapter of the CQL Guide](./user_guide/01_introduction.md#getting-started) to write your first CQL program!
+The [second chapter](./user_guide/02_using_data.md#a-sample-program) has a less trivial program that walks through how to query a SQLite database with CQL.
+- [CQL Language Cheatsheet](./user_guide/appendices/06_cql_in_20_minutes.md)
 - [CQL Playground](playground.md)
 
 ## Requirements

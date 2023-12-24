@@ -25,8 +25,8 @@ of the schema to the current version.  Because of the limitations of SQL in gene
 SQLite in particular, not all transforms are possible; so additionally the system must correctly
 detect and prevent upgrades that cannot be safely performed.
 
-The full set of schema attributes and their meaning is described in [Chapter 10](../user_guide/10_schema_management.md)
-and the full set of validations is described in [Chapter 11](../user_guide/11_previous_schema_validation.md).  Briefly the
+The full set of schema attributes and their meaning is described in [Chapter 10](./10_schema_management.md)
+and the full set of validations is described in [Chapter 11](./11_previous_schema_validation.md).  Briefly the
 directives are:
 
 * `@create(n)`: indicates a table/column is to be created at version `n`.

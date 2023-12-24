@@ -1,8 +1,20 @@
 # CG/SQL
 
-CG/SQL is a code generation system for the popular SQLite library that allows developers to write stored procedures in a variant of Transact-SQL (T-SQL) and compile them into C code that uses SQLite’s C API to do the coded operations. CG/SQL enables engineers to create highly complex stored procedures with very large queries, without the manual code checking that existing methods require.
+CG/SQL is a code generation system for the popular SQLite library that allows
+developers to write stored procedures in a variant of Transact-SQL (T-SQL) and
+compile them into C or Lua code that uses SQLite’s C API to do the coded
+operations.  CG/SQL enables engineers to create highly complex stored
+procedures with very large queries, without the manual code checking that
+existing methods require.
 
-The full system also includes features for managing and upgrading schema, creating test code for stored procedures, getting query plans for procedures, as well as interfacing with stored procedures from other languages, such as Java and Objective-C. The JSON output allows for the creation of even more analysis or interfacing code. The package includes extensive documentation on the language and system.
+CG/SQL system also includes features for managing and upgrading schema,
+creating test code for stored procedures, getting query plans for procedures,
+as well as interfacing with stored procedures from other languages, such as
+Java and Objective-C.
+
+CG/SQL's JSON output allows for the creation of even more analysis or
+interfacing code. The package includes extensive documentation on the language
+and system.
 
 ## Getting Started
 

@@ -1101,7 +1101,9 @@ create table A (id integer, name text);
 @end_region;
 ```
 
-Really the visibility rules couldn't be anything other than the above, as SQLite has no knowledge of regions at all and so any exotic name resolution would just doom SQLite statements to fail when they finally run.
+Really the visibility rules couldn't be anything other than the above, as SQLite has
+no knowledge of regions at all and so any exotic name resolution would just doom SQLite
+statements to fail when they finally run.
 
 ##### Exception for `"... LIKE <table>"` statement
 
@@ -1111,12 +1113,15 @@ statements. This form doesn't create a dependence on the table (but does
 create a dependence on its shape). When CQL generates output, the `LIKE`
 construct is replaced with the actual names of the columns it refers to.
 But these are independent columns, so this is simply a keystroke saver.
-The table (or view, cursor, etc.) reference will be gone.
+The table (or view, cursor, etc.) reference will be gone in any output SQL
+so this isn't a real dependency on the existence of the mentioned table or
+shape at run time.
 
 The cases below will succeed.
 
 ```sql
 @declare_region root;
+
 create table A (...);
 create view B (....);
 create procedure C {...}
@@ -1144,7 +1149,6 @@ Excluded regions:
 
 * must be valid region names and indicate parts of schema that are upgraded elsewhere, perhaps with a seperate CQL run, a different automatic upgrade, or even a manual mechanism
 * upgrade code will be generated for all the included schema, but not for the excluded regions and their contents
-
 
 Example: Referring to the regions above you might do something like this
 

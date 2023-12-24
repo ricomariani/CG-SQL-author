@@ -255,6 +255,23 @@ UPDATE inventory
 
 `inventory` was joined against `daily` (a nested select) and the join condition appears in the `WHERE` clause.
 
+The following sugared version of the `UPDATE` statement is also supported:
+
+```SQL
+UPDATE some_table (a,b,c) = (1, 2, "xx") WHERE ...;
+```
+
+This form at first appears to be less good than the usual form in that the clarity of which column
+is getting which value is gone however it creates symmetry with the `INSERT` statement and like
+the `INSERT` statement the column names or values may be generated from `LIKE` and `FROM` forms as
+described in [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms).  These forms allow for
+bundles of arguments or columns of cursors to be easily updated.  Consider this example:
+
+ ```SQL
+ UPDATE something(LIKE C) = (FROM C) WHERE id = 12;
+ ```
+
+The usual shape forms are supported, so `C` could be `ARGUMENTS` or `LOCALS` etc.
 
 #### The `INSERT` Statement
 
@@ -270,6 +287,28 @@ Verifications:
 * If the specified columns do not include a value for all not null columns with no default value then
   * if present, `@dummy_seed` is be used to generate missing column values, (Chapter 12 covers this in greater detail)
   * an error is generated for the first missing value
+
+
+Note that the column names or values may be generated from `LIKE` and `FROM` forms as described in
+[Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms).  These forms allow for bundles
+of arguments or columns of cursors to be easily inserted.
+
+The following sugared syntax is also supported:
+
+```SQL
+INSERT INTO somewhere USING
+  1 foo,
+  2 bar,
+  "xx" baz;
+```
+
+This form is much less error prone than the equivalent (below) because the correspondence between columns is readily visible.
+
+```sql
+INSERT INTO somewhere(foo, bar, baz) VALUES(1,2,"xx");
+```
+
+The sugared version is converted into the normal version.
 
 #### The `THROW` Statement
 

@@ -347,7 +347,7 @@ would have been much less useful, reporting the line of the `printf`.
 
 #### Token Pasting
 
-You can create new tokens with a two step process:
+You can create new tokens in one of two ways:
 
   * `@TEXT` will create a string from one or more parts.
   * `@ID` will make a new identifier from one or more parts
@@ -411,7 +411,8 @@ be helpful in the `expect!` macro.
 There is no macro form that can stand in for a type name.  However,
 identifiers are legal types and so `@ID(...)` is an excellent
 construct for creating type names from expressions like strings
-or identifiers.
+or identifiers.  In general, `@ID(...)` can allow you to use
+an expression macro where an expression is not legal but a name is.
 
 For instance:
 

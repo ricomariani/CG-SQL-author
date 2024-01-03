@@ -258,7 +258,7 @@ UPDATE inventory
 The following sugared version of the `UPDATE` statement is also supported:
 
 ```SQL
-UPDATE some_table (a,b,c) = (1, 2, "xx") WHERE ...;
+UPDATE some_table SET (a,b,c) = (1, 2, "xx") WHERE ...;
 ```
 
 This form at first appears to be less good than the usual form in that the clarity of which column

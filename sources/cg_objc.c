@@ -494,28 +494,6 @@ cql_noexport void cg_objc_main(ast_node *head) {
   cql_exit_on_semantic_errors(head);
   exit_on_validating_schema();
 
-  // OBJC can be configured in a variety of ways, when running the suites and pattern matching
-  // we hard code it to these normalized options.  This also means we don't test every combo
-  // but really this only affects the symbol string building and that is heavily tested in
-  // other places.  Previously we used sed to normalize.
-
-  if (options.test) {
-    // make a new rt in the pool so we can safely mutate it without affecting
-    // subsequent runs in the amalgam case.
-
-    rtdata *rtnew = _ast_pool_new(rtdata);
-    *rtnew = *rt;
-    rt = rtnew;
-
-    // set some canonical options
-
-    rt->header_prefix = "#pragma once\n\n#import <Foundation/Foundation.h>\n\n";
-    rt->symbol_prefix = "CGB";
-    rt->impl_symbol_prefix = "CGC";
-    rt->symbol_case = cg_symbol_case_pascal;
-    rt->cql_string_ref_encode = "CGOEncodedString";
-  }
-
   cg_objc_init();
 
   CHARBUF_OPEN(header_file);

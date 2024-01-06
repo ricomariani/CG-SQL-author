@@ -308,7 +308,7 @@ objc: $(source)
 ifeq ($(shell uname),Darwin)
 > mkdir -p $O/objc
 > $(CQL) --nolines --include_paths $(SCRIPT_DIR_RELATIVE) --in $(source) --cg $O/objc/$(example_name).h $O/objc/$(example_name).c --cqlrt $(CQL_ROOT_DIR)/cqlrt_cf/cqlrt_cf.h
-> $(CQL) --dev --test --in $(source) --rt objc_mit --cg $O/objc/$(example_name)_objc.h --objc_c_include_path $O/objc/$(example_name).h
+> $(CQL) --dev --test --in $(source) --rt objc --cg $O/objc/$(example_name)_objc.h --objc_c_include_path $O/objc/$(example_name).h
 > if grep -q "entrypoint(void)" $O/objc/$(example_name).h; then \
     CC_FLAGS="-DNO_DB_CONNECTION_REQUIRED_FOR_ENTRYPOINT"; \
 fi; \

@@ -13,12 +13,8 @@ echo "building cql"
 echo "building C code"
 ../out/cql --in demo_todo.sql --cg demo_todo.h demo_todo.c --cqlrt cqlrt_cf.h
 
-# note --rt objc_mit used so that even the non-OSS build will do the OSS version of the output
-# for normal users here is no difference between objc and objc_mit this is an internal thing
-# objc_mit normalizes the output.
-
 echo "building OBJC code"
-../out/cql --in demo_todo.sql --cg demo_objc.h --rt objc_mit --objc_c_include_path demo_todo.h --cqlrt cqlrt_cf.h
+../out/cql --in demo_todo.sql --cg demo_objc.h --rt objc --objc_c_include_path demo_todo.h --cqlrt cqlrt_cf.h
 
 echo "building executable"
 cc -o demo -g -I.. -I. demo_todo.c demo_main.m cqlrt_cf.c cqlholder.m -lsqlite3 -framework Foundation -fobjc-arc

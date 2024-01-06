@@ -122,18 +122,8 @@ turned on when debugging failures.  But you can make that choice for yourself.
 
 #### Customizing Code Generation
 
-The file `rt_common.c` defines the common result types, but the skeleton file `rt.c`
-includes affordances to add your own types without having to worry about conflicts with the
-common types.  These macros define
-
-```c
-#define RT_EXTRAS
-#define RT_EXTRA_CLEANUP
-```
-
-Simply define these two to create whatever `rt_` data structures you want and add any
-cleanup function that might be needed to release resources.  The other cleanup
-functions should provide a good template for you to make your own.
+The file `rt.c` defines the common result types, additional result types can
+be readily added to this file.
 
 The C data type `rtdata` includes many text fragments that directly control the
 code generation.  If you want to make your generated code look more like say

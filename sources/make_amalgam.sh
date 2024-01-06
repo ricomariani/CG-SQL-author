@@ -86,7 +86,6 @@ process_c_files() {
   cat "minipool.c"
   cat "printf.c"
   cat "rt.c"
-  cat "rt_common.c"
   cat "rewrite.c"
   cat "sem.c"
   cat "sha256.c"

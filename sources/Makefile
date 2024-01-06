@@ -57,7 +57,7 @@ OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebu
 
 OBJECTS+=$(ADDITIONAL_OBJECTS)
 
-$O/rt.o: rt.c rt_common.c
+$O/rt.o: rt.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/%.o: %.c
@@ -108,7 +108,7 @@ $O/ast.o: ast.c ast.h cql.h encoders.h charbuf.h
 
 $O/cqlrt.o: cqlrt.c cqlrt.h cqlrt_common.c cqlrt_common.h
 
-$O/rt.o: rt.c rt.h rt_common.c
+$O/rt.o: rt.c rt.h
 
 $O/gen_sql.o: gen_sql.c ast.h gen_sql.h charbuf.h cql.h encoders.h sem.h
 

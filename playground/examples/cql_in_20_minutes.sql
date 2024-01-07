@@ -440,12 +440,11 @@ begin
 
 
   _!('### You can "throw" out of the current procedure (see exceptions below)');
-  begin try
+  try
     let y := ifnull_throw(_null);
-  end try;
-  begin catch
+  catch
     call printf("CATCH: _null is null\n");
-  end catch;
+  end;
   _!("");
 
 

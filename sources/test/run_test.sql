@@ -42,19 +42,16 @@ end;
 begin
   create procedure @ID("test_", x!)()
   begin 
-    begin try 
+    try 
       set tests := tests + 1; 
       declare starting_fails integer not null; 
       set starting_fails := fails;
-
       body!;
-
-    end try;
-    begin catch
+    catch
       call printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(x!));
       set fails := fails + 1;
       throw;
-    end catch;
+    end;
     if starting_fails != fails then
       call printf("%s failed.\n", @TEXT(x!));
     else 
@@ -1052,15 +1049,14 @@ create procedure throws(out did_throw bool!)
 begin
   declare x int!;
   set did_throw := 0;
-  begin try
+  try
     -- this fails
     set x := (select id from mixed where id = 999);
-  end try;
-  begin catch
+  catch
     set did_throw := 1;
     -- and rethrow!
     throw;
-  end catch;
+  end;
   set did_throw := 0; -- test fails if this runs, it should not
 end;
 
@@ -1069,13 +1065,12 @@ BEGIN
   declare did_throw bool!;
   declare did_continue bool!;
   set did_continue := 0;
-  begin try
+  try
     call throws(did_throw);
     set did_throw := one / zero;  -- this does not run
-  end try;
-  begin catch
+  catch
     set did_continue := 1;
-  end catch;
+  end;
   EXPECT!(did_throw == 1);  -- exception was caught
   EXPECT!(did_continue == 1);  -- execution continued
 END);
@@ -1084,12 +1079,11 @@ END);
 TEST!(throw_and_not_catch,
 BEGIN
   declare did_catch int!;
-  begin try
+  try
     set did_catch := 0;
-  end try;
-  begin catch
+  catch
     set did_catch := 1;
-  end catch;
+  end;
   EXPECT!(did_catch == 0); -- catch did not run
 END);
 
@@ -3366,12 +3360,11 @@ BEGIN
   set start := -1;
   set stop := 1;
   declare rs object!;
-  begin try
+  try
     call some_integers_fetch(rs, start, stop);
-  end try;
-  begin catch
+  catch
     set ok_after_all := 1;
-  end catch;
+  end;
 
   -- throw happened and we're not gonna leak
   EXPECT!(ok_after_all);
@@ -3989,12 +3982,11 @@ BEGIN
   call select_if_nothing(2);
   EXPECT!(@rc == 0);
 
-  begin try
+  try
     call select_if_nothing_throw(2);
-  end try;
-  begin catch
+  catch
     EXPECT!(@rc != 0);
-  end catch;
+  end;
 END);
 
 create proc out_union()
@@ -4037,28 +4029,26 @@ TEST!(nested_rc_values,
 BEGIN
   let e0 := @rc;
   EXPECT!(e0 = 0); -- SQLITE_OK
-  begin try
+  try
     -- force duplicate table error
     create table foo(id integer primary key);
     create table foo(id integer primary key);
-  end try;
-  begin catch
+  catch
     let e1 := @rc;
     EXPECT!(e1 == 1); -- SQLITE_ERROR
-    begin try
+    try
       let e2 := @rc;
       EXPECT!(e2 == 1); -- SQLITE_ERROR
       -- force constraint error
       insert into foo using 1 id;
       insert into foo using 1 id;
-    end try;
-    begin catch
+    catch
       let e3 := @rc;
       EXPECT!(e3 == 19); -- SQLITE_CONSTRAINT
-    end catch;
+    end;
     let e4 := @rc;
     EXPECT!(e4 == 1); -- back to SQLITE_ERROR
-  end catch;
+  end;
   let e7 := @rc;
   EXPECT!(e7 = 0); -- back to SQLITE_OK
 END);
@@ -4694,13 +4684,12 @@ BEGIN
 
   -- null blob, throws exception
   let caught := false;
-  begin try
+  try
     fetch test_cursor_both from blob_both;
-  end try;
-  begin catch
+  catch
     EXPECT!(not test_cursor_both);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 
   -- big blob will have too many fields...
@@ -4725,25 +4714,23 @@ BEGIN
   set any_blob := stash_notnulls;
   declare blob_with_extras blob<storage_with_extras>;
   set blob_with_extras := any_blob;
-  begin try
+  try
     fetch cursor_with_extras from blob_with_extras;
-  end try;
-  begin catch
+  catch
     EXPECT!(not cursor_with_extras);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 
   -- attempting to read from an empty cursor will throw
   EXPECT!(not cursor_with_extras);
   set caught := false;
-  begin try
+  try
     set blob_with_extras from cursor cursor_with_extras;
-  end try;
-  begin catch
+  catch
     EXPECT!(not cursor_with_extras);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 
   -- the types are all wrong but they are simply not null values of the same types
@@ -4771,13 +4758,12 @@ BEGIN
 
   -- we can't read possibly null types into not null types
   set caught := false;
-  begin try
+  try
     fetch test_cursor_notnulls from blob_notnulls;
-  end try;
-  begin catch
+  catch
     EXPECT!(not test_cursor_notnulls);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 
   -- set up a totally different stored blob
@@ -4795,13 +4781,12 @@ BEGIN
 
   -- the types in this blob do not match the cursor we're going to use it with
   set caught := false;
-  begin try
+  try
     fetch cursor_nullables from blob_nullables;
-  end try;
-  begin catch
+  catch
     EXPECT!(not cursor_nullables);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 
 END);
@@ -4859,14 +4844,13 @@ BEGIN
     set blob_broken := create_truncated_blob(blob_both, i);
     -- the types in this blob do not match the cursor we're going to use it with
     let caught := false;
-    begin try
+    try
       -- this is gonna fail
       fetch cursor_both from blob_broken;
-    end try;
-    begin catch
+    catch
       EXPECT!(not cursor_both);
       set caught := true;
-    end catch;
+    end;
     EXPECT!(caught);
     set i := i + 1;
   end;
@@ -4891,14 +4875,13 @@ BEGIN
   set test_blob := bogus_int;
 
   let caught := false;
-  begin try
+  try
     -- this is gonna fail
     fetch C from test_blob;
-  end try;
-  begin catch
+  catch
     EXPECT!(not C);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 END);
 
@@ -4920,14 +4903,13 @@ BEGIN
   set test_blob := bogus_long;
 
   let caught := false;
-  begin try
+  try
     -- this is gonna fail
     fetch C from test_blob;
-  end try;
-  begin catch
+  catch
     EXPECT!(not C);
     set caught := true;
-  end catch;
+  end;
   EXPECT!(caught);
 END);
 
@@ -5106,14 +5088,13 @@ BEGIN
       -- invoke da smasher
       call corrupt_blob_with_invalid_shenanigans(my_blob);
 
-      begin try
+      try
         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
         fetch test_cursor_both from my_blob;
         set good := good + 1;
-      end try;
-      begin catch
+      catch
         set bad := bad + 1;
-      end catch;
+      end;
 
       set attempt := attempt + 1;
     end;
@@ -6501,23 +6482,21 @@ BEGIN
 
   -- this should conflict (the net key blob must be the same as the one for val == 1)
   let caught := false;
-  begin try
+  try
     update compound_backed set id1 = 'foo' where val = 2;
-  end try;
-  begin catch
+  catch
     set caught := true;
-  end catch;
+  end;
 
   EXPECT!(caught);
 
   -- this should conflict (the net key blob must be the same as the one for val == 1)
   set caught := false;
-  begin try
+  try
     update compound_backed set id2 = 'bar' where val = 3;
-  end try;
-  begin catch
+  catch
     set caught := true;
-  end catch;
+  end;
 
   EXPECT!(caught);
 
@@ -6527,12 +6506,11 @@ BEGIN
 
   -- this should conflict (the net key blob must be the same as the one for val == 2)
   set caught := false;
-  begin try
+  try
     update compound_backed set id1 = 'foo' where val = 1;
-  end try;
-  begin catch
+  catch
     set caught := true;
-  end catch;
+  end;
 
   declare C cursor for select * from compound_backed order by val;
 
@@ -6607,17 +6585,16 @@ create table does_not_exist(id integer);
 
 create proc fails_because_bogus_table()
 begin
-  begin try
+  try
     declare D cursor for select * from does_not_exist;
-  end try;
-  begin catch
+  catch
     -- Without tracing this failure code can be seen, the cursor D
     -- will be finalized as part of cleanup and THAT success will be
     -- the sqlite3_errmsg() result.  Tracing lets you see the error as it happens.
     drop table if exists does_not_exist;
     -- now we save the code
     throw;
-  end catch;
+  end;
 end;
 
 -- Called in the test client to verify that we hit tripwires when passing NULL

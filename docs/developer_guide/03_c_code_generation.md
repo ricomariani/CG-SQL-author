@@ -1045,13 +1045,12 @@ Let's generalize this example a tiny bit:
 CREATE PROC p (OUT success BOOL NOT NULL)
 BEGIN
   LET arg := "test";
-  BEGIN TRY
+  TRY
     CALL something_that_might_fail(arg);
     SET success := 1;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     SET success := 0;
-  END CATCH;
+  END;
 END;
 ```
 

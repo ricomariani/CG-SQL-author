@@ -370,13 +370,12 @@ end;
 begin
   create procedure @ID("test_", name!)()
   begin
-    begin try
+    try
       body!;
-    end try;
-    begin catch
+    catch
       call printf("Test failed %s\n", @TEXT(name!));
       throw;
-    end catch;
+    end;
   end;
 end;
 
@@ -389,15 +388,14 @@ END);
 
 CREATE PROC test_try_something ()
 BEGIN
-  BEGIN TRY
+  TRY
     IF NOT 1 = 1 THEN
       THROW;
     END IF;
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("Test failed %s\n", "try_something");
     THROW;
-  END CATCH;
+  END;
 END;
 ```
 

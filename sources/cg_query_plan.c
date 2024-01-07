@@ -979,22 +979,20 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "CREATE PROC query_plan()\n");
   bprintf(&output_buf, "BEGIN\n");
   bprintf(&output_buf, "  CALL create_schema();\n");
-  bprintf(&output_buf, "  BEGIN TRY\n");
+  bprintf(&output_buf, "  TRY\n");
   bprintf(&output_buf, "    CALL populate_no_table_scan();\n");
-  bprintf(&output_buf, "  END TRY;\n");
-  bprintf(&output_buf, "  BEGIN CATCH\n");
+  bprintf(&output_buf, "  CATCH\n");
   bprintf(&output_buf, "    CALL printf(\"failed populating no_table_scan table\\n\");\n");
   bprintf(&output_buf, "    THROW;\n");
-  bprintf(&output_buf, "  END CATCH;\n");
+  bprintf(&output_buf, "  END;\n");
   
   for (uint32_t i = 1; i <= sql_stmt_count; i++) {
-    bprintf(&output_buf, "  BEGIN TRY\n");
+    bprintf(&output_buf, "  TRY\n");
     bprintf(&output_buf, "    CALL populate_query_plan_%d();\n", i);
-    bprintf(&output_buf, "  END TRY;\n");
-    bprintf(&output_buf, "  BEGIN CATCH\n");
+    bprintf(&output_buf, "  CATCH\n");
     bprintf(&output_buf, "    CALL printf(\"failed populating query %d\\n\");\n", i);
     bprintf(&output_buf, "    THROW;\n");
-    bprintf(&output_buf, "  END CATCH;\n");
+    bprintf(&output_buf, "  END;\n");
   }
 
   bprintf(&output_buf, "  CALL printf(\"{\\n\");\n");

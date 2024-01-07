@@ -375,15 +375,14 @@ becomes:
 create procedure foo()
 begin
   savepoint @proc;  -- @proc is always the name of the current procedure
-  begin try
+  try
     -- your code
     release savepoint @proc;
-  end try;
-  begin catch
+  catch
     rollback transaction to savepoint @proc;
     release savepoint @proc;
     throw;
-  end catch;
+  end;
 end;
 ```
 

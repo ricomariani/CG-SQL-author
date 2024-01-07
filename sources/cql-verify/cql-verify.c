@@ -159,26 +159,25 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:86
+// Generated from cql-verify.sql:85
 
 /*
 @ATTRIBUTE(cql:private)
 CREATE PROC find_test_output_line (expectation_line INTEGER NOT NULL, OUT test_output_line INTEGER NOT NULL)
 BEGIN
-  BEGIN TRY
+  TRY
     SET test_output_line := ( SELECT line
       FROM test_results
       WHERE line >= expectation_line
       LIMIT 1 );
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("no lines come after %d\n", expectation_line);
     CALL printf("available test output lines: %d\n", ( SELECT count(*)
       FROM test_results ));
     CALL printf("max line number: %d\n", ( SELECT max(line)
       FROM test_results ));
     THROW;
-  END CATCH;
+  END;
 END;
 */
 
@@ -242,7 +241,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:105
+// Generated from cql-verify.sql:104
 
 /*
 @ATTRIBUTE(cql:private)
@@ -258,7 +257,7 @@ BEGIN
     SET found := 1;
   ELSE
     SET found := 0;
-  END IF;
+  END;
 END;
 */
 
@@ -307,7 +306,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:116
+// Generated from cql-verify.sql:115
 
 /*
 @ATTRIBUTE(cql:private)
@@ -356,7 +355,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:126
+// Generated from cql-verify.sql:125
 
 /*
 @ATTRIBUTE(cql:private)
@@ -396,7 +395,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:143
+// Generated from cql-verify.sql:142
 
 /*
 @ATTRIBUTE(cql:private)
@@ -446,7 +445,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:161
+// Generated from cql-verify.sql:160
 
 /*
 @ATTRIBUTE(cql:private)
@@ -458,8 +457,9 @@ BEGIN
       WHERE line > line1 AND line <= line2;
   LOOP FETCH C
   BEGIN
-    CALL printf("%5s %05d: %s\n", CASE WHEN C.line = current_line THEN "FAIL"
-    ELSE ""
+    CALL printf("%5s %05d: %s\n", CASE
+      WHEN C.line = current_line THEN "FAIL"
+      ELSE ""
     END, C.line, C.data);
   END;
 END;
@@ -523,7 +523,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:184
+// Generated from cql-verify.sql:183
 
 /*
 @ATTRIBUTE(cql:private)
@@ -536,9 +536,10 @@ BEGIN
       WHERE line = test_output_line;
   LOOP FETCH C
   BEGIN
-    CALL printf("%3s%s\n", CASE WHEN last_rowid = C.rowid THEN ">  "
-    WHEN C.data LIKE p THEN "!  "
-    ELSE ""
+    CALL printf("%3s%s\n", CASE
+      WHEN last_rowid = C.rowid THEN ">  "
+      WHEN C.data LIKE p THEN "!  "
+      ELSE ""
     END, C.data);
   END;
 END;
@@ -620,20 +621,23 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:213
+// Generated from cql-verify.sql:212
 
 /*
 @ATTRIBUTE(cql:private)
 CREATE PROC print_fail_details (pat TEXT NOT NULL, test_output_line INTEGER NOT NULL, expected INTEGER NOT NULL)
 BEGIN
   LET found := find_count(pat, test_output_line);
-  LET details := CASE WHEN expected = -2 THEN CASE WHEN found > 0 THEN "pattern found but not on the same line (see lines marked with !)"
-  ELSE "pattern exists nowhere in test output"
-  END
-  WHEN expected = -1 THEN CASE WHEN found > 0 THEN "pattern exists but only earlier in the results where + doesn't match it"
-  ELSE "pattern exists nowhere in test output"
-  END
-  ELSE printf("pattern occurrences found: %d, expecting: %d (see lines marked with !)", found, expected)
+  LET details := CASE
+    WHEN expected = -2 THEN CASE
+      WHEN found > 0 THEN "pattern found but not on the same line (see lines marked with !)"
+      ELSE "pattern exists nowhere in test output"
+    END
+    WHEN expected = -1 THEN CASE
+      WHEN found > 0 THEN "pattern exists but only earlier in the results where + doesn't match it"
+      ELSE "pattern exists nowhere in test output"
+    END
+    ELSE printf("pattern occurrences found: %d, expecting: %d (see lines marked with !)", found, expected)
   END;
   CALL printf("\n%s\n\n", details);
 END;
@@ -693,7 +697,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:242
+// Generated from cql-verify.sql:241
 
 /*
 @ATTRIBUTE(cql:private)
@@ -738,7 +742,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:258
+// Generated from cql-verify.sql:257
 
 /*
 @ATTRIBUTE(cql:private)
@@ -747,18 +751,18 @@ BEGIN
   SET result := FALSE;
   IF len_text(buffer) < 7 THEN
     RETURN;
-  END IF;
+  END;
   IF NOT starts_with_text(buffer, "-- +") THEN
     RETURN;
-  END IF;
+  END;
   LET digit := octet_text(buffer, 4);
   LET space := octet_text(buffer, 5);
   IF space <> 32 THEN
     RETURN;
-  END IF;
+  END;
   IF digit < 48 OR digit > 48 + 9 THEN
     RETURN;
-  END IF;
+  END;
   SET result := TRUE;
 END;
 */
@@ -795,7 +799,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:341
+// Generated from cql-verify.sql:340
 
 /*
 CREATE PROC match_actual (buffer TEXT NOT NULL, expectation_line INTEGER NOT NULL)
@@ -806,10 +810,10 @@ BEGIN
   IF NOT starts_with_text(buffer, "-- ") THEN
     SET last_rowid := 0;
     RETURN;
-  END IF;
+  END;
   IF starts_with_text(buffer, "-- TEST:") THEN
     SET tests := tests + 1;
-  END IF;
+  END;
   IF starts_with_text(buffer, "-- - ") THEN
     SET pattern := after_text(buffer, 5);
     SET expected := 0;
@@ -827,7 +831,7 @@ BEGIN
     SET expected := octet_text(buffer, 4) - 48;
   ELSE
     RETURN;
-  END IF;
+  END;
   SET attempts := attempts + 1;
   LET pat := ifnull_throw(pattern);
   LET test_output_line := find_test_output_line(expectation_line);
@@ -835,18 +839,18 @@ BEGIN
     SET found := find_next(pat, test_output_line);
     IF found = 1 THEN
       RETURN;
-    END IF;
+    END;
   ELSE IF expected = -2 THEN
     SET found := find_same(pat);
     IF found = 1 THEN
       RETURN;
-    END IF;
+    END;
   ELSE
     SET found := find_count(pat, test_output_line);
     IF expected = found THEN
       RETURN;
-    END IF;
-  END IF;
+    END;
+  END;
   SET errors := errors + 1;
   CALL print_error_block(test_output_line, pat, expectation_line, expected);
   CALL printf("test file %s:%d\n", sql_name, expectation_line);
@@ -978,19 +982,18 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:353
+// Generated from cql-verify.sql:351
 
 /*
 @ATTRIBUTE(cql:private)
 CREATE PROC do_match (buffer TEXT NOT NULL, expectation_line INTEGER NOT NULL)
 BEGIN
-  BEGIN TRY
+  TRY
     CALL match_actual(buffer, expectation_line);
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("unexpected sqlite error\n");
     THROW;
-  END CATCH;
+  END;
 END;
 */
 
@@ -1021,7 +1024,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:368
+// Generated from cql-verify.sql:366
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1081,7 +1084,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:406
+// Generated from cql-verify.sql:404
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1091,7 +1094,7 @@ BEGIN
   IF result_file IS NULL THEN
     CALL printf("unable to open file '%s'\n", result_name);
     THROW;
-  END IF;
+  END;
   LET line := 0;
   LET key_string := "The statement ending at line ";
   LET len := len_text(key_string);
@@ -1100,11 +1103,11 @@ BEGIN
     LET data := readline_object_file(result_file);
     IF data IS NULL THEN
       LEAVE;
-    END IF;
+    END;
     LET loc := index_of_text(data, key_string);
     IF loc >= 0 THEN
       SET line := atoi_at_text(data, loc + len);
-    END IF;
+    END;
     INSERT INTO test_results(line, data)
       VALUES(line, data);
   END;
@@ -1175,7 +1178,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:431
+// Generated from cql-verify.sql:429
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1185,14 +1188,14 @@ BEGIN
   IF sql_file IS NULL THEN
     CALL printf("unable to open file '%s'\n", sql_name);
     THROW;
-  END IF;
+  END;
   LET line := 1;
   WHILE TRUE
   BEGIN
     LET data := readline_object_file(sql_file);
     IF data IS NULL THEN
       LEAVE;
-    END IF;
+    END;
     INSERT INTO test_input(line, data)
       VALUES(line, data);
     SET line := line + 1;
@@ -1255,7 +1258,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:438
+// Generated from cql-verify.sql:436
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1283,7 +1286,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:455
+// Generated from cql-verify.sql:453
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1295,7 +1298,7 @@ BEGIN
     CALL printf("cql-verify is a test tool.  It processes the input foo.sql\n");
     CALL printf("looking for patterns to match in the CQL output foo.out\n");
     RETURN;
-  END IF;
+  END;
   SET sql_name := ifnull_throw(get_from_object_cql_string_list(args, 1));
   SET result_name := ifnull_throw(get_from_object_cql_string_list(args, 2));
 END;
@@ -1339,7 +1342,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:467
+// Generated from cql-verify.sql:465
 
 /*
 CREATE PROC dbhelp_main (args OBJECT<cql_string_list> NOT NULL)
@@ -1349,7 +1352,7 @@ BEGIN
   IF sql_name IS NOT NULL AND result_name IS NOT NULL THEN
     CALL load_data(sql_name, result_name);
     CALL process();
-  END IF;
+  END;
 END;
 */
 

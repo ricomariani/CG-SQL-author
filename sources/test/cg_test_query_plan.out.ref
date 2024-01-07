@@ -1183,293 +1183,252 @@ END;
 CREATE PROC query_plan()
 BEGIN
   CALL create_schema();
-  BEGIN TRY
+  TRY
     CALL populate_no_table_scan();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating no_table_scan table\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_1();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 1\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_2();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 2\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_3();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 3\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_4();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 4\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_5();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 5\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_6();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 6\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_7();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 7\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_8();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 8\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_9();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 9\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_10();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 10\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_11();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 11\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_12();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 12\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_13();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 13\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_14();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 14\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_15();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 15\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_16();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 16\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_17();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 17\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_18();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 18\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_19();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 19\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_20();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 20\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_21();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 21\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_22();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 22\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_23();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 23\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_24();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 24\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_25();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 25\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_26();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 26\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_27();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 27\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_28();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 28\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_29();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 29\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_30();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 30\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_31();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 31\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_32();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 32\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_33();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 33\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_34();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 34\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_35();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 35\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_36();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 36\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_37();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 37\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_38();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 38\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_39();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 39\n");
     THROW;
-  END CATCH;
-  BEGIN TRY
+  END;
+  TRY
     CALL populate_query_plan_40();
-  END TRY;
-  BEGIN CATCH
+  CATCH
     CALL printf("failed populating query 40\n");
     THROW;
-  END CATCH;
+  END;
   CALL printf("{\n");
   CALL print_query_violation();
   CALL printf("\"plans\" : [\n");

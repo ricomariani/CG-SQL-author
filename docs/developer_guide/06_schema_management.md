@@ -383,17 +383,16 @@ so we'll include this one in full.
   bprintf(&preamble, "@attribute(cql:private)\n");
   bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
-  bprintf(&preamble, "  BEGIN TRY\n");
+  bprintf(&preamble, "  TRY\n");
   bprintf(&preamble, "    SET %s_facets := cql_facets_new();\n", global_proc_name);
   bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
   bprintf(&preamble, "    LOOP FETCH C\n");
   bprintf(&preamble, "    BEGIN\n");
   bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
   bprintf(&preamble, "    END;\n");
-  bprintf(&preamble, "  END TRY;\n");
-  bprintf(&preamble, "  BEGIN CATCH\n");
+  bprintf(&preamble, "  CATCH\n");
   bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
-  bprintf(&preamble, "  END CATCH;\n");
+  bprintf(&preamble, "  END;\n");
   bprintf(&preamble, "END;\n\n");
 ```
 

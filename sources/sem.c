@@ -22516,13 +22516,12 @@ static void sem_proc_savepoint_stmt(ast_node *ast)
 //     BEGIN \
 //       LET error_in_try := FALSE; \
 //       @attribute(cql:try_is_proc_body) \
-//       BEGIN TRY
+//       TRY
 //
 //   #define LOGGING_PROC_END \
-//       END TRY; \
-//       BEGIN CATCH \
+//       CATCH \
 //         SET error_in_try := TRUE; \
-//       END CATCH; \
+//       END; \
 //       IF error_in_try THEN \
 //         CALL some_proc_that_logs_and_rethrows(__FILE__, __LINE__); \
 //       END IF; \
@@ -22608,7 +22607,7 @@ static void sem_trycatch_stmt(ast_node *ast) {
   //
   //   DECLARE x INT;
   //   SET x := 42;
-  //   BEGIN TRY
+  //   TRY
   //     IF some_condition THEN
   //       SET x := NULL;
   //       IF another_condition THEN
@@ -22619,10 +22618,9 @@ static void sem_trycatch_stmt(ast_node *ast) {
   //       -- do nothing; neutral for x
   //     END IF;
   //     -- x is still nonnull here as the outer IF was neutral for x
-  //   END TRY;
-  //   BEGIN CATCH
+  //   CATCH
   //     -- x must be nullable here as the final SET may have not occurred
-  //   END CATCH;
+  //   END;
   //   -- x must also be nullable here
   //
   // If we did not use a jump context, x would be nonnull after the TRY because

@@ -179,12 +179,11 @@ CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
 -- helper proc for getting the schema version of a facet
 CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
 BEGIN
-  BEGIN TRY
+  TRY
     SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);
-  END TRY;
-  BEGIN CATCH
+  CATCH
     SET _version := -1;
-  END CATCH;
+  END;
 END;
 
 -- saved facets table declaration --
@@ -371,17 +370,16 @@ END;
 @attribute(cql:private)
 CREATE PROCEDURE test_setup_facets()
 BEGIN
-  BEGIN TRY
+  TRY
     SET test_facets := cql_facets_create();
     DECLARE C CURSOR FOR SELECT * from test_cql_schema_facets;
     LOOP FETCH C
     BEGIN
       LET added := cql_facet_add(test_facets, C.facet, C.version);
     END;
-  END TRY;
-  BEGIN CATCH
-   -- if table doesn't exist we just have empty facets, that's ok
-  END CATCH;
+  CATCH
+    -- if table doesn't exist we just have empty facets, that's ok
+  END;
 END;
 
 DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;
@@ -531,15 +529,14 @@ BEGIN
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
   IF schema_crc <> 5550480522444860907 THEN
-    BEGIN TRY
+    TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);
-    END TRY;
-    BEGIN CATCH
+    CATCH
       SET test_facets := NULL;
       SET test_tables_dict_ := NULL;
       THROW;
-    END CATCH;
+    END;
     SET test_facets := NULL;
     SET test_tables_dict_ := NULL;
   ELSE

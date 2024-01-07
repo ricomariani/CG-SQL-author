@@ -74,15 +74,14 @@ begin
      We need to find the number of a line in the test output that has been charged
      to an input line greater than the one we are on.
   */
-  begin try
+  try
     set test_output_line := (select line from test_results where line >= expectation_line limit 1);
-  end try;
-  begin catch
+  catch
     printf("no lines come after %d\n", expectation_line);
     printf("available test output lines: %d\n", (select count(*) from test_results));
     printf("max line number: %d\n", (select max(line) from test_results));
     throw;
-  end catch;
+  end;
 end;
 
 -- find the next match, the matches have to be in order
@@ -343,13 +342,12 @@ end;
 [[private]]
 proc do_match(buffer text!, expectation_line int!)
 begin
-  begin try
+  try
      match_actual(buffer, expectation_line);
-  end try;
-  begin catch
+  catch
     printf("unexpected sqlite error\n");
     throw;
-  end catch;
+  end;
 end;
 
 [[private]]

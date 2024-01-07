@@ -538,13 +538,12 @@ end;
 -- + cql_cleanup:
 create procedure throwing()
 begin
-  begin try
+  try
    delete from bar;
-  end try;
-  begin catch
+  catch
    call printf("error\n");
    throw;
-  end catch;
+  end;
 end;
 
 -- TEST: a simple case expression
@@ -1661,28 +1660,26 @@ end;
 -- + catch_start%:
 create proc no_cleanup_label_needed_proc()
 begin
-  begin try
+  try
     declare C cursor for select 1 as N;
     fetch C;
-  end try;
-  begin catch
+  catch
     declare x integer;
-  end catch;
+  end;
 end;
 
 -- TEST: no code after the last label
--- begin try and begin catch implyl dml proc
+-- try and catch implyl dml proc
 -- + cql_code no_code_after_catch(sqlite3 *_Nonnull _db_)
 create proc no_code_after_catch()
 begin
-  begin try
+  try
     @attribute(foo) -- just messing with the tree
     declare x integer;
-  end try;
-  begin catch
+  catch
     @attribute(bar) -- just messing with the tree
     declare y integer;
-  end catch;
+  end;
 end;
 
 -- TEST: void cursor fetcher
@@ -2748,12 +2745,11 @@ declare proc out_union_no_dml(id integer) out union (id integer not null);
 -- + cql_cleanup:
 create proc use_return()
 begin
-  begin try
+  try
     select 1 x;
-  end try;
-  begin catch
+  catch
     return;
-  end catch;
+  end;
 end;
 
 -- TEST: emit goto cql_cleanup in case of return, force the label even if not
@@ -2807,10 +2803,9 @@ begin
   begin
   end;
 
-  begin try
-  end try;
-  begin catch
-  end catch;
+  try
+  catch
+  end;
 end;
 
 -- This proc illustrates a case where we need to put the ;
@@ -2828,14 +2823,12 @@ end;
 -- + catch_end_6:;
 create proc tail_catch()
 begin
-   begin try
-   end try;
-   begin catch
-     begin try
-     end try;
-     begin catch
-     end catch;
-   end catch;
+   try
+   catch
+     try
+     catch
+     end;
+   end;
 end;
 
 -- TEST: the SQL output will include an escaped quote ''
@@ -3587,29 +3580,26 @@ create proc rc_test()
 begin
   LET err := @rc;
   let e0 := @rc;
-  begin try
-  begin try
+  try
+  try
     create table whatever_anything(id integer);
-  end try;
-  begin catch
+  catch
     set err := @rc;
     let e1 := @rc;
-    begin try
+    try
        let e2 := @rc;
        create table whatever_anything(id integer);
-    end try;
-    begin catch
+    catch
        let e3 := @rc;
        set err := @rc;
        throw;
-    end catch;
+    end;
     let e4 := @rc;
-  end catch;
-  end try;
-  begin catch
+  end;
+  catch
     let e5 := @rc;
     call printf("Error %d\n", err);
-  end catch;
+  end;
   let e6 := @rc;
 end;
 
@@ -3619,17 +3609,15 @@ end;
 -- +  _rc_ = cql_best_error(_rc_thrown_2);
 create proc rc_test_lazy1()
 begin
-  begin try
+  try
     create table whatever_anything(id integer);
-  end try;
-  begin catch
-    begin try
+  catch
+    try
        create table whatever_anything(id integer);
-    end try;
-    begin catch
+    catch
        throw;
-    end catch;
-  end catch;
+    end;
+  end;
 end;
 
 -- TEST: lazy decl of rcthrown variables (via @rc)
@@ -3638,17 +3626,15 @@ end;
 -- +  err = _rc_thrown_2;
 create proc rc_test_lazy2()
 begin
-  begin try
+  try
     create table whatever_anything(id integer);
-  end try;
-  begin catch
-    begin try
+  catch
+    try
        create table whatever_anything(id integer);
-    end try;
-    begin catch
+    catch
        let err := @rc;
-    end catch;
-  end catch;
+    end;
+  end;
 end;
 
 -- TEST: make an integer enum
@@ -4009,11 +3995,10 @@ end;
 create proc try_catch_rc()
 begin
   declare C cursor for select 'foo' extra2 from bar;
-  begin try
+  try
     fetch C;
-  end try;
-  begin catch
-  end catch;
+  catch
+  end;
 end;
 
 -- TEST: basic code gen for the switch

@@ -2783,13 +2783,12 @@ end;
 -- - error:
 create proc throw_before_out()
 begin
-  begin try
+  try
     declare C cursor for select 1 x;
     fetch C;
-  end try;
-  begin catch
+  catch
     throw;
-  end catch;
+  end;
   out C;
 end;
 
@@ -3322,24 +3321,22 @@ end;
 -- - error:
 -- + {trycatch_stmt}: ok
 -- + {throw_stmt}: ok
-begin try
+try
   select 1;
-end try;
-begin catch
+catch
   throw;
-end catch;
+end;
 
 -- TEST: error in try block should be propagated to top of tree
 -- * error: % string operand not allowed in 'NOT'
 -- + {trycatch_stmt}: err
 -- + {stmt_list}: err
 -- +1 error:
-begin try
+try
   select not 'x';
-end try;
-begin catch
+catch
   throw;
-end catch;
+end;
 
 -- TEST: error in catch block should be propagated to top of tree
 -- * error: % string operand not allowed in 'NOT'
@@ -3347,12 +3344,11 @@ end catch;
 -- + {stmt_list}: ok
 -- + {stmt_list}: err
 -- +1 error:
-begin try
+try
   throw;
-end try;
-begin catch
+catch
   select not 'x';
-end catch;
+end;
 
 -- TEST: this procedure will have a structured semantic type
 -- + {create_proc_stmt}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
@@ -18655,7 +18651,7 @@ begin
 
   set a := 1;
 
-  begin try
+  try
     -- use an if/else to make sure we're safe in the presence of effect merging
     if 0 then
       set a := null;
@@ -18668,11 +18664,10 @@ begin
       -- do nothing; neutral
     end if;
     let x0 := a; -- safely considered nonnull
-  end try;
-  begin catch
+  catch
     let x1 := a; -- nullable
     set a := 1; -- does not allow for improving x2 (at least for now)
-  end catch;
+  end;
 
   let x2 := a; -- nullable
 end;
@@ -19169,13 +19164,12 @@ begin
   set rc := 0;
   @attribute(cql:try_is_proc_body)
   @attribute(some_other_attribute)
-  begin try
+  try
     -- we're okay because it's initialized in the TRY...
     set a := "text";
-  end try;
-  begin catch
+  catch
     set rc := 1;
-  end catch;
+  end;
   -- ...even though it's not always initialized in the proc
 end;
 
@@ -19190,12 +19184,11 @@ begin
   set rc := 0;
   @attribute(some_other_attribute)
   @attribute(cql:try_is_proc_body)
-  begin try
+  try
     -- `a` is not initialized soon enough so we get an error...
-  end try;
-  begin catch
+  catch
     set rc := 1;
-  end catch;
+  end;
   -- ...even though it's always initialized in the proc
   set a := "text";
 end;
@@ -19209,15 +19202,13 @@ end;
 create proc try_is_proc_body_may_only_appear_once()
 begin
   @attribute(cql:try_is_proc_body)
-  begin try
-  end try;
-  begin catch
-  end catch;
+  try
+  catch
+  end;
   @attribute(cql:try_is_proc_body)
-  begin try
-  end try;
-  begin catch
-  end catch;
+  try
+  catch
+  end;
 end;
 
 -- TEST: try_is_proc_body accepts no values.
@@ -19229,10 +19220,9 @@ end;
 create proc try_is_proc_body_accepts_no_values()
 begin
   @attribute(cql:try_is_proc_body=(foo))
-  begin try
-  end try;
-  begin catch
-  end catch;
+  try
+  catch
+  end;
 end;
 
 -- TEST: Improvements can be set for names using the dot syntax even when the

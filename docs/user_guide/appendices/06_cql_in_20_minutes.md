@@ -499,14 +499,13 @@ create proc upsert_t1(
   r_ real
 )
 begin
-  begin try
+  try
     -- try to insert
     insert into T1(id, t, r) values (id_, t_, r_);
-  end try;
-  begin catch
+  catch
     -- if the insert fails, try to update
     update T1 set t = t_, r = r_ where id = id_;
-  end catch;
+  end;
 end;
 
 -- Shapes can be very useful in avoiding boilerplate code
@@ -514,12 +513,11 @@ end;
 -- More on shapes later.
 create proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
 begin
-  begin try
+  try
     insert into T1 from arguments
-  end try;
-  begin catch
+  catch
     update T1 set t = t_, r = r_ where id = id_;
-  end catch;
+  end;
 end;
 
 -- You can (re)throw an error explicitly.
@@ -562,16 +560,15 @@ select * from T1 where case hi_not_low then T1.r >= r_ else T1.r <= r_ end;
 -- This upsert is a bit better than the first:
 create proc upsert_t1(LIKE t1) -- my args are the same as the columns of T1
 begin
-  begin try
+  try
     insert into T1 from arguments
-  end try;
-  begin catch;
+  catch
     if @rc == 19 /* SQLITE_CONSTRAINT */ then
       update T1 set t = t_, r = r_ where id = id_;
     else
       throw;  -- rethrow, something bad happened.
     end if;
-  end catch;
+  end;
 end;
 
 -- By convention, you can call a procedure that has an OUT argument

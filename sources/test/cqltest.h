@@ -24,18 +24,17 @@ declare proc exit no check;
 #define BEGIN_TEST(x) \
   create procedure test_##x() \
   begin \
-  begin try \
+  try \
   set tests := tests + 1; \
   declare starting_fails integer not null; \
   set starting_fails := fails;
 
 #define END_TEST(x) \
-  end try; \
-  begin catch \
+  catch \
     call printf("%s had an unexpected CQL exception (usually a db error)\n", #x); \
     set fails := fails + 1; \
     throw; \
-  end catch; \
+  end; \
   if starting_fails != fails then \
     call printf("%s failed.\n", #x); \
   else \

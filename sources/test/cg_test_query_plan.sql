@@ -329,13 +329,12 @@
 -- + CREATE PROC query_plan()
 -- + BEGIN
 -- +   CALL create_schema();
--- +   BEGIN TRY
+-- +   TRY
 -- +     CALL populate_no_table_scan();
--- +   END TRY;
--- +   BEGIN CATCH
+-- +   CATCH
 -- +     CALL printf("failed populating no_table_scan table\n");
 -- +     THROW;
--- +   END CATCH;
+-- +   END;
 -- +   CALL printf("{\n");
 -- +   CALL print_query_violation();
 -- +   CALL printf("\"plans\" : [\n");

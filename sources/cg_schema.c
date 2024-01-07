@@ -243,12 +243,11 @@ static void cg_schema_helpers(charbuf *decls) {
 
   bprintf(decls, "CREATE PROCEDURE %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
-  bprintf(decls, "  BEGIN TRY\n");
+  bprintf(decls, "  TRY\n");
   bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);\n", global_proc_name);
-  bprintf(decls, "  END TRY;\n");
-  bprintf(decls, "  BEGIN CATCH\n");
+  bprintf(decls, "  CATCH\n");
   bprintf(decls, "    SET _version := -1;\n"); // this is here to handle the case where the table doesn't exist
-  bprintf(decls, "  END CATCH;\n");
+  bprintf(decls, "  END;\n");
   bprintf(decls, "END;\n\n");
 
   bprintf(decls, "-- saved facets table declaration --\n");
@@ -1777,17 +1776,16 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&preamble, "@attribute(cql:private)\n");
   bprintf(&preamble, "CREATE PROCEDURE %s_setup_facets()\n", global_proc_name);
   bprintf(&preamble, "BEGIN\n");
-  bprintf(&preamble, "  BEGIN TRY\n");
+  bprintf(&preamble, "  TRY\n");
   bprintf(&preamble, "    SET %s_facets := cql_facets_create();\n", global_proc_name);
   bprintf(&preamble, "    DECLARE C CURSOR FOR SELECT * from %s_cql_schema_facets;\n", global_proc_name);
   bprintf(&preamble, "    LOOP FETCH C\n");
   bprintf(&preamble, "    BEGIN\n");
   bprintf(&preamble, "      LET added := cql_facet_add(%s_facets, C.facet, C.version);\n", global_proc_name);
   bprintf(&preamble, "    END;\n");
-  bprintf(&preamble, "  END TRY;\n");
-  bprintf(&preamble, "  BEGIN CATCH\n");
-  bprintf(&preamble, "   -- if table doesn't exist we just have empty facets, that's ok\n");
-  bprintf(&preamble, "  END CATCH;\n");
+  bprintf(&preamble, "  CATCH\n");
+  bprintf(&preamble, "    -- if table doesn't exist we just have empty facets, that's ok\n");
+  bprintf(&preamble, "  END;\n");
   bprintf(&preamble, "END;\n\n");
 
   bprintf(&preamble, "DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;\n");
@@ -2196,15 +2194,14 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "  -- fetch the last known schema crc, if it's different do the upgrade --\n");
   bprintf(&main, "  CALL %s_cql_get_facet_version('cql_schema_crc', schema_crc);\n\n", global_proc_name);
   bprintf(&main, "  IF schema_crc <> %lld THEN\n", (llint_t)schema_crc);
-  bprintf(&main, "    BEGIN TRY\n");
+  bprintf(&main, "    TRY\n");
   bprintf(&main, "      CALL %s_setup_facets();\n", global_proc_name);
   bprintf(&main, "      CALL %s_perform_needed_upgrades(include_virtual_tables);\n", global_proc_name);
-  bprintf(&main, "    END TRY;\n");
-  bprintf(&main, "    BEGIN CATCH\n");
+  bprintf(&main, "    CATCH\n");
   bprintf(&main, "      SET %s_facets := NULL;\n", global_proc_name);
   bprintf(&main, "      SET %s_tables_dict_ := NULL;\n", global_proc_name);
   bprintf(&main, "      THROW;\n");
-  bprintf(&main, "    END CATCH;\n");
+  bprintf(&main, "    END;\n");
   bprintf(&main, "    SET %s_facets := NULL;\n", global_proc_name);
   bprintf(&main, "    SET %s_tables_dict_ := NULL;\n", global_proc_name);
   bprintf(&main, "  ELSE\n");

@@ -1148,10 +1148,9 @@ begin
   begin
   end;
 
-  begin try
-  end try;
-  begin catch
-  end catch;
+  try
+  catch
+  end;
 end;
 
 declare proc proc_as_func(out x integer not null);

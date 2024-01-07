@@ -274,37 +274,35 @@ declare procedure printf no check;
 
 create procedure upsert_foo(id_ integer, t_ text)
 begin
-  begin try
+  try
     insert into foo(id, t) values(id_, t_)
-  end try;
-  begin catch
-    begin try
-      update foo set t = t_ where id = id_;
-    end try;
-    begin catch
+  catch
+    try
+      update foo set t = t_ where id = id_;   
+    catch
       call printf("Error code %d!\n", @rc);
       throw;
-    end catch;
-  end catch;
+    end;
+  end;
 end;
 ```
 
 Once again, let's go over this section by section:
 
 ```sql
-  begin try
+  try
     insert into foo(id, t) values(id_, t_)
-  end try;
+  catch
 ```
 
 Normally if the `insert` statement fails, the procedure will exit with a failure result code.  Here, instead,
 we prepare to catch that error.
 
 ```sql
-  begin catch
-    begin try
+  catch
+    try
       update foo set t = t_ where id = id_;
-    end try;
+    catch
 ```
 
 Now, having failed to insert, presumably because a row with the provided
@@ -313,10 +311,10 @@ might also fail, so we  wrap it in another try.  If the update fails,
 then there is a final catch block:
 
 ```sql
-    begin catch
+    catch
       call printf("Error code %d!\n", @rc);
       throw;
-    end catch;
+    end;
 ```
 
 Here we see a usage of the `@rc` variable to observe the failed error
@@ -331,7 +329,7 @@ statement will become the result code of the current procedure.
 This leaves only the closing markers:
 
 ```sql
-  end catch;
+  end;
 end;
 ```
 

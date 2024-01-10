@@ -91,7 +91,7 @@ AT_UNSUB                              { put_quoted("@UNSUB"); }
 AUTOINCREMENT                         { put_quoted("AUTOINCREMENT"); }
 BEFORE                                { put_quoted("BEFORE"); }
 BEGIN_                                { put_quoted("BEGIN"); }
-BEGIN_INCLUDE                         { put_quoted("@INCLUDE \"path\""); }
+BEGIN_INCLUDE                         { put_quoted("@INCLUDE quoted-filename"); }
 BETWEEN                               { put_quoted("BETWEEN"); }
 BLOB                                  { put_quoted("BLOB"); }
 BLOBLIT                               { put_quoted("sql-blob-literal"); }

@@ -265,6 +265,7 @@ SET                                   { put_quoted("SET"); }
 SIGN_FUNCTION                         { put_quoted("SIGN FUNCTION"); }
 STATEMENT                             { put_quoted("STATEMENT"); }
 STMT_LIST                             { put_quoted("STMT_LIST"); }
+STMT_LIST_MACRO                       { put_quoted("ID!"); }
 STRLIT                                { put_quoted("sql-string-literal"); }
 SWITCH                                { put_quoted("SWITCH"); }
 TABLE                                 { put_quoted("TABLE"); }

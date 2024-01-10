@@ -91,6 +91,7 @@ AT_UNSUB                              { put_quoted("@UNSUB"); }
 AUTOINCREMENT                         { put_quoted("AUTOINCREMENT"); }
 BEFORE                                { put_quoted("BEFORE"); }
 BEGIN_                                { put_quoted("BEGIN"); }
+BEGIN_INCLUDE                         { put_quoted("@INCLUDE \"path\""); }
 BETWEEN                               { put_quoted("BETWEEN"); }
 BLOB                                  { put_quoted("BLOB"); }
 BLOBLIT                               { put_quoted("sql-blob-literal"); }
@@ -116,6 +117,7 @@ CREATE                                { put_quoted("CREATE"); }
 CROSS                                 { put_quoted("CROSS"); }
 CSTRLIT                               { put_quoted("c-string-literal"); }
 CTE_TABLES                            { put_quoted("CTE_TABLES"); }
+CTE_TABLES_MACRO                      { put_quoted("ID!"); }
 CURRENT_ROW                           { put_quoted("CURRENT ROW"); }
 CURSOR                                { put_quoted("CURSOR"); }
 CURSOR_HAS_ROW                        { put_quoted("CURSOR HAS ROW"); }
@@ -133,6 +135,7 @@ ELSE                                  { put_quoted("ELSE"); }
 ELSE_IF                               { put_quoted("ELSE IF"); }
 ENCODE                                { put_quoted("ENCODE"); }
 END                                   { put_quoted("END"); }
+END_INCLUDE                           { put_quoted("end of included file"); }
 ENUM                                  { put_quoted("ENUM"); }
 EXCEPT                                { put_quoted("EXCEPT"); }
 EXCLUDE_CURRENT_ROW                   { put_quoted("EXCLUDE CURRENT ROW"); }
@@ -143,6 +146,7 @@ EXCLUSIVE                             { put_quoted("EXCLUSIVE"); }
 EXISTS                                { put_quoted("EXISTS"); }
 EXPLAIN                               { put_quoted("EXPLAIN"); }
 EXPR                                  { put_quoted("EXPR"); }
+EXPR_MACRO                            { put_quoted("ID!"); }
 FAIL                                  { put_quoted("FAIL"); }
 FALSE_                                { put_quoted("FALSE"); }
 FCOUNT                                { put_quoted("FCOUNT"); }
@@ -232,6 +236,7 @@ PROC                                  { put_quoted("PROC"); }
 PROCEDURE                             { put_quoted("PROCEDURE"); }
 QID                                   { put_quoted("`quoted identifier`"); }
 QUERY_PARTS                           { put_quoted("QUERY_PARTS"); }
+QUERY_PARTS_MACRO                     { put_quoted("ID!"); }
 QUERY_PLAN                            { put_quoted("QUERY PLAN"); }
 RAISE                                 { put_quoted("RAISE"); }
 RANGE                                 { put_quoted("RANGE"); }
@@ -252,7 +257,10 @@ ROWS                                  { put_quoted("ROWS"); }
 SAVEPOINT                             { put_quoted("SAVEPOINT"); }
 SELECT                                { put_quoted("SELECT"); }
 SELECT_CORE                           { put_quoted("SELECT_CORE"); }
+SELECT_CORE_MACRO                     { put_quoted("ID!"); }
 SELECT_EXPR                           { put_quoted("SELECT_EXPR"); }
+SELECT_EXPR_MACRO                     { put_quoted("ID!"); }
+SELECT_LIST_MACRO                     { put_quoted("ID!"); }
 SET                                   { put_quoted("SET"); }
 SIGN_FUNCTION                         { put_quoted("SIGN FUNCTION"); }
 STATEMENT                             { put_quoted("STATEMENT"); }

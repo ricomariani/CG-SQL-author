@@ -1912,19 +1912,12 @@ END);
 
 TEST!(bind_and_fetch_all_types,
 BEGIN
-  declare i int!;
-  declare l long!;
-  declare r real!;
-  declare b bool!;
-  declare s text!;
-  declare bl blob!;
-
-  i := 10;
-  l := 1234567890156789L;
-  r := 1234.45;
-  b := 1;
-  s := "string";
-  bl := blob_from_string("blob text");
+  let i := 10;
+  let l := 1234567890156789L;
+  let r := 1234.45;
+  let b := 1;
+  let s := "string";
+  let bl := blob_from_string("blob text");
 
   EXPECT!(13*i == (select 13*i));
   EXPECT!(13*l == (select 13*l));
@@ -1943,12 +1936,12 @@ BEGIN
   declare s text;
   declare bl blob;
 
-  i := 10;
-  l := 1234567890156789L;
-  r := 1234.45;
-  b := 1;
-  s := "string";
-  bl := blob_from_string("blob text");
+  i := nullable(10);
+  l := nullable(1234567890156789L);
+  r := nullable(1234.45);
+  b := nullable(1);
+  s := nullable("string");
+  bl := nullable(blob_from_string("blob text"));
 
   EXPECT!(13*i == (select 13*i));
   EXPECT!(13*l == (select 13*l));

@@ -40,7 +40,7 @@ end;
 
 @MACRO(stmt_list) TEST_GATED!(x! expr, pred! expr, body! stmt_list)
 begin
-  create procedure @ID("test_", x!)()
+  proc @ID("test_", x!)()
   begin 
     try 
       set tests := tests + 1; 
@@ -87,7 +87,7 @@ begin
   call end_suite();
 end;
 
-create procedure errcheck(passed bool @sensitive, message text, line integer not null)
+proc errcheck(passed bool @sensitive, message text, line integer not null)
 begin
   set expectations := expectations + 1;
   if not coalesce(passed, 0) then
@@ -96,7 +96,7 @@ begin
   end if;
 end;
 
-create procedure end_suite()
+proc end_suite()
 begin
   call printf("%d tests executed. %d passed, %d failed.  %d expectations failed of %d.\n",
     tests, tests_passed, tests - tests_passed, fails, expectations);
@@ -162,7 +162,7 @@ declare enum longs long_int (
   neg = -1
 );
 
-create proc make_schema()
+proc make_schema()
 begin
   @attribute(cql:backing_table)
   create table backing(
@@ -215,25 +215,25 @@ declare side_effect_0_count int!;
 declare side_effect_1_count int!;
 declare side_effect_null_count int!;
 
-create proc side_effect_0(out result integer)
+proc side_effect_0(out result integer)
 begin
   set result := 0;
   set side_effect_0_count := side_effect_0_count + 1;
 end;
 
-create proc side_effect_1(out result integer)
+proc side_effect_1(out result integer)
 begin
   set result := 1;
   set side_effect_1_count := side_effect_1_count + 1;
 end;
 
-create proc side_effect_null(out result integer)
+proc side_effect_null(out result integer)
 begin
   set result := null;
   set side_effect_null_count := side_effect_null_count + 1;
 end;
 
-create proc reset_counts()
+proc reset_counts()
 begin
   set side_effect_0_count := 0;
   set side_effect_1_count := 0;
@@ -482,7 +482,7 @@ BEGIN
 END);
 
 -- verify that out parameter is set in proc call
-create procedure echo ( in arg1 int!, out arg2 int!)
+proc echo ( in arg1 int!, out arg2 int!)
 begin
   set arg2 := arg1;
 end;
@@ -495,7 +495,7 @@ BEGIN
 END);
 
 -- test simple recursive function
-create procedure fib (in arg int!, out result int!)
+proc fib (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;
@@ -554,7 +554,7 @@ BEGIN
   close exchange_cursor;
 END);
 
-create procedure make_mixed()
+proc make_mixed()
 begin
   create table mixed(
     id int!,
@@ -566,21 +566,21 @@ begin
   );
 end;
 
-create procedure drop_mixed()
+proc drop_mixed()
 begin
   drop table if exists mixed;
 end;
 
 call make_mixed();
 
-create procedure load_mixed()
+proc load_mixed()
 begin
   delete from mixed;
   insert into mixed values (1, "a name", 12, 1, 5.0, cast("blob1" as blob));
   insert into mixed values (2, "another name", 14, 3, 7.0, cast("blob2" as blob));
 end;
 
-create procedure load_mixed_dupes()
+proc load_mixed_dupes()
 begin
   delete from mixed;
   insert into mixed values (1, "a name", 12, 1, 5.0, NULL);
@@ -591,7 +591,7 @@ begin
   insert into mixed values (1, NULL, 12, 1, 5.0, NULL);
 end;
 
-create procedure load_mixed_dupe_identities()
+proc load_mixed_dupe_identities()
 begin
   delete from mixed;
   insert into mixed values (1, "a name", 12, 1, 5.0, NULL);
@@ -601,14 +601,14 @@ begin
   insert into mixed values (1, "another name", 14, 0, 7.0, cast("blob1" as blob));
 end;
 
-create procedure load_mixed_with_nulls()
+proc load_mixed_with_nulls()
 begin
   call load_mixed();
   insert into mixed values (3, NULL, NULL, NULL, NULL, NULL);
   insert into mixed values (4, "last name", 16, 0, 9.0, cast("blob3" as blob));
 end;
 
-create procedure update_mixed(id_ int!, name_ text, code_ long int, bl_ blob)
+proc update_mixed(id_ int!, name_ text, code_ long int, bl_ blob)
 begin
   update mixed set code = code_, bl = bl_ where id = id_;
 end;
@@ -692,7 +692,7 @@ BEGIN
   EXPECT!((select - -longs.neg) == -1);
 END);
 
-create proc make_bools()
+proc make_bools()
 begin
   select true x
   union all
@@ -730,7 +730,7 @@ END);
 
 -- complex delete pattern
 
-create proc delete_one_from_mixed(out _id int!)
+proc delete_one_from_mixed(out _id int!)
 begin
   set _id := (select id from mixed order by id limit 1);
   delete from mixed where id = _id;
@@ -753,7 +753,7 @@ BEGIN
 END);
 
 -- some basic string stuff using sqlite for string helpers
-create proc string_copy(in input text!, out output text!)
+proc string_copy(in input text!, out output text!)
 begin
   -- extra shuffling for refcount testing
   declare t text!;
@@ -762,7 +762,7 @@ begin
 end;
 
 -- some basic string stuff using sqlite for string helpers
-create proc string_equal(in t1 text!, in t2 text!, out result bool!)
+proc string_equal(in t1 text!, in t2 text!, out result bool!)
 begin
   set result := (select t1 == t2);
 end;
@@ -937,7 +937,7 @@ BEGIN
   EXPECT!(sum  == 3);   -- some math along the way
 END);
 
-create procedure load_more_mixed()
+proc load_more_mixed()
 begin
   delete from mixed;
   insert into mixed values (1, "a name", 12, 1, 5.0, NULL);
@@ -982,10 +982,8 @@ END);
 -- basic test of while loop plus leave and continue
 TEST!(while_control_flow,
 BEGIN
-  declare i, sum int!;
-
-  set i := 0;
-  set sum := 0;
+  let i := 0;
+  let sum := 0;
   while i < 5
   begin
     set i := i + 1;
@@ -999,16 +997,11 @@ BEGIN
   set sum := 0;
   while i < 5
   begin
-    set i := i + 1;
-    if i == 2 then
-      continue;
-    end if;
+    i += 1;
+    if i == 2 continue;
 
-    if i == 4 then
-      leave;
-    end if;
-
-    set sum := sum + i;
+    if i == 4 leave;
+    sum += i;
   end;
 
   EXPECT!(i == 4);  -- loop ended on time
@@ -1045,7 +1038,7 @@ BEGIN
 END);
 
 -- error handling with try catch throw
-create procedure throws(out did_throw bool!)
+proc throws(out did_throw bool!)
 begin
   declare x int!;
   set did_throw := 0;
@@ -1087,7 +1080,7 @@ BEGIN
   EXPECT!(did_catch == 0); -- catch did not run
 END);
 
-create procedure case_tester1(value int!, out result integer)
+proc case_tester1(value int!, out result integer)
 begin
   set result := case value
                      when 1 then 100
@@ -1096,7 +1089,7 @@ begin
                      else 400 end;
 end;
 
-create procedure case_tester2(value int!, out result integer)
+proc case_tester2(value int!, out result integer)
 begin
   set result := case value
                      when 1 then 100
@@ -1127,7 +1120,7 @@ BEGIN
   EXPECT!(result is null);
 END);
 
-create procedure string_case_tester1(value text, out result text)
+proc string_case_tester1(value text, out result text)
 begin
   set result := case value
                      when "1" then "100"
@@ -1149,8 +1142,7 @@ BEGIN
   EXPECT!(result is null);
 END);
 
-
-create procedure in_tester1(value int!, out result bool!)
+proc in_tester1(value int!, out result bool!)
 begin
   set result := value in (1, 2, 3);
 end;
@@ -1168,7 +1160,7 @@ BEGIN
   EXPECT!(not result);
 END);
 
-create procedure in_tester2(value integer, out result bool)
+proc in_tester2(value integer, out result bool)
 begin
   declare two integer;
   set two := 2;
@@ -1190,7 +1182,7 @@ BEGIN
   EXPECT!(result is null);
 END);
 
-create procedure nullables_case_tester(value integer, out result int!)
+proc nullables_case_tester(value integer, out result int!)
 begin
   -- this is a very weird way to get a bool
   set result := case 1 when value then 1 else 0 end;
@@ -1205,7 +1197,7 @@ BEGIN
   EXPECT!(result == 0);
 END);
 
-create procedure nullables_case_tester2(value integer, out result int!)
+proc nullables_case_tester2(value integer, out result int!)
 begin
   -- this is a very weird way to get a bool
   set result := case when value then 1 else 0 end;
@@ -1222,7 +1214,7 @@ BEGIN
   EXPECT!(result == 0);
 END);
 
-create procedure in_string_tester(value text, out result bool)
+proc in_string_tester(value text, out result bool)
 begin
   set result := value in ("this", "that");
 end;
@@ -1304,7 +1296,7 @@ BEGIN
   set n3 := "3";
 END);
 
-create proc maybe_commit(do_commit bool!)
+proc maybe_commit(do_commit bool!)
 begin
   call load_mixed();
   begin transaction;
@@ -1327,13 +1319,13 @@ END);
 
 @attribute(cql:identity=(id, code, bl))
 @attribute(cql:generate_copy)
-create procedure get_mixed(lim int!)
+proc get_mixed(lim int!)
 begin
   select * from mixed limit lim;
 end;
 
 @attribute(cql:generate_copy)
-create procedure get_one_from_mixed(id_ int!)
+proc get_one_from_mixed(id_ int!)
 begin
   declare C cursor for select * from mixed where id = id_;
   fetch C;
@@ -1363,7 +1355,7 @@ BEGIN
   EXPECT!(count == 2); -- there should be two rows
 END);
 
-create proc savepoint_maybe_commit(do_commit bool!)
+proc savepoint_maybe_commit(do_commit bool!)
 begin
   call load_mixed();
   savepoint foo;
@@ -1392,7 +1384,7 @@ BEGIN
   EXPECT!((select NOT EXISTS(select * from mixed)));  -- not exists found no rows
 END);
 
-create proc bulk_load_mixed(rows_ int!)
+proc bulk_load_mixed(rows_ int!)
 begin
   delete from mixed;
   declare i int!;
@@ -1609,8 +1601,7 @@ declare C cursor for
   EXPECT!(i == 11); -- 10 results matched, 11th did not match
 END);
 
-
-create proc outint(out int1 integer, out int2 int!)
+proc outint(out int1 integer, out int2 int!)
 begin
   declare C1 cursor for select 1;
   fetch C1 into int1;
@@ -1620,9 +1611,7 @@ END;
 
 TEST!(fetch_output_param,
 BEGIN
-  declare int1 integer;
-  declare int2 int!;
-  call outint(int1, int2);
+  declare out call outint(int1, int2);
   EXPECT!(int1 == 1); -- bind output nullable
   EXPECT!(int2 == 2); -- bind output not nullable
 END);
@@ -1746,7 +1735,7 @@ BEGIN
   EXPECT!(s_null IS NULL);
 END);
 
-create proc blob_table_maker()
+proc blob_table_maker()
 begin
   create table if not exists blob_table(
     id int!,
@@ -1756,7 +1745,7 @@ begin
   delete from blob_table;
 end;
 
-create proc load_blobs()
+proc load_blobs()
 begin
   call blob_table_maker();
 
@@ -1805,12 +1794,12 @@ BEGIN
   EXPECT!(i == count); -- wrong number of rows
 END);
 
-create procedure get_blob_table()
+proc get_blob_table()
 begin
   select * from blob_table;
 end;
 
-create procedure load_sparse_blobs()
+proc load_sparse_blobs()
 begin
   call blob_table_maker();
 
@@ -1861,7 +1850,7 @@ BEGIN
   EXPECT!(i == count); -- wrong number of rows
 END);
 
-create proc row_getter(x int!, y real!, z text)
+proc row_getter(x int!, y real!, z text)
 begin
   declare C cursor for select x X, y Y, z Z;
   fetch C;
@@ -1877,7 +1866,7 @@ BEGIN
 END);
 
 -- test simple recursive function -- using func syntax!
-create procedure fib2 (in arg int!, out result int!)
+proc fib2 (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := 1;
@@ -1897,7 +1886,7 @@ BEGIN
 END);
 
 -- test simple recursive function -- using func syntax!
-create procedure fib3 (in arg int!, out result int!)
+proc fib3 (in arg int!, out result int!)
 begin
   if (arg <= 2) then
     set result := (select 1); -- for this to be a dml proc
@@ -2835,7 +2824,7 @@ BEGIN
 END);
 
 @attribute(cql:vault_sensitive)
-create procedure load_encoded_table()
+proc load_encoded_table()
 begin
   create table all_types_encoded_table(
     b0 bool @sensitive,
@@ -2862,7 +2851,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive=(context, (b0, i0, l0, d0, s0, bl0, b1, i1, l1, d1, s1, bl1)))
-create procedure load_encoded_with_context_table()
+proc load_encoded_with_context_table()
 begin
   create table all_types_encoded_with_context_table(
     b0 bool @sensitive,
@@ -2891,7 +2880,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive)
-create procedure load_encoded_cursor()
+proc load_encoded_cursor()
 begin
   declare C cursor for select * from all_types_encoded_table;
   fetch C;
@@ -2899,7 +2888,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive)
-create proc out_union_dml()
+proc out_union_dml()
 begin
   declare x cursor for select * from all_types_encoded_table;
   fetch x;
@@ -2907,7 +2896,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive)
-create proc out_union_not_dml()
+proc out_union_not_dml()
 begin
   declare bogus cursor for select 1; -- just to make the proc dml to test a non dml cursor x with vault.
 
@@ -2930,7 +2919,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive)
-create proc load_decoded_out_union()
+proc load_decoded_out_union()
 begin
   declare C cursor for call out_union_dml();
   fetch C;
@@ -2938,7 +2927,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive)
-create proc load_decoded_multi_out_union()
+proc load_decoded_multi_out_union()
 begin
   declare C cursor for call out_union_dml();
   fetch C;
@@ -2950,7 +2939,7 @@ begin
 end;
 
 @attribute(cql:vault_sensitive=(z, (y)))
-create proc out_union_dml_with_encode_context()
+proc out_union_dml_with_encode_context()
 begin
   create table some_type_encoded_table(x integer, y text @sensitive, z text);
   insert into some_type_encoded_table using 66 x, 'abc' y, 'xyz' z;
@@ -3031,7 +3020,7 @@ END);
 declare proc obj_shape(set_ object) out union (o object);
 declare proc not_null_obj_shape(set_ object!) out union (o object!);
 
-create proc emit_object_result_set(set_ object)
+proc emit_object_result_set(set_ object)
 begin
   declare C cursor like obj_shape;
   fetch C using set_ o;
@@ -3041,7 +3030,7 @@ begin
   out union C;
 end;
 
-create proc emit_object_result_set_not_null(set_ object!)
+proc emit_object_result_set_not_null(set_ object!)
 begin
   declare C cursor like not_null_obj_shape;
   fetch C using set_ o;
@@ -3067,7 +3056,7 @@ BEGIN
 END);
 
 @attribute(cql:vault_sensitive=(y))
-create procedure load_some_encoded_field()
+proc load_some_encoded_field()
 begin
   create table some_encoded_field_table(x integer, y text @sensitive);
   insert into some_encoded_field_table using 66 x, 'bogus' y;
@@ -3086,7 +3075,7 @@ BEGIN
 END);
 
 @attribute(cql:vault_sensitive=(z, (y)))
-create procedure load_some_encoded_field_with_encode_context()
+proc load_some_encoded_field_with_encode_context()
 begin
   create table some_encoded_field_context_table(x integer, y text @sensitive, z text);
   insert into some_encoded_field_context_table using 66 x, 'bogus' y, 'context' z;
@@ -3106,7 +3095,7 @@ BEGIN
 END);
 
 @attribute(cql:emit_setters)
-create procedure load_all_types_table()
+proc load_all_types_table()
 begin
   create table all_types_table(
     b0 bool @sensitive,
@@ -3133,7 +3122,7 @@ begin
 end;
 
 -- this proc will make the tables and also this serves as the table declarations
-create procedure init_temp_tables()
+proc init_temp_tables()
 begin
   create temp table temp_table_one(id int! @sensitive);
   create temp table temp_table_two(id int!);
@@ -3151,7 +3140,7 @@ end;
 -- to get the auto-cleanup.  If you are using the statement
 -- as with a direct CQL call, you are out of luck
 @attribute(cql:autodrop=(temp_table_one, temp_table_two, temp_table_three))
-create procedure read_three_tables_and_autodrop()
+proc read_three_tables_and_autodrop()
 begin
   call init_temp_tables();
 
@@ -3165,7 +3154,7 @@ end;
 -- This helper proc will be called by the client producing its one-row result
 -- it has no DB pointer and that exercises and important case in the autodrop logic
 -- where info.db is NULL.  There can be no autodrop tables here.
-create procedure simple_cursor_proc()
+proc simple_cursor_proc()
 begin
   declare C cursor like temp_table_one;
   fetch C (id) from values(1);
@@ -3178,7 +3167,7 @@ end;
 -- this table will never exist
 create table dummy_table(id integer);
 
-create proc some_integers(start int!, stop int!)
+proc some_integers(start int!, stop int!)
 begin
   declare C cursor like select 1 v, 2 vsq, "xx" junk;
   declare i int!;
@@ -3256,7 +3245,7 @@ BEGIN
   end;
 END);
 
-create procedure all_types_union()
+proc all_types_union()
 begin
   declare C cursor like all_types_table;
 
@@ -3408,7 +3397,7 @@ BEGIN
   end;
 END);
 
-create proc a_few_rows()
+proc a_few_rows()
 begin
   with data(x,y) as (values (1,2), (3,4), (5,6))
   select * from data;
@@ -3500,7 +3489,7 @@ END);
 
 @enforce_strict cast;
 
-create proc dummy(seed int!, i int!, r real!, b bool!)
+proc dummy(seed int!, i int!, r real!, b bool!)
 begin
   EXPECT!(seed == i);
   EXPECT!(seed == r);
@@ -3841,7 +3830,7 @@ BEGIN
 
 END);
 
-create proc no_statement_really(x integer)
+proc no_statement_really(x integer)
 begin
   if x then
     select 1 x;
@@ -3891,7 +3880,7 @@ BEGIN
 
 END);
 
-create proc simple_select()
+proc simple_select()
 begin
   select 1 x;
 end;
@@ -3925,7 +3914,7 @@ BEGIN
   end;
 END);
 
-create proc out_union_helper()
+proc out_union_helper()
 begin
   declare C cursor like select 1 x;
   fetch C using 1 x;
@@ -3946,18 +3935,18 @@ BEGIN
 END);
 
 create table simple_rc_table(id integer, foo text);
-create proc simple_insert()
+proc simple_insert()
 begin
   insert into simple_rc_table(id, foo) values(1, "foo");
 end;
 
-create proc select_if_nothing(id_ int!)
+proc select_if_nothing(id_ int!)
 begin
   declare bar text;
   set bar := (select foo from simple_rc_table where id == id_ if nothing "bar");
 end;
 
-create proc select_if_nothing_throw(id_ int!)
+proc select_if_nothing_throw(id_ int!)
 begin
   declare bar text;
   set bar := (select foo from simple_rc_table where id == id_ if nothing throw);
@@ -3989,7 +3978,7 @@ BEGIN
   end;
 END);
 
-create proc out_union()
+proc out_union()
 begin
   declare C cursor like select 1 x;
   fetch C using 1 x;
@@ -3998,7 +3987,7 @@ end;
 
 -- claims to be an out-union proc but isn't really going to produce anything
 -- non dml path
-create proc out_union_nil_result()
+proc out_union_nil_result()
 begin
   if 0 then
     call out_union();
@@ -4007,7 +3996,7 @@ end;
 
 -- claims to be an out-union proc but isn't really going to produce anything
 -- dml path
-create proc out_union_nil_result_dml()
+proc out_union_nil_result_dml()
 begin
   if 0 then
     call out_union_dml();
@@ -4100,19 +4089,19 @@ BEGIN
 END);
 
 -- not null result
-create proc f(x int!, out y int!)
+proc f(x int!, out y int!)
 begin
   set y := x;
 end;
 
 -- nullable version (not null arg)
-create proc fn(x int!, out y integer)
+proc fn(x int!, out y integer)
 begin
   set y := x;
 end;
 
 -- nullable arg and result version (forces boxing)
-create proc fnn(x integer, out y integer)
+proc fnn(x integer, out y integer)
 begin
   set y := x;
 end;
@@ -4147,7 +4136,7 @@ END);
 
 -- a simple proc that creates a result set with out union
 -- this reference must be correctly managed
-create proc get_row()
+proc get_row()
 begin
   declare D cursor like select 'x' facet;
   fetch D using 'x' facet;
@@ -4156,7 +4145,7 @@ end;
 
 -- the test here is to ensure that when we call get_row we correctly
 -- release the previous result set
-create proc get_row_thrice()
+proc get_row_thrice()
 begin
   -- these are redundant but they force the previous pending result to be freed
   -- this still returns a single row
@@ -4184,14 +4173,14 @@ END);
 
 
 @attribute(cql:shared_fragment)
-create proc f1(pattern text)
+proc f1(pattern text)
 begin
   with source(*) LIKE (select 1 id, "x" t)
   select * from source where t like pattern;
 end;
 
 @attribute(cql:shared_fragment)
-create proc f2(pattern text, idstart int!, idend int!, lim int!)
+proc f2(pattern text, idstart int!, idend int!, lim int!)
 begin
   with
   source(*) LIKE f1,
@@ -4201,7 +4190,7 @@ begin
 end;
 
 @attribute(cql:private)
-create proc shared_consumer()
+proc shared_consumer()
 begin
   with
     source1(id, t) as (values (1100, 'x_x'), (1101, 'zz')),
@@ -4227,7 +4216,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-create proc select_nothing_user(flag bool!)
+proc select_nothing_user(flag bool!)
 begin
   if flag then
     select flag as xyzzy;
@@ -4250,7 +4239,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-create proc get_values()
+proc get_values()
 begin
   select 1 id, 'x' t
   union all
@@ -4281,7 +4270,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-create proc conditional_values_base(x_ integer)
+proc conditional_values_base(x_ integer)
 begin
   if x_ == 2 then
     select x_ id, 'y' t;
@@ -4293,7 +4282,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc conditional_values(x_ int!)
+proc conditional_values(x_ int!)
 begin
   if x_ == 1 then
     select nullable(x_) id, 'x' t;
@@ -4373,7 +4362,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-create proc skip_notnulls(a_ int!, b_ bool!, c_ long!, d_ real!, e_ text!, f_ blob!, g_ object!)
+proc skip_notnulls(a_ int!, b_ bool!, c_ long!, d_ real!, e_ text!, f_ blob!, g_ object!)
 begin
   if a_ == 0 then
     select a_ - 100 result;
@@ -4412,7 +4401,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-create proc skip_nullables(
+proc skip_nullables(
   a_ integer,
   b_ bool,
   c_ long,
@@ -4458,7 +4447,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-create proc abs_func(x int!)
+proc abs_func(x int!)
 begin
   select case
     when x < 0 then x * -1
@@ -4467,19 +4456,19 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc max_func(x int!, y int!)
+proc max_func(x int!, y int!)
 begin
   select case when x <= y then y else x end result;
 end;
 
 @attribute(cql:shared_fragment)
-create proc ten()
+proc ten()
 begin
   select 10 ten;
 end;
 
 @attribute(cql:shared_fragment)
-create proc numbers(lim int!)
+proc numbers(lim int!)
 begin
   with N(x) as (
     select 1 x
@@ -4913,7 +4902,7 @@ BEGIN
   EXPECT!(caught);
 END);
 
-create proc round_trip_int(value int!)
+proc round_trip_int(value int!)
 begin
   DECLARE C cursor LIKE storage_one_int;
   FETCH C using value x;
@@ -4925,7 +4914,7 @@ begin
   EXPECT!(C.x == D.x);
 end;
 
-create proc round_trip_long(value long!)
+proc round_trip_long(value long!)
 begin
   DECLARE C cursor LIKE storage_one_long;
   FETCH C using value x;
@@ -5105,7 +5094,7 @@ BEGIN
   printf("1000 bad results is normal\n");
 END);
 
-create proc change_arg(x text)
+proc change_arg(x text)
 begin
   set x := 'hi';
 end;
@@ -5547,7 +5536,7 @@ BEGIN
   end;
 END);
 
-create proc ch1()
+proc ch1()
 begin
   let i := 0;
   let base := 500;
@@ -5567,7 +5556,7 @@ begin
   end;
 end;
 
-create proc ch2()
+proc ch2()
 begin
   let i := 0;
   let base := 1000;
@@ -5587,7 +5576,7 @@ begin
   end;
 end;
 
-create proc ch1_filter(k1 integer, k2 text)
+proc ch1_filter(k1 integer, k2 text)
 begin
   declare C cursor for call ch1();
   loop fetch C
@@ -5598,7 +5587,7 @@ begin
   end;
 end;
 
-create proc ch2_filter(k3 integer, k4 text)
+proc ch2_filter(k3 integer, k4 text)
 begin
   declare C cursor for call ch2();
   loop fetch C
@@ -5610,7 +5599,7 @@ begin
 end;
 
 
-create proc parent()
+proc parent()
 begin
   let i := 0;
   declare C cursor like (k1 integer, k2 text, k3 integer, k4 text, v1 bool, v2 text, v3 real);
@@ -5632,14 +5621,14 @@ begin
   end;
 end;
 
-create proc parent_child()
+proc parent_child()
 begin
   OUT UNION CALL parent() JOIN
     call ch1() USING (k1, k2) AS ch1 AND
     call ch2() USING (k3, k4) AS ch2;
 end;
 
-create proc parent_child_simple_pattern()
+proc parent_child_simple_pattern()
 begin
   declare C cursor for call parent();
   loop fetch C
@@ -5650,7 +5639,7 @@ begin
   end;
 end;
 
-create proc verify_parent_child_results(results object<parent_child set>)
+proc verify_parent_child_results(results object<parent_child set>)
 begin
   declare P cursor for results;
   let i := 0;
@@ -6410,7 +6399,7 @@ create table mixed_backed(
   bl blob
 );
 
-create procedure load_mixed_backed()
+proc load_mixed_backed()
 begin
   delete from mixed_backed;
   insert into mixed_backed values (1, "a name", 12, 1, 5.0, cast("blob1" as blob));
@@ -6541,7 +6530,7 @@ END);
 -- and we need both for this test.
 
 var a_global int!;
-create proc mutator(new_val int!, out result int!)
+proc mutator(new_val int!, out result int!)
 begin
   set result := new_val + 1;
   set a_global := result;
@@ -6583,7 +6572,7 @@ void run_test_trace_callback(const char *proc, const char *file, int32_t line);
 -- hence it is a good source of db errors
 create table does_not_exist(id integer);
 
-create proc fails_because_bogus_table()
+proc fails_because_bogus_table()
 begin
   try
     declare D cursor for select * from does_not_exist;
@@ -6599,7 +6588,7 @@ end;
 
 -- Called in the test client to verify that we hit tripwires when passing NULL
 -- inappropriately for various argument types and at various argument indices.
-create proc proc_with_notnull_args(
+proc proc_with_notnull_args(
   a text!, b text!, out c text!, out d text!, inout e text!, inout f text!,
   inout g text!, inout h text!, i text!, out j text!, inout k text!, inout l text!,
 )

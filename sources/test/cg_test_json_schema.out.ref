@@ -5,7 +5,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE Foo(
-      id INTEGER<ident> NOT NULL,
+      id INTEGER<ident>!,
       name TEXT
     )
 
@@ -96,7 +96,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T3(
-      id INTEGER UNIQUE NOT NULL
+      id INTEGER UNIQUE!
     )
 
     {
@@ -285,7 +285,7 @@
 
     @ATTRIBUTE(this:that=1L)
     CREATE TEMP TABLE IF NOT EXISTS T6(
-      id INTEGER NOT NULL
+      id INTEGER!
     ) WITHOUT ROWID
 
     {
@@ -1006,8 +1006,8 @@
     The statement ending at line XXXX
 
     CREATE TABLE with_fk_on_columns(
-      id1 INTEGER NOT NULL REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
-      id2 INTEGER NOT NULL REFERENCES T10 (id4) ON DELETE CASCADE,
+      id1 INTEGER! REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
+      id2 INTEGER! REFERENCES T10 (id4) ON DELETE CASCADE,
       FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)
     )
 
@@ -1121,7 +1121,7 @@
     @ATTRIBUTE(cql:backing_table)
     CREATE TABLE backing(
       k BLOB PRIMARY KEY,
-      v BLOB NOT NULL
+      v BLOB!
     )
 
     {
@@ -1178,7 +1178,7 @@
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE backed(
       id INTEGER PRIMARY KEY,
-      name TEXT NOT NULL,
+      name TEXT!,
       details TEXT
     )
 
@@ -1248,7 +1248,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE radioactive(
-      id INTEGER NOT NULL,
+      id INTEGER!,
       danger TEXT @SENSITIVE
     )
 
@@ -1644,9 +1644,9 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE name(
-      first TEXT NOT NULL,
+      first TEXT!,
       middle TEXT,
-      last TEXT NOT NULL,
+      last TEXT!,
       PRIMARY KEY (first, last)
     )
 
@@ -1717,12 +1717,12 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE every_type(
-      bool_column BOOL NOT NULL,
-      int32_column INTEGER NOT NULL,
-      int64_column LONG_INT NOT NULL,
-      float_column REAL NOT NULL,
-      string_column TEXT NOT NULL,
-      blob_column BLOB NOT NULL,
+      bool_column BOOL!,
+      int32_column INTEGER!,
+      int64_column LONG_INT!,
+      float_column REAL!,
+      string_column TEXT!,
+      blob_column BLOB!,
       PRIMARY KEY (bool_column)
     )
 
@@ -1826,14 +1826,14 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE continents(
-      country TEXT NOT NULL,
-      africa TEXT NOT NULL,
-      antarctica TEXT NOT NULL,
-      asia TEXT NOT NULL,
-      europe TEXT NOT NULL,
-      north_america TEXT NOT NULL,
-      oceania TEXT NOT NULL,
-      south_america TEXT NOT NULL,
+      country TEXT!,
+      africa TEXT!,
+      antarctica TEXT!,
+      asia TEXT!,
+      europe TEXT!,
+      north_america TEXT!,
+      oceania TEXT!,
+      south_america TEXT!,
       PRIMARY KEY (country)
     )
 
@@ -1959,12 +1959,12 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE pks_not_first_columns(
-      a BOOL NOT NULL,
-      b INTEGER NOT NULL,
-      c LONG_INT NOT NULL,
-      d REAL NOT NULL,
-      e TEXT NOT NULL,
-      f BLOB NOT NULL,
+      a BOOL!,
+      b INTEGER!,
+      c LONG_INT!,
+      d REAL!,
+      e TEXT!,
+      f BLOB!,
       PRIMARY KEY (b, d, f)
     )
 
@@ -2068,9 +2068,9 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE only_pks_nonnull(
-      a BOOL NOT NULL,
-      b INTEGER NOT NULL,
-      c LONG_INT NOT NULL,
+      a BOOL!,
+      b INTEGER!,
+      c LONG_INT!,
       d REAL,
       e TEXT,
       f BLOB,
@@ -2177,11 +2177,11 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE some_non_pk_nonnull(
-      a BOOL NOT NULL,
-      b INTEGER NOT NULL,
-      c LONG_INT NOT NULL,
+      a BOOL!,
+      b INTEGER!,
+      c LONG_INT!,
       d REAL,
-      e TEXT NOT NULL,
+      e TEXT!,
       f BLOB,
       PRIMARY KEY (a, b, c)
     )
@@ -2286,7 +2286,7 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE _starts_with_underscore(
-      foo INTEGER NOT NULL PRIMARY KEY,
+      foo INTEGER! PRIMARY KEY,
       bar TEXT
     )
 
@@ -2405,8 +2405,8 @@
     The statement ending at line XXXX
 
     CREATE TABLE `abc def`(
-      `a b` INTEGER NOT NULL UNIQUE,
-      `x y` INTEGER NOT NULL PRIMARY KEY
+      `a b` INTEGER! UNIQUE,
+      `x y` INTEGER! PRIMARY KEY
     )
 
     {
@@ -3514,7 +3514,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC a_query (pattern TEXT NOT NULL, reject TEXT)
+    CREATE PROC a_query (pattern TEXT!, reject TEXT)
     BEGIN
     SELECT id
       FROM Foo
@@ -3555,7 +3555,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC bigger_query (pattern TEXT NOT NULL, reject TEXT)
+    CREATE PROC bigger_query (pattern TEXT!, reject TEXT)
     BEGIN
     SELECT DISTINCT *
       FROM Foo
@@ -3607,7 +3607,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(my_attribute='This is a string attribute')
-    CREATE PROC joiner (id_ INTEGER NOT NULL)
+    CREATE PROC joiner (id_ INTEGER!)
     BEGIN
     SELECT *
       FROM Foo AS T1
@@ -4121,7 +4121,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC insert_proc (id_ INTEGER NOT NULL, name_ TEXT)
+    CREATE PROC insert_proc (id_ INTEGER!, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo(id, name)
       VALUES(id_, name_);
@@ -4166,7 +4166,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC dummy_insert_proc (seed_ INTEGER NOT NULL)
+    CREATE PROC dummy_insert_proc (seed_ INTEGER!)
     BEGIN
     INSERT INTO fOo(id, name) VALUES(_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
     END
@@ -4335,7 +4335,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_insert_proc (x INTEGER NOT NULL)
+    CREATE PROC with_insert_proc (x INTEGER!)
     BEGIN
     WITH
       data (id) AS (
@@ -4371,7 +4371,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC update_proc (id_ INTEGER NOT NULL, name_ TEXT)
+    CREATE PROC update_proc (id_ INTEGER!, name_ TEXT)
     BEGIN
     UPDATE foO
       SET name = name_
@@ -4407,7 +4407,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC update_with_proc (id_ INTEGER NOT NULL, name_ TEXT)
+    CREATE PROC update_with_proc (id_ INTEGER!, name_ TEXT)
     BEGIN
     WITH
       names (n) AS (
@@ -4507,7 +4507,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_complex_args (OUT pattern TEXT NOT NULL, INOUT arg REAL)
+    CREATE PROC with_complex_args (OUT pattern TEXT!, INOUT arg REAL)
     BEGIN
     SET pattern := "text";
 
@@ -4725,7 +4725,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_3 (x_ INTEGER NOT NULL, y_ INTEGER NOT NULL)
+    CREATE PROC proc_args_3 (x_ INTEGER!, y_ INTEGER!)
     BEGIN
     END
 
@@ -4809,7 +4809,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_6 (foo_ INTEGER NOT NULL, id_ INTEGER, name_ TEXT)
+    CREATE PROC proc_args_6 (foo_ INTEGER!, id_ INTEGER, name_ TEXT)
     BEGIN
     END
 
@@ -4901,7 +4901,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_with_deps (OUT x INTEGER NOT NULL)
+    CREATE PROC proc_with_deps (OUT x INTEGER!)
     BEGIN
     CALL other_Proc();
 
@@ -5081,7 +5081,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC proc_as_func (OUT x INTEGER NOT NULL)
+    DECLARE PROC proc_as_func (OUT x INTEGER!)
 
     {
       "name" : "proc_as_func",
@@ -5110,7 +5110,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(foo=bar)
-    DECLARE PROC decl_proc_take_all_type_proc (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL NOT NULL, i_nn INTEGER NOT NULL, l_nn LONG_INT NOT NULL, r_nn REAL NOT NULL, bl_nn BLOB NOT NULL, str_nn TEXT NOT NULL, obj_nn OBJECT NOT NULL) USING TRANSACTION
+    DECLARE PROC decl_proc_take_all_type_proc (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INTEGER!, l_nn LONG_INT!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) USING TRANSACTION
 
     {
       "name" : "decl_proc_take_all_type_proc",
@@ -5237,7 +5237,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC out_cursor_proc () OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION
+    DECLARE PROC out_cursor_proc () OUT (A INTEGER!, B INTEGER!) USING TRANSACTION
 
     {
       "name" : "out_cursor_proc",
@@ -5260,7 +5260,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC proc_with_like () (id INTEGER, first TEXT NOT NULL, middle TEXT, last TEXT NOT NULL)
+    DECLARE PROC proc_with_like () (id INTEGER, first TEXT!, middle TEXT, last TEXT!)
 
     {
       "name" : "proc_with_like",
@@ -5321,7 +5321,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL
+    DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!
 
     {
       "name" : "cql_partition_create",
@@ -5344,7 +5344,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL
+    DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!
 
     {
       "name" : "cql_partition_cursor",
@@ -5382,7 +5382,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL
+    DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!
 
     {
       "name" : "cql_extract_partition",
@@ -5415,7 +5415,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NOT NULL
+    DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary>!
 
     {
       "name" : "cql_string_dictionary_create",
@@ -5438,7 +5438,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL
+    DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!
 
     {
       "name" : "cql_string_dictionary_add",
@@ -5476,7 +5476,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT
+    DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TEXT) TEXT
 
     {
       "name" : "cql_string_dictionary_find",
@@ -5509,7 +5509,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT NOT NULL
+    DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!
 
     {
       "name" : "cql_cursor_format",
@@ -5536,7 +5536,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL
+    DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!
 
     {
       "name" : "create_cql_string_list",
@@ -5559,7 +5559,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL
+    DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!
 
     {
       "name" : "set_in_object_cql_string_list",
@@ -5598,7 +5598,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL) TEXT
+    DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT
 
     {
       "name" : "get_from_object_cql_string_list",
@@ -5631,7 +5631,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT NULL) INTEGER NOT NULL
+    DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!
 
     {
       "name" : "get_object_cql_string_list_count",
@@ -5659,7 +5659,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, string TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL
+    DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!
 
     {
       "name" : "add_object_cql_string_list",
@@ -5693,7 +5693,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(foo=bar)
-    DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL NOT NULL, i_nn INTEGER NOT NULL, l_nn LONG_INT NOT NULL, r_nn REAL NOT NULL, bl_nn BLOB NOT NULL, str_nn TEXT NOT NULL, obj_nn OBJECT NOT NULL) BOOL
+    DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INTEGER!, l_nn LONG_INT!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
 
     {
       "name" : "decl_func_take_all_types_func",
@@ -5889,7 +5889,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_bool_notnull () BOOL NOT NULL
+    DECLARE FUNC func_return_bool_notnull () BOOL!
 
     {
       "name" : "func_return_bool_notnull",
@@ -5951,7 +5951,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC NoCheckFunc NO CHECK TEXT NOT NULL
+    DECLARE FUNC NoCheckFunc NO CHECK TEXT!
 
     {
       "name" : "NoCheckFunc",

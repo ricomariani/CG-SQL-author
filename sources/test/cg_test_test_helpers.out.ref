@@ -1,46 +1,46 @@
 
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc1 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc2 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc3 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc4 () (id INTEGER NOT NULL);
+DECLARE PROC sample_proc4 () (id INTEGER!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc5 () (id INTEGER NOT NULL);
+DECLARE PROC sample_proc5 () (id INTEGER!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc6 () (id INTEGER NOT NULL);
+DECLARE PROC sample_proc6 () (id INTEGER!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc7 () (id INTEGER NOT NULL);
+DECLARE PROC sample_proc7 () (id INTEGER!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc11 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+DECLARE PROC sample_proc11 () OUT (id INTEGER!) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc12 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+DECLARE PROC sample_proc12 () OUT (id INTEGER!) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc13 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+DECLARE PROC sample_proc13 () OUT (id INTEGER!) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc21 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc21 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc22 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc22 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc24 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc24 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc25 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc25 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 
 
 -- The statement ending at line XXXX
@@ -161,18 +161,18 @@ BEGIN
 END;
 
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc7_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -181,8 +181,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -294,18 +294,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc13_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -314,8 +314,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -430,18 +430,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc14_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -450,8 +450,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -539,25 +539,25 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc15_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS primary_as_column(
-    id_ TEXT NOT NULL,
+    id_ TEXT!,
     seat TEXT,
     lable TEXT,
     PRIMARY KEY (id_, seat)
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -566,8 +566,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -664,18 +664,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc16_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -684,8 +684,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -764,18 +764,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc17_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -784,8 +784,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -795,7 +795,7 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
-    id_ TEXT NOT NULL,
+    id_ TEXT!,
     seat TEXT,
     lable TEXT,
     PRIMARY KEY (id_, seat)
@@ -889,18 +889,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc18_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -909,8 +909,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -989,12 +989,12 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc19_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
@@ -1034,18 +1034,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc20_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1054,8 +1054,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -1134,18 +1134,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc21_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1154,8 +1154,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -1165,7 +1165,7 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
-    id_ TEXT NOT NULL,
+    id_ TEXT!,
     seat TEXT,
     lable TEXT,
     PRIMARY KEY (id_, seat)
@@ -1272,18 +1272,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc22_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1292,8 +1292,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -1303,7 +1303,7 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
-    id_ TEXT NOT NULL,
+    id_ TEXT!,
     seat TEXT,
     lable TEXT,
     PRIMARY KEY (id_, seat)
@@ -1409,18 +1409,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc23_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1429,8 +1429,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -1440,7 +1440,7 @@ BEGIN
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
   );
   CREATE TABLE IF NOT EXISTS primary_as_column(
-    id_ TEXT NOT NULL,
+    id_ TEXT!,
     seat TEXT,
     lable TEXT,
     PRIMARY KEY (id_, seat)
@@ -1536,18 +1536,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc24_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1556,8 +1556,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -1646,18 +1646,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc25_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1666,8 +1666,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -1756,7 +1756,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc26_create_tables()
 BEGIN
@@ -1796,15 +1796,15 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc27_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS experiment_value(
-    config TEXT NOT NULL,
-    param TEXT NOT NULL,
+    config TEXT!,
+    param TEXT!,
     value TEXT,
-    type LONG_INT NOT NULL,
+    type LONG_INT!,
     logging_id TEXT,
     PRIMARY KEY (config, param)
   );
@@ -1838,12 +1838,12 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc28_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1900,7 +1900,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc29_create_tables()
 BEGIN
@@ -1940,12 +1940,12 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc30_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -2002,7 +2002,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc31_create_tables()
 BEGIN
@@ -2083,18 +2083,18 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_sample_proc311_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER NOT NULL,
+    id INTEGER!,
     `id 2` LONG_INT,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
   CREATE TABLE IF NOT EXISTS `table a`(
-    `a pk` REAL NOT NULL PRIMARY KEY
+    `a pk` REAL! PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -2103,8 +2103,8 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER NOT NULL,
-    `a pk` REAL NOT NULL,
+    id INTEGER!,
+    `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
@@ -2183,7 +2183,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_no_long_to_conversion_create_tables()
 BEGIN
@@ -2251,7 +2251,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_self_ref_proc_create_tables()
 BEGIN
@@ -2291,7 +2291,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_self_ref_proc_no_data_create_tables()
 BEGIN
@@ -2331,7 +2331,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_self_ref_proc2_create_tables()
 BEGIN
@@ -2370,7 +2370,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_self_ref_proc2_no_data_create_tables()
 BEGIN
@@ -2409,7 +2409,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_too_many_row_in_child_table_create_tables()
 BEGIN
@@ -2461,7 +2461,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_too_many_row_in_child_table_2_create_tables()
 BEGIN
@@ -2515,7 +2515,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_virtual_table_proc_create_tables()
 BEGIN
@@ -2547,7 +2547,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_blob_primary_key_create_tables()
 BEGIN
@@ -2585,7 +2585,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_child_blob_primary_key_create_tables()
 BEGIN
@@ -2636,7 +2636,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_blob_literal_in_dummy_test_create_tables()
 BEGIN
@@ -2687,7 +2687,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_test_frags_create_tables()
 BEGIN
@@ -2738,7 +2738,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_MyProc_create_tables()
 BEGIN
@@ -2828,7 +2828,7 @@ END;
 
 -- The statement ending at line XXXX
 @attribute(cql:deterministic)
-DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
 CREATE PROC test_uses_backed_table_create_tables()
 BEGIN

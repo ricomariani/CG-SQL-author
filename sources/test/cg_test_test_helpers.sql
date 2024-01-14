@@ -8,12 +8,12 @@
 -- test helpers generation tests
 create table `table a`
 (
-  `a pk` real not null primary key
+  `a pk` real! primary key
 );
 
 create table Baa
 (
-  id int not null,
+  id int!,
   `id 2` long int,
   `id 3` text
 );
@@ -31,8 +31,8 @@ create table dbl_table (
 
 create table `table C`
 (
-  id int not null,
-  `a pk` real not null,
+  id int!,
+  `a pk` real!,
   uid real,
   name text,
   name2 text,
@@ -44,7 +44,7 @@ create table `table C`
 
 create table primary_as_column
 (
-  id_ text not null,
+  id_ text!,
   seat text,
   lable text,
   primary key (id_, seat)
@@ -69,14 +69,14 @@ create view `Foo View` AS select * from `table C`;
 
 create view Complex_view AS select * from `table C` where name in (select id_ from primary_as_column);
 
-declare proc decl1(id integer) ( A integer not null, B bool );
+declare proc decl1(id integer) ( A int!, B bool );
 
 create index p_id on primary_as_column(id_);
 
 create index p_id_delete on primary_as_column(id_) @delete(1);
 
 @attribute(cql:deterministic)
-declare select function is_declare_func_enabled() bool not null;
+declare select function is_declare_func_enabled() bool!;
 
 create trigger `trigger on table a`
   before delete on `table a` when is_declare_func_enabled()
@@ -92,11 +92,11 @@ end @delete(2);
 
 create table experiment_value
 (
-  config text not null,
-  param text not null,
+  config text!,
+  param text!,
   @attribute(non_privacy_sensitive)
   value text,
-  type long int not null,
+  type long int!,
   @attribute(non_privacy_sensitive)
   logging_id text,
   primary key (config, param)
@@ -174,7 +174,7 @@ create table child_blob_primary_key (
 );
 
 -- TEST: dummy_table only
--- + DECLARE PROC sample_proc1 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+-- + DECLARE PROC sample_proc1 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 -- + CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);
 -- + DROP TABLE test_sample_proc1;
 @attribute(cql:autotest=(dummy_table))
@@ -184,7 +184,7 @@ begin
 end;
 
 -- TEST: dummy_insert only
--- + DECLARE PROC sample_proc2 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+-- + DECLARE PROC sample_proc2 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 -- + INSERT INTO test_sample_proc2 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_insert))
 create proc sample_proc2()
@@ -193,7 +193,7 @@ begin
 end;
 
 -- TEST: dummy_select only
--- + DECLARE PROC sample_proc3 () (id INTEGER NOT NULL, `a pk` REAL NOT NULL, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+-- + DECLARE PROC sample_proc3 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
 -- + SELECT * FROM test_sample_proc3;
 @attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc3()
@@ -202,7 +202,7 @@ begin
 end;
 
 -- TEST: dummy_table and dummy_insert only
--- + DECLARE PROC sample_proc4 () (id INTEGER NOT NULL);
+-- + DECLARE PROC sample_proc4 () (id INTEGER!);
 -- + CREATE TEMP TABLE test_sample_proc4(LIKE sample_proc4);
 -- + DROP TABLE test_sample_proc4;
 -- + INSERT INTO test_sample_proc4 FROM ARGUMENTS;
@@ -213,7 +213,7 @@ begin
 end;
 
 -- TEST: dummy_table and dummy_insert only
--- + DECLARE PROC sample_proc5 () (id INTEGER NOT NULL);
+-- + DECLARE PROC sample_proc5 () (id INTEGER!);
 -- + CREATE TEMP TABLE test_sample_proc5(LIKE sample_proc5);
 -- + DROP TABLE test_sample_proc5;
 -- + SELECT * FROM test_sample_proc5;
@@ -224,7 +224,7 @@ begin
 end;
 
 -- TEST: dummy_select and dummy_insert only
--- + DECLARE PROC sample_proc6 () (id INTEGER NOT NULL);
+-- + DECLARE PROC sample_proc6 () (id INTEGER!);
 -- + SELECT * FROM test_sample_proc6;
 -- + INSERT INTO test_sample_proc6 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_select, dummy_insert))
@@ -234,7 +234,7 @@ begin
 end;
 
 -- TEST: dummy_table, dummy_select, dummy_insert, dummy_test
--- + DECLARE PROC sample_proc7 () (id INTEGER NOT NULL);
+-- + DECLARE PROC sample_proc7 () (id INTEGER!);
 -- + CREATE TEMP TABLE test_sample_proc7(LIKE sample_proc7);
 -- + DROP TABLE test_sample_proc7;
 -- + INSERT INTO test_sample_proc7 FROM ARGUMENTS;
@@ -263,7 +263,7 @@ begin
 end;
 
 -- TEST: Proc has dummy_result_set attribute
--- + DECLARE PROC sample_proc12 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC sample_proc12 () OUT (id INTEGER!) USING TRANSACTION;
 -- + CREATE PROC generate_sample_proc12_row(LIKE sample_proc12)
 -- + DECLARE curs CURSOR LIKE sample_proc12
 @attribute(cql:autotest=(dummy_result_set))
@@ -275,8 +275,8 @@ begin
 end;
 
 -- TEST: Proc that generates table/insert/select/result_set/dummy_test
--- + DECLARE PROC sample_proc13 () OUT (id INTEGER NOT NULL) USING TRANSACTION;
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+-- + DECLARE PROC sample_proc13 () OUT (id INTEGER!) USING TRANSACTION;
+-- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + CREATE PROC test_sample_proc13_create_tables()
 -- + CREATE PROC test_sample_proc13_populate_tables()
 -- + CREATE PROC test_sample_proc13_drop_tables()
@@ -386,7 +386,7 @@ end;
 create proc sample_proc19()
 begin
 create table t (
-  id int not null primary key,
+  id int! primary key,
   num long int,
   FOREIGN KEY (id, num) REFERENCES Baa(id, `id 2`) ON UPDATE NO ACTION
 );
@@ -598,7 +598,7 @@ BEGIN
 END;
 
 -- TEST: test dbl_table is processed in dummy_test because of `trigger on table a` on `table a`
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+-- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + CREATE PROC test_sample_proc28_create_tables()
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
@@ -642,7 +642,7 @@ BEGIN
 END;
 
 -- TEST: test dbl_table is processed in dummy_test because of trigger`table a` on `table a`
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
+-- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + CREATE PROC test_sample_proc30_create_tables()
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
@@ -744,7 +744,7 @@ end;
 create proc sample_proc34()
 begin
   create table tt (
-    id int not null
+    id int!
   );
 end;
 

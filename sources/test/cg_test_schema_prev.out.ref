@@ -2,7 +2,7 @@
 @ATTRIBUTE(cql:deterministic)
 DECLARE SELECT FUNC my_func (x TEXT) TEXT;
 
-DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
+DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER!;
 
 @DECLARE_SCHEMA_REGION shared;
 
@@ -23,7 +23,7 @@ CREATE TABLE `quoted foo`(
 
 @begin_schema_region shared;
 CREATE TABLE added_table(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -45,7 +45,7 @@ CREATE TABLE `use g1`(
 
 @begin_schema_region extra;
 CREATE TABLE table2(
-  `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`),
+  `an id` INTEGER! REFERENCES `quoted foo` (`an id`),
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -60,22 +60,22 @@ CREATE TABLE other_table(
 @end_schema_region;
 
 CREATE TABLE table_to_recreate(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE;
 
 CREATE TABLE grouped_table_1(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_2(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_3(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE(my_group);
 
@@ -120,21 +120,21 @@ CREATE TABLE migrated_from_recreate2(
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE conflict_clause_t(
-  `an id` INTEGER NOT NULL ON CONFLICT FAIL
+  `an id` INTEGER! ON CONFLICT FAIL
 );
 
 CREATE TABLE conflict_clause_pk(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   CONSTRAINT `pk 1` PRIMARY KEY (`an id`) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE expression_pk(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   CONSTRAINT `pk 1` PRIMARY KEY (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE expression_uk(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   CONSTRAINT uk1 UNIQUE (`an id` / 2, `an id` % 2)
 );
 
@@ -173,7 +173,7 @@ CREATE TABLE unsub_recreated(
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
-  v BLOB NOT NULL
+  v BLOB!
 );
 
 @ATTRIBUTE(cql:backed_by=backing)
@@ -185,7 +185,7 @@ CREATE TABLE backed(
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE recreate_backing(
   k BLOB PRIMARY KEY,
-  v BLOB NOT NULL
+  v BLOB!
 ) @RECREATE(foo);
 
 @ATTRIBUTE(cql:backed_by=recreate_backing)

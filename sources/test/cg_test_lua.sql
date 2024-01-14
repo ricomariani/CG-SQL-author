@@ -10,13 +10,13 @@ declare proc puts no check;
 
 -- basic test table with an auto inc field
 create table foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+  id INTEGER PRIMARY KEY AUTOINCREMENT!
 );
 
 -- second test table with combination of fields
 @attribute(bar_is_good=1)
 create table bar(
-  id INTEGER NOT NULL PRIMARY KEY,
+  id INTEGER! PRIMARY KEY,
   @attribute(collossal_cave='xyzzy')
   name TEXT,
   rate LONG INT,
@@ -773,7 +773,7 @@ set s := (select printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, null
 set S := 'x';
 
 -- TEST: declare proc and call it
--- + DECLARE PROC xyzzy (id INTEGER) (A INTEGER NOT NULL);
+-- + DECLARE PROC xyzzy (id INTEGER) (A INTEGER!);
 declare proc xyzzy(id integer) ( A integer not null );
 
 -- TEST: call declared proc, capture statement in a cursor
@@ -1515,7 +1515,7 @@ create table threads (
 -- + function thread_theme_info_list_fetch_results(_db_, thread_key_)
 -- + _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
-create procedure thread_theme_info_list(thread_key_ LONG INT NOT NULL)
+create procedure thread_theme_info_list(thread_key_ LONG INT!)
 begin
   select * from (select thread_key from threads) T;
 end;
@@ -1973,7 +1973,7 @@ end;
 
 -- TEST: make an out union helper without defining it
 -- - function
-declare proc extern_out_union_helper () OUT UNION (x INTEGER NOT NULL);
+declare proc extern_out_union_helper () OUT UNION (x INTEGER!);
 
 -- TEST: this should still compile even though the body of the proc isn't here
 -- + function forward_out_union_extern_fetch_results()
@@ -2591,11 +2591,11 @@ begin
 end;
 
 -- TEST: make sure decl output is correct for DML out union
--- + DECLARE PROC out_union_with_dml (id INTEGER) OUT UNION (id INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_union_with_dml (id INTEGER) OUT UNION (id INTEGER!) USING TRANSACTION;
 declare proc out_union_with_dml(id integer) out union (id integer not null) using transaction;
 
 -- TEST: make sure decl output is correct for non-DML out union
--- + DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER NOT NULL);
+-- + DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER!);
 declare proc out_union_no_dml(id integer) out union (id integer not null);
 
 -- TEST: emit goto cql_cleanup in case of return
@@ -3205,7 +3205,7 @@ begin
   end;
 end;
 
-DECLARE x INTEGER NOT NULL;
+DECLARE x INTEGER!;
 
 -- TEST: a series of paren checks on left association
 -- avoid hard coded divide by zero (hence 4/3 not e.g 1/3)
@@ -4266,34 +4266,34 @@ set true_test := i0_nullable is not true;
 set false_test := i0_nullable is not false;
 
 CREATE TABLE big_data(
-  f1 LONG_INT NOT NULL,
-  f2 INTEGER NOT NULL,
+  f1 LONG_INT!,
+  f2 INTEGER!,
   f3 TEXT,
-  f4 TEXT NOT NULL,
+  f4 TEXT!,
   f5 TEXT,
   f6 TEXT,
   f7 LONG_INT,
-  f8 LONG_INT NOT NULL,
-  f9 LONG_INT NOT NULL,
-  f10 LONG_INT NOT NULL,
-  f11 LONG_INT NOT NULL,
+  f8 LONG_INT!,
+  f9 LONG_INT!,
+  f10 LONG_INT!,
+  f11 LONG_INT!,
   f12 TEXT @SENSITIVE,
-  f13 BOOL NOT NULL,
+  f13 BOOL!,
   f14 LONG_INT,
   f15 BOOL,
-  f16 INTEGER NOT NULL,
-  f17 INTEGER NOT NULL,
+  f16 INTEGER!,
+  f17 INTEGER!,
   f18 TEXT,
   f19 INTEGER,
   f20 TEXT,
   f21 INTEGER,
   f22 TEXT,
   f23 INTEGER,
-  f24 LONG_INT NOT NULL,
+  f24 LONG_INT!,
   f25 TEXT,
-  f26 BOOL NOT NULL,
-  f27 BOOL NOT NULL,
-  f28 BOOL NOT NULL,
+  f26 BOOL!,
+  f27 BOOL!,
+  f28 BOOL!,
   f29 TEXT,
   f30 TEXT,
   f31 TEXT,
@@ -4302,25 +4302,25 @@ CREATE TABLE big_data(
   f34 INTEGER,
   f35 TEXT,
   f36 TEXT,
-  f38 LONG_INT NOT NULL,
+  f38 LONG_INT!,
   f39 LONG_INT UNIQUE,
   f40 BOOL,
-  f41 BOOL NOT NULL,
+  f41 BOOL!,
   f42 TEXT,
   f43 TEXT,
   f44 LONG_INT,
-  f45 BOOL NOT NULL,
+  f45 BOOL!,
   f46 LONG_INT,
-  f47 INTEGER NOT NULL,
+  f47 INTEGER!,
   f48 TEXT,
   f49 LONG_INT,
   f50 TEXT,
   f51 TEXT,
   f52 LONG_INT,
-  f53 INTEGER NOT NULL,
+  f53 INTEGER!,
   f54 TEXT,
-  f55 LONG_INT NOT NULL,
-  f56 LONG_INT NOT NULL,
+  f55 LONG_INT!,
+  f56 LONG_INT!,
   f57 TEXT,
   f58 TEXT,
   f59 INTEGER,
@@ -4329,9 +4329,9 @@ CREATE TABLE big_data(
   f62 LONG_INT,
   f63 LONG_INT,
   f64 INTEGER,
-  f65 LONG_INT NOT NULL,
-  f66 INTEGER NOT NULL,
-  f67 INTEGER NOT NULL,
+  f65 LONG_INT!,
+  f66 INTEGER!,
+  f67 INTEGER!,
   f68 INTEGER,
   f69 TEXT,
   f70 REAL,

@@ -306,6 +306,15 @@ static void gen_type_kind(CSTR name) {
   }
 }
 
+static void gen_not_null() {
+  if (for_sqlite()) {
+    gen_printf(" NOT NULL");
+  }
+  else {
+    gen_printf("!");
+  }
+}
+
 void gen_data_type(ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
     gen_printf("CREATE ");
@@ -314,7 +323,7 @@ void gen_data_type(ast_node *ast) {
   }
   else if (is_ast_notnull(ast)) {
     gen_data_type(ast->left);
-    gen_printf(" NOT NULL");
+    gen_not_null();
     return;
   }
   else if (is_ast_sensitive_attr(ast)) {
@@ -664,7 +673,7 @@ static void gen_col_attrs(ast_node *_Nullable attrs) {
     } else if (is_ast_delete_attr(attr)) {
       gen_delete_attr(attr);
     } else if (is_ast_col_attrs_not_null(attr)) {
-      gen_printf(" NOT NULL");
+      gen_not_null();
       EXTRACT_ANY(conflict_clause, attr->left);
       if (conflict_clause) {
         gen_conflict_clause(conflict_clause);
@@ -4021,7 +4030,7 @@ static void gen_declare_proc_from_create_proc(ast_node *ast) {
         }
 
         if (is_not_nullable(sem_type)) {
-          gen_printf(" NOT NULL");
+          gen_not_null();
         }
 
         if (sensitive_flag(sem_type)) {

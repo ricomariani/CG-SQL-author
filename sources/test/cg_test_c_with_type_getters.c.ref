@@ -149,7 +149,7 @@ CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector
 
 /*
 export:
-DECLARE PROC selector () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+DECLARE PROC selector () (f1 INTEGER!, f2 TEXT!, f3 REAL!, f4 BOOL!, f5 LONG_INT!, f6 BLOB!, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
 */
 CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -172,7 +172,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC emit_object_result_set (o OBJECT NOT NULL)
+CREATE PROC emit_object_result_set (o OBJECT!)
 BEGIN
   DECLARE C CURSOR LIKE emit_object_result_set ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
@@ -213,7 +213,7 @@ cql_fetch_info emit_object_result_set_info = {
 };
 /*
 export:
-DECLARE PROC emit_object_result_set (o OBJECT NOT NULL) OUT UNION (o OBJECT NOT NULL);
+DECLARE PROC emit_object_result_set (o OBJECT!) OUT UNION (o OBJECT!);
 */
 
 typedef struct emit_object_result_set_C_row {
@@ -332,7 +332,7 @@ CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, s
 
 /*
 export:
-DECLARE PROC sproc_copy_func () (f1 INTEGER NOT NULL, f2 TEXT NOT NULL, f3 REAL NOT NULL, f4 BOOL NOT NULL, f5 LONG_INT NOT NULL, f6 BLOB NOT NULL, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+DECLARE PROC sproc_copy_func () (f1 INTEGER!, f2 TEXT!, f3 REAL!, f4 BOOL!, f5 LONG_INT!, f6 BLOB!, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
 */
 CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -356,7 +356,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC emit_object_with_setters (o OBJECT NOT NULL)
+CREATE PROC emit_object_with_setters (o OBJECT!)
 BEGIN
   DECLARE C CURSOR LIKE emit_object_with_setters ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
@@ -404,7 +404,7 @@ void emit_object_with_setters_fetch_results( emit_object_with_setters_result_set
 
 /*
 export:
-DECLARE PROC emit_object_with_setters (o OBJECT NOT NULL) OUT (o OBJECT NOT NULL);
+DECLARE PROC emit_object_with_setters (o OBJECT!) OUT (o OBJECT!);
 */
 
 typedef struct emit_object_with_setters_C_row {
@@ -485,7 +485,7 @@ CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_,
 
 /*
 export:
-DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
+DECLARE PROC simple_child_proc () (x INTEGER!, y INTEGER!);
 */
 CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -510,7 +510,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC simple_container_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>);
+  DECLARE C CURSOR LIKE (a INTEGER, b INTEGER!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
   OUT UNION C;
 END;
@@ -553,8 +553,8 @@ cql_fetch_info simple_container_proc_info = {
 };
 /*
 export:
-DECLARE PROC simple_child_proc () (x INTEGER NOT NULL, y INTEGER NOT NULL);
-DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER NOT NULL, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
+DECLARE PROC simple_child_proc () (x INTEGER!, y INTEGER!);
+DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER!, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
 */
 
 typedef struct simple_container_proc_C_row {

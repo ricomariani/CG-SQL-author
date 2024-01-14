@@ -16,7 +16,7 @@ create table foo(
 -- second test table with combination of fields
 @attribute(bar_is_good=1)
 create table bar(
-  id INTEGER NOT NULL PRIMARY KEY,
+  id INTEGER! PRIMARY KEY,
   @attribute(collossal_cave='xyzzy')
   name TEXT,
   rate LONG INT,
@@ -31,17 +31,17 @@ create view baz as select id, name, type from bar;
 declare i0_nullable int;
 declare i1_nullable int;
 declare r0_nullable real;
-declare l0_nullable long integer;
-declare l1_nullable long integer;
+declare l0_nullable long int;
+declare l1_nullable long int;
 declare b0_nullable bool;
 declare t0_nullable text;
 
 -- same types but not null variant
-declare i2 int not null;
-declare r2 real not null;
-declare l2 long integer not null;
-declare b2 bool not null;
-declare t2 text not null;
+declare i2 int!;
+declare r2 real!;
+declare l2 long int!;
+declare b2 bool!;
+declare t2 text!;
 
 -- initialize for later use
 set t2 := "text";
@@ -153,8 +153,8 @@ call printf("Hello, world\n");
 set i2 := r2 and l2;
 
 -- helper methods for the next test
-declare function side_effect1() integer;
-declare function side_effect2() integer;
+declare function side_effect1() int;
+declare function side_effect2() int;
 
 -- TEST: the operands have side effects, the short circuit must not
 -- do the evaluation of the side effect for the second arg if the first
@@ -321,7 +321,7 @@ end if;
 -- + void test(cql_int32 i) {
 -- + if (i) {
 -- + puts("true");
-create procedure test(i integer not null)
+create procedure test(i int!)
 begin
   if i then
     call puts('true');
@@ -431,7 +431,7 @@ set i0_nullable := i1_nullable not between r2 and i0_nullable;
 -- + *i = i2;
 -- + cql_set_nullable(*ii, i0_nullable.is_null, i0_nullable.value);
 -- + }
-create procedure out_test(out i integer not null, out ii integer)
+create procedure out_test(out i int!, out ii int)
 begin
   set i := i2;
   set ii := i0_nullable;
@@ -439,7 +439,7 @@ end;
 
 -- TEST: force a cql_int64 variable to be pushed on the scratch stack
 -- + cql_nullable_int64 longint_var = { .is_null = 1 };
-declare longint_var long integer;
+declare longint_var long int;
 
 -- + cql_combine_nullables(_tmp_n_int64_1, l0_nullable.is_null, l1_nullable.is_null, l0_nullable.value + l1_nullable.value);
 -- + cql_set_nullable(longint_var, _tmp_n_int64_1.is_null, _tmp_n_int64_1.value * 5);
@@ -466,8 +466,8 @@ declare foo_cursor cursor for select id, i2 from foo where id = i0_nullable;
 fetch foo_cursor into i0_nullable, i2;
 
 -- TEST: test elementary cursor on select with no tables, still round trips through sqlite
-declare col1 integer;
-declare col2 real not null;
+declare col1 int;
+declare col2 real!;
 -- + _rc_ = cql_prepare(_db_, &basic_cursor_stmt,
 declare basic_cursor cursor for select 1, 2.5;
 -- + cql_multifetch(_rc_, basic_cursor_stmt, 2,
@@ -478,8 +478,8 @@ fetch basic_cursor into col1, col2;
 close basic_cursor;
 
 -- TEST: the most expensive way to swap two variables ever :)
-declare arg1 integer not null;
-declare arg2 integer not null;
+declare arg1 int!;
+declare arg2 int!;
 set arg1 := 7;
 set arg2 := 11;
 -- + _rc_ = cql_prepare(_db_, &exchange_cursor_stmt,
@@ -520,7 +520,7 @@ delete from bar where name like '\\ " \n';
 -- TEST: binding an out parameter
 -- + cql_multibind(&_rc_, _db_, &_temp_stmt, 1,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, *foo);
-create procedure outparm_test(out foo integer not null)
+create procedure outparm_test(out foo int!)
 begin
  set foo := 1;
  delete from bar where id = foo;
@@ -779,7 +779,7 @@ end;
 
 -- TEST: create a proc with reader logic with more than one arg
 -- + cql_code get_data(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_string_ref _Nonnull name_, cql_int32 id_) {
-create procedure get_data(name_ text not null, id_ integer not null)
+create procedure get_data(name_ text!, id_ int!)
 begin
   select * from bar where id = id_ and name = name_;
 end;
@@ -847,7 +847,7 @@ call copy_int(i0_nullable, i1_nullable);
 -- - cql_cleanup
 create proc insert_rowid_reader()
 begin
-  declare row long integer;
+  declare row long int;
   set row := last_insert_rowid();
 end;
 
@@ -856,12 +856,12 @@ end;
 -- - cql_cleanup
 create proc changes_reader()
 begin
-  declare ct integer;
+  declare ct int;
   set ct := changes();
 end;
 
 -- TEST: try out printf expression
-declare s text not null;
+declare s text!;
 -- + _printf_result = sqlite3_mprintf("%d and %d", 1, 2);
 -- + cql_string_release(s);
 -- + s = cql_string_ref_new(_printf_result);
@@ -887,9 +887,9 @@ set S := 'x';
 
 -- TEST: declare proc and call it
 -- + /*
--- + DECLARE PROC xyzzy (id INTEGER) (A INTEGER NOT NULL);
+-- + DECLARE PROC xyzzy (id INTEGER) (A INTEGER!);
 -- + */
-declare proc xyzzy(id integer) ( A integer not null );
+declare proc xyzzy(id int) ( A int! );
 
 -- + _rc_ = xyzzy(_db_, &xyzzy_cursor_stmt, _tmp_n_int_%);
 -- +  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
@@ -902,22 +902,22 @@ end;
 -- + /*
 -- + DECLARE PROC plugh (id INTEGER);
 -- + */
-declare proc plugh(id integer);
+declare proc plugh(id int);
 
 -- TEST: create a proc that returns a mix of possible types
 --       in a select
 create proc complex_return()
 begin
   select TRUE as _bool,
-   2 as _integer,
-   cast(3 as long integer) as _longint,
+   2 as _int,
+   cast(3 as long int) as _longint,
    3.0 as _real,
    'xyz' as _text,
    cast(null as bool) as _nullable_bool;
 end;
 
 -- TEST: create a proc with a nested select within an in statement for hierarchical queries
-create proc hierarchical_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
+create proc hierarchical_query(rate_ long int!, limit_ int!, offset_ int!)
 begin
   select *
   from foo
@@ -933,7 +933,7 @@ begin
 end;
 
 -- TEST: create a proc with a nested select within a not in statement for hierarchical queries
-create proc hierarchical_unmatched_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
+create proc hierarchical_unmatched_query(rate_ long int!, limit_ int!, offset_ int!)
 begin
   select *
   from foo
@@ -1007,7 +1007,7 @@ end;
 -- +                CQL_DATA_TYPE_INT32, output);
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + *result = _C_has_row_;
-create proc outint_nullable(out output integer, out result bool not null)
+create proc outint_nullable(out output int, out result bool!)
 begin
   declare C cursor for select 1;
   fetch C into output;
@@ -1021,14 +1021,14 @@ END;
 -- +                CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, output);
 -- + if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
 -- + *result = _C_has_row_;
-create proc outint_notnull(out output integer not null, out result bool not null)
+create proc outint_notnull(out output int!, out result bool!)
 begin
   declare C cursor for select 1;
   fetch C into output;
   set result := C;
 END;
 
-declare function simple_func(int1 integer) integer;
+declare function simple_func(int1 int) int;
 
 -- TEST: call external function
 -- + cql_set_notnull(_tmp_n_int_%, 2);
@@ -1041,7 +1041,7 @@ let result := simple_func(2);
 -- + result = simple_func(_tmp_n_int_1);
 set result := simple_func(simple_func(1));
 
-declare function text_func(int1 integer, int2 integer not null) text not null;
+declare function text_func(int1 int, int2 int!) text!;
 declare text_result text;
 
 -- TEST: call external text function
@@ -1060,9 +1060,9 @@ set obj_var := null;
 
 -- TEST: declare not null object
 -- + cql_object_ref obj_var2 = NULL;
-declare obj_var2 object not null;
+declare obj_var2 object!;
 
-declare function obj_notnull_func() object not null;
+declare function obj_notnull_func() object!;
 
 -- initialize for later use
 set obj_var2 := obj_notnull_func();
@@ -1172,12 +1172,12 @@ set obj_var2 := ifnull_throw(obj_func());
 -- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
 set obj_var2 := ifnull_crash(obj_func_create());
 
--- TEST: assign nullable int to an integer
+-- TEST: assign nullable int to an int
 -- + cql_invariant(!i0_nullable.is_null);
 -- + i2 = i0_nullable.value
 set i2 := ifnull_crash(i0_nullable);
 
--- TEST: assign nullable int to an integer or throw
+-- TEST: assign nullable int to an int or throw
 -- + if (i0_nullable.is_null) {
 -- +   _rc_ = SQLITE_ERROR;
 -- +   goto cql_cleanup;
@@ -1190,7 +1190,7 @@ set i2 := ifnull_throw(i0_nullable);
 -- - cql_int32 _tmp_int_1 = 0;
 -- + o = i.value;
 -- + o = - 1;
-create proc unused_temp(i integer, out o integer not null)
+create proc unused_temp(i int, out o int!)
 begin
   set o := coalesce(i, -1);
 end;
@@ -1231,7 +1231,7 @@ insert into foo default values;
 -- + cql_code insert_values(sqlite3 *_Nonnull _db_, cql_int32 id_, cql_nullable_int32 type_) {
 -- + "INSERT INTO bar(id, type) "
 -- +   "VALUES(?, ?)");
-create proc insert_values(id_ integer not null, type_ integer)
+create proc insert_values(id_ int!, type_ int)
 begin
   insert into bar(id, type) values (id_, type_);
 end;
@@ -1265,7 +1265,7 @@ begin
 end;
 
 -- TEST: declare a void func
-declare function voidfunc() integer;
+declare function voidfunc() int;
 
 -- TEST: use a select exists clause
 -- + "SELECT EXISTS (SELECT * "
@@ -1360,9 +1360,9 @@ declare blob_var blob;
 
 -- TEST: create blob variable2
 -- + cql_blob_ref blob_var2 = NULL;
-declare blob_var2 blob not null;
+declare blob_var2 blob!;
 
-declare function blob_notnull_func() blob not null;
+declare function blob_notnull_func() blob!;
 
 -- initialize for later use
 set blob_var2 := blob_notnull_func();
@@ -1461,8 +1461,8 @@ set blob_var := blob_func_create();
 
 -- make a table with blobs in it
 create table blob_table (
-  blob_id integer not null,
-  b_notnull blob not null,
+  blob_id int!,
+  b_notnull blob!,
   b_nullable blob
 );
 
@@ -1475,7 +1475,7 @@ set blob_var := (select b_nullable from blob_table where blob_id = 1);
 set blob_var := (select b_notnull from blob_table where blob_id = 1);
 
 -- some not null blob object we can use
-declare blob_var_notnull blob not null;
+declare blob_var_notnull blob!;
 
 -- initialize for later use
 set blob_var_notnull := blob_notnull_func();
@@ -1508,7 +1508,7 @@ begin
 end;
 
 -- TEST: create an output struct proc
--- + DECLARE PROC out_cursor_proc () OUT (id INTEGER NOT NULL, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT NOT NULL, extra2 TEXT NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_cursor_proc () OUT (id INTEGER!, name TEXT, rate LONG_INT, type INTEGER, size REAL, extra1 TEXT!, extra2 TEXT!) USING TRANSACTION;
 -- + #define out_cursor_proc_C_refs_offset cql_offsetof(out_cursor_proc_C_row, name) // count = 3
 -- + memset(_result_, 0, sizeof(*_result_));
 -- + out_cursor_proc_C_row C = { ._refs_count_ = 3, ._refs_offset_ = out_cursor_proc_C_refs_offset };
@@ -1550,7 +1550,7 @@ end;
 
 -- TEST: proc decl with out args
 -- + DECLARE PROC fetcher_proc () OUT (a INTEGER, b TEXT);
-declare proc fetcher_proc() out (a integer, b text);
+declare proc fetcher_proc() out (a int, b text);
 
 -- TEST: All void all day
 -- + DECLARE PROC totally_void_proc ();
@@ -1562,7 +1562,7 @@ declare proc totally_void_proc();
 -- +  if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
 set i2 := outparm_test();
 
-declare proc compute(in a_ integer not null, out b_ integer not null);
+declare proc compute(in a_ int!, out b_ int!);
 
 -- TEST: call out proc like a function, this one has args
 -- + compute(1, &_tmp_int_1);
@@ -1570,7 +1570,7 @@ declare proc compute(in a_ integer not null, out b_ integer not null);
 set i2 := compute(compute(1));
 
 -- a dml method
-declare proc dml_compute(in a_ integer not null, out b_ integer not null) USING TRANSACTION;
+declare proc dml_compute(in a_ int!, out b_ int!) USING TRANSACTION;
 
 -- TEST: call out proc like a function, this one has args and uses the db
 -- + _rc_ = dml_compute(_db_, 1, &_tmp_int_1);
@@ -1581,14 +1581,14 @@ set i2 := dml_compute(dml_compute(1));
 
 -- TEST: write the result of a proc-as-func call to an out variable
 -- + _rc_ = dml_compute(_db_, 1, &*a_);
-create proc dml_user(out a_ integer not null)
+create proc dml_user(out a_ int!)
 begin
   set a_ := dml_compute(1);
 end;
 
 -- a test table for the following case
 create table threads (
- thread_key long int not null
+ thread_key long int!
 );
 
 -- TEST: nested subquery in a proc
@@ -1664,7 +1664,7 @@ begin
     declare C cursor for select 1 as N;
     fetch C;
   catch
-    declare x integer;
+    declare x int;
   end;
 end;
 
@@ -1675,15 +1675,15 @@ create proc no_code_after_catch()
 begin
   try
     @attribute(foo) -- just messing with the tree
-    declare x integer;
+    declare x int;
   catch
     @attribute(bar) -- just messing with the tree
-    declare y integer;
+    declare y int;
   end;
 end;
 
 -- TEST: void cursor fetcher
--- + DECLARE PROC out_no_db () OUT (A INTEGER NOT NULL, B REAL NOT NULL);
+-- + DECLARE PROC out_no_db () OUT (A INTEGER!, B REAL!);
 -- + void out_no_db(out_no_db_row *_Nonnull _result_) {
 -- + memset(_result_, 0, sizeof(*_result_));
 -- + out_no_db_C_row C = { 0 };
@@ -1790,9 +1790,9 @@ begin
   delete from bar where name >= '\';
 end;
 
--- TEST: create a table with a long integer autoinc column
+-- TEST: create a table with a long int autoinc column
 -- this requires the workaround of downgradeing the long to int
--- note: sqlite integers can hold 64 bits so they are already "long"
+-- note: sqlite ints can hold 64 bits so they are already "long"
 -- + id LONG_INT PRIMARY KEY AUTOINCREMENT,
 -- + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
 create proc long_auto_table_maker()
@@ -1867,7 +1867,7 @@ begin
     insert into foo select * from x;
 end;
 
-declare select func SqlUserFunc(id integer) real not null;
+declare select func SqlUserFunc(id int) real!;
 
 -- TEST: invoke a declared user function
 -- + _rc_ = cql_prepare(_db_, &_temp_stmt,
@@ -1887,7 +1887,7 @@ set r2 := (select SqlUserFunc(123));
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, blob_id_,
 -- +               CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_BLOB, b_notnull_,
 -- +               CQL_DATA_TYPE_BLOB, b_nullable_);
-create proc multi_rewrite(like blob_table, like bar, out out_arg integer not null)
+create proc multi_rewrite(like blob_table, like bar, out out_arg int!)
 begin
   insert into blob_table from arguments;
   set out_arg := 1;
@@ -1933,7 +1933,7 @@ end;
 create proc loop_statement_not_auto_cursor()
 begin
   declare C cursor for select 1 A;
-  declare A_ integer not null;
+  declare A_ int!;
   loop fetch C into A_
   begin
     call printf("%d\n", A_);
@@ -1953,7 +1953,7 @@ end;
 -- + _rc_ = simple_select(_db_, &C_stmt);
 create proc call_in_loop()
 begin
-  declare i integer;
+  declare i int;
   set i := 0;
   while i < 5
   begin
@@ -1991,7 +1991,7 @@ end;
 -- + cql_object_release(D_object_);
 create proc call_in_loop_boxed()
 begin
-  declare i integer;
+  declare i int;
   set i := 0;
   while i < 5
   begin
@@ -2005,7 +2005,7 @@ begin
 end;
 
 -- TEST: verify the decl, this is only for later tests
--- + DECLARE PROC out_union_helper () OUT UNION (x INTEGER NOT NULL);
+-- + DECLARE PROC out_union_helper () OUT UNION (x INTEGER!);
 create proc out_union_helper()
 begin
   declare C cursor like select 1 x;
@@ -2014,7 +2014,7 @@ begin
 end;
 
 -- TEST: verify the decl, this is only for later tests
--- + DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_union_dml_helper () OUT UNION (x INTEGER!) USING TRANSACTION;
 create proc out_union_dml_helper()
 begin
   declare C cursor for select 1 x;
@@ -2033,7 +2033,7 @@ end;
 -- + cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 1,
 create proc call_out_union_in_loop()
 begin
-  declare i integer;
+  declare i int;
   set i := 0;
   while i < 5
   begin
@@ -2044,7 +2044,7 @@ begin
 end;
 
 -- TEST: here we create a proc that is going to forward the result of out union as its own result
--- + DECLARE PROC forward_out_union () OUT UNION (x INTEGER NOT NULL)
+-- + DECLARE PROC forward_out_union () OUT UNION (x INTEGER!)
 -- - USING TRANSACTION
 -- + *_result_set_ = NULL;
 -- + out_union_helper_fetch_results((out_union_helper_result_set_ref *)_result_set_);
@@ -2056,7 +2056,7 @@ begin
 end;
 
 -- declare one, this ensures we have the necessary types after the decl (the row type esp.)
-declare proc extern_out_union_helper () OUT UNION (x INTEGER NOT NULL);
+declare proc extern_out_union_helper () OUT UNION (x INTEGER!);
 
 -- TEST: this should still compile even though the body of the proc isn't here
 -- + extern_out_union_helper_fetch_results((extern_out_union_helper_result_set_ref *)_result_set_);
@@ -2067,7 +2067,7 @@ begin
 end;
 
 -- TEST: forward out union result, with dml proc
--- + DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC forward_out_union_dml () OUT UNION (x INTEGER!) USING TRANSACTION;
 -- + *_result_set_ = NULL;
 -- +  _rc_ = out_union_dml_helper_fetch_results(_db_, (out_union_dml_helper_result_set_ref *)_result_set_);
 -- +1 cql_object_release(*_result_set_);
@@ -2174,7 +2174,7 @@ end;
 -- + b = ((i.is_null == j.is_null) && (j.is_null || i.value == j.value))
 create proc is_test()
 begin
-  declare b bool not null;
+  declare b bool!;
   set b := 1 is 1;
   set b := 'x' is 'x';
   set b := 'x' is 'y';
@@ -2193,7 +2193,7 @@ create proc is_blob()
 begin
   declare bl1 blob;
   declare bl2 blob;
-  declare b bool not null;
+  declare b bool!;
   set b := bl1 is bl2;
   set b := bl1 is not bl2;
 end;
@@ -2208,7 +2208,7 @@ end;
 -- + b = !((i.is_null == j.is_null) && (j.is_null || i.value == j.value))
 create proc is_not_test()
 begin
-  declare b bool not null;
+  declare b bool!;
   set b := 1 is not 1;
   set b := 'x' is not 'x';
   set b := 'x' is not 'y';
@@ -2222,7 +2222,7 @@ end;
 
 -- TEST: null on lhs of IN
 -- + cql_set_null(*b);
-create proc in_test(x integer, out b bool)
+create proc in_test(x int, out b bool)
 begin
   set b := NULL IN (1);
 end;
@@ -2230,7 +2230,7 @@ end;
 -- TEST: null on lhs of NOT IN
 -- + DECLARE PROC not_in_test (x INTEGER, OUT b BOOL);
 -- + cql_set_null(*b);
-create proc not_in_test(x integer, out b bool)
+create proc not_in_test(x int, out b bool)
 begin
   set b := NULL NOT IN (1);
 end;
@@ -2246,7 +2246,7 @@ end;
 
 -- TEST: create proc with a single-column identity attribute
 -- + cql_uint16 simple_identity_identity_columns[] = { 1,
--- + DECLARE PROC simple_identity () (id INTEGER NOT NULL, data INTEGER NOT NULL);
+-- + DECLARE PROC simple_identity () (id INTEGER!, data INTEGER!);
 @attribute(cql:identity=(id))
 create proc simple_identity()
 begin
@@ -2272,7 +2272,7 @@ begin
 end;
 
 create table radioactive(
- id integer not null,
+ id int!,
  data text @sensitive
 );
 
@@ -2316,8 +2316,8 @@ begin
     update bar set name = 'xyzzy' where id in (select * from x);
 end;
 
-create temp table table1( id integer);
-create temp table table2( id integer);
+create temp table table1( id int);
+create temp table table2( id int);
 
 -- TEST: autodrop attribute
 -- + .autodrop_tables = "table1\0table2\0",
@@ -2371,7 +2371,7 @@ end;
 -- + "FROM (SELECT 1 AS xyzzy) AS T");
 create proc redundant_cast()
 begin
-  select CAST(5 as integer) plugh, T.xyzzy five from (select 1 xyzzy) as T;
+  select CAST(5 as int) plugh, T.xyzzy five from (select 1 xyzzy) as T;
 end;
 
 -- TEST: select with alias in view
@@ -2381,13 +2381,13 @@ end;
 create proc view_creator()
 begin
   create view alias_preserved as
-    select CAST(5 as integer) plugh, T.xyzzy five from (select 1 xyzzy) as T;
+    select CAST(5 as int) plugh, T.xyzzy five from (select 1 xyzzy) as T;
 end;
 
 @enforce_strict cast;
 
-create table switch_account_badges(badge_count integer);
-create table unread_pending_threads(unread_pending_thread_count integer);
+create table switch_account_badges(badge_count int);
+create table unread_pending_threads(unread_pending_thread_count int);
 
 -- TEST: nested select table should not have column aliases removed
 -- +  "SELECT SUM(A.unread_pending_thread_count), SUM(A.switch_account_badge_count) "
@@ -2445,12 +2445,12 @@ END;
 -- +   ") "
 create proc use_with_select()
 begin
-   declare x integer;
+   declare x int;
    SET x := (WITH threads2 (count) AS (SELECT 1 foo) SELECT COUNT(*) FROM threads2);
 end;
 
 -- declare a simple table-valued function
-declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
+declare select function ReadFromRowset(rowset Object<rowset>) (id int);
 
 -- TEST: use a table valued function that consumes an object
 -- + cql_multibind(&_rc_, _db_, &C_stmt, 1,
@@ -2498,7 +2498,7 @@ END;
 -- + "INSERT INTO foo(id) "
 -- +   "VALUES(?) "
 -- +  "ON CONFLICT DO NOTHING");
-create proc upsert_do_nothing(id_ integer not null)
+create proc upsert_do_nothing(id_ int!)
 BEGIN
  insert into foo(id) values(id_) on conflict do nothing;
 END;
@@ -2530,8 +2530,8 @@ on conflict(id) do
 update set id=10;
 
 -- TEST: set up a couple of out cursor procs (body not needed)
-declare procedure p1() out (id integer not null, t text);
-declare procedure p2() out (id integer not null, t text) using transaction;
+declare procedure p1() out (id int!, t text);
+declare procedure p2() out (id int!, t text) using transaction;
 
 -- TEST: this test forces several out cursors to go into the symbol table
 -- the idea is that it reveals any cases where a temporary pointer is
@@ -2557,7 +2557,7 @@ end;
 -- +2 p1((p1_row *)&C);
 -- +2 _rc_ = p2(_db_, (p2_row *)&C);
 -- +5 cql_teardown_row(C);
-create procedure fetch_many_times(arg bool not null)
+create procedure fetch_many_times(arg bool!)
 begin
   declare C cursor like p1;
   if arg  == 1 then
@@ -2571,7 +2571,7 @@ begin
 end;
 
 -- TEST: create a result set from rows values
--- + DECLARE PROC out_union_two () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL);
+-- + DECLARE PROC out_union_two () OUT UNION (x INTEGER!, y TEXT!);
 -- + void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
@@ -2622,7 +2622,7 @@ begin
 end;
 
 -- TEST: create a result set from selected rows
--- + DECLARE PROC out_union_from_select () OUT UNION (x INTEGER NOT NULL, y TEXT NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_union_from_select () OUT UNION (x INTEGER!, y TEXT!) USING TRANSACTION;
 -- + cql_bytebuf _rows_;
 -- + cql_bytebuf_open(&_rows_);
 -- +2 cql_retain_row(C);
@@ -2654,8 +2654,8 @@ begin
 end;
 
 
--- This just sets up a call to a procedure that takes two integers
-create proc out_union_values(a integer not null, b integer not null)
+-- This just sets up a call to a procedure that takes two ints
+create proc out_union_values(a int!, b int!)
 begin
   declare x cursor like select 1 x, 2 y;
   fetch x from values(a,b);
@@ -2672,7 +2672,7 @@ end;
 -- + cql_copyoutrow(NULL, (cql_result_set_ref)C_result_set_, C_row_num_, 2,
 -- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.x,
 -- +   CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.y);
-create proc read_out_union_values(a integer not null, b integer not null)
+create proc read_out_union_values(a int!, b int!)
 begin
   declare C cursor for call out_union_values(a,b);
   fetch C;
@@ -2709,7 +2709,7 @@ end;
 -- + "LIMIT 1");
 create proc compound_select_expr()
 begin
-  declare x integer;
+  declare x int;
   set x := (select 1 where 0 union select 2 limit 1);
 end;
 
@@ -2733,12 +2733,12 @@ begin
 end;
 
 -- TEST: make sure decl output is correct for DML out union
--- + DECLARE PROC out_union_with_dml (id INTEGER) OUT UNION (id INTEGER NOT NULL) USING TRANSACTION;
-declare proc out_union_with_dml(id integer) out union (id integer not null) using transaction;
+-- + DECLARE PROC out_union_with_dml (id INTEGER) OUT UNION (id INTEGER!) USING TRANSACTION;
+declare proc out_union_with_dml(id int) out union (id int!) using transaction;
 
 -- TEST: make sure decl output is correct for non-DML out union
--- + DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER NOT NULL);
-declare proc out_union_no_dml(id integer) out union (id integer not null);
+-- + DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER!);
+declare proc out_union_no_dml(id int) out union (id int!);
 
 -- TEST: emit goto cql_cleanup in case of return
 -- + goto cql_cleanup; // return
@@ -2883,14 +2883,14 @@ end;
 -- - emit_object_with_setters_set_o
 @attribute(cql:emit_setters)
 create proc emit_object_with_setters(
-  o object not null,
-  x object not null,
-  i integer not null,
-  l long not null,
-  b bool not null,
-  d real not null,
-  t text not null,
-  bl blob not null)
+  o object!,
+  x object!,
+  i int!,
+  l long!,
+  b bool!,
+  d real!,
+  t text!,
+  bl blob!)
 begin
   declare C cursor like emit_object_with_setters arguments;
   fetch C from arguments;
@@ -2905,7 +2905,7 @@ end;
 create proc emit_setters_with_nullables(
   o object,
   x object,
-  i integer,
+  i int,
   l long,
   b bool,
   d real,
@@ -2945,7 +2945,7 @@ end;
 -- TEST: make sure that _rc_ is set to SQLITE_OK when we return
 -- + _rc_ = SQLITE_OK; // clean up any SQLITE_ROW value or other non-error
 -- + goto cql_cleanup; // return
-create proc early_out_rc_cleared(out x integer)
+create proc early_out_rc_cleared(out x int)
 begin
   declare C cursor for select 1 x;
   fetch C;
@@ -2956,22 +2956,22 @@ end;
 
 -- TEST: helper table
 create table vault_mixed_sensitive(
-  id int not null primary key,
+  id int! primary key,
   name text @sensitive,
   title text,
   type long @sensitive
 );
 
 create table vault_mixed_not_nullable_sensitive(
-  id int not null primary key,
-  name text not null @sensitive,
-  title text not null,
-  type long not null @sensitive
+  id int! primary key,
+  name text! @sensitive,
+  title text!,
+  type long! @sensitive
 );
 
 -- TEST: helper table
 create table vault_non_sensitive(
-  id int not null primary key,
+  id int! primary key,
   name text,
   title text,
   type long
@@ -3114,25 +3114,25 @@ end;
 -- + x = ((cql_int32)(3.2));
 create proc local_cast_int_notnull()
 begin
-  declare x integer not null;
-  set x := cast(3.2 as integer);
+  declare x int!;
+  set x := cast(3.2 as int);
 end;
 
 -- TEST: numeric cast operation int32 nullable
 -- + cql_set_nullable(x, r.is_null, ((cql_int32)(r.value)));
 create proc local_cast_int()
 begin
-  declare x integer;
+  declare x int;
   declare r real;
   set r := nullable(3.2);
-  set x := cast(r as integer);
+  set x := cast(r as int);
 end;
 
 -- TEST: numeric cast operation int64 nullable
 -- + x = ((cql_int64)(3.2));
 create proc local_cast_long_notnull()
 begin
-  declare x long not null;
+  declare x long!;
   set x := cast(3.2 as long);
 end;
 
@@ -3150,7 +3150,7 @@ end;
 -- + x = ((cql_double)(3));
 create proc local_cast_real_notnull()
 begin
-  declare x real not null;
+  declare x real!;
   set x := cast(3 as real);
 end;
 
@@ -3168,7 +3168,7 @@ end;
 -- + x = ((cql_bool)!!(3.2));
 create proc local_cast_bool_notnull()
 begin
-  declare x bool not null;
+  declare x bool!;
   set x := cast(3.2 as bool);
 end;
 
@@ -3186,9 +3186,9 @@ end;
 -- + x = ((cql_double)!!(b));
 create proc local_cast_from_bool_notnull()
 begin
-  declare b bool not null;
+  declare b bool!;
   set b := 1;
-  declare x real not null;
+  declare x real!;
   set x := cast(b as real);
 end;
 
@@ -3206,12 +3206,12 @@ end;
 -- because normal mode is still legal
 @enforce_normal cast;
 
--- TEST: numeric cast operation from bool not nullable (no-op version)
+-- TEST: numeric cast operation from bool!able (no-op version)
 -- + x = b;
 create proc local_cast_from_bool_no_op_notnull()
 begin
-  declare x bool not null;
-  declare b bool not null;
+  declare x bool!;
+  declare b bool!;
   set b := 1;
   set x := cast(b as bool);
 end;
@@ -3248,7 +3248,7 @@ create proc base_proc_savepoint()
 begin
   proc savepoint
   begin
-    declare X integer;
+    declare X int;
   end;
 end;
 
@@ -3280,7 +3280,7 @@ begin
   end;
 end;
 
-DECLARE x INTEGER NOT NULL;
+DECLARE x INTEGER!;
 
 -- TEST: a series of paren checks on left association
 -- avoid hard coded divide by zero
@@ -3391,7 +3391,7 @@ set x := (1 | 2) | 3;
 set x := 1 == (2 != 3);
 
 create table SalesInfo(
-  month integer,
+  month int,
   amount real
 );
 
@@ -3540,11 +3540,11 @@ begin
 end;
 
 -- TEST: use result code in a procedure
--- + DECLARE PROC emit_rc (OUT result_code INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC emit_rc (OUT result_code INTEGER!) USING TRANSACTION;
 -- + CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull result_code)
 -- + cql_code _rc_ = SQLITE_OK;
 -- + *result_code = SQLITE_OK;
-create proc emit_rc(out result_code integer not null)
+create proc emit_rc(out result_code int!)
 begin
   set result_code := @rc;
 end;
@@ -3582,13 +3582,13 @@ begin
   let e0 := @rc;
   try
   try
-    create table whatever_anything(id integer);
+    create table whatever_anything(id int);
   catch
     set err := @rc;
     let e1 := @rc;
     try
        let e2 := @rc;
-       create table whatever_anything(id integer);
+       create table whatever_anything(id int);
     catch
        let e3 := @rc;
        set err := @rc;
@@ -3610,10 +3610,10 @@ end;
 create proc rc_test_lazy1()
 begin
   try
-    create table whatever_anything(id integer);
+    create table whatever_anything(id int);
   catch
     try
-       create table whatever_anything(id integer);
+       create table whatever_anything(id int);
     catch
        throw;
     end;
@@ -3627,18 +3627,18 @@ end;
 create proc rc_test_lazy2()
 begin
   try
-    create table whatever_anything(id integer);
+    create table whatever_anything(id int);
   catch
     try
-       create table whatever_anything(id integer);
+       create table whatever_anything(id int);
     catch
        let err := @rc;
     end;
   end;
 end;
 
--- TEST: make an integer enum
-declare enum some_ints integer (
+-- TEST: make an int enum
+declare enum some_ints int (
   foo = 12,
   bar = 3
 );
@@ -3670,7 +3670,7 @@ create proc virtual_table_creator()
 begin
   -- this will be rewritten
   create virtual table virt_table using virt_module (arguments following) as (
-    id integer,
+    id int,
     t text
   );
 end;
@@ -3679,7 +3679,7 @@ end;
 -- + C.x = 1;
 -- + C.y = 1;
 -- + out_arg_cursor(C.x, &C.y);
-create proc out_arg_cursor(x integer not null, out y integer not null)
+create proc out_arg_cursor(x int!, out y int!)
 begin
   declare C cursor like out_arg_cursor arguments;
   fetch C from values(1,1);
@@ -3693,19 +3693,19 @@ end;
 -- +   "id INTEGER)");
 create proc make_virt_table()
 begin
-  create virtual table v1 using m1 as (id integer);
-  create virtual table v2 using m2(x) as (id integer);
-  create virtual table v3 using m2(arguments following) as (id integer);
+  create virtual table v1 using m1 as (id int);
+  create virtual table v2 using m2(x) as (id int);
+  create virtual table v3 using m2(arguments following) as (id int);
 end;
 
 -- TEST: declaration of a named type
-declare my_name_type type text not null;
+declare my_name_type type text!;
 
 -- make a virtual table with a hidden column for use in the next tests
 create virtual table virtual_with_hidden using module_name as (
-  vx integer hidden not null,
-  vy integer,
-  vz integer hidden not null
+  vx int hidden!,
+  vy int,
+  vz int hidden!
 );
 
 -- TEST: hidden applied on virtual tables
@@ -3799,7 +3799,7 @@ set t2 := (select name from bar if nothing or null "garbonzo");
 -- + DECLARE PROC private_proc (OUT x INTEGER);
 -- + static void private_proc(cql_nullable_int32 *_Nonnull x)
 @attribute(cql:private)
-create proc private_proc(out x integer)
+create proc private_proc(out x int)
 begin
   set x := 1;
 end;
@@ -3807,7 +3807,7 @@ end;
 -- TEST: verify that getters are not present on private out union but the fetcher is
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
 -- + .crc = CRC_private_out_union,
--- + DECLARE PROC private_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + DECLARE PROC private_out_union () OUT UNION (a_field INTEGER!);
 -- + static void private_out_union_fetch_results(private_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
 -- - private_out_union_get_a_field
@@ -3824,7 +3824,7 @@ end;
 -- + void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x)
 -- - void proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x)
 @attribute(cql:alt_prefix=c_)
-create proc proc_with_alt_prefix(out x integer)
+create proc proc_with_alt_prefix(out x int)
 begin
   set x := 1;
 end;
@@ -3845,7 +3845,7 @@ end;
 -- TEST: verify that getters are not present on no getters out union but the fetcher is
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
 -- + .crc = CRC_no_getters_out_union,
--- + DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + DECLARE PROC no_getters_out_union () OUT UNION (a_field INTEGER!);
 -- - static void
 -- + void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
@@ -3875,7 +3875,7 @@ end;
 -- TEST: verify that getters are not present on suppress results out union but the fetcher is
 -- + CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL, // a_field
 -- + .crc = CRC_suppress_results_out_union,
--- + DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER NOT NULL);
+-- + DECLARE PROC suppress_results_out_union () OUT UNION (a_field INTEGER!);
 -- - static void
 -- + void suppress_results_out_union_fetch_results(suppress_results_out_union_result_set_ref _Nullable *_Nonnull _result_set_) {
 -- -- no getter
@@ -3903,11 +3903,11 @@ begin
 end;
 
 -- TEST: verify private exports and binding for result set case
--- + DECLARE PROC private_result (OUT x INTEGER) (x INTEGER NOT NULL);
+-- + DECLARE PROC private_result (OUT x INTEGER) (x INTEGER!);
 -- + static CQL_WARN_UNUSED cql_code private_result(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt, cql_nullable_int32 *_Nonnull x) {
 -- -- cql_code private_result_fetch_results
 @attribute(cql:private)
-create proc private_result(out x integer)
+create proc private_result(out x int)
 begin
   select 1 x;
 end;
@@ -3915,7 +3915,7 @@ end;
 -- TEST: private proc forward ref results in static prototype
 -- + static void private_fwd_ref(cql_int32 x);
 @attribute(cql:private)
-declare proc private_fwd_ref(x integer not null);
+declare proc private_fwd_ref(x int!);
 
 -- TEST: ensure out args set to null for ref types
 -- + void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
@@ -3927,14 +3927,14 @@ end;
 -- TEST: ensure out args set to null for nullable types
 -- + void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
 -- + cql_set_null(*x); // set out arg to non-garbage
-create proc set_out_arg_null_test(out x integer)
+create proc set_out_arg_null_test(out x int)
 begin
 end;
 
 -- TEST: ensure out args set to null for non-null types
 -- + void set_out_arg_notnull_test(cql_int32 *_Nonnull x) {
 -- + *x = 0; // set out arg to non-garbage
-create proc set_out_arg_notnull_test(out x integer not null)
+create proc set_out_arg_notnull_test(out x int!)
 begin
 end;
 
@@ -4103,14 +4103,14 @@ switch i2
 end;
 
 -- used in the next suite of tests
-declare proc out2_proc(x integer, out y integer not null, out z integer not null);
+declare proc out2_proc(x int, out y int!, out z int!);
 
 -- TEST: implicit declare including re-use
 -- + void out_decl_test(cql_nullable_int32 x) {
 -- + cql_int32 u = 0;
 -- + cql_int32 v = 0;
 -- +2 out2_proc(x, &u, &v);
-create proc out_decl_test(x integer)
+create proc out_decl_test(x int)
 begin
   declare out call out2_proc(x, u, v);
   declare out call out2_proc(x, u, v);
@@ -4123,7 +4123,7 @@ end;
 -- + cql_int32 u = 0;
 -- + cql_int32 v = 0;
 -- +2 out2_proc(x, &u, &v);
-create proc out_decl_loop_test(x integer)
+create proc out_decl_loop_test(x int)
 begin
   while 1
   begin
@@ -4221,7 +4221,7 @@ end;
 
 -- +  CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL, // o
 -- + cql_offsetof(out_object_row, o)
-create proc out_object(o object not null)
+create proc out_object(o object!)
 begin
   declare C cursor like out_object arguments;
   fetch C from arguments;
@@ -4245,21 +4245,21 @@ end;
 -- +1 cql_contract_argument_notnull_when_dereferenced
 create proc exercise_contracts(
   a int,
-  b int not null,
+  b int!,
   c text,
-  d text not null,
+  d text!,
   e blob,
-  f blob not null,
+  f blob!,
   g object,
-  h object not null,
+  h object!,
   out i int,
-  out j int not null,
+  out j int!,
   out k text,
-  out l text not null,
+  out l text!,
   inout m int,
-  inout n int not null,
+  inout n int!,
   inout o text,
-  inout p text not null,
+  inout p text!,
 )
 begin
   set l := "text";
@@ -4267,27 +4267,27 @@ end;
 
 -- TEST: Contracts should be emitted for public procs
 -- + cql_contract_argument_notnull((void *)t, 1);
-create proc public_proc_with_a_contract(t text not null)
+create proc public_proc_with_a_contract(t text!)
 begin
 end;
 
 -- TEST: Contracts should not be emitted for private procs
 -- - cql_contract_argument_notnull((void *)t, 1);
 @attribute(cql:private)
-create proc private_proc_without_a_contract(t text not null)
+create proc private_proc_without_a_contract(t text!)
 begin
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for result set procs
 -- +1 cql_contract_argument_notnull((void *)t, 1);
-create proc result_set_proc_with_contract_in_fetch_results(t text not null)
+create proc result_set_proc_with_contract_in_fetch_results(t text!)
 begin
   select * from bar;
 end;
 
 -- TEST: Contracts should be emitted only in _fetch_results for out procs
 -- +1 cql_contract_argument_notnull((void *)t, 1);
-create proc out_proc_with_contract_in_fetch_results(t text not null)
+create proc out_proc_with_contract_in_fetch_results(t text!)
 begin
   declare C cursor like bar;
   out C;
@@ -4326,11 +4326,11 @@ end;
 -- - cql_prepare
 select 1 x;
 
--- TEST: we should infer a bool not null variable and compute is true correctly
+-- TEST: we should infer a bool! variable and compute is true correctly
 -- + true_test = !!(1);
 let true_test := 1 is true;
 
--- TEST: we should infer a bool not null variable and compute is false correctly
+-- TEST: we should infer a bool! variable and compute is false correctly
 -- + false_test = !(0);
 let false_test := 0 is false;
 
@@ -4342,11 +4342,11 @@ set true_test := i0_nullable is true;
 -- + false_test = cql_is_nullable_false(i0_nullable.is_null, i0_nullable.value);
 set false_test := i0_nullable is false;
 
--- TEST: we should infer a bool not null variable and compute is true correctly
+-- TEST: we should infer a bool! variable and compute is true correctly
 -- + true_test = !(1);
 set true_test := 1 is not true;
 
--- TEST: we should infer a bool not null variable and compute is false correctly
+-- TEST: we should infer a bool! variable and compute is false correctly
 -- + false_test = !!(0);
 set false_test := 0 is not false;
 
@@ -4360,9 +4360,9 @@ set false_test := i0_nullable is not false;
 
 CREATE TABLE big_data(
   f1 LONG_INT NOT NULL,
-  f2 INTEGER NOT NULL,
+  f2 INT!,
   f3 TEXT,
-  f4 TEXT NOT NULL,
+  f4 TEXT!,
   f5 TEXT,
   f6 TEXT,
   f7 LONG_INT,
@@ -4374,8 +4374,8 @@ CREATE TABLE big_data(
   f13 BOOL NOT NULL,
   f14 LONG_INT,
   f15 BOOL,
-  f16 INTEGER NOT NULL,
-  f17 INTEGER NOT NULL,
+  f16 INT!,
+  f17 INT!,
   f18 TEXT,
   f19 INTEGER,
   f20 TEXT,
@@ -4404,13 +4404,13 @@ CREATE TABLE big_data(
   f44 LONG_INT,
   f45 BOOL NOT NULL,
   f46 LONG_INT,
-  f47 INTEGER NOT NULL,
+  f47 INT!,
   f48 TEXT,
   f49 LONG_INT,
   f50 TEXT,
   f51 TEXT,
   f52 LONG_INT,
-  f53 INTEGER NOT NULL,
+  f53 INT!,
   f54 TEXT,
   f55 LONG_INT NOT NULL,
   f56 LONG_INT NOT NULL,
@@ -4423,8 +4423,8 @@ CREATE TABLE big_data(
   f63 LONG_INT,
   f64 INTEGER,
   f65 LONG_INT NOT NULL,
-  f66 INTEGER NOT NULL,
-  f67 INTEGER NOT NULL,
+  f66 INT!,
+  f67 INT!,
   f68 INTEGER,
   f69 TEXT,
   f70 REAL,
@@ -4492,13 +4492,13 @@ SET abs_val_nullable := abs(null);
 
 
 -- Used in the following test.
-create proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;
+create proc ltor_proc_int_not_null(a int!, b int!, out c int!) begin end;
 create proc ltor_proc_int(a int, b int, out c int) begin end;
-create proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin set c := "text"; end;
+create proc ltor_proc_text_not_null(a text!, b text!, out c text!) begin set c := "text"; end;
 create proc ltor_proc_text(a text, b text, out c text) begin end;
-declare function ltor_func_int_not_null(a int not null, b int not null) int not null;
+declare function ltor_func_int_not_null(a int!, b int!) int!;
 declare function ltor_func_int(a int, b int) int;
-declare function ltor_func_text_not_null(a text not null, b text not null) text not null;
+declare function ltor_func_text_not_null(a text!, b text!) text!;
 declare function ltor_func_text(a text, b text) text;
 
 -- TEST: Arguments are always evaluated left-to-right (which is ensured by
@@ -4539,17 +4539,17 @@ begin
   let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4"));
 end;
 
-create proc f1(out x integer not null)
+create proc f1(out x int!)
 begin
   set x := 5;
 end;
 
-create proc f2(out x integer )
+create proc f2(out x int )
 begin
   set x := 5;
 end;
 
-create proc f3(y integer, out x integer )
+create proc f3(y int, out x int )
 begin
   set x := y;
 end;
@@ -4714,7 +4714,7 @@ end;
 
 -- used in the following test
 @attribute(cql:shared_fragment)
-create proc shared_conditional(x integer not null)
+create proc shared_conditional(x int!)
 begin
   if x == 1 then
     select x as x;
@@ -4785,7 +4785,7 @@ end;
 --
 -- 8 variable sites, only some of which are used
 -- + cql_multibind_var(&_rc_, _db_, _result_stmt, 8, _vpreds_1,
-create proc shared_conditional_user(x integer not null)
+create proc shared_conditional_user(x int!)
 begin
   with
   some_cte(id) as (select x),
@@ -4796,7 +4796,7 @@ end;
 -- used in the following test, this is silly fragment
 -- but it forces complex push and pop of variable state
 @attribute(cql:shared_fragment)
-create proc nested_shared_proc(x_ integer not null)
+create proc nested_shared_proc(x_ int!)
 begin
   if x_ <= 5 then
     with
@@ -4952,7 +4952,7 @@ end;
 
 -- used in the next test
 @attribute(cql:shared_fragment)
-create proc shared_frag_else_nothing(id_ integer)
+create proc shared_frag_else_nothing(id_ int)
 begin
   if id_ > 0 then
     select id_ as id1, 'x' as text1;
@@ -5005,8 +5005,8 @@ end;
 
 @attribute(cql:blob_storage)
 create table structured_storage(
-  id integer not null,
-  name text not null
+  id int!,
+  name text!
 );
 
 -- TEST: basic blob serialization case
@@ -5078,7 +5078,7 @@ declare const group big_constants(
 declare group var_group
 begin
   declare gr_cursor cursor like select 1 x, "2" y;
-  declare gr_integer integer;
+  declare gr_integer int;
   declare gr_blob_cursor cursor like structured_storage;
 end;
 
@@ -5153,7 +5153,7 @@ begin
   out union c;
 end;
 
-declare function external_cursor_func(x cursor) integer;
+declare function external_cursor_func(x cursor) int;
 
 -- TEST call a function that takes a generic cursor
 -- + cql_dynamic_cursor shape_storage_dyn = {
@@ -5211,7 +5211,7 @@ end;
 -- TEST: make sure the not null contract is renamed
 -- + void mutated_not_null(cql_string_ref _Nonnull _in__x) {
 -- + cql_contract_argument_notnull((void *)_in__x, 1);
-create proc mutated_not_null(x text not null)
+create proc mutated_not_null(x text!)
 begin
   set x := 'xyzzy';
 end;
@@ -5223,7 +5223,7 @@ declare select function no_check_select_fun no check text;
 declare select function no_check_select_table_valued_fun no check (t text);
 
 -- a proc that returns a value, we will use its shape below
-declare proc a_proc_we_need() (id integer, t text);
+declare proc a_proc_we_need() (id int, t text);
 
 -- TEST make sure we export everything we need including the recursive dependency
 -- +2 DECLARE PROC a_proc_we_need () (id INTEGER, t TEXT);
@@ -5255,7 +5255,7 @@ end;
 @attribute(cql:emit_setters)
 create proc simple_container_proc()
 begin
-  declare C cursor like (a integer, b integer not null, c object<simple_child_proc set>);
+  declare C cursor like (a int, b int!, c object<simple_child_proc set>);
   fetch C using
      1 a,
      2 b,
@@ -5284,7 +5284,7 @@ create table backing(
 
 @attribute(cql:backed_by=backing)
 create table backed(
-  flag bool not null,
+  flag bool!,
   id long,
   name text,
   age real,
@@ -5298,7 +5298,7 @@ create table backed(
 create table backed2(
   pk1 int,
   pk2 int,
-  flag bool not null,
+  flag bool!,
   id long,
   name text,
   extra int,
@@ -5491,7 +5491,7 @@ end;
 -- + FROM backed
 -- verify this is NOT a result set proc
 -- - sqlite3_stmt *_Nullable *_Nonnull _result_stmt
-create proc use_backed_table_select_expr(out x bool not null)
+create proc use_backed_table_select_expr(out x bool!)
 begin
   set x := (select flag from backed);
 end;
@@ -5514,7 +5514,7 @@ end;
 -- + SELECT rowid, flag, id, name, age, storage, pk
 -- + FROM backed
 @attribute(cql:private)
-create proc explain_query_plan_backed(out x bool not null)
+create proc explain_query_plan_backed(out x bool!)
 begin
   explain query plan select * from backed;
 end;
@@ -5531,7 +5531,7 @@ end;
 -- + bgetval(T.v, 3),
 -- + bgetval(T.v, 4),
 -- + bgetkey(T.k, 0)
-create proc use_backed_table_select_expr_value_offsets(out x bool not null)
+create proc use_backed_table_select_expr_value_offsets(out x bool!)
 begin
   set x := (select flag from backed);
 end;
@@ -5784,23 +5784,23 @@ end;
 -- +1   "SELECT 1");
 create proc my_proc_check_type()
 begin
-  let int_lit_foo := type_check(1 as int not null);
+  let int_lit_foo := type_check(1 as int!);
   let a_string := "abc";
-  let str_foo := type_check(a_string as text not null);
-  let int_cast_foo := type_check(cast(1 as integer<foo>) as integer<foo> not null);
-  let int_sql_val := (select type_check(1 as integer not null));
+  let str_foo := type_check(a_string as text!);
+  let int_cast_foo := type_check(cast(1 as int<foo>) as int<foo>!);
+  let int_sql_val := (select type_check(1 as int!));
 end;
 
-declare function expr_func_a(x integer) integer;
-declare procedure expr_proc_b(x integer);
+declare function expr_func_a(x int) int;
+declare procedure expr_proc_b(x int);
 
 -- TEST: top level expressions
 -- + (void)(1 + 2 + 3);
 1+2+3;
 
-declare function stew1 no check integer not null;
-declare function stew2 no check create text not null;
-declare function stew3 no check text not null;
+declare function stew1 no check int!;
+declare function stew2 no check create text!;
+declare function stew3 no check text!;
 
 @echo c, "int stew1(int x, ...);\n";
 @echo c, "cql_string_ref stew2(int x, ...);\n";
@@ -5830,7 +5830,7 @@ end;
 
 -- TEST: cql:alias_of attribution
 @attribute(cql:alias_of=some_native_func)
-declare function an_alias_func(x int not null) int not null;
+declare function an_alias_func(x int!) int!;
 
 -- TEST: create a table with a weird name and a weird column
 -- verify that echoing is re-emitting the escaped text
@@ -5970,6 +5970,6 @@ create proc end_proc() begin end;
 -- TEST: end marker -- this is the last test
 -- + cql_nullable_int32 end_marker = { .is_null = 1 };
 -- + cql_code cql_startup(sqlite3 *_Nonnull _db_)
-declare end_marker integer;
+declare end_marker int;
 --------------------------------------------------------------------
 

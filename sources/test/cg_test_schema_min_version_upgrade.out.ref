@@ -3,7 +3,7 @@
 -- DDL in procs will not count as declarations
 @SCHEMA_UPGRADE_SCRIPT;
 
--- schema crc -2270053074149662303
+-- schema crc -157692974292512665
 
 -- declare facet helpers-- 
 DECLARE facet_data TYPE OBJECT<facet_data>;
@@ -28,7 +28,7 @@ CREATE TABLE sqlite_master (
 @ATTRIBUTE(cql:deterministic)
 DECLARE SELECT FUNC my_func (x TEXT) TEXT;
 
-DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER NOT NULL;
+DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER!;
 
 @DECLARE_SCHEMA_REGION shared;
 
@@ -49,7 +49,7 @@ CREATE TABLE `quoted foo`(
 
 @begin_schema_region shared;
 CREATE TABLE added_table(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -71,7 +71,7 @@ CREATE TABLE `use g1`(
 
 @begin_schema_region extra;
 CREATE TABLE table2(
-  `an id` INTEGER NOT NULL REFERENCES `quoted foo` (`an id`),
+  `an id` INTEGER! REFERENCES `quoted foo` (`an id`),
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -86,22 +86,22 @@ CREATE TABLE other_table(
 @end_schema_region;
 
 CREATE TABLE table_to_recreate(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE;
 
 CREATE TABLE grouped_table_1(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_2(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_3(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   name TEXT
 ) @RECREATE(my_group);
 
@@ -146,21 +146,21 @@ CREATE TABLE migrated_from_recreate2(
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE conflict_clause_t(
-  `an id` INTEGER NOT NULL ON CONFLICT FAIL
+  `an id` INTEGER! ON CONFLICT FAIL
 );
 
 CREATE TABLE conflict_clause_pk(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   CONSTRAINT `pk 1` PRIMARY KEY (`an id`) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE expression_pk(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   CONSTRAINT `pk 1` PRIMARY KEY (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE expression_uk(
-  `an id` INTEGER NOT NULL,
+  `an id` INTEGER!,
   CONSTRAINT uk1 UNIQUE (`an id` / 2, `an id` % 2)
 );
 
@@ -199,7 +199,7 @@ CREATE TABLE unsub_recreated(
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE backing(
   k BLOB PRIMARY KEY,
-  v BLOB NOT NULL
+  v BLOB!
 );
 
 @ATTRIBUTE(cql:backed_by=backing)
@@ -211,7 +211,7 @@ CREATE TABLE backed(
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE recreate_backing(
   k BLOB PRIMARY KEY,
-  v BLOB NOT NULL
+  v BLOB!
 ) @RECREATE(foo);
 
 @ATTRIBUTE(cql:backed_by=recreate_backing)
@@ -928,7 +928,7 @@ END;
 CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
-  IF cql_facet_find(test_facets, facet) <> -6568751959899624240 THEN
+  IF cql_facet_find(test_facets, facet) <> -5163160265316741884 THEN
     DECLARE schema_version LONG INTEGER NOT NULL;
     -- dropping all views --
     CALL test_cql_drop_all_views();
@@ -947,7 +947,7 @@ BEGIN
       -- creating table added_table
 
       CREATE TABLE IF NOT EXISTS added_table(
-        `an id` INTEGER NOT NULL,
+        `an id` INTEGER!,
         name1 TEXT
       );
     END IF;
@@ -1057,11 +1057,11 @@ BEGIN
     CALL test_cql_create_all_triggers();
 
     CALL test_cql_set_facet_version('cql_schema_version', 7);
-    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -6568751959899624240);
+    CALL test_cql_set_facet_version('cql_schema_crc_no_virtual', -5163160265316741884);
   END IF;
   IF include_virtual_tables THEN
     CALL test_cql_recreate_virtual_tables();
-    CALL test_cql_set_facet_version('cql_schema_crc', -2270053074149662303);
+    CALL test_cql_set_facet_version('cql_schema_crc', -157692974292512665);
   END IF;
 END;
 
@@ -1118,7 +1118,7 @@ BEGIN
   -- fetch the last known schema crc, if it's different do the upgrade --
   CALL test_cql_get_facet_version('cql_schema_crc', schema_crc);
 
-  IF schema_crc <> -2270053074149662303 THEN
+  IF schema_crc <> -157692974292512665 THEN
     TRY
       CALL test_setup_facets();
       CALL test_perform_needed_upgrades(include_virtual_tables);

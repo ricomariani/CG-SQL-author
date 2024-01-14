@@ -6,14 +6,14 @@
  */
 
 -- TEST: query plan
--- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL NOT NULL;
--- + DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL NOT NULL;
--- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT NOT NULL, idx INTEGER NOT NULL) LONG_INT;
+-- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
+-- + DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL!;
+-- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT!, idx INTEGER!) LONG_INT;
 -- + DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT, b BLOB, r REAL);
 -- + @attribute(cql:deterministic)
--- + DECLARE SELECT FUNC bgetkey_type (x BLOB NOT NULL) LONG_INT NOT NULL;
+-- + DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG_INT!;
 -- + @attribute(cql:deterministic)
--- + DECLARE SELECT FUNC bgetval_type (x BLOB NOT NULL) LONG_INT NOT NULL;
+-- + DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG_INT!;
 -- + @attribute(cql:deterministic)
 -- + DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
 -- + @attribute(cql:deterministic)
@@ -26,7 +26,7 @@
 -- + DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
 -- + @attribute(cql:deterministic)
 -- + DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
--- + DECLARE SELECT FUNC stuff () INTEGER NOT NULL;
+-- + DECLARE SELECT FUNC stuff () INTEGER!;
 -- + CREATE PROC create_schema()
 -- + BEGIN
 -- +   call cql_create_udf_stub("is_declare_func_enabled");
@@ -97,7 +97,7 @@
 -- +     r REAL
 -- +   );
 -- +   CREATE TABLE C(
--- +     id INTEGER NOT NULL,
+-- +     id INTEGER!,
 -- +     name TEXT
 -- +   );
 -- +   CREATE TABLE select_virtual_table (
@@ -109,34 +109,34 @@
 -- +   @attribute(cql:backing_table)
 -- +   CREATE TABLE backing(
 -- +     k BLOB PRIMARY KEY,
--- +     v BLOB NOT NULL
+-- +     v BLOB!
 -- +   );
 -- +   CREATE INDEX backing_index ON backing (bgetkey_type(k));
 -- +   CREATE TABLE sql_temp(
--- +     id INT NOT NULL PRIMARY KEY,
--- +     sql TEXT NOT NULL
+-- +     id INT! PRIMARY KEY,
+-- +     sql TEXT!
 -- +   ) WITHOUT ROWID;
 -- +   CREATE TABLE plan_temp(
--- +     iselectid INT NOT NULL,
--- +     iorder INT NOT NULL,
--- +     ifrom INT NOT NULL,
--- +     zdetail TEXT NOT NULL,
--- +     sql_id INT NOT NULL,
+-- +     iselectid INT!,
+-- +     iorder INT!,
+-- +     ifrom INT!,
+-- +     zdetail TEXT!,
+-- +     sql_id INT!,
 -- +     FOREIGN KEY (sql_id) REFERENCES sql_temp(id)
 -- +   );
 -- +   CREATE TABLE no_table_scan(
--- +     table_name TEXT NOT NULL PRIMARY KEY
+-- +     table_name TEXT! PRIMARY KEY
 -- +   );
 -- +   CREATE TABLE table_scan_alert(
--- +     info TEXT NOT NULL
+-- +     info TEXT!
 -- +   );
 -- +   CREATE TABLE b_tree_alert(
--- +     info TEXT NOT NULL
+-- +     info TEXT!
 -- +   );
 -- +   CREATE TABLE ok_table_scan(
--- +     sql_id INT NOT NULL PRIMARY KEY,
--- +     proc_name TEXT NOT NULL,
--- +     table_names TEXT NOT NULL
+-- +     sql_id INT! PRIMARY KEY,
+-- +     proc_name TEXT!,
+-- +     table_names TEXT!
 -- +   ) WITHOUT ROWID;
 -- + END;
 --
@@ -159,7 +159,7 @@
 -- +   LET query_plan_trivial_object := trivial_object();
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
--- +   DECLARE stmt TEXT NOT NULL;
+-- +   DECLARE stmt TEXT!;
 -- +   SET stmt := "SELECT *\\n  FROM `table one`\\n  WHERE name = 'Nelly' AND id IN (SELECT id\\n  FROM t2\\n  WHERE id = 1\\nUNION\\nSELECT id\\n  FROM t3)\\n  ORDER BY name ASC";
 -- +   INSERT INTO sql_temp(id, sql) VALUES(1, stmt);
 -- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
@@ -211,7 +211,7 @@
 -- +   LET query_plan_trivial_object := trivial_object();
 -- +   LET query_plan_trivial_blob := trivial_blob();
 --
--- +   DECLARE stmt TEXT NOT NULL;
+-- +   DECLARE stmt TEXT!;
 -- +   SET stmt := "WITH\\n  I (id) AS (CALL ids_from_string('1')),\\n  E (id) AS (CALL ids_from_string('1'))\\nSELECT C.*\\n  FROM C\\n  WHERE C.id IN (SELECT *\\n  FROM I) AND C.id NOT IN (SELECT *\\n  FROM E)";
 -- +   INSERT INTO sql_temp(id, sql) VALUES(21, stmt);
 -- +   DECLARE C CURSOR FOR EXPLAIN QUERY PLAN
@@ -268,14 +268,14 @@
 -- + END;
 -- 
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC frag (v INTEGER NOT NULL)
+-- + CREATE PROC frag (v INTEGER!)
 -- + BEGIN
 -- + SELECT v AS val;
 -- + END;
 -- 
 -- + CREATE PROC populate_query_plan_40()
 --
--- + CREATE PROC populate_table_scan_alert_table(table_ text not null)
+-- + CREATE PROC populate_table_scan_alert_table(table_ text!)
 -- + BEGIN
 -- +   INSERT OR IGNORE INTO table_scan_alert
 -- +     SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp
@@ -291,7 +291,7 @@
 -- + CREATE PROC populate_b_tree_alert_table()
 -- + END;
 -- 
--- + CREATE PROC print_query_plan_graph(id_ integer not null)
+-- + CREATE PROC print_query_plan_graph(id_ int!)
 -- + BEGIN
 -- +   DECLARE C CURSOR FOR
 -- +   WITH RECURSIVE
@@ -316,7 +316,7 @@
 -- +   CALL printf("\"\n");
 -- + END;
 -- 
--- + CREATE PROC print_query_plan(sql_id integer not null)
+-- + CREATE PROC print_query_plan(sql_id int!)
 -- + BEGIN
 -- +   CALL printf("  {\n");
 -- +   CALL printf("   \"id\" : %d,\n", sql_id);
@@ -378,7 +378,7 @@ create view my_view_using_table_alias as select foo.*, bar.id id2, bar.rowid row
 declare function any_func() bool not null;
 declare select function is_declare_func_enabled() bool not null;
 declare select function is_declare_func_wall(id long integer) bool not null;
-declare select function array_num_at(array_object_ptr LONG NOT NULL, idx integer not null) long;
+declare select function array_num_at(array_object_ptr LONG!, idx int!) long;
 declare function blob_from_string(str text) create blob not null;
 declare timer_var int;
 declare label_var text;
@@ -523,7 +523,7 @@ begin
 end;
 
 create table C(
- id integer not null,
+ id int!,
  name text);
 
 @attribute(cql:shared_fragment)
@@ -547,7 +547,7 @@ BEGIN
   SELECT CAST(tok AS LONG) AS id FROM toks;
 END;
 
-CREATE PROC use_shared(inc_ text not null, exc_ text not null)
+CREATE PROC use_shared(inc_ text!, exc_ text!)
 begin
   WITH
   I(id) as (call ids_from_string(inc_)),
@@ -618,7 +618,7 @@ CREATE PROC frag_with_select_nothing() BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC frag(v integer not null) BEGIN
+CREATE PROC frag(v int!) BEGIN
   select v val;
 END;
 
@@ -717,7 +717,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-proc notnull_int_frag(v integer not null) BEGIN
+proc notnull_int_frag(v int!) BEGIN
   select v val;
 end;
 

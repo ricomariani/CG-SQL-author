@@ -79,7 +79,7 @@ begin
 end;
 
 -- TEST:  int! still works even though it isn't a macro
--- + DECLARE x_int INTEGER NOT NULL;
+-- + DECLARE x_int INTEGER!;
 var x_int int!;
 
 

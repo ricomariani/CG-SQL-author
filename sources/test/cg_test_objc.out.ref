@@ -199,10 +199,10 @@ static inline BOOL CGS_complex_return_get__bool(CGS_complex_return *resultSet, i
   return complex_return_get__bool(cResultSet, row) ? YES : NO;
 }
 
-static inline int32_t CGS_complex_return_get__integer(CGS_complex_return *resultSet, int32_t row)
+static inline int32_t CGS_complex_return_get__int(CGS_complex_return *resultSet, int32_t row)
 {
   complex_return_result_set_ref cResultSet = complex_return_from_CGS_complex_return(resultSet);
-  return complex_return_get__integer(cResultSet, row);
+  return complex_return_get__int(cResultSet, row);
 }
 
 static inline int64_t CGS_complex_return_get__longint(CGS_complex_return *resultSet, int32_t row)

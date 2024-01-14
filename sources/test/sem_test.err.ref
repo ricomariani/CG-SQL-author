@@ -372,7 +372,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0404: proced
 test/sem_test.sql:XXXX:1: error: in str : CQL0194: declared procedures must be top level 'yy'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER)
-test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER NOT NULL)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER!)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'decl1'
 test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'id'
@@ -1032,7 +1032,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_symbol'
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC incompatible_result_proc () (t TEXT)
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER NOT NULL)
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER!)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0189: procedure declarations/definitions do not match 'incompatible_result_proc'
 test/sem_test.sql:XXXX:1: error: in collate : CQL0241: COLLATE may only appear in the context of a SQL statement

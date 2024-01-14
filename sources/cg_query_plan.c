@@ -309,7 +309,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // The C encoded will be unescaped when it is compiled and the JSON goes directly to the output
   // so that we correctly generate a JSON fragment as a result of running this code.  The JSON
   // string has escaped any quotes etc. that were in the original SQL.
-  bprintf(&body, "DECLARE stmt TEXT NOT NULL;\n");
+  bprintf(&body, "DECLARE stmt TEXT!;\n");
   bprintf(&body, "SET stmt := %s;\n", c_str.ptr);
 
   bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
@@ -619,30 +619,30 @@ static void cg_qp_emit_create_schema_proc(charbuf *output) {
   bprintf(output,
     "%s",
     "  CREATE TABLE sql_temp(\n"
-    "    id INT NOT NULL PRIMARY KEY,\n"
-    "    sql TEXT NOT NULL\n"
+    "    id INT! PRIMARY KEY,\n"
+    "    sql TEXT!\n"
     "  ) WITHOUT ROWID;\n"
     "  CREATE TABLE plan_temp(\n"
-    "    iselectid INT NOT NULL,\n"
-    "    iorder INT NOT NULL,\n"
-    "    ifrom INT NOT NULL,\n"
-    "    zdetail TEXT NOT NULL,\n"
-    "    sql_id INT NOT NULL,\n"
+    "    iselectid INT!,\n"
+    "    iorder INT!,\n"
+    "    ifrom INT!,\n"
+    "    zdetail TEXT!,\n"
+    "    sql_id INT!,\n"
     "    FOREIGN KEY (sql_id) REFERENCES sql_temp(id)\n"
     "  );\n"
     "  CREATE TABLE no_table_scan(\n"
-    "    table_name TEXT NOT NULL PRIMARY KEY\n"
+    "    table_name TEXT! PRIMARY KEY\n"
     "  );\n"
     "  CREATE TABLE table_scan_alert(\n"
-    "    info TEXT NOT NULL\n"
+    "    info TEXT!\n"
     "  );\n"
     "  CREATE TABLE b_tree_alert(\n"
-    "    info TEXT NOT NULL\n"
+    "    info TEXT!\n"
     "  );\n"
     "  CREATE TABLE ok_table_scan(\n"
-    "    sql_id INT NOT NULL PRIMARY KEY,\n"
-    "    proc_name TEXT NOT NULL,\n"
-    "    table_names TEXT NOT NULL\n"
+    "    sql_id INT! PRIMARY KEY,\n"
+    "    proc_name TEXT!,\n"
+    "    table_names TEXT!\n"
     "  ) WITHOUT ROWID;\n"
     "END;\n"
     "\n"
@@ -658,7 +658,7 @@ static void emit_populate_tables_proc(charbuf *output) {
 static void emit_print_sql_statement_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_sql_statement(sql_id integer not null)\n"
+    "CREATE PROC print_sql_statement(sql_id int!)\n"
     "BEGIN\n"
     "  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;\n"
     "  FETCH C;\n"
@@ -671,7 +671,7 @@ static void emit_print_sql_statement_proc(charbuf *output) {
 static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC populate_table_scan_alert_table(table_ text not null)\n"
+    "CREATE PROC populate_table_scan_alert_table(table_ text!)\n"
     "BEGIN\n"
     "  INSERT OR IGNORE INTO table_scan_alert\n"
     "    SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp\n"
@@ -736,7 +736,7 @@ static void emit_print_query_violation_proc(charbuf *output) {
 static void emit_print_query_plan_stat_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_query_plan_stat(id_ integer not null)\n"
+    "CREATE PROC print_query_plan_stat(id_ int!)\n"
     "BEGIN\n"
     "  CALL printf(\"   \\\"stats\\\" : {\\n\");\n"
     "  DECLARE Ca CURSOR FOR\n"
@@ -808,7 +808,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
 static void emit_print_query_plan_graph_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_query_plan_graph(id_ integer not null)\n"
+    "CREATE PROC print_query_plan_graph(id_ int!)\n"
     "BEGIN\n"
     "  DECLARE C CURSOR FOR\n"
     "  WITH RECURSIVE\n"
@@ -838,7 +838,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
 
 static void emit_print_query_plan(charbuf *output) {
   bprintf(output,
-    "CREATE PROC print_query_plan(sql_id integer not null)\n"
+    "CREATE PROC print_query_plan(sql_id int!)\n"
     "BEGIN\n"
     "  CALL printf(\"  {\\n\");\n"
     "  CALL printf(\"   \\\"id\\\" : %%d,\\n\", sql_id);\n"
@@ -941,7 +941,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
     goto cleanup;
   }
 
-  bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT NOT NULL) using transaction;\n\n");
+  bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
 
   bprintf(&output_buf, 
     "proc trivial_object()\n"

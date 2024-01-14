@@ -3,7 +3,7 @@
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL;
+DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -22,7 +22,7 @@ DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL;
+DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -56,7 +56,7 @@ DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL;
+DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -86,7 +86,7 @@ DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR)
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NOT NULL;
+DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -105,7 +105,7 @@ DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NO
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL;
+DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -141,7 +141,7 @@ DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL,
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT;
+DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TEXT) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -169,7 +169,7 @@ DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT NOT NULL;
+DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -208,7 +208,7 @@ DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL;
+DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -227,7 +227,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL;
+DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -264,7 +264,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NUL
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL) TEXT;
+DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -293,7 +293,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT N
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT NULL) INTEGER NOT NULL;
+DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -317,7 +317,7 @@ DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, string TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL;
+DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -504,7 +504,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER NOT NULL,
+  id INTEGER!,
   rate LONG_INT @DELETE(5, deletor),
   rate_2 LONG_INT @DELETE(4),
   id2 INTEGER @CREATE(4),
@@ -802,7 +802,7 @@ CREATE TABLE t_column_type_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_attribute_changed(
-  id INTEGER NOT NULL
+  id INTEGER!
 );
 
   {create_table_stmt}: err
@@ -878,7 +878,7 @@ The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_changed(
   id INTEGER,
-  id2 INTEGER NOT NULL DEFAULT 2
+  id2 INTEGER! DEFAULT 2
 );
 
   {create_table_stmt}: err
@@ -906,7 +906,7 @@ The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_ok(
   id INTEGER,
-  id2 INTEGER NOT NULL DEFAULT 1
+  id2 INTEGER! DEFAULT 1
 );
 
   {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default } validated
@@ -933,7 +933,7 @@ CREATE TABLE t_column_default_value_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_present(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER,
   PRIMARY KEY (a, b)
 );
@@ -969,8 +969,8 @@ CREATE TABLE t_additional_attribute_present(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_mismatch(
-  a INTEGER NOT NULL,
-  b INTEGER NOT NULL,
+  a INTEGER!,
+  b INTEGER!,
   PRIMARY KEY (a)
 );
 
@@ -1021,7 +1021,7 @@ CREATE TABLE t_columns_removed(
 The statement ending at line XXXX
 
 CREATE TABLE t_attribute_added(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   UNIQUE (a)
 );
 
@@ -1047,7 +1047,7 @@ CREATE TABLE t_attribute_added(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER
 );
 
@@ -1073,7 +1073,7 @@ CREATE TABLE t_additional_column(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column_ok(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER @CREATE(2),
   c INTEGER @CREATE(6)
 );
@@ -1112,7 +1112,7 @@ CREATE TABLE t_additional_column_ok(
 The statement ending at line XXXX
 
 CREATE TEMP TABLE t_becomes_temp_table(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER
 );
 
@@ -1138,7 +1138,7 @@ CREATE TEMP TABLE t_becomes_temp_table(
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_ok(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER
 ) @CREATE(26);
 
@@ -1167,7 +1167,7 @@ CREATE TABLE t_new_table_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_no_annotation(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER
 );
 
@@ -1195,7 +1195,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table 
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_stale_annotation(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER
 ) @CREATE(2);
 
@@ -1226,7 +1226,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table 
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_create_and_delete(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER @CREATE(6) @DELETE(7)
 );
 
@@ -1258,7 +1258,7 @@ CREATE TABLE t_new_table_create_and_delete(
 The statement ending at line XXXX
 
 CREATE TABLE t_new_legit_column(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER @CREATE(6)
 );
 
@@ -1777,7 +1777,7 @@ END @DELETE(2);
 The statement ending at line XXXX
 
 CREATE TABLE t_removed_facet(
-  id INTEGER NOT NULL
+  id INTEGER!
 );
 
   {create_table_stmt}: t_removed_facet: { id: integer notnull } validated
@@ -2197,7 +2197,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE table_staying(
-  col1 INTEGER PRIMARY KEY NOT NULL
+  col1 INTEGER PRIMARY KEY!
 ) @RECREATE(my_recreate_group);
 
   {create_table_stmt}: table_staying: { col1: integer notnull primary_key } validated @recreate(my_recreate_group)
@@ -2486,7 +2486,7 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER NOT NULL ON CONFLICT FAIL
+  id INTEGER! ON CONFLICT FAIL
 );
 
   {create_table_stmt}: conflict_clause_t: { id: integer notnull } validated
@@ -2506,7 +2506,7 @@ CREATE TABLE conflict_clause_t(
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER NOT NULL,
+  id INTEGER!,
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
@@ -2663,8 +2663,8 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
-  id INTEGER NOT NULL PRIMARY KEY,
-  val TEXT NOT NULL
+  id INTEGER! PRIMARY KEY,
+  val TEXT!
 );
 
   {stmt_and_attr}: ok
@@ -2700,8 +2700,8 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE new_backed_table(
-  id INTEGER NOT NULL PRIMARY KEY,
-  val TEXT NOT NULL
+  id INTEGER! PRIMARY KEY,
+  val TEXT!
 );
 
   {stmt_and_attr}: ok
@@ -2806,7 +2806,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER NOT NULL,
+  id INTEGER!,
   rate LONG_INT @DELETE(5, deletor),
   rate_2 LONG_INT @DELETE(4),
   id2 INTEGER @CREATE(4),
@@ -3201,7 +3201,7 @@ The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_changed(
   id INTEGER,
-  id2 INTEGER NOT NULL DEFAULT 1
+  id2 INTEGER! DEFAULT 1
 );
 
 Incompatible declarations found
@@ -3235,7 +3235,7 @@ The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_ok(
   id INTEGER,
-  id2 INTEGER NOT NULL DEFAULT 1
+  id2 INTEGER! DEFAULT 1
 );
 
   {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default }
@@ -3262,7 +3262,7 @@ CREATE TABLE t_column_default_value_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_present(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER,
   PRIMARY KEY (a, b)
 );
@@ -3298,8 +3298,8 @@ CREATE TABLE t_additional_attribute_present(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_mismatch(
-  a INTEGER NOT NULL,
-  b INTEGER NOT NULL,
+  a INTEGER!,
+  b INTEGER!,
   PRIMARY KEY (a, b)
 );
 
@@ -3368,7 +3368,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0129: a column was re
 The statement ending at line XXXX
 
 CREATE TABLE t_attribute_added(
-  a INTEGER NOT NULL
+  a INTEGER!
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0134: table has a new non-column facet in the current schema 't_attribute_added'
@@ -3389,7 +3389,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0134: table has a new
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column(
-  a INTEGER NOT NULL
+  a INTEGER!
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0130: table has columns added without marking them @create 't_additional_column'
@@ -3410,7 +3410,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0130: table has columns ad
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column_ok(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER @CREATE(2)
 );
 
@@ -3439,7 +3439,7 @@ CREATE TABLE t_additional_column_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_becomes_temp_table(
-  a INTEGER NOT NULL,
+  a INTEGER!,
   b INTEGER
 );
 
@@ -3467,7 +3467,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0135: table crea
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_create_and_delete(
-  a INTEGER NOT NULL
+  a INTEGER!
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0131: table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
@@ -3488,7 +3488,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0131: table has newly adde
 The statement ending at line XXXX
 
 CREATE TABLE t_new_legit_column(
-  a INTEGER NOT NULL
+  a INTEGER!
 );
 
   {create_table_stmt}: t_new_legit_column: { a: integer notnull }
@@ -4071,7 +4071,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE t_removed_facet(
-  id INTEGER NOT NULL,
+  id INTEGER!,
   CONSTRAINT uk UNIQUE (id)
 );
 
@@ -4538,7 +4538,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE table_staying(
-  col1 INTEGER PRIMARY KEY NOT NULL
+  col1 INTEGER PRIMARY KEY!
 ) @RECREATE(my_recreate_group);
 
   {create_table_stmt}: table_staying: { col1: integer notnull primary_key } @recreate(my_recreate_group)
@@ -4899,7 +4899,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER NOT NULL ON CONFLICT FAIL
+  id INTEGER! ON CONFLICT FAIL
 );
 
   {create_table_stmt}: conflict_clause_t: { id: integer notnull }
@@ -4919,7 +4919,7 @@ CREATE TABLE conflict_clause_t(
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER NOT NULL,
+  id INTEGER!,
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
@@ -5057,7 +5057,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
-  guid INTEGER NOT NULL PRIMARY KEY,
+  guid INTEGER! PRIMARY KEY,
   gal TEXT
 );
 

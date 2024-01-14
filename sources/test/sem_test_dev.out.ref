@@ -3,7 +3,7 @@
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL;
+DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -22,7 +22,7 @@ DECLARE FUNC cql_partition_create () CREATE OBJECT<partitioning> NOT NULL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, value CURSOR) BOOL NOT NULL;
+DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning>!, key CURSOR, value CURSOR) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -56,7 +56,7 @@ DECLARE FUNC cql_partition_cursor (p OBJECT<partitioning> NOT NULL, key CURSOR, 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR) CREATE OBJECT NOT NULL;
+DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -86,7 +86,7 @@ DECLARE FUNC cql_extract_partition (p OBJECT<partitioning> NOT NULL, key CURSOR)
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NOT NULL;
+DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -105,7 +105,7 @@ DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary> NO
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL, key TEXT NOT NULL, value TEXT NOT NULL) BOOL NOT NULL;
+DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -141,7 +141,7 @@ DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary> NOT NULL,
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL, key TEXT) TEXT;
+DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TEXT) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -169,7 +169,7 @@ DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary> NOT NULL
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT NOT NULL;
+DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -208,7 +208,7 @@ DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL;
+DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -227,7 +227,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list> NOT NULL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL, value_ TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL;
+DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -264,7 +264,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list> NOT NUL
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, index_ INTEGER NOT NULL) TEXT;
+DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -293,7 +293,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list> NOT N
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT NULL) INTEGER NOT NULL;
+DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -317,7 +317,7 @@ DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list> NOT 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list> NOT NULL, string TEXT NOT NULL) OBJECT<cql_string_list> NOT NULL;
+DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok

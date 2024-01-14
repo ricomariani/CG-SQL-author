@@ -50,7 +50,7 @@ declare price_e real<euros>;
 -- + {create_table_stmt}: bar: { id: integer notnull, name: text, rate: longint }
 -- - error:
 create table bar(
-  id integer not null,
+  id int!,
   name text @create(2),
   rate LONG INT @create(2)
 );
@@ -332,7 +332,7 @@ declare real_result2 real;
 -- + {name simple_func2}: real notnull
 -- + {func_params_return}
 -- - error:
-declare function simple_func2(arg1 integer not null, arg2 integer not null, arg3 integer not null) real not null;
+declare function simple_func2(arg1 int!, arg2 int!, arg3 int!) real!;
 
 -- TEST: colon operator used with the right number of args does not report errors
 -- + {name simple_func2}
@@ -346,7 +346,7 @@ declare function simple_func2(arg1 integer not null, arg2 integer not null, arg3
 SET real_result2 := 2:simple_func2(3, 4);
 
 declare int_result int;
-declare function simple_func3(arg1 integer not null) int not null;
+declare function simple_func3(arg1 int!) int!;
 
 -- TEST: colon operator when only one arg exists
 -- + {name simple_func3}
@@ -1320,7 +1320,7 @@ create index index_10 on foo(id) where 'hi';
 -- + {create_table_stmt}: simple_pk_table: { id: integer notnull partial_pk }
 -- - error:
 create table simple_pk_table(
-  id integer not null,
+  id int!,
   PRIMARY KEY (id)
 );
 
@@ -1330,7 +1330,7 @@ create table simple_pk_table(
 -- * error: % name not found 'pk_col_not_exist'
 -- +1 error:
 create table baz(
-  id integer not null,
+  id int!,
   PRIMARY KEY (pk_col_not_exist)
 );
 
@@ -1339,7 +1339,7 @@ create table baz(
 -- * error: % more than one primary key in table 'baz'
 -- +1 error:
 create table baz(
-  id integer not null,
+  id int!,
   PRIMARY KEY (id),
   PRIMARY KEY (id)
 );
@@ -1349,7 +1349,7 @@ create table baz(
 -- + {name ak1}
 -- - error:
 create table simple_ak_table (
-  id integer not null,
+  id int!,
   CONSTRAINT ak1 UNIQUE (id)
 );
 
@@ -1357,7 +1357,7 @@ create table simple_ak_table (
 -- + {create_table_stmt}: simple_ak_table_2: { a: integer notnull, b: text, c: real, d: longint }
 -- - error:
 create table simple_ak_table_2 (
-  a integer not null,
+  a int!,
   b text,
   c real,
   d long int,
@@ -1370,7 +1370,7 @@ create table simple_ak_table_2 (
 -- + {create_table_stmt}: simple_ak_table_3: { a: integer notnull, b: text, c: real, d: longint }
 -- - error:
 create table simple_ak_table_3 (
-  a integer not null,
+  a int!,
   b text,
   c real,
   d long int,
@@ -1383,7 +1383,7 @@ create table simple_ak_table_3 (
 -- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_4 (
-  a integer not null,
+  a int!,
   b text,
   c real,
   UNIQUE (a, b),
@@ -1395,7 +1395,7 @@ create table simple_ak_table_4 (
 -- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_5 (
-  a integer not null,
+  a int!,
   b text,
   c real,
   d long int,
@@ -1408,7 +1408,7 @@ create table simple_ak_table_5 (
 -- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_6 (
-  a integer not null,
+  a int!,
   b text,
   c real,
   d long int,
@@ -1421,7 +1421,7 @@ create table simple_ak_table_6 (
 -- * error: % at least part of this unique key is redundant with previous unique keys
 -- +1 error:
 create table simple_ak_table_7 (
-  a integer not null,
+  a int!,
   b text,
   c real,
   d long int,
@@ -1483,7 +1483,7 @@ create table baz_dup_uk (
 -- * error: % duplicate constraint name in table 'pk1'
 -- +1 error:
 create table baz_dup_pk (
-  id integer not null,
+  id int!,
   CONSTRAINT pk1 PRIMARY KEY (id),
   CONSTRAINT pk1 PRIMARY KEY (id)
 );
@@ -1865,7 +1865,7 @@ declare proc bad_constants_nested_proc();
 -- * error: % cannot assign/copy possibly null expression to not null target 'default value'
 -- +1 error:
 create table bad_conversions(
-  data integer not null default const(NULL)
+  data int! default const(NULL)
 );
 
 -- TEST: try to use a lossy conversion in a const expr default value
@@ -1874,14 +1874,14 @@ create table bad_conversions(
 -- * error: % lossy conversion from type 'REAL' in 2.200000e+00
 -- +1 error:
 create table bad_conversions(
-  data integer not null default const(1 + 1.2)
+  data int! default const(1 + 1.2)
 );
 
 -- TEST: allowable conversion, the constant becomes real
--- + data REAL NOT NULL DEFAULT 1
+-- + data REAL! DEFAULT 1
 -- - error:
 create table good_conversions(
-  data real not null default const(1)
+  data real! default const(1)
 );
 
 -- TEST: TRUE constant
@@ -1915,7 +1915,7 @@ declare X, Y integer;
 
 -- TEST: make variables (X/Y are not null)
 -- - error:
-declare X_not_null integer not null;
+declare X_not_null int!;
 
 -- TEST: try to declare X again
 -- * error: % duplicate variable name in the same scope 'X'
@@ -2123,7 +2123,7 @@ end;
 -- + {assign}: result_code: integer notnull variable out
 -- + {name @RC}: @rc: integer notnull variable
 -- - error:
-create proc using_rc(out result_code integer not null)
+create proc using_rc(out result_code int!)
 begin
   set result_code := @rc;
 end;
@@ -2865,7 +2865,7 @@ select foo.id from foo;
 select foo.id from foo as T1;
 
 -- make a not null variable for the next test
-declare int_nn int not null;
+declare int_nn int!;
 
 -- TEST: bogus assignment
 -- + {assign}: err
@@ -3403,7 +3403,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull variable in }
 -- + {select_expr_list_con}: select: { A: integer variable was_set }
-create procedure with_wrong_flags(i integer not null)
+create procedure with_wrong_flags(i int!)
 begin
   if i then
     select i as A;
@@ -3417,7 +3417,7 @@ end;
 -- use the important fragment for the match, one is a variable so the tree is slightly different
 -- +2 {select_expr_list}: select: { A: integer notnull
 -- - error:
-create procedure with_ok_flags(i integer not null)
+create procedure with_ok_flags(i int!)
 begin
   if i then
     select i as A;
@@ -3431,7 +3431,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: select: { A: integer notnull }
 -- + {select_expr_list_con}: select: { B: integer notnull }
-create procedure with_bad_names(i integer not null)
+create procedure with_bad_names(i int!)
 begin
   if i then
     select 1 as A;
@@ -3445,7 +3445,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {stmt_list}: err
 -- + {select_expr_list_con}: select: { _anon: integer notnull }
-create procedure with_no_names(i integer not null)
+create procedure with_no_names(i int!)
 begin
   select 1;
 end;
@@ -3543,7 +3543,7 @@ end;
 -- TEST: Set up a not null int for the tested
 -- + {name my_int}: my_int: integer notnull variable
 -- - error:
-declare my_int int not null;
+declare my_int int!;
 
 -- TEST: my_int is not nullable, must be exact match in out parameter, ordinarily this would be compatible
 -- * error: % cannot assign/copy possibly null expression to not null target 'my_int'
@@ -3673,11 +3673,11 @@ select * from bar as T1 inner join foo as T2 using(id, name);
 
 -- {create_table_stmt}: payload1: { id: integer notnull, data1: integer notnull }
 -- - error:
-create table payload1 (id integer not null, data1 integer not null);
+create table payload1 (id int!, data1 int!);
 
 -- {create_table_stmt}: payload2: { id: integer notnull, data2: integer notnull }
 -- - error:
-create table payload2 (id integer not null, data2 integer not null);
+create table payload2 (id int!, data2 int!);
 
 -- TEST: all not null
 -- {select_stmt}: select: { id: integer notnull, data1: integer notnull, id: integer notnull, data2: integer notnull }
@@ -3840,7 +3840,7 @@ select last_insert_rowid(1);
 select * from foo limit last_insert_rowid();
 
 -- declare result for last_insert_rowid
-declare rowid_result long int not null;
+declare rowid_result long int!;
 
 -- TEST: set last_insert_rowid outside of select statement
 -- + {assign}: rowid_result: longint notnull variable
@@ -3871,7 +3871,7 @@ select changes(1);
 select * from foo limit changes();
 
 -- declare result for changes function
-declare changes_result int not null;
+declare changes_result int!;
 
 -- TEST: set changes outside of select statement
 -- + {assign}: changes_result: integer notnull variable
@@ -4213,7 +4213,7 @@ set X := cast(5.0 as text);
 -- + {type_check_expr}: integer notnull
 -- + {int 1}: integer notnull
 -- - error
-let int_lit_foo := type_check(1 as int not null);
+let int_lit_foo := type_check(1 as int!);
 
 -- TEST: correct check_type (types match) on str litteral
 -- + {let_stmt}: str_foo: text notnull variabl
@@ -4256,7 +4256,7 @@ set int_foo := type_check(1 as integer<foo> not null);
 -- + {type_check_expr}: err
 -- * error: % expressions of different kinds can't be mixed: 'bar' vs. '[none]'
 -- +1 error:
-set int_foo := type_check(cast(1 as integer<bar>) as integer not null);
+set int_foo := type_check(cast(1 as integer<bar>) as int!);
 
 -- TEST: correct check_type (not null mismatch)
 -- + {type_check_expr}: err
@@ -4277,7 +4277,7 @@ set int_foo := type_check(1 as integer<foo> not null @sensitive);
 -- + {type_check_expr}: integer notnull
 -- + {int 1}: integer notnull
 -- - error:
-let int_sql_val := (select type_check(1 as integer not null));
+let int_sql_val := (select type_check(1 as int!));
 
 -- enforce strict cast and verify
 @enforce_strict cast;
@@ -4337,9 +4337,9 @@ create table pk_test_2(
 );
 
 -- TEST: ensure that table factors are visible in order
-create table AA1(id1 int not null);
-create table BB2(id2 int not null);
-create table CC3(id3 int not null);
+create table AA1(id1 int!);
+create table BB2(id2 int!);
+create table CC3(id3 int!);
 
 -- - error:
 -- + {select_stmt}: select: { id1: integer notnull, id2: integer notnull, id3: integer }
@@ -4371,11 +4371,11 @@ declare proc decl2(id integer) using transaction;
 -- TEST: declare procedure with select result set
 -- - error:
 -- + declare_proc_stmt}: decl3: { A: integer notnull, B: bool } dml_proc
-declare proc decl3(id integer) ( A integer not null, B bool );
+declare proc decl3(id integer) ( A int!, B bool );
 
 -- TEST: try an arg bundle inside of a declared proc
 -- make sure the rewrite was accurate
--- + DECLARE PROC decl4 (x_A INTEGER NOT NULL, x_B BOOL);
+-- + DECLARE PROC decl4 (x_A INTEGER!, x_B BOOL);
 -- - error:
 declare proc decl4(x like decl3);
 
@@ -4399,7 +4399,7 @@ declare proc decl1(id integer);
 -- TEST: duplicate declaration, mismatch
 -- * error: in declare_proc_stmt % procedure declarations/definitions do not match 'decl1'
 -- + {declare_proc_stmt}: err
-declare proc decl1(id integer not null);
+declare proc decl1(id int!);
 
 -- TEST: bogus parameters
 -- * error: % duplicate parameter name 'id'
@@ -5411,7 +5411,7 @@ end;
 -- + {create_proc_stmt}: a_shared_frag: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
-create proc a_shared_frag(x integer not null, y integer not null)
+create proc a_shared_frag(x int!, y int!)
 begin
   select 1 x, 2 y, 3.0 z;
 end;
@@ -5574,7 +5574,7 @@ call a_shared_frag();
 -- + {create_proc_stmt}: shared_frag2: { x: integer notnull, y: integer notnull, z: real notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
-create proc shared_frag2(x integer not null, y integer not null)
+create proc shared_frag2(x int!, y int!)
 begin
   with source(*) LIKE a_shared_frag
   select * from source;
@@ -5818,7 +5818,7 @@ select * from some_cte;
 -- + {create_proc_stmt}: test_shared_fragment_with_CTEs: { x: integer notnull, y: text, z: longint } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
-create proc test_shared_fragment_with_CTEs(id_ integer not null)
+create proc test_shared_fragment_with_CTEs(id_ int!)
 begin
   with
     t1(id) as (select id from foo where id = id_ limit 20),
@@ -5830,7 +5830,7 @@ end;
 -- + {create_proc_stmt}: test_shared_fragment_without_CTEs: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
-create proc test_shared_fragment_without_CTEs(id_ integer not null)
+create proc test_shared_fragment_without_CTEs(id_ int!)
 begin
   select id, name, rate from bar where id = id_;
 end;
@@ -5969,27 +5969,27 @@ select T.*;
 select T.* from (select 1) as U;
 
 -- TEST: simple test for declare function
--- + DECLARE FUNC simple_func (arg1 integer not null) REAL not null;
+-- + DECLARE FUNC simple_func (arg1 INTEGER!) REAL!;
 -- + name simple_func}: real notnull
 -- + {params}: ok
 -- + {param}: arg1: integer notnull variable in
 -- - error:
-declare function simple_func(arg1 integer not null) real not null;
+declare function simple_func(arg1 int!) real!;
 
 -- TEST: error duplicate function
 -- * error: % duplicate function name 'simple_func'
 -- +1 error:
-declare function simple_func(arg1 integer) real not null;
+declare function simple_func(arg1 integer) real!;
 
 -- TEST: error declare proc conflicts with func
 -- * error: % proc name conflicts with func name 'simple_func'
 -- +1 error:
-declare proc simple_func(arg1 integer not null);
+declare proc simple_func(arg1 int!);
 
 -- TEST: error declare proc conflicts with func
 -- * error: % proc name conflicts with func name 'simple_func'
 -- +1 error:
-create proc simple_func(arg1 integer not null)
+create proc simple_func(arg1 int!)
 begin
   select 1;
 end;
@@ -6566,7 +6566,7 @@ select name from hides_id_not_name;
 -- * error: % a procedure can appear in only one annotation 'creator'
 -- +1 error:
 create table migrate_test(
-  id integer not null,
+  id int!,
   id2 integer @create(4, creator),
   id3 integer @create(4, creator)
 );
@@ -6594,7 +6594,7 @@ create table migrate_annotions_broken(
 -- +1 error:
 create table migrate_annotions_broken_not_null_create(
   col1 integer,
-  col2 integer not null @create(3)
+  col2 int! @create(3)
 );
 
 -- TEST: create a table with @delete annotations on a not null column
@@ -6602,7 +6602,7 @@ create table migrate_annotions_broken_not_null_create(
 -- +1 error:
 create table migrate_annotions_broken_not_null_delete(
   col1 integer,
-  col2 integer not null @delete(3)
+  col2 int! @delete(3)
 );
 
 -- TEST: create a table with @delete on earlier version than create
@@ -6763,7 +6763,7 @@ create table t_col_early_delete (
 -- + {col_def}: id: integer notnull has_default deleted @delete(2)
 -- - error:
 create table t_col_delete_notnull (
-  id integer not null DEFAULT 8675309 @delete(2)
+  id int! DEFAULT 8675309 @delete(2)
 );
 
 -- TEST: negative default value
@@ -6774,7 +6774,7 @@ create table t_col_delete_notnull (
 -- + {int 1}
 -- - error:
 create table neg_default (
-  id integer not null default -1 @create(2)
+  id int! default -1 @create(2)
 );
 
 -- TEST: alter a table, adding a nullable column
@@ -6782,7 +6782,7 @@ create table neg_default (
 -- {name bar}: bar: { id: integer notnull, name: text, rate: longint }
 -- {col_def}: name: text
 -- - error:
-alter table neg_default add column id integer not null default -1;
+alter table neg_default add column id int! default -1;
 
 -- TEST: try to validate previous schema in a proc
 -- + {create_proc_stmt}: err
@@ -6941,7 +6941,7 @@ drop index if exists I_dont_see_no_steekin_index;
 -- * error: % a column attribute was specified twice on the same column
 -- +1 error:
 create table two_not_null(
-  id integer not null unique not null
+  id int! unique not null
 );
 
 -- TEST: specify incompatible constraints
@@ -7238,7 +7238,7 @@ fetch QQ from call not_out_cursor_proc();
 -- +1 error:
 create proc out_cursor_proc_not_shape_storage()
 begin
-  declare a, b integer not null;
+  declare a, b int!;
   declare C cursor for select 1 A, 2 B;
   fetch C into a, b;
   out C;
@@ -7252,7 +7252,7 @@ end;
 -- +4 error:
 create proc out_cursor_proc_incompat_results()
 begin
-  declare a, b integer not null;
+  declare a, b int!;
   declare C cursor for select 1 A, 2 B;
   declare D cursor for select 1 A, 2 C;
   fetch C;
@@ -7268,7 +7268,7 @@ end;
 -- +1 error:
 create proc out_cursor_proc_mixed_cursor_select()
 begin
-  declare a, b integer not null;
+  declare a, b int!;
   declare C cursor for select 1 A, 2 B;
   fetch C;
   out C;
@@ -7282,7 +7282,7 @@ end;
 -- +1 error:
 create proc out_cursor_proc_mixed_cursor_select_select_first()
 begin
-  declare a, b integer not null;
+  declare a, b int!;
   declare C cursor for select 1 A, 2 B;
   fetch C;
   select 1 A, 2 B;
@@ -7296,7 +7296,7 @@ end;
 -- +1 error:
 create proc out_cursor_proc_mixed_cursor_select_then_union()
 begin
-  declare a, b integer not null;
+  declare a, b int!;
   declare C cursor for select 1 A, 2 B;
   fetch C;
   select 1 A, 2 B;
@@ -7496,7 +7496,7 @@ set an_int := proc2(1);
 set an_int := (select proc_with_single_output(1, an_int, an_int));
 
 -- a helper proc that is for sure using dml
-create proc dml_func(out a integer not null)
+create proc dml_func(out a int!)
 begin
  set a := (select 1);
 end;
@@ -7505,7 +7505,7 @@ end;
 -- - error:
 -- + {create_proc_stmt}: ok dml_proc
 -- + {assign}: a: integer notnull variable out
-create proc should_be_dml(out a integer not null)
+create proc should_be_dml(out a int!)
 begin
   set a := dml_func();
 end;
@@ -7963,7 +7963,7 @@ end;
 create table misc_attr_table
 (
   @attribute(bar = baz)
-  id integer not null
+  id int!
 );
 
 -- TEST: complex index (with expression)
@@ -7977,7 +7977,7 @@ create unique index if not exists my_unique_index on bar(id/2 asc, name desc, ra
 -- * error: % columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
 -- +1 error:
 create table ref_bar(
- id integer not null references bar(id) -- index is on id/2
+ id int! references bar(id) -- index is on id/2
 );
 
 -- TEST: try to update a table that does not exist
@@ -8172,7 +8172,7 @@ insert into bar select not 'x';
 -- + {declare_select_func_stmt}: real notnull select_func
 -- + {param_detail}: id: integer variable in
 -- - error:
-declare select func SqlUserFunc(id integer) real not null;
+declare select func SqlUserFunc(id integer) real!;
 
 -- TEST: now try to use the user function in a select statement
 -- + SELECT SqlUserFunc(1);
@@ -8233,7 +8233,7 @@ declare select func foo(x integer, x integer) integer;
 
 -- TEST: create a cursor and fetch from arguments
 -- AST rewritten
--- + CREATE PROC arg_fetcher (arg1 TEXT NOT NULL, arg2 INTEGER NOT NULL, arg3 REAL NOT NULL)
+-- + CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INTEGER!, arg3 REAL!)
 -- + FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
 -- + {fetch_values_stmt}: ok
 -- + {name_columns_values}
@@ -8252,7 +8252,7 @@ declare select func foo(x integer, x integer) integer;
 -- + {dot}: arg2: integer notnull variable in
 -- + {insert_list}
 -- + {dot}: arg3: real notnull variable in
-create proc arg_fetcher(arg1 text not null, arg2 integer not null, arg3 real not null)
+create proc arg_fetcher(arg1 text not null, arg2 int!, arg3 real!)
 begin
   declare curs cursor like select 'x' A, 1 B, 3.5 C;
   fetch curs from arguments;
@@ -8260,7 +8260,7 @@ end;
 
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
--- + CREATE PROC fetch_bar (extra INTEGER, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT)
+-- + CREATE PROC fetch_bar (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
 -- + FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
 -- + {create_proc_stmt}: ok
 -- - error:
@@ -8271,14 +8271,14 @@ begin
 end;
 
 -- TEST: scoped like arguments
--- + CREATE PROC qualified_like (x_id INTEGER NOT NULL, x_name TEXT, x_rate LONG_INT, y_id INTEGER NOT NULL, y_name TEXT, y_rate LONG_INT)
+-- + CREATE PROC qualified_like (x_id INTEGER!, x_name TEXT, x_rate LONG_INT, y_id INTEGER!, y_name TEXT, y_rate LONG_INT)
 create proc qualified_like(x like bar, y like bar)
 begin
 end;
 
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
--- + CREATE PROC insert_bar (extra INTEGER, id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT)
+-- + CREATE PROC insert_bar (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
 -- + INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 -- + {create_proc_stmt}: ok
 -- - error:
@@ -8292,7 +8292,7 @@ end;
 -- + INSERT INTO bar(id, name, rate) VALUES(id, name_, rate);
 -- + {create_proc_stmt}: ok
 -- - error:
-create proc insert_bar_explicit(extra integer, id integer not null, name_ text, rate long integer)
+create proc insert_bar_explicit(extra integer, id int!, name_ text, rate long integer)
 begin
   insert into bar from arguments(like bar);
 end;
@@ -8302,7 +8302,7 @@ end;
 -- + INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
 -- + {create_proc_stmt}: ok
 -- - error:
-create proc insert_bar_locals(extra integer, id integer not null, name_ text, rate long integer)
+create proc insert_bar_locals(extra integer, id int!, name_ text, rate long integer)
 begin
   insert into bar from locals(like bar);
 end;
@@ -8312,7 +8312,7 @@ end;
 -- + {create_proc_stmt}: err
 -- * error: % expanding FROM ARGUMENTS, there is no argument matching 'name'
 -- +1 error:
-create proc insert_bar_missing(extra integer, id integer not null)
+create proc insert_bar_missing(extra integer, id int!)
 begin
   insert into bar from arguments(like bar);
 end;
@@ -8354,7 +8354,7 @@ end;
 -- +1 {name name}: name: text variable in
 -- +1 {name rate}: rate: longint variable in
 -- - error:
-create proc bar_auto_inserter(id integer not null, name text, rate LONG INT)
+create proc bar_auto_inserter(id int!, name text, rate LONG INT)
 begin
  insert into bar from arguments;
 end;
@@ -8368,7 +8368,7 @@ end;
 -- +1 {name name}: name: text variable in
 -- +1 {name rate}: rate: longint variable in
 -- - error:
-create proc bar_auto_inserter_mininal(id integer not null, name text, rate LONG INT)
+create proc bar_auto_inserter_mininal(id int!, name text, rate LONG INT)
 begin
  insert into bar(id) from arguments;
 end;
@@ -8377,7 +8377,7 @@ end;
 -- + INSERT INTO bar() FROM ARGUMENTS
 -- + {insert_stmt}: err
 -- * error: % FROM [shape] is redundant if column list is empty
-create proc bar_auto_inserter_no_columns(id integer not null, name text, rate LONG INT)
+create proc bar_auto_inserter_no_columns(id int!, name text, rate LONG INT)
 begin
  insert into bar() from arguments @dummy_seed(1);
 end;
@@ -8393,7 +8393,7 @@ end;
 
 -- TEST: rewrite proc arguments using the LIKE table form
 -- - error:
--- + CREATE PROC rewritten_like_args (id_ INTEGER NOT NULL, name_ TEXT, rate_ LONG_INT)
+-- + CREATE PROC rewritten_like_args (id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
 -- + INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 -- + {create_proc_stmt}: ok dml_proc
 -- + {param}: id_: integer notnull variable in
@@ -8444,7 +8444,7 @@ create table args2(
 -- TEST: this procedure uses two tables for its args, the trick here is that both tables
 --       have the id_ column;  we should only emit it once
 -- note that id_ was skipped the second time
--- + CREATE PROC two_arg_sources (id_ INTEGER NOT NULL, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
+-- + CREATE PROC two_arg_sources (id_ INTEGER!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
 -- {create_proc_stmt): ok
 -- - error:
 create proc two_arg_sources(like args1, like args2)
@@ -8452,7 +8452,7 @@ begin
 end;
 
 -- TEST: test the case where 2nd and subsequent like forms do nothing
--- + CREATE PROC two_arg_sources_fully_redundant (id_ INTEGER NOT NULL, name_ TEXT, data_ BLOB)
+-- + CREATE PROC two_arg_sources_fully_redundant (id_ INTEGER!, name_ TEXT, data_ BLOB)
 -- {create_proc_stmt): ok
 -- - error:
 create proc two_arg_sources_fully_redundant(like args1, like args1, like args1)
@@ -8461,7 +8461,7 @@ end;
 
 create view ViewShape as select TRUE a, 2.5 b, 'xyz' c;
 
--- + CREATE PROC like_a_view (a_ BOOL NOT NULL, b_ REAL NOT NULL, c_ TEXT NOT NULL)
+-- + CREATE PROC like_a_view (a_ BOOL!, b_ REAL!, c_ TEXT!)
 -- +   SELECT *
 -- +     FROM ViewShape AS v
 -- +   WHERE v.a = a_ AND v.b = b_ AND v.c > c_;
@@ -9315,14 +9315,14 @@ set _sens := (select id from with_sensitive group by info having info = 1);
 insert into without_sensitive select name from with_sensitive;
 
 create table a (
-  key_ int not null primary key,
-  sort_key int not null
+  key_ int! primary key,
+  sort_key int!
 );
 
 create table b (
-  key_ int not null primary key,
-  a_key_ int not null,
-  sort_key int not null
+  key_ int! primary key,
+  a_key_ int!,
+  sort_key int!
 );
 
 -- TEST: compound select ordered by name
@@ -9433,7 +9433,7 @@ call decl1(_sens);
 
 declare proc sens_proc(out foo integer @sensitive);
 declare proc non_sens_proc(out foo integer);
-declare proc non_sens_proc_nonnull(out foo integer not null);
+declare proc non_sens_proc_nonnull(out foo int!);
 
 -- TEST: try to call a proc with a sensitive out parameter
 -- * error: % cannot assign/copy sensitive expression to non-sensitive target 'X'
@@ -9569,10 +9569,10 @@ begin
 end;
 
 -- TEST: match a proc that was previously created
--- + DECLARE PROC out_cursor_proc () OUT (A INTEGER NOT NULL, B INTEGER NOT NULL) USING TRANSACTION;
+-- + DECLARE PROC out_cursor_proc () OUT (A INTEGER!, B INTEGER!) USING TRANSACTION;
 -- + {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
 -- - error:
-declare proc out_cursor_proc() OUT (A int not null, B int not null) using transaction;
+declare proc out_cursor_proc() OUT (A int!, B int!) using transaction;
 
 -- TEST: declare the proc first then create it
 -- + CREATE PROC decl1 (id INTEGER)
@@ -10844,8 +10844,8 @@ create table recreatable_reference_6(
 -- - {pk_def}: err
 -- +1 error:
 CREATE TABLE early_out_on_errs(
-  result_index INTEGER NOT NULL,
-  query TEXT NOT NULL,
+  result_index INTEGER!,
+  query TEXT!,
   FOREIGN KEY (query) REFERENCES table_not_found(q),
   PRIMARY KEY (garbonzo)
 ) @RECREATE;
@@ -11352,7 +11352,7 @@ select replace('a', 0, 'c');
 -- +1 error:
 select replace('a', 'b', 0);
 
--- TEST: The replace function has a TEXT NOT NULL result type if ALL of its
+-- TEST: The replace function has a TEXT! result type if ALL of its
 -- arguments are nonnull.
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {call}: text notnull
@@ -11524,16 +11524,16 @@ on conflict(id) do update set name = excluded.name, rate = id+1;
 insert into foo default values on conflict do nothing;
 
 -- TEST declare a value fetcher that doesn't use DML
--- + DECLARE PROC val_fetch (seed INTEGER NOT NULL) OUT (id TEXT);
+-- + DECLARE PROC val_fetch (seed INTEGER!) OUT (id TEXT);
 -- + {declare_proc_stmt}: val_fetch: { id: text } uses_out
 -- - dml_proc
 -- - USING TRANSACTION
-DECLARE PROC val_fetch (seed INTEGER NOT NULL) OUT (id TEXT);
+DECLARE PROC val_fetch (seed INTEGER!) OUT (id TEXT);
 
 -- TEST declare a value fetcher that does use DML
--- + DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTION;
+-- + DECLARE PROC val_fetch_dml (seed INTEGER!) OUT (id TEXT) USING TRANSACTION;
 -- + {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
-DECLARE PROC val_fetch_dml (seed INTEGER NOT NULL) OUT (id TEXT) USING TRANSACTION;
+DECLARE PROC val_fetch_dml (seed INTEGER!) OUT (id TEXT) USING TRANSACTION;
 
 -- TEST: declare a valid root deployable region
 -- + {declare_deployable_region_stmt}: root_deployable_region: region deployable
@@ -12374,7 +12374,7 @@ select total(info) as t from with_sensitive;
 -- This is all sugar
 -- + INSERT INTO referenceable(a, b, c, d, e) VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- - error:
-create proc insert_using_args_with_dummy(x integer not null, y real not null)
+create proc insert_using_args_with_dummy(x int!, y real!)
 begin
   insert into referenceable(a, b) from arguments @dummy_seed(1) @dummy_nullables;
 end;
@@ -12383,7 +12383,7 @@ end;
 -- This is all sugar
 -- + FETCH C(a, b, c, d, e) FROM VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 -- - error:
-create proc fetch_using_args_with_dummy(x integer not null, y real not null)
+create proc fetch_using_args_with_dummy(x int!, y real!)
 begin
   declare C cursor like referenceable;
   fetch C(a,b) from arguments @dummy_seed(1) @dummy_nullables;
@@ -12636,7 +12636,7 @@ declare proc incompatible_result_proc () (t text);
 -- TEST: this is compatible with the above declaration, it won't be if SENSITIVE is not preserved.
 -- + Incompatible declarations found
 -- * error: in declare_proc_stmt : DECLARE PROC incompatible_result_proc () (t TEXT)
--- * error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER NOT NULL)
+-- * error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER!)
 -- + The above must be identical.
 -- * error: % procedure declarations/definitions do not match 'incompatible_result_proc'
 -- + {create_proc_stmt}: err
@@ -12766,7 +12766,7 @@ select nullif(name, 'a') as n from with_sensitive;
 -- + {declare_select_func_stmt}: err
 -- * error: % select function does not require a declaration, it is a CQL built-in 'nullif'
 -- +1 error:
-declare select function nullif(value INT, defaultValue int not null) int;
+declare select function nullif(value INT, defaultValue int!) int;
 
 -- TEST: test upper with sensitive value
 -- + {select_stmt}: select: { _anon: text sensitive }
@@ -13425,7 +13425,7 @@ begin
 end;
 
 -- a type shape we will use for making args and cursors
-declare proc shape() (x integer not null, y text not null);
+declare proc shape() (x int!, y text not null);
 
 -- just one column of the type, we'll use this to call with a slice of the cursor
 declare proc small_shape() (y text not null);
@@ -13489,7 +13489,7 @@ begin
    call shape_y_only(from C like not_a_real_shape);
 end;
 
-declare proc lotsa_ints(a integer not null, b integer not null, c integer not null, d integer not null);
+declare proc lotsa_ints(a int!, b int!, c int!, d int!);
 
 -- TEST: try inserting arguments into the middle of the arg list
 -- + CALL lotsa_ints(C.x, C.y, 1, 2);
@@ -13514,7 +13514,7 @@ end;
 -- +  CALL lotsa_ints(1, 2, x, y);
 -- +  CALL lotsa_ints(x, y, x, y);
 -- - error:
-create proc arg_rewrite_simple(x integer not null, y integer not null)
+create proc arg_rewrite_simple(x int!, y int!)
 begin
    call lotsa_ints(from arguments, 1, 2);
    call lotsa_ints(1, from arguments, 2);
@@ -13543,7 +13543,7 @@ call lotsa_ints(from arguments, 1, 2);
 -- +  CALL lotsa_ints(1, 2, 3, y);
 -- +  CALL lotsa_ints(y, y, y, y);
 -- - error:
-create proc arg_rewrite_with_like(x integer not null, y integer not null)
+create proc arg_rewrite_with_like(x int!, y int!)
 begin
    call lotsa_ints(from arguments like small_shape, 1, 2, 3);
    call lotsa_ints(1, from arguments like small_shape, 2, 3);
@@ -13564,7 +13564,7 @@ end;
 -- +  CALL lotsa_ints(1, 2, 3, y_);
 -- +  CALL lotsa_ints(y_, y_, y_, y_);
 -- - error:
-create proc arg_rewrite_with_like_with_underscore(x integer not null, y_ integer not null)
+create proc arg_rewrite_with_like_with_underscore(x int!, y_ int!)
 begin
    call lotsa_ints(from arguments like small_shape, 1, 2, 3);
    call lotsa_ints(1, from arguments like small_shape, 2, 3);
@@ -13585,7 +13585,7 @@ end;
 -- +  CALL lotsa_ints(1, 2, x_, y_);
 -- +  CALL lotsa_ints(x_, y_, x_, y_);
 -- - error:
-create proc arg_rewrite_with_like_many_cols_with_underscore(x_ integer not null, y_ integer not null)
+create proc arg_rewrite_with_like_many_cols_with_underscore(x_ int!, y_ int!)
 begin
    call lotsa_ints(from arguments like shape, 1, 2);
    call lotsa_ints(1, from arguments like shape, 2);
@@ -13615,14 +13615,14 @@ begin
 end;
 
 -- this procedure ends with an out arg, can be called as a function
-declare proc funclike(like shape, out z integer not null);
+declare proc funclike(like shape, out z int!);
 
 -- TEST: use argument expansion in a function call context
 -- This is strictly a rewrite
--- + CREATE PROC arg_caller (x_ INTEGER NOT NULL, y_ TEXT NOT NULL, OUT z INTEGER NOT NULL)
+-- + CREATE PROC arg_caller (x_ INTEGER!, y_ TEXT!, OUT z INTEGER!)
 -- + SET z := funclike(x_, y_);
 -- - error:
-create proc arg_caller(like shape, out z integer not null)
+create proc arg_caller(like shape, out z int!)
 begin
    set z := funclike(from arguments like shape);
 end;
@@ -13635,7 +13635,7 @@ end;
 -- + {name not_a_shape}: err
 -- * error: % must be a cursor, proc, table, or view 'not_a_shape'
 -- +1 error:
-create proc arg_caller_bogus_shape(like shape, out z integer not null)
+create proc arg_caller_bogus_shape(like shape, out z int!)
 begin
    set z := funclike(from arguments like not_a_shape);
 end;
@@ -13717,7 +13717,7 @@ set a_string := cql_cursor_diff_val(an_int, an_int2, 1);
 -- +1 error:
 create proc cql_cursor_diff_col_without_cursor_arg()
 begin
-  declare x integer not null;
+  declare x int!;
   declare y text not null;
   declare c1 cursor for select 1 x, 'y' y;
   declare c2 cursor for select 1 x, 'y' y;
@@ -14000,7 +14000,7 @@ end;
 create proc print_call_cql_not_fetch_cursor_format()
 begin
   declare c cursor for select 1;
-  declare x integer not null;
+  declare x int!;
   fetch C into x; -- tricky, fetching but not with storage
   set a_string := cql_cursor_format(c);
 end;
@@ -14189,7 +14189,7 @@ set an_long := cql_get_blob_size(an_int);
 -- +1 error:
 set an_long := (select cql_get_blob_size(an_int));
 
-declare proc some_proc(id integer, t text, t1 text not null, b blob, out x integer not null);
+declare proc some_proc(id integer, t text, t1 text not null, b blob, out x int!);
 
 -- TEST: make a cursor using the arguments of a procedure as the shape
 -- + DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
@@ -14198,17 +14198,17 @@ declare proc some_proc(id integer, t text, t1 text not null, b blob, out x integ
 declare Q cursor like some_proc arguments;
 
 -- TEST: make a procedure using a declared shape (rewrite test)
--- + CREATE PROC some_proc_proxy (id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL)
+-- + CREATE PROC some_proc_proxy (id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!)
 -- - error:
 create proc some_proc_proxy(like some_proc arguments)
 begin
    call some_proc(from arguments);
 end;
 
-declare proc some_proc2(inout id integer, t text, t1 text not null, b blob, out x integer not null);
+declare proc some_proc2(inout id integer, t text, t1 text not null, b blob, out x int!);
 
 -- TEST: make a procedure using a declared shape (rewrite test)
--- + CREATE PROC some_proc2_proxy (INOUT id INTEGER, t TEXT, t1 TEXT NOT NULL, b BLOB, OUT x INTEGER NOT NULL)
+-- + CREATE PROC some_proc2_proxy (INOUT id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!)
 -- - error:
 create proc some_proc2_proxy(like some_proc2 arguments)
 begin
@@ -14554,7 +14554,7 @@ begin
 end;
 
 -- TEST: ensure that the type kind is preserved from an arg bundle
--- + CREATE PROC enum_in_bundle (b_x INTEGER<integer_things> NOT NULL)
+-- + CREATE PROC enum_in_bundle (b_x INTEGER<integer_things>!)
 -- proof that the cursor fields had the right type when extracted
 -- + {name u}: u: integer<integer_things> notnull variable
 -- proof that the b_x arg has the right type
@@ -14569,7 +14569,7 @@ end;
 
 -- TEST: verify typed names preserve kind
 -- verify the rewrite include the enum type
--- + DECLARE PROC shape_result_test () (x INTEGER<integer_things> NOT NULL);
+-- + DECLARE PROC shape_result_test () (x INTEGER<integer_things>!);
 declare proc shape_result_test() (like test_shape);
 
 -- TEST: create an integer enum exact copy is OK!
@@ -15116,7 +15116,7 @@ declare redundant_sensitive my_type @sensitive;
 
 -- TEST: ok to add not null, it's not there already
 -- verify the rewrite and also the type info
--- + DECLARE adding_notnull TEXT @SENSITIVE NOT NULL;
+-- + DECLARE adding_notnull TEXT @SENSITIVE!;
 -- + {declare_vars_type}: text notnull sensitive
 -- + {name_list}: adding_notnull: text notnull variable init_required sensitive
 -- - error:
@@ -15200,7 +15200,7 @@ begin
 end;
 
 -- TEST: declare a sensitive and not null type
--- + DECLARE my_type_sens_not TYPE TEXT NOT NULL @SENSITIVE;
+-- + DECLARE my_type_sens_not TYPE TEXT! @SENSITIVE;
 -- - error:
 declare my_type_sens_not type text not null @sensitive;
 
@@ -15267,7 +15267,7 @@ begin
 end;
 
 -- TEST: declared type in column definition
--- + id TEXT @SENSITIVE NOT NULL
+-- + id TEXT @SENSITIVE!
 -- + {create_table_stmt}: t: { id: text notnull sensitive }
 -- + {col_def}: id: text notnull sensitive
 -- + {col_def_type_attrs}: ok
@@ -15333,16 +15333,16 @@ declare func decl_type_func_err (arg1 integer) bogus_type;
 
 create table to_copy(
   f1 integer,
-  f2 integer not null,
-  f3 integer not null @sensitive,
+  f2 int!,
+  f3 int! @sensitive,
   f4 integer @sensitive
 );
 
 -- TEST: ensure all attributes correctly copied
 -- + CREATE TABLE the_copy(
 -- + f1 INTEGER,
--- + f2 INTEGER NOT NULL,
--- + f3 INTEGER @SENSITIVE NOT NULL,
+-- + f2 INTEGER!,
+-- + f3 INTEGER @SENSITIVE!,
 -- + f4 INTEGER @SENSITIVE
 -- - error:
 create table the_copy(
@@ -15350,19 +15350,19 @@ create table the_copy(
 );
 
 -- TEST: ensure proc arguments are rewritten correctly
--- + CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- + CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE)
 -- - error:
 create proc uses_complex_table_attrs(like to_copy)
 begin
 end;
 
 -- TEST: ensure proc arguments are rewritten correctly
--- + DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- + DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE)
 -- - error:
 declare proc uses_complex_table_attrs(like to_copy);
 
 -- TEST: ensure func arguments are rewritten correctly
--- + DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER NOT NULL, f3_ INTEGER NOT NULL @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
+-- + DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
 -- - error:
 declare function function_uses_complex_table_attrs(like to_copy) integer;
 
@@ -15425,7 +15425,7 @@ declare function maybe_create_func_long() create long not null @sensitive;
 declare type_obj_foo type object<Foo> not null @sensitive;
 
 -- TEST: declared function that return create object
--- + DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo> NOT NULL @SENSITIVE;
+-- + DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo>! @SENSITIVE;
 -- + {declare_func_stmt}: object<Foo> notnull create_func sensitive
 -- - error:
 declare function type_func_return_create_obj() create type_obj_foo;
@@ -15438,13 +15438,13 @@ declare function type_func_return_create_obj() create type_obj_foo;
 declare function type_func_return_create_bogus_obj() create bogus_type;
 
 -- TEST: declared function that return object
--- + DECLARE FUNC type_func_return_obj () OBJECT<Foo> NOT NULL @SENSITIVE;
+-- + DECLARE FUNC type_func_return_obj () OBJECT<Foo>! @SENSITIVE;
 -- + {declare_func_stmt}: object<Foo> notnull sensitive
 -- - error:
 declare function type_func_return_obj() type_obj_foo;
 
 -- TEST: declare type as enum name
--- + DECLARE my_enum_type TYPE INTEGER<ints> NOT NULL;
+-- + DECLARE my_enum_type TYPE INTEGER<ints>!;
 -- + {declare_named_type}: integer<ints> notnull
 -- + {notnull}: integer<ints> notnull
 -- - error:
@@ -15909,7 +15909,7 @@ end;
 -- + {create_table_stmt}: bar_with_sensitive: { id: integer notnull, name: text sensitive, title: text sensitive, intro: text }
 -- - error:
 create table bar_with_sensitive(
-  id integer not null,
+  id int!,
   name text @sensitive @create(2),
   title text @sensitive @create(2),
   intro text @create(2)
@@ -16198,7 +16198,7 @@ create virtual table virtual_with_hidden using module_name as (
 -- * error: % HIDDEN column attribute must be the first attribute if present
 -- +1 error:
 create virtual table virtual_with_hidden_wrong using module_name as (
-  x integer not null hidden,
+  x int! hidden,
   y integer
 );
 
@@ -16455,7 +16455,7 @@ set price_d := (select "x" if nothing or null price_e);
 set price_d := (select "x" if nothing or null obj_var);
 
 -- - error:
-declare real_nn real not null;
+declare real_nn real!;
 
 -- TEST: if nothing or null gets not null result if right side is not null
 -- +  {assign}: real_nn: real notnull variable
@@ -16865,7 +16865,7 @@ select (1 <> NULL);
 select (1 + (SELECT NULL));
 
 -- used in the next suite of tests
-declare proc out2_proc(x integer, out y integer not null, out z integer not null);
+declare proc out2_proc(x integer, out y int!, out z int!);
 
 -- TEST: try to do declare out on a non-existent procedure
 -- + {declare_out_call_stmt}: err
@@ -17040,7 +17040,7 @@ create table bogus_builtin_migrator_placement (
 -- + {declare_proc_stmt}: ok dml_proc
 -- + {param}: code_: text notnull variable init_required out sensitive
 -- - error:
-DECLARE PROC proc_as_func(IN transport_key_ TEXT, OUT code_ TEXT NOT NULL @sensitive) USING TRANSACTION;
+DECLARE PROC proc_as_func(IN transport_key_ TEXT, OUT code_ TEXT! @sensitive) USING TRANSACTION;
 
 -- TEST: test sensitive flag on pr variable for LET stmt
 -- + {let_stmt}: pr: text notnull variable sensitive
@@ -17064,7 +17064,7 @@ SET pr2 := proc_as_func("t");
 -- + {col_attrs_not_null}: ok
 -- + {int 2}
 -- - error:
-create table conflict_clause_t(id int not null on conflict fail);
+create table conflict_clause_t(id int! on conflict fail);
 
 -- TEST: test create table with pk column on conflict clause rollback
 -- + {create_table_stmt}: conflict_clause_pk: { id: integer notnull partial_pk }
@@ -17072,7 +17072,7 @@ create table conflict_clause_t(id int not null on conflict fail);
 -- + {int 0}
 -- - error:
 create table conflict_clause_pk(
-  id int not null,
+  id int!,
   constraint pk1 primary key (id) on conflict rollback
 );
 
@@ -17497,7 +17497,7 @@ end;
 
 -- Used in the following test.
 -- - error:
-create proc requires_notnull_out(OUT a INT NOT NULL)
+create proc requires_notnull_out(OUT a INT!)
 begin
 end;
 
@@ -17515,7 +17515,7 @@ end;
 
 -- Used in the following test.
 -- - error:
-create proc requires_notnull_inout(INOUT a INT NOT NULL)
+create proc requires_notnull_inout(INOUT a INT!)
 begin
 end;
 
@@ -17560,13 +17560,13 @@ declare some_global int;
 
 -- Used in the following test.
 -- - error:
-create proc requires_not_nulls(a int not null, b int not null, c int not null)
+create proc requires_not_nulls(a int!, b int!, c int!)
 begin
 end;
 
 -- Used in the following test.
 -- - error:
-create proc returns_int_not_null(out a int not null)
+create proc returns_int_not_null(out a int!)
 begin
 end;
 
@@ -18469,7 +18469,7 @@ begin
 end;
 
 -- Used in the following tests.
-declare proc requires_int_notnull(a int not null);
+declare proc requires_int_notnull(a int!);
 
 -- TEST: Improvements that are unset within a loop affect all preceding
 -- statements within the loop.
@@ -18973,7 +18973,7 @@ end;
 create proc initialization_is_not_required_for_non_reference_types()
 begin
   declare a bool not null;
-  declare b int not null;
+  declare b int!;
   declare c long not null;
 
   let x := a;
@@ -19159,7 +19159,7 @@ end;
 -- + {create_proc_stmt}: ok dml_proc
 -- + {assign}: a: text notnull variable init_required out
 -- - error:
-create proc try_blocks_can_successfully_verify_initialization(out a text not null, out rc int not null)
+create proc try_blocks_can_successfully_verify_initialization(out a text not null, out rc int!)
 begin
   set rc := 0;
   @attribute(cql:try_is_proc_body)
@@ -19179,7 +19179,7 @@ end;
 -- + {trycatch_stmt}: err
 -- * error: % nonnull reference OUT parameter possibly not always initialized 'a'
 -- +1 error:
-create proc try_blocks_can_fail_to_verify_initialization(out a text not null, out rc int not null)
+create proc try_blocks_can_fail_to_verify_initialization(out a text not null, out rc int!)
 begin
   set rc := 0;
   @attribute(some_other_attribute)
@@ -20110,7 +20110,7 @@ end;
 -- + {create_proc_stmt}: conditional_frag: { id: integer notnull } dml_proc
 -- - error:
 @attribute(cql:shared_fragment)
-create proc conditional_frag(bb integer not null)
+create proc conditional_frag(bb int!)
 begin
   if bb == 1 then
     with source(*) like foo
@@ -20129,7 +20129,7 @@ end;
 -- + {call_stmt}: conditional_frag: { id: integer notnull } dml_proc
 -- + {name conditional_frag}: conditional_frag: { id: integer notnull } dml_proc
 -- - error:
-create proc conditional_user(xx integer not null)
+create proc conditional_user(xx int!)
 begin
   with D(*) AS (call conditional_frag(1) using foo as source, foo as source2)
   select * from D;
@@ -20585,7 +20585,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc nested_expression_fragment(x integer not null, y integer not null)
+create proc nested_expression_fragment(x int!, y int!)
 begin
   select (
     with
@@ -20603,7 +20603,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc nested_expression_fragment_with_args1(x integer not null, y integer not null)
+create proc nested_expression_fragment_with_args1(x int!, y int!)
 begin
   select (
     with
@@ -20622,7 +20622,7 @@ begin
 end;
 
 @attribute(cql:shared_fragment)
-create proc nested_expression_fragment_with_args2(x integer not null, y integer not null)
+create proc nested_expression_fragment_with_args2(x int!, y int!)
 begin
   select (
     select f.x from  (call a_shared_frag(*)) f
@@ -21232,7 +21232,7 @@ create table collate_col_backed(
 @attribute(cql:backed_by=simple_backing_table)
 create table default_value_col_backed(
   id integer primary key,
-  x integer not null default 7,
+  x int! default 7,
   t text
 );
 
@@ -21278,7 +21278,7 @@ create table recreate_backed_wrong_group(
 
 @attribute(cql:blob_storage)
 create table structured_storage(
-  id integer not null,
+  id int!,
   name text not null
 );
 
@@ -22745,7 +22745,7 @@ begin
 end;
 
 -- TEST: this procedure returns NOT NULL id column instead of NULLABLE
--- + CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER NOT NULL)
+-- + CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER!)
 -- + {create_proc_stmt}: err
 -- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
 -- +1 error:
@@ -22756,7 +22756,7 @@ begin
 end;
 
 -- TEST: this procedure returns TEXT NOT NULL id column instead of INT NOT NULL
--- + CREATE PROC test_interface1_implementation_wrong_type (id_ TEXT not null)
+-- + CREATE PROC test_interface1_implementation_wrong_type (id_ TEXT!)
 -- + {create_proc_stmt}: err
 -- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found text notnull) 'id'
 -- +1 error:
@@ -22830,8 +22830,8 @@ end;
 
 
 -- interfaces for multi-interface test cases
-declare interface interface_foo1 (id integer not null, name text not null);
-declare interface interface_foo2 (id2 integer not null, name text not null);
+declare interface interface_foo1 (id int!, name text not null);
+declare interface interface_foo2 (id2 int!, name text not null);
 
 -- TEST: two interfaces, one not supported
 -- + {misc_attrs}: err
@@ -22996,7 +22996,7 @@ end;
 -- TEST: Verify that the rewrite is successful including arg pass through
 -- + CREATE PROC test_parent_child ()
 -- + BEGIN
--- +   DECLARE __result__0 BOOL NOT NULL;
+-- +   DECLARE __result__0 BOOL!;
 -- +   DECLARE __key__0 CURSOR LIKE test_child(x);
 -- +   LET __partition__0 := cql_partition_create();
 -- +   DECLARE __child_cursor__0 CURSOR FOR
@@ -23006,7 +23006,7 @@ end;
 -- +     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
 -- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
 -- +   END;
--- +   DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, my_child OBJECT<test_child SET> NOT NULL);
+-- +   DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, my_child OBJECT<test_child SET>!);
 -- +   DECLARE __parent__0 CURSOR FOR
 -- +     CALL test_parent(2);
 -- +   LOOP FETCH __parent__0
@@ -23376,7 +23376,7 @@ end;
 -- + {declare_func_stmt}: integer notnull
 -- - error:
 @attribute(cql:alias_of=some_native_func)
-declare function an_alias_func(x int not null) int not null;
+declare function an_alias_func(x int!) int!;
 
 -- TEST: cql:alias_of attribution on declare proc stmt
 -- + {stmt_and_attr}: ok
@@ -23387,7 +23387,7 @@ declare function an_alias_func(x int not null) int not null;
 -- + {declare_proc_stmt}: ok
 -- - error:
 @attribute(cql:alias_of=some_native_func)
-declare proc an_alias_proc(x int not null);
+declare proc an_alias_proc(x int!);
 
 -- TEST: cql:alias_of attribution on invalid statement
 -- + {stmt_and_attr}: err
@@ -23396,7 +23396,7 @@ declare proc an_alias_proc(x int not null);
 -- * error: % alias_of attribute may only be added to a declare function or declare proc statement
 -- +1 error:
 @attribute(cql:alias_of=barfoo)
-declare select function foobaz(x int not null) int not null;
+declare select function foobaz(x int!) int!;
 
 -- TEST: cql:alias_of attribution invalid value
 -- + {stmt_and_attr}: err
@@ -23405,7 +23405,7 @@ declare select function foobaz(x int not null) int not null;
 -- * error: % alias_of attribute must be a non-empty string argument
 -- +1 error:
 @attribute(cql:alias_of)
-declare function an_alias_func_bad(x int not null) int not null;
+declare function an_alias_func_bad(x int!) int!;
 
 -- setup for invalid child test, private proc
 -- this ok so far
@@ -23439,15 +23439,15 @@ begin
   declare x object<invalid_child_proc_2 set>;
 end;
 
-declare function rev_apply_null(x bool) integer not null;
-declare function rev_apply_bool(x bool) integer not null;
-declare function rev_apply_int(x int) integer not null;
-declare function rev_apply_long(x long) integer not null;
-declare function rev_apply_real(x real) integer not null;
-declare function rev_apply_text(x text) integer not null;
-declare function rev_apply_blob(x blob) integer not null;
-declare function rev_apply_object(x object) integer not null;
-declare function rev_apply_cursor(x cursor) integer not null;
+declare function rev_apply_null(x bool) int!;
+declare function rev_apply_bool(x bool) int!;
+declare function rev_apply_int(x int) int!;
+declare function rev_apply_long(x long) int!;
+declare function rev_apply_real(x real) int!;
+declare function rev_apply_text(x text) int!;
+declare function rev_apply_blob(x blob) int!;
+declare function rev_apply_object(x object) int!;
+declare function rev_apply_cursor(x cursor) int!;
 
 -- TEST: use the reverse apply with :: to get polymorphism
 -- validate rewrite only
@@ -23516,7 +23516,7 @@ set int_result := invalid_id_bogus::rev_apply();
 
 declare lbs real<pounds> not null;
 
-declare function some_polymorphic_function_real_pounds(x real<pounds>, y real) integer not null;
+declare function some_polymorphic_function_real_pounds(x real<pounds>, y real) int!;
 
 -- TEST: using the type kind we append "real_pounds" not just "real"
 -- + LET poly_result_1 := some_polymorphic_function_real_pounds(lbs, 1);
@@ -23532,7 +23532,7 @@ end;
 -- so we have to use a generic object to capture the argument.
 -- this is of dubious usefulness.  But again these internal types
 -- are not intended to be used in this way anyway.
-declare function count_object_get_result_SET(result object) integer not null;
+declare function count_object_get_result_SET(result object) int!;
 
 -- TEST: this is a not very clever use of ::: but it showcases space issue
 -- note that we added an underscore so we get _SET
@@ -23933,7 +23933,7 @@ type an_integer_type integer!;
 -- note that even though ! syntax was used for the former the AST is the same
 -- so there is no error here
 -- -error:
-type an_integer_type integer not null;
+type an_integer_type int!;
 
 -- TEST: select functions cannot have out arguments -- inout form
 -- + {declare_select_func_stmt}: err
@@ -23950,8 +23950,8 @@ declare select func select_func_with_out_arg2(out out_param int!) int;
 -- TEST: create a table with a weird name and a weird column
 -- verify that echoing is re-emitting the escaped text
 -- + CREATE TABLE `xyz``abc`(
--- + x INTEGER NOT NULL,
--- + `a b` INTEGER NOT NULL
+-- + x INTEGER!,
+-- + `a b` INTEGER!
 -- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `xyz``abc`}
 -- + {col_def}: x: integer notnull
@@ -24061,7 +24061,7 @@ create index `abc def` on `xyz``abc` (`a b` asc);
 
 -- TEST: use a reference attribute with quoted names
 -- verify that echoing is re-emitting the escaped text
--- + x INTEGER NOT NULL REFERENCES `xyz``abc` (`a b`)
+-- + x INTEGER! REFERENCES `xyz``abc` (`a b`)
 -- + {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
 -- + {name `a b`}: X_aX20b: integer notnull qid
 -- - error:
@@ -24187,7 +24187,7 @@ alter table `xyz``abc` add column `a b` int;
 
 -- TEST: this construct forces exotic names into the reality of locals
 -- verify that echoing is re-emitting the escaped text
--- + CREATE PROC args_defined_by_exotics (x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+-- + CREATE PROC args_defined_by_exotics (x_ INTEGER!, `a b_` INTEGER!)
 -- + SET `a b_` := 1;
 -- + SET `a b_` := `a b_` + 1;
 -- + LET `u v` := 5;
@@ -24228,8 +24228,8 @@ end;
 -- TEST: create a new table using a nested shape with quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + CREATE TABLE reuse_exotic_columns(
--- + x INTEGER NOT NULL,
--- + `a b` INTEGER NOT NULL
+-- + x INTEGER!,
+-- + `a b` INTEGER!
 -- + {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 create table reuse_exotic_columns (
@@ -24238,7 +24238,7 @@ create table reuse_exotic_columns (
 
 -- TEST: shape name expansion with quid in the columns
 -- verifying the echo is correct (this is actually sufficient)
--- + CREATE PROC qid_shape_args (AAA_x INTEGER NOT NULL, `AAA_a b` INTEGER NOT NULL, BBB_x INTEGER NOT NULL, `BBB_a b` INTEGER NOT NULL, x_ INTEGER NOT NULL, `a b_` INTEGER NOT NULL)
+-- + CREATE PROC qid_shape_args (AAA_x INTEGER!, `AAA_a b` INTEGER!, BBB_x INTEGER!, `BBB_a b` INTEGER!, x_ INTEGER!, `a b_` INTEGER!)
 -- + {create_proc_stmt}: ok
 -- + {name AAA_x}: AAA_x: integer notnull variable in
 -- + {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in

@@ -719,7 +719,7 @@ cql_string_ref t2 = NULL;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC test (i INT!)
+PROC test (i INT!)
 BEGIN
   IF i THEN
     CALL puts('true');
@@ -743,7 +743,7 @@ void test(cql_int32 i) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC proc_with_return_guard (a INT)
+PROC proc_with_return_guard (a INT)
 BEGIN
   IF a IS NOT NULL THEN
     RETURN;
@@ -779,7 +779,7 @@ cql_nullable_int32 _between_5_ = { .is_null = 1 };
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_test (OUT i INT!, OUT ii INT)
+PROC out_test (OUT i INT!, OUT ii INT)
 BEGIN
   SET i := i2;
   SET ii := i0_nullable;
@@ -848,7 +848,7 @@ sqlite3_stmt *_temp_stmt = NULL;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC outparm_test (OUT foo INT!)
+PROC outparm_test (OUT foo INT!)
 BEGIN
   SET foo := 1;
   DELETE FROM bar WHERE id = foo;
@@ -889,7 +889,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC throwing ()
+PROC throwing ()
 BEGIN
   TRY
     DELETE FROM bar;
@@ -943,7 +943,7 @@ cql_string_ref _between_13_ = NULL;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_result_set ()
+PROC with_result_set ()
 BEGIN
   SELECT *
     FROM bar;
@@ -1030,7 +1030,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC select_from_view ()
+PROC select_from_view ()
 BEGIN
   SELECT id, type
     FROM baz;
@@ -1104,7 +1104,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC make_view ()
+PROC make_view ()
 BEGIN
   CREATE VIEW MyView AS
     SELECT 1 AS f1, 2 AS f2, 3 AS f3;
@@ -1135,7 +1135,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC make_index ()
+PROC make_index ()
 BEGIN
   CREATE INDEX index_1 ON bar (id);
 END;
@@ -1164,7 +1164,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC get_data (name_ TEXT!, id_ INT!)
+PROC get_data (name_ TEXT!, id_ INT!)
 BEGIN
   SELECT *
     FROM bar
@@ -1259,7 +1259,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC easy_fetch ()
+PROC easy_fetch ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -1336,7 +1336,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC copy_int (a INT, OUT b INT)
+PROC copy_int (a INT, OUT b INT)
 BEGIN
   SET b := a;
 END;
@@ -1359,7 +1359,7 @@ void copy_int(cql_nullable_int32 a, cql_nullable_int32 *_Nonnull b) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC insert_rowid_reader ()
+PROC insert_rowid_reader ()
 BEGIN
   DECLARE row LONG;
   SET row := last_insert_rowid();
@@ -1387,7 +1387,7 @@ CQL_WARN_UNUSED cql_code insert_rowid_reader(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC changes_reader ()
+PROC changes_reader ()
 BEGIN
   DECLARE ct INT;
   SET ct := changes();
@@ -1428,7 +1428,7 @@ DECLARE PROC xyzzy (id INT) (A INT!);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC xyzzy_test ()
+PROC xyzzy_test ()
 BEGIN
   CURSOR xyzzy_cursor FOR
     CALL xyzzy(1);
@@ -1467,7 +1467,7 @@ DECLARE PROC plugh (id INT);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC complex_return ()
+PROC complex_return ()
 BEGIN
   SELECT
       TRUE AS _bool,
@@ -1567,7 +1567,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC hierarchical_query (rate_ LONG!, limit_ INT!, offset_ INT!)
+PROC hierarchical_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
   SELECT *
     FROM foo
@@ -1656,7 +1656,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC hierarchical_unmatched_query (rate_ LONG!, limit_ INT!, offset_ INT!)
+PROC hierarchical_unmatched_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
   SELECT *
     FROM foo
@@ -1745,7 +1745,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC union_select ()
+PROC union_select ()
 BEGIN
   SELECT 1 AS A
   UNION
@@ -1818,7 +1818,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC union_all_select ()
+PROC union_all_select ()
 BEGIN
   SELECT 1 AS A
   UNION ALL
@@ -1891,7 +1891,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC union_all_with_nullable ()
+PROC union_all_with_nullable ()
 BEGIN
   SELECT nullable('foo') AS name
   UNION ALL
@@ -1970,7 +1970,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_stmt_using_cursor ()
+PROC with_stmt_using_cursor ()
 BEGIN
   CURSOR C FOR
     WITH
@@ -2030,7 +2030,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_stmt ()
+PROC with_stmt ()
 BEGIN
   WITH
     X (a, b, c) AS (
@@ -2115,7 +2115,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_recursive_stmt ()
+PROC with_recursive_stmt ()
 BEGIN
   WITH RECURSIVE
     X (a, b, c) AS (
@@ -2204,7 +2204,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC parent_proc ()
+PROC parent_proc ()
 BEGIN
   SELECT 1 AS one, 2 AS two, 3 AS three;
 END;
@@ -2279,7 +2279,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC parent_proc_child ()
+PROC parent_proc_child ()
 BEGIN
   SELECT 4 AS four, 5 AS five, 6 AS six;
 END;
@@ -2354,7 +2354,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC outint_nullable (OUT output INT, OUT result BOOL!)
+PROC outint_nullable (OUT output INT, OUT result BOOL!)
 BEGIN
   CURSOR C FOR
     SELECT 1;
@@ -2400,7 +2400,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC outint_notnull (OUT output INT!, OUT result BOOL!)
+PROC outint_notnull (OUT output INT!, OUT result BOOL!)
 BEGIN
   CURSOR C FOR
     SELECT 1;
@@ -2468,7 +2468,7 @@ cql_object_ref obj_var2 = NULL;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC obj_proc (OUT an_object OBJECT)
+PROC obj_proc (OUT an_object OBJECT)
 BEGIN
   SET an_object := NULL;
 END;
@@ -2491,7 +2491,7 @@ void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC cursor_with_object (object_ OBJECT)
+PROC cursor_with_object (object_ OBJECT)
 BEGIN
   CURSOR C LIKE cursor_with_object ARGUMENTS;
   FETCH C(object_) FROM VALUES(object_);
@@ -2568,7 +2568,7 @@ void cursor_with_object(cql_object_ref _Nullable object_, cursor_with_object_row
 // The statement ending at line XXXX
 
 /*
-CREATE PROC unused_temp (i INT, OUT o INT!)
+PROC unused_temp (i INT, OUT o INT!)
 BEGIN
   SET o := coalesce(i, -1);
 END;
@@ -2611,7 +2611,7 @@ int Garbonzo; // a chick pea
 // The statement ending at line XXXX
 
 /*
-CREATE PROC echo_test ()
+PROC echo_test ()
 BEGIN
   DECLARE s TEXT;
   SET s := "before echo";
@@ -2639,7 +2639,7 @@ void echo_test(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC insert_values (id_ INT!, type_ INT)
+PROC insert_values (id_ INT!, type_ INT)
 BEGIN
   INSERT INTO bar(id, type)
     VALUES(id_, type_);
@@ -2678,7 +2678,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC alter_table_test ()
+PROC alter_table_test ()
 BEGIN
   ALTER TABLE bar ADD COLUMN size REAL;
 END;
@@ -2707,7 +2707,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC drop_table_test ()
+PROC drop_table_test ()
 BEGIN
   DROP TABLE IF EXISTS bar;
 END;
@@ -2736,7 +2736,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC uses_proc_for_result ()
+PROC uses_proc_for_result ()
 BEGIN
   CALL with_result_set();
 END;
@@ -2825,7 +2825,7 @@ cql_bool _table_expanded_select_has_row_ = 0;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC index_dropper ()
+PROC index_dropper ()
 BEGIN
   DROP INDEX index_1;
 END;
@@ -2854,7 +2854,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC misc_dml_proc ()
+PROC misc_dml_proc ()
 BEGIN
   INSERT INTO foo(id)
     VALUES(NULL);
@@ -2903,7 +2903,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC dummy_user ()
+PROC dummy_user ()
 BEGIN
   INSERT INTO bar(id, name, rate, type, size) VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
@@ -2945,7 +2945,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC proc_with_out_arg (OUT foo TEXT)
+PROC proc_with_out_arg (OUT foo TEXT)
 BEGIN
   SET foo := 'x';
 END;
@@ -2968,7 +2968,7 @@ void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC calls_out_proc (OUT foo TEXT)
+PROC calls_out_proc (OUT foo TEXT)
 BEGIN
   SET foo := 'x';
   DECLARE bar TEXT;
@@ -3015,7 +3015,7 @@ cql_blob_ref blob_var2 = NULL;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC blob_proc (OUT a_blob BLOB)
+PROC blob_proc (OUT a_blob BLOB)
 BEGIN
   SET a_blob := NULL;
 END;
@@ -3045,7 +3045,7 @@ cql_blob_ref blob_var_notnull = NULL;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC blob_returner ()
+PROC blob_returner ()
 BEGIN
   SELECT *
     FROM blob_table;
@@ -3126,7 +3126,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC voidproc ()
+PROC voidproc ()
 BEGIN
   DECLARE unused INT;
 END;
@@ -3147,7 +3147,7 @@ void voidproc(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_cursor_proc ()
+PROC out_cursor_proc ()
 BEGIN
   CURSOR C FOR
     SELECT bar.*, 'xyzzy' AS extra1, 'plugh' AS extra2
@@ -3272,7 +3272,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC read_cursor_proc ()
+PROC read_cursor_proc ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
 END;
@@ -3318,7 +3318,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC declare_cursor_then_fetch_from_proc ()
+PROC declare_cursor_then_fetch_from_proc ()
 BEGIN
   CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc();
@@ -3389,7 +3389,7 @@ DECLARE PROC dml_compute (IN a_ INT!, OUT b_ INT!) USING TRANSACTION;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC dml_user (OUT a_ INT!)
+PROC dml_user (OUT a_ INT!)
 BEGIN
   SET a_ := dml_compute(1);
 END;
@@ -3420,7 +3420,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC thread_theme_info_list (thread_key_ LONG!)
+PROC thread_theme_info_list (thread_key_ LONG!)
 BEGIN
   SELECT *
     FROM (SELECT thread_key
@@ -3493,7 +3493,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC fetch_values_dummy ()
+PROC fetch_values_dummy ()
 BEGIN
   CURSOR C LIKE SELECT *
     FROM bar;
@@ -3546,7 +3546,7 @@ void fetch_values_dummy(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC fetch_values_extended ()
+PROC fetch_values_extended ()
 BEGIN
   CURSOR C LIKE (id INT!, name TEXT, rate LONG, type INT, size REAL, xx REAL, yy TEXT);
   FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
@@ -3610,7 +3610,7 @@ void fetch_values_extended(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC c_literal (OUT x TEXT)
+PROC c_literal (OUT x TEXT)
 BEGIN
   SET x := "\"Testing\" \\''";
 END;
@@ -3633,7 +3633,7 @@ void c_literal(cql_string_ref _Nullable *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC no_cleanup_label_needed_proc ()
+PROC no_cleanup_label_needed_proc ()
 BEGIN
   TRY
     CURSOR C FOR
@@ -3690,7 +3690,7 @@ CQL_WARN_UNUSED cql_code no_cleanup_label_needed_proc(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC no_code_after_catch ()
+PROC no_code_after_catch ()
 BEGIN
   TRY
     @ATTRIBUTE(foo)
@@ -3730,7 +3730,7 @@ CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_no_db ()
+PROC out_no_db ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2.5 AS B;
   FETCH C(A, B) FROM VALUES(3, 12);
@@ -3803,7 +3803,7 @@ void out_no_db(out_no_db_row *_Nonnull _result_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC declare_cursor_like_cursor ()
+PROC declare_cursor_like_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2.5 AS B;
   CURSOR C1 LIKE C0;
@@ -3886,7 +3886,7 @@ void declare_cursor_like_cursor(declare_cursor_like_cursor_row *_Nonnull _result
 // The statement ending at line XXXX
 
 /*
-CREATE PROC declare_cursor_like_proc ()
+PROC declare_cursor_like_proc ()
 BEGIN
   CURSOR C LIKE fetcher_proc;
   OUT C;
@@ -3964,7 +3964,7 @@ void declare_cursor_like_proc(declare_cursor_like_proc_row *_Nonnull _result_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC declare_cursor_like_table ()
+PROC declare_cursor_like_table ()
 BEGIN
   CURSOR C LIKE bar;
   OUT C;
@@ -4054,7 +4054,7 @@ void declare_cursor_like_table(declare_cursor_like_table_row *_Nonnull _result_)
 // The statement ending at line XXXX
 
 /*
-CREATE PROC declare_cursor_like_view ()
+PROC declare_cursor_like_view ()
 BEGIN
   CURSOR C LIKE MyView;
   OUT C;
@@ -4127,7 +4127,7 @@ void declare_cursor_like_view(declare_cursor_like_view_row *_Nonnull _result_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC weird_quoting ()
+PROC weird_quoting ()
 BEGIN
   DELETE FROM bar WHERE name LIKE "\n\n";
   DELETE FROM bar WHERE name = ' '' \n '' \';
@@ -4168,7 +4168,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC long_auto_table_maker ()
+PROC long_auto_table_maker ()
 BEGIN
   CREATE TABLE long_int_autoinc(
     id LONG PRIMARY KEY AUTOINCREMENT,
@@ -4209,7 +4209,7 @@ DECLARE PROC blob_out (OUT x BLOB);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC blob_call1 ()
+PROC blob_call1 ()
 BEGIN
   DECLARE b BLOB;
   CALL blob_out(b);
@@ -4234,7 +4234,7 @@ void blob_call1(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC blob_call2 ()
+PROC blob_call2 ()
 BEGIN
   DECLARE b BLOB;
   SET b := blob_out();
@@ -4259,7 +4259,7 @@ void blob_call2(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC blob_no_else ()
+PROC blob_no_else ()
 BEGIN
   DECLARE b BLOB;
   DECLARE b1 BLOB;
@@ -4299,7 +4299,7 @@ void blob_no_else(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_inserter ()
+PROC with_inserter ()
 BEGIN
   WITH
     x (a) AS (
@@ -4340,7 +4340,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC multi_rewrite (blob_id_ INT!, b_notnull_ BLOB!, b_nullable_ BLOB, id_ INT!, name_ TEXT, rate_ LONG, type_ INT, size_ REAL, OUT out_arg INT!)
+PROC multi_rewrite (blob_id_ INT!, b_notnull_ BLOB!, b_nullable_ BLOB, id_ INT!, name_ TEXT, rate_ LONG, type_ INT, size_ REAL, OUT out_arg INT!)
 BEGIN
   INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(blob_id_, b_notnull_, b_nullable_);
   SET out_arg := 1;
@@ -4384,7 +4384,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC fetch_to_cursor_from_cursor ()
+PROC fetch_to_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, "foo" AS B;
   CURSOR C1 LIKE C0;
@@ -4483,7 +4483,7 @@ void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _resu
 // The statement ending at line XXXX
 
 /*
-CREATE PROC loop_statement_cursor ()
+PROC loop_statement_cursor ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS A;
@@ -4536,7 +4536,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC loop_statement_not_auto_cursor ()
+PROC loop_statement_not_auto_cursor ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS A;
@@ -4585,7 +4585,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:suppress_result_set)
-CREATE PROC simple_select ()
+PROC simple_select ()
 BEGIN
   SELECT 1 AS x;
 END;
@@ -4616,7 +4616,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC call_in_loop ()
+PROC call_in_loop ()
 BEGIN
   DECLARE i INT;
   SET i := 0;
@@ -4674,7 +4674,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC call_in_loop_with_nullable_condition ()
+PROC call_in_loop_with_nullable_condition ()
 BEGIN
   DECLARE i INT;
   SET i := nullable(0);
@@ -4734,7 +4734,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC call_in_loop_boxed ()
+PROC call_in_loop_boxed ()
 BEGIN
   DECLARE i INT;
   SET i := 0;
@@ -4806,7 +4806,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_helper ()
+PROC out_union_helper ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x;
   FETCH C(x) FROM VALUES(1);
@@ -4869,7 +4869,7 @@ void out_union_helper_fetch_results(out_union_helper_result_set_ref _Nullable *_
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_dml_helper ()
+PROC out_union_dml_helper ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS x;
@@ -4949,7 +4949,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC call_out_union_in_loop ()
+PROC call_out_union_in_loop ()
 BEGIN
   DECLARE i INT;
   SET i := 0;
@@ -5008,7 +5008,7 @@ CQL_WARN_UNUSED cql_code call_out_union_in_loop(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC forward_out_union ()
+PROC forward_out_union ()
 BEGIN
   CALL out_union_helper();
 END;
@@ -5062,7 +5062,7 @@ DECLARE PROC extern_out_union_helper () OUT UNION (x INT!);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC forward_out_union_extern ()
+PROC forward_out_union_extern ()
 BEGIN
   CALL extern_out_union_helper();
 END;
@@ -5110,7 +5110,7 @@ void forward_out_union_extern_fetch_results(forward_out_union_extern_result_set_
 // The statement ending at line XXXX
 
 /*
-CREATE PROC forward_out_union_dml ()
+PROC forward_out_union_dml ()
 BEGIN
   CALL out_union_dml_helper();
 END;
@@ -5167,7 +5167,7 @@ global_cursor_row global_cursor = { 0 };
 // The statement ending at line XXXX
 
 /*
-CREATE PROC make_trigger ()
+PROC make_trigger ()
 BEGIN
   CREATE TEMP TRIGGER IF NOT EXISTS trigger1
     BEFORE DELETE ON bar
@@ -5208,7 +5208,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC is_test ()
+PROC is_test ()
 BEGIN
   DECLARE b BOOL!;
   SET b := 1 IS 1;
@@ -5245,7 +5245,7 @@ void is_test(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC is_blob ()
+PROC is_blob ()
 BEGIN
   DECLARE bl1 BLOB;
   DECLARE bl2 BLOB;
@@ -5276,7 +5276,7 @@ void is_blob(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC is_not_test ()
+PROC is_not_test ()
 BEGIN
   DECLARE b BOOL!;
   SET b := 1 IS NOT 1;
@@ -5313,7 +5313,7 @@ void is_not_test(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC in_test (x INT, OUT b BOOL)
+PROC in_test (x INT, OUT b BOOL)
 BEGIN
   SET b := NULL IN (1);
 END;
@@ -5336,7 +5336,7 @@ void in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC not_in_test (x INT, OUT b BOOL)
+PROC not_in_test (x INT, OUT b BOOL)
 BEGIN
   SET b := NULL NOT IN (1);
 END;
@@ -5359,7 +5359,7 @@ void not_in_test(cql_nullable_int32 x, cql_nullable_bool *_Nonnull b) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC drop_trigger_test ()
+PROC drop_trigger_test ()
 BEGIN
   DROP TRIGGER IF EXISTS trigger1;
   DROP TRIGGER trigger1;
@@ -5393,7 +5393,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:identity=(id))
-CREATE PROC simple_identity ()
+PROC simple_identity ()
 BEGIN
   SELECT 1 AS id, 2 AS data;
 END;
@@ -5471,7 +5471,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:identity=(col1, col2))
-CREATE PROC complex_identity ()
+PROC complex_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
 END;
@@ -5553,7 +5553,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:identity=(id))
-CREATE PROC out_cursor_identity ()
+PROC out_cursor_identity ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 2 AS data;
@@ -5648,7 +5648,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC radioactive_proc ()
+PROC radioactive_proc ()
 BEGIN
   SELECT *
     FROM radioactive;
@@ -5730,7 +5730,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_deleter ()
+PROC with_deleter ()
 BEGIN
   WITH
     x (a) AS (
@@ -5769,7 +5769,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_updater ()
+PROC with_updater ()
 BEGIN
   WITH
     x (a) AS (
@@ -5813,7 +5813,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:autodrop=(table1, table2))
-CREATE PROC autodropper ()
+PROC autodropper ()
 BEGIN
   SELECT 1 AS a, 2 AS b;
 END;
@@ -5886,7 +5886,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC simple_cursor_proc ()
+PROC simple_cursor_proc ()
 BEGIN
   CURSOR A_CURSOR LIKE SELECT 1 AS id;
   FETCH a_cursor(id) FROM VALUES(1);
@@ -5954,7 +5954,7 @@ void simple_cursor_proc(simple_cursor_proc_row *_Nonnull _result_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC redundant_cast ()
+PROC redundant_cast ()
 BEGIN
   SELECT CAST(5 AS INT) AS plugh, T.xyzzy AS five
     FROM (SELECT 1 AS xyzzy) AS T;
@@ -6028,7 +6028,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC view_creator ()
+PROC view_creator ()
 BEGIN
   CREATE VIEW alias_preserved AS
     SELECT CAST(5 AS INT) AS plugh, T.xyzzy AS five
@@ -6061,7 +6061,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC settings_info ()
+PROC settings_info ()
 BEGIN
   CURSOR C FOR
     SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count, SUM(A.switch_account_badge_count) AS switch_account_badge_count
@@ -6103,7 +6103,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC top_level_select_alias_unused ()
+PROC top_level_select_alias_unused ()
 BEGIN
   SELECT 1 AS id, 2 AS x
   UNION ALL
@@ -6181,7 +6181,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC top_level_select_alias_used_in_orderby ()
+PROC top_level_select_alias_used_in_orderby ()
 BEGIN
   SELECT 1 AS id, 2 AS x
   UNION ALL
@@ -6261,7 +6261,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_with_select ()
+PROC use_with_select ()
 BEGIN
   DECLARE x INT;
   SET x := (   WITH
@@ -6310,7 +6310,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC rowset_object_reader (rowset OBJECT<rowset>)
+PROC rowset_object_reader (rowset OBJECT<rowset>)
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -6346,7 +6346,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC upsert_do_something ()
+PROC upsert_do_something ()
 BEGIN
   INSERT INTO foo(id)
     SELECT id
@@ -6387,7 +6387,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC with_upsert_form ()
+PROC with_upsert_form ()
 BEGIN
   WITH
     names (id) AS (
@@ -6436,7 +6436,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC upsert_do_nothing (id_ INT!)
+PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
     VALUES(id_)
@@ -6489,7 +6489,7 @@ DECLARE PROC p2 () OUT (id INT!, t TEXT) USING TRANSACTION;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_many_out_cursors ()
+PROC use_many_out_cursors ()
 BEGIN
   CURSOR c1 FETCH FROM CALL p1();
   CURSOR c2 FETCH FROM CALL p2();
@@ -6545,7 +6545,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC fetch_many_times (arg BOOL!)
+PROC fetch_many_times (arg BOOL!)
 BEGIN
   CURSOR C LIKE p1;
   IF arg = 1 THEN
@@ -6609,7 +6609,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_two ()
+PROC out_union_two ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, '2' AS y;
   FETCH C(x, y) FROM VALUES(1, "y");
@@ -6688,7 +6688,7 @@ void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnul
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_reader ()
+PROC out_union_reader ()
 BEGIN
   CURSOR c FOR
     CALL out_union_two();
@@ -6748,7 +6748,7 @@ CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_from_select ()
+PROC out_union_from_select ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS x, '2' AS y;
@@ -6844,7 +6844,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_dml_reader ()
+PROC out_union_dml_reader ()
 BEGIN
   CURSOR c FOR
     CALL out_union_from_select();
@@ -6906,7 +6906,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_union_values (a INT!, b INT!)
+PROC out_union_values (a INT!, b INT!)
 BEGIN
   CURSOR x LIKE SELECT 1 AS x, 2 AS y;
   FETCH x(x, y) FROM VALUES(a, b);
@@ -6973,7 +6973,7 @@ void out_union_values_fetch_results(out_union_values_result_set_ref _Nullable *_
 // The statement ending at line XXXX
 
 /*
-CREATE PROC read_out_union_values (a INT!, b INT!)
+PROC read_out_union_values (a INT!, b INT!)
 BEGIN
   CURSOR C FOR
     CALL out_union_values(a, b);
@@ -7022,7 +7022,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC out_union_dml ()
+PROC out_union_dml ()
 BEGIN
   CURSOR x FOR
     SELECT *
@@ -7122,7 +7122,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC out_union_dml_for_call ()
+PROC out_union_dml_for_call ()
 BEGIN
   CURSOR C FOR
     CALL out_union_dml();
@@ -7175,7 +7175,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC compound_select_expr ()
+PROC compound_select_expr ()
 BEGIN
   DECLARE x INT;
   SET x := ( SELECT 1
@@ -7222,7 +7222,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window_function_invocation ()
+PROC window_function_invocation ()
 BEGIN
   SELECT id, 
     row_number() OVER () AS row_num
@@ -7298,7 +7298,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC update_cursor ()
+PROC update_cursor ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, 2 AS y;
   UPDATE CURSOR C(x) FROM VALUES(2);
@@ -7348,7 +7348,7 @@ DECLARE PROC out_union_no_dml (id INT) OUT UNION (id INT!);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_return ()
+PROC use_return ()
 BEGIN
   TRY
     SELECT 1 AS x;
@@ -7430,7 +7430,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_return_no_error_flow ()
+PROC use_return_no_error_flow ()
 BEGIN
   IF 1 THEN
     RETURN;
@@ -7456,7 +7456,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC empty_proc ()
+PROC empty_proc ()
 BEGIN
 END;
 */
@@ -7474,7 +7474,7 @@ void empty_proc(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC empty_blocks ()
+PROC empty_blocks ()
 BEGIN
   IF 1 THEN
   END;
@@ -7564,7 +7564,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC tail_catch ()
+PROC tail_catch ()
 BEGIN
   TRY
   CATCH
@@ -7608,7 +7608,7 @@ CQL_WARN_UNUSED cql_code tail_catch(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC pretty_print_with_quote ()
+PROC pretty_print_with_quote ()
 BEGIN
   INSERT INTO bar(id, name)
     VALUES(1, "it's high noon\r\n\f\b\t\v");
@@ -7639,7 +7639,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC hex_quote ()
+PROC hex_quote ()
 BEGIN
   INSERT INTO bar(id, name)
     VALUES(1, "\x01\x02\xa1\x1bg");
@@ -7671,7 +7671,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:suppress_getters)
-CREATE PROC lotsa_columns_no_getters ()
+PROC lotsa_columns_no_getters ()
 BEGIN
   SELECT *
     FROM bar;
@@ -7759,7 +7759,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:generate_copy)
-CREATE PROC sproc_with_copy ()
+PROC sproc_with_copy ()
 BEGIN
   SELECT *
     FROM bar;
@@ -7847,7 +7847,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
+PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
   FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
@@ -7965,7 +7965,7 @@ void emit_object_with_setters(cql_object_ref _Nonnull o, cql_object_ref _Nonnull
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
+PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
   CURSOR C LIKE emit_setters_with_nullables ARGUMENTS;
   FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
@@ -8078,7 +8078,7 @@ void emit_setters_with_nullables(cql_object_ref _Nullable o, cql_object_ref _Nul
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC no_out_with_setters ()
+PROC no_out_with_setters ()
 BEGIN
   SELECT *
     FROM bar;
@@ -8166,7 +8166,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:suppress_result_set)
-CREATE PROC lotsa_columns_no_result_set ()
+PROC lotsa_columns_no_result_set ()
 BEGIN
   SELECT *
     FROM bar;
@@ -8199,7 +8199,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC early_out_rc_cleared (OUT x INT)
+PROC early_out_rc_cleared (OUT x INT)
 BEGIN
   CURSOR C FOR
     SELECT 1 AS x;
@@ -8257,7 +8257,7 @@ cql_cleanup:
 /*
 @ATTRIBUTE(cql:vault_sensitive=(id, name))
 @ATTRIBUTE(cql:custom_type_for_encoded_column)
-CREATE PROC vault_sensitive_with_values_proc ()
+PROC vault_sensitive_with_values_proc ()
 BEGIN
   SELECT *
     FROM vault_mixed_sensitive;
@@ -8347,7 +8347,7 @@ cql_cleanup:
 /*
 @ATTRIBUTE(cql:vault_sensitive=(id, name))
 @ATTRIBUTE(cql:custom_type_for_encoded_column)
-CREATE PROC vault_not_nullable_sensitive_with_values_proc ()
+PROC vault_not_nullable_sensitive_with_values_proc ()
 BEGIN
   SELECT *
     FROM vault_mixed_not_nullable_sensitive;
@@ -8436,7 +8436,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC vault_sensitive_with_no_values_proc ()
+PROC vault_sensitive_with_no_values_proc ()
 BEGIN
   SELECT *
     FROM vault_mixed_sensitive;
@@ -8525,7 +8525,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC vault_union_all_table_proc ()
+PROC vault_union_all_table_proc ()
 BEGIN
   SELECT *
     FROM vault_mixed_sensitive
@@ -8620,7 +8620,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive=alias_name)
-CREATE PROC vault_alias_column_proc ()
+PROC vault_alias_column_proc ()
 BEGIN
   SELECT name AS alias_name
     FROM vault_mixed_sensitive;
@@ -8700,7 +8700,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive=alias_name)
-CREATE PROC vault_alias_column_name_proc ()
+PROC vault_alias_column_name_proc ()
 BEGIN
   SELECT name AS alias_name
     FROM vault_mixed_sensitive;
@@ -8780,7 +8780,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC vault_cursor_proc ()
+PROC vault_cursor_proc ()
 BEGIN
   CURSOR C FOR
     SELECT name
@@ -8832,7 +8832,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive=(title, (id, name)))
-CREATE PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
+PROC vault_sensitive_with_context_and_sensitive_columns_proc ()
 BEGIN
   SELECT *
     FROM vault_mixed_sensitive;
@@ -8921,7 +8921,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive=((id, name)))
-CREATE PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
+PROC vault_sensitive_with_no_context_and_sensitive_columns_proc ()
 BEGIN
   SELECT *
     FROM vault_mixed_sensitive;
@@ -9010,7 +9010,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:vault_sensitive=(title, (id, name)))
-CREATE PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
+PROC vault_sensitive_with_context_and_no_sensitive_columns_proc ()
 BEGIN
   SELECT *
     FROM vault_non_sensitive;
@@ -9098,7 +9098,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC try_boxing (OUT result OBJECT<bar CURSOR>)
+PROC try_boxing (OUT result OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -9141,7 +9141,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>)
+PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR boxed_cursor;
   FETCH C;
@@ -9197,7 +9197,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_int_notnull ()
+PROC local_cast_int_notnull ()
 BEGIN
   DECLARE x INT!;
   SET x := CAST(3.2 AS INT);
@@ -9220,7 +9220,7 @@ void local_cast_int_notnull(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_int ()
+PROC local_cast_int ()
 BEGIN
   DECLARE x INT;
   DECLARE r REAL;
@@ -9247,7 +9247,7 @@ void local_cast_int(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_long_notnull ()
+PROC local_cast_long_notnull ()
 BEGIN
   DECLARE x LONG!;
   SET x := CAST(3.2 AS LONG);
@@ -9270,7 +9270,7 @@ void local_cast_long_notnull(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_long ()
+PROC local_cast_long ()
 BEGIN
   DECLARE x LONG;
   DECLARE r REAL;
@@ -9297,7 +9297,7 @@ void local_cast_long(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_real_notnull ()
+PROC local_cast_real_notnull ()
 BEGIN
   DECLARE x REAL!;
   SET x := CAST(3 AS REAL);
@@ -9320,7 +9320,7 @@ void local_cast_real_notnull(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_real ()
+PROC local_cast_real ()
 BEGIN
   DECLARE x REAL;
   DECLARE r INT;
@@ -9347,7 +9347,7 @@ void local_cast_real(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_bool_notnull ()
+PROC local_cast_bool_notnull ()
 BEGIN
   DECLARE x BOOL!;
   SET x := CAST(3.2 AS BOOL);
@@ -9370,7 +9370,7 @@ void local_cast_bool_notnull(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_bool ()
+PROC local_cast_bool ()
 BEGIN
   DECLARE x BOOL;
   DECLARE r REAL;
@@ -9397,7 +9397,7 @@ void local_cast_bool(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_from_bool_notnull ()
+PROC local_cast_from_bool_notnull ()
 BEGIN
   DECLARE b BOOL!;
   SET b := 1;
@@ -9424,7 +9424,7 @@ void local_cast_from_bool_notnull(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_from_bool ()
+PROC local_cast_from_bool ()
 BEGIN
   DECLARE b BOOL;
   SET b := nullable(1);
@@ -9451,7 +9451,7 @@ void local_cast_from_bool(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_from_bool_no_op_notnull ()
+PROC local_cast_from_bool_no_op_notnull ()
 BEGIN
   DECLARE x BOOL!;
   DECLARE b BOOL!;
@@ -9478,7 +9478,7 @@ void local_cast_from_bool_no_op_notnull(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC local_cast_from_bool_no_op ()
+PROC local_cast_from_bool_no_op ()
 BEGIN
   DECLARE b BOOL;
   SET b := nullable(1);
@@ -9505,7 +9505,7 @@ void local_cast_from_bool_no_op(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC base_proc_savepoint ()
+PROC base_proc_savepoint ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -9557,7 +9557,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC base_proc_savepoint_commit_return ()
+PROC base_proc_savepoint_commit_return ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -9617,7 +9617,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC base_proc_savepoint_rollback_return ()
+PROC base_proc_savepoint_rollback_return ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -9686,7 +9686,7 @@ cql_int32 x = 0;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window1 ()
+PROC window1 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
@@ -9765,7 +9765,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window2 ()
+PROC window2 ()
 BEGIN
   SELECT month, amount, 
     SUM(amount) OVER (ORDER BY month) AS RunningTotal
@@ -9844,7 +9844,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window3 ()
+PROC window3 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
@@ -9923,7 +9923,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window4 ()
+PROC window4 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
@@ -10002,7 +10002,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window5 ()
+PROC window5 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
@@ -10081,7 +10081,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window6 ()
+PROC window6 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
@@ -10160,7 +10160,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window7 ()
+PROC window7 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
@@ -10239,7 +10239,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window8 ()
+PROC window8 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
@@ -10318,7 +10318,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window9 ()
+PROC window9 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
@@ -10397,7 +10397,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window10 ()
+PROC window10 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
@@ -10476,7 +10476,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window11 ()
+PROC window11 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
@@ -10555,7 +10555,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window12 ()
+PROC window12 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
@@ -10634,7 +10634,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window13 ()
+PROC window13 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
@@ -10713,7 +10713,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window14 ()
+PROC window14 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
@@ -10792,7 +10792,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window15 ()
+PROC window15 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
@@ -10871,7 +10871,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC window16 ()
+PROC window16 ()
 BEGIN
   SELECT month, amount, 
     AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
@@ -10950,7 +10950,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC emit_rc (OUT result_code INT!)
+PROC emit_rc (OUT result_code INT!)
 BEGIN
   SET result_code := @RC;
 END;
@@ -10979,7 +10979,7 @@ CQL_WARN_UNUSED cql_code emit_rc(sqlite3 *_Nonnull _db_, cql_int32 *_Nonnull res
 // The statement ending at line XXXX
 
 /*
-CREATE PROC rc_test ()
+PROC rc_test ()
 BEGIN
   LET err := @RC;
   LET e0 := @RC;
@@ -11086,7 +11086,7 @@ CQL_WARN_UNUSED cql_code rc_test(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC rc_test_lazy1 ()
+PROC rc_test_lazy1 ()
 BEGIN
   TRY
     CREATE TABLE whatever_anything(
@@ -11152,7 +11152,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC rc_test_lazy2 ()
+PROC rc_test_lazy2 ()
 BEGIN
   TRY
     CREATE TABLE whatever_anything(
@@ -11216,7 +11216,7 @@ CQL_WARN_UNUSED cql_code rc_test_lazy2(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC virtual_table_creator ()
+PROC virtual_table_creator ()
 BEGIN
   CREATE VIRTUAL TABLE virt_table USING virt_module (ARGUMENTS FOLLOWING) AS (
     id INT,
@@ -11250,7 +11250,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_arg_cursor (x INT!, OUT y INT!)
+PROC out_arg_cursor (x INT!, OUT y INT!)
 BEGIN
   CURSOR C LIKE out_arg_cursor ARGUMENTS;
   FETCH C(x, y) FROM VALUES(1, 1);
@@ -11288,7 +11288,7 @@ void out_arg_cursor(cql_int32 x, cql_int32 *_Nonnull y) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC make_virt_table ()
+PROC make_virt_table ()
 BEGIN
   CREATE VIRTUAL TABLE v1 USING m1 AS (
     id INT
@@ -11332,7 +11332,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC virtual1 ()
+PROC virtual1 ()
 BEGIN
   SELECT *
     FROM virtual_with_hidden;
@@ -11409,7 +11409,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC virtual2 ()
+PROC virtual2 ()
 BEGIN
   SELECT vx, vy, vz
     FROM virtual_with_hidden
@@ -11489,7 +11489,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC private_proc (OUT x INT)
+PROC private_proc (OUT x INT)
 BEGIN
   SET x := 1;
 END;
@@ -11511,7 +11511,7 @@ static void private_proc(cql_nullable_int32 *_Nonnull x) {
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC private_out_union ()
+PROC private_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
   FETCH C(a_field) FROM VALUES(1);
@@ -11575,7 +11575,7 @@ static void private_out_union_fetch_results(private_out_union_result_set_ref _Nu
 
 /*
 @ATTRIBUTE(cql:alt_prefix=c_)
-CREATE PROC proc_with_alt_prefix (OUT x INT)
+PROC proc_with_alt_prefix (OUT x INT)
 BEGIN
   SET x := 1;
 END;
@@ -11598,7 +11598,7 @@ void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_private_out_union ()
+PROC use_private_out_union ()
 BEGIN
   CURSOR C FOR
     CALL private_out_union();
@@ -11652,7 +11652,7 @@ CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
 
 /*
 @ATTRIBUTE(cql:suppress_getters)
-CREATE PROC no_getters_out_union ()
+PROC no_getters_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
   FETCH C(a_field) FROM VALUES(1);
@@ -11715,7 +11715,7 @@ void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nul
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_no_getters_out_union ()
+PROC use_no_getters_out_union ()
 BEGIN
   CURSOR C FOR
     CALL no_getters_out_union();
@@ -11769,7 +11769,7 @@ CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
 
 /*
 @ATTRIBUTE(cql:suppress_result_set)
-CREATE PROC suppress_results_out_union ()
+PROC suppress_results_out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS a_field;
   FETCH C(a_field) FROM VALUES(1);
@@ -11832,7 +11832,7 @@ void suppress_results_out_union_fetch_results(suppress_results_out_union_result_
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_suppress_results_out_union ()
+PROC use_suppress_results_out_union ()
 BEGIN
   CURSOR C FOR
     CALL suppress_results_out_union();
@@ -11886,7 +11886,7 @@ CQL_WARN_UNUSED cql_code use_suppress_results_out_union(sqlite3 *_Nonnull _db_) 
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC private_result (OUT x INT)
+PROC private_result (OUT x INT)
 BEGIN
   SELECT 1 AS x;
 END;
@@ -11927,7 +11927,7 @@ static void private_fwd_ref(cql_int32 x);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC set_out_arg_ref_test (OUT x TEXT)
+PROC set_out_arg_ref_test (OUT x TEXT)
 BEGIN
 END;
 */
@@ -11948,7 +11948,7 @@ void set_out_arg_ref_test(cql_string_ref _Nullable *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC set_out_arg_null_test (OUT x INT)
+PROC set_out_arg_null_test (OUT x INT)
 BEGIN
 END;
 */
@@ -11969,7 +11969,7 @@ void set_out_arg_null_test(cql_nullable_int32 *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC set_out_arg_notnull_test (OUT x INT!)
+PROC set_out_arg_notnull_test (OUT x INT!)
 BEGIN
 END;
 */
@@ -11991,7 +11991,7 @@ global_cursor2_row global_cursor2 = { ._refs_count_ = 1, ._refs_offset_ = global
 // The statement ending at line XXXX
 
 /*
-CREATE PROC early_close_cursor ()
+PROC early_close_cursor ()
 BEGIN
   CLOSE global_cursor;
   CLOSE global_cursor2;
@@ -12019,7 +12019,7 @@ CQL_WARN_UNUSED cql_code early_close_cursor(sqlite3 *_Nonnull _db_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC various_lets ()
+PROC various_lets ()
 BEGIN
   LET r := 1.0;
   LET i := 1;
@@ -12077,7 +12077,7 @@ void various_lets(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC try_catch_rc ()
+PROC try_catch_rc ()
 BEGIN
   CURSOR C FOR
     SELECT 'foo' AS extra2
@@ -12144,7 +12144,7 @@ DECLARE PROC out2_proc (x INT, OUT y INT!, OUT z INT!);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_decl_test (x INT)
+PROC out_decl_test (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
   DECLARE OUT CALL out2_proc(x, u, v);
@@ -12169,7 +12169,7 @@ void out_decl_test(cql_nullable_int32 x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_decl_loop_test (x INT)
+PROC out_decl_loop_test (x INT)
 BEGIN
   WHILE 1
   BEGIN
@@ -12200,7 +12200,7 @@ void out_decl_loop_test(cql_nullable_int32 x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC binary_ops_with_null ()
+PROC binary_ops_with_null ()
 BEGIN
   LET add0 := NULL + 42;
   LET add1 := 42 + NULL;
@@ -12309,7 +12309,7 @@ void binary_ops_with_null(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC uses_throw ()
+PROC uses_throw ()
 BEGIN
   THROW;
 END;
@@ -12338,7 +12338,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC uses_ifnull_throw (x INT)
+PROC uses_ifnull_throw (x INT)
 BEGIN
   LET y := ifnull_throw(x);
 END;
@@ -12371,7 +12371,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_object (o OBJECT!)
+PROC out_object (o OBJECT!)
 BEGIN
   CURSOR C LIKE out_object ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
@@ -12450,7 +12450,7 @@ void out_object(cql_object_ref _Nonnull o, out_object_row *_Nonnull _result_) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC exercise_contracts (a INT, b INT!, c TEXT, d TEXT!, e BLOB, f BLOB!, g OBJECT, h OBJECT!, OUT i INT, OUT j INT!, OUT k TEXT, OUT l TEXT!, INOUT m INT, INOUT n INT!, INOUT o TEXT, INOUT p TEXT!)
+PROC exercise_contracts (a INT, b INT!, c TEXT, d TEXT!, e BLOB, f BLOB!, g OBJECT, h OBJECT!, OUT i INT, OUT j INT!, OUT k TEXT, OUT l TEXT!, INOUT m INT, INOUT n INT!, INOUT o TEXT, INOUT p TEXT!)
 BEGIN
   SET l := "text";
 END;
@@ -12486,7 +12486,7 @@ void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nulla
 // The statement ending at line XXXX
 
 /*
-CREATE PROC public_proc_with_a_contract (t TEXT!)
+PROC public_proc_with_a_contract (t TEXT!)
 BEGIN
 END;
 */
@@ -12507,7 +12507,7 @@ void public_proc_with_a_contract(cql_string_ref _Nonnull t) {
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC private_proc_without_a_contract (t TEXT!)
+PROC private_proc_without_a_contract (t TEXT!)
 BEGIN
 END;
 */
@@ -12525,7 +12525,7 @@ static void private_proc_without_a_contract(cql_string_ref _Nonnull t) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC result_set_proc_with_contract_in_fetch_results (t TEXT!)
+PROC result_set_proc_with_contract_in_fetch_results (t TEXT!)
 BEGIN
   SELECT *
     FROM bar;
@@ -12614,7 +12614,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC out_proc_with_contract_in_fetch_results (t TEXT!)
+PROC out_proc_with_contract_in_fetch_results (t TEXT!)
 BEGIN
   CURSOR C LIKE bar;
   OUT C;
@@ -12706,7 +12706,7 @@ void out_proc_with_contract_in_fetch_results(cql_string_ref _Nonnull t, out_proc
 // The statement ending at line XXXX
 
 /*
-CREATE PROC nullability_improvements_are_erased_for_sql ()
+PROC nullability_improvements_are_erased_for_sql ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -12783,7 +12783,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC nullability_improvements_do_not_change_access ()
+PROC nullability_improvements_do_not_change_access ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -12815,7 +12815,7 @@ cql_bool false_test = 0;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC BigFormat ()
+PROC BigFormat ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -13269,7 +13269,7 @@ cql_bool abs_val_bool = 0;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC ltor_proc_int_not_null (a INT!, b INT!, OUT c INT!)
+PROC ltor_proc_int_not_null (a INT!, b INT!, OUT c INT!)
 BEGIN
 END;
 */
@@ -13290,7 +13290,7 @@ void ltor_proc_int_not_null(cql_int32 a, cql_int32 b, cql_int32 *_Nonnull c) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC ltor_proc_int (a INT, b INT, OUT c INT)
+PROC ltor_proc_int (a INT, b INT, OUT c INT)
 BEGIN
 END;
 */
@@ -13311,7 +13311,7 @@ void ltor_proc_int(cql_nullable_int32 a, cql_nullable_int32 b, cql_nullable_int3
 // The statement ending at line XXXX
 
 /*
-CREATE PROC ltor_proc_text_not_null (a TEXT!, b TEXT!, OUT c TEXT!)
+PROC ltor_proc_text_not_null (a TEXT!, b TEXT!, OUT c TEXT!)
 BEGIN
   SET c := "text";
 END;
@@ -13336,7 +13336,7 @@ void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull 
 // The statement ending at line XXXX
 
 /*
-CREATE PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT)
+PROC ltor_proc_text (a TEXT, b TEXT, OUT c TEXT)
 BEGIN
 END;
 */
@@ -13357,7 +13357,7 @@ void ltor_proc_text(cql_string_ref _Nullable a, cql_string_ref _Nullable b, cql_
 // The statement ending at line XXXX
 
 /*
-CREATE PROC arguments_are_evaluated_left_to_right ()
+PROC arguments_are_evaluated_left_to_right ()
 BEGIN
   LET a := ltor_proc_int_not_null(ltor_proc_int_not_null(1, 2), ltor_proc_int_not_null(3, 4));
   LET b := ltor_proc_int(ltor_proc_int(1, 2), ltor_proc_int(3, 4));
@@ -13448,7 +13448,7 @@ void arguments_are_evaluated_left_to_right(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC f1 (OUT x INT!)
+PROC f1 (OUT x INT!)
 BEGIN
   SET x := 5;
 END;
@@ -13471,7 +13471,7 @@ void f1(cql_int32 *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC f2 (OUT x INT)
+PROC f2 (OUT x INT)
 BEGIN
   SET x := 5;
 END;
@@ -13494,7 +13494,7 @@ void f2(cql_nullable_int32 *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC f3 (y INT, OUT x INT)
+PROC f3 (y INT, OUT x INT)
 BEGIN
   SET x := y;
 END;
@@ -13517,7 +13517,7 @@ void f3(cql_nullable_int32 y, cql_nullable_int32 *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC multi_call_temp_reuse ()
+PROC multi_call_temp_reuse ()
 BEGIN
   LET q := f1() + f1() + f1();
   LET r := f2() + f2() + f2();
@@ -13566,7 +13566,7 @@ void multi_call_temp_reuse(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC sensitive_function_is_a_no_op ()
+PROC sensitive_function_is_a_no_op ()
 BEGIN
   LET x := sensitive("hello");
   SELECT sensitive("hello") AS y;
@@ -13643,7 +13643,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC and_preserves_temps (a LONG, b LONG, c LONG)
+PROC and_preserves_temps (a LONG, b LONG, c LONG)
 BEGIN
   IF a > b AND (a < c OR c IS NULL) THEN
     SET c := a;
@@ -13696,7 +13696,7 @@ void and_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullabl
 // The statement ending at line XXXX
 
 /*
-CREATE PROC or_preserves_temps (a LONG, b LONG, c LONG)
+PROC or_preserves_temps (a LONG, b LONG, c LONG)
 BEGIN
   IF c < 0 OR a > c AND b > c THEN
     SET c := a;
@@ -13752,7 +13752,7 @@ void or_preserves_temps(cql_nullable_int64 a, cql_nullable_int64 b, cql_nullable
 
 /*
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag ()
+PROC shared_frag ()
 BEGIN
   SELECT 1234 AS shared_something;
 END;
@@ -13761,7 +13761,7 @@ END;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
   WITH
     shared_frag (shared_something) AS (CALL shared_frag())
@@ -13841,7 +13841,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_conditional (x INT!)
+PROC shared_conditional (x INT!)
 BEGIN
   IF x = 1 THEN
     SELECT x AS x;
@@ -13856,7 +13856,7 @@ END;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC shared_conditional_user (x INT!)
+PROC shared_conditional_user (x INT!)
 BEGIN
   WITH
     some_cte (id) AS (
@@ -13998,7 +13998,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_shared_proc (x_ INT!)
+PROC nested_shared_proc (x_ INT!)
 BEGIN
   IF x_ <= 5 THEN
     WITH
@@ -14015,7 +14015,7 @@ END;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC nested_shared_stuff ()
+PROC nested_shared_stuff ()
 BEGIN
   WITH
     nested_shared_proc (x) AS (CALL nested_shared_proc(1))
@@ -14148,7 +14148,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_nested_select_shared_frag_form ()
+PROC use_nested_select_shared_frag_form ()
 BEGIN
   SELECT *
     FROM (CALL nested_shared_proc(1));
@@ -14282,7 +14282,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC simple_shared_frag ()
+PROC simple_shared_frag ()
 BEGIN
   SELECT *
     FROM (CALL shared_frag());
@@ -14322,7 +14322,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag_else_nothing (id_ INT)
+PROC shared_frag_else_nothing (id_ INT)
 BEGIN
   IF id_ > 0 THEN
     SELECT id_ AS id1, 'x' AS text1;
@@ -14335,7 +14335,7 @@ END;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC shared_frag_else_nothing_test ()
+PROC shared_frag_else_nothing_test ()
 BEGIN
   WITH
     shared_frag_else_nothing (id1, text1) AS (CALL shared_frag_else_nothing(5))
@@ -14434,7 +14434,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC shared_frag_else_nothing_in_from_clause_test ()
+PROC shared_frag_else_nothing_in_from_clause_test ()
 BEGIN
   SELECT *
     FROM (CALL shared_frag_else_nothing(5));
@@ -14540,7 +14540,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC slash_star_and_star_slash ()
+PROC slash_star_and_star_slash ()
 BEGIN
   LET x := "/+  +/";
 END;
@@ -14563,7 +14563,7 @@ void slash_star_and_star_slash(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC blob_serialization_test ()
+PROC blob_serialization_test ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
@@ -14684,7 +14684,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC deserialize_func ()
+PROC deserialize_func ()
 BEGIN
   CURSOR C LIKE structured_storage;
   FETCH C FROM BLOB make_blob();
@@ -14753,7 +14753,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC bigstuff ()
+PROC bigstuff ()
 BEGIN
   LET big1 := 0x7fffffffffffffffL;
   LET big2 := 0x8000000000000000L;
@@ -14821,7 +14821,7 @@ cql_dynamic_cursor gr_blob_cursor_dyn = {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>)
+PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>)
 BEGIN
   SET b FROM CURSOR gr_blob_cursor;
 END;
@@ -14852,7 +14852,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC mutated_in_param_ref (x TEXT)
+PROC mutated_in_param_ref (x TEXT)
 BEGIN
   SET x := 'hi';
 END;
@@ -14888,7 +14888,7 @@ DECLARE PROC some_redeclared_out_proc () OUT (x INT) USING TRANSACTION;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC some_redeclared_out_proc ()
+PROC some_redeclared_out_proc ()
 BEGIN
   CURSOR c FOR
     SELECT nullable(1) AS x;
@@ -14984,7 +14984,7 @@ DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INT) USING TRANSACTI
 // The statement ending at line XXXX
 
 /*
-CREATE PROC some_redeclared_out_union_proc ()
+PROC some_redeclared_out_union_proc ()
 BEGIN
   CURSOR c FOR
     SELECT nullable(1) AS x;
@@ -15064,7 +15064,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC external_cursor_caller ()
+PROC external_cursor_caller ()
 BEGIN
   CURSOR shape_storage LIKE SELECT 1 AS x;
   LET result := external_cursor_func(shape_storage);
@@ -15114,7 +15114,7 @@ void external_cursor_caller(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC clobber1 (INOUT x TEXT)
+PROC clobber1 (INOUT x TEXT)
 BEGIN
   SET x := "xyzzy";
 END;
@@ -15136,7 +15136,7 @@ void clobber1(cql_string_ref _Nullable *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC clobber2 (OUT x TEXT)
+PROC clobber2 (OUT x TEXT)
 BEGIN
   SET x := "xyzzy";
 END;
@@ -15159,7 +15159,7 @@ void clobber2(cql_string_ref _Nullable *_Nonnull x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC mutated_in_arg1 (x TEXT)
+PROC mutated_in_arg1 (x TEXT)
 BEGIN
   CALL clobber1(x);
 END;
@@ -15183,7 +15183,7 @@ void mutated_in_arg1(cql_string_ref _Nullable _in__x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC mutated_in_arg2 (x TEXT)
+PROC mutated_in_arg2 (x TEXT)
 BEGIN
   CALL clobber2(x);
 END;
@@ -15208,7 +15208,7 @@ void mutated_in_arg2(cql_string_ref _Nullable _in__x) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC mutated_in_arg3 (x TEXT)
+PROC mutated_in_arg3 (x TEXT)
 BEGIN
   CURSOR C FOR
     SELECT "x" AS x;
@@ -15250,7 +15250,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC mutated_not_null (x TEXT!)
+PROC mutated_not_null (x TEXT!)
 BEGIN
   SET x := 'xyzzy';
 END;
@@ -15282,7 +15282,7 @@ DECLARE PROC a_proc_we_need () (id INT, t TEXT);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC a_proc_that_needs_dependents ()
+PROC a_proc_that_needs_dependents ()
 BEGIN
   CURSOR C LIKE (a_foo OBJECT<a_proc_we_need SET>, another_foo OBJECT<a_proc_we_need SET>);
   FETCH C(a_foo, another_foo) FROM VALUES(a_proc_we_need(), a_proc_we_need());
@@ -15380,7 +15380,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC another_proc_that_needs_dependents (a_foo OBJECT<a_proc_we_need SET>)
+PROC another_proc_that_needs_dependents (a_foo OBJECT<a_proc_we_need SET>)
 BEGIN
 END;
 */
@@ -15399,7 +15399,7 @@ void another_proc_that_needs_dependents(cql_object_ref _Nullable a_foo) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC simple_child_proc ()
+PROC simple_child_proc ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
 END;
@@ -15472,7 +15472,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC simple_container_proc ()
+PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
@@ -15567,7 +15567,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_cql_blob_get_backed ()
+PROC use_cql_blob_get_backed ()
 BEGIN
   CURSOR C FOR
     SELECT
@@ -15613,7 +15613,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_cql_blob_get_backed2 ()
+PROC use_cql_blob_get_backed2 ()
 BEGIN
   CURSOR C FOR
     SELECT
@@ -15657,7 +15657,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC insert_into_backed2 ()
+PROC insert_into_backed2 ()
 BEGIN
   WITH
     _vals (pk1, pk2, flag, id, name, extra) AS (
@@ -15698,7 +15698,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC update_backed2 ()
+PROC update_backed2 ()
 BEGIN
   WITH
     backed2 (rowid, pk1, pk2, flag, id, name, extra) AS (CALL _backed2())
@@ -15752,7 +15752,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_generated_fragment ()
+PROC use_generated_fragment ()
 BEGIN
   WITH
     _backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -15862,7 +15862,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_directly ()
+PROC use_backed_table_directly ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -15972,7 +15972,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_with_cursor ()
+PROC use_backed_table_with_cursor ()
 BEGIN
   CURSOR C FOR
     WITH
@@ -16023,7 +16023,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_directly_in_with_select ()
+PROC use_backed_table_directly_in_with_select ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
@@ -16145,7 +16145,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_with_select_and_cursor ()
+PROC use_backed_table_with_select_and_cursor ()
 BEGIN
   CURSOR C FOR
     WITH
@@ -16208,7 +16208,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_select_expr (OUT x BOOL!)
+PROC use_backed_table_select_expr (OUT x BOOL!)
 BEGIN
   SET x := (   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -16266,7 +16266,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC explain_query_plan_backed (OUT x BOOL!)
+PROC explain_query_plan_backed (OUT x BOOL!)
 BEGIN
   EXPLAIN QUERY PLAN
   WITH
@@ -16319,7 +16319,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC use_backed_table_select_expr_value_offsets (OUT x BOOL!)
+PROC use_backed_table_select_expr_value_offsets (OUT x BOOL!)
 BEGIN
   SET x := (   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -16376,7 +16376,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC insert_backed_values ()
+PROC insert_backed_values ()
 BEGIN
   WITH
     _vals (pk, x, y) AS (
@@ -16417,7 +16417,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC insert_backed_values_using_with ()
+PROC insert_backed_values_using_with ()
 BEGIN
   WITH
     U (x, y, z) AS (
@@ -16472,7 +16472,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC insert_backed_values_using_form ()
+PROC insert_backed_values_using_form ()
 BEGIN
   WITH
     _vals (pk, x, y) AS (
@@ -16513,7 +16513,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC inserted_backed_from_select ()
+PROC inserted_backed_from_select ()
 BEGIN
   WITH
     small_backed (rowid, pk, x, y) AS (CALL _small_backed()),
@@ -16568,7 +16568,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC delete_from_backed ()
+PROC delete_from_backed ()
 BEGIN
   WITH
     small_backed (rowid, pk, x, y) AS (CALL _small_backed())
@@ -16615,7 +16615,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC delete_from_backed_no_where_clause ()
+PROC delete_from_backed_no_where_clause ()
 BEGIN
   WITH
     small_backed (rowid, pk, x, y) AS (CALL _small_backed()),
@@ -16666,7 +16666,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC test_blob_update_expand ()
+PROC test_blob_update_expand ()
 BEGIN
   DECLARE b BLOB;
   LET x := ( SELECT cql_blob_update(b, 1, backed.pk) );
@@ -16720,7 +16720,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC update_backed_set_value ()
+PROC update_backed_set_value ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -16774,7 +16774,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC update_backed_with_clause ()
+PROC update_backed_with_clause ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
@@ -16834,7 +16834,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC update_backed_set_key ()
+PROC update_backed_set_key ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -16888,7 +16888,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC update_backed_set_both ()
+PROC update_backed_set_both ()
 BEGIN
   WITH
     backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
@@ -16946,7 +16946,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC stmt_in_loop ()
+PROC stmt_in_loop ()
 BEGIN
   LET i := 0;
   WHILE i < 10
@@ -17011,7 +17011,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC cursor_in_loop ()
+PROC cursor_in_loop ()
 BEGIN
   LET i := 0;
   WHILE i < 10
@@ -17088,7 +17088,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC select_in_loop ()
+PROC select_in_loop ()
 BEGIN
   WHILE 1
   BEGIN
@@ -17135,7 +17135,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC select_if_nothing_in_loop ()
+PROC select_if_nothing_in_loop ()
 BEGIN
   WHILE 1
   BEGIN
@@ -17189,7 +17189,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC select_if_nothing_or_null_in_loop ()
+PROC select_if_nothing_or_null_in_loop ()
 BEGIN
   WHILE 1
   BEGIN
@@ -17245,7 +17245,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC my_proc_check_type ()
+PROC my_proc_check_type ()
 BEGIN
   LET int_lit_foo := TYPE_CHECK(1 AS INT!);
   LET a_string := "abc";
@@ -17322,7 +17322,7 @@ cql_string_ref stew3(int x, ...);
 // The statement ending at line XXXX
 
 /*
-CREATE PROC no_check_func_calls ()
+PROC no_check_func_calls ()
 BEGIN
   LET x := stew1(0, 'x');
   LET y := stew2(1, 2, 3);
@@ -17360,7 +17360,7 @@ void no_check_func_calls(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t0 ()
+PROC qid_t0 ()
 BEGIN
   CREATE TABLE `xyz``abc`(
     x INT!,
@@ -17395,7 +17395,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t1 ()
+PROC qid_t1 ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -17452,7 +17452,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t2 ()
+PROC qid_t2 ()
 BEGIN
   CURSOR D FOR
     SELECT `xyz``abc`.*
@@ -17509,7 +17509,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t3 ()
+PROC qid_t3 ()
 BEGIN
   LET x := ( SELECT `xyz``abc`.`a b`
     FROM `xyz``abc` );
@@ -17547,7 +17547,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t4a ()
+PROC qid_t4a ()
 BEGIN
   CURSOR Q LIKE `xyz``abc`(-`a b`);
 END;
@@ -17575,7 +17575,7 @@ void qid_t4a(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t4b ()
+PROC qid_t4b ()
 BEGIN
   CURSOR R LIKE `xyz``abc`;
   FETCH R(x, `a b`) FROM VALUES(1, 2);
@@ -17614,7 +17614,7 @@ void qid_t4b(void) {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t5 ()
+PROC qid_t5 ()
 BEGIN
   CREATE VIEW `view` AS
     SELECT 1 AS x;
@@ -17645,7 +17645,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC qid_t6 ()
+PROC qid_t6 ()
 BEGIN
   CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
 END;
@@ -17674,7 +17674,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC declare_constant_variable ()
+PROC declare_constant_variable ()
 BEGIN
   CONST const_variable := 1;
 END;
@@ -17697,7 +17697,7 @@ cql_int32 this_is_the_end = 0;
 // The statement ending at line XXXX
 
 /*
-CREATE PROC end_proc ()
+PROC end_proc ()
 BEGIN
 END;
 */

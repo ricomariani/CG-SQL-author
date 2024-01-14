@@ -44,118 +44,118 @@ DECLARE PROC sample_proc25 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2
 
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc1()
+PROC open_sample_proc1()
 BEGIN
   CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);
 END;
 
-CREATE PROC close_sample_proc1()
+PROC close_sample_proc1()
 BEGIN
   DROP TABLE test_sample_proc1;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc2()
+PROC open_sample_proc2()
 BEGIN
   CREATE TEMP TABLE test_sample_proc2(LIKE sample_proc2);
 END;
 
-CREATE PROC close_sample_proc2()
+PROC close_sample_proc2()
 BEGIN
   DROP TABLE test_sample_proc2;
 END;
 
-CREATE PROC insert_sample_proc2(LIKE sample_proc2)
+PROC insert_sample_proc2(LIKE sample_proc2)
 BEGIN
   INSERT INTO test_sample_proc2 FROM ARGUMENTS;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc3()
+PROC open_sample_proc3()
 BEGIN
   CREATE TEMP TABLE test_sample_proc3(LIKE sample_proc3);
 END;
 
-CREATE PROC close_sample_proc3()
+PROC close_sample_proc3()
 BEGIN
   DROP TABLE test_sample_proc3;
 END;
 
-CREATE PROC select_sample_proc3()
+PROC select_sample_proc3()
 BEGIN
   SELECT * FROM test_sample_proc3;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc4()
+PROC open_sample_proc4()
 BEGIN
   CREATE TEMP TABLE test_sample_proc4(LIKE sample_proc4);
 END;
 
-CREATE PROC close_sample_proc4()
+PROC close_sample_proc4()
 BEGIN
   DROP TABLE test_sample_proc4;
 END;
 
-CREATE PROC insert_sample_proc4(LIKE sample_proc4)
+PROC insert_sample_proc4(LIKE sample_proc4)
 BEGIN
   INSERT INTO test_sample_proc4 FROM ARGUMENTS;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc5()
+PROC open_sample_proc5()
 BEGIN
   CREATE TEMP TABLE test_sample_proc5(LIKE sample_proc5);
 END;
 
-CREATE PROC close_sample_proc5()
+PROC close_sample_proc5()
 BEGIN
   DROP TABLE test_sample_proc5;
 END;
 
-CREATE PROC select_sample_proc5()
+PROC select_sample_proc5()
 BEGIN
   SELECT * FROM test_sample_proc5;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc6()
+PROC open_sample_proc6()
 BEGIN
   CREATE TEMP TABLE test_sample_proc6(LIKE sample_proc6);
 END;
 
-CREATE PROC close_sample_proc6()
+PROC close_sample_proc6()
 BEGIN
   DROP TABLE test_sample_proc6;
 END;
 
-CREATE PROC select_sample_proc6()
+PROC select_sample_proc6()
 BEGIN
   SELECT * FROM test_sample_proc6;
 END;
 
-CREATE PROC insert_sample_proc6(LIKE sample_proc6)
+PROC insert_sample_proc6(LIKE sample_proc6)
 BEGIN
   INSERT INTO test_sample_proc6 FROM ARGUMENTS;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc7()
+PROC open_sample_proc7()
 BEGIN
   CREATE TEMP TABLE test_sample_proc7(LIKE sample_proc7);
 END;
 
-CREATE PROC close_sample_proc7()
+PROC close_sample_proc7()
 BEGIN
   DROP TABLE test_sample_proc7;
 END;
 
-CREATE PROC insert_sample_proc7(LIKE sample_proc7)
+PROC insert_sample_proc7(LIKE sample_proc7)
 BEGIN
   INSERT INTO test_sample_proc7 FROM ARGUMENTS;
 END;
 
-CREATE PROC select_sample_proc7()
+PROC select_sample_proc7()
 BEGIN
   SELECT * FROM test_sample_proc7;
 END;
@@ -163,7 +163,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc7_create_tables()
+PROC test_sample_proc7_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -196,7 +196,7 @@ BEGIN
       FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc7_create_triggers()
+PROC test_sample_proc7_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -211,7 +211,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc7_populate_tables()
+PROC test_sample_proc7_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -223,7 +223,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc7_drop_tables()
+PROC test_sample_proc7_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS `Foo View`;
   DROP TABLE IF EXISTS `table C`;
@@ -232,60 +232,60 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc7_drop_triggers()
+PROC test_sample_proc7_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc7_read_Baa()
+PROC test_sample_proc7_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc7_read_X_tableX20a()
+PROC test_sample_proc7_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc7_read_dbl_table()
+PROC test_sample_proc7_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc7_read_X_tableX20C()
+PROC test_sample_proc7_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc7_read_X_FooX20View()
+PROC test_sample_proc7_read_X_FooX20View()
 BEGIN
   SELECT * FROM `Foo View`;
 END;
 
-CREATE PROC test_sample_proc7_drop_indexes()
+PROC test_sample_proc7_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC open_sample_proc11()
+PROC open_sample_proc11()
 BEGIN
   CREATE TEMP TABLE test_sample_proc11(LIKE sample_proc11);
 END;
 
-CREATE PROC close_sample_proc11()
+PROC close_sample_proc11()
 BEGIN
   DROP TABLE test_sample_proc11;
 END;
 
-CREATE PROC select_sample_proc11()
+PROC select_sample_proc11()
 BEGIN
   SELECT * FROM test_sample_proc11;
 END;
 
 -- The statement ending at line XXXX
-CREATE PROC generate_sample_proc12_row(LIKE sample_proc12)
+PROC generate_sample_proc12_row(LIKE sample_proc12)
 BEGIN
   DECLARE curs CURSOR LIKE sample_proc12;
   FETCH curs FROM ARGUMENTS;
@@ -296,7 +296,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc13_create_tables()
+PROC test_sample_proc13_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -329,7 +329,7 @@ BEGIN
       FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc13_create_triggers()
+PROC test_sample_proc13_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -344,7 +344,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc13_populate_tables()
+PROC test_sample_proc13_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -356,7 +356,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc13_drop_tables()
+PROC test_sample_proc13_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS `Foo View`;
   DROP TABLE IF EXISTS `table C`;
@@ -365,63 +365,63 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc13_drop_triggers()
+PROC test_sample_proc13_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc13_read_Baa()
+PROC test_sample_proc13_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc13_read_X_tableX20a()
+PROC test_sample_proc13_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc13_read_dbl_table()
+PROC test_sample_proc13_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc13_read_X_tableX20C()
+PROC test_sample_proc13_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc13_read_X_FooX20View()
+PROC test_sample_proc13_read_X_FooX20View()
 BEGIN
   SELECT * FROM `Foo View`;
 END;
 
-CREATE PROC test_sample_proc13_drop_indexes()
+PROC test_sample_proc13_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
 
-CREATE PROC open_sample_proc13()
+PROC open_sample_proc13()
 BEGIN
   CREATE TEMP TABLE test_sample_proc13(LIKE sample_proc13);
 END;
 
-CREATE PROC close_sample_proc13()
+PROC close_sample_proc13()
 BEGIN
   DROP TABLE test_sample_proc13;
 END;
 
-CREATE PROC insert_sample_proc13(LIKE sample_proc13)
+PROC insert_sample_proc13(LIKE sample_proc13)
 BEGIN
   INSERT INTO test_sample_proc13 FROM ARGUMENTS;
 END;
 
-CREATE PROC select_sample_proc13()
+PROC select_sample_proc13()
 BEGIN
   SELECT * FROM test_sample_proc13;
 END;
 
-CREATE PROC generate_sample_proc13_row(LIKE sample_proc13)
+PROC generate_sample_proc13_row(LIKE sample_proc13)
 BEGIN
   DECLARE curs CURSOR LIKE sample_proc13;
   FETCH curs FROM ARGUMENTS;
@@ -432,7 +432,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc14_create_tables()
+PROC test_sample_proc14_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -465,7 +465,7 @@ BEGIN
       FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc14_create_triggers()
+PROC test_sample_proc14_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -480,7 +480,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc14_populate_tables()
+PROC test_sample_proc14_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -492,7 +492,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc14_drop_tables()
+PROC test_sample_proc14_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS `Foo View`;
   DROP TABLE IF EXISTS `table C`;
@@ -501,38 +501,38 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc14_drop_triggers()
+PROC test_sample_proc14_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc14_read_Baa()
+PROC test_sample_proc14_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc14_read_X_tableX20a()
+PROC test_sample_proc14_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc14_read_dbl_table()
+PROC test_sample_proc14_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc14_read_X_tableX20C()
+PROC test_sample_proc14_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc14_read_X_FooX20View()
+PROC test_sample_proc14_read_X_FooX20View()
 BEGIN
   SELECT * FROM `Foo View`;
 END;
 
-CREATE PROC test_sample_proc14_drop_indexes()
+PROC test_sample_proc14_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
@@ -541,7 +541,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc15_create_tables()
+PROC test_sample_proc15_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS primary_as_column(
     id_ TEXT!,
@@ -581,7 +581,7 @@ BEGIN
       FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc15_create_triggers()
+PROC test_sample_proc15_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -596,7 +596,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc15_populate_tables()
+PROC test_sample_proc15_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1') @dummy_seed(123);
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -610,7 +610,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc15_drop_tables()
+PROC test_sample_proc15_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS `Foo View`;
   DROP TABLE IF EXISTS `table C`;
@@ -620,43 +620,43 @@ BEGIN
   DROP TABLE IF EXISTS primary_as_column;
 END;
 
-CREATE PROC test_sample_proc15_drop_triggers()
+PROC test_sample_proc15_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc15_read_primary_as_column()
+PROC test_sample_proc15_read_primary_as_column()
 BEGIN
   SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc15_read_Baa()
+PROC test_sample_proc15_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc15_read_X_tableX20a()
+PROC test_sample_proc15_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc15_read_dbl_table()
+PROC test_sample_proc15_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc15_read_X_tableX20C()
+PROC test_sample_proc15_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc15_read_X_FooX20View()
+PROC test_sample_proc15_read_X_FooX20View()
 BEGIN
   SELECT * FROM `Foo View`;
 END;
 
-CREATE PROC test_sample_proc15_drop_indexes()
+PROC test_sample_proc15_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS p_id;
   DROP INDEX IF EXISTS `Baa id index`;
@@ -666,7 +666,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc16_create_tables()
+PROC test_sample_proc16_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -696,7 +696,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc16_create_triggers()
+PROC test_sample_proc16_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -711,7 +711,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc16_populate_tables()
+PROC test_sample_proc16_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -723,7 +723,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc16_drop_tables()
+PROC test_sample_proc16_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
@@ -731,33 +731,33 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc16_drop_triggers()
+PROC test_sample_proc16_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc16_read_Baa()
+PROC test_sample_proc16_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc16_read_X_tableX20a()
+PROC test_sample_proc16_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc16_read_dbl_table()
+PROC test_sample_proc16_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc16_read_X_tableX20C()
+PROC test_sample_proc16_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc16_drop_indexes()
+PROC test_sample_proc16_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
@@ -766,7 +766,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc17_create_tables()
+PROC test_sample_proc17_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -806,7 +806,7 @@ BEGIN
       FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc17_create_triggers()
+PROC test_sample_proc17_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -821,7 +821,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc17_populate_tables()
+PROC test_sample_proc17_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -835,7 +835,7 @@ BEGIN
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc17_drop_tables()
+PROC test_sample_proc17_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS `Foo View`;
   DROP TABLE IF EXISTS primary_as_column;
@@ -845,43 +845,43 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc17_drop_triggers()
+PROC test_sample_proc17_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc17_read_Baa()
+PROC test_sample_proc17_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc17_read_X_tableX20a()
+PROC test_sample_proc17_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc17_read_dbl_table()
+PROC test_sample_proc17_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc17_read_X_tableX20C()
+PROC test_sample_proc17_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc17_read_primary_as_column()
+PROC test_sample_proc17_read_primary_as_column()
 BEGIN
   SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc17_read_X_FooX20View()
+PROC test_sample_proc17_read_X_FooX20View()
 BEGIN
   SELECT * FROM `Foo View`;
 END;
 
-CREATE PROC test_sample_proc17_drop_indexes()
+PROC test_sample_proc17_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
@@ -891,7 +891,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc18_create_tables()
+PROC test_sample_proc18_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -921,7 +921,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc18_create_triggers()
+PROC test_sample_proc18_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -936,7 +936,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc18_populate_tables()
+PROC test_sample_proc18_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -948,7 +948,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc18_drop_tables()
+PROC test_sample_proc18_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
@@ -956,33 +956,33 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc18_drop_triggers()
+PROC test_sample_proc18_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc18_read_Baa()
+PROC test_sample_proc18_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc18_read_X_tableX20a()
+PROC test_sample_proc18_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc18_read_dbl_table()
+PROC test_sample_proc18_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc18_read_X_tableX20C()
+PROC test_sample_proc18_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc18_drop_indexes()
+PROC test_sample_proc18_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
@@ -991,7 +991,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc19_create_tables()
+PROC test_sample_proc19_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1001,33 +1001,33 @@ BEGIN
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 END;
 
-CREATE PROC test_sample_proc19_create_triggers()
+PROC test_sample_proc19_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc19_populate_tables()
+PROC test_sample_proc19_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc19_drop_tables()
+PROC test_sample_proc19_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc19_drop_triggers()
+PROC test_sample_proc19_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc19_read_Baa()
+PROC test_sample_proc19_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc19_drop_indexes()
+PROC test_sample_proc19_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
@@ -1036,7 +1036,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc20_create_tables()
+PROC test_sample_proc20_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1066,7 +1066,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc20_create_triggers()
+PROC test_sample_proc20_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1081,7 +1081,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc20_populate_tables()
+PROC test_sample_proc20_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1093,7 +1093,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc20_drop_tables()
+PROC test_sample_proc20_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
@@ -1101,33 +1101,33 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc20_drop_triggers()
+PROC test_sample_proc20_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc20_read_Baa()
+PROC test_sample_proc20_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc20_read_X_tableX20a()
+PROC test_sample_proc20_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc20_read_dbl_table()
+PROC test_sample_proc20_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc20_read_X_tableX20C()
+PROC test_sample_proc20_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc20_drop_indexes()
+PROC test_sample_proc20_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
@@ -1136,7 +1136,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc21_create_tables()
+PROC test_sample_proc21_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1178,7 +1178,7 @@ BEGIN
       FROM primary_as_column);
 END;
 
-CREATE PROC test_sample_proc21_create_triggers()
+PROC test_sample_proc21_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1193,7 +1193,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc21_populate_tables()
+PROC test_sample_proc21_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(333, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1208,7 +1208,7 @@ BEGIN
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(133) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc21_drop_tables()
+PROC test_sample_proc21_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS Complex_view;
   DROP TABLE IF EXISTS primary_as_column;
@@ -1218,54 +1218,54 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc21_drop_triggers()
+PROC test_sample_proc21_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc21_read_Baa()
+PROC test_sample_proc21_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc21_read_X_tableX20a()
+PROC test_sample_proc21_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc21_read_dbl_table()
+PROC test_sample_proc21_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc21_read_X_tableX20C()
+PROC test_sample_proc21_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc21_read_primary_as_column()
+PROC test_sample_proc21_read_primary_as_column()
 BEGIN
   SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc21_read_Complex_view()
+PROC test_sample_proc21_read_Complex_view()
 BEGIN
   SELECT * FROM Complex_view;
 END;
 
-CREATE PROC test_sample_proc21_drop_indexes()
+PROC test_sample_proc21_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
 END;
 
-CREATE PROC open_sample_proc21()
+PROC open_sample_proc21()
 BEGIN
   CREATE TEMP TABLE test_sample_proc21(LIKE sample_proc21);
 END;
 
-CREATE PROC close_sample_proc21()
+PROC close_sample_proc21()
 BEGIN
   DROP TABLE test_sample_proc21;
 END;
@@ -1274,7 +1274,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc22_create_tables()
+PROC test_sample_proc22_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1316,7 +1316,7 @@ BEGIN
       FROM primary_as_column);
 END;
 
-CREATE PROC test_sample_proc22_create_triggers()
+PROC test_sample_proc22_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1331,7 +1331,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc22_populate_tables()
+PROC test_sample_proc22_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(222, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1345,7 +1345,7 @@ BEGIN
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc22_drop_tables()
+PROC test_sample_proc22_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS Complex_view;
   DROP TABLE IF EXISTS primary_as_column;
@@ -1355,54 +1355,54 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc22_drop_triggers()
+PROC test_sample_proc22_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc22_read_Baa()
+PROC test_sample_proc22_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc22_read_X_tableX20a()
+PROC test_sample_proc22_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc22_read_dbl_table()
+PROC test_sample_proc22_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc22_read_X_tableX20C()
+PROC test_sample_proc22_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc22_read_primary_as_column()
+PROC test_sample_proc22_read_primary_as_column()
 BEGIN
   SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc22_read_Complex_view()
+PROC test_sample_proc22_read_Complex_view()
 BEGIN
   SELECT * FROM Complex_view;
 END;
 
-CREATE PROC test_sample_proc22_drop_indexes()
+PROC test_sample_proc22_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
 END;
 
-CREATE PROC open_sample_proc22()
+PROC open_sample_proc22()
 BEGIN
   CREATE TEMP TABLE test_sample_proc22(LIKE sample_proc22);
 END;
 
-CREATE PROC close_sample_proc22()
+PROC close_sample_proc22()
 BEGIN
   DROP TABLE test_sample_proc22;
 END;
@@ -1411,7 +1411,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc23_create_tables()
+PROC test_sample_proc23_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1453,7 +1453,7 @@ BEGIN
       FROM primary_as_column);
 END;
 
-CREATE PROC test_sample_proc23_create_triggers()
+PROC test_sample_proc23_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1468,7 +1468,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc23_populate_tables()
+PROC test_sample_proc23_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1482,7 +1482,7 @@ BEGIN
   INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2') @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc23_drop_tables()
+PROC test_sample_proc23_drop_tables()
 BEGIN
   DROP VIEW IF EXISTS Complex_view;
   DROP TABLE IF EXISTS primary_as_column;
@@ -1492,43 +1492,43 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc23_drop_triggers()
+PROC test_sample_proc23_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc23_read_Baa()
+PROC test_sample_proc23_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc23_read_X_tableX20a()
+PROC test_sample_proc23_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc23_read_dbl_table()
+PROC test_sample_proc23_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc23_read_X_tableX20C()
+PROC test_sample_proc23_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc23_read_primary_as_column()
+PROC test_sample_proc23_read_primary_as_column()
 BEGIN
   SELECT * FROM primary_as_column;
 END;
 
-CREATE PROC test_sample_proc23_read_Complex_view()
+PROC test_sample_proc23_read_Complex_view()
 BEGIN
   SELECT * FROM Complex_view;
 END;
 
-CREATE PROC test_sample_proc23_drop_indexes()
+PROC test_sample_proc23_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
   DROP INDEX IF EXISTS p_id;
@@ -1538,7 +1538,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc24_create_tables()
+PROC test_sample_proc24_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1568,7 +1568,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc24_create_triggers()
+PROC test_sample_proc24_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1583,7 +1583,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc24_populate_tables()
+PROC test_sample_proc24_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1595,7 +1595,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc24_drop_tables()
+PROC test_sample_proc24_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
@@ -1603,43 +1603,43 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc24_drop_triggers()
+PROC test_sample_proc24_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc24_read_Baa()
+PROC test_sample_proc24_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc24_read_X_tableX20a()
+PROC test_sample_proc24_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc24_read_dbl_table()
+PROC test_sample_proc24_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc24_read_X_tableX20C()
+PROC test_sample_proc24_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc24_drop_indexes()
+PROC test_sample_proc24_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
 
-CREATE PROC open_sample_proc24()
+PROC open_sample_proc24()
 BEGIN
   CREATE TEMP TABLE test_sample_proc24(LIKE sample_proc24);
 END;
 
-CREATE PROC close_sample_proc24()
+PROC close_sample_proc24()
 BEGIN
   DROP TABLE test_sample_proc24;
 END;
@@ -1648,7 +1648,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc25_create_tables()
+PROC test_sample_proc25_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -1678,7 +1678,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc25_create_triggers()
+PROC test_sample_proc25_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1693,7 +1693,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc25_populate_tables()
+PROC test_sample_proc25_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1705,7 +1705,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc25_drop_tables()
+PROC test_sample_proc25_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
@@ -1713,43 +1713,43 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc25_drop_triggers()
+PROC test_sample_proc25_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc25_read_Baa()
+PROC test_sample_proc25_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc25_read_X_tableX20a()
+PROC test_sample_proc25_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc25_read_dbl_table()
+PROC test_sample_proc25_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc25_read_X_tableX20C()
+PROC test_sample_proc25_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc25_drop_indexes()
+PROC test_sample_proc25_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
 
-CREATE PROC open_sample_proc25()
+PROC open_sample_proc25()
 BEGIN
   CREATE TEMP TABLE test_sample_proc25(LIKE sample_proc25);
 END;
 
-CREATE PROC close_sample_proc25()
+PROC close_sample_proc25()
 BEGIN
   DROP TABLE test_sample_proc25;
 END;
@@ -1758,7 +1758,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc26_create_tables()
+PROC test_sample_proc26_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1768,28 +1768,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc26_create_triggers()
+PROC test_sample_proc26_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc26_populate_tables()
+PROC test_sample_proc26_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(-0.1, '1') @dummy_seed(123);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc26_drop_tables()
+PROC test_sample_proc26_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
 END;
 
-CREATE PROC test_sample_proc26_drop_triggers()
+PROC test_sample_proc26_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc26_read_dbl_table()
+PROC test_sample_proc26_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
@@ -1798,7 +1798,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc27_create_tables()
+PROC test_sample_proc27_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS experiment_value(
     config TEXT!,
@@ -1810,28 +1810,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc27_create_triggers()
+PROC test_sample_proc27_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc27_populate_tables()
+PROC test_sample_proc27_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '1234', 9223372036854775807, 'enabled', '0') @dummy_seed(123);
   INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '5678', 9223372036854775807, 'some_integer', '42') @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc27_drop_tables()
+PROC test_sample_proc27_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS experiment_value;
 END;
 
-CREATE PROC test_sample_proc27_drop_triggers()
+PROC test_sample_proc27_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc27_read_experiment_value()
+PROC test_sample_proc27_read_experiment_value()
 BEGIN
   SELECT * FROM experiment_value;
 END;
@@ -1840,7 +1840,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc28_create_tables()
+PROC test_sample_proc28_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS `table a`(
     `a pk` REAL! PRIMARY KEY
@@ -1853,7 +1853,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc28_create_triggers()
+PROC test_sample_proc28_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1868,7 +1868,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc28_populate_tables()
+PROC test_sample_proc28_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(123);
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1876,24 +1876,24 @@ BEGIN
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc28_drop_tables()
+PROC test_sample_proc28_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
 END;
 
-CREATE PROC test_sample_proc28_drop_triggers()
+PROC test_sample_proc28_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc28_read_X_tableX20a()
+PROC test_sample_proc28_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc28_read_dbl_table()
+PROC test_sample_proc28_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
@@ -1902,7 +1902,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc29_create_tables()
+PROC test_sample_proc29_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS dbl_table(
     num REAL,
@@ -1912,28 +1912,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc29_create_triggers()
+PROC test_sample_proc29_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc29_populate_tables()
+PROC test_sample_proc29_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(1, '1') @dummy_seed(123);
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc29_drop_tables()
+PROC test_sample_proc29_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
 END;
 
-CREATE PROC test_sample_proc29_drop_triggers()
+PROC test_sample_proc29_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_sample_proc29_read_dbl_table()
+PROC test_sample_proc29_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
@@ -1942,7 +1942,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc30_create_tables()
+PROC test_sample_proc30_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS `table a`(
     `a pk` REAL! PRIMARY KEY
@@ -1955,7 +1955,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc30_create_triggers()
+PROC test_sample_proc30_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -1970,7 +1970,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc30_populate_tables()
+PROC test_sample_proc30_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1) @dummy_seed(123);
   INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -1978,24 +1978,24 @@ BEGIN
   INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2') @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc30_drop_tables()
+PROC test_sample_proc30_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS dbl_table;
   DROP TABLE IF EXISTS `table a`;
 END;
 
-CREATE PROC test_sample_proc30_drop_triggers()
+PROC test_sample_proc30_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc30_read_X_tableX20a()
+PROC test_sample_proc30_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc30_read_dbl_table()
+PROC test_sample_proc30_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
@@ -2004,7 +2004,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc31_create_tables()
+PROC test_sample_proc31_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS T1(
     id INT
@@ -2021,7 +2021,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc31_create_triggers()
+PROC test_sample_proc31_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `Trigger 1`
     BEFORE DELETE ON T1
@@ -2035,7 +2035,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc31_populate_tables()
+PROC test_sample_proc31_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO T1() VALUES() @dummy_seed(123);
   INSERT OR IGNORE INTO T1() VALUES() @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2047,7 +2047,7 @@ BEGIN
   INSERT OR IGNORE INTO T3(id) VALUES(2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc31_drop_tables()
+PROC test_sample_proc31_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS T3;
   DROP TABLE IF EXISTS T4;
@@ -2055,28 +2055,28 @@ BEGIN
   DROP TABLE IF EXISTS T1;
 END;
 
-CREATE PROC test_sample_proc31_drop_triggers()
+PROC test_sample_proc31_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `Trigger 1`;
   DROP TRIGGER IF EXISTS R2;
 END;
 
-CREATE PROC test_sample_proc31_read_T1()
+PROC test_sample_proc31_read_T1()
 BEGIN
   SELECT * FROM T1;
 END;
 
-CREATE PROC test_sample_proc31_read_T2()
+PROC test_sample_proc31_read_T2()
 BEGIN
   SELECT * FROM T2;
 END;
 
-CREATE PROC test_sample_proc31_read_T4()
+PROC test_sample_proc31_read_T4()
 BEGIN
   SELECT * FROM T4;
 END;
 
-CREATE PROC test_sample_proc31_read_T3()
+PROC test_sample_proc31_read_T3()
 BEGIN
   SELECT * FROM T3;
 END;
@@ -2085,7 +2085,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_sample_proc311_create_tables()
+PROC test_sample_proc311_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
     id INT!,
@@ -2115,7 +2115,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_sample_proc311_create_triggers()
+PROC test_sample_proc311_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS `also on table a`
     BEFORE DELETE ON `table a`
@@ -2130,7 +2130,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_sample_proc311_populate_tables()
+PROC test_sample_proc311_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-99, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(-444, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2142,7 +2142,7 @@ BEGIN
   INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_sample_proc311_drop_tables()
+PROC test_sample_proc311_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS `table C`;
   DROP TABLE IF EXISTS dbl_table;
@@ -2150,33 +2150,33 @@ BEGIN
   DROP TABLE IF EXISTS Baa;
 END;
 
-CREATE PROC test_sample_proc311_drop_triggers()
+PROC test_sample_proc311_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS `also on table a`;
   DROP TRIGGER IF EXISTS `trigger on table a`;
 END;
 
-CREATE PROC test_sample_proc311_read_Baa()
+PROC test_sample_proc311_read_Baa()
 BEGIN
   SELECT * FROM Baa;
 END;
 
-CREATE PROC test_sample_proc311_read_X_tableX20a()
+PROC test_sample_proc311_read_X_tableX20a()
 BEGIN
   SELECT * FROM `table a`;
 END;
 
-CREATE PROC test_sample_proc311_read_dbl_table()
+PROC test_sample_proc311_read_dbl_table()
 BEGIN
   SELECT * FROM dbl_table;
 END;
 
-CREATE PROC test_sample_proc311_read_X_tableX20C()
+PROC test_sample_proc311_read_X_tableX20C()
 BEGIN
   SELECT * FROM `table C`;
 END;
 
-CREATE PROC test_sample_proc311_drop_indexes()
+PROC test_sample_proc311_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS `Baa id index`;
 END;
@@ -2185,7 +2185,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_no_long_to_conversion_create_tables()
+PROC test_no_long_to_conversion_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS t5(
     id LONG PRIMARY KEY AUTOINCREMENT,
@@ -2197,12 +2197,12 @@ BEGIN
   );
 END;
 
-CREATE PROC test_no_long_to_conversion_create_triggers()
+PROC test_no_long_to_conversion_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_no_long_to_conversion_populate_tables()
+PROC test_no_long_to_conversion_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO t5(id) VALUES(1) @dummy_seed(123);
   INSERT OR IGNORE INTO t5(id) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2210,23 +2210,23 @@ BEGIN
   INSERT OR IGNORE INTO t6(id) VALUES(2) @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_no_long_to_conversion_drop_tables()
+PROC test_no_long_to_conversion_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS t6;
   DROP TABLE IF EXISTS t5;
 END;
 
-CREATE PROC test_no_long_to_conversion_drop_triggers()
+PROC test_no_long_to_conversion_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_no_long_to_conversion_read_t5()
+PROC test_no_long_to_conversion_read_t5()
 BEGIN
   SELECT * FROM t5;
 END;
 
-CREATE PROC test_no_long_to_conversion_read_t6()
+PROC test_no_long_to_conversion_read_t6()
 BEGIN
   SELECT * FROM t6;
 END;
@@ -2253,7 +2253,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_self_ref_proc_create_tables()
+PROC test_self_ref_proc_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INT PRIMARY KEY,
@@ -2263,28 +2263,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_self_ref_proc_create_triggers()
+PROC test_self_ref_proc_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc_populate_tables()
+PROC test_self_ref_proc_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
   INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_self_ref_proc_drop_tables()
+PROC test_self_ref_proc_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table;
 END;
 
-CREATE PROC test_self_ref_proc_drop_triggers()
+PROC test_self_ref_proc_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc_read_self_ref_table()
+PROC test_self_ref_proc_read_self_ref_table()
 BEGIN
   SELECT * FROM self_ref_table;
 END;
@@ -2293,7 +2293,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_self_ref_proc_no_data_create_tables()
+PROC test_self_ref_proc_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
     id INT PRIMARY KEY,
@@ -2303,28 +2303,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_self_ref_proc_no_data_create_triggers()
+PROC test_self_ref_proc_no_data_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc_no_data_populate_tables()
+PROC test_self_ref_proc_no_data_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_self_ref_proc_no_data_drop_tables()
+PROC test_self_ref_proc_no_data_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table;
 END;
 
-CREATE PROC test_self_ref_proc_no_data_drop_triggers()
+PROC test_self_ref_proc_no_data_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc_no_data_read_self_ref_table()
+PROC test_self_ref_proc_no_data_read_self_ref_table()
 BEGIN
   SELECT * FROM self_ref_table;
 END;
@@ -2333,7 +2333,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_self_ref_proc2_create_tables()
+PROC test_self_ref_proc2_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table2(
     id INT PRIMARY KEY,
@@ -2342,28 +2342,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_self_ref_proc2_create_triggers()
+PROC test_self_ref_proc2_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc2_populate_tables()
+PROC test_self_ref_proc2_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
   INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_self_ref_proc2_drop_tables()
+PROC test_self_ref_proc2_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table2;
 END;
 
-CREATE PROC test_self_ref_proc2_drop_triggers()
+PROC test_self_ref_proc2_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc2_read_self_ref_table2()
+PROC test_self_ref_proc2_read_self_ref_table2()
 BEGIN
   SELECT * FROM self_ref_table2;
 END;
@@ -2372,7 +2372,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_self_ref_proc2_no_data_create_tables()
+PROC test_self_ref_proc2_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table2(
     id INT PRIMARY KEY,
@@ -2381,28 +2381,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_self_ref_proc2_no_data_create_triggers()
+PROC test_self_ref_proc2_no_data_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc2_no_data_populate_tables()
+PROC test_self_ref_proc2_no_data_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
   INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_self_ref_proc2_no_data_drop_tables()
+PROC test_self_ref_proc2_no_data_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS self_ref_table2;
 END;
 
-CREATE PROC test_self_ref_proc2_no_data_drop_triggers()
+PROC test_self_ref_proc2_no_data_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_self_ref_proc2_no_data_read_self_ref_table2()
+PROC test_self_ref_proc2_no_data_read_self_ref_table2()
 BEGIN
   SELECT * FROM self_ref_table2;
 END;
@@ -2411,7 +2411,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_too_many_row_in_child_table_create_tables()
+PROC test_test_too_many_row_in_child_table_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS test1(
     id INT PRIMARY KEY
@@ -2423,12 +2423,12 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_create_triggers()
+PROC test_test_too_many_row_in_child_table_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_populate_tables()
+PROC test_test_too_many_row_in_child_table_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO test1(id) VALUES(1) @dummy_seed(123);
   INSERT OR IGNORE INTO test1(id) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2438,23 +2438,23 @@ BEGIN
   INSERT OR IGNORE INTO test2(name, id) VALUES('name_4', 1) @dummy_seed(128) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_drop_tables()
+PROC test_test_too_many_row_in_child_table_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS test2;
   DROP TABLE IF EXISTS test1;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_drop_triggers()
+PROC test_test_too_many_row_in_child_table_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_read_test1()
+PROC test_test_too_many_row_in_child_table_read_test1()
 BEGIN
   SELECT * FROM test1;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_read_test2()
+PROC test_test_too_many_row_in_child_table_read_test2()
 BEGIN
   SELECT * FROM test2;
 END;
@@ -2463,7 +2463,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_create_tables()
+PROC test_test_too_many_row_in_child_table_2_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS test1(
     id INT PRIMARY KEY
@@ -2475,12 +2475,12 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_create_triggers()
+PROC test_test_too_many_row_in_child_table_2_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_populate_tables()
+PROC test_test_too_many_row_in_child_table_2_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO test1(id) VALUES(90) @dummy_seed(123);
   INSERT OR IGNORE INTO test1(id) VALUES(91) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2492,23 +2492,23 @@ BEGIN
   INSERT OR IGNORE INTO test2(id) VALUES(93) @dummy_seed(130) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_drop_tables()
+PROC test_test_too_many_row_in_child_table_2_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS test2;
   DROP TABLE IF EXISTS test1;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_drop_triggers()
+PROC test_test_too_many_row_in_child_table_2_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_read_test1()
+PROC test_test_too_many_row_in_child_table_2_read_test1()
 BEGIN
   SELECT * FROM test1;
 END;
 
-CREATE PROC test_test_too_many_row_in_child_table_2_read_test2()
+PROC test_test_too_many_row_in_child_table_2_read_test2()
 BEGIN
   SELECT * FROM test2;
 END;
@@ -2517,7 +2517,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_virtual_table_proc_create_tables()
+PROC test_test_virtual_table_proc_create_tables()
 BEGIN
   CREATE VIRTUAL TABLE IF NOT EXISTS basic_virtual USING module_name (this, that, the_other) AS (
     id INT,
@@ -2525,22 +2525,22 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_virtual_table_proc_create_triggers()
+PROC test_test_virtual_table_proc_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_virtual_table_proc_drop_tables()
+PROC test_test_virtual_table_proc_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS basic_virtual;
 END;
 
-CREATE PROC test_test_virtual_table_proc_drop_triggers()
+PROC test_test_virtual_table_proc_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_virtual_table_proc_read_basic_virtual()
+PROC test_test_virtual_table_proc_read_basic_virtual()
 BEGIN
   SELECT * FROM basic_virtual;
 END;
@@ -2549,7 +2549,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_blob_primary_key_create_tables()
+PROC test_test_blob_primary_key_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS blob_primary_key(
     id BLOB PRIMARY KEY,
@@ -2557,28 +2557,28 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_blob_primary_key_create_triggers()
+PROC test_test_blob_primary_key_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_blob_primary_key_populate_tables()
+PROC test_test_blob_primary_key_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_test_blob_primary_key_drop_tables()
+PROC test_test_blob_primary_key_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS blob_primary_key;
 END;
 
-CREATE PROC test_test_blob_primary_key_drop_triggers()
+PROC test_test_blob_primary_key_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_blob_primary_key_read_blob_primary_key()
+PROC test_test_blob_primary_key_read_blob_primary_key()
 BEGIN
   SELECT * FROM blob_primary_key;
 END;
@@ -2587,7 +2587,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_child_blob_primary_key_create_tables()
+PROC test_test_child_blob_primary_key_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS blob_primary_key(
     id BLOB PRIMARY KEY,
@@ -2600,12 +2600,12 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_child_blob_primary_key_create_triggers()
+PROC test_test_child_blob_primary_key_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_child_blob_primary_key_populate_tables()
+PROC test_test_child_blob_primary_key_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2613,23 +2613,23 @@ BEGIN
   INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_test_child_blob_primary_key_drop_tables()
+PROC test_test_child_blob_primary_key_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS child_blob_primary_key;
   DROP TABLE IF EXISTS blob_primary_key;
 END;
 
-CREATE PROC test_test_child_blob_primary_key_drop_triggers()
+PROC test_test_child_blob_primary_key_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_child_blob_primary_key_read_blob_primary_key()
+PROC test_test_child_blob_primary_key_read_blob_primary_key()
 BEGIN
   SELECT * FROM blob_primary_key;
 END;
 
-CREATE PROC test_test_child_blob_primary_key_read_child_blob_primary_key()
+PROC test_test_child_blob_primary_key_read_child_blob_primary_key()
 BEGIN
   SELECT * FROM child_blob_primary_key;
 END;
@@ -2638,7 +2638,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_create_tables()
+PROC test_test_blob_literal_in_dummy_test_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS blob_primary_key(
     id BLOB PRIMARY KEY,
@@ -2651,12 +2651,12 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_create_triggers()
+PROC test_test_blob_literal_in_dummy_test_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_populate_tables()
+PROC test_test_blob_literal_in_dummy_test_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'90') @dummy_seed(123);
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(X'91') @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2664,23 +2664,23 @@ BEGIN
   INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(X'91') @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_drop_tables()
+PROC test_test_blob_literal_in_dummy_test_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS child_blob_primary_key;
   DROP TABLE IF EXISTS blob_primary_key;
 END;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_drop_triggers()
+PROC test_test_blob_literal_in_dummy_test_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_read_blob_primary_key()
+PROC test_test_blob_literal_in_dummy_test_read_blob_primary_key()
 BEGIN
   SELECT * FROM blob_primary_key;
 END;
 
-CREATE PROC test_test_blob_literal_in_dummy_test_read_child_blob_primary_key()
+PROC test_test_blob_literal_in_dummy_test_read_child_blob_primary_key()
 BEGIN
   SELECT * FROM child_blob_primary_key;
 END;
@@ -2689,7 +2689,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_test_frags_create_tables()
+PROC test_test_frags_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS blob_primary_key(
     id BLOB PRIMARY KEY,
@@ -2702,12 +2702,12 @@ BEGIN
   );
 END;
 
-CREATE PROC test_test_frags_create_triggers()
+PROC test_test_frags_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_frags_populate_tables()
+PROC test_test_frags_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
   INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2715,23 +2715,23 @@ BEGIN
   INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(126) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_test_frags_drop_tables()
+PROC test_test_frags_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS child_blob_primary_key;
   DROP TABLE IF EXISTS blob_primary_key;
 END;
 
-CREATE PROC test_test_frags_drop_triggers()
+PROC test_test_frags_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_test_frags_read_blob_primary_key()
+PROC test_test_frags_read_blob_primary_key()
 BEGIN
   SELECT * FROM blob_primary_key;
 END;
 
-CREATE PROC test_test_frags_read_child_blob_primary_key()
+PROC test_test_frags_read_child_blob_primary_key()
 BEGIN
   SELECT * FROM child_blob_primary_key;
 END;
@@ -2740,7 +2740,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_MyProc_create_tables()
+PROC test_MyProc_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS trig_test_t1(
     pk LONG PRIMARY KEY
@@ -2762,7 +2762,7 @@ BEGIN
   );
 END;
 
-CREATE PROC test_MyProc_create_triggers()
+PROC test_MyProc_create_triggers()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS trig
     AFTER INSERT ON trig_test_t1
@@ -2773,7 +2773,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC test_MyProc_populate_tables()
+PROC test_MyProc_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO trig_test_t1(pk) VALUES(1) @dummy_seed(123);
   INSERT OR IGNORE INTO trig_test_t1(pk) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
@@ -2787,7 +2787,7 @@ BEGIN
   INSERT OR IGNORE INTO trig_test_t3(pk, ak) VALUES(2, 2) @dummy_seed(132) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_MyProc_drop_tables()
+PROC test_MyProc_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS trig_test_t3;
   DROP TABLE IF EXISTS trig_test_tx;
@@ -2796,32 +2796,32 @@ BEGIN
   DROP TABLE IF EXISTS trig_test_t1;
 END;
 
-CREATE PROC test_MyProc_drop_triggers()
+PROC test_MyProc_drop_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS trig;
 END;
 
-CREATE PROC test_MyProc_read_trig_test_t1()
+PROC test_MyProc_read_trig_test_t1()
 BEGIN
   SELECT * FROM trig_test_t1;
 END;
 
-CREATE PROC test_MyProc_read_trig_test_t2()
+PROC test_MyProc_read_trig_test_t2()
 BEGIN
   SELECT * FROM trig_test_t2;
 END;
 
-CREATE PROC test_MyProc_read_trig_test_t4()
+PROC test_MyProc_read_trig_test_t4()
 BEGIN
   SELECT * FROM trig_test_t4;
 END;
 
-CREATE PROC test_MyProc_read_trig_test_tx()
+PROC test_MyProc_read_trig_test_tx()
 BEGIN
   SELECT * FROM trig_test_tx;
 END;
 
-CREATE PROC test_MyProc_read_trig_test_t3()
+PROC test_MyProc_read_trig_test_t3()
 BEGIN
   SELECT * FROM trig_test_t3;
 END;
@@ -2830,7 +2830,7 @@ END;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 
-CREATE PROC test_uses_backed_table_create_tables()
+PROC test_uses_backed_table_create_tables()
 BEGIN
   @attribute(cql:backing_table)
   CREATE TABLE IF NOT EXISTS backing(
@@ -2847,38 +2847,38 @@ CREATE TABLE IF NOT EXISTS backed(
   y REAL
 );
 
-CREATE PROC test_uses_backed_table_create_triggers()
+PROC test_uses_backed_table_create_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_uses_backed_table_populate_tables()
+PROC test_uses_backed_table_populate_tables()
 BEGIN
   INSERT OR IGNORE INTO backed(pk) VALUES(1) @dummy_seed(123);
   INSERT OR IGNORE INTO backed(pk) VALUES(2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 END;
 
-CREATE PROC test_uses_backed_table_drop_tables()
+PROC test_uses_backed_table_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS backing;
 END;
 
-CREATE PROC test_uses_backed_table_drop_triggers()
+PROC test_uses_backed_table_drop_triggers()
 BEGIN
   IF @rc THEN END IF;
 END;
 
-CREATE PROC test_uses_backed_table_read_backing()
+PROC test_uses_backed_table_read_backing()
 BEGIN
   SELECT * FROM backing;
 END;
 
-CREATE PROC test_uses_backed_table_read_backed()
+PROC test_uses_backed_table_read_backed()
 BEGIN
   SELECT * FROM backed;
 END;
 
-CREATE PROC test_uses_backed_table_drop_indexes()
+PROC test_uses_backed_table_drop_indexes()
 BEGIN
   DROP INDEX IF EXISTS backing_type_index;
 END;

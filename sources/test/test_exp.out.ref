@@ -12,7 +12,7 @@ END;
 
 DECLARE x_int INT!;
 
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
   IF 1 THEN
     CALL printf("hi\n");
@@ -675,7 +675,7 @@ SET a1 := 20;
 
 SET b3 := 40.75;
 
-CREATE PROC a ()
+PROC a ()
 BEGIN
   INSERT INTO d
     VALUES(e, f);
@@ -683,7 +683,7 @@ BEGIN
     SET h = j, k = l;
 END;
 
-CREATE PROC a (b INT, c TEXT)
+PROC a (b INT, c TEXT)
 BEGIN
   INSERT INTO d
     VALUES(e, f);
@@ -691,7 +691,7 @@ BEGIN
     SET h = j, k = l;
 END;
 
-CREATE PROC a (b INT, IN c TEXT, OUT d LONG, INOUT f TEXT)
+PROC a (b INT, IN c TEXT, OUT d LONG, INOUT f TEXT)
 BEGIN
   INSERT INTO d
     VALUES(e, f);
@@ -999,7 +999,7 @@ CALL foo();
 
 CALL foo(2);
 
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
   TRY
     SELECT 'try';
@@ -1391,12 +1391,12 @@ FETCH to_cursor FROM from_cursor;
 
 INSERT INTO foo(a, b) FROM ARGUMENTS;
 
-CREATE PROC var_x (LIKE table_name, id INT)
+PROC var_x (LIKE table_name, id INT)
 BEGIN
   DECLARE x INT;
 END;
 
-CREATE PROC x (LIKE table_name, id INT)
+PROC x (LIKE table_name, id INT)
 BEGIN
   DECLARE x INT;
 END;
@@ -1476,13 +1476,13 @@ SELECT RAISE(ABORT, 'abort it');
 SELECT RAISE(ROLLBACK, 'roll it back');
 
 @ATTRIBUTE(cql:identity=(id))
-CREATE PROC simple_identity ()
+PROC simple_identity ()
 BEGIN
   SELECT 1 AS id, 2 AS data;
 END;
 
 @ATTRIBUTE(cql:identity=(col1, col2))
-CREATE PROC complex_identity ()
+PROC complex_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
 END;
@@ -1603,7 +1603,7 @@ CURSOR E FOR
 
 @SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(some_group, some_proc);
 
-CREATE PROC emit_several_rows ()
+PROC emit_several_rows ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, "2" AS y;
   FETCH C FROM VALUES(1, "2");
@@ -1611,7 +1611,7 @@ BEGIN
   OUT UNION C;
 END;
 
-CREATE PROC emit_several_rows ()
+PROC emit_several_rows ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, "2" AS y;
   FETCH C FROM VALUES(1, "2");
@@ -1619,7 +1619,7 @@ BEGIN
   OUT UNION C;
 END;
 
-CREATE PROC compound_select_expr ()
+PROC compound_select_expr ()
 BEGIN
   DECLARE x INT;
   SET x := ( SELECT 1
@@ -1641,7 +1641,7 @@ SELECT id,
     win2 AS ()
   ORDER BY id;
 
-CREATE PROC foo (x INT, y INT)
+PROC foo (x INT, y INT)
 BEGIN
   INSERT INTO bar(x, y) FROM ARGUMENTS @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
@@ -1688,7 +1688,7 @@ CALL something(FROM ARGUMENTS LIKE something);
 
 SET x := foo(FROM ARGUMENTS LIKE X, FROM C LIKE A, FROM X, FROM ARGUMENTS);
 
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
   DECLARE w TEXT;
   SET w := @PROC;
@@ -1717,7 +1717,7 @@ CREATE TABLE foo(
   id INT COLLATE bar CHECK(id = 3 AND goo = 5) 
 );
 
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -1823,7 +1823,7 @@ SET virtual := 3;
 
 SET hidden := 2;
 
-CREATE PROC foo (x LIKE this, y LIKE that)
+PROC foo (x LIKE this, y LIKE that)
 BEGIN
 END;
 
@@ -2143,7 +2143,7 @@ CREATE TABLE V(
   v TEXT
 );
 
-CREATE PROC p ()
+PROC p ()
 BEGIN
   CURSOR C FOR
     SELECT T.*, 1 AS u, 2 AS v
@@ -2258,7 +2258,7 @@ UPDATE foo
 @ATTRIBUTE(cql:potato=bar)
 @ATTRIBUTE(cql:garbonzo=(bar, baz))
 @ATTRIBUTE(other:something)
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
 END;
 

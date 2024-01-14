@@ -64,7 +64,7 @@ typedef struct simple_container_proc_row {
 // The statement ending at line XXXX
 
 /*
-CREATE PROC selector ()
+PROC selector ()
 BEGIN
   SELECT *
     FROM foo;
@@ -172,7 +172,7 @@ cql_cleanup:
 // The statement ending at line XXXX
 
 /*
-CREATE PROC emit_object_result_set (o OBJECT!)
+PROC emit_object_result_set (o OBJECT!)
 BEGIN
   CURSOR C LIKE emit_object_result_set ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
@@ -247,7 +247,7 @@ void emit_object_result_set_fetch_results(emit_object_result_set_result_set_ref 
 
 /*
 @ATTRIBUTE(cql:generate_copy)
-CREATE PROC sproc_copy_func ()
+PROC sproc_copy_func ()
 BEGIN
   SELECT *
     FROM foo;
@@ -356,7 +356,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC emit_object_with_setters (o OBJECT!)
+PROC emit_object_with_setters (o OBJECT!)
 BEGIN
   CURSOR C LIKE emit_object_with_setters ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
@@ -435,7 +435,7 @@ void emit_object_with_setters(cql_object_ref _Nonnull o, emit_object_with_setter
 // The statement ending at line XXXX
 
 /*
-CREATE PROC simple_child_proc ()
+PROC simple_child_proc ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
 END;
@@ -508,7 +508,7 @@ cql_cleanup:
 
 /*
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC simple_container_proc ()
+PROC simple_container_proc ()
 BEGIN
   CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());

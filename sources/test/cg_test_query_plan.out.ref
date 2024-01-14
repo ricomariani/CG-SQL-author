@@ -36,7 +36,7 @@ DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
 @attribute(cql:deterministic)
 DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
 DECLARE SELECT FUNC stuff () INT!;
-CREATE PROC create_schema()
+PROC create_schema()
 BEGIN
   call cql_create_udf_stub("is_declare_func_enabled");
   call cql_create_udf_stub("is_declare_func_wall");
@@ -154,7 +154,7 @@ CREATE TABLE backed(
   id INT PRIMARY KEY,
   name TEXT
 );
-CREATE PROC populate_no_table_scan()
+PROC populate_no_table_scan()
 BEGIN
   INSERT OR IGNORE INTO no_table_scan(table_name) VALUES
     ("table one"),
@@ -162,7 +162,7 @@ BEGIN
     ("scan_ok"),
     ("foo");
 END;
-CREATE PROC populate_query_plan_1()
+PROC populate_query_plan_1()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -186,7 +186,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_2()
+PROC populate_query_plan_2()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -204,7 +204,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_3()
+PROC populate_query_plan_3()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -223,7 +223,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_4()
+PROC populate_query_plan_4()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -247,7 +247,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_5()
+PROC populate_query_plan_5()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -265,7 +265,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_6()
+PROC populate_query_plan_6()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -288,7 +288,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_7()
+PROC populate_query_plan_7()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -309,7 +309,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_8()
+PROC populate_query_plan_8()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -332,7 +332,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_9()
+PROC populate_query_plan_9()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -348,7 +348,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_10()
+PROC populate_query_plan_10()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -367,7 +367,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_11()
+PROC populate_query_plan_11()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -392,7 +392,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_12()
+PROC populate_query_plan_12()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -408,7 +408,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_13()
+PROC populate_query_plan_13()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -424,7 +424,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_14()
+PROC populate_query_plan_14()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -440,7 +440,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_15()
+PROC populate_query_plan_15()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -456,7 +456,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_16()
+PROC populate_query_plan_16()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -479,7 +479,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_17()
+PROC populate_query_plan_17()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -496,7 +496,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_18()
+PROC populate_query_plan_18()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -514,7 +514,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_19()
+PROC populate_query_plan_19()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -532,7 +532,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_20()
+PROC populate_query_plan_20()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -549,7 +549,7 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC split_commas (str TEXT)
+PROC split_commas (str TEXT)
 BEGIN
 WITH
   splitter (tok, rest) AS (
@@ -565,7 +565,7 @@ SELECT tok
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC ids_from_string (str TEXT)
+PROC ids_from_string (str TEXT)
 BEGIN
 WITH
   toks (tok) AS (CALL split_commas(str))
@@ -573,7 +573,7 @@ SELECT CAST(tok AS LONG) AS id
   FROM toks;
 END;
 
-CREATE PROC populate_query_plan_21()
+PROC populate_query_plan_21()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -598,26 +598,26 @@ END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=11)
-CREATE PROC frag1 (x INT)
+PROC frag1 (x INT)
 BEGIN
 SELECT 2 AS a;
 END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=4)
-CREATE PROC frag2 (y INT)
+PROC frag2 (y INT)
 BEGIN
 SELECT 40 AS b;
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC frag3 (z INT)
+PROC frag3 (z INT)
 BEGIN
 SELECT 100 AS c;
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC frag_with_select ()
+PROC frag_with_select ()
 BEGIN
 WITH
   cte (a) AS (
@@ -629,18 +629,18 @@ END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=2)
-CREATE PROC frag_with_select_nothing ()
+PROC frag_with_select_nothing ()
 BEGIN
 SELECT 1 AS a;
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC frag (v INT!)
+PROC frag (v INT!)
 BEGIN
 SELECT v AS val;
 END;
 
-CREATE PROC populate_query_plan_22()
+PROC populate_query_plan_22()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -659,7 +659,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_23()
+PROC populate_query_plan_23()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -678,7 +678,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_24()
+PROC populate_query_plan_24()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -704,7 +704,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_25()
+PROC populate_query_plan_25()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -724,7 +724,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_26()
+PROC populate_query_plan_26()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -740,7 +740,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_27()
+PROC populate_query_plan_27()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -756,7 +756,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_28()
+PROC populate_query_plan_28()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -772,7 +772,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_29()
+PROC populate_query_plan_29()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -789,12 +789,12 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC notnull_int_frag (v INT!)
+PROC notnull_int_frag (v INT!)
 BEGIN
 SELECT v AS val;
 END;
 
-CREATE PROC populate_query_plan_30()
+PROC populate_query_plan_30()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -811,7 +811,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_31()
+PROC populate_query_plan_31()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -829,12 +829,12 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC simple_blob_fragment (x BLOB)
+PROC simple_blob_fragment (x BLOB)
 BEGIN
 SELECT 1 AS xx;
 END;
 
-CREATE PROC populate_query_plan_32()
+PROC populate_query_plan_32()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -852,12 +852,12 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC simple_object_fragment (x OBJECT)
+PROC simple_object_fragment (x OBJECT)
 BEGIN
 SELECT 1 AS xx;
 END;
 
-CREATE PROC populate_query_plan_33()
+PROC populate_query_plan_33()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -875,13 +875,13 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC qp_take_inner_blob (foo BLOB)
+PROC qp_take_inner_blob (foo BLOB)
 BEGIN
 SELECT foo AS inner_a;
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC qp_take_blob (foo BLOB)
+PROC qp_take_blob (foo BLOB)
 BEGIN
 WITH
   qp_take_inner_blob (inner_a) AS (CALL qp_take_inner_blob(LOCALS.foo))
@@ -889,7 +889,7 @@ SELECT *
   FROM qp_take_inner_blob;
 END;
 
-CREATE PROC populate_query_plan_34()
+PROC populate_query_plan_34()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -908,7 +908,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_35()
+PROC populate_query_plan_35()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -927,7 +927,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_36()
+PROC populate_query_plan_36()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -944,19 +944,19 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC object_frag (o OBJECT)
+PROC object_frag (o OBJECT)
 BEGIN
 SELECT 1 AS x;
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC outer_frag ()
+PROC outer_frag ()
 BEGIN
 SELECT *
   FROM (CALL object_frag(nullable(trivial_object())));
 END;
 
-CREATE PROC populate_query_plan_37()
+PROC populate_query_plan_37()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -973,7 +973,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_38()
+PROC populate_query_plan_38()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -990,7 +990,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_39()
+PROC populate_query_plan_39()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -1007,7 +1007,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_query_plan_40()
+PROC populate_query_plan_40()
 BEGIN
   LET query_plan_trivial_object := trivial_object();
   LET query_plan_trivial_blob := trivial_blob();
@@ -1024,7 +1024,7 @@ BEGIN
   END;
 END;
 
-CREATE PROC populate_table_scan_alert_table(table_ text!)
+PROC populate_table_scan_alert_table(table_ text!)
 BEGIN
   INSERT OR IGNORE INTO table_scan_alert
     SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp
@@ -1037,7 +1037,7 @@ BEGIN
     ) GROUP BY table_;
 END;
 
-CREATE PROC populate_b_tree_alert_table()
+PROC populate_b_tree_alert_table()
 BEGIN
   INSERT OR IGNORE INTO b_tree_alert
     SELECT '#' || sql_id || '(' || count(*) || ')' as info FROM plan_temp
@@ -1045,7 +1045,7 @@ BEGIN
     GROUP BY sql_id;
 END;
 
-CREATE PROC print_query_violation()
+PROC print_query_violation()
 BEGIN
   CALL populate_b_tree_alert_table();
   DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;
@@ -1072,14 +1072,14 @@ BEGIN
   CALL printf("\n},\n");
 END;
 
-CREATE PROC print_sql_statement(sql_id int!)
+PROC print_sql_statement(sql_id int!)
 BEGIN
   DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;
   FETCH C;
   CALL printf("   \"query\" : \"%s\",\n", C.sql);
 END;
 
-CREATE PROC print_query_plan_stat(id_ int!)
+PROC print_query_plan_stat(id_ int!)
 BEGIN
   CALL printf("   \"stats\" : {\n");
   DECLARE Ca CURSOR FOR
@@ -1145,7 +1145,7 @@ BEGIN
   CALL printf("\n    },\n");
 END;
 
-CREATE PROC print_query_plan_graph(id_ int!)
+PROC print_query_plan_graph(id_ int!)
 BEGIN
   DECLARE C CURSOR FOR
   WITH RECURSIVE
@@ -1170,7 +1170,7 @@ BEGIN
   CALL printf("\"\n");
 END;
 
-CREATE PROC print_query_plan(sql_id int!)
+PROC print_query_plan(sql_id int!)
 BEGIN
   CALL printf("  {\n");
   CALL printf("   \"id\" : %d,\n", sql_id);
@@ -1180,7 +1180,7 @@ BEGIN
   CALL printf("  }");
 END;
 
-CREATE PROC query_plan()
+PROC query_plan()
 BEGIN
   CALL create_schema();
   TRY

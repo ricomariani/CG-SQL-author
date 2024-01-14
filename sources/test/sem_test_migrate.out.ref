@@ -651,7 +651,7 @@ test/sem_test_migrate.sql:XXXX:1: error: in str : CQL0069: name not found 'rate_
 
 The statement ending at line XXXX
 
-CREATE PROC deletor ()
+PROC deletor ()
 BEGIN
   DECLARE i INT;
 END;
@@ -699,7 +699,7 @@ CREATE TABLE bar(
 
 The statement ending at line XXXX
 
-CREATE PROC name_creator (i INT)
+PROC name_creator (i INT)
 BEGIN
   SELECT 1 AS x;
 END;
@@ -890,7 +890,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE PROC MyAdHocMigration ()
+PROC MyAdHocMigration ()
 BEGIN
   UPDATE foo
     SET id = 1

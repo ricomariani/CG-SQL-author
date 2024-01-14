@@ -307,7 +307,7 @@ end if;
 -- +   end
 -- + end
 
-create procedure test(i integer not null)
+procedure test(i integer not null)
 begin
   if i then
     call puts('true');
@@ -318,7 +318,7 @@ end;
 -- + if a ~= nil then
 -- +    goto cql_cleanup -- return
 -- + ::cql_cleanup::
-create proc proc_with_return_guard(a int)
+proc proc_with_return_guard(a int)
 begin
   if a is not null return;
   let x := a;
@@ -368,7 +368,7 @@ set i0_nullable := i1_nullable not between r2 and i0_nullable;
 -- +   ii = i0_nullable
 -- +   return i, ii
 -- + end
-create procedure out_test(out i integer not null, out ii integer)
+procedure out_test(out i integer not null, out ii integer)
 begin
   set i := i2;
   set ii := i0_nullable;
@@ -464,7 +464,7 @@ delete from bar where name like '\\ " \n';
 -- +  "DELETE FROM bar WHERE id = ?")
 -- +  _rc_ = cql_multibind(_db_, _temp_stmt, "I", foo)
 -- +  return _rc_, foo
-create procedure outparm_test(out foo integer not null)
+procedure outparm_test(out foo integer not null)
 begin
  set foo := 1;
  delete from bar where id = foo;
@@ -490,7 +490,7 @@ end;
 -- + ::cql_cleanup::
 -- +   return _rc_
 -- + end
-create procedure throwing()
+procedure throwing()
 begin
   try
    delete from bar;
@@ -623,7 +623,7 @@ set b0_nullable := 'b' not between null and 'c';
 -- + if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end
 -- + function with_result_set_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
-create procedure with_result_set()
+procedure with_result_set()
 begin
   select * from bar;
 end;
@@ -636,21 +636,21 @@ end;
 -- + function select_from_view_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Ii", { "id", "type" })
 -- + return _rc_, result_set
-create proc select_from_view()
+proc select_from_view()
 begin
   select id, type from baz;
 end;
 
 -- TEST: create dml for a view
 -- + "CREATE VIEW MyView AS SELECT 1 AS f1, 2 AS f2, 3 AS f3")
-create procedure make_view()
+procedure make_view()
 begin
    create view MyView as select 1 as f1, 2 as f2, 3 as f3;
 end;
 
 -- TEST: code gen a simple create index statement
 -- + "CREATE INDEX index_1 ON bar (id)"
-create procedure make_index()
+procedure make_index()
 begin
   create index index_1 on bar(id);
 end;
@@ -660,7 +660,7 @@ end;
 -- + function get_data_fetch_results(_db_, name_, id_)
 -- + _rc_, stmt = get_data(_db_, name_, id_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
-create procedure get_data(name_ text not null, id_ integer not null)
+procedure get_data(name_ text not null, id_ integer not null)
 begin
   select * from bar where id = id_ and name = name_;
 end;
@@ -688,7 +688,7 @@ end;
 -- +   cql_finalize_stmt(C2_stmt)
 -- +   return _rc_
 @attribute(cql:vault_sensitive)
-create proc easy_fetch()
+proc easy_fetch()
 begin
   declare C cursor for select * from bar;
   fetch C;
@@ -720,7 +720,7 @@ set i0_nullable := ifnull(i0_nullable, i1_nullable);
 -- +  local b
 -- +  b = a
 -- +  return b
-create proc copy_int(a int, out b int)
+proc copy_int(a int, out b int)
 begin
   set b := a;
 end;
@@ -733,7 +733,7 @@ call copy_int(i0_nullable, i1_nullable);
 -- + local row
 -- + row = cql_last_insert_rowid(_db_)
 -- - cleanup
-create proc insert_rowid_reader()
+proc insert_rowid_reader()
 begin
   declare row long integer;
   set row := last_insert_rowid();
@@ -743,7 +743,7 @@ end;
 -- + local ct
 -- + ct = cql_changes(_db_)
 -- - cleanup
-create proc changes_reader()
+proc changes_reader()
 begin
   declare ct integer;
   set ct := changes();
@@ -780,7 +780,7 @@ declare proc xyzzy(id integer) ( A integer not null );
 -- + local xyzzy_cursor = { _has_row_ = false }
 -- + _rc_, xyzzy_cursor_stmt = xyzzy(_db_, 1)
 -- + cql_finalize_stmt(xyzzy_cursor_stmt)
-create proc xyzzy_test()
+proc xyzzy_test()
 begin
   declare xyzzy_cursor cursor for call xyzzy(1);
 end;
@@ -792,7 +792,7 @@ declare proc plugh(id integer);
 -- TEST: create a proc that returns a mix of possible types in a select
 -- + "SELECT 1, 2, CAST(3 AS LONG_INT), 3.0, 'xyz', NULL")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "FILDSf", { "_bool", "_integer", "_longint", "_real", "_text", "_nullable_bool" })
-create proc complex_return()
+proc complex_return()
 begin
   select TRUE as _bool,
    2 as _integer,
@@ -803,7 +803,7 @@ begin
 end;
 
 -- TEST: create a proc with a nested select within an in statement for hierarchical queries
-create proc hierarchical_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
+proc hierarchical_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 -- + "SELECT id FROM foo WHERE id IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
 begin
@@ -823,7 +823,7 @@ end;
 -- TEST: create a proc with a nested select within a not in statement for hierarchical queries
 -- + "SELECT id FROM foo WHERE id NOT IN (SELECT id FROM bar WHERE rate = ? ORDER BY name LIMIT ? OFFSET ?) ORDER BY id")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "id" })
-create proc hierarchical_unmatched_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
+proc hierarchical_unmatched_query(rate_ long integer not null, limit_ integer not null, offset_ integer not null)
 begin
   select *
   from foo
@@ -841,7 +841,7 @@ end;
 -- TEST: create a proc with a compound select union form
 -- +  "SELECT 1 UNION SELECT 2"
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
-create proc union_select()
+proc union_select()
 begin
  select 1 as A union select 2 as A;
 end;
@@ -849,7 +849,7 @@ end;
 -- TEST: create a proc with a compound select union all form
 -- + "SELECT 1 UNION ALL SELECT 2")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "I", { "A" })
-create proc union_all_select()
+proc union_all_select()
 begin
  select 1 as A union all select 2 as A;
 end;
@@ -857,7 +857,7 @@ end;
 -- TEST: create a valid union using not null columns and nullable matching
 -- + "SELECT 'foo' UNION ALL SELECT name FROM bar")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "name" })
-create proc union_all_with_nullable()
+proc union_all_with_nullable()
 begin
   select nullable('foo') as name
   union all
@@ -870,7 +870,7 @@ end;
 -- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
 -- +  _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
-create proc with_stmt_using_cursor()
+proc with_stmt_using_cursor()
 begin
   declare C cursor for
     with X(a,b,c) as (select 1,2,3)
@@ -881,7 +881,7 @@ end;
 -- TEST: with statement top level
 -- + "WITH X (a, b, c) AS ( SELECT 1, 2, 3 ) SELECT a, b, c FROM X")
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
-create proc with_stmt()
+proc with_stmt()
 begin
   with X(a,b,c) as (select 1,2,3) select * from X;
 end;
@@ -889,7 +889,7 @@ end;
 -- TEST: with recursive statement top level
 -- + "WITH RECURSIVE X (a, b, c) AS ( SELECT 1, 2, 3 UNION ALL SELECT 4, 5, 6 ) SELECT a, b, c FROM X"
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "a", "b", "c" })
-create proc with_recursive_stmt()
+proc with_recursive_stmt()
 begin
   with recursive X(a,b,c) as (select 1,2,3 union all select 4,5,6) select * from X;
 end;
@@ -897,7 +897,7 @@ end;
 -- TEST: parent procedure
 -- + "SELECT 1, 2, 3"
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "one", "two", "three" })
-create proc parent_proc()
+proc parent_proc()
 begin
   select 1 as one, 2 as two, 3 as three;
 end;
@@ -905,7 +905,7 @@ end;
 -- TEST: child procedure
 -- +  "SELECT 4, 5, 6"
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "four", "five", "six" })
-create proc parent_proc_child()
+proc parent_proc_child()
 begin
   select 4 as four, 5 as five, 6 as six;
 end;
@@ -920,7 +920,7 @@ end;
 -- + output = C._anon0
 -- + result = C._has_row_
 -- + return _rc_, output, result
-create proc outint_nullable(out output integer, out result bool not null)
+proc outint_nullable(out output integer, out result bool not null)
 begin
   declare C cursor for select 1;
   fetch C into output;
@@ -934,7 +934,7 @@ END;
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + output = C._anon0
 -- + return _rc_, output, result
-create proc outint_notnull(out output integer not null, out result bool not null)
+proc outint_notnull(out output integer not null, out result bool not null)
 begin
   declare C cursor for select 1;
   fetch C into output;
@@ -1017,7 +1017,7 @@ set b2 := obj_var2 not in (obj_var2, obj_var2);
 -- +   an_object = nil
 -- +   return an_object
 -- + end
-create proc obj_proc(out an_object object)
+proc obj_proc(out an_object object)
 begin
   set an_object := null;
 end;
@@ -1030,7 +1030,7 @@ end;
 -- + function cursor_with_object_fetch_results(object_)
 -- +  _result_ = cursor_with_object(object_)
 -- +  result_set = { _result_ }
-create proc cursor_with_object(object_ object)
+proc cursor_with_object(object_ object)
 begin
   declare C cursor like cursor_with_object arguments;
   fetch C from arguments;
@@ -1105,7 +1105,7 @@ set i2 := ifnull_throw(i0_nullable);
 -- - _tmp
 -- + o = i
 -- + o = - 1
-create proc unused_temp(i integer, out o integer not null)
+proc unused_temp(i integer, out o integer not null)
 begin
   set o := coalesce(i, -1);
 end;
@@ -1125,7 +1125,7 @@ end;
 -- + s = "before echo"
 -- + s = "omg echo"
 -- + s = "after echo"
-create proc echo_test()
+proc echo_test()
 begin
   declare s text;
   SET s := "before echo";
@@ -1148,7 +1148,7 @@ insert into foo default values;
 -- +   cql_finalize_stmt(_temp_stmt)
 -- +   return _rc_
 -- + end
-create proc insert_values(id_ integer not null, type_ integer)
+proc insert_values(id_ integer not null, type_ integer)
 begin
   insert into bar(id, type) values (id_, type_);
 end;
@@ -1156,7 +1156,7 @@ end;
 -- TEST: alter table add column
 -- +   _rc_ = cql_exec(_db_,
 -- + "ALTER TABLE bar ADD COLUMN size REAL"
-create proc alter_table_test()
+proc alter_table_test()
 begin
   alter table bar add column size real;
 end;
@@ -1164,7 +1164,7 @@ end;
 -- TEST: drop table
 -- + _rc_ = cql_exec(_db_,
 -- + "DROP TABLE IF EXISTS bar"
-create proc drop_table_test()
+proc drop_table_test()
 begin
   drop table if exists bar;
 end;
@@ -1176,7 +1176,7 @@ end;
 -- + function uses_proc_for_result_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 -- + return _rc_, result_set
-create procedure uses_proc_for_result()
+procedure uses_proc_for_result()
 begin
   call with_result_set();
 end;
@@ -1209,7 +1209,7 @@ set l2 := 3147483647;
 
 -- TEST: use drop index in a proc
 -- + "DROP INDEX index_1"
-create proc index_dropper()
+proc index_dropper()
 begin
   drop index index_1;
 end;
@@ -1219,7 +1219,7 @@ end;
 -- + "INSERT INTO foo(id) VALUES(NULL)"
 -- + "UPDATE bar SET name = 'bar' WHERE name = 'baz'"
 -- + "DELETE FROM foo WHERE id = 1"
-create proc misc_dml_proc()
+proc misc_dml_proc()
 begin
   insert into foo values(NULL);
   insert into foo(id) values(NULL);
@@ -1233,7 +1233,7 @@ end;
 -- + _seed_ = 123
 -- + "INSERT INTO bar(id, name, rate, type, size) VALUES(?, printf('name_%d', ?), ?, ?, ?)"
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "IIIII", _seed_, _seed_, _seed_, _seed_, _seed_)
-create proc dummy_user()
+proc dummy_user()
 begin
   insert into bar () values () @dummy_seed(123) @dummy_nullables @dummy_defaults;
 end;
@@ -1241,7 +1241,7 @@ end;
 -- TEST: simple out arg proc
 -- + foo = "x"
 -- +  return foo
-create proc proc_with_out_arg(out foo text)
+proc proc_with_out_arg(out foo text)
 begin
   set foo := 'x';
 end;
@@ -1251,7 +1251,7 @@ end;
 -- + foo = proc_with_out_arg()
 -- + bar = proc_with_out_arg()
 -- + return foo
-create proc calls_out_proc(out foo text)
+proc calls_out_proc(out foo text)
 begin
   set foo := 'x';
   declare bar text;
@@ -1336,7 +1336,7 @@ set b2 := blob_var2 not in (blob_var, blob_var2);
 -- TEST: proc with blob args
 -- + function blob_proc()
 -- + return a_blob
-create proc blob_proc(out a_blob blob)
+proc blob_proc(out a_blob blob)
 begin
   set a_blob := null;
 end;
@@ -1399,7 +1399,7 @@ insert into blob_table(blob_id, b_nullable, b_notnull) values(0, blob_var, blob_
 -- TEST: a result set that includes blobs
 -- +  "SELECT blob_id, b_notnull, b_nullable FROM blob_table
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "IBb", { "blob_id", "b_notnull", "b_nullable" })
-create proc blob_returner()
+proc blob_returner()
 begin
   select * from blob_table;
 end;
@@ -1418,7 +1418,7 @@ set obj_var := case when 1 then obj_var end;
 -- TEST: force a proc with no arg list
 -- + function voidproc()
 -- - return
-create proc voidproc()
+proc voidproc()
 begin
   declare unused int;
 end;
@@ -1439,7 +1439,7 @@ end;
 -- + _rc_, _result_ = out_cursor_proc(_db_)
 -- + result_set = { _result_ }
 -- + return _rc_, result_set
-create proc out_cursor_proc()
+proc out_cursor_proc()
 begin
   declare C cursor for select bar.*, 'xyzzy' extra1, 'plugh' extra2 from bar;
   fetch C;
@@ -1449,7 +1449,7 @@ end;
 -- TEST: fetch from an output struct proc
 -- + _rc_, C = out_cursor_proc(_db_)
 -- + if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-create proc read_cursor_proc()
+proc read_cursor_proc()
 begin
   declare C cursor fetch from call out_cursor_proc();
 end;
@@ -1457,7 +1457,7 @@ end;
 -- TEST: declare a cursor and do a fetch as separate actions
 -- + _rc_, C = out_cursor_proc(_db_)
 -- + if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-create proc declare_cursor_then_fetch_from_proc()
+proc declare_cursor_then_fetch_from_proc()
 begin
   declare C cursor like out_cursor_proc;
   fetch C from call out_cursor_proc();
@@ -1497,7 +1497,7 @@ set i2 := dml_compute(dml_compute(1));
 
 -- TEST: write the result of a proc-as-func call to an out variable
 -- + _rc_, a_ = dml_compute(_db_, 1)
-create proc dml_user(out a_ integer not null)
+proc dml_user(out a_ integer not null)
 begin
   set a_ := dml_compute(1);
 end;
@@ -1515,7 +1515,7 @@ create table threads (
 -- + function thread_theme_info_list_fetch_results(_db_, thread_key_)
 -- + _rc_, stmt = thread_theme_info_list(_db_, thread_key_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "L", { "thread_key" })
-create procedure thread_theme_info_list(thread_key_ LONG INT!)
+procedure thread_theme_info_list(thread_key_ LONG INT!)
 begin
   select * from (select thread_key from threads) T;
 end;
@@ -1533,7 +1533,7 @@ end;
 -- - _rc_
 -- - cql_cleanup
 -- - return
-create proc fetch_values_dummy()
+proc fetch_values_dummy()
 begin
   declare C cursor like select * from bar;
   fetch C() from values() @dummy_seed(123) @dummy_nullables;
@@ -1554,7 +1554,7 @@ end;
 -- + _tmp_text_1 = cql_printf("yy_%d", _seed_)
 -- + C.yy = _tmp_text_1
 -- - return
-create proc fetch_values_extended()
+proc fetch_values_extended()
 begin
   declare C cursor like (like bar, xx real, yy text);
   fetch C() from values() @dummy_seed(123) @dummy_nullables;
@@ -1562,7 +1562,7 @@ end;
 
 -- TEST: c style literal
 -- + SET x := "\"Testing\" \\''";
-create proc c_literal(out x text)
+proc c_literal(out x text)
 begin
   set x := "\"Testing\" \\''";
 end;
@@ -1577,7 +1577,7 @@ end;
 -- + end
 -- + ::catch_end_2::
 -- - cql_cleanup
-create proc no_cleanup_label_needed_proc()
+proc no_cleanup_label_needed_proc()
 begin
   try
     declare C cursor for select 1 as N;
@@ -1592,7 +1592,7 @@ end;
 -- + function no_code_after_catch(_db_)
 -- - cql_cleanup
 -- + return _rc_
-create proc no_code_after_catch()
+proc no_code_after_catch()
 begin
   try
     @attribute(foo) -- just messing with the tree
@@ -1619,7 +1619,7 @@ end;
 -- +   return result_set
 -- + end
 
-create proc out_no_db()
+proc out_no_db()
 begin
   declare C cursor like select 1 A, 2.5 B;
   fetch C(A,B) from values(3,12);
@@ -1632,7 +1632,7 @@ end;
 -- + C1.B = cql_to_float(12)
 -- + _result_ = cql_clone_row(C1)
 -- + return _result_
-create proc declare_cursor_like_cursor()
+proc declare_cursor_like_cursor()
 begin
   declare C0 cursor like select 1 A, 2.5 B;
   declare C1 cursor like C0;
@@ -1644,7 +1644,7 @@ end;
 -- + local C = { _has_row_ = false }
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
-create proc declare_cursor_like_proc()
+proc declare_cursor_like_proc()
 begin
   declare C cursor like fetcher_proc;
   out C;
@@ -1654,7 +1654,7 @@ end;
 -- + local C = { _has_row_ = false }
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
-create proc declare_cursor_like_table()
+proc declare_cursor_like_table()
 begin
   declare C cursor like bar;
   out C;
@@ -1664,7 +1664,7 @@ end;
 -- + local C = { _has_row_ = false }
 -- + _result_ = cql_clone_row(C)
 -- + return _result_
-create proc declare_cursor_like_view()
+proc declare_cursor_like_view()
 begin
   declare C cursor like MyView;
   out C;
@@ -1688,7 +1688,7 @@ end;
 -- + "DELETE FROM bar WHERE name = ' '' \\n '' \\'"
 -- + "DELETE FROM bar WHERE name <> ''''"
 -- + "DELETE FROM bar WHERE name >= '\\'"
-create proc weird_quoting()
+proc weird_quoting()
 begin
   delete from bar where name like "\n\n";
   -- the newline looking thing is NOT an escape sequence it's a pain in the ass...
@@ -1704,7 +1704,7 @@ end;
 -- note: sqlite integers can hold 64 bits so they are already "long"
 -- + id LONG PRIMARY KEY AUTOINCREMENT,
 -- + "CREATE TABLE long_int_autoinc( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT )"
-create proc long_auto_table_maker()
+proc long_auto_table_maker()
 begin
   create table long_int_autoinc (
     id long primary key autoincrement,
@@ -1716,7 +1716,7 @@ declare proc blob_out(out x blob);
 
 -- TEST: force blob out var to be null
 -- + b = blob_out()
-create proc blob_call1()
+proc blob_call1()
 begin
  declare b blob;
  call blob_out(b);
@@ -1724,7 +1724,7 @@ end;
 
 -- TEST: blob return from func
 -- + b = blob_out()
-create proc blob_call2()
+proc blob_call2()
 begin
  declare b blob;
  set b := blob_out(); -- use function call syntax should be the same
@@ -1733,7 +1733,7 @@ end;
 -- TEST: forces us to set a blob to null via else.  This is not the store code path
 -- + b = b1
 -- + b = nil
-create proc blob_no_else()
+proc blob_no_else()
 begin
   declare b blob;
   declare b1 blob;
@@ -1748,7 +1748,7 @@ insert into foo values ( ifnull((select a from x), 0));
 
 -- TEST: use insert from select (put this in a proc to force the schema utils to walk it)
 -- + "WITH x (a) AS ( SELECT 111 ) INSERT INTO foo(id) SELECT a FROM x")
-create proc with_inserter()
+proc with_inserter()
 begin
   with x(a) as (select 111)
     insert into foo select * from x;
@@ -1775,7 +1775,7 @@ set r2 := (select SqlUserFunc(123));
 -- + _rc_ = cql_multibind(_db_, _temp_stmt, "IBb", blob_id_, b_notnull_, b_nullable_)
 -- + out_arg = 1
 -- + return _rc_, out_arg
-create proc multi_rewrite(like blob_table, like bar, out out_arg integer not null)
+proc multi_rewrite(like blob_table, like bar, out out_arg integer not null)
 begin
   insert into blob_table from arguments;
   set out_arg := 1;
@@ -1789,7 +1789,7 @@ end;
 -- + C1.A = C0.A
 -- + C1.B = C0.B
 -- + _result_ = cql_clone_row(C1)
-create proc fetch_to_cursor_from_cursor()
+proc fetch_to_cursor_from_cursor()
 begin
   declare C0 cursor like select 1 A, "foo" B;
   declare C1 cursor like C0;
@@ -1806,7 +1806,7 @@ end;
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + if not C._has_row_ then break end
 -- + printf("%d\n", C.A)
-create proc loop_statement_cursor()
+proc loop_statement_cursor()
 begin
   declare C cursor for select 1 A;
   loop fetch C
@@ -1825,7 +1825,7 @@ end;
 -- + A_ = C.A
 -- + if not C._has_row_ then break end
 -- + printf("%d\n", A_)
-create proc loop_statement_not_auto_cursor()
+proc loop_statement_not_auto_cursor()
 begin
   declare C cursor for select 1 A;
   declare A_ integer not null;
@@ -1837,7 +1837,7 @@ end;
 
 
 @attribute(cql:suppress_result_set)
-create proc simple_select()
+proc simple_select()
 begin
   select 1 x;
 end;
@@ -1849,7 +1849,7 @@ end;
 -- +2 cql_finalize_stmt(C_stmt)
 -- + _rc_, C_stmt = simple_select(_db_)
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
-create proc call_in_loop()
+proc call_in_loop()
 begin
   declare i integer;
   set i := 0;
@@ -1868,7 +1868,7 @@ end;
 -- + local C_types_ = "I"
 -- + _rc_, C_stmt = simple_select(_db_)
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
-create proc call_in_loop_with_nullable_condition()
+proc call_in_loop_with_nullable_condition()
 begin
   declare i int;
   set i := nullable(0);
@@ -1892,7 +1892,7 @@ end;
 -- - cql_finalize_stmt(D_stmt)
 -- + D_stmt = box
 -- + _rc_ = cql_multifetch(D_stmt, D, D_types_, D_fields_)
-create proc call_in_loop_boxed()
+proc call_in_loop_boxed()
 begin
   declare i integer;
   set i := 0;
@@ -1914,7 +1914,7 @@ end;
 -- + C.x = 1
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rows_
-create proc out_union_helper()
+proc out_union_helper()
 begin
   declare C cursor like select 1 x;
   fetch C using 1 x;
@@ -1930,7 +1930,7 @@ end;
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rc_, _rows_
-create proc out_union_dml_helper()
+proc out_union_dml_helper()
 begin
   declare C cursor for select 1 x;
   fetch C;
@@ -1947,7 +1947,7 @@ end;
 -- + else
 -- +   C = { _has_row_ = false }
 -- + end
-create proc call_out_union_in_loop()
+proc call_out_union_in_loop()
 begin
   declare i integer;
   set i := 0;
@@ -1966,7 +1966,7 @@ end;
 -- + local _result_set_ = {}
 -- + _result_set_ = out_union_helper_fetch_results()
 -- + return _result_set_
-create proc forward_out_union()
+proc forward_out_union()
 begin
   call out_union_helper();
 end;
@@ -1980,7 +1980,7 @@ declare proc extern_out_union_helper () OUT UNION (x INT!);
 -- - function forward_out_union_extern()
 -- + _result_set_ = extern_out_union_helper_fetch_results()
 -- + return _result_set_
-create proc forward_out_union_extern()
+proc forward_out_union_extern()
 begin
   call extern_out_union_helper();
 end;
@@ -1990,7 +1990,7 @@ end;
 -- - function forward_out_union_dml(_db_)
 -- + _rc_, _result_set_ = out_union_dml_helper_fetch_results(_db_)
 -- + return _rc_, _result_set_
-create proc forward_out_union_dml()
+proc forward_out_union_dml()
 begin
   call out_union_dml_helper();
 end;
@@ -2059,7 +2059,7 @@ set i2 := 1 | ~i2;
 
 -- TEST: create a trigger, force the dml
 -- + "CREATE TEMP TRIGGER IF NOT EXISTS trigger1 BEFORE DELETE ON bar FOR EACH ROW WHEN old.id > 7 BEGIN SELECT old.id; END"
-create proc make_trigger()
+proc make_trigger()
 begin
   create temp trigger if not exists trigger1
     before delete on bar
@@ -2078,7 +2078,7 @@ end;
 -- + i = 1
 -- + j = 2
 -- + b = i == j
-create proc is_test()
+proc is_test()
 begin
   declare b bool not null;
   set b := 1 is 1;
@@ -2095,7 +2095,7 @@ end;
 -- TEST: blob comparaison
 -- + b = cql_blob_is_eq(bl1, bl2)
 -- + b = cql_blob_is_ne(bl1, bl2)
-create proc is_blob()
+proc is_blob()
 begin
   declare bl1 blob;
   declare bl2 blob;
@@ -2112,7 +2112,7 @@ end;
 -- + i = 1
 -- + j = 2
 -- + b = i ~= j
-create proc is_not_test()
+proc is_not_test()
 begin
   declare b bool not null;
   set b := 1 is not 1;
@@ -2129,7 +2129,7 @@ end;
 -- TEST: null on lhs of IN
 -- + b = nil
 -- + return b
-create proc in_test(x integer, out b bool)
+proc in_test(x integer, out b bool)
 begin
   set b := NULL IN (1);
 end;
@@ -2137,7 +2137,7 @@ end;
 -- TEST: null on lhs of NOT IN
 -- + b = nil
 -- + return b
-create proc not_in_test(x integer, out b bool)
+proc not_in_test(x integer, out b bool)
 begin
   set b := NULL NOT IN (1);
 end;
@@ -2145,7 +2145,7 @@ end;
 -- TEST: drop a trigger (both flavors)
 -- +1 "DROP TRIGGER IF EXISTS trigger1"
 -- +1 "DROP TRIGGER trigger1"
-create proc drop_trigger_test()
+proc drop_trigger_test()
 begin
   drop trigger if exists trigger1;
   drop trigger trigger1;
@@ -2161,7 +2161,7 @@ end;
 -- this really doesn't make much sense in the LUA world but some thinking
 -- could be needed here.
 @attribute(cql:identity=(id))
-create proc simple_identity()
+proc simple_identity()
 begin
   select 1 as id, 2 as data;
 end;
@@ -2173,7 +2173,7 @@ end;
 -- +  _rc_, stmt = complex_identity(_db_)
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "III", { "col1", "col2", "data" })
 @attribute(cql:identity=(col1, col2))
-create proc complex_identity()
+proc complex_identity()
 begin
   select 1 as col1, 2 as col2, 3 as data;
 end;
@@ -2187,7 +2187,7 @@ end;
 -- + function out_cursor_identity_fetch_results(_db_)
 -- + result_set = { _result_ }
 @attribute(cql:identity=(id))
-create proc out_cursor_identity()
+proc out_cursor_identity()
 begin
   declare C cursor for select 1 as id, 2 as data;
   fetch C;
@@ -2206,14 +2206,14 @@ create table radioactive(
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Is", { "id", "data" })
 -- TODO vault_sensitive is not yet supported, we'll have to figure out some kind of plan for what this means
 @attribute(cql:vault_sensitive)
-create proc radioactive_proc()
+proc radioactive_proc()
 begin
   select * from radioactive;
 end;
 
 -- TEST: with delete form
 -- +  "WITH x (a) AS ( SELECT 111 ) DELETE FROM foo WHERE id IN (SELECT a FROM x)")
-create proc with_deleter()
+proc with_deleter()
 begin
   with x(a) as (select 111)
     delete from foo where id in (select * from x);
@@ -2221,7 +2221,7 @@ end;
 
 -- TEST: with update form
 -- +  "WITH x (a) AS ( SELECT 111 ) UPDATE bar SET name = 'xyzzy' WHERE id IN (SELECT a FROM x)"
-create proc with_updater()
+proc with_updater()
 begin
   with x(a) as (select 111)
     update bar set name = 'xyzzy' where id in (select * from x);
@@ -2234,7 +2234,7 @@ create temp table table2( id integer);
 -- + function autodropper(_db_)
 -- TODO -- this attribute is not yet supported but it's also really unpopular...
 @attribute(cql:autodrop=(table1, table2))
-create proc autodropper()
+proc autodropper()
 begin
    select 1 a, 2 b;
 end;
@@ -2249,7 +2249,7 @@ end;
 -- + function simple_cursor_proc_fetch_results()
 -- +  _result_ = simple_cursor_proc()
 -- + result_set = { _result_ }
-create procedure simple_cursor_proc()
+procedure simple_cursor_proc()
 begin
   declare A_CURSOR cursor like select 1 id;
   fetch a_cursor (id) from values(1);
@@ -2283,14 +2283,14 @@ end;
 
 -- TEST: select with redundant cast and alias
 -- + "SELECT (5), T.xyzzy FROM (SELECT 1 AS xyzzy) AS T"
-create proc redundant_cast()
+proc redundant_cast()
 begin
   select CAST(5 as integer) plugh, T.xyzzy five from (select 1 xyzzy) as T;
 end;
 
 -- TEST: select with alias in view
 -- + "CREATE VIEW alias_preserved AS SELECT (5) AS plugh, T.xyzzy AS five FROM (SELECT 1 AS xyzzy) AS T"
-create proc view_creator()
+proc view_creator()
 begin
   create view alias_preserved as
     select CAST(5 as integer) plugh, T.xyzzy five from (select 1 xyzzy) as T;
@@ -2308,7 +2308,7 @@ create table unread_pending_threads(unread_pending_thread_count integer);
 -- = UNION ALL
 -- = SELECT 0 AS unread_pending_thread_count, S.badge_count AS switch_account_badge_count
 -- = FROM switch_account_badges AS S) AS A"
-CREATE PROC settings_info ()
+PROC settings_info ()
 BEGIN
   declare C cursor for
     SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count,
@@ -2322,7 +2322,7 @@ END;
 
 -- TEST: aliases in top-level selects can be removed if not referenced
 -- + "SELECT 1, 2 UNION ALL SELECT foo.id, 2 FROM foo"
-CREATE PROC top_level_select_alias_unused()
+PROC top_level_select_alias_unused()
 BEGIN
   SELECT 1 AS id, 2 as x
   UNION ALL
@@ -2333,7 +2333,7 @@ END;
 -- TEST: aliases in top-level selects must not be removed if referenced from an
 -- order by clause
 -- + "SELECT 1 AS id, 2 UNION ALL SELECT foo.id, 2 FROM foo ORDER BY id"
-CREATE PROC top_level_select_alias_used_in_orderby()
+PROC top_level_select_alias_used_in_orderby()
 BEGIN
   SELECT 1 AS id, 2 as x
   UNION ALL
@@ -2346,7 +2346,7 @@ END;
 -- + "WITH threads2 (count) AS ( SELECT 1 ) SELECT COUNT(*) FROM threads2"
 -- + _tmp_int_0 = cql_get_value(_temp_stmt, 0)
 -- + x = _tmp_int_0
-create proc use_with_select()
+proc use_with_select()
 begin
    declare x integer;
    SET x := (WITH threads2 (count) AS (SELECT 1 foo) SELECT COUNT(*) FROM threads2);
@@ -2359,7 +2359,7 @@ declare select function ReadFromRowset(rowset Object<rowset>) (id integer);
 -- + function rowset_object_reader(_db_, rowset)
 -- + "SELECT id FROM ReadFromRowset(?)")
 -- + _rc_ = cql_multibind(_db_, C_stmt, "o", rowset)
-create proc rowset_object_reader(rowset Object<rowset>)
+proc rowset_object_reader(rowset Object<rowset>)
 begin
   declare C cursor for select * from ReadFromRowset(rowset);
 end;
@@ -2368,7 +2368,7 @@ end;
 -- + function upsert_do_something(_db_)
 -- + "INSERT INTO foo(id) SELECT id FROM bar WHERE 1
 -- = ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
-create proc upsert_do_something()
+proc upsert_do_something()
 BEGIN
  insert into foo select id from bar where 1 on conflict(id) do update set id=10 where id != 10;
 END;
@@ -2377,7 +2377,7 @@ END;
 -- + function with_upsert_form(_db_)
 -- + "WITH names (id) AS ( VALUES(1), (5), (3), (12) ) INSERT INTO foo(id)
 -- = SELECT id FROM names WHERE 1 ON CONFLICT (id) DO UPDATE SET id = 10 WHERE id <> 10"
-create proc with_upsert_form()
+proc with_upsert_form()
 BEGIN
  with names(id) as (values (1), (5), (3), (12))
  insert into foo select id from names where 1 on conflict(id) do update set id = 10 where id != 10;
@@ -2386,7 +2386,7 @@ END;
 -- TEST: codegen upsert statement with do nothing
 -- + function upsert_do_nothing(_db_, id_)
 -- + "INSERT INTO foo(id) VALUES(?) ON CONFLICT DO NOTHING"
-create proc upsert_do_nothing(id_ integer not null)
+proc upsert_do_nothing(id_ integer not null)
 BEGIN
  insert into foo(id) values(id_) on conflict do nothing;
 END;
@@ -2418,7 +2418,7 @@ declare procedure p2() out (id integer not null, t text) using transaction;
 -- +1 local c2 = { _has_row_ = false }
 -- +1 c1 = p1()
 -- +1 _rc_, c2 = p2(_db_)
-create procedure use_many_out_cursors()
+procedure use_many_out_cursors()
 begin
   declare c1 cursor fetch from call p1();
   declare c2 cursor fetch from call p2();
@@ -2432,7 +2432,7 @@ end;
 -- +1 local C = { _has_row_ = false }
 -- +2 C = p1()
 -- +2 _rc_, C = p2(_db_)
-create procedure fetch_many_times(arg bool not null)
+procedure fetch_many_times(arg bool not null)
 begin
   declare C cursor like p1;
   if arg  == 1 then
@@ -2453,7 +2453,7 @@ end;
 -- + C.y = "y"
 -- +2 table.insert(_rows_, cql_clone_row(C))
 -- + return _rows_
-create proc out_union_two()
+proc out_union_two()
 begin
  declare C cursor like select 1 x, '2' y;
  fetch C from values(1, "y");
@@ -2468,7 +2468,7 @@ end;
 -- + c_row_count_ = #(c_result_set_)
 -- + c = c_result_set_[c_row_num_]
 -- + c = { _has_row_ = false }
-create proc out_union_reader()
+proc out_union_reader()
 begin
   declare c cursor for call out_union_two();
   loop fetch C
@@ -2486,7 +2486,7 @@ end;
 -- +1 _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- +2 table.insert(_rows_, cql_clone_row(C))
 -- + return _rc_, _rows_
-create proc out_union_from_select()
+proc out_union_from_select()
 begin
  declare C cursor for select 1 x, '2' y;
  fetch C;
@@ -2499,7 +2499,7 @@ end;
 -- + _rc_, c_result_set_ = out_union_from_select_fetch_results(_db_)
 -- + c_row_num_ = 0
 -- + c_row_count_ = #(c_result_set_)
-create proc out_union_dml_reader()
+proc out_union_dml_reader()
 begin
   declare c cursor for call out_union_from_select();
   loop fetch C
@@ -2509,7 +2509,7 @@ begin
 end;
 
 -- This just sets up a call to a procedure that takes two integers
-create proc out_union_values(a integer not null, b integer not null)
+proc out_union_values(a integer not null, b integer not null)
 begin
   declare x cursor like select 1 x, 2 y;
   fetch x from values(a,b);
@@ -2528,7 +2528,7 @@ end;
 -- +  C = C_result_set_[C_row_num_]
 -- + else
 -- +  C = { _has_row_ = false }
-create proc read_out_union_values(a integer not null, b integer not null)
+proc read_out_union_values(a integer not null, b integer not null)
 begin
   declare C cursor for call out_union_values(a,b);
   fetch C;
@@ -2546,7 +2546,7 @@ end;
 -- + return _rc_, _rows_
 -- TODO whatever vault sensitive means here needs to be explored
 @attribute(cql:vault_sensitive)
-create proc out_union_dml()
+proc out_union_dml()
 begin
   declare x cursor for select * from radioactive;
   fetch x;
@@ -2559,7 +2559,7 @@ end;
 -- + C = C_result_set_[C_row_num_]
 -- TODO whatever vault sensitive means here needs to be explored
 @attribute(cql:vault_sensitive)
-create proc out_union_dml_for_call()
+proc out_union_dml_for_call()
 begin
   declare C cursor for call out_union_dml();
   fetch C;
@@ -2567,7 +2567,7 @@ end;
 
 -- TEST: generate a compound select statement in an expression (this is a legal form)
 -- + "SELECT 1 WHERE 0 UNION SELECT 2 LIMIT 1"
-create proc compound_select_expr()
+proc compound_select_expr()
 begin
   declare x integer;
   set x := (select 1 where 0 union select 2 limit 1);
@@ -2575,7 +2575,7 @@ end;
 
 -- TEST: generate window function invocation
 -- + "SELECT id,  row_number() OVER () FROM foo"
-create proc window_function_invocation()
+proc window_function_invocation()
 begin
   select id, row_number() over () as row_num from foo;
 end;
@@ -2584,7 +2584,7 @@ end;
 -- + if C._has_row_ then
 -- +   C.x = 2
 -- + end
-create proc update_cursor()
+proc update_cursor()
 begin
   declare C cursor like select 1 x, 2 y;
   update cursor C(x) from values (2);
@@ -2601,7 +2601,7 @@ declare proc out_union_no_dml(id integer) out union (id integer not null);
 -- TEST: emit goto cql_cleanup in case of return
 -- + goto cql_cleanup
 -- + ::cql_cleanup::
-create proc use_return()
+proc use_return()
 begin
   try
     select 1 x;
@@ -2614,7 +2614,7 @@ end;
 -- used for any other error processing
 -- + goto cql_cleanup
 -- + ::cql_cleanup::
-create proc use_return_no_error_flow()
+proc use_return_no_error_flow()
 begin
   if 1 then
     return;
@@ -2622,12 +2622,12 @@ begin
 end;
 
 -- TEST: empty proc body
--- + CREATE PROC empty_proc ()
+-- + PROC empty_proc ()
 -- + BEGIN
 -- + END;
 -- + function empty_proc()
 -- - ::cql_cleanup::
-create proc empty_proc()
+proc empty_proc()
 begin
 end;
 
@@ -2635,8 +2635,8 @@ end;
 -- nothing really to validate here; if any of the empty cases
 -- are not handled it will crash.  If the blocks are badly shaped
 -- it won't compile. Can't think of anything that isn't redundant here
--- + CREATE PROC empty_blocks ()
-create proc empty_blocks()
+-- + PROC empty_blocks ()
+proc empty_blocks()
 begin
   if 1 then
   end if;
@@ -2674,7 +2674,7 @@ end;
 -- +2 -- try
 -- +2 goto catch_end_%
 -- +2 ::catch_end_%::
-create proc tail_catch()
+proc tail_catch()
 begin
    try
    catch
@@ -2691,14 +2691,14 @@ end;
 -- it was a line break in non-quoted SQL which can be replaced with a space
 -- note the newline is escaped and present
 -- + "INSERT INTO bar(id, name) VALUES(1, 'it''s high noon\r\n\f\b\t\v')"
-create proc pretty_print_with_quote()
+proc pretty_print_with_quote()
 begin
   insert into bar(id, name) values(1, "it's high noon\r\n\f\b\t\v");
 end;
 
 -- TEST: string literal with hex forms
 -- + "INSERT INTO bar(id, name) VALUES(1, '\x01\x02\xa1\x1bg')"
-create proc hex_quote()
+proc hex_quote()
 begin
   insert into bar(id, name) values(1, "\x01\x02\xA1\x1b\x00\xg");
 end;
@@ -2707,7 +2707,7 @@ end;
 -- lua has no getters but we can verify that there are no errors for using the form
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 @attribute(cql:suppress_getters)
-create proc lotsa_columns_no_getters()
+proc lotsa_columns_no_getters()
 begin
   select * from bar;
 end;
@@ -2719,7 +2719,7 @@ end;
 -- + function sproc_with_copy_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Islid", { "id", "name", "rate", "type", "size" })
 @attribute(cql:generate_copy)
-create proc sproc_with_copy()
+proc sproc_with_copy()
 begin
   select * from bar;
 end;
@@ -2751,7 +2751,7 @@ end;
 -- +  _result_ = emit_object_with_setters(o, x, i, l, b, d, t, bl)
 -- +  result_set = { _result_ }
 @attribute(cql:emit_setters)
-create proc emit_object_with_setters(
+proc emit_object_with_setters(
   o object not null,
   x object not null,
   i integer not null,
@@ -2782,7 +2782,7 @@ end;
 -- + _result_ = emit_setters_with_nullables(o, x, i, l, b, d, t, bl)
 -- + result_set = { _result_ }
 @attribute(cql:emit_setters)
-create proc emit_setters_with_nullables(
+proc emit_setters_with_nullables(
   o object,
   x object,
   i integer,
@@ -2805,7 +2805,7 @@ end;
 -- + function no_out_with_setters_fetch_results(_db_)
 -- + _rc_, stmt = no_out_with_setters(_db_)
 @attribute(cql:emit_setters)
-create proc no_out_with_setters()
+proc no_out_with_setters()
 begin
   select * from bar;
 end;
@@ -2816,7 +2816,7 @@ end;
 -- + return _rc_, _result_stmt
 -- - function lotsa_columns_no_result_set_fetch_results(_db_)
 @attribute(cql:suppress_result_set)
-create proc lotsa_columns_no_result_set()
+proc lotsa_columns_no_result_set()
 begin
   select * from bar;
 end;
@@ -2827,7 +2827,7 @@ end;
 -- + function early_out_rc_cleared(_db_)
 -- + _rc_ = CQL_OK -- clean up any CQL_ROW value or other non-error
 -- + goto cql_cleanup -- return
-create proc early_out_rc_cleared(out x integer)
+proc early_out_rc_cleared(out x integer)
 begin
   declare C cursor for select 1 x;
   fetch C;
@@ -2870,7 +2870,7 @@ create table vault_non_sensitive(
 -- +  return _rc_, result_set
 @attribute(cql:vault_sensitive=(id, name))
 @attribute(cql:custom_type_for_encoded_column)
-create proc vault_sensitive_with_values_proc()
+proc vault_sensitive_with_values_proc()
 begin
   select * from vault_mixed_sensitive;
 end;
@@ -2885,7 +2885,7 @@ end;
 -- +  return _rc_, result_set
 @attribute(cql:vault_sensitive=(id, name))
 @attribute(cql:custom_type_for_encoded_column)
-create proc vault_not_nullable_sensitive_with_values_proc()
+proc vault_not_nullable_sensitive_with_values_proc()
 begin
   select * from vault_mixed_not_nullable_sensitive;
 end;
@@ -2899,7 +2899,7 @@ end;
 -- +  _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- +  return _rc_, result_set
 @attribute(cql:vault_sensitive)
-create proc vault_sensitive_mixed_proc()
+proc vault_sensitive_mixed_proc()
 begin
   select * from vault_mixed_sensitive;
 end;
@@ -2913,7 +2913,7 @@ end;
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 -- + return _rc_, result_set
 @attribute(cql:vault_sensitive)
-create proc vault_union_all_table_proc()
+proc vault_union_all_table_proc()
 begin
   select * from vault_mixed_sensitive
   union all
@@ -2930,7 +2930,7 @@ end;
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 -- + return _rc_, result_set
 @attribute(cql:vault_sensitive=alias_name)
-create proc vault_alias_column_proc()
+proc vault_alias_column_proc()
 begin
   select name as alias_name from vault_mixed_sensitive;
 end;
@@ -2944,7 +2944,7 @@ end;
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "s", { "alias_name" })
 -- + return _rc_, result_set
 @attribute(cql:vault_sensitive=alias_name)
-create proc vault_alias_column_name_proc()
+proc vault_alias_column_name_proc()
 begin
   select name as alias_name from vault_mixed_sensitive;
 end;
@@ -2958,7 +2958,7 @@ end;
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- - fetch_results
 @attribute(cql:vault_sensitive)
-create proc vault_cursor_proc()
+proc vault_cursor_proc()
 begin
   declare C cursor for select name from vault_mixed_sensitive;
   fetch c;
@@ -2971,7 +2971,7 @@ end;
 -- + function vault_sensitive_with_context_and_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 @attribute(cql:vault_sensitive=(title, (id, name)))
-create proc vault_sensitive_with_context_and_sensitive_columns_proc()
+proc vault_sensitive_with_context_and_sensitive_columns_proc()
 begin
  select * from vault_mixed_sensitive;
 end;
@@ -2983,7 +2983,7 @@ end;
 -- + function vault_sensitive_with_no_context_and_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, stmt = vault_sensitive_with_no_context_and_sensitive_columns_proc(_db_)
 @attribute(cql:vault_sensitive=((id, name)))
-create proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
+proc vault_sensitive_with_no_context_and_sensitive_columns_proc()
 begin
  select * from vault_mixed_sensitive;
 end;
@@ -2993,7 +2993,7 @@ end;
 -- + function vault_sensitive_with_context_and_no_sensitive_columns_proc_fetch_results(_db_)
 -- + _rc_, result_set = cql_fetch_all_rows(stmt, "Issl", { "id", "name", "title", "type" })
 @attribute(cql:vault_sensitive=(title, (id, name)))
-create proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
+proc vault_sensitive_with_context_and_no_sensitive_columns_proc()
 begin
  select * from vault_non_sensitive;
 end;
@@ -3006,7 +3006,7 @@ end;
 -- + return _rc_, result
 -- boxed object controlsl lifetime now
 -- - finalize
-create proc try_boxing(out result object<bar cursor>)
+proc try_boxing(out result object<bar cursor>)
 begin
   declare C cursor for select * from bar;
   set result from cursor C;
@@ -3019,7 +3019,7 @@ end;
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
 -- boxing controls lifetime
 -- - finalize
-create proc try_unboxing(boxed_cursor object<bar cursor>)
+proc try_unboxing(boxed_cursor object<bar cursor>)
 begin
   declare C cursor for boxed_cursor;
   fetch C;
@@ -3027,7 +3027,7 @@ end;
 
 -- TEST: numeric cast operation int32
 -- + x = cql_to_integer(3.2)
-create proc local_cast_int_notnull()
+proc local_cast_int_notnull()
 begin
   declare x integer not null;
   set x := cast(3.2 as integer);
@@ -3036,7 +3036,7 @@ end;
 -- TEST: numeric cast operation int32 nullable
 -- + r = 3.2
 -- + x = cql_to_integer(r)
-create proc local_cast_int()
+proc local_cast_int()
 begin
   declare x integer;
   declare r real;
@@ -3046,7 +3046,7 @@ end;
 
 -- TEST: numeric cast operation int64 nullable
 -- + x = cql_to_integer(3.2)
-create proc local_cast_long_notnull()
+proc local_cast_long_notnull()
 begin
   declare x long not null;
   set x := cast(3.2 as long);
@@ -3055,7 +3055,7 @@ end;
 -- TEST: numeric cast operation int64 nullable
 -- + r = 3.2
 -- + x = cql_to_integer(r)
-create proc local_cast_long()
+proc local_cast_long()
 begin
   declare x long;
   declare r real;
@@ -3065,7 +3065,7 @@ end;
 
 -- TEST: numeric cast operation real
 -- + x = cql_to_float(3)
-create proc local_cast_real_notnull()
+proc local_cast_real_notnull()
 begin
   declare x real not null;
   set x := cast(3 as real);
@@ -3074,7 +3074,7 @@ end;
 -- TEST: numeric cast operation real nullable
 -- + r = 3
 -- + x = cql_to_float(r)
-create proc local_cast_real()
+proc local_cast_real()
 begin
   declare x real;
   declare r int;
@@ -3084,7 +3084,7 @@ end;
 
 -- TEST: numeric cast operation bool (and normalize)
 -- + x = cql_to_bool(3.2)
-create proc local_cast_bool_notnull()
+proc local_cast_bool_notnull()
 begin
   declare x bool not null;
   set x := cast(3.2 as bool);
@@ -3093,7 +3093,7 @@ end;
 -- TEST: numeric cast operation bool nullable (and normalize)
 -- + r = 3.2
 -- + x = cql_to_bool(r)
-create proc local_cast_bool()
+proc local_cast_bool()
 begin
   declare x bool;
   declare r real;
@@ -3104,7 +3104,7 @@ end;
 -- TEST: numeric cast operation from bool (normalize b)
 -- + b = true
 -- + x = cql_to_float(b)
-create proc local_cast_from_bool_notnull()
+proc local_cast_from_bool_notnull()
 begin
   declare b bool not null;
   set b := 1;
@@ -3115,7 +3115,7 @@ end;
 -- TEST: numeric cast operation from bool nullable (normalize b)
 -- + b = true
 -- + x = cql_to_float(b)
-create proc local_cast_from_bool()
+proc local_cast_from_bool()
 begin
   declare b bool;
   set b := nullable(1);
@@ -3130,7 +3130,7 @@ end;
 -- TEST: numeric cast operation from bool not nullable (no-op version)
 -- + b = false
 -- + x = (b)
-create proc local_cast_from_bool_no_op_notnull()
+proc local_cast_from_bool_no_op_notnull()
 begin
   declare x bool not null;
   declare b bool not null;
@@ -3141,7 +3141,7 @@ end;
 -- TEST: numeric cast operation from bool nullable (no-op version)
 -- + b = true
 -- + x = (b)
-create proc local_cast_from_bool_no_op()
+proc local_cast_from_bool_no_op()
 begin
   declare b bool;
   set b := nullable(1);
@@ -3169,7 +3169,7 @@ set l2 := cql_get_blob_size(blob_var2);
 -- + "ROLLBACK TO base_proc_savepoint"
 -- + _rc_ = cql_best_error(_rc_thrown_1)
 -- + ::catch_end%::
-create proc base_proc_savepoint()
+proc base_proc_savepoint()
 begin
   proc savepoint
   begin
@@ -3181,7 +3181,7 @@ end;
 -- +1 "SAVEPOINT base_proc_savepoint_commit_return"
 -- +3 "RELEASE base_proc_savepoint_commit_return"
 -- +1 "ROLLBACK TO base_proc_savepoint_commit_return"
-create proc base_proc_savepoint_commit_return()
+proc base_proc_savepoint_commit_return()
 begin
   proc savepoint
   begin
@@ -3195,7 +3195,7 @@ end;
 -- +1 "SAVEPOINT base_proc_savepoint_rollback_return"
 -- +2 "ROLLBACK TO base_proc_savepoint_rollback_return"
 -- +3 "RELEASE base_proc_savepoint_rollback_return"
-create proc base_proc_savepoint_rollback_return()
+proc base_proc_savepoint_rollback_return()
 begin
   proc savepoint
   begin
@@ -3322,7 +3322,7 @@ create table SalesInfo(
 
 -- TEST: ORDERBY BETWEEN PRECEEDING AND FOLLOWING NO FILTER NO EXCLUDE
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS SalesMovingAverage
-create proc window1()
+proc window1()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
@@ -3331,7 +3331,7 @@ end;
 
 -- TEST: simple OVER and ORDER BY
 -- + SUM(amount) OVER (ORDER BY month) AS RunningTotal
-create proc window2()
+proc window2()
 begin
   SELECT month, amount, SUM(amount) OVER
     (ORDER BY month) RunningTotal
@@ -3340,7 +3340,7 @@ end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude no others
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
-create proc window3()
+proc window3()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
@@ -3349,7 +3349,7 @@ end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude no others with FILTER
 -- + AVG(amount) FILTER (WHERE month = 1) OVER (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS) AS SalesMovingAverage
-create proc window4()
+proc window4()
 begin
   SELECT month, amount, AVG(amount) FILTER(WHERE month = 1) OVER
     (ORDER BY month ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING EXCLUDE NO OTHERS)
@@ -3358,7 +3358,7 @@ end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude current row
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW) AS SalesMovingAverage
-create proc window5()
+proc window5()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month ROWS BETWEEN 3 PRECEDING AND 4 FOLLOWING EXCLUDE CURRENT ROW)
@@ -3367,7 +3367,7 @@ end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude group
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP) AS SalesMovingAverage
-create proc window6()
+proc window6()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month ROWS BETWEEN 4 PRECEDING AND 5 FOLLOWING EXCLUDE GROUP)
@@ -3376,7 +3376,7 @@ end;
 
 -- TEST: ROWS expr preceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-create proc window7()
+proc window7()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month ROWS BETWEEN 6 PRECEDING AND 7 FOLLOWING EXCLUDE TIES)
@@ -3385,7 +3385,7 @@ end;
 
 -- TEST: RANGE expr preceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-create proc window8()
+proc window8()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month RANGE BETWEEN 8 PRECEDING AND 9 FOLLOWING EXCLUDE TIES)
@@ -3394,7 +3394,7 @@ end;
 
 -- TEST: GROUPS expr preceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-create proc window9()
+proc window9()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month GROUPS BETWEEN 10 PRECEDING AND 11 FOLLOWING EXCLUDE TIES)
@@ -3403,7 +3403,7 @@ end;
 
 -- TEST: GROUPS unbounded proceeding and expr following, exclude ties
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES) AS SalesMovingAverage
-create proc window10()
+proc window10()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND 12 FOLLOWING EXCLUDE TIES)
@@ -3412,7 +3412,7 @@ end;
 
 -- TEST: GROUPS expr following and expr preceeding
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING) AS SalesMovingAverage
-create proc window11()
+proc window11()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month GROUPS BETWEEN 13 FOLLOWING AND 14 PRECEDING)
@@ -3421,7 +3421,7 @@ end;
 
 -- TEST: GROUPS between current row and unbounded following
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) AS SalesMovingAverage
-create proc window12()
+proc window12()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
@@ -3430,7 +3430,7 @@ end;
 
 -- TEST: GROUPS between unbounded preceding and current row with no exclude
 -- + AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS SalesMovingAverage
-create proc window13()
+proc window13()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
@@ -3439,7 +3439,7 @@ end;
 
 -- TEST: GROUPS between unbounded preceding and current row with exclude ties
 -- +  AVG(amount) OVER (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
-create proc window14()
+proc window14()
 begin
   SELECT month, amount, AVG(amount) OVER
     (ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
@@ -3448,7 +3448,7 @@ end;
 
 -- TEST: correct parse and re-emit of CURRENT_ROW
 -- + AVG(amount) OVER (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES) AS SalesMovingAverage
-create proc window15()
+proc window15()
 begin
   SELECT month, amount, AVG(amount) OVER
     (PARTITION BY month ORDER BY month GROUPS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW EXCLUDE TIES)
@@ -3457,7 +3457,7 @@ end;
 
 -- TEST: correct parse and re-emit of CURRENT_ROW
 -- + AVG(amount) OVER (GROUPS CURRENT ROW) AS SalesMovingAverage
-create proc window16()
+proc window16()
 begin
   SELECT month, amount, AVG(amount) OVER
     (GROUPS CURRENT ROW)
@@ -3468,7 +3468,7 @@ end;
 -- + function emit_rc(_db_)
 -- + result_code = CQL_OK
 -- + return _rc_, result_code
-create proc emit_rc(out result_code integer not null)
+proc emit_rc(out result_code integer not null)
 begin
   set result_code := @rc;
 end;
@@ -3491,7 +3491,7 @@ end;
 -- + e5 = _rc_thrown_3
 -- + printf("Error %d\n", err)
 -- + e6 = CQL_OK
-create proc rc_test()
+proc rc_test()
 begin
   LET err := @rc;
   let e0 := @rc;
@@ -3522,7 +3522,7 @@ end;
 -- - local _rc_thrown_1 = _rc_
 -- + local _rc_thrown_2 = _rc_
 -- + _rc_ = cql_best_error(_rc_thrown_2)
-create proc rc_test_lazy1()
+proc rc_test_lazy1()
 begin
   try
     create table whatever_anything(id integer);
@@ -3539,7 +3539,7 @@ end;
 -- - local _rc_thrown_1 = _rc_
 -- + local _rc_thrown_2 = _rc_
 -- + err = _rc_thrown_2
-create proc rc_test_lazy2()
+proc rc_test_lazy2()
 begin
   try
     create table whatever_anything(id integer);
@@ -3595,7 +3595,7 @@ declare enum some_longs long (
 
 -- TEST: resolve a virtual table, note that the arguments become the declaration
 -- + "CREATE VIRTUAL TABLE virt_table USING virt_module ( id INTEGER, t TEXT)"
-create proc virtual_table_creator()
+proc virtual_table_creator()
 begin
   -- this will be rewritten
   create virtual table virt_table using virt_module (arguments following) as (
@@ -3610,7 +3610,7 @@ end;
 -- + C.y = 1
 -- + C.y = out_arg_cursor(C.x)
 -- + return y
-create proc out_arg_cursor(x integer not null, out y integer not null)
+proc out_arg_cursor(x integer not null, out y integer not null)
 begin
   declare C cursor like out_arg_cursor arguments;
   fetch C from values(1,1);
@@ -3621,7 +3621,7 @@ end;
 -- +    "CREATE VIRTUAL TABLE v1 USING m1"
 -- +    "CREATE VIRTUAL TABLE v2 USING m2 (x)"
 -- +    "CREATE VIRTUAL TABLE v3 USING m2 ( id INTEGER)"
-create proc make_virt_table()
+proc make_virt_table()
 begin
   create virtual table v1 using m1 as (id integer);
   create virtual table v2 using m2(x) as (id integer);
@@ -3639,14 +3639,14 @@ create virtual table virtual_with_hidden using module_name as (
 
 -- TEST: hidden applied on virtual tables
 -- +  "SELECT vy FROM virtual_with_hidden"
-create proc virtual1()
+proc virtual1()
 begin
   select * from virtual_with_hidden;
 end;
 
 -- TEST: hidden columns may be used by name
 -- + "SELECT vx, vy FROM virtual_with_hidden WHERE vx = 2"
-create proc virtual2()
+proc virtual2()
 begin
   select vx, vy from virtual_with_hidden where vx = 2;
 end;
@@ -3718,7 +3718,7 @@ set t2 := (select name from bar if nothing or null "garbonzo");
 -- private doesn't mean anything in lua
 -- + function private_proc()
 @attribute(cql:private)
-create proc private_proc(out x integer)
+proc private_proc(out x integer)
 begin
   set x := 1;
 end;
@@ -3729,7 +3729,7 @@ end;
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rows_
 @attribute(cql:private)
-create proc private_out_union()
+proc private_out_union()
 begin
   declare C cursor like select 1 a_field;
 
@@ -3741,7 +3741,7 @@ end;
 -- note that compiling this code in LUA correctly is part of the test which verifies lots of linkage in addition
 -- to just these strings.
 -- + C_result_set_ = private_out_union_fetch_results()
-create proc use_private_out_union()
+proc use_private_out_union()
 begin
   declare C cursor for call private_out_union();
   loop fetch C
@@ -3759,7 +3759,7 @@ end;
 -- + table.insert(_rows_, cql_clone_row(C))
 -- + return _rows_
 @attribute(cql:suppress_getters)
-create proc no_getters_out_union()
+proc no_getters_out_union()
 begin
   declare C cursor like select 1 a_field;
 
@@ -3771,7 +3771,7 @@ end;
 -- note that compiling this code in LUA correctly is part of the test which verifies lots of linkage in addition
 -- to just these strings.
 -- + C_result_set_ = no_getters_out_union_fetch_results()
-create proc use_no_getters_out_union()
+proc use_no_getters_out_union()
 begin
   declare C cursor for call no_getters_out_union();
   loop fetch C
@@ -3785,7 +3785,7 @@ end;
 -- + function suppress_results_out_union_fetch_results()
 -- + table.insert(_rows_, cql_clone_row(C))
 @attribute(cql:suppress_result_set)
-create proc suppress_results_out_union()
+proc suppress_results_out_union()
 begin
   declare C cursor like select 1 a_field;
 
@@ -3798,7 +3798,7 @@ end;
 -- to just these strings.
 -- + function use_suppress_results_out_union(_db_)
 -- + C_result_set_ = suppress_results_out_union_fetch_results()
-create proc use_suppress_results_out_union()
+proc use_suppress_results_out_union()
 begin
   declare C cursor for call suppress_results_out_union();
   loop fetch C
@@ -3814,7 +3814,7 @@ end;
 -- + return _rc_, _result_stmt, x
 -- - private_result_fetch_results
 @attribute(cql:private)
-create proc private_result(out x integer)
+proc private_result(out x integer)
 begin
   select 1 x;
 end;
@@ -3829,7 +3829,7 @@ declare proc private_fwd_ref(x integer not null);
 -- nothing to do in LUA
 -- + local x
 -- + return x
-create proc set_out_arg_ref_test(out x text)
+proc set_out_arg_ref_test(out x text)
 begin
 end;
 
@@ -3837,14 +3837,14 @@ end;
 -- nothing to do in LUA
 -- + local x
 -- + return x
-create proc set_out_arg_null_test(out x integer)
+proc set_out_arg_null_test(out x integer)
 begin
 end;
 
 -- TEST: ensure out args set to null for non-null types
 -- + x = 0
 -- + return x
-create proc set_out_arg_notnull_test(out x integer not null)
+proc set_out_arg_notnull_test(out x integer not null)
 begin
 end;
 
@@ -3856,7 +3856,7 @@ declare global_cursor2 cursor like select "x" x;
 -- + global_cursor_stmt = nil
 -- + global_cursor = { _has_row_ = false }
 -- + global_cursor2 = { _has_row_ = false }
-create proc early_close_cursor()
+proc early_close_cursor()
 begin
   close global_cursor;
   close global_cursor2;
@@ -3876,7 +3876,7 @@ end;
 -- + si = (3 + 3)
 -- + sr = 3.0
 -- + st = "ST"
-create proc various_lets()
+proc various_lets()
 begin
   let r := 1.0;
   let i := 1;
@@ -3898,7 +3898,7 @@ end;
 -- rc is not clobbered elsewhere!
 -- +2 _rc_ = CQL_OK
 -- + return _rc_
-create proc try_catch_rc()
+proc try_catch_rc()
 begin
   declare C cursor for select 'foo' extra2 from bar;
   try
@@ -4020,7 +4020,7 @@ declare proc out2_proc(x integer, out y integer not null, out z integer not null
 -- TEST: implicit declare including re-use
 -- + function out_decl_test(x)
 -- +2 u, v = out2_proc(x)
-create proc out_decl_test(x integer)
+proc out_decl_test(x integer)
 begin
   declare out call out2_proc(x, u, v);
   declare out call out2_proc(x, u, v);
@@ -4031,7 +4031,7 @@ end;
 -- flags appropriately during loop reanalysis
 -- + function out_decl_loop_test(x)
 -- +2 u, v = out2_proc(x)
-create proc out_decl_loop_test(x integer)
+proc out_decl_loop_test(x integer)
 begin
   while 1
   begin
@@ -4074,7 +4074,7 @@ end;
 -- +1 sub0 = nil
 -- +1 sub1 = nil
 -- - Error
-create proc binary_ops_with_null()
+proc binary_ops_with_null()
 begin
   let add0 := NULL + 42;
   let add1 := 42 + NULL;
@@ -4112,7 +4112,7 @@ end;
 -- + function uses_throw(_db_)
 -- + _rc_ = cql_best_error(CQL_OK)
 -- +  cql_error_trace(_rc_, _db_)
-create proc uses_throw()
+proc uses_throw()
 begin
   throw;
 end;
@@ -4121,7 +4121,7 @@ end;
 -- + function uses_ifnull_throw(_db_, x)
 -- + _rc_ = CQL_ERROR
 -- +  cql_error_trace(_rc_, _db_)
-create proc uses_ifnull_throw(x int)
+proc uses_ifnull_throw(x int)
 begin
    let y := ifnull_throw(x);
 end;
@@ -4135,7 +4135,7 @@ end;
 -- + function out_object_fetch_results(o)
 -- + _result_ = out_object(o)
 -- + result_set = { _result_ }
-create proc out_object(o object not null)
+proc out_object(o object not null)
 begin
   declare C cursor like out_object arguments;
   fetch C from arguments;
@@ -4150,7 +4150,7 @@ end;
 -- +  cql_contract_argument_notnull(h, 8)
 -- +  cql_contract_argument_notnull(n, 14)
 -- +  cql_contract_argument_notnull(p, 16)
-create proc exercise_contracts(
+proc exercise_contracts(
   a int,
   b int not null,
   c text,
@@ -4174,27 +4174,27 @@ end;
 
 -- TEST: Contracts should be emitted for public procs
 -- +1 cql_contract_argument_notnull(t, 1)
-create proc public_proc_with_a_contract(t text not null)
+proc public_proc_with_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should not be emitted for private procs
 -- - cql_contract_argument_notnull
 @attribute(cql:private)
-create proc private_proc_without_a_contract(t text not null)
+proc private_proc_without_a_contract(t text not null)
 begin
 end;
 
 -- TEST: Contracts should be emitted only once, not also in fetch results
 -- +1 cql_contract_argument_notnull(t, 1)
-create proc result_set_proc_with_contract_in_fetch_results(t text not null)
+proc result_set_proc_with_contract_in_fetch_results(t text not null)
 begin
   select * from bar;
 end;
 
 -- TEST: Contracts should be emitted only once, not also in fetch results
 -- +1 cql_contract_argument_notnull(t, 1)
-create proc out_proc_with_contract_in_fetch_results(t text not null)
+proc out_proc_with_contract_in_fetch_results(t text not null)
 begin
   declare C cursor like bar;
   out C;
@@ -4202,7 +4202,7 @@ end;
 
 -- TEST: The improving of nullable variables compiles to nothing in SQL.
 -- + "SELECT ? + 1"
-create proc nullability_improvements_are_erased_for_sql()
+proc nullability_improvements_are_erased_for_sql()
 begin
   declare a int;
   if a is not null then
@@ -4216,7 +4216,7 @@ end;
 -- + if a ~= nil then
 -- + b = a
 -- + a = 0
-create proc nullability_improvements_do_not_change_access()
+proc nullability_improvements_do_not_change_access()
 begin
   declare a int;
   if a is not null then
@@ -4348,7 +4348,7 @@ CREATE TABLE big_data(
 -- it has in the past.
 -- + "SELECT f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f26, f27, f28, f29, f30, f31, f32, f33, f34, f35, f36, f38, f39, f40, f41, f42, f43, f44, f45, f46, f47, f48, f49, f50, f51, f52, f53, f54, f55, f56, f57, f58, f59, f60, f61, f62, f63, f64, f65, f66, f67, f68, f69, f70, f71, f72, f73, f74, f75 FROM big_data"
 -- + _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
-CREATE PROC BigFormat ()
+PROC BigFormat ()
 BEGIN
   DECLARE C CURSOR FOR SELECT * FROM big_data;
   LOOP FETCH C
@@ -4390,10 +4390,10 @@ LET abs_val_bool := abs(true);
 SET abs_val_nullable := abs(null);
 
 -- Used in the following test.
-create proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;
-create proc ltor_proc_int(a int, b int, out c int) begin end;
-create proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin set c := "text"; end;
-create proc ltor_proc_text(a text, b text, out c text) begin end;
+proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;
+proc ltor_proc_int(a int, b int, out c int) begin end;
+proc ltor_proc_text_not_null(a text not null, b text not null, out c text not null) begin set c := "text"; end;
+proc ltor_proc_text(a text, b text, out c text) begin end;
 declare function ltor_func_int_not_null(a int not null, b int not null) int not null;
 declare function ltor_func_int(a int, b int) int;
 declare function ltor_func_text_not_null(a text not null, b text not null) text not null;
@@ -4424,7 +4424,7 @@ declare function ltor_func_text(a text, b text) text;
 -- + _tmp_n_text_1 = ltor_func_text("1", "2")
 -- + _tmp_n_text_2 = ltor_func_text("3", "4")
 -- + h = ltor_func_text(_tmp_n_text_1, _tmp_n_text_2)
-create proc arguments_are_evaluated_left_to_right()
+proc arguments_are_evaluated_left_to_right()
 begin
   let a := ltor_proc_int_not_null(ltor_proc_int_not_null(1, 2), ltor_proc_int_not_null(3, 4));
   let b := ltor_proc_int(ltor_proc_int(1, 2), ltor_proc_int(3, 4));
@@ -4436,17 +4436,17 @@ begin
   let h := ltor_func_text(ltor_func_text("1", "2"), ltor_func_text("3", "4"));
 end;
 
-create proc f1(out x integer not null)
+proc f1(out x integer not null)
 begin
   set x := 5;
 end;
 
-create proc f2(out x integer )
+proc f2(out x integer )
 begin
   set x := 5;
 end;
 
-create proc f3(y integer, out x integer )
+proc f3(y integer, out x integer )
 begin
   set x := y;
 end;
@@ -4468,7 +4468,7 @@ end;
 -- + _tmp_n_int_1 = f3(1)
 -- + _tmp_n_int_2 = f3(2)
 -- + s = cql_add(cql_add(_tmp_n_int_0, _tmp_n_int_1), _tmp_n_int_2)
-create proc multi_call_temp_reuse()
+proc multi_call_temp_reuse()
 begin
   let q := f1() + f1() + f1();
   let r := f2() + f2() + f2();
@@ -4478,7 +4478,7 @@ end;
 -- TEST: The `sensitive` function is a no-op and never appears in the LUA output.
 -- + x = "hello"
 -- + "SELECT 'hello'")
-create proc sensitive_function_is_a_no_op()
+proc sensitive_function_is_a_no_op()
 begin
   let x := sensitive("hello");
   select sensitive("hello") as y;
@@ -4495,7 +4495,7 @@ end;
 -- = function() return c == nil end) end) then
 -- + c = a
 -- + end
-create proc and_preserves_temps(a long, b long, c long)
+proc and_preserves_temps(a long, b long, c long)
 begin
   if a > b and (a < c or c is null) then
      set c := a;
@@ -4513,7 +4513,7 @@ end;
 -- = function() return cql_gt(b, c) end) end) then
 -- + c = a
 -- + end
-create proc or_preserves_temps(a long, b long, c long)
+proc or_preserves_temps(a long, b long, c long)
 begin
   if c < 0 or (a > c and b > c) then
      set c := a;
@@ -4523,7 +4523,7 @@ end;
 -- TEST: make sure we don't emit this into the output
 -- - function shared_frag
 @attribute(cql:shared_fragment)
-create proc shared_frag()
+proc shared_frag()
 begin
  select 1234 shared_something; -- hence no cql_code return type
 end;
@@ -4540,7 +4540,7 @@ end;
 -- + "SELECT 1234",
 -- ---- then we see what came after the shared fragment
 -- + ") SELECT shared_something FROM shared_frag"
-create proc foo()
+proc foo()
 begin
   with
     (call shared_frag())
@@ -4550,7 +4550,7 @@ end;
 
 -- used in the following test
 @attribute(cql:shared_fragment)
-create proc shared_conditional(x integer not null)
+proc shared_conditional(x integer not null)
 begin
   if x == 1 then
     select x as x;
@@ -4614,7 +4614,7 @@ end;
 --
 -- 8 variable sites, only some of which are used
 -- + _rc_ = cql_multibind_var(_db_, _result_stmt, 8, _vpreds_1, "IIIIIIII", x, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, _p1_x_, x)
-create proc shared_conditional_user(x integer not null)
+proc shared_conditional_user(x integer not null)
 begin
   with
   some_cte(id) as (select x),
@@ -4626,7 +4626,7 @@ end;
 -- used in the following test, this is silly fragment
 -- but it forces complex push and pop of variable state
 @attribute(cql:shared_fragment)
-create proc nested_shared_proc(x_ integer not null)
+proc nested_shared_proc(x_ integer not null)
 begin
   if x_ <= 5 then
     with
@@ -4669,7 +4669,7 @@ end;
 -- +   _preds_1[6] = true
 -- +   _vpreds_1[7] = true -- pred 6 known to be true
 -- + end
-create proc nested_shared_stuff()
+proc nested_shared_stuff()
 begin
   with
   (call nested_shared_proc(1))
@@ -4752,7 +4752,7 @@ end;
 --
 -- fragment 9 present always
 -- +  ")"
-create proc use_nested_select_shared_frag_form()
+proc use_nested_select_shared_frag_form()
 begin
   select * from (call nested_shared_proc(1));
 end;
@@ -4767,7 +4767,7 @@ end;
 -- + ")",
 -- + ")"
 @attribute(cql:private)
-create proc simple_shared_frag()
+proc simple_shared_frag()
 begin
   select * from (call shared_frag());
 end;
@@ -4791,7 +4791,7 @@ declare const group some_constants (
 --   - For slash star, there is a high chance that the compiler
 --     will reject the generated code under certain configurations
 --     (-Werror and -Wcomment flags).
-create proc slash_star_and_star_slash()
+proc slash_star_and_star_slash()
 begin
   let x := "/*  */";
 end;
@@ -4821,7 +4821,7 @@ create table structured_storage(
 -- TEST: basic blob serialization case
 -- + _rc_, B = cql_serialize_to_blob(C);
 -- + _rc_, D = cql_deserialize_from_blob(B)
-create proc blob_serialization_test()
+proc blob_serialization_test()
 begin
   declare C cursor for select 1 id, 'foo' name;
   fetch C;
@@ -4841,7 +4841,7 @@ declare function make_blob() create blob<structured_storage>;
 -- func call is a good standing for general eval
 -- + _tmp_n_blob_0 = make_blob()
 -- + _rc_, C = cql_deserialize_from_blob(_tmp_n_blob_0)
-create proc deserialize_func()
+proc deserialize_func()
 begin
   declare C cursor like structured_storage;
   fetch C from blob make_blob();
@@ -4858,7 +4858,7 @@ end;
 -- + big4 = (-9223372036854775807 - 1)
 -- + big5 = 9223372036854775807
 -- + big6 = 9223372036854775807
-create proc bigstuff()
+proc bigstuff()
 begin
   let big1 := 0x7fffffffffffffffL;
   let big2 := 0x8000000000000000L;
@@ -4916,7 +4916,7 @@ end;
 -- even though it's out of order the codegen will be affected
 -- the test cases above verify this
 -- _rc_, b = cql_serialize_to_blob(gr_blob_cursor);
-create proc use_gr_cursor_for_serialization(out b blob<structured_storage>)
+proc use_gr_cursor_for_serialization(out b blob<structured_storage>)
 begin
   set b from cursor gr_blob_cursor;
 end;
@@ -4926,7 +4926,7 @@ end;
 -- nor can it be...  So convert this to a normal local pattern.
 -- In LUA this is all trivial, because there are no borrowed refs.
 -- + x = "hi"
-create proc mutated_in_param_ref(x text)
+proc mutated_in_param_ref(x text)
 begin
   set x := 'hi';
 end;
@@ -4940,7 +4940,7 @@ set b2 := ( select likely(1) );
 -- result can be compiled successfully).
 declare proc some_redeclared_out_proc() out (x int) using transaction;
 declare proc some_redeclared_out_proc() out (x int) using transaction;
-create proc some_redeclared_out_proc()
+proc some_redeclared_out_proc()
 begin
   declare c cursor for select nullable(1) x;
   fetch c;
@@ -4953,7 +4953,7 @@ end;
 declare proc some_redeclared_out_union_proc() out union (x int) using transaction;
 declare proc some_redeclared_out_union_proc() out union (x int) using transaction;
 
-create proc some_redeclared_out_union_proc()
+proc some_redeclared_out_union_proc()
 begin
   declare c cursor for select nullable(1) x;
   fetch c;
@@ -4964,20 +4964,20 @@ declare function external_cursor_func(x cursor) integer;
 
 -- TEST call a function that takes a generic cursor
 -- + result = external_cursor_func(shape_storage, shape_storage_types_, shape_storage_fields_)
-create proc external_cursor_caller ()
+proc external_cursor_caller ()
 begin
   declare shape_storage cursor like select 1 as x;
   let result := external_cursor_func(shape_storage);
 end;
 
 -- helper method that clobbers x (in out)
-create proc clobber1(inout x text)
+proc clobber1(inout x text)
 begin
   set x := "xyzzy";
 end;
 
 -- helper method that clobbers x (out arg)
-create proc clobber2(out x text)
+proc clobber2(out x text)
 begin
   set x := "xyzzy";
 end;
@@ -4985,7 +4985,7 @@ end;
 -- TEST: use of in arg at in/out position requires copy (in C)
 -- in lua it means nothing... because in ref args are not borrowed
 -- + x = clobber1(x)
-create proc mutated_in_arg1(x text)
+proc mutated_in_arg1(x text)
 begin
   call clobber1(x);
 end;
@@ -4993,7 +4993,7 @@ end;
 -- TEST: use of in arg at out position requires copy (in C)
 -- in lua it means nothing... because in ref args are not borrowed
 -- + x = clobber2()
-create proc mutated_in_arg2(x text)
+proc mutated_in_arg2(x text)
 begin
   call clobber2(x);
 end;
@@ -5005,7 +5005,7 @@ end;
 -- whatever you put there. In lua you do nothing...
 -- + function mutated_in_arg3(_db_, x)
 -- + x = C.x
-create proc mutated_in_arg3(x text)
+proc mutated_in_arg3(x text)
 begin
   declare C cursor for select "x" x;
   fetch C into x;
@@ -5016,7 +5016,7 @@ end;
 -- + cql_contract_argument_notnull(x, 1)
 -- + x = "xyzzy"
 -- + return x
-create proc mutated_not_null(inout x text not null)
+proc mutated_not_null(inout x text not null)
 begin
   set x := 'xyzzy';
 end;
@@ -5030,7 +5030,7 @@ declare select function no_check_select_fun no check text;
 declare select function no_check_select_table_valued_fun no check (t text);
 
 -- for the next case
-create proc simple_child_proc()
+proc simple_child_proc()
 begin
   select 1 x, 2 y;
 end;
@@ -5046,7 +5046,7 @@ end;
 -- + C.c = _tmp_object_0
 -- + table.insert(_rows_, cql_clone_row(C))
 @attribute(cql:emit_setters)
-create proc simple_container_proc()
+proc simple_container_proc()
 begin
   declare C cursor like (a integer, b integer not null, c object<simple_child_proc set>);
   fetch C using
@@ -5061,7 +5061,7 @@ declare proc num_arg(x integer not null);
 
 -- TEST: invoke num proc with a bool
 -- + num_arg(1)
-create proc call_num_with_bool()
+proc call_num_with_bool()
 begin
    call num_arg(true);
 end;
@@ -5072,7 +5072,7 @@ end;
 -- + WHEN 9223372036854775807L THEN
 -- + if _tmp_int64_0 == (-9223372036854775807 - 1) then
 -- + if _tmp_int64_0 == 9223372036854775807 then
-create proc big_switch_label(x long integer not null)
+proc big_switch_label(x long integer not null)
 begin
   switch x
   when -9223372036854775808L then let y := 0;
@@ -5113,7 +5113,7 @@ create table backed(
 -- = WHERE bgetkey_type(T.k) = -5417664364642960231
 -- + ") SELECT rowid, pk, flag, id, name, age, storage FROM backed"
 @attribute(cql:private)
-create proc explain_equery_plan_backed(out x bool not null)
+proc explain_equery_plan_backed(out x bool not null)
 begin
   explain query plan select * from backed;
 end;
@@ -5126,7 +5126,7 @@ end;
 -- verify that we went back to _temp_stmt after using _temp1_stmt
 -- +1 _rc_, _temp1_stmt = cql_prepare(_db_,
 -- +1 _rc_, _temp_stmt = cql_prepare(_db_,
-create proc stmt_in_loop()
+proc stmt_in_loop()
 begin
    let i := 0;
    while i < 10
@@ -5145,7 +5145,7 @@ end;
 -- verify that we went back to _temp_stmt after using C_stmt
 -- +1 _rc_, C_stmt = cql_prepare(_db_,
 -- +1 _rc_, _temp_stmt = cql_prepare(_db_,
-create proc cursor_in_loop()
+proc cursor_in_loop()
 begin
    let i := 0;
    while i < 10
@@ -5161,7 +5161,7 @@ end;
 -- TEST: in_loop variation of select expression case
 -- +1 cql_reset_stmt(_temp1_stmt)
 -- +1 cql_finalize_stmt(_temp1_stmt)
-create proc select_in_loop()
+proc select_in_loop()
 begin
    while 1
    begin
@@ -5172,7 +5172,7 @@ end;
 -- TEST: in_loop variation of select expression if nothing case
 -- +1 cql_reset_stmt(_temp1_stmt)
 -- +1 cql_finalize_stmt(_temp1_stmt)
-create proc select_if_nothing_in_loop()
+proc select_if_nothing_in_loop()
 begin
    while 1
    begin
@@ -5183,7 +5183,7 @@ end;
 -- TEST: in_loop variation of select expression if nothing or null case
 -- +1 cql_reset_stmt(_temp1_stmt)
 -- +1 cql_finalize_stmt(_temp1_stmt)
-create proc select_if_nothing_or_null_in_loop()
+proc select_if_nothing_or_null_in_loop()
 begin
    while 1
    begin
@@ -5217,7 +5217,7 @@ declare function stew3 no check text not null;
 -- + y = stew2(1, 2, 3)
 -- + z = stew3("x", 1)
 -- + x = stew1(z)
-create proc no_check_test_proc()
+proc no_check_test_proc()
 begin
   let x := stew1('x');
   let y := stew2(1,2,3);
@@ -5228,7 +5228,7 @@ end;
 -- TEST: declare constant variable
 -- + local const_variable = 0
 -- + const_variable = 1
-create proc declare_constant_variable()
+proc declare_constant_variable()
 begin
   const const_variable := 1;
 end;
@@ -5238,7 +5238,7 @@ end;
 --------------------------------------------------------------------
 let this_is_the_end := 0xf00d;
 
-create proc end_proc() begin end;
+proc end_proc() begin end;
 
 -- TEST: end marker -- this is the last test
 -- + local end_marker

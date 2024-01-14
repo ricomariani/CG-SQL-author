@@ -178,7 +178,7 @@ create table child_blob_primary_key (
 -- + CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);
 -- + DROP TABLE test_sample_proc1;
 @attribute(cql:autotest=(dummy_table))
-create proc sample_proc1()
+proc sample_proc1()
 begin
   select * from `Foo View`;
 end;
@@ -187,7 +187,7 @@ end;
 -- + DECLARE PROC sample_proc2 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 -- + INSERT INTO test_sample_proc2 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_insert))
-create proc sample_proc2()
+proc sample_proc2()
 begin
   select * from `Foo View`;
 end;
@@ -196,7 +196,7 @@ end;
 -- + DECLARE PROC sample_proc3 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 -- + SELECT * FROM test_sample_proc3;
 @attribute(cql:autotest=(dummy_table, dummy_select))
-create proc sample_proc3()
+proc sample_proc3()
 begin
   select * from `Foo View`;
 end;
@@ -207,7 +207,7 @@ end;
 -- + DROP TABLE test_sample_proc4;
 -- + INSERT INTO test_sample_proc4 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_insert))
-create proc sample_proc4()
+proc sample_proc4()
 begin
   select id from `Foo View`;
 end;
@@ -218,7 +218,7 @@ end;
 -- + DROP TABLE test_sample_proc5;
 -- + SELECT * FROM test_sample_proc5;
 @attribute(cql:autotest=(dummy_table, dummy_select))
-create proc sample_proc5()
+proc sample_proc5()
 begin
   select id from `Foo View`;
 end;
@@ -228,7 +228,7 @@ end;
 -- + SELECT * FROM test_sample_proc6;
 -- + INSERT INTO test_sample_proc6 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_select, dummy_insert))
-create proc sample_proc6()
+proc sample_proc6()
 begin
   select id from `Foo View`;
 end;
@@ -239,15 +239,15 @@ end;
 -- + DROP TABLE test_sample_proc7;
 -- + INSERT INTO test_sample_proc7 FROM ARGUMENTS;
 -- + SELECT * FROM test_sample_proc7;
--- + CREATE PROC test_sample_proc7_create_tables()
--- + CREATE PROC test_sample_proc7_populate_tables()
--- + CREATE PROC test_sample_proc7_drop_tables()
--- + CREATE PROC test_sample_proc7_read_Baa()
--- + CREATE PROC test_sample_proc7_read_X_tableX20C()
--- + CREATE PROC test_sample_proc7_read_X_FooX20View()
--- + CREATE PROC test_sample_proc7_drop_indexes()
+-- + PROC test_sample_proc7_create_tables()
+-- + PROC test_sample_proc7_populate_tables()
+-- + PROC test_sample_proc7_drop_tables()
+-- + PROC test_sample_proc7_read_Baa()
+-- + PROC test_sample_proc7_read_X_tableX20C()
+-- + PROC test_sample_proc7_read_X_FooX20View()
+-- + PROC test_sample_proc7_drop_indexes()
 @attribute(cql:autotest=(dummy_table, dummy_insert, dummy_select, dummy_test))
-create proc sample_proc7()
+proc sample_proc7()
 begin
   select id from `Foo View`;
 end;
@@ -255,7 +255,7 @@ end;
 -- TEST: Proc has fetch_result instead of result_set
 -- + SELECT * FROM test_sample_proc11;
 @attribute(cql:autotest=(dummy_table, dummy_select))
-create proc sample_proc11()
+proc sample_proc11()
 begin
   DECLARE curs CURSOR FOR SELECT id FROM `FOO VIEW`;
   FETCH curs;
@@ -264,10 +264,10 @@ end;
 
 -- TEST: Proc has dummy_result_set attribute
 -- + DECLARE PROC sample_proc12 () OUT (id INT!) USING TRANSACTION;
--- + CREATE PROC generate_sample_proc12_row(LIKE sample_proc12)
+-- + PROC generate_sample_proc12_row(LIKE sample_proc12)
 -- + DECLARE curs CURSOR LIKE sample_proc12
 @attribute(cql:autotest=(dummy_result_set))
-create proc sample_proc12()
+proc sample_proc12()
 begin
   DECLARE curs CURSOR FOR SELECT id FROM `FOO VIEW`;
   FETCH curs;
@@ -277,34 +277,34 @@ end;
 -- TEST: Proc that generates table/insert/select/result_set/dummy_test
 -- + DECLARE PROC sample_proc13 () OUT (id INT!) USING TRANSACTION;
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
--- + CREATE PROC test_sample_proc13_create_tables()
--- + CREATE PROC test_sample_proc13_populate_tables()
--- + CREATE PROC test_sample_proc13_drop_tables()
+-- + PROC test_sample_proc13_create_tables()
+-- + PROC test_sample_proc13_populate_tables()
+-- + PROC test_sample_proc13_drop_tables()
 --
--- + CREATE PROC test_sample_proc13_read_Baa()
--- + CREATE PROC test_sample_proc13_read_X_tableX20a()
--- + CREATE PROC test_sample_proc13_read_dbl_table()
--- + CREATE PROC test_sample_proc13_read_X_tableX20C()
--- + CREATE PROC test_sample_proc13_read_X_FooX20View()
+-- + PROC test_sample_proc13_read_Baa()
+-- + PROC test_sample_proc13_read_X_tableX20a()
+-- + PROC test_sample_proc13_read_dbl_table()
+-- + PROC test_sample_proc13_read_X_tableX20C()
+-- + PROC test_sample_proc13_read_X_FooX20View()
 --
--- + CREATE PROC test_sample_proc13_drop_indexes()
+-- + PROC test_sample_proc13_drop_indexes()
 --
--- + CREATE PROC open_sample_proc13()
+-- + PROC open_sample_proc13()
 -- + CREATE TEMP TABLE test_sample_proc13(LIKE sample_proc13);
 --
--- + CREATE PROC close_sample_proc13()
+-- + PROC close_sample_proc13()
 -- + DROP TABLE test_sample_proc13;
 --
--- + CREATE PROC insert_sample_proc13(LIKE sample_proc13)
+-- + PROC insert_sample_proc13(LIKE sample_proc13)
 -- + INSERT INTO test_sample_proc13 FROM ARGUMENTS;
 --
--- + CREATE PROC select_sample_proc13()
+-- + PROC select_sample_proc13()
 -- + SELECT * FROM test_sample_proc13;
 --
--- + CREATE PROC generate_sample_proc13_row(LIKE sample_proc13)
+-- + PROC generate_sample_proc13_row(LIKE sample_proc13)
 -- + DECLARE curs CURSOR LIKE sample_proc13
 @attribute(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
-create proc sample_proc13()
+proc sample_proc13()
 begin
   DECLARE curs CURSOR FOR SELECT id FROM `FOO VIEW`;
   FETCH curs;
@@ -312,52 +312,52 @@ begin
 end;
 
 -- TEST: dummy_test only
--- + CREATE PROC test_sample_proc14_create_tables()
--- + CREATE PROC test_sample_proc14_populate_tables()
--- + CREATE PROC test_sample_proc14_read_Baa()
--- + CREATE PROC test_sample_proc14_read_X_tableX20C()
--- + CREATE PROC test_sample_proc14_read_X_FooX20View()
--- + CREATE PROC test_sample_proc14_drop_indexes()
+-- + PROC test_sample_proc14_create_tables()
+-- + PROC test_sample_proc14_populate_tables()
+-- + PROC test_sample_proc14_read_Baa()
+-- + PROC test_sample_proc14_read_X_tableX20C()
+-- + PROC test_sample_proc14_read_X_FooX20View()
+-- + PROC test_sample_proc14_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc14()
+proc sample_proc14()
 begin
   select * from `Foo View`;
 end;
 
 -- TEST: test dummy_test with primary key as column in the table "primary_as_column"
--- + CREATE PROC test_sample_proc15_create_tables()
--- + CREATE PROC test_sample_proc15_populate_tables()
--- + CREATE PROC test_sample_proc15_read_primary_as_column()
--- + CREATE PROC test_sample_proc15_read_X_FooX20View()
--- + CREATE PROC test_sample_proc15_drop_indexes()
+-- + PROC test_sample_proc15_create_tables()
+-- + PROC test_sample_proc15_populate_tables()
+-- + PROC test_sample_proc15_read_primary_as_column()
+-- + PROC test_sample_proc15_read_X_FooX20View()
+-- + PROC test_sample_proc15_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc15()
+proc sample_proc15()
 begin
   select * from primary_as_column left join `foo view`;
 end;
 
 -- TEST: test dummy_test with insert statement
--- + CREATE PROC test_sample_proc16_create_tables()
--- + CREATE PROC test_sample_proc16_populate_tables()
--- + CREATE PROC test_sample_proc16_read_Baa()
--- + CREATE PROC test_sample_proc16_read_dbl_table()
--- + CREATE PROC test_sample_proc16_read_X_tableX20C()
--- + CREATE PROC test_sample_proc16_drop_indexes()
+-- + PROC test_sample_proc16_create_tables()
+-- + PROC test_sample_proc16_populate_tables()
+-- + PROC test_sample_proc16_read_Baa()
+-- + PROC test_sample_proc16_read_dbl_table()
+-- + PROC test_sample_proc16_read_X_tableX20C()
+-- + PROC test_sample_proc16_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc16()
+proc sample_proc16()
 begin
   insert into `table C`(id, `a pk`, name) values (1, 1.1, 'val');
 end;
 
 -- TEST: test dummy_test with drop,delete table statement
--- + CREATE PROC test_sample_proc17_create_tables()
--- + CREATE PROC test_sample_proc17_populate_tables()
--- + CREATE PROC test_sample_proc17_read_Baa()
--- + CREATE PROC test_sample_proc17_read_X_tableX20C()
--- + CREATE PROC test_sample_proc17_read_primary_as_column()
--- + CREATE PROC test_sample_proc17_drop_indexes()
+-- + PROC test_sample_proc17_create_tables()
+-- + PROC test_sample_proc17_populate_tables()
+-- + PROC test_sample_proc17_read_Baa()
+-- + PROC test_sample_proc17_read_X_tableX20C()
+-- + PROC test_sample_proc17_read_primary_as_column()
+-- + PROC test_sample_proc17_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc17()
+proc sample_proc17()
 begin
   drop table `table C`;
   drop view `Foo View`;
@@ -365,25 +365,25 @@ begin
 end;
 
 -- TEST: test dummy_test with create view statement
--- + CREATE PROC test_sample_proc18_create_tables()
--- + CREATE PROC test_sample_proc18_populate_tables()
--- + CREATE PROC test_sample_proc18_drop_tables()
--- + CREATE PROC test_sample_proc18_read_Baa()
--- + CREATE PROC test_sample_proc18_read_X_tableX20C()
--- + CREATE PROC test_sample_proc18_drop_indexes()
+-- + PROC test_sample_proc18_create_tables()
+-- + PROC test_sample_proc18_populate_tables()
+-- + PROC test_sample_proc18_drop_tables()
+-- + PROC test_sample_proc18_read_Baa()
+-- + PROC test_sample_proc18_read_X_tableX20C()
+-- + PROC test_sample_proc18_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc18()
+proc sample_proc18()
 begin
   create view zaa AS select * from `table C`;
 end;
 
 -- TEST: test dummy_test with create table statement with the foreign key table (Baa) to generate
--- + CREATE PROC test_sample_proc19_create_tables()
--- + CREATE PROC test_sample_proc19_populate_tables()
--- + CREATE PROC test_sample_proc19_read_Baa()
--- + CREATE PROC test_sample_proc19_drop_indexes()
+-- + PROC test_sample_proc19_create_tables()
+-- + PROC test_sample_proc19_populate_tables()
+-- + PROC test_sample_proc19_read_Baa()
+-- + PROC test_sample_proc19_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc19()
+proc sample_proc19()
 begin
 create table t (
   id int! primary key,
@@ -393,21 +393,21 @@ create table t (
 end;
 
 -- TEST: test dummy_test with update statement
--- + CREATE PROC test_sample_proc20_create_tables()
--- + CREATE PROC test_sample_proc20_populate_tables()
--- + CREATE PROC test_sample_proc20_read_Baa()
--- + CREATE PROC test_sample_proc20_read_X_tableX20a()
--- + CREATE PROC test_sample_proc20_read_dbl_table()
--- + CREATE PROC test_sample_proc20_read_X_tableX20C()
--- + CREATE PROC test_sample_proc20_drop_indexes()
+-- + PROC test_sample_proc20_create_tables()
+-- + PROC test_sample_proc20_populate_tables()
+-- + PROC test_sample_proc20_read_Baa()
+-- + PROC test_sample_proc20_read_X_tableX20a()
+-- + PROC test_sample_proc20_read_dbl_table()
+-- + PROC test_sample_proc20_read_X_tableX20C()
+-- + PROC test_sample_proc20_drop_indexes()
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc20()
+proc sample_proc20()
 begin
   update `table C` set id = 1;
 end;
 
 -- TEST: test dummy_test with create view statement contains multiple tables
--- + CREATE PROC test_sample_proc21_create_tables()
+-- + PROC test_sample_proc21_create_tables()
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE TABLE IF NOT EXISTS `table a`(
@@ -417,7 +417,7 @@ end;
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE VIEW IF NOT EXISTS Complex_view
 -- + 
--- + CREATE PROC test_sample_proc21_populate_tables()
+-- + PROC test_sample_proc21_populate_tables()
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(333, 2)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(444, 3)
@@ -430,7 +430,7 @@ end;
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1')
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
 --
--- + CREATE PROC test_sample_proc21_drop_tables()
+-- + PROC test_sample_proc21_drop_tables()
 -- + DROP VIEW IF EXISTS Complex_view;
 -- + DROP TABLE IF EXISTS primary_as_column;
 -- + DROP TABLE IF EXISTS `table C`;
@@ -438,25 +438,25 @@ end;
 -- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS Baa;
 --
--- + CREATE PROC test_sample_proc21_read_Baa()
--- + CREATE PROC test_sample_proc21_read_X_tableX20a()
--- + CREATE PROC test_sample_proc21_read_dbl_table()
--- + CREATE PROC test_sample_proc21_read_X_tableX20C()
+-- + PROC test_sample_proc21_read_Baa()
+-- + PROC test_sample_proc21_read_X_tableX20a()
+-- + PROC test_sample_proc21_read_dbl_table()
+-- + PROC test_sample_proc21_read_X_tableX20C()
 -- + SELECT * FROM `table C`;
--- + CREATE PROC test_sample_proc21_read_primary_as_column()
--- + CREATE PROC test_sample_proc21_read_Complex_view()
+-- + PROC test_sample_proc21_read_primary_as_column()
+-- + PROC test_sample_proc21_read_Complex_view()
 --
--- + CREATE PROC test_sample_proc21_drop_indexes()
+-- + PROC test_sample_proc21_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
 -- + DROP INDEX IF EXISTS p_id;
 @attribute(cql:autotest=((dummy_test, (Baa, (id), (111), (333)), (`table C`, (name, id), ('Nelly', 333), ('Babeth', 444))), dummy_table))
-create proc sample_proc21()
+proc sample_proc21()
 begin
   select * from Complex_view;
 end;
 
 -- TEST: test dummy_test with fk column value populated to fk table
--- + CREATE PROC test_sample_proc22_create_tables()
+-- + PROC test_sample_proc22_create_tables()
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE TABLE IF NOT EXISTS `table a`(
@@ -465,7 +465,7 @@ end;
 -- + CREATE TABLE IF NOT EXISTS primary_as_column
 -- + CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
 -- + CREATE VIEW IF NOT EXISTS Complex_view
--- + CREATE PROC test_sample_proc22_populate_tables()
+-- + PROC test_sample_proc22_populate_tables()
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(111, 1)
 -- + INSERT OR IGNORE INTO Baa(id, `id 2`) VALUES(222, 2)
 -- + INSERT OR IGNORE INTO `table a`(`a pk`) VALUES(1)
@@ -476,32 +476,32 @@ end;
 -- + INSERT OR IGNORE INTO `table C`(id, name, `a pk`, uid, num) VALUES(222, 'Babeth', 2, 2, 2)
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1')
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
--- + CREATE PROC test_sample_proc22_drop_tables()
+-- + PROC test_sample_proc22_drop_tables()
 -- + DROP VIEW IF EXISTS Complex_view;
 -- + DROP TABLE IF EXISTS primary_as_column;
 -- + DROP TABLE IF EXISTS `table C`;
 -- + DROP TABLE IF EXISTS dbl_table;
 -- + DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS Baa;
--- + CREATE PROC test_sample_proc22_read_Baa()
--- + CREATE PROC test_sample_proc22_read_X_tableX20a()
+-- + PROC test_sample_proc22_read_Baa()
+-- + PROC test_sample_proc22_read_X_tableX20a()
 -- + SELECT * FROM `table a`;
--- + CREATE PROC test_sample_proc22_read_dbl_table()
--- + CREATE PROC test_sample_proc22_read_X_tableX20C()
+-- + PROC test_sample_proc22_read_dbl_table()
+-- + PROC test_sample_proc22_read_X_tableX20C()
 -- + SELECT * FROM `table C`;
--- + CREATE PROC test_sample_proc22_read_primary_as_column()
--- + CREATE PROC test_sample_proc22_read_Complex_view()
--- + CREATE PROC test_sample_proc22_drop_indexes()
+-- + PROC test_sample_proc22_read_primary_as_column()
+-- + PROC test_sample_proc22_read_Complex_view()
+-- + PROC test_sample_proc22_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
 -- + DROP INDEX IF EXISTS p_id;
 @attribute(cql:autotest=((dummy_test, (`table C`, (name, id), ('Nelly', 111), ('Babeth', 222))), dummy_table))
-create proc sample_proc22()
+proc sample_proc22()
 begin
   select * from Complex_view;
 end;
 
 -- TEST: test dummy_test with no explicit value on a complex view
--- + CREATE PROC test_sample_proc23_create_tables()
+-- + PROC test_sample_proc23_create_tables()
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE TABLE IF NOT EXISTS `table a`(
@@ -520,32 +520,32 @@ end;
 -- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 2, '2', 2)
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('1', '1')
 -- + INSERT OR IGNORE INTO primary_as_column(id_, seat) VALUES('2', '2')
--- + CREATE PROC test_sample_proc23_drop_indexes()
+-- + PROC test_sample_proc23_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
 -- + DROP INDEX IF EXISTS p_id;
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc23()
+proc sample_proc23()
 begin
   select * from Complex_view;
 end;
 
 -- TEST: test dummy_test with fk column value populated to fk table
--- + CREATE PROC test_sample_proc24_create_tables()
+-- + PROC test_sample_proc24_create_tables()
 -- + CREATE TABLE IF NOT EXISTS Baa
 -- + CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
 -- + CREATE TABLE IF NOT EXISTS `table C`
--- + CREATE PROC test_sample_proc24_populate_tables()
+-- + PROC test_sample_proc24_populate_tables()
 -- + INSERT OR IGNORE INTO dbl_table(label, num) VALUES('Chris', 777.0)
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
 -- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(1, 1, 777.0, 'Chris', 1)
 -- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, 'Chris', 2)
--- + CREATE PROC test_sample_proc24_drop_tables()
--- + CREATE PROC test_sample_proc24_drop_indexes()
+-- + PROC test_sample_proc24_drop_tables()
+-- + PROC test_sample_proc24_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (dbl_table, (num, label), (777.0, 'Chris'))), dummy_table))
-create proc sample_proc24()
+proc sample_proc24()
 begin
   select * from `table C`;
 end;
@@ -556,39 +556,39 @@ end;
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
 -- + INSERT OR IGNORE INTO `table C`(uid, id, `a pk`, name, num) VALUES(777.0, 1, 1, '1', 1)
 -- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(2, 2, 777.0, '2', 2)
--- + CREATE PROC test_sample_proc25_drop_indexes()
+-- + PROC test_sample_proc25_drop_indexes()
 -- + DROP INDEX IF EXISTS `Baa id index`;
 @attribute(cql:autotest=((dummy_test, (dbl_table, (num), (777.0)), (`table C`, (uid), (777.0))), dummy_table))
-create proc sample_proc25()
+proc sample_proc25()
 begin
   select * from `table C`;
 end;
 
 -- TEST: test dummy_test with unique column
--- + CREATE PROC test_sample_proc26_create_tables()
+-- + PROC test_sample_proc26_create_tables()
 -- + CREATE TABLE IF NOT EXISTS dbl_table
--- + CREATE PROC test_sample_proc26_populate_tables()
+-- + PROC test_sample_proc26_populate_tables()
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(-0.1, '1')
 -- + INSERT OR IGNORE INTO dbl_table(num, label) VALUES(2, '2')
--- + CREATE PROC test_sample_proc26_drop_tables()
+-- + PROC test_sample_proc26_drop_tables()
 -- + DROP TABLE IF EXISTS dbl_table;
--- + CREATE PROC test_sample_proc26_read_dbl_table()
+-- + PROC test_sample_proc26_read_dbl_table()
 -- + SELECT * FROM dbl_table
 @attribute(cql:autotest=((dummy_test, (dbl_table, (num), (-0.1)))))
-create proc sample_proc26()
+proc sample_proc26()
 begin
   select * from dbl_table;
 end;
 
 -- TEST: test dummy_test info duplicated
--- + CREATE PROC test_sample_proc27_create_tables()
+-- + PROC test_sample_proc27_create_tables()
 -- + CREATE TABLE IF NOT EXISTS experiment_value
--- + CREATE PROC test_sample_proc27_populate_tables()
+-- + PROC test_sample_proc27_populate_tables()
 -- + INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '1234', 9223372036854775807, 'enabled', '0')
 -- + INSERT OR IGNORE INTO experiment_value(config, logging_id, type, param, value) VALUES('rtc_overlayconfig_exampleconfig', '5678', 9223372036854775807, 'some_integer', '42')
--- + CREATE PROC test_sample_proc27_drop_tables()
+-- + PROC test_sample_proc27_drop_tables()
 -- + DROP TABLE IF EXISTS experiment_value;
--- + CREATE PROC test_sample_proc27_read_experiment_value()
+-- + PROC test_sample_proc27_read_experiment_value()
 -- + SELECT * FROM experiment_value
 @attribute(cql:autotest=((dummy_test, (experiment_value, (config, param, value, type, logging_id), ('rtc_overlayconfig_exampleconfig', 'enabled', '0', 9223372036854775807, '1234'), ('rtc_overlayconfig_exampleconfig', 'some_integer', '42', 9223372036854775807, '5678')))))
 CREATE PROCEDURE sample_proc27()
@@ -599,21 +599,21 @@ END;
 
 -- TEST: test dbl_table is processed in dummy_test because of `trigger on table a` on `table a`
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
--- + CREATE PROC test_sample_proc28_create_tables()
+-- + PROC test_sample_proc28_create_tables()
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
--- + CREATE PROC test_sample_proc28_create_triggers()
+-- + PROC test_sample_proc28_create_triggers()
 -- + CREATE TRIGGER IF NOT EXISTS `trigger on table a`
--- + CREATE PROC test_sample_proc28_populate_tables()
+-- + PROC test_sample_proc28_populate_tables()
 -- +2 INSERT OR IGNORE INTO `table a`
 -- +2 INSERT OR IGNORE INTO dbl_table
--- + CREATE PROC test_sample_proc28_drop_tables()
+-- + PROC test_sample_proc28_drop_tables()
 -- + DROP TABLE IF EXISTS dbl_table;
 -- + DROP TABLE IF EXISTS `table a`;
--- + CREATE PROC test_sample_proc28_drop_triggers()
+-- + PROC test_sample_proc28_drop_triggers()
 -- + DROP TRIGGER IF EXISTS `trigger on table a`
--- + CREATE PROC test_sample_proc28_read_X_tableX20a()
--- + CREATE PROC test_sample_proc28_read_dbl_table()
+-- + PROC test_sample_proc28_read_X_tableX20a()
+-- + PROC test_sample_proc28_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc28()
 BEGIN
@@ -621,20 +621,20 @@ BEGIN
 END;
 
 -- TEST: test `table a` is not processed in dummy_test because the trigger`table a` is on `table a`
--- + CREATE PROC test_sample_proc29_create_tables()
+-- + PROC test_sample_proc29_create_tables()
 -- - CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
 -- _ CREATE PROC test_sample_proc29_create_triggers()
 -- - CREATE TRIGGER `trigger on table a`
--- + CREATE PROC test_sample_proc29_populate_tables()
+-- + PROC test_sample_proc29_populate_tables()
 -- - INSERT OR IGNORE INTO `table a`
 -- +2 INSERT OR IGNORE INTO dbl_table
--- + CREATE PROC test_sample_proc29_drop_tables()
+-- + PROC test_sample_proc29_drop_tables()
 -- - DROP TABLE IF EXISTS `table a`;
 -- + DROP TABLE IF EXISTS dbl_table;
--- + CREATE PROC test_sample_proc29_drop_triggers()
+-- + PROC test_sample_proc29_drop_triggers()
 -- - DROP TRIGGER IF EXISTS `trigger on table a`
--- + CREATE PROC test_sample_proc29_read_dbl_table()
+-- + PROC test_sample_proc29_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc29()
 BEGIN
@@ -643,21 +643,21 @@ END;
 
 -- TEST: test dbl_table is processed in dummy_test because of trigger`table a` on `table a`
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
--- + CREATE PROC test_sample_proc30_create_tables()
+-- + PROC test_sample_proc30_create_tables()
 -- + CREATE TABLE IF NOT EXISTS `table a`
 -- + CREATE TABLE IF NOT EXISTS dbl_table
--- + CREATE PROC test_sample_proc30_create_triggers()
+-- + PROC test_sample_proc30_create_triggers()
 -- + CREATE TRIGGER IF NOT EXISTS `trigger on table a`
--- + CREATE PROC test_sample_proc30_populate_tables()
+-- + PROC test_sample_proc30_populate_tables()
 -- +2 INSERT OR IGNORE INTO `table a`
 -- +2 INSERT OR IGNORE INTO dbl_table
--- + CREATE PROC test_sample_proc30_drop_tables()
+-- + PROC test_sample_proc30_drop_tables()
 -- + DROP TABLE IF EXISTS dbl_table;
 -- + DROP TABLE IF EXISTS `table a`;
--- + CREATE PROC test_sample_proc30_drop_triggers()
+-- + PROC test_sample_proc30_drop_triggers()
 -- + DROP TRIGGER IF EXISTS `trigger on table a`
--- + CREATE PROC test_sample_proc30_read_X_tableX20a
--- + CREATE PROC test_sample_proc30_read_dbl_table()
+-- + PROC test_sample_proc30_read_X_tableX20a
+-- + PROC test_sample_proc30_read_dbl_table()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc30()
 BEGIN
@@ -669,31 +669,31 @@ BEGIN
 END;
 
 -- TEST: test T1, T2, T3 relationship base on triggers and T3, T4 base on foreign key
--- + CREATE PROC test_sample_proc31_create_tables()
+-- + PROC test_sample_proc31_create_tables()
 -- + CREATE TABLE IF NOT EXISTS T1
 -- + CREATE TABLE IF NOT EXISTS T2
 -- + CREATE TABLE IF NOT EXISTS T4
 -- + CREATE TABLE IF NOT EXISTS T3
--- + CREATE PROC test_sample_proc31_create_triggers()
+-- + PROC test_sample_proc31_create_triggers()
 -- + CREATE TRIGGER IF NOT EXISTS `Trigger 1`
 -- + CREATE TRIGGER IF NOT EXISTS R2
--- + CREATE PROC test_sample_proc31_populate_tables()
+-- + PROC test_sample_proc31_populate_tables()
 -- +2 INSERT OR IGNORE INTO T1
 -- +2 INSERT OR IGNORE INTO T2
 -- +2 INSERT OR IGNORE INTO T3
 -- +2 INSERT OR IGNORE INTO T4
--- + CREATE PROC test_sample_proc31_drop_tables()
+-- + PROC test_sample_proc31_drop_tables()
 -- + DROP TABLE IF EXISTS T3;
 -- + DROP TABLE IF EXISTS T4;
 -- + DROP TABLE IF EXISTS T2;
 -- + DROP TABLE IF EXISTS T1;
--- + CREATE PROC test_sample_proc31_drop_triggers()
+-- + PROC test_sample_proc31_drop_triggers()
 -- + DROP TRIGGER IF EXISTS `Trigger 1`
 -- + DROP TRIGGER IF EXISTS R2
--- + CREATE PROC test_sample_proc31_read_T1()
--- + CREATE PROC test_sample_proc31_read_T2()
--- + CREATE PROC test_sample_proc31_read_T4()
--- + CREATE PROC test_sample_proc31_read_T3()
+-- + PROC test_sample_proc31_read_T1()
+-- + PROC test_sample_proc31_read_T2()
+-- + PROC test_sample_proc31_read_T4()
+-- + PROC test_sample_proc31_read_T3()
 @attribute(cql:autotest=(dummy_test))
 CREATE PROCEDURE sample_proc31()
 BEGIN
@@ -706,7 +706,7 @@ END;
 -- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 1, 1, '1', 1)
 -- + INSERT OR IGNORE INTO `table C`(id, `a pk`, uid, name, num) VALUES(-444, 2, 2, '2', 2)
 @attribute(cql:autotest=((dummy_test, (Baa, (id), (-99)), (`table C`, (id), (-444)))))
-create proc sample_proc311()
+proc sample_proc311()
 begin
   select * from `table C`;
 end;
@@ -714,7 +714,7 @@ end;
 -- TEST: test that column type of id in t5, t6 tables is not converted to integer.
 -- +2 id LONG PRIMARY KEY
 @attribute(cql:autotest=(dummy_test))
-create proc no_long_to_conversion()
+proc no_long_to_conversion()
 begin
   select * from t6;
 end;
@@ -723,7 +723,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc32()
+proc sample_proc32()
 begin
   declare curs cursor like `foo view`;
 end;
@@ -732,7 +732,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc33()
+proc sample_proc33()
 begin
   declare curs cursor like decl1;
 end;
@@ -741,7 +741,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc34()
+proc sample_proc34()
 begin
   create table tt (
     id int!
@@ -752,7 +752,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc35()
+proc sample_proc35()
 begin
   with cte(a,b) as (select 1,2)
   select * from cte;
@@ -762,7 +762,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:autotest=(dummy_test))
-create proc sample_proc36()
+proc sample_proc36()
 begin
   select 1 as A, 2 as B;
 end;
@@ -771,7 +771,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:auto=(dummy_test))
-create proc sample_proc37()
+proc sample_proc37()
 begin
   select 1 as A, 2 as B;
 end;
@@ -779,7 +779,7 @@ end;
 -- TEST: Proc has no attributes, do not generate anything
 -- - CREATE
 -- - DECLARE
-create proc sample_proc8()
+proc sample_proc8()
 begin
   select id from `Foo View`;
 end;
@@ -788,7 +788,7 @@ end;
 -- - CREATE
 -- - DECLARE
 @attribute(cql:autotest=(dummy_table))
-create proc sample_proc9()
+proc sample_proc9()
 begin
   insert into `table C` values (1, 1.1, 10, "asdf", "Antonia", 0);
 end;
@@ -797,7 +797,7 @@ end;
 -- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
 -- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=((dummy_test, (self_ref_table, (id, `id 2`), (1, null), (2, 1)))))
-create proc self_ref_proc()
+proc self_ref_proc()
 begin
   select * from self_ref_table;
 end;
@@ -806,7 +806,7 @@ end;
 -- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
 -- + INSERT OR IGNORE INTO self_ref_table(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=((dummy_test)))
-create proc self_ref_proc_no_data()
+proc self_ref_proc_no_data()
 begin
   select * from self_ref_table;
 end;
@@ -815,7 +815,7 @@ end;
 -- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, NULL) @dummy_seed(123);
 -- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 1) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=((dummy_test, (self_ref_table2, (id, `id 2`), (1, null), (2, 1)))))
-create proc self_ref_proc2()
+proc self_ref_proc2()
 begin
   select * from self_ref_table2;
 end;
@@ -824,7 +824,7 @@ end;
 -- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(1, 1) @dummy_seed(123);
 -- + INSERT OR IGNORE INTO self_ref_table2(id, `id 2`) VALUES(2, 2) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=((dummy_test)))
-create proc self_ref_proc2_no_data()
+proc self_ref_proc2_no_data()
 begin
   select * from self_ref_table2;
 end;
@@ -859,7 +859,7 @@ create table test2(
     )
   )
 )
-create proc test_too_many_row_in_child_table()
+proc test_too_many_row_in_child_table()
 begin
   select * from test2;
 end;
@@ -886,7 +886,7 @@ end;
     )
   )
 )
-create proc test_too_many_row_in_child_table_2()
+proc test_too_many_row_in_child_table_2()
 begin
   select * from test2;
 end;
@@ -896,12 +896,12 @@ end;
 -- +   id INT,
 -- +   t TEXT
 -- + );
--- + CREATE PROC test_test_virtual_table_proc_drop_tables()
+-- + PROC test_test_virtual_table_proc_drop_tables()
 -- +   DROP TABLE IF EXISTS basic_virtual;
--- + CREATE PROC test_test_virtual_table_proc_read_basic_virtual()
+-- + PROC test_test_virtual_table_proc_read_basic_virtual()
 -- +   SELECT * FROM basic_virtual;
 @attribute(cql:autotest=(dummy_test))
-create proc test_virtual_table_proc()
+proc test_virtual_table_proc()
 begin
   select * from basic_virtual;
 end;
@@ -910,7 +910,7 @@ end;
 -- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(123);
 -- + INSERT OR IGNORE INTO blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(124) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=(dummy_test))
-create proc test_blob_primary_key()
+proc test_blob_primary_key()
 begin
   select * from blob_primary_key;
 end;
@@ -921,7 +921,7 @@ end;
 -- + INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('1' as blob)) @dummy_seed(125);
 -- + INSERT OR IGNORE INTO child_blob_primary_key(id) VALUES(CAST('2' as blob)) @dummy_seed(126) @dummy_nullables @dummy_defaults;
 @attribute(cql:autotest=(dummy_test))
-create proc test_child_blob_primary_key()
+proc test_child_blob_primary_key()
 begin
   select * from child_blob_primary_key;
 end;
@@ -942,14 +942,14 @@ end;
     )
   )
 )
-create proc test_blob_literal_in_dummy_test()
+proc test_blob_literal_in_dummy_test()
 begin
   select * from child_blob_primary_key;
 end;
 
 
 @attribute(cql:shared_fragment)
-create proc simple_frag()
+proc simple_frag()
 begin
   with source(*) like child_blob_primary_key
   select * from source;
@@ -961,7 +961,7 @@ end;
 -- + CREATE TABLE IF NOT EXISTS child_blob_primary_key(
 -- - dbl_table
 @attribute(cql:autotest=((dummy_test)))
-create proc test_frags()
+proc test_frags()
 begin
   declare C cursor like select * from dbl_table;
   with (call simple_frag() using child_blob_primary_key as source)
@@ -1005,7 +1005,7 @@ END;
 -- validation comes from the fact that we compile the generated code so
 -- any invalid order will cause the compilation to fail in the test.  That is
 -- providing real order validation here.
--- + CREATE PROC test_MyProc_create_tables()
+-- + PROC test_MyProc_create_tables()
 -- + BEGIN
 -- + CREATE TABLE IF NOT EXISTS trig_test_t1
 -- + CREATE TABLE IF NOT EXISTS trig_test_t2
@@ -1013,7 +1013,7 @@ END;
 -- + CREATE TABLE IF NOT EXISTS trig_test_tx
 -- + CREATE TABLE IF NOT EXISTS trig_test_t3
 -- + END
--- + CREATE PROC test_MyProc_create_triggers()
+-- + PROC test_MyProc_create_triggers()
 -- + BEGIN
 -- + CREATE TRIGGER IF NOT EXISTS trig
 -- + END
@@ -1058,7 +1058,7 @@ create table backed(
 -- - DROP TABLE IF EXISTS backed;
 -- - INSERT OR IGNORE INTO backing
 @attribute(cql:autotest=(dummy_test))
-create proc uses_backed_table()
+proc uses_backed_table()
 begin
   select * from backed;
 end;

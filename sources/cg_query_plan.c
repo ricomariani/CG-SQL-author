@@ -329,7 +329,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   bprintf(&body, "  INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%d, C.iselectid, C.iorder, C.ifrom, C.zdetail);\n", sql_stmt_count);
   bprintf(&body, "END;\n");
 
-  bprintf(&proc, "CREATE PROC populate_query_plan_%d()\n", sql_stmt_count);
+  bprintf(&proc, "PROC populate_query_plan_%d()\n", sql_stmt_count);
   bprintf(&proc, "BEGIN\n");
   bindent(&proc, &body, 2);
   bprintf(&proc, "END;\n\n");
@@ -551,7 +551,7 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
     }
   }
 
-  bprintf(output, "CREATE PROC populate_no_table_scan()\n");
+  bprintf(output, "PROC populate_no_table_scan()\n");
   bprintf(output, "BEGIN\n");
 
   if (no_scan_tables_buf.used > 1) {
@@ -611,7 +611,7 @@ static void cg_qp_emit_udf_stubs(charbuf *output) {
 // plus the standard schema for query plan storage and emit any UDF stubs
 // at this time as well.  See above for the UDF stub code.
 static void cg_qp_emit_create_schema_proc(charbuf *output) {
-  bprintf(output, "CREATE PROC create_schema()\n");
+  bprintf(output, "PROC create_schema()\n");
   bprintf(output, "BEGIN\n");
 
   cg_qp_emit_udf_stubs(output);
@@ -658,7 +658,7 @@ static void emit_populate_tables_proc(charbuf *output) {
 static void emit_print_sql_statement_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_sql_statement(sql_id int!)\n"
+    "PROC print_sql_statement(sql_id int!)\n"
     "BEGIN\n"
     "  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;\n"
     "  FETCH C;\n"
@@ -671,7 +671,7 @@ static void emit_print_sql_statement_proc(charbuf *output) {
 static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC populate_table_scan_alert_table(table_ text!)\n"
+    "PROC populate_table_scan_alert_table(table_ text!)\n"
     "BEGIN\n"
     "  INSERT OR IGNORE INTO table_scan_alert\n"
     "    SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp\n"
@@ -690,7 +690,7 @@ static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
 static void emit_populate_b_tree_alert_table_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC populate_b_tree_alert_table()\n"
+    "PROC populate_b_tree_alert_table()\n"
     "BEGIN\n"
     "  INSERT OR IGNORE INTO b_tree_alert\n"
     "    SELECT '#' || sql_id || '(' || count(*) || ')' as info FROM plan_temp\n"
@@ -704,7 +704,7 @@ static void emit_populate_b_tree_alert_table_proc(charbuf *output) {
 static void emit_print_query_violation_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_query_violation()\n"
+    "PROC print_query_violation()\n"
     "BEGIN\n"
     "  CALL populate_b_tree_alert_table();\n"
     "  DECLARE C CURSOR FOR SELECT table_name FROM no_table_scan;\n"
@@ -736,7 +736,7 @@ static void emit_print_query_violation_proc(charbuf *output) {
 static void emit_print_query_plan_stat_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_query_plan_stat(id_ int!)\n"
+    "PROC print_query_plan_stat(id_ int!)\n"
     "BEGIN\n"
     "  CALL printf(\"   \\\"stats\\\" : {\\n\");\n"
     "  DECLARE Ca CURSOR FOR\n"
@@ -808,7 +808,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
 static void emit_print_query_plan_graph_proc(charbuf *output) {
   bprintf(output,
     "%s",
-    "CREATE PROC print_query_plan_graph(id_ int!)\n"
+    "PROC print_query_plan_graph(id_ int!)\n"
     "BEGIN\n"
     "  DECLARE C CURSOR FOR\n"
     "  WITH RECURSIVE\n"
@@ -838,7 +838,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
 
 static void emit_print_query_plan(charbuf *output) {
   bprintf(output,
-    "CREATE PROC print_query_plan(sql_id int!)\n"
+    "PROC print_query_plan(sql_id int!)\n"
     "BEGIN\n"
     "  CALL printf(\"  {\\n\");\n"
     "  CALL printf(\"   \\\"id\\\" : %%d,\\n\", sql_id);\n"
@@ -976,7 +976,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   emit_print_query_plan_graph_proc(&output_buf);
   emit_print_query_plan(&output_buf);
 
-  bprintf(&output_buf, "CREATE PROC query_plan()\n");
+  bprintf(&output_buf, "PROC query_plan()\n");
   bprintf(&output_buf, "BEGIN\n");
   bprintf(&output_buf, "  CALL create_schema();\n");
   bprintf(&output_buf, "  TRY\n");

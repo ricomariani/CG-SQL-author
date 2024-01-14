@@ -177,7 +177,7 @@ DECLARE x_int INT!;
 
 The statement ending at line XXXX
 
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
   IF 1 THEN
     CALL printf("hi\n");

@@ -3489,7 +3489,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC crazy_string ()
+    PROC crazy_string ()
     BEGIN
     SELECT "\\ ' \a \b \f \n \t \r \v \\ \" " AS crazy;
     END
@@ -3514,7 +3514,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC a_query (pattern TEXT!, reject TEXT)
+    PROC a_query (pattern TEXT!, reject TEXT)
     BEGIN
     SELECT id
       FROM Foo
@@ -3555,7 +3555,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC bigger_query (pattern TEXT!, reject TEXT)
+    PROC bigger_query (pattern TEXT!, reject TEXT)
     BEGIN
     SELECT DISTINCT *
       FROM Foo
@@ -3607,7 +3607,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(my_attribute='This is a string attribute')
-    CREATE PROC joiner (id_ INT!)
+    PROC joiner (id_ INT!)
     BEGIN
     SELECT *
       FROM Foo AS T1
@@ -3673,7 +3673,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC radioactive_proc ()
+    PROC radioactive_proc ()
     BEGIN
     SELECT *
       FROM radioactive;
@@ -3706,7 +3706,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC object_proc (anObject OBJECT)
+    PROC object_proc (anObject OBJECT)
     BEGIN
     SELECT 1 AS x;
     END
@@ -3737,7 +3737,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_inside_region ()
+    PROC proc_inside_region ()
     BEGIN
     SELECT 1 AS a;
     END
@@ -3764,7 +3764,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_select_proc ()
+    PROC with_select_proc ()
     BEGIN
     WITH
       nums (i) AS (
@@ -3802,7 +3802,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC json_escapes ()
+    PROC json_escapes ()
     BEGIN
     SELECT "\\\r\n\t\b\f\"\x01" AS quoted_text;
     END
@@ -3827,7 +3827,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC use_view ()
+    PROC use_view ()
     BEGIN
     SELECT *
       FROM MyView;
@@ -3862,7 +3862,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:autotest=((dummy_test, (Foo, (id, name), (1, NULL), (2, "hi")))))
-    CREATE PROC null_attribute ()
+    PROC null_attribute ()
     BEGIN
     SELECT *
       FROM Foo;
@@ -3901,7 +3901,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC shared_frag_user_function_style ()
+    PROC shared_frag_user_function_style ()
     BEGIN
     SELECT shared_func() AS result;
     END
@@ -3928,7 +3928,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC high_bit_escapes ()
+    PROC high_bit_escapes ()
     BEGIN
     SELECT "\xa1\xa2" AS t;
     END
@@ -3954,7 +3954,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:doc_comment="/**\n * some potato\n */")
-    CREATE PROC potato (i INT, b REAL, c TEXT)
+    PROC potato (i INT, b REAL, c TEXT)
     BEGIN
     SELECT 1 AS x;
     END
@@ -4003,7 +4003,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC uses_deleted_view_alias ()
+    PROC uses_deleted_view_alias ()
     BEGIN
     WITH
       deleted_view (x, y) AS (
@@ -4039,7 +4039,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:implements=interface1)
-    CREATE PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
+    PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
     BEGIN
     SELECT id_ AS id, name_ AS name;
     END
@@ -4087,7 +4087,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC generate_quoted_items ()
+    PROC generate_quoted_items ()
     BEGIN
     SELECT *
       FROM `abc def`;
@@ -4121,7 +4121,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC insert_proc (id_ INT!, name_ TEXT)
+    PROC insert_proc (id_ INT!, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo(id, name)
       VALUES(id_, name_);
@@ -4166,7 +4166,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC dummy_insert_proc (seed_ INT!)
+    PROC dummy_insert_proc (seed_ INT!)
     BEGIN
     INSERT INTO fOo(id, name) VALUES(_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
     END
@@ -4206,7 +4206,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC insert_with_select ()
+    PROC insert_with_select ()
     BEGIN
     INSERT INTO T3(id)
       SELECT 1;
@@ -4229,7 +4229,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC insert_compound ()
+    PROC insert_compound ()
     BEGIN
     INSERT INTO T3(id)
       VALUES(1)
@@ -4254,7 +4254,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC insert_multi_value ()
+    PROC insert_multi_value ()
     BEGIN
     INSERT INTO T3(id)
       VALUES(1), (2), (3);
@@ -4277,7 +4277,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC upsert_proc ()
+    PROC upsert_proc ()
     BEGIN
     INSERT INTO T3(id)
       VALUES(1)
@@ -4303,7 +4303,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_upsert_proc ()
+    PROC with_upsert_proc ()
     BEGIN
     WITH
       data (id) AS (
@@ -4335,7 +4335,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_insert_proc (x INT!)
+    PROC with_insert_proc (x INT!)
     BEGIN
     WITH
       data (id) AS (
@@ -4371,7 +4371,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC update_proc (id_ INT!, name_ TEXT)
+    PROC update_proc (id_ INT!, name_ TEXT)
     BEGIN
     UPDATE foO
       SET name = name_
@@ -4407,7 +4407,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC update_with_proc (id_ INT!, name_ TEXT)
+    PROC update_with_proc (id_ INT!, name_ TEXT)
     BEGIN
     WITH
       names (n) AS (
@@ -4448,7 +4448,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC delete_proc (name_ TEXT)
+    PROC delete_proc (name_ TEXT)
     BEGIN
     DELETE FROM foO WHERE name LIKE name_;
     END
@@ -4474,7 +4474,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC delete_with_values (name_ TEXT)
+    PROC delete_with_values (name_ TEXT)
     BEGIN
     WITH
       names (n) AS (
@@ -4507,7 +4507,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_complex_args (OUT pattern TEXT!, INOUT arg REAL)
+    PROC with_complex_args (OUT pattern TEXT!, INOUT arg REAL)
     BEGIN
     SET pattern := "text";
 
@@ -4548,7 +4548,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC atypical_noreturn ()
+    PROC atypical_noreturn ()
     BEGIN
     CURSOR C LIKE SELECT 1 AS A;
     END
@@ -4565,7 +4565,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC typical_outresult ()
+    PROC typical_outresult ()
     BEGIN
     CURSOR C LIKE SELECT 1 AS A;
 
@@ -4594,7 +4594,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC typical_out_union_result ()
+    PROC typical_out_union_result ()
     BEGIN
     CURSOR C LIKE SELECT 1 AS A;
 
@@ -4625,7 +4625,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC typical_select ()
+    PROC typical_select ()
     BEGIN
     DECLARE x INT;
 
@@ -4669,7 +4669,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_1 (arg1_x INT, arg1_y INT)
+    PROC proc_args_1 (arg1_x INT, arg1_y INT)
     BEGIN
     END
 
@@ -4697,7 +4697,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_2 (id_ INT, name_ TEXT)
+    PROC proc_args_2 (id_ INT, name_ TEXT)
     BEGIN
     END
 
@@ -4725,7 +4725,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_3 (x_ INT!, y_ INT!)
+    PROC proc_args_3 (x_ INT!, y_ INT!)
     BEGIN
     END
 
@@ -4753,7 +4753,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_4 (id_ INT, name_ TEXT)
+    PROC proc_args_4 (id_ INT, name_ TEXT)
     BEGIN
     END
 
@@ -4781,7 +4781,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_5 (arg1_x INT, arg1_y INT)
+    PROC proc_args_5 (arg1_x INT, arg1_y INT)
     BEGIN
     END
 
@@ -4809,7 +4809,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_6 (foo_ INT!, id_ INT, name_ TEXT)
+    PROC proc_args_6 (foo_ INT!, id_ INT, name_ TEXT)
     BEGIN
     END
 
@@ -4843,7 +4843,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC empty_proc ()
+    PROC empty_proc ()
     BEGIN
     END
 
@@ -4859,7 +4859,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC empty_blocks ()
+    PROC empty_blocks ()
     BEGIN
     IF 1 THEN
     END;
@@ -4901,7 +4901,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_with_deps (OUT x INT!)
+    PROC proc_with_deps (OUT x INT!)
     BEGIN
     CALL other_Proc();
 
@@ -4928,7 +4928,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC using_kinds (list OBJECT<list>, s INT<seconds>)
+    PROC using_kinds (list OBJECT<list>, s INT<seconds>)
     BEGIN
     SET s := s + 1;
     END
@@ -4959,7 +4959,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC shared_frag_user ()
+    PROC shared_frag_user ()
     BEGIN
     WITH
       shared (id) AS (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
@@ -4992,7 +4992,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC shared_frag_user_nested_select ()
+    PROC shared_frag_user_nested_select ()
     BEGIN
     SELECT *
       FROM (CALL shared_frag_proc() USING T1 AS source, T2 AS control)
@@ -5024,7 +5024,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(foo="bar")
-    CREATE PROC string_literal_attr ()
+    PROC string_literal_attr ()
     BEGIN
     END
 

@@ -107,13 +107,13 @@ static bool_t cg_test_helpers_force_if_not_exists(
 // Emit a close proc which drops the temp table
 static void cg_test_helpers_dummy_table(CSTR name) {
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC open_%s()\n", name);
+  bprintf(cg_th_procs, "PROC open_%s()\n", name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  CREATE TEMP TABLE test_%s(LIKE %s);\n", name, name);
   bprintf(cg_th_procs, "END;\n");
 
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC close_%s()\n", name);
+  bprintf(cg_th_procs, "PROC close_%s()\n", name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  DROP TABLE test_%s;\n", name);
   bprintf(cg_th_procs, "END;\n");
@@ -122,7 +122,7 @@ static void cg_test_helpers_dummy_table(CSTR name) {
 // Emit a dummy insert to the temp table using FROM ARGUMENTS
 static void cg_test_helpers_dummy_insert(CSTR name) {
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC insert_%s(LIKE %s)\n", name, name);
+  bprintf(cg_th_procs, "PROC insert_%s(LIKE %s)\n", name, name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  INSERT INTO test_%s FROM ARGUMENTS;\n", name);
   bprintf(cg_th_procs, "END;\n");
@@ -132,7 +132,7 @@ static void cg_test_helpers_dummy_insert(CSTR name) {
 // that matches that of the original proc
 static void cg_test_helpers_dummy_select(CSTR name) {
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC select_%s()\n", name);
+  bprintf(cg_th_procs, "PROC select_%s()\n", name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  SELECT * FROM test_%s;\n", name);
   bprintf(cg_th_procs, "END;\n");
@@ -142,7 +142,7 @@ static void cg_test_helpers_dummy_select(CSTR name) {
 // and produces a result set
 static void cg_test_helpers_dummy_result_set(CSTR name) {
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC generate_%s_row(LIKE %s)\n", name, name);
+  bprintf(cg_th_procs, "PROC generate_%s_row(LIKE %s)\n", name, name);
   bprintf(cg_th_procs, "BEGIN\n");
   bprintf(cg_th_procs, "  DECLARE curs CURSOR LIKE %s;\n", name);
   bprintf(cg_th_procs, "  FETCH curs FROM ARGUMENTS;\n");
@@ -787,7 +787,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     EXTRACT_STRING(table_name, name_ast);
 
     bprintf(&gen_read_tables, "\n");
-    bprintf(&gen_read_tables, "CREATE PROC test_%s_read_%s()\n", proc_name, table_name);
+    bprintf(&gen_read_tables, "PROC test_%s_read_%s()\n", proc_name, table_name);
     bprintf(&gen_read_tables, "BEGIN\n");
     bprintf(&gen_read_tables, "  SELECT * FROM ");
     cg_emit_name_ast(&gen_read_tables, name_ast);
@@ -822,7 +822,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
 
   // create tables proc
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC test_%s_create_tables()\n", proc_name);
+  bprintf(cg_th_procs, "PROC test_%s_create_tables()\n", proc_name);
   bprintf(cg_th_procs, "BEGIN\n");
   bindent(cg_th_procs, &gen_create_tables, 2);
   bprintf(cg_th_procs, "END;\n");
@@ -855,7 +855,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     bprintf(gen_create_triggers, "IF @rc THEN END IF;\n");
   }
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC test_%s_create_triggers()\n", proc_name);
+  bprintf(cg_th_procs, "PROC test_%s_create_triggers()\n", proc_name);
   bprintf(cg_th_procs, "BEGIN\n");
   bindent(cg_th_procs, gen_create_triggers, 2);
   bprintf(cg_th_procs, "END;\n");
@@ -863,7 +863,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   // populate tables proc
   if (gen_populate_tables.used > 1) {
     bprintf(cg_th_procs, "\n");
-    bprintf(cg_th_procs, "CREATE PROC test_%s_populate_tables()\n", proc_name);
+    bprintf(cg_th_procs, "PROC test_%s_populate_tables()\n", proc_name);
     bprintf(cg_th_procs, "BEGIN\n");
     bindent(cg_th_procs, &gen_populate_tables, 2);
     bprintf(cg_th_procs, "END;\n");
@@ -871,7 +871,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
 
   // drop tables proc
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC test_%s_drop_tables()\n", proc_name);
+  bprintf(cg_th_procs, "PROC test_%s_drop_tables()\n", proc_name);
   bprintf(cg_th_procs, "BEGIN\n");
   bindent(cg_th_procs, &gen_drop_tables, 2);
   bprintf(cg_th_procs, "END;\n");
@@ -881,7 +881,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     bprintf(gen_drop_triggers, "IF @rc THEN END IF;\n");
   }
   bprintf(cg_th_procs, "\n");
-  bprintf(cg_th_procs, "CREATE PROC test_%s_drop_triggers()\n", proc_name);
+  bprintf(cg_th_procs, "PROC test_%s_drop_triggers()\n", proc_name);
   bprintf(cg_th_procs, "BEGIN\n");
   bindent(cg_th_procs, gen_drop_triggers, 2);
   bprintf(cg_th_procs, "END;\n");
@@ -892,7 +892,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   // drop indexes proc
   if (gen_drop_indexes.used > 1) {
     bprintf(cg_th_procs, "\n");
-    bprintf(cg_th_procs, "CREATE PROC test_%s_drop_indexes()\n", proc_name);
+    bprintf(cg_th_procs, "PROC test_%s_drop_indexes()\n", proc_name);
     bprintf(cg_th_procs, "BEGIN\n");
     bindent(cg_th_procs, &gen_drop_indexes, 2);
     bprintf(cg_th_procs, "END;\n");

@@ -7477,7 +7477,7 @@ test/sem_test.sql:XXXX:1: error: in continue_stmt : CQL0218: continue must be in
 
 The statement ending at line XXXX
 
-CREATE PROC return_with_attr ()
+PROC return_with_attr ()
 BEGIN
   IF 1 THEN
     @ATTRIBUTE(goo)
@@ -7502,7 +7502,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_rc (OUT result_code INT!)
+PROC using_rc (OUT result_code INT!)
 BEGIN
   SET result_code := @RC;
 END;
@@ -7524,7 +7524,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC return_no_attr ()
+PROC return_no_attr ()
 BEGIN
   IF 1 THEN
     RETURN;
@@ -7544,7 +7544,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC return_not_last_with_attr ()
+PROC return_not_last_with_attr ()
 BEGIN
   IF 1 THEN
     @ATTRIBUTE(goo)
@@ -7573,7 +7573,7 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0308: statement should be t
 
 The statement ending at line XXXX
 
-CREATE PROC return_not_last_no_attr ()
+PROC return_not_last_no_attr ()
 BEGIN
   IF 1 THEN
     RETURN;
@@ -7605,7 +7605,7 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0307: return statement shou
 
 The statement ending at line XXXX
 
-CREATE PROC return_at_top_level ()
+PROC return_at_top_level ()
 BEGIN
   RETURN;
 END;
@@ -7669,7 +7669,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'X'
 
 The statement ending at line XXXX
 
-CREATE PROC close_boxed_cursor (IN box OBJECT<foo CURSOR>)
+PROC close_boxed_cursor (IN box OBJECT<foo CURSOR>)
 BEGIN
   CURSOR C FOR box;
   CLOSE C;
@@ -7706,7 +7706,7 @@ DECLARE FUNC get_boxed_cursor () OBJECT<foo CURSOR>;
 
 The statement ending at line XXXX
 
-CREATE PROC boxed_cursor_expr ()
+PROC boxed_cursor_expr ()
 BEGIN
   CURSOR C FOR get_boxed_cursor();
 END;
@@ -7724,7 +7724,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_boxed_cursor_expr ()
+PROC bogus_boxed_cursor_expr ()
 BEGIN
   CURSOR C FOR 12;
 END;
@@ -8996,7 +8996,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC proc1 ()
+PROC proc1 ()
 BEGIN
   DELETE FROM foo;
 END;
@@ -9010,7 +9010,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC proc1 ()
+PROC proc1 ()
 BEGIN
   DELETE FROM foo;
 END;
@@ -9026,7 +9026,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 'p
 
 The statement ending at line XXXX
 
-CREATE PROC proc2 (arg1 INT, arg2 TEXT)
+PROC proc2 (arg1 INT, arg2 TEXT)
 BEGIN
   DELETE FROM foo WHERE arg1 = ('x' IN (arg2));
 END;
@@ -9099,7 +9099,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'arg2'
 
 The statement ending at line XXXX
 
-CREATE PROC proc3 (arg1 INT, arg1 TEXT)
+PROC proc3 (arg1 INT, arg1 TEXT)
 BEGIN
   CALL anything(arg1, arg2);
 END;
@@ -9129,7 +9129,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'arg
 
 The statement ending at line XXXX
 
-CREATE PROC proc3 ()
+PROC proc3 ()
 BEGIN
   THROW;
 END;
@@ -9144,7 +9144,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 'p
 
 The statement ending at line XXXX
 
-CREATE PROC proc_throw_not_at_end ()
+PROC proc_throw_not_at_end ()
 BEGIN
   THROW;
   DECLARE x INT;
@@ -9164,7 +9164,7 @@ test/sem_test.sql:XXXX:1: error: in throw_stmt : CQL0308: statement should be th
 
 The statement ending at line XXXX
 
-CREATE PROC throw_before_out ()
+PROC throw_before_out ()
 BEGIN
   TRY
     CURSOR C FOR
@@ -9216,7 +9216,7 @@ DECLARE PROC anything NO CHECK;
 
 The statement ending at line XXXX
 
-CREATE PROC proc4 (IN arg1 INT, OUT arg2 TEXT, INOUT arg3 REAL)
+PROC proc4 (IN arg1 INT, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
   CALL anything(arg1, arg3);
 END;
@@ -9252,7 +9252,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC proc5 (IN arg1 INT, OUT arg2 TEXT, INOUT arg3 REAL)
+PROC proc5 (IN arg1 INT, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
   DECLARE arg1 INT;
 END;
@@ -9596,7 +9596,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0213: procedure had errors, c
 
 The statement ending at line XXXX
 
-CREATE PROC proc_with_output (IN arg1 INT, INOUT arg2 INT, OUT arg3 INT)
+PROC proc_with_output (IN arg1 INT, INOUT arg2 INT, OUT arg3 INT)
 BEGIN
 END;
 
@@ -9667,7 +9667,7 @@ CALL proc_with_output(1, X, Y);
 
 The statement ending at line XXXX
 
-CREATE PROC test_proc2 (INOUT arg1 INT)
+PROC test_proc2 (INOUT arg1 INT)
 BEGIN
   CALL proc_with_output(1, X, arg1);
 END;
@@ -9693,7 +9693,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_proc3 (OUT arg1 INT)
+PROC test_proc3 (OUT arg1 INT)
 BEGIN
   CALL proc_with_output(1, X, arg1);
 END;
@@ -9779,7 +9779,7 @@ CALL proc_with_output(1 + X, Y, X);
 
 The statement ending at line XXXX
 
-CREATE PROC cursors_cannot_be_used_as_out_args ()
+PROC cursors_cannot_be_used_as_out_args ()
 BEGIN
   CURSOR c FOR
     SELECT 0 AS x;
@@ -9817,7 +9817,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0207: expected a variable name for 
 
 The statement ending at line XXXX
 
-CREATE PROC enum_cases_cannot_be_used_as_out_args ()
+PROC enum_cases_cannot_be_used_as_out_args ()
 BEGIN
   CALL test_proc3(-1);
 END;
@@ -9835,7 +9835,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0207: expected a variable name for 
 
 The statement ending at line XXXX
 
-CREATE PROC unbound_variables_cannot_be_used_as_out_args ()
+PROC unbound_variables_cannot_be_used_as_out_args ()
 BEGIN
   CALL test_proc3(unbound);
 END;
@@ -11044,9 +11044,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC foo ()
+PROC foo ()
 BEGIN
-  CREATE PROC bar ()
+  PROC bar ()
   BEGIN
     SELECT 1;
   END;
@@ -11079,7 +11079,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0184: stored procedures cannot be n
 
 The statement ending at line XXXX
 
-CREATE PROC calls_dml ()
+PROC calls_dml ()
 BEGIN
   CALL proc1();
 END;
@@ -11180,7 +11180,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC with_result_set ()
+PROC with_result_set ()
 BEGIN
   SELECT *
     FROM bar;
@@ -11209,7 +11209,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_matching_result (i INT)
+PROC with_matching_result (i INT)
 BEGIN
   IF i THEN
     SELECT 1 AS A, 2.5 AS B;
@@ -11279,7 +11279,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_wrong_types (i INT)
+PROC with_wrong_types (i INT)
 BEGIN
   IF i THEN
     SELECT 1 AS A, 2.5 AS B;
@@ -11351,7 +11351,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0061: in multiple select/ou
 
 The statement ending at line XXXX
 
-CREATE PROC with_wrong_count (i INT)
+PROC with_wrong_count (i INT)
 BEGIN
   IF i THEN
     SELECT 1 AS A, 2.5 AS B;
@@ -11427,7 +11427,7 @@ only in 1st: B real notnull
 
 The statement ending at line XXXX
 
-CREATE PROC with_wrong_flags (i INT!)
+PROC with_wrong_flags (i INT!)
 BEGIN
   IF i THEN
     SELECT i AS A;
@@ -11490,7 +11490,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0062: in multiple select/ou
 
 The statement ending at line XXXX
 
-CREATE PROC with_ok_flags (i INT!)
+PROC with_ok_flags (i INT!)
 BEGIN
   IF i THEN
     SELECT i AS A;
@@ -11551,7 +11551,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_bad_names (i INT!)
+PROC with_bad_names (i INT!)
 BEGIN
   IF i THEN
     SELECT 1 AS A;
@@ -11624,7 +11624,7 @@ only in 2nd: B integer notnull
 
 The statement ending at line XXXX
 
-CREATE PROC with_no_names (i INT!)
+PROC with_no_names (i INT!)
 BEGIN
   SELECT 1;
 END;
@@ -11974,7 +11974,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense i
 
 The statement ending at line XXXX
 
-CREATE PROC out_proc (OUT result INT)
+PROC out_proc (OUT result INT)
 BEGIN
   SET result := 5;
 END;
@@ -15419,7 +15419,7 @@ DECLARE PROC decl4 (x_A INT!, x_B BOOL);
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_nested_declare ()
+PROC bogus_nested_declare ()
 BEGIN
   DECLARE PROC yy ();
 END;
@@ -19723,7 +19723,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadow
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shadows_an_existing_table ()
+PROC shadows_an_existing_table ()
 BEGIN
   WITH
     foo (*) LIKE (
@@ -19835,7 +19835,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0437: common table name shadow
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC does_not_shadow_an_existing_table ()
+PROC does_not_shadow_an_existing_table ()
 BEGIN
   WITH
     table_not_yet_defined (x) AS (
@@ -19952,7 +19952,7 @@ SELECT *
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC empty_fragment ()
+PROC empty_fragment ()
 BEGIN
 END;
 
@@ -19971,7 +19971,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may no
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC a_shared_frag (x INT!, y INT!)
+PROC a_shared_frag (x INT!, y INT!)
 BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
@@ -20113,7 +20113,7 @@ test/sem_test.sql:XXXX:1: error: in table_star : CQL0054: table not found 'a_sha
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC conditional_no_else ()
+PROC conditional_no_else ()
 BEGIN
   IF 1 THEN
     SELECT 1 AS x;
@@ -20159,7 +20159,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC not_valid_proc_for_select_nothing ()
+PROC not_valid_proc_for_select_nothing ()
 BEGIN
   SELECT NOTHING;
 END;
@@ -20175,7 +20175,7 @@ test/sem_test.sql:XXXX:1: error: in select_nothing_stmt : CQL0496: SELECT NOTHIN
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC conditional_else_nothing ()
+PROC conditional_else_nothing ()
 BEGIN
   IF 1 THEN
     SELECT 1 AS x;
@@ -20222,7 +20222,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC ok_conditional_duplicate_cte_names ()
+PROC ok_conditional_duplicate_cte_names ()
 BEGIN
   IF 1 THEN
     WITH
@@ -20318,7 +20318,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_conditional_duplicate_cte_names ()
+PROC bogus_conditional_duplicate_cte_names ()
 BEGIN
   IF 1 THEN
     WITH
@@ -20422,7 +20422,7 @@ only in 2nd: id integer notnull
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_conditional_two_selects ()
+PROC bogus_conditional_two_selects ()
 BEGIN
   IF 1 THEN
     SELECT 1 AS x;
@@ -20503,7 +20503,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0443: shared fragments with c
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_conditional_non_select ()
+PROC bogus_conditional_non_select ()
 BEGIN
   IF 1 THEN
     DECLARE x INT;
@@ -20555,7 +20555,7 @@ test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0443: shared fragment
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_conditional_empty_clause ()
+PROC bogus_conditional_empty_clause ()
 BEGIN
   IF 1 THEN
   ELSE
@@ -20601,7 +20601,7 @@ test/sem_test.sql:XXXX:1: error: in cond_action : CQL0443: shared fragments with
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_conditional_empty_else_clause ()
+PROC bogus_conditional_empty_else_clause ()
 BEGIN
   IF 1 THEN
     SELECT 1 AS x;
@@ -20656,7 +20656,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0434: shared fragments may no
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag2 (x INT!, y INT!)
+PROC shared_frag2 (x INT!, y INT!)
 BEGIN
   WITH
     source (x, y, z) LIKE a_shared_frag
@@ -20779,7 +20779,7 @@ DECLARE PROC frag_type () (id INT<job>, name TEXT);
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag3 ()
+PROC shared_frag3 ()
 BEGIN
   WITH
     source (id, name) LIKE frag_type
@@ -20962,7 +20962,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag_bad_like ()
+PROC shared_frag_bad_like ()
 BEGIN
   WITH
     source (*) LIKE there_is_no_such_source
@@ -21063,7 +21063,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be us
 
 The statement ending at line XXXX
 
-CREATE PROC not_a_shared_fragment ()
+PROC not_a_shared_fragment ()
 BEGIN
   WITH
     source (*) LIKE there_is_no_such_source
@@ -21798,7 +21798,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC bogus_like_in_shared ()
+PROC bogus_like_in_shared ()
 BEGIN
   WITH
     data (*) AS (
@@ -21884,7 +21884,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0427: LIKE CTE form may only be us
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag_bad_like_decl ()
+PROC shared_frag_bad_like_decl ()
 BEGIN
   WITH
     source (u) LIKE a_shared_frag
@@ -21943,7 +21943,7 @@ test/sem_test.sql:XXXX:1: error: in cte_decl : CQL0101: too few column names spe
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag_bogus_cte_columns ()
+PROC shared_frag_bogus_cte_columns ()
 BEGIN
   WITH
     source (id, id) LIKE (
@@ -22361,7 +22361,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared pro
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_with_CTEs (id_ INT!)
+PROC test_shared_fragment_with_CTEs (id_ INT!)
 BEGIN
   WITH
     t1 (id) AS (
@@ -22496,7 +22496,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_without_CTEs (id_ INT!)
+PROC test_shared_fragment_without_CTEs (id_ INT!)
 BEGIN
   SELECT id, name, rate
     FROM bar
@@ -22550,7 +22550,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_wrong_form ()
+PROC test_shared_fragment_wrong_form ()
 BEGIN
   SELECT *
     FROM bar;
@@ -22606,7 +22606,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments must c
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_bad_args (OUT x INT)
+PROC test_shared_fragment_bad_args (OUT x INT)
 BEGIN
   SELECT *
     FROM bar;
@@ -22650,7 +22650,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0208: shared fragments cannot
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_wrong_form_not_select ()
+PROC test_shared_fragment_wrong_form_not_select ()
 BEGIN
   DECLARE x INT;
 END;
@@ -23384,7 +23384,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0195: proc name conflicts with func
 
 The statement ending at line XXXX
 
-CREATE PROC simple_func (arg1 INT!)
+PROC simple_func (arg1 INT!)
 BEGIN
   SELECT 1;
 END;
@@ -23434,7 +23434,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc
 
 The statement ending at line XXXX
 
-CREATE PROC nested_func_wrapper ()
+PROC nested_func_wrapper ()
 BEGIN
   DECLARE FUNC foo () INT;
 END;
@@ -23671,7 +23671,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0010: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC obj_proc (OUT an_obj OBJECT)
+PROC obj_proc (OUT an_obj OBJECT)
 BEGIN
   SET an_obj := NULL;
 END;
@@ -24809,7 +24809,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0144: cannot alter a view 'MyView'
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_version ()
+PROC bogus_version ()
 BEGIN
   @SCHEMA_UPGRADE_VERSION (11);
 END;
@@ -25057,7 +25057,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0027: a procedure can appear in onl
 
 The statement ending at line XXXX
 
-CREATE PROC creator ()
+PROC creator ()
 BEGIN
   SELECT 1;
 END;
@@ -25568,7 +25568,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0109: cannot drop a view with drop 
 
 The statement ending at line XXXX
 
-CREATE PROC uses_proc_for_result ()
+PROC uses_proc_for_result ()
 BEGIN
   CALL with_result_set();
 END;
@@ -25751,7 +25751,7 @@ ALTER TABLE neg_default ADD COLUMN id INT! DEFAULT -1;
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_validate ()
+PROC bogus_validate ()
 BEGIN
   @PREVIOUS_SCHEMA;
 END;
@@ -25766,7 +25766,7 @@ test/sem_test.sql:XXXX:1: error: in previous_schema_stmt : CQL0225: switching to
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_fetch ()
+PROC bogus_fetch ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -25823,7 +25823,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0180: duplicate column name in resu
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_result_duplicate_names ()
+PROC bogus_result_duplicate_names ()
 BEGIN
   SELECT *
     FROM foo AS T1
@@ -25963,7 +25963,7 @@ test/sem_test.sql:XXXX:1: error: in schema_upgrade_script_stmt : CQL0227: schema
 
 The statement ending at line XXXX
 
-CREATE PROC schema_upgrade_you_wish ()
+PROC schema_upgrade_you_wish ()
 BEGIN
   @SCHEMA_UPGRADE_SCRIPT;
 END;
@@ -26602,7 +26602,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0243: blob operand must be converte
 
 The statement ending at line XXXX
 
-CREATE PROC blob_proc (OUT a_blob BLOB)
+PROC blob_proc (OUT a_blob BLOB)
 BEGIN
   SET a_blob := NULL;
 END;
@@ -26838,7 +26838,7 @@ test/sem_test.sql:XXXX:1: error: in not_between : CQL0012: incompatible types in
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_object_read ()
+PROC bogus_object_read ()
 BEGIN
   DECLARE o1, o2, o3 OBJECT;
   CURSOR C FOR
@@ -26890,7 +26890,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0010: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC fool (x INT)
+PROC fool (x INT)
 BEGIN
   SET x := x IN (SELECT 1);
 END;
@@ -26927,7 +26927,7 @@ test/sem_test.sql:XXXX:1: error: in in_pred : CQL0078: [not] in (select ...) is 
 
 The statement ending at line XXXX
 
-CREATE PROC notfool (x INT)
+PROC notfool (x INT)
 BEGIN
   SET x := x NOT IN (SELECT 1);
 END;
@@ -26991,7 +26991,7 @@ INSERT INTO blob_table_test(b) VALUES(CAST(printf('b_%d', _seed_) AS BLOB)) @DUM
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc ()
+PROC out_cursor_proc ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
@@ -27056,7 +27056,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
 
 The statement ending at line XXXX
 
-CREATE PROC not_out_cursor_proc ()
+PROC not_out_cursor_proc ()
 BEGIN
   SELECT 1 AS A, 2 AS B;
 END;
@@ -27100,7 +27100,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a proce
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc_not_shape_storage ()
+PROC out_cursor_proc_not_shape_storage ()
 BEGIN
   DECLARE a, b INT!;
   CURSOR C FOR
@@ -27156,7 +27156,7 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0223: cursor was not fetched w
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc_incompat_results ()
+PROC out_cursor_proc_incompat_results ()
 BEGIN
   DECLARE a, b INT!;
   CURSOR C FOR
@@ -27249,7 +27249,7 @@ only in 2nd: C integer notnull
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc_mixed_cursor_select ()
+PROC out_cursor_proc_mixed_cursor_select ()
 BEGIN
   DECLARE a, b INT!;
   CURSOR C FOR
@@ -27323,7 +27323,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0063: can't mix and match o
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc_mixed_cursor_select_select_first ()
+PROC out_cursor_proc_mixed_cursor_select_select_first ()
 BEGIN
   DECLARE a, b INT!;
   CURSOR C FOR
@@ -27397,7 +27397,7 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0063: can't mix and match out,
 
 The statement ending at line XXXX
 
-CREATE PROC out_cursor_proc_mixed_cursor_select_then_union ()
+PROC out_cursor_proc_mixed_cursor_select_then_union ()
 BEGIN
   DECLARE a, b INT!;
   CURSOR C FOR
@@ -27471,7 +27471,7 @@ test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and matc
 
 The statement ending at line XXXX
 
-CREATE PROC out_union_dml ()
+PROC out_union_dml ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
@@ -27513,7 +27513,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC out_union ()
+PROC out_union ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2 AS B;
   FETCH C(A, B) FROM VALUES(1, 2);
@@ -27565,7 +27565,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC call_out_union_dml ()
+PROC call_out_union_dml ()
 BEGIN
   CALL out_union_dml();
 END;
@@ -27579,7 +27579,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC call_out_union ()
+PROC call_out_union ()
 BEGIN
   CALL out_union();
 END;
@@ -27593,7 +27593,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC out_union_call_and_out_union ()
+PROC out_union_call_and_out_union ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
@@ -27640,7 +27640,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0063: can't mix and match out
 
 The statement ending at line XXXX
 
-CREATE PROC out_union_call_and_out_union_other_order ()
+PROC out_union_call_and_out_union_other_order ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
@@ -27687,7 +27687,7 @@ test/sem_test.sql:XXXX:1: error: in out_union_stmt : CQL0063: can't mix and matc
 
 The statement ending at line XXXX
 
-CREATE PROC out_not_cursor ()
+PROC out_not_cursor ()
 BEGIN
   DECLARE C INT;
   OUT C;
@@ -27717,7 +27717,7 @@ test/sem_test.sql:XXXX:1: error: in out_stmt : CQL0222: out cursor statement onl
 
 The statement ending at line XXXX
 
-CREATE PROC result_reader ()
+PROC result_reader ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
 END;
@@ -27733,7 +27733,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fails_result_reader ()
+PROC fails_result_reader ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C;
@@ -27773,7 +27773,7 @@ DECLARE PROC declared_proc (id INT) OUT (t TEXT);
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_proc_fetch_bogus_call ()
+PROC invalid_proc_fetch_bogus_call ()
 BEGIN
   CURSOR C FETCH FROM CALL declared_proc(NOT 'x');
 END;
@@ -27794,7 +27794,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC xyzzy ()
+PROC xyzzy ()
 BEGIN
 END;
 
@@ -27804,7 +27804,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_proc_fetch ()
+PROC invalid_proc_fetch ()
 BEGIN
   CURSOR C FETCH FROM CALL xyzzy();
 END;
@@ -27822,7 +27822,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a proce
 
 The statement ending at line XXXX
 
-CREATE PROC fails_result_reader_double_decl ()
+PROC fails_result_reader_double_decl ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   CURSOR C FETCH FROM CALL out_cursor_proc();
@@ -27845,7 +27845,7 @@ test/sem_test.sql:XXXX:1: error: in declare_value_cursor : CQL0197: duplicate va
 
 The statement ending at line XXXX
 
-CREATE PROC proc_with_single_output (a INT, b INT, OUT c INT)
+PROC proc_with_single_output (a INT, b INT, OUT c INT)
 BEGIN
 END;
 
@@ -27886,7 +27886,7 @@ SET an_int := proc_with_single_output(1, an_int);
 
 The statement ending at line XXXX
 
-CREATE PROC proc_func (IN arg1 INT, OUT arg2 INT)
+PROC proc_func (IN arg1 INT, OUT arg2 INT)
 BEGIN
   DROP TABLE foo;
 END;
@@ -28005,7 +28005,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0224: a function call to a procedu
 
 The statement ending at line XXXX
 
-CREATE PROC dml_func (OUT a INT!)
+PROC dml_func (OUT a INT!)
 BEGIN
   SET a := ( SELECT 1 );
 END;
@@ -28040,7 +28040,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC should_be_dml (OUT a INT!)
+PROC should_be_dml (OUT a INT!)
 BEGIN
   SET a := dml_func();
 END;
@@ -28065,7 +28065,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values ()
+PROC fetch_values ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(1, 2);
@@ -28095,7 +28095,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_dummy ()
+PROC fetch_values_dummy ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
@@ -28128,7 +28128,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_from_call ()
+PROC fetch_from_call ()
 BEGIN
   CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc();
@@ -28153,7 +28153,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_from_call_to_proc_with_invalid_arguments ()
+PROC fetch_from_call_to_proc_with_invalid_arguments ()
 BEGIN
   CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc(42);
@@ -28182,7 +28182,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments prov
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_from_call_to_proc_with_invalid_cursor ()
+PROC fetch_from_call_to_proc_with_invalid_cursor ()
 BEGIN
   DECLARE C TEXT;
   FETCH C FROM CALL out_cursor_proc();
@@ -28209,7 +28209,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C'
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_from_call_to_proc_with_different_column_names ()
+PROC fetch_from_call_to_proc_with_different_column_names ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2 AS C;
   FETCH C FROM CALL out_cursor_proc();
@@ -28298,7 +28298,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for valu
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_bogus_seed_value ()
+PROC fetch_values_bogus_seed_value ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C() FROM VALUES() @DUMMY_SEED(NOT 'x');
@@ -28326,7 +28326,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_missing_value ()
+PROC fetch_values_missing_value ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES();
@@ -28354,7 +28354,7 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0166: count of column
 
 The statement ending at line XXXX
 
-CREATE PROC blob_out ()
+PROC blob_out ()
 BEGIN
   CURSOR C FOR
     SELECT CASE
@@ -28402,7 +28402,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_blob_dummy ()
+PROC fetch_values_blob_dummy ()
 BEGIN
   CURSOR C FETCH FROM CALL blob_out();
   FETCH C() FROM VALUES() @DUMMY_SEED(123) @DUMMY_NULLABLES;
@@ -28429,7 +28429,7 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0168: CQL has no good
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_missing_columns ()
+PROC fetch_values_missing_columns ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A) FROM VALUES(1);
@@ -28457,7 +28457,7 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_bogus_value ()
+PROC fetch_values_bogus_value ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(1, NOT 'x');
@@ -28490,7 +28490,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_bogus_type ()
+PROC fetch_values_bogus_type ()
 BEGIN
   CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(1, 'x');
@@ -28522,7 +28522,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_blob_dummy_with_null ()
+PROC fetch_values_blob_dummy_with_null ()
 BEGIN
   CURSOR C FETCH FROM CALL blob_out();
   FETCH C(B) FROM VALUES(NULL) @DUMMY_SEED(123);
@@ -28551,7 +28551,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_to_cursor_from_cursor ()
+PROC fetch_to_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   CURSOR C1 LIKE C0;
@@ -28627,7 +28627,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_to_cursor_from_invalid_cursor ()
+PROC fetch_to_cursor_from_invalid_cursor ()
 BEGIN
   DECLARE C0 INT;
   CURSOR C1 LIKE SELECT 1 AS A, 2 AS B;
@@ -28684,7 +28684,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C0'
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_to_invalid_cursor_from_cursor ()
+PROC fetch_to_invalid_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   DECLARE C1 INT;
@@ -28747,7 +28747,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0205: not a cursor 'C1'
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_to_statement_cursor_from_cursor ()
+PROC fetch_to_statement_cursor_from_cursor ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   CURSOR C1 FOR
@@ -28830,7 +28830,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0165: fetch values is only for valu
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_to_cursor_from_cursor_with_different_columns ()
+PROC fetch_to_cursor_from_cursor_with_different_columns ()
 BEGIN
   CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   CURSOR C1 LIKE SELECT 1 AS A, 2 AS B, 3 AS C;
@@ -28929,7 +28929,7 @@ test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too fe
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_to_cursor_from_cursor_without_fields ()
+PROC fetch_to_cursor_from_cursor_without_fields ()
 BEGIN
   DECLARE X INT;
   DECLARE Y REAL;
@@ -29005,7 +29005,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_cursor ()
+PROC declare_cursor_like_cursor ()
 BEGIN
   CURSOR C0 FETCH FROM CALL out_cursor_proc();
   CURSOR C1 LIKE C0;
@@ -29027,7 +29027,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_non_cursor_variable ()
+PROC declare_cursor_like_non_cursor_variable ()
 BEGIN
   DECLARE C0 INT;
   CURSOR C1 LIKE C0;
@@ -29051,7 +29051,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0200: variable is not a cursor 'C0
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_cursor_with_same_name ()
+PROC declare_cursor_like_cursor_with_same_name ()
 BEGIN
   CURSOR C0 FETCH FROM CALL out_cursor_proc();
   CURSOR C0 LIKE C0;
@@ -29075,7 +29075,7 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor_like_name : CQL0197: duplicat
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_undefined_variable ()
+PROC declare_cursor_like_undefined_variable ()
 BEGIN
   CURSOR C1 LIKE C0;
 END;
@@ -29094,7 +29094,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_proc ()
+PROC declare_cursor_like_proc ()
 BEGIN
   CURSOR C LIKE decl3;
 END;
@@ -29111,7 +29111,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_proc_with_no_result ()
+PROC declare_cursor_like_proc_with_no_result ()
 BEGIN
   CURSOR C LIKE decl1;
 END;
@@ -29130,7 +29130,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'decl1'
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_table ()
+PROC declare_cursor_like_table ()
 BEGIN
   CURSOR C LIKE bar;
 END;
@@ -29147,7 +29147,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_view ()
+PROC declare_cursor_like_view ()
 BEGIN
   CURSOR C LIKE MyView;
 END;
@@ -29164,7 +29164,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC declare_cursor_like_select ()
+PROC declare_cursor_like_select ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
   FETCH C(A, B, C) FROM VALUES(_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
@@ -29430,7 +29430,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0066: identifier is ambiguous 'rowi
 
 The statement ending at line XXXX
 
-CREATE PROC value_result_reader ()
+PROC value_result_reader ()
 BEGIN
   CURSOR C FETCH FROM CALL declare_cursor_like_select();
 END;
@@ -29799,7 +29799,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0033: columns in a table marked
 
 The statement ending at line XXXX
 
-CREATE PROC cte_test ()
+PROC cte_test ()
 BEGIN
   WITH
     should_not_conflict (a, b) AS (
@@ -29908,7 +29908,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_insert_form ()
+PROC with_insert_form ()
 BEGIN
   WITH
     x (a, b, c) AS (
@@ -30056,7 +30056,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_column_spec_form ()
+PROC with_column_spec_form ()
 BEGIN
   WITH
     x (a, b, c) AS (
@@ -30204,7 +30204,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_insert_bogus_cte ()
+PROC with_insert_bogus_cte ()
 BEGIN
   WITH
     x (a) AS (
@@ -30272,7 +30272,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC with_insert_bogus_insert ()
+PROC with_insert_bogus_insert ()
 BEGIN
   WITH
     x (a) AS (
@@ -30667,7 +30667,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc
 
 The statement ending at line XXXX
 
-CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
+PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
 BEGIN
   CURSOR curs LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
   FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
@@ -30749,7 +30749,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
+PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   CURSOR curs LIKE bar;
   FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
@@ -30811,7 +30811,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC qualified_like (x_id INT!, x_name TEXT, x_rate LONG, y_id INT!, y_name TEXT, y_rate LONG)
+PROC qualified_like (x_id INT!, x_name TEXT, x_rate LONG, y_id INT!, y_name TEXT, y_rate LONG)
 BEGIN
 END;
 
@@ -30853,7 +30853,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
+PROC insert_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 END;
@@ -30910,7 +30910,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_explicit (extra INT, id INT!, name_ TEXT, rate LONG)
+PROC insert_bar_explicit (extra INT, id INT!, name_ TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, name_, rate);
 END;
@@ -30967,7 +30967,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_locals (extra INT, id INT!, name_ TEXT, rate LONG)
+PROC insert_bar_locals (extra INT, id INT!, name_ TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
 END;
@@ -31024,7 +31024,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_missing (extra INT, id INT!)
+PROC insert_bar_missing (extra INT, id INT!)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, ARGUMENTS.name, ARGUMENTS.rate);
 END;
@@ -31073,7 +31073,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, the
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_from_bogus (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
+PROC insert_bar_from_bogus (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) FROM ARGUMENTS(LIKE bogus_name_here);
 END;
@@ -31154,7 +31154,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0163: FROM ARGUMENTS construct is o
 
 The statement ending at line XXXX
 
-CREATE PROC arg_fetcher_not_enough_args (arg1 TEXT!)
+PROC arg_fetcher_not_enough_args (arg1 TEXT!)
 BEGIN
   CURSOR curs LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
   FETCH curs(A, B, C) FROM ARGUMENTS(arg1);
@@ -31219,7 +31219,7 @@ test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too fe
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter (id INT!, name TEXT, rate LONG)
+PROC bar_auto_inserter (id INT!, name TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, name, rate);
 END;
@@ -31271,7 +31271,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter_mininal (id INT!, name TEXT, rate LONG)
+PROC bar_auto_inserter_mininal (id INT!, name TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id) VALUES(id);
 END;
@@ -31311,7 +31311,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter_no_columns (id INT!, name TEXT, rate LONG)
+PROC bar_auto_inserter_no_columns (id INT!, name TEXT, rate LONG)
 BEGIN
   INSERT INTO bar() FROM ARGUMENTS @DUMMY_SEED(1);
 END;
@@ -31352,7 +31352,7 @@ test/sem_test.sql:XXXX:1: error: in from_shape : CQL0297: FROM [shape] is redund
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter_missing_columns (id INT)
+PROC bar_auto_inserter_missing_columns (id INT)
 BEGIN
   INSERT INTO bar(id, name, rate) FROM ARGUMENTS(id);
 END;
@@ -31388,7 +31388,7 @@ test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too fe
 
 The statement ending at line XXXX
 
-CREATE PROC rewritten_like_args (id_ INT!, name_ TEXT, rate_ LONG)
+PROC rewritten_like_args (id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 END;
@@ -31440,7 +31440,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC rewrite_args_fails (LIKE garbonzo)
+PROC rewrite_args_fails (LIKE garbonzo)
 BEGIN
   DECLARE x INT;
 END;
@@ -31537,7 +31537,7 @@ CREATE TABLE args2(
 
 The statement ending at line XXXX
 
-CREATE PROC two_arg_sources (id_ INT!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
+PROC two_arg_sources (id_ INT!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
 BEGIN
 END;
 
@@ -31573,7 +31573,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC two_arg_sources_fully_redundant (id_ INT!, name_ TEXT, data_ BLOB)
+PROC two_arg_sources_fully_redundant (id_ INT!, name_ TEXT, data_ BLOB)
 BEGIN
 END;
 
@@ -31637,7 +31637,7 @@ CREATE VIEW ViewShape AS
 
 The statement ending at line XXXX
 
-CREATE PROC like_a_view (a_ BOOL!, b_ REAL!, c_ TEXT!)
+PROC like_a_view (a_ BOOL!, b_ REAL!, c_ TEXT!)
 BEGIN
   SELECT *
     FROM ViewShape AS v
@@ -31705,7 +31705,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_cursor_shape ()
+PROC bogus_cursor_shape ()
 BEGIN
   CURSOR C LIKE SELECT 1, 2;
 END;
@@ -31769,7 +31769,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the se
 
 The statement ending at line XXXX
 
-CREATE PROC like_other_proc (A_ INT!, B_ INT!)
+PROC like_other_proc (A_ INT!, B_ INT!)
 BEGIN
   CURSOR C LIKE out_cursor_proc;
   FETCH C(A, B) FROM VALUES(A_, B_);
@@ -31819,7 +31819,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_like_proc (LIKE proc1)
+PROC bogus_like_proc (LIKE proc1)
 BEGIN
   DECLARE x INT;
 END;
@@ -32448,7 +32448,7 @@ test/sem_test.sql:XXXX:1: error: in tilde : CQL0001: operands must be an integer
 
 The statement ending at line XXXX
 
-CREATE PROC simple_alias_order_by ()
+PROC simple_alias_order_by ()
 BEGIN
   SELECT id AS bar_id
     FROM bar
@@ -32485,7 +32485,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC complex_alias_order_by ()
+PROC complex_alias_order_by ()
 BEGIN
   SELECT 1 AS sort_order_value, id
     FROM bar
@@ -33181,7 +33181,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'old.id'
 
 The statement ending at line XXXX
 
-CREATE PROC make_trigger ()
+PROC make_trigger ()
 BEGIN
   CREATE TRIGGER selecting_trigger
     BEFORE DELETE ON bar
@@ -33729,7 +33729,7 @@ SELECT 1 AS A, 2 AS B;
 
 The statement ending at line XXXX
 
-CREATE PROC returns_bogus_null ()
+PROC returns_bogus_null ()
 BEGIN
   SELECT NULL AS n;
 END;
@@ -33759,7 +33759,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0056: NULL expression has n
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_null_column ()
+PROC fetch_null_column ()
 BEGIN
   CURSOR C FOR
     SELECT NULL AS n;
@@ -33847,7 +33847,7 @@ CREATE TABLE without_sensitive(
 
 The statement ending at line XXXX
 
-CREATE PROC get_sensitive ()
+PROC get_sensitive ()
 BEGIN
   SELECT
       1 AS safe,
@@ -35849,7 +35849,7 @@ UPDATE foo
 
 The statement ending at line XXXX
 
-CREATE PROC with_delete_form ()
+PROC with_delete_form ()
 BEGIN
   WITH
     x (id) AS (
@@ -35923,7 +35923,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_delete_form_bogus_cte ()
+PROC with_delete_form_bogus_cte ()
 BEGIN
   WITH
     x (id) AS (
@@ -35999,7 +35999,7 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in
 
 The statement ending at line XXXX
 
-CREATE PROC with_delete_form_bogus_delete ()
+PROC with_delete_form_bogus_delete ()
 BEGIN
   WITH
     x (id) AS (
@@ -36075,7 +36075,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0151: table in delete statement doe
 
 The statement ending at line XXXX
 
-CREATE PROC with_update_form ()
+PROC with_update_form ()
 BEGIN
   WITH
     x (id) AS (
@@ -36159,7 +36159,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_update_form_bogus_cte ()
+PROC with_update_form_bogus_cte ()
 BEGIN
   WITH
     x (id) AS (
@@ -36245,7 +36245,7 @@ test/sem_test.sql:XXXX:1: error: in select_core : CQL0012: incompatible types in
 
 The statement ending at line XXXX
 
-CREATE PROC with_update_form_bogus_delete ()
+PROC with_update_form_bogus_delete ()
 BEGIN
   WITH
     x (id) AS (
@@ -36351,7 +36351,7 @@ DECLARE PROC out_cursor_proc () OUT (A INT!, B INT!) USING TRANSACTION;
 
 The statement ending at line XXXX
 
-CREATE PROC decl1 (id INT)
+PROC decl1 (id INT)
 BEGIN
   DECLARE i INT;
 END;
@@ -36372,7 +36372,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC decl1 (id INT)
+PROC decl1 (id INT)
 BEGIN
   DECLARE i INT;
 END;
@@ -36395,7 +36395,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 'd
 
 The statement ending at line XXXX
 
-CREATE PROC decl2 (id INT)
+PROC decl2 (id INT)
 BEGIN
   DECLARE i INT;
 END;
@@ -36423,7 +36423,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0189: procedure declar
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_test, dummy_table, dummy_insert, dummy_select, dummy_result_set))
-CREATE PROC autotest_all_attribute ()
+PROC autotest_all_attribute ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36469,7 +36469,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1, 'Nelly'), (-2, 'Babeth')), (foo, (id), (777)))))
-CREATE PROC autotest_dummy_test_with_others_attributes ()
+PROC autotest_dummy_test_with_others_attributes ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36538,7 +36538,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=((dummy_test, (bar, (id), (1), (2)))))
-CREATE PROC autotest_dummy_test_without_other_attributes ()
+PROC autotest_dummy_test_without_other_attributes ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36589,7 +36589,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (one)))))
-CREATE PROC autotest_dummy_test_invalid_col_str_value ()
+PROC autotest_dummy_test_invalid_col_str_value ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36641,7 +36641,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0276: autotest attribute 'dummy_tes
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=((dummy_test, (bar, (id), (0.1)))))
-CREATE PROC autotest_dummy_test_invalid_col_dbl_value ()
+PROC autotest_dummy_test_invalid_col_dbl_value ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36691,7 +36691,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0276: autotest attribute 'dummy_tes
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=((dummy_test, (bar, (rate), (1)))))
-CREATE PROC autotest_dummy_test_long_col_with_int_value ()
+PROC autotest_dummy_test_long_col_with_int_value ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36739,7 +36739,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=((dummy_test, (bar, (rate), (-1)))))
-CREATE PROC autotest_dummy_test_neg_long_col_with_int_value ()
+PROC autotest_dummy_test_neg_long_col_with_int_value ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36788,7 +36788,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), ('bogus')))))
-CREATE PROC autotest_dummy_test_invalid_col_strlit_value ()
+PROC autotest_dummy_test_invalid_col_strlit_value ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36840,7 +36840,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0276: autotest attribute 'dummy_tes
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (1L)))))
-CREATE PROC autotest_dummy_test_invalid_col_lng_value ()
+PROC autotest_dummy_test_invalid_col_lng_value ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36892,7 +36892,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0276: autotest attribute 'dummy_tes
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, id, (1), (2)))))
-CREATE PROC autotest_dummy_test_invalid_col_format ()
+PROC autotest_dummy_test_invalid_col_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -36946,7 +36946,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), (1, 2)))))
-CREATE PROC autotest_dummy_test_too_many_value_format ()
+PROC autotest_dummy_test_too_many_value_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37000,7 +37000,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name), (1)))))
-CREATE PROC autotest_dummy_test_missing_value_format ()
+PROC autotest_dummy_test_missing_value_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37054,7 +37054,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id, name)))))
-CREATE PROC autotest_dummy_test_no_value_format ()
+PROC autotest_dummy_test_no_value_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37105,7 +37105,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (1, (id), (1)))))
-CREATE PROC autotest_bogus_table_name_format ()
+PROC autotest_bogus_table_name_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37157,7 +37157,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0273: autotest att
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (1), (1)))))
-CREATE PROC autotest_bogus_colum_name_format ()
+PROC autotest_bogus_colum_name_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37209,7 +37209,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (id), 1))))
-CREATE PROC autotest_colum_value_incorrect_format ()
+PROC autotest_colum_value_incorrect_format ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37260,7 +37260,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0273: autotest attribute has incorr
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bar, (bogus_col), (1), (2)))))
-CREATE PROC autotest_dummy_test_bogus_col_name ()
+PROC autotest_dummy_test_bogus_col_name ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37315,7 +37315,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0275: autotest attribute 'dummy_tes
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_test, (bogus_table, (id), (1), (2)))))
-CREATE PROC autotest_dummy_test_bogus_table_name ()
+PROC autotest_dummy_test_bogus_table_name ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37370,7 +37370,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0274: autotest attribute 'dummy_tes
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_bogus))
-CREATE PROC autotest_dummy_bogus ()
+PROC autotest_dummy_bogus ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37410,7 +37410,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0278: autotest attribute name is no
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_table, (dummy_bogus)))
-CREATE PROC autotest_bogus_nested_attribute ()
+PROC autotest_bogus_nested_attribute ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37453,7 +37453,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0277: autotest has incorrect format
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_test, (bar, (id), (1))))
-CREATE PROC autotest_dummy_test_not_nested ()
+PROC autotest_dummy_test_not_nested ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37502,7 +37502,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0277: autotest has incorrect format
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_test, bar, ((id, name), (1, 'x'))))
-CREATE PROC autotest_dummy_test_not_nested_2 ()
+PROC autotest_dummy_test_not_nested_2 ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37556,7 +37556,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0277: autotest has
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=((dummy_test, ((bar, (id), (1), (2))))))
-CREATE PROC autotest_dummy_test_with_col_double_nested ()
+PROC autotest_dummy_test_with_col_double_nested ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37610,7 +37610,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0273: autotest att
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=dummy_table)
-CREATE PROC autotest_incorrect_formatting ()
+PROC autotest_incorrect_formatting ()
 BEGIN
   SELECT *
     FROM bar;
@@ -37703,7 +37703,7 @@ CREATE TABLE not_a_temp_table(
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autodrop=(table1, table2))
-CREATE PROC autodropper ()
+PROC autodropper ()
 BEGIN
   SELECT *
     FROM table1;
@@ -37743,7 +37743,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autodrop=(not_an_object))
-CREATE PROC autodropper_not_an_objecte ()
+PROC autodropper_not_an_objecte ()
 BEGIN
   SELECT *
     FROM table1;
@@ -37783,7 +37783,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0181: autodrop tem
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autodrop=(ViewShape))
-CREATE PROC autodropper_dropping_view ()
+PROC autodropper_dropping_view ()
 BEGIN
   SELECT *
     FROM table1;
@@ -37823,7 +37823,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0182: autodrop tar
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autodrop=(not_a_temp_table))
-CREATE PROC autodropper_not_temp_table ()
+PROC autodropper_not_temp_table ()
 BEGIN
   SELECT *
     FROM table1;
@@ -37863,7 +37863,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0183: autodrop tar
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autodrop=(table1, table2))
-CREATE PROC autodrop_not_really_a_result_set_proc ()
+PROC autodrop_not_really_a_result_set_proc ()
 BEGIN
   DECLARE i INT;
 END;
@@ -37892,7 +37892,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0234: autodrop annotation ca
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autodrop=(table1, table2))
-CREATE PROC autodrop_no_db ()
+PROC autodrop_no_db ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS id;
   FETCH c(id) FROM VALUES(1);
@@ -38711,7 +38711,7 @@ CREATE TABLE fk_strict_success_loose(
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:identity=(col1, col3))
-CREATE PROC invalid_identity ()
+PROC invalid_identity ()
 BEGIN
   SELECT 1 AS col1, 2 AS col2, 3 AS data;
 END;
@@ -38762,7 +38762,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: procedure identity col
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:identity=(col1, col3))
-CREATE PROC no_result_set_identity ()
+PROC no_result_set_identity ()
 BEGIN
   DECLARE x INT;
 END;
@@ -38912,7 +38912,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0244: unknown schema region 'what_i
 
 The statement ending at line XXXX
 
-CREATE PROC decl_region_in_proc ()
+PROC decl_region_in_proc ()
 BEGIN
   @DECLARE_SCHEMA_REGION fooey;
 END;
@@ -38928,7 +38928,7 @@ test/sem_test.sql:XXXX:1: error: in declare_schema_region_stmt : CQL0248: schema
 
 The statement ending at line XXXX
 
-CREATE PROC begin_region_in_proc ()
+PROC begin_region_in_proc ()
 BEGIN
   @BEGIN_SCHEMA_REGION fooey;
 END;
@@ -38944,7 +38944,7 @@ test/sem_test.sql:XXXX:1: error: in begin_schema_region_stmt : CQL0248: schema r
 
 The statement ending at line XXXX
 
-CREATE PROC end_region_in_proc ()
+PROC end_region_in_proc ()
 BEGIN
   @END_SCHEMA_REGION;
 END;
@@ -39641,7 +39641,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0395: table valued functions may n
 
 The statement ending at line XXXX
 
-CREATE PROC using_tvf ()
+PROC using_tvf ()
 BEGIN
   LET v := 1;
   SELECT *
@@ -39679,7 +39679,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_tvf_error ()
+PROC using_tvf_error ()
 BEGIN
   LET v := 1;
   SELECT *
@@ -39718,7 +39718,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'does_not_exis
 
 The statement ending at line XXXX
 
-CREATE PROC using_tvf_invalid_arg ()
+PROC using_tvf_invalid_arg ()
 BEGIN
   SELECT *
     FROM tvf(NOT 'x');
@@ -39753,7 +39753,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC using_tvf_arg_mismatch ()
+PROC using_tvf_arg_mismatch ()
 BEGIN
   SELECT *
     FROM tvf('x');
@@ -39787,7 +39787,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC using_tvf_unaliased ()
+PROC using_tvf_unaliased ()
 BEGIN
   SELECT *
     FROM tvf(1)
@@ -39826,7 +39826,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_tvf_aliased ()
+PROC using_tvf_aliased ()
 BEGIN
   SELECT *
     FROM tvf(1) AS T1
@@ -39867,7 +39867,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_not_a_tvf ()
+PROC using_not_a_tvf ()
 BEGIN
   SELECT *
     FROM SqlUserFunc(1);
@@ -39901,7 +39901,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0249: function is not a table-value
 
 The statement ending at line XXXX
 
-CREATE PROC using_not_a_func ()
+PROC using_not_a_func ()
 BEGIN
   SELECT *
     FROM ThisDoesNotExist(1);
@@ -39953,7 +39953,7 @@ DECLARE SELECT FUNC ReadFromRowset (rowset OBJECT<rowset>) (id INT);
 
 The statement ending at line XXXX
 
-CREATE PROC rowset_object_reader (rowset OBJECT<rowset>)
+PROC rowset_object_reader (rowset OBJECT<rowset>)
 BEGIN
   SELECT *
     FROM ReadFromRowset(rowset);
@@ -40078,7 +40078,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC variable_conflict ()
+PROC variable_conflict ()
 BEGIN
   DECLARE id INT;
   SET id := ( SELECT id
@@ -40117,7 +40117,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0059: a variable name might be ambi
 
 The statement ending at line XXXX
 
-CREATE PROC variable_conflict_rowid ()
+PROC variable_conflict_rowid ()
 BEGIN
   DECLARE rowid INT;
   SET rowid := ( SELECT rowid
@@ -40216,7 +40216,7 @@ SELECT group_concat('not-null') AS gc
 
 The statement ending at line XXXX
 
-CREATE PROC min_gets_blob (a_blob BLOB)
+PROC min_gets_blob (a_blob BLOB)
 BEGIN
   SELECT min(a_blob)
     FROM foo;
@@ -40848,7 +40848,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0021: foreign key refers to non-
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_ddl_1 ()
+PROC invalid_ddl_1 ()
 BEGIN
   CREATE TABLE inv_1(
     id INT
@@ -40877,7 +40877,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0396: versioning attr
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_ddl_2 ()
+PROC invalid_ddl_2 ()
 BEGIN
   CREATE TABLE inv2(
     id INT
@@ -40907,7 +40907,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0396: versioning attr
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_ddl_3 ()
+PROC invalid_ddl_3 ()
 BEGIN
   CREATE TABLE inv3(
     id INT
@@ -40937,7 +40937,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0396: versioning attr
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_ddl_4 ()
+PROC invalid_ddl_4 ()
 BEGIN
   CREATE INDEX inv_4 ON bar (x) @DELETE(2);
 END;
@@ -40965,7 +40965,7 @@ test/sem_test.sql:XXXX:1: error: in create_index_stmt : CQL0396: versioning attr
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_ddl_5 ()
+PROC invalid_ddl_5 ()
 BEGIN
   CREATE VIEW inv_5 AS
     SELECT 1 AS f1 @DELETE(2);
@@ -41005,7 +41005,7 @@ test/sem_test.sql:XXXX:1: error: in create_view_stmt : CQL0396: versioning attri
 
 The statement ending at line XXXX
 
-CREATE PROC invalid_ddl_6 ()
+PROC invalid_ddl_6 ()
 BEGIN
   CREATE TRIGGER IF NOT EXISTS trigger2
     AFTER INSERT ON bar
@@ -41085,7 +41085,7 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery_list : CQL0263: non-ANSI j
 
 The statement ending at line XXXX
 
-CREATE PROC bar ()
+PROC bar ()
 BEGIN
   CURSOR C FOR
     CALL out_cursor_proc();
@@ -41131,7 +41131,7 @@ test/sem_test.sql:XXXX:1: error: in opt_offset : CQL0271: OFFSET clause may only
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_do_nothing ()
+PROC upsert_do_nothing ()
 BEGIN
   INSERT INTO foo(id)
     SELECT id
@@ -41180,7 +41180,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_upsert_do_nothing ()
+PROC with_upsert_do_nothing ()
 BEGIN
   WITH
     data (id) AS (
@@ -41257,7 +41257,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_upsert_cte_err ()
+PROC with_upsert_cte_err ()
 BEGIN
   WITH
     data (id) AS (
@@ -41328,7 +41328,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC with_upsert_insert_err ()
+PROC with_upsert_insert_err ()
 BEGIN
   WITH
     data (id) AS (
@@ -41402,7 +41402,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_without_conflict_target ()
+PROC upsert_without_conflict_target ()
 BEGIN
   INSERT INTO foo(id)
     VALUES(1)
@@ -41437,7 +41437,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_update ()
+PROC upsert_update ()
 BEGIN
   INSERT INTO foo(id)
     VALUES(1)
@@ -41497,7 +41497,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_conflict_on_unknown_column ()
+PROC upsert_conflict_on_unknown_column ()
 BEGIN
   INSERT INTO foo(id)
     VALUES(1)
@@ -41540,7 +41540,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_invalid_update_stmt ()
+PROC upsert_invalid_update_stmt ()
 BEGIN
   INSERT INTO foo(id)
     VALUES(1)
@@ -41591,7 +41591,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0281: upsert statement does not inc
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_no_where_stmt ()
+PROC upsert_no_where_stmt ()
 BEGIN
   INSERT INTO foo(id)
     SELECT id
@@ -41655,7 +41655,7 @@ test/sem_test.sql:XXXX:1: error: in insert_stmt : CQL0280: upsert statement requ
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_or_ignore ()
+PROC upsert_or_ignore ()
 BEGIN
   INSERT OR IGNORE INTO foo
     SELECT id
@@ -41703,7 +41703,7 @@ test/sem_test.sql:XXXX:1: error: in insert_or_ignore : CQL0283: upsert syntax on
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_with_bogus_where_stmt ()
+PROC upsert_with_bogus_where_stmt ()
 BEGIN
   INSERT INTO foo(id)
     VALUES(1)
@@ -41748,7 +41748,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
 The statement ending at line XXXX
 
-CREATE PROC update_without_table_name ()
+PROC update_without_table_name ()
 BEGIN
   CREATE TEMP TRIGGER update_without_table_name_trigger
     BEFORE DELETE ON bar
@@ -41797,7 +41797,7 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0282: update statement requ
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_conflict_target_column_not_unique_key ()
+PROC upsert_conflict_target_column_not_unique_key ()
 BEGIN
   INSERT INTO bar(id)
     VALUES(1)
@@ -41837,7 +41837,7 @@ test/sem_test.sql:XXXX:1: error: in indexed_columns : CQL0279: columns reference
 
 The statement ending at line XXXX
 
-CREATE PROC upsert_conflict_target_columns_valid ()
+PROC upsert_conflict_target_columns_valid ()
 BEGIN
   INSERT INTO simple_ak_table_2(a, b, c, d)
     VALUES(1, "t", 1.7, 1)
@@ -42080,7 +42080,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_notnull (t TEXT!)
+PROC substr_test_notnull (t TEXT!)
 BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
@@ -42123,7 +42123,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_onearg (t TEXT!)
+PROC substr_test_onearg (t TEXT!)
 BEGIN
   SELECT substr(t, 1) AS t;
 END;
@@ -42164,7 +42164,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_nullable_string (t TEXT)
+PROC substr_test_nullable_string (t TEXT)
 BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
@@ -42206,7 +42206,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_nullable_start (t TEXT!)
+PROC substr_test_nullable_start (t TEXT!)
 BEGIN
   SELECT substr(t, nullable(1), 2) AS t;
 END;
@@ -42254,7 +42254,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_nullable_count (t TEXT!)
+PROC substr_test_nullable_count (t TEXT!)
 BEGIN
   SELECT substr(t, 1, nullable(2)) AS t;
 END;
@@ -42302,7 +42302,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_sensitive_string (t TEXT @SENSITIVE)
+PROC substr_test_sensitive_string (t TEXT @SENSITIVE)
 BEGIN
   SELECT substr(t, 1, 2) AS t;
 END;
@@ -42345,7 +42345,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_sensitive_start (t TEXT)
+PROC substr_test_sensitive_start (t TEXT)
 BEGIN
   SELECT substr(t, sensitive(1), 2) AS t;
 END;
@@ -42392,7 +42392,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_sensitive_count (t TEXT)
+PROC substr_test_sensitive_count (t TEXT)
 BEGIN
   SELECT substr(t, 1, sensitive(2)) AS t;
 END;
@@ -42439,7 +42439,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_notstring ()
+PROC substr_test_notstring ()
 BEGIN
   SELECT substr(3, 1, 2);
 END;
@@ -42476,7 +42476,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0086: first argument must be a str
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_arg2string ()
+PROC substr_test_arg2string ()
 BEGIN
   SELECT substr('x', '1', 2);
 END;
@@ -42513,7 +42513,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument must be numeric 'sub
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_arg3string ()
+PROC substr_test_arg3string ()
 BEGIN
   SELECT substr('x', 1, '2');
 END;
@@ -42550,7 +42550,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument must be numeric 'sub
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_toofew ()
+PROC substr_test_toofew ()
 BEGIN
   SELECT substr('x');
 END;
@@ -42583,7 +42583,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC substr_test_toomany ()
+PROC substr_test_toomany ()
 BEGIN
   SELECT substr('x', 1, 2, 4);
 END;
@@ -43463,7 +43463,7 @@ test/sem_test.sql:XXXX:1: error: in declare_schema_region_stmt : CQL0291: region
 
 The statement ending at line XXXX
 
-CREATE PROC many_row_emitter ()
+PROC many_row_emitter ()
 BEGIN
   CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc();
@@ -43491,7 +43491,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC compound_select_expr ()
+PROC compound_select_expr ()
 BEGIN
   DECLARE x INT;
   SET x := ( SELECT 1
@@ -43862,7 +43862,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 
 The statement ending at line XXXX
 
-CREATE PROC explain_query ()
+PROC explain_query ()
 BEGIN
   EXPLAIN QUERY PLAN
   SELECT 1;
@@ -43926,7 +43926,7 @@ CURSOR c FOR
 
 The statement ending at line XXXX
 
-CREATE PROC explain_query_with_cursor ()
+PROC explain_query_with_cursor ()
 BEGIN
   CURSOR c FOR
     EXPLAIN QUERY PLAN
@@ -43998,7 +43998,7 @@ SELECT NULL AS X;
 
 The statement ending at line XXXX
 
-CREATE PROC mixed_union ()
+PROC mixed_union ()
 BEGIN
   SELECT "x" AS X
   UNION ALL
@@ -44042,7 +44042,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC mixed_union_cte ()
+PROC mixed_union_cte ()
 BEGIN
   WITH
     core (x) AS (
@@ -46053,7 +46053,7 @@ SELECT total(info) AS t
 
 The statement ending at line XXXX
 
-CREATE PROC insert_using_args_with_dummy (x INT!, y REAL!)
+PROC insert_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
   INSERT INTO referenceable(a, b, c, d, e) VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
@@ -46124,7 +46124,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_using_args_with_dummy (x INT!, y REAL!)
+PROC fetch_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
   CURSOR C LIKE referenceable;
   FETCH C(a, b, c, d, e) FROM VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
@@ -46200,7 +46200,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_from_empty_col_list ()
+PROC fetch_from_empty_col_list ()
 BEGIN
   CURSOR C LIKE referenceable;
   FETCH C(a, b, c, d, e) FROM VALUES(1, 2, 'x', 'y', 5);
@@ -47251,7 +47251,7 @@ DECLARE PROC sens_result_proc () (t TEXT @SENSITIVE);
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_test))
-CREATE PROC sens_result_proc ()
+PROC sens_result_proc ()
 BEGIN
   SELECT *
     FROM sens_table;
@@ -47303,7 +47303,7 @@ DECLARE PROC incompatible_result_proc () (t TEXT);
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=(dummy_test))
-CREATE PROC incompatible_result_proc ()
+PROC incompatible_result_proc ()
 BEGIN
   SELECT 1 AS t;
 END;
@@ -47537,7 +47537,7 @@ SELECT x'FAB1';
 
 The statement ending at line XXXX
 
-CREATE PROC blob_literal_out (OUT b BLOB)
+PROC blob_literal_out (OUT b BLOB)
 BEGIN
   SET b := x'12abcdef';
 END;
@@ -48528,7 +48528,7 @@ DECLARE PROC _stuff6 () (x_id INT, x_name TEXT, y_id INT, y_name TEXT);
 
 The statement ending at line XXXX
 
-CREATE PROC using_like_shape (x_id INT, x_name TEXT)
+PROC using_like_shape (x_id INT, x_name TEXT)
 BEGIN
   CALL printf("%s\n", x.id);
 END;
@@ -48559,7 +48559,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_like_shape_bad_name (x_id INT, x_name TEXT)
+PROC using_like_shape_bad_name (x_id INT, x_name TEXT)
 BEGIN
   CALL printf("%s\n", x.xyzzy);
 END;
@@ -48592,7 +48592,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0068: field not found in shape 'xyz
 
 The statement ending at line XXXX
 
-CREATE PROC arg_shape_forwarder (args_arg1 INT, args_arg2 TEXT, extra_args_id INT, extra_args_name TEXT)
+PROC arg_shape_forwarder (args_arg1 INT, args_arg2 TEXT, extra_args_id INT, extra_args_name TEXT)
 BEGIN
   CALL proc2(args.arg1, args.arg2);
 END;
@@ -48743,7 +48743,7 @@ DECLARE PROC basic_source () OUT UNION (id INT, name TEXT);
 
 The statement ending at line XXXX
 
-CREATE PROC basic_wrapper_out ()
+PROC basic_wrapper_out ()
 BEGIN
   CURSOR C FOR
     CALL basic_source();
@@ -48766,7 +48766,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC basic_wrapper_out_union ()
+PROC basic_wrapper_out_union ()
 BEGIN
   CURSOR C FOR
     CALL basic_source();
@@ -49008,7 +49008,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:autotest=((dummy_test, (self_ref1, (id, id2), (1, NULL), (2, 1)))))
-CREATE PROC self_ref_proc_table ()
+PROC self_ref_proc_table ()
 BEGIN
   SELECT *
     FROM self_ref1;
@@ -49065,7 +49065,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:ok_table_scan=foo)
-CREATE PROC ok_table_scan ()
+PROC ok_table_scan ()
 BEGIN
   SELECT *
     FROM foo;
@@ -49102,7 +49102,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:ok_table_scan=(foo, 1))
-CREATE PROC ok_table_scan_value ()
+PROC ok_table_scan_value ()
 BEGIN
   SELECT *
     FROM foo;
@@ -49145,7 +49145,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:ok_table_scan=bogus)
 @ATTRIBUTE(cql:attr)
-CREATE PROC ok_table_scan_bogus ()
+PROC ok_table_scan_bogus ()
 BEGIN
   SELECT *
     FROM foo;
@@ -49189,7 +49189,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0326: the table name in ok_t
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:ok_table_scan=1)
-CREATE PROC ok_table_scan_value_int ()
+PROC ok_table_scan_value_int ()
 BEGIN
   SELECT *
     FROM foo;
@@ -49968,7 +49968,7 @@ CREATE TABLE table_with_valid_without_rowid_mode(
 
 The statement ending at line XXXX
 
-CREATE PROC min_int_64_test ()
+PROC min_int_64_test ()
 BEGIN
   SELECT -9223372036854775808L AS x;
 END;
@@ -49997,7 +49997,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC exotic_literals ()
+PROC exotic_literals ()
 BEGIN
   SELECT
       2147483647 AS a,
@@ -50050,7 +50050,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC hex_literals ()
+PROC hex_literals ()
 BEGIN
   SELECT 0x13aF AS a, 0x234L AS b, 0x123456789L AS c;
 END;
@@ -50145,7 +50145,7 @@ DECLARE PROC shape_consumer (x_ INT!, y_ TEXT!);
 
 The statement ending at line XXXX
 
-CREATE PROC shape_all_columns ()
+PROC shape_all_columns ()
 BEGIN
   CURSOR C LIKE shape;
   FETCH C(x, y) FROM VALUES(1, 'x');
@@ -50187,7 +50187,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC shape_thing_bogus_cursor ()
+PROC shape_thing_bogus_cursor ()
 BEGIN
   CALL shape_consumer(FROM not_a_cursor);
 END;
@@ -50206,7 +50206,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
 The statement ending at line XXXX
 
-CREATE PROC shape_some_columns_statement_cursor ()
+PROC shape_some_columns_statement_cursor ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS x, 'y' AS y;
@@ -50271,7 +50271,7 @@ DECLARE PROC shape_y_only (y_ TEXT!);
 
 The statement ending at line XXXX
 
-CREATE PROC shape_some_columns ()
+PROC shape_some_columns ()
 BEGIN
   CURSOR C LIKE shape;
   FETCH C(x, y) FROM VALUES(1, 'x');
@@ -50309,7 +50309,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC shape_some_columns_bogus_name ()
+PROC shape_some_columns_bogus_name ()
 BEGIN
   CURSOR C LIKE shape;
   FETCH C(x, y) FROM VALUES(1, 'x');
@@ -50385,7 +50385,7 @@ DECLARE PROC lotsa_ints (a INT!, b INT!, c INT!, d INT!);
 
 The statement ending at line XXXX
 
-CREATE PROC shape_args_middle ()
+PROC shape_args_middle ()
 BEGIN
   CURSOR C LIKE SELECT 1 AS x, 2 AS y;
   FETCH C(x, y) FROM VALUES(1, 2);
@@ -50498,7 +50498,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_simple (x INT!, y INT!)
+PROC arg_rewrite_simple (x INT!, y INT!)
 BEGIN
   CALL lotsa_ints(x, y, 1, 2);
   CALL lotsa_ints(1, x, y, 2);
@@ -50585,7 +50585,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_no_args ()
+PROC arg_rewrite_no_args ()
 BEGIN
   CALL lotsa_ints(FROM ARGUMENTS, 1, 2);
 END;
@@ -50624,7 +50624,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0163: FROM ARGUMENTS construct is o
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_with_like (x INT!, y INT!)
+PROC arg_rewrite_with_like (x INT!, y INT!)
 BEGIN
   CALL lotsa_ints(y, 1, 2, 3);
   CALL lotsa_ints(1, y, 2, 3);
@@ -50718,7 +50718,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_with_like_with_underscore (x INT!, y_ INT!)
+PROC arg_rewrite_with_like_with_underscore (x INT!, y_ INT!)
 BEGIN
   CALL lotsa_ints(y_, 1, 2, 3);
   CALL lotsa_ints(1, y_, 2, 3);
@@ -50812,7 +50812,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_with_like_many_cols_with_underscore (x_ INT!, y_ INT!)
+PROC arg_rewrite_with_like_many_cols_with_underscore (x_ INT!, y_ INT!)
 BEGIN
   CALL lotsa_ints(x_, y_, 1, 2);
   CALL lotsa_ints(1, x_, y_, 2);
@@ -50899,7 +50899,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC call_with_missing_type (x INT)
+PROC call_with_missing_type (x INT)
 BEGIN
   CALL lotsa_ints(1, 2, 3, ARGUMENTS.id);
 END;
@@ -50930,7 +50930,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, the
 
 The statement ending at line XXXX
 
-CREATE PROC call_from_arguments_bogus_type (x INT)
+PROC call_from_arguments_bogus_type (x INT)
 BEGIN
   CALL lotsa_ints(1, 2, 3, FROM ARGUMENTS LIKE no_such_type_dude);
 END;
@@ -50992,7 +50992,7 @@ DECLARE PROC funclike (x_ INT!, y_ TEXT!, OUT z INT!);
 
 The statement ending at line XXXX
 
-CREATE PROC arg_caller (x_ INT!, y_ TEXT!, OUT z INT!)
+PROC arg_caller (x_ INT!, y_ TEXT!, OUT z INT!)
 BEGIN
   SET z := funclike(x_, y_);
 END;
@@ -51037,7 +51037,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_caller_bogus_shape (x_ INT!, y_ TEXT!, OUT z INT!)
+PROC arg_caller_bogus_shape (x_ INT!, y_ TEXT!, OUT z INT!)
 BEGIN
   SET z := funclike(FROM ARGUMENTS LIKE not_a_shape);
 END;
@@ -51119,7 +51119,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0252: @PROC literal can only appear
 
 The statement ending at line XXXX
 
-CREATE PROC savepoint_proc_stuff ()
+PROC savepoint_proc_stuff ()
 BEGIN
   DECLARE p TEXT;
   SET p := 'savepoint_proc_stuff';
@@ -51220,7 +51220,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_col_without_cursor_arg ()
+PROC cql_cursor_diff_col_without_cursor_arg ()
 BEGIN
   DECLARE x INT!;
   DECLARE y TEXT!;
@@ -51316,7 +51316,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_unfetched ()
+PROC cql_cursor_unfetched ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS x;
@@ -51355,7 +51355,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_col_wrong_cursor_type ()
+PROC cql_cursor_diff_col_wrong_cursor_type ()
 BEGIN
   CURSOR c1 FOR
     SELECT 1 AS x;
@@ -51425,7 +51425,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0061: in cql_cursor_diff_col, all c
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_col_with_wrong_col_count_arg ()
+PROC cql_cursor_diff_col_with_wrong_col_count_arg ()
 BEGIN
   CURSOR c1 FOR
     SELECT 1 AS x, 'z' AS z;
@@ -51500,7 +51500,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0342: cursor arguments must have i
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_col_compatible_cursor_with_diff_col_name ()
+PROC cql_cursor_diff_col_compatible_cursor_with_diff_col_name ()
 BEGIN
   CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
@@ -51592,7 +51592,7 @@ only in 2nd: v text notnull
 
 The statement ending at line XXXX
 
-CREATE PROC cql_cursor_diff_col_with_shape_storage ()
+PROC cql_cursor_diff_col_with_shape_storage ()
 BEGIN
   CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
@@ -51687,7 +51687,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC print_call_cql_cursor_diff_col ()
+PROC print_call_cql_cursor_diff_col ()
 BEGIN
   CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
@@ -51783,7 +51783,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC print_call_cql_cursor_diff_val ()
+PROC print_call_cql_cursor_diff_val ()
 BEGIN
   CURSOR c1 FOR
     SELECT nullable(1) AS x, 'y' AS y;
@@ -52476,7 +52476,7 @@ SET sens_text := ( SELECT trim("xyz", name) AS result
 
 The statement ending at line XXXX
 
-CREATE PROC print_call_cql_cursor_format ()
+PROC print_call_cql_cursor_format ()
 BEGIN
   CURSOR c1 FOR
     SELECT
@@ -52557,7 +52557,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC select_cql_cursor_format ()
+PROC select_cql_cursor_format ()
 BEGIN
   CURSOR c1 FOR
     SELECT 1 AS a;
@@ -52615,7 +52615,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0088: user function may not appear
 
 The statement ending at line XXXX
 
-CREATE PROC print_call_cql_not_fetch_cursor_format ()
+PROC print_call_cql_not_fetch_cursor_format ()
 BEGIN
   CURSOR c FOR
     SELECT 1;
@@ -52821,7 +52821,7 @@ SET an_int := ( SELECT length("x") );
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_box (OUT B OBJECT<bar CURSOR>)
+PROC cursor_box (OUT B OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -52864,7 +52864,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_unbox (box OBJECT<bar CURSOR>)
+PROC cursor_unbox (box OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR box;
 END;
@@ -52885,7 +52885,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_unbox_untyped (box OBJECT)
+PROC cursor_unbox_untyped (box OBJECT)
 BEGIN
   CURSOR C FOR box;
 END;
@@ -52907,7 +52907,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0346: expression must be of type ob
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_unbox_not_cursor (box OBJECT<bar>)
+PROC cursor_unbox_not_cursor (box OBJECT<bar>)
 BEGIN
   CURSOR C FOR box;
 END;
@@ -52930,7 +52930,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type obje
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_unbox_not_a_type (box OBJECT<not_a_type CURSOR>)
+PROC cursor_unbox_not_a_type (box OBJECT<not_a_type CURSOR>)
 BEGIN
   CURSOR C FOR box;
 END;
@@ -52953,7 +52953,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_unbox_duplicate (box OBJECT<bar CURSOR>)
+PROC cursor_unbox_duplicate (box OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C FOR box;
   CURSOR C FOR box;
@@ -52980,7 +52980,7 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_unbox_not_exists ()
+PROC cursor_unbox_not_exists ()
 BEGIN
   CURSOR C FOR box;
 END;
@@ -52997,7 +52997,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'box'
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_box_value (OUT box OBJECT<bar CURSOR>)
+PROC cursor_box_value (OUT box OBJECT<bar CURSOR>)
 BEGIN
   CURSOR C LIKE bar;
   SET box FROM CURSOR C;
@@ -53027,7 +53027,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0261: cursor did not originate from
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_box_not_a_shape (OUT box OBJECT<barf CURSOR>)
+PROC cursor_box_not_a_shape (OUT box OBJECT<barf CURSOR>)
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -53072,7 +53072,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_box_wrong_shape (OUT box OBJECT<foo CURSOR>)
+PROC cursor_box_wrong_shape (OUT box OBJECT<foo CURSOR>)
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -53127,7 +53127,7 @@ only in 2nd: rate longint
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_box_not_a_cursor (OUT box OBJECT<foo CURSOR>)
+PROC cursor_box_not_a_cursor (OUT box OBJECT<foo CURSOR>)
 BEGIN
   SET box FROM CURSOR XYZZY;
 END;
@@ -53151,7 +53151,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'XYZZY'
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_box_var_not_found ()
+PROC cursor_box_var_not_found ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -53321,7 +53321,7 @@ CURSOR Q LIKE some_proc ARGUMENTS;
 
 The statement ending at line XXXX
 
-CREATE PROC some_proc_proxy (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
+PROC some_proc_proxy (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
 BEGIN
   CALL some_proc(id, t, t1, b, x);
 END;
@@ -53422,7 +53422,7 @@ DECLARE PROC some_proc2 (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!);
 
 The statement ending at line XXXX
 
-CREATE PROC some_proc2_proxy (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
+PROC some_proc2_proxy (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
 BEGIN
   CALL some_proc(id, t, t1, b, x);
 END;
@@ -53485,7 +53485,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC some_proc3_proxy (LIKE some_proc3 ARGUMENTS)
+PROC some_proc3_proxy (LIKE some_proc3 ARGUMENTS)
 BEGIN
   CALL some_proc(FROM ARGUMENTS);
 END;
@@ -53511,7 +53511,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found 'some_proc3'
 
 The statement ending at line XXXX
 
-CREATE PROC some_proc4_proxy (LIKE proc1 ARGUMENTS)
+PROC some_proc4_proxy (LIKE proc1 ARGUMENTS)
 BEGIN
 END;
 
@@ -53541,7 +53541,7 @@ CURSOR cursor_with_object LIKE obj_proc ARGUMENTS;
 
 The statement ending at line XXXX
 
-CREATE PROC try_to_emit_object ()
+PROC try_to_emit_object ()
 BEGIN
   OUT cursor_with_object;
 END;
@@ -53555,7 +53555,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_fetch_using ()
+PROC test_fetch_using ()
 BEGIN
   CURSOR C LIKE bar;
   FETCH C(id, name, rate) FROM VALUES(1, NULL, 99);
@@ -53590,7 +53590,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_fetch_using_with_dummy_seed ()
+PROC test_fetch_using_with_dummy_seed ()
 BEGIN
   CURSOR C LIKE bar;
   FETCH C(id, name, rate) FROM VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
@@ -53810,7 +53810,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0349: column definitions may no
 
 The statement ending at line XXXX
 
-CREATE PROC test_insert_using ()
+PROC test_insert_using ()
 BEGIN
   INSERT INTO foo(id) VALUES(1);
 END;
@@ -53832,7 +53832,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_insert_using_with_dummy_seed ()
+PROC test_insert_using_with_dummy_seed ()
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
@@ -53872,7 +53872,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_insert_using ()
+PROC test_insert_using ()
 BEGIN
   INSERT INTO foo USING 1 AS bogus;
 END;
@@ -54139,7 +54139,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_cursor_using ()
+PROC test_update_cursor_using ()
 BEGIN
   UPDATE CURSOR small_cursor(x) FROM VALUES(2);
 END;
@@ -54159,7 +54159,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC proc_savepoint_basic ()
+PROC proc_savepoint_basic ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -54189,7 +54189,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC proc_savepoint_error_in_stmt_list ()
+PROC proc_savepoint_error_in_stmt_list ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -54222,7 +54222,7 @@ test/sem_test.sql:XXXX:1: error: in proc_savepoint_stmt : CQL0351: statement sho
 
 The statement ending at line XXXX
 
-CREATE PROC savepoint_nested ()
+PROC savepoint_nested ()
 BEGIN
   IF 1 THEN
     PROC SAVEPOINT
@@ -54246,7 +54246,7 @@ test/sem_test.sql:XXXX:1: error: in proc_savepoint_stmt : CQL0351: statement sho
 
 The statement ending at line XXXX
 
-CREATE PROC rollback_return_invalid ()
+PROC rollback_return_invalid ()
 BEGIN
   IF 1 THEN
     ROLLBACK RETURN;
@@ -54268,7 +54268,7 @@ test/sem_test.sql:XXXX:1: error: in rollback_return_stmt : CQL0350: statement mu
 
 The statement ending at line XXXX
 
-CREATE PROC commit_return_invalid ()
+PROC commit_return_invalid ()
 BEGIN
   IF 1 THEN
     COMMIT RETURN;
@@ -54290,7 +54290,7 @@ test/sem_test.sql:XXXX:1: error: in commit_return_stmt : CQL0350: statement must
 
 The statement ending at line XXXX
 
-CREATE PROC regular_return_invalid ()
+PROC regular_return_invalid ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -54349,7 +54349,7 @@ DECLARE PROC test_shape () (x INT<integer_things>!);
 
 The statement ending at line XXXX
 
-CREATE PROC enum_users ()
+PROC enum_users ()
 BEGIN
   CURSOR C LIKE test_shape;
   FETCH C(x) FROM VALUES(1);
@@ -54405,7 +54405,7 @@ DECLARE PROC enum_users_out (i INT<integer_things>!) OUT (x INT<integer_things>!
 
 The statement ending at line XXXX
 
-CREATE PROC enum_users_out (i INT<integer_things>!)
+PROC enum_users_out (i INT<integer_things>!)
 BEGIN
   CURSOR C LIKE test_shape;
   FETCH C(x) FROM VALUES(i);
@@ -54442,7 +54442,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC enum_in_bundle (b_x INT<integer_things>!)
+PROC enum_in_bundle (b_x INT<integer_things>!)
 BEGIN
   LET u := b.x;
   LET v := b_x;
@@ -54775,7 +54775,7 @@ DECLARE ENUM misc REAL (
 
 The statement ending at line XXXX
 
-CREATE PROC enum_in_proc_bogus ()
+PROC enum_in_proc_bogus ()
 BEGIN
   DECLARE ENUM bogus_inside_proc INT (
     foo
@@ -55140,7 +55140,7 @@ DECLARE PROC use_c () (c INT);
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_1 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_1 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a) VALUES(a2.c);
 END;
@@ -55184,7 +55184,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_2 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_2 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a) VALUES(a2.c);
 END;
@@ -55228,7 +55228,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_3 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_3 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a) VALUES(a2.c);
 END;
@@ -55272,7 +55272,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_4 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_4 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a, b) VALUES(a1.a, a1.b);
 END;
@@ -55322,7 +55322,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_5 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_5 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a, b) VALUES(a1.b, a1.a);
 END;
@@ -55374,7 +55374,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_6 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_6 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(b, a) VALUES(a1.b, a1.a);
 END;
@@ -55424,7 +55424,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_7 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_7 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a, b) VALUES(a2.c, a2.d);
 END;
@@ -55474,7 +55474,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_8 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_8 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(b, a) VALUES(a1.a, a1.b);
 END;
@@ -55526,7 +55526,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_9 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_9 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(b, a) VALUES(a2.c, a2.d);
 END;
@@ -55578,7 +55578,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_10 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_10 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
   FETCH C(a, b) FROM VALUES(a2.c, a2.d);
@@ -55633,7 +55633,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_11 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_11 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
   FETCH C(a, b) FROM VALUES(a1.a, a1.b);
@@ -55688,7 +55688,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_12 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_12 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
   FETCH C(a, b) FROM VALUES(a1.a, NULL);
@@ -55741,7 +55741,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_13 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_13 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
   UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
@@ -55795,7 +55795,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_14 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_14 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
   UPDATE CURSOR C(a) FROM VALUES(a2.c);
@@ -55843,7 +55843,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_15 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_15 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE AB;
   UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
@@ -55897,7 +55897,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_16 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
+PROC arg_bundle_16 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   CURSOR C LIKE a1;
   UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
@@ -56738,7 +56738,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
 The statement ending at line XXXX
 
-CREATE PROC named_type ()
+PROC named_type ()
 BEGIN
   TYPE my_type INT;
   DECLARE my_var INT;
@@ -56983,7 +56983,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
 The statement ending at line XXXX
 
-CREATE PROC decl_type (label TEXT @SENSITIVE)
+PROC decl_type (label TEXT @SENSITIVE)
 BEGIN
 END;
 
@@ -56999,7 +56999,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC decl_type_err (label bogus_type)
+PROC decl_type_err (label bogus_type)
 BEGIN
 END;
 
@@ -57133,7 +57133,7 @@ CREATE TABLE the_copy(
 
 The statement ending at line XXXX
 
-CREATE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE)
+PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE)
 BEGIN
 END;
 
@@ -58354,7 +58354,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0328: vault_sensitive attrib
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(bogus, nan))
-CREATE PROC vault_sensitive_with_invalid_values ()
+PROC vault_sensitive_with_invalid_values ()
 BEGIN
   SELECT *
     FROM bar;
@@ -58397,7 +58397,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, rate))
-CREATE PROC vault_sensitive_with_valid_values ()
+PROC vault_sensitive_with_valid_values ()
 BEGIN
   SELECT *
     FROM bar;
@@ -58437,7 +58437,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=bogus)
-CREATE PROC vault_sensitive_with_invalid_single_column ()
+PROC vault_sensitive_with_invalid_single_column ()
 BEGIN
   SELECT *
     FROM bar;
@@ -58476,7 +58476,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=1)
-CREATE PROC vault_sensitive_with_not_string_value_proc_val ()
+PROC vault_sensitive_with_not_string_value_proc_val ()
 BEGIN
 END;
 
@@ -58496,7 +58496,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, 1, 'lol'))
-CREATE PROC vault_sensitive_with_not_strings_value_proc_val ()
+PROC vault_sensitive_with_not_strings_value_proc_val ()
 BEGIN
 END;
 
@@ -58521,7 +58521,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive='lol')
-CREATE PROC vault_sensitive_with_lit_string_value_proc_val ()
+PROC vault_sensitive_with_lit_string_value_proc_val ()
 BEGIN
 END;
 
@@ -58541,7 +58541,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0363: all arguments must be names '
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(bogus, (nan)))
-CREATE PROC vault_sensitive_with_invalid_encode_context_columns ()
+PROC vault_sensitive_with_invalid_encode_context_columns ()
 BEGIN
   SELECT *
     FROM bar;
@@ -58585,7 +58585,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0239: vault_sensitive column
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(1, (name)))
-CREATE PROC vault_sensitive_with_not_string_vault_context_proc_val ()
+PROC vault_sensitive_with_not_string_vault_context_proc_val ()
 BEGIN
 END;
 
@@ -58609,7 +58609,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=('lol', (name)))
-CREATE PROC vault_sensitive_with_literal_string_vault_context_proc_val ()
+PROC vault_sensitive_with_literal_string_vault_context_proc_val ()
 BEGIN
 END;
 
@@ -58633,7 +58633,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0363: all arguments must be names '
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (1)))
-CREATE PROC vault_sensitive_with_not_string_vault_column_proc_val ()
+PROC vault_sensitive_with_not_string_vault_column_proc_val ()
 BEGIN
 END;
 
@@ -58708,7 +58708,7 @@ CREATE TABLE bar_with_sensitive(
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (id, title)))
-CREATE PROC vault_sensitive_with_sensitive_encode_context_column_proc_val ()
+PROC vault_sensitive_with_sensitive_encode_context_column_proc_val ()
 BEGIN
   SELECT *
     FROM bar_with_sensitive;
@@ -58753,7 +58753,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0400: encode context column 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(intro, (id, (title))))
-CREATE PROC vault_sensitive_with_invalid_nested_vault_column_proc_val ()
+PROC vault_sensitive_with_invalid_nested_vault_column_proc_val ()
 BEGIN
   SELECT *
     FROM bar_with_sensitive;
@@ -58799,7 +58799,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0363: all argument
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(intro, (name), id))
-CREATE PROC vault_sensitive_with_multi_encode_context_columns_proc_val ()
+PROC vault_sensitive_with_multi_encode_context_columns_proc_val ()
 BEGIN
   SELECT *
     FROM bar_with_sensitive;
@@ -58844,7 +58844,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0408: encode context column 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(intro, (name, title)))
-CREATE PROC vault_sensitive_with_valid_context_and_encode_columns ()
+PROC vault_sensitive_with_valid_context_and_encode_columns ()
 BEGIN
   SELECT *
     FROM bar_with_sensitive;
@@ -58894,7 +58894,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, rate))
-CREATE PROC vault_sensitive_with_only_encode_columns_strict_mode ()
+PROC vault_sensitive_with_only_encode_columns_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -58936,7 +58936,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0401: context column must be
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=name)
-CREATE PROC vault_sensitive_with_only_encode_column_strict_mode ()
+PROC vault_sensitive_with_only_encode_column_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -58975,7 +58975,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0401: context column must be
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC vault_sensitive_with_no_columns_strict_mode ()
+PROC vault_sensitive_with_no_columns_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59013,7 +59013,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0401: context column must be
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(id, (name)))
-CREATE PROC vault_sensitive_with_integer_encode_context ()
+PROC vault_sensitive_with_integer_encode_context ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59061,7 +59061,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
-CREATE PROC vault_sensitive_encode_context_integer_strict_mode ()
+PROC vault_sensitive_encode_context_integer_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59118,7 +59118,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
-CREATE PROC vault_sensitive_encode_context_long_integer_strict_mode ()
+PROC vault_sensitive_encode_context_long_integer_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59175,7 +59175,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
-CREATE PROC vault_sensitive_encode_context_real_strict_mode ()
+PROC vault_sensitive_encode_context_real_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59232,7 +59232,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
-CREATE PROC vault_sensitive_encode_context_bool_strict_mode ()
+PROC vault_sensitive_encode_context_bool_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59289,7 +59289,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
-CREATE PROC vault_sensitive_encode_context_blob_strict_mode ()
+PROC vault_sensitive_encode_context_blob_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59346,7 +59346,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(id, (name, rate)))
-CREATE PROC vault_sensitive_with_integer_encode_context_strict_mode ()
+PROC vault_sensitive_with_integer_encode_context_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59391,7 +59391,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0402: vault context column i
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive=(name, (rate)))
-CREATE PROC vault_sensitive_with_text_encode_context_strict_mode ()
+PROC vault_sensitive_with_text_encode_context_strict_mode ()
 BEGIN
   SELECT *
     FROM bar;
@@ -59446,7 +59446,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC vault_sensitive_proc ()
+PROC vault_sensitive_proc ()
 BEGIN
 END;
 
@@ -59463,7 +59463,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:vault_sensitive)
-CREATE PROC vault_sensitive_proc_dml ()
+PROC vault_sensitive_proc_dml ()
 BEGIN
   DECLARE y TEXT;
 END;
@@ -60481,7 +60481,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
 
 The statement ending at line XXXX
 
-CREATE PROC val_avg_proc (lim INT)
+PROC val_avg_proc (lim INT)
 BEGIN
   LET val_avg := ( SELECT avg(id) AS col
     FROM foo
@@ -62311,7 +62311,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0390: DECLARE OUT CALL used on a pr
 
 The statement ending at line XXXX
 
-CREATE PROC decl_test_err ()
+PROC decl_test_err ()
 BEGIN
   DECLARE OUT CALL out2_proc(NOT 'x', u, v);
 END;
@@ -62383,7 +62383,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
 
 The statement ending at line XXXX
 
-CREATE PROC out_decl_test_2 (x INT)
+PROC out_decl_test_2 (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, 1 + 3, v);
 END;
@@ -62499,7 +62499,7 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0397: object is an 
 
 The statement ending at line XXXX
 
-CREATE PROC out_decl_test_3 (x INT)
+PROC out_decl_test_3 (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
 END;
@@ -62525,7 +62525,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC out_decl_test_4 (x INT)
+PROC out_decl_test_4 (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
   DECLARE OUT CALL out2_proc(x, u, v);
@@ -62975,7 +62975,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'fo
 
 The statement ending at line XXXX
 
-CREATE PROC conditionals_improve_nullable_variables ()
+PROC conditionals_improve_nullable_variables ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -63059,7 +63059,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC conditionals_only_improve_through_ands ()
+PROC conditionals_only_improve_through_ands ()
 BEGIN
   DECLARE a TEXT;
   DECLARE b TEXT;
@@ -63253,7 +63253,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC local_improvements_persist_until_set_to_a_nullable ()
+PROC local_improvements_persist_until_set_to_a_nullable ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -63394,7 +63394,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC set_can_improve_a_type_if_set_to_something_not_null ()
+PROC set_can_improve_a_type_if_set_to_something_not_null ()
 BEGIN
   DECLARE a INT;
   LET x0 := a;
@@ -63435,7 +63435,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_added_by_set_do_not_persist_outside_the_statement_list ()
+PROC improvements_added_by_set_do_not_persist_outside_the_statement_list ()
 BEGIN
   DECLARE a INT;
   IF 0 THEN
@@ -63475,7 +63475,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_removed_by_set_do_persist_outside_the_statement_list ()
+PROC improvements_removed_by_set_do_persist_outside_the_statement_list ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -63524,7 +63524,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_in_case_expressions ()
+PROC improvements_work_in_case_expressions ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -63624,7 +63624,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_in_case_expressions_with_matching ()
+PROC improvements_do_not_work_in_case_expressions_with_matching ()
 BEGIN
   DECLARE a INT;
   LET x := CASE FALSE
@@ -63658,7 +63658,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_in_iif_expressions ()
+PROC improvements_work_in_iif_expressions ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -63741,7 +63741,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC sets_out (OUT a INT, OUT b INT)
+PROC sets_out (OUT a INT, OUT b INT)
 BEGIN
 END;
 
@@ -63763,7 +63763,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC local_improvements_persist_until_used_as_out_arg ()
+PROC local_improvements_persist_until_used_as_out_arg ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -63926,7 +63926,7 @@ CREATE TABLE tnull(
 
 The statement ending at line XXXX
 
-CREATE PROC local_improvements_persist_until_fetch_into ()
+PROC local_improvements_persist_until_fetch_into ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -64095,7 +64095,7 @@ CURSOR c_global LIKE tnull;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_auto_cursors ()
+PROC improvements_work_for_auto_cursors ()
 BEGIN
   CURSOR c FOR
     SELECT *
@@ -64196,7 +64196,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global ()
+PROC improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global ()
 BEGIN
   CURSOR c_local LIKE tnull;
   FETCH c_local(xn, yn) FROM VALUES(0, 0);
@@ -64304,7 +64304,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_auto_cursors_that_shadow_a_global ()
+PROC improvements_work_for_auto_cursors_that_shadow_a_global ()
 BEGIN
   CURSOR c_global LIKE SELECT nullable(1) AS xn, nullable(2) AS yn;
   FETCH c_global(xn, yn) FROM VALUES(0, 0);
@@ -64440,7 +64440,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_global_auto_cursors ()
+PROC improvements_work_for_global_auto_cursors ()
 BEGIN
   FETCH c_global(xn, yn) FROM VALUES(0, 0);
   LET x0 := c_global.xn;
@@ -64598,7 +64598,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_in_args (a INT)
+PROC improvements_work_for_in_args (a INT)
 BEGIN
   IF a IS NOT NULL THEN
     LET x := a;
@@ -64632,7 +64632,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC requires_notnull_out (OUT a INT!)
+PROC requires_notnull_out (OUT a INT!)
 BEGIN
 END;
 
@@ -64649,7 +64649,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_out ()
+PROC improvements_do_not_work_for_out ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -64681,7 +64681,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must 
 
 The statement ending at line XXXX
 
-CREATE PROC requires_notnull_inout (INOUT a INT!)
+PROC requires_notnull_inout (INOUT a INT!)
 BEGIN
 END;
 
@@ -64698,7 +64698,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_inout ()
+PROC improvements_do_not_work_for_inout ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -64730,7 +64730,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_in_sql ()
+PROC improvements_work_in_sql ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -64779,7 +64779,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_are_not_applied_if_not_an_id_or_dot ()
+PROC improvements_are_not_applied_if_not_an_id_or_dot ()
 BEGIN
   DECLARE a INT;
   IF a + 1 IS NOT NULL THEN
@@ -64819,7 +64819,7 @@ DECLARE some_global INT;
 
 The statement ending at line XXXX
 
-CREATE PROC requires_not_nulls (a INT!, b INT!, c INT!)
+PROC requires_not_nulls (a INT!, b INT!, c INT!)
 BEGIN
 END;
 
@@ -64847,7 +64847,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC returns_int_not_null (OUT a INT!)
+PROC returns_int_not_null (OUT a INT!)
 BEGIN
 END;
 
@@ -64864,7 +64864,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_globals ()
+PROC improvements_work_for_globals ()
 BEGIN
   IF some_global IS NOT NULL THEN
     LET x0 := some_global;
@@ -65117,7 +65117,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_select_star ()
+PROC improvements_work_for_select_star ()
 BEGIN
   SELECT *
     FROM tnull
@@ -65176,7 +65176,7 @@ CREATE TABLE another_table_with_nullables(
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_select_table_star ()
+PROC improvements_work_for_select_table_star ()
 BEGIN
   SELECT tnull.*, another_table_with_nullables.xn AS xn0, another_table_with_nullables.zn
     FROM tnull
@@ -65254,7 +65254,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_select_expressions ()
+PROC improvements_work_for_select_expressions ()
 BEGIN
   SELECT xn, yn
     FROM tnull
@@ -65306,7 +65306,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_correctly_handle_nested_selects ()
+PROC improvements_correctly_handle_nested_selects ()
 BEGIN
   SELECT
       ( SELECT xn ),
@@ -65442,7 +65442,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_apply_in_select_exprs ()
+PROC improvements_apply_in_select_exprs ()
 BEGIN
   SELECT xn + xn AS yn, yn AS yn0
     FROM tnull
@@ -65496,7 +65496,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC local_variable_improvements_do_not_affect_result_columns ()
+PROC local_variable_improvements_do_not_affect_result_columns ()
 BEGIN
   DECLARE xn INT;
   IF xn IS NULL THEN
@@ -65541,7 +65541,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_on_join_results ()
+PROC improvements_work_on_join_results ()
 BEGIN
   SELECT tnull.xn AS xn0
     FROM tnull
@@ -65603,7 +65603,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_on_clauses ()
+PROC improvements_do_not_work_for_on_clauses ()
 BEGIN
   SELECT tnull.xn AS xn0
     FROM tnull
@@ -65659,7 +65659,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor ()
+PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor ()
 BEGIN
   CURSOR c LIKE tnull;
   FETCH c(xn, yn) FROM VALUES(1, 2);
@@ -65769,7 +65769,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc ()
+PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc ()
 BEGIN
   CURSOR c LIKE improvements_work_for_in_args ARGUMENTS;
   FETCH c(a) FROM VALUES(0);
@@ -65860,7 +65860,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC returns_nullable_int ()
+PROC returns_nullable_int ()
 BEGIN
   CURSOR c LIKE SELECT nullable(0) AS a;
   OUT c;
@@ -65898,7 +65898,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a INT)
+PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a INT)
 BEGIN
   IF args.a IS NOT NULL THEN
     LET x0 := args.a;
@@ -65947,7 +65947,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_within_ctes ()
+PROC improvements_work_within_ctes ()
 BEGIN
   DECLARE a INT;
   IF a IS NOT NULL THEN
@@ -66022,7 +66022,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_commit_return_guards (a INT)
+PROC improvements_work_for_commit_return_guards (a INT)
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -66074,7 +66074,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_continue_guards (a INT)
+PROC improvements_work_for_continue_guards (a INT)
 BEGIN
   WHILE 1
   BEGIN
@@ -66120,7 +66120,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_leave_guards (a INT)
+PROC improvements_work_for_leave_guards (a INT)
 BEGIN
   WHILE 1
   BEGIN
@@ -66166,7 +66166,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_return_guards (a INT)
+PROC improvements_work_for_return_guards (a INT)
 BEGIN
   IF 1 THEN
     IF a IS NULL THEN
@@ -66213,7 +66213,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_rollback_return_guards (a INT)
+PROC improvements_work_for_rollback_return_guards (a INT)
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -66265,7 +66265,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_throw_guards (a INT)
+PROC improvements_work_for_throw_guards (a INT)
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -66317,7 +66317,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC guard_improvements_work_for_cursor_fields ()
+PROC guard_improvements_work_for_cursor_fields ()
 BEGIN
   CURSOR c FOR
     SELECT nullable(1) AS a;
@@ -66393,7 +66393,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC multiple_improvements_are_possible_via_one_guard (a INT, b INT, c INT)
+PROC multiple_improvements_are_possible_via_one_guard (a INT, b INT, c INT)
 BEGIN
   IF 1 THEN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
@@ -66484,7 +66484,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC guard_improvements_only_work_for_outermost_ors (a INT, b INT, c INT)
+PROC guard_improvements_only_work_for_outermost_ors (a INT, b INT, c INT)
 BEGIN
   IF a IS NULL AND (b IS NULL OR c IS NULL) THEN
     RETURN;
@@ -66541,7 +66541,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC guard_improvements_only_work_for_is_null (a INT)
+PROC guard_improvements_only_work_for_is_null (a INT)
 BEGIN
   IF NOT a THEN
     RETURN;
@@ -66571,7 +66571,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC guard_improvements_handle_semantic_issues_like_if ()
+PROC guard_improvements_handle_semantic_issues_like_if ()
 BEGIN
   IF some_undefined_variable IS NULL THEN
     RETURN;
@@ -66595,7 +66595,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'some_undefine
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_guard_pattern_ifs ()
+PROC improvements_work_for_guard_pattern_ifs ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -66686,7 +66686,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_guard_pattern_ifs_with_preceding_statements ()
+PROC improvements_work_for_guard_pattern_ifs_with_preceding_statements ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -66783,7 +66783,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null ()
+PROC improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null ()
 BEGIN
   DECLARE a INT;
   IF 1 THEN
@@ -66834,7 +66834,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else ()
+PROC improvements_do_not_work_for_guard_like_ifs_with_else ()
 BEGIN
   DECLARE a INT;
   IF a IS NULL THEN
@@ -66867,7 +66867,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else_if ()
+PROC improvements_do_not_work_for_guard_like_ifs_with_else_if ()
 BEGIN
   DECLARE a INT;
   IF a IS NULL THEN
@@ -66902,7 +66902,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_do_not_work_for_is_null_checks_in_else_ifs ()
+PROC improvements_do_not_work_for_is_null_checks_in_else_ifs ()
 BEGIN
   DECLARE a INT;
   IF 0 THEN
@@ -66940,7 +66940,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC false_conditions_of_earlier_branches_improve_later_branches ()
+PROC false_conditions_of_earlier_branches_improve_later_branches ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -67079,7 +67079,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC unimprovements_do_not_negatively_affect_later_branches ()
+PROC unimprovements_do_not_negatively_affect_later_branches ()
 BEGIN
   DECLARE a INT;
   LET x0 := a;
@@ -67172,7 +67172,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC nested_unimprovements_do_not_negatively_affect_later_branches ()
+PROC nested_unimprovements_do_not_negatively_affect_later_branches ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -67556,7 +67556,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC reverting_improvements_and_unimprovements_restores_original_state ()
+PROC reverting_improvements_and_unimprovements_restores_original_state ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -67791,7 +67791,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC unimproving_and_reimproving_is_neutral ()
+PROC unimproving_and_reimproving_is_neutral ()
 BEGIN
   DECLARE a INT;
   SET a := 42;
@@ -67907,7 +67907,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC all_branches_improving_including_else_results_in_an_improvement ()
+PROC all_branches_improving_including_else_results_in_an_improvement ()
 BEGIN
   DECLARE a INT;
   IF 0 THEN
@@ -68061,7 +68061,7 @@ DECLARE PROC requires_int_notnull (a INT!);
 
 The statement ending at line XXXX
 
-CREATE PROC unimprovements_in_loops_affect_earlier_statements ()
+PROC unimprovements_in_loops_affect_earlier_statements ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -68251,7 +68251,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0013: cannot assign/copy possibly n
 
 The statement ending at line XXXX
 
-CREATE PROC loops_keep_all_unsets_and_ignore_all_sets ()
+PROC loops_keep_all_unsets_and_ignore_all_sets ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -68542,7 +68542,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC try_keeps_all_unsets_and_ignores_all_sets ()
+PROC try_keeps_all_unsets_and_ignores_all_sets ()
 BEGIN
   DECLARE a INT;
   SET a := 1;
@@ -68615,7 +68615,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC proc_savepoint_improvements_persist ()
+PROC proc_savepoint_improvements_persist ()
 BEGIN
   DECLARE a INT;
   PROC SAVEPOINT
@@ -68651,7 +68651,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC switch_branches_are_independent_for_improvements ()
+PROC switch_branches_are_independent_for_improvements ()
 BEGIN
   DECLARE a INT;
   SET a := 1;
@@ -68723,7 +68723,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC switch_improvements_can_persist ()
+PROC switch_improvements_can_persist ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -68867,7 +68867,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC empty_branches_prevent_persisting_improvements ()
+PROC empty_branches_prevent_persisting_improvements ()
 BEGIN
   DECLARE a INT;
   IF 0 THEN
@@ -68961,7 +68961,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_account_for_control_statements ()
+PROC improvements_account_for_control_statements ()
 BEGIN
   DECLARE a INT;
   IF 0 THEN
@@ -69145,7 +69145,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_while_conditions ()
+PROC improvements_work_for_while_conditions ()
 BEGIN
   DECLARE a INT;
   DECLARE b INT;
@@ -69309,7 +69309,7 @@ DECLARE PROC requires_inout_object_notnull (INOUT t OBJECT!);
 
 The statement ending at line XXXX
 
-CREATE PROC initialization_is_required_for_nonnull_reference_types ()
+PROC initialization_is_required_for_nonnull_reference_types ()
 BEGIN
   DECLARE a TEXT!;
   DECLARE b BLOB!;
@@ -69372,7 +69372,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0438: variable possibly used before
 
 The statement ending at line XXXX
 
-CREATE PROC initialization_is_not_required_for_nullable_reference_types ()
+PROC initialization_is_not_required_for_nullable_reference_types ()
 BEGIN
   DECLARE a TEXT;
   DECLARE b BLOB;
@@ -69410,7 +69410,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC initialization_is_not_required_for_non_reference_types ()
+PROC initialization_is_not_required_for_non_reference_types ()
 BEGIN
   DECLARE a BOOL!;
   DECLARE b INT!;
@@ -69451,7 +69451,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC set_can_initialize ()
+PROC set_can_initialize ()
 BEGIN
   DECLARE a TEXT!;
   SET a := "text";
@@ -69476,7 +69476,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC string_chain ()
+PROC string_chain ()
 BEGIN
   LET z := "abc\n123\r\n\x02lmnop''";
 END;
@@ -69510,7 +69510,7 @@ DECLARE PROC requires_out_text_notnull (OUT t TEXT!);
 
 The statement ending at line XXXX
 
-CREATE PROC out_arg_uses_can_initialize ()
+PROC out_arg_uses_can_initialize ()
 BEGIN
   DECLARE a TEXT!;
   CALL requires_out_text_notnull(a);
@@ -69536,7 +69536,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_into_initializes ()
+PROC fetch_into_initializes ()
 BEGIN
   DECLARE a TEXT!;
   CURSOR foo FOR
@@ -69582,7 +69582,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC nonnull_reference_out_args_require_initialization (OUT a TEXT!)
+PROC nonnull_reference_out_args_require_initialization (OUT a TEXT!)
 BEGIN
 END;
 
@@ -69601,7 +69601,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull referenc
 
 The statement ending at line XXXX
 
-CREATE PROC out_arg_initialization_directly_in_proc_works (OUT a TEXT!)
+PROC out_arg_initialization_directly_in_proc_works (OUT a TEXT!)
 BEGIN
   SET a := "text";
 END;
@@ -69623,7 +69623,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC out_args_must_be_initialized_before_return (OUT a TEXT!)
+PROC out_args_must_be_initialized_before_return (OUT a TEXT!)
 BEGIN
   IF 0 THEN
     RETURN;
@@ -69656,7 +69656,7 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0439: nonnull reference OUT
 
 The statement ending at line XXXX
 
-CREATE PROC out_args_can_be_initialized_in_branches (OUT a TEXT!)
+PROC out_args_can_be_initialized_in_branches (OUT a TEXT!)
 BEGIN
   IF 0 THEN
     SET a := "text";
@@ -69787,7 +69787,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC out_arg_initialization_in_branches_must_cover_all_cases (OUT a TEXT!)
+PROC out_arg_initialization_in_branches_must_cover_all_cases (OUT a TEXT!)
 BEGIN
   IF 0 THEN
     SET a := "text";
@@ -69915,7 +69915,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0439: nonnull referenc
 
 The statement ending at line XXXX
 
-CREATE PROC forwarding_procs_handle_initialization (OUT t TEXT!)
+PROC forwarding_procs_handle_initialization (OUT t TEXT!)
 BEGIN
   CALL requires_out_text_notnull(t);
 END;
@@ -69940,7 +69940,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC forwarding_procs_handle_initialization_named (OUT bundle_t TEXT!)
+PROC forwarding_procs_handle_initialization_named (OUT bundle_t TEXT!)
 BEGIN
   CALL requires_out_text_notnull(bundle.t);
 END;
@@ -69965,7 +69965,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC try_blocks_can_successfully_verify_initialization (OUT a TEXT!, OUT rc INT!)
+PROC try_blocks_can_successfully_verify_initialization (OUT a TEXT!, OUT rc INT!)
 BEGIN
   SET rc := 0;
   @ATTRIBUTE(cql:try_is_proc_body)
@@ -70019,7 +70019,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC try_blocks_can_fail_to_verify_initialization (OUT a TEXT!, OUT rc INT!)
+PROC try_blocks_can_fail_to_verify_initialization (OUT a TEXT!, OUT rc INT!)
 BEGIN
   SET rc := 0;
   @ATTRIBUTE(some_other_attribute)
@@ -70074,7 +70074,7 @@ test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0439: nonnull reference O
 
 The statement ending at line XXXX
 
-CREATE PROC try_is_proc_body_may_only_appear_once ()
+PROC try_is_proc_body_may_only_appear_once ()
 BEGIN
   @ATTRIBUTE(cql:try_is_proc_body)
   TRY
@@ -70109,7 +70109,7 @@ test/sem_test.sql:XXXX:1: error: in trycatch_stmt : CQL0446: @attribute(cql:try_
 
 The statement ending at line XXXX
 
-CREATE PROC try_is_proc_body_accepts_no_values ()
+PROC try_is_proc_body_accepts_no_values ()
 BEGIN
   @ATTRIBUTE(cql:try_is_proc_body=(foo))
   TRY
@@ -70135,7 +70135,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: @attribute(c
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_dots_that_shadow_globals (X_id INT, X_t TEXT, X_t1 TEXT!, X_b BLOB, OUT X_x INT!)
+PROC improvements_work_for_dots_that_shadow_globals (X_id INT, X_t TEXT, X_t1 TEXT!, X_b BLOB, OUT X_x INT!)
 BEGIN
   CURSOR Y FOR
     SELECT nullable(1) AS id;
@@ -70279,7 +70279,7 @@ DECLARE PROC requires_text_notnull (a TEXT!);
 
 The statement ending at line XXXX
 
-CREATE PROC dot_form_and_underscore_form_are_equivalent (OUT b0_a TEXT!, b0_b INT, OUT b1_a TEXT!, b1_b INT)
+PROC dot_form_and_underscore_form_are_equivalent (OUT b0_a TEXT!, b0_b INT, OUT b1_a TEXT!, b1_b INT)
 BEGIN
   CALL requires_out_text_notnull_and_int(b0.a, b0.b);
   SET b1_a := "text";
@@ -73418,7 +73418,7 @@ test/sem_test.sql:XXXX:1: error: in is_not : CQL0409: cannot use IS NULL or IS N
 
 The statement ending at line XXXX
 
-CREATE PROC proc_inout_text (INOUT a TEXT)
+PROC proc_inout_text (INOUT a TEXT)
 BEGIN
 END;
 
@@ -73456,7 +73456,7 @@ CALL proc_inout_text(a_string);
 
 The statement ending at line XXXX
 
-CREATE PROC proc_inout_text_out_text (INOUT a TEXT, OUT b TEXT)
+PROC proc_inout_text_out_text (INOUT a TEXT, OUT b TEXT)
 BEGIN
   SET b := NULL;
 END;
@@ -73509,7 +73509,7 @@ CALL proc_inout_text_out_text(a_string, a_string2);
 
 The statement ending at line XXXX
 
-CREATE PROC proc_out_text_out_text (OUT a TEXT, OUT b TEXT)
+PROC proc_out_text_out_text (OUT a TEXT, OUT b TEXT)
 BEGIN
   SET a := NULL;
   SET b := NULL;
@@ -73566,7 +73566,7 @@ CALL proc_out_text_out_text(a_string, a_string2);
 
 The statement ending at line XXXX
 
-CREATE PROC proc_out_text (OUT a TEXT)
+PROC proc_out_text (OUT a TEXT)
 BEGIN
   SET a := NULL;
 END;
@@ -73598,7 +73598,7 @@ LET proc_out_text_result := proc_out_text();
 
 The statement ending at line XXXX
 
-CREATE PROC proc_in_text_in_text_out_text (a TEXT, b TEXT, OUT c TEXT)
+PROC proc_in_text_in_text_out_text (a TEXT, b TEXT, OUT c TEXT)
 BEGIN
   SET c := NULL;
 END;
@@ -73680,7 +73680,7 @@ DECLARE CONST GROUP foo (
 
 The statement ending at line XXXX
 
-CREATE PROC use_global_constants ()
+PROC use_global_constants ()
 BEGIN
   LET v := FALSE;
   LET w := 3.500000e+00;
@@ -73843,7 +73843,7 @@ DECLARE CONST GROUP foo (
 
 The statement ending at line XXXX
 
-CREATE PROC try_to_nest_constants ()
+PROC try_to_nest_constants ()
 BEGIN
   DECLARE CONST GROUP err5 (
     err5 = 1
@@ -73884,7 +73884,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0169: constant group not found 'not
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC conditional_frag (bb INT!)
+PROC conditional_frag (bb INT!)
 BEGIN
   IF bb = 1 THEN
     WITH
@@ -74026,7 +74026,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC conditional_user (xx INT!)
+PROC conditional_user (xx INT!)
 BEGIN
   WITH
     D (id) AS (CALL conditional_frag(1) USING foo AS source, foo AS source2)
@@ -74085,7 +74085,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_0_0 ()
+PROC fragtest_0_0 ()
 BEGIN
   WITH
     source (x) LIKE (
@@ -74176,7 +74176,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_0_1 ()
+PROC fragtest_0_1 ()
 BEGIN
   WITH
     source (x) LIKE (
@@ -74255,7 +74255,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_0_2 ()
+PROC fragtest_0_2 ()
 BEGIN
   WITH
     source (x) LIKE (
@@ -74453,7 +74453,7 @@ SELECT *
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_1_0 ()
+PROC fragtest_1_0 ()
 BEGIN
   WITH
     source (x) LIKE (
@@ -74544,7 +74544,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_1_1 ()
+PROC fragtest_1_1 ()
 BEGIN
   WITH
     possible_conflict (x) AS (
@@ -74626,7 +74626,7 @@ The above originated from CALL fragtest_1_0 USING possible_conflict AS source
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_2_0 ()
+PROC fragtest_2_0 ()
 BEGIN
   WITH
     possible_conflict (x) AS (
@@ -74690,7 +74690,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC fragtest_2_1 ()
+PROC fragtest_2_1 ()
 BEGIN
   WITH
     source (x) LIKE (
@@ -74831,7 +74831,7 @@ SELECT *
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC frag_not_really_a_conflict ()
+PROC frag_not_really_a_conflict ()
 BEGIN
   WITH
     possible_conflict (x) LIKE (
@@ -74902,7 +74902,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:doc_comment="/** This is a doc comment */")
-CREATE PROC doc_comment_proc ()
+PROC doc_comment_proc ()
 BEGIN
 END;
 
@@ -75766,7 +75766,7 @@ SELECT xyzzy
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math (x_ INT, y_ INT)
+PROC inline_math (x_ INT, y_ INT)
 BEGIN
   SELECT x_ + y_ AS result;
 END;
@@ -75812,7 +75812,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math ()
+PROC do_inline_math ()
 BEGIN
   WITH
     N (i) AS (
@@ -75907,7 +75907,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math_bad (x INT, y INT)
+PROC inline_math_bad (x INT, y INT)
 BEGIN
   SELECT x + y AS sum
     FROM (SELECT 1 AS z);
@@ -75972,7 +75972,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad ()
+PROC do_inline_math_bad ()
 BEGIN
   SELECT inline_math_bad(1, 2) AS bad;
 END;
@@ -76010,7 +76010,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0450: a shared fragment used like 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math_bad2 ()
+PROC inline_math_bad2 ()
 BEGIN
   SELECT 1 AS x
   UNION ALL
@@ -76060,7 +76060,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad2 ()
+PROC do_inline_math_bad2 ()
 BEGIN
   SELECT inline_math_bad2() AS bad;
 END;
@@ -76094,7 +76094,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0450: a shared fragment used like 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math_bad3 ()
+PROC inline_math_bad3 ()
 BEGIN
   SELECT NOT 'x' AS y;
 END;
@@ -76131,7 +76131,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad3 ()
+PROC do_inline_math_bad3 ()
 BEGIN
   SELECT inline_math_bad3() AS bad;
 END;
@@ -76165,7 +76165,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0213: procedure had errors, can't 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math_bad4 ()
+PROC inline_math_bad4 ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
 END;
@@ -76204,7 +76204,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad4 ()
+PROC do_inline_math_bad4 ()
 BEGIN
   SELECT inline_math_bad4() AS bad;
 END;
@@ -76237,7 +76237,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0232: nested select expression mus
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad5 ()
+PROC do_inline_math_bad5 ()
 BEGIN
   SELECT 1
     WHERE inline_math(2);
@@ -76274,7 +76274,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided t
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_frag (x INT)
+PROC inline_frag (x INT)
 BEGIN
   SELECT 1 AS x;
 END;
@@ -76313,7 +76313,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad6 ()
+PROC do_inline_math_bad6 ()
 BEGIN
   SELECT 1
     WHERE inline_frag(DISTINCT 2);
@@ -76371,7 +76371,7 @@ DECLARE PROC declared_shared_fragment () (x INT);
 
 The statement ending at line XXXX
 
-CREATE PROC uses_declared_shared_fragment ()
+PROC uses_declared_shared_fragment ()
 BEGIN
   WITH
     x (*) AS (CALL declared_shared_fragment())
@@ -76414,7 +76414,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0468: @attribute(cql:shared_fragmen
 
 The statement ending at line XXXX
 
-CREATE PROC do_inline_math_bad7 ()
+PROC do_inline_math_bad7 ()
 BEGIN
   SELECT 1
     WHERE inline_frag(2) FILTER (WHERE 1);
@@ -76454,7 +76454,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call i
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC no_args_frag ()
+PROC no_args_frag ()
 BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
@@ -76499,7 +76499,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_expression_fragment (x INT!, y INT!)
+PROC nested_expression_fragment (x INT!, y INT!)
 BEGIN
   SELECT (   WITH
     no_args_frag (x, y, z) AS (CALL no_args_frag())
@@ -76583,7 +76583,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC use_nested_expression_fragment ()
+PROC use_nested_expression_fragment ()
 BEGIN
   SELECT nested_expression_fragment(1, 2) AS val;
 END;
@@ -76619,7 +76619,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_expression_fragment_with_args1 (x INT!, y INT!)
+PROC nested_expression_fragment_with_args1 (x INT!, y INT!)
 BEGIN
   SELECT (   WITH
     a_shared_frag (x, y, z) AS (CALL a_shared_frag(LOCALS.x, LOCALS.y))
@@ -76711,7 +76711,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC use_nested_expression_fragment_with_args1 ()
+PROC use_nested_expression_fragment_with_args1 ()
 BEGIN
   SELECT nested_expression_fragment_with_args1(1, 2) AS val;
 END;
@@ -76749,7 +76749,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0467: a shared fragment used like 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_expression_fragment_with_args2 (x INT!, y INT!)
+PROC nested_expression_fragment_with_args2 (x INT!, y INT!)
 BEGIN
   SELECT ( SELECT f.x
     FROM (CALL a_shared_frag(LOCALS.x, LOCALS.y)) AS f ) AS val;
@@ -76826,7 +76826,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC use_nested_expression_fragment_with_args2 ()
+PROC use_nested_expression_fragment_with_args2 ()
 BEGIN
   SELECT nested_expression_fragment_with_args2(1, 2) AS val;
 END;
@@ -76952,7 +76952,7 @@ CREATE TABLE Shape_uvxy(
 
 The statement ending at line XXXX
 
-CREATE PROC ShapeTrix ()
+PROC ShapeTrix ()
 BEGIN
   CURSOR C FOR
     SELECT Shape_xy.*, 1 AS u, 2 AS v
@@ -77294,7 +77294,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC ShapeTrixError1 ()
+PROC ShapeTrixError1 ()
 BEGIN
   INSERT INTO Shape_xy(x, y)
     VALUES(FROM not_a_cursor LIKE Shape_xy);
@@ -77333,7 +77333,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
 The statement ending at line XXXX
 
-CREATE PROC ShapeTrixError2 ()
+PROC ShapeTrixError2 ()
 BEGIN
   CURSOR R LIKE Shape_uvxy;
   FETCH R(x, y, u, v) FROM VALUES(FROM not_a_cursor);
@@ -77369,7 +77369,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
 The statement ending at line XXXX
 
-CREATE PROC ShapeTrixError3 ()
+PROC ShapeTrixError3 ()
 BEGIN
   CURSOR R LIKE Shape_uvxy;
   FETCH R(x, y, u, v) FROM VALUES(NULL, NULL, NULL, NULL) @DUMMY_SEED(1);
@@ -77429,7 +77429,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
 The statement ending at line XXXX
 
-CREATE PROC ShapeTrixError4 ()
+PROC ShapeTrixError4 ()
 BEGIN
   INSERT INTO Shape_xy(x, y)
     VALUES(1, 2), (FROM not_a_cursor LIKE Shape_xy);
@@ -77857,7 +77857,7 @@ DECLARE ENUM an_enum INT (
 
 The statement ending at line XXXX
 
-CREATE PROC use_enum_and_backing ()
+PROC use_enum_and_backing ()
 BEGIN
   WITH
     backed (rowid, status_id, global_connection_state) AS (CALL _backed())
@@ -79632,7 +79632,7 @@ CREATE TABLE structured_storage(
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test ()
+PROC blob_serialization_test ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
@@ -79762,7 +79762,7 @@ CREATE TABLE basic_table2(
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_type ()
+PROC blob_get_type ()
 BEGIN
   DECLARE x BLOB @SENSITIVE;
   LET z := ( SELECT cql_blob_get_type(x) );
@@ -79801,7 +79801,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_type_wrong_arg_count ()
+PROC blob_get_type_wrong_arg_count ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get_type() );
@@ -79839,7 +79839,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_type_wrong_arg_type ()
+PROC blob_get_type_wrong_arg_type ()
 BEGIN
   LET z := ( SELECT cql_blob_get_type(1) );
 END;
@@ -79874,7 +79874,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_type_bad_expr ()
+PROC blob_get_type_bad_expr ()
 BEGIN
   LET z := ( SELECT cql_blob_get_type(NOT "x") );
 END;
@@ -79910,7 +79910,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_type_context_wrong ()
+PROC blob_get_type_context_wrong ()
 BEGIN
   DECLARE x BLOB;
   LET z := cql_blob_get_type(x);
@@ -79937,7 +79937,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get ()
+PROC blob_get ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get(x, basic_table.id) );
@@ -79979,7 +79979,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_not_dot_operator ()
+PROC blob_get_not_dot_operator ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get(x, 1 + 2) );
@@ -80023,7 +80023,7 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_table_wrong ()
+PROC blob_get_table_wrong ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get(x, table_not_exists.id) );
@@ -80067,7 +80067,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_column_wrong ()
+PROC blob_get_column_wrong ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get(x, basic_table.col_not_exists) );
@@ -80111,7 +80111,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0489: the indicated column is not p
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_column_wrong_arg_count ()
+PROC blob_get_column_wrong_arg_count ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get(x) );
@@ -80151,7 +80151,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_column_context_wrong ()
+PROC blob_get_column_context_wrong ()
 BEGIN
   DECLARE x BLOB;
   LET z := cql_blob_get(x);
@@ -80178,7 +80178,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_column_wrong_arg_type ()
+PROC blob_get_column_wrong_arg_type ()
 BEGIN
   LET z := ( SELECT cql_blob_get(1, basic_table.id) );
 END;
@@ -80217,7 +80217,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_column_bad_expr ()
+PROC blob_get_column_bad_expr ()
 BEGIN
   LET z := ( SELECT cql_blob_get(NOT "x", basic_table.id) );
 END;
@@ -80257,7 +80257,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC blob_get_not_backed_table ()
+PROC blob_get_not_backed_table ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_get(x, simple_backing_table.k) );
@@ -80301,7 +80301,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not de
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update ()
+PROC blob_update ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, basic_table.id) );
@@ -80345,7 +80345,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_bogus_arg1 ()
+PROC blob_update_bogus_arg1 ()
 BEGIN
   LET z := ( SELECT cql_blob_update(NOT 'x', 1, basic_table.id) );
 END;
@@ -80387,7 +80387,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_different_tables ()
+PROC blob_update_different_tables ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 2, basic_table2.id) );
@@ -80439,7 +80439,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not co
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_arg_one_error ()
+PROC blob_update_arg_one_error ()
 BEGIN
   DECLARE not_a_blob INT;
   LET z := ( SELECT cql_blob_update(not_a_blob, 1, basic_table.id) );
@@ -80485,7 +80485,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_not_dot_operator ()
+PROC blob_update_not_dot_operator ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, 1 + 2) );
@@ -80531,7 +80531,7 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_not_dot_operator_later_arg ()
+PROC blob_update_not_dot_operator_later_arg ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 2, 1 + 2) );
@@ -80583,7 +80583,7 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0257: argument must be table.column
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_table_wrong ()
+PROC blob_update_table_wrong ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, table_not_exists.id) );
@@ -80629,7 +80629,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_table_wrong_later_arg ()
+PROC blob_update_table_wrong_later_arg ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, basic_table.id, 2, table_not_exists.id) );
@@ -80681,7 +80681,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_column_wrong ()
+PROC blob_update_column_wrong ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, 1, basic_table.col_not_exists) );
@@ -80727,7 +80727,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0489: the indicated column is not p
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_column_wrong_arg_count ()
+PROC blob_update_column_wrong_arg_count ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b) );
@@ -80767,7 +80767,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_column_context_wrong ()
+PROC blob_update_column_context_wrong ()
 BEGIN
   DECLARE b BLOB;
   LET z := cql_blob_update(x);
@@ -80794,7 +80794,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_column_wrong_arg_type ()
+PROC blob_update_column_wrong_arg_type ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, "x", basic_table.id) );
@@ -80840,7 +80840,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_column_bad_expr ()
+PROC blob_update_column_bad_expr ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, NOT "x", basic_table.id) );
@@ -80887,7 +80887,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC blob_update_not_backed_table ()
+PROC blob_update_not_backed_table ()
 BEGIN
   DECLARE b BLOB;
   LET z := ( SELECT cql_blob_update(b, x, simple_backing_table.k) );
@@ -81634,7 +81634,7 @@ ON CONFLICT (k) DO UPDATE
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create ()
+PROC blob_create ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, 1, basic_table.id) );
 END;
@@ -81673,7 +81673,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_not_a_string ()
+PROC blob_create_not_a_string ()
 BEGIN
   LET z := ( SELECT cql_blob_create(1, 1, basic_table.id) );
 END;
@@ -81714,7 +81714,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0491: argument 1 must be a table na
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_different_tables ()
+PROC blob_create_different_tables ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, 1, basic_table.id, 2, basic_table2.id) );
 END;
@@ -81761,7 +81761,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0488: the indicated table is not co
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_arg_one_error ()
+PROC blob_create_arg_one_error ()
 BEGIN
   LET z := ( SELECT cql_blob_create(not_a_table, 1, basic_table.id) );
 END;
@@ -81802,7 +81802,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'not_a
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_not_dot_operator ()
+PROC blob_create_not_dot_operator ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, 1, 1 + 2) );
 END;
@@ -81843,7 +81843,7 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0490: argument must be table.column
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_table_wrong ()
+PROC blob_create_table_wrong ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, 1, table_not_exists.id) );
 END;
@@ -81884,7 +81884,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0095: table/view not defined 'table
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_column_wrong ()
+PROC blob_create_column_wrong ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_create(basic_table, 1, basic_table.col_not_exists) );
@@ -81930,7 +81930,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0489: the indicated column is not p
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_column_wrong_arg_count ()
+PROC blob_create_column_wrong_arg_count ()
 BEGIN
   DECLARE x BLOB;
   LET z := ( SELECT cql_blob_create() );
@@ -81968,7 +81968,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_column_context_wrong ()
+PROC blob_create_column_context_wrong ()
 BEGIN
   DECLARE x BLOB;
   LET z := cql_blob_create(x);
@@ -81995,7 +81995,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_column_wrong_arg_type ()
+PROC blob_create_column_wrong_arg_type ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, "x", basic_table.id) );
 END;
@@ -82036,7 +82036,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_column_bad_expr ()
+PROC blob_create_column_bad_expr ()
 BEGIN
   LET z := ( SELECT cql_blob_create(basic_table, NOT "x", basic_table.id) );
 END;
@@ -82078,7 +82078,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC blob_create_not_backed_table ()
+PROC blob_create_not_backed_table ()
 BEGIN
   LET z := ( SELECT cql_blob_create(simple_backing_table, x, simple_backing_table.k) );
 END;
@@ -82181,7 +82181,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test_type_mismatch ()
+PROC blob_serialization_test_type_mismatch ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 5 AS name;
@@ -82232,7 +82232,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0061: in the cursor and the blob ty
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test_type_not_a_table ()
+PROC blob_serialization_test_type_not_a_table ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'name' AS name;
@@ -82283,7 +82283,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0453: blob type is not a valid tabl
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test_type_is_a_view ()
+PROC blob_serialization_test_type_is_a_view ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'name' AS name;
@@ -82334,7 +82334,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0456: blob type is a view, not a ta
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test_type_has_no_kind ()
+PROC blob_serialization_test_type_has_no_kind ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'name' AS name;
@@ -82384,7 +82384,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a typ
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test_no_storage ()
+PROC blob_serialization_test_no_storage ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 5 AS name;
@@ -82432,7 +82432,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0454: cursor was not declared for s
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_test_valid_cursor ()
+PROC blob_serialization_test_valid_cursor ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 5 AS name;
@@ -82480,7 +82480,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'not_a_cursor'
 
 The statement ending at line XXXX
 
-CREATE PROC blob_serialization_not_storage_table ()
+PROC blob_serialization_not_storage_table ()
 BEGIN
   DECLARE b BLOB<foo>;
   CURSOR C LIKE foo;
@@ -82512,7 +82512,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not ma
 
 The statement ending at line XXXX
 
-CREATE PROC blob_deseralized_from_err ()
+PROC blob_deseralized_from_err ()
 BEGIN
   CURSOR C LIKE foo;
   FETCH C FROM BLOB NOT 'x';
@@ -82536,7 +82536,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-CREATE PROC blob_deseralized_from_not_a_blob ()
+PROC blob_deseralized_from_not_a_blob ()
 BEGIN
   CURSOR C LIKE foo;
   FETCH C FROM BLOB 1;
@@ -83199,7 +83199,7 @@ CREATE TABLE has_row_check_blob(
 
 The statement ending at line XXXX
 
-CREATE PROC has_row_check_required_before_using_nonnull_reference_field ()
+PROC has_row_check_required_before_using_nonnull_reference_field ()
 BEGIN
   CURSOR c FOR
     SELECT *
@@ -83248,7 +83248,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 
 The statement ending at line XXXX
 
-CREATE PROC has_row_checks_can_be_positive_or_negative ()
+PROC has_row_checks_can_be_positive_or_negative ()
 BEGIN
   CURSOR c FOR
     SELECT *
@@ -83331,7 +83331,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_values_requires_no_has_row_check (a_ TEXT!, b_ TEXT)
+PROC fetch_values_requires_no_has_row_check (a_ TEXT!, b_ TEXT)
 BEGIN
   CURSOR c0 LIKE has_row_check_table;
   FETCH c0(a, b) FROM VALUES("text", NULL);
@@ -83463,7 +83463,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 
 The statement ending at line XXXX
 
-CREATE PROC fetching_again_requires_another_check ()
+PROC fetching_again_requires_another_check ()
 BEGIN
   CURSOR c FOR
     SELECT *
@@ -83538,7 +83538,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 
 The statement ending at line XXXX
 
-CREATE PROC fetching_with_loop_requires_no_check ()
+PROC fetching_with_loop_requires_no_check ()
 BEGIN
   CURSOR c FOR
     SELECT *
@@ -83591,7 +83591,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
 
 The statement ending at line XXXX
 
-CREATE PROC refetching_within_loop_may_unimprove_cursor_earlier_in_loop ()
+PROC refetching_within_loop_may_unimprove_cursor_earlier_in_loop ()
 BEGIN
   CURSOR c0 FOR
     SELECT *
@@ -83700,7 +83700,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql=cql)
 @ATTRIBUTE(cql)
 @ATTRIBUTE(cql:vault_sensitive=(privacy_context, (some_column)))
-CREATE PROC attribute_test ()
+PROC attribute_test ()
 BEGIN
   SELECT 'x' AS some_column;
 END;
@@ -83896,7 +83896,7 @@ test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable defin
 
 The statement ending at line XXXX
 
-CREATE PROC proc_contains_var_group ()
+PROC proc_contains_var_group ()
 BEGIN
   DECLARE GROUP var_group
   BEGIN
@@ -84744,7 +84744,7 @@ DECLARE PROC any_args_at_all NO CHECK;
 
 The statement ending at line XXXX
 
-CREATE PROC use_locals_expansion (x INT<x>!, y INT<y>)
+PROC use_locals_expansion (x INT<x>!, y INT<y>)
 BEGIN
   CALL any_args_at_all(LOCALS.x, LOCALS.y);
   LET z := locals.x;
@@ -84825,7 +84825,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bogus_local_usage ()
+PROC bogus_local_usage ()
 BEGIN
   CALL any_args_at_all(locals.xyzzy);
 END;
@@ -84869,7 +84869,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
 
 The statement ending at line XXXX
 
-CREATE PROC locals_work_with_nullability_improvements (a_ INT)
+PROC locals_work_with_nullability_improvements (a_ INT)
 BEGIN
   DECLARE b INT;
   DECLARE c_ INT;
@@ -85326,7 +85326,7 @@ DECLARE INTERFACE interface2 (id INT, name TEXT);
 
 The statement ending at line XXXX
 
-CREATE PROC interface_source (id_ INT, name_ TEXT)
+PROC interface_source (id_ INT, name_ TEXT)
 BEGIN
 END;
 
@@ -85347,7 +85347,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
+PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id, name_ AS name;
 END;
@@ -85398,7 +85398,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_nullability (id_ INT!)
+PROC test_interface1_implementation_wrong_nullability (id_ INT!)
 BEGIN
   SELECT id_ AS id, "5" AS col2;
 END;
@@ -85447,7 +85447,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types ret
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_type (id_ TEXT!)
+PROC test_interface1_implementation_wrong_type (id_ TEXT!)
 BEGIN
   SELECT id_ AS id, "5" AS col2;
 END;
@@ -85496,7 +85496,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types ret
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_order (id_ INT, name_ TEXT)
+PROC test_interface1_implementation_wrong_order (id_ INT, name_ TEXT)
 BEGIN
   SELECT name_ AS name, id_ AS id;
 END;
@@ -85547,7 +85547,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_name (id_ INT, name_ TEXT)
+PROC test_interface1_implementation_wrong_name (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id2, name_ AS name;
 END;
@@ -85600,7 +85600,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface2)
-CREATE PROC test_interface1_missing_column (id_ INT, name_ TEXT)
+PROC test_interface1_missing_column (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id;
 END;
@@ -85648,7 +85648,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=missing_interface)
-CREATE PROC test_interface1_missing_interface (id_ INT, name_ TEXT)
+PROC test_interface1_missing_interface (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id, name_ AS name;
 END;
@@ -85722,7 +85722,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name confl
 
 The statement ending at line XXXX
 
-CREATE PROC interface1 (id_ INT, name_ TEXT)
+PROC interface1 (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id2, name_ AS name;
 END;
@@ -85805,7 +85805,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface_foo1)
 @ATTRIBUTE(cql:implements=interface_foo2)
-CREATE PROC interface_proc1 ()
+PROC interface_proc1 ()
 BEGIN
   SELECT 1 AS id, "2" AS name;
 END;
@@ -85855,7 +85855,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface_foo1)
 @ATTRIBUTE(cql:implements=interface_foo2)
-CREATE PROC interface_proc2 ()
+PROC interface_proc2 ()
 BEGIN
   SELECT 1 AS id, "2" AS name, 3 AS id2;
 END;
@@ -86158,7 +86158,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with
 
 The statement ending at line XXXX
 
-CREATE PROC nested_interface_wrapper ()
+PROC nested_interface_wrapper ()
 BEGIN
   DECLARE INTERFACE foo (LIKE interface1);
 END;
@@ -86180,7 +86180,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be to
 
 The statement ending at line XXXX
 
-CREATE PROC test_parent (x_ INT)
+PROC test_parent (x_ INT)
 BEGIN
   SELECT x_ AS x;
 END;
@@ -86213,7 +86213,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_child (x_ INT)
+PROC test_child (x_ INT)
 BEGIN
   SELECT x_ AS x;
 END;
@@ -86246,7 +86246,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_parent_child ()
+PROC test_parent_child ()
 BEGIN
   DECLARE __result__0 BOOL!;
   CURSOR __key__0 LIKE test_child(x);
@@ -86386,7 +86386,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_parent_child2 ()
+PROC test_parent_child2 ()
 BEGIN
   DECLARE __result__1 BOOL!;
   CURSOR __key__1 LIKE test_child(x);
@@ -86526,7 +86526,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_object_types ()
+PROC test_object_types ()
 BEGIN
   CURSOR C LIKE (id INT);
   DECLARE u OBJECT<goo CURSOR>;
@@ -87073,7 +87073,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape (id_ INT!, name_ TEXT)
+PROC test_update_from_shape (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET id = id_, name = name_
@@ -87258,7 +87258,7 @@ CREATE TABLE update_stmt_table(
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_insert_list (id_ INT!, name_ TEXT)
+PROC test_update_from_insert_list (id_ INT!, name_ TEXT)
 BEGIN
   CURSOR cur LIKE update_stmt_table(a, b, c);
   FETCH cur(a, b, c) FROM VALUES("a", "b", "c");
@@ -87425,7 +87425,7 @@ CREATE TABLE aux_table(
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_with_shape_and_from_clause (id INT, updates_name TEXT, updates_a TEXT, updates_b TEXT, updates_c TEXT)
+PROC test_update_with_shape_and_from_clause (id INT, updates_name TEXT, updates_a TEXT, updates_b TEXT, updates_c TEXT)
 BEGIN
   UPDATE update_stmt_table
     SET
@@ -87539,7 +87539,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors0 (id_ INT!, name_ TEXT)
+PROC test_update_from_shape_errors0 (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET name = ARGUMENTS.id, id = ARGUMENTS.name;
@@ -87583,7 +87583,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors1 (id_ INT!, name_ TEXT)
+PROC test_update_from_shape_errors1 (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET (id, name) = (FROM cursor_not_exist);
@@ -87624,7 +87624,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cursor_not_ex
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors2 (id_ INT!, name_ TEXT)
+PROC test_update_from_shape_errors2 (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET (LIKE cursor_not_exist) = (FROM ARGUMENTS);
@@ -87664,7 +87664,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors3 (id INT!)
+PROC test_update_from_shape_errors3 (id INT!)
 BEGIN
   UPDATE update_test_1
     SET (id, name) = (ARGUMENTS.id);
@@ -87801,7 +87801,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute mus
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:private)
-CREATE PROC invalid_child_proc ()
+PROC invalid_child_proc ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
 END;
@@ -87841,7 +87841,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:suppress_result_set)
-CREATE PROC invalid_child_proc_2 ()
+PROC invalid_child_proc_2 ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
 END;
@@ -87880,7 +87880,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC use_invalid_result_set ()
+PROC use_invalid_result_set ()
 BEGIN
   DECLARE x OBJECT<invalid_child_proc SET>;
 END;
@@ -87899,7 +87899,7 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T
 
 The statement ending at line XXXX
 
-CREATE PROC use_invalid_result_set2 ()
+PROC use_invalid_result_set2 ()
 BEGIN
   DECLARE x OBJECT<invalid_child_proc_2 SET>;
 END;
@@ -88239,7 +88239,7 @@ LET poly_result_1 := some_polymorphic_function_real_pounds(lbs, 1);
 
 The statement ending at line XXXX
 
-CREATE PROC get_result ()
+PROC get_result ()
 BEGIN
   SELECT 1 AS x, 2 AS y;
 END;
@@ -88353,7 +88353,7 @@ CALL expr_proc_b(1);
 
 The statement ending at line XXXX
 
-CREATE PROC local_expando_rewrite ()
+PROC local_expando_rewrite ()
 BEGIN
   LET x := 1;
   CALL expr_proc_b(LOCALS.x);
@@ -88408,7 +88408,7 @@ CALL expr_proc_b(expr_func_a(expr_func_a(1)));
 
 The statement ending at line XXXX
 
-CREATE PROC dump_int (x INT, OUT result INT)
+PROC dump_int (x INT, OUT result INT)
 BEGIN
   SET result := x;
   CALL printf(" %d", x);
@@ -88441,7 +88441,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC main ()
+PROC main ()
 BEGIN
   LET x := 2;
   DECLARE result INT;
@@ -88684,7 +88684,7 @@ DECLARE FUNC set_in_object_foo (array OBJECT<foo>, index TEXT, value TEXT) TEXT!
 
 The statement ending at line XXXX
 
-CREATE PROC array_test ()
+PROC array_test ()
 BEGIN
   DECLARE x OBJECT<foo>;
   LET z := get_from_object_foo(x, 'index');
@@ -88806,7 +88806,7 @@ DECLARE FUNC get_from_object_dot_two NO CHECK INT;
 
 The statement ending at line XXXX
 
-CREATE PROC dot_test ()
+PROC dot_test ()
 BEGIN
   DECLARE q OBJECT<dot_one>;
   DECLARE u OBJECT<dot_two>;
@@ -88860,7 +88860,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC dot_fail_no_funcs ()
+PROC dot_fail_no_funcs ()
 BEGIN
   DECLARE q OBJECT<dot_three>;
   LET z := q.id;
@@ -88885,7 +88885,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'q.id'
 
 The statement ending at line XXXX
 
-CREATE PROC dot_fail_no_kind ()
+PROC dot_fail_no_kind ()
 BEGIN
   DECLARE q OBJECT;
   LET z := q.id;
@@ -88920,7 +88920,7 @@ DECLARE FUNC make_dot_one () CREATE OBJECT<dot_one>;
 
 The statement ending at line XXXX
 
-CREATE PROC dot_fail_no_missing_helper_computed ()
+PROC dot_fail_no_missing_helper_computed ()
 BEGIN
   DECLARE q OBJECT;
   LET u := get_object_dot_one_id(make_dot_one());
@@ -89270,7 +89270,7 @@ DECLARE PROC a_target_proc (x INT, y INT);
 
 The statement ending at line XXXX
 
-CREATE PROC abuse_star1 (x INT, y INT)
+PROC abuse_star1 (x INT, y INT)
 BEGIN
   CALL a_target_proc(1, *, 1);
 END;
@@ -89302,7 +89302,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
 
 The statement ending at line XXXX
 
-CREATE PROC abuse_star2 (x INT, y INT)
+PROC abuse_star2 (x INT, y INT)
 BEGIN
   CALL a_target_proc(*, 1);
 END;
@@ -89358,7 +89358,7 @@ DECLARE PROC another_target_proc (x INT, y INT, OUT result INT);
 
 The statement ending at line XXXX
 
-CREATE PROC abuse_star3 (x INT, y INT)
+PROC abuse_star3 (x INT, y INT)
 BEGIN
   another_target_proc(*, 1);
 END;
@@ -89456,7 +89456,7 @@ DECLARE PROC get_from_object_event_invitees (invitees OBJECT<event_invitees>, fi
 
 The statement ending at line XXXX
 
-CREATE PROC proc_as_func_preserves_kind ()
+PROC proc_as_func_preserves_kind ()
 BEGIN
   LET event := create_event();
   LET x := get_object_event_invitees(event);
@@ -89716,7 +89716,7 @@ CREATE TABLE `xyz``abc`(
 
 The statement ending at line XXXX
 
-CREATE PROC qid_t1 ()
+PROC qid_t1 ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -89768,7 +89768,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC qid_t2 ()
+PROC qid_t2 ()
 BEGIN
   CURSOR D FOR
     SELECT `xyz``abc`.*
@@ -89821,7 +89821,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC qid_t3 ()
+PROC qid_t3 ()
 BEGIN
   LET x := ( SELECT `xyz``abc`.`a b`
     FROM `xyz``abc` );
@@ -89855,7 +89855,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC qid_t4 ()
+PROC qid_t4 ()
 BEGIN
   CURSOR Q LIKE `xyz``abc`(-`a b`);
   CURSOR R LIKE `xyz``abc`;
@@ -90197,7 +90197,7 @@ INSERT INTO `xyz``abc`(x, `a b`) VALUES(2, _seed_) @DUMMY_SEED(500);
 
 The statement ending at line XXXX
 
-CREATE PROC quoted_from_forms ()
+PROC quoted_from_forms ()
 BEGIN
   CURSOR C FOR
     SELECT *
@@ -90308,7 +90308,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already
 
 The statement ending at line XXXX
 
-CREATE PROC args_defined_by_exotics (x_ INT!, `a b_` INT!)
+PROC args_defined_by_exotics (x_ INT!, `a b_` INT!)
 BEGIN
   SET `a b_` := 1;
   SET `a b_` := `a b_` + 1;
@@ -90349,7 +90349,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_boxing_with_qid ()
+PROC cursor_boxing_with_qid ()
 BEGIN
   CURSOR C FOR
     SELECT 1 AS x;
@@ -90417,7 +90417,7 @@ CREATE TABLE reuse_exotic_columns(
 
 The statement ending at line XXXX
 
-CREATE PROC qid_shape_args (AAA_x INT!, `AAA_a b` INT!, BBB_x INT!, `BBB_a b` INT!, x_ INT!, `a b_` INT!)
+PROC qid_shape_args (AAA_x INT!, `AAA_a b` INT!, BBB_x INT!, `BBB_a b` INT!, x_ INT!, `a b_` INT!)
 BEGIN
 END;
 
@@ -90488,7 +90488,7 @@ CREATE TABLE qnamed_table(
 
 The statement ending at line XXXX
 
-CREATE PROC presult_1 ()
+PROC presult_1 ()
 BEGIN
   SELECT T2.*
     FROM qnamed_table AS T1
@@ -90529,7 +90529,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC presult_2 ()
+PROC presult_2 ()
 BEGIN
   SELECT T1.`x y`
     FROM qnamed_table AS T1
@@ -90572,7 +90572,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC presult_3 ()
+PROC presult_3 ()
 BEGIN
   SELECT 1 AS `x y`;
 END;
@@ -90600,7 +90600,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC presult_4 ()
+PROC presult_4 ()
 BEGIN
   SELECT *
     FROM (SELECT *
@@ -90645,7 +90645,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC presult_5 ()
+PROC presult_5 ()
 BEGIN
   SELECT T1.*
     FROM (SELECT *
@@ -90718,7 +90718,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE PROC nullability_improvement_with_logical_operators ()
+PROC nullability_improvement_with_logical_operators ()
 BEGIN
   LET nullable1 := nullable(1);
   LET nullable2 := nullable(2);
@@ -90846,7 +90846,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC cursor_nullability_improvement_with_logical_operators ()
+PROC cursor_nullability_improvement_with_logical_operators ()
 BEGIN
   CURSOR c FOR
     SELECT *
@@ -90917,7 +90917,7 @@ CONST a_constant_variable := 1;
 
 The statement ending at line XXXX
 
-CREATE PROC try_modifying_constant_variables ()
+PROC try_modifying_constant_variables ()
 BEGIN
   CONST cant_change := 1;
   SET cant_change := 2;

@@ -422,7 +422,7 @@ CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
 );
 
 -- helper proc for getting the schema version of a facet
-CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
+PROC test_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)
 BEGIN
   TRY
     SET _version := (SELECT version FROM test_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);
@@ -442,7 +442,7 @@ DECLARE test_tables_dict_ OBJECT<string_dictionary>;
 
 -- helper proc for creating the dictionary of table defs from sqlite_master
 @attribute(cql:private)
-CREATE PROCEDURE test_get_table_defs()
+PROC test_get_table_defs()
 BEGIN
   DECLARE C CURSOR FOR SELECT name, sql from sqlite_master where type = 'table';
   SET test_tables_dict_ := cql_string_dictionary_create();
@@ -456,7 +456,7 @@ END;
 
 -- helper proc for creating the schema version table
 @attribute(cql:private)
-CREATE PROCEDURE test_create_cql_schema_facets_if_needed()
+PROC test_create_cql_schema_facets_if_needed()
 BEGIN
   CREATE TABLE IF NOT EXISTS test_cql_schema_facets(
     facet TEXT NOT NULL PRIMARY KEY,
@@ -466,7 +466,7 @@ END;
 
 -- helper proc for creating the rebuilt facets table
 @attribute(cql:private)
-CREATE PROCEDURE test_create_cql_schema_rebuilt_tables_if_needed()
+PROC test_create_cql_schema_rebuilt_tables_if_needed()
 BEGIN
   CREATE TEMP TABLE IF NOT EXISTS cql_schema_rebuilt_tables(
     rebuild_facet TEXT NOT NULL
@@ -475,7 +475,7 @@ END;
 
 -- helper proc for saving the schema version table
 @attribute(cql:private)
-CREATE PROCEDURE test_save_cql_schema_facets()
+PROC test_save_cql_schema_facets()
 BEGIN
   DROP TABLE IF EXISTS test_cql_schema_facets_saved;
   CREATE TEMP TABLE test_cql_schema_facets_saved(
@@ -487,7 +487,7 @@ BEGIN
 END;
 
 -- helper proc for setting the schema version of a facet
-CREATE PROCEDURE test_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)
+PROC test_cql_set_facet_version(_facet TEXT NOT NULL, _version LONG INTEGER NOT NULL)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES(_facet, _version);
   LET added := cql_facet_upsert(test_facets, _facet, _version);
@@ -495,13 +495,13 @@ END;
 
 -- helper proc for getting the schema version CRC for a version index
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
+PROC test_cql_get_version_crc(_v INTEGER NOT NULL, out _crc LONG INTEGER NOT NULL)
 BEGIN
   SET _crc := cql_facet_find(test_facets, printf('cql_schema_v%d', _v));
 END;
 
 -- helper proc for setting the schema version CRC for a version index
-CREATE PROCEDURE test_cql_set_version_crc(_v INTEGER NOT NULL, _crc LONG INTEGER NOT NULL)
+PROC test_cql_set_version_crc(_v INTEGER NOT NULL, _crc LONG INTEGER NOT NULL)
 BEGIN
   INSERT OR REPLACE INTO test_cql_schema_facets (facet, version) VALUES('cql_schema_v'||_v, _crc);
 END;
@@ -509,7 +509,7 @@ END;
 -- helper proc to reset any triggers that are on the old plan --
 DECLARE PROCEDURE cql_exec_internal(sql TEXT NOT NULL) USING TRANSACTION;
 
-CREATE PROCEDURE test_drop_table_helper(table_name TEXT NOT NULL)
+PROC test_drop_table_helper(table_name TEXT NOT NULL)
 BEGIN
   CALL cql_exec_internal(printf('DROP TABLE IF EXISTS [%s]', table_name));
   -- remove the table from our dictionary marking it dropped
@@ -518,13 +518,13 @@ BEGIN
 END;
 
 -- helper proc to insert facet into cql_rebuilt_tables --
-CREATE PROCEDURE test_rebuilt_tables_insert_helper(facet TEXT NOT NULL)
+PROC test_rebuilt_tables_insert_helper(facet TEXT NOT NULL)
 BEGIN
   INSERT INTO cql_schema_rebuilt_tables VALUES(facet);
 END;
 
 -- helper proc to delete facet from cql_schema_facets_saved table --
-CREATE PROCEDURE test_cql_schema_delete_saved_facet(delete_facet TEXT NOT NULL)
+PROC test_cql_schema_delete_saved_facet(delete_facet TEXT NOT NULL)
 BEGIN
   DELETE FROM test_cql_schema_facets_saved WHERE facet = delete_facet;
 END;
@@ -532,32 +532,32 @@ END;
 -- declared upgrade procedures if any
 
 @attribute(cql:private)
-CREATE PROC test_foo_group_group_drop()
+PROC test_foo_group_group_drop()
 BEGIN
   DROP TABLE IF EXISTS after_backed_table;
   DROP TABLE IF EXISTS recreate_backing;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_unsub_recreated_table_group_drop()
+PROC test_unsub_recreated_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS unsub_recreated;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_complex_virtual_table_table_group_drop()
+PROC test_complex_virtual_table_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS complex_virtual_table;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_a_virtual_table_table_group_drop()
+PROC test_a_virtual_table_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS a_virtual_table;
 END;
 
 @attribute(cql:private)
-CREATE PROC test_my_group_group_group_drop()
+PROC test_my_group_group_group_drop()
 BEGIN
   DROP TABLE IF EXISTS grouped_table_3;
   DROP TABLE IF EXISTS grouped_table_2;
@@ -565,14 +565,14 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_table_to_recreate_table_group_drop()
+PROC test_table_to_recreate_table_group_drop()
 BEGIN
   DROP TABLE IF EXISTS table_to_recreate;
 END;
 DECLARE PROC RecreateGroup1Migration() USING TRANSACTION;
 
 @attribute(cql:private)
-CREATE PROC test_gr1_group_group_drop()
+PROC test_gr1_group_group_drop()
 BEGIN
   DROP TABLE IF EXISTS `use g1`;
   DROP TABLE IF EXISTS g1;
@@ -582,7 +582,7 @@ DECLARE PROC CreateName2Proc() USING TRANSACTION;
 DECLARE PROC DeadViewMigration() USING TRANSACTION;
 
 @attribute(cql:private)
-CREATE PROC test_migrated_from_recreate2_full_drop()
+PROC test_migrated_from_recreate2_full_drop()
 BEGIN
   -- mark indices as having been deleted
   CALL test_cql_set_facet_version(cql_compressed('recreate_index_needs_deleting3_index_crc'), -1);
@@ -592,7 +592,7 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_X_migratedX20fromX20recreate_full_drop()
+PROC test_X_migratedX20fromX20recreate_full_drop()
 BEGIN
   -- drop all dependent tables
   CALL test_migrated_from_recreate2_full_drop();
@@ -608,7 +608,7 @@ DECLARE PROC CreateId2Proc() USING TRANSACTION;
 DECLARE PROC DeleteRate2Proc() USING TRANSACTION;
 DECLARE PROC MyAdHocMigrationScript() USING TRANSACTION;
 
-CREATE PROCEDURE test_cql_install_baseline_schema()
+PROC test_cql_install_baseline_schema()
 BEGIN
   CREATE TABLE IF NOT EXISTS `quoted foo`(
     `an id` INT PRIMARY KEY,
@@ -665,7 +665,7 @@ BEGIN
 END;
 -- drop all the views we know
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_drop_all_views()
+PROC test_cql_drop_all_views()
 BEGIN
   DROP VIEW IF EXISTS shared_view;
   DROP VIEW IF EXISTS live_view;
@@ -677,7 +677,7 @@ END;
 
 -- create all the views we know
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_create_all_views()
+PROC test_cql_create_all_views()
 BEGIN
   CREATE VIEW shared_view AS
     SELECT *
@@ -696,7 +696,7 @@ END;
 
 -- drop all the indices that are deleted or changing
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_drop_all_indices()
+PROC test_cql_drop_all_indices()
 BEGIN
   IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8386858284532282478 THEN
     DROP INDEX IF EXISTS shared_index;
@@ -729,7 +729,7 @@ END;
 
 -- create all the indices we need
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_create_all_indices()
+PROC test_cql_create_all_indices()
 BEGIN
   IF cql_facet_find(test_facets, 'shared_index_index_crc') != -8386858284532282478 THEN
     CREATE INDEX shared_index ON `quoted foo` (name, name_2);
@@ -755,7 +755,7 @@ END;
 
 -- drop all the triggers we know
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_drop_all_triggers()
+PROC test_cql_drop_all_triggers()
 BEGIN
   DROP TRIGGER IF EXISTS shared_trigger;
   DROP TRIGGER IF EXISTS not_shared_trigger;
@@ -768,7 +768,7 @@ END;
 
 -- create all the triggers we know
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_create_all_triggers()
+PROC test_cql_create_all_triggers()
 BEGIN
   CREATE TRIGGER shared_trigger
     BEFORE INSERT ON `quoted foo`
@@ -797,7 +797,7 @@ END;
 
 -- recreate all the non-virtual @recreate tables that might have changed
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_recreate_non_virtual_tables()
+PROC test_cql_recreate_non_virtual_tables()
 BEGIN
   IF cql_facet_find(test_facets, 'all_nonvirtual_tables_crc') == 1767267850535997412 RETURN; 
   IF cql_facet_find(test_facets, 'foo_group_crc') != -5376428347335479627 THEN
@@ -892,7 +892,7 @@ END;
 
 -- recreate all the virtual @recreate tables that might have changed
 @attribute(cql:private)
-CREATE PROCEDURE test_cql_recreate_virtual_tables()
+PROC test_cql_recreate_virtual_tables()
 BEGIN
   IF cql_facet_find(test_facets, 'all_virtual_tables_crc') == 5087671875723827320 RETURN; 
   IF cql_facet_find(test_facets, 'complex_virtual_table_table_crc') != -9096134801896065707 THEN
@@ -922,7 +922,7 @@ BEGIN
   CALL test_cql_set_facet_version('all_virtual_tables_crc', 5087671875723827320);
 END;
 
-CREATE PROCEDURE test_cql_install_temp_schema()
+PROC test_cql_install_temp_schema()
 BEGIN
   CREATE TEMP TABLE this_table_appears_in_temp_section(
     temp_section_integer INT
@@ -942,7 +942,7 @@ BEGIN
 
 END;
 @attribute(cql:private)
-CREATE PROCEDURE test_setup_facets()
+PROC test_setup_facets()
 BEGIN
   TRY
     SET test_facets := cql_facets_create();
@@ -958,7 +958,7 @@ END;
 
 DECLARE FUNCTION _cql_contains_column_def(needle TEXT, haystack TEXT) BOOL NOT NULL;
 @attribute(cql:private)
-CREATE PROC test_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
+PROC test_column_exists(table_ TEXT NOT NULL, col_info TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
   LET table_str := cql_string_dictionary_find(test_tables_dict_, table_);
@@ -966,7 +966,7 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
+PROC test_table_exists(table_ TEXT NOT NULL, OUT exists_ BOOL NOT NULL)
 BEGIN
   IF test_tables_dict_ IS NULL THROW;
   LET result := cql_string_dictionary_find(test_tables_dict_, table_);
@@ -974,7 +974,7 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROC test_cql_drop_tables()
+PROC test_cql_drop_tables()
 BEGIN
   DROP TABLE IF EXISTS deleted_virtual_table; --@delete
   DROP TABLE IF EXISTS added_table; --@delete
@@ -986,7 +986,7 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROCEDURE test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
+PROC test_perform_upgrade_steps(include_virtual_tables BOOL NOT NULL)
 BEGIN
   LET facet := cql_compressed('cql_schema_crc_no_virtual');
   IF cql_facet_find(test_facets, facet) <> -3323734474422934011 THEN
@@ -1176,7 +1176,7 @@ BEGIN
   END IF;
 END;
 
-CREATE PROCEDURE test_get_current_and_proposed_versions(
+PROC test_get_current_and_proposed_versions(
     out current long not null,
     out proposed long not null
     )
@@ -1185,7 +1185,7 @@ BEGIN
     SET proposed := 7;
 END;
 
-CREATE PROCEDURE test_fetch_changed_facets()
+PROC test_fetch_changed_facets()
 BEGIN
     SELECT T1.facet FROM
       test_cql_schema_facets T1
@@ -1194,13 +1194,13 @@ BEGIN
       WHERE T1.version is not T2.version;
 END;
 
-CREATE PROCEDURE test_fetch_rebuilt_facets()
+PROC test_fetch_rebuilt_facets()
 BEGIN
     SELECT rebuild_facet FROM cql_schema_rebuilt_tables;
 END;
 
 @attribute(cql:private)
-CREATE PROCEDURE test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
+PROC test_perform_needed_upgrades(include_virtual_tables BOOL NOT NULL)
 BEGIN
   -- check for downgrade --
   IF cql_facet_find(test_facets, 'cql_schema_version') > 7 THEN
@@ -1216,7 +1216,7 @@ BEGIN
 END;
 
 @attribute(cql:private)
-CREATE PROCEDURE test_helper(include_virtual_tables BOOL NOT NULL)
+PROC test_helper(include_virtual_tables BOOL NOT NULL)
 BEGIN
   DECLARE schema_crc LONG INTEGER NOT NULL;
 
@@ -1249,12 +1249,12 @@ BEGIN
 
 END;
 
-CREATE PROCEDURE test()
+PROC test()
 BEGIN
   CALL test_helper(TRUE);
 END;
 
-CREATE PROCEDURE test_no_virtual_tables()
+PROC test_no_virtual_tables()
 BEGIN
   CALL test_helper(FALSE);
 END;

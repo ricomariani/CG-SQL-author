@@ -3993,7 +3993,7 @@ static void gen_create_proc_stmt(ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
 
-  gen_printf("CREATE PROC ");
+  gen_printf("PROC ");
   gen_name(name_ast);
   gen_printf(" (");
   if (params) {

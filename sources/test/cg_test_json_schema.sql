@@ -161,7 +161,7 @@ create table T5
 -- + SELECT "\\ ' \a \b \f \n \t \r \v \\ \" " AS crazy;
 -- + "name" : "crazy_string",
 -- + "statement" : "SELECT '\\ '' \u0007 \b \f \n \t \r \u000b \\ \" ' AS crazy",
-create proc crazy_string()
+proc crazy_string()
 begin
   select "\\ ' \a \b \f \n \t \r \v \\ \" " as crazy;
 end;
@@ -353,7 +353,7 @@ create table T12b (
 -- +2 "type" : "text"
 -- + "statement" : "SELECT id FROM Foo WHERE name LIKE ? AND name <> ?",
 -- + "statementArgs" : [ "pattern", "reject" ]
-create proc a_query(pattern text!, reject text)
+proc a_query(pattern text!, reject text)
 begin
   select id from Foo where name like pattern and name <> reject;
 end;
@@ -368,7 +368,7 @@ end;
 -- + "name" : "arg",
 -- + "type" : "real",
 -- + "isNotNull" : 0
-create proc with_complex_args(out pattern text!, inout arg real)
+proc with_complex_args(out pattern text!, inout arg real)
 begin
   set pattern := "text";
   select 1 a;
@@ -388,7 +388,7 @@ end;
 -- + "name" : "name",
 -- + "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
 -- + "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
-create proc bigger_query(pattern text!, reject text)
+proc bigger_query(pattern text!, reject text)
 begin
   select distinct * from Foo where name like pattern and name <> reject group by name having name > reject order by pattern limit 1 offset 3;
 end;
@@ -405,7 +405,7 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES(?, ?)",
 -- + "statementArgs" : [ "id_", "name_" ]
-create proc insert_proc(id_ integer!, name_ text)
+proc insert_proc(id_ integer!, name_ text)
 begin
   insert or replace into Foo(id, name) values(id_, name_);
 end;
@@ -413,7 +413,7 @@ end;
 -- TEST: general form but no return type
 -- + "name" : "atypical_noreturn",
 -- + "usesDatabase" : 0
-create proc atypical_noreturn()
+proc atypical_noreturn()
 begin
   declare C cursor like select 1 A;
 end;
@@ -429,7 +429,7 @@ end;
 -- + "usesDatabase" : 0
 -- - "hasSelectResult"
 -- - "hasOutUnionResult"
-create proc typical_outresult()
+proc typical_outresult()
 begin
   declare C cursor like select 1 A;
   fetch C from values (7);
@@ -448,7 +448,7 @@ end;
 -- + "usesDatabase" : 0
 -- - "hasSelectResult"
 -- - "hasOutResult"
-create proc typical_out_union_result()
+proc typical_out_union_result()
 begin
   declare C cursor like select 1 A;
   fetch C from values (7);
@@ -469,7 +469,7 @@ end;
 -- + "usesDatabase" : 1
 -- - "hasOutResult"
 -- - "hasOutUnionResult"
-create proc typical_select()
+proc typical_select()
 begin
   -- this declare forces this to be a non-single-statement proc
   declare x integer;
@@ -483,13 +483,13 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "DELETE FROM Foo WHERE name LIKE ?",
 -- + "statementArgs" : [ "name_" ]
-create proc delete_proc(name_ text)
+proc delete_proc(name_ text)
 begin
   delete from foO where name like name_; -- name should normalize
 end;
 
 -- TEST: with delete form
-create proc delete_with_values(name_ text)
+proc delete_with_values(name_ text)
 begin
   with names(n) as ( values ("this") , ("that") )
   delete from foO where name in (select * from names);
@@ -499,7 +499,7 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "UPDATE Foo SET name = ? WHERE id = ? ORDER BY name LIMIT 1",
 -- + "statementArgs" : [ "name_", "id_" ]
-create proc update_proc(id_ integer!, name_ text)
+proc update_proc(id_ integer!, name_ text)
 begin
   update foO set name = name_ where id = id_ order by name limit 1;
 end;
@@ -509,7 +509,7 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "WITH names (n) AS ( VALUES('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
 -- + "statementArgs" : [ "name_" ]
-create proc update_with_proc(id_ integer!, name_ text)
+proc update_with_proc(id_ integer!, name_ text)
 begin
   with names(n) as ( values ("this") , ("that") )
   update foO set name = name_ where name in (select * from names);
@@ -619,7 +619,7 @@ create view MyViewWithAttributes as select * from Foo;
 -- + "valueArgs" : [ "_seed_" ]
 -- + "value" : "printf('name_%d', ?)",
 -- + "valueArgs" : [ "_seed_" ]
-create proc dummy_insert_proc(seed_ integer!)
+proc dummy_insert_proc(seed_ integer!)
 begin
   insert into fOo() values() @dummy_seed(seed_) @dummy_nullables;
 end;
@@ -638,7 +638,7 @@ create view ADeletedViewWithMigrationProc as select * from Foo @delete(1, view_d
 -- TEST: join tables, create new dependencies
 -- + "statement" : "SELECT id, name, r, bl, b, l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
 @attribute(my_attribute = 'This is a string attribute')
-create proc joiner(id_ integer!)
+proc joiner(id_ integer!)
 begin
   select * from Foo T1 inner join T5 on T1.id = id_ and T1.id = T5.l;
 end;
@@ -737,7 +737,7 @@ create table backed(
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
 -- - "values"
-create procedure insert_with_select()
+procedure insert_with_select()
 begin
   insert into T3 select 1;
 end;
@@ -755,7 +755,7 @@ end;
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
 -- - "values"
-create procedure insert_compound()
+procedure insert_compound()
 begin
   insert into T3 values (1) union all select 1 column1;
 end;
@@ -772,7 +772,7 @@ end;
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
 -- - "values"
-create procedure insert_multi_value()
+procedure insert_multi_value()
 begin
   insert into T3 values (1), (2), (3);
 end;
@@ -788,7 +788,7 @@ create table radioactive(
 
 -- TEST: declare a simple query that has sensitive data
 -- +1 "isSensitive" : 1
-create proc radioactive_proc()
+proc radioactive_proc()
 begin
  select * from radioactive;
 end;
@@ -801,7 +801,7 @@ end;
 -- + "statement" : "INSERT INTO T3(id) VALUES(1) ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
-create proc upsert_proc()
+proc upsert_proc()
 begin
  insert into T3(id) values(1) on conflict do update set id=1 where id=9;
 end;
@@ -814,7 +814,7 @@ end;
 -- + "statement" : "WITH data (id) AS ( VALUES(1), (2), (3) ) INSERT INTO T3(id) SELECT id FROM data WHERE 1 ON CONFLICT DO UPDATE SET id = 1 WHERE id = 9",
 -- + "statementArgs" : [  ],
 -- + "statementType" : "INSERT",
-create proc with_upsert_proc()
+proc with_upsert_proc()
 begin
  with data(id) as (values (1), (2), (3))
  insert into T3(id) select id from data where 1 on conflict do update set id=1 where id=9;
@@ -832,20 +832,20 @@ end;
 -- + "statementArgs" : [ "x" ],
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
-create proc with_insert_proc(x integer!)
+proc with_insert_proc(x integer!)
 begin
  with data(id) as (values (1), (2), (x))
  insert into T3(id) select * from data;
 end;
 
 -- TEST: procedure with object arguments, ensure object type emitted
--- + CREATE PROC object_proc (anObject OBJECT)
+-- + PROC object_proc (anObject OBJECT)
 -- + "name" : "object_proc",
 -- + "args" : [
 -- + "name" : "anObject",
 -- + "type" : "object",
 -- + "isNotNull" : 0
-create proc object_proc(anObject OBJECT)
+proc object_proc(anObject OBJECT)
 begin
   select 1 x; /* any body will do */
 end;
@@ -869,14 +869,14 @@ create view my_view as select 1 foo, T1.* from T1;
 -- + "argOrigin" : "arg1 result_proc x"
 -- + "name" : "arg1_y",
 -- + "argOrigin" : "arg1 result_proc y"
-create proc proc_args_1(arg1 like result_proc)
+proc proc_args_1(arg1 like result_proc)
 begin
 end;
 
 -- TEST: args like a table
 -- + "argOrigin" : "T1 id",
 -- + "argOrigin" : "T1 name",
-create proc proc_args_2(like T1)
+proc proc_args_2(like T1)
 begin
 end;
 
@@ -885,7 +885,7 @@ end;
 -- so the cursor name is the best we can do.
 -- + "argOrigin" : "a_cursor x",
 -- + "argOrigin" : "a_cursor y",
-create proc proc_args_3(like a_cursor)
+proc proc_args_3(like a_cursor)
 begin
 end;
 
@@ -893,14 +893,14 @@ end;
 -- note the original type name is used
 -- + "argOrigin" : "T1 id",
 -- + "argOrigin" : "T1 name",
-create proc proc_args_4(like b_cursor)
+proc proc_args_4(like b_cursor)
 begin
 end;
 
 -- TEST: args like a procedures arguments
 -- + "argOrigin" : "proc_args_1[arguments] arg1_x",
 -- + "argOrigin" : "proc_args_1[arguments] arg1_y",
-create proc proc_args_5(like proc_args_1 arguments)
+proc proc_args_5(like proc_args_1 arguments)
 begin
 end;
 
@@ -908,7 +908,7 @@ end;
 -- + "argOrigin" : "my_view foo",
 -- + "argOrigin" : "my_view id",
 -- + "argOrigin" : "my_view name",
-create proc proc_args_6(like my_view)
+proc proc_args_6(like my_view)
 begin
 end;
 
@@ -1072,7 +1072,7 @@ end @delete(3);
 -- TEST: procedure inside region
 -- + "name" : "proc_inside_region"
 -- + "region" : "region0",
-create proc proc_inside_region()
+proc proc_inside_region()
 begin
 select 1 a;
 end;
@@ -1088,7 +1088,7 @@ end;
 -- +         "isNotNull" : 1
 -- +   "statement" : "WITH nums (i) AS ( SELECT 0 UNION ALL SELECT i + 1 FROM nums LIMIT 1 ), vals (v) AS ( SELECT i FROM nums ) SELECT v FROM vals",
 -- +   "statementArgs" : [  ]
-create procedure with_select_proc()
+procedure with_select_proc()
 begin
   with
   nums(i) as (
@@ -1111,7 +1111,7 @@ END;
 -- + "usesTables" : [  ],
 -- + "usesDatabase" : 0
 -- + },
-create proc empty_proc()
+proc empty_proc()
 begin
 end;
 
@@ -1124,7 +1124,7 @@ end;
 -- + "usesTables" : [  ],
 -- + "usesDatabase" : 1
 -- + }
-create proc empty_blocks()
+proc empty_blocks()
 begin
   if 1 then
   end if;
@@ -1160,7 +1160,7 @@ declare proc other_proc();
 -- + "name" : "proc_with_deps",
 -- + "usesProcedures" : [ "other_proc", "proc_as_func" ]
 -- + "usesTables" : [  ],
-create proc proc_with_deps(out x integer!)
+proc proc_with_deps(out x integer!)
 begin
   -- note unusal casing, the JSON output should use the canonical name in the dependencies
   call other_Proc();
@@ -1169,7 +1169,7 @@ end;
 
 -- TEST: escape characters in JSON
 -- + "statement" : "SELECT '\\\r\n\t\b\f\"\u0001' AS quoted_text",
-create proc json_escapes()
+proc json_escapes()
 begin
   select "\\\r\n\t\b\f\"\x01" quoted_text;
 end;
@@ -1213,7 +1213,7 @@ end;
 -- + "fromTables" : [ "Foo" ],
 -- + "usesViews" : [ "MyView" ],
 -- + "usesTables" : [ "Foo" ],
-create proc use_view()
+proc use_view()
 begin
   select * from MyView;
 end;
@@ -1221,7 +1221,7 @@ end;
 -- TEST: make sure that null values in the attributes are lowercase in json
 -- +  "value" : [["dummy_test", ["Foo", ["id", "name"], [1, null], [2, "hi"]]]]
 @attribute(cql:autotest=((dummy_test, (Foo, (id, name), (1, null), (2, "hi")))))
-create proc null_attribute()
+proc null_attribute()
 begin
   select * from Foo;
 end;
@@ -1351,7 +1351,7 @@ create table with_unnamed_check_constraints(
 -- + "name" : "s",
 -- + "type" : "integer",
 -- + "kind" : "seconds",
-create proc using_kinds(list object<list>, s integer<seconds>)
+proc using_kinds(list object<list>, s integer<seconds>)
 begin
   set s := s + 1;
 end;
@@ -1388,7 +1388,7 @@ declare const group const_group (
 -- TEST: shared fragment that we can use
 -- invisible to JSON
 @attribute(cql:shared_fragment)
-create proc shared_frag_proc()
+proc shared_frag_proc()
 begin
   with
     source(*) like T1,
@@ -1408,7 +1408,7 @@ end;
 -- + "fromTables" : [ "Foo", "T1", "T2", "T6" ],
 -- + "usesTables" : [ "Foo", "T1", "T2", "T6" ],
 -- - "statement" :
-create proc shared_frag_user()
+proc shared_frag_user()
 begin
   with shared(*) as (call shared_frag_proc() using T1 as source, T2 as control)
   select * from shared
@@ -1426,7 +1426,7 @@ end;
 -- + "fromTables" : [ "Foo", "T1", "T2", "T6" ],
 -- + "usesTables" : [ "Foo", "T1", "T2", "T6" ],
 -- - "statement" :
-create proc shared_frag_user_nested_select()
+proc shared_frag_user_nested_select()
 begin
   select * from (call shared_frag_proc() using T1 as source, T2 as control)
   union all
@@ -1436,7 +1436,7 @@ end;
 -- Shared fragment function form we can use
 -- we will verify this creates a dependency on T2
 @attribute(cql:shared_fragment)
-create proc shared_func()
+proc shared_func()
 begin
   select (select max(id) from T2) result;
 end;
@@ -1447,7 +1447,7 @@ end;
 -- + "fromTables" : [ "T2" ],
 -- + "usesTables" : [ "T2" ],
 -- + "statement" : "SELECT shared_func() AS result",
-create proc shared_frag_user_function_style()
+proc shared_frag_user_function_style()
 begin
   select shared_func() result;
 end;
@@ -1456,7 +1456,7 @@ end;
 -- + SELECT "\xa1\xa2" AS t;
 -- + "name" : "high_bit_escapes",
 -- + "statement" : "SELECT '\u00a1\u00a2' AS t"
-create proc high_bit_escapes()
+proc high_bit_escapes()
 begin
   select "\xa1\xa2" t;
 end;
@@ -1465,7 +1465,7 @@ end;
 -- + "name" : "foo",
 -- + "value" : "bar"
 @attribute(foo="bar")
-create proc string_literal_attr()
+proc string_literal_attr()
 begin
 end;
 
@@ -1475,7 +1475,7 @@ end;
 /**
  * some potato
  */
-create procedure potato(i int, b real, c text)
+procedure potato(i int, b real, c text)
 begin
   select 1 x;
 end;
@@ -1509,7 +1509,7 @@ create view deleted_view as select 1 x @delete(2);
 -- + "name" : "uses_deleted_view_alias",
 -- + "usesTables" : [  ],
 -- - "usesViews"
-create proc uses_deleted_view_alias()
+proc uses_deleted_view_alias()
 begin
   with deleted_view(*) as (select 1 x, 2 y)
   select * from deleted_view;
@@ -1558,7 +1558,7 @@ create table t_for_unsub(
 DECLARE INTERFACE interface1 (id INT);
 
 @attribute(cql:implements=interface1)
-create proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
+proc test_interface1_implementation_correct(id_ INT, name_ TEXT)
 begin
   select id_ id, name_ name;
 end;
@@ -1939,7 +1939,7 @@ create table `abc def` (
 -- + "name" : "x y",
 -- + "statement" : "SELECT [a b], [x y] FROM [abc def]",
 -- + "statementArgs" : [  ]
-create proc generate_quoted_items()
+proc generate_quoted_items()
 begin
   select * from `abc def`;
 end;

@@ -36,7 +36,7 @@ extern cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnul
 // The statement ending at line XXXX
 
 /*
-CREATE PROC p (x BLOB<blobshape>)
+PROC p (x BLOB<blobshape>)
 BEGIN
   FETCH serialized_cursor FROM BLOB x;
 END;

@@ -27,7 +27,7 @@
 -- + @attribute(cql:deterministic)
 -- + DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
 -- + DECLARE SELECT FUNC stuff () INT!;
--- + CREATE PROC create_schema()
+-- + PROC create_schema()
 -- + BEGIN
 -- +   call cql_create_udf_stub("is_declare_func_enabled");
 -- +   call cql_create_udf_stub("is_declare_func_wall");
@@ -145,7 +145,7 @@
 -- +   id INT PRIMARY KEY,
 -- +   name TEXT
 -- + );
--- + CREATE PROC populate_no_table_scan()
+-- + PROC populate_no_table_scan()
 -- + BEGIN
 -- +   INSERT OR IGNORE INTO no_table_scan(table_name) VALUES
 -- +     ("table one"),
@@ -154,7 +154,7 @@
 -- +     ("foo");
 -- + END;
 --
--- + CREATE PROC populate_query_plan_1()
+-- + PROC populate_query_plan_1()
 -- + BEGIN
 -- +   LET query_plan_trivial_object := trivial_object();
 -- +   LET query_plan_trivial_blob := trivial_blob();
@@ -178,11 +178,11 @@
 -- +   END;
 -- + END;
 --
--- + CREATE PROC populate_query_plan_2()
--- + CREATE PROC populate_query_plan_20()
+-- + PROC populate_query_plan_2()
+-- + PROC populate_query_plan_20()
 --
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC split_commas (str TEXT)
+-- + PROC split_commas (str TEXT)
 -- + BEGIN
 -- + WITH
 -- +   splitter (tok, rest) AS (
@@ -198,7 +198,7 @@
 -- + END;
 --
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC ids_from_string (str TEXT)
+-- + PROC ids_from_string (str TEXT)
 -- + BEGIN
 -- + WITH
 -- +   toks (tok) AS (CALL split_commas(str))
@@ -206,7 +206,7 @@
 -- +   FROM toks;
 -- + END;
 --
--- + CREATE PROC populate_query_plan_21()
+-- + PROC populate_query_plan_21()
 -- + BEGIN
 -- +   LET query_plan_trivial_object := trivial_object();
 -- +   LET query_plan_trivial_blob := trivial_blob();
@@ -231,26 +231,26 @@
 --
 -- + @attribute(cql:shared_fragment)
 -- + @attribute(cql:query_plan_branch=11)
--- + CREATE PROC frag1 (x INT)
+-- + PROC frag1 (x INT)
 -- + BEGIN
 -- + SELECT 2 AS a;
 -- + END;
 --
 -- + @attribute(cql:shared_fragment)
 -- + @attribute(cql:query_plan_branch=4)
--- + CREATE PROC frag2 (y INT)
+-- + PROC frag2 (y INT)
 -- + BEGIN
 -- + SELECT 40 AS b;
 -- + END;
 -- 
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC frag3 (z INT)
+-- + PROC frag3 (z INT)
 -- + BEGIN
 -- + SELECT 100 AS c;
 -- + END;
 -- 
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC frag_with_select ()
+-- + PROC frag_with_select ()
 -- + BEGIN
 -- + WITH
 -- +   cte (a) AS (
@@ -262,20 +262,20 @@
 -- 
 -- + @attribute(cql:shared_fragment)
 -- + @attribute(cql:query_plan_branch=2)
--- + CREATE PROC frag_with_select_nothing ()
+-- + PROC frag_with_select_nothing ()
 -- + BEGIN
 -- + SELECT 1 AS a;
 -- + END;
 -- 
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC frag (v INT!)
+-- + PROC frag (v INT!)
 -- + BEGIN
 -- + SELECT v AS val;
 -- + END;
 -- 
--- + CREATE PROC populate_query_plan_40()
+-- + PROC populate_query_plan_40()
 --
--- + CREATE PROC populate_table_scan_alert_table(table_ text!)
+-- + PROC populate_table_scan_alert_table(table_ text!)
 -- + BEGIN
 -- +   INSERT OR IGNORE INTO table_scan_alert
 -- +     SELECT upper(table_) || '(' || count(*) || ')' as info FROM plan_temp
@@ -288,10 +288,10 @@
 -- +     ) GROUP BY table_;
 -- + END;
 -- 
--- + CREATE PROC populate_b_tree_alert_table()
+-- + PROC populate_b_tree_alert_table()
 -- + END;
 -- 
--- + CREATE PROC print_query_plan_graph(id_ int!)
+-- + PROC print_query_plan_graph(id_ int!)
 -- + BEGIN
 -- +   DECLARE C CURSOR FOR
 -- +   WITH RECURSIVE
@@ -316,7 +316,7 @@
 -- +   CALL printf("\"\n");
 -- + END;
 -- 
--- + CREATE PROC print_query_plan(sql_id int!)
+-- + PROC print_query_plan(sql_id int!)
 -- + BEGIN
 -- +   CALL printf("  {\n");
 -- +   CALL printf("   \"id\" : %d,\n", sql_id);
@@ -326,7 +326,7 @@
 -- +   CALL printf("  }");
 -- + END;
 --  
--- + CREATE PROC query_plan()
+-- + PROC query_plan()
 -- + BEGIN
 -- +   CALL create_schema();
 -- +   TRY
@@ -413,7 +413,7 @@ create virtual table virtual_table using module_name(this, that, the_other) as (
 declare select function select_virtual_table(b text) (id long int, t text, b blob, r real);
 
 -- Proc with SELECT stmt
-create proc sample()
+proc sample()
 begin
   select * from `table one`
     where name = 'Nelly' and
@@ -497,25 +497,25 @@ with
 
 -- Object type in stmt
 -- + SELECT array_num_at(ptr(query_plan_trivial_object), id) AS idx
-create proc read_object(sync_group_ids_ object not null)
+proc read_object(sync_group_ids_ object not null)
 begin
   select array_num_at(ptr(sync_group_ids_), id) as idx from `table one`;
 end;
 
 -- ok_table_scan attr
 @attribute(cql:ok_table_scan=(scan_ok, t3))
-create proc use_ok_table_scan_attr()
+proc use_ok_table_scan_attr()
 begin
   select * from scan_ok;
 end;
 
 -- test no table scan on "foo_", "_foo" but should be on "foo"
-create proc table_name_like_t1()
+proc table_name_like_t1()
 begin
   select 1 as n from foo_, _foo;
 end;
 
-create proc nullable_variables_remain_nullable(a int)
+proc nullable_variables_remain_nullable(a int)
 begin
   -- analysis of this would fail if `a` were replaced with a value of a nonnull
   -- type when generating the query plan
@@ -527,7 +527,7 @@ create table C(
  name text);
 
 @attribute(cql:shared_fragment)
-CREATE PROC split_commas(str text)
+PROC split_commas(str text)
 BEGIN
   WITH splitter(tok, rest) AS (
     SELECT "", IFNULL(str || ",", "")
@@ -541,13 +541,13 @@ BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC ids_from_string(str text)
+PROC ids_from_string(str text)
 BEGIN
   WITH toks(tok) AS (CALL split_commas(str))
   SELECT CAST(tok AS LONG) AS id FROM toks;
 END;
 
-CREATE PROC use_shared(inc_ text!, exc_ text!)
+PROC use_shared(inc_ text!, exc_ text!)
 begin
   WITH
   I(id) as (call ids_from_string(inc_)),
@@ -559,7 +559,7 @@ end;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=011)
-CREATE PROC frag1(x int)
+PROC frag1(x int)
 BEGIN
   IF x == 2 THEN
     SELECT 1 a;
@@ -570,7 +570,7 @@ END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=4)
-CREATE PROC frag2(y int)
+PROC frag2(y int)
 BEGIN
   IF y == 2 THEN
     SELECT 10 b;
@@ -587,7 +587,7 @@ END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=1)
-CREATE PROC frag3(z int)
+PROC frag3(z int)
 BEGIN
   IF z == 2 THEN
     SELECT 100 c;
@@ -598,7 +598,7 @@ END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=1)
-CREATE PROC frag_with_select() BEGIN
+PROC frag_with_select() BEGIN
   IF TRUE THEN
     WITH cte(a) AS (SELECT 1 a)
     SELECT * FROM cte;
@@ -609,7 +609,7 @@ END;
 
 @attribute(cql:shared_fragment)
 @attribute(cql:query_plan_branch=2)
-CREATE PROC frag_with_select_nothing() BEGIN
+PROC frag_with_select_nothing() BEGIN
   IF TRUE THEN
     SELECT 1 a;
   ELSE
@@ -618,11 +618,11 @@ CREATE PROC frag_with_select_nothing() BEGIN
 END;
 
 @attribute(cql:shared_fragment)
-CREATE PROC frag(v int!) BEGIN
+PROC frag(v int!) BEGIN
   select v val;
 END;
 
-CREATE PROC use_frag_locals() BEGIN
+PROC use_frag_locals() BEGIN
   let v := nullable(1);
   if v is not null then
     with
@@ -631,7 +631,7 @@ CREATE PROC use_frag_locals() BEGIN
   end if;
 END;
 
-CREATE PROC use_frag_arguments(v integer) BEGIN
+PROC use_frag_arguments(v integer) BEGIN
   if v is not null then
     with
       (call frag(from arguments))
@@ -640,7 +640,7 @@ CREATE PROC use_frag_arguments(v integer) BEGIN
 END;
 
 -- proc call a virtual table
-CREATE PROC call_virtual_table()
+PROC call_virtual_table()
 BEGIN
   select
     one.id,
@@ -698,7 +698,7 @@ declare select function bupdateval no check blob;
 create index backing_index on backing(bgetkey_type(k));
 
 -- proc to read from a backed table
-create proc read_from_backed_table()
+proc read_from_backed_table()
 begin
   select * from backed where name = 'x';
 end;
@@ -779,7 +779,7 @@ end;
 
 -- + (CALL qp_take_inner_blob(LOCALS.foo))
 [[shared_fragment]]
-create proc qp_take_blob(foo blob) begin
+proc qp_take_blob(foo blob) begin
   with (call qp_take_inner_blob(*))
   select * from qp_take_inner_blob;
 end;

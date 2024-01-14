@@ -1706,9 +1706,9 @@ static bool_t will_add_current_entity() {
 CSTR coretype_string(sem_t sem_type) {
   CSTR result = NULL;
   switch (core_type_of(sem_type)) {
-    case SEM_TYPE_INTEGER: result = "INTEGER"; break;
+    case SEM_TYPE_INTEGER: result = "INT"; break;
     case SEM_TYPE_TEXT: result = "TEXT"; break;
-    case SEM_TYPE_LONG_INTEGER: result = "LONG_INT"; break;
+    case SEM_TYPE_LONG_INTEGER: result = "LONG"; break;
     case SEM_TYPE_REAL: result = "REAL"; break;
     case SEM_TYPE_BOOL: result = "BOOL"; break;
     case SEM_TYPE_BLOB: result = "BLOB"; break;
@@ -2852,7 +2852,7 @@ static bool_t sem_verify_safe_assign(ast_node *ast, sem_t sem_type_needed, sem_t
       }
 
       if (core_type_found == SEM_TYPE_LONG_INTEGER && core_type_needed == SEM_TYPE_INTEGER) {
-         err_type = "LONG_INT";
+         err_type = "LONG";
          goto error;
       }
       break;
@@ -4507,7 +4507,7 @@ static sem_t sem_col_attrs(ast_node *def, ast_node *head, col_def_info *info) {
         sem_t core_type = core_type_of(info->col_sem_type);
 
         if (core_type != SEM_TYPE_INTEGER && core_type != SEM_TYPE_LONG_INTEGER) {
-          report_error(ast->left, "CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY", info->col_name);
+          report_error(ast->left, "CQL0029: autoincrement column must be [LONG|INT] PRIMARY KEY", info->col_name);
           record_error(head);
           return false;
         }

@@ -22,7 +22,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0404: procedure canno
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 );
 
   {create_table_stmt}: foo: { id: integer notnull primary_key autoinc }
@@ -43,7 +43,7 @@ CREATE TABLE foo(
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 );
 
   {create_table_stmt}: foo: { id: integer notnull primary_key autoinc } alias
@@ -64,7 +64,7 @@ CREATE TABLE foo(
 The statement ending at line XXXX
 
 CREATE TABLE with_kind(
-  id INTEGER<some_key>,
+  id INT<some_key>,
   cost REAL<dollars>,
   value REAL<dollars>
 );
@@ -119,9 +119,9 @@ DECLARE price_e REAL<euros>;
 The statement ending at line XXXX
 
 CREATE TABLE bar(
-  id INTEGER!,
+  id INT!,
   name TEXT @CREATE(2),
-  rate LONG_INT @CREATE(2)
+  rate LONG @CREATE(2)
 );
 
   {create_table_stmt}: bar: { id: integer notnull, name: text, rate: longint }
@@ -158,15 +158,15 @@ CREATE TABLE bar(
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER
+  id INT
 );
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 )
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
-  id INTEGER
+  id INT
 )
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'foo'
@@ -186,8 +186,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'fo
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER,
-  id INTEGER
+  id INT,
+  id INT
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0142: duplicate column name 'id'
@@ -1284,7 +1284,7 @@ DECLARE real_result2 REAL;
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func2 (arg1 INTEGER!, arg2 INTEGER!, arg3 INTEGER!) REAL!;
+DECLARE FUNC simple_func2 (arg1 INT!, arg2 INT!, arg3 INT!) REAL!;
 
   {declare_func_stmt}: real notnull
   | {name simple_func2}: real notnull
@@ -1329,7 +1329,7 @@ SET real_result2 := simple_func2(2, 3, 4);
 
 The statement ending at line XXXX
 
-DECLARE int_result INTEGER;
+DECLARE int_result INT;
 
   {declare_vars_type}: integer
   | {name_list}: int_result: integer variable was_set
@@ -1338,7 +1338,7 @@ DECLARE int_result INTEGER;
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func3 (arg1 INTEGER!) INTEGER!;
+DECLARE FUNC simple_func3 (arg1 INT!) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name simple_func3}: integer notnull
@@ -2460,7 +2460,7 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
 The statement ending at line XXXX
 
 CREATE TABLE big(
-  l LONG_INT,
+  l LONG,
   r REAL
 );
 
@@ -4727,7 +4727,7 @@ CREATE VIEW foo AS
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 )
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW foo AS
   SELECT 2 AS x
@@ -5105,7 +5105,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0015: expected numeric expression '
 The statement ending at line XXXX
 
 CREATE TABLE simple_pk_table(
-  id INTEGER!,
+  id INT!,
   PRIMARY KEY (id)
 );
 
@@ -5131,7 +5131,7 @@ CREATE TABLE simple_pk_table(
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER!,
+  id INT!,
   PRIMARY KEY (pk_col_not_exist)
 );
 
@@ -5159,7 +5159,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'pk_col_not_ex
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER!,
+  id INT!,
   PRIMARY KEY (id),
   PRIMARY KEY (id)
 );
@@ -5194,7 +5194,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0143: more than one primary key in 
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT ak1 UNIQUE (id)
 );
 
@@ -5221,10 +5221,10 @@ CREATE TABLE simple_ak_table(
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table_2(
-  a INTEGER!,
+  a INT!,
   b TEXT,
   c REAL,
-  d LONG_INT,
+  d LONG,
   UNIQUE (a, b),
   UNIQUE (a, c),
   UNIQUE (d)
@@ -5288,10 +5288,10 @@ CREATE TABLE simple_ak_table_2(
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table_3(
-  a INTEGER!,
+  a INT!,
   b TEXT,
   c REAL,
-  d LONG_INT,
+  d LONG,
   UNIQUE (a, b),
   UNIQUE (b, d)
 );
@@ -5348,7 +5348,7 @@ CREATE TABLE simple_ak_table_3(
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table_4(
-  a INTEGER!,
+  a INT!,
   b TEXT,
   c REAL,
   UNIQUE (a, b),
@@ -5406,10 +5406,10 @@ test/sem_test.sql:XXXX:1: error: in unq_def : CQL0269: at least part of this uni
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table_5(
-  a INTEGER!,
+  a INT!,
   b TEXT,
   c REAL,
-  d LONG_INT,
+  d LONG,
   UNIQUE (a, b),
   UNIQUE (b, a)
 );
@@ -5468,10 +5468,10 @@ test/sem_test.sql:XXXX:1: error: in unq_def : CQL0269: at least part of this uni
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table_6(
-  a INTEGER!,
+  a INT!,
   b TEXT,
   c REAL,
-  d LONG_INT,
+  d LONG,
   UNIQUE (a, b),
   UNIQUE (c, d, b, a)
 );
@@ -5536,10 +5536,10 @@ test/sem_test.sql:XXXX:1: error: in unq_def : CQL0269: at least part of this uni
 The statement ending at line XXXX
 
 CREATE TABLE simple_ak_table_7(
-  a INTEGER!,
+  a INT!,
   b TEXT,
   c REAL,
-  d LONG_INT,
+  d LONG,
   UNIQUE (a, b),
   UNIQUE (a)
 );
@@ -5595,7 +5595,7 @@ test/sem_test.sql:XXXX:1: error: in unq_def : CQL0269: at least part of this uni
 The statement ending at line XXXX
 
 CREATE TABLE baz_expr_uk(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   CONSTRAINT ak1 UNIQUE (id / 2)
 );
 
@@ -5627,7 +5627,7 @@ CREATE TABLE baz_expr_uk(
 The statement ending at line XXXX
 
 CREATE TABLE baz_expr_uk_bogus(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   CONSTRAINT ak1 UNIQUE (random())
 );
 
@@ -5662,7 +5662,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE baz_expr_pk(
-  id INTEGER,
+  id INT,
   CONSTRAINT pk1 PRIMARY KEY (id / 2)
 );
 
@@ -5690,7 +5690,7 @@ CREATE TABLE baz_expr_pk(
 The statement ending at line XXXX
 
 CREATE TABLE baz_expr_uk_bogus(
-  id INTEGER,
+  id INT,
   CONSTRAINT pk1 PRIMARY KEY (random())
 );
 
@@ -5721,7 +5721,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE baz_dup_uk(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   CONSTRAINT ak1 UNIQUE (id),
   CONSTRAINT ak1 UNIQUE (id)
 );
@@ -5761,7 +5761,7 @@ test/sem_test.sql:XXXX:1: error: in unq_def : CQL0020: duplicate constraint name
 The statement ending at line XXXX
 
 CREATE TABLE baz_dup_pk(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id),
   CONSTRAINT pk1 PRIMARY KEY (id)
 );
@@ -5798,7 +5798,7 @@ test/sem_test.sql:XXXX:1: error: in pk_def : CQL0020: duplicate constraint name 
 The statement ending at line XXXX
 
 CREATE TABLE baz_2(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   name TEXT,
   UNIQUE (id, name),
   UNIQUE (name, id)
@@ -5849,7 +5849,7 @@ test/sem_test.sql:XXXX:1: error: in unq_def : CQL0269: at least part of this uni
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   CONSTRAINT ak1 UNIQUE (ak_col_not_exist)
 );
 
@@ -5881,7 +5881,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'ak_col_not_ex
 The statement ending at line XXXX
 
 CREATE TABLE baz_3(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   UNIQUE (ak_col_not_exist)
 );
 
@@ -5912,7 +5912,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'ak_col_not_ex
 The statement ending at line XXXX
 
 CREATE TABLE fk_table(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo (id)
 );
 
@@ -5942,7 +5942,7 @@ CREATE TABLE fk_table(
 The statement ending at line XXXX
 
 CREATE TABLE fk_table_dup(
-  id INTEGER,
+  id INT,
   CONSTRAINT x FOREIGN KEY (id) REFERENCES foo (id),
   CONSTRAINT x FOREIGN KEY (id) REFERENCES foo (id)
 );
@@ -5988,7 +5988,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0020: duplicate constraint name 
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (bogus) REFERENCES foo (id)
 );
 
@@ -6020,7 +6020,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'bogus'
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo (bogus)
 );
 
@@ -6052,7 +6052,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'bogus'
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES bogus (id)
 );
 
@@ -6547,7 +6547,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE TABLE booly(
-  id INTEGER DEFAULT 8675309,
+  id INT DEFAULT 8675309,
   flag BOOL
 );
 
@@ -6573,7 +6573,7 @@ CREATE TABLE booly(
 
 The statement ending at line XXXX
 
-DECLARE ENUM ints INTEGER (
+DECLARE ENUM ints INT (
   negative_one = -1,
   postive_one = 1
 );
@@ -6595,8 +6595,8 @@ DECLARE ENUM ints INTEGER (
 The statement ending at line XXXX
 
 CREATE TABLE bad_constants_table(
-  x INTEGER DEFAULT -1,
-  y INTEGER DEFAULT CONST(1 / 0)
+  x INT DEFAULT -1,
+  y INT DEFAULT CONST(1 / 0)
 );
 
 test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant failed
@@ -6883,7 +6883,7 @@ test/sem_test.sql:XXXX:1: error: in const : CQL0353: evaluation of constant fail
 The statement ending at line XXXX
 
 CREATE TABLE bad_conversions(
-  data INTEGER! DEFAULT NULL
+  data INT! DEFAULT NULL
 );
 
 test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly null expression to not null target 'default value'
@@ -6906,7 +6906,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly 
 The statement ending at line XXXX
 
 CREATE TABLE bad_conversions(
-  data INTEGER! DEFAULT 2.200000e+00
+  data INT! DEFAULT 2.200000e+00
 );
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 2.200000e+00
@@ -7001,7 +7001,7 @@ SELECT DISTINCTROW id, flag
 
 The statement ending at line XXXX
 
-DECLARE X, Y INTEGER;
+DECLARE X, Y INT;
 
   {declare_vars_type}: integer
   | {name_list}: X: integer variable was_set
@@ -7012,7 +7012,7 @@ DECLARE X, Y INTEGER;
 
 The statement ending at line XXXX
 
-DECLARE X_not_null INTEGER!;
+DECLARE X_not_null INT!;
 
   {declare_vars_type}: integer notnull
   | {name_list}: X_not_null: integer notnull variable was_set
@@ -7022,7 +7022,7 @@ DECLARE X_not_null INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE X INTEGER;
+DECLARE X INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'X'
 
@@ -7041,7 +7041,7 @@ SET X := @RC;
 
 The statement ending at line XXXX
 
-DECLARE foo INTEGER;
+DECLARE foo INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0198: global variable hides table/view name 'foo'
 
@@ -7135,7 +7135,7 @@ DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
 
 The statement ending at line XXXX
 
-DECLARE extended_cursor CURSOR LIKE (id INTEGER<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
+DECLARE extended_cursor CURSOR LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
 
   {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
   | {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
@@ -7306,7 +7306,7 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable
 
 The statement ending at line XXXX
 
-DECLARE extended_cursor CURSOR LIKE (x INTEGER);
+DECLARE extended_cursor CURSOR LIKE (x INT);
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_typed_names : CQL0197: duplicate variable name in the same scope 'extended_cursor'
 
@@ -7344,7 +7344,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE extended_cursor CURSOR LIKE (x INTEGER, x INTEGER);
+DECLARE extended_cursor CURSOR LIKE (x INT, x INT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'x'
 
@@ -7502,7 +7502,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_rc (OUT result_code INTEGER!)
+CREATE PROC using_rc (OUT result_code INT!)
 BEGIN
   SET result_code := @RC;
 END;
@@ -8224,8 +8224,8 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0013: cannot assign/copy possibly 
 The statement ending at line XXXX
 
 CREATE TABLE two_autoincs_is_bad(
-  id1 INTEGER PRIMARY KEY AUTOINCREMENT!,
-  id2 INTEGER PRIMARY KEY AUTOINCREMENT!
+  id1 INT PRIMARY KEY AUTOINCREMENT!,
+  id2 INT PRIMARY KEY AUTOINCREMENT!
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0040: table can only have one autoinc column 'id2'
@@ -8343,7 +8343,7 @@ DECLARE fetch_cursor CURSOR FOR
 
 The statement ending at line XXXX
 
-DECLARE an_int INTEGER;
+DECLARE an_int INT;
 
   {declare_vars_type}: integer
   | {name_list}: an_int: integer variable was_set
@@ -8352,7 +8352,7 @@ DECLARE an_int INTEGER;
 
 The statement ending at line XXXX
 
-DECLARE an_int2 INTEGER;
+DECLARE an_int2 INT;
 
   {declare_vars_type}: integer
   | {name_list}: an_int2: integer variable was_set
@@ -8388,7 +8388,7 @@ DECLARE a_nullable TEXT;
 
 The statement ending at line XXXX
 
-DECLARE an_long LONG_INT;
+DECLARE an_long LONG;
 
   {declare_vars_type}: longint
   | {name_list}: an_long: longint variable was_set
@@ -8527,7 +8527,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
 The statement ending at line XXXX
 
 CREATE TABLE bad_table(
-  key_id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  key_id INT PRIMARY KEY AUTOINCREMENT!,
   CONSTRAINT ak1 UNIQUE (key_id, key_id)
 );
 
@@ -8562,7 +8562,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
 The statement ending at line XXXX
 
 CREATE TABLE bad_table_2(
-  key_id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  key_id INT PRIMARY KEY AUTOINCREMENT!,
   UNIQUE (key_id, key_id)
 );
 
@@ -8596,7 +8596,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
 The statement ending at line XXXX
 
 CREATE TABLE bad_table(
-  col_id INTEGER,
+  col_id INT,
   FOREIGN KEY (col_id, col_id) REFERENCES foo (id)
 );
 
@@ -8630,8 +8630,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0172: name list has duplicate name 
 The statement ending at line XXXX
 
 CREATE TABLE ref_target(
-  ref_id1 INTEGER,
-  ref_id2 INTEGER
+  ref_id1 INT,
+  ref_id2 INT
 );
 
   {create_table_stmt}: ref_target: { ref_id1: integer, ref_id2: integer }
@@ -8655,8 +8655,8 @@ CREATE TABLE ref_target(
 The statement ending at line XXXX
 
 CREATE TABLE bad_table(
-  id1 INTEGER,
-  id2 INTEGER,
+  id1 INT,
+  id2 INT,
   FOREIGN KEY (id1, id2) REFERENCES ref_target (ref_id1, ref_id1)
 );
 
@@ -8888,7 +8888,7 @@ UPDATE foo
   SET id = 1L
   WHERE id = 2;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG_INT' in 1L
+test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 1L
 
   {update_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -9026,7 +9026,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 'p
 
 The statement ending at line XXXX
 
-CREATE PROC proc2 (arg1 INTEGER, arg2 TEXT)
+CREATE PROC proc2 (arg1 INT, arg2 TEXT)
 BEGIN
   DELETE FROM foo WHERE arg1 = ('x' IN (arg2));
 END;
@@ -9099,7 +9099,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'arg2'
 
 The statement ending at line XXXX
 
-CREATE PROC proc3 (arg1 INTEGER, arg1 TEXT)
+CREATE PROC proc3 (arg1 INT, arg1 TEXT)
 BEGIN
   CALL anything(arg1, arg2);
 END;
@@ -9147,7 +9147,7 @@ The statement ending at line XXXX
 CREATE PROC proc_throw_not_at_end ()
 BEGIN
   THROW;
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in throw_stmt : CQL0308: statement should be the last thing in a statement list
@@ -9216,7 +9216,7 @@ DECLARE PROC anything NO CHECK;
 
 The statement ending at line XXXX
 
-CREATE PROC proc4 (IN arg1 INTEGER, OUT arg2 TEXT, INOUT arg3 REAL)
+CREATE PROC proc4 (IN arg1 INT, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
   CALL anything(arg1, arg3);
 END;
@@ -9252,9 +9252,9 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC proc5 (IN arg1 INTEGER, OUT arg2 TEXT, INOUT arg3 REAL)
+CREATE PROC proc5 (IN arg1 INT, OUT arg2 TEXT, INOUT arg3 REAL)
 BEGIN
-  DECLARE arg1 INTEGER;
+  DECLARE arg1 INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'arg1'
@@ -9484,7 +9484,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.id'
 
 The statement ending at line XXXX
 
-DECLARE int_nn INTEGER!;
+DECLARE int_nn INT!;
 
   {declare_vars_type}: integer notnull
   | {name_list}: int_nn: integer notnull variable was_set
@@ -9596,7 +9596,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0213: procedure had errors, c
 
 The statement ending at line XXXX
 
-CREATE PROC proc_with_output (IN arg1 INTEGER, INOUT arg2 INTEGER, OUT arg3 INTEGER)
+CREATE PROC proc_with_output (IN arg1 INT, INOUT arg2 INT, OUT arg3 INT)
 BEGIN
 END;
 
@@ -9667,7 +9667,7 @@ CALL proc_with_output(1, X, Y);
 
 The statement ending at line XXXX
 
-CREATE PROC test_proc2 (INOUT arg1 INTEGER)
+CREATE PROC test_proc2 (INOUT arg1 INT)
 BEGIN
   CALL proc_with_output(1, X, arg1);
 END;
@@ -9693,7 +9693,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_proc3 (OUT arg1 INTEGER)
+CREATE PROC test_proc3 (OUT arg1 INT)
 BEGIN
   CALL proc_with_output(1, X, arg1);
 END;
@@ -11209,7 +11209,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_matching_result (i INTEGER)
+CREATE PROC with_matching_result (i INT)
 BEGIN
   IF i THEN
     SELECT 1 AS A, 2.5 AS B;
@@ -11279,7 +11279,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_wrong_types (i INTEGER)
+CREATE PROC with_wrong_types (i INT)
 BEGIN
   IF i THEN
     SELECT 1 AS A, 2.5 AS B;
@@ -11351,7 +11351,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0061: in multiple select/ou
 
 The statement ending at line XXXX
 
-CREATE PROC with_wrong_count (i INTEGER)
+CREATE PROC with_wrong_count (i INT)
 BEGIN
   IF i THEN
     SELECT 1 AS A, 2.5 AS B;
@@ -11427,7 +11427,7 @@ only in 1st: B real notnull
 
 The statement ending at line XXXX
 
-CREATE PROC with_wrong_flags (i INTEGER!)
+CREATE PROC with_wrong_flags (i INT!)
 BEGIN
   IF i THEN
     SELECT i AS A;
@@ -11490,7 +11490,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0062: in multiple select/ou
 
 The statement ending at line XXXX
 
-CREATE PROC with_ok_flags (i INTEGER!)
+CREATE PROC with_ok_flags (i INT!)
 BEGIN
   IF i THEN
     SELECT i AS A;
@@ -11551,7 +11551,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC with_bad_names (i INTEGER!)
+CREATE PROC with_bad_names (i INT!)
 BEGIN
   IF i THEN
     SELECT 1 AS A;
@@ -11624,7 +11624,7 @@ only in 2nd: B integer notnull
 
 The statement ending at line XXXX
 
-CREATE PROC with_no_names (i INTEGER!)
+CREATE PROC with_no_names (i INT!)
 BEGIN
   SELECT 1;
 END;
@@ -11974,7 +11974,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense i
 
 The statement ending at line XXXX
 
-CREATE PROC out_proc (OUT result INTEGER)
+CREATE PROC out_proc (OUT result INT)
 BEGIN
   SET result := 5;
 END;
@@ -11995,7 +11995,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE my_int INTEGER!;
+DECLARE my_int INT!;
 
   {declare_vars_type}: integer notnull
   | {name_list}: my_int: integer notnull variable was_set
@@ -12551,8 +12551,8 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0097: join using column not f
 The statement ending at line XXXX
 
 CREATE TABLE payload1(
-  id INTEGER!,
-  data1 INTEGER!
+  id INT!,
+  data1 INT!
 );
 
   {create_table_stmt}: payload1: { id: integer notnull, data1: integer notnull }
@@ -12578,8 +12578,8 @@ CREATE TABLE payload1(
 The statement ending at line XXXX
 
 CREATE TABLE payload2(
-  id INTEGER!,
-  data2 INTEGER!
+  id INT!,
+  data2 INT!
 );
 
   {create_table_stmt}: payload2: { id: integer notnull, data2: integer notnull }
@@ -13065,8 +13065,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE TABLE fk_table_2(
-  id1 INTEGER,
-  id2 INTEGER,
+  id1 INT,
+  id2 INT,
   FOREIGN KEY (id1, id2) REFERENCES foo (id)
 );
 
@@ -13156,7 +13156,7 @@ CREATE TABLE join_clause_1(
 The statement ending at line XXXX
 
 CREATE TABLE join_clause_2(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: join_clause_2: { id: integer }
@@ -13286,7 +13286,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-DECLARE rowid_result LONG_INT!;
+DECLARE rowid_result LONG!;
 
   {declare_vars_type}: longint notnull
   | {name_list}: rowid_result: longint notnull variable was_set
@@ -13385,7 +13385,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-DECLARE changes_result INTEGER!;
+DECLARE changes_result INT!;
 
   {declare_vars_type}: integer notnull
   | {name_list}: changes_result: integer notnull variable was_set
@@ -13628,7 +13628,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument must be numeric 'sum
 The statement ending at line XXXX
 
 CREATE TABLE A1(
-  foo INTEGER
+  foo INT
 );
 
   {create_table_stmt}: A1: { foo: integer }
@@ -13646,7 +13646,7 @@ CREATE TABLE A1(
 The statement ending at line XXXX
 
 CREATE TABLE B1(
-  foo INTEGER
+  foo INT
 );
 
   {create_table_stmt}: B1: { foo: integer }
@@ -13664,7 +13664,7 @@ CREATE TABLE B1(
 The statement ending at line XXXX
 
 CREATE TABLE C1(
-  foo INTEGER
+  foo INT
 );
 
   {create_table_stmt}: C1: { foo: integer }
@@ -14922,7 +14922,7 @@ test/sem_test.sql:XXXX:1: error: in cast_expr : CQL0073: CAST may only appear in
 
 The statement ending at line XXXX
 
-LET int_lit_foo := TYPE_CHECK(1 AS INTEGER!);
+LET int_lit_foo := TYPE_CHECK(1 AS INT!);
 
   {let_stmt}: int_lit_foo: integer notnull variable
   | {name int_lit_foo}: int_lit_foo: integer notnull variable
@@ -14949,7 +14949,7 @@ LET str_foo := TYPE_CHECK(a_string AS TEXT!);
 
 The statement ending at line XXXX
 
-LET int_foo := TYPE_CHECK(CAST(1 AS INTEGER<foo>) AS INTEGER<foo>!);
+LET int_foo := TYPE_CHECK(CAST(1 AS INT<foo>) AS INT<foo>!);
 
   {let_stmt}: int_foo: integer<foo> notnull variable
   | {name int_foo}: int_foo: integer<foo> notnull variable
@@ -14989,7 +14989,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'goo'
 
 The statement ending at line XXXX
 
-SET int_foo := TYPE_CHECK(CAST(1 AS INTEGER<bar>) AS INTEGER<foo>!);
+SET int_foo := TYPE_CHECK(CAST(1 AS INT<bar>) AS INT<foo>!);
 
 test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: 'bar' vs. 'foo'
 
@@ -15006,7 +15006,7 @@ test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of di
 
 The statement ending at line XXXX
 
-SET int_foo := TYPE_CHECK(1 AS INTEGER<foo>!);
+SET int_foo := TYPE_CHECK(1 AS INT<foo>!);
 
 test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: '[none]' vs. 'foo'
 
@@ -15020,7 +15020,7 @@ test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of di
 
 The statement ending at line XXXX
 
-SET int_foo := TYPE_CHECK(CAST(1 AS INTEGER<bar>) AS INTEGER!);
+SET int_foo := TYPE_CHECK(CAST(1 AS INT<bar>) AS INT!);
 
 test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of different kinds can't be mixed: 'bar' vs. '[none]'
 
@@ -15036,7 +15036,7 @@ test/sem_test.sql:XXXX:1: error: in type_check_expr : CQL0070: expressions of di
 
 The statement ending at line XXXX
 
-SET int_foo := TYPE_CHECK(1 AS INTEGER);
+SET int_foo := TYPE_CHECK(1 AS INT);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression (expected integer; found integer notnull) '1'
 
@@ -15048,7 +15048,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-SET int_foo := TYPE_CHECK(1 AS INTEGER<foo>! @SENSITIVE);
+SET int_foo := TYPE_CHECK(1 AS INT<foo>! @SENSITIVE);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression (expected integer notnull sensitive; found integer notnull) '1'
 
@@ -15063,7 +15063,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-LET int_sql_val := ( SELECT TYPE_CHECK(1 AS INTEGER!) );
+LET int_sql_val := ( SELECT TYPE_CHECK(1 AS INT!) );
 
   {let_stmt}: int_sql_val: integer notnull variable
   | {name int_sql_val}: int_sql_val: integer notnull variable
@@ -15094,9 +15094,9 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-LET idx := CAST(1 AS INTEGER);
+LET idx := CAST(1 AS INT);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0170: cast is redundant, remove to reduce code size 'CAST(1 AS INTEGER)'
+test/sem_test.sql:XXXX:1: error: in num : CQL0170: cast is redundant, remove to reduce code size 'CAST(1 AS INT)'
 
   {let_stmt}: err
   | {name idx}
@@ -15106,7 +15106,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0170: cast is redundant, remove to 
 
 The statement ending at line XXXX
 
-LET idr := CAST(1.5 AS INTEGER);
+LET idr := CAST(1.5 AS INT);
 
   {let_stmt}: idr: integer notnull variable
   | {name idr}: idr: integer notnull variable
@@ -15116,7 +15116,7 @@ LET idr := CAST(1.5 AS INTEGER);
 
 The statement ending at line XXXX
 
-LET idx := CAST(1 AS INTEGER<x>);
+LET idx := CAST(1 AS INT<x>);
 
   {let_stmt}: idx: integer<x> notnull variable
   | {name idx}: idx: integer<x> notnull variable
@@ -15127,7 +15127,7 @@ LET idx := CAST(1 AS INTEGER<x>);
 
 The statement ending at line XXXX
 
-LET idy := CAST(idx AS INTEGER<y>);
+LET idy := CAST(idx AS INT<y>);
 
   {let_stmt}: idy: integer<y> notnull variable
   | {name idy}: idy: integer<y> notnull variable
@@ -15138,9 +15138,9 @@ LET idy := CAST(idx AS INTEGER<y>);
 
 The statement ending at line XXXX
 
-SET idy := CAST(idy AS INTEGER<y>);
+SET idy := CAST(idy AS INT<y>);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0170: cast is redundant, remove to reduce code size 'CAST(idy AS INTEGER<y>)'
+test/sem_test.sql:XXXX:1: error: in str : CQL0170: cast is redundant, remove to reduce code size 'CAST(idy AS INT<y>)'
 
   {assign}: err
   | {name idy}: idy: integer<y> notnull variable
@@ -15158,7 +15158,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-SELECT CAST(NOT 'x' AS INTEGER);
+SELECT CAST(NOT 'x' AS INT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -15183,7 +15183,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE TABLE pk_test(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
   {create_table_stmt}: pk_test: { id: integer notnull primary_key }
@@ -15203,7 +15203,7 @@ CREATE TABLE pk_test(
 The statement ending at line XXXX
 
 CREATE TABLE pk_test_2(
-  id INTEGER,
+  id INT,
   PRIMARY KEY (id)
 );
 
@@ -15228,7 +15228,7 @@ CREATE TABLE pk_test_2(
 The statement ending at line XXXX
 
 CREATE TABLE AA1(
-  id1 INTEGER!
+  id1 INT!
 );
 
   {create_table_stmt}: AA1: { id1: integer notnull }
@@ -15247,7 +15247,7 @@ CREATE TABLE AA1(
 The statement ending at line XXXX
 
 CREATE TABLE BB2(
-  id2 INTEGER!
+  id2 INT!
 );
 
   {create_table_stmt}: BB2: { id2: integer notnull }
@@ -15266,7 +15266,7 @@ CREATE TABLE BB2(
 The statement ending at line XXXX
 
 CREATE TABLE CC3(
-  id3 INTEGER!
+  id3 INT!
 );
 
   {create_table_stmt}: CC3: { id3: integer notnull }
@@ -15335,7 +15335,7 @@ SELECT *
 
 The statement ending at line XXXX
 
-DECLARE PROC decl1 (id INTEGER);
+DECLARE PROC decl1 (id INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -15359,7 +15359,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0404: proced
 
 The statement ending at line XXXX
 
-DECLARE PROC decl2 (id INTEGER) USING TRANSACTION;
+DECLARE PROC decl2 (id INT) USING TRANSACTION;
 
   {declare_proc_stmt}: ok dml_proc
   | {proc_name_type}
@@ -15374,7 +15374,7 @@ DECLARE PROC decl2 (id INTEGER) USING TRANSACTION;
 
 The statement ending at line XXXX
 
-DECLARE PROC decl3 (id INTEGER) (A INTEGER!, B BOOL);
+DECLARE PROC decl3 (id INT) (A INT!, B BOOL);
 
   {declare_proc_stmt}: decl3: { A: integer notnull, B: bool } dml_proc
   | {proc_name_type}
@@ -15398,7 +15398,7 @@ DECLARE PROC decl3 (id INTEGER) (A INTEGER!, B BOOL);
 
 The statement ending at line XXXX
 
-DECLARE PROC decl4 (x_A INTEGER!, x_B BOOL);
+DECLARE PROC decl4 (x_A INT!, x_B BOOL);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -15438,7 +15438,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0194: declared procedures must be t
 
 The statement ending at line XXXX
 
-DECLARE PROC decl1 (id INTEGER);
+DECLARE PROC decl1 (id INT);
 
   {declare_proc_stmt}: ok alias
   | {proc_name_type}
@@ -15453,11 +15453,11 @@ DECLARE PROC decl1 (id INTEGER);
 
 The statement ending at line XXXX
 
-DECLARE PROC decl1 (id INTEGER!);
+DECLARE PROC decl1 (id INT!);
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER)
-test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INTEGER!)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INT)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl1 (id INT!)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'decl1'
 
@@ -15475,7 +15475,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure decla
 
 The statement ending at line XXXX
 
-DECLARE PROC bogus_duplicate_params (id INTEGER, id INTEGER);
+DECLARE PROC bogus_duplicate_params (id INT, id INT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'id'
 
@@ -15497,7 +15497,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'id'
 
 The statement ending at line XXXX
 
-DECLARE PROC bogus_select_list (id INTEGER) (id INTEGER, id INTEGER);
+DECLARE PROC bogus_select_list (id INT) (id INT, id INT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 
@@ -19971,7 +19971,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0440: fragments may no
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC a_shared_frag (x INTEGER!, y INTEGER!)
+CREATE PROC a_shared_frag (x INT!, y INT!)
 BEGIN
   SELECT 1 AS x, 2 AS y, 3.0 AS z;
 END;
@@ -20506,7 +20506,7 @@ The statement ending at line XXXX
 CREATE PROC bogus_conditional_non_select ()
 BEGIN
   IF 1 THEN
-    DECLARE x INTEGER;
+    DECLARE x INT;
   ELSE
     SELECT 1 AS x;
   END;
@@ -20656,7 +20656,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0434: shared fragments may no
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC shared_frag2 (x INTEGER!, y INTEGER!)
+CREATE PROC shared_frag2 (x INT!, y INT!)
 BEGIN
   WITH
     source (x, y, z) LIKE a_shared_frag
@@ -20759,7 +20759,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0430: no actual table was pro
 
 The statement ending at line XXXX
 
-DECLARE PROC frag_type () (id INTEGER<job>, name TEXT);
+DECLARE PROC frag_type () (id INT<job>, name TEXT);
 
   {declare_proc_stmt}: frag_type: { id: integer<job>, name: text } dml_proc
   | {proc_name_type}
@@ -20829,7 +20829,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE jobstuff(
-  id INTEGER<job>,
+  id INT<job>,
   name TEXT
 );
 
@@ -20855,7 +20855,7 @@ CREATE TABLE jobstuff(
 The statement ending at line XXXX
 
 CREATE TABLE bad_jobstuff(
-  id INTEGER<meters>,
+  id INT<meters>,
   name TEXT
 );
 
@@ -22361,7 +22361,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0323: calls to undeclared pro
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_with_CTEs (id_ INTEGER!)
+CREATE PROC test_shared_fragment_with_CTEs (id_ INT!)
 BEGIN
   WITH
     t1 (id) AS (
@@ -22496,7 +22496,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_without_CTEs (id_ INTEGER!)
+CREATE PROC test_shared_fragment_without_CTEs (id_ INT!)
 BEGIN
   SELECT id, name, rate
     FROM bar
@@ -22606,7 +22606,7 @@ test/sem_test.sql:XXXX:1: error: in stmt_list : CQL0179: shared fragments must c
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC test_shared_fragment_bad_args (OUT x INTEGER)
+CREATE PROC test_shared_fragment_bad_args (OUT x INT)
 BEGIN
   SELECT *
     FROM bar;
@@ -22652,7 +22652,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:shared_fragment)
 CREATE PROC test_shared_fragment_wrong_form_not_select ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in declare_vars_type : CQL0441: shared fragments may only have IF, SELECT, or WITH...SELECT at the top level 'test_shared_fragment_wrong_form_not_select'
@@ -23333,7 +23333,7 @@ test/sem_test.sql:XXXX:1: error: in table_star : CQL0054: table not found 'T'
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func (arg1 INTEGER!) REAL!;
+DECLARE FUNC simple_func (arg1 INT!) REAL!;
 
   {declare_func_stmt}: real notnull
   | {name simple_func}: real notnull
@@ -23349,7 +23349,7 @@ DECLARE FUNC simple_func (arg1 INTEGER!) REAL!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC simple_func (arg1 INTEGER) REAL!;
+DECLARE FUNC simple_func (arg1 INT) REAL!;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0193: duplicate function name 'simple_func'
 
@@ -23366,7 +23366,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0193: duplicate function name 'simp
 
 The statement ending at line XXXX
 
-DECLARE PROC simple_func (arg1 INTEGER!);
+DECLARE PROC simple_func (arg1 INT!);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0195: proc name conflicts with func name 'simple_func'
 
@@ -23384,7 +23384,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0195: proc name conflicts with func
 
 The statement ending at line XXXX
 
-CREATE PROC simple_func (arg1 INTEGER!)
+CREATE PROC simple_func (arg1 INT!)
 BEGIN
   SELECT 1;
 END;
@@ -23418,7 +23418,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0185: proc name conflicts with func
 
 The statement ending at line XXXX
 
-DECLARE FUNC proc1 (i INTEGER) INTEGER;
+DECLARE FUNC proc1 (i INT) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc name 'proc1'
 
@@ -23436,7 +23436,7 @@ The statement ending at line XXXX
 
 CREATE PROC nested_func_wrapper ()
 BEGIN
-  DECLARE FUNC foo () INTEGER;
+  DECLARE FUNC foo () INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0191: declared functions must be top level 'foo'
@@ -23452,7 +23452,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0191: declared functions must be to
 
 The statement ending at line XXXX
 
-DECLARE FUNC dup_formal (a INTEGER, a INTEGER) INTEGER;
+DECLARE FUNC dup_formal (a INT, a INT) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0175: duplicate parameter name 'a'
 
@@ -24702,7 +24702,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0147: adding a not nullable col
 
 The statement ending at line XXXX
 
-ALTER TABLE bar ADD COLUMN name INTEGER;
+ALTER TABLE bar ADD COLUMN name INT;
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0149: added column must be an exact match for the column type declared in the table 'name'
 
@@ -24716,7 +24716,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0149: added column must be an e
 
 The statement ending at line XXXX
 
-ALTER TABLE bar ADD COLUMN goo INTEGER;
+ALTER TABLE bar ADD COLUMN goo INT;
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'goo'
 
@@ -24758,7 +24758,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0041: tables cannot have object col
 
 The statement ending at line XXXX
 
-ALTER TABLE bar ADD COLUMN id INTEGER PRIMARY KEY AUTOINCREMENT;
+ALTER TABLE bar ADD COLUMN id INT PRIMARY KEY AUTOINCREMENT;
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0146: adding an auto increment column is not allowed 'id'
 
@@ -24775,7 +24775,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0146: adding an auto increment 
 
 The statement ending at line XXXX
 
-ALTER TABLE garbonzo ADD COLUMN id INTEGER PRIMARY KEY AUTOINCREMENT;
+ALTER TABLE garbonzo ADD COLUMN id INT PRIMARY KEY AUTOINCREMENT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0144: table in alter statement does not exist 'garbonzo'
 
@@ -24792,7 +24792,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0144: table in alter statement does
 
 The statement ending at line XXXX
 
-ALTER TABLE MyView ADD COLUMN id INTEGER PRIMARY KEY AUTOINCREMENT;
+ALTER TABLE MyView ADD COLUMN id INT PRIMARY KEY AUTOINCREMENT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0144: cannot alter a view 'MyView'
 
@@ -24936,7 +24936,7 @@ test/sem_test.sql:XXXX:1: error: in create_attr : CQL0025: version number in ann
 The statement ending at line XXXX
 
 CREATE TABLE hides_id_not_name(
-  id INTEGER @DELETE(2),
+  id INT @DELETE(2),
   name TEXT @CREATE(3)
 );
 
@@ -25015,9 +25015,9 @@ SELECT name
 The statement ending at line XXXX
 
 CREATE TABLE migrate_test(
-  id INTEGER!,
-  id2 INTEGER @CREATE(4, creator),
-  id3 INTEGER @CREATE(4, creator)
+  id INT!,
+  id2 INT @CREATE(4, creator),
+  id3 INT @CREATE(4, creator)
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0027: a procedure can appear in only one annotation 'creator'
@@ -25086,9 +25086,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0187: @schema_upgrade_version not d
 The statement ending at line XXXX
 
 CREATE TABLE migrate_annotions_broken(
-  col1 INTEGER,
-  col2 INTEGER @CREATE(3),
-  col3 INTEGER
+  col1 INT,
+  col2 INT @CREATE(3),
+  col3 INT
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0032: created columns must be at the end and must be in version order 'col3'
@@ -25123,8 +25123,8 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0032: created columns must be a
 The statement ending at line XXXX
 
 CREATE TABLE migrate_annotions_broken_not_null_create(
-  col1 INTEGER,
-  col2 INTEGER! @CREATE(3)
+  col1 INT,
+  col2 INT! @CREATE(3)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value 'col2'
@@ -25154,8 +25154,8 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0034: create/delete version num
 The statement ending at line XXXX
 
 CREATE TABLE migrate_annotions_broken_not_null_delete(
-  col1 INTEGER,
-  col2 INTEGER! @DELETE(3)
+  col1 INT,
+  col2 INT! @DELETE(3)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0034: create/delete version numbers can only be applied to columns that are nullable or have a default value 'col2'
@@ -25185,8 +25185,8 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0034: create/delete version num
 The statement ending at line XXXX
 
 CREATE TABLE migrate_annotions_delete_out_of_order(
-  col1 INTEGER,
-  col2 INTEGER @DELETE(3) @CREATE(4)
+  col1 INT,
+  col2 INT @DELETE(3) @CREATE(4)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0035: column delete version can't be <= column create version 'col2'
@@ -25218,7 +25218,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0035: column delete version can
 The statement ending at line XXXX
 
 CREATE TABLE versioned_table(
-  id INTEGER @CREATE(2)
+  id INT @CREATE(2)
 ) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc);
 
   {create_table_stmt}: versioned_table: { id: integer } deleted @create(1) @delete(3)
@@ -25247,7 +25247,7 @@ CREATE TABLE versioned_table(
 The statement ending at line XXXX
 
 CREATE TABLE bogus_migration_proc(
-  id INTEGER
+  id INT
 ) @CREATE(1, x_crc);
 
 test/sem_test.sql:XXXX:1: error: in create_attr : CQL0338: the name of a migration procedure may not end in '_crc' 'x_crc'
@@ -25271,7 +25271,7 @@ test/sem_test.sql:XXXX:1: error: in create_attr : CQL0338: the name of a migrati
 The statement ending at line XXXX
 
 CREATE TABLE versioned_table_double_create(
-  id INTEGER
+  id INT
 ) @CREATE(1) @CREATE(1);
 
 test/sem_test.sql:XXXX:1: error: in create_attr : CQL0026: duplicate version annotation
@@ -25297,7 +25297,7 @@ test/sem_test.sql:XXXX:1: error: in create_attr : CQL0026: duplicate version ann
 The statement ending at line XXXX
 
 CREATE TABLE versioned_table_double_delete(
-  id INTEGER
+  id INT
 ) @DELETE(1) @DELETE(1);
 
 test/sem_test.sql:XXXX:1: error: in delete_attr : CQL0026: duplicate version annotation
@@ -25341,7 +25341,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0019: create index table name not f
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES versioned_table (id)
 );
 
@@ -25396,7 +25396,7 @@ test/sem_test.sql:XXXX:1: error: in table_or_subquery : CQL0095: table/view not 
 
 The statement ending at line XXXX
 
-ALTER TABLE versioned_table ADD COLUMN id INTEGER;
+ALTER TABLE versioned_table ADD COLUMN id INT;
 
   {alter_table_add_column_stmt}: ok
   | {name versioned_table}: versioned_table: { id: integer } deleted @create(1) @delete(3)
@@ -25471,7 +25471,7 @@ CREATE VIEW versioned_table AS
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE versioned_table(
-  id INTEGER @CREATE(2)
+  id INT @CREATE(2)
 ) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc)
 test/sem_test.sql:XXXX:1: error: in create_view_stmt : CREATE VIEW versioned_table AS
   SELECT 1 AS x
@@ -25503,7 +25503,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 've
 
 The statement ending at line XXXX
 
-DECLARE versioned_table INTEGER;
+DECLARE versioned_table INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0198: global variable hides table/view name 'versioned_table'
 
@@ -25515,15 +25515,15 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0198: global variable hides table/v
 The statement ending at line XXXX
 
 CREATE TABLE versioned_table(
-  id2 INTEGER
+  id2 INT
 );
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE versioned_table(
-  id INTEGER @CREATE(2)
+  id INT @CREATE(2)
 ) @CREATE(1, table_create_proc) @DELETE(3, table_delete_proc)
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE versioned_table(
-  id2 INTEGER
+  id2 INT
 )
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'versioned_table'
@@ -25583,7 +25583,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE t_col_early_delete(
-  id INTEGER @DELETE(2)
+  id INT @DELETE(2)
 ) @CREATE(3);
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0036: column delete version can't be <= the table create version 'id'
@@ -25609,7 +25609,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0036: column delete version can
 The statement ending at line XXXX
 
 CREATE TABLE t_col_early_delete(
-  id INTEGER @CREATE(2)
+  id INT @CREATE(2)
 ) @CREATE(3);
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0038: column create version can't be <= the table create version 'id'
@@ -25635,7 +25635,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0038: column create version can
 The statement ending at line XXXX
 
 CREATE TABLE t_col_early_delete(
-  id INTEGER @DELETE(2)
+  id INT @DELETE(2)
 ) @DELETE(1);
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0037: column delete version can't be >= the table delete version 'id'
@@ -25661,7 +25661,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0037: column delete version can
 The statement ending at line XXXX
 
 CREATE TABLE t_col_early_delete(
-  id INTEGER @CREATE(2)
+  id INT @CREATE(2)
 ) @DELETE(1);
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0039: column create version can't be >= the table delete version 'id'
@@ -25687,7 +25687,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0039: column create version can
 The statement ending at line XXXX
 
 CREATE TABLE t_col_delete_notnull(
-  id INTEGER! DEFAULT 8675309 @DELETE(2)
+  id INT! DEFAULT 8675309 @DELETE(2)
 );
 
   {create_table_stmt}: t_col_delete_notnull: {  }
@@ -25711,7 +25711,7 @@ CREATE TABLE t_col_delete_notnull(
 The statement ending at line XXXX
 
 CREATE TABLE neg_default(
-  id INTEGER! DEFAULT -1 @CREATE(2)
+  id INT! DEFAULT -1 @CREATE(2)
 );
 
   {create_table_stmt}: neg_default: { id: integer notnull has_default }
@@ -25735,7 +25735,7 @@ CREATE TABLE neg_default(
 
 The statement ending at line XXXX
 
-ALTER TABLE neg_default ADD COLUMN id INTEGER! DEFAULT -1;
+ALTER TABLE neg_default ADD COLUMN id INT! DEFAULT -1;
 
   {alter_table_add_column_stmt}: ok
   | {name neg_default}: neg_default: { id: integer notnull has_default }
@@ -26003,7 +26003,7 @@ INSERT INTO hides_id_not_name(name)
 The statement ending at line XXXX
 
 CREATE TABLE trickier_alter_target(
-  id INTEGER,
+  id INT,
   something_deleted TEXT @CREATE(1) @DELETE(2),
   added TEXT @CREATE(2),
   PRIMARY KEY (id)
@@ -26050,7 +26050,7 @@ CREATE TABLE trickier_alter_target(
 
 The statement ending at line XXXX
 
-ALTER TABLE trickier_alter_target ADD COLUMN id INTEGER;
+ALTER TABLE trickier_alter_target ADD COLUMN id INT;
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required 'id'
 
@@ -26214,7 +26214,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0112: index in drop statement was n
 The statement ending at line XXXX
 
 CREATE TABLE two_not_null(
-  id INTEGER! UNIQUE!
+  id INT! UNIQUE!
 );
 
 test/sem_test.sql:XXXX:1: error: in col_attrs_not_null : CQL0030: a column attribute was specified twice on the same column 'id'
@@ -26237,7 +26237,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_not_null : CQL0030: a column attri
 The statement ending at line XXXX
 
 CREATE TABLE mixed_pk_uk(
-  id INTEGER PRIMARY KEY UNIQUE
+  id INT PRIMARY KEY UNIQUE
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0031: column can't be primary key and also unique key 'id'
@@ -26260,7 +26260,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0031: column can't be primary k
 The statement ending at line XXXX
 
 CREATE TABLE table_with_uk(
-  id INTEGER UNIQUE
+  id INT UNIQUE
 );
 
   {create_table_stmt}: table_with_uk: { id: integer unique_key }
@@ -26279,7 +26279,7 @@ CREATE TABLE table_with_uk(
 The statement ending at line XXXX
 
 CREATE TABLE baz(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!,
+  id INT PRIMARY KEY AUTOINCREMENT!,
   PRIMARY KEY (id)
 );
 
@@ -26890,7 +26890,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0010: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC fool (x INTEGER)
+CREATE PROC fool (x INT)
 BEGIN
   SET x := x IN (SELECT 1);
 END;
@@ -26927,7 +26927,7 @@ test/sem_test.sql:XXXX:1: error: in in_pred : CQL0078: [not] in (select ...) is 
 
 The statement ending at line XXXX
 
-CREATE PROC notfool (x INTEGER)
+CREATE PROC notfool (x INT)
 BEGIN
   SET x := x NOT IN (SELECT 1);
 END;
@@ -27102,7 +27102,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_cursor_proc_not_shape_storage ()
 BEGIN
-  DECLARE a, b INTEGER!;
+  DECLARE a, b INT!;
   DECLARE C CURSOR FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C INTO a, b;
@@ -27158,7 +27158,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_cursor_proc_incompat_results ()
 BEGIN
-  DECLARE a, b INTEGER!;
+  DECLARE a, b INT!;
   DECLARE C CURSOR FOR
     SELECT 1 AS A, 2 AS B;
   DECLARE D CURSOR FOR
@@ -27251,7 +27251,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_cursor_proc_mixed_cursor_select ()
 BEGIN
-  DECLARE a, b INTEGER!;
+  DECLARE a, b INT!;
   DECLARE C CURSOR FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
@@ -27325,7 +27325,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_cursor_proc_mixed_cursor_select_select_first ()
 BEGIN
-  DECLARE a, b INTEGER!;
+  DECLARE a, b INT!;
   DECLARE C CURSOR FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
@@ -27399,7 +27399,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_cursor_proc_mixed_cursor_select_then_union ()
 BEGIN
-  DECLARE a, b INTEGER!;
+  DECLARE a, b INT!;
   DECLARE C CURSOR FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
@@ -27689,7 +27689,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_not_cursor ()
 BEGIN
-  DECLARE C INTEGER;
+  DECLARE C INT;
   OUT C;
 END;
 
@@ -27754,7 +27754,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0215: value cursors are not used wi
 
 The statement ending at line XXXX
 
-DECLARE PROC declared_proc (id INTEGER) OUT (t TEXT);
+DECLARE PROC declared_proc (id INT) OUT (t TEXT);
 
   {declare_proc_stmt}: declared_proc: { t: text } uses_out
   | {proc_name_type}
@@ -27845,7 +27845,7 @@ test/sem_test.sql:XXXX:1: error: in declare_value_cursor : CQL0197: duplicate va
 
 The statement ending at line XXXX
 
-CREATE PROC proc_with_single_output (a INTEGER, b INTEGER, OUT c INTEGER)
+CREATE PROC proc_with_single_output (a INT, b INT, OUT c INT)
 BEGIN
 END;
 
@@ -27886,7 +27886,7 @@ SET an_int := proc_with_single_output(1, an_int);
 
 The statement ending at line XXXX
 
-CREATE PROC proc_func (IN arg1 INTEGER, OUT arg2 INTEGER)
+CREATE PROC proc_func (IN arg1 INT, OUT arg2 INT)
 BEGIN
   DROP TABLE foo;
 END;
@@ -28005,7 +28005,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0224: a function call to a procedu
 
 The statement ending at line XXXX
 
-CREATE PROC dml_func (OUT a INTEGER!)
+CREATE PROC dml_func (OUT a INT!)
 BEGIN
   SET a := ( SELECT 1 );
 END;
@@ -28040,7 +28040,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC should_be_dml (OUT a INTEGER!)
+CREATE PROC should_be_dml (OUT a INT!)
 BEGIN
   SET a := dml_func();
 END;
@@ -28629,7 +28629,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_to_cursor_from_invalid_cursor ()
 BEGIN
-  DECLARE C0 INTEGER;
+  DECLARE C0 INT;
   DECLARE C1 CURSOR LIKE SELECT 1 AS A, 2 AS B;
   FETCH C1(A, B) FROM C0;
   OUT C1;
@@ -28687,7 +28687,7 @@ The statement ending at line XXXX
 CREATE PROC fetch_to_invalid_cursor_from_cursor ()
 BEGIN
   DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
-  DECLARE C1 INTEGER;
+  DECLARE C1 INT;
   FETCH C0(A, B) FROM VALUES(1, 2);
   FETCH C1 FROM C0;
 END;
@@ -28931,7 +28931,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_to_cursor_from_cursor_without_fields ()
 BEGIN
-  DECLARE X INTEGER;
+  DECLARE X INT;
   DECLARE Y REAL;
   DECLARE C0 CURSOR FOR
     SELECT 1 AS A, 2.5;
@@ -29029,7 +29029,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_non_cursor_variable ()
 BEGIN
-  DECLARE C0 INTEGER;
+  DECLARE C0 INT;
   DECLARE C1 CURSOR LIKE C0;
 END;
 
@@ -29451,7 +29451,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(num=-9)
 CREATE TABLE misc_attr_table(
   @ATTRIBUTE(bar=baz)
-  id INTEGER!
+  id INT!
 );
 
   {stmt_and_attr}: ok
@@ -29512,7 +29512,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON bar (id / 2 ASC, name DESC,
 The statement ending at line XXXX
 
 CREATE TABLE ref_bar(
-  id INTEGER! REFERENCES bar (id)
+  id INT! REFERENCES bar (id)
 );
 
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'bar'
@@ -29558,7 +29558,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement doe
 The statement ending at line XXXX
 
 CREATE TABLE fk_on_col(
-  fk_src INTEGER REFERENCES foo (id) ON UPDATE CASCADE ON DELETE SET NULL
+  fk_src INT REFERENCES foo (id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
   {create_table_stmt}: fk_on_col: { fk_src: integer foreign_key }
@@ -29583,7 +29583,7 @@ CREATE TABLE fk_on_col(
 The statement ending at line XXXX
 
 CREATE TABLE bogus_fk_on_col_1(
-  fk_src INTEGER REFERENCES bar (id, name) ON UPDATE CASCADE ON DELETE SET NULL
+  fk_src INT REFERENCES bar (id, name) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exactly one column with the correct type 'fk_src'
@@ -29612,7 +29612,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exac
 The statement ending at line XXXX
 
 CREATE TABLE bogus_fk_on_col_1(
-  fk_src INTEGER REFERENCES bar (name)
+  fk_src INT REFERENCES bar (name)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exactly one column with the correct type 'fk_src'
@@ -29639,7 +29639,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0028: FK reference must be exac
 The statement ending at line XXXX
 
 CREATE TABLE bogus_fk_on_col_1(
-  fk_src INTEGER REFERENCES no_such_table (name)
+  fk_src INT REFERENCES no_such_table (name)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non-existent table 'no_such_table'
@@ -29666,7 +29666,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non
 The statement ending at line XXXX
 
 CREATE TABLE bogus_fk_on_col_1(
-  fk_src INTEGER REFERENCES bar (no_such_column)
+  fk_src INT REFERENCES bar (no_such_column)
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'no_such_column'
@@ -29696,7 +29696,7 @@ CREATE TABLE bogus_autoinc_type(
   id BOOL PRIMARY KEY AUTOINCREMENT
 );
 
-test/sem_test.sql:XXXX:1: error: in autoinc_and_conflict_clause : CQL0029: autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
+test/sem_test.sql:XXXX:1: error: in autoinc_and_conflict_clause : CQL0029: autoincrement column must be [LONG|INT] PRIMARY KEY 'id'
 
   {create_table_stmt}: err
   | {create_table_name_flags}
@@ -29716,7 +29716,7 @@ test/sem_test.sql:XXXX:1: error: in autoinc_and_conflict_clause : CQL0029: autoi
 The statement ending at line XXXX
 
 CREATE TABLE bogus_without_rowid(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 ) WITHOUT ROWID;
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0141: table has an AUTOINCREMENT column; it cannot also be WITHOUT ROWID 'bogus_without_rowid'
@@ -29739,7 +29739,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0141: table has an AU
 The statement ending at line XXXX
 
 CREATE TABLE recreatable(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT
 ) @RECREATE;
 
@@ -29767,7 +29767,7 @@ CREATE TABLE recreatable(
 The statement ending at line XXXX
 
 CREATE TABLE column_marked_delete_on_recreate_table(
-  id INTEGER PRIMARY KEY @CREATE(2),
+  id INT PRIMARY KEY @CREATE(2),
   name TEXT
 ) @RECREATE;
 
@@ -30497,7 +30497,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC SqlUserFunc (id INTEGER) REAL!;
+DECLARE SELECT FUNC SqlUserFunc (id INT) REAL!;
 
   {declare_select_func_stmt}: real notnull select_func
   | {name SqlUserFunc}: real notnull
@@ -30646,7 +30646,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0089: user function may only appea
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC foo (x INTEGER, x INTEGER) INTEGER;
+DECLARE SELECT FUNC foo (x INT, x INT) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc name 'foo'
 
@@ -30667,7 +30667,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0192: func name conflicts with proc
 
 The statement ending at line XXXX
 
-CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INTEGER!, arg3 REAL!)
+CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
 BEGIN
   DECLARE curs CURSOR LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
   FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
@@ -30749,7 +30749,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_bar (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+CREATE PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   DECLARE curs CURSOR LIKE bar;
   FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
@@ -30811,7 +30811,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC qualified_like (x_id INTEGER!, x_name TEXT, x_rate LONG_INT, y_id INTEGER!, y_name TEXT, y_rate LONG_INT)
+CREATE PROC qualified_like (x_id INT!, x_name TEXT, x_rate LONG, y_id INT!, y_name TEXT, y_rate LONG)
 BEGIN
 END;
 
@@ -30853,7 +30853,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+CREATE PROC insert_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 END;
@@ -30910,7 +30910,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_explicit (extra INTEGER, id INTEGER!, name_ TEXT, rate LONG_INT)
+CREATE PROC insert_bar_explicit (extra INT, id INT!, name_ TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, name_, rate);
 END;
@@ -30967,7 +30967,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_locals (extra INTEGER, id INTEGER!, name_ TEXT, rate LONG_INT)
+CREATE PROC insert_bar_locals (extra INT, id INT!, name_ TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(LOCALS.id, LOCALS.name, LOCALS.rate);
 END;
@@ -31024,7 +31024,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_missing (extra INTEGER, id INTEGER!)
+CREATE PROC insert_bar_missing (extra INT, id INT!)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, ARGUMENTS.name, ARGUMENTS.rate);
 END;
@@ -31073,7 +31073,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, the
 
 The statement ending at line XXXX
 
-CREATE PROC insert_bar_from_bogus (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+CREATE PROC insert_bar_from_bogus (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) FROM ARGUMENTS(LIKE bogus_name_here);
 END;
@@ -31219,7 +31219,7 @@ test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too fe
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter (id INTEGER!, name TEXT, rate LONG_INT)
+CREATE PROC bar_auto_inserter (id INT!, name TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id, name, rate);
 END;
@@ -31271,7 +31271,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter_mininal (id INTEGER!, name TEXT, rate LONG_INT)
+CREATE PROC bar_auto_inserter_mininal (id INT!, name TEXT, rate LONG)
 BEGIN
   INSERT INTO bar(id) VALUES(id);
 END;
@@ -31311,7 +31311,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter_no_columns (id INTEGER!, name TEXT, rate LONG_INT)
+CREATE PROC bar_auto_inserter_no_columns (id INT!, name TEXT, rate LONG)
 BEGIN
   INSERT INTO bar() FROM ARGUMENTS @DUMMY_SEED(1);
 END;
@@ -31352,7 +31352,7 @@ test/sem_test.sql:XXXX:1: error: in from_shape : CQL0297: FROM [shape] is redund
 
 The statement ending at line XXXX
 
-CREATE PROC bar_auto_inserter_missing_columns (id INTEGER)
+CREATE PROC bar_auto_inserter_missing_columns (id INT)
 BEGIN
   INSERT INTO bar(id, name, rate) FROM ARGUMENTS(id);
 END;
@@ -31388,7 +31388,7 @@ test/sem_test.sql:XXXX:1: error: in columns_values : CQL0299: [shape] has too fe
 
 The statement ending at line XXXX
 
-CREATE PROC rewritten_like_args (id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+CREATE PROC rewritten_like_args (id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
   INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 END;
@@ -31442,7 +31442,7 @@ The statement ending at line XXXX
 
 CREATE PROC rewrite_args_fails (LIKE garbonzo)
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'garbonzo'
@@ -31465,7 +31465,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 The statement ending at line XXXX
 
 CREATE TABLE args1(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT,
   data BLOB
 );
@@ -31499,7 +31499,7 @@ CREATE TABLE args1(
 The statement ending at line XXXX
 
 CREATE TABLE args2(
-  id INTEGER REFERENCES args1 (id),
+  id INT REFERENCES args1 (id),
   name2 TEXT,
   rate REAL
 );
@@ -31537,7 +31537,7 @@ CREATE TABLE args2(
 
 The statement ending at line XXXX
 
-CREATE PROC two_arg_sources (id_ INTEGER!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
+CREATE PROC two_arg_sources (id_ INT!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
 BEGIN
 END;
 
@@ -31573,7 +31573,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC two_arg_sources_fully_redundant (id_ INTEGER!, name_ TEXT, data_ BLOB)
+CREATE PROC two_arg_sources_fully_redundant (id_ INT!, name_ TEXT, data_ BLOB)
 BEGIN
 END;
 
@@ -31769,7 +31769,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the se
 
 The statement ending at line XXXX
 
-CREATE PROC like_other_proc (A_ INTEGER!, B_ INTEGER!)
+CREATE PROC like_other_proc (A_ INT!, B_ INT!)
 BEGIN
   DECLARE C CURSOR LIKE out_cursor_proc;
   FETCH C(A, B) FROM VALUES(A_, B_);
@@ -31821,7 +31821,7 @@ The statement ending at line XXXX
 
 CREATE PROC bogus_like_proc (LIKE proc1)
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'proc1'
@@ -31844,7 +31844,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'proc1'
 The statement ending at line XXXX
 
 CREATE TEMP TABLE nontemp_table_like_table(
-  id INTEGER!
+  id INT!
 );
 
   {create_table_stmt}: nontemp_table_like_table: { id: integer notnull }
@@ -31863,7 +31863,7 @@ CREATE TEMP TABLE nontemp_table_like_table(
 The statement ending at line XXXX
 
 CREATE TEMP TABLE table_like_table(
-  id INTEGER!
+  id INT!
 );
 
   {create_table_stmt}: table_like_table: { id: integer notnull }
@@ -31882,9 +31882,9 @@ CREATE TEMP TABLE table_like_table(
 The statement ending at line XXXX
 
 CREATE TEMP TABLE table_like_view(
-  f1 INTEGER!,
-  f2 INTEGER!,
-  f3 INTEGER!
+  f1 INT!,
+  f2 INT!,
+  f3 INT!
 );
 
   {create_table_stmt}: table_like_view: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
@@ -31917,9 +31917,9 @@ CREATE TEMP TABLE table_like_view(
 The statement ending at line XXXX
 
 CREATE TEMP TABLE table_like_proc(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT
+  rate LONG
 );
 
   {create_table_stmt}: table_like_proc: { id: integer notnull, name: text, rate: longint }
@@ -31986,12 +31986,12 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 The statement ending at line XXXX
 
 CREATE TEMP TABLE table_multiple_like(
-  f1 INTEGER!,
-  f2 INTEGER!,
-  f3 INTEGER!,
-  id INTEGER!,
+  f1 INT!,
+  f2 INT!,
+  f3 INT!,
+  id INT!,
   name TEXT,
-  rate LONG_INT
+  rate LONG
 );
 
   {create_table_stmt}: table_multiple_like: { f1: integer notnull, f2: integer notnull, f3: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -32044,10 +32044,10 @@ The statement ending at line XXXX
 
 CREATE TEMP TABLE table_like_mixed(
   garbage TEXT,
-  f1 INTEGER!,
-  f2 INTEGER!,
-  f3 INTEGER!,
-  happy INTEGER
+  f1 INT!,
+  f2 INT!,
+  f3 INT!,
+  happy INT
 );
 
   {create_table_stmt}: table_like_mixed: { garbage: text, f1: integer notnull, f2: integer notnull, f3: integer notnull, happy: integer }
@@ -32093,9 +32093,9 @@ The statement ending at line XXXX
 
 CREATE TEMP TABLE table_with_dup_col(
   f1 TEXT,
-  f1 INTEGER!,
-  f2 INTEGER!,
-  f3 INTEGER!
+  f1 INT!,
+  f2 INT!,
+  f3 INT!
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0142: duplicate column name 'f1'
@@ -32205,7 +32205,7 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0139: temp objects 
 The statement ending at line XXXX
 
 CREATE TEMP TABLE bogus_temp_with_create_versioning(
-  id INTEGER
+  id INT
 ) @CREATE(1);
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_with_create_versioning'
@@ -32228,7 +32228,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects ma
 The statement ending at line XXXX
 
 CREATE TEMP TABLE bogus_temp_with_delete_versioning(
-  id INTEGER
+  id INT
 ) @DELETE(1);
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_with_delete_versioning'
@@ -32251,7 +32251,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects ma
 The statement ending at line XXXX
 
 CREATE TEMP TABLE bogus_temp_with_recreate_versioning(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects may not have versioning annotations 'bogus_temp_with_recreate_versioning'
@@ -32272,7 +32272,7 @@ test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0139: temp objects ma
 The statement ending at line XXXX
 
 CREATE TEMP TABLE bogus_temp_with_versioning_in_column(
-  id INTEGER @CREATE(2)
+  id INT @CREATE(2)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0140: columns in a temp table may not have versioning attributes 'id'
@@ -32552,7 +32552,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE stories(
-  media_id LONG_INT
+  media_id LONG
 );
 
   {create_table_stmt}: stories: { media_id: longint }
@@ -33254,7 +33254,7 @@ DROP TRIGGER IF EXISTS trigger1;
 The statement ending at line XXXX
 
 CREATE TABLE retro_deleted_table(
-  id INTEGER
+  id INT
 ) @CREATE(3) @DELETE(1);
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0107: delete version can't be <= create version 'retro_deleted_table'
@@ -33796,9 +33796,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0056: NULL expression has no type t
 The statement ending at line XXXX
 
 CREATE TABLE with_sensitive(
-  id INTEGER,
+  id INT,
   name TEXT @SENSITIVE,
-  info INTEGER @SENSITIVE
+  info INT @SENSITIVE
 );
 
   {create_table_stmt}: with_sensitive: { id: integer, name: text sensitive, info: integer sensitive }
@@ -33917,7 +33917,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE _sens INTEGER @SENSITIVE;
+DECLARE _sens INT @SENSITIVE;
 
   {declare_vars_type}: integer sensitive
   | {name_list}: _sens: integer variable sensitive was_set
@@ -34220,7 +34220,7 @@ END);
 
 The statement ending at line XXXX
 
-SET _sens := ( SELECT CAST(_sens AS INTEGER) );
+SET _sens := ( SELECT CAST(_sens AS INT) );
 
   {assign}: _sens: integer variable sensitive was_set
   | {name _sens}: _sens: integer variable sensitive was_set
@@ -34913,8 +34913,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive 
 The statement ending at line XXXX
 
 CREATE TABLE a(
-  key_ INTEGER! PRIMARY KEY,
-  sort_key INTEGER!
+  key_ INT! PRIMARY KEY,
+  sort_key INT!
 );
 
   {create_table_stmt}: a: { key_: integer notnull primary_key, sort_key: integer notnull }
@@ -34942,9 +34942,9 @@ CREATE TABLE a(
 The statement ending at line XXXX
 
 CREATE TABLE b(
-  key_ INTEGER! PRIMARY KEY,
-  a_key_ INTEGER!,
-  sort_key INTEGER!
+  key_ INT! PRIMARY KEY,
+  a_key_ INT!,
+  sort_key INT!
 );
 
   {create_table_stmt}: b: { key_: integer notnull primary_key, a_key_: integer notnull, sort_key: integer notnull }
@@ -35587,7 +35587,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive 
 
 The statement ending at line XXXX
 
-DECLARE PROC sens_proc (OUT foo INTEGER @SENSITIVE);
+DECLARE PROC sens_proc (OUT foo INT @SENSITIVE);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -35604,7 +35604,7 @@ DECLARE PROC sens_proc (OUT foo INTEGER @SENSITIVE);
 
 The statement ending at line XXXX
 
-DECLARE PROC non_sens_proc (OUT foo INTEGER);
+DECLARE PROC non_sens_proc (OUT foo INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -35620,7 +35620,7 @@ DECLARE PROC non_sens_proc (OUT foo INTEGER);
 
 The statement ending at line XXXX
 
-DECLARE PROC non_sens_proc_nonnull (OUT foo INTEGER!);
+DECLARE PROC non_sens_proc_nonnull (OUT foo INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -35742,7 +35742,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive
 
 The statement ending at line XXXX
 
-DECLARE FUNC sens_func (id INTEGER @SENSITIVE, t TEXT) TEXT @SENSITIVE;
+DECLARE FUNC sens_func (id INT @SENSITIVE, t TEXT) TEXT @SENSITIVE;
 
   {declare_func_stmt}: text sensitive
   | {name sens_func}: text sensitive
@@ -35832,7 +35832,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0014: cannot assign/copy sensitive 
 The statement ending at line XXXX
 
 UPDATE foo
-  SET id = CAST('1' AS INTEGER);
+  SET id = CAST('1' AS INT);
 
   {update_stmt}: foo: { id: integer notnull primary_key autoinc }
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -36331,7 +36331,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0154: table in update statement doe
 
 The statement ending at line XXXX
 
-DECLARE PROC out_cursor_proc () OUT (A INTEGER!, B INTEGER!) USING TRANSACTION;
+DECLARE PROC out_cursor_proc () OUT (A INT!, B INT!) USING TRANSACTION;
 
   {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out alias
   | {proc_name_type}
@@ -36351,9 +36351,9 @@ DECLARE PROC out_cursor_proc () OUT (A INTEGER!, B INTEGER!) USING TRANSACTION;
 
 The statement ending at line XXXX
 
-CREATE PROC decl1 (id INTEGER)
+CREATE PROC decl1 (id INT)
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
 END;
 
   {create_proc_stmt}: ok
@@ -36372,9 +36372,9 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC decl1 (id INTEGER)
+CREATE PROC decl1 (id INT)
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 'decl1'
@@ -36395,14 +36395,14 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0186: duplicate stored proc name 'd
 
 The statement ending at line XXXX
 
-CREATE PROC decl2 (id INTEGER)
+CREATE PROC decl2 (id INT)
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
 END;
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl2 (id INTEGER) USING TRANSACTION
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC decl2 (id INTEGER)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC decl2 (id INT) USING TRANSACTION
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC decl2 (id INT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0189: procedure declarations/definitions do not match 'decl2'
 
@@ -37649,7 +37649,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0277: autotest has incorrect format
 The statement ending at line XXXX
 
 CREATE TEMP TABLE table1(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: table1: { id: integer }
@@ -37667,7 +37667,7 @@ CREATE TEMP TABLE table1(
 The statement ending at line XXXX
 
 CREATE TEMP TABLE table2(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: table2: { id: integer }
@@ -37685,7 +37685,7 @@ CREATE TEMP TABLE table2(
 The statement ending at line XXXX
 
 CREATE TABLE not_a_temp_table(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: not_a_temp_table: { id: integer }
@@ -37865,7 +37865,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:autodrop=(table1, table2))
 CREATE PROC autodrop_not_really_a_result_set_proc ()
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0234: autodrop annotation can only go on a procedure that returns a result set 'autodrop_not_really_a_result_set_proc'
@@ -37948,11 +37948,11 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0236: autodrop annotation ca
 The statement ending at line XXXX
 
 CREATE TABLE referenceable(
-  a INTEGER PRIMARY KEY,
+  a INT PRIMARY KEY,
   b REAL UNIQUE,
   c TEXT,
   d TEXT,
-  e LONG_INT
+  e LONG
 );
 
   {create_table_stmt}: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint }
@@ -37997,7 +37997,7 @@ CREATE TABLE referenceable(
 The statement ending at line XXXX
 
 CREATE TABLE referenceable_2(
-  a INTEGER,
+  a INT,
   b REAL,
   PRIMARY KEY (a, b)
 );
@@ -38051,7 +38051,7 @@ CREATE UNIQUE INDEX referenceable_index ON referenceable (c, d);
 The statement ending at line XXXX
 
 CREATE TABLE reference_pk(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES referenceable (a)
 );
 
@@ -38081,7 +38081,7 @@ CREATE TABLE reference_pk(
 The statement ending at line XXXX
 
 CREATE TABLE reference_2_pk(
-  id INTEGER,
+  id INT,
   size REAL,
   FOREIGN KEY (id, size) REFERENCES referenceable_2 (a, b)
 );
@@ -38122,7 +38122,7 @@ CREATE TABLE reference_2_pk(
 The statement ending at line XXXX
 
 CREATE TABLE reference_2_wrong_order_pk(
-  id INTEGER,
+  id INT,
   size REAL,
   FOREIGN KEY (size, id) REFERENCES referenceable_2 (b, a)
 );
@@ -38193,7 +38193,7 @@ CREATE TABLE reference_uk(
 The statement ending at line XXXX
 
 CREATE TABLE reference_pk_and_uk(
-  id1 INTEGER,
+  id1 INT,
   id2 REAL,
   FOREIGN KEY (id1, id2) REFERENCES referenceable (a, b)
 );
@@ -38277,7 +38277,7 @@ CREATE TABLE referenceable_unique_index(
 The statement ending at line XXXX
 
 CREATE TABLE reference_pk_and_unique_index(
-  id1 INTEGER,
+  id1 INT,
   id2 TEXT,
   FOREIGN KEY (id1, id2) REFERENCES referenceable (a, c)
 );
@@ -38374,7 +38374,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
 The statement ending at line XXXX
 
 CREATE TABLE reference_not_referenceable_column(
-  id LONG_INT PRIMARY KEY,
+  id LONG PRIMARY KEY,
   FOREIGN KEY (id) REFERENCES referenceable (e)
 );
 
@@ -38538,7 +38538,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_ok(
-  id INTEGER REFERENCES foo (id) ON UPDATE CASCADE ON DELETE CASCADE
+  id INT REFERENCES foo (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
   {create_table_stmt}: fk_strict_ok: { id: integer foreign_key }
@@ -38563,7 +38563,7 @@ CREATE TABLE fk_strict_ok(
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_failure_update(
-  id INTEGER REFERENCES foo (id)
+  id INT REFERENCES foo (id)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
@@ -38590,7 +38590,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_failure_delete(
-  id INTEGER REFERENCES foo (id) ON UPDATE NO ACTION
+  id INT REFERENCES foo (id) ON UPDATE NO ACTION
 );
 
 test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0238: strict FK validation requires that some ON DELETE option be selected for every foreign key
@@ -38617,7 +38617,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0238: strict FK validation
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_failure_delete_loose(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo (id) ON UPDATE NO ACTION
 );
 
@@ -38649,7 +38649,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0238: strict FK validation requi
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_failure_update_loose(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo (id)
 );
 
@@ -38681,7 +38681,7 @@ test/sem_test.sql:XXXX:1: error: in fk_def : CQL0237: strict FK validation requi
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_success_loose(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo (id) ON UPDATE CASCADE ON DELETE NO ACTION
 );
 
@@ -38764,7 +38764,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:identity=(col1, col3))
 CREATE PROC no_result_set_identity ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0240: identity annotation can only go on a procedure that returns a result set 'no_result_set_identity'
@@ -39013,7 +39013,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE a_table_in_root_region(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: a_table_in_root_region: { id: integer }
@@ -39091,7 +39091,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE a_table_in_dep_region(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: a_table_in_dep_region: { id: integer }
@@ -39201,7 +39201,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0112: index in drop statement was n
 The statement ending at line XXXX
 
 CREATE TABLE a_table_like_table_in_dep_region(
-  id INTEGER!
+  id INT!
 );
 
   {create_table_stmt}: a_table_like_table_in_dep_region: { id: integer notnull }
@@ -39220,8 +39220,8 @@ CREATE TABLE a_table_like_table_in_dep_region(
 The statement ending at line XXXX
 
 CREATE TABLE a_table_like_table_in_dep_region_2(
-  id1 INTEGER,
-  id2 INTEGER
+  id1 INT,
+  id2 INT
 );
 
   {create_table_stmt}: a_table_like_table_in_dep_region_2: { id1: integer, id2: integer }
@@ -39245,9 +39245,9 @@ CREATE TABLE a_table_like_table_in_dep_region_2(
 The statement ending at line XXXX
 
 CREATE TABLE a_table_like_view_in_dep_region(
-  f1 INTEGER!,
-  f2 INTEGER!,
-  f3 INTEGER!
+  f1 INT!,
+  f2 INT!,
+  f3 INT!
 );
 
   {create_table_stmt}: a_table_like_view_in_dep_region: { f1: integer notnull, f2: integer notnull, f3: integer notnull }
@@ -39280,9 +39280,9 @@ CREATE TABLE a_table_like_view_in_dep_region(
 The statement ending at line XXXX
 
 CREATE TABLE a_table_like_proc_in_dep_region(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT
+  rate LONG
 );
 
   {create_table_stmt}: a_table_like_proc_in_dep_region: { id: integer notnull, name: text, rate: longint }
@@ -39492,7 +39492,7 @@ DROP INDEX a_index_in_root_region;
 The statement ending at line XXXX
 
 CREATE TABLE diamond_region_table(
-  id INTEGER
+  id INT
 ) @RECREATE(d_group);
 
   {create_table_stmt}: diamond_region_table: { id: integer } @recreate(d_group)
@@ -39593,7 +39593,7 @@ SELECT COUNT(*)
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC tvf (id INTEGER) (foo TEXT);
+DECLARE SELECT FUNC tvf (id INT) (foo TEXT);
 
   {declare_select_func_stmt}: select: { foo: text } select_func
   | {name tvf}: select: { foo: text }
@@ -39935,7 +39935,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0250: table-valued function not dec
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC ReadFromRowset (rowset OBJECT<rowset>) (id INTEGER);
+DECLARE SELECT FUNC ReadFromRowset (rowset OBJECT<rowset>) (id INT);
 
   {declare_select_func_stmt}: select: { id: integer } select_func
   | {name ReadFromRowset}: select: { id: integer }
@@ -40080,7 +40080,7 @@ The statement ending at line XXXX
 
 CREATE PROC variable_conflict ()
 BEGIN
-  DECLARE id INTEGER;
+  DECLARE id INT;
   SET id := ( SELECT id
     FROM foo );
 END;
@@ -40119,7 +40119,7 @@ The statement ending at line XXXX
 
 CREATE PROC variable_conflict_rowid ()
 BEGIN
-  DECLARE rowid INTEGER;
+  DECLARE rowid INT;
   SET rowid := ( SELECT rowid
     FROM foo );
 END;
@@ -40541,7 +40541,7 @@ SELECT min(_sens, 1L);
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_1(
-  id INTEGER PRIMARY KEY REFERENCES recreatable (id),
+  id INT PRIMARY KEY REFERENCES recreatable (id),
   name TEXT
 );
 
@@ -40577,7 +40577,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_2(
-  id INTEGER PRIMARY KEY REFERENCES recreatable (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id INT PRIMARY KEY REFERENCES recreatable (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE;
 
@@ -40612,7 +40612,7 @@ CREATE TABLE recreatable_reference_2(
 The statement ending at line XXXX
 
 CREATE TABLE in_group_test(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT
 ) @RECREATE(rtest);
 
@@ -40641,7 +40641,7 @@ CREATE TABLE in_group_test(
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_3(
-  id INTEGER PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id INT PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE;
 
@@ -40676,8 +40676,8 @@ CREATE TABLE recreatable_reference_3(
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_4(
-  id INTEGER PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
-  id2 INTEGER REFERENCES recreatable_reference_3 (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id INT PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id2 INT REFERENCES recreatable_reference_3 (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE(rtest_other_group);
 
@@ -40726,7 +40726,7 @@ CREATE TABLE recreatable_reference_4(
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_5(
-  id INTEGER PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id INT PRIMARY KEY REFERENCES in_group_test (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE(rtest);
 
@@ -40762,7 +40762,7 @@ CREATE TABLE recreatable_reference_5(
 The statement ending at line XXXX
 
 CREATE TABLE recreatable_reference_6(
-  id INTEGER PRIMARY KEY REFERENCES recreatable_reference_4 (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  id INT PRIMARY KEY REFERENCES recreatable_reference_4 (id) ON UPDATE CASCADE ON DELETE CASCADE,
   name TEXT
 ) @RECREATE(rtest);
 
@@ -40800,7 +40800,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0060: referenced table can be i
 The statement ending at line XXXX
 
 CREATE TABLE early_out_on_errs(
-  result_index INTEGER!,
+  result_index INT!,
   query TEXT!,
   FOREIGN KEY (query) REFERENCES table_not_found (q),
   PRIMARY KEY (garbonzo)
@@ -40851,7 +40851,7 @@ The statement ending at line XXXX
 CREATE PROC invalid_ddl_1 ()
 BEGIN
   CREATE TABLE inv_1(
-    id INTEGER
+    id INT
   ) @RECREATE(xyx);
 END;
 
@@ -40880,7 +40880,7 @@ The statement ending at line XXXX
 CREATE PROC invalid_ddl_2 ()
 BEGIN
   CREATE TABLE inv2(
-    id INTEGER
+    id INT
   ) @CREATE(1);
 END;
 
@@ -40910,7 +40910,7 @@ The statement ending at line XXXX
 CREATE PROC invalid_ddl_3 ()
 BEGIN
   CREATE TABLE inv3(
-    id INTEGER
+    id INT
   ) @DELETE(2);
 END;
 
@@ -43116,11 +43116,11 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-DECLARE PROC MyAdHocMigration (x INTEGER);
+DECLARE PROC MyAdHocMigration (x INT);
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration () USING TRANSACTION
-test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration (x INTEGER)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC MyAdHocMigration (x INT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'MyAdHocMigration'
 
@@ -43137,7 +43137,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure decla
 
 The statement ending at line XXXX
 
-DECLARE PROC InvalidAdHocMigration (y INTEGER);
+DECLARE PROC InvalidAdHocMigration (y INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -43155,7 +43155,7 @@ The statement ending at line XXXX
 @SCHEMA_AD_HOC_MIGRATION(5, InvalidAdHocMigration);
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration (y INTEGER)
+test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration (y INT)
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC InvalidAdHocMigration () USING TRANSACTION
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0196: procedure declarations/definitions do not match 'InvalidAdHocMigration'
@@ -43232,7 +43232,7 @@ test/sem_test.sql:XXXX:1: error: in schema_ad_hoc_migration_stmt : CQL0284: ad h
 The statement ending at line XXXX
 
 CREATE TABLE upsert_test(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT,
   rate REAL
 );
@@ -43334,7 +43334,7 @@ test/sem_test.sql:XXXX:1: error: in insert_normal : CQL0316: upsert-clause is no
 
 The statement ending at line XXXX
 
-DECLARE PROC val_fetch (seed INTEGER!) OUT (id TEXT);
+DECLARE PROC val_fetch (seed INT!) OUT (id TEXT);
 
   {declare_proc_stmt}: val_fetch: { id: text } uses_out
   | {proc_name_type}
@@ -43354,7 +43354,7 @@ DECLARE PROC val_fetch (seed INTEGER!) OUT (id TEXT);
 
 The statement ending at line XXXX
 
-DECLARE PROC val_fetch_dml (seed INTEGER!) OUT (id TEXT) USING TRANSACTION;
+DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 
   {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
   | {proc_name_type}
@@ -43493,7 +43493,7 @@ The statement ending at line XXXX
 
 CREATE PROC compound_select_expr ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
   SET x := ( SELECT 1
     WHERE 0
   UNION
@@ -43617,7 +43617,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE private_region_table(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
   {create_table_stmt}: private_region_table: { id: integer notnull primary_key }
@@ -43650,7 +43650,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE containing_region_table(
-  id INTEGER PRIMARY KEY REFERENCES private_region_table (id)
+  id INT PRIMARY KEY REFERENCES private_region_table (id)
 );
 
   {create_table_stmt}: containing_region_table: { id: integer notnull primary_key foreign_key }
@@ -43690,7 +43690,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE client_region_table_1(
-  id INTEGER PRIMARY KEY REFERENCES private_region_table (id)
+  id INT PRIMARY KEY REFERENCES private_region_table (id)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non-existent table (object is in schema region 'private_region' not accessible from region 'client_region') 'private_region_table'
@@ -43719,7 +43719,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non
 The statement ending at line XXXX
 
 CREATE TABLE client_region_table_2(
-  id INTEGER PRIMARY KEY REFERENCES containing_region_table (id)
+  id INT PRIMARY KEY REFERENCES containing_region_table (id)
 );
 
   {create_table_stmt}: client_region_table_2: { id: integer notnull primary_key foreign_key }
@@ -46053,7 +46053,7 @@ SELECT total(info) AS t
 
 The statement ending at line XXXX
 
-CREATE PROC insert_using_args_with_dummy (x INTEGER!, y REAL!)
+CREATE PROC insert_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
   INSERT INTO referenceable(a, b, c, d, e) VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
@@ -46124,7 +46124,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC fetch_using_args_with_dummy (x INTEGER!, y REAL!)
+CREATE PROC fetch_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
   DECLARE C CURSOR LIKE referenceable;
   FETCH C(a, b, c, d, e) FROM VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
@@ -46641,7 +46641,7 @@ The statement ending at line XXXX
 
 CREATE TEMP TABLE foo_data(
   c1 TEXT!,
-  c2 INTEGER,
+  c2 INT,
   c3 REAL,
   c4 REAL,
   c5 REAL,
@@ -47181,7 +47181,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-DECLARE PROC out_union_user (x INTEGER) OUT UNION (id INTEGER, x TEXT);
+DECLARE PROC out_union_user (x INT) OUT UNION (id INT, x TEXT);
 
   {declare_proc_stmt}: out_union_user: { id: integer, x: text } uses_out_union
   | {proc_name_type}
@@ -47310,7 +47310,7 @@ END;
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : DECLARE PROC incompatible_result_proc () (t TEXT)
-test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER!)
+test/sem_test.sql:XXXX:1: error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INT!)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0189: procedure declarations/definitions do not match 'incompatible_result_proc'
 
@@ -47411,7 +47411,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 The statement ending at line XXXX
 
 CREATE TABLE IF NOT EXISTS foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 );
 
   {create_table_stmt}: foo: { id: integer notnull primary_key autoinc } alias
@@ -47762,7 +47762,7 @@ SELECT nullif(name, 'a') AS n
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC nullif (value INTEGER, defaultValue INTEGER!) INTEGER;
+DECLARE SELECT FUNC nullif (value INT, defaultValue INT!) INT;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0314: select function does not require a declaration, it is a CQL built-in 'nullif'
 
@@ -48253,7 +48253,7 @@ The statement ending at line XXXX
 
 CREATE TABLE bogus_reference_in_fk(
   col1 TEXT,
-  col2 INTEGER,
+  col2 INT,
   FOREIGN KEY (col2) REFERENCES this_table_does_not_exist (col1) ON UPDATE CASCADE ON DELETE CASCADE
 ) @DELETE(1);
 
@@ -48337,7 +48337,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0405: procedure of an unknown type 
 
 The statement ending at line XXXX
 
-DECLARE FUNC some_external_thing (t TEXT, r REAL) INTEGER;
+DECLARE FUNC some_external_thing (t TEXT, r REAL) INT;
 
   {declare_func_stmt}: integer
   | {name some_external_thing}: integer
@@ -48371,7 +48371,7 @@ LET result_of_some_external_thing := some_external_thing('x', 5.0);
 
 The statement ending at line XXXX
 
-DECLARE PROC _stuff () (id INTEGER, name TEXT);
+DECLARE PROC _stuff () (id INT, name TEXT);
 
   {declare_proc_stmt}: _stuff: { id: integer, name: text } dml_proc
   | {proc_name_type}
@@ -48389,7 +48389,7 @@ DECLARE PROC _stuff () (id INTEGER, name TEXT);
 
 The statement ending at line XXXX
 
-DECLARE PROC _stuff1 () (id INTEGER, name TEXT);
+DECLARE PROC _stuff1 () (id INT, name TEXT);
 
   {declare_proc_stmt}: _stuff1: { id: integer, name: text } dml_proc
   | {proc_name_type}
@@ -48407,7 +48407,7 @@ DECLARE PROC _stuff1 () (id INTEGER, name TEXT);
 
 The statement ending at line XXXX
 
-DECLARE PROC _stuff2 () (h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER);
+DECLARE PROC _stuff2 () (h1 INT, id INT, name TEXT, t1 INT);
 
   {declare_proc_stmt}: _stuff2: { h1: integer, id: integer, name: text, t1: integer } dml_proc
   | {proc_name_type}
@@ -48433,7 +48433,7 @@ DECLARE PROC _stuff2 () (h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER);
 
 The statement ending at line XXXX
 
-DECLARE PROC _stuff3 () (h2 INTEGER, h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER, t2 INTEGER);
+DECLARE PROC _stuff3 () (h2 INT, h1 INT, id INT, name TEXT, t1 INT, t2 INT);
 
   {declare_proc_stmt}: _stuff3: { h2: integer, h1: integer, id: integer, name: text, t1: integer, t2: integer } dml_proc
   | {proc_name_type}
@@ -48484,7 +48484,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-DECLARE PROC _stuff5 () (id INTEGER, name TEXT);
+DECLARE PROC _stuff5 () (id INT, name TEXT);
 
   {declare_proc_stmt}: _stuff5: { id: integer, name: text } dml_proc
   | {proc_name_type}
@@ -48502,7 +48502,7 @@ DECLARE PROC _stuff5 () (id INTEGER, name TEXT);
 
 The statement ending at line XXXX
 
-DECLARE PROC _stuff6 () (x_id INTEGER, x_name TEXT, y_id INTEGER, y_name TEXT);
+DECLARE PROC _stuff6 () (x_id INT, x_name TEXT, y_id INT, y_name TEXT);
 
   {declare_proc_stmt}: _stuff6: { x_id: integer, x_name: text, y_id: integer, y_name: text } dml_proc
   | {proc_name_type}
@@ -48528,7 +48528,7 @@ DECLARE PROC _stuff6 () (x_id INTEGER, x_name TEXT, y_id INTEGER, y_name TEXT);
 
 The statement ending at line XXXX
 
-CREATE PROC using_like_shape (x_id INTEGER, x_name TEXT)
+CREATE PROC using_like_shape (x_id INT, x_name TEXT)
 BEGIN
   CALL printf("%s\n", x.id);
 END;
@@ -48559,7 +48559,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC using_like_shape_bad_name (x_id INTEGER, x_name TEXT)
+CREATE PROC using_like_shape_bad_name (x_id INT, x_name TEXT)
 BEGIN
   CALL printf("%s\n", x.xyzzy);
 END;
@@ -48592,7 +48592,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0068: field not found in shape 'xyz
 
 The statement ending at line XXXX
 
-CREATE PROC arg_shape_forwarder (args_arg1 INTEGER, args_arg2 TEXT, extra_args_id INTEGER, extra_args_name TEXT)
+CREATE PROC arg_shape_forwarder (args_arg1 INT, args_arg2 TEXT, extra_args_id INT, extra_args_name TEXT)
 BEGIN
   CALL proc2(args.arg1, args.arg2);
 END;
@@ -48725,7 +48725,7 @@ CREATE TABLE in_the_future(
 
 The statement ending at line XXXX
 
-DECLARE PROC basic_source () OUT UNION (id INTEGER, name TEXT);
+DECLARE PROC basic_source () OUT UNION (id INT, name TEXT);
 
   {declare_proc_stmt}: basic_source: { id: integer, name: text } uses_out_union
   | {proc_name_type}
@@ -48790,8 +48790,8 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE self_ref1(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER REFERENCES self_ref1 (id)
+  id INT PRIMARY KEY,
+  id2 INT REFERENCES self_ref1 (id)
 );
 
   {create_table_stmt}: self_ref1: { id: integer notnull primary_key, id2: integer foreign_key }
@@ -48824,8 +48824,8 @@ CREATE TABLE self_ref1(
 The statement ending at line XXXX
 
 CREATE TABLE self_ref2(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER,
+  id INT PRIMARY KEY,
+  id2 INT,
   FOREIGN KEY (id2) REFERENCES self_ref2 (id)
 );
 
@@ -48863,8 +48863,8 @@ CREATE TABLE self_ref2(
 The statement ending at line XXXX
 
 CREATE TABLE self_ref3(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER REFERENCES self_ref3 (idx)
+  id INT PRIMARY KEY,
+  id2 INT REFERENCES self_ref3 (idx)
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'idx'
@@ -48899,8 +48899,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'idx'
 The statement ending at line XXXX
 
 CREATE TABLE self_ref4(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER,
+  id INT PRIMARY KEY,
+  id2 INT,
   FOREIGN KEY (id2) REFERENCES self_ref4 (idx)
 );
 
@@ -48940,8 +48940,8 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0171: name not found 'idx'
 The statement ending at line XXXX
 
 CREATE TABLE self_ref5(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER,
+  id INT PRIMARY KEY,
+  id2 INT,
   FOREIGN KEY (id2) REFERENCES self_ref5 (id2)
 );
 
@@ -48981,7 +48981,7 @@ test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in t
 The statement ending at line XXXX
 
 CREATE TABLE fk_to_non_key(
-  id INTEGER REFERENCES self_ref2 (id2)
+  id INT REFERENCES self_ref2 (id2)
 );
 
 test/sem_test.sql:XXXX:1: error: in name_list : CQL0272: columns referenced in the foreign key statement should match exactly a unique key in the parent table 'self_ref2'
@@ -49857,7 +49857,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'bogus'
 The statement ending at line XXXX
 
 CREATE TABLE values_table(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INT PRIMARY KEY AUTOINCREMENT,
   name TEXT
 );
 
@@ -49920,7 +49920,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE table_with_invalid_without_rowid_mode(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 ) WITHOUT ROWID;
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0339: WITHOUT ROWID tables are forbidden if strict without rowid mode is enabled 'table_with_invalid_without_rowid_mode'
@@ -49949,7 +49949,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE table_with_valid_without_rowid_mode(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 ) WITHOUT ROWID;
 
   {create_table_stmt}: table_with_valid_without_rowid_mode: { id: integer notnull primary_key }
@@ -50088,7 +50088,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC shape () (x INTEGER!, y TEXT!);
+DECLARE PROC shape () (x INT!, y TEXT!);
 
   {declare_proc_stmt}: shape: { x: integer notnull, y: text notnull } dml_proc
   | {proc_name_type}
@@ -50123,7 +50123,7 @@ DECLARE PROC small_shape () (y TEXT!);
 
 The statement ending at line XXXX
 
-DECLARE PROC shape_consumer (x_ INTEGER!, y_ TEXT!);
+DECLARE PROC shape_consumer (x_ INT!, y_ TEXT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -50351,7 +50351,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-DECLARE PROC lotsa_ints (a INTEGER!, b INTEGER!, c INTEGER!, d INTEGER!);
+DECLARE PROC lotsa_ints (a INT!, b INT!, c INT!, d INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -50498,7 +50498,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_simple (x INTEGER!, y INTEGER!)
+CREATE PROC arg_rewrite_simple (x INT!, y INT!)
 BEGIN
   CALL lotsa_ints(x, y, 1, 2);
   CALL lotsa_ints(1, x, y, 2);
@@ -50624,7 +50624,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0163: FROM ARGUMENTS construct is o
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_with_like (x INTEGER!, y INTEGER!)
+CREATE PROC arg_rewrite_with_like (x INT!, y INT!)
 BEGIN
   CALL lotsa_ints(y, 1, 2, 3);
   CALL lotsa_ints(1, y, 2, 3);
@@ -50718,7 +50718,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_with_like_with_underscore (x INTEGER!, y_ INTEGER!)
+CREATE PROC arg_rewrite_with_like_with_underscore (x INT!, y_ INT!)
 BEGIN
   CALL lotsa_ints(y_, 1, 2, 3);
   CALL lotsa_ints(1, y_, 2, 3);
@@ -50812,7 +50812,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_rewrite_with_like_many_cols_with_underscore (x_ INTEGER!, y_ INTEGER!)
+CREATE PROC arg_rewrite_with_like_many_cols_with_underscore (x_ INT!, y_ INT!)
 BEGIN
   CALL lotsa_ints(x_, y_, 1, 2);
   CALL lotsa_ints(1, x_, y_, 2);
@@ -50899,7 +50899,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC call_with_missing_type (x INTEGER)
+CREATE PROC call_with_missing_type (x INT)
 BEGIN
   CALL lotsa_ints(1, 2, 3, ARGUMENTS.id);
 END;
@@ -50930,7 +50930,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0201: expanding FROM ARGUMENTS, the
 
 The statement ending at line XXXX
 
-CREATE PROC call_from_arguments_bogus_type (x INTEGER)
+CREATE PROC call_from_arguments_bogus_type (x INT)
 BEGIN
   CALL lotsa_ints(1, 2, 3, FROM ARGUMENTS LIKE no_such_type_dude);
 END;
@@ -50963,7 +50963,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-DECLARE PROC funclike (x_ INTEGER!, y_ TEXT!, OUT z INTEGER!);
+DECLARE PROC funclike (x_ INT!, y_ TEXT!, OUT z INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -50992,7 +50992,7 @@ DECLARE PROC funclike (x_ INTEGER!, y_ TEXT!, OUT z INTEGER!);
 
 The statement ending at line XXXX
 
-CREATE PROC arg_caller (x_ INTEGER!, y_ TEXT!, OUT z INTEGER!)
+CREATE PROC arg_caller (x_ INT!, y_ TEXT!, OUT z INT!)
 BEGIN
   SET z := funclike(x_, y_);
 END;
@@ -51037,7 +51037,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_caller_bogus_shape (x_ INTEGER!, y_ TEXT!, OUT z INTEGER!)
+CREATE PROC arg_caller_bogus_shape (x_ INT!, y_ TEXT!, OUT z INT!)
 BEGIN
   SET z := funclike(FROM ARGUMENTS LIKE not_a_shape);
 END;
@@ -51222,7 +51222,7 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_diff_col_without_cursor_arg ()
 BEGIN
-  DECLARE x INTEGER!;
+  DECLARE x INT!;
   DECLARE y TEXT!;
   DECLARE c1 CURSOR FOR
     SELECT 1 AS x, 'y' AS y;
@@ -52619,7 +52619,7 @@ CREATE PROC print_call_cql_not_fetch_cursor_format ()
 BEGIN
   DECLARE c CURSOR FOR
     SELECT 1;
-  DECLARE x INTEGER!;
+  DECLARE x INT!;
   FETCH C INTO x;
   SET a_string := cql_cursor_format(c);
 END;
@@ -52668,7 +52668,7 @@ The statement ending at line XXXX
 
 SET an_int := 1L;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG_INT' in 1L
+test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 1L
 
   {assign}: err
   | {name an_int}: err
@@ -53272,7 +53272,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-DECLARE PROC some_proc (id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!);
+DECLARE PROC some_proc (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -53321,7 +53321,7 @@ DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
 
 The statement ending at line XXXX
 
-CREATE PROC some_proc_proxy (id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!)
+CREATE PROC some_proc_proxy (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
 BEGIN
   CALL some_proc(id, t, t1, b, x);
 END;
@@ -53383,7 +53383,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC some_proc2 (INOUT id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!);
+DECLARE PROC some_proc2 (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -53422,7 +53422,7 @@ DECLARE PROC some_proc2 (INOUT id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEG
 
 The statement ending at line XXXX
 
-CREATE PROC some_proc2_proxy (INOUT id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!)
+CREATE PROC some_proc2_proxy (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
 BEGIN
   CALL some_proc(id, t, t1, b, x);
 END;
@@ -53647,9 +53647,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0347: select function may not retur
 The statement ending at line XXXX
 
 CREATE TABLE with_check(
-  id INTEGER,
-  lo INTEGER CHECK(lo <= hi) ,
-  hi INTEGER
+  id INT,
+  lo INT CHECK(lo <= hi) ,
+  hi INT
 );
 
   {create_table_stmt}: with_check: { id: integer, lo: integer has_check, hi: integer }
@@ -53683,9 +53683,9 @@ CREATE TABLE with_check(
 The statement ending at line XXXX
 
 CREATE TABLE with_check_bogus_column(
-  id INTEGER,
-  lo INTEGER CHECK(lo <= hip) ,
-  hi INTEGER
+  id INT,
+  lo INT CHECK(lo <= hip) ,
+  hi INT
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'hip'
@@ -53721,7 +53721,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'hip'
 The statement ending at line XXXX
 
 CREATE TABLE with_collate(
-  id INTEGER,
+  id INT,
   t TEXT COLLATE garbonzo
 );
 
@@ -53748,7 +53748,7 @@ CREATE TABLE with_collate(
 The statement ending at line XXXX
 
 CREATE TABLE with_collate(
-  id INTEGER,
+  id INT,
   i REAL COLLATE garbonzo
 );
 
@@ -53777,7 +53777,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0348: collate applied to a non-text
 The statement ending at line XXXX
 
 CREATE TABLE bad_order(
-  id INTEGER,
+  id INT,
   PRIMARY KEY (id),
   t TEXT
 );
@@ -54310,7 +54310,7 @@ test/sem_test.sql:XXXX:1: error: in return_stmt : CQL0352: use COMMIT RETURN or 
 
 The statement ending at line XXXX
 
-DECLARE ENUM integer_things INTEGER (
+DECLARE ENUM integer_things INT (
   pen,
   paper = 7,
   pencil
@@ -54333,7 +54333,7 @@ DECLARE ENUM integer_things INTEGER (
 
 The statement ending at line XXXX
 
-DECLARE PROC test_shape () (x INTEGER<integer_things>!);
+DECLARE PROC test_shape () (x INT<integer_things>!);
 
   {declare_proc_stmt}: test_shape: { x: integer<integer_things> notnull } dml_proc
   | {proc_name_type}
@@ -54382,7 +54382,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC enum_users_out (i INTEGER<integer_things>!) OUT (x INTEGER<integer_things>!);
+DECLARE PROC enum_users_out (i INT<integer_things>!) OUT (x INT<integer_things>!);
 
   {declare_proc_stmt}: enum_users_out: { x: integer<integer_things> notnull } uses_out
   | {proc_name_type}
@@ -54405,7 +54405,7 @@ DECLARE PROC enum_users_out (i INTEGER<integer_things>!) OUT (x INTEGER<integer_
 
 The statement ending at line XXXX
 
-CREATE PROC enum_users_out (i INTEGER<integer_things>!)
+CREATE PROC enum_users_out (i INT<integer_things>!)
 BEGIN
   DECLARE C CURSOR LIKE test_shape;
   FETCH C(x) FROM VALUES(i);
@@ -54442,7 +54442,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC enum_in_bundle (b_x INTEGER<integer_things>!)
+CREATE PROC enum_in_bundle (b_x INT<integer_things>!)
 BEGIN
   LET u := b.x;
   LET v := b_x;
@@ -54470,7 +54470,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC shape_result_test () (x INTEGER<integer_things>!);
+DECLARE PROC shape_result_test () (x INT<integer_things>!);
 
   {declare_proc_stmt}: shape_result_test: { x: integer<integer_things> notnull } dml_proc
   | {proc_name_type}
@@ -54486,7 +54486,7 @@ DECLARE PROC shape_result_test () (x INTEGER<integer_things>!);
 
 The statement ending at line XXXX
 
-DECLARE ENUM integer_things INTEGER (
+DECLARE ENUM integer_things INT (
   pen,
   paper = 7,
   pencil
@@ -54626,7 +54626,7 @@ DECLARE ENUM bool_things BOOL (
 
 The statement ending at line XXXX
 
-DECLARE ENUM long_things LONG_INT (
+DECLARE ENUM long_things LONG (
   pen,
   paper = -7,
   pencil
@@ -54650,15 +54650,15 @@ DECLARE ENUM long_things LONG_INT (
 
 The statement ending at line XXXX
 
-DECLARE ENUM long_things INTEGER (
+DECLARE ENUM long_things INT (
   foo
 );
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things INTEGER (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things INT (
   foo
 )
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things LONG_INT (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM long_things LONG (
   pen,
   paper = -7,
   pencil
@@ -54676,7 +54676,7 @@ test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0356: enum definition
 
 The statement ending at line XXXX
 
-DECLARE ENUM duplicated_things INTEGER (
+DECLARE ENUM duplicated_things INT (
   two,
   two
 );
@@ -54696,7 +54696,7 @@ test/sem_test.sql:XXXX:1: error: in enum_value : CQL0354: duplicate enum member 
 
 The statement ending at line XXXX
 
-DECLARE ENUM invalid_things INTEGER (
+DECLARE ENUM invalid_things INT (
   boo = 1 / 0
 );
 
@@ -54777,7 +54777,7 @@ The statement ending at line XXXX
 
 CREATE PROC enum_in_proc_bogus ()
 BEGIN
-  DECLARE ENUM bogus_inside_proc INTEGER (
+  DECLARE ENUM bogus_inside_proc INT (
     foo
   );
 END;
@@ -54799,7 +54799,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0358: declared enums must be top le
 The statement ending at line XXXX
 
 CREATE TABLE SalesInfo(
-  month INTEGER,
+  month INT,
   amount REAL
 );
 
@@ -55052,7 +55052,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE AB(
-  a INTEGER,
+  a INT,
   b TEXT
 );
 
@@ -55077,7 +55077,7 @@ CREATE TABLE AB(
 The statement ending at line XXXX
 
 CREATE TABLE CD(
-  c INTEGER,
+  c INT,
   d TEXT
 );
 
@@ -55102,7 +55102,7 @@ CREATE TABLE CD(
 The statement ending at line XXXX
 
 CREATE TABLE BA(
-  b INTEGER,
+  b INT,
   a TEXT
 );
 
@@ -55126,7 +55126,7 @@ CREATE TABLE BA(
 
 The statement ending at line XXXX
 
-DECLARE PROC use_c () (c INTEGER);
+DECLARE PROC use_c () (c INT);
 
   {declare_proc_stmt}: use_c: { c: integer } dml_proc
   | {proc_name_type}
@@ -55140,7 +55140,7 @@ DECLARE PROC use_c () (c INTEGER);
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_1 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_1 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a) VALUES(a2.c);
 END;
@@ -55184,7 +55184,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_2 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_2 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a) VALUES(a2.c);
 END;
@@ -55228,7 +55228,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_3 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_3 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a) VALUES(a2.c);
 END;
@@ -55272,7 +55272,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_4 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_4 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a, b) VALUES(a1.a, a1.b);
 END;
@@ -55322,7 +55322,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_5 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_5 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a, b) VALUES(a1.b, a1.a);
 END;
@@ -55374,7 +55374,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0012: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_6 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_6 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(b, a) VALUES(a1.b, a1.a);
 END;
@@ -55424,7 +55424,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_7 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_7 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(a, b) VALUES(a2.c, a2.d);
 END;
@@ -55474,7 +55474,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_8 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_8 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(b, a) VALUES(a1.a, a1.b);
 END;
@@ -55526,7 +55526,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_9 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_9 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   INSERT INTO AB(b, a) VALUES(a2.c, a2.d);
 END;
@@ -55578,7 +55578,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_10 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_10 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE AB;
   FETCH C(a, b) FROM VALUES(a2.c, a2.d);
@@ -55633,7 +55633,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_11 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_11 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE AB;
   FETCH C(a, b) FROM VALUES(a1.a, a1.b);
@@ -55688,7 +55688,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_12 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_12 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE AB;
   FETCH C(a, b) FROM VALUES(a1.a, NULL);
@@ -55741,7 +55741,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_13 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_13 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE AB;
   UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
@@ -55795,7 +55795,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_14 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_14 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE AB;
   UPDATE CURSOR C(a) FROM VALUES(a2.c);
@@ -55843,7 +55843,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_15 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_15 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE AB;
   UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
@@ -55897,7 +55897,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC arg_bundle_16 (a1_a INTEGER, a1_b TEXT, a2_c INTEGER, a2_d TEXT)
+CREATE PROC arg_bundle_16 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
   DECLARE C CURSOR LIKE a1;
   UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
@@ -55952,7 +55952,7 @@ END;
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE basic_virtual USING module_name (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -55987,8 +55987,8 @@ CREATE VIRTUAL TABLE basic_virtual USING module_name (this, that, the_other) AS 
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE broken_virtual_table USING module_name AS (
-  id INTEGER,
-  id INTEGER
+  id INT,
+  id INT
 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0142: duplicate column name 'id'
@@ -56083,7 +56083,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0164: cannot use ALTER TABLE on a v
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE deleting_virtual USING module_name (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 ) @DELETE(1);
 
@@ -56122,7 +56122,7 @@ test/sem_test.sql:XXXX:1: error: in version_annotation : CQL0392: when deleting 
 The statement ending at line XXXX
 
 CREATE TABLE any_table_at_all(
-  id INTEGER,
+  id INT,
   t TEXT
 ) @CREATE(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
@@ -56155,7 +56155,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0378: built-in migration procedure 
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE deleting_virtual_correctly USING module_name (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 ) @DELETE(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
@@ -56213,7 +56213,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0169: enum not found 'bogus_enum_na
 The statement ending at line XXXX
 
 CREATE TABLE with_check_expr(
-  v INTEGER,
+  v INT,
   CHECK (v > 5)
 );
 
@@ -56237,7 +56237,7 @@ CREATE TABLE with_check_expr(
 The statement ending at line XXXX
 
 CREATE TABLE with_check_expr_random(
-  v INTEGER,
+  v INT,
   CHECK (v > random())
 );
 
@@ -56266,7 +56266,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE with_check_expr_changes(
-  v INTEGER,
+  v INT,
   CHECK (v > changes())
 );
 
@@ -56295,7 +56295,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE with_check_expr_udf(
-  v INTEGER,
+  v INT,
   CHECK (v > SqlUserFunc(1))
 );
 
@@ -56461,7 +56461,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE with_check_expr_select(
-  v INTEGER,
+  v INT,
   CHECK (v > ( SELECT 5 ))
 );
 
@@ -56560,7 +56560,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 The statement ending at line XXXX
 
 CREATE TABLE with_bogus_check_expr(
-  v INTEGER,
+  v INT,
   CHECK (q > 5)
 );
 
@@ -56703,11 +56703,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
 The statement ending at line XXXX
 
-DECLARE my_type TYPE INTEGER;
+DECLARE my_type TYPE INT;
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE INTEGER
+test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE INT
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: conflicting type declaration 'my_type'
 
@@ -56740,8 +56740,8 @@ The statement ending at line XXXX
 
 CREATE PROC named_type ()
 BEGIN
-  DECLARE my_type TYPE INTEGER;
-  DECLARE my_var INTEGER;
+  DECLARE my_type TYPE INT;
+  DECLARE my_var INT;
 END;
 
   {create_proc_stmt}: ok
@@ -57016,7 +57016,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
 The statement ending at line XXXX
 
-DECLARE FUNC decl_type_func (arg1 INTEGER) TEXT @SENSITIVE;
+DECLARE FUNC decl_type_func (arg1 INT) TEXT @SENSITIVE;
 
   {declare_func_stmt}: text sensitive
   | {name decl_type_func}: text sensitive
@@ -57031,7 +57031,7 @@ DECLARE FUNC decl_type_func (arg1 INTEGER) TEXT @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE FUNC decl_type_func_err (arg1 INTEGER) bogus_type;
+DECLARE FUNC decl_type_func_err (arg1 INT) bogus_type;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
@@ -57048,10 +57048,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 The statement ending at line XXXX
 
 CREATE TABLE to_copy(
-  f1 INTEGER,
-  f2 INTEGER!,
-  f3 INTEGER! @SENSITIVE,
-  f4 INTEGER @SENSITIVE
+  f1 INT,
+  f2 INT!,
+  f3 INT! @SENSITIVE,
+  f4 INT @SENSITIVE
 );
 
   {create_table_stmt}: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
@@ -57091,10 +57091,10 @@ CREATE TABLE to_copy(
 The statement ending at line XXXX
 
 CREATE TABLE the_copy(
-  f1 INTEGER,
-  f2 INTEGER!,
-  f3 INTEGER @SENSITIVE!,
-  f4 INTEGER @SENSITIVE
+  f1 INT,
+  f2 INT!,
+  f3 INT @SENSITIVE!,
+  f4 INT @SENSITIVE
 );
 
   {create_table_stmt}: the_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive }
@@ -57133,7 +57133,7 @@ CREATE TABLE the_copy(
 
 The statement ending at line XXXX
 
-CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE)
+CREATE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE)
 BEGIN
 END;
 
@@ -57167,7 +57167,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE);
+DECLARE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE);
 
   {declare_proc_stmt}: ok alias
   | {proc_name_type}
@@ -57201,7 +57201,7 @@ DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @
 
 The statement ending at line XXXX
 
-DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
+DECLARE FUNC function_uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE) INT;
 
   {declare_func_stmt}: integer
   | {name function_uses_complex_table_attrs}: integer
@@ -57276,7 +57276,7 @@ DECLARE FUNC maybe_create_func_text () CREATE TEXT;
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_int () CREATE INTEGER;
+DECLARE FUNC maybe_create_func_int () CREATE INT;
 
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
@@ -57300,7 +57300,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 
 The statement ending at line XXXX
 
-DECLARE FUNC maybe_create_func_long () CREATE LONG_INT! @SENSITIVE;
+DECLARE FUNC maybe_create_func_long () CREATE LONG! @SENSITIVE;
 
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 
@@ -57362,7 +57362,7 @@ DECLARE FUNC type_func_return_obj () OBJECT<Foo>! @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE my_enum_type TYPE INTEGER<ints>!;
+DECLARE my_enum_type TYPE INT<ints>!;
 
   {declare_named_type}: integer<ints> notnull
   | {name my_enum_type}: integer<ints> notnull
@@ -57372,14 +57372,14 @@ DECLARE my_enum_type TYPE INTEGER<ints>!;
 
 The statement ending at line XXXX
 
-DECLARE ENUM my_type INTEGER (
+DECLARE ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
 );
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
-test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INTEGER (
+test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
 )
@@ -57402,7 +57402,7 @@ test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : CQL0359: conflicting typ
 
 The statement ending at line XXXX
 
-DECLARE x1, x2, x3 INTEGER<x_coord>;
+DECLARE x1, x2, x3 INT<x_coord>;
 
   {declare_vars_type}: integer<x_coord>
   | {name_list}: x1: integer<x_coord> variable was_set
@@ -57416,7 +57416,7 @@ DECLARE x1, x2, x3 INTEGER<x_coord>;
 
 The statement ending at line XXXX
 
-DECLARE y1, y2, y3 INTEGER<y_coord>;
+DECLARE y1, y2, y3 INT<y_coord>;
 
   {declare_vars_type}: integer<y_coord>
   | {name_list}: y1: integer<y_coord> variable
@@ -57535,7 +57535,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-DECLARE _x TYPE INTEGER<x_coord>;
+DECLARE _x TYPE INT<x_coord>;
 
   {declare_named_type}: integer<x_coord>
   | {name _x}: integer<x_coord>
@@ -57544,7 +57544,7 @@ DECLARE _x TYPE INTEGER<x_coord>;
 
 The statement ending at line XXXX
 
-DECLARE _y TYPE INTEGER<y_coord>;
+DECLARE _y TYPE INT<y_coord>;
 
   {declare_named_type}: integer<y_coord>
   | {name _y}: integer<y_coord>
@@ -57553,7 +57553,7 @@ DECLARE _y TYPE INTEGER<y_coord>;
 
 The statement ending at line XXXX
 
-DECLARE x4 INTEGER<x_coord>;
+DECLARE x4 INT<x_coord>;
 
   {declare_vars_type}: integer<x_coord>
   | {name_list}: x4: integer<x_coord> variable
@@ -57572,8 +57572,8 @@ SET x1 := x4;
 The statement ending at line XXXX
 
 CREATE TABLE xy(
-  x INTEGER<x_coord>,
-  y INTEGER<y_coord>
+  x INT<x_coord>,
+  y INT<y_coord>
 );
 
   {create_table_stmt}: xy: { x: integer<x_coord>, y: integer<y_coord> }
@@ -57953,7 +57953,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-DECLARE v1, v2, v3 INTEGER<v>;
+DECLARE v1, v2, v3 INT<v>;
 
   {declare_vars_type}: integer<v>
   | {name_list}: v1: integer<v> variable was_set
@@ -58277,7 +58277,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET x1 := CAST(y1 AS INTEGER<x_coord>);
+SET x1 := CAST(y1 AS INT<x_coord>);
 
   {assign}: x1: integer<x_coord> variable was_set
   | {name x1}: x1: integer<x_coord> variable was_set
@@ -58288,7 +58288,7 @@ SET x1 := CAST(y1 AS INTEGER<x_coord>);
 
 The statement ending at line XXXX
 
-SET x1 := CAST(y1 AS INTEGER<x_coord>);
+SET x1 := CAST(y1 AS INT<x_coord>);
 
   {assign}: x1: integer<x_coord> variable was_set
   | {name x1}: x1: integer<x_coord> variable was_set
@@ -58299,7 +58299,7 @@ SET x1 := CAST(y1 AS INTEGER<x_coord>);
 
 The statement ending at line XXXX
 
-SET x1 := CAST(y1 AS INTEGER);
+SET x1 := CAST(y1 AS INT);
 
   {assign}: x1: integer<x_coord> variable was_set
   | {name x1}: x1: integer<x_coord> variable was_set
@@ -58309,7 +58309,7 @@ SET x1 := CAST(y1 AS INTEGER);
 
 The statement ending at line XXXX
 
-SET x1 := CAST(x1 AS INTEGER<y_coord>);
+SET x1 := CAST(x1 AS INT<y_coord>);
 
 test/sem_test.sql:XXXX:1: error: in cast_expr : CQL0070: expressions of different kinds can't be mixed: 'x_coord' vs. 'y_coord'
 
@@ -58657,7 +58657,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0363: all arguments must be names '
 The statement ending at line XXXX
 
 CREATE TABLE bar_with_sensitive(
-  id INTEGER!,
+  id INT!,
   name TEXT @SENSITIVE @CREATE(2),
   title TEXT @SENSITIVE @CREATE(2),
   intro TEXT @CREATE(2)
@@ -59523,8 +59523,8 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE hidden_ignored_on_normal_tables(
-  x INTEGER HIDDEN!,
-  y INTEGER
+  x INT HIDDEN!,
+  y INT
 );
 
   {create_table_stmt}: hidden_ignored_on_normal_tables: { x: integer notnull, y: integer }
@@ -59550,8 +59550,8 @@ CREATE TABLE hidden_ignored_on_normal_tables(
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE virtual_with_hidden USING module_name AS (
-  x INTEGER HIDDEN!,
-  y INTEGER
+  x INT HIDDEN!,
+  y INT
 );
 
   {create_virtual_table_stmt}: virtual_with_hidden: { x: integer notnull hidden_col, y: integer } virtual @recreate
@@ -59581,8 +59581,8 @@ CREATE VIRTUAL TABLE virtual_with_hidden USING module_name AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE virtual_with_hidden_wrong USING module_name AS (
-  x INTEGER! HIDDEN,
-  y INTEGER
+  x INT! HIDDEN,
+  y INT
 );
 
 test/sem_test.sql:XXXX:1: error: in col_attrs_hidden : CQL0362: HIDDEN column attribute must be the first attribute if present
@@ -59633,7 +59633,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_err_0(
-  id INTEGER REFERENCES foo (id)
+  id INT REFERENCES foo (id)
 );
 
   {create_table_stmt}: fk_strict_err_0: { id: integer foreign_key }
@@ -59671,7 +59671,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_err_1(
-  id INTEGER REFERENCES foo (id)
+  id INT REFERENCES foo (id)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
@@ -59704,7 +59704,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE fk_strict_err_2(
-  id INTEGER REFERENCES foo (id)
+  id INT REFERENCES foo (id)
 );
 
   {create_table_stmt}: fk_strict_err_2: { id: integer foreign_key }
@@ -60481,7 +60481,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
 
 The statement ending at line XXXX
 
-CREATE PROC val_avg_proc (lim INTEGER)
+CREATE PROC val_avg_proc (lim INT)
 BEGIN
   LET val_avg := ( SELECT avg(id) AS col
     FROM foo
@@ -61966,7 +61966,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE ENUM three_things INTEGER (
+DECLARE ENUM three_things INT (
   zip = 0,
   zero = 0,
   one = 1,
@@ -62260,7 +62260,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0374: SELECT expression is 
 
 The statement ending at line XXXX
 
-DECLARE PROC out2_proc (x INTEGER, OUT y INTEGER!, OUT z INTEGER!);
+DECLARE PROC out2_proc (x INT, OUT y INT!, OUT z INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -62383,7 +62383,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0426: OUT or INOUT argument cannot 
 
 The statement ending at line XXXX
 
-CREATE PROC out_decl_test_2 (x INTEGER)
+CREATE PROC out_decl_test_2 (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, 1 + 3, v);
 END;
@@ -62414,7 +62414,7 @@ test/sem_test.sql:XXXX:1: error: in add : CQL0207: expected a variable name for 
 The statement ending at line XXXX
 
 CREATE TABLE this_table_is_deleted(
-  id INTEGER
+  id INT
 ) @DELETE(1);
 
   {create_table_stmt}: this_table_is_deleted: { id: integer } deleted @delete(1)
@@ -62499,7 +62499,7 @@ test/sem_test.sql:XXXX:1: error: in create_trigger_stmt : CQL0397: object is an 
 
 The statement ending at line XXXX
 
-CREATE PROC out_decl_test_3 (x INTEGER)
+CREATE PROC out_decl_test_3 (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
 END;
@@ -62525,7 +62525,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC out_decl_test_4 (x INTEGER)
+CREATE PROC out_decl_test_4 (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
   DECLARE OUT CALL out2_proc(x, u, v);
@@ -62753,7 +62753,7 @@ INSERT INTO with_kind(id, cost, value)
 The statement ending at line XXXX
 
 CREATE TABLE moving_to_recreate(
-  id INTEGER
+  id INT
 ) @CREATE(1, cql:from_recreate);
 
   {create_table_stmt}: moving_to_recreate: { id: integer } @create(1)
@@ -62777,7 +62777,7 @@ CREATE TABLE moving_to_recreate(
 The statement ending at line XXXX
 
 CREATE TABLE bogus_builtin_migrator(
-  id INTEGER
+  id INT
 ) @CREATE(1, cql:fxom_recreate);
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0379: unknown built-in migration procedure 'cql:fxom_recreate'
@@ -62803,8 +62803,8 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0379: unknown built-in migration pr
 The statement ending at line XXXX
 
 CREATE TABLE bogus_builtin_migrator_placement(
-  id INTEGER,
-  id2 INTEGER @CREATE(2, cql:from_recreate)
+  id INT,
+  id2 INT @CREATE(2, cql:from_recreate)
 ) @CREATE(1);
 
 test/sem_test.sql:XXXX:1: error: in dot : CQL0378: built-in migration procedure not valid in this context 'cql:from_recreate'
@@ -62900,7 +62900,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0014: cannot assign/copy sensitive
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER! ON CONFLICT FAIL
+  id INT! ON CONFLICT FAIL
 );
 
   {create_table_stmt}: conflict_clause_t: { id: integer notnull }
@@ -62920,7 +62920,7 @@ CREATE TABLE conflict_clause_t(
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
@@ -62948,15 +62948,15 @@ CREATE TABLE conflict_clause_pk(
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER
+  id INT
 );
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT
+  id INT PRIMARY KEY AUTOINCREMENT
 )
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CREATE TABLE foo(
-  id INTEGER
+  id INT
 )
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in str : CQL0103: duplicate table/view name 'foo'
@@ -62977,9 +62977,9 @@ The statement ending at line XXXX
 
 CREATE PROC conditionals_improve_nullable_variables ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   LET x0 := a;
   IF a IS NOT NULL THEN
     LET x1 := a;
@@ -63255,8 +63255,8 @@ The statement ending at line XXXX
 
 CREATE PROC local_improvements_persist_until_set_to_a_nullable ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
   LET x0 := a;
   LET y0 := b;
   IF a IS NOT NULL AND b IS NOT NULL THEN
@@ -63396,7 +63396,7 @@ The statement ending at line XXXX
 
 CREATE PROC set_can_improve_a_type_if_set_to_something_not_null ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   LET x0 := a;
   SET a := 42;
   LET x1 := a;
@@ -63437,7 +63437,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_added_by_set_do_not_persist_outside_the_statement_list ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF 0 THEN
     SET a := 42;
     LET x0 := a;
@@ -63477,7 +63477,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_removed_by_set_do_persist_outside_the_statement_list ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     LET x0 := a;
     IF 1 THEN
@@ -63526,8 +63526,8 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_in_case_expressions ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
   LET x0 := CASE
     WHEN a IS NOT NULL THEN a + a
     ELSE 42
@@ -63626,7 +63626,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_in_case_expressions_with_matching ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   LET x := CASE FALSE
     WHEN a IS NOT NULL THEN a + a
     ELSE 42
@@ -63660,8 +63660,8 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_in_iif_expressions ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
   LET x0 := CASE
     WHEN a IS NOT NULL THEN a + a
     ELSE 42
@@ -63741,7 +63741,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC sets_out (OUT a INTEGER, OUT b INTEGER)
+CREATE PROC sets_out (OUT a INT, OUT b INT)
 BEGIN
 END;
 
@@ -63765,9 +63765,9 @@ The statement ending at line XXXX
 
 CREATE PROC local_improvements_persist_until_used_as_out_arg ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE x INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE x INT;
   IF a IS NOT NULL AND b IS NOT NULL THEN
     LET x0 := a;
     LET y0 := b;
@@ -63902,8 +63902,8 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE tnull(
-  xn INTEGER,
-  yn INTEGER
+  xn INT,
+  yn INT
 );
 
   {create_table_stmt}: tnull: { xn: integer, yn: integer }
@@ -63928,9 +63928,9 @@ The statement ending at line XXXX
 
 CREATE PROC local_improvements_persist_until_fetch_into ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE x INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE x INT;
   DECLARE c CURSOR FOR
     SELECT *
       FROM tnull;
@@ -64598,7 +64598,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_in_args (a INTEGER)
+CREATE PROC improvements_work_for_in_args (a INT)
 BEGIN
   IF a IS NOT NULL THEN
     LET x := a;
@@ -64632,7 +64632,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC requires_notnull_out (OUT a INTEGER!)
+CREATE PROC requires_notnull_out (OUT a INT!)
 BEGIN
 END;
 
@@ -64651,7 +64651,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_for_out ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     CALL requires_notnull_out(a);
   END;
@@ -64681,7 +64681,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must 
 
 The statement ending at line XXXX
 
-CREATE PROC requires_notnull_inout (INOUT a INTEGER!)
+CREATE PROC requires_notnull_inout (INOUT a INT!)
 BEGIN
 END;
 
@@ -64700,7 +64700,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_for_inout ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     CALL requires_notnull_inout(a);
   END;
@@ -64732,7 +64732,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_in_sql ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     SELECT 1 + a AS b;
   END;
@@ -64781,7 +64781,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_are_not_applied_if_not_an_id_or_dot ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a + 1 IS NOT NULL THEN
     LET b := a;
   END;
@@ -64810,7 +64810,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE some_global INTEGER;
+DECLARE some_global INT;
 
   {declare_vars_type}: integer
   | {name_list}: some_global: integer variable
@@ -64819,7 +64819,7 @@ DECLARE some_global INTEGER;
 
 The statement ending at line XXXX
 
-CREATE PROC requires_not_nulls (a INTEGER!, b INTEGER!, c INTEGER!)
+CREATE PROC requires_not_nulls (a INT!, b INT!, c INT!)
 BEGIN
 END;
 
@@ -64847,7 +64847,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC returns_int_not_null (OUT a INTEGER!)
+CREATE PROC returns_int_not_null (OUT a INT!)
 BEGIN
 END;
 
@@ -65152,8 +65152,8 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE another_table_with_nullables(
-  xn INTEGER,
-  zn INTEGER
+  xn INT,
+  zn INT
 );
 
   {create_table_stmt}: another_table_with_nullables: { xn: integer, zn: integer }
@@ -65498,7 +65498,7 @@ The statement ending at line XXXX
 
 CREATE PROC local_variable_improvements_do_not_affect_result_columns ()
 BEGIN
-  DECLARE xn INTEGER;
+  DECLARE xn INT;
   IF xn IS NULL THEN
     RETURN;
   END;
@@ -65898,7 +65898,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a INTEGER)
+CREATE PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a INT)
 BEGIN
   IF args.a IS NOT NULL THEN
     LET x0 := args.a;
@@ -65949,7 +65949,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_within_ctes ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     WITH RECURSIVE
       some_cte (b) AS (
@@ -66022,7 +66022,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_commit_return_guards (a INTEGER)
+CREATE PROC improvements_work_for_commit_return_guards (a INT)
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -66074,7 +66074,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_continue_guards (a INTEGER)
+CREATE PROC improvements_work_for_continue_guards (a INT)
 BEGIN
   WHILE 1
   BEGIN
@@ -66120,7 +66120,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_leave_guards (a INTEGER)
+CREATE PROC improvements_work_for_leave_guards (a INT)
 BEGIN
   WHILE 1
   BEGIN
@@ -66166,7 +66166,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_return_guards (a INTEGER)
+CREATE PROC improvements_work_for_return_guards (a INT)
 BEGIN
   IF 1 THEN
     IF a IS NULL THEN
@@ -66213,7 +66213,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_rollback_return_guards (a INTEGER)
+CREATE PROC improvements_work_for_rollback_return_guards (a INT)
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -66265,7 +66265,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_throw_guards (a INTEGER)
+CREATE PROC improvements_work_for_throw_guards (a INT)
 BEGIN
   PROC SAVEPOINT
   BEGIN
@@ -66393,7 +66393,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC multiple_improvements_are_possible_via_one_guard (a INTEGER, b INTEGER, c INTEGER)
+CREATE PROC multiple_improvements_are_possible_via_one_guard (a INT, b INT, c INT)
 BEGIN
   IF 1 THEN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
@@ -66484,7 +66484,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC guard_improvements_only_work_for_outermost_ors (a INTEGER, b INTEGER, c INTEGER)
+CREATE PROC guard_improvements_only_work_for_outermost_ors (a INT, b INT, c INT)
 BEGIN
   IF a IS NULL AND (b IS NULL OR c IS NULL) THEN
     RETURN;
@@ -66541,7 +66541,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC guard_improvements_only_work_for_is_null (a INTEGER)
+CREATE PROC guard_improvements_only_work_for_is_null (a INT)
 BEGIN
   IF NOT a THEN
     RETURN;
@@ -66597,9 +66597,9 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_guard_pattern_ifs ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   IF 1 THEN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
       RETURN;
@@ -66688,9 +66688,9 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_guard_pattern_ifs_with_preceding_statements ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   IF 1 THEN
     IF a IS NULL OR b IS NULL OR c IS NULL THEN
       CALL printf("Hello, world!\n");
@@ -66785,7 +66785,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_guard_pattern_ifs_that_set_the_id_to_null ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF 1 THEN
     IF a IS NULL THEN
       SET a := NULL;
@@ -66836,7 +66836,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NULL THEN
     RETURN;
   ELSE
@@ -66869,7 +66869,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_for_guard_like_ifs_with_else_if ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NULL THEN
     RETURN;
   ELSE IF 1 THEN
@@ -66904,7 +66904,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_do_not_work_for_is_null_checks_in_else_ifs ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF 0 THEN
     RETURN;
   ELSE IF a IS NULL THEN
@@ -66942,9 +66942,9 @@ The statement ending at line XXXX
 
 CREATE PROC false_conditions_of_earlier_branches_improve_later_branches ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   IF a IS NULL THEN
     LET x0 := a;
     LET y0 := b;
@@ -67081,7 +67081,7 @@ The statement ending at line XXXX
 
 CREATE PROC unimprovements_do_not_negatively_affect_later_branches ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   LET x0 := a;
   IF a IS NULL THEN
     RETURN;
@@ -67174,9 +67174,9 @@ The statement ending at line XXXX
 
 CREATE PROC nested_unimprovements_do_not_negatively_affect_later_branches ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   IF a IS NULL OR b IS NULL OR c IS NULL THEN
     RETURN;
   END;
@@ -67558,10 +67558,10 @@ The statement ending at line XXXX
 
 CREATE PROC reverting_improvements_and_unimprovements_restores_original_state ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
-  DECLARE d INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
+  DECLARE d INT;
   IF b IS NULL THEN
     RETURN;
   END;
@@ -67793,7 +67793,7 @@ The statement ending at line XXXX
 
 CREATE PROC unimproving_and_reimproving_is_neutral ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   SET a := 42;
   LET x0 := a;
   IF 0 THEN
@@ -67909,7 +67909,7 @@ The statement ending at line XXXX
 
 CREATE PROC all_branches_improving_including_else_results_in_an_improvement ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF 0 THEN
     SET a := 42;
   ELSE IF 0 THEN
@@ -68045,7 +68045,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC requires_int_notnull (a INTEGER!);
+DECLARE PROC requires_int_notnull (a INT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -68063,8 +68063,8 @@ The statement ending at line XXXX
 
 CREATE PROC unimprovements_in_loops_affect_earlier_statements ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
   SET a := 1;
   SET b := 1;
   LET x0 := a;
@@ -68253,8 +68253,8 @@ The statement ending at line XXXX
 
 CREATE PROC loops_keep_all_unsets_and_ignore_all_sets ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
   SET a := 1;
   SET b := 1;
   WHILE 0
@@ -68307,7 +68307,7 @@ BEGIN
   END;
   LET x4 := a;
   LET y4 := b;
-  DECLARE c INTEGER;
+  DECLARE c INT;
   SET c := 1;
   PROC SAVEPOINT
   BEGIN
@@ -68544,7 +68544,7 @@ The statement ending at line XXXX
 
 CREATE PROC try_keeps_all_unsets_and_ignores_all_sets ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   SET a := 1;
   TRY
     IF 0 THEN
@@ -68617,7 +68617,7 @@ The statement ending at line XXXX
 
 CREATE PROC proc_savepoint_improvements_persist ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   PROC SAVEPOINT
   BEGIN
     SET a := 1;
@@ -68653,7 +68653,7 @@ The statement ending at line XXXX
 
 CREATE PROC switch_branches_are_independent_for_improvements ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   SET a := 1;
   SWITCH 0
     WHEN 1 THEN
@@ -68725,9 +68725,9 @@ The statement ending at line XXXX
 
 CREATE PROC switch_improvements_can_persist ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   SWITCH 0
     WHEN 1 THEN
       SET a := 1;
@@ -68869,7 +68869,7 @@ The statement ending at line XXXX
 
 CREATE PROC empty_branches_prevent_persisting_improvements ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF 0 THEN
   ELSE IF 0 THEN
     SET a := 1;
@@ -68963,7 +68963,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_account_for_control_statements ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF 0 THEN
     SET a := 1;
   ELSE
@@ -69147,9 +69147,9 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_while_conditions ()
 BEGIN
-  DECLARE a INTEGER;
-  DECLARE b INTEGER;
-  DECLARE c INTEGER;
+  DECLARE a INT;
+  DECLARE b INT;
+  DECLARE c INT;
   IF b IS NULL THEN
     RETURN;
   END;
@@ -69413,8 +69413,8 @@ The statement ending at line XXXX
 CREATE PROC initialization_is_not_required_for_non_reference_types ()
 BEGIN
   DECLARE a BOOL!;
-  DECLARE b INTEGER!;
-  DECLARE c LONG_INT!;
+  DECLARE b INT!;
+  DECLARE c LONG!;
   LET x := a;
   LET y := b;
   LET z := c;
@@ -69965,7 +69965,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC try_blocks_can_successfully_verify_initialization (OUT a TEXT!, OUT rc INTEGER!)
+CREATE PROC try_blocks_can_successfully_verify_initialization (OUT a TEXT!, OUT rc INT!)
 BEGIN
   SET rc := 0;
   @ATTRIBUTE(cql:try_is_proc_body)
@@ -70019,7 +70019,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC try_blocks_can_fail_to_verify_initialization (OUT a TEXT!, OUT rc INTEGER!)
+CREATE PROC try_blocks_can_fail_to_verify_initialization (OUT a TEXT!, OUT rc INT!)
 BEGIN
   SET rc := 0;
   @ATTRIBUTE(some_other_attribute)
@@ -70135,7 +70135,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attr_value_list : CQL0445: @attribute(c
 
 The statement ending at line XXXX
 
-CREATE PROC improvements_work_for_dots_that_shadow_globals (X_id INTEGER, X_t TEXT, X_t1 TEXT!, X_b BLOB, OUT X_x INTEGER!)
+CREATE PROC improvements_work_for_dots_that_shadow_globals (X_id INT, X_t TEXT, X_t1 TEXT!, X_b BLOB, OUT X_x INT!)
 BEGIN
   DECLARE Y CURSOR FOR
     SELECT nullable(1) AS id;
@@ -70241,7 +70241,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE PROC requires_out_text_notnull_and_int (OUT a TEXT!, b INTEGER);
+DECLARE PROC requires_out_text_notnull_and_int (OUT a TEXT!, b INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -70279,7 +70279,7 @@ DECLARE PROC requires_text_notnull (a TEXT!);
 
 The statement ending at line XXXX
 
-CREATE PROC dot_form_and_underscore_form_are_equivalent (OUT b0_a TEXT!, b0_b INTEGER, OUT b1_a TEXT!, b1_b INTEGER)
+CREATE PROC dot_form_and_underscore_form_are_equivalent (OUT b0_a TEXT!, b0_b INT, OUT b1_a TEXT!, b1_b INT)
 BEGIN
   CALL requires_out_text_notnull_and_int(b0.a, b0.b);
   SET b1_a := "text";
@@ -72018,7 +72018,7 @@ The statement ending at line XXXX
 
 SELECT printf("%d", 0L);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG_INT' in 0L
+test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 0L
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -73884,7 +73884,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0169: constant group not found 'not
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC conditional_frag (bb INTEGER!)
+CREATE PROC conditional_frag (bb INT!)
 BEGIN
   IF bb = 1 THEN
     WITH
@@ -74026,7 +74026,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC conditional_user (xx INTEGER!)
+CREATE PROC conditional_user (xx INT!)
 BEGIN
   WITH
     D (id) AS (CALL conditional_frag(1) USING foo AS source, foo AS source2)
@@ -74920,7 +74920,7 @@ END;
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
-  id INTEGER @SENSITIVE,
+  id INT @SENSITIVE,
   t TEXT
 );
 
@@ -74950,7 +74950,7 @@ CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE @EPONYMOUS epony USING epono AS (
-  id INTEGER @SENSITIVE,
+  id INT @SENSITIVE,
   t TEXT
 );
 
@@ -74982,7 +74982,7 @@ test/sem_test.sql:XXXX:1: error: in create_virtual_table_stmt : CQL0447: virtual
 The statement ending at line XXXX
 
 CREATE TABLE simple_shape(
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -75007,7 +75007,7 @@ CREATE TABLE simple_shape(
 The statement ending at line XXXX
 
 CREATE TABLE simple_shape2(
-  id INTEGER,
+  id INT,
   t TEXT,
   u TEXT
 );
@@ -75520,7 +75520,7 @@ SELECT
 The statement ending at line XXXX
 
 CREATE TABLE two_col_v1(
-  x INTEGER,
+  x INT,
   r REAL
 );
 
@@ -75545,7 +75545,7 @@ CREATE TABLE two_col_v1(
 The statement ending at line XXXX
 
 CREATE TABLE two_col_v2(
-  x INTEGER,
+  x INT,
   t REAL
 );
 
@@ -75570,7 +75570,7 @@ CREATE TABLE two_col_v2(
 The statement ending at line XXXX
 
 CREATE TABLE two_col_v3(
-  x INTEGER,
+  x INT,
   r TEXT
 );
 
@@ -75712,7 +75712,7 @@ test/sem_test.sql:XXXX:1: error: in shape_def : CQL0069: name not found 't'
 
 The statement ending at line XXXX
 
-DECLARE PROC arg_shape (xyzzy INTEGER);
+DECLARE PROC arg_shape (xyzzy INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -75766,7 +75766,7 @@ SELECT xyzzy
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math (x_ INTEGER, y_ INTEGER)
+CREATE PROC inline_math (x_ INT, y_ INT)
 BEGIN
   SELECT x_ + y_ AS result;
 END;
@@ -75907,7 +75907,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_math_bad (x INTEGER, y INTEGER)
+CREATE PROC inline_math_bad (x INT, y INT)
 BEGIN
   SELECT x + y AS sum
     FROM (SELECT 1 AS z);
@@ -76274,7 +76274,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0212: too few arguments provided t
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC inline_frag (x INTEGER)
+CREATE PROC inline_frag (x INT)
 BEGIN
   SELECT 1 AS x;
 END;
@@ -76351,7 +76351,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0451: procedure as function call i
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-DECLARE PROC declared_shared_fragment () (x INTEGER);
+DECLARE PROC declared_shared_fragment () (x INT);
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -76499,7 +76499,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_expression_fragment (x INTEGER!, y INTEGER!)
+CREATE PROC nested_expression_fragment (x INT!, y INT!)
 BEGIN
   SELECT (   WITH
     no_args_frag (x, y, z) AS (CALL no_args_frag())
@@ -76619,7 +76619,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_expression_fragment_with_args1 (x INTEGER!, y INTEGER!)
+CREATE PROC nested_expression_fragment_with_args1 (x INT!, y INT!)
 BEGIN
   SELECT (   WITH
     a_shared_frag (x, y, z) AS (CALL a_shared_frag(LOCALS.x, LOCALS.y))
@@ -76749,7 +76749,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0467: a shared fragment used like 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:shared_fragment)
-CREATE PROC nested_expression_fragment_with_args2 (x INTEGER!, y INTEGER!)
+CREATE PROC nested_expression_fragment_with_args2 (x INT!, y INT!)
 BEGIN
   SELECT ( SELECT f.x
     FROM (CALL a_shared_frag(LOCALS.x, LOCALS.y)) AS f ) AS val;
@@ -76864,8 +76864,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0467: a shared fragment used like 
 The statement ending at line XXXX
 
 CREATE TABLE Shape_xy(
-  x INTEGER,
-  y INTEGER
+  x INT,
+  y INT
 );
 
   {create_table_stmt}: Shape_xy: { x: integer, y: integer }
@@ -76914,8 +76914,8 @@ CREATE TABLE Shape_uv(
 The statement ending at line XXXX
 
 CREATE TABLE Shape_uvxy(
-  x INTEGER,
-  y INTEGER,
+  x INT,
+  y INT,
   u TEXT,
   v TEXT
 );
@@ -77767,7 +77767,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT<cool_text>!
 );
 
@@ -77804,8 +77804,8 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE backed(
-  status_id INTEGER PRIMARY KEY,
-  global_connection_state LONG_INT
+  status_id INT PRIMARY KEY,
+  global_connection_state LONG
 );
 
   {stmt_and_attr}: ok
@@ -77837,7 +77837,7 @@ CREATE TABLE backed(
 
 The statement ending at line XXXX
 
-DECLARE ENUM an_enum INTEGER (
+DECLARE ENUM an_enum INT (
   ONE = 1,
   TWO = 2
 );
@@ -77968,7 +77968,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE no_pk_backed_table(
-  id INTEGER,
+  id INT,
   name TEXT!
 );
 
@@ -78004,7 +78004,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE only_pk_backed_table(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0487: table is not suitable for use as backed storage: it has only primary key columns 'only_pk_backed_table'
@@ -78034,7 +78034,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table_2(
-  id INTEGER,
+  id INT,
   name TEXT!,
   CONSTRAINT pk1 PRIMARY KEY (id)
 );
@@ -78076,7 +78076,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table_expr_key(
-  id INTEGER,
+  id INT,
   name TEXT!,
   CONSTRAINT pk1 PRIMARY KEY (id / 2)
 );
@@ -78122,7 +78122,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table_with_versions(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT!
 ) @CREATE(2) @DELETE(12);
 
@@ -78166,7 +78166,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE has_non_blob_columns(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   v BLOB!
 );
 
@@ -78203,7 +78203,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE VIRTUAL TABLE virtual_backing_illegal USING module_name (args) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -78243,7 +78243,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TEMP TABLE temp_backing(
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -78389,7 +78389,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE fk_col_backing(
-  id INTEGER REFERENCES foo (id),
+  id INT REFERENCES foo (id),
   t TEXT
 );
 
@@ -78430,7 +78430,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE uk_col_backing(
-  id INTEGER UNIQUE,
+  id INT UNIQUE,
   t TEXT
 );
 
@@ -78503,7 +78503,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE autoinc_col_backing(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INT PRIMARY KEY AUTOINCREMENT,
   v BLOB!
 );
 
@@ -78578,7 +78578,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE check_col_backing(
   k BLOB PRIMARY KEY,
-  id INTEGER CHECK(id = 5) 
+  id INT CHECK(id = 5) 
 );
 
 test/sem_test.sql:XXXX:1: error: in create_table_stmt : CQL0483: table is not suitable for use as backing storage: column 'id' has a check expression in 'check_col_backing'
@@ -78655,7 +78655,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backing_table)
 CREATE TABLE default_value_col_backing(
-  id INTEGER DEFAULT 5,
+  id INT DEFAULT 5,
   v BLOB!
 );
 
@@ -78835,7 +78835,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE simple_backed_table_versions(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT!
 ) @CREATE(2) @DELETE(12);
 
@@ -78879,7 +78879,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE VIRTUAL TABLE virtual_backed_illegal USING module_name (args) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -78920,7 +78920,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TEMP TABLE temp_backed(
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -78955,7 +78955,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=not_exists_table)
 CREATE TABLE backed_by_not_exists(
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -78990,7 +78990,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=foo)
 CREATE TABLE backed_by_non_backing(
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -79025,7 +79025,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE norowid_backed(
-  id INTEGER,
+  id INT,
   t TEXT
 ) WITHOUT ROWID;
 
@@ -79060,7 +79060,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE constraint_backed(
-  id INTEGER,
+  id INT,
   t TEXT,
   CONSTRAINT ak1 UNIQUE (id)
 );
@@ -79103,7 +79103,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE pk_col_backed(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   t TEXT
 );
 
@@ -79138,7 +79138,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE fk_col_backed(
-  id INTEGER REFERENCES foo (id),
+  id INT REFERENCES foo (id),
   t TEXT
 );
 
@@ -79180,7 +79180,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE uk_col_backed(
-  id INTEGER UNIQUE,
+  id INT UNIQUE,
   t TEXT
 );
 
@@ -79216,7 +79216,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE hidden_col_backed(
-  id INTEGER HIDDEN,
+  id INT HIDDEN,
   t TEXT
 );
 
@@ -79252,7 +79252,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE autoinc_col_backed(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INT PRIMARY KEY AUTOINCREMENT,
   t TEXT
 );
 
@@ -79290,7 +79290,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE conflict_clause_col_backed(
-  id INTEGER PRIMARY KEY ON CONFLICT ABORT,
+  id INT PRIMARY KEY ON CONFLICT ABORT,
   t TEXT
 );
 
@@ -79326,7 +79326,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE check_col_backed(
-  id INTEGER CHECK(id = 5) ,
+  id INT CHECK(id = 5) ,
   t TEXT
 );
 
@@ -79365,7 +79365,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE collate_col_backed(
-  id INTEGER,
+  id INT,
   t TEXT COLLATE nocase
 );
 
@@ -79402,8 +79402,8 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE default_value_col_backed(
-  id INTEGER PRIMARY KEY,
-  x INTEGER! DEFAULT 7,
+  id INT PRIMARY KEY,
+  x INT! DEFAULT 7,
   t TEXT
 );
 
@@ -79447,7 +79447,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE deleted_col_backed(
-  id INTEGER,
+  id INT,
   t TEXT @DELETE(7)
 );
 
@@ -79485,7 +79485,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE created_col_backed(
-  id INTEGER,
+  id INT,
   t TEXT @CREATE(7)
 );
 
@@ -79523,7 +79523,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE recreate_backed(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   t TEXT
 ) @RECREATE;
 
@@ -79561,7 +79561,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=recreate_backing)
 CREATE TABLE recreate_backed_wrong_group(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   t TEXT
 ) @RECREATE(wrong_group_name);
 
@@ -79600,7 +79600,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE structured_storage(
-  id INTEGER!,
+  id INT!,
   name TEXT!
 );
 
@@ -79693,7 +79693,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE basic_table(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT<cool_text>
 );
 
@@ -79729,7 +79729,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE basic_table2(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT
 );
 
@@ -80441,7 +80441,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_update_arg_one_error ()
 BEGIN
-  DECLARE not_a_blob INTEGER;
+  DECLARE not_a_blob INT;
   LET z := ( SELECT cql_blob_update(not_a_blob, 1, basic_table.id) );
 END;
 
@@ -80935,10 +80935,10 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=simple_backing_table)
 CREATE TABLE bt_default(
-  pk1 INTEGER DEFAULT 2222,
-  pk2 INTEGER DEFAULT 99,
-  x INTEGER DEFAULT 1111,
-  y INTEGER DEFAULT 42,
+  pk1 INT DEFAULT 2222,
+  pk2 INT DEFAULT 99,
+  x INT DEFAULT 1111,
+  y INT DEFAULT 42,
   CONSTRAINT pk PRIMARY KEY (pk1, pk2)
 );
 
@@ -82632,7 +82632,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE VIRTUAL TABLE virtual_blob_storage_illegal USING module_name (args) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -82672,7 +82672,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TEMP TABLE temp_blob_storage(
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -82706,7 +82706,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE norowid_blob_storage(
-  id INTEGER,
+  id INT,
   t TEXT
 ) WITHOUT ROWID;
 
@@ -82740,7 +82740,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE constraint_blob_storage(
-  id INTEGER,
+  id INT,
   t TEXT,
   CONSTRAINT ak1 UNIQUE (id)
 );
@@ -82782,7 +82782,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE pk_col_blob_storage(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   t TEXT
 );
 
@@ -82818,7 +82818,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE fk_col_blob_storage(
-  id INTEGER REFERENCES foo (id),
+  id INT REFERENCES foo (id),
   t TEXT
 );
 
@@ -82859,7 +82859,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE uk_col_blob_storage(
-  id INTEGER UNIQUE,
+  id INT UNIQUE,
   t TEXT
 );
 
@@ -82894,7 +82894,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE hidden_col_blob_storage(
-  id INTEGER HIDDEN,
+  id INT HIDDEN,
   t TEXT
 );
 
@@ -82929,7 +82929,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE check_col_blob_storage(
-  id INTEGER CHECK(id = 5) ,
+  id INT CHECK(id = 5) ,
   t TEXT
 );
 
@@ -82967,7 +82967,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE collate_col_blob_storage(
-  id INTEGER,
+  id INT,
   t TEXT COLLATE nocase
 );
 
@@ -83003,7 +83003,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE default_value_col_blob_storage(
-  id INTEGER DEFAULT 5,
+  id INT DEFAULT 5,
   t TEXT
 );
 
@@ -83039,7 +83039,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE deleted_col_blob_storage(
-  id INTEGER,
+  id INT,
   t TEXT @DELETE(7)
 );
 
@@ -83076,7 +83076,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE recreate_blob_storage(
-  id INTEGER,
+  id INT,
   t TEXT
 ) @RECREATE;
 
@@ -83779,7 +83779,7 @@ The statement ending at line XXXX
 
 DECLARE GROUP var_group
 BEGIN
-  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var1 INT;
   DECLARE var_group_var2 CURSOR LIKE foo;
   DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
 END;
@@ -83824,7 +83824,7 @@ The statement ending at line XXXX
 
 DECLARE GROUP var_group
 BEGIN
-  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var1 INT;
   DECLARE var_group_var2 CURSOR LIKE foo;
   DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
 END;
@@ -83869,17 +83869,17 @@ The statement ending at line XXXX
 
 DECLARE GROUP var_group
 BEGIN
-  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var1 INT;
 END;
 
 Incompatible declarations found
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
 BEGIN
-  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var1 INT;
 END
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
 BEGIN
-  DECLARE var_group_var1 INTEGER;
+  DECLARE var_group_var1 INT;
   DECLARE var_group_var2 CURSOR LIKE foo;
   DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
 END
@@ -83900,7 +83900,7 @@ CREATE PROC proc_contains_var_group ()
 BEGIN
   DECLARE GROUP var_group
   BEGIN
-    DECLARE var_group_var1 INTEGER;
+    DECLARE var_group_var1 INT;
   END;
 END;
 
@@ -83922,8 +83922,8 @@ The statement ending at line XXXX
 
 DECLARE GROUP var_group_error
 BEGIN
-  DECLARE var_group_var_dup INTEGER;
-  DECLARE var_group_var_dup INTEGER;
+  DECLARE var_group_var_dup INT;
+  DECLARE var_group_var_dup INT;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0197: duplicate variable name in the same scope 'var_group_var_dup'
@@ -83961,7 +83961,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0464: group not found 'not_a_var_gr
 The statement ending at line XXXX
 
 CREATE TABLE unsub_test_table(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
   {create_table_stmt}: unsub_test_table: { id: integer notnull primary_key }
@@ -83981,7 +83981,7 @@ CREATE TABLE unsub_test_table(
 The statement ending at line XXXX
 
 CREATE TABLE unsub_test_table_deleted(
-  id INTEGER
+  id INT
 ) @DELETE(2);
 
   {create_table_stmt}: unsub_test_table_deleted: { id: integer } deleted @delete(2)
@@ -84002,7 +84002,7 @@ CREATE TABLE unsub_test_table_deleted(
 The statement ending at line XXXX
 
 CREATE TABLE unsub_test_table_late_create(
-  id INTEGER
+  id INT
 ) @CREATE(7);
 
   {create_table_stmt}: unsub_test_table_late_create: { id: integer } @create(7)
@@ -84131,7 +84131,7 @@ test/sem_test.sql:XXXX:1: error: in schema_unsub_stmt : CQL0469: table/view is a
 The statement ending at line XXXX
 
 CREATE TABLE sub_test_dependency(
-  id INTEGER REFERENCES unsub_test_table (id)
+  id INT REFERENCES unsub_test_table (id)
 );
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non-existent table (hidden by @unsub) 'unsub_test_table'
@@ -84158,7 +84158,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0021: foreign key refers to non
 The statement ending at line XXXX
 
 CREATE TABLE unsub_test_table2(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
   {create_table_stmt}: unsub_test_table2: { id: integer notnull primary_key }
@@ -84178,7 +84178,7 @@ CREATE TABLE unsub_test_table2(
 The statement ending at line XXXX
 
 CREATE TABLE sub_test_dependency2(
-  id INTEGER REFERENCES unsub_test_table2 (id)
+  id INT REFERENCES unsub_test_table2 (id)
 );
 
   {create_table_stmt}: sub_test_dependency2: { id: integer foreign_key }
@@ -84232,7 +84232,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE used_by_a_view(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: used_by_a_view: { id: integer }
@@ -84279,7 +84279,7 @@ CREATE VIEW uses_a_table AS
 The statement ending at line XXXX
 
 CREATE TABLE used_by_a_deleted_view(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: used_by_a_deleted_view: { id: integer }
@@ -84349,7 +84349,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE unrelated(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: unrelated: { id: integer }
@@ -84367,7 +84367,7 @@ CREATE TABLE unrelated(
 The statement ending at line XXXX
 
 CREATE TABLE used_by_a_trigger(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: used_by_a_trigger: { id: integer }
@@ -84412,7 +84412,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE used_by_a_deleted_trigger(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: used_by_a_deleted_trigger: { id: integer }
@@ -84480,7 +84480,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE unsub_with_views_test_table(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: unsub_with_views_test_table: { id: integer }
@@ -84744,7 +84744,7 @@ DECLARE PROC any_args_at_all NO CHECK;
 
 The statement ending at line XXXX
 
-CREATE PROC use_locals_expansion (x INTEGER<x>!, y INTEGER<y>)
+CREATE PROC use_locals_expansion (x INT<x>!, y INT<y>)
 BEGIN
   CALL any_args_at_all(LOCALS.x, LOCALS.y);
   LET z := locals.x;
@@ -84869,10 +84869,10 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'locals'
 
 The statement ending at line XXXX
 
-CREATE PROC locals_work_with_nullability_improvements (a_ INTEGER)
+CREATE PROC locals_work_with_nullability_improvements (a_ INT)
 BEGIN
-  DECLARE b INTEGER;
-  DECLARE c_ INTEGER;
+  DECLARE b INT;
+  DECLARE c_ INT;
   IF a_ IS NULL OR b IS NULL OR locals.c IS NULL THEN
     RETURN;
   END;
@@ -85031,7 +85031,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE parent_subs_table(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 ) @CREATE(9) @DELETE(25);
 
   {create_table_stmt}: parent_subs_table: { id: integer notnull primary_key } deleted @create(9) @delete(25)
@@ -85057,7 +85057,7 @@ CREATE TABLE parent_subs_table(
 The statement ending at line XXXX
 
 CREATE TABLE child_subs_table(
-  id INTEGER PRIMARY KEY REFERENCES parent_subs_table (id)
+  id INT PRIMARY KEY REFERENCES parent_subs_table (id)
 ) @CREATE(9) @DELETE(25);
 
   {create_table_stmt}: child_subs_table: { id: integer notnull primary_key foreign_key } deleted @create(9) @delete(25)
@@ -85090,8 +85090,8 @@ CREATE TABLE child_subs_table(
 The statement ending at line XXXX
 
 CREATE TABLE self_ref_table(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER REFERENCES self_ref_table (id)
+  id INT PRIMARY KEY,
+  id2 INT REFERENCES self_ref_table (id)
 ) @CREATE(10);
 
   {create_table_stmt}: self_ref_table: { id: integer notnull primary_key, id2: integer foreign_key } @create(10)
@@ -85172,7 +85172,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
 
 The statement ending at line XXXX
 
-DECLARE FUNC external_cursor_func (x CURSOR) INTEGER;
+DECLARE FUNC external_cursor_func (x CURSOR) INT;
 
   {declare_func_stmt}: integer
   | {name external_cursor_func}: integer
@@ -85232,7 +85232,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0069: name not found (proc had err
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE proc4 (id INTEGER);
+DECLARE INTERFACE proc4 (id INT);
 
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface name conflicts with procedure name 'proc4'
 
@@ -85246,7 +85246,7 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0478: interface 
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INTEGER);
+DECLARE INTERFACE interface1 (id INT);
 
   {declare_interface_stmt}: interface1: { id: integer }
   | {name interface1}
@@ -85258,7 +85258,7 @@ DECLARE INTERFACE interface1 (id INTEGER);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INTEGER);
+DECLARE INTERFACE interface1 (id INT);
 
   {declare_interface_stmt}: interface1: { id: integer } alias
   | {name interface1}
@@ -85270,7 +85270,7 @@ DECLARE INTERFACE interface1 (id INTEGER);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INTEGER, id TEXT);
+DECLARE INTERFACE interface1 (id INT, id TEXT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 
@@ -85288,11 +85288,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'id'
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface1 (id INTEGER, name TEXT);
+DECLARE INTERFACE interface1 (id INT, name TEXT);
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER)
-test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INTEGER, name TEXT)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT)
+test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : DECLARE INTERFACE interface1 (id INT, name TEXT)
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface declarations do not match 'interface1'
 
@@ -85310,7 +85310,7 @@ test/sem_test.sql:XXXX:1: error: in declare_interface_stmt : CQL0479: interface 
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface2 (id INTEGER, name TEXT);
+DECLARE INTERFACE interface2 (id INT, name TEXT);
 
   {declare_interface_stmt}: interface2: { id: integer, name: text }
   | {name interface2}
@@ -85326,7 +85326,7 @@ DECLARE INTERFACE interface2 (id INTEGER, name TEXT);
 
 The statement ending at line XXXX
 
-CREATE PROC interface_source (id_ INTEGER, name_ TEXT)
+CREATE PROC interface_source (id_ INT, name_ TEXT)
 BEGIN
 END;
 
@@ -85347,7 +85347,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
+CREATE PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id, name_ AS name;
 END;
@@ -85398,7 +85398,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER!)
+CREATE PROC test_interface1_implementation_wrong_nullability (id_ INT!)
 BEGIN
   SELECT id_ AS id, "5" AS col2;
 END;
@@ -85496,7 +85496,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0485: column types ret
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_order (id_ INTEGER, name_ TEXT)
+CREATE PROC test_interface1_implementation_wrong_order (id_ INT, name_ TEXT)
 BEGIN
   SELECT name_ AS name, id_ AS id;
 END;
@@ -85547,7 +85547,7 @@ END;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface1)
-CREATE PROC test_interface1_implementation_wrong_name (id_ INTEGER, name_ TEXT)
+CREATE PROC test_interface1_implementation_wrong_name (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id2, name_ AS name;
 END;
@@ -85600,7 +85600,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=interface2)
-CREATE PROC test_interface1_missing_column (id_ INTEGER, name_ TEXT)
+CREATE PROC test_interface1_missing_column (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id;
 END;
@@ -85648,7 +85648,7 @@ test/sem_test.sql:XXXX:1: error: in create_proc_stmt : CQL0484: procedure 'test_
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:implements=missing_interface)
-CREATE PROC test_interface1_missing_interface (id_ INTEGER, name_ TEXT)
+CREATE PROC test_interface1_missing_interface (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id, name_ AS name;
 END;
@@ -85700,7 +85700,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0482: interface not found 'missing_
 
 The statement ending at line XXXX
 
-DECLARE PROC interface1 (id_ INTEGER, name_ TEXT);
+DECLARE PROC interface1 (id_ INT, name_ TEXT);
 
 test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name conflicts with interface name 'interface1'
 
@@ -85722,7 +85722,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_stmt : CQL0481: proc name confl
 
 The statement ending at line XXXX
 
-CREATE PROC interface1 (id_ INTEGER, name_ TEXT)
+CREATE PROC interface1 (id_ INT, name_ TEXT)
 BEGIN
   SELECT id_ AS id2, name_ AS name;
 END;
@@ -85767,7 +85767,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0481: proc name conflicts with inte
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface_foo1 (id INTEGER!, name TEXT!);
+DECLARE INTERFACE interface_foo1 (id INT!, name TEXT!);
 
   {declare_interface_stmt}: interface_foo1: { id: integer notnull, name: text notnull }
   | {name interface_foo1}
@@ -85785,7 +85785,7 @@ DECLARE INTERFACE interface_foo1 (id INTEGER!, name TEXT!);
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE interface_foo2 (id2 INTEGER!, name TEXT!);
+DECLARE INTERFACE interface_foo2 (id2 INT!, name TEXT!);
 
   {declare_interface_stmt}: interface_foo2: { id2: integer notnull, name: text notnull }
   | {name interface_foo2}
@@ -86053,7 +86053,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC no_check_select_table_valued_fun NO CHECK (t TEXT, i INTEGER);
+DECLARE SELECT FUNC no_check_select_table_valued_fun NO CHECK (t TEXT, i INT);
 
   {declare_select_func_no_check_stmt}: select: { t: text, i: integer } select_func
   | {name no_check_select_table_valued_fun}: select: { t: text, i: integer }
@@ -86140,7 +86140,7 @@ test/sem_test.sql:XXXX:1: error: in declare_proc_no_check_stmt : CQL0481: proc n
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE maybe_create_func_text (id INTEGER, name TEXT);
+DECLARE INTERFACE maybe_create_func_text (id INT, name TEXT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0477: interface name conflicts with func name 'maybe_create_func_text'
 
@@ -86180,7 +86180,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0480: declared interface must be to
 
 The statement ending at line XXXX
 
-CREATE PROC test_parent (x_ INTEGER)
+CREATE PROC test_parent (x_ INT)
 BEGIN
   SELECT x_ AS x;
 END;
@@ -86213,7 +86213,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_child (x_ INTEGER)
+CREATE PROC test_child (x_ INT)
 BEGIN
   SELECT x_ AS x;
 END;
@@ -86258,7 +86258,7 @@ BEGIN
     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
   END;
-  DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, my_child OBJECT<test_child SET>!);
+  DECLARE __out_cursor__0 CURSOR LIKE (x INT, my_child OBJECT<test_child SET>!);
   DECLARE __parent__0 CURSOR FOR
     CALL test_parent(2);
   LOOP FETCH __parent__0
@@ -86398,7 +86398,7 @@ BEGIN
     FETCH __key__1(x) FROM VALUES(__child_cursor__1.x);
     SET __result__1 := cql_partition_cursor(__partition__1, __key__1, __child_cursor__1);
   END;
-  DECLARE __out_cursor__1 CURSOR LIKE (x INTEGER, child1 OBJECT<test_child SET>!);
+  DECLARE __out_cursor__1 CURSOR LIKE (x INT, child1 OBJECT<test_child SET>!);
   DECLARE __parent__1 CURSOR FOR
     CALL test_parent(2);
   LOOP FETCH __parent__1
@@ -86528,7 +86528,7 @@ The statement ending at line XXXX
 
 CREATE PROC test_object_types ()
 BEGIN
-  DECLARE C CURSOR LIKE (id INTEGER);
+  DECLARE C CURSOR LIKE (id INT);
   DECLARE u OBJECT<goo CURSOR>;
   DECLARE w OBJECT<C CURSOR>;
   DECLARE x OBJECT<C SET>;
@@ -86645,7 +86645,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a str
 The statement ending at line XXXX
 
 CREATE TABLE dummy_table_for_backed_test(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: dummy_table_for_backed_test: { id: integer }
@@ -86856,7 +86856,7 @@ UPDATE dummy_table_for_backed_test
 The statement ending at line XXXX
 
 CREATE TABLE update_from_target(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT
 );
 
@@ -86883,7 +86883,7 @@ CREATE TABLE update_from_target(
 The statement ending at line XXXX
 
 CREATE TABLE update_test_1(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT
 );
 
@@ -86910,7 +86910,7 @@ CREATE TABLE update_test_1(
 The statement ending at line XXXX
 
 CREATE TABLE update_test_2(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT
 );
 
@@ -87073,7 +87073,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape (id_ INTEGER!, name_ TEXT)
+CREATE PROC test_update_from_shape (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET id = id_, name = name_
@@ -87190,14 +87190,14 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE update_stmt_table(
-  id INTEGER PRIMARY KEY,
+  id INT PRIMARY KEY,
   name TEXT,
   a TEXT,
   b TEXT,
   c TEXT,
-  x INTEGER,
-  y INTEGER,
-  z INTEGER
+  x INT,
+  y INT,
+  z INT
 );
 
   {create_table_stmt}: update_stmt_table: { id: integer notnull primary_key, name: text, a: text, b: text, c: text, x: integer, y: integer, z: integer }
@@ -87258,7 +87258,7 @@ CREATE TABLE update_stmt_table(
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_insert_list (id_ INTEGER!, name_ TEXT)
+CREATE PROC test_update_from_insert_list (id_ INT!, name_ TEXT)
 BEGIN
   DECLARE cur CURSOR LIKE update_stmt_table(a, b, c);
   FETCH cur(a, b, c) FROM VALUES("a", "b", "c");
@@ -87385,10 +87385,10 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE aux_table(
-  id INTEGER PRIMARY KEY,
-  x INTEGER,
-  y INTEGER,
-  z INTEGER
+  id INT PRIMARY KEY,
+  x INT,
+  y INT,
+  z INT
 );
 
   {create_table_stmt}: aux_table: { id: integer notnull primary_key, x: integer, y: integer, z: integer }
@@ -87425,7 +87425,7 @@ CREATE TABLE aux_table(
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_with_shape_and_from_clause (id INTEGER, updates_name TEXT, updates_a TEXT, updates_b TEXT, updates_c TEXT)
+CREATE PROC test_update_with_shape_and_from_clause (id INT, updates_name TEXT, updates_a TEXT, updates_b TEXT, updates_c TEXT)
 BEGIN
   UPDATE update_stmt_table
     SET
@@ -87539,7 +87539,7 @@ END;
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors0 (id_ INTEGER!, name_ TEXT)
+CREATE PROC test_update_from_shape_errors0 (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET name = ARGUMENTS.id, id = ARGUMENTS.name;
@@ -87583,7 +87583,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0009: incompatible types in express
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors1 (id_ INTEGER!, name_ TEXT)
+CREATE PROC test_update_from_shape_errors1 (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET (id, name) = (FROM cursor_not_exist);
@@ -87624,7 +87624,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'cursor_not_ex
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors2 (id_ INTEGER!, name_ TEXT)
+CREATE PROC test_update_from_shape_errors2 (id_ INT!, name_ TEXT)
 BEGIN
   UPDATE update_test_1
     SET (LIKE cursor_not_exist) = (FROM ARGUMENTS);
@@ -87664,7 +87664,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-CREATE PROC test_update_from_shape_errors3 (id INTEGER!)
+CREATE PROC test_update_from_shape_errors3 (id INT!)
 BEGIN
   UPDATE update_test_1
     SET (id, name) = (ARGUMENTS.id);
@@ -87702,7 +87702,7 @@ test/sem_test.sql:XXXX:1: error: in update_stmt : CQL0157: count of columns diff
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:alias_of=some_native_func)
-DECLARE FUNC an_alias_func (x INTEGER!) INTEGER!;
+DECLARE FUNC an_alias_func (x INT!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -87726,7 +87726,7 @@ DECLARE FUNC an_alias_func (x INTEGER!) INTEGER!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:alias_of=some_native_func)
-DECLARE PROC an_alias_proc (x INTEGER!);
+DECLARE PROC an_alias_proc (x INT!);
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -87750,7 +87750,7 @@ DECLARE PROC an_alias_proc (x INTEGER!);
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:alias_of=barfoo)
-DECLARE SELECT FUNC foobaz (x INTEGER!) INTEGER!;
+DECLARE SELECT FUNC foobaz (x INT!) INT!;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may only be added to a declare function or declare proc statement
 
@@ -87776,7 +87776,7 @@ test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0499: alias_of attribute may
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:alias_of)
-DECLARE FUNC an_alias_func_bad (x INTEGER!) INTEGER!;
+DECLARE FUNC an_alias_func_bad (x INT!) INT!;
 
 test/sem_test.sql:XXXX:1: error: in misc_attrs : CQL0500: alias_of attribute must be a non-empty string argument.
 
@@ -87918,7 +87918,7 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_null (x BOOL) INTEGER!;
+DECLARE FUNC rev_apply_null (x BOOL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_null}: integer notnull
@@ -87933,7 +87933,7 @@ DECLARE FUNC rev_apply_null (x BOOL) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_bool (x BOOL) INTEGER!;
+DECLARE FUNC rev_apply_bool (x BOOL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_bool}: integer notnull
@@ -87948,7 +87948,7 @@ DECLARE FUNC rev_apply_bool (x BOOL) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_int (x INTEGER) INTEGER!;
+DECLARE FUNC rev_apply_int (x INT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_int}: integer notnull
@@ -87963,7 +87963,7 @@ DECLARE FUNC rev_apply_int (x INTEGER) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_long (x LONG_INT) INTEGER!;
+DECLARE FUNC rev_apply_long (x LONG) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_long}: integer notnull
@@ -87978,7 +87978,7 @@ DECLARE FUNC rev_apply_long (x LONG_INT) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_real (x REAL) INTEGER!;
+DECLARE FUNC rev_apply_real (x REAL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_real}: integer notnull
@@ -87993,7 +87993,7 @@ DECLARE FUNC rev_apply_real (x REAL) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_text (x TEXT) INTEGER!;
+DECLARE FUNC rev_apply_text (x TEXT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_text}: integer notnull
@@ -88008,7 +88008,7 @@ DECLARE FUNC rev_apply_text (x TEXT) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_blob (x BLOB) INTEGER!;
+DECLARE FUNC rev_apply_blob (x BLOB) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_blob}: integer notnull
@@ -88023,7 +88023,7 @@ DECLARE FUNC rev_apply_blob (x BLOB) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_object (x OBJECT) INTEGER!;
+DECLARE FUNC rev_apply_object (x OBJECT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_object}: integer notnull
@@ -88038,7 +88038,7 @@ DECLARE FUNC rev_apply_object (x OBJECT) INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_cursor (x CURSOR) INTEGER!;
+DECLARE FUNC rev_apply_cursor (x CURSOR) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name rev_apply_cursor}: integer notnull
@@ -88203,7 +88203,7 @@ DECLARE lbs REAL<pounds>!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC some_polymorphic_function_real_pounds (x REAL<pounds>, y REAL) INTEGER!;
+DECLARE FUNC some_polymorphic_function_real_pounds (x REAL<pounds>, y REAL) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name some_polymorphic_function_real_pounds}: integer notnull
@@ -88272,7 +88272,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE FUNC count_object_get_result_SET (result OBJECT) INTEGER!;
+DECLARE FUNC count_object_get_result_SET (result OBJECT) INT!;
 
   {declare_func_stmt}: integer notnull
   | {name count_object_get_result_SET}: integer notnull
@@ -88303,7 +88303,7 @@ LET poly_result_2 := count_object_get_result_SET(get_result());
 
 The statement ending at line XXXX
 
-DECLARE FUNC expr_func_a (x INTEGER) INTEGER;
+DECLARE FUNC expr_func_a (x INT) INT;
 
   {declare_func_stmt}: integer
   | {name expr_func_a}: integer
@@ -88317,7 +88317,7 @@ DECLARE FUNC expr_func_a (x INTEGER) INTEGER;
 
 The statement ending at line XXXX
 
-DECLARE PROC expr_proc_b (x INTEGER);
+DECLARE PROC expr_proc_b (x INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -88408,7 +88408,7 @@ CALL expr_proc_b(expr_func_a(expr_func_a(1)));
 
 The statement ending at line XXXX
 
-CREATE PROC dump_int (x INTEGER, OUT result INTEGER)
+CREATE PROC dump_int (x INT, OUT result INT)
 BEGIN
   SET result := x;
   CALL printf(" %d", x);
@@ -88444,7 +88444,7 @@ The statement ending at line XXXX
 CREATE PROC main ()
 BEGIN
   LET x := 2;
-  DECLARE result INTEGER;
+  DECLARE result INT;
   dump_int(1);
   CALL dump_int(LOCALS.x, LOCALS.result);
 END;
@@ -88782,7 +88782,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_object_dot_one_id (x OBJECT<dot_one>) INTEGER;
+DECLARE FUNC get_object_dot_one_id (x OBJECT<dot_one>) INT;
 
   {declare_func_stmt}: integer
   | {name get_object_dot_one_id}: integer
@@ -88797,7 +88797,7 @@ DECLARE FUNC get_object_dot_one_id (x OBJECT<dot_one>) INTEGER;
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_from_object_dot_two NO CHECK INTEGER;
+DECLARE FUNC get_from_object_dot_two NO CHECK INT;
 
   {declare_func_no_check_stmt}: integer
   | {name get_from_object_dot_two}: integer
@@ -88991,7 +88991,7 @@ DECLARE PROC set_in_object_dot_storage NO CHECK;
 
 The statement ending at line XXXX
 
-DECLARE PROC set_object_dot_storage_id (self OBJECT<dot_storage>, value INTEGER);
+DECLARE PROC set_object_dot_storage_id (self OBJECT<dot_storage>, value INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -89012,7 +89012,7 @@ DECLARE PROC set_object_dot_storage_id (self OBJECT<dot_storage>, value INTEGER)
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INTEGER;
+DECLARE FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INT;
 
   {declare_func_stmt}: integer
   | {name get_object_dot_storage_id}: integer
@@ -89027,7 +89027,7 @@ DECLARE FUNC get_object_dot_storage_id (self OBJECT<dot_storage>) INTEGER;
 
 The statement ending at line XXXX
 
-DECLARE FUNC get_from_object_dot_storage NO CHECK INTEGER;
+DECLARE FUNC get_from_object_dot_storage NO CHECK INT;
 
   {declare_func_no_check_stmt}: integer
   | {name get_from_object_dot_storage}: integer
@@ -89250,7 +89250,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0492: operator found in an invalid
 
 The statement ending at line XXXX
 
-DECLARE PROC a_target_proc (x INTEGER, y INTEGER);
+DECLARE PROC a_target_proc (x INT, y INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -89270,7 +89270,7 @@ DECLARE PROC a_target_proc (x INTEGER, y INTEGER);
 
 The statement ending at line XXXX
 
-CREATE PROC abuse_star1 (x INTEGER, y INTEGER)
+CREATE PROC abuse_star1 (x INT, y INT)
 BEGIN
   CALL a_target_proc(1, *, 1);
 END;
@@ -89302,7 +89302,7 @@ test/sem_test.sql:XXXX:1: error: in star : CQL0051: argument can only be used in
 
 The statement ending at line XXXX
 
-CREATE PROC abuse_star2 (x INTEGER, y INTEGER)
+CREATE PROC abuse_star2 (x INT, y INT)
 BEGIN
   CALL a_target_proc(*, 1);
 END;
@@ -89332,7 +89332,7 @@ test/sem_test.sql:XXXX:1: error: in arg_list : CQL0474: when '*' appears in an e
 
 The statement ending at line XXXX
 
-DECLARE PROC another_target_proc (x INTEGER, y INTEGER, OUT result INTEGER);
+DECLARE PROC another_target_proc (x INT, y INT, OUT result INT);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
@@ -89358,7 +89358,7 @@ DECLARE PROC another_target_proc (x INTEGER, y INTEGER, OUT result INTEGER);
 
 The statement ending at line XXXX
 
-CREATE PROC abuse_star3 (x INTEGER, y INTEGER)
+CREATE PROC abuse_star3 (x INT, y INT)
 BEGIN
   another_target_proc(*, 1);
 END;
@@ -89500,10 +89500,10 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE larger_table(
-  a INTEGER,
-  b INTEGER,
-  c INTEGER,
-  d INTEGER
+  a INT,
+  b INT,
+  c INT,
+  d INT
 );
 
   {create_table_stmt}: larger_table: { a: integer, b: integer, c: integer, d: integer }
@@ -89538,7 +89538,7 @@ CREATE TABLE larger_table(
 
 The statement ending at line XXXX
 
-DECLARE INTERFACE smaller_interface (a INTEGER, b INTEGER);
+DECLARE INTERFACE smaller_interface (a INT, b INT);
 
   {declare_interface_stmt}: smaller_interface: { a: integer, b: integer }
   | {name smaller_interface}
@@ -89634,7 +89634,7 @@ SELECT larger_table.a, larger_table.b
 
 The statement ending at line XXXX
 
-DECLARE an_integer_type TYPE INTEGER!;
+DECLARE an_integer_type TYPE INT!;
 
   {declare_named_type}: integer notnull
   | {name an_integer_type}: integer notnull
@@ -89643,7 +89643,7 @@ DECLARE an_integer_type TYPE INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE an_integer_type TYPE INTEGER!;
+DECLARE an_integer_type TYPE INT!;
 
   {declare_named_type}: integer notnull alias
   | {name an_integer_type}: integer notnull
@@ -89652,7 +89652,7 @@ DECLARE an_integer_type TYPE INTEGER!;
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC select_func_with_out_arg1 (INOUT inout_param INTEGER!) INTEGER;
+DECLARE SELECT FUNC select_func_with_out_arg1 (INOUT inout_param INT!) INT;
 
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'inout_param'
 
@@ -89670,7 +89670,7 @@ test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot hav
 
 The statement ending at line XXXX
 
-DECLARE SELECT FUNC select_func_with_out_arg2 (OUT out_param INTEGER!) INTEGER;
+DECLARE SELECT FUNC select_func_with_out_arg2 (OUT out_param INT!) INT;
 
 test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot have out parameters 'out_param'
 
@@ -89689,8 +89689,8 @@ test/sem_test.sql:XXXX:1: error: in param : CQL0475: select functions cannot hav
 The statement ending at line XXXX
 
 CREATE TABLE `xyz``abc`(
-  x INTEGER!,
-  `a b` INTEGER! UNIQUE
+  x INT!,
+  `a b` INT! UNIQUE
 );
 
   {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
@@ -89979,7 +89979,7 @@ CREATE INDEX `abc def` ON `xyz``abc` (`a b` ASC);
 The statement ending at line XXXX
 
 CREATE TABLE qid_ref_1(
-  x INTEGER! REFERENCES `xyz``abc` (`a b`)
+  x INT! REFERENCES `xyz``abc` (`a b`)
 );
 
   {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
@@ -90005,7 +90005,7 @@ CREATE TABLE qid_ref_1(
 The statement ending at line XXXX
 
 CREATE TABLE qid_ref_2(
-  `uu uu` INTEGER!,
+  `uu uu` INT!,
   CONSTRAINT `c1` FOREIGN KEY (`uu uu`) REFERENCES `xyz``abc` (`a b`)
 );
 
@@ -90037,7 +90037,7 @@ CREATE TABLE qid_ref_2(
 The statement ending at line XXXX
 
 CREATE TABLE qid_ref_3(
-  `uu uu` INTEGER!,
+  `uu uu` INT!,
   CONSTRAINT `c1` PRIMARY KEY (`uu uu`)
 );
 
@@ -90064,7 +90064,7 @@ CREATE TABLE qid_ref_3(
 The statement ending at line XXXX
 
 CREATE TABLE qid_ref_4(
-  `uu uu` INTEGER!,
+  `uu uu` INT!,
   CONSTRAINT `c1` UNIQUE (`uu uu`)
 );
 
@@ -90294,7 +90294,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0110: view in drop statement does n
 
 The statement ending at line XXXX
 
-ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
+ALTER TABLE `xyz``abc` ADD COLUMN `a b` INT;
 
 test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already be reflected in declared schema, with @create, exact name match required '`a b`'
 
@@ -90308,7 +90308,7 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already
 
 The statement ending at line XXXX
 
-CREATE PROC args_defined_by_exotics (x_ INTEGER!, `a b_` INTEGER!)
+CREATE PROC args_defined_by_exotics (x_ INT!, `a b_` INT!)
 BEGIN
   SET `a b_` := 1;
   SET `a b_` := `a b_` + 1;
@@ -90391,8 +90391,8 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE reuse_exotic_columns(
-  x INTEGER!,
-  `a b` INTEGER!
+  x INT!,
+  `a b` INT!
 );
 
   {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, `a b`: integer notnull qid }
@@ -90417,7 +90417,7 @@ CREATE TABLE reuse_exotic_columns(
 
 The statement ending at line XXXX
 
-CREATE PROC qid_shape_args (AAA_x INTEGER!, `AAA_a b` INTEGER!, BBB_x INTEGER!, `BBB_a b` INTEGER!, x_ INTEGER!, `a b_` INTEGER!)
+CREATE PROC qid_shape_args (AAA_x INT!, `AAA_a b` INT!, BBB_x INT!, `BBB_a b` INT!, x_ INT!, `a b_` INT!)
 BEGIN
 END;
 
@@ -90464,8 +90464,8 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE qnamed_table(
-  `x y` INTEGER,
-  `a b` INTEGER
+  `x y` INT,
+  `a b` INT
 );
 
   {create_table_stmt}: qnamed_table: { `x y`: integer qid, `a b`: integer qid }

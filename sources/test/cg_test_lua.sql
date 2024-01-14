@@ -10,17 +10,17 @@ declare proc puts no check;
 
 -- basic test table with an auto inc field
 create table foo(
-  id INTEGER PRIMARY KEY AUTOINCREMENT!
+  id INT PRIMARY KEY AUTOINCREMENT!
 );
 
 -- second test table with combination of fields
 @attribute(bar_is_good=1)
 create table bar(
-  id INTEGER! PRIMARY KEY,
+  id INT! PRIMARY KEY,
   @attribute(collossal_cave='xyzzy')
   name TEXT,
   rate LONG INT,
-  type INTEGER,
+  type INT,
   size REAL @create(2)
 );
 
@@ -773,7 +773,7 @@ set s := (select printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', 5, null
 set S := 'x';
 
 -- TEST: declare proc and call it
--- + DECLARE PROC xyzzy (id INTEGER) (A INTEGER!);
+-- + DECLARE PROC xyzzy (id INT) (A INT!);
 declare proc xyzzy(id integer) ( A integer not null );
 
 -- TEST: call declared proc, capture statement in a cursor
@@ -786,7 +786,7 @@ begin
 end;
 
 -- TEST: declare a simple proc with no dml
--- + DECLARE PROC plugh (id INTEGER);
+-- + DECLARE PROC plugh (id INT);
 declare proc plugh(id integer);
 
 -- TEST: create a proc that returns a mix of possible types in a select
@@ -1464,7 +1464,7 @@ begin
 end;
 
 -- TEST: proc decl with out args
--- + DECLARE PROC fetcher_proc () OUT (a INTEGER, b TEXT);
+-- + DECLARE PROC fetcher_proc () OUT (a INT, b TEXT);
 declare proc fetcher_proc() out (a integer, b text);
 
 -- TEST: All void all day
@@ -1702,7 +1702,7 @@ end;
 -- TEST: create a table with a long integer autoinc column
 -- this requires the workaround of downgradeing the long to int
 -- note: sqlite integers can hold 64 bits so they are already "long"
--- + id LONG_INT PRIMARY KEY AUTOINCREMENT,
+-- + id LONG PRIMARY KEY AUTOINCREMENT,
 -- + "CREATE TABLE long_int_autoinc( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT )"
 create proc long_auto_table_maker()
 begin
@@ -1973,7 +1973,7 @@ end;
 
 -- TEST: make an out union helper without defining it
 -- - function
-declare proc extern_out_union_helper () OUT UNION (x INTEGER!);
+declare proc extern_out_union_helper () OUT UNION (x INT!);
 
 -- TEST: this should still compile even though the body of the proc isn't here
 -- + function forward_out_union_extern_fetch_results()
@@ -2591,11 +2591,11 @@ begin
 end;
 
 -- TEST: make sure decl output is correct for DML out union
--- + DECLARE PROC out_union_with_dml (id INTEGER) OUT UNION (id INTEGER!) USING TRANSACTION;
+-- + DECLARE PROC out_union_with_dml (id INT) OUT UNION (id INT!) USING TRANSACTION;
 declare proc out_union_with_dml(id integer) out union (id integer not null) using transaction;
 
 -- TEST: make sure decl output is correct for non-DML out union
--- + DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER!);
+-- + DECLARE PROC out_union_no_dml (id INT) OUT UNION (id INT!);
 declare proc out_union_no_dml(id integer) out union (id integer not null);
 
 -- TEST: emit goto cql_cleanup in case of return
@@ -3205,7 +3205,7 @@ begin
   end;
 end;
 
-DECLARE x INTEGER!;
+DECLARE x INT!;
 
 -- TEST: a series of paren checks on left association
 -- avoid hard coded divide by zero (hence 4/3 not e.g 1/3)
@@ -4266,30 +4266,30 @@ set true_test := i0_nullable is not true;
 set false_test := i0_nullable is not false;
 
 CREATE TABLE big_data(
-  f1 LONG_INT!,
-  f2 INTEGER!,
+  f1 LONG!,
+  f2 INT!,
   f3 TEXT,
   f4 TEXT!,
   f5 TEXT,
   f6 TEXT,
-  f7 LONG_INT,
-  f8 LONG_INT!,
-  f9 LONG_INT!,
-  f10 LONG_INT!,
-  f11 LONG_INT!,
+  f7 LONG,
+  f8 LONG!,
+  f9 LONG!,
+  f10 LONG!,
+  f11 LONG!,
   f12 TEXT @SENSITIVE,
   f13 BOOL!,
-  f14 LONG_INT,
+  f14 LONG,
   f15 BOOL,
-  f16 INTEGER!,
-  f17 INTEGER!,
+  f16 INT!,
+  f17 INT!,
   f18 TEXT,
-  f19 INTEGER,
+  f19 INT,
   f20 TEXT,
-  f21 INTEGER,
+  f21 INT,
   f22 TEXT,
-  f23 INTEGER,
-  f24 LONG_INT!,
+  f23 INT,
+  f24 LONG!,
   f25 TEXT,
   f26 BOOL!,
   f27 BOOL!,
@@ -4297,49 +4297,49 @@ CREATE TABLE big_data(
   f29 TEXT,
   f30 TEXT,
   f31 TEXT,
-  f32 INTEGER,
-  f33 LONG_INT,
-  f34 INTEGER,
+  f32 INT,
+  f33 LONG,
+  f34 INT,
   f35 TEXT,
   f36 TEXT,
-  f38 LONG_INT!,
-  f39 LONG_INT UNIQUE,
+  f38 LONG!,
+  f39 LONG UNIQUE,
   f40 BOOL,
   f41 BOOL!,
   f42 TEXT,
   f43 TEXT,
-  f44 LONG_INT,
+  f44 LONG,
   f45 BOOL!,
-  f46 LONG_INT,
-  f47 INTEGER!,
+  f46 LONG,
+  f47 INT!,
   f48 TEXT,
-  f49 LONG_INT,
+  f49 LONG,
   f50 TEXT,
   f51 TEXT,
-  f52 LONG_INT,
-  f53 INTEGER!,
+  f52 LONG,
+  f53 INT!,
   f54 TEXT,
-  f55 LONG_INT!,
-  f56 LONG_INT!,
+  f55 LONG!,
+  f56 LONG!,
   f57 TEXT,
   f58 TEXT,
-  f59 INTEGER,
+  f59 INT,
   f60 TEXT,
-  f61 INTEGER,
-  f62 LONG_INT,
-  f63 LONG_INT,
-  f64 INTEGER,
-  f65 LONG_INT!,
-  f66 INTEGER!,
-  f67 INTEGER!,
-  f68 INTEGER,
+  f61 INT,
+  f62 LONG,
+  f63 LONG,
+  f64 INT,
+  f65 LONG!,
+  f66 INT!,
+  f67 INT!,
+  f68 INT,
   f69 TEXT,
   f70 REAL,
-  f71 LONG_INT,
-  f72 INTEGER,
-  f73 INTEGER,
-  f74 LONG_INT,
-  f75 INTEGER
+  f71 LONG,
+  f72 INT,
+  f73 INT,
+  f74 LONG,
+  f75 INT
 );
 
 -- TEST: lots of string temporaries create no errors

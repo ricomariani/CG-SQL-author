@@ -167,7 +167,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE x_int INTEGER!;
+DECLARE x_int INT!;
 
   {declare_vars_type}
   | {name_list}
@@ -202,7 +202,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE first_table(
-  x INTEGER!
+  x INT!
 );
 
   {create_table_stmt}
@@ -221,7 +221,7 @@ CREATE TABLE first_table(
 The statement ending at line XXXX
 
 CREATE TABLE second_table(
-  y INTEGER!
+  y INT!
 );
 
   {create_table_stmt}

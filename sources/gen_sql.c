@@ -334,7 +334,15 @@ void gen_data_type(ast_node *ast) {
     return;
   }
   else if (is_ast_type_int(ast)) {
-    gen_printf("INTEGER");
+    if (for_sqlite()) {
+      // we could use INT here but there is schema out
+      // there that won't match if we do, seems risky
+      // to change the canonical SQL output
+      gen_printf("INTEGER");
+    }
+    else {
+      gen_printf("INT");
+    }
   } else if (is_ast_type_text(ast)) {
     gen_printf("TEXT");
   } else if (is_ast_type_blob(ast)) {
@@ -342,7 +350,15 @@ void gen_data_type(ast_node *ast) {
   } else if (is_ast_type_object(ast)) {
     gen_printf("OBJECT");
   } else if (is_ast_type_long(ast)) {
-    gen_printf("LONG_INT");
+    if (for_sqlite()) {
+      // we could use INT here but there is schema out
+      // there that won't match if we do, seems risky
+      // to change the canonical SQL output
+      gen_printf("LONG_INT");
+    }
+    else {
+      gen_printf("LONG");
+    }
   } else if (is_ast_type_real(ast)) {
     gen_printf("REAL");
   } else if (is_ast_type_bool(ast)) {

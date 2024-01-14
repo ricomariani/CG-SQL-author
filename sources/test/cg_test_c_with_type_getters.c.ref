@@ -149,7 +149,7 @@ CQL_WARN_UNUSED cql_code selector_fetch_results(sqlite3 *_Nonnull _db_, selector
 
 /*
 export:
-DECLARE PROC selector () (f1 INTEGER!, f2 TEXT!, f3 REAL!, f4 BOOL!, f5 LONG_INT!, f6 BLOB!, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+DECLARE PROC selector () (f1 INT!, f2 TEXT!, f3 REAL!, f4 BOOL!, f5 LONG!, f6 BLOB!, g1 INT, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG, g6 BLOB);
 */
 CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -332,7 +332,7 @@ CQL_WARN_UNUSED cql_code sproc_copy_func_fetch_results(sqlite3 *_Nonnull _db_, s
 
 /*
 export:
-DECLARE PROC sproc_copy_func () (f1 INTEGER!, f2 TEXT!, f3 REAL!, f4 BOOL!, f5 LONG_INT!, f6 BLOB!, g1 INTEGER, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG_INT, g6 BLOB);
+DECLARE PROC sproc_copy_func () (f1 INT!, f2 TEXT!, f3 REAL!, f4 BOOL!, f5 LONG!, f6 BLOB!, g1 INT, g2 TEXT, g3 REAL, g4 BOOL, g5 LONG, g6 BLOB);
 */
 CQL_WARN_UNUSED cql_code sproc_copy_func(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -485,7 +485,7 @@ CQL_WARN_UNUSED cql_code simple_child_proc_fetch_results(sqlite3 *_Nonnull _db_,
 
 /*
 export:
-DECLARE PROC simple_child_proc () (x INTEGER!, y INTEGER!);
+DECLARE PROC simple_child_proc () (x INT!, y INT!);
 */
 CQL_WARN_UNUSED cql_code simple_child_proc(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt) {
   cql_code _rc_ = SQLITE_OK;
@@ -510,7 +510,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC simple_container_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE (a INTEGER, b INTEGER!, c OBJECT<simple_child_proc SET>);
+  DECLARE C CURSOR LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
   OUT UNION C;
 END;
@@ -553,8 +553,8 @@ cql_fetch_info simple_container_proc_info = {
 };
 /*
 export:
-DECLARE PROC simple_child_proc () (x INTEGER!, y INTEGER!);
-DECLARE PROC simple_container_proc () OUT UNION (a INTEGER, b INTEGER!, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
+DECLARE PROC simple_child_proc () (x INT!, y INT!);
+DECLARE PROC simple_container_proc () OUT UNION (a INT, b INT!, c OBJECT<simple_child_proc SET>) USING TRANSACTION;
 */
 
 typedef struct simple_container_proc_C_row {

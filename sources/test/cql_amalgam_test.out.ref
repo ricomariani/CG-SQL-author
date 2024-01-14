@@ -1,7 +1,7 @@
 -- RUN test/cql_amalgam_test_success.sql:
 CREATE TABLE t(
   a TEXT,
-  b INTEGER
+  b INT
 );
 
 SELECT a, b
@@ -10,7 +10,7 @@ SELECT a, b
 -- RUN test/cql_amalgam_test_semantic_error.sql:
 CREATE TABLE t(
   a TEXT,
-  b INTEGER
+  b INT
 );
 
 SELECT bogus
@@ -21,7 +21,7 @@ SELECT bogus
 -- RUN test/cql_amalgam_test_success.sql:
 CREATE TABLE t(
   a TEXT,
-  b INTEGER
+  b INT
 );
 
 SELECT a, b

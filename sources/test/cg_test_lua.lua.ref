@@ -5,14 +5,14 @@ require("cqlrt")
 -- The statement ending at line XXXX
 
 --[[
-DECLARE i0_nullable INTEGER;
+DECLARE i0_nullable INT;
 --]]
 local i0_nullable
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE i1_nullable INTEGER;
+DECLARE i1_nullable INT;
 --]]
 local i1_nullable
 
@@ -26,14 +26,14 @@ local r0_nullable
 -- The statement ending at line XXXX
 
 --[[
-DECLARE l0_nullable LONG_INT;
+DECLARE l0_nullable LONG;
 --]]
 local l0_nullable
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE l1_nullable LONG_INT;
+DECLARE l1_nullable LONG;
 --]]
 local l1_nullable
 
@@ -54,7 +54,7 @@ local t0_nullable
 -- The statement ending at line XXXX
 
 --[[
-DECLARE i2 INTEGER!;
+DECLARE i2 INT!;
 --]]
 local i2 = 0
 
@@ -68,7 +68,7 @@ local r2 = 0.0
 -- The statement ending at line XXXX
 
 --[[
-DECLARE l2 LONG_INT!;
+DECLARE l2 LONG!;
 --]]
 local l2 = 0
 
@@ -89,7 +89,7 @@ local t2
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC test (i INTEGER!)
+CREATE PROC test (i INT!)
 BEGIN
   IF i THEN
     CALL puts('true');
@@ -109,7 +109,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC proc_with_return_guard (a INTEGER)
+CREATE PROC proc_with_return_guard (a INT)
 BEGIN
   IF a IS NOT NULL THEN
     RETURN;
@@ -138,7 +138,7 @@ local _between_5_
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC out_test (OUT i INTEGER!, OUT ii INTEGER)
+CREATE PROC out_test (OUT i INT!, OUT ii INT)
 BEGIN
   SET i := i2;
   SET ii := i0_nullable;
@@ -158,7 +158,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE longint_var LONG_INT;
+DECLARE longint_var LONG;
 --]]
 local longint_var
 local foo_cursor_stmt = nil
@@ -169,7 +169,7 @@ local foo_cursor_types_ = "II"
 -- The statement ending at line XXXX
 
 --[[
-DECLARE col1 INTEGER;
+DECLARE col1 INT;
 --]]
 local col1
 
@@ -187,14 +187,14 @@ local basic_cursor_types_ = "ID"
 -- The statement ending at line XXXX
 
 --[[
-DECLARE arg1 INTEGER!;
+DECLARE arg1 INT!;
 --]]
 local arg1 = 0
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE arg2 INTEGER!;
+DECLARE arg2 INT!;
 --]]
 local arg2 = 0
 local exchange_cursor_stmt = nil
@@ -206,7 +206,7 @@ local _temp_stmt = nil
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC outparm_test (OUT foo INTEGER!)
+CREATE PROC outparm_test (OUT foo INT!)
 BEGIN
   SET foo := 1;
   DELETE FROM bar WHERE id = foo;
@@ -401,7 +401,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC get_data (name_ TEXT!, id_ INTEGER!)
+CREATE PROC get_data (name_ TEXT!, id_ INT!)
 BEGIN
   SELECT *
     FROM bar
@@ -495,7 +495,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC copy_int (a INTEGER, OUT b INTEGER)
+CREATE PROC copy_int (a INT, OUT b INT)
 BEGIN
   SET b := a;
 END;
@@ -514,7 +514,7 @@ end
 --[[
 CREATE PROC insert_rowid_reader ()
 BEGIN
-  DECLARE row LONG_INT;
+  DECLARE row LONG;
   SET row := last_insert_rowid();
 END;
 --]]
@@ -534,7 +534,7 @@ end
 --[[
 CREATE PROC changes_reader ()
 BEGIN
-  DECLARE ct INTEGER;
+  DECLARE ct INT;
   SET ct := changes();
 END;
 --]]
@@ -559,7 +559,7 @@ local s
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC xyzzy (id INTEGER) (A INTEGER!);
+DECLARE PROC xyzzy (id INT) (A INT!);
 --]]
 
 -- The statement ending at line XXXX
@@ -592,7 +592,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC plugh (id INTEGER);
+DECLARE PROC plugh (id INT);
 --]]
 
 -- The statement ending at line XXXX
@@ -603,7 +603,7 @@ BEGIN
   SELECT
       TRUE AS _bool,
       2 AS _integer,
-      CAST(3 AS LONG_INT) AS _longint,
+      CAST(3 AS LONG) AS _longint,
       3.0 AS _real,
       'xyz' AS _text,
       CAST(NULL AS BOOL) AS _nullable_bool;
@@ -640,7 +640,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC hierarchical_query (rate_ LONG_INT!, limit_ INTEGER!, offset_ INTEGER!)
+CREATE PROC hierarchical_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
   SELECT *
     FROM foo
@@ -690,7 +690,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC hierarchical_unmatched_query (rate_ LONG_INT!, limit_ INTEGER!, offset_ INTEGER!)
+CREATE PROC hierarchical_unmatched_query (rate_ LONG!, limit_ INT!, offset_ INT!)
 BEGIN
   SELECT *
     FROM foo
@@ -1048,7 +1048,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC outint_nullable (OUT output INTEGER, OUT result BOOL!)
+CREATE PROC outint_nullable (OUT output INT, OUT result BOOL!)
 BEGIN
   DECLARE C CURSOR FOR
     SELECT 1;
@@ -1085,7 +1085,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC outint_notnull (OUT output INTEGER!, OUT result BOOL!)
+CREATE PROC outint_notnull (OUT output INT!, OUT result BOOL!)
 BEGIN
   DECLARE C CURSOR FOR
     SELECT 1;
@@ -1195,7 +1195,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC unused_temp (i INTEGER, OUT o INTEGER!)
+CREATE PROC unused_temp (i INT, OUT o INT!)
 BEGIN
   SET o := coalesce(i, -1);
 END;
@@ -1253,7 +1253,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC insert_values (id_ INTEGER!, type_ INTEGER)
+CREATE PROC insert_values (id_ INT!, type_ INT)
 BEGIN
   INSERT INTO bar(id, type)
     VALUES(id_, type_);
@@ -1576,7 +1576,7 @@ end
 --[[
 CREATE PROC voidproc ()
 BEGIN
-  DECLARE unused INTEGER;
+  DECLARE unused INT;
 END;
 --]]
 
@@ -1684,7 +1684,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC fetcher_proc () OUT (a INTEGER, b TEXT);
+DECLARE PROC fetcher_proc () OUT (a INT, b TEXT);
 --]]
 
 -- The statement ending at line XXXX
@@ -1696,19 +1696,19 @@ DECLARE PROC totally_void_proc ();
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC compute (IN a_ INTEGER!, OUT b_ INTEGER!);
+DECLARE PROC compute (IN a_ INT!, OUT b_ INT!);
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC dml_compute (IN a_ INTEGER!, OUT b_ INTEGER!) USING TRANSACTION;
+DECLARE PROC dml_compute (IN a_ INT!, OUT b_ INT!) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC dml_user (OUT a_ INTEGER!)
+CREATE PROC dml_user (OUT a_ INT!)
 BEGIN
   SET a_ := dml_compute(1);
 END;
@@ -1729,7 +1729,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC thread_theme_info_list (thread_key_ LONG_INT!)
+CREATE PROC thread_theme_info_list (thread_key_ LONG!)
 BEGIN
   SELECT *
     FROM (SELECT thread_key
@@ -1800,7 +1800,7 @@ end
 --[[
 CREATE PROC fetch_values_extended ()
 BEGIN
-  DECLARE C CURSOR LIKE (id INTEGER!, name TEXT, rate LONG_INT, type INTEGER, size REAL, xx REAL, yy TEXT);
+  DECLARE C CURSOR LIKE (id INT!, name TEXT, rate LONG, type INT, size REAL, xx REAL, yy TEXT);
   FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 --]]
@@ -1854,7 +1854,7 @@ BEGIN
       SELECT 1 AS N;
     FETCH C;
   CATCH
-    DECLARE x INTEGER;
+    DECLARE x INT;
   END;
 END;
 --]]
@@ -1896,10 +1896,10 @@ CREATE PROC no_code_after_catch ()
 BEGIN
   TRY
     @ATTRIBUTE(foo)
-    DECLARE x INTEGER;
+    DECLARE x INT;
   CATCH
     @ATTRIBUTE(bar)
-    DECLARE y INTEGER;
+    DECLARE y INT;
   END;
 END;
 --]]
@@ -2128,7 +2128,7 @@ end
 CREATE PROC long_auto_table_maker ()
 BEGIN
   CREATE TABLE long_int_autoinc(
-    id LONG_INT PRIMARY KEY AUTOINCREMENT,
+    id LONG PRIMARY KEY AUTOINCREMENT,
     name TEXT
   );
 END;
@@ -2245,7 +2245,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC multi_rewrite (blob_id_ INTEGER!, b_notnull_ BLOB!, b_nullable_ BLOB, id_ INTEGER!, name_ TEXT, rate_ LONG_INT, type_ INTEGER, size_ REAL, OUT out_arg INTEGER!)
+CREATE PROC multi_rewrite (blob_id_ INT!, b_notnull_ BLOB!, b_nullable_ BLOB, id_ INT!, name_ TEXT, rate_ LONG, type_ INT, size_ REAL, OUT out_arg INT!)
 BEGIN
   INSERT INTO blob_table(blob_id, b_notnull, b_nullable) VALUES(blob_id_, b_notnull_, b_nullable_);
   SET out_arg := 1;
@@ -2369,7 +2369,7 @@ CREATE PROC loop_statement_not_auto_cursor ()
 BEGIN
   DECLARE C CURSOR FOR
     SELECT 1 AS A;
-  DECLARE A_ INTEGER!;
+  DECLARE A_ INT!;
   LOOP FETCH C INTO A_
   BEGIN
     CALL printf("%d\n", A_);
@@ -2433,7 +2433,7 @@ end
 --[[
 CREATE PROC call_in_loop ()
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
   SET i := 0;
   WHILE i < 5
   BEGIN
@@ -2478,7 +2478,7 @@ end
 --[[
 CREATE PROC call_in_loop_with_nullable_condition ()
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
   SET i := nullable(0);
   WHILE i < 5
   BEGIN
@@ -2523,7 +2523,7 @@ end
 --[[
 CREATE PROC call_in_loop_boxed ()
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
   SET i := 0;
   WHILE i < 5
   BEGIN
@@ -2639,7 +2639,7 @@ end
 --[[
 CREATE PROC call_out_union_in_loop ()
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
   SET i := 0;
   WHILE i < 5
   BEGIN
@@ -2700,7 +2700,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC extern_out_union_helper () OUT UNION (x INTEGER!);
+DECLARE PROC extern_out_union_helper () OUT UNION (x INT!);
 --]]
 
 -- The statement ending at line XXXX
@@ -2857,7 +2857,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC in_test (x INTEGER, OUT b BOOL)
+CREATE PROC in_test (x INT, OUT b BOOL)
 BEGIN
   SET b := NULL IN (1);
 END;
@@ -2874,7 +2874,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC not_in_test (x INTEGER, OUT b BOOL)
+CREATE PROC not_in_test (x INT, OUT b BOOL)
 BEGIN
   SET b := NULL NOT IN (1);
 END;
@@ -3200,7 +3200,7 @@ end
 --[[
 CREATE PROC redundant_cast ()
 BEGIN
-  SELECT CAST(5 AS INTEGER) AS plugh, T.xyzzy AS five
+  SELECT CAST(5 AS INT) AS plugh, T.xyzzy AS five
     FROM (SELECT 1 AS xyzzy) AS T;
 END;
 --]]
@@ -3238,7 +3238,7 @@ end
 CREATE PROC view_creator ()
 BEGIN
   CREATE VIEW alias_preserved AS
-    SELECT CAST(5 AS INTEGER) AS plugh, T.xyzzy AS five
+    SELECT CAST(5 AS INT) AS plugh, T.xyzzy AS five
       FROM (SELECT 1 AS xyzzy) AS T;
 END;
 --]]
@@ -3371,7 +3371,7 @@ end
 --[[
 CREATE PROC use_with_select ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
   SET x := (   WITH
     threads2 (count) AS (
       SELECT 1 AS foo
@@ -3494,7 +3494,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC upsert_do_nothing (id_ INTEGER!)
+CREATE PROC upsert_do_nothing (id_ INT!)
 BEGIN
   INSERT INTO foo(id)
     VALUES(id_)
@@ -3529,13 +3529,13 @@ local _seed_ = 0
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC p1 () OUT (id INTEGER!, t TEXT);
+DECLARE PROC p1 () OUT (id INT!, t TEXT);
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC p2 () OUT (id INTEGER!, t TEXT) USING TRANSACTION;
+DECLARE PROC p2 () OUT (id INT!, t TEXT) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
@@ -3770,7 +3770,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC out_union_values (a INTEGER!, b INTEGER!)
+CREATE PROC out_union_values (a INT!, b INT!)
 BEGIN
   DECLARE x CURSOR LIKE SELECT 1 AS x, 2 AS y;
   FETCH x(x, y) FROM VALUES(a, b);
@@ -3800,7 +3800,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC read_out_union_values (a INTEGER!, b INTEGER!)
+CREATE PROC read_out_union_values (a INT!, b INT!)
 BEGIN
   DECLARE C CURSOR FOR
     CALL out_union_values(a, b);
@@ -3915,7 +3915,7 @@ end
 --[[
 CREATE PROC compound_select_expr ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
   SET x := ( SELECT 1
     WHERE 0
   UNION
@@ -4012,13 +4012,13 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC out_union_with_dml (id INTEGER) OUT UNION (id INTEGER!) USING TRANSACTION;
+DECLARE PROC out_union_with_dml (id INT) OUT UNION (id INT!) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC out_union_no_dml (id INTEGER) OUT UNION (id INTEGER!);
+DECLARE PROC out_union_no_dml (id INT) OUT UNION (id INT!);
 --]]
 
 -- The statement ending at line XXXX
@@ -4341,7 +4341,7 @@ end
 
 --[[
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INTEGER!, l LONG_INT!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
+CREATE PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
   DECLARE C CURSOR LIKE emit_object_with_setters ARGUMENTS;
   FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
@@ -4392,7 +4392,7 @@ end
 
 --[[
 @ATTRIBUTE(cql:emit_setters)
-CREATE PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INTEGER, l LONG_INT, b BOOL, d REAL, t TEXT, bl BLOB)
+CREATE PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
   DECLARE C CURSOR LIKE emit_setters_with_nullables ARGUMENTS;
   FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
@@ -4495,7 +4495,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC early_out_rc_cleared (OUT x INTEGER)
+CREATE PROC early_out_rc_cleared (OUT x INT)
 BEGIN
   DECLARE C CURSOR FOR
     SELECT 1 AS x;
@@ -4976,8 +4976,8 @@ end
 --[[
 CREATE PROC local_cast_int_notnull ()
 BEGIN
-  DECLARE x INTEGER!;
-  SET x := CAST(3.2 AS INTEGER);
+  DECLARE x INT!;
+  SET x := CAST(3.2 AS INT);
 END;
 --]]
 
@@ -4993,10 +4993,10 @@ end
 --[[
 CREATE PROC local_cast_int ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
   DECLARE r REAL;
   SET r := nullable(3.2);
-  SET x := CAST(r AS INTEGER);
+  SET x := CAST(r AS INT);
 END;
 --]]
 
@@ -5014,8 +5014,8 @@ end
 --[[
 CREATE PROC local_cast_long_notnull ()
 BEGIN
-  DECLARE x LONG_INT!;
-  SET x := CAST(3.2 AS LONG_INT);
+  DECLARE x LONG!;
+  SET x := CAST(3.2 AS LONG);
 END;
 --]]
 
@@ -5031,10 +5031,10 @@ end
 --[[
 CREATE PROC local_cast_long ()
 BEGIN
-  DECLARE x LONG_INT;
+  DECLARE x LONG;
   DECLARE r REAL;
   SET r := nullable(3.2);
-  SET x := CAST(r AS LONG_INT);
+  SET x := CAST(r AS LONG);
 END;
 --]]
 
@@ -5070,7 +5070,7 @@ end
 CREATE PROC local_cast_real ()
 BEGIN
   DECLARE x REAL;
-  DECLARE r INTEGER;
+  DECLARE r INT;
   SET r := nullable(3);
   SET x := CAST(r AS REAL);
 END;
@@ -5214,7 +5214,7 @@ CREATE PROC base_proc_savepoint ()
 BEGIN
   PROC SAVEPOINT
   BEGIN
-    DECLARE X INTEGER;
+    DECLARE X INT;
   END;
 END;
 --]]
@@ -5368,7 +5368,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE x INTEGER!;
+DECLARE x INT!;
 --]]
 local x = 0
 
@@ -5983,7 +5983,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC emit_rc (OUT result_code INTEGER!)
+CREATE PROC emit_rc (OUT result_code INT!)
 BEGIN
   SET result_code := @RC;
 END;
@@ -6009,7 +6009,7 @@ BEGIN
   TRY
     TRY
       CREATE TABLE whatever_anything(
-        id INTEGER
+        id INT
       );
     CATCH
       SET err := @RC;
@@ -6017,7 +6017,7 @@ BEGIN
       TRY
         LET e2 := @RC;
         CREATE TABLE whatever_anything(
-          id INTEGER
+          id INT
         );
       CATCH
         LET e3 := @RC;
@@ -6107,12 +6107,12 @@ CREATE PROC rc_test_lazy1 ()
 BEGIN
   TRY
     CREATE TABLE whatever_anything(
-      id INTEGER
+      id INT
     );
   CATCH
     TRY
       CREATE TABLE whatever_anything(
-        id INTEGER
+        id INT
       );
     CATCH
       THROW;
@@ -6164,12 +6164,12 @@ CREATE PROC rc_test_lazy2 ()
 BEGIN
   TRY
     CREATE TABLE whatever_anything(
-      id INTEGER
+      id INT
     );
   CATCH
     TRY
       CREATE TABLE whatever_anything(
-        id INTEGER
+        id INT
       );
     CATCH
       LET err := @RC;
@@ -6219,7 +6219,7 @@ end
 CREATE PROC virtual_table_creator ()
 BEGIN
   CREATE VIRTUAL TABLE virt_table USING virt_module (ARGUMENTS FOLLOWING) AS (
-    id INTEGER,
+    id INT,
     t TEXT
   );
 END;
@@ -6239,7 +6239,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC out_arg_cursor (x INTEGER!, OUT y INTEGER!)
+CREATE PROC out_arg_cursor (x INT!, OUT y INT!)
 BEGIN
   DECLARE C CURSOR LIKE out_arg_cursor ARGUMENTS;
   FETCH C(x, y) FROM VALUES(1, 1);
@@ -6269,13 +6269,13 @@ end
 CREATE PROC make_virt_table ()
 BEGIN
   CREATE VIRTUAL TABLE v1 USING m1 AS (
-    id INTEGER
+    id INT
   );
   CREATE VIRTUAL TABLE v2 USING m2 (x) AS (
-    id INTEGER
+    id INT
   );
   CREATE VIRTUAL TABLE v3 USING m2 (ARGUMENTS FOLLOWING) AS (
-    id INTEGER
+    id INT
   );
 END;
 --]]
@@ -6376,7 +6376,7 @@ end
 
 --[[
 @ATTRIBUTE(cql:private)
-CREATE PROC private_proc (OUT x INTEGER)
+CREATE PROC private_proc (OUT x INT)
 BEGIN
   SET x := 1;
 END;
@@ -6601,7 +6601,7 @@ end
 
 --[[
 @ATTRIBUTE(cql:private)
-CREATE PROC private_result (OUT x INTEGER)
+CREATE PROC private_result (OUT x INT)
 BEGIN
   SELECT 1 AS x;
 END;
@@ -6626,7 +6626,7 @@ end
 
 --[[
 @ATTRIBUTE(cql:private)
-DECLARE PROC private_fwd_ref (x INTEGER!);
+DECLARE PROC private_fwd_ref (x INT!);
 --]]
 
 -- The statement ending at line XXXX
@@ -6647,7 +6647,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC set_out_arg_null_test (OUT x INTEGER)
+CREATE PROC set_out_arg_null_test (OUT x INT)
 BEGIN
 END;
 --]]
@@ -6662,7 +6662,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC set_out_arg_notnull_test (OUT x INTEGER!)
+CREATE PROC set_out_arg_notnull_test (OUT x INT!)
 BEGIN
 END;
 --]]
@@ -6795,13 +6795,13 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC out2_proc (x INTEGER, OUT y INTEGER!, OUT z INTEGER!);
+DECLARE PROC out2_proc (x INT, OUT y INT!, OUT z INT!);
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC out_decl_test (x INTEGER)
+CREATE PROC out_decl_test (x INT)
 BEGIN
   DECLARE OUT CALL out2_proc(x, u, v);
   DECLARE OUT CALL out2_proc(x, u, v);
@@ -6820,7 +6820,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC out_decl_loop_test (x INTEGER)
+CREATE PROC out_decl_loop_test (x INT)
 BEGIN
   WHILE 1
   BEGIN
@@ -6969,7 +6969,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC uses_ifnull_throw (x INTEGER)
+CREATE PROC uses_ifnull_throw (x INT)
 BEGIN
   LET y := ifnull_throw(x);
 END;
@@ -7030,7 +7030,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC exercise_contracts (a INTEGER, b INTEGER!, c TEXT, d TEXT!, e BLOB, f BLOB!, g OBJECT, h OBJECT!, OUT i INTEGER, OUT j INTEGER!, OUT k TEXT, OUT l TEXT!, INOUT m INTEGER, INOUT n INTEGER!, INOUT o TEXT, INOUT p TEXT!)
+CREATE PROC exercise_contracts (a INT, b INT!, c TEXT, d TEXT!, e BLOB, f BLOB!, g OBJECT, h OBJECT!, OUT i INT, OUT j INT!, OUT k TEXT, OUT l TEXT!, INOUT m INT, INOUT n INT!, INOUT o TEXT, INOUT p TEXT!)
 BEGIN
   SET l := "text";
 END;
@@ -7158,7 +7158,7 @@ end
 --[[
 CREATE PROC nullability_improvements_are_erased_for_sql ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     SELECT a + 1 AS b;
   END;
@@ -7203,7 +7203,7 @@ end
 --[[
 CREATE PROC nullability_improvements_do_not_change_access ()
 BEGIN
-  DECLARE a INTEGER;
+  DECLARE a INT;
   IF a IS NOT NULL THEN
     LET b := a;
     SET a := 0;
@@ -7276,7 +7276,7 @@ local abs_val_bool = false
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC ltor_proc_int_not_null (a INTEGER!, b INTEGER!, OUT c INTEGER!)
+CREATE PROC ltor_proc_int_not_null (a INT!, b INT!, OUT c INT!)
 BEGIN
 END;
 --]]
@@ -7294,7 +7294,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC ltor_proc_int (a INTEGER, b INTEGER, OUT c INTEGER)
+CREATE PROC ltor_proc_int (a INT, b INT, OUT c INT)
 BEGIN
 END;
 --]]
@@ -7405,7 +7405,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC f1 (OUT x INTEGER!)
+CREATE PROC f1 (OUT x INT!)
 BEGIN
   SET x := 5;
 END;
@@ -7422,7 +7422,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC f2 (OUT x INTEGER)
+CREATE PROC f2 (OUT x INT)
 BEGIN
   SET x := 5;
 END;
@@ -7439,7 +7439,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC f3 (y INTEGER, OUT x INTEGER)
+CREATE PROC f3 (y INT, OUT x INT)
 BEGIN
   SET x := y;
 END;
@@ -7533,7 +7533,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC and_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT)
+CREATE PROC and_preserves_temps (a LONG, b LONG, c LONG)
 BEGIN
   IF a > b AND (a < c OR c IS NULL) THEN
     SET c := a;
@@ -7551,7 +7551,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC or_preserves_temps (a LONG_INT, b LONG_INT, c LONG_INT)
+CREATE PROC or_preserves_temps (a LONG, b LONG, c LONG)
 BEGIN
   IF c < 0 OR a > c AND b > c THEN
     SET c := a;
@@ -7614,7 +7614,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC shared_conditional_user (x INTEGER!)
+CREATE PROC shared_conditional_user (x INT!)
 BEGIN
   WITH
     some_cte (id) AS (
@@ -8063,13 +8063,13 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC some_redeclared_out_proc () OUT (x INTEGER) USING TRANSACTION;
+DECLARE PROC some_redeclared_out_proc () OUT (x INT) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC some_redeclared_out_proc () OUT (x INTEGER) USING TRANSACTION;
+DECLARE PROC some_redeclared_out_proc () OUT (x INT) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
@@ -8122,13 +8122,13 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INTEGER) USING TRANSACTION;
+DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INT) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INTEGER) USING TRANSACTION;
+DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INT) USING TRANSACTION;
 --]]
 
 -- The statement ending at line XXXX
@@ -8340,7 +8340,7 @@ end
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC simple_container_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE (a INTEGER, b INTEGER!, c OBJECT<simple_child_proc SET>);
+  DECLARE C CURSOR LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
   OUT UNION C;
 END;
@@ -8372,7 +8372,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE PROC num_arg (x INTEGER!);
+DECLARE PROC num_arg (x INT!);
 --]]
 
 -- The statement ending at line XXXX
@@ -8392,7 +8392,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-CREATE PROC big_switch_label (x LONG_INT!)
+CREATE PROC big_switch_label (x LONG!)
 BEGIN
   SWITCH x
     WHEN -9223372036854775808L THEN
@@ -8783,7 +8783,7 @@ end
 -- The statement ending at line XXXX
 
 --[[
-DECLARE end_marker INTEGER;
+DECLARE end_marker INT;
 --]]
 local end_marker
 
@@ -9584,7 +9584,7 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  SET s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', CAST(4 AS LONG_INT), CAST(nullable(5) AS LONG_INT), CAST(TRUE AS LONG_INT), 0L, CAST(FALSE AS INTEGER), 0, 6L, 7, 0.0, 0.0, NULL, CAST(8 AS REAL));
+  SET s := printf('%lld %lld %lld %llu %d %d %llu %d %f %f %s %f', CAST(4 AS LONG), CAST(nullable(5) AS LONG), CAST(TRUE AS LONG), 0L, CAST(FALSE AS INT), 0, 6L, 7, 0.0, 0.0, NULL, CAST(8 AS REAL));
   --]]
   s = cql_printf("%lld %lld %lld %llu %d %d %llu %d %f %f %s %f", cql_to_integer(4), cql_to_integer(5), cql_to_integer(true), 0, cql_to_integer(false), 0, 6, 7, 0.0, 0.0, nil, cql_to_float(8))
 
@@ -11040,10 +11040,10 @@ function cql_startup(_db_)
   DECLARE GROUP var_group
   BEGIN
     DECLARE gr_cursor CURSOR LIKE SELECT 1 AS x, "2" AS y;
-    DECLARE gr_integer INTEGER;
+    DECLARE gr_integer INT;
     DECLARE gr_bool BOOL;
     DECLARE gr_text TEXT;
-    DECLARE gr_not_null_integer INTEGER!;
+    DECLARE gr_not_null_integer INT!;
     DECLARE gr_not_null_bool BOOL!;
     DECLARE gr_blob_cursor CURSOR LIKE structured_storage;
   END;

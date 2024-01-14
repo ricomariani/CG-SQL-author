@@ -7,13 +7,13 @@
 
 -- TEST: query plan
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
--- + DECLARE SELECT FUNC is_declare_func_wall (id LONG_INT) BOOL!;
--- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG_INT!, idx INTEGER!) LONG_INT;
--- + DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG_INT, t TEXT, b BLOB, r REAL);
+-- + DECLARE SELECT FUNC is_declare_func_wall (id LONG) BOOL!;
+-- + DECLARE SELECT FUNC array_num_at (array_object_ptr LONG!, idx INT!) LONG;
+-- + DECLARE SELECT FUNC select_virtual_table (b TEXT) (id LONG, t TEXT, b BLOB, r REAL);
 -- + @attribute(cql:deterministic)
--- + DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG_INT!;
+-- + DECLARE SELECT FUNC bgetkey_type (x BLOB!) LONG!;
 -- + @attribute(cql:deterministic)
--- + DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG_INT!;
+-- + DECLARE SELECT FUNC bgetval_type (x BLOB!) LONG!;
 -- + @attribute(cql:deterministic)
 -- + DECLARE SELECT FUNC bgetkey NO CHECK BLOB;
 -- + @attribute(cql:deterministic)
@@ -26,7 +26,7 @@
 -- + DECLARE SELECT FUNC bupdatekey NO CHECK BLOB;
 -- + @attribute(cql:deterministic)
 -- + DECLARE SELECT FUNC bupdateval NO CHECK BLOB;
--- + DECLARE SELECT FUNC stuff () INTEGER!;
+-- + DECLARE SELECT FUNC stuff () INT!;
 -- + CREATE PROC create_schema()
 -- + BEGIN
 -- +   call cql_create_udf_stub("is_declare_func_enabled");
@@ -43,36 +43,36 @@
 -- +   call cql_create_udf_stub("bupdateval");
 -- +   call cql_create_udf_stub("stuff");
 -- +   CREATE TABLE `table one`(
--- +     id INTEGER PRIMARY KEY,
+-- +     id INT PRIMARY KEY,
 -- +     name TEXT
 -- +   );
 -- +   CREATE TABLE t2(
--- +     id INTEGER PRIMARY KEY,
+-- +     id INT PRIMARY KEY,
 -- +     name TEXT
 -- +   );
 -- +   CREATE TABLE t3(
--- +     id INTEGER PRIMARY KEY,
+-- +     id INT PRIMARY KEY,
 -- +     name TEXT
 -- +   );
 -- +   CREATE TABLE t4(
--- +     id LONG_INT PRIMARY KEY AUTOINCREMENT,
+-- +     id LONG PRIMARY KEY AUTOINCREMENT,
 -- +     data BLOB
 -- +   );
 -- +   CREATE TABLE t5(
--- +     id LONG_INT,
+-- +     id LONG,
 -- +     FOREIGN KEY (id) REFERENCES t4 (id) ON UPDATE CASCADE ON DELETE CASCADE
 -- +   );
 -- +   CREATE TABLE scan_ok(
--- +     id INTEGER
+-- +     id INT
 -- +   );
 -- +   CREATE TABLE foo(
--- +     id INTEGER
+-- +     id INT
 -- +   );
 -- +   CREATE TABLE _foo(
--- +     id INTEGER
+-- +     id INT
 -- +   );
 -- +   CREATE TABLE foo_(
--- +     id INTEGER
+-- +     id INT
 -- +   );
 -- +   CREATE INDEX `table one index` ON `table one` (name, id);
 -- +   CREATE INDEX it4 ON t4 (data, id);
@@ -91,17 +91,17 @@
 -- +   DELETE FROM t2 WHERE id > new.id;
 -- +   END;
 -- +   CREATE TABLE virtual_table(
--- +     id INTEGER,
+-- +     id INT,
 -- +     t TEXT,
 -- +     b BLOB,
 -- +     r REAL
 -- +   );
 -- +   CREATE TABLE C(
--- +     id INTEGER!,
+-- +     id INT!,
 -- +     name TEXT
 -- +   );
 -- +   CREATE TABLE select_virtual_table (
--- +     id INTEGER,
+-- +     id INT,
 -- +     t TEXT,
 -- +     b BLOB,
 -- +     r REAL
@@ -142,7 +142,7 @@
 --
 -- + @attribute(cql:backed_by=backing)
 -- + CREATE TABLE backed(
--- +   id INTEGER PRIMARY KEY,
+-- +   id INT PRIMARY KEY,
 -- +   name TEXT
 -- + );
 -- + CREATE PROC populate_no_table_scan()
@@ -202,7 +202,7 @@
 -- + BEGIN
 -- + WITH
 -- +   toks (tok) AS (CALL split_commas(str))
--- + SELECT CAST(tok AS LONG_INT) AS id
+-- + SELECT CAST(tok AS LONG) AS id
 -- +   FROM toks;
 -- + END;
 --
@@ -231,20 +231,20 @@
 --
 -- + @attribute(cql:shared_fragment)
 -- + @attribute(cql:query_plan_branch=11)
--- + CREATE PROC frag1 (x INTEGER)
+-- + CREATE PROC frag1 (x INT)
 -- + BEGIN
 -- + SELECT 2 AS a;
 -- + END;
 --
 -- + @attribute(cql:shared_fragment)
 -- + @attribute(cql:query_plan_branch=4)
--- + CREATE PROC frag2 (y INTEGER)
+-- + CREATE PROC frag2 (y INT)
 -- + BEGIN
 -- + SELECT 40 AS b;
 -- + END;
 -- 
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC frag3 (z INTEGER)
+-- + CREATE PROC frag3 (z INT)
 -- + BEGIN
 -- + SELECT 100 AS c;
 -- + END;
@@ -268,7 +268,7 @@
 -- + END;
 -- 
 -- + @attribute(cql:shared_fragment)
--- + CREATE PROC frag (v INTEGER!)
+-- + CREATE PROC frag (v INT!)
 -- + BEGIN
 -- + SELECT v AS val;
 -- + END;

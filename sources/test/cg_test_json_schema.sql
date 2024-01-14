@@ -42,7 +42,7 @@
 -- + "uniqueKeys" : [
 create table Foo
 (
-  id int<ident> not null,
+  id int<ident>!,
   name text
 );
 
@@ -89,17 +89,17 @@ create table T2
 );
 
 -- TEST: force unique  key flag
--- unique key implies not null
+-- unique key doesn't imply not null
 -- + "name" : "T3"
 -- + "name" : "id"
 -- + "type" : "integer",
--- + "isNotNull" : 1
+-- + "isNotNull" : 0
 -- - "isPrimaryKey" : 1
 -- + "isUniqueKey" : 1
 -- + "isAutoIncrement" : 0
 create table T3
 (
-  id integer unique not null
+  id integer unique
 );
 
 -- TEST: force some misc attributes
@@ -178,7 +178,7 @@ end;
 -- + "value" : 1
 @attribute(this:that=1L)
 create temp table if not exists T6 (
-  id integer not null
+  id integer!
 ) without rowid;
 
 -- TEST: use create/delete on column
@@ -353,7 +353,7 @@ create table T12b (
 -- +2 "type" : "text"
 -- + "statement" : "SELECT id FROM Foo WHERE name LIKE ? AND name <> ?",
 -- + "statementArgs" : [ "pattern", "reject" ]
-create proc a_query(pattern text not null, reject text)
+create proc a_query(pattern text!, reject text)
 begin
   select id from Foo where name like pattern and name <> reject;
 end;
@@ -368,7 +368,7 @@ end;
 -- + "name" : "arg",
 -- + "type" : "real",
 -- + "isNotNull" : 0
-create proc with_complex_args(out pattern text not null, inout arg real)
+create proc with_complex_args(out pattern text!, inout arg real)
 begin
   set pattern := "text";
   select 1 a;
@@ -388,7 +388,7 @@ end;
 -- + "name" : "name",
 -- + "statement" : "SELECT DISTINCT id, name FROM Foo WHERE name LIKE ? AND name <> ? GROUP BY name HAVING name > ? ORDER BY ? LIMIT 1 OFFSET 3",
 -- + "statementArgs" : [ "pattern", "reject", "reject", "pattern" ]
-create proc bigger_query(pattern text not null, reject text)
+create proc bigger_query(pattern text!, reject text)
 begin
   select distinct * from Foo where name like pattern and name <> reject group by name having name > reject order by pattern limit 1 offset 3;
 end;
@@ -405,7 +405,7 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "INSERT OR REPLACE INTO Foo(id, name) VALUES(?, ?)",
 -- + "statementArgs" : [ "id_", "name_" ]
-create proc insert_proc(id_ integer not null, name_ text)
+create proc insert_proc(id_ integer!, name_ text)
 begin
   insert or replace into Foo(id, name) values(id_, name_);
 end;
@@ -499,7 +499,7 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "UPDATE Foo SET name = ? WHERE id = ? ORDER BY name LIMIT 1",
 -- + "statementArgs" : [ "name_", "id_" ]
-create proc update_proc(id_ integer not null, name_ text)
+create proc update_proc(id_ integer!, name_ text)
 begin
   update foO set name = name_ where id = id_ order by name limit 1;
 end;
@@ -509,7 +509,7 @@ end;
 -- + "table" : "Foo",
 -- + "statement" : "WITH names (n) AS ( VALUES('this'), ('that') ) UPDATE foO SET name = ? WHERE name IN (SELECT n FROM names)",
 -- + "statementArgs" : [ "name_" ]
-create proc update_with_proc(id_ integer not null, name_ text)
+create proc update_with_proc(id_ integer!, name_ text)
 begin
   with names(n) as ( values ("this") , ("that") )
   update foO set name = name_ where name in (select * from names);
@@ -619,7 +619,7 @@ create view MyViewWithAttributes as select * from Foo;
 -- + "valueArgs" : [ "_seed_" ]
 -- + "value" : "printf('name_%d', ?)",
 -- + "valueArgs" : [ "_seed_" ]
-create proc dummy_insert_proc(seed_ integer not null)
+create proc dummy_insert_proc(seed_ integer!)
 begin
   insert into fOo() values() @dummy_seed(seed_) @dummy_nullables;
 end;
@@ -638,7 +638,7 @@ create view ADeletedViewWithMigrationProc as select * from Foo @delete(1, view_d
 -- TEST: join tables, create new dependencies
 -- + "statement" : "SELECT id, name, r, bl, b, l FROM Foo AS T1 INNER JOIN T5 ON T1.id = ? AND T1.id = T5.l",
 @attribute(my_attribute = 'This is a string attribute')
-create proc joiner(id_ integer not null)
+create proc joiner(id_ integer!)
 begin
   select * from Foo T1 inner join T5 on T1.id = id_ and T1.id = T5.l;
 end;
@@ -683,14 +683,14 @@ declare other_database object;
 -- + "onUpdate" : "NO ACTION",
 -- + "onDelete" : "NO ACTION",
 create table with_fk_on_columns(
- id1 integer not null references T2(id) on update cascade deferrable initially deferred,
- id2 integer not null references T10(id4) on delete cascade,
+ id1 int! references T2(id) on update cascade deferrable initially deferred,
+ id2 int! references T10(id4) on delete cascade,
  foreign key (id1, id2) references T10(id3, id4)
 );
 
 -- TEST: emit recreate annotation with group
 -- +  CREATE TABLE recreated_in_a_group(
--- +    id INTEGER
+-- +    id INT
 -- +  ) @RECREATE(my_recreate_group)
 -- +  "name" : "recreated_in_a_group",
 -- +  "isAdded" : 0,
@@ -706,7 +706,7 @@ create table recreated_in_a_group(
 @attribute(cql:backing_table)
 create table backing(
   k blob primary key,
-  v blob not null
+  v blob!
 );
 
 -- TEST: emit backed table
@@ -720,7 +720,7 @@ create table backing(
 @attribute(cql:backed_by=backing)
 create table backed(
   id integer primary key,
-  name text not null,
+  name text!,
   details text
 );
 
@@ -782,7 +782,7 @@ end;
 -- +1 @SENSITIVE
 -- +1 "isSensitive" : 1,
 create table radioactive(
- id integer not null,
+ id integer!,
  danger text @sensitive
 );
 
@@ -832,7 +832,7 @@ end;
 -- + "statementArgs" : [ "x" ],
 -- + "statementType" : "INSERT",
 -- + "columns" : [ "id" ]
-create proc with_insert_proc(x integer not null)
+create proc with_insert_proc(x integer!)
 begin
  with data(id) as (values (1), (2), (x))
  insert into T3(id) select * from data;
@@ -1153,14 +1153,14 @@ begin
   end;
 end;
 
-declare proc proc_as_func(out x integer not null);
+declare proc proc_as_func(out x integer!);
 declare proc other_proc();
 
 -- TEST: check proc to proc usage
 -- + "name" : "proc_with_deps",
 -- + "usesProcedures" : [ "other_proc", "proc_as_func" ]
 -- + "usesTables" : [  ],
-create proc proc_with_deps(out x integer not null)
+create proc proc_with_deps(out x integer!)
 begin
   -- note unusal casing, the JSON output should use the canonical name in the dependencies
   call other_Proc();
@@ -1897,7 +1897,7 @@ DECLARE FUNCTION func_return_object() OBJECT;
 -- + "type" : "bool"
 -- + "isNotNull" : 1
 -- + "createsObject" : 0
-DECLARE FUNCTION func_return_bool_notnull() BOOL not null;
+DECLARE FUNCTION func_return_bool_notnull() BOOL!;
 
 -- TEST: check declare function that returns a create blob.
 -- + "returnType" : {

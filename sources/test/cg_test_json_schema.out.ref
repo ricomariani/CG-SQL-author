@@ -5,7 +5,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE Foo(
-      id INTEGER<ident>!,
+      id INT<ident>!,
       name TEXT
     )
 
@@ -58,7 +58,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T2(
-      id INTEGER PRIMARY KEY AUTOINCREMENT
+      id INT PRIMARY KEY AUTOINCREMENT
     )
 
     {
@@ -96,13 +96,13 @@
     The statement ending at line XXXX
 
     CREATE TABLE T3(
-      id INTEGER UNIQUE!
+      id INT UNIQUE
     )
 
     {
       "name" : "T3",
-      "schema" : "CREATE TABLE T3(\n  id INTEGER UNIQUE NOT NULL\n)",
-      "CRC" : "-6018250782949692794",
+      "schema" : "CREATE TABLE T3(\n  id INTEGER UNIQUE\n)",
+      "CRC" : "-1045678026932242111",
       "isTemp" : 0,
       "ifNotExists" : 0,
       "withoutRowid" : 0,
@@ -113,7 +113,7 @@
         {
           "name" : "id",
           "type" : "integer",
-          "isNotNull" : 1,
+          "isNotNull" : 0,
           "isAdded" : 0,
           "isDeleted" : 0,
           "isPrimaryKey" : 0,
@@ -144,7 +144,7 @@
     @ATTRIBUTE(qid=`quoted identifier`)
     CREATE TABLE T4(
       @ATTRIBUTE(cool)
-      id INTEGER
+      id INT
     )
 
     {
@@ -210,7 +210,7 @@
       r REAL,
       bl BLOB,
       b BOOL,
-      l LONG_INT
+      l LONG
     )
 
     {
@@ -285,7 +285,7 @@
 
     @ATTRIBUTE(this:that=1L)
     CREATE TEMP TABLE IF NOT EXISTS T6(
-      id INTEGER!
+      id INT!
     ) WITHOUT ROWID
 
     {
@@ -329,7 +329,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T7a(
-      id INTEGER @CREATE(1) @DELETE(3)
+      id INT @CREATE(1) @DELETE(3)
     )
 
     {
@@ -369,7 +369,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T7b(
-      id INTEGER @CREATE(1, t7_col_create) @DELETE(3, t7_col_delete)
+      id INT @CREATE(1, t7_col_create) @DELETE(3, t7_col_delete)
     )
 
     {
@@ -411,7 +411,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T8a(
-      id INTEGER
+      id INT
     ) @CREATE(1) @DELETE(3)
 
     {
@@ -451,7 +451,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T8b(
-      id INTEGER
+      id INT
     ) @CREATE(1, t8_table_create) @DELETE(3, t8_table_delete)
 
     {
@@ -496,12 +496,12 @@
     @ATTRIBUTE(a_double=2.5)
     @ATTRIBUTE(a_double=2.5)
     CREATE TABLE T9(
-      id1 INTEGER DEFAULT 3 PRIMARY KEY,
-      id2 INTEGER,
-      id3 INTEGER,
+      id1 INT DEFAULT 3 PRIMARY KEY,
+      id2 INT,
+      id3 INT,
       name TEXT DEFAULT "xyzzy",
       val REAL DEFAULT -3.5,
-      val2 LONG_INT DEFAULT 123456789123456789L,
+      val2 LONG DEFAULT 123456789123456789L,
       CONSTRAINT uk1 UNIQUE (id2 DESC, id3 ASC),
       CONSTRAINT uk2 UNIQUE (id2 / 2 ASC, id3 + 2 DESC)
     )
@@ -619,10 +619,10 @@
     The statement ending at line XXXX
 
     CREATE TABLE T10(
-      id1 INTEGER UNIQUE,
-      id2 INTEGER,
-      id3 INTEGER,
-      id4 INTEGER UNIQUE,
+      id1 INT UNIQUE,
+      id2 INT,
+      id3 INT,
+      id4 INT UNIQUE,
       CONSTRAINT pk1 PRIMARY KEY (id1 DESC, id2 ASC),
       CONSTRAINT fk1 FOREIGN KEY (id1, id2) REFERENCES T9 (id2, id3),
       CONSTRAINT uk1 UNIQUE (id2, id3),
@@ -723,9 +723,9 @@
     The statement ending at line XXXX
 
     CREATE TABLE T11(
-      id1 INTEGER,
-      id2 INTEGER,
-      id3 INTEGER,
+      id1 INT,
+      id2 INT,
+      id3 INT,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE CASCADE,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON UPDATE SET NULL
     )
@@ -801,9 +801,9 @@
     The statement ending at line XXXX
 
     CREATE TABLE T12(
-      id1 INTEGER,
-      id2 INTEGER,
-      id3 INTEGER,
+      id1 INT,
+      id2 INT,
+      id3 INT,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE SET DEFAULT DEFERRABLE INITIALLY DEFERRED,
       FOREIGN KEY (id2) REFERENCES T9 (id1) ON UPDATE NO ACTION
     )
@@ -879,9 +879,9 @@
     The statement ending at line XXXX
 
     CREATE TABLE T12a(
-      id1 INTEGER,
-      id2 INTEGER,
-      id3 INTEGER,
+      id1 INT,
+      id2 INT,
+      id3 INT,
       FOREIGN KEY (id1) REFERENCES T9 (id1) ON DELETE RESTRICT NOT DEFERRABLE
     )
 
@@ -948,8 +948,8 @@
     The statement ending at line XXXX
 
     CREATE TABLE T12b(
-      id1 INTEGER,
-      id2 INTEGER,
+      id1 INT,
+      id2 INT,
       FOREIGN KEY (id1) REFERENCES T9 (id1) NOT DEFERRABLE
     )
 
@@ -1006,8 +1006,8 @@
     The statement ending at line XXXX
 
     CREATE TABLE with_fk_on_columns(
-      id1 INTEGER! REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
-      id2 INTEGER! REFERENCES T10 (id4) ON DELETE CASCADE,
+      id1 INT! REFERENCES T2 (id) ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED,
+      id2 INT! REFERENCES T10 (id4) ON DELETE CASCADE,
       FOREIGN KEY (id1, id2) REFERENCES T10 (id3, id4)
     )
 
@@ -1080,7 +1080,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE recreated_in_a_group(
-      id INTEGER
+      id INT
     ) @RECREATE(my_recreate_group)
 
     {
@@ -1177,7 +1177,7 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE backed(
-      id INTEGER PRIMARY KEY,
+      id INT PRIMARY KEY,
       name TEXT!,
       details TEXT
     )
@@ -1248,7 +1248,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE radioactive(
-      id INTEGER!,
+      id INT!,
       danger TEXT @SENSITIVE
     )
 
@@ -1298,7 +1298,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE T1(
-      id INTEGER,
+      id INT,
       name TEXT
     )
 
@@ -1388,7 +1388,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE with_check_constraints(
-      v INTEGER,
+      v INT,
       CONSTRAINT x CHECK (v > 5)
     )
 
@@ -1432,7 +1432,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE with_unnamed_check_constraints(
-      w INTEGER<meters>,
+      w INT<meters>,
       CHECK (w > 5)
     )
 
@@ -1476,7 +1476,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE with_from_recreate(
-      id INTEGER,
+      id INT,
       t TEXT
     ) @CREATE(3, cql:from_recreate)
 
@@ -1529,7 +1529,7 @@
     @ATTRIBUTE(cql:doc_comment="/** comment for the table */")
     CREATE TABLE potato_table(
       @ATTRIBUTE(cql:doc_comment="/** for the id column */")
-      potato_id INTEGER,
+      potato_id INT,
       @ATTRIBUTE(cql:doc_comment="/** for the name column */")
       @ATTRIBUTE(normal_attribute)
       potato_name TEXT
@@ -1602,7 +1602,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE t_for_unsub(
-      id INTEGER
+      id INT
     )
 
     {
@@ -1718,8 +1718,8 @@
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE every_type(
       bool_column BOOL!,
-      int32_column INTEGER!,
-      int64_column LONG_INT!,
+      int32_column INT!,
+      int64_column LONG!,
       float_column REAL!,
       string_column TEXT!,
       blob_column BLOB!,
@@ -1960,8 +1960,8 @@
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE pks_not_first_columns(
       a BOOL!,
-      b INTEGER!,
-      c LONG_INT!,
+      b INT!,
+      c LONG!,
       d REAL!,
       e TEXT!,
       f BLOB!,
@@ -2069,8 +2069,8 @@
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE only_pks_nonnull(
       a BOOL!,
-      b INTEGER!,
-      c LONG_INT!,
+      b INT!,
+      c LONG!,
       d REAL,
       e TEXT,
       f BLOB,
@@ -2178,8 +2178,8 @@
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE some_non_pk_nonnull(
       a BOOL!,
-      b INTEGER!,
-      c LONG_INT!,
+      b INT!,
+      c LONG!,
       d REAL,
       e TEXT!,
       f BLOB,
@@ -2286,7 +2286,7 @@
 
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE _starts_with_underscore(
-      foo INTEGER! PRIMARY KEY,
+      foo INT! PRIMARY KEY,
       bar TEXT
     )
 
@@ -2347,7 +2347,7 @@
     @ATTRIBUTE(cql:backed_by=backing)
     CREATE TABLE ends_with_underscore_(
       foo TEXT PRIMARY KEY,
-      bar INTEGER
+      bar INT
     )
 
     {
@@ -2405,8 +2405,8 @@
     The statement ending at line XXXX
 
     CREATE TABLE `abc def`(
-      `a b` INTEGER! UNIQUE,
-      `x y` INTEGER! PRIMARY KEY
+      `a b` INT! UNIQUE,
+      `x y` INT! PRIMARY KEY
     )
 
     {
@@ -2463,7 +2463,7 @@
 
     @ATTRIBUTE(banana)
     CREATE TABLE a_virtual_table(
-      id INTEGER,
+      id INT,
       t TEXT
     ) @RECREATE
 
@@ -2522,7 +2522,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE a_second_virtual_table(
-      id INTEGER @SENSITIVE,
+      id INT @SENSITIVE,
       t TEXT
     ) @RECREATE
 
@@ -2575,7 +2575,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE a_third_virtual_table(
-      id INTEGER @SENSITIVE,
+      id INT @SENSITIVE,
       t TEXT,
       q REAL
     ) @RECREATE
@@ -2640,7 +2640,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE a_deleted_virtual_table(
-      id INTEGER @SENSITIVE,
+      id INT @SENSITIVE,
       t TEXT,
       q REAL
     ) @DELETE(2, cql:module_must_not_be_deleted_see_docs_for_CQL0392)
@@ -2707,7 +2707,7 @@
     The statement ending at line XXXX
 
     CREATE TABLE epon_virt_table(
-      id INTEGER,
+      id INT,
       t TEXT
     ) WITHOUT ROWID @RECREATE
 
@@ -3607,7 +3607,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(my_attribute='This is a string attribute')
-    CREATE PROC joiner (id_ INTEGER!)
+    CREATE PROC joiner (id_ INT!)
     BEGIN
     SELECT *
       FROM Foo AS T1
@@ -3954,7 +3954,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:doc_comment="/**\n * some potato\n */")
-    CREATE PROC potato (i INTEGER, b REAL, c TEXT)
+    CREATE PROC potato (i INT, b REAL, c TEXT)
     BEGIN
     SELECT 1 AS x;
     END
@@ -4039,7 +4039,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:implements=interface1)
-    CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
+    CREATE PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
     BEGIN
     SELECT id_ AS id, name_ AS name;
     END
@@ -4121,7 +4121,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC insert_proc (id_ INTEGER!, name_ TEXT)
+    CREATE PROC insert_proc (id_ INT!, name_ TEXT)
     BEGIN
     INSERT OR REPLACE INTO Foo(id, name)
       VALUES(id_, name_);
@@ -4166,7 +4166,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC dummy_insert_proc (seed_ INTEGER!)
+    CREATE PROC dummy_insert_proc (seed_ INT!)
     BEGIN
     INSERT INTO fOo(id, name) VALUES(_seed_, printf('name_%d', _seed_)) @DUMMY_SEED(seed_) @DUMMY_NULLABLES;
     END
@@ -4335,7 +4335,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC with_insert_proc (x INTEGER!)
+    CREATE PROC with_insert_proc (x INT!)
     BEGIN
     WITH
       data (id) AS (
@@ -4371,7 +4371,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC update_proc (id_ INTEGER!, name_ TEXT)
+    CREATE PROC update_proc (id_ INT!, name_ TEXT)
     BEGIN
     UPDATE foO
       SET name = name_
@@ -4407,7 +4407,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC update_with_proc (id_ INTEGER!, name_ TEXT)
+    CREATE PROC update_with_proc (id_ INT!, name_ TEXT)
     BEGIN
     WITH
       names (n) AS (
@@ -4627,7 +4627,7 @@
 
     CREATE PROC typical_select ()
     BEGIN
-    DECLARE x INTEGER;
+    DECLARE x INT;
 
     SELECT *
       FROM T5;
@@ -4669,7 +4669,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_1 (arg1_x INTEGER, arg1_y INTEGER)
+    CREATE PROC proc_args_1 (arg1_x INT, arg1_y INT)
     BEGIN
     END
 
@@ -4697,7 +4697,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_2 (id_ INTEGER, name_ TEXT)
+    CREATE PROC proc_args_2 (id_ INT, name_ TEXT)
     BEGIN
     END
 
@@ -4725,7 +4725,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_3 (x_ INTEGER!, y_ INTEGER!)
+    CREATE PROC proc_args_3 (x_ INT!, y_ INT!)
     BEGIN
     END
 
@@ -4753,7 +4753,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_4 (id_ INTEGER, name_ TEXT)
+    CREATE PROC proc_args_4 (id_ INT, name_ TEXT)
     BEGIN
     END
 
@@ -4781,7 +4781,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_5 (arg1_x INTEGER, arg1_y INTEGER)
+    CREATE PROC proc_args_5 (arg1_x INT, arg1_y INT)
     BEGIN
     END
 
@@ -4809,7 +4809,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_args_6 (foo_ INTEGER!, id_ INTEGER, name_ TEXT)
+    CREATE PROC proc_args_6 (foo_ INT!, id_ INT, name_ TEXT)
     BEGIN
     END
 
@@ -4901,7 +4901,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC proc_with_deps (OUT x INTEGER!)
+    CREATE PROC proc_with_deps (OUT x INT!)
     BEGIN
     CALL other_Proc();
 
@@ -4928,7 +4928,7 @@
 
     The statement ending at line XXXX
 
-    CREATE PROC using_kinds (list OBJECT<list>, s INTEGER<seconds>)
+    CREATE PROC using_kinds (list OBJECT<list>, s INT<seconds>)
     BEGIN
     SET s := s + 1;
     END
@@ -5048,7 +5048,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC result_proc (id INTEGER, t TEXT) (x INTEGER, y INTEGER)
+    DECLARE PROC result_proc (id INT, t TEXT) (x INT, y INT)
 
     {
       "name" : "result_proc",
@@ -5081,7 +5081,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC proc_as_func (OUT x INTEGER!)
+    DECLARE PROC proc_as_func (OUT x INT!)
 
     {
       "name" : "proc_as_func",
@@ -5110,7 +5110,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(foo=bar)
-    DECLARE PROC decl_proc_take_all_type_proc (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INTEGER!, l_nn LONG_INT!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) USING TRANSACTION
+    DECLARE PROC decl_proc_take_all_type_proc (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) USING TRANSACTION
 
     {
       "name" : "decl_proc_take_all_type_proc",
@@ -5214,7 +5214,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC declared_proc (id INTEGER) OUT (t TEXT)
+    DECLARE PROC declared_proc (id INT) OUT (t TEXT)
 
     {
       "name" : "declared_proc",
@@ -5237,7 +5237,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC out_cursor_proc () OUT (A INTEGER!, B INTEGER!) USING TRANSACTION
+    DECLARE PROC out_cursor_proc () OUT (A INT!, B INT!) USING TRANSACTION
 
     {
       "name" : "out_cursor_proc",
@@ -5260,7 +5260,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE PROC proc_with_like () (id INTEGER, first TEXT!, middle TEXT, last TEXT!)
+    DECLARE PROC proc_with_like () (id INT, first TEXT!, middle TEXT, last TEXT!)
 
     {
       "name" : "proc_with_like",
@@ -5559,7 +5559,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!
+    DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!
 
     {
       "name" : "set_in_object_cql_string_list",
@@ -5598,7 +5598,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT
+    DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!) TEXT
 
     {
       "name" : "get_from_object_cql_string_list",
@@ -5631,7 +5631,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!
+    DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INT!
 
     {
       "name" : "get_object_cql_string_list_count",
@@ -5693,7 +5693,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(foo=bar)
-    DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INTEGER, l LONG_INT, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INTEGER!, l_nn LONG_INT!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
+    DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
 
     {
       "name" : "decl_func_take_all_types_func",
@@ -5799,7 +5799,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_integer () INTEGER
+    DECLARE FUNC func_return_integer () INT
 
     {
       "name" : "func_return_integer",
@@ -5814,7 +5814,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE FUNC func_return_long () LONG_INT
+    DECLARE FUNC func_return_long () LONG
 
     {
       "name" : "func_return_long",
@@ -5966,7 +5966,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE SELECT FUNC tvf (id INTEGER) (foo TEXT)
+    DECLARE SELECT FUNC tvf (id INT) (foo TEXT)
 
     {
       "name" : "tvf",
@@ -6004,7 +6004,7 @@
 
     The statement ending at line XXXX
 
-    DECLARE INTERFACE interface1 (id INTEGER)
+    DECLARE INTERFACE interface1 (id INT)
 
     {
       "name" : "interface1",
@@ -6167,7 +6167,7 @@
     }
     The statement ending at line XXXX
 
-    DECLARE ENUM some_longs LONG_INT (
+    DECLARE ENUM some_longs LONG (
       neg = -1000,
       pos = 0x100010001000L
     )

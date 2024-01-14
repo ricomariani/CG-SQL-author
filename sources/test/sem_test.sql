@@ -1199,7 +1199,7 @@ create view MyView as select 1 y;
 -- TEST: try to make a duplicate view (re-use a table)
 -- + Incompatible declarations found
 -- + CREATE TABLE foo(
--- + id INTEGER PRIMARY KEY AUTOINCREMENT
+-- + id INT PRIMARY KEY AUTOINCREMENT
 -- + )
 -- + CREATE VIEW foo AS
 -- + SELECT 2 AS x
@@ -1706,8 +1706,8 @@ declare enum ints integer (
 );
 
 -- TEST: use const expr where normally literals go in default value
--- + x INTEGER DEFAULT -1,
--- + y INTEGER DEFAULT CONST(1 / 0)
+-- + x INT DEFAULT -1,
+-- + y INT DEFAULT CONST(1 / 0)
 -- + {col_attrs_default}: err
 -- + {const}: err
 -- * error: % evaluation of constant failed
@@ -1961,7 +1961,7 @@ declare kind_value_cursor cursor like kind_cursor;
 
 -- TEST: make a value cursor extending the above using typed names syntax
 -- verify the rewrite also
--- + DECLARE extended_cursor CURSOR LIKE (id INTEGER<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
+-- + DECLARE extended_cursor CURSOR LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
 -- + {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
 -- + {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
 -- + {typed_names}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
@@ -2652,7 +2652,7 @@ update foo set id = 'x';
 -- + {update_stmt}: err
 -- + {update_list}: err
 -- + {update_entry}: err
--- * error: % lossy conversion from type 'LONG_INT' in 1L
+-- * error: % lossy conversion from type 'LONG' in 1L
 -- +1 error:
 update foo set id = 1L where id = 2;
 
@@ -4285,7 +4285,7 @@ let int_sql_val := (select type_check(1 as int!));
 -- TEST 1 is already an int
 -- + {let_stmt}: err
 -- + {cast_expr}: err
--- * error: % cast is redundant, remove to reduce code size 'CAST(1 AS INTEGER)'
+-- * error: % cast is redundant, remove to reduce code size 'CAST(1 AS INT)'
 -- +1 error:
 let idx := cast(1 as integer);
 
@@ -4307,7 +4307,7 @@ let idy := cast(idx as integer<y>);
 -- TEST: type and kind match, this is a no-op therefore an error
 -- + {assign}: err
 -- + {cast_expr}: err
--- * error: % cast is redundant, remove to reduce code size 'CAST(idy AS INTEGER<y>
+-- * error: % cast is redundant, remove to reduce code size 'CAST(idy AS INT<y>
 -- +1 error:
 set idy := cast(idy as integer<y>);
 
@@ -4375,7 +4375,7 @@ declare proc decl3(id integer) ( A int!, B bool );
 
 -- TEST: try an arg bundle inside of a declared proc
 -- make sure the rewrite was accurate
--- + DECLARE PROC decl4 (x_A INTEGER!, x_B BOOL);
+-- + DECLARE PROC decl4 (x_A INT!, x_B BOOL);
 -- - error:
 declare proc decl4(x like decl3);
 
@@ -4390,7 +4390,7 @@ begin
 end;
 
 -- TEST: duplicate declaration, all matches
--- + DECLARE PROC decl1 (id INTEGER);
+-- + DECLARE PROC decl1 (id INT);
 -- + {declare_proc_stmt}: ok
 -- + {param}: id: integer variable in
 -- - error:
@@ -5969,7 +5969,7 @@ select T.*;
 select T.* from (select 1) as U;
 
 -- TEST: simple test for declare function
--- + DECLARE FUNC simple_func (arg1 INTEGER!) REAL!;
+-- + DECLARE FUNC simple_func (arg1 INT!) REAL!;
 -- + name simple_func}: real notnull
 -- + {params}: ok
 -- + {param}: arg1: integer notnull variable in
@@ -8030,7 +8030,7 @@ create table bogus_fk_on_col_1(
 
 -- TEST: create a table with a non-integer autoinc
 -- + {create_table_stmt}: err
--- * error: % autoincrement column must be [LONG_]INTEGER PRIMARY KEY 'id'
+-- * error: % autoincrement column must be [LONG|INT] PRIMARY KEY 'id'
 -- +1 error:
 create table bogus_autoinc_type(id bool primary key autoincrement);
 
@@ -8233,7 +8233,7 @@ declare select func foo(x integer, x integer) integer;
 
 -- TEST: create a cursor and fetch from arguments
 -- AST rewritten
--- + CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INTEGER!, arg3 REAL!)
+-- + CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
 -- + FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
 -- + {fetch_values_stmt}: ok
 -- + {name_columns_values}
@@ -8260,7 +8260,7 @@ end;
 
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
--- + CREATE PROC fetch_bar (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+-- + CREATE PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 -- + FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
 -- + {create_proc_stmt}: ok
 -- - error:
@@ -8271,14 +8271,14 @@ begin
 end;
 
 -- TEST: scoped like arguments
--- + CREATE PROC qualified_like (x_id INTEGER!, x_name TEXT, x_rate LONG_INT, y_id INTEGER!, y_name TEXT, y_rate LONG_INT)
+-- + CREATE PROC qualified_like (x_id INT!, x_name TEXT, x_rate LONG, y_id INT!, y_name TEXT, y_rate LONG)
 create proc qualified_like(x like bar, y like bar)
 begin
 end;
 
 -- TEST: use the arguments like "bar" even though there are other arguments
 -- AST rewritten, note "extra" does not appear
--- + CREATE PROC insert_bar (extra INTEGER, id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+-- + CREATE PROC insert_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 -- + INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 -- + {create_proc_stmt}: ok
 -- - error:
@@ -8393,7 +8393,7 @@ end;
 
 -- TEST: rewrite proc arguments using the LIKE table form
 -- - error:
--- + CREATE PROC rewritten_like_args (id_ INTEGER!, name_ TEXT, rate_ LONG_INT)
+-- + CREATE PROC rewritten_like_args (id_ INT!, name_ TEXT, rate_ LONG)
 -- + INSERT INTO bar(id, name, rate) VALUES(id_, name_, rate_);
 -- + {create_proc_stmt}: ok dml_proc
 -- + {param}: id_: integer notnull variable in
@@ -8444,7 +8444,7 @@ create table args2(
 -- TEST: this procedure uses two tables for its args, the trick here is that both tables
 --       have the id_ column;  we should only emit it once
 -- note that id_ was skipped the second time
--- + CREATE PROC two_arg_sources (id_ INTEGER!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
+-- + CREATE PROC two_arg_sources (id_ INT!, name_ TEXT, data_ BLOB, name2_ TEXT, rate_ REAL)
 -- {create_proc_stmt): ok
 -- - error:
 create proc two_arg_sources(like args1, like args2)
@@ -8452,7 +8452,7 @@ begin
 end;
 
 -- TEST: test the case where 2nd and subsequent like forms do nothing
--- + CREATE PROC two_arg_sources_fully_redundant (id_ INTEGER!, name_ TEXT, data_ BLOB)
+-- + CREATE PROC two_arg_sources_fully_redundant (id_ INT!, name_ TEXT, data_ BLOB)
 -- {create_proc_stmt): ok
 -- - error:
 create proc two_arg_sources_fully_redundant(like args1, like args1, like args1)
@@ -9569,13 +9569,13 @@ begin
 end;
 
 -- TEST: match a proc that was previously created
--- + DECLARE PROC out_cursor_proc () OUT (A INTEGER!, B INTEGER!) USING TRANSACTION;
+-- + DECLARE PROC out_cursor_proc () OUT (A INT!, B INT!) USING TRANSACTION;
 -- + {declare_proc_stmt}: out_cursor_proc: { A: integer notnull, B: integer notnull } dml_proc uses_out
 -- - error:
 declare proc out_cursor_proc() OUT (A int!, B int!) using transaction;
 
 -- TEST: declare the proc first then create it
--- + CREATE PROC decl1 (id INTEGER)
+-- + CREATE PROC decl1 (id INT)
 -- + {create_proc_stmt}: ok
 -- - error:
 create proc decl1(id integer)
@@ -9595,10 +9595,10 @@ end;
 -- TEST: try to create a proc that doesn't match the signature
 -- the only difference here is that the declaration specified
 -- that this was to be a proc that uses the database... we will not do so
--- + CREATE PROC decl2 (id INTEGER)
+-- + CREATE PROC decl2 (id INT)
 -- + Incompatible declarations found
--- + error: % DECLARE PROC decl2 (id INTEGER) USING TRANSACTION
--- + error: % DECLARE PROC decl2 (id INTEGER)
+-- + error: % DECLARE PROC decl2 (id INT) USING TRANSACTION
+-- + error: % DECLARE PROC decl2 (id INT)
 -- + The above must be identical.
 -- + error: % procedure declarations/definitions do not match 'decl2'
 -- + {create_proc_stmt}: err
@@ -10192,7 +10192,7 @@ create table reference_not_referenceable_column(
 @enforce_strict foreign key on delete;
 
 -- TEST: strict validation ok
--- + id INTEGER REFERENCES foo (id) ON UPDATE CASCADE ON DELETE CASCADE
+-- + id INT REFERENCES foo (id) ON UPDATE CASCADE ON DELETE CASCADE
 -- + {create_table_stmt}: fk_strict_ok: { id: integer foreign_key }
 -- + {col_attrs_fk}: ok
 -- - error:
@@ -10211,14 +10211,14 @@ create table fk_strict_failure_update(
 );
 
 -- TEST: strict failure ON DELETE missing
--- + id INTEGER REFERENCES foo (id) ON UPDATE NO ACTION
+-- + id INT REFERENCES foo (id) ON UPDATE NO ACTION
 -- + {create_table_stmt}: err
 -- + {col_def}: err
 -- + {col_attrs_fk}: err
 -- * error: % strict FK validation requires that some ON DELETE option be selected for every foreign key
 -- +1 error:
 CREATE TABLE fk_strict_failure_delete(
-  id INTEGER REFERENCES foo (id) ON UPDATE NO ACTION
+  id INT REFERENCES foo (id) ON UPDATE NO ACTION
 );
 
 -- TEST: strict failure ON DELETE missing (loose FK)
@@ -10227,7 +10227,7 @@ CREATE TABLE fk_strict_failure_delete(
 -- * error: % strict FK validation requires that some ON DELETE option be selected for every foreign key
 -- +1 error:
 CREATE TABLE fk_strict_failure_delete_loose(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo(id) ON UPDATE NO ACTION
 );
 
@@ -10237,7 +10237,7 @@ CREATE TABLE fk_strict_failure_delete_loose(
 -- * error: % strict FK validation requires that some ON UPDATE option be selected for every foreign key
 -- +1 error:
 CREATE TABLE fk_strict_failure_update_loose(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo(id)
 );
 
@@ -10246,7 +10246,7 @@ CREATE TABLE fk_strict_failure_update_loose(
 -- + {fk_def}: ok
 -- - error:
 CREATE TABLE fk_strict_success_loose(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES foo(id) ON DELETE NO ACTION ON UPDATE CASCADE
 );
 
@@ -10844,7 +10844,7 @@ create table recreatable_reference_6(
 -- - {pk_def}: err
 -- +1 error:
 CREATE TABLE early_out_on_errs(
-  result_index INTEGER!,
+  result_index INT!,
   query TEXT!,
   FOREIGN KEY (query) REFERENCES table_not_found(q),
   PRIMARY KEY (garbonzo)
@@ -11437,7 +11437,7 @@ select replace('a', 'b', sensitive('c'));
 -- TEST: ad hoc migration proc must conform
 -- + Incompatible declarations found
 -- + error: % DECLARE PROC MyAdHocMigration () USING TRANSACTION
--- + error: % DECLARE PROC MyAdHocMigration (x INTEGER)
+-- + error: % DECLARE PROC MyAdHocMigration (x INT)
 -- + The above must be identical.
 -- + {declare_proc_stmt}: err
 -- * error: % procedure declarations/definitions do not match 'MyAdHocMigration'
@@ -11451,7 +11451,7 @@ declare proc InvalidAdHocMigration(y integer);
 
 -- TEST: create ad hoc version migration -- failure due to invalid proc signature
 -- + Incompatible declarations found
--- + error: % DECLARE PROC InvalidAdHocMigration (y INTEGER)
+-- + error: % DECLARE PROC InvalidAdHocMigration (y INT)
 -- + error: % DECLARE PROC InvalidAdHocMigration () USING TRANSACTION
 -- + The above must be identical.
 -- + schema_ad_hoc_migration_stmt}: err
@@ -11524,16 +11524,16 @@ on conflict(id) do update set name = excluded.name, rate = id+1;
 insert into foo default values on conflict do nothing;
 
 -- TEST declare a value fetcher that doesn't use DML
--- + DECLARE PROC val_fetch (seed INTEGER!) OUT (id TEXT);
+-- + DECLARE PROC val_fetch (seed INT!) OUT (id TEXT);
 -- + {declare_proc_stmt}: val_fetch: { id: text } uses_out
 -- - dml_proc
 -- - USING TRANSACTION
-DECLARE PROC val_fetch (seed INTEGER!) OUT (id TEXT);
+DECLARE PROC val_fetch (seed INT!) OUT (id TEXT);
 
 -- TEST declare a value fetcher that does use DML
--- + DECLARE PROC val_fetch_dml (seed INTEGER!) OUT (id TEXT) USING TRANSACTION;
+-- + DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 -- + {declare_proc_stmt}: val_fetch_dml: { id: text } dml_proc uses_out
-DECLARE PROC val_fetch_dml (seed INTEGER!) OUT (id TEXT) USING TRANSACTION;
+DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 
 -- TEST: declare a valid root deployable region
 -- + {declare_deployable_region_stmt}: root_deployable_region: region deployable
@@ -12603,7 +12603,7 @@ fetch c1c7 from cursor nully_cursor(like c1c7);
 fetch c1c7 from cursor nully_cursor(like not_a_symbol);
 
 -- TEST: try to declare a procedure that uses out union
--- + DECLARE PROC out_union_user (x INTEGER) OUT UNION (id INTEGER, x TEXT);
+-- + DECLARE PROC out_union_user (x INT) OUT UNION (id INT, x TEXT);
 -- + {declare_proc_stmt}: out_union_user: { id: integer, x: text } uses_out_union
 -- - error:
 declare proc out_union_user(x integer) out union (id integer, x text);
@@ -12636,7 +12636,7 @@ declare proc incompatible_result_proc () (t text);
 -- TEST: this is compatible with the above declaration, it won't be if SENSITIVE is not preserved.
 -- + Incompatible declarations found
 -- * error: in declare_proc_stmt : DECLARE PROC incompatible_result_proc () (t TEXT)
--- * error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INTEGER!)
+-- * error: in create_proc_stmt : DECLARE PROC incompatible_result_proc () (t INT!)
 -- + The above must be identical.
 -- * error: % procedure declarations/definitions do not match 'incompatible_result_proc'
 -- + {create_proc_stmt}: err
@@ -12950,19 +12950,19 @@ declare proc _stuff() (id integer, name text);
 
 -- TEST: type list base case, simple replacement
 -- checking the rewrite (that's all that matters here)
--- + DECLARE PROC _stuff1 () (id INTEGER, name TEXT);
+-- + DECLARE PROC _stuff1 () (id INT, name TEXT);
 -- - error:
 declare proc _stuff1() (like _stuff);
 
 -- TEST: type list insert in the middle of some other args, and dedupe
 -- checking the rewrite (that's all that matters here)
--- + DECLARE PROC _stuff2 () (h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER);
+-- + DECLARE PROC _stuff2 () (h1 INT, id INT, name TEXT, t1 INT);
 -- - error:
 declare proc _stuff2() ( h1 integer, like _stuff1, like _stuff, t1 integer);
 
 -- TEST: type list insert in the middle of some other args, and dedupe
 -- checking the rewrite (that's all that matters here)
--- + DECLARE PROC _stuff3 () (h2 INTEGER, h1 INTEGER, id INTEGER, name TEXT, t1 INTEGER, t2 INTEGER);
+-- + DECLARE PROC _stuff3 () (h2 INT, h1 INT, id INT, name TEXT, t1 INT, t2 INT);
 -- - error:
 declare proc _stuff3() ( h2 integer, like _stuff2, t2 integer);
 
@@ -12973,12 +12973,12 @@ declare proc _stuff3() ( h2 integer, like _stuff2, t2 integer);
 declare proc _stuff4() (like invalid_type_name);
 
 -- TEST: rewrite with formal name, formals all duplicated with no qualifier
--- + DECLARE PROC _stuff5 () (id INTEGER, name TEXT);
+-- + DECLARE PROC _stuff5 () (id INT, name TEXT);
 -- - error:
 declare proc _stuff5() (like _stuff1, like _stuff1);
 
 -- TEST: rewrite with formal name for each shape
--- + DECLARE PROC _stuff6 () (x_id INTEGER, x_name TEXT, y_id INTEGER, y_name TEXT);
+-- + DECLARE PROC _stuff6 () (x_id INT, x_name TEXT, y_id INT, y_name TEXT);
 -- - error:
 declare proc _stuff6() (x like _stuff1, y like _stuff1);
 
@@ -12998,7 +12998,7 @@ begin
 end;
 
 -- TEST try to pass some of my args along
--- + CREATE PROC arg_shape_forwarder (args_arg1 INTEGER, args_arg2 TEXT, extra_args_id INTEGER, extra_args_name TEXT)
+-- + CREATE PROC arg_shape_forwarder (args_arg1 INT, args_arg2 TEXT, extra_args_id INT, extra_args_name TEXT)
 -- + CALL proc2(args.arg1, args.arg2);
 -- - error:
 create proc arg_shape_forwarder(args like proc2 arguments, extra_args like _stuff1)
@@ -13619,7 +13619,7 @@ declare proc funclike(like shape, out z int!);
 
 -- TEST: use argument expansion in a function call context
 -- This is strictly a rewrite
--- + CREATE PROC arg_caller (x_ INTEGER!, y_ TEXT!, OUT z INTEGER!)
+-- + CREATE PROC arg_caller (x_ INT!, y_ TEXT!, OUT z INT!)
 -- + SET z := funclike(x_, y_);
 -- - error:
 create proc arg_caller(like shape, out z int!)
@@ -14007,7 +14007,7 @@ end;
 
 -- TEST: assigning an int64 to an int is not ok
 -- + {assign}: err
--- * error: % lossy conversion from type 'LONG_INT'
+-- * error: % lossy conversion from type 'LONG'
 -- +1 error:
 set an_int := 1L;
 
@@ -14198,7 +14198,7 @@ declare proc some_proc(id integer, t text, t1 text not null, b blob, out x int!)
 declare Q cursor like some_proc arguments;
 
 -- TEST: make a procedure using a declared shape (rewrite test)
--- + CREATE PROC some_proc_proxy (id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!)
+-- + CREATE PROC some_proc_proxy (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
 -- - error:
 create proc some_proc_proxy(like some_proc arguments)
 begin
@@ -14208,7 +14208,7 @@ end;
 declare proc some_proc2(inout id integer, t text, t1 text not null, b blob, out x int!);
 
 -- TEST: make a procedure using a declared shape (rewrite test)
--- + CREATE PROC some_proc2_proxy (INOUT id INTEGER, t TEXT, t1 TEXT!, b BLOB, OUT x INTEGER!)
+-- + CREATE PROC some_proc2_proxy (INOUT id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
 -- - error:
 create proc some_proc2_proxy(like some_proc2 arguments)
 begin
@@ -14554,7 +14554,7 @@ begin
 end;
 
 -- TEST: ensure that the type kind is preserved from an arg bundle
--- + CREATE PROC enum_in_bundle (b_x INTEGER<integer_things>!)
+-- + CREATE PROC enum_in_bundle (b_x INT<integer_things>!)
 -- proof that the cursor fields had the right type when extracted
 -- + {name u}: u: integer<integer_things> notnull variable
 -- proof that the b_x arg has the right type
@@ -14569,7 +14569,7 @@ end;
 
 -- TEST: verify typed names preserve kind
 -- verify the rewrite include the enum type
--- + DECLARE PROC shape_result_test () (x INTEGER<integer_things>!);
+-- + DECLARE PROC shape_result_test () (x INT<integer_things>!);
 declare proc shape_result_test() (like test_shape);
 
 -- TEST: create an integer enum exact copy is OK!
@@ -15190,8 +15190,8 @@ declare my_var my_type;
 declare my_var bogus_type;
 
 -- TEST: create local named type with same name. the local type have priority
--- + DECLARE my_type TYPE INTEGER;
--- + DECLARE my_var INTEGER;
+-- + DECLARE my_type TYPE INT;
+-- + DECLARE my_var INT;
 -- + {create_proc_stmt}: ok
 create proc named_type ()
 begin
@@ -15318,13 +15318,13 @@ begin
 end;
 
 -- TEST: declared type in declare function
--- + DECLARE FUNC decl_type_func (arg1 INTEGER) TEXT @SENSITIVE;
+-- + DECLARE FUNC decl_type_func (arg1 INT) TEXT @SENSITIVE;
 -- + {declare_func_stmt}: text sensitive
 -- - error:
 declare func decl_type_func (arg1 integer) my_type;
 
 -- TEST: declared type in declare function with err
--- + DECLARE FUNC decl_type_func_err (arg1 INTEGER) bogus_type;
+-- + DECLARE FUNC decl_type_func_err (arg1 INT) bogus_type;
 -- + {declare_func_stmt}: err
 -- + {name bogus_type}: err
 -- * error: % unknown type 'bogus_type'
@@ -15340,29 +15340,29 @@ create table to_copy(
 
 -- TEST: ensure all attributes correctly copied
 -- + CREATE TABLE the_copy(
--- + f1 INTEGER,
--- + f2 INTEGER!,
--- + f3 INTEGER @SENSITIVE!,
--- + f4 INTEGER @SENSITIVE
+-- + f1 INT,
+-- + f2 INT!,
+-- + f3 INT @SENSITIVE!,
+-- + f4 INT @SENSITIVE
 -- - error:
 create table the_copy(
    like to_copy
 );
 
 -- TEST: ensure proc arguments are rewritten correctly
--- + CREATE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- + CREATE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE)
 -- - error:
 create proc uses_complex_table_attrs(like to_copy)
 begin
 end;
 
 -- TEST: ensure proc arguments are rewritten correctly
--- + DECLARE PROC uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE)
+-- + DECLARE PROC uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE)
 -- - error:
 declare proc uses_complex_table_attrs(like to_copy);
 
 -- TEST: ensure func arguments are rewritten correctly
--- + DECLARE FUNC function_uses_complex_table_attrs (f1_ INTEGER, f2_ INTEGER!, f3_ INTEGER! @SENSITIVE, f4_ INTEGER @SENSITIVE) INTEGER;
+-- + DECLARE FUNC function_uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SENSITIVE, f4_ INT @SENSITIVE) INT;
 -- - error:
 declare function function_uses_complex_table_attrs(like to_copy) integer;
 
@@ -15444,7 +15444,7 @@ declare function type_func_return_create_bogus_obj() create bogus_type;
 declare function type_func_return_obj() type_obj_foo;
 
 -- TEST: declare type as enum name
--- + DECLARE my_enum_type TYPE INTEGER<ints>!;
+-- + DECLARE my_enum_type TYPE INT<ints>!;
 -- + {declare_named_type}: integer<ints> notnull
 -- + {notnull}: integer<ints> notnull
 -- - error:
@@ -15536,7 +15536,7 @@ declare _x type integer<x_coord>;
 declare _y type integer<y_coord>;
 
 -- TEST: declare an integer with the type alias
--- + DECLARE x4 INTEGER<x_coord>;
+-- + DECLARE x4 INT<x_coord>;
 -- + {declare_vars_type}: integer<x_coord>
 -- + {name_list}: x4: integer<x_coord> variable
 -- + {name x4}: x4: integer<x_coord> variable
@@ -15762,7 +15762,7 @@ set x1 := coalesce(x1, y2, x3);
 set x1 := cast(y1 as integer<x_coord>);
 
 -- TEST: cast ok direct conversion (using type name) (check for rewrite too)
--- + SET x1 := CAST(y1 AS INTEGER<x_coord>);
+-- + SET x1 := CAST(y1 AS INT<x_coord>);
 -- + {assign}: x1: integer<x_coord> variable
 -- + {name x1}: x1: integer<x_coord> variable
 -- + {cast_expr}: integer<x_coord>
@@ -16918,7 +16918,7 @@ end;
 
 -- we need a deleted table for the next test
 CREATE TABLE this_table_is_deleted(
-  id INTEGER
+  id INT
 ) @DELETE(1);
 
 -- TEST: it's ok to have an index refer to a deleted table if the index is deleted
@@ -19637,7 +19637,7 @@ select printf("%s %s", "hello", 42);
 
 -- TEST: printf disallows loss of precision
 -- + {select_expr}: err
--- * error: % lossy conversion from type 'LONG_INT' in 0L
+-- * error: % lossy conversion from type 'LONG' in 0L
 -- +1 error:
 select printf("%d", 0L);
 
@@ -22713,8 +22713,8 @@ DECLARE INTERFACE interface1 (id INT);
 DECLARE INTERFACE interface1 (id INT, id TEXT);
 
 -- TEST: attempting to redefine interface with different signature
--- + error: % DECLARE INTERFACE interface1 (id INTEGER)
--- + error: % DECLARE INTERFACE interface1 (id INTEGER, name TEXT)
+-- + error: % DECLARE INTERFACE interface1 (id INT)
+-- + error: % DECLARE INTERFACE interface1 (id INT, name TEXT)
 -- + The above must be identical.
 -- + {declare_interface_stmt}: err
 -- * error: % interface declarations do not match 'interface1'
@@ -22727,7 +22727,7 @@ DECLARE INTERFACE interface2 (id INT, name TEXT);
 
 -- TEST: this procedure uses interface for its args
 -- verify that the args are rewritten correctly
--- + CREATE PROC interface_source (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC interface_source (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: ok
 -- - error:
 create proc interface_source(like interface2)
@@ -22735,7 +22735,7 @@ begin
 end;
 
 -- TEST: this procedure correctly implements interface
--- + CREATE PROC test_interface1_implementation_correct (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC test_interface1_implementation_correct (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: test_interface1_implementation_correct: { id: integer, name: text } dml_proc
 -- - error:
 @attribute(cql:implements=interface1)
@@ -22745,7 +22745,7 @@ begin
 end;
 
 -- TEST: this procedure returns NOT NULL id column instead of NULLABLE
--- + CREATE PROC test_interface1_implementation_wrong_nullability (id_ INTEGER!)
+-- + CREATE PROC test_interface1_implementation_wrong_nullability (id_ INT!)
 -- + {create_proc_stmt}: err
 -- * error: % column types returned by proc need to be the same as defined on the interface (expected integer; found integer notnull) 'id'
 -- +1 error:
@@ -22767,7 +22767,7 @@ begin
 end;
 
 -- TEST: this procedure returns id column as second column instead of first, this is ok
--- + CREATE PROC test_interface1_implementation_wrong_order (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC test_interface1_implementation_wrong_order (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: test_interface1_implementation_wrong_order: { name: text, id: integer } dml_proc
 -- - error:
 @attribute(cql:implements=interface1)
@@ -22777,7 +22777,7 @@ begin
 end;
 
 -- TEST: first returned column has incorrect name
--- + CREATE PROC test_interface1_implementation_wrong_name (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC test_interface1_implementation_wrong_name (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: err
 -- * error: % procedure 'test_interface1_implementation_wrong_name' is missing column 'id' of interface 'interface1'
 -- +1 error:
@@ -22788,7 +22788,7 @@ begin
 end;
 
 -- TEST: procedure does not return all columns from the interface
--- + CREATE PROC test_interface1_missing_column (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC test_interface1_missing_column (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: err
 -- * error: % procedure 'test_interface1_missing_column' is missing column 'name' of interface 'interface2'
 -- +1 error:
@@ -22799,7 +22799,7 @@ begin
 end;
 
 -- TEST: implementing interface that's not defined
--- + CREATE PROC test_interface1_missing_interface (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC test_interface1_missing_interface (id_ INT, name_ TEXT)
 -- + {name missing_interface}: err
 -- + {create_proc_stmt}: err
 -- * error: % interface not found 'missing_interface'
@@ -22811,14 +22811,14 @@ begin
 end;
 
 -- TEST: redefining interface as proc (declare)
--- + DECLARE PROC interface1 (id_ INTEGER, name_ TEXT)
+-- + DECLARE PROC interface1 (id_ INT, name_ TEXT)
 -- + {declare_proc_stmt}: err
 -- * error: % proc name conflicts with interface name 'interface1'
 -- +1 error:
 declare proc interface1(id_ INT, name_ TEXT);
 
 -- TEST: redefining interface as proc (create)
--- + CREATE PROC interface1 (id_ INTEGER, name_ TEXT)
+-- + CREATE PROC interface1 (id_ INT, name_ TEXT)
 -- + {create_proc_stmt}: err
 -- + {name interface1}: err
 -- * error: % proc name conflicts with interface name 'interface1'
@@ -23006,7 +23006,7 @@ end;
 -- +     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
 -- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
 -- +   END;
--- +   DECLARE __out_cursor__0 CURSOR LIKE (x INTEGER, my_child OBJECT<test_child SET>!);
+-- +   DECLARE __out_cursor__0 CURSOR LIKE (x INT, my_child OBJECT<test_child SET>!);
 -- +   DECLARE __parent__0 CURSOR FOR
 -- +     CALL test_parent(2);
 -- +   LOOP FETCH __parent__0
@@ -23950,8 +23950,8 @@ declare select func select_func_with_out_arg2(out out_param int!) int;
 -- TEST: create a table with a weird name and a weird column
 -- verify that echoing is re-emitting the escaped text
 -- + CREATE TABLE `xyz``abc`(
--- + x INTEGER!,
--- + `a b` INTEGER!
+-- + x INT!,
+-- + `a b` INT!
 -- + {create_table_stmt}: X_xyzX60abc: { x: integer notnull, `a b`: integer notnull unique_key qid } qid
 -- + {name `xyz``abc`}
 -- + {col_def}: x: integer notnull
@@ -24061,7 +24061,7 @@ create index `abc def` on `xyz``abc` (`a b` asc);
 
 -- TEST: use a reference attribute with quoted names
 -- verify that echoing is re-emitting the escaped text
--- + x INTEGER! REFERENCES `xyz``abc` (`a b`)
+-- + x INT! REFERENCES `xyz``abc` (`a b`)
 -- + {create_table_stmt}: qid_ref_1: { x: integer notnull foreign_key }
 -- + {name `a b`}: X_aX20b: integer notnull qid
 -- - error:
@@ -24182,12 +24182,12 @@ drop view `vvv v`;
 
 -- TEST: alter table
 -- the echo is all that matters
--- + ALTER TABLE `xyz``abc` ADD COLUMN `a b` INTEGER;
+-- + ALTER TABLE `xyz``abc` ADD COLUMN `a b` INT;
 alter table `xyz``abc` add column `a b` int;
 
 -- TEST: this construct forces exotic names into the reality of locals
 -- verify that echoing is re-emitting the escaped text
--- + CREATE PROC args_defined_by_exotics (x_ INTEGER!, `a b_` INTEGER!)
+-- + CREATE PROC args_defined_by_exotics (x_ INT!, `a b_` INT!)
 -- + SET `a b_` := 1;
 -- + SET `a b_` := `a b_` + 1;
 -- + LET `u v` := 5;
@@ -24228,8 +24228,8 @@ end;
 -- TEST: create a new table using a nested shape with quoted names
 -- verify that echoing is re-emitting the escaped text
 -- + CREATE TABLE reuse_exotic_columns(
--- + x INTEGER!,
--- + `a b` INTEGER!
+-- + x INT!,
+-- + `a b` INT!
 -- + {create_table_stmt}: reuse_exotic_columns: { x: integer notnull, `a b`: integer notnull qid }
 -- - error:
 create table reuse_exotic_columns (
@@ -24238,7 +24238,7 @@ create table reuse_exotic_columns (
 
 -- TEST: shape name expansion with quid in the columns
 -- verifying the echo is correct (this is actually sufficient)
--- + CREATE PROC qid_shape_args (AAA_x INTEGER!, `AAA_a b` INTEGER!, BBB_x INTEGER!, `BBB_a b` INTEGER!, x_ INTEGER!, `a b_` INTEGER!)
+-- + CREATE PROC qid_shape_args (AAA_x INT!, `AAA_a b` INT!, BBB_x INT!, `BBB_a b` INT!, x_ INT!, `a b_` INT!)
 -- + {create_proc_stmt}: ok
 -- + {name AAA_x}: AAA_x: integer notnull variable in
 -- + {name `AAA_a b`}: X_AAA_aX20b: integer notnull variable in

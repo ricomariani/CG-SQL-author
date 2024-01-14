@@ -10,7 +10,7 @@ BEGIN
   END;
 END;
 
-DECLARE x_int INTEGER!;
+DECLARE x_int INT!;
 
 CREATE PROC foo ()
 BEGIN
@@ -20,11 +20,11 @@ BEGIN
 END;
 
 CREATE TABLE xx(
-  x INTEGER!
+  x INT!
 );
 
 CREATE TABLE yy(
-  y INTEGER!
+  y INT!
 );
 
 @MACRO(QUERY_PARTS) qp!()
@@ -298,19 +298,19 @@ SET file := 'long/path/I/do/not/like';
 SET file := 'long/path/I/do/not/like';
 
 CREATE TABLE foo(
-  id INTEGER
+  id INT
 );
 
 CREATE TEMP TABLE foo(
-  id INTEGER
+  id INT
 );
 
 CREATE TABLE IF NOT EXISTS foo(
-  id INTEGER
+  id INT
 );
 
 CREATE TEMP TABLE IF NOT EXISTS foo(
-  id INTEGER
+  id INT
 );
 
 CREATE TEMP TABLE temp_foo(
@@ -318,43 +318,43 @@ CREATE TEMP TABLE temp_foo(
 );
 
 CREATE TABLE foo(
-  id INTEGER
+  id INT
 );
 
 CREATE TABLE foo(
-  id INTEGER,
+  id INT,
   name TEXT,
-  rate LONG_INT
+  rate LONG
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT
+  rate LONG
 );
 
 CREATE TABLE foo(
-  id INTEGER! PRIMARY KEY AUTOINCREMENT,
+  id INT! PRIMARY KEY AUTOINCREMENT,
   name TEXT,
-  rate LONG_INT
+  rate LONG
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT PRIMARY KEY,
-  rate LONG_INT
+  rate LONG
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT PRIMARY KEY,
-  rate LONG_INT DEFAULT 22
+  rate LONG DEFAULT 22
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT PRIMARY KEY,
-  rate LONG_INT DEFAULT 22
+  rate LONG DEFAULT 22
 ) WITHOUT ROWID;
 
 CREATE TABLE foo(
@@ -362,60 +362,60 @@ CREATE TABLE foo(
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT,
+  rate LONG,
   PRIMARY KEY (id, name)
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT,
+  rate LONG,
   CONSTRAINT pk1 PRIMARY KEY (id, name)
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT,
+  rate LONG,
   CONSTRAINT pk1 PRIMARY KEY (id + 1, name)
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT,
+  rate LONG,
   PRIMARY KEY (id, name),
   FOREIGN KEY (id, name) REFERENCES baz (id, name2)
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT,
+  rate LONG,
   PRIMARY KEY (id, name),
   CONSTRAINT garbonzo FOREIGN KEY (id, name) REFERENCES baz (id, name2)
 );
 
 CREATE TABLE foo(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (name) REFERENCES baz (name2) ON UPDATE CASCADE
 );
 
 CREATE TABLE T1(
-  C11 INTEGER!,
-  C12 INTEGER DEFAULT 37
+  C11 INT!,
+  C12 INT DEFAULT 37
 );
 
 CREATE TABLE T2(
-  C21 INTEGER!,
-  C22 INTEGER DEFAULT 93,
+  C21 INT!,
+  C22 INT DEFAULT 93,
   PRIMARY KEY (a, b, c)
 );
 
 CREATE TABLE T(
-  C1 INTEGER!,
+  C1 INT!,
   C2 REAL,
   C3 TEXT
 );
@@ -643,21 +643,21 @@ CREATE VIEW unread_not_muted_threads_count AS
     WHERE T.last_activity_timestamp_ms > T.last_read_watermark_timestamp_ms AND (T.mute_expire_time_ms >= 0 AND T.mute_expire_time_ms - strftime('%s', 'now') * 1000 <= 0) AND T.folder_name = 'inbox';
 
 CREATE TABLE pending_tasks(
-  task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id INT PRIMARY KEY AUTOINCREMENT,
   queue_name TEXT!,
   task_value TEXT!,
   context TEXT,
-  attempt_count INTEGER! DEFAULT 0,
-  enqueue_timestamp_ms LONG_INT! DEFAULT 0,
-  first_executed_timestamp_ms LONG_INT! DEFAULT 0,
-  last_executed_timestamp_ms LONG_INT! DEFAULT 0,
-  next_retry_timestamp_ms LONG_INT! DEFAULT 0,
-  failure_count INTEGER! DEFAULT 0
+  attempt_count INT! DEFAULT 0,
+  enqueue_timestamp_ms LONG! DEFAULT 0,
+  first_executed_timestamp_ms LONG! DEFAULT 0,
+  last_executed_timestamp_ms LONG! DEFAULT 0,
+  next_retry_timestamp_ms LONG! DEFAULT 0,
+  failure_count INT! DEFAULT 0
 );
 
 CREATE TABLE pending_query_changes(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  query_id INTEGER UNIQUE!
+  id INT PRIMARY KEY AUTOINCREMENT,
+  query_id INT UNIQUE!
 );
 
 UPDATE a
@@ -683,7 +683,7 @@ BEGIN
     SET h = j, k = l;
 END;
 
-CREATE PROC a (b INTEGER, c TEXT)
+CREATE PROC a (b INT, c TEXT)
 BEGIN
   INSERT INTO d
     VALUES(e, f);
@@ -691,7 +691,7 @@ BEGIN
     SET h = j, k = l;
 END;
 
-CREATE PROC a (b INTEGER, IN c TEXT, OUT d LONG_INT, INOUT f TEXT)
+CREATE PROC a (b INT, IN c TEXT, OUT d LONG, INOUT f TEXT)
 BEGIN
   INSERT INTO d
     VALUES(e, f);
@@ -705,21 +705,21 @@ CONTINUE;
 
 LEAVE;
 
-DECLARE a, b, c INTEGER;
+DECLARE a, b, c INT;
 
-DECLARE var_a, var_b, var_c INTEGER;
-
-DECLARE a CURSOR FOR
-  SELECT b
-    FROM c;
+DECLARE var_a, var_b, var_c INT;
 
 DECLARE a CURSOR FOR
   SELECT b
     FROM c;
 
-DECLARE a CURSOR LIKE (a INTEGER, b TEXT);
+DECLARE a CURSOR FOR
+  SELECT b
+    FROM c;
 
-DECLARE a CURSOR LIKE (id INTEGER);
+DECLARE a CURSOR LIKE (a INT, b TEXT);
+
+DECLARE a CURSOR LIKE (id INT);
 
 LOOP FETCH a INTO b
 BEGIN
@@ -1102,21 +1102,21 @@ SELECT a, b
 
 SELECT CAST(1 AS TEXT);
 
-DECLARE PROC decl1 (id INTEGER);
+DECLARE PROC decl1 (id INT);
 
-DECLARE PROC decl2 (id INTEGER) USING TRANSACTION;
+DECLARE PROC decl2 (id INT) USING TRANSACTION;
 
-DECLARE PROC decl3 (id INTEGER) (A INTEGER!, B BOOL);
+DECLARE PROC decl3 (id INT) (A INT!, B BOOL);
 
-DECLARE PROC decl3 (id INTEGER) OUT (A INTEGER!, B BOOL);
+DECLARE PROC decl3 (id INT) OUT (A INT!, B BOOL);
 
-DECLARE PROC decl4 (id INTEGER) OUT (A INTEGER!, B BOOL) USING TRANSACTION;
+DECLARE PROC decl4 (id INT) OUT (A INT!, B BOOL) USING TRANSACTION;
 
-DECLARE INTERFACE decl5 (A INTEGER!, B BOOL);
+DECLARE INTERFACE decl5 (A INT!, B BOOL);
 
-DECLARE INTERFACE decl6 (A INTEGER!, B BOOL);
+DECLARE INTERFACE decl6 (A INT!, B BOOL);
 
-DECLARE ENUM things INTEGER (
+DECLARE ENUM things INT (
   foo,
   bar,
   baz = 3 + 1,
@@ -1193,7 +1193,7 @@ SELECT x
 SELECT T.*
   FROM (SELECT 1) AS T;
 
-DECLARE FUNC foo (x INTEGER, y TEXT!) INTEGER!;
+DECLARE FUNC foo (x INT, y TEXT!) INT!;
 
 DECLARE obj_var OBJECT;
 
@@ -1221,32 +1221,32 @@ INSERT OR IGNORE INTO foo(a, b)
 CREATE TEMP VIEW foo AS
   SELECT 1 AS A;
 
-ALTER TABLE foo ADD COLUMN bar INTEGER!;
+ALTER TABLE foo ADD COLUMN bar INT!;
 
 CREATE TABLE foo(
-  id INTEGER @CREATE(1, Foo)
+  id INT @CREATE(1, Foo)
 );
 
 CREATE TABLE foo(
-  id INTEGER @CREATE(1, cql:from_recreate)
+  id INT @CREATE(1, cql:from_recreate)
 );
 
 CREATE TABLE foo(
-  id INTEGER @DELETE(2, Bar)
+  id INT @DELETE(2, Bar)
 );
 
 CREATE TABLE foo(
-  id INTEGER @CREATE(1, Foo) @DELETE(2, Bar)
+  id INT @CREATE(1, Foo) @DELETE(2, Bar)
 );
 
 CREATE TABLE foo(
-  id INTEGER @CREATE(1) @DELETE(2)
+  id INT @CREATE(1) @DELETE(2)
 );
 
 @SCHEMA_UPGRADE_VERSION (112);
 
 CREATE TABLE foo(
-  id INTEGER
+  id INT
 ) @CREATE(1, foo) @DELETE(2, bar);
 
 DROP TABLE foo;
@@ -1318,15 +1318,15 @@ CREATE TABLE bar(
   @ATTRIBUTE(smart)
   @ATTRIBUTE(coolstuff:main=1)
   @ATTRIBUTE(coolstuff:alt=1)
-  id INTEGER
+  id INT
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS my_unique_index ON foo (id ASC, name DESC, zone);
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   name TEXT,
-  rate LONG_INT,
+  rate LONG,
   PRIMARY KEY (id, name),
   FOREIGN KEY (id, name) REFERENCES baz (id, name2) ON UPDATE CASCADE ON DELETE NO ACTION NOT DEFERRABLE INITIALLY DEFERRED,
   FOREIGN KEY (rate) REFERENCES rater (r) ON UPDATE RESTRICT ON DELETE SET DEFAULT DEFERRABLE INITIALLY IMMEDIATE,
@@ -1334,27 +1334,27 @@ CREATE TABLE foo(
 );
 
 CREATE TABLE foo(
-  id INTEGER REFERENCES goo (another_id) ON UPDATE CASCADE ON DELETE SET NULL
+  id INT REFERENCES goo (another_id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE lots_o_defaults(
-  c1 INTEGER DEFAULT 2,
-  c2 INTEGER DEFAULT -7,
+  c1 INT DEFAULT 2,
+  c2 INT DEFAULT -7,
   c3 REAL DEFAULT 2.5,
   c4 TEXT DEFAULT '''',
   c5 TEXT DEFAULT "xyzzy"
 );
 
 CREATE TABLE foo(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
 CREATE TABLE foo2(
-  id INTEGER
+  id INT
 ) @RECREATE @DELETE;
 
 CREATE TABLE foo3(
-  id INTEGER
+  id INT
 ) @RECREATE(foo3_group) @DELETE;
 
 WITH
@@ -1379,7 +1379,7 @@ INSERT INTO foo()
   SELECT 1, 2, 3
     FROM bar;
 
-DECLARE SELECT FUNC foo (id INTEGER) INTEGER!;
+DECLARE SELECT FUNC foo (id INT) INT!;
 
 FETCH a_cursor FROM ARGUMENTS;
 
@@ -1391,14 +1391,14 @@ FETCH to_cursor FROM from_cursor;
 
 INSERT INTO foo(a, b) FROM ARGUMENTS;
 
-CREATE PROC var_x (LIKE table_name, id INTEGER)
+CREATE PROC var_x (LIKE table_name, id INT)
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
-CREATE PROC x (LIKE table_name, id INTEGER)
+CREATE PROC x (LIKE table_name, id INT)
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
 END;
 
 SELECT x MATCH y;
@@ -1421,7 +1421,7 @@ SELECT 'x' MATCH 'y';
 
 SELECT 1:min(2);
 
-DECLARE FUNC dummy_func (x TEXT, y INTEGER) INTEGER;
+DECLARE FUNC dummy_func (x TEXT, y INT) INT;
 
 SELECT "a":dummy_func(3);
 
@@ -1488,7 +1488,7 @@ BEGIN
 END;
 
 CREATE TABLE with_sensitive(
-  id INTEGER,
+  id INT,
   name TEXT @SENSITIVE
 );
 
@@ -1556,7 +1556,7 @@ SET rc := @RC;
 
 @END_SCHEMA_REGION;
 
-DECLARE SELECT FUNC garbonzo (id INTEGER) (t TEXT);
+DECLARE SELECT FUNC garbonzo (id INT) (t TEXT);
 
 SELECT *
   FROM garbonzo(1, 2, 3) AS T1
@@ -1621,7 +1621,7 @@ END;
 
 CREATE PROC compound_select_expr ()
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
   SET x := ( SELECT 1
     WHERE 0
   UNION
@@ -1641,7 +1641,7 @@ SELECT id,
     win2 AS ()
   ORDER BY id;
 
-CREATE PROC foo (x INTEGER, y INTEGER)
+CREATE PROC foo (x INT, y INT)
 BEGIN
   INSERT INTO bar(x, y) FROM ARGUMENTS @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
@@ -1714,7 +1714,7 @@ DECLARE C CURSOR LIKE P2 ARGUMENTS;
 DECLARE C CURSOR LIKE P2 ARGUMENTS;
 
 CREATE TABLE foo(
-  id INTEGER COLLATE bar CHECK(id = 3 AND goo = 5) 
+  id INT COLLATE bar CHECK(id = 3 AND goo = 5) 
 );
 
 CREATE PROC foo ()
@@ -1791,9 +1791,9 @@ SELECT month, amount,
 
 SET trigger := 1;
 
-DECLARE x INTEGER! @SENSITIVE;
+DECLARE x INT! @SENSITIVE;
 
-DECLARE x INTEGER! @SENSITIVE;
+DECLARE x INT! @SENSITIVE;
 
 SET z := 1 BETWEEN 1 & 2 AND 3;
 
@@ -1828,43 +1828,43 @@ BEGIN
 END;
 
 CREATE VIRTUAL TABLE foo USING bar (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE @EPONYMOUS foo USING bar (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS @EPONYMOUS foo USING bar (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE IF NOT EXISTS @EPONYMOUS foo USING bar (this, that, the_other) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE foo USING bar AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE foo USING bar (ARGUMENTS FOLLOWING) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE foo USING bar (ARGUMENTS FOLLOWING) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 ) @DELETE(5);
 
 CREATE TABLE foo(
-  id INTEGER,
-  v INTEGER,
+  id INT,
+  v INT,
   CHECK (v > 5),
   CONSTRAINT goo CHECK (v < 20)
 );
@@ -1879,31 +1879,31 @@ DECLARE fbid TYPE TEXT @SENSITIVE;
 
 DECLARE my_fbid fbid;
 
-DECLARE x INTEGER<special>;
+DECLARE x INT<special>;
 
 DECLARE y REAL<special>;
 
 SET x := 1;
 
-DECLARE PROC p (x INTEGER<special>);
+DECLARE PROC p (x INT<special>);
 
-DECLARE FUNC f (x INTEGER<special>) REAL<not_so_special>;
+DECLARE FUNC f (x INT<special>) REAL<not_so_special>;
 
-DECLARE PROC p2 () (x INTEGER<special>, y INTEGER<also_special>);
+DECLARE PROC p2 () (x INT<special>, y INT<also_special>);
 
 CREATE TABLE special(
-  id INTEGER<special>,
-  id2 INTEGER<less_special>,
-  id3 INTEGER
+  id INT<special>,
+  id2 INT<less_special>,
+  id3 INT
 );
 
-DECLARE l1 LONG_INT<one>;
+DECLARE l1 LONG<one>;
 
-DECLARE l1 LONG_INT<two>;
+DECLARE l1 LONG<two>;
 
-DECLARE l1 LONG_INT<three>;
+DECLARE l1 LONG<three>;
 
-DECLARE l1 LONG_INT<four>;
+DECLARE l1 LONG<four>;
 
 SELECT CASE
   WHEN 1 THEN 2
@@ -1911,7 +1911,7 @@ SELECT CASE
 END;
 
 CREATE TABLE foo(
-  x INTEGER HIDDEN
+  x INT HIDDEN
 );
 
 @ENFORCE_PUSH;
@@ -1956,49 +1956,49 @@ DECLARE OUT CALL foo(a, b);
 INSERT INTO foo USING SELECT 1 AS a, 2 AS b;
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id, name) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id, name) ON CONFLICT FAIL
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id, name) ON CONFLICT IGNORE
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id, name) ON CONFLICT REPLACE
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 UNIQUE (id, name) ON CONFLICT ABORT
 );
 
 CREATE TABLE foo(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 UNIQUE (id + 5, name) ON CONFLICT ABORT
 );
 
 CREATE TABLE foo(
-  id INTEGER UNIQUE ON CONFLICT ROLLBACK
+  id INT UNIQUE ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE foo(
-  id INTEGER PRIMARY KEY ON CONFLICT FAIL
+  id INT PRIMARY KEY ON CONFLICT FAIL
 );
 
 CREATE TABLE foo(
-  id INTEGER PRIMARY KEY ON CONFLICT FAIL AUTOINCREMENT
+  id INT PRIMARY KEY ON CONFLICT FAIL AUTOINCREMENT
 );
 
 CREATE TABLE foo(
-  id INTEGER! ON CONFLICT FAIL
+  id INT! ON CONFLICT FAIL
 );
 
 SELECT CAST(1 AS REAL) + 1;
@@ -2127,8 +2127,8 @@ SELECT @COLUMNS(DISTINCT a.b, LIKE bar)
   FROM foo2;
 
 CREATE TABLE T(
-  x INTEGER,
-  y INTEGER
+  x INT,
+  y INT
 );
 
 CREATE TABLE U(
@@ -2137,8 +2137,8 @@ CREATE TABLE U(
 );
 
 CREATE TABLE V(
-  x INTEGER,
-  y INTEGER,
+  x INT,
+  y INT,
   u TEXT,
   v TEXT
 );
@@ -2172,7 +2172,7 @@ FETCH C FROM BLOB b;
 
 DECLARE GROUP foo
 BEGIN
-  DECLARE x INTEGER;
+  DECLARE x INT;
   DECLARE y CURSOR LIKE foo;
   DECLARE y CURSOR LIKE SELECT 2 AS x, "foo" AS y;
 END;
@@ -2181,11 +2181,11 @@ END;
 
 @UNSUB(foo);
 
-DECLARE FUNC foo (x CURSOR) INTEGER;
+DECLARE FUNC foo (x CURSOR) INT;
 
-DECLARE X CURSOR LIKE (x INTEGER, y REAL, LIKE goo);
+DECLARE X CURSOR LIKE (x INT, y REAL, LIKE goo);
 
-DECLARE X CURSOR LIKE (x INTEGER, y REAL, LIKE goo);
+DECLARE X CURSOR LIKE (x INT, y REAL, LIKE goo);
 
 DECLARE Z CURSOR LIKE foo(x, y);
 
@@ -2201,7 +2201,7 @@ OUT UNION CALL foo(a, b, c) JOIN
 LET x := y;
 
 CREATE TABLE unary_plus_default_value(
-  x INTEGER DEFAULT 7
+  x INT DEFAULT 7
 );
 
 @BLOB_GET_KEY_TYPE bgetkey_type;
@@ -2290,7 +2290,7 @@ lshift <<= 3;
 
 rshift >>= 3;
 
-DECLARE FUNC stew1 NO CHECK INTEGER!;
+DECLARE FUNC stew1 NO CHECK INT!;
 
 DECLARE FUNC stew2 NO CHECK CREATE TEXT!;
 

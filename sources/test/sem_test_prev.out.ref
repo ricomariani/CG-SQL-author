@@ -227,7 +227,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!;
+DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -264,7 +264,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT;
+DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -293,7 +293,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, ind
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!;
+DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -363,7 +363,7 @@ DECLARE bool TYPE BOOL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE int TYPE INTEGER;
+DECLARE int TYPE INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -378,7 +378,7 @@ DECLARE int TYPE INTEGER;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE integer TYPE INTEGER;
+DECLARE integer TYPE INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -393,7 +393,7 @@ DECLARE integer TYPE INTEGER;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long TYPE LONG_INT;
+DECLARE long TYPE LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -468,7 +468,7 @@ DECLARE blob TYPE BLOB;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long_int TYPE LONG_INT;
+DECLARE long_int TYPE LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -504,10 +504,10 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER!,
-  rate LONG_INT @DELETE(5, deletor),
-  rate_2 LONG_INT @DELETE(4),
-  id2 INTEGER @CREATE(4),
+  id INT!,
+  rate LONG @DELETE(5, deletor),
+  rate_2 LONG @DELETE(4),
+  id2 INT @CREATE(4),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -574,7 +574,7 @@ CREATE TABLE foo(
 The statement ending at line XXXX
 
 CREATE TABLE column_deleted_in_this_table(
-  id INTEGER,
+  id INT,
   being_deleted TEXT @DELETE(6)
 );
 
@@ -602,7 +602,7 @@ CREATE TABLE column_deleted_in_this_table(
 The statement ending at line XXXX
 
 CREATE TABLE column_undeleted_in_this_table(
-  id INTEGER,
+  id INT,
   being_undeleted TEXT
 );
 
@@ -627,7 +627,7 @@ CREATE TABLE column_undeleted_in_this_table(
 The statement ending at line XXXX
 
 CREATE TABLE become_sensitive(
-  id2 INTEGER @SENSITIVE,
+  id2 INT @SENSITIVE,
   name TEXT @SENSITIVE
 );
 
@@ -654,7 +654,7 @@ CREATE TABLE become_sensitive(
 The statement ending at line XXXX
 
 CREATE TABLE t_create_verison_changed(
-  id INTEGER
+  id INT
 ) @CREATE(1);
 
   {create_table_stmt}: err
@@ -675,7 +675,7 @@ CREATE TABLE t_create_verison_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_delete_verison_changed(
-  id INTEGER
+  id INT
 ) @DELETE(1);
 
   {create_table_stmt}: err
@@ -724,7 +724,7 @@ CREATE VIEW t_became_a_view AS
 The statement ending at line XXXX
 
 CREATE TABLE t_created_in_wrong_version(
-  id INTEGER
+  id INT
 ) @CREATE(1);
 
   {create_table_stmt}: err
@@ -745,7 +745,7 @@ CREATE TABLE t_created_in_wrong_version(
 The statement ending at line XXXX
 
 CREATE TABLE t_was_correctly_deleted(
-  id INTEGER
+  id INT
 ) @DELETE(1);
 
   {create_table_stmt}: t_was_correctly_deleted: { id: integer } deleted validated @delete(1)
@@ -766,7 +766,7 @@ CREATE TABLE t_was_correctly_deleted(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_name_changed(
-  id_ INTEGER
+  id_ INT
 );
 
   {create_table_stmt}: err
@@ -802,7 +802,7 @@ CREATE TABLE t_column_type_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_attribute_changed(
-  id INTEGER!
+  id INT!
 );
 
   {create_table_stmt}: err
@@ -821,8 +821,8 @@ CREATE TABLE t_column_attribute_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_delete_version_changed(
-  id INTEGER,
-  id2 INTEGER @DELETE(1)
+  id INT,
+  id2 INT @DELETE(1)
 );
 
   {create_table_stmt}: err
@@ -849,8 +849,8 @@ CREATE TABLE t_column_delete_version_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_create_version_changed(
-  id INTEGER,
-  id2 INTEGER @CREATE(1)
+  id INT,
+  id2 INT @CREATE(1)
 );
 
   {create_table_stmt}: err
@@ -877,8 +877,8 @@ CREATE TABLE t_column_create_version_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_changed(
-  id INTEGER,
-  id2 INTEGER! DEFAULT 2
+  id INT,
+  id2 INT! DEFAULT 2
 );
 
   {create_table_stmt}: err
@@ -905,8 +905,8 @@ CREATE TABLE t_column_default_value_changed(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_ok(
-  id INTEGER,
-  id2 INTEGER! DEFAULT 1
+  id INT,
+  id2 INT! DEFAULT 1
 );
 
   {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default } validated
@@ -933,8 +933,8 @@ CREATE TABLE t_column_default_value_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_present(
-  a INTEGER!,
-  b INTEGER,
+  a INT!,
+  b INT,
   PRIMARY KEY (a, b)
 );
 
@@ -969,8 +969,8 @@ CREATE TABLE t_additional_attribute_present(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_mismatch(
-  a INTEGER!,
-  b INTEGER!,
+  a INT!,
+  b INT!,
   PRIMARY KEY (a)
 );
 
@@ -1003,7 +1003,7 @@ CREATE TABLE t_additional_attribute_mismatch(
 The statement ending at line XXXX
 
 CREATE TABLE t_columns_removed(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: err
@@ -1021,7 +1021,7 @@ CREATE TABLE t_columns_removed(
 The statement ending at line XXXX
 
 CREATE TABLE t_attribute_added(
-  a INTEGER!,
+  a INT!,
   UNIQUE (a)
 );
 
@@ -1047,8 +1047,8 @@ CREATE TABLE t_attribute_added(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column(
-  a INTEGER!,
-  b INTEGER
+  a INT!,
+  b INT
 );
 
   {create_table_stmt}: err
@@ -1073,9 +1073,9 @@ CREATE TABLE t_additional_column(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column_ok(
-  a INTEGER!,
-  b INTEGER @CREATE(2),
-  c INTEGER @CREATE(6)
+  a INT!,
+  b INT @CREATE(2),
+  c INT @CREATE(6)
 );
 
   {create_table_stmt}: t_additional_column_ok: { a: integer notnull, b: integer, c: integer } validated
@@ -1112,8 +1112,8 @@ CREATE TABLE t_additional_column_ok(
 The statement ending at line XXXX
 
 CREATE TEMP TABLE t_becomes_temp_table(
-  a INTEGER!,
-  b INTEGER
+  a INT!,
+  b INT
 );
 
   {create_table_stmt}: err
@@ -1138,8 +1138,8 @@ CREATE TEMP TABLE t_becomes_temp_table(
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_ok(
-  a INTEGER!,
-  b INTEGER
+  a INT!,
+  b INT
 ) @CREATE(26);
 
   {create_table_stmt}: t_new_table_ok: { a: integer notnull, b: integer } @create(26)
@@ -1167,8 +1167,8 @@ CREATE TABLE t_new_table_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_no_annotation(
-  a INTEGER!,
-  b INTEGER
+  a INT!,
+  b INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(26) or later 't_new_table_no_annotation'
@@ -1195,8 +1195,8 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table 
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_stale_annotation(
-  a INTEGER!,
-  b INTEGER
+  a INT!,
+  b INT
 ) @CREATE(2);
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table must be added with @create(26) or later 't_new_table_stale_annotation'
@@ -1226,8 +1226,8 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0309: new table 
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_create_and_delete(
-  a INTEGER!,
-  b INTEGER @CREATE(6) @DELETE(7)
+  a INT!,
+  b INT @CREATE(6) @DELETE(7)
 );
 
   {create_table_stmt}: err
@@ -1258,8 +1258,8 @@ CREATE TABLE t_new_table_create_and_delete(
 The statement ending at line XXXX
 
 CREATE TABLE t_new_legit_column(
-  a INTEGER!,
-  b INTEGER @CREATE(6)
+  a INT!,
+  b INT @CREATE(6)
 );
 
   {create_table_stmt}: t_new_legit_column: { a: integer notnull, b: integer } validated
@@ -1287,7 +1287,7 @@ CREATE TABLE t_new_legit_column(
 The statement ending at line XXXX
 
 CREATE TABLE with_create_migrator(
-  id INTEGER
+  id INT
 ) @CREATE(1, ACreateMigrator);
 
   {create_table_stmt}: err
@@ -1309,7 +1309,7 @@ CREATE TABLE with_create_migrator(
 The statement ending at line XXXX
 
 CREATE TABLE with_delete_migrator(
-  id INTEGER
+  id INT
 ) @DELETE(1, ADeleteMigrator);
 
   {create_table_stmt}: err
@@ -1331,7 +1331,7 @@ CREATE TABLE with_delete_migrator(
 The statement ending at line XXXX
 
 CREATE TABLE view_becomes_a_table(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: err
@@ -1421,8 +1421,8 @@ CREATE INDEX this_index_was_created_with_no_annotation ON foo (id);
 The statement ending at line XXXX
 
 CREATE TABLE create_column_migrate_test(
-  id INTEGER UNIQUE,
-  id2 INTEGER @CREATE(2, ChangedColumnCreateMigrator)
+  id INT UNIQUE,
+  id2 INT @CREATE(2, ChangedColumnCreateMigrator)
 );
 
   {create_table_stmt}: err
@@ -1451,8 +1451,8 @@ CREATE TABLE create_column_migrate_test(
 The statement ending at line XXXX
 
 CREATE TABLE delete_column_migrate_test(
-  id INTEGER,
-  id2 INTEGER @DELETE(2, ChangedColumnDeleteMigrator)
+  id INT,
+  id2 INT @DELETE(2, ChangedColumnDeleteMigrator)
 );
 
   {create_table_stmt}: err
@@ -1480,7 +1480,7 @@ CREATE TABLE delete_column_migrate_test(
 The statement ending at line XXXX
 
 CREATE TABLE fk_facet(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
 );
 
@@ -1510,7 +1510,7 @@ CREATE TABLE fk_facet(
 The statement ending at line XXXX
 
 CREATE TABLE cannot_change_to_recreate(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: err
@@ -1529,7 +1529,7 @@ CREATE TABLE cannot_change_to_recreate(
 The statement ending at line XXXX
 
 CREATE TABLE ok_to_delete_recreate_table(
-  id INTEGER
+  id INT
 ) @RECREATE @DELETE;
 
   {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } deleted validated @delete(1) @recreate
@@ -1549,7 +1549,7 @@ CREATE TABLE ok_to_delete_recreate_table(
 The statement ending at line XXXX
 
 CREATE TABLE ok_to_create_recreate_table(
-  id INTEGER
+  id INT
 ) @CREATE(26, cql:from_recreate);
 
   {create_table_stmt}: ok_to_create_recreate_table: { id: integer } validated @create(26)
@@ -1573,7 +1573,7 @@ CREATE TABLE ok_to_create_recreate_table(
 The statement ending at line XXXX
 
 CREATE TABLE not_ok_to_create_recreate_table(
-  id INTEGER
+  id INT
 ) @CREATE(6);
 
   {create_table_stmt}: err
@@ -1594,7 +1594,7 @@ CREATE TABLE not_ok_to_create_recreate_table(
 The statement ending at line XXXX
 
 CREATE TABLE recreate_deleted_in_the_past(
-  id INTEGER
+  id INT
 ) @RECREATE @DELETE;
 
   {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } deleted validated @delete(1) @recreate
@@ -1614,7 +1614,7 @@ CREATE TABLE recreate_deleted_in_the_past(
 The statement ending at line XXXX
 
 CREATE TABLE recreate_created_in_the_past(
-  id INTEGER
+  id INT
 ) @CREATE(2, cql:from_recreate);
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0399: table must leave @recreate management with @create(26) or later 'recreate_created_in_the_past'
@@ -1640,7 +1640,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0399: table must
 The statement ending at line XXXX
 
 CREATE TABLE recreate_feel_the_power(
-  id INTEGER,
+  id INT,
   payload REAL,
   whatever TEXT
 ) @RECREATE;
@@ -1673,7 +1673,7 @@ CREATE TABLE recreate_feel_the_power(
 The statement ending at line XXXX
 
 CREATE TABLE direct_to_recreate(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: direct_to_recreate: { id: integer } @recreate
@@ -1777,7 +1777,7 @@ END @DELETE(2);
 The statement ending at line XXXX
 
 CREATE TABLE t_removed_facet(
-  id INTEGER!
+  id INT!
 );
 
   {create_table_stmt}: t_removed_facet: { id: integer notnull } validated
@@ -1796,7 +1796,7 @@ CREATE TABLE t_removed_facet(
 The statement ending at line XXXX
 
 CREATE TABLE t_subtle_column_change(
-  id INTEGER REFERENCES create_column_migrate_test (id)
+  id INT REFERENCES create_column_migrate_test (id)
 );
 
   {create_table_stmt}: err
@@ -1821,9 +1821,9 @@ CREATE TABLE t_subtle_column_change(
 The statement ending at line XXXX
 
 CREATE TABLE t_several_columns_added_interleaved(
-  col1 INTEGER,
-  col2 INTEGER @CREATE(2),
-  col3 INTEGER @CREATE(2),
+  col1 INT,
+  col2 INT @CREATE(2),
+  col3 INT @CREATE(2),
   PRIMARY KEY (col1)
 );
 
@@ -1904,7 +1904,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE TChanging(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0311: object's deployment region changed from 'different_region' to 'base' 'TChanging'
@@ -2047,7 +2047,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE TableWithDeferredOwner(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0311: object's deployment region changed from 'DeployableRegion1' to 'DeployableRegion2' 'TableWithDeferredOwner'
@@ -2098,7 +2098,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE logical_moving_T1(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
   {create_table_stmt}: logical_moving_T1: { id: integer notnull primary_key } validated
@@ -2118,7 +2118,7 @@ CREATE TABLE logical_moving_T1(
 The statement ending at line XXXX
 
 CREATE TABLE logical_moving_T2(
-  id INTEGER REFERENCES logical_moving_T1 (id),
+  id INT REFERENCES logical_moving_T1 (id),
   name TEXT
 );
 
@@ -2170,7 +2170,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE high_numbered_thing(
-  id INTEGER
+  id INT
 ) @CREATE(9999);
 
   {create_table_stmt}: high_numbered_thing: { id: integer } validated @create(9999)
@@ -2197,7 +2197,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE table_staying(
-  col1 INTEGER PRIMARY KEY!
+  col1 INT PRIMARY KEY!
 ) @RECREATE(my_recreate_group);
 
   {create_table_stmt}: table_staying: { col1: integer notnull primary_key } validated @recreate(my_recreate_group)
@@ -2221,7 +2221,7 @@ The statement ending at line XXXX
 
 CREATE TABLE table_going(
   col1 TEXT,
-  col2 INTEGER,
+  col2 INT,
   FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
 ) @RECREATE(my_recreate_group) @DELETE;
 
@@ -2260,9 +2260,9 @@ CREATE TABLE table_going(
 The statement ending at line XXXX
 
 CREATE TABLE adding_with_migrators_ok(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER @DELETE(3, delete_me),
-  id3 INTEGER @CREATE(3, create_me)
+  id INT PRIMARY KEY,
+  id2 INT @DELETE(3, delete_me),
+  id3 INT @CREATE(3, create_me)
 ) @CREATE(2);
 
   {create_table_stmt}: adding_with_migrators_ok: { id: integer notnull primary_key, id3: integer } validated @create(2)
@@ -2304,7 +2304,7 @@ CREATE TABLE adding_with_migrators_ok(
 
 The statement ending at line XXXX
 
-DECLARE ENUM foo_enum INTEGER (
+DECLARE ENUM foo_enum INT (
   a = 1,
   b = 2
 );
@@ -2325,7 +2325,7 @@ DECLARE ENUM foo_enum INTEGER (
 The statement ending at line XXXX
 
 CREATE TABLE foo_with_check(
-  x INTEGER CHECK(x = 1) 
+  x INT CHECK(x = 1) 
 );
 
   {create_table_stmt}: err
@@ -2347,7 +2347,7 @@ CREATE TABLE foo_with_check(
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 );
 
   {create_virtual_table_stmt}: unchanged_virtual: { id: integer } virtual @recreate
@@ -2371,7 +2371,7 @@ CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 ) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
   {create_virtual_table_stmt}: deleted_virtual: { id: integer } deleted virtual @delete(3)
@@ -2400,7 +2400,7 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 );
 
   {create_virtual_table_stmt}: undead_virtual: { id: integer } virtual @recreate
@@ -2424,7 +2424,7 @@ CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo, goo) AS (
-  id INTEGER,
+  id INT,
   t TEXT
 );
 
@@ -2457,7 +2457,7 @@ CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo, goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 ) @DELETE(1, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
   {create_virtual_table_stmt}: delete_change_virtual: { id: integer } deleted virtual @delete(1)
@@ -2486,7 +2486,7 @@ CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER! ON CONFLICT FAIL
+  id INT! ON CONFLICT FAIL
 );
 
   {create_table_stmt}: conflict_clause_t: { id: integer notnull } validated
@@ -2506,7 +2506,7 @@ CREATE TABLE conflict_clause_t(
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
@@ -2534,7 +2534,7 @@ CREATE TABLE conflict_clause_pk(
 The statement ending at line XXXX
 
 CREATE TABLE dropping_this(
-  f1 INTEGER,
+  f1 INT,
   f2 TEXT
 ) @DELETE(5);
 
@@ -2562,7 +2562,7 @@ CREATE TABLE dropping_this(
 The statement ending at line XXXX
 
 CREATE TABLE losing_group(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: losing_group: { id: integer } @recreate
@@ -2581,7 +2581,7 @@ CREATE TABLE losing_group(
 The statement ending at line XXXX
 
 CREATE TABLE gaining_group(
-  id INTEGER
+  id INT
 ) @RECREATE(new_group);
 
   {create_table_stmt}: gaining_group: { id: integer } validated @recreate(new_group)
@@ -2601,7 +2601,7 @@ CREATE TABLE gaining_group(
 The statement ending at line XXXX
 
 CREATE TABLE unsub_resub_trickery(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: unsub_resub_trickery: { id: integer } validated
@@ -2663,7 +2663,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
-  id INTEGER! PRIMARY KEY,
+  id INT! PRIMARY KEY,
   val TEXT!
 );
 
@@ -2700,7 +2700,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE new_backed_table(
-  id INTEGER! PRIMARY KEY,
+  id INT! PRIMARY KEY,
   val TEXT!
 );
 
@@ -2736,8 +2736,8 @@ CREATE TABLE new_backed_table(
 The statement ending at line XXXX
 
 CREATE TABLE transitioning_to_baseline(
-  x INTEGER,
-  y INTEGER
+  x INT,
+  y INT
 );
 
   {create_table_stmt}: err
@@ -2761,7 +2761,7 @@ CREATE TABLE transitioning_to_baseline(
 The statement ending at line XXXX
 
 CREATE TABLE resubscribing(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: resubscribing: { id: integer } validated
@@ -2806,10 +2806,10 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER!,
-  rate LONG_INT @DELETE(5, deletor),
-  rate_2 LONG_INT @DELETE(4),
-  id2 INTEGER @CREATE(4),
+  id INT!,
+  rate LONG @DELETE(5, deletor),
+  rate_2 LONG @DELETE(4),
+  id2 INT @CREATE(4),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -2876,7 +2876,7 @@ CREATE TABLE foo(
 The statement ending at line XXXX
 
 CREATE TABLE column_deleted_in_this_table(
-  id INTEGER,
+  id INT,
   being_deleted TEXT
 );
 
@@ -2901,7 +2901,7 @@ CREATE TABLE column_deleted_in_this_table(
 The statement ending at line XXXX
 
 CREATE TABLE column_undeleted_in_this_table(
-  id INTEGER,
+  id INT,
   being_undeleted TEXT @DELETE(6)
 );
 
@@ -2931,7 +2931,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete ve
 The statement ending at line XXXX
 
 CREATE TABLE become_sensitive(
-  id2 INTEGER,
+  id2 INT,
   name TEXT
 );
 
@@ -2956,7 +2956,7 @@ CREATE TABLE become_sensitive(
 The statement ending at line XXXX
 
 CREATE TABLE t_create_verison_changed(
-  id INTEGER
+  id INT
 ) @CREATE(2);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version not equal to previous create version for 't_create_verison_changed'
@@ -2979,7 +2979,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version n
 The statement ending at line XXXX
 
 CREATE TABLE t_delete_verison_changed(
-  id INTEGER
+  id INT
 ) @DELETE(2);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version not equal to previous delete version for 't_delete_verison_changed'
@@ -3002,7 +3002,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version n
 The statement ending at line XXXX
 
 CREATE TABLE t_not_present_in_new_schema(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 't_not_present_in_new_schema'
@@ -3022,7 +3022,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was 
 The statement ending at line XXXX
 
 CREATE TABLE t_became_a_view(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0127: object was a table but is now a view 't_became_a_view'
@@ -3042,7 +3042,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_view_stmt : CQL0127: object was 
 The statement ending at line XXXX
 
 CREATE TABLE t_created_in_wrong_version(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version not equal to previous create version for 't_created_in_wrong_version'
@@ -3062,7 +3062,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0115: current create version n
 The statement ending at line XXXX
 
 CREATE TABLE t_was_correctly_deleted(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: t_was_correctly_deleted: { id: integer }
@@ -3080,7 +3080,7 @@ CREATE TABLE t_was_correctly_deleted(
 The statement ending at line XXXX
 
 CREATE TABLE t_column_name_changed(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0119: column name is different between previous and current schema 'id_'
@@ -3100,7 +3100,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0119: column name is different
 The statement ending at line XXXX
 
 CREATE TABLE t_column_type_changed(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different between previous and current schema 'id'
@@ -3120,7 +3120,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different
 The statement ending at line XXXX
 
 CREATE TABLE t_column_attribute_changed(
-  id INTEGER
+  id INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different between previous and current schema 'id'
@@ -3140,8 +3140,8 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0120: column type is different
 The statement ending at line XXXX
 
 CREATE TABLE t_column_delete_version_changed(
-  id INTEGER,
-  id2 INTEGER @DELETE(2)
+  id INT,
+  id2 INT @DELETE(2)
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete version not equal to previous delete version 'id2'
@@ -3170,8 +3170,8 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0122: column current delete ve
 The statement ending at line XXXX
 
 CREATE TABLE t_column_create_version_changed(
-  id INTEGER,
-  id2 INTEGER @CREATE(2)
+  id INT,
+  id2 INT @CREATE(2)
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0121: column current create version not equal to previous create version 'id2'
@@ -3200,8 +3200,8 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0121: column current create ve
 The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_changed(
-  id INTEGER,
-  id2 INTEGER! DEFAULT 1
+  id INT,
+  id2 INT! DEFAULT 1
 );
 
 Incompatible declarations found
@@ -3234,8 +3234,8 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0125: column current default v
 The statement ending at line XXXX
 
 CREATE TABLE t_column_default_value_ok(
-  id INTEGER,
-  id2 INTEGER! DEFAULT 1
+  id INT,
+  id2 INT! DEFAULT 1
 );
 
   {create_table_stmt}: t_column_default_value_ok: { id: integer, id2: integer notnull has_default }
@@ -3262,8 +3262,8 @@ CREATE TABLE t_column_default_value_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_present(
-  a INTEGER!,
-  b INTEGER,
+  a INT!,
+  b INT,
   PRIMARY KEY (a, b)
 );
 
@@ -3298,8 +3298,8 @@ CREATE TABLE t_additional_attribute_present(
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_attribute_mismatch(
-  a INTEGER!,
-  b INTEGER!,
+  a INT!,
+  b INT!,
   PRIMARY KEY (a, b)
 );
 
@@ -3341,8 +3341,8 @@ test/sem_test_prev.sql:XXXX:1: error: in pk_def : CQL0132: table has a facet tha
 The statement ending at line XXXX
 
 CREATE TABLE t_columns_removed(
-  id INTEGER,
-  id2 INTEGER
+  id INT,
+  id2 INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0129: a column was removed from the table rather than marked with @delete 'id2'
@@ -3368,7 +3368,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0129: a column was re
 The statement ending at line XXXX
 
 CREATE TABLE t_attribute_added(
-  a INTEGER!
+  a INT!
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0134: table has a new non-column facet in the current schema 't_attribute_added'
@@ -3389,7 +3389,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0134: table has a new
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column(
-  a INTEGER!
+  a INT!
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0130: table has columns added without marking them @create 't_additional_column'
@@ -3410,8 +3410,8 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0130: table has columns ad
 The statement ending at line XXXX
 
 CREATE TABLE t_additional_column_ok(
-  a INTEGER!,
-  b INTEGER @CREATE(2)
+  a INT!,
+  b INT @CREATE(2)
 );
 
   {create_table_stmt}: t_additional_column_ok: { a: integer notnull, b: integer }
@@ -3439,8 +3439,8 @@ CREATE TABLE t_additional_column_ok(
 The statement ending at line XXXX
 
 CREATE TABLE t_becomes_temp_table(
-  a INTEGER!,
-  b INTEGER
+  a INT!,
+  b INT
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0135: table create statement attributes different than previous version 't_becomes_temp_table'
@@ -3467,7 +3467,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0135: table crea
 The statement ending at line XXXX
 
 CREATE TABLE t_new_table_create_and_delete(
-  a INTEGER!
+  a INT!
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0131: table has newly added columns that are marked both @create and @delete 't_new_table_create_and_delete'
@@ -3488,7 +3488,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0131: table has newly adde
 The statement ending at line XXXX
 
 CREATE TABLE t_new_legit_column(
-  a INTEGER!
+  a INT!
 );
 
   {create_table_stmt}: t_new_legit_column: { a: integer notnull }
@@ -3507,7 +3507,7 @@ CREATE TABLE t_new_legit_column(
 The statement ending at line XXXX
 
 CREATE TABLE with_create_migrator(
-  id INTEGER
+  id INT
 ) @CREATE(1);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure changed in object 'with_create_migrator'
@@ -3530,7 +3530,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure change
 The statement ending at line XXXX
 
 CREATE TABLE with_create_migrator(
-  id INTEGER
+  id INT
 ) @CREATE(1, ADifferentCreateMigrator);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure changed in object 'with_create_migrator'
@@ -3554,7 +3554,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0118: @create procedure change
 The statement ending at line XXXX
 
 CREATE TABLE with_delete_migrator(
-  id INTEGER
+  id INT
 ) @DELETE(1);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
@@ -3577,7 +3577,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure change
 The statement ending at line XXXX
 
 CREATE TABLE with_delete_migrator(
-  id INTEGER
+  id INT
 ) @DELETE(1, ADifferentDeleteMigrator);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0117: @delete procedure changed in object 'with_delete_migrator'
@@ -3707,8 +3707,8 @@ test/sem_test_prev.sql:XXXX:1: error: in create_index_stmt : CQL0017: index was 
 The statement ending at line XXXX
 
 CREATE TABLE create_column_migrate_test(
-  id INTEGER UNIQUE,
-  id2 INTEGER @CREATE(2, PreviousColumnCreateMigrator)
+  id INT UNIQUE,
+  id2 INT @CREATE(2, PreviousColumnCreateMigrator)
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0124: column @create procedure changed 'id2'
@@ -3739,8 +3739,8 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0124: column @create procedure
 The statement ending at line XXXX
 
 CREATE TABLE delete_column_migrate_test(
-  id INTEGER,
-  id2 INTEGER @DELETE(2, PreviousColumnDeleteMigrator)
+  id INT,
+  id2 INT @DELETE(2, PreviousColumnDeleteMigrator)
 );
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0123: column @delete procedure changed 'id2'
@@ -3770,7 +3770,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0123: column @delete procedure
 The statement ending at line XXXX
 
 CREATE TABLE fk_facet(
-  id INTEGER,
+  id INT,
   FOREIGN KEY (id) REFERENCES create_column_migrate_test (id) ON UPDATE CASCADE
 );
 
@@ -3806,7 +3806,7 @@ test/sem_test_prev.sql:XXXX:1: error: in fk_def : CQL0132: table has a facet tha
 The statement ending at line XXXX
 
 CREATE TABLE cannot_change_to_recreate(
-  id INTEGER
+  id INT
 ) @CREATE(1);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go back to @recreate semantics for 'cannot_change_to_recreate'
@@ -3829,7 +3829,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go 
 The statement ending at line XXXX
 
 CREATE TABLE ok_to_delete_recreate_table(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: ok_to_delete_recreate_table: { id: integer } @recreate
@@ -3848,7 +3848,7 @@ CREATE TABLE ok_to_delete_recreate_table(
 The statement ending at line XXXX
 
 CREATE TABLE ok_to_create_recreate_table(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: ok_to_create_recreate_table: { id: integer } @recreate
@@ -3867,7 +3867,7 @@ CREATE TABLE ok_to_create_recreate_table(
 The statement ending at line XXXX
 
 CREATE TABLE not_ok_to_create_recreate_table(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'not_ok_to_create_recreate_table'
@@ -3888,7 +3888,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from
 The statement ending at line XXXX
 
 CREATE TABLE recreate_deleted_in_the_past(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: recreate_deleted_in_the_past: { id: integer } @recreate
@@ -3907,7 +3907,7 @@ CREATE TABLE recreate_deleted_in_the_past(
 The statement ending at line XXXX
 
 CREATE TABLE recreate_created_in_the_past(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: recreate_created_in_the_past: { id: integer } @recreate
@@ -3928,7 +3928,7 @@ The statement ending at line XXXX
 CREATE TABLE recreate_feel_the_power(
   id TEXT,
   payload TEXT,
-  whatever INTEGER
+  whatever INT
 ) @RECREATE;
 
   {create_table_stmt}: recreate_feel_the_power: { id: text, payload: text, whatever: integer } @recreate
@@ -3959,7 +3959,7 @@ CREATE TABLE recreate_feel_the_power(
 The statement ending at line XXXX
 
 CREATE TABLE disapparing_recreate(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
 test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0126: table was present but now it does not exist (use @delete instead) 'disapparing_recreate'
@@ -4071,7 +4071,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE t_removed_facet(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT uk UNIQUE (id)
 );
 
@@ -4100,7 +4100,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_key_list : CQL0133: non-column face
 The statement ending at line XXXX
 
 CREATE TABLE t_subtle_column_change(
-  id INTEGER REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
+  id INT REFERENCES create_column_migrate_test (id) ON DELETE CASCADE
 );
 
 Incompatible declarations found
@@ -4131,7 +4131,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column t
 The statement ending at line XXXX
 
 CREATE TABLE t_several_columns_added_interleaved(
-  col1 INTEGER,
+  col1 INT,
   PRIMARY KEY (col1)
 );
 
@@ -4200,7 +4200,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE TChanging(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: err
@@ -4333,7 +4333,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE TableWithDeferredOwner(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: err
@@ -4382,7 +4382,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE logical_moving_T1(
-  id INTEGER PRIMARY KEY
+  id INT PRIMARY KEY
 );
 
   {create_table_stmt}: logical_moving_T1: { id: integer notnull primary_key }
@@ -4402,7 +4402,7 @@ CREATE TABLE logical_moving_T1(
 The statement ending at line XXXX
 
 CREATE TABLE logical_moving_T2(
-  id INTEGER REFERENCES logical_moving_T1 (id),
+  id INT REFERENCES logical_moving_T1 (id),
   name TEXT
 );
 
@@ -4454,7 +4454,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE high_numbered_thing(
-  id INTEGER
+  id INT
 ) @CREATE(9999);
 
   {create_table_stmt}: high_numbered_thing: { id: integer } @create(9999)
@@ -4538,7 +4538,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE table_staying(
-  col1 INTEGER PRIMARY KEY!
+  col1 INT PRIMARY KEY!
 ) @RECREATE(my_recreate_group);
 
   {create_table_stmt}: table_staying: { col1: integer notnull primary_key } @recreate(my_recreate_group)
@@ -4562,7 +4562,7 @@ The statement ending at line XXXX
 
 CREATE TABLE table_going(
   col1 TEXT,
-  col2 INTEGER,
+  col2 INT,
   FOREIGN KEY (col2) REFERENCES table_staying (col1) ON UPDATE CASCADE ON DELETE CASCADE
 ) @RECREATE(my_recreate_group);
 
@@ -4600,8 +4600,8 @@ CREATE TABLE table_going(
 The statement ending at line XXXX
 
 CREATE TABLE adding_with_migrators_ok(
-  id INTEGER PRIMARY KEY,
-  id2 INTEGER
+  id INT PRIMARY KEY,
+  id2 INT
 ) @CREATE(2);
 
   {create_table_stmt}: adding_with_migrators_ok: { id: integer notnull primary_key, id2: integer } @create(2)
@@ -4629,7 +4629,7 @@ CREATE TABLE adding_with_migrators_ok(
 
 The statement ending at line XXXX
 
-DECLARE ENUM foo_enum INTEGER (
+DECLARE ENUM foo_enum INT (
   a = 10,
   b = 2
 );
@@ -4650,7 +4650,7 @@ DECLARE ENUM foo_enum INTEGER (
 The statement ending at line XXXX
 
 CREATE TABLE foo_with_check(
-  x INTEGER CHECK(x = 10) 
+  x INT CHECK(x = 10) 
 );
 
 Incompatible declarations found
@@ -4678,7 +4678,7 @@ test/sem_test_prev.sql:XXXX:1: error: in col_def : CQL0128: table has a column t
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 );
 
   {create_virtual_table_stmt}: unchanged_virtual: { id: integer } virtual @recreate
@@ -4702,7 +4702,7 @@ CREATE VIRTUAL TABLE unchanged_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 );
 
   {create_virtual_table_stmt}: deleted_virtual: { id: integer } virtual @recreate
@@ -4726,7 +4726,7 @@ CREATE VIRTUAL TABLE deleted_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE undead_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 ) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go back to @recreate semantics for 'undead_virtual'
@@ -4757,7 +4757,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0114: current schema can't go 
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 );
 
   {create_virtual_table_stmt}: changing_virtual: { id: integer } virtual @recreate
@@ -4781,7 +4781,7 @@ CREATE VIRTUAL TABLE changing_virtual USING my_virtual (goo) AS (
 The statement ending at line XXXX
 
 CREATE VIRTUAL TABLE delete_change_virtual USING my_virtual (goo) AS (
-  id INTEGER
+  id INT
 ) @DELETE(3, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0116: current delete version not equal to previous delete version for 'delete_change_virtual'
@@ -4840,7 +4840,7 @@ CREATE TEMP VIEW this_view_is_gone AS
 The statement ending at line XXXX
 
 CREATE TEMP TABLE this_table_is_gone(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: this_table_is_gone: { id: integer }
@@ -4899,7 +4899,7 @@ END;
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_t(
-  id INTEGER! ON CONFLICT FAIL
+  id INT! ON CONFLICT FAIL
 );
 
   {create_table_stmt}: conflict_clause_t: { id: integer notnull }
@@ -4919,7 +4919,7 @@ CREATE TABLE conflict_clause_t(
 The statement ending at line XXXX
 
 CREATE TABLE conflict_clause_pk(
-  id INTEGER!,
+  id INT!,
   CONSTRAINT pk1 PRIMARY KEY (id) ON CONFLICT ROLLBACK
 );
 
@@ -4947,7 +4947,7 @@ CREATE TABLE conflict_clause_pk(
 The statement ending at line XXXX
 
 CREATE TABLE dropping_this(
-  f1 INTEGER,
+  f1 INT,
   f2 TEXT
 ) @RECREATE(foo);
 
@@ -4976,7 +4976,7 @@ test/sem_test_prev.sql:XXXX:1: error: in create_table_stmt : CQL0448: table was 
 The statement ending at line XXXX
 
 CREATE TABLE gaining_group(
-  id INTEGER
+  id INT
 ) @RECREATE;
 
   {create_table_stmt}: gaining_group: { id: integer } @recreate
@@ -4995,7 +4995,7 @@ CREATE TABLE gaining_group(
 The statement ending at line XXXX
 
 CREATE TABLE unsub_resub_trickery(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: unsub_resub_trickery: { id: integer }
@@ -5057,7 +5057,7 @@ The statement ending at line XXXX
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
-  guid INTEGER! PRIMARY KEY,
+  guid INT! PRIMARY KEY,
   gal TEXT
 );
 
@@ -5092,8 +5092,8 @@ CREATE TABLE backed(
 The statement ending at line XXXX
 
 CREATE TABLE transitioning_to_baseline(
-  x INTEGER,
-  y INTEGER
+  x INT,
+  y INT
 ) @RECREATE(foo);
 
 test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate) 'transitioning_to_baseline'
@@ -5121,7 +5121,7 @@ test/sem_test_prev.sql:XXXX:1: error: in str : CQL0377: table transitioning from
 The statement ending at line XXXX
 
 CREATE TABLE resubscribing(
-  id INTEGER
+  id INT
 );
 
   {create_table_stmt}: resubscribing: { id: integer }

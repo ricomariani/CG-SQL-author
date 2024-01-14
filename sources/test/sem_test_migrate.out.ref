@@ -227,7 +227,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!;
+DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -264,7 +264,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT;
+DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -293,7 +293,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, ind
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!;
+DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -363,7 +363,7 @@ DECLARE bool TYPE BOOL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE int TYPE INTEGER;
+DECLARE int TYPE INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -378,7 +378,7 @@ DECLARE int TYPE INTEGER;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE integer TYPE INTEGER;
+DECLARE integer TYPE INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -393,7 +393,7 @@ DECLARE integer TYPE INTEGER;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long TYPE LONG_INT;
+DECLARE long TYPE LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -468,7 +468,7 @@ DECLARE blob TYPE BLOB;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long_int TYPE LONG_INT;
+DECLARE long_int TYPE LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -490,10 +490,10 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 CREATE TABLE foo(
-  id INTEGER!,
-  rate LONG_INT @DELETE(5, deletor),
-  rate_2 LONG_INT @DELETE(4),
-  id2 INTEGER @CREATE(4),
+  id INT!,
+  rate LONG @DELETE(5, deletor),
+  rate_2 LONG @DELETE(4),
+  id2 INT @CREATE(4),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -576,7 +576,7 @@ CREATE INDEX recent_index ON foo (name_2);
 The statement ending at line XXXX
 
 CREATE TABLE fk_not_there_yet(
-  id INTEGER,
+  id INT,
   text1 TEXT REFERENCES foo (name_2),
   text2 TEXT,
   FOREIGN KEY (text2) REFERENCES foo (name_2)
@@ -653,7 +653,7 @@ The statement ending at line XXXX
 
 CREATE PROC deletor ()
 BEGIN
-  DECLARE i INTEGER;
+  DECLARE i INT;
 END;
 
 test/sem_test_migrate.sql:XXXX:1: error: in str : CQL0188: procedure is supposed to do schema migration but it doesn't have any DML 'deletor'
@@ -670,7 +670,7 @@ test/sem_test_migrate.sql:XXXX:1: error: in str : CQL0188: procedure is supposed
 The statement ending at line XXXX
 
 CREATE TABLE bar(
-  id INTEGER!,
+  id INT!,
   name TEXT @CREATE(5, name_creator)
 );
 
@@ -699,7 +699,7 @@ CREATE TABLE bar(
 
 The statement ending at line XXXX
 
-CREATE PROC name_creator (i INTEGER)
+CREATE PROC name_creator (i INT)
 BEGIN
   SELECT 1 AS x;
 END;
@@ -735,7 +735,7 @@ test/sem_test_migrate.sql:XXXX:1: error: in params : CQL0233: procedure previous
 The statement ending at line XXXX
 
 CREATE TABLE t1(
-  id INTEGER
+  id INT
 ) @CREATE(7);
 
   {create_table_stmt}: t1: { id: integer } deleted @create(7)
@@ -756,7 +756,7 @@ CREATE TABLE t1(
 The statement ending at line XXXX
 
 CREATE TABLE t2(
-  id INTEGER
+  id INT
 ) @CREATE(5);
 
   {create_table_stmt}: t2: { id: integer } @create(5)
@@ -777,7 +777,7 @@ CREATE TABLE t2(
 The statement ending at line XXXX
 
 CREATE TABLE t3(
-  id INTEGER
+  id INT
 ) @DELETE(4);
 
   {create_table_stmt}: t3: { id: integer } deleted @delete(4)
@@ -798,7 +798,7 @@ CREATE TABLE t3(
 The statement ending at line XXXX
 
 CREATE TABLE t4(
-  id INTEGER
+  id INT
 ) @DELETE(5);
 
   {create_table_stmt}: t4: { id: integer } @delete(5)

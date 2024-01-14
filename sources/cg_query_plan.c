@@ -76,7 +76,7 @@ static bool_t qp_table_function_callback(
       case SEM_TYPE_BOOL:
       case SEM_TYPE_INTEGER:
       case SEM_TYPE_LONG_INTEGER:
-        type = "INTEGER";
+        type = "INT";
         break;
       case SEM_TYPE_TEXT:
         type = "TEXT";

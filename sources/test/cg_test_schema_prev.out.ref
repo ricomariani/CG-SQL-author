@@ -2,7 +2,7 @@
 @ATTRIBUTE(cql:deterministic)
 DECLARE SELECT FUNC my_func (x TEXT) TEXT;
 
-DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER!;
+DECLARE SELECT FUNC filter_ (id INT) INT!;
 
 @DECLARE_SCHEMA_REGION shared;
 
@@ -12,10 +12,10 @@ DECLARE SELECT FUNC filter_ (id INTEGER) INTEGER!;
 
 @begin_schema_region shared;
 CREATE TABLE `quoted foo`(
-  `an id` INTEGER PRIMARY KEY,
-  rate LONG_INT @DELETE(5),
-  `rate 2` LONG_INT @DELETE(4, DeleteRate2Proc),
-  `id 2` INTEGER DEFAULT 12345 @CREATE(4, CreateId2Proc),
+  `an id` INT PRIMARY KEY,
+  rate LONG @DELETE(5),
+  `rate 2` LONG @DELETE(4, DeleteRate2Proc),
+  `id 2` INT DEFAULT 12345 @CREATE(4, CreateId2Proc),
   name TEXT @CREATE(5),
   name_2 TEXT @CREATE(6)
 );
@@ -23,7 +23,7 @@ CREATE TABLE `quoted foo`(
 
 @begin_schema_region shared;
 CREATE TABLE added_table(
-  `an id` INTEGER!,
+  `an id` INT!,
   name1 TEXT,
   name2 TEXT @CREATE(4)
 ) @CREATE(3) @DELETE(5);
@@ -31,21 +31,21 @@ CREATE TABLE added_table(
 
 @begin_schema_region shared;
 CREATE TABLE g1(
-  `an id` INTEGER PRIMARY KEY,
+  `an id` INT PRIMARY KEY,
   name TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region shared;
 CREATE TABLE `use g1`(
-  `an id` INTEGER PRIMARY KEY REFERENCES g1 (`an id`),
+  `an id` INT PRIMARY KEY REFERENCES g1 (`an id`),
   name2 TEXT
 ) @RECREATE(gr1);
 @end_schema_region;
 
 @begin_schema_region extra;
 CREATE TABLE table2(
-  `an id` INTEGER! REFERENCES `quoted foo` (`an id`),
+  `an id` INT! REFERENCES `quoted foo` (`an id`),
   name1 TEXT @CREATE(2, CreateName1Proc),
   name2 TEXT @CREATE(2, CreateName2Proc),
   name3 TEXT @CREATE(2),
@@ -55,114 +55,114 @@ CREATE TABLE table2(
 
 @begin_schema_region other;
 CREATE TABLE other_table(
-  `an id` INTEGER
+  `an id` INT
 );
 @end_schema_region;
 
 CREATE TABLE table_to_recreate(
-  `an id` INTEGER!,
+  `an id` INT!,
   name TEXT
 ) @RECREATE;
 
 CREATE TABLE grouped_table_1(
-  `an id` INTEGER!,
+  `an id` INT!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_2(
-  `an id` INTEGER!,
+  `an id` INT!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE grouped_table_3(
-  `an id` INTEGER!,
+  `an id` INT!,
   name TEXT
 ) @RECREATE(my_group);
 
 CREATE TABLE t5(
-  `an id` LONG_INT PRIMARY KEY AUTOINCREMENT,
+  `an id` LONG PRIMARY KEY AUTOINCREMENT,
   data TEXT
 );
 
 CREATE TABLE t6(
-  `an id` LONG_INT PRIMARY KEY,
+  `an id` LONG PRIMARY KEY,
   FOREIGN KEY (`an id`) REFERENCES t5 (`an id`) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE VIRTUAL TABLE a_virtual_table USING a_module (this, that, the_other) AS (
-  `an id` INTEGER @SENSITIVE,
+  `an id` INT @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE @EPONYMOUS epon USING epon AS (
-  `an id` INTEGER @SENSITIVE,
+  `an id` INT @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE complex_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-  `an id` INTEGER @SENSITIVE,
+  `an id` INT @SENSITIVE,
   t TEXT
 );
 
 CREATE VIRTUAL TABLE deleted_virtual_table USING a_module (ARGUMENTS FOLLOWING) AS (
-  `an id` INTEGER @SENSITIVE,
+  `an id` INT @SENSITIVE,
   t TEXT
 ) @DELETE(4, cql:module_must_not_be_deleted_see_docs_for_CQL0392);
 
 CREATE TABLE `migrated from recreate`(
-  `an id` INTEGER PRIMARY KEY,
+  `an id` INT PRIMARY KEY,
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE migrated_from_recreate2(
-  `an id` INTEGER PRIMARY KEY REFERENCES `migrated from recreate` (`an id`),
+  `an id` INT PRIMARY KEY REFERENCES `migrated from recreate` (`an id`),
   t TEXT
 ) @CREATE(4, cql:from_recreate);
 
 CREATE TABLE conflict_clause_t(
-  `an id` INTEGER! ON CONFLICT FAIL
+  `an id` INT! ON CONFLICT FAIL
 );
 
 CREATE TABLE conflict_clause_pk(
-  `an id` INTEGER!,
+  `an id` INT!,
   CONSTRAINT `pk 1` PRIMARY KEY (`an id`) ON CONFLICT ROLLBACK
 );
 
 CREATE TABLE expression_pk(
-  `an id` INTEGER!,
+  `an id` INT!,
   CONSTRAINT `pk 1` PRIMARY KEY (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE expression_uk(
-  `an id` INTEGER!,
+  `an id` INT!,
   CONSTRAINT uk1 UNIQUE (`an id` / 2, `an id` % 2)
 );
 
 CREATE TABLE delete__second(
-  `an id` INTEGER PRIMARY KEY
+  `an id` INT PRIMARY KEY
 ) @DELETE(7);
 
 CREATE TABLE delete_first(
-  `an id` INTEGER REFERENCES delete__second (`an id`)
+  `an id` INT REFERENCES delete__second (`an id`)
 ) @DELETE(7);
 
 CREATE TABLE `create first`(
-  `an id` INTEGER PRIMARY KEY
+  `an id` INT PRIMARY KEY
 ) @CREATE(7);
 
 CREATE TABLE create_second(
-  `an id` INTEGER REFERENCES `create first` (`an id`)
+  `an id` INT REFERENCES `create first` (`an id`)
 ) @CREATE(7);
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE blob_storage_at_create_table(
-  x INTEGER,
+  x INT,
   y TEXT
 ) @CREATE(5);
 
 @ATTRIBUTE(cql:blob_storage)
 CREATE TABLE blob_storage_baseline_table(
-  x INTEGER,
+  x INT,
   y TEXT
 );
 
@@ -178,8 +178,8 @@ CREATE TABLE backing(
 
 @ATTRIBUTE(cql:backed_by=backing)
 CREATE TABLE backed(
-  x INTEGER PRIMARY KEY,
-  y INTEGER
+  x INT PRIMARY KEY,
+  y INT
 );
 
 @ATTRIBUTE(cql:backing_table)
@@ -190,17 +190,17 @@ CREATE TABLE recreate_backing(
 
 @ATTRIBUTE(cql:backed_by=recreate_backing)
 CREATE TABLE recreate_backed(
-  x INTEGER PRIMARY KEY,
-  y INTEGER
+  x INT PRIMARY KEY,
+  y INT
 ) @RECREATE(foo);
 
 CREATE TABLE after_backed_table(
-  x INTEGER PRIMARY KEY
+  x INT PRIMARY KEY
 ) @RECREATE(foo);
 
 @begin_schema_region other;
 CREATE TABLE unsub_voyage(
-  v1 INTEGER,
+  v1 INT,
   v3 TEXT @CREATE(3),
   v5 TEXT @CREATE(5),
   v7 TEXT @CREATE(7)
@@ -209,21 +209,21 @@ CREATE TABLE unsub_voyage(
 
 @begin_schema_region other;
 CREATE TABLE unsub_inner(
-  `an id` INTEGER PRIMARY KEY,
+  `an id` INT PRIMARY KEY,
   name_inner TEXT
 );
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE TABLE unsub_outer(
-  `an id` INTEGER PRIMARY KEY REFERENCES unsub_inner (`an id`),
+  `an id` INT PRIMARY KEY REFERENCES unsub_inner (`an id`),
   name_outer TEXT
 );
 @end_schema_region;
 
 @begin_schema_region other;
 CREATE TABLE some_table(
-  `an id` INTEGER
+  `an id` INT
 );
 @end_schema_region;
 

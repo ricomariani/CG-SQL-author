@@ -227,7 +227,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!, value_ TEXT!) OBJECT<cql_string_list>!;
+DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -264,7 +264,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INTEGER!) TEXT;
+DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -293,7 +293,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, ind
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INTEGER!;
+DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -363,7 +363,7 @@ DECLARE bool TYPE BOOL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE int TYPE INTEGER;
+DECLARE int TYPE INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -378,7 +378,7 @@ DECLARE int TYPE INTEGER;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE integer TYPE INTEGER;
+DECLARE integer TYPE INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -393,7 +393,7 @@ DECLARE integer TYPE INTEGER;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long TYPE LONG_INT;
+DECLARE long TYPE LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -468,7 +468,7 @@ DECLARE blob TYPE BLOB;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long_int TYPE LONG_INT;
+DECLARE long_int TYPE LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok

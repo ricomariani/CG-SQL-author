@@ -1,46 +1,46 @@
 
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc1 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc1 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc2 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc2 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc3 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc3 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc4 () (id INTEGER!);
+DECLARE PROC sample_proc4 () (id INT!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc5 () (id INTEGER!);
+DECLARE PROC sample_proc5 () (id INT!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc6 () (id INTEGER!);
+DECLARE PROC sample_proc6 () (id INT!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc7 () (id INTEGER!);
+DECLARE PROC sample_proc7 () (id INT!);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc11 () OUT (id INTEGER!) USING TRANSACTION;
+DECLARE PROC sample_proc11 () OUT (id INT!) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc12 () OUT (id INTEGER!) USING TRANSACTION;
+DECLARE PROC sample_proc12 () OUT (id INT!) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc13 () OUT (id INTEGER!) USING TRANSACTION;
+DECLARE PROC sample_proc13 () OUT (id INT!) USING TRANSACTION;
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc21 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc21 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc22 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc22 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc24 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc24 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 -- The statement ending at line XXXX
-DECLARE PROC sample_proc25 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+DECLARE PROC sample_proc25 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 
 
 -- The statement ending at line XXXX
@@ -166,8 +166,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc7_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -181,12 +181,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -299,8 +299,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc13_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -314,12 +314,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -435,8 +435,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc14_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -450,12 +450,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -551,8 +551,8 @@ BEGIN
   );
   CREATE INDEX IF NOT EXISTS p_id ON primary_as_column (id_);
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -566,12 +566,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -669,8 +669,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc16_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -684,12 +684,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -769,8 +769,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc17_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -784,12 +784,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -894,8 +894,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc18_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -909,12 +909,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -994,8 +994,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc19_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1039,8 +1039,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc20_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1054,12 +1054,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -1139,8 +1139,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc21_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1154,12 +1154,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -1277,8 +1277,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc22_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1292,12 +1292,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -1414,8 +1414,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc23_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1429,12 +1429,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -1541,8 +1541,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc24_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1556,12 +1556,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -1651,8 +1651,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc25_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -1666,12 +1666,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -1804,7 +1804,7 @@ BEGIN
     config TEXT!,
     param TEXT!,
     value TEXT,
-    type LONG_INT!,
+    type LONG!,
     logging_id TEXT,
     PRIMARY KEY (config, param)
   );
@@ -2007,16 +2007,16 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc31_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS T1(
-    id INTEGER
+    id INT
   );
   CREATE TABLE IF NOT EXISTS T2(
-    id INTEGER
+    id INT
   );
   CREATE TABLE IF NOT EXISTS T4(
-    id INTEGER PRIMARY KEY
+    id INT PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS T3(
-    id INTEGER,
+    id INT,
     FOREIGN KEY (id) REFERENCES T4 (id) ON UPDATE NO ACTION
   );
 END;
@@ -2088,8 +2088,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_sample_proc311_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS Baa(
-    id INTEGER!,
-    `id 2` LONG_INT,
+    id INT!,
+    `id 2` LONG,
     `id 3` TEXT
   );
   CREATE UNIQUE INDEX IF NOT EXISTS `Baa id index` ON Baa (id, `id 2`);
@@ -2103,12 +2103,12 @@ BEGIN
     CONSTRAINT unq UNIQUE (num, label)
   );
   CREATE TABLE IF NOT EXISTS `table C`(
-    id INTEGER!,
+    id INT!,
     `a pk` REAL!,
     uid REAL,
     name TEXT,
     name2 TEXT,
-    num LONG_INT,
+    num LONG,
     FOREIGN KEY (id, num) REFERENCES Baa (id, `id 2`) ON UPDATE NO ACTION,
     FOREIGN KEY (`a pk`) REFERENCES `table a` (`a pk`) ON UPDATE NO ACTION,
     FOREIGN KEY (uid, name) REFERENCES dbl_table (num, label) ON UPDATE NO ACTION
@@ -2188,11 +2188,11 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_no_long_to_conversion_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS t5(
-    id LONG_INT PRIMARY KEY AUTOINCREMENT,
+    id LONG PRIMARY KEY AUTOINCREMENT,
     data TEXT
   );
   CREATE TABLE IF NOT EXISTS t6(
-    id LONG_INT PRIMARY KEY,
+    id LONG PRIMARY KEY,
     FOREIGN KEY (id) REFERENCES t5 (id) ON UPDATE CASCADE ON DELETE CASCADE
   );
 END;
@@ -2256,8 +2256,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_self_ref_proc_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
-    id INTEGER PRIMARY KEY,
-    `id 2` INTEGER @SENSITIVE,
+    id INT PRIMARY KEY,
+    `id 2` INT @SENSITIVE,
     name TEXT,
     FOREIGN KEY (`id 2`) REFERENCES self_ref_table (id)
   );
@@ -2296,8 +2296,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_self_ref_proc_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table(
-    id INTEGER PRIMARY KEY,
-    `id 2` INTEGER @SENSITIVE,
+    id INT PRIMARY KEY,
+    `id 2` INT @SENSITIVE,
     name TEXT,
     FOREIGN KEY (`id 2`) REFERENCES self_ref_table (id)
   );
@@ -2336,8 +2336,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_self_ref_proc2_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table2(
-    id INTEGER PRIMARY KEY,
-    `id 2` INTEGER REFERENCES self_ref_table2 (id),
+    id INT PRIMARY KEY,
+    `id 2` INT REFERENCES self_ref_table2 (id),
     name TEXT
   );
 END;
@@ -2375,8 +2375,8 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_self_ref_proc2_no_data_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS self_ref_table2(
-    id INTEGER PRIMARY KEY,
-    `id 2` INTEGER REFERENCES self_ref_table2 (id),
+    id INT PRIMARY KEY,
+    `id 2` INT REFERENCES self_ref_table2 (id),
     name TEXT
   );
 END;
@@ -2414,11 +2414,11 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_test_too_many_row_in_child_table_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS test1(
-    id INTEGER PRIMARY KEY
+    id INT PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS test2(
     name TEXT,
-    id INTEGER,
+    id INT,
     FOREIGN KEY (id) REFERENCES test1 (id)
   );
 END;
@@ -2466,11 +2466,11 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_test_too_many_row_in_child_table_2_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS test1(
-    id INTEGER PRIMARY KEY
+    id INT PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS test2(
     name TEXT,
-    id INTEGER,
+    id INT,
     FOREIGN KEY (id) REFERENCES test1 (id)
   );
 END;
@@ -2520,7 +2520,7 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_test_virtual_table_proc_create_tables()
 BEGIN
   CREATE VIRTUAL TABLE IF NOT EXISTS basic_virtual USING module_name (this, that, the_other) AS (
-    id INTEGER,
+    id INT,
     t TEXT
   );
 END;
@@ -2743,22 +2743,22 @@ DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 CREATE PROC test_MyProc_create_tables()
 BEGIN
   CREATE TABLE IF NOT EXISTS trig_test_t1(
-    pk LONG_INT PRIMARY KEY
+    pk LONG PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS trig_test_t2(
-    pk LONG_INT PRIMARY KEY,
-    ak LONG_INT REFERENCES trig_test_t1 (pk)
+    pk LONG PRIMARY KEY,
+    ak LONG REFERENCES trig_test_t1 (pk)
   );
   CREATE TABLE IF NOT EXISTS trig_test_t4(
-    pk LONG_INT PRIMARY KEY,
-    ak LONG_INT REFERENCES trig_test_t2 (pk)
+    pk LONG PRIMARY KEY,
+    ak LONG REFERENCES trig_test_t2 (pk)
   );
   CREATE TABLE IF NOT EXISTS trig_test_tx(
-    ak LONG_INT PRIMARY KEY
+    ak LONG PRIMARY KEY
   );
   CREATE TABLE IF NOT EXISTS trig_test_t3(
-    pk LONG_INT PRIMARY KEY,
-    ak LONG_INT REFERENCES trig_test_t2 (pk)
+    pk LONG PRIMARY KEY,
+    ak LONG REFERENCES trig_test_t2 (pk)
   );
 END;
 
@@ -2842,7 +2842,7 @@ END;
 
 @attribute(cql:backed_by=backing)
 CREATE TABLE IF NOT EXISTS backed(
-  pk INTEGER PRIMARY KEY,
+  pk INT PRIMARY KEY,
   x TEXT,
   y REAL
 );

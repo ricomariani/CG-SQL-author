@@ -174,7 +174,7 @@ create table child_blob_primary_key (
 );
 
 -- TEST: dummy_table only
--- + DECLARE PROC sample_proc1 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+-- + DECLARE PROC sample_proc1 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 -- + CREATE TEMP TABLE test_sample_proc1(LIKE sample_proc1);
 -- + DROP TABLE test_sample_proc1;
 @attribute(cql:autotest=(dummy_table))
@@ -184,7 +184,7 @@ begin
 end;
 
 -- TEST: dummy_insert only
--- + DECLARE PROC sample_proc2 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+-- + DECLARE PROC sample_proc2 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 -- + INSERT INTO test_sample_proc2 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_insert))
 create proc sample_proc2()
@@ -193,7 +193,7 @@ begin
 end;
 
 -- TEST: dummy_select only
--- + DECLARE PROC sample_proc3 () (id INTEGER!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG_INT);
+-- + DECLARE PROC sample_proc3 () (id INT!, `a pk` REAL!, uid REAL, name TEXT, name2 TEXT, num LONG);
 -- + SELECT * FROM test_sample_proc3;
 @attribute(cql:autotest=(dummy_table, dummy_select))
 create proc sample_proc3()
@@ -202,7 +202,7 @@ begin
 end;
 
 -- TEST: dummy_table and dummy_insert only
--- + DECLARE PROC sample_proc4 () (id INTEGER!);
+-- + DECLARE PROC sample_proc4 () (id INT!);
 -- + CREATE TEMP TABLE test_sample_proc4(LIKE sample_proc4);
 -- + DROP TABLE test_sample_proc4;
 -- + INSERT INTO test_sample_proc4 FROM ARGUMENTS;
@@ -213,7 +213,7 @@ begin
 end;
 
 -- TEST: dummy_table and dummy_insert only
--- + DECLARE PROC sample_proc5 () (id INTEGER!);
+-- + DECLARE PROC sample_proc5 () (id INT!);
 -- + CREATE TEMP TABLE test_sample_proc5(LIKE sample_proc5);
 -- + DROP TABLE test_sample_proc5;
 -- + SELECT * FROM test_sample_proc5;
@@ -224,7 +224,7 @@ begin
 end;
 
 -- TEST: dummy_select and dummy_insert only
--- + DECLARE PROC sample_proc6 () (id INTEGER!);
+-- + DECLARE PROC sample_proc6 () (id INT!);
 -- + SELECT * FROM test_sample_proc6;
 -- + INSERT INTO test_sample_proc6 FROM ARGUMENTS;
 @attribute(cql:autotest=(dummy_table, dummy_select, dummy_insert))
@@ -234,7 +234,7 @@ begin
 end;
 
 -- TEST: dummy_table, dummy_select, dummy_insert, dummy_test
--- + DECLARE PROC sample_proc7 () (id INTEGER!);
+-- + DECLARE PROC sample_proc7 () (id INT!);
 -- + CREATE TEMP TABLE test_sample_proc7(LIKE sample_proc7);
 -- + DROP TABLE test_sample_proc7;
 -- + INSERT INTO test_sample_proc7 FROM ARGUMENTS;
@@ -263,7 +263,7 @@ begin
 end;
 
 -- TEST: Proc has dummy_result_set attribute
--- + DECLARE PROC sample_proc12 () OUT (id INTEGER!) USING TRANSACTION;
+-- + DECLARE PROC sample_proc12 () OUT (id INT!) USING TRANSACTION;
 -- + CREATE PROC generate_sample_proc12_row(LIKE sample_proc12)
 -- + DECLARE curs CURSOR LIKE sample_proc12
 @attribute(cql:autotest=(dummy_result_set))
@@ -275,7 +275,7 @@ begin
 end;
 
 -- TEST: Proc that generates table/insert/select/result_set/dummy_test
--- + DECLARE PROC sample_proc13 () OUT (id INTEGER!) USING TRANSACTION;
+-- + DECLARE PROC sample_proc13 () OUT (id INT!) USING TRANSACTION;
 -- + DECLARE SELECT FUNC is_declare_func_enabled () BOOL!;
 -- + CREATE PROC test_sample_proc13_create_tables()
 -- + CREATE PROC test_sample_proc13_populate_tables()
@@ -712,7 +712,7 @@ begin
 end;
 
 -- TEST: test that column type of id in t5, t6 tables is not converted to integer.
--- +2 id LONG_INT PRIMARY KEY
+-- +2 id LONG PRIMARY KEY
 @attribute(cql:autotest=(dummy_test))
 create proc no_long_to_conversion()
 begin
@@ -893,7 +893,7 @@ end;
 
 -- TEST: test virtual table in dummy_test helper
 -- + CREATE VIRTUAL TABLE IF NOT EXISTS basic_virtual USING module_name (this, that, the_other) AS (
--- +   id INTEGER,
+-- +   id INT,
 -- +   t TEXT
 -- + );
 -- + CREATE PROC test_test_virtual_table_proc_drop_tables()
@@ -969,26 +969,26 @@ begin
 end;
 
 CREATE TABLE trig_test_t1(
-  pk LONG_INT PRIMARY KEY
+  pk LONG PRIMARY KEY
 );
 
 CREATE TABLE trig_test_t2(
-  pk LONG_INT PRIMARY KEY,
-  ak LONG_INT REFERENCES trig_test_t1 (pk)
+  pk LONG PRIMARY KEY,
+  ak LONG REFERENCES trig_test_t1 (pk)
 );
 
 CREATE TABLE trig_test_t3(
-  pk LONG_INT PRIMARY KEY,
-  ak LONG_INT REFERENCES trig_test_t2 (pk)
+  pk LONG PRIMARY KEY,
+  ak LONG REFERENCES trig_test_t2 (pk)
 );
 
 CREATE TABLE trig_test_t4(
-  pk LONG_INT PRIMARY KEY,
-  ak LONG_INT REFERENCES trig_test_t2 (pk)
+  pk LONG PRIMARY KEY,
+  ak LONG REFERENCES trig_test_t2 (pk)
 );
 
 CREATE TABLE IF NOT EXISTS trig_test_tx(
-  ak LONG_INT PRIMARY KEY
+  ak LONG PRIMARY KEY
 );
 
 CREATE TRIGGER IF NOT EXISTS trig

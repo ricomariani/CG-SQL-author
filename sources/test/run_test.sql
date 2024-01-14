@@ -461,11 +461,11 @@ BEGIN
   EXPECT_SQL_TOO!(abs(2) = 2);
   EXPECT_SQL_TOO!(abs(-2.0) = 2);
   EXPECT_SQL_TOO!(abs(2.0) = 2);
-  
+
   LET t := 3L;
   EXPECT_SQL_TOO!(abs(t) = t);
   EXPECT_SQL_TOO!(abs(-t) = t);
-  
+
   t := -4;
   EXPECT_SQL_TOO!(abs(t) = -t);
   EXPECT_SQL_TOO!(abs(-t) = -t);
@@ -514,19 +514,12 @@ end;
 
 TEST!(simple_recursion,
 BEGIN
-  declare scratch int!;
-  call fib(1, scratch);
-  EXPECT!(scratch == 1);
-  call fib(2, scratch);
-  EXPECT!(scratch == 1);
-  call fib(3, scratch);
-  EXPECT!(scratch == 2);
-  call fib(4, scratch);
-  EXPECT!(scratch == 3);
-  call fib(5, scratch);
-  EXPECT!(scratch == 5);
-  call fib(6, scratch);
-  EXPECT!(scratch == 8);
+  EXPECT!(fib(1) == 1);
+  EXPECT!(fib(2) == 1);
+  EXPECT!(fib(3) == 2);
+  EXPECT!(fib(4) == 3);
+  EXPECT!(fib(5) == 5);
+  EXPECT!(fib(6) == 8);
 END);
 
 -- test elementary cursor on select with no tables, still round trips through sqlite
@@ -541,7 +534,6 @@ BEGIN
   EXPECT!(col2 == 2.5);
   fetch basic_cursor into col1, col2;
   EXPECT!(not basic_cursor);
-  close basic_cursor;
 END);
 
 -- the most expensive way to swap two variables ever :)
@@ -554,7 +546,6 @@ BEGIN
   EXPECT!(exchange_cursor);
   EXPECT!(arg1 == 11);
   EXPECT!(arg2 == 7);
-  close exchange_cursor;
 END);
 
 proc make_mixed()
@@ -932,34 +923,23 @@ end;
 
 TEST!(loop_control_flow,
 BEGIN
-  declare id_ int!;
-  declare name_ text;
-  declare code_ long int;
-  declare flag_  bool;
-  declare rate_ real;
-  declare bl_ blob;
-  declare count int!;
-
   call load_more_mixed();
 
-  declare read_cursor cursor for select * from mixed;
+  cursor C for select * from mixed;
 
-  count := 0;
-  loop fetch read_cursor into id_, name_, code_, flag_, rate_, bl_
+  let count := 0;
+  loop fetch C
   begin
     -- skip number two
-    if id_ == 2 then
-      continue;
-    end if;
+    if C.id == 2 continue;
     count += 1;
+
     -- should break on number 4
-    if name_ == "some name" then
-      leave;
-    end if;
+    if C.name == "some name" leave;
   end;
 
   EXPECT!(count == 3); -- there should be three rows tested
-  EXPECT!(id_  == 4);  -- the match goes with id #4
+  EXPECT!(C.id  == 4);  -- the match goes with id #4
 END);
 
 -- basic test of while loop plus leave and continue
@@ -1021,32 +1001,31 @@ END);
 -- error handling with try catch throw
 proc throws(out did_throw bool!)
 begin
-  declare x int!;
-  did_throw := 0;
+  did_throw := false;
   try
-    -- this fails
-    x := (select id from mixed where id = 999);
+    -- this fails, there is no such row
+    let x := (select id from mixed where id = 999);
   catch
-    did_throw := 1;
+    did_throw := true;
     -- and rethrow!
     throw;
   end;
-  did_throw := 0; -- test fails if this runs, it should not
+  -- test fails if this runs, it should not
+  let divide_by_zero := one / zero;  -- this does not run
 end;
 
 TEST!(throw_and_catch,
 BEGIN
-  declare did_throw bool!;
-  declare did_continue bool!;
-  did_continue := 0;
+  let did_throw := false;
+  let did_continue := false;
   try
     call throws(did_throw);
-    did_throw := one / zero;  -- this does not run
+    let divide_by_zero := one / zero;  -- this does not run
   catch
-    did_continue := 1;
+    did_continue := true;
   end;
-  EXPECT!(did_throw == 1);  -- exception was caught
-  EXPECT!(did_continue == 1);  -- execution continued
+  EXPECT!(did_throw);  -- exception was caught
+  EXPECT!(did_continue);  -- execution continued
 END);
 
 -- the catch block should not run if no errors
@@ -1113,14 +1092,16 @@ end;
 
 TEST!(string_case_test,
 BEGIN
-  declare result text;
-  call string_case_tester1("1", result);
+  let result := string_case_tester1("1");
   EXPECT!(result == "100");
-  call string_case_tester1("2", result);
+
+  result := string_case_tester1("2");
   EXPECT!(result == "200");
-  call string_case_tester1("3", result);
+
+  result := string_case_tester1("3");
   EXPECT!(result == "300");
-  call string_case_tester1("5", result);
+
+  result := string_case_tester1("5");
   EXPECT!(result is null);
 END);
 

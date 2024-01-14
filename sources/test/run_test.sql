@@ -78,8 +78,13 @@ end;
 
 @MACRO(stmt_list) BEGIN_SUITE!()
 begin
-  -- for future use
-  if 0 then end if;
+  declare zero int!;
+  declare one int!;
+  declare two int!;
+
+  zero := 0;
+  one := 1;
+  two := 2;
 end;
 
 @MACRO(stmt_list) END_SUITE!()
@@ -242,18 +247,18 @@ end;
 
 TEST!(logical_operations,
 BEGIN
-  EXPECT_SQL_TOO!((null and 0) == 0);
-  EXPECT_SQL_TOO!((null and 0) = 0);
-  EXPECT_SQL_TOO!((0 and null) == 0);
-  EXPECT_SQL_TOO!((1 and null) is null);
-  EXPECT_SQL_TOO!((null and 1) is null);
-  EXPECT_SQL_TOO!((null or 1) == 1);
-  EXPECT_SQL_TOO!((1 or null) == 1);
-  EXPECT_SQL_TOO!((0 or null) is null);
-  EXPECT_SQL_TOO!((null or 0) is null);
-  EXPECT_SQL_TOO!((0 or 1) and (1 or 0));
-  EXPECT_SQL_TOO!(NOT (1+2) == 0);
-  EXPECT_SQL_TOO!((NOT 1)+2 == 2);
+  EXPECT_SQL_TOO!((NULL AND 0) = 0);
+  EXPECT_SQL_TOO!((NULL AND 0) = 0);
+  EXPECT_SQL_TOO!((0 AND NULL) = 0);
+  EXPECT_SQL_TOO!((1 AND NULL) IS NULL);
+  EXPECT_SQL_TOO!((NULL AND 1) IS NULL);
+  EXPECT_SQL_TOO!((NULL OR 1) = 1);
+  EXPECT_SQL_TOO!((1 OR NULL) = 1);
+  EXPECT_SQL_TOO!((0 OR NULL) IS NULL);
+  EXPECT_SQL_TOO!((NULL OR 0) IS NULL);
+  EXPECT_SQL_TOO!((0 OR 1) AND (1 OR 0));
+  EXPECT_SQL_TOO!(NOT 1 + 2 = 0);
+  EXPECT_SQL_TOO!((NOT 1) + 2 = 2);
 
   EXPECT!((side_effect_0() and side_effect_0()) == 0);
   EXPECT!(side_effect_0_count == 1);
@@ -367,12 +372,6 @@ BEGIN
   EXPECT_SQL_TOO!(NOT 0 < 0);
 END);
 
-declare zero int!;
-set zero := 0;
-
-declare one int!;
-set one := 1;
-
 -- logical and short-circuit verify 1/0 not evaluated
 TEST!(local_operations_early_out,
 BEGIN
@@ -383,12 +382,12 @@ END);
 -- assorted between combinations
 TEST!(between_operations,
 BEGIN
-  EXPECT_SQL_TOO!(1 between 0 and 2);
-  EXPECT_SQL_TOO!(not 3 between 0 and 2);
-  EXPECT_SQL_TOO!(not (3 between 0 and 2));
-  EXPECT_SQL_TOO!((null between 0 and 2) is null);
-  EXPECT_SQL_TOO!((1 between null and 2) is null);
-  EXPECT_SQL_TOO!((1 between 0 and null) is null);
+  EXPECT_SQL_TOO!(1 BETWEEN 0 AND 2);
+  EXPECT_SQL_TOO!(NOT 3 BETWEEN 0 AND 2);
+  EXPECT_SQL_TOO!(NOT 3 BETWEEN 0 AND 2);
+  EXPECT_SQL_TOO!(NULL BETWEEN 0 AND 2 IS NULL);
+  EXPECT_SQL_TOO!(1 BETWEEN NULL AND 2 IS NULL);
+  EXPECT_SQL_TOO!(1 BETWEEN 0 AND NULL IS NULL);
 
   EXPECT!((-1 between side_effect_0() and side_effect_1()) == 0);
   EXPECT!(side_effect_0_count == 1);
@@ -424,25 +423,30 @@ END);
 -- assorted not between combinations
 TEST!(not_between_operations,
 BEGIN
-  EXPECT_SQL_TOO!(3 not between 0 and 2);
-  EXPECT_SQL_TOO!(not 1 not between 0 and 2);
-  EXPECT_SQL_TOO!(not (1 not between 0 and 2));
-  EXPECT_SQL_TOO!((not 1) not between 0 and 2 == 0);
-  EXPECT_SQL_TOO!(1 not between 2 and 0);
-  EXPECT_SQL_TOO!(0 == not 7 not between 5 and 6);
-  EXPECT_SQL_TOO!(1 == (not 7) not between 5 and 6);
-  EXPECT_SQL_TOO!((null not between 0 and 2) is null);
-  EXPECT_SQL_TOO!((1 not between null and 2) is null);
-  EXPECT_SQL_TOO!((1 not between 0 and null) is null);
+  EXPECT_SQL_TOO!(3 NOT BETWEEN 0 AND 2);
+  EXPECT_SQL_TOO!(NOT 1 NOT BETWEEN 0 AND 2);
+  EXPECT_SQL_TOO!(NOT 1 NOT BETWEEN 0 AND 2);
+  EXPECT_SQL_TOO!((NOT 1) NOT BETWEEN 0 AND 2 = 0);
+  EXPECT_SQL_TOO!(1 NOT BETWEEN 2 AND 0);
+  EXPECT_SQL_TOO!(0 = (NOT 7 NOT BETWEEN 5 AND 6));
+  EXPECT_SQL_TOO!(1 = (NOT 7) NOT BETWEEN 5 AND 6);
+  EXPECT_SQL_TOO!(NULL NOT BETWEEN 0 AND 2 IS NULL);
+  EXPECT_SQL_TOO!(1 NOT BETWEEN NULL AND 2 IS NULL);
+  EXPECT_SQL_TOO!(1 NOT BETWEEN 0 AND NULL IS NULL);
 END);
 
 -- assorted comparisons
 TEST!(numeric_comparisons,
 BEGIN
-  EXPECT_SQL_TOO!(0 == zero);
-  EXPECT_SQL_TOO!(not (one == zero));
-  EXPECT_SQL_TOO!(one <> zero);
-  EXPECT_SQL_TOO!(not (one <> 1));
+  EXPECT_SQL_TOO!(0 = zero);
+  EXPECT_SQL_TOO!(1 = one);
+  EXPECT_SQL_TOO!(2 = two);
+  EXPECT_SQL_TOO!(NOT two = zero);
+  EXPECT_SQL_TOO!(two <> zero);
+  EXPECT_SQL_TOO!(NOT zero <> 0);
+  EXPECT_SQL_TOO!(NOT zero == two);
+  EXPECT_SQL_TOO!((NOT two) == 0);
+  EXPECT_SQL_TOO!((NOT two) <> 1);
   EXPECT_SQL_TOO!(one > zero);
   EXPECT_SQL_TOO!(zero < one);
   EXPECT_SQL_TOO!(one >= zero);
@@ -453,32 +457,33 @@ END);
 
 TEST!(simple_funcs,
 BEGIN
-  EXPECT_SQL_TOO!(abs(-2) == 2);
-  EXPECT_SQL_TOO!(abs(2) == 2);
-  EXPECT_SQL_TOO!(abs(-2.0) == 2);
-  EXPECT_SQL_TOO!(abs(2.0) == 2);
+  EXPECT_SQL_TOO!(abs(-2) = 2);
+  EXPECT_SQL_TOO!(abs(2) = 2);
+  EXPECT_SQL_TOO!(abs(-2.0) = 2);
+  EXPECT_SQL_TOO!(abs(2.0) = 2);
+  
   LET t := 3L;
-  EXPECT_SQL_TOO!(abs(t) == t);
-  EXPECT_SQL_TOO!(abs(-t) == t);
+  EXPECT_SQL_TOO!(abs(t) = t);
+  EXPECT_SQL_TOO!(abs(-t) = t);
+  
   t := -4;
-  EXPECT_SQL_TOO!(abs(t) == -t);
-  EXPECT_SQL_TOO!(abs(-t) == -t);
+  EXPECT_SQL_TOO!(abs(t) = -t);
+  EXPECT_SQL_TOO!(abs(-t) = -t);
+  EXPECT_SQL_TOO!(abs(TRUE) = TRUE);
+  EXPECT_SQL_TOO!(abs(FALSE) = FALSE);
+  EXPECT_SQL_TOO!(abs(NULL) IS NULL);
 
-  EXPECT_SQL_TOO!(abs(true) == true);
-  EXPECT_SQL_TOO!(abs(false) == false);
-  EXPECT_SQL_TOO!(abs(null) is null);
-
-  EXPECT!(sign(5) == 1);
-  EXPECT!(sign(0.1) == 1);
-  EXPECT!(sign(7L) == 1);
-  EXPECT!(sign(true) == 1);
-  EXPECT!(sign(-5) == -1);
-  EXPECT!(sign(-0.1) == -1);
-  EXPECT!(sign(-7L) == -1);
-  EXPECT!(sign(0) == 0);
-  EXPECT!(sign(0.0) == 0);
-  EXPECT!(sign(0L) == 0);
-  EXPECT!(sign(false) == 0);
+  EXPECT!(sign(5) = 1);
+  EXPECT!(sign(0.1) = 1);
+  EXPECT!(sign(7L) = 1);
+  EXPECT!(sign(TRUE) = 1);
+  EXPECT!(sign(-5) = -1);
+  EXPECT!(sign(-0.1) = -1);
+  EXPECT!(sign(-7L) = -1);
+  EXPECT!(sign(0) = 0);
+  EXPECT!(sign(0.0) = 0);
+  EXPECT!(sign(0L) = 0);
+  EXPECT!(sign(FALSE) = 0);
 END);
 
 -- verify that out parameter is set in proc call
@@ -542,10 +547,8 @@ END);
 -- the most expensive way to swap two variables ever :)
 TEST!(exchange_with_cursor,
 BEGIN
-  declare arg1 int!;
-  declare arg2 int!;
-  arg1 := 7;
-  arg2 := 11;
+  let arg1 := 7;
+  let arg2 := 11;
   declare exchange_cursor cursor for select arg2, arg1;
   fetch exchange_cursor into arg1, arg2;
   EXPECT!(exchange_cursor);
@@ -671,8 +674,7 @@ END);
 TEST!(nested_select_expressions,
 BEGIN
   -- use nested expression select
-  declare temp_1 int!;
-  temp_1 := (select zero*5 + one*11);
+  let temp_1 := (select zero * 5 + one * 11);
   EXPECT!(temp_1 == 11);
 
   call load_mixed();
@@ -683,8 +685,7 @@ BEGIN
   temp_1 := (select count(*) from mixed);
   EXPECT!(temp_1 == 2);
 
-  declare temp_2 real;
-  temp_2 := (select avg(id) from mixed);
+  let temp_2 := (select avg(id) from mixed);
   EXPECT!(temp_2 == 1.5);
 
   EXPECT!((select longs.neg) == -1);
@@ -703,6 +704,7 @@ TEST!(bool_round_trip,
 BEGIN
   declare b bool;
 
+  -- coerce from integer
   b := (select 0);
   EXPECT!(NOT b);
 
@@ -780,13 +782,9 @@ END);
 -- try out some string comparisons
 TEST!(string_comparisons,
 BEGIN
-  declare t1 text;
-  declare t2 text;
-  declare t3 text;
-
-  t1 := "a";
-  t2 := "b";
-  t3 := "a";
+  let t1 := "a";
+  let t2 := "b";
+  let t3 := "a";
 
   EXPECT_SQL_TOO!("a" == "a");
   EXPECT_SQL_TOO!("a" IS "a");
@@ -806,8 +804,7 @@ END);
 TEST!(string_comparisons_nullability,
 BEGIN
   declare null_ text;
-  declare x text!;
-  x := "x";
+  let x := "x";
   EXPECT_SQL_TOO!((nullable(x) < nullable(x)) is not null);
   EXPECT_SQL_TOO!((nullable(x) > nullable("x")) is not null);
   EXPECT_SQL_TOO!((null_ > x) is null);
@@ -820,10 +817,8 @@ END);
 TEST!(string_is_null_or_not,
 BEGIN
   declare null_ text;
-  declare x text!;
-  x := "x";
-  declare y text;
-  y := nullable("y");
+  let x := "x";
+  let y := nullable("y");
 
   EXPECT_SQL_TOO!(null_ is null);
   EXPECT_SQL_TOO!(nullable(x) is not null);
@@ -837,17 +832,11 @@ END);
 -- binding tests for not null types
 TEST!(bind_not_nullables,
 BEGIN
-  declare b bool!;
-  declare i int!;
-  declare l long int!;
-  declare r real!;
-  declare t text!;
-
-  b := 1;
-  i := 2;
-  l := 3;
-  r := 4.5;
-  t := "foo";
+  let b := true;
+  let i := 2;
+  let l := 3L;
+  let r := 4.5;
+  let t := "foo";
 
   EXPECT!(b == (select b)); -- binding not null bool
   EXPECT!(i == (select i)); -- binding not null int
@@ -864,17 +853,11 @@ END);
 -- binding tests for nullable types
 TEST!(bind_nullables_not_null,
 BEGIN
-  declare b bool;
-  declare i integer;
-  declare l long integer;
-  declare r real;
-  declare t text;
-
-  b := 1;
-  i := 2;
-  l := 3;
-  r := 4.5;
-  t := "foo";
+  let b := nullable(true);
+  let i := nullable(2);
+  let l := nullable(3L);
+  let r := nullable(4.5);
+  let t := nullable("foo");
 
   EXPECT!(b == (select b)); -- binding nullable not null bool
   EXPECT!(i == (select i)); -- binding nullable not null int
@@ -929,7 +912,7 @@ BEGIN
   sum := 0;
   loop fetch read_cursor into id_, name_, code_, flag_, rate_, bl_
   begin
-    count := count + 1;
+    count += 1;
     sum := sum + id_;
   end;
 
@@ -968,7 +951,7 @@ BEGIN
     if id_ == 2 then
       continue;
     end if;
-    count := count + 1;
+    count += 1;
     -- should break on number 4
     if name_ == "some name" then
       leave;
@@ -1080,20 +1063,21 @@ END);
 
 proc case_tester1(value int!, out result integer)
 begin
-  result := case value
-                     when 1 then 100
-                     when 2 then 200
-                     when 3 then 300
-                     else 400 end;
+  result := CASE value
+    WHEN 1 THEN 100
+    WHEN 2 THEN 200
+    WHEN 3 THEN 300
+    ELSE 400
+  END;
 end;
 
 proc case_tester2(value int!, out result integer)
 begin
-  result := case value
-                     when 1 then 100
-                     when 2 then 200
-                     when 3 then 300
-                     end;
+  result := CASE value
+    WHEN 1 THEN 100
+    WHEN 2 THEN 200
+    WHEN 3 THEN 300
+  END;
 end;
 
 TEST!(simple_case_test,
@@ -1120,11 +1104,11 @@ END);
 
 proc string_case_tester1(value text, out result text)
 begin
-  result := case value
-                     when "1" then "100"
-                     when "2" then "200"
-                     when "3" then "300"
-                     end;
+  result := CASE value
+    WHEN "1" THEN "100"
+    WHEN "2" THEN "200"
+    WHEN "3" THEN "300"
+  END;
 end;
 
 TEST!(string_case_test,
@@ -1332,22 +1316,14 @@ end;
 
 TEST!(proc_loop_fetch,
 BEGIN
-  declare id_ int!;
-  declare name_ text;
-  declare code_ long int;
-  declare flag_  bool;
-  declare rate_ real;
-  declare bl_ blob;
-  declare count, sum int!;
-
   call load_mixed();
 
   declare read_cursor cursor for call get_mixed(200);
 
-  count := 0;
-  loop fetch read_cursor into id_, name_, code_, flag_, rate_, bl_
+  let count := 0;
+  loop fetch read_cursor
   begin
-    count := count + 1;
+    count += 1;
   end;
 
   EXPECT!(count == 2); -- there should be two rows
@@ -1441,7 +1417,7 @@ BEGIN
   sum := 0;
   loop fetch read_cursor
   begin
-    count := count + 1;
+    count += 1;
     sum := sum + read_cursor.id;
   end;
 
@@ -1621,14 +1597,12 @@ declare function string_ref_count(str text) int!;
 TEST!(external_functions,
 BEGIN
   declare int_out integer;
-  declare int_result int!;
 
-  int_result := run_test_math(100, int_out);
+  let int_result := run_test_math(100, int_out);
   EXPECT!(int_out == 500);
   EXPECT!(int_result == 700);
 
-  declare text_result text;
-  text_result := string_create();
+  let text_result := string_create();
 
   EXPECT!(text_result like "%Hello%");
 END);
@@ -1636,9 +1610,8 @@ END);
 TEST!(rev_appl_operator,
 BEGIN
   declare int_out integer;
-  declare int_result int!;
 
-  int_result := 100:run_test_math(int_out);
+  let int_result := 100:run_test_math(int_out);
   EXPECT_SQL_TOO!(int_out == 500);
   EXPECT_SQL_TOO!(int_result == 700);
 
@@ -2488,13 +2461,8 @@ BEGIN
   let x7 := nullable(7);
   let x8 := nullable(8);
   let x9 := nullable(9);
-  declare temp0 integer;
-  declare temp1 integer;
-  declare temp2 integer;
-  declare temp3 integer;
-  declare temp4 integer;
 
-  temp0 := nullable(27);
+  let temp0 := nullable(27);
   EXPECT_SQL_TOO!(x1+x2*x3+x4*x5 == temp0);
   EXPECT_SQL_TOO!(x1+x2/x2 == x2);
   EXPECT_SQL_TOO!(x1+x2/x2*x4 == x5);
@@ -2519,7 +2487,7 @@ BEGIN
 
   temp0 := nullable(10);
 
-  temp1 := nullable(40);
+  let temp1 := nullable(40);
   EXPECT_SQL_TOO!(temp0<<x1+x1 == temp1);
   temp1 := nullable(22);
   EXPECT_SQL_TOO!(x1+temp0<<x1 == temp1);
@@ -2553,7 +2521,7 @@ BEGIN
 
   EXPECT_SQL_TOO!(x6&x4 == x4);
   EXPECT_SQL_TOO!(x6&x4|temp1 == temp1);
-  temp2 := nullable(14);
+  let temp2 := nullable(14);
   EXPECT_SQL_TOO!(x6&x4|temp1|x2 == temp2);
   EXPECT_SQL_TOO!(x6&x4|temp1|x2|x2 == temp2);
   temp2 := nullable(112);
@@ -2684,7 +2652,7 @@ BEGIN
   temp1 := nullable(15);
   EXPECT_SQL_TOO!(temp1%x3-x2 IS -x2);
   temp2 := nullable(30);
-  temp3 := nullable(13);
+  let temp3 := nullable(13);
   EXPECT_SQL_TOO!(temp1-temp2%x4 IS temp3);
   EXPECT_SQL_TOO!(temp1-temp2/x2 IS x0);
   EXPECT_SQL_TOO!(temp1/x5-x3 IS x0);
@@ -6579,7 +6547,6 @@ end;
 ';
 
 @emit_enums;
-
 
 -- parent child test case
 proc TestParentChildInit()

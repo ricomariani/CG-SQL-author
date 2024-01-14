@@ -1261,12 +1261,12 @@ cql_cleanup:
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC easy_fetch ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   FETCH C;
   CALL printf("%d %s\n", C.id, C.name);
-  DECLARE C2 CURSOR FOR
+  CURSOR C2 FOR
     SELECT *
       FROM bar
       WHERE C AND id = C.id;
@@ -1430,7 +1430,7 @@ DECLARE PROC xyzzy (id INT) (A INT!);
 /*
 CREATE PROC xyzzy_test ()
 BEGIN
-  DECLARE xyzzy_cursor CURSOR FOR
+  CURSOR xyzzy_cursor FOR
     CALL xyzzy(1);
 END;
 */
@@ -1972,7 +1972,7 @@ cql_cleanup:
 /*
 CREATE PROC with_stmt_using_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       X (a, b, c) AS (
         SELECT 1, 2, 3
@@ -2356,7 +2356,7 @@ cql_cleanup:
 /*
 CREATE PROC outint_nullable (OUT output INT, OUT result BOOL!)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1;
   FETCH C INTO output;
   SET result := C;
@@ -2402,7 +2402,7 @@ cql_cleanup:
 /*
 CREATE PROC outint_notnull (OUT output INT!, OUT result BOOL!)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1;
   FETCH C INTO output;
   SET result := C;
@@ -2493,7 +2493,7 @@ void obj_proc(cql_object_ref _Nullable *_Nonnull an_object) {
 /*
 CREATE PROC cursor_with_object (object_ OBJECT)
 BEGIN
-  DECLARE C CURSOR LIKE cursor_with_object ARGUMENTS;
+  CURSOR C LIKE cursor_with_object ARGUMENTS;
   FETCH C(object_) FROM VALUES(object_);
   OUT C;
 END;
@@ -3149,7 +3149,7 @@ void voidproc(void) {
 /*
 CREATE PROC out_cursor_proc ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT bar.*, 'xyzzy' AS extra1, 'plugh' AS extra2
       FROM bar;
   FETCH C;
@@ -3274,7 +3274,7 @@ cql_cleanup:
 /*
 CREATE PROC read_cursor_proc ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
 END;
 */
 
@@ -3320,7 +3320,7 @@ cql_cleanup:
 /*
 CREATE PROC declare_cursor_then_fetch_from_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE out_cursor_proc;
+  CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc();
 END;
 */
@@ -3495,7 +3495,7 @@ cql_cleanup:
 /*
 CREATE PROC fetch_values_dummy ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT *
+  CURSOR C LIKE SELECT *
     FROM bar;
   FETCH C(id, name, rate, type, size) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
@@ -3548,7 +3548,7 @@ void fetch_values_dummy(void) {
 /*
 CREATE PROC fetch_values_extended ()
 BEGIN
-  DECLARE C CURSOR LIKE (id INT!, name TEXT, rate LONG, type INT, size REAL, xx REAL, yy TEXT);
+  CURSOR C LIKE (id INT!, name TEXT, rate LONG, type INT, size REAL, xx REAL, yy TEXT);
   FETCH C(id, name, rate, type, size, xx, yy) FROM VALUES(_seed_, printf('name_%d', _seed_), _seed_, _seed_, _seed_, _seed_, printf('yy_%d', _seed_)) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 */
@@ -3636,7 +3636,7 @@ void c_literal(cql_string_ref _Nullable *_Nonnull x) {
 CREATE PROC no_cleanup_label_needed_proc ()
 BEGIN
   TRY
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       SELECT 1 AS N;
     FETCH C;
   CATCH
@@ -3732,7 +3732,7 @@ CQL_WARN_UNUSED cql_code no_code_after_catch(sqlite3 *_Nonnull _db_) {
 /*
 CREATE PROC out_no_db ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS A, 2.5 AS B;
+  CURSOR C LIKE SELECT 1 AS A, 2.5 AS B;
   FETCH C(A, B) FROM VALUES(3, 12);
   OUT C;
 END;
@@ -3805,8 +3805,8 @@ void out_no_db(out_no_db_row *_Nonnull _result_) {
 /*
 CREATE PROC declare_cursor_like_cursor ()
 BEGIN
-  DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2.5 AS B;
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C0 LIKE SELECT 1 AS A, 2.5 AS B;
+  CURSOR C1 LIKE C0;
   FETCH C1(A, B) FROM VALUES(3, 12);
   OUT C1;
 END;
@@ -3888,7 +3888,7 @@ void declare_cursor_like_cursor(declare_cursor_like_cursor_row *_Nonnull _result
 /*
 CREATE PROC declare_cursor_like_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE fetcher_proc;
+  CURSOR C LIKE fetcher_proc;
   OUT C;
 END;
 */
@@ -3966,7 +3966,7 @@ void declare_cursor_like_proc(declare_cursor_like_proc_row *_Nonnull _result_) {
 /*
 CREATE PROC declare_cursor_like_table ()
 BEGIN
-  DECLARE C CURSOR LIKE bar;
+  CURSOR C LIKE bar;
   OUT C;
 END;
 */
@@ -4056,7 +4056,7 @@ void declare_cursor_like_table(declare_cursor_like_table_row *_Nonnull _result_)
 /*
 CREATE PROC declare_cursor_like_view ()
 BEGIN
-  DECLARE C CURSOR LIKE MyView;
+  CURSOR C LIKE MyView;
   OUT C;
 END;
 */
@@ -4386,8 +4386,8 @@ cql_cleanup:
 /*
 CREATE PROC fetch_to_cursor_from_cursor ()
 BEGIN
-  DECLARE C0 CURSOR LIKE SELECT 1 AS A, "foo" AS B;
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C0 LIKE SELECT 1 AS A, "foo" AS B;
+  CURSOR C1 LIKE C0;
   FETCH C0(A, B) FROM VALUES(2, "bar");
   FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
   OUT C1;
@@ -4485,7 +4485,7 @@ void fetch_to_cursor_from_cursor(fetch_to_cursor_from_cursor_row *_Nonnull _resu
 /*
 CREATE PROC loop_statement_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A;
   LOOP FETCH C
   BEGIN
@@ -4538,7 +4538,7 @@ cql_cleanup:
 /*
 CREATE PROC loop_statement_not_auto_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A;
   DECLARE A_ INT!;
   LOOP FETCH C INTO A_
@@ -4623,7 +4623,7 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       CALL simple_select();
     FETCH C;
   END;
@@ -4681,7 +4681,7 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       CALL simple_select();
     FETCH C;
   END;
@@ -4741,11 +4741,11 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       CALL simple_select();
     DECLARE box OBJECT<C CURSOR>;
     SET box FROM CURSOR C;
-    DECLARE D CURSOR FOR box;
+    CURSOR D FOR box;
     FETCH D;
   END;
 END;
@@ -4808,7 +4808,7 @@ cql_cleanup:
 /*
 CREATE PROC out_union_helper ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS x;
+  CURSOR C LIKE SELECT 1 AS x;
   FETCH C(x) FROM VALUES(1);
   OUT UNION C;
 END;
@@ -4871,7 +4871,7 @@ void out_union_helper_fetch_results(out_union_helper_result_set_ref _Nullable *_
 /*
 CREATE PROC out_union_dml_helper ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS x;
   FETCH C;
   OUT UNION C;
@@ -4956,7 +4956,7 @@ BEGIN
   WHILE i < 5
   BEGIN
     SET i := i + 1;
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       CALL out_union_helper();
     FETCH C;
   END;
@@ -5555,7 +5555,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:identity=(id))
 CREATE PROC out_cursor_identity ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 2 AS data;
   FETCH C;
   OUT C;
@@ -5888,7 +5888,7 @@ cql_cleanup:
 /*
 CREATE PROC simple_cursor_proc ()
 BEGIN
-  DECLARE A_CURSOR CURSOR LIKE SELECT 1 AS id;
+  CURSOR A_CURSOR LIKE SELECT 1 AS id;
   FETCH a_cursor(id) FROM VALUES(1);
   OUT a_cursor;
 END;
@@ -6063,7 +6063,7 @@ cql_cleanup:
 /*
 CREATE PROC settings_info ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT SUM(A.unread_pending_thread_count) AS unread_pending_thread_count, SUM(A.switch_account_badge_count) AS switch_account_badge_count
       FROM (SELECT P.unread_pending_thread_count AS unread_pending_thread_count, 0 AS switch_account_badge_count
             FROM unread_pending_threads AS P
@@ -6312,7 +6312,7 @@ cql_cleanup:
 /*
 CREATE PROC rowset_object_reader (rowset OBJECT<rowset>)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM ReadFromRowset(rowset);
 END;
@@ -6491,8 +6491,8 @@ DECLARE PROC p2 () OUT (id INT!, t TEXT) USING TRANSACTION;
 /*
 CREATE PROC use_many_out_cursors ()
 BEGIN
-  DECLARE c1 CURSOR FETCH FROM CALL p1();
-  DECLARE c2 CURSOR FETCH FROM CALL p2();
+  CURSOR c1 FETCH FROM CALL p1();
+  CURSOR c2 FETCH FROM CALL p2();
 END;
 */
 
@@ -6547,7 +6547,7 @@ cql_cleanup:
 /*
 CREATE PROC fetch_many_times (arg BOOL!)
 BEGIN
-  DECLARE C CURSOR LIKE p1;
+  CURSOR C LIKE p1;
   IF arg = 1 THEN
     FETCH C FROM CALL p1();
   ELSE IF arg = 2 THEN
@@ -6611,7 +6611,7 @@ cql_cleanup:
 /*
 CREATE PROC out_union_two ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS x, '2' AS y;
+  CURSOR C LIKE SELECT 1 AS x, '2' AS y;
   FETCH C(x, y) FROM VALUES(1, "y");
   OUT UNION C;
   OUT UNION C;
@@ -6690,7 +6690,7 @@ void out_union_two_fetch_results(out_union_two_result_set_ref _Nullable *_Nonnul
 /*
 CREATE PROC out_union_reader ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     CALL out_union_two();
   LOOP FETCH C
   BEGIN
@@ -6750,7 +6750,7 @@ CQL_WARN_UNUSED cql_code out_union_reader(sqlite3 *_Nonnull _db_) {
 /*
 CREATE PROC out_union_from_select ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS x, '2' AS y;
   FETCH C;
   OUT UNION C;
@@ -6846,7 +6846,7 @@ cql_cleanup:
 /*
 CREATE PROC out_union_dml_reader ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     CALL out_union_from_select();
   LOOP FETCH C
   BEGIN
@@ -6908,7 +6908,7 @@ cql_cleanup:
 /*
 CREATE PROC out_union_values (a INT!, b INT!)
 BEGIN
-  DECLARE x CURSOR LIKE SELECT 1 AS x, 2 AS y;
+  CURSOR x LIKE SELECT 1 AS x, 2 AS y;
   FETCH x(x, y) FROM VALUES(a, b);
   OUT UNION x;
 END;
@@ -6975,7 +6975,7 @@ void out_union_values_fetch_results(out_union_values_result_set_ref _Nullable *_
 /*
 CREATE PROC read_out_union_values (a INT!, b INT!)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL out_union_values(a, b);
   FETCH C;
 END;
@@ -7024,7 +7024,7 @@ CQL_WARN_UNUSED cql_code read_out_union_values(sqlite3 *_Nonnull _db_, cql_int32
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC out_union_dml ()
 BEGIN
-  DECLARE x CURSOR FOR
+  CURSOR x FOR
     SELECT *
       FROM radioactive;
   FETCH x;
@@ -7124,7 +7124,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC out_union_dml_for_call ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL out_union_dml();
   FETCH C;
 END;
@@ -7300,7 +7300,7 @@ cql_cleanup:
 /*
 CREATE PROC update_cursor ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS x, 2 AS y;
+  CURSOR C LIKE SELECT 1 AS x, 2 AS y;
   UPDATE CURSOR C(x) FROM VALUES(2);
 END;
 */
@@ -7488,7 +7488,7 @@ BEGIN
   WHILE 1
   BEGIN
   END;
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT 1 AS x;
   LOOP FETCH c
   BEGIN
@@ -7849,7 +7849,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC emit_object_with_setters (o OBJECT!, x OBJECT!, i INT!, l LONG!, b BOOL!, d REAL!, t TEXT!, bl BLOB!)
 BEGIN
-  DECLARE C CURSOR LIKE emit_object_with_setters ARGUMENTS;
+  CURSOR C LIKE emit_object_with_setters ARGUMENTS;
   FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
   OUT C;
 END;
@@ -7967,7 +7967,7 @@ void emit_object_with_setters(cql_object_ref _Nonnull o, cql_object_ref _Nonnull
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC emit_setters_with_nullables (o OBJECT, x OBJECT, i INT, l LONG, b BOOL, d REAL, t TEXT, bl BLOB)
 BEGIN
-  DECLARE C CURSOR LIKE emit_setters_with_nullables ARGUMENTS;
+  CURSOR C LIKE emit_setters_with_nullables ARGUMENTS;
   FETCH C(o, x, i, l, b, d, t, bl) FROM VALUES(o, x, i, l, b, d, t, bl);
   OUT C;
 END;
@@ -8201,7 +8201,7 @@ cql_cleanup:
 /*
 CREATE PROC early_out_rc_cleared (OUT x INT)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS x;
   FETCH C;
   IF C THEN
@@ -8782,7 +8782,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:vault_sensitive)
 CREATE PROC vault_cursor_proc ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT name
       FROM vault_mixed_sensitive;
   FETCH c;
@@ -9100,7 +9100,7 @@ cql_cleanup:
 /*
 CREATE PROC try_boxing (OUT result OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   SET result FROM CURSOR C;
@@ -9143,7 +9143,7 @@ cql_cleanup:
 /*
 CREATE PROC try_unboxing (boxed_cursor OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR boxed_cursor;
+  CURSOR C FOR boxed_cursor;
   FETCH C;
 END;
 */
@@ -11252,7 +11252,7 @@ cql_cleanup:
 /*
 CREATE PROC out_arg_cursor (x INT!, OUT y INT!)
 BEGIN
-  DECLARE C CURSOR LIKE out_arg_cursor ARGUMENTS;
+  CURSOR C LIKE out_arg_cursor ARGUMENTS;
   FETCH C(x, y) FROM VALUES(1, 1);
   CALL out_arg_cursor(C.x, C.y);
 END;
@@ -11513,7 +11513,7 @@ static void private_proc(cql_nullable_int32 *_Nonnull x) {
 @ATTRIBUTE(cql:private)
 CREATE PROC private_out_union ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS a_field;
+  CURSOR C LIKE SELECT 1 AS a_field;
   FETCH C(a_field) FROM VALUES(1);
   OUT UNION C;
 END;
@@ -11600,7 +11600,7 @@ void c_proc_with_alt_prefix(cql_nullable_int32 *_Nonnull x) {
 /*
 CREATE PROC use_private_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL private_out_union();
   LOOP FETCH C
   BEGIN
@@ -11654,7 +11654,7 @@ CQL_WARN_UNUSED cql_code use_private_out_union(sqlite3 *_Nonnull _db_) {
 @ATTRIBUTE(cql:suppress_getters)
 CREATE PROC no_getters_out_union ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS a_field;
+  CURSOR C LIKE SELECT 1 AS a_field;
   FETCH C(a_field) FROM VALUES(1);
   OUT UNION C;
 END;
@@ -11717,7 +11717,7 @@ void no_getters_out_union_fetch_results(no_getters_out_union_result_set_ref _Nul
 /*
 CREATE PROC use_no_getters_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL no_getters_out_union();
   LOOP FETCH C
   BEGIN
@@ -11771,7 +11771,7 @@ CQL_WARN_UNUSED cql_code use_no_getters_out_union(sqlite3 *_Nonnull _db_) {
 @ATTRIBUTE(cql:suppress_result_set)
 CREATE PROC suppress_results_out_union ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS a_field;
+  CURSOR C LIKE SELECT 1 AS a_field;
   FETCH C(a_field) FROM VALUES(1);
   OUT UNION C;
 END;
@@ -11834,7 +11834,7 @@ void suppress_results_out_union_fetch_results(suppress_results_out_union_result_
 /*
 CREATE PROC use_suppress_results_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL suppress_results_out_union();
   LOOP FETCH C
   BEGIN
@@ -12079,7 +12079,7 @@ void various_lets(void) {
 /*
 CREATE PROC try_catch_rc ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 'foo' AS extra2
       FROM bar;
   TRY
@@ -12373,7 +12373,7 @@ cql_cleanup:
 /*
 CREATE PROC out_object (o OBJECT!)
 BEGIN
-  DECLARE C CURSOR LIKE out_object ARGUMENTS;
+  CURSOR C LIKE out_object ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
   OUT C;
 END;
@@ -12616,7 +12616,7 @@ cql_cleanup:
 /*
 CREATE PROC out_proc_with_contract_in_fetch_results (t TEXT!)
 BEGIN
-  DECLARE C CURSOR LIKE bar;
+  CURSOR C LIKE bar;
   OUT C;
 END;
 */
@@ -12817,7 +12817,7 @@ cql_bool false_test = 0;
 /*
 CREATE PROC BigFormat ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM big_data;
   LOOP FETCH C
@@ -14565,12 +14565,12 @@ void slash_star_and_star_slash(void) {
 /*
 CREATE PROC blob_serialization_test ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
   FETCH C;
   DECLARE B BLOB<structured_storage>;
   SET B FROM CURSOR C;
-  DECLARE D CURSOR LIKE C;
+  CURSOR D LIKE C;
   FETCH D FROM BLOB B;
 END;
 */
@@ -14686,7 +14686,7 @@ cql_cleanup:
 /*
 CREATE PROC deserialize_func ()
 BEGIN
-  DECLARE C CURSOR LIKE structured_storage;
+  CURSOR C LIKE structured_storage;
   FETCH C FROM BLOB make_blob();
 END;
 */
@@ -14890,7 +14890,7 @@ DECLARE PROC some_redeclared_out_proc () OUT (x INT) USING TRANSACTION;
 /*
 CREATE PROC some_redeclared_out_proc ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT nullable(1) AS x;
   FETCH c;
   OUT c;
@@ -14986,7 +14986,7 @@ DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INT) USING TRANSACTI
 /*
 CREATE PROC some_redeclared_out_union_proc ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT nullable(1) AS x;
   FETCH c;
   OUT UNION c;
@@ -15066,7 +15066,7 @@ cql_cleanup:
 /*
 CREATE PROC external_cursor_caller ()
 BEGIN
-  DECLARE shape_storage CURSOR LIKE SELECT 1 AS x;
+  CURSOR shape_storage LIKE SELECT 1 AS x;
   LET result := external_cursor_func(shape_storage);
 END;
 */
@@ -15210,7 +15210,7 @@ void mutated_in_arg2(cql_string_ref _Nullable _in__x) {
 /*
 CREATE PROC mutated_in_arg3 (x TEXT)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT "x" AS x;
   FETCH C INTO x;
 END;
@@ -15284,7 +15284,7 @@ DECLARE PROC a_proc_we_need () (id INT, t TEXT);
 /*
 CREATE PROC a_proc_that_needs_dependents ()
 BEGIN
-  DECLARE C CURSOR LIKE (a_foo OBJECT<a_proc_we_need SET>, another_foo OBJECT<a_proc_we_need SET>);
+  CURSOR C LIKE (a_foo OBJECT<a_proc_we_need SET>, another_foo OBJECT<a_proc_we_need SET>);
   FETCH C(a_foo, another_foo) FROM VALUES(a_proc_we_need(), a_proc_we_need());
   OUT UNION C;
 END;
@@ -15474,7 +15474,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC simple_container_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
+  CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
   OUT UNION C;
 END;
@@ -15569,7 +15569,7 @@ cql_cleanup:
 /*
 CREATE PROC use_cql_blob_get_backed ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT
         cql_blob_get(k, backed.pk),
         cql_blob_get(v, backed.flag),
@@ -15615,7 +15615,7 @@ cql_cleanup:
 /*
 CREATE PROC use_cql_blob_get_backed2 ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT
         cql_blob_get(k, backed2.pk1),
         cql_blob_get(k, backed2.pk2),
@@ -15974,7 +15974,7 @@ cql_cleanup:
 /*
 CREATE PROC use_backed_table_with_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed())
     SELECT *
@@ -16147,7 +16147,7 @@ cql_cleanup:
 /*
 CREATE PROC use_backed_table_with_select_and_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     WITH
       backed (rowid, flag, id, name, age, storage, pk) AS (CALL _backed()),
       one (x) AS (
@@ -17016,7 +17016,7 @@ BEGIN
   LET i := 0;
   WHILE i < 10
   BEGIN
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       SELECT *
         FROM foo
         WHERE id = i;
@@ -17397,7 +17397,7 @@ cql_cleanup:
 /*
 CREATE PROC qid_t1 ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM `xyz``abc`;
   LOOP FETCH C
@@ -17454,7 +17454,7 @@ cql_cleanup:
 /*
 CREATE PROC qid_t2 ()
 BEGIN
-  DECLARE D CURSOR FOR
+  CURSOR D FOR
     SELECT `xyz``abc`.*
       FROM `xyz``abc`;
   LOOP FETCH D
@@ -17549,7 +17549,7 @@ cql_cleanup:
 /*
 CREATE PROC qid_t4a ()
 BEGIN
-  DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
+  CURSOR Q LIKE `xyz``abc`(-`a b`);
 END;
 */
 
@@ -17577,7 +17577,7 @@ void qid_t4a(void) {
 /*
 CREATE PROC qid_t4b ()
 BEGIN
-  DECLARE R CURSOR LIKE `xyz``abc`;
+  CURSOR R LIKE `xyz``abc`;
   FETCH R(x, `a b`) FROM VALUES(1, 2);
   CALL printf("%d %d\n", R.x, R.`a b`);
   FETCH R(x, `a b`) FROM VALUES(3, 4);
@@ -18335,7 +18335,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  DECLARE foo_cursor CURSOR FOR
+  CURSOR foo_cursor FOR
     SELECT id, i2
       FROM foo
       WHERE id = i0_nullable;
@@ -18364,7 +18364,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  DECLARE basic_cursor CURSOR FOR
+  CURSOR basic_cursor FOR
     SELECT 1, 2.5;
   */
   _rc_ = cql_prepare(_db_, &basic_cursor_stmt,
@@ -18407,7 +18407,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  DECLARE exchange_cursor CURSOR FOR
+  CURSOR exchange_cursor FOR
     SELECT arg2, arg1;
   */
   _rc_ = cql_prepare(_db_, &exchange_cursor_stmt,
@@ -19073,7 +19073,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  DECLARE expanded_select CURSOR FOR
+  CURSOR expanded_select FOR
     SELECT *
       FROM bar;
   */
@@ -19085,7 +19085,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  DECLARE table_expanded_select CURSOR FOR
+  CURSOR table_expanded_select FOR
     SELECT bar.*
       FROM bar;
   */
@@ -19429,7 +19429,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  DECLARE global_cursor CURSOR FOR
+  CURSOR global_cursor FOR
     SELECT 1 AS a, 2 AS b;
   */
   _rc_ = cql_prepare(_db_, &global_cursor_stmt,

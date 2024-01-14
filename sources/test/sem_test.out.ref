@@ -7071,7 +7071,7 @@ SELECT Y;
 
 The statement ending at line XXXX
 
-DECLARE my_cursor CURSOR FOR
+CURSOR my_cursor FOR
   SELECT 1 AS one, 2 AS two;
 
   {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
@@ -7100,7 +7100,7 @@ DECLARE my_cursor CURSOR FOR
 
 The statement ending at line XXXX
 
-DECLARE kind_cursor CURSOR FOR
+CURSOR kind_cursor FOR
   SELECT *
     FROM with_kind;
 
@@ -7125,7 +7125,7 @@ DECLARE kind_cursor CURSOR FOR
 
 The statement ending at line XXXX
 
-DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
+CURSOR kind_value_cursor LIKE kind_cursor;
 
   {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
   | {name kind_value_cursor}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
@@ -7135,7 +7135,7 @@ DECLARE kind_value_cursor CURSOR LIKE kind_cursor;
 
 The statement ending at line XXXX
 
-DECLARE extended_cursor CURSOR LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
+CURSOR extended_cursor LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
 
   {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
   | {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
@@ -7165,7 +7165,7 @@ DECLARE extended_cursor CURSOR LIKE (id INT<some_key>, cost REAL<dollars>, value
 
 The statement ending at line XXXX
 
-DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, id);
+CURSOR reduced_cursor LIKE extended_cursor(id, id);
 
 test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0206: duplicate name in list 'id'
 
@@ -7185,7 +7185,7 @@ test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0206: duplicate name in list
 
 The statement ending at line XXXX
 
-DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, not_a_valid_name);
+CURSOR reduced_cursor LIKE extended_cursor(id, not_a_valid_name);
 
 test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0069: name not found 'not_a_valid_name'
 
@@ -7205,7 +7205,7 @@ test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0069: name not found 'not_a_
 
 The statement ending at line XXXX
 
-DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, cost);
+CURSOR reduced_cursor LIKE extended_cursor(id, cost);
 
   {declare_cursor_like_name}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
   | {name reduced_cursor}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
@@ -7223,7 +7223,7 @@ DECLARE reduced_cursor CURSOR LIKE extended_cursor(id, cost);
 
 The statement ending at line XXXX
 
-DECLARE reduced_cursor2 CURSOR LIKE extended_cursor(-id, cost);
+CURSOR reduced_cursor2 LIKE extended_cursor(-id, cost);
 
 test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0494: mixing adding and removing columns from a shape 'cost'
 
@@ -7242,7 +7242,7 @@ test/sem_test.sql:XXXX:1: error: in shape_expr : CQL0494: mixing adding and remo
 
 The statement ending at line XXXX
 
-DECLARE reduced_cursor3 CURSOR LIKE extended_cursor(-id);
+CURSOR reduced_cursor3 LIKE extended_cursor(-id);
 
   {declare_cursor_like_name}: reduced_cursor3: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
   | {name reduced_cursor3}: reduced_cursor3: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
@@ -7255,7 +7255,7 @@ DECLARE reduced_cursor3 CURSOR LIKE extended_cursor(-id);
 
 The statement ending at line XXXX
 
-DECLARE reduced_cursor4 CURSOR LIKE extended_cursor(-id, -xx, -yy, -value, -cost);
+CURSOR reduced_cursor4 LIKE extended_cursor(-id, -xx, -yy, -value, -cost);
 
 test/sem_test.sql:XXXX:1: error: in shape_exprs : CQL0495: no columns were selected in the LIKE expression
 
@@ -7282,7 +7282,7 @@ test/sem_test.sql:XXXX:1: error: in shape_exprs : CQL0495: no columns were selec
 
 The statement ending at line XXXX
 
-DECLARE my_cursor CURSOR FOR
+CURSOR my_cursor FOR
   SELECT 1;
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable name in the same scope 'my_cursor'
@@ -7306,7 +7306,7 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable
 
 The statement ending at line XXXX
 
-DECLARE extended_cursor CURSOR LIKE (x INT);
+CURSOR extended_cursor LIKE (x INT);
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_typed_names : CQL0197: duplicate variable name in the same scope 'extended_cursor'
 
@@ -7319,7 +7319,7 @@ test/sem_test.sql:XXXX:1: error: in declare_cursor_like_typed_names : CQL0197: d
 
 The statement ending at line XXXX
 
-DECLARE my_cursor CURSOR FOR
+CURSOR my_cursor FOR
   SELECT NOT 'x';
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -7344,7 +7344,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE extended_cursor CURSOR LIKE (x INT, x INT);
+CURSOR extended_cursor LIKE (x INT, x INT);
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0190: duplicate column name 'x'
 
@@ -7671,7 +7671,7 @@ The statement ending at line XXXX
 
 CREATE PROC close_boxed_cursor (IN box OBJECT<foo CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
   CLOSE C;
 END;
 
@@ -7708,7 +7708,7 @@ The statement ending at line XXXX
 
 CREATE PROC boxed_cursor_expr ()
 BEGIN
-  DECLARE C CURSOR FOR get_boxed_cursor();
+  CURSOR C FOR get_boxed_cursor();
 END;
 
   {create_proc_stmt}: ok
@@ -7726,7 +7726,7 @@ The statement ending at line XXXX
 
 CREATE PROC bogus_boxed_cursor_expr ()
 BEGIN
-  DECLARE C CURSOR FOR 12;
+  CURSOR C FOR 12;
 END;
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0346: expression must be of type object<T cursor> where T is a valid shape name '12'
@@ -8315,7 +8315,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE fetch_cursor CURSOR FOR
+CURSOR fetch_cursor FOR
   SELECT 1, 'foo', NULL;
 
   {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc
@@ -9167,7 +9167,7 @@ The statement ending at line XXXX
 CREATE PROC throw_before_out ()
 BEGIN
   TRY
-    DECLARE C CURSOR FOR
+    CURSOR C FOR
       SELECT 1 AS x;
     FETCH C;
   CATCH
@@ -9781,7 +9781,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursors_cannot_be_used_as_out_args ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT 0 AS x;
   CALL test_proc3(c);
 END;
@@ -11658,7 +11658,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the se
 
 The statement ending at line XXXX
 
-DECLARE curs CURSOR FOR
+CURSOR curs FOR
   CALL with_result_set();
 
   {declare_cursor}: curs: with_result_set: { id: integer notnull, name: text, rate: longint } variable dml_proc
@@ -11668,7 +11668,7 @@ DECLARE curs CURSOR FOR
 
 The statement ending at line XXXX
 
-DECLARE curs2 CURSOR FOR
+CURSOR curs2 FOR
   CALL with_result_set(1);
 
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0235: too many arguments provided to procedure 'with_result_set'
@@ -11691,7 +11691,7 @@ test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0214: procedures with results
 
 The statement ending at line XXXX
 
-DECLARE curs CURSOR FOR
+CURSOR curs FOR
   CALL proc1();
 
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0199: cursor requires a procedure that returns a result set via select 'curs'
@@ -12287,7 +12287,7 @@ test/sem_test.sql:XXXX:1: error: in rollback_trans_stmt : CQL0220: savepoint has
 
 The statement ending at line XXXX
 
-DECLARE shape_storage CURSOR FOR
+CURSOR shape_storage FOR
   SELECT 1 AS one, 2 AS two;
 
   {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
@@ -25768,7 +25768,7 @@ The statement ending at line XXXX
 
 CREATE PROC bogus_fetch ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM foo AS T1
         INNER JOIN foo AS T2 ON T1.id = T2.id;
@@ -26841,7 +26841,7 @@ The statement ending at line XXXX
 CREATE PROC bogus_object_read ()
 BEGIN
   DECLARE o1, o2, o3 OBJECT;
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   FETCH C INTO o1, o2, o3;
@@ -26993,7 +26993,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_cursor_proc ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   OUT C;
@@ -27033,7 +27033,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE QQ CURSOR LIKE out_cursor_proc;
+CURSOR QQ LIKE out_cursor_proc;
 
   {declare_cursor_like_name}: QQ: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
   | {name QQ}: QQ: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -27103,7 +27103,7 @@ The statement ending at line XXXX
 CREATE PROC out_cursor_proc_not_shape_storage ()
 BEGIN
   DECLARE a, b INT!;
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C INTO a, b;
   OUT C;
@@ -27159,9 +27159,9 @@ The statement ending at line XXXX
 CREATE PROC out_cursor_proc_incompat_results ()
 BEGIN
   DECLARE a, b INT!;
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
-  DECLARE D CURSOR FOR
+  CURSOR D FOR
     SELECT 1 AS A, 2 AS C;
   FETCH C;
   FETCH D;
@@ -27252,7 +27252,7 @@ The statement ending at line XXXX
 CREATE PROC out_cursor_proc_mixed_cursor_select ()
 BEGIN
   DECLARE a, b INT!;
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   OUT C;
@@ -27326,7 +27326,7 @@ The statement ending at line XXXX
 CREATE PROC out_cursor_proc_mixed_cursor_select_select_first ()
 BEGIN
   DECLARE a, b INT!;
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   SELECT 1 AS A, 2 AS B;
@@ -27400,7 +27400,7 @@ The statement ending at line XXXX
 CREATE PROC out_cursor_proc_mixed_cursor_select_then_union ()
 BEGIN
   DECLARE a, b INT!;
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   SELECT 1 AS A, 2 AS B;
@@ -27473,7 +27473,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_union_dml ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   OUT UNION C;
@@ -27515,7 +27515,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_union ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS A, 2 AS B;
+  CURSOR C LIKE SELECT 1 AS A, 2 AS B;
   FETCH C(A, B) FROM VALUES(1, 2);
   OUT UNION C;
 END;
@@ -27595,7 +27595,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_union_call_and_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   OUT UNION C;
@@ -27642,7 +27642,7 @@ The statement ending at line XXXX
 
 CREATE PROC out_union_call_and_out_union_other_order ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C;
   CALL out_union_dml();
@@ -27719,7 +27719,7 @@ The statement ending at line XXXX
 
 CREATE PROC result_reader ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -27735,7 +27735,7 @@ The statement ending at line XXXX
 
 CREATE PROC fails_result_reader ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C;
 END;
 
@@ -27775,7 +27775,7 @@ The statement ending at line XXXX
 
 CREATE PROC invalid_proc_fetch_bogus_call ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL declared_proc(NOT 'x');
+  CURSOR C FETCH FROM CALL declared_proc(NOT 'x');
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
@@ -27806,7 +27806,7 @@ The statement ending at line XXXX
 
 CREATE PROC invalid_proc_fetch ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL xyzzy();
+  CURSOR C FETCH FROM CALL xyzzy();
 END;
 
 test/sem_test.sql:XXXX:1: error: in call_stmt : CQL0203: cursor requires a procedure that returns a cursor with OUT 'C'
@@ -27824,8 +27824,8 @@ The statement ending at line XXXX
 
 CREATE PROC fails_result_reader_double_decl ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
 END;
 
 test/sem_test.sql:XXXX:1: error: in declare_value_cursor : CQL0197: duplicate variable name in the same scope 'C'
@@ -28067,7 +28067,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(1, 2);
 END;
 
@@ -28097,7 +28097,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_dummy ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(_seed_, _seed_) @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 
@@ -28130,7 +28130,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_from_call ()
 BEGIN
-  DECLARE C CURSOR LIKE out_cursor_proc;
+  CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc();
   OUT C;
 END;
@@ -28155,7 +28155,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_from_call_to_proc_with_invalid_arguments ()
 BEGIN
-  DECLARE C CURSOR LIKE out_cursor_proc;
+  CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc(42);
   OUT C;
 END;
@@ -28211,7 +28211,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_from_call_to_proc_with_different_column_names ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS A, 2 AS C;
+  CURSOR C LIKE SELECT 1 AS A, 2 AS C;
   FETCH C FROM CALL out_cursor_proc();
   OUT C;
 END;
@@ -28300,7 +28300,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_bogus_seed_value ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C() FROM VALUES() @DUMMY_SEED(NOT 'x');
 END;
 
@@ -28328,7 +28328,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_missing_value ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES();
 END;
 
@@ -28356,7 +28356,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_out ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT CASE
       WHEN 1 THEN CAST('x' AS BLOB)
       ELSE NULL
@@ -28404,7 +28404,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_blob_dummy ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL blob_out();
+  CURSOR C FETCH FROM CALL blob_out();
   FETCH C() FROM VALUES() @DUMMY_SEED(123) @DUMMY_NULLABLES;
 END;
 
@@ -28431,7 +28431,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_missing_columns ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A) FROM VALUES(1);
 END;
 
@@ -28459,7 +28459,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_bogus_value ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(1, NOT 'x');
 END;
 
@@ -28492,7 +28492,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_bogus_type ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL out_cursor_proc();
+  CURSOR C FETCH FROM CALL out_cursor_proc();
   FETCH C(A, B) FROM VALUES(1, 'x');
 END;
 
@@ -28524,7 +28524,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_blob_dummy_with_null ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL blob_out();
+  CURSOR C FETCH FROM CALL blob_out();
   FETCH C(B) FROM VALUES(NULL) @DUMMY_SEED(123);
 END;
 
@@ -28553,8 +28553,8 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_to_cursor_from_cursor ()
 BEGIN
-  DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
+  CURSOR C1 LIKE C0;
   FETCH C0(A, B) FROM VALUES(1, 2);
   FETCH C1(A, B) FROM VALUES(C0.A, C0.B);
   OUT C1;
@@ -28630,7 +28630,7 @@ The statement ending at line XXXX
 CREATE PROC fetch_to_cursor_from_invalid_cursor ()
 BEGIN
   DECLARE C0 INT;
-  DECLARE C1 CURSOR LIKE SELECT 1 AS A, 2 AS B;
+  CURSOR C1 LIKE SELECT 1 AS A, 2 AS B;
   FETCH C1(A, B) FROM C0;
   OUT C1;
 END;
@@ -28686,7 +28686,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_to_invalid_cursor_from_cursor ()
 BEGIN
-  DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
+  CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
   DECLARE C1 INT;
   FETCH C0(A, B) FROM VALUES(1, 2);
   FETCH C1 FROM C0;
@@ -28749,8 +28749,8 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_to_statement_cursor_from_cursor ()
 BEGIN
-  DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
-  DECLARE C1 CURSOR FOR
+  CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
+  CURSOR C1 FOR
     SELECT 1 AS A, 2 AS B;
   FETCH C0(A, B) FROM VALUES(1, 2);
   FETCH C1 FROM C0;
@@ -28832,8 +28832,8 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_to_cursor_from_cursor_with_different_columns ()
 BEGIN
-  DECLARE C0 CURSOR LIKE SELECT 1 AS A, 2 AS B;
-  DECLARE C1 CURSOR LIKE SELECT 1 AS A, 2 AS B, 3 AS C;
+  CURSOR C0 LIKE SELECT 1 AS A, 2 AS B;
+  CURSOR C1 LIKE SELECT 1 AS A, 2 AS B, 3 AS C;
   FETCH C0(A, B) FROM VALUES(1, 2);
   FETCH C1(A, B, C) FROM C0(A, B);
 END;
@@ -28933,9 +28933,9 @@ CREATE PROC fetch_to_cursor_from_cursor_without_fields ()
 BEGIN
   DECLARE X INT;
   DECLARE Y REAL;
-  DECLARE C0 CURSOR FOR
+  CURSOR C0 FOR
     SELECT 1 AS A, 2.5;
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C1 LIKE C0;
   FETCH C0 INTO X, Y;
   FETCH C1(A, _anon) FROM C0(A, _anon);
 END;
@@ -29007,8 +29007,8 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_cursor ()
 BEGIN
-  DECLARE C0 CURSOR FETCH FROM CALL out_cursor_proc();
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C0 FETCH FROM CALL out_cursor_proc();
+  CURSOR C1 LIKE C0;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -29030,7 +29030,7 @@ The statement ending at line XXXX
 CREATE PROC declare_cursor_like_non_cursor_variable ()
 BEGIN
   DECLARE C0 INT;
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C1 LIKE C0;
 END;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0200: variable is not a cursor 'C0'
@@ -29053,8 +29053,8 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_cursor_with_same_name ()
 BEGIN
-  DECLARE C0 CURSOR FETCH FROM CALL out_cursor_proc();
-  DECLARE C0 CURSOR LIKE C0;
+  CURSOR C0 FETCH FROM CALL out_cursor_proc();
+  CURSOR C0 LIKE C0;
 END;
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_name : CQL0197: duplicate variable name in the same scope 'C0'
@@ -29077,7 +29077,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_undefined_variable ()
 BEGIN
-  DECLARE C1 CURSOR LIKE C0;
+  CURSOR C1 LIKE C0;
 END;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'C0'
@@ -29096,7 +29096,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE decl3;
+  CURSOR C LIKE decl3;
 END;
 
   {create_proc_stmt}: ok
@@ -29113,7 +29113,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_proc_with_no_result ()
 BEGIN
-  DECLARE C CURSOR LIKE decl1;
+  CURSOR C LIKE decl1;
 END;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0178: proc has no result 'decl1'
@@ -29132,7 +29132,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_table ()
 BEGIN
-  DECLARE C CURSOR LIKE bar;
+  CURSOR C LIKE bar;
 END;
 
   {create_proc_stmt}: ok
@@ -29149,7 +29149,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_view ()
 BEGIN
-  DECLARE C CURSOR LIKE MyView;
+  CURSOR C LIKE MyView;
 END;
 
   {create_proc_stmt}: ok
@@ -29166,7 +29166,7 @@ The statement ending at line XXXX
 
 CREATE PROC declare_cursor_like_select ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
+  CURSOR C LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
   FETCH C(A, B, C) FROM VALUES(_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
   OUT C;
 END;
@@ -29235,7 +29235,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE some_cursor CURSOR LIKE SELECT 1 AS A, 2.5 AS B, NOT 'x' AS C;
+CURSOR some_cursor LIKE SELECT 1 AS A, 2.5 AS B, NOT 'x' AS C;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -29271,7 +29271,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-DECLARE X CURSOR LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
+CURSOR X LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor_like_select : CQL0197: duplicate variable name in the same scope 'X'
 
@@ -29432,7 +29432,7 @@ The statement ending at line XXXX
 
 CREATE PROC value_result_reader ()
 BEGIN
-  DECLARE C CURSOR FETCH FROM CALL declare_cursor_like_select();
+  CURSOR C FETCH FROM CALL declare_cursor_like_select();
 END;
 
   {create_proc_stmt}: ok
@@ -30669,7 +30669,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_fetcher (arg1 TEXT!, arg2 INT!, arg3 REAL!)
 BEGIN
-  DECLARE curs CURSOR LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
+  CURSOR curs LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
   FETCH curs(A, B, C) FROM VALUES(arg1, arg2, arg3);
 END;
 
@@ -30751,7 +30751,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_bar (extra INT, id_ INT!, name_ TEXT, rate_ LONG)
 BEGIN
-  DECLARE curs CURSOR LIKE bar;
+  CURSOR curs LIKE bar;
   FETCH curs(id, name, rate) FROM VALUES(id_, name_, rate_);
 END;
 
@@ -31126,7 +31126,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-DECLARE val_cursor CURSOR LIKE my_cursor;
+CURSOR val_cursor LIKE my_cursor;
 
   {declare_cursor_like_name}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
   | {name val_cursor}: val_cursor: select: { one: integer notnull, two: integer notnull } variable shape_storage value_cursor
@@ -31156,7 +31156,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_fetcher_not_enough_args (arg1 TEXT!)
 BEGIN
-  DECLARE curs CURSOR LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
+  CURSOR curs LIKE SELECT 'x' AS A, 1 AS B, 3.5 AS C;
   FETCH curs(A, B, C) FROM ARGUMENTS(arg1);
 END;
 
@@ -31707,7 +31707,7 @@ The statement ending at line XXXX
 
 CREATE PROC bogus_cursor_shape ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1, 2;
+  CURSOR C LIKE SELECT 1, 2;
 END;
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0055: all columns in the select must have a name
@@ -31771,7 +31771,7 @@ The statement ending at line XXXX
 
 CREATE PROC like_other_proc (A_ INT!, B_ INT!)
 BEGIN
-  DECLARE C CURSOR LIKE out_cursor_proc;
+  CURSOR C LIKE out_cursor_proc;
   FETCH C(A, B) FROM VALUES(A_, B_);
   OUT C;
 END;
@@ -33761,7 +33761,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_null_column ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT NULL AS n;
   FETCH C;
 END;
@@ -37894,7 +37894,7 @@ The statement ending at line XXXX
 @ATTRIBUTE(cql:autodrop=(table1, table2))
 CREATE PROC autodrop_no_db ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS id;
+  CURSOR C LIKE SELECT 1 AS id;
   FETCH c(id) FROM VALUES(1);
   OUT c;
 END;
@@ -41087,7 +41087,7 @@ The statement ending at line XXXX
 
 CREATE PROC bar ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL out_cursor_proc();
 END;
 
@@ -43465,7 +43465,7 @@ The statement ending at line XXXX
 
 CREATE PROC many_row_emitter ()
 BEGIN
-  DECLARE C CURSOR LIKE out_cursor_proc;
+  CURSOR C LIKE out_cursor_proc;
   FETCH C FROM CALL out_cursor_proc();
   OUT UNION C;
   OUT UNION C;
@@ -43891,7 +43891,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE c CURSOR FOR
+CURSOR c FOR
   EXPLAIN QUERY PLAN
   SELECT *
     FROM foo
@@ -43928,7 +43928,7 @@ The statement ending at line XXXX
 
 CREATE PROC explain_query_with_cursor ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     EXPLAIN QUERY PLAN
     SELECT 1;
   FETCH c;
@@ -46126,7 +46126,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_using_args_with_dummy (x INT!, y REAL!)
 BEGIN
-  DECLARE C CURSOR LIKE referenceable;
+  CURSOR C LIKE referenceable;
   FETCH C(a, b, c, d, e) FROM VALUES(x, y, printf('c_%d', _seed_), printf('d_%d', _seed_), _seed_) @DUMMY_SEED(1) @DUMMY_NULLABLES;
 END;
 
@@ -46202,7 +46202,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_from_empty_col_list ()
 BEGIN
-  DECLARE C CURSOR LIKE referenceable;
+  CURSOR C LIKE referenceable;
   FETCH C(a, b, c, d, e) FROM VALUES(1, 2, 'x', 'y', 5);
   OUT C;
 END;
@@ -46246,7 +46246,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE c_bar CURSOR LIKE referenceable;
+CURSOR c_bar LIKE referenceable;
 
   {declare_cursor_like_name}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
   | {name c_bar}: c_bar: referenceable: { a: integer notnull primary_key, b: real unique_key, c: text, d: text, e: longint } variable shape_storage value_cursor
@@ -46344,7 +46344,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0298: cannot read from a cursor wit
 
 The statement ending at line XXXX
 
-DECLARE small_cursor CURSOR LIKE SELECT 1 AS x;
+CURSOR small_cursor LIKE SELECT 1 AS x;
 
   {declare_cursor_like_select}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
   | {name small_cursor}: small_cursor: select: { x: integer notnull } variable shape_storage value_cursor
@@ -46721,7 +46721,7 @@ CREATE TEMP TABLE foo_data(
 
 The statement ending at line XXXX
 
-DECLARE nully_cursor CURSOR LIKE foo_data;
+CURSOR nully_cursor LIKE foo_data;
 
   {declare_cursor_like_name}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
   | {name nully_cursor}: nully_cursor: foo_data: { c1: text notnull, c2: integer, c3: real, c4: real, c5: real, c6: real, c7: real, c8: real, c9: real, c10: real } variable shape_storage value_cursor
@@ -46797,7 +46797,7 @@ test/sem_test.sql:XXXX:1: error: in fetch_values_stmt : CQL0167: required column
 
 The statement ending at line XXXX
 
-DECLARE c1c7 CURSOR LIKE SELECT 'x' AS c1, nullable(3.2) AS c7;
+CURSOR c1c7 LIKE SELECT 'x' AS c1, nullable(3.2) AS c7;
 
   {declare_cursor_like_select}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
   | {name c1c7}: c1c7: select: { c1: text notnull, c7: real } variable shape_storage value_cursor
@@ -47052,7 +47052,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, tabl
 
 The statement ending at line XXXX
 
-DECLARE id_name_cursor CURSOR LIKE SELECT 1 AS id, 'x' AS name;
+CURSOR id_name_cursor LIKE SELECT 1 AS id, 'x' AS name;
 
   {declare_cursor_like_select}: id_name_cursor: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
   | {name id_name_cursor}: id_name_cursor: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
@@ -47204,7 +47204,7 @@ DECLARE PROC out_union_user (x INT) OUT UNION (id INT, x TEXT);
 
 The statement ending at line XXXX
 
-DECLARE out_union_cursor CURSOR FOR
+CURSOR out_union_cursor FOR
   CALL out_union_user(2);
 
   {declare_cursor}: out_union_cursor: out_union_user: { id: integer, x: text } variable uses_out_union
@@ -48745,7 +48745,7 @@ The statement ending at line XXXX
 
 CREATE PROC basic_wrapper_out ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL basic_source();
   FETCH C;
   OUT C;
@@ -48768,7 +48768,7 @@ The statement ending at line XXXX
 
 CREATE PROC basic_wrapper_out_union ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     CALL basic_source();
   FETCH C;
   OUT UNION C;
@@ -50147,7 +50147,7 @@ The statement ending at line XXXX
 
 CREATE PROC shape_all_columns ()
 BEGIN
-  DECLARE C CURSOR LIKE shape;
+  CURSOR C LIKE shape;
   FETCH C(x, y) FROM VALUES(1, 'x');
   CALL shape_consumer(C.x, C.y);
 END;
@@ -50208,7 +50208,7 @@ The statement ending at line XXXX
 
 CREATE PROC shape_some_columns_statement_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS x, 'y' AS y;
   CALL shape_consumer(C.x, C.y);
 END;
@@ -50273,7 +50273,7 @@ The statement ending at line XXXX
 
 CREATE PROC shape_some_columns ()
 BEGIN
-  DECLARE C CURSOR LIKE shape;
+  CURSOR C LIKE shape;
   FETCH C(x, y) FROM VALUES(1, 'x');
   CALL shape_y_only(C.y);
 END;
@@ -50311,7 +50311,7 @@ The statement ending at line XXXX
 
 CREATE PROC shape_some_columns_bogus_name ()
 BEGIN
-  DECLARE C CURSOR LIKE shape;
+  CURSOR C LIKE shape;
   FETCH C(x, y) FROM VALUES(1, 'x');
   CALL shape_y_only(FROM C LIKE not_a_real_shape);
 END;
@@ -50387,7 +50387,7 @@ The statement ending at line XXXX
 
 CREATE PROC shape_args_middle ()
 BEGIN
-  DECLARE C CURSOR LIKE SELECT 1 AS x, 2 AS y;
+  CURSOR C LIKE SELECT 1 AS x, 2 AS y;
   FETCH C(x, y) FROM VALUES(1, 2);
   CALL lotsa_ints(C.x, C.y, 1, 2);
   CALL lotsa_ints(1, C.x, C.y, 2);
@@ -51224,9 +51224,9 @@ CREATE PROC cql_cursor_diff_col_without_cursor_arg ()
 BEGIN
   DECLARE x INT!;
   DECLARE y TEXT!;
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT 1 AS x, 'y' AS y;
   FETCH c1 INTO x, y;
   FETCH c2;
@@ -51318,7 +51318,7 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_unfetched ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS x;
   IF C THEN
   END;
@@ -51357,9 +51357,9 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_diff_col_wrong_cursor_type ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS x;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT '1' AS x;
   FETCH c1;
   FETCH c2;
@@ -51427,9 +51427,9 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_diff_col_with_wrong_col_count_arg ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS x, 'z' AS z;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT 1 AS x;
   FETCH c1;
   FETCH c2;
@@ -51502,9 +51502,9 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_diff_col_compatible_cursor_with_diff_col_name ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT 1 AS z, 'v' AS v;
   FETCH c1;
   FETCH c2;
@@ -51594,9 +51594,9 @@ The statement ending at line XXXX
 
 CREATE PROC cql_cursor_diff_col_with_shape_storage ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT 1 AS x, 'y' AS y;
   FETCH c1;
   FETCH c2;
@@ -51689,9 +51689,9 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_cursor_diff_col ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS x, 'y' AS y;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT 1 AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
@@ -51785,9 +51785,9 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_cursor_diff_val ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT nullable(1) AS x, 'y' AS y;
-  DECLARE c2 CURSOR FOR
+  CURSOR c2 FOR
     SELECT nullable(1) AS x, 'v' AS y;
   FETCH c1;
   FETCH c2;
@@ -52478,7 +52478,7 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_cursor_format ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT
         TRUE AS a,
         1 AS b,
@@ -52559,7 +52559,7 @@ The statement ending at line XXXX
 
 CREATE PROC select_cql_cursor_format ()
 BEGIN
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT 1 AS a;
   FETCH c1;
   SELECT cql_cursor_format(c1) AS p;
@@ -52617,7 +52617,7 @@ The statement ending at line XXXX
 
 CREATE PROC print_call_cql_not_fetch_cursor_format ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT 1;
   DECLARE x INT!;
   FETCH C INTO x;
@@ -52823,7 +52823,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_box (OUT B OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   SET B FROM CURSOR C;
@@ -52866,7 +52866,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_unbox (box OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
 END;
 
   {create_proc_stmt}: ok
@@ -52887,7 +52887,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_unbox_untyped (box OBJECT)
 BEGIN
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0346: expression must be of type object<T cursor> where T is a valid shape name 'box'
@@ -52909,7 +52909,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_unbox_not_cursor (box OBJECT<bar>)
 BEGIN
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0343: variable must be of type object<T CURSOR> or object<T SET> where T is a valid shape name 'box'
@@ -52932,7 +52932,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_unbox_not_a_type (box OBJECT<not_a_type CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
 END;
 
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_type'
@@ -52955,8 +52955,8 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_unbox_duplicate (box OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR box;
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
+  CURSOR C FOR box;
 END;
 
 test/sem_test.sql:XXXX:1: error: in declare_cursor : CQL0197: duplicate variable name in the same scope 'C'
@@ -52982,7 +52982,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_unbox_not_exists ()
 BEGIN
-  DECLARE C CURSOR FOR box;
+  CURSOR C FOR box;
 END;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'box'
@@ -52999,7 +52999,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_box_value (OUT box OBJECT<bar CURSOR>)
 BEGIN
-  DECLARE C CURSOR LIKE bar;
+  CURSOR C LIKE bar;
   SET box FROM CURSOR C;
 END;
 
@@ -53029,7 +53029,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_box_not_a_shape (OUT box OBJECT<barf CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   SET box FROM CURSOR C;
@@ -53074,7 +53074,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_box_wrong_shape (OUT box OBJECT<foo CURSOR>)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   SET box FROM CURSOR C;
@@ -53153,7 +53153,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_box_var_not_found ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM bar;
   SET box FROM CURSOR C;
@@ -53310,7 +53310,7 @@ DECLARE PROC some_proc (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!);
 
 The statement ending at line XXXX
 
-DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
+CURSOR Q LIKE some_proc ARGUMENTS;
 
   {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
   | {name Q}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
@@ -53530,7 +53530,7 @@ test/sem_test.sql:XXXX:1: error: in like : CQL0262: LIKE ... ARGUMENTS used on a
 
 The statement ending at line XXXX
 
-DECLARE cursor_with_object CURSOR LIKE obj_proc ARGUMENTS;
+CURSOR cursor_with_object LIKE obj_proc ARGUMENTS;
 
   {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
   | {name cursor_with_object}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
@@ -53557,7 +53557,7 @@ The statement ending at line XXXX
 
 CREATE PROC test_fetch_using ()
 BEGIN
-  DECLARE C CURSOR LIKE bar;
+  CURSOR C LIKE bar;
   FETCH C(id, name, rate) FROM VALUES(1, NULL, 99);
 END;
 
@@ -53592,7 +53592,7 @@ The statement ending at line XXXX
 
 CREATE PROC test_fetch_using_with_dummy_seed ()
 BEGIN
-  DECLARE C CURSOR LIKE bar;
+  CURSOR C LIKE bar;
   FETCH C(id, name, rate) FROM VALUES(1, printf('name_%d', _seed_), _seed_) @DUMMY_SEED(9) @DUMMY_DEFAULTS @DUMMY_NULLABLES;
 END;
 
@@ -54351,7 +54351,7 @@ The statement ending at line XXXX
 
 CREATE PROC enum_users ()
 BEGIN
-  DECLARE C CURSOR LIKE test_shape;
+  CURSOR C LIKE test_shape;
   FETCH C(x) FROM VALUES(1);
   LET z := C.x;
 END;
@@ -54407,7 +54407,7 @@ The statement ending at line XXXX
 
 CREATE PROC enum_users_out (i INT<integer_things>!)
 BEGIN
-  DECLARE C CURSOR LIKE test_shape;
+  CURSOR C LIKE test_shape;
   FETCH C(x) FROM VALUES(i);
   OUT C;
 END;
@@ -55580,7 +55580,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_10 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE AB;
+  CURSOR C LIKE AB;
   FETCH C(a, b) FROM VALUES(a2.c, a2.d);
 END;
 
@@ -55635,7 +55635,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_11 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE AB;
+  CURSOR C LIKE AB;
   FETCH C(a, b) FROM VALUES(a1.a, a1.b);
 END;
 
@@ -55690,7 +55690,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_12 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE AB;
+  CURSOR C LIKE AB;
   FETCH C(a, b) FROM VALUES(a1.a, NULL);
 END;
 
@@ -55743,7 +55743,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_13 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE AB;
+  CURSOR C LIKE AB;
   UPDATE CURSOR C(a, b) FROM VALUES(a1.a, a1.b);
 END;
 
@@ -55797,7 +55797,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_14 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE AB;
+  CURSOR C LIKE AB;
   UPDATE CURSOR C(a) FROM VALUES(a2.c);
 END;
 
@@ -55845,7 +55845,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_15 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE AB;
+  CURSOR C LIKE AB;
   UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
 END;
 
@@ -55899,7 +55899,7 @@ The statement ending at line XXXX
 
 CREATE PROC arg_bundle_16 (a1_a INT, a1_b TEXT, a2_c INT, a2_d TEXT)
 BEGIN
-  DECLARE C CURSOR LIKE a1;
+  CURSOR C LIKE a1;
   UPDATE CURSOR C(a, b) FROM VALUES(a2.c, a2.d);
 END;
 
@@ -56585,7 +56585,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'q'
 
 The statement ending at line XXXX
 
-DECLARE my_type TYPE TEXT @SENSITIVE;
+TYPE my_type TEXT @SENSITIVE;
 
   {declare_named_type}: text sensitive
   | {name my_type}: text sensitive
@@ -56632,7 +56632,7 @@ test/sem_test.sql:XXXX:1: error: in sensitive_attr : CQL0367: an attribute was s
 
 The statement ending at line XXXX
 
-DECLARE text_nn TYPE TEXT!;
+TYPE text_nn TEXT!;
 
   {declare_named_type}: text notnull
   | {name text_nn}: text notnull
@@ -56641,7 +56641,7 @@ DECLARE text_nn TYPE TEXT!;
 
 The statement ending at line XXXX
 
-DECLARE type_short_form TYPE TEXT!;
+TYPE type_short_form TEXT!;
 
   {declare_named_type}: text notnull
   | {name type_short_form}: text notnull
@@ -56675,7 +56675,7 @@ DECLARE nn_var_sens TEXT! @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE my_type_1 TYPE TEXT @SENSITIVE;
+TYPE my_type_1 TEXT @SENSITIVE;
 
   {declare_named_type}: text sensitive
   | {name my_type_1}: text sensitive
@@ -56684,7 +56684,7 @@ DECLARE my_type_1 TYPE TEXT @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE my_type_2 TYPE TEXT @SENSITIVE;
+TYPE my_type_2 TEXT @SENSITIVE;
 
   {declare_named_type}: text sensitive
   | {name my_type_2}: text sensitive
@@ -56693,7 +56693,7 @@ DECLARE my_type_2 TYPE TEXT @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE my_type TYPE bogus_type;
+TYPE my_type bogus_type;
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
@@ -56703,11 +56703,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 
 The statement ending at line XXXX
 
-DECLARE my_type TYPE INT;
+TYPE my_type INT;
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE INT
+test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type INT
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: conflicting type declaration 'my_type'
 
@@ -56740,7 +56740,7 @@ The statement ending at line XXXX
 
 CREATE PROC named_type ()
 BEGIN
-  DECLARE my_type TYPE INT;
+  TYPE my_type INT;
   DECLARE my_var INT;
 END;
 
@@ -56758,7 +56758,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE my_type_sens_not TYPE TEXT! @SENSITIVE;
+TYPE my_type_sens_not TEXT! @SENSITIVE;
 
   {declare_named_type}: text notnull sensitive
   | {name my_type_sens_not}: text notnull sensitive
@@ -57234,7 +57234,7 @@ DECLARE FUNC function_uses_complex_table_attrs (f1_ INT, f2_ INT!, f3_ INT! @SEN
 
 The statement ending at line XXXX
 
-DECLARE complex_attr_cursor CURSOR LIKE to_copy;
+CURSOR complex_attr_cursor LIKE to_copy;
 
   {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
   | {name complex_attr_cursor}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
@@ -57314,7 +57314,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 
 The statement ending at line XXXX
 
-DECLARE type_obj_foo TYPE OBJECT<Foo>! @SENSITIVE;
+TYPE type_obj_foo OBJECT<Foo>! @SENSITIVE;
 
   {declare_named_type}: object<Foo> notnull sensitive
   | {name type_obj_foo}: object<Foo> notnull sensitive
@@ -57362,7 +57362,7 @@ DECLARE FUNC type_func_return_obj () OBJECT<Foo>! @SENSITIVE;
 
 The statement ending at line XXXX
 
-DECLARE my_enum_type TYPE INT<ints>!;
+TYPE my_enum_type INT<ints>!;
 
   {declare_named_type}: integer<ints> notnull
   | {name my_enum_type}: integer<ints> notnull
@@ -57378,7 +57378,7 @@ DECLARE ENUM my_type INT (
 );
 
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type TEXT @SENSITIVE
 test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
@@ -57535,7 +57535,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-DECLARE _x TYPE INT<x_coord>;
+TYPE _x INT<x_coord>;
 
   {declare_named_type}: integer<x_coord>
   | {name _x}: integer<x_coord>
@@ -57544,7 +57544,7 @@ DECLARE _x TYPE INT<x_coord>;
 
 The statement ending at line XXXX
 
-DECLARE _y TYPE INT<y_coord>;
+TYPE _y INT<y_coord>;
 
   {declare_named_type}: integer<y_coord>
   | {name _y}: integer<y_coord>
@@ -57905,7 +57905,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-DECLARE xy_curs CURSOR LIKE xy;
+CURSOR xy_curs LIKE xy;
 
   {declare_cursor_like_name}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
   | {name xy_curs}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
@@ -63065,13 +63065,13 @@ BEGIN
   DECLARE b TEXT;
   DECLARE c TEXT;
   IF a IS NOT NULL AND (b IS NOT NULL OR c IS NOT NULL) THEN
-    DECLARE c0 CURSOR FOR
+    CURSOR c0 FOR
       SELECT a AS a0, b AS b0, c AS c0;
     IF (b IS NOT NULL OR a LIKE "hello") AND c IS NOT NULL THEN
-      DECLARE c1 CURSOR FOR
+      CURSOR c1 FOR
         SELECT a AS a1, b AS b1, c AS c1;
       IF b IS NOT NULL THEN
-        DECLARE c2 CURSOR FOR
+        CURSOR c2 FOR
           SELECT a AS a2, b AS b2, c AS c2;
       END;
     END;
@@ -63931,7 +63931,7 @@ BEGIN
   DECLARE a INT;
   DECLARE b INT;
   DECLARE x INT;
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM tnull;
   IF a IS NOT NULL AND b IS NOT NULL THEN
@@ -64085,7 +64085,7 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE c_global CURSOR LIKE tnull;
+CURSOR c_global LIKE tnull;
 
   {declare_cursor_like_name}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
   | {name c_global}: c_global: tnull: { xn: integer, yn: integer } variable shape_storage value_cursor
@@ -64097,7 +64097,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_auto_cursors ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM tnull;
   FETCH c;
@@ -64198,7 +64198,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global ()
 BEGIN
-  DECLARE c_local CURSOR LIKE tnull;
+  CURSOR c_local LIKE tnull;
   FETCH c_local(xn, yn) FROM VALUES(0, 0);
   LET x0 := c_local.xn;
   LET y0 := c_local.yn;
@@ -64306,7 +64306,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_auto_cursors_that_shadow_a_global ()
 BEGIN
-  DECLARE c_global CURSOR LIKE SELECT nullable(1) AS xn, nullable(2) AS yn;
+  CURSOR c_global LIKE SELECT nullable(1) AS xn, nullable(2) AS yn;
   FETCH c_global(xn, yn) FROM VALUES(0, 0);
   LET x0 := c_global.xn;
   LET y0 := c_global.yn;
@@ -64897,7 +64897,7 @@ BEGIN
       WHEN 0 THEN returns_int_not_null()
       ELSE some_global
     END;
-    DECLARE c CURSOR FETCH FROM CALL out_cursor_proc();
+    CURSOR c FETCH FROM CALL out_cursor_proc();
     LET x11 := some_global;
     IF some_global IS NULL THEN
       RETURN;
@@ -65661,12 +65661,12 @@ The statement ending at line XXXX
 
 CREATE PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor ()
 BEGIN
-  DECLARE c CURSOR LIKE tnull;
+  CURSOR c LIKE tnull;
   FETCH c(xn, yn) FROM VALUES(1, 2);
   IF c.xn IS NOT NULL AND c.yn IS NOT NULL THEN
     LET x0 := c.xn;
     LET y0 := c.yn;
-    DECLARE d CURSOR LIKE c;
+    CURSOR d LIKE c;
     LET x1 := c.xn;
     LET y1 := c.yn;
     LET x2 := d.xn;
@@ -65771,15 +65771,15 @@ The statement ending at line XXXX
 
 CREATE PROC notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc ()
 BEGIN
-  DECLARE c CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
+  CURSOR c LIKE improvements_work_for_in_args ARGUMENTS;
   FETCH c(a) FROM VALUES(0);
   IF c.a IS NOT NULL THEN
     LET x0 := c.a;
-    DECLARE d CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
+    CURSOR d LIKE improvements_work_for_in_args ARGUMENTS;
     FETCH d(a) FROM VALUES(0);
     LET x1 := c.a;
     LET x2 := d.a;
-    DECLARE e CURSOR LIKE improvements_work_for_in_args ARGUMENTS;
+    CURSOR e LIKE improvements_work_for_in_args ARGUMENTS;
   END;
 END;
 
@@ -65862,7 +65862,7 @@ The statement ending at line XXXX
 
 CREATE PROC returns_nullable_int ()
 BEGIN
-  DECLARE c CURSOR LIKE SELECT nullable(0) AS a;
+  CURSOR c LIKE SELECT nullable(0) AS a;
   OUT c;
 END;
 
@@ -65902,7 +65902,7 @@ CREATE PROC notnull_inferred_does_not_get_copied_via_arguments_like_proc (args_a
 BEGIN
   IF args.a IS NOT NULL THEN
     LET x0 := args.a;
-    DECLARE c CURSOR FETCH FROM CALL returns_nullable_int();
+    CURSOR c FETCH FROM CALL returns_nullable_int();
     LET x1 := c.a;
   END;
 END;
@@ -66319,7 +66319,7 @@ The statement ending at line XXXX
 
 CREATE PROC guard_improvements_work_for_cursor_fields ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT nullable(1) AS a;
   FETCH c;
   IF 1 THEN
@@ -68089,7 +68089,7 @@ BEGIN
   SET b := 1;
   LET x4 := a;
   LET y4 := b;
-  DECLARE foo CURSOR FOR
+  CURSOR foo FOR
     SELECT 1 AS bar;
   LOOP FETCH foo
   BEGIN
@@ -68291,7 +68291,7 @@ BEGIN
   SET b := 1;
   LET x3 := a;
   LET y3 := b;
-  DECLARE foo CURSOR FOR
+  CURSOR foo FOR
     SELECT 1 AS bar;
   LOOP FETCH foo
   BEGIN
@@ -69539,7 +69539,7 @@ The statement ending at line XXXX
 CREATE PROC fetch_into_initializes ()
 BEGIN
   DECLARE a TEXT!;
-  DECLARE foo CURSOR FOR
+  CURSOR foo FOR
     SELECT "text" AS bar;
   FETCH foo INTO a;
   LET x := a;
@@ -70137,7 +70137,7 @@ The statement ending at line XXXX
 
 CREATE PROC improvements_work_for_dots_that_shadow_globals (X_id INT, X_t TEXT, X_t1 TEXT!, X_b BLOB, OUT X_x INT!)
 BEGIN
-  DECLARE Y CURSOR FOR
+  CURSOR Y FOR
     SELECT nullable(1) AS id;
   FETCH Y;
   IF X.id IS NOT NULL AND Y.id IS NOT NULL THEN
@@ -76954,7 +76954,7 @@ The statement ending at line XXXX
 
 CREATE PROC ShapeTrix ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT Shape_xy.*, 1 AS u, 2 AS v
       FROM Shape_xy;
   FETCH C;
@@ -76962,14 +76962,14 @@ BEGIN
     VALUES(C.x, C.y);
   INSERT INTO Shape_xy(x, y)
     VALUES(1, 2), (3, 4), (C.x, C.y);
-  DECLARE D CURSOR FOR
+  CURSOR D FOR
     SELECT *
       FROM Shape_uv;
   FETCH D;
-  DECLARE R CURSOR LIKE Shape_uvxy;
+  CURSOR R LIKE Shape_uvxy;
   FETCH R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
   UPDATE CURSOR R(x, y, u, v) FROM VALUES(C.x, C.y, D.u, D.v);
-  DECLARE S CURSOR FOR
+  CURSOR S FOR
     WITH
       cte1 (l, m, n, o) AS (
         VALUES(C.x, C.y, D.u, D.v)
@@ -76977,7 +76977,7 @@ BEGIN
     SELECT *
       FROM cte1;
   FETCH S;
-  DECLARE T CURSOR FOR
+  CURSOR T FOR
     WITH
       cte2 (l, m, n, o) AS (
         VALUES(1, 2, '3', '4'), (C.x, C.y, D.u, D.v)
@@ -77335,7 +77335,7 @@ The statement ending at line XXXX
 
 CREATE PROC ShapeTrixError2 ()
 BEGIN
-  DECLARE R CURSOR LIKE Shape_uvxy;
+  CURSOR R LIKE Shape_uvxy;
   FETCH R(x, y, u, v) FROM VALUES(FROM not_a_cursor);
 END;
 
@@ -77371,7 +77371,7 @@ The statement ending at line XXXX
 
 CREATE PROC ShapeTrixError3 ()
 BEGIN
-  DECLARE R CURSOR LIKE Shape_uvxy;
+  CURSOR R LIKE Shape_uvxy;
   FETCH R(x, y, u, v) FROM VALUES(NULL, NULL, NULL, NULL) @DUMMY_SEED(1);
   UPDATE CURSOR R(x, y, u, v) FROM VALUES(FROM not_a_cursor);
 END;
@@ -79634,12 +79634,12 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
   FETCH C;
   DECLARE B BLOB<structured_storage>;
   SET B FROM CURSOR C;
-  DECLARE D CURSOR LIKE C;
+  CURSOR D LIKE C;
   FETCH D FROM BLOB B;
 END;
 
@@ -82183,7 +82183,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test_type_mismatch ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 5 AS name;
   FETCH C;
   DECLARE B BLOB<structured_storage>;
@@ -82234,7 +82234,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test_type_not_a_table ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 'name' AS name;
   FETCH C;
   DECLARE B BLOB<not_a_table>;
@@ -82285,7 +82285,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test_type_is_a_view ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 'name' AS name;
   FETCH C;
   DECLARE B BLOB<MyView>;
@@ -82336,7 +82336,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test_type_has_no_kind ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 'name' AS name;
   FETCH C;
   DECLARE B BLOB;
@@ -82386,7 +82386,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test_no_storage ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 5 AS name;
   DECLARE B BLOB<structured_storage>;
   SET B FROM CURSOR C;
@@ -82434,7 +82434,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_serialization_test_valid_cursor ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS id, 5 AS name;
   DECLARE B BLOB<structured_storage>;
   SET B FROM CURSOR not_a_cursor;
@@ -82483,7 +82483,7 @@ The statement ending at line XXXX
 CREATE PROC blob_serialization_not_storage_table ()
 BEGIN
   DECLARE b BLOB<foo>;
-  DECLARE C CURSOR LIKE foo;
+  CURSOR C LIKE foo;
   FETCH C FROM b;
 END;
 
@@ -82514,7 +82514,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_deseralized_from_err ()
 BEGIN
-  DECLARE C CURSOR LIKE foo;
+  CURSOR C LIKE foo;
   FETCH C FROM BLOB NOT 'x';
 END;
 
@@ -82538,7 +82538,7 @@ The statement ending at line XXXX
 
 CREATE PROC blob_deseralized_from_not_a_blob ()
 BEGIN
-  DECLARE C CURSOR LIKE foo;
+  CURSOR C LIKE foo;
   FETCH C FROM BLOB 1;
 END;
 
@@ -83201,7 +83201,7 @@ The statement ending at line XXXX
 
 CREATE PROC has_row_check_required_before_using_nonnull_reference_field ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM has_row_check_table;
   FETCH c;
@@ -83250,7 +83250,7 @@ The statement ending at line XXXX
 
 CREATE PROC has_row_checks_can_be_positive_or_negative ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM has_row_check_table;
   FETCH c;
@@ -83333,17 +83333,17 @@ The statement ending at line XXXX
 
 CREATE PROC fetch_values_requires_no_has_row_check (a_ TEXT!, b_ TEXT)
 BEGIN
-  DECLARE c0 CURSOR LIKE has_row_check_table;
+  CURSOR c0 LIKE has_row_check_table;
   FETCH c0(a, b) FROM VALUES("text", NULL);
   LET x0 := c0.a;
-  DECLARE c1 CURSOR LIKE has_row_check_table;
+  CURSOR c1 LIKE has_row_check_table;
   FETCH c1(a, b) FROM VALUES(a_, b_);
   LET x1 := c1.a;
   DECLARE b BLOB<has_row_check_blob>;
-  DECLARE c2 CURSOR LIKE has_row_check_blob;
+  CURSOR c2 LIKE has_row_check_blob;
   FETCH c2 FROM BLOB b;
   LET x2 := c2.a;
-  DECLARE c3 CURSOR FOR
+  CURSOR c3 FOR
     SELECT *
       FROM has_row_check_table;
   FETCH c3;
@@ -83465,7 +83465,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetching_again_requires_another_check ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM has_row_check_table;
   FETCH c;
@@ -83540,7 +83540,7 @@ The statement ending at line XXXX
 
 CREATE PROC fetching_with_loop_requires_no_check ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM has_row_check_table;
   LOOP FETCH c
@@ -83593,10 +83593,10 @@ The statement ending at line XXXX
 
 CREATE PROC refetching_within_loop_may_unimprove_cursor_earlier_in_loop ()
 BEGIN
-  DECLARE c0 CURSOR FOR
+  CURSOR c0 FOR
     SELECT *
       FROM has_row_check_table;
-  DECLARE c1 CURSOR FOR
+  CURSOR c1 FOR
     SELECT *
       FROM has_row_check_table;
   FETCH c0;
@@ -83780,8 +83780,8 @@ The statement ending at line XXXX
 DECLARE GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
-  DECLARE var_group_var2 CURSOR LIKE foo;
-  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+  CURSOR var_group_var2 LIKE foo;
+  CURSOR var_group_var3 LIKE SELECT 1 AS x, "2" AS y;
 END;
 
   {declare_group_stmt}: ok
@@ -83825,8 +83825,8 @@ The statement ending at line XXXX
 DECLARE GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
-  DECLARE var_group_var2 CURSOR LIKE foo;
-  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+  CURSOR var_group_var2 LIKE foo;
+  CURSOR var_group_var3 LIKE SELECT 1 AS x, "2" AS y;
 END;
 
   {declare_group_stmt}: ok alias
@@ -83880,8 +83880,8 @@ END
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
-  DECLARE var_group_var2 CURSOR LIKE foo;
-  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+  CURSOR var_group_var2 LIKE foo;
+  CURSOR var_group_var3 LIKE SELECT 1 AS x, "2" AS y;
 END
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable definitions do not match in group 'var_group'
@@ -86249,17 +86249,17 @@ The statement ending at line XXXX
 CREATE PROC test_parent_child ()
 BEGIN
   DECLARE __result__0 BOOL!;
-  DECLARE __key__0 CURSOR LIKE test_child(x);
+  CURSOR __key__0 LIKE test_child(x);
   LET __partition__0 := cql_partition_create();
-  DECLARE __child_cursor__0 CURSOR FOR
+  CURSOR __child_cursor__0 FOR
     CALL test_child(1);
   LOOP FETCH __child_cursor__0
   BEGIN
     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
   END;
-  DECLARE __out_cursor__0 CURSOR LIKE (x INT, my_child OBJECT<test_child SET>!);
-  DECLARE __parent__0 CURSOR FOR
+  CURSOR __out_cursor__0 LIKE (x INT, my_child OBJECT<test_child SET>!);
+  CURSOR __parent__0 FOR
     CALL test_parent(2);
   LOOP FETCH __parent__0
   BEGIN
@@ -86389,17 +86389,17 @@ The statement ending at line XXXX
 CREATE PROC test_parent_child2 ()
 BEGIN
   DECLARE __result__1 BOOL!;
-  DECLARE __key__1 CURSOR LIKE test_child(x);
+  CURSOR __key__1 LIKE test_child(x);
   LET __partition__1 := cql_partition_create();
-  DECLARE __child_cursor__1 CURSOR FOR
+  CURSOR __child_cursor__1 FOR
     CALL test_child(1);
   LOOP FETCH __child_cursor__1
   BEGIN
     FETCH __key__1(x) FROM VALUES(__child_cursor__1.x);
     SET __result__1 := cql_partition_cursor(__partition__1, __key__1, __child_cursor__1);
   END;
-  DECLARE __out_cursor__1 CURSOR LIKE (x INT, child1 OBJECT<test_child SET>!);
-  DECLARE __parent__1 CURSOR FOR
+  CURSOR __out_cursor__1 LIKE (x INT, child1 OBJECT<test_child SET>!);
+  CURSOR __parent__1 FOR
     CALL test_parent(2);
   LOOP FETCH __parent__1
   BEGIN
@@ -86528,7 +86528,7 @@ The statement ending at line XXXX
 
 CREATE PROC test_object_types ()
 BEGIN
-  DECLARE C CURSOR LIKE (id INT);
+  CURSOR C LIKE (id INT);
   DECLARE u OBJECT<goo CURSOR>;
   DECLARE w OBJECT<C CURSOR>;
   DECLARE x OBJECT<C SET>;
@@ -86662,7 +86662,7 @@ CREATE TABLE dummy_table_for_backed_test(
 
 The statement ending at line XXXX
 
-DECLARE backed_cursor CURSOR FOR
+CURSOR backed_cursor FOR
   WITH
     simple_backed_table (rowid, id, name) AS (CALL _simple_backed_table())
   SELECT *
@@ -87080,7 +87080,7 @@ BEGIN
     WHERE id = locals.id
     ORDER BY update_test_1.id
       LIMIT 1;
-  DECLARE C CURSOR LIKE update_test_1;
+  CURSOR C LIKE update_test_1;
   FETCH C(id, name) FROM VALUES(1, "foo");
   UPDATE update_test_1
     SET id = C.id, name = C.name
@@ -87260,7 +87260,7 @@ The statement ending at line XXXX
 
 CREATE PROC test_update_from_insert_list (id_ INT!, name_ TEXT)
 BEGIN
-  DECLARE cur CURSOR LIKE update_stmt_table(a, b, c);
+  CURSOR cur LIKE update_stmt_table(a, b, c);
   FETCH cur(a, b, c) FROM VALUES("a", "b", "c");
   UPDATE update_stmt_table
     SET
@@ -89634,7 +89634,7 @@ SELECT larger_table.a, larger_table.b
 
 The statement ending at line XXXX
 
-DECLARE an_integer_type TYPE INT!;
+TYPE an_integer_type INT!;
 
   {declare_named_type}: integer notnull
   | {name an_integer_type}: integer notnull
@@ -89643,7 +89643,7 @@ DECLARE an_integer_type TYPE INT!;
 
 The statement ending at line XXXX
 
-DECLARE an_integer_type TYPE INT!;
+TYPE an_integer_type INT!;
 
   {declare_named_type}: integer notnull alias
   | {name an_integer_type}: integer notnull
@@ -89718,7 +89718,7 @@ The statement ending at line XXXX
 
 CREATE PROC qid_t1 ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM `xyz``abc`;
   LOOP FETCH C
@@ -89770,7 +89770,7 @@ The statement ending at line XXXX
 
 CREATE PROC qid_t2 ()
 BEGIN
-  DECLARE D CURSOR FOR
+  CURSOR D FOR
     SELECT `xyz``abc`.*
       FROM `xyz``abc`;
   LOOP FETCH D
@@ -89857,8 +89857,8 @@ The statement ending at line XXXX
 
 CREATE PROC qid_t4 ()
 BEGIN
-  DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
-  DECLARE R CURSOR LIKE `xyz``abc`;
+  CURSOR Q LIKE `xyz``abc`(-`a b`);
+  CURSOR R LIKE `xyz``abc`;
   FETCH R(x, `a b`) FROM VALUES(1, 2);
   CALL printf("%d %d\n", R.x, R.`a b`);
   FETCH R(x, `a b`) FROM VALUES(3, 4);
@@ -90199,7 +90199,7 @@ The statement ending at line XXXX
 
 CREATE PROC quoted_from_forms ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM `xyz``abc`;
   FETCH C;
@@ -90351,7 +90351,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_boxing_with_qid ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT 1 AS x;
   DECLARE `box obj` OBJECT<C CURSOR>;
   SET `box obj` FROM CURSOR C;
@@ -90848,7 +90848,7 @@ The statement ending at line XXXX
 
 CREATE PROC cursor_nullability_improvement_with_logical_operators ()
 BEGIN
-  DECLARE c CURSOR FOR
+  CURSOR c FOR
     SELECT *
       FROM has_row_check_table;
   FETCH c;
@@ -90922,7 +90922,7 @@ BEGIN
   CONST cant_change := 1;
   SET cant_change := 2;
   CALL using_rc(cant_change);
-  DECLARE my_cursor CURSOR FOR
+  CURSOR my_cursor FOR
     SELECT 1 AS one;
   FETCH fetch_cursor INTO cant_change;
 END;

@@ -192,7 +192,7 @@ DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE cql_string_list TYPE OBJECT<cql_string_list>;
+TYPE cql_string_list OBJECT<cql_string_list>;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -348,7 +348,7 @@ DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string T
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE bool TYPE BOOL;
+TYPE bool BOOL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -363,7 +363,7 @@ DECLARE bool TYPE BOOL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE int TYPE INT;
+TYPE int INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -378,7 +378,7 @@ DECLARE int TYPE INT;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE integer TYPE INT;
+TYPE integer INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -393,7 +393,7 @@ DECLARE integer TYPE INT;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long TYPE LONG;
+TYPE long LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -408,7 +408,7 @@ DECLARE long TYPE LONG;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE real TYPE REAL;
+TYPE real REAL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -423,7 +423,7 @@ DECLARE real TYPE REAL;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE text TYPE TEXT;
+TYPE text TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -438,7 +438,7 @@ DECLARE text TYPE TEXT;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE object TYPE OBJECT;
+TYPE object OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -453,7 +453,7 @@ DECLARE object TYPE OBJECT;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE blob TYPE BLOB;
+TYPE blob BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -468,7 +468,7 @@ DECLARE blob TYPE BLOB;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE long_int TYPE LONG;
+TYPE long_int LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok

@@ -174,7 +174,7 @@ cql_cleanup:
 /*
 CREATE PROC emit_object_result_set (o OBJECT!)
 BEGIN
-  DECLARE C CURSOR LIKE emit_object_result_set ARGUMENTS;
+  CURSOR C LIKE emit_object_result_set ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
   OUT UNION C;
 END;
@@ -358,7 +358,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC emit_object_with_setters (o OBJECT!)
 BEGIN
-  DECLARE C CURSOR LIKE emit_object_with_setters ARGUMENTS;
+  CURSOR C LIKE emit_object_with_setters ARGUMENTS;
   FETCH C(o) FROM VALUES(o);
   OUT C;
 END;
@@ -510,7 +510,7 @@ cql_cleanup:
 @ATTRIBUTE(cql:emit_setters)
 CREATE PROC simple_container_proc ()
 BEGIN
-  DECLARE C CURSOR LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
+  CURSOR C LIKE (a INT, b INT!, c OBJECT<simple_child_proc SET>);
   FETCH C(a, b, c) FROM VALUES(1, 2, simple_child_proc());
   OUT UNION C;
 END;

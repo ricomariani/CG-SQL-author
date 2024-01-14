@@ -1947,76 +1947,76 @@ select Y;
 -- TEST: create a cursor with select statement
 -- + {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable
 -- - error:
-declare my_cursor cursor for select 1 as one, 2 as two;
+cursor my_cursor for select 1 as one, 2 as two;
 
 -- TEST: create a cursor with primitive kinds
 -- + {declare_cursor}: kind_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable
 -- - error:
-declare kind_cursor cursor for select * from with_kind;
+cursor kind_cursor for select * from with_kind;
 
 -- TEST: make a value cursor of the same shape
 -- + {declare_cursor_like_name}: kind_value_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars> } variable shape_storage value_cursor
 -- - error:
-declare kind_value_cursor cursor like kind_cursor;
+cursor kind_value_cursor like kind_cursor;
 
 -- TEST: make a value cursor extending the above using typed names syntax
 -- verify the rewrite also
--- + DECLARE extended_cursor CURSOR LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
+-- + CURSOR extended_cursor LIKE (id INT<some_key>, cost REAL<dollars>, value REAL<dollars>, xx REAL, yy TEXT);
 -- + {declare_cursor_like_typed_names}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
 -- + {name extended_cursor}: extended_cursor: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text } variable shape_storage value_cursor
 -- + {typed_names}: select: { id: integer<some_key>, cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
 -- - error:
-declare extended_cursor cursor like ( like kind_value_cursor, xx real, yy text);
+cursor extended_cursor like ( like kind_value_cursor, xx real, yy text);
 
 -- TEST: restriction syntax with duplicate name
 -- + {declare_cursor_like_name}: err
 -- * error: % duplicate name in list 'id'
 -- +1 error:
-declare reduced_cursor cursor like extended_cursor(id, id);
+cursor reduced_cursor like extended_cursor(id, id);
 
 -- TEST: restriction syntax with bogus name
 -- + {declare_cursor_like_name}: err
 -- * error: % name not found 'not_a_valid_name'
 -- +1 error:
-declare reduced_cursor cursor like extended_cursor(id, not_a_valid_name);
+cursor reduced_cursor like extended_cursor(id, not_a_valid_name);
 
 -- TEST: now use the restriction syntax to get a smaller cursor
 -- + {declare_cursor_like_name}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
 -- + {name reduced_cursor}: reduced_cursor: select: { id: integer<some_key>, cost: real<dollars> } variable shape_storage value_cursor
 -- + {shape_def}: select: { id: integer<some_key>, cost: real<dollars> }
 -- - error:
-declare reduced_cursor cursor like extended_cursor(id, cost);
+cursor reduced_cursor like extended_cursor(id, cost);
 
 -- TEST: try to make a shape with both additive and subtractive form
 -- + {declare_cursor_like_name}: err
 -- + {shape_def}: err
 -- * error: % mixing adding and removing columns from a shape 'cost'
 -- +1 error:
-declare reduced_cursor2 cursor like extended_cursor(-id, cost);
+cursor reduced_cursor2 like extended_cursor(-id, cost);
 
 -- TEST: try to make a cursor by removing columns
 -- + {shape_def}: select: { cost: real<dollars>, value: real<dollars>, xx: real, yy: text }
 -- - error:
-declare reduced_cursor3 cursor like extended_cursor(-id);
+cursor reduced_cursor3 like extended_cursor(-id);
 
 -- TEST: try to make a cursor by removing columns but remove everything
 -- + {declare_cursor_like_name}: err
 -- * error: % no columns were selected in the LIKE expression
 -- +1 error:
-declare reduced_cursor4 cursor like extended_cursor(-id, -xx, -yy, -value, -cost);
+cursor reduced_cursor4 like extended_cursor(-id, -xx, -yy, -value, -cost);
 
 -- TEST: try to create a duplicate cursor
 -- + {declare_cursor}: err
 -- + {name my_cursor}: err
 -- * error: % duplicate variable name in the same scope 'my_cursor'
 -- +1 error:
-declare my_cursor cursor for select 1;
+cursor my_cursor for select 1;
 
 -- TEST: try to create a duplicate cursor using like syntax
 -- + {declare_cursor_like_typed_names}: err
 -- * error: % duplicate variable name in the same scope 'extended_cursor'
 -- +1 error
-declare extended_cursor cursor like ( x integer );
+cursor extended_cursor like ( x integer );
 
 -- TEST: the select statement is bogus, error cascade halted so the duplicate name is not reported
 -- - duplicate
@@ -2025,13 +2025,13 @@ declare extended_cursor cursor like ( x integer );
 -- + {not}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
-declare my_cursor cursor for select not 'x';
+cursor my_cursor for select not 'x';
 
 -- TEST: the type list is bogus, this fails before the duplicate name detection
 -- + {declare_cursor_like_typed_names}: err
 -- * error: % duplicate column name 'x'
 -- +1 error
-declare extended_cursor cursor like ( x integer, x integer );
+cursor extended_cursor like ( x integer, x integer );
 
 -- TEST: standard loop with leave
 -- + {loop_stmt}: ok
@@ -2210,7 +2210,7 @@ close X;
 -- +1 error:
 create proc close_boxed_cursor(in box object<foo cursor>)
 begin
-  declare C cursor for box;
+  cursor C for box;
   close C;
 end;
 
@@ -2222,7 +2222,7 @@ declare func get_boxed_cursor() object<foo cursor>;
 -- - error:
 create proc boxed_cursor_expr()
 begin
-  declare C cursor for get_boxed_cursor();
+  cursor C for get_boxed_cursor();
 end;
 
 -- TEST: use boxed cursor from a bogus expression
@@ -2231,7 +2231,7 @@ end;
 -- +1 error:
 create proc bogus_boxed_cursor_expr()
 begin
-  declare C cursor for 12;
+  cursor C for 12;
 end;
 
 -- TEST: a working delete
@@ -2437,7 +2437,7 @@ set X := not 'x';
 -- TEST: simple cursor and fetch test
 -- + {declare_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable
 -- - error:
-declare fetch_cursor cursor for select 1, 'foo', null;
+cursor fetch_cursor for select 1, 'foo', null;
 
 -- setup variables for the upcoming tests
 declare an_int integer;
@@ -2784,7 +2784,7 @@ end;
 create proc throw_before_out()
 begin
   try
-    declare C cursor for select 1 x;
+    cursor C for select 1 x;
     fetch C;
   catch
     throw;
@@ -3008,7 +3008,7 @@ call proc_with_output(1 + X, Y, X);
 -- +1 error:
 create procedure cursors_cannot_be_used_as_out_args()
 begin
-  declare c cursor for select 0 as x;
+  cursor c for select 0 as x;
   call test_proc3(c);
 end;
 
@@ -3454,13 +3454,13 @@ end;
 -- + {declare_cursor}: curs: with_result_set: { id: integer notnull, name: text, rate: longint } variable
 -- + {name with_result_set}: with_result_set: { id: integer notnull, name: text, rate: longint } dml_proc
 -- - error:
-declare curs cursor for call with_result_set();
+cursor curs for call with_result_set();
 
 -- TEST: bad args to the function -> error path
 -- + {declare_cursor}: err
 -- * error: % too many arguments provided to procedure 'with_result_set'
 -- +1 error:
-declare curs2 cursor for call with_result_set(1);
+cursor curs2 for call with_result_set(1);
 
 -- TEST: bad invocation, needs cursor
 -- * error: % procedures with results can only be called using a cursor in global context 'with_result_set'
@@ -3471,7 +3471,7 @@ call with_result_set();
 -- * error: % cursor requires a procedure that returns a result set via select 'curs'
 -- + {declare_cursor}: err
 -- + {name proc1}: ok dml_proc
-declare curs cursor for call proc1();
+cursor curs for call proc1();
 
 -- TEST: full join with all expression options, including offset
 -- + {select_stmt}: select: { id: integer notnull, id: integer notnull, name: text, rate: longint }
@@ -3616,7 +3616,7 @@ rollback transaction to savepoint another_garbonzo;
 -- + {declare_cursor}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
 -- + {name shape_storage}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage
 -- - error:
-declare shape_storage cursor for select 1 as one, 2 as two;
+cursor shape_storage for select 1 as one, 2 as two;
 
 -- TEST: Fetch the auto cursor
 -- + {fetch_stmt}: shape_storage: select: { one: integer notnull, two: integer notnull } variable dml_proc
@@ -6801,7 +6801,7 @@ end;
 -- +1 error:
 create proc bogus_fetch()
 begin
-  declare C cursor for select * from foo T1 join foo T2 on T1.id = T2.id;
+  cursor C for select * from foo T1 join foo T2 on T1.id = T2.id;
   fetch C;
 end;
 
@@ -7171,7 +7171,7 @@ set X := 2 not between 1 and blob_var;
 create proc bogus_object_read()
 begin
   declare o1, o2, o3 object;
-  declare C cursor for select * from bar;
+  cursor C for select * from bar;
   fetch C into o1, o2, o3;
 end;
 
@@ -7205,13 +7205,13 @@ insert into blob_table_test() values() @dummy_seed(1) @dummy_nullables;
 -- TEST: simple out statement case
 create proc out_cursor_proc()
 begin
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   out C;
 end;
 
 -- needed for the next test
-declare QQ cursor like out_cursor_proc;
+cursor QQ like out_cursor_proc;
 
 -- TEST: force an error on the out cursor path, bad args
 -- {declare_cursor}: err
@@ -7239,7 +7239,7 @@ fetch QQ from call not_out_cursor_proc();
 create proc out_cursor_proc_not_shape_storage()
 begin
   declare a, b int!;
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C into a, b;
   out C;
 end;
@@ -7253,8 +7253,8 @@ end;
 create proc out_cursor_proc_incompat_results()
 begin
   declare a, b int!;
-  declare C cursor for select 1 A, 2 B;
-  declare D cursor for select 1 A, 2 C;
+  cursor C for select 1 A, 2 B;
+  cursor D for select 1 A, 2 C;
   fetch C;
   fetch D;
   out C;
@@ -7269,7 +7269,7 @@ end;
 create proc out_cursor_proc_mixed_cursor_select()
 begin
   declare a, b int!;
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   out C;
   select 1 A, 2 B;
@@ -7283,7 +7283,7 @@ end;
 create proc out_cursor_proc_mixed_cursor_select_select_first()
 begin
   declare a, b int!;
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   select 1 A, 2 B;
   out C;
@@ -7297,7 +7297,7 @@ end;
 create proc out_cursor_proc_mixed_cursor_select_then_union()
 begin
   declare a, b int!;
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   select 1 A, 2 B;
   out union C;
@@ -7308,7 +7308,7 @@ end;
 -- - error:
 create proc out_union_dml()
 begin
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   out union C;
 end;
@@ -7318,7 +7318,7 @@ end;
 -- - error:
 create proc out_union()
 begin
-  declare C cursor like select 1 A, 2 B;
+  cursor C like select 1 A, 2 B;
   fetch C using 1 A, 2 B;
   out union C;
 end;
@@ -7346,7 +7346,7 @@ end;
 -- +1 error:
 create proc out_union_call_and_out_union()
 begin
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   out union C;
   call out_union_dml();
@@ -7359,7 +7359,7 @@ end;
 -- +1 error:
 create proc out_union_call_and_out_union_other_order()
 begin
-  declare C cursor for select 1 A, 2 B;
+  cursor C for select 1 A, 2 B;
   fetch C;
   call out_union_dml();
   out union C;
@@ -7389,7 +7389,7 @@ out curs;
 -- - error:
 create proc result_reader()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
 end;
 
 -- TEST: read the result of a proc with an out cursor
@@ -7398,7 +7398,7 @@ end;
 -- +1 error:
 create proc fails_result_reader()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C;
 end;
 
@@ -7413,7 +7413,7 @@ declare proc declared_proc(id integer) out (t text);
 -- +1 error:
 create proc invalid_proc_fetch_bogus_call()
 begin
-  declare C cursor fetch from call declared_proc(not 'x');
+  cursor C fetch from call declared_proc(not 'x');
 end;
 
 -- a bogus proc for use in a later test
@@ -7427,7 +7427,7 @@ end;
 -- +1 error:
 create proc invalid_proc_fetch()
 begin
-  declare C cursor fetch from call xyzzy();
+  cursor C fetch from call xyzzy();
 end;
 
 -- TEST: read the result of a proc with an out cursor, use same var twice
@@ -7437,8 +7437,8 @@ end;
 -- +1 error:
 create proc fails_result_reader_double_decl()
 begin
-  declare C cursor fetch from call out_cursor_proc();
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
 end;
 
 -- used in the following tests
@@ -7515,7 +7515,7 @@ end;
 -- + {fetch_values_stmt}: ok
 create proc fetch_values()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C from values(1,2);
 end;
 
@@ -7526,7 +7526,7 @@ end;
 -- +2 {name _seed_}: _seed_: integer notnull variable
 create proc fetch_values_dummy()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C() from values() @dummy_seed(123) @dummy_nullables;
 end;
 
@@ -7539,7 +7539,7 @@ end;
 -- - error:
 create proc fetch_from_call()
 begin
-  declare C cursor like out_cursor_proc;
+  cursor C like out_cursor_proc;
   fetch C from call out_cursor_proc();
   out C;
 end;
@@ -7554,7 +7554,7 @@ end;
 -- +1 error:
 create proc fetch_from_call_to_proc_with_invalid_arguments()
 begin
-  declare C cursor like out_cursor_proc;
+  cursor C like out_cursor_proc;
   fetch C from call out_cursor_proc(42);
   out C;
 end;
@@ -7585,7 +7585,7 @@ end;
 -- +4 error:
 create proc fetch_from_call_to_proc_with_different_column_names()
 begin
-  declare C cursor like select 1 A, 2 C;
+  cursor C like select 1 A, 2 C;
   fetch C from call out_cursor_proc();
   out C;
 end;
@@ -7608,7 +7608,7 @@ fetch my_cursor from values(1,2,3);
 -- +1 error:
 create proc fetch_values_bogus_seed_value()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C() from values() @dummy_seed(not 'x');
 end;
 
@@ -7618,7 +7618,7 @@ end;
 -- +1 error:
 create proc fetch_values_missing_value()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C from values();
 end;
 
@@ -7628,7 +7628,7 @@ end;
 create proc blob_out()
 begin
   -- cheesy nullable blob
-  declare C cursor for select case when 1 then cast('x' as blob) else null end B;
+  cursor C for select case when 1 then cast('x' as blob) else null end B;
   fetch C;
   out C;
 end;
@@ -7639,7 +7639,7 @@ end;
 -- +1 error:
 create proc fetch_values_blob_dummy()
 begin
-  declare C cursor fetch from call blob_out();
+  cursor C fetch from call blob_out();
   fetch C() from values() @dummy_seed(123) @dummy_nullables;
 end;
 
@@ -7649,7 +7649,7 @@ end;
 -- +1 error:
 create proc fetch_values_missing_columns()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C(A) from values(1);
 end;
 
@@ -7659,7 +7659,7 @@ end;
 -- +1 error:
 create proc fetch_values_bogus_value()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C(A,B) from values(1, not 'x');
 end;
 
@@ -7669,7 +7669,7 @@ end;
 -- +1 error:
 create proc fetch_values_bogus_type()
 begin
-  declare C cursor fetch from call out_cursor_proc();
+  cursor C fetch from call out_cursor_proc();
   fetch C(A,B) from values(1, 'x');
 end;
 
@@ -7679,7 +7679,7 @@ end;
 -- - error:
 create proc fetch_values_blob_dummy_with_null()
 begin
-  declare C cursor fetch from call blob_out();
+  cursor C fetch from call blob_out();
   fetch C() from values() @dummy_seed(123);
 end;
 
@@ -7691,8 +7691,8 @@ end;
 -- - error:
 create proc fetch_to_cursor_from_cursor()
 begin
-  declare C0 cursor like select 1 A, 2 B;
-  declare C1 cursor like C0;
+  cursor C0 like select 1 A, 2 B;
+  cursor C1 like C0;
   fetch C0 from values(1, 2);
   fetch C1 from C0;
   out C1;
@@ -7709,7 +7709,7 @@ end;
 create proc fetch_to_cursor_from_invalid_cursor()
 begin
   declare C0 int;
-  declare C1 cursor like select 1 A, 2 B;
+  cursor C1 like select 1 A, 2 B;
   fetch C1 from C0;
   out C1;
 end;
@@ -7724,7 +7724,7 @@ end;
 -- +1 error:
 create proc fetch_to_invalid_cursor_from_cursor()
 begin
-  declare C0 cursor like select 1 A, 2 B;
+  cursor C0 like select 1 A, 2 B;
   declare C1 int;
   fetch C0 from values(1, 2);
   fetch C1 from C0;
@@ -7739,8 +7739,8 @@ end;
 -- +1 error:
 create proc fetch_to_statement_cursor_from_cursor()
 begin
-  declare C0 cursor like select 1 A, 2 B;
-  declare C1 cursor for select 1 A, 2 B;
+  cursor C0 like select 1 A, 2 B;
+  cursor C1 for select 1 A, 2 B;
   fetch C0 from values(1, 2);
   fetch C1 from C0;
 end;
@@ -7754,8 +7754,8 @@ end;
 -- +1 error:
 create proc fetch_to_cursor_from_cursor_with_different_columns()
 begin
-  declare C0 cursor like select 1 A, 2 B;
-  declare C1 cursor like select 1 A, 2 B, 3 C;
+  cursor C0 like select 1 A, 2 B;
+  cursor C1 like select 1 A, 2 B, 3 C;
   fetch C0 from values(1, 2);
   fetch C1 from C0;
 end;
@@ -7772,13 +7772,13 @@ create proc fetch_to_cursor_from_cursor_without_fields()
 begin
   declare X int;
   declare Y real;
-  declare C0 cursor for select 1 A, 2.5;
-  declare C1 cursor like C0;
+  cursor C0 for select 1 A, 2.5;
+  cursor C1 like C0;
   fetch C0 into X, Y;
   fetch C1 from C0;
 end;
 
--- TEST: declare a cursor like an existing cursor
+-- TEST: cursor a like an existing cursor
 -- + {create_proc_stmt}: ok dml_proc
 -- + {name declare_cursor_like_cursor}: ok dml_proc
 -- + {declare_cursor_like_name}: C1: out_cursor_proc: { A: integer notnull, B: integer notnull } variable shape_storage value_cursor
@@ -7786,11 +7786,11 @@ end;
 -- - error:
 create proc declare_cursor_like_cursor()
 begin
-  declare C0 cursor fetch from call out_cursor_proc();
-  declare C1 cursor like C0;
+  cursor C0 fetch from call out_cursor_proc();
+  cursor C1 like C0;
 end;
 
--- TEST: declare a cursor like a variable that's not a cursor
+-- TEST: cursor a like a variable that's not a cursor
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_non_cursor_variable}: err
 -- + {stmt_list}: err
@@ -7801,10 +7801,10 @@ end;
 create proc declare_cursor_like_non_cursor_variable()
 begin
     declare C0 integer;
-    declare C1 cursor like C0;
+    cursor C1 like C0;
 end;
 
--- TEST: declare a cursor with the same name as an existing variable
+-- TEST: cursor a with the same name as an existing variable
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_cursor_with_same_name}: err
 -- + {stmt_list}: err
@@ -7814,11 +7814,11 @@ end;
 -- +1 error:
 create proc declare_cursor_like_cursor_with_same_name()
 begin
-  declare C0 cursor fetch from call out_cursor_proc();
-  declare C0 cursor like C0;
+  cursor C0 fetch from call out_cursor_proc();
+  cursor C0 like C0;
 end;
 
--- TEST: declare a cursor like something that's not defined
+-- TEST: cursor a like something that's not defined
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_undefined_variable}: err
 -- + {stmt_list}: err
@@ -7828,10 +7828,10 @@ end;
 -- +1 error:
 create proc declare_cursor_like_undefined_variable()
 begin
-    declare C1 cursor like C0;
+    cursor C1 like C0;
 end;
 
--- TEST: declare a cursor like a proc
+-- TEST: cursor a like a proc
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_proc}: ok
 -- + {declare_cursor_like_name}: C: decl3: { A: integer notnull, B: bool } variable shape_storage value_cursor
@@ -7840,10 +7840,10 @@ end;
 -- - error:
 create proc declare_cursor_like_proc()
 begin
-  declare C cursor like decl3;
+  cursor C like decl3;
 end;
 
--- TEST: declare a cursor like a proc with no result
+-- TEST: cursor a like a proc with no result
 -- + {create_proc_stmt}: err
 -- + {name declare_cursor_like_proc_with_no_result}: err
 -- + {stmt_list}: err
@@ -7853,10 +7853,10 @@ end;
 -- +1 error:
 create proc declare_cursor_like_proc_with_no_result()
 begin
-  declare C cursor like decl1;
+  cursor C like decl1;
 end;
 
--- TEST: declare a cursor like a table
+-- TEST: cursor a like a table
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_table}: ok
 -- + {declare_cursor_like_name}: C: bar: { id: integer notnull, name: text, rate: longint } variable shape_storage value_cursor
@@ -7865,10 +7865,10 @@ end;
 -- - error:
 create proc declare_cursor_like_table()
 begin
-  declare C cursor like bar;
+  cursor C like bar;
 end;
 
--- TEST: declare a cursor like a view
+-- TEST: cursor a like a view
 -- + {create_proc_stmt}: ok
 -- + {name declare_cursor_like_view}: ok
 -- + {declare_cursor_like_name}: C: MyView: { f1: integer notnull, f2: integer notnull, f3: integer notnull } variable shape_storage value_cursor
@@ -7877,12 +7877,12 @@ end;
 -- - error:
 create proc declare_cursor_like_view()
 begin
-  declare C cursor like MyView;
+  cursor C like MyView;
 end;
 
--- TEST: use like syntax to declare a cursor of the type of a select statement
+-- TEST: use like syntax to cursor a of the type of a select statement
 -- + CREATE PROC declare_cursor_like_select ()
--- + DECLARE C CURSOR LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
+-- + CURSOR C LIKE SELECT 1 AS A, 2.5 AS B, 'x' AS C;
 -- + FETCH C(A, B, C) FROM VALUES(_seed_, _seed_, printf('C_%d', _seed_)) @DUMMY_SEED(123);
 -- + {declare_cursor_like_select}: C: select: { A: integer notnull, B: real notnull, C: text notnull } variable shape_storage value_cursor
 -- + {fetch_values_stmt}: ok
@@ -7890,7 +7890,7 @@ end;
 -- - error:
 create proc declare_cursor_like_select()
 begin
-  declare C cursor like select 1 A, 2.5 B, 'x' C;
+  cursor C like select 1 A, 2.5 B, 'x' C;
   fetch C() from values() @dummy_seed(123);
   out C;
 end;
@@ -7899,13 +7899,13 @@ end;
 -- + {declare_cursor_like_select}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
-declare some_cursor cursor like select 1 A, 2.5 B, not 'x' C;
+cursor some_cursor like select 1 A, 2.5 B, not 'x' C;
 
 -- TEST: duplicate cursor name
 -- + {declare_cursor_like_select}: err
 -- * error: % duplicate variable name in the same scope 'X'
 -- +1 error:
-declare X cursor like select 1 A, 2.5 B, 'x' C;
+cursor X like select 1 A, 2.5 B, 'x' C;
 
 -- TEST: pull the rowid out of a table
 -- + {select_stmt}: select: { rowid: longint notnull }
@@ -7937,7 +7937,7 @@ select rowid from foo T1, foo T2;
 -- - error:
 create proc value_result_reader()
 begin
-  declare C cursor fetch from call declare_cursor_like_select();
+  cursor C fetch from call declare_cursor_like_select();
 end;
 
 -- TEST: create table with misc attributes
@@ -8254,7 +8254,7 @@ declare select func foo(x integer, x integer) integer;
 -- + {dot}: arg3: real notnull variable in
 create proc arg_fetcher(arg1 text not null, arg2 int!, arg3 real!)
 begin
-  declare curs cursor like select 'x' A, 1 B, 3.5 C;
+  cursor curs like select 'x' A, 1 B, 3.5 C;
   fetch curs from arguments;
 end;
 
@@ -8266,7 +8266,7 @@ end;
 -- - error:
 create proc fetch_bar(extra integer, like bar)
 begin
-  declare curs cursor like bar;
+  cursor curs like bar;
   fetch curs from arguments(like bar);
 end;
 
@@ -8327,7 +8327,7 @@ begin
   insert into bar from arguments(like bogus_name_here);
 end;
 
-declare val_cursor cursor like my_cursor;
+cursor val_cursor like my_cursor;
 
 -- TEST: try to fetch a cursor from arguments but not in a procedure
 -- + {fetch_values_stmt}: err
@@ -8341,7 +8341,7 @@ fetch val_cursor from arguments;
 -- +1 error:
 create proc arg_fetcher_not_enough_args(arg1 text not null)
 begin
-  declare curs cursor like select 'x' A, 1 B, 3.5 C;
+  cursor curs like select 'x' A, 1 B, 3.5 C;
   fetch curs from arguments;
 end;
 
@@ -8476,7 +8476,7 @@ end;
 -- +1 error:
 create proc bogus_cursor_shape()
 begin
-  declare C cursor like select 1, 2;
+  cursor C like select 1, 2;
 end;
 
 -- TEST: views must have a name for every column
@@ -8491,7 +8491,7 @@ create view MyBogusView as select 1, 2;
 -- - error:
 create proc like_other_proc(like out_cursor_proc)
 begin
- declare C cursor like out_cursor_proc;
+ cursor C like out_cursor_proc;
  fetch C from arguments;
  out C;
 end;
@@ -9023,7 +9023,7 @@ end;
 -- +1 error:
 create proc fetch_null_column()
 begin
-  declare C cursor for select null AS n;
+  cursor C for select null AS n;
   fetch C;
 end;
 
@@ -10020,7 +10020,7 @@ end;
 @attribute(cql:autodrop=(table1, table2))
 create procedure autodrop_no_db()
 begin
-  declare C cursor like select 1 id;
+  cursor C like select 1 id;
   fetch c (id) from values(1);
   out c;
 end;
@@ -10933,7 +10933,7 @@ select * from foo, bar;
 -- +1 error:
 create proc bar()
 begin
-  declare C cursor for call out_cursor_proc();
+  cursor C for call out_cursor_proc();
 end;
 
 -- TEST: can't use offset without limit
@@ -11592,7 +11592,7 @@ DECLARE PROC val_fetch_dml (seed INT!) OUT (id TEXT) USING TRANSACTION;
 -- - error:
 create proc many_row_emitter()
 begin
-  declare C cursor like out_cursor_proc;
+  cursor C like out_cursor_proc;
   fetch C from call out_cursor_proc();
   out union C;
   out union C;
@@ -11732,7 +11732,7 @@ end;
 -- + {explain_stmt}: explain_query: { iselectid: integer notnull, iorder: integer notnull, ifrom: integer notnull, zdetail: text notnull }
 -- + {int 2}
 -- - error:
-declare c cursor for explain query plan select * from foo inner join bar;
+cursor c for explain query plan select * from foo inner join bar;
 
 -- TEST: explain query plan cursor in proc
 -- + {create_proc_stmt}: ok dml_proc
@@ -11744,7 +11744,7 @@ declare c cursor for explain query plan select * from foo inner join bar;
 -- - error:
 create proc explain_query_with_cursor()
 begin
-  declare c cursor for explain query plan select 1;
+  cursor c for explain query plan select 1;
   fetch c;
 end;
 
@@ -12385,7 +12385,7 @@ end;
 -- - error:
 create proc fetch_using_args_with_dummy(x int!, y real!)
 begin
-  declare C cursor like referenceable;
+  cursor C like referenceable;
   fetch C(a,b) from arguments @dummy_seed(1) @dummy_nullables;
 end;
 
@@ -12394,13 +12394,13 @@ end;
 -- - error:
 create proc fetch_from_empty_col_list()
 begin
-  declare C cursor like referenceable;
+  cursor C like referenceable;
   fetch C from values(1, 2, 'x', 'y', 5);
   out C;
 END;
 
 -- we'll need this cursor for the FROM cursor tests
-declare c_bar cursor like referenceable;
+cursor c_bar like referenceable;
 
 -- TEST: verify that we can insert from a match cursor
 -- This is a sugar feature, so we only need to check the rewrite
@@ -12424,7 +12424,7 @@ insert into referenceable() from cursor c_bar;
 insert into referenceable from cursor fetch_cursor;
 
 -- we need this cursor with only one field to test the case where the cursor is too small
-declare small_cursor cursor like select 1 x;
+cursor small_cursor like select 1 x;
 
 -- TEST: try to use a cursor that has not enough fields
 -- + {insert_stmt}: err
@@ -12509,7 +12509,7 @@ create temp table foo_data (
 );
 
 -- make a cursor on it
-declare nully_cursor cursor like foo_data;
+cursor nully_cursor like foo_data;
 
 -- TEST: use the "null fill" feature of value cursors to rewrite this monster into valid full row fetch
 -- + FETCH nully_cursor(c1, c2, c3, c4, c5, c6, c7, c8, c9, c10) FROM VALUES('x', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -12526,7 +12526,7 @@ fetch nully_cursor(c1) from values('x');
 fetch nully_cursor(c2) from values('x');
 
 -- make a small cursor and load it up, it has only 2 of the columns
-declare c1c7 cursor like select 'x' c1, nullable(3.2) c7;
+cursor c1c7 like select 'x' c1, nullable(3.2) c7;
 fetch c1c7 from values('x', 3.2);
 
 -- TEST: rewrite to use the columns of small cursor
@@ -12573,7 +12573,7 @@ fetch nully_cursor(like c1c7) from cursor not_a_symbol;
 fetch nully_cursor(like not_a_symbol) from values (1, 2);
 
 -- make a cursor with some of the bar columns
-declare id_name_cursor cursor like select 1 id, 'x' name;
+cursor id_name_cursor like select 1 id, 'x' name;
 
 -- TEST: rewrite the columns of an insert from a cursor source
 -- + INSERT INTO bar(id, name)
@@ -12611,7 +12611,7 @@ declare proc out_union_user(x integer) out union (id integer, x text);
 -- TEST: make a cursor for an externally defined out union func
 -- + {declare_cursor}: out_union_cursor: out_union_user: { id: integer, x: text } variable uses_out_union
 -- - error:
-declare out_union_cursor cursor for call out_union_user(2);
+cursor out_union_cursor for call out_union_user(2);
 
 -- a table with one sensitive column
 create table sens_table(t text @sensitive);
@@ -13039,7 +13039,7 @@ declare proc basic_source() out union (id integer, name text);
 -- - error:
 create proc basic_wrapper_out()
 begin
-  declare C cursor for call basic_source();
+  cursor C for call basic_source();
   fetch C;
   out C;
 end;
@@ -13051,7 +13051,7 @@ end;
 -- - error:
 create proc basic_wrapper_out_union()
 begin
-  declare C cursor for call basic_source();
+  cursor C for call basic_source();
   fetch C;
   out union C;
 end;
@@ -13439,7 +13439,7 @@ declare proc shape_consumer(like shape);
 -- - error:
 create proc shape_all_columns()
 begin
-   declare C cursor like shape;
+   cursor C like shape;
    fetch C from values(1, 'x');
    call shape_consumer(from C);
 end;
@@ -13462,7 +13462,7 @@ end;
 -- +1 error:
 create proc shape_some_columns_statement_cursor()
 begin
-   declare C cursor for select 1 x, 'y' y;
+   cursor C for select 1 x, 'y' y;
    call shape_consumer(from C);
 end;
 
@@ -13474,7 +13474,7 @@ declare proc shape_y_only(like small_shape);
 -- - error:
 create proc shape_some_columns()
 begin
-   declare C cursor like shape;
+   cursor C like shape;
    fetch C(x, y) from values(1, 'x');
    call shape_y_only(from C like small_shape);
 end;
@@ -13484,7 +13484,7 @@ end;
 -- +1 error:
 create proc shape_some_columns_bogus_name()
 begin
-   declare C cursor like shape;
+   cursor C like shape;
    fetch C(x, y) from values(1, 'x');
    call shape_y_only(from C like not_a_real_shape);
 end;
@@ -13499,7 +13499,7 @@ declare proc lotsa_ints(a int!, b int!, c int!, d int!);
 -- - error:
 create proc shape_args_middle()
 begin
-   declare C cursor like select 1 x, 2 y;
+   cursor C like select 1 x, 2 y;
    fetch C from values(1, 2);
    call lotsa_ints(from C, 1, 2);
    call lotsa_ints(1, from C, 2);
@@ -13719,8 +13719,8 @@ create proc cql_cursor_diff_col_without_cursor_arg()
 begin
   declare x int!;
   declare y text not null;
-  declare c1 cursor for select 1 x, 'y' y;
-  declare c2 cursor for select 1 x, 'y' y;
+  cursor c1 for select 1 x, 'y' y;
+  cursor c2 for select 1 x, 'y' y;
   fetch c1 into x, y; -- tricky, fetching but not with storage
   fetch c2;
   set a_string := cql_cursor_diff_col(c1, c2);
@@ -13738,7 +13738,7 @@ end;
 -- +1 error:
 create proc cql_cursor_unfetched()
 begin
-  declare C cursor for select 1 x;
+  cursor C for select 1 x;
   if C then end if;
 end;
 
@@ -13753,8 +13753,8 @@ end;
 -- +1 error:
 create proc cql_cursor_diff_col_wrong_cursor_type()
 begin
-  declare c1 cursor for select 1 x;
-  declare c2 cursor for select '1' x;
+  cursor c1 for select 1 x;
+  cursor c2 for select '1' x;
   fetch c1;
   fetch c2;
   set a_string := cql_cursor_diff_col(c1, c2);
@@ -13768,8 +13768,8 @@ end;
 -- +1 error:
 create proc cql_cursor_diff_col_with_wrong_col_count_arg()
 begin
-  declare c1 cursor for select 1 x, 'z' z;
-  declare c2 cursor for select 1 x;
+  cursor c1 for select 1 x, 'z' z;
+  cursor c2 for select 1 x;
   fetch c1;
   fetch c2;
   set a_string := cql_cursor_diff_col(c1, c2);
@@ -13784,8 +13784,8 @@ end;
 -- +4 error:
 create proc cql_cursor_diff_col_compatible_cursor_with_diff_col_name()
 begin
-  declare c1 cursor for select 1 x, 'y' y;
-  declare c2 cursor for select 1 z, 'v' v;
+  cursor c1 for select 1 x, 'y' y;
+  cursor c2 for select 1 z, 'v' v;
   fetch c1;
   fetch c2;
   set a_string := cql_cursor_diff_col(c1, c2);
@@ -13801,8 +13801,8 @@ end;
 -- - error:
 create proc cql_cursor_diff_col_with_shape_storage()
 begin
-  declare c1 cursor for select 1 x, 'y' y;
-  declare c2 cursor for select 1 x, 'y' y;
+  cursor c1 for select 1 x, 'y' y;
+  cursor c2 for select 1 x, 'y' y;
   fetch c1;
   fetch c2;
   set a_string := cql_cursor_diff_col(c1, c2);
@@ -13818,8 +13818,8 @@ end;
 -- - error:
 create proc print_call_cql_cursor_diff_col()
 begin
-  declare c1 cursor for select 1 x, 'y' y;
-  declare c2 cursor for select 1 x, 'v' y;
+  cursor c1 for select 1 x, 'y' y;
+  cursor c2 for select 1 x, 'v' y;
   fetch c1;
   fetch c2;
   call printf(cql_cursor_diff_col(c1, c2));
@@ -13847,8 +13847,8 @@ end;
 -- - error:
 create proc print_call_cql_cursor_diff_val()
 begin
-  declare c1 cursor for select nullable(1) x, 'y' y;
-  declare c2 cursor for select nullable(1) x, 'v' y;
+  cursor c1 for select nullable(1) x, 'y' y;
+  cursor c2 for select nullable(1) x, 'v' y;
   fetch c1;
   fetch c2;
   call printf(cql_cursor_diff_val(c1, c2));
@@ -13958,7 +13958,7 @@ set sens_text := (select trim(name) from with_sensitive);
 set sens_text := (select trim("xyz", name) result from with_sensitive);
 
 -- TEST: call cql_cursor_format on a auto cursor
--- + DECLARE c1 CURSOR FOR
+-- + CURSOR c1 FOR
 -- +  SELECT
 -- +     TRUE AS a,
 -- +     1 AS b,
@@ -13973,7 +13973,7 @@ set sens_text := (select trim("xyz", name) result from with_sensitive);
 -- - error:
 create proc print_call_cql_cursor_format()
 begin
-  declare c1 cursor for select TRUE a, 1 b, 99L c, 'x' d, nullable(1.1) e, cast('y' as blob) f;
+  cursor c1 for select TRUE a, 1 b, 99L c, 'x' d, nullable(1.1) e, cast('y' as blob) f;
   fetch c1;
   set a_string := cql_cursor_format(c1);
 end;
@@ -13986,7 +13986,7 @@ end;
 -- +1 error:
 create proc select_cql_cursor_format()
 begin
-  declare c1 cursor for select 1 as a;
+  cursor c1 for select 1 as a;
   fetch c1;
   select cql_cursor_format(c1) as p;
 end;
@@ -13999,7 +13999,7 @@ end;
 -- +1 error:
 create proc print_call_cql_not_fetch_cursor_format()
 begin
-  declare c cursor for select 1;
+  cursor c for select 1;
   declare x int!;
   fetch C into x; -- tricky, fetching but not with storage
   set a_string := cql_cursor_format(c);
@@ -14060,7 +14060,7 @@ set an_int := (select length("x"));
 -- - error:
 create proc cursor_box(out B object<bar cursor>)
 begin
-  declare C cursor for select * from bar;
+  cursor C for select * from bar;
   set B from cursor C;
 end;
 
@@ -14071,7 +14071,7 @@ end;
 -- - error:
 create proc cursor_unbox(box object<bar cursor>)
 begin
-  declare C cursor for box;
+  cursor C for box;
 end;
 
 -- TEST: unbox from an object that has no type spec
@@ -14079,7 +14079,7 @@ end;
 -- +1 error:
 create proc cursor_unbox_untyped(box object)
 begin
-  declare C cursor for box;
+  cursor C for box;
 end;
 
 -- TEST: unbox from an object that is not marked CURSOR
@@ -14087,7 +14087,7 @@ end;
 -- +1 error:
 create proc cursor_unbox_not_cursor(box object<bar>)
 begin
-  declare C cursor for box;
+  cursor C for box;
 end;
 
 -- TEST: unbox from an object that has a type spec that isn't a valid shape
@@ -14095,7 +14095,7 @@ end;
 -- +1 error:
 create proc cursor_unbox_not_a_type(box object<not_a_type cursor>)
 begin
-  declare C cursor for box;
+  cursor C for box;
 end;
 
 -- TEST: unbox and attempt to redeclare the same cursor
@@ -14103,8 +14103,8 @@ end;
 -- +1 error:
 create proc cursor_unbox_duplicate(box object<bar cursor>)
 begin
-  declare C cursor for box;
-  declare C cursor for box;
+  cursor C for box;
+  cursor C for box;
 end;
 
 -- TEST: unbox from a variable that does not exist
@@ -14112,7 +14112,7 @@ end;
 -- +1 error:
 create proc cursor_unbox_not_exists()
 begin
-  declare C cursor for box;
+  cursor C for box;
 end;
 
 -- TEST: try to box a value cursor
@@ -14120,7 +14120,7 @@ end;
 -- +1 error:
 create proc cursor_box_value(out box object<bar cursor>)
 begin
-  declare C cursor like bar;
+  cursor C like bar;
   set box from cursor C;
 end;
 
@@ -14129,7 +14129,7 @@ end;
 -- +1 error:
 create proc cursor_box_not_a_shape(out box object<barf cursor>)
 begin
-  declare C cursor for select * from bar;
+  cursor C for select * from bar;
   set box from cursor C;
 end;
 
@@ -14139,7 +14139,7 @@ end;
 -- +4 error:
 create proc cursor_box_wrong_shape(out box object<foo cursor>)
 begin
-  declare C cursor for select * from bar;
+  cursor C for select * from bar;
   set box from cursor C;
 end;
 
@@ -14156,7 +14156,7 @@ end;
 -- +1 error:
 create proc cursor_box_var_not_found()
 begin
-  declare C cursor for select * from bar;
+  cursor C for select * from bar;
   set box from cursor C;
 end;
 
@@ -14192,10 +14192,10 @@ set an_long := (select cql_get_blob_size(an_int));
 declare proc some_proc(id integer, t text, t1 text not null, b blob, out x int!);
 
 -- TEST: make a cursor using the arguments of a procedure as the shape
--- + DECLARE Q CURSOR LIKE some_proc ARGUMENTS;
+-- + CURSOR Q LIKE some_proc ARGUMENTS;
 -- + {declare_cursor_like_name}: Q: some_proc[arguments]: { id: integer in, t: text in, t1: text notnull in, b: blob in, x: integer notnull in } variable shape_storage value_cursor
 -- - error:
-declare Q cursor like some_proc arguments;
+cursor Q like some_proc arguments;
 
 -- TEST: make a procedure using a declared shape (rewrite test)
 -- + CREATE PROC some_proc_proxy (id INT, t TEXT, t1 TEXT!, b BLOB, OUT x INT!)
@@ -14235,7 +14235,7 @@ end;
 -- + {declare_cursor_like_name}: cursor_with_object: obj_proc[arguments]: { an_obj: object in } variable shape_storage value_cursor
 -- + {shape_def}: obj_proc[arguments]: { an_obj: object in }
 -- - error:
-declare cursor_with_object cursor like obj_proc arguments;
+cursor cursor_with_object like obj_proc arguments;
 
 -- TEST: try to make a proc that emits a cursor with an object in it
 -- + {create_proc_stmt}: cursor_with_object: try_to_emit_object: { an_obj: object } variable shape_storage uses_out value_cursor
@@ -14255,7 +14255,7 @@ end;
 -- - error:
 create proc test_fetch_using()
 begin
-  declare C cursor like bar;
+  cursor C like bar;
   fetch C using 1 id, NULL as name, 99 rate;
 end;
 
@@ -14265,7 +14265,7 @@ end;
 -- - error:
 create proc test_fetch_using_with_dummy_seed()
 begin
-  declare C cursor like bar;
+  cursor C like bar;
   fetch C using 1 id @dummy_seed(9) @dummy_defaults @dummy_nullables;
 end;
 
@@ -14532,7 +14532,7 @@ declare proc test_shape() (x integer_things);
 -- - error:
 create proc enum_users()
 begin
-   declare C cursor like test_shape;
+   cursor C like test_shape;
    fetch C using integer_things.pen x;
    let z := C.x;
 end;
@@ -14548,7 +14548,7 @@ declare proc enum_users_out(i integer_things) out (x integer_things);
 -- - error:
 create proc enum_users_out(i integer_things)
 begin
-  declare C cursor like test_shape;
+  cursor C like test_shape;
   fetch C using i x;
   out C;
 end;
@@ -14844,7 +14844,7 @@ end;
 -- - error:
 create proc arg_bundle_10(a1 like AB, a2 like CD)
 begin
-  declare C cursor like AB;
+  cursor C like AB;
   fetch C from a2;
 end;
 
@@ -14853,7 +14853,7 @@ end;
 -- - error:
 create proc arg_bundle_11(a1 like AB, a2 like CD)
 begin
-  declare C cursor like AB;
+  cursor C like AB;
   fetch C from a1;
 end;
 
@@ -14862,7 +14862,7 @@ end;
 -- - error:
 create proc arg_bundle_12(a1 like AB, a2 like CD)
 begin
-  declare C cursor like AB;
+  cursor C like AB;
   fetch C(a) from a1;
 end;
 
@@ -14871,7 +14871,7 @@ end;
 -- - error:
 create proc arg_bundle_13(a1 like AB, a2 like CD)
 begin
-  declare C cursor like AB;
+  cursor C like AB;
   update cursor C from a1;
 end;
 
@@ -14880,7 +14880,7 @@ end;
 -- - error:
 create proc arg_bundle_14(a1 like AB, a2 like CD)
 begin
-  declare C cursor like AB;
+  cursor C like AB;
   update cursor C(a) from a2;
 end;
 
@@ -14889,7 +14889,7 @@ end;
 -- - error:
 create proc arg_bundle_15(a1 like AB, a2 like CD)
 begin
-  declare C cursor like AB;
+  cursor C like AB;
   update cursor C from a2;
 end;
 
@@ -14898,7 +14898,7 @@ end;
 -- - error:
 create proc arg_bundle_16(a1 like AB, a2 like CD)
 begin
-  declare C cursor like a1;
+  cursor C like a1;
   update cursor C from a2;
 end;
 
@@ -15107,7 +15107,7 @@ create table with_bogus_check_expr(
 -- + {sensitive_attr}: text sensitive
 -- + {type_text}: text
 -- - error:
-declare my_type type text @sensitive;
+type my_type text @sensitive;
 
 -- TEST: can't add sensitive again
 -- * error: % an attribute was specified twice '@sensitive'
@@ -15133,7 +15133,7 @@ declare function adding_attr_to_func_redundant() create my_type @sensitive;
 -- + {declare_named_type}: text notnull
 -- + {name text_nn}: text notnull
 -- - error:
-declare text_nn type text not null;
+type text_nn text not null;
 
 -- TEST: short form to declare a type
 -- + {declare_named_type}: text notnull
@@ -15154,27 +15154,27 @@ declare nn_var_redundant text_nn not null @sensitive;
 declare nn_var_sens text_nn @sensitive;
 
 -- TEST: declare type using another declared type
--- + DECLARE my_type_1 TYPE TEXT @SENSITIVE;
+-- + TYPE my_type_1 TEXT @SENSITIVE;
 -- - error:
-declare my_type_1 type my_type;
+type my_type_1 my_type;
 
 -- TEST: declare type using another declared type
--- + DECLARE my_type_2 TYPE TEXT @SENSITIVE;
+-- + TYPE my_type_2 TEXT @SENSITIVE;
 -- - error:
-declare my_type_2 type my_type_1;
+type my_type_2 my_type_1;
 
 -- TEST: declare type using another declared type
 -- + {declare_named_type}: err
 -- * error: % unknown type 'bogus_type'
 -- +1 error:
-declare my_type type bogus_type;
+type my_type bogus_type;
 
 -- TEST: duplicate declare type definition
 -- + {declare_named_type}: err
 -- * error: % conflicting type declaration 'my_type'
 -- extra error line for the two conflicting types
 -- +3 error:
-declare my_type type integer;
+type my_type integer;
 
 -- TEST: use declared type in variable declaration
 -- + DECLARE my_var TEXT @SENSITIVE;
@@ -15190,19 +15190,19 @@ declare my_var my_type;
 declare my_var bogus_type;
 
 -- TEST: create local named type with same name. the local type have priority
--- + DECLARE my_type TYPE INT;
+-- + TYPE my_type INT;
 -- + DECLARE my_var INT;
 -- + {create_proc_stmt}: ok
 create proc named_type ()
 begin
-  declare my_type type integer;
+  type my_type integer;
   declare my_var my_type;
 end;
 
 -- TEST: declare a sensitive and not null type
--- + DECLARE my_type_sens_not TYPE TEXT! @SENSITIVE;
+-- + TYPE my_type_sens_not TEXT! @SENSITIVE;
 -- - error:
-declare my_type_sens_not type text not null @sensitive;
+type my_type_sens_not text not null @sensitive;
 
 -- used in the following test
 -- + {declare_proc_stmt}: ok
@@ -15369,7 +15369,7 @@ declare function function_uses_complex_table_attrs(like to_copy) integer;
 -- TEST: ensure cursor includes not-null and sensitive
 -- + {declare_cursor_like_name}: complex_attr_cursor: to_copy: { f1: integer, f2: integer notnull, f3: integer notnull sensitive, f4: integer sensitive } variable shape_storage value_cursor
 -- - error:
-declare complex_attr_cursor cursor like to_copy;
+cursor complex_attr_cursor like to_copy;
 
 -- TEST: make a function that creates sensitive
 -- + {declare_func_stmt}: object create_func sensitive
@@ -15415,14 +15415,14 @@ declare function maybe_create_func_bool() create bool;
 -- +1 error:
 declare function maybe_create_func_long() create long not null @sensitive;
 
--- TEST: declare a named type for object Foo
+-- TEST: type a named for object Foo
 -- + {declare_named_type}: object<Foo> notnull sensitive
 -- + {sensitive_attr}: object<Foo> notnull sensitive
 -- + {notnull}: object<Foo> notnull
 -- + {type_object}: object<Foo>
 -- + {name Foo}
 -- - error:
-declare type_obj_foo type object<Foo> not null @sensitive;
+type type_obj_foo object<Foo> not null @sensitive;
 
 -- TEST: declared function that return create object
 -- + DECLARE FUNC type_func_return_create_obj () CREATE OBJECT<Foo>! @SENSITIVE;
@@ -15444,11 +15444,11 @@ declare function type_func_return_create_bogus_obj() create bogus_type;
 declare function type_func_return_obj() type_obj_foo;
 
 -- TEST: declare type as enum name
--- + DECLARE my_enum_type TYPE INT<ints>!;
+-- + TYPE my_enum_type INT<ints>!;
 -- + {declare_named_type}: integer<ints> notnull
 -- + {notnull}: integer<ints> notnull
 -- - error:
-declare my_enum_type type ints;
+type my_enum_type ints;
 
 -- TEST: used a named type's name to declare an enum
 -- + {declare_enum_stmt}: err
@@ -15528,14 +15528,14 @@ set bb := x1 < y1;
 -- + {type_int}: integer<x_coord>
 -- + {name x_coord}
 -- - error:
-declare _x type integer<x_coord>;
+type _x integer<x_coord>;
 
 -- TEST: make an alias for an integer with kind (y)
 -- + {name y_coord}
 -- - error:
-declare _y type integer<y_coord>;
+type _y integer<y_coord>;
 
--- TEST: declare an integer with the type alias
+-- TEST: type an integer with the alias
 -- + DECLARE x4 INT<x_coord>;
 -- + {declare_vars_type}: integer<x_coord>
 -- + {name_list}: x4: integer<x_coord> variable
@@ -15616,7 +15616,7 @@ insert into xy values
 
 -- TEST: cursor should have the correct shape including kinds
 -- + {declare_cursor_like_name}: xy_curs: xy: { x: integer<x_coord>, y: integer<y_coord> } variable shape_storage value_cursor
-declare xy_curs cursor like xy;
+cursor xy_curs like xy;
 
 -- TEST: fetch cursor, ok, kinds match
 -- + {fetch_values_stmt}: ok
@@ -17119,11 +17119,11 @@ begin
   declare c text;
 
   if a is not null and (b is not null or c is not null) then
-    declare c0 cursor for select a as a0, b as b0, c as c0;
+    cursor c0 for select a as a0, b as b0, c as c0;
     if (b is not null or a like "hello") and c is not null then
-      declare c1 cursor for select a as a1, b as b1, c as c1;
+      cursor c1 for select a as a1, b as b1, c as c1;
       if b is not null then
-        declare c2 cursor for select a as a2, b as b2, c as c2;
+        cursor c2 for select a as a2, b as b2, c as c2;
       end if;
     end if;
   end if;
@@ -17348,7 +17348,7 @@ begin
   declare a int;
   declare b int;
   declare x int;
-  declare c cursor for select * from tnull;
+  cursor c for select * from tnull;
   if a is not null and b is not null then
     let x0 := a;
     let y0 := b;
@@ -17370,7 +17370,7 @@ end;
 
 -- We need this for our following tests.
 -- - error:
-declare c_global cursor like tnull;
+cursor c_global like tnull;
 
 -- TEST: Improvements work for auto cursors.
 -- + {let_stmt}: x0: integer variable
@@ -17382,7 +17382,7 @@ declare c_global cursor like tnull;
 -- - error:
 create proc improvements_work_for_auto_cursors()
 begin
-  declare c cursor for select * from tnull;
+  cursor c for select * from tnull;
   fetch c;
   let x0 := c.xn;
   let y0 := c.yn;
@@ -17408,7 +17408,7 @@ end;
 -- - error:
 create proc improvements_work_for_local_auto_cursors_that_do_not_shadow_a_global()
 begin
-  declare c_local cursor like tnull;
+  cursor c_local like tnull;
   fetch c_local from values (0, 0);
   let x0 := c_local.xn;
   let y0 := c_local.yn;
@@ -17436,7 +17436,7 @@ end;
 -- - error:
 create proc improvements_work_for_auto_cursors_that_shadow_a_global()
 begin
-  declare c_global cursor like select nullable(1) as xn, nullable(2) as yn;
+  cursor c_global like select nullable(1) as xn, nullable(2) as yn;
   fetch c_global from values (0, 0);
   let x0 := c_global.xn;
   let y0 := c_global.yn;
@@ -17624,7 +17624,7 @@ begin
     -- subexpression due to branch-independent analysis.
     let x10 := iif(0, returns_int_not_null(), some_global);
     -- Fetching from a procedure will also invalidate the improvement.
-    declare c cursor fetch from call out_cursor_proc();
+    cursor c fetch from call out_cursor_proc();
     let x11 := some_global;
     -- Re-improve the global.
     if some_global is null return;
@@ -17743,12 +17743,12 @@ end;
 -- - error:
 create proc notnull_inferred_does_not_get_copied_via_declare_cursor_like_cursor()
 begin
-  declare c cursor like tnull;
+  cursor c like tnull;
   fetch c from values (1, 2);
   if c.xn is not null and c.yn is not null then
     let x0 := c.xn;
     let y0 := c.yn;
-    declare d cursor like c;
+    cursor d like c;
     let x1 := c.xn;
     let y1 := c.yn;
     let x2 := d.xn;
@@ -17768,15 +17768,15 @@ end;
 -- - error:
 create proc notnull_inferred_does_not_get_copied_via_declare_cursor_like_proc()
 begin
-  declare c cursor like improvements_work_for_in_args arguments;
+  cursor c like improvements_work_for_in_args arguments;
   fetch c from values (0);
   if c.a is not null then
     let x0 := c.a;
-    declare d cursor like improvements_work_for_in_args arguments;
+    cursor d like improvements_work_for_in_args arguments;
     fetch d from values (0);
     let x1 := c.a;
     let x2 := d.a;
-    declare e cursor like improvements_work_for_in_args arguments;
+    cursor e like improvements_work_for_in_args arguments;
   end if;
 end;
 
@@ -17784,7 +17784,7 @@ end;
 -- - error:
 create proc returns_nullable_int()
 begin
-  declare c cursor like select nullable(0) as a;
+  cursor c like select nullable(0) as a;
   out c;
 end;
 
@@ -17797,7 +17797,7 @@ create proc notnull_inferred_does_not_get_copied_via_arguments_like_proc(args li
 begin
   if args.a is not null then
     let x0 := args.a;
-    declare c cursor fetch from call returns_nullable_int();
+    cursor c fetch from call returns_nullable_int();
     let x1 := c.a;
   end if;
 end;
@@ -17911,7 +17911,7 @@ end;
 -- - error:
 create proc guard_improvements_work_for_cursor_fields()
 begin
-  declare c cursor for select nullable(1) a;
+  cursor c for select nullable(1) a;
   fetch c;
   if 1 then
     if c.a is null return;
@@ -18525,7 +18525,7 @@ begin
   let x4 := a; -- nonnull
   let y4 := b; -- nonnull
 
-  declare foo cursor for select 1 bar;
+  cursor foo for select 1 bar;
   loop fetch foo
   begin
     let x5 := a; -- nullable
@@ -18601,7 +18601,7 @@ begin
   let x3 := a; -- nonnull
   let y3 := b; -- nonnull
 
-  declare foo cursor for select 1 bar;
+  cursor foo for select 1 bar;
   loop fetch foo
   begin
     if 0 then
@@ -19023,7 +19023,7 @@ end;
 create proc fetch_into_initializes()
 begin
   declare a text not null;
-  declare foo cursor for select "text" bar;
+  cursor foo for select "text" bar;
   fetch foo into a;
   let x := a;
 end;
@@ -19234,7 +19234,7 @@ end;
 -- - error:
 create proc improvements_work_for_dots_that_shadow_globals(X like some_proc arguments)
 begin
-  declare Y cursor for select nullable(1) id;
+  cursor Y for select nullable(1) id;
   fetch Y;
   if X.id is not null and Y.id is not null then
     let x_ := X.id;
@@ -20660,25 +20660,25 @@ create table Shape_uvxy (like Shape_xy, like Shape_uv);
 -- - error:
 create proc ShapeTrix()
 begin
-  declare C cursor for select Shape_xy.*, 1 u, 2 v from Shape_xy;
+  cursor C for select Shape_xy.*, 1 u, 2 v from Shape_xy;
   fetch C;
   insert into Shape_xy values(from C like Shape_xy);
   insert into Shape_xy values (1,2), (3,4), (from C like Shape_xy);
 
-  declare D cursor for select * from Shape_uv;
+  cursor D for select * from Shape_uv;
   fetch D;
 
-  declare R cursor like Shape_uvxy;
+  cursor R like Shape_uvxy;
   fetch R from values (from C like Shape_xy, from D);
 
   update cursor  R from values (from C like Shape_xy, from D);
 
-  declare S cursor for
+  cursor S for
     with cte1(l,m,n,o) as (values (from C like Shape_xy, from D))
      select * from cte1;
   fetch S;
 
-  declare T cursor for
+  cursor T for
     with cte2(l,m,n,o) as (values (1,2,'3','4'), (from C like Shape_xy, from D))
      select * from cte2;
   fetch S;
@@ -20697,7 +20697,7 @@ end;
 -- +1 error:
 create proc ShapeTrixError2()
 begin
-  declare R cursor like Shape_uvxy;
+  cursor R like Shape_uvxy;
   fetch R from values (from not_a_cursor);
 end;
 
@@ -20706,7 +20706,7 @@ end;
 -- +1 error:
 create proc ShapeTrixError3()
 begin
-  declare R cursor like Shape_uvxy;
+  cursor R like Shape_uvxy;
   fetch R() from values () @dummy_seed(1);
   update cursor R from values (from not_a_cursor);
 end;
@@ -21292,14 +21292,14 @@ create table structured_storage(
 -- - error:
 create proc blob_serialization_test()
 begin
-  declare C cursor for select 1 id, 'foo' name;
+  cursor C for select 1 id, 'foo' name;
   fetch C;
 
   declare B blob<structured_storage>;
 
   set B from cursor C;
 
-  declare D cursor like C;
+  cursor D like C;
   fetch D from B;
 end;
 
@@ -21842,7 +21842,7 @@ end;
 -- +1 error:
 create proc blob_serialization_test_type_mismatch()
 begin
-  declare C cursor for select 1 id, 5 name;
+  cursor C for select 1 id, 5 name;
   fetch C;
 
   declare B blob<structured_storage>;
@@ -21855,7 +21855,7 @@ end;
 -- +1 error:
 create proc blob_serialization_test_type_not_a_table()
 begin
-  declare C cursor for select 1 id, 'name' name;
+  cursor C for select 1 id, 'name' name;
   fetch C;
 
   declare B blob<not_a_table>;
@@ -21868,7 +21868,7 @@ end;
 -- +1 error:
 create proc blob_serialization_test_type_is_a_view()
 begin
-  declare C cursor for select 1 id, 'name' name;
+  cursor C for select 1 id, 'name' name;
   fetch C;
 
   declare B blob<MyView>;
@@ -21881,7 +21881,7 @@ end;
 -- +1 error:
 create proc blob_serialization_test_type_has_no_kind()
 begin
-  declare C cursor for select 1 id, 'name' name;
+  cursor C for select 1 id, 'name' name;
   fetch C;
 
   declare B blob;
@@ -21894,7 +21894,7 @@ end;
 -- +1 error:
 create proc blob_serialization_test_no_storage()
 begin
-  declare C cursor for select 1 id, 5 name;
+  cursor C for select 1 id, 5 name;
 
   declare B blob<structured_storage>;
 
@@ -21907,7 +21907,7 @@ end;
 -- +1 error:
 create proc blob_serialization_test_valid_cursor()
 begin
-  declare C cursor for select 1 id, 5 name;
+  cursor C for select 1 id, 5 name;
 
   declare B blob<structured_storage>;
 
@@ -21921,7 +21921,7 @@ end;
 create proc blob_serialization_not_storage_table()
 begin
   declare b blob<foo>;
-  declare C cursor like foo;
+  cursor C like foo;
   fetch C from b;
 end;
 
@@ -21931,7 +21931,7 @@ end;
 -- +1 error:
 create proc blob_deseralized_from_err()
 begin
-  declare C cursor like foo;
+  cursor C like foo;
   fetch C from blob not 'x';
 end;
 
@@ -21941,7 +21941,7 @@ end;
 -- +1 error:
 create proc blob_deseralized_from_not_a_blob()
 begin
-  declare C cursor like foo;
+  cursor C like foo;
   fetch C from blob 1;
 end;
 
@@ -22136,7 +22136,7 @@ create table has_row_check_blob (a text not null, b text);
 -- +1 error:
 create proc has_row_check_required_before_using_nonnull_reference_field()
 begin
-  declare c cursor for select * from has_row_check_table;
+  cursor c for select * from has_row_check_table;
   fetch c;
   -- Illegal due to `c.a` having type `TEXT NOT NULL`.
   let x := c.a;
@@ -22154,7 +22154,7 @@ end;
 -- +2 error:
 create proc has_row_checks_can_be_positive_or_negative()
 begin
-  declare c cursor for select * from has_row_check_table;
+  cursor c for select * from has_row_check_table;
   fetch c;
   -- Illegal.
   let x0 := c.a;
@@ -22182,23 +22182,23 @@ end;
 -- +1 error:
 create proc fetch_values_requires_no_has_row_check(like has_row_check_table)
 begin
-  declare c0 cursor like has_row_check_table;
+  cursor c0 like has_row_check_table;
   fetch c0 from values ("text", null);
   -- Legal due to the fetch values form.
   let x0 := c0.a;
 
-  declare c1 cursor like has_row_check_table;
+  cursor c1 like has_row_check_table;
   fetch c1 from arguments;
   -- Legal due to the fetch values form.
   let x1 := c1.a;
 
   declare b blob<has_row_check_blob>;
-  declare c2 cursor like has_row_check_blob;
+  cursor c2 like has_row_check_blob;
   fetch c2 from b;
   -- Legal due to the fetch values form.
   let x2 := c2.a;
 
-  declare c3 cursor for select * from has_row_check_table;
+  cursor c3 for select * from has_row_check_table;
   fetch c3;
   -- Illegal.
   let x3 := c3.a;
@@ -22213,7 +22213,7 @@ end;
 -- +1 error:
 create proc fetching_again_requires_another_check()
 begin
-  declare c cursor for select * from has_row_check_table;
+  cursor c for select * from has_row_check_table;
   fetch c;
   if not c return;
   -- Legal due to a negative check.
@@ -22236,7 +22236,7 @@ end;
 -- +1 error:
 create proc fetching_with_loop_requires_no_check()
 begin
-  declare c cursor for select * from has_row_check_table;
+  cursor c for select * from has_row_check_table;
   loop fetch c
   begin
     -- Legal due to the loop only running if we have a row.
@@ -22255,8 +22255,8 @@ end;
 -- +1 error:
 create proc refetching_within_loop_may_unimprove_cursor_earlier_in_loop()
 begin
-  declare c0 cursor for select * from has_row_check_table;
-  declare c1 cursor for select * from has_row_check_table;
+  cursor c0 for select * from has_row_check_table;
+  cursor c1 for select * from has_row_check_table;
   fetch c0;
   if not c0 return;
   loop fetch c1
@@ -22313,8 +22313,8 @@ end;
 declare group var_group
 begin
   declare var_group_var1 integer;
-  declare var_group_var2 cursor like foo;
-  declare var_group_var3 cursor like select 1 x, "2" y;
+  cursor var_group_var2 like foo;
+  cursor var_group_var3 like select 1 x, "2" y;
 end;
 
 -- TEST: duplicate var group is ok
@@ -22323,8 +22323,8 @@ end;
 declare group var_group
 begin
   declare var_group_var1 integer;
-  declare var_group_var2 cursor like foo;
-  declare var_group_var3 cursor like select 1 x, "2" y;
+  cursor var_group_var2 like foo;
+  cursor var_group_var3 like select 1 x, "2" y;
 end;
 
 -- TEST: non-duplicate var group = error
@@ -22997,17 +22997,17 @@ end;
 -- + CREATE PROC test_parent_child ()
 -- + BEGIN
 -- +   DECLARE __result__0 BOOL!;
--- +   DECLARE __key__0 CURSOR LIKE test_child(x);
+-- +   CURSOR __key__0 LIKE test_child(x);
 -- +   LET __partition__0 := cql_partition_create();
--- +   DECLARE __child_cursor__0 CURSOR FOR
+-- +   CURSOR __child_cursor__0 FOR
 -- +     CALL test_child(1);
 -- +   LOOP FETCH __child_cursor__0
 -- +   BEGIN
 -- +     FETCH __key__0(x) FROM VALUES(__child_cursor__0.x);
 -- +     SET __result__0 := cql_partition_cursor(__partition__0, __key__0, __child_cursor__0);
 -- +   END;
--- +   DECLARE __out_cursor__0 CURSOR LIKE (x INT, my_child OBJECT<test_child SET>!);
--- +   DECLARE __parent__0 CURSOR FOR
+-- +   CURSOR __out_cursor__0 LIKE (x INT, my_child OBJECT<test_child SET>!);
+-- +   CURSOR __parent__0 FOR
 -- +     CALL test_parent(2);
 -- +   LOOP FETCH __parent__0
 -- +   BEGIN
@@ -23039,7 +23039,7 @@ end;
 -- * error: % object<T SET> has a T that is not a procedure with a result set 'C SET'
 create proc test_object_types()
 begin
-  declare C cursor like (id integer);
+  cursor C like (id integer);
   declare u object<goo cursor>;
   declare w object<C cursor>;
   declare x object<C set>;
@@ -23076,7 +23076,7 @@ create table dummy_table_for_backed_test(id integer);
 -- ensure kind "cool_text" is preserved
 -- + {declare_cursor}: backed_cursor: select: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull } variable dml_proc
 -- + {cte_table}: simple_backed_table: { rowid: longint notnull, id: integer notnull, name: text<cool_text> notnull }
-declare backed_cursor CURSOR for select * from simple_backed_table;
+cursor backed_cursor for select * from simple_backed_table;
 
 -- TEST: inserting using simple_backed should work even if it isn't the target
 -- verify rewrite only
@@ -23184,7 +23184,7 @@ begin
   limit 1;
 
   -- Update statement from a cursor
-  declare C cursor like update_test_1;
+  cursor C like update_test_1;
   fetch C from values(1, "foo");
   update update_test_1
   set (like update_test_1) = (from C)
@@ -23245,7 +23245,7 @@ create table update_stmt_table(
 -- - error:
 proc test_update_from_insert_list(like update_stmt_table(id, name))
 begin
-  declare cur cursor like update_stmt_table(a, b, c);
+  cursor cur like update_stmt_table(a, b, c);
   fetch cur from values("a", "b", "c");
   
   update update_stmt_table
@@ -23966,7 +23966,7 @@ create table `xyz``abc`
 
 -- TEST: make a cursor on an exotic name and fetch from it
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE C CURSOR FOR
+-- + CURSOR C FOR
 -- +   SELECT *
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", C.x, C.`a b`);
@@ -23986,7 +23986,7 @@ end;
 
 -- TEST: Test several expansions
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE D CURSOR FOR
+-- + CURSOR D FOR
 -- +   SELECT `xyz``abc`.*
 -- + FROM `xyz``abc`;
 -- + CALL printf("%d %d", D.x, D.`a b`);
@@ -24021,8 +24021,8 @@ end;
 
 -- TEST: cursor forms with exotic columns
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE Q CURSOR LIKE `xyz``abc`(-`a b`);
--- + DECLARE R CURSOR LIKE `xyz``abc`;
+-- + CURSOR Q LIKE `xyz``abc`(-`a b`);
+-- + CURSOR R LIKE `xyz``abc`;
 -- + FETCH R(x, `a b`) FROM VALUES(1, 2);
 -- + CALL printf("%d %d\n", R.x, R.`a b`);
 -- + FETCH R(x, `a b`) FROM VALUES(3, 4);
@@ -24145,7 +24145,7 @@ insert into `xyz``abc`(x) values(2) @dummy_seed(500);
 
 -- TEST: create a cursor and expand it using the from form
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE C CURSOR FOR
+-- + CURSOR C FOR
 -- +   SELECT *
 -- + FROM `xyz``abc`;
 -- + INSERT INTO `xyz``abc`(x, `a b`)
@@ -24211,7 +24211,7 @@ end;
 
 -- TEST: boxed cursor constructs and unusual box object
 -- verify that echoing is re-emitting the escaped text
--- + DECLARE C CURSOR FOR
+-- + CURSOR C FOR
 -- +  SELECT 1 AS x;
 -- + DECLARE `box obj` OBJECT<C CURSOR>;
 -- + SET `box obj` FROM CURSOR C;
@@ -24220,7 +24220,7 @@ end;
 -- - error:
 create proc cursor_boxing_with_qid()
 begin
-  declare C cursor for select 1 x;
+  cursor C for select 1 x;
   declare `box obj` object<C cursor>;
   set `box obj` from cursor C;
 end;
@@ -24359,7 +24359,7 @@ end;
 -- + {declare_cursor}: c: select: { a: text notnull, b: text } variable dml_proc
 -- - error:
 create proc cursor_nullability_improvement_with_logical_operators() begin
-  declare c cursor for select * from has_row_check_table;
+  cursor c for select * from has_row_check_table;
   fetch c;
 
   -- Nullability improvement with AND.
@@ -24401,6 +24401,6 @@ begin
   call using_rc(cant_change);
 
   -- fetch into variable not allowed
-  declare my_cursor cursor for select 1 as one;
+  cursor my_cursor for select 1 as one;
   fetch fetch_cursor into cant_change;
 end;

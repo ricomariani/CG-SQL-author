@@ -4550,7 +4550,7 @@
 
     CREATE PROC atypical_noreturn ()
     BEGIN
-    DECLARE C CURSOR LIKE SELECT 1 AS A;
+    CURSOR C LIKE SELECT 1 AS A;
     END
 
     {
@@ -4567,7 +4567,7 @@
 
     CREATE PROC typical_outresult ()
     BEGIN
-    DECLARE C CURSOR LIKE SELECT 1 AS A;
+    CURSOR C LIKE SELECT 1 AS A;
 
     FETCH C(A) FROM VALUES(7);
 
@@ -4596,7 +4596,7 @@
 
     CREATE PROC typical_out_union_result ()
     BEGIN
-    DECLARE C CURSOR LIKE SELECT 1 AS A;
+    CURSOR C LIKE SELECT 1 AS A;
 
     FETCH C(A) FROM VALUES(7);
 
@@ -4877,7 +4877,7 @@
     BEGIN
     END;
 
-    DECLARE c CURSOR FOR
+    CURSOR c FOR
       SELECT 1 AS x;
 
     LOOP FETCH c

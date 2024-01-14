@@ -1216,8 +1216,8 @@ test/sem_test.sql:XXXX:1: error: in sensitive_attr : CQL0367: an attribute was s
 test/sem_test.sql:XXXX:1: error: in notnull : CQL0367: an attribute was specified twice 'not null'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE INT
+test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type INT
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_named_type : CQL0359: conflicting type declaration 'my_type'
 test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'bogus_type'
@@ -1243,7 +1243,7 @@ test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0361: return data type in a create function declaration can only be text, blob or object
 test/sem_test.sql:XXXX:1: error: in create_data_type : CQL0360: unknown type 'bogus_type'
 Incompatible declarations found
-test/sem_test.sql:XXXX:1: error: in declare_named_type : DECLARE my_type TYPE TEXT @SENSITIVE
+test/sem_test.sql:XXXX:1: error: in declare_named_type : TYPE my_type TEXT @SENSITIVE
 test/sem_test.sql:XXXX:1: error: in declare_enum_stmt : DECLARE ENUM my_type INT (
   negative_one = -1,
   postive_one = 1
@@ -1610,8 +1610,8 @@ END
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : DECLARE GROUP var_group
 BEGIN
   DECLARE var_group_var1 INT;
-  DECLARE var_group_var2 CURSOR LIKE foo;
-  DECLARE var_group_var3 CURSOR LIKE SELECT 1 AS x, "2" AS y;
+  CURSOR var_group_var2 LIKE foo;
+  CURSOR var_group_var3 LIKE SELECT 1 AS x, "2" AS y;
 END
 The above must be identical.
 test/sem_test.sql:XXXX:1: error: in declare_group_stmt : CQL0463: variable definitions do not match in group 'var_group'

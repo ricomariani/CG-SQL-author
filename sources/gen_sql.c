@@ -4349,7 +4349,7 @@ static void gen_declare_cursor(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(source, ast->right);
 
-  gen_printf("DECLARE %s CURSOR FOR", name);
+  gen_printf("CURSOR %s FOR", name);
 
   if (is_select_stmt(source) || is_ast_call_stmt(source)) {
     // The two statement cases are unified
@@ -4369,7 +4369,7 @@ static void gen_declare_cursor_like_name(ast_node *ast) {
   EXTRACT_STRING(new_cursor_name, ast->left);
   EXTRACT_NOTNULL(shape_def, ast->right);
 
-  gen_printf("DECLARE %s CURSOR ", new_cursor_name);
+  gen_printf("CURSOR %s ", new_cursor_name);
   gen_shape_def(shape_def);
 }
 
@@ -4378,7 +4378,7 @@ static void gen_declare_cursor_like_select(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf("DECLARE %s CURSOR LIKE ", name);
+  gen_printf("CURSOR %s LIKE ", name);
   gen_one_stmt(stmt);
 }
 
@@ -4387,7 +4387,7 @@ static void gen_declare_cursor_like_typed_names(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(typed_names, ast->right);
 
-  gen_printf("DECLARE %s CURSOR LIKE (", name);
+  gen_printf("CURSOR %s LIKE (", name);
   gen_typed_names(typed_names);
   gen_printf(")");
 }
@@ -4397,9 +4397,9 @@ static void gen_declare_named_type(ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
 
-  gen_printf("DECLARE ");
+  gen_printf("TYPE ");
   gen_name(name_ast);
-  gen_printf(" TYPE ");
+  gen_printf(" ");
   gen_data_type(data_type);
 }
 
@@ -4408,7 +4408,7 @@ static void gen_declare_value_cursor(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf("DECLARE %s CURSOR FETCH FROM ", name);
+  gen_printf("CURSOR %s FETCH FROM ", name);
   gen_one_stmt(stmt);
 }
 

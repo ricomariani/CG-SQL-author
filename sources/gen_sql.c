@@ -2087,13 +2087,24 @@ static void gen_expr_between_rewrite(ast_node *ast, CSTR op, int32_t pri, int32_
   Contract(is_ast_between_rewrite(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
+  // even though we did a rewrwite on the AST to make codegen easier we want to
+  // echo this back the way it was originally written.  This is important to allow
+  // the echoed codegen to reparse in tests -- this isn't a case of sugar, we've
+  // added a codegen temporary into the AST and it really doesn't belong in the output
+
   if (pri_new < pri) gen_printf("(");
-  gen_printf("BETWEEN REWRITE ");
-  gen_expr(range->left, pri_new);
-  gen_printf(" := ");
+
   gen_expr(ast->left, pri_new);
-  gen_printf(" CHECK ");
-  gen_expr(range->right, pri_new);
+  if (is_ast_or(range->right)) {
+    gen_printf(" NOT BETWEEN ");
+  }
+  else {
+    gen_printf(" BETWEEN ");
+  }
+  gen_expr(range->right->left->right, pri_new);
+  gen_printf(" AND ");
+  gen_expr(range->right->right->right, pri_new);
+
   if (pri_new < pri) gen_printf(")");
 }
 

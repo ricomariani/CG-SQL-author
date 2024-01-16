@@ -58161,7 +58161,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0070: expressions of differ
 
 The statement ending at line XXXX
 
-SET b0 := BETWEEN REWRITE _between_0_ := x1 CHECK (_between_0_ >= x2 AND _between_0_ <= x3);
+SET b0 := x1 BETWEEN x2 AND x3;
 
   {assign}: b0: bool variable was_set
   | {name b0}: b0: bool variable was_set

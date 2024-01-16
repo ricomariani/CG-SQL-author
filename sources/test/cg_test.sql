@@ -339,13 +339,13 @@ begin
 end;
 
 -- TEST: simple between
--- + SET b2 := BETWEEN REWRITE _between_0_ := 1 CHECK (_between_0_ >= 0 AND _between_0_ <= 3);
+-- + SET b2 := 1 BETWEEN 0 AND 3;
 -- + _between_0_ = 1;
 -- + b2 = _between_0_ >= 0 && _between_0_ <= 3;
 set b2 := 1 between 0 and 3;
 
 -- TEST: between with some nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_1_ := i1_nullable CHECK (_between_1_ >= i0_nullable AND _between_1_ <= r2);
+-- + SET i0_nullable := i1_nullable BETWEEN i0_nullable AND r2;
 -- + cql_set_nullable(_between_1_, i1_nullable.is_null, i1_nullable.value);
 -- + cql_combine_nullables(_tmp_n_bool_1, _between_1_.is_null, i0_nullable.is_null, _between_1_.value >= i0_nullable.value);
 -- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -364,7 +364,7 @@ set b2 := 1 between 0 and 3;
 set i0_nullable := i1_nullable between i0_nullable and r2;
 
 -- TEST: between with different nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_2_ := i1_nullable CHECK (_between_2_ >= r2 AND _between_2_ <= i0_nullable);
+-- + SET i0_nullable := i1_nullable BETWEEN r2 AND i0_nullable;
 -- + cql_set_nullable(_between_2_, i1_nullable.is_null, i1_nullable.value);
 -- + cql_set_nullable(_tmp_n_bool_1, _between_2_.is_null, _between_2_.value >= r2);
 -- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -383,13 +383,13 @@ set i0_nullable := i1_nullable between i0_nullable and r2;
 set i0_nullable := i1_nullable between r2 and i0_nullable;
 
 -- TEST: simple not between
--- + SET b2 := BETWEEN REWRITE _between_3_ := 1 CHECK (_between_3_ < 0 OR _between_3_ > 3);
+-- + SET b2 := 1 NOT BETWEEN 0 and 3;
 -- + _between_3_ = 1;
 -- + b2 = _between_3_ < 0 || _between_3_ > 3;
 set b2 := 1 not between 0 and 3;
 
 -- TEST: not between with some nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_4_ := i1_nullable CHECK (_between_4_ < i0_nullable OR _between_4_ > r2);
+-- + SET I0_NULLABLE := I1_NULLABLE NOT BETWEEN i0_nullable AND r2;
 -- + cql_set_nullable(_between_4_, i1_nullable.is_null, i1_nullable.value);
 -- + cql_combine_nullables(_tmp_n_bool_1, _between_4_.is_null, i0_nullable.is_null, _between_4_.value < i0_nullable.value);
 -- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -408,7 +408,7 @@ set b2 := 1 not between 0 and 3;
 set i0_nullable := i1_nullable not between i0_nullable and r2;
 
 -- TEST: not between with different nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_5_ := i1_nullable CHECK (_between_5_ < r2 OR _between_5_ > i0_nullable);
+-- + SET i0_nullable := i1_nullable NOT BETWEEN r2 AND i0_nullable;
 -- + cql_set_nullable(_between_5_, i1_nullable.is_null, i1_nullable.value);
 -- + cql_set_nullable(_tmp_n_bool_1, _between_5_.is_null, _between_5_.value < r2);
 -- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -617,13 +617,13 @@ set i2 := 3 not in (1, 2, null, 4);
 set i0_nullable := i1_nullable not in (1, 2, null, b0_nullable);
 
 -- TEST: between with strings
--- + SET b2 := BETWEEN REWRITE _between_6_ := 'b' CHECK (_between_6_ >= 'a' AND _between_6_ <= 'c');
+-- + SET b2 := 'b' BETWEEN 'a' and 'c';
 -- + cql_set_string_ref(&_between_6_, _literal_%_b_);
 -- + b2 = cql_string_compare(_between_6_, _literal_%_a_) >= 0 && cql_string_compare(_between_6_, _literal_%_c_) <= 0;
 set b2 := 'b' between 'a' and 'c';
 
 -- TEST: between with nullable strings right
--- + SET b0_nullable := BETWEEN REWRITE _between_7_ := 'b' CHECK (_between_7_ >= 'a' AND _between_7_ <= t0_nullable);
+-- + SET b0_nullable := 'b' BETWEEN 'a' AND t0_nullable;
 -- + cql_set_string_ref(&_between_7_, _literal_%_b_);
 -- + if (!(cql_string_compare(_between_7_, _literal_%_a_) >= 0)) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 0);
@@ -641,7 +641,7 @@ set b2 := 'b' between 'a' and 'c';
 set b0_nullable := 'b' between 'a' and t0_nullable;
 
 -- TEST: between with nullable strings left
--- + SET b0_nullable := BETWEEN REWRITE _between_8_ := 'b' CHECK (_between_8_ >= t0_nullable AND _between_8_ <= 'c');
+-- + SET b0_nullable := 'b' BETWEEN t0_nullable and 'c';
 -- + cql_set_string_ref(&_between_8_, _literal_%_b_);
 -- + cql_combine_nullables(_tmp_n_bool_1, !_between_8_, !t0_nullable, cql_string_compare(_between_8_, t0_nullable) >= 0);
 -- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -659,7 +659,7 @@ set b0_nullable := 'b' between 'a' and t0_nullable;
 set b0_nullable := 'b' between t0_nullable and 'c';
 
 -- TEST: between with nullable strings null operand
--- + SET b0_nullable := BETWEEN REWRITE _between_9_ := 'b' CHECK (_between_9_ >= NULL AND _between_9_ <= 'c');
+-- + SET b0_nullable := 'b' BETWEEN NULL AND 'c';
 -- + cql_set_string_ref(&_between_9_, _literal_%_b_);
 -- + cql_set_null(_tmp_n_bool_1);
 -- + if (cql_is_nullable_false(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -677,13 +677,13 @@ set b0_nullable := 'b' between t0_nullable and 'c';
 set b0_nullable := 'b' between null and 'c';
 
 -- TEST: not between with strings
--- + SET b2 := BETWEEN REWRITE _between_10_ := 'b' CHECK (_between_10_ < 'a' OR _between_10_ > 'c');
+-- + SET b2 := 'b' NOT BETWEEN 'a' AND 'c';
 -- + cql_set_string_ref(&_between_10_, _literal_%_b_);
 -- + b2 = cql_string_compare(_between_10_, _literal_%_a_) < 0 || cql_string_compare(_between_10_, _literal_%_c_) > 0;
 set b2 := 'b' not between 'a' and 'c';
 
 -- TEST: not between with nullable strings right
--- + SET b0_nullable := BETWEEN REWRITE _between_11_ := 'b' CHECK (_between_11_ < 'a' OR _between_11_ > t0_nullable);
+-- + SET b0_nullable := 'b' NOT BETWEEN 'a' AND t0_nullable;
 -- + cql_set_string_ref(&_between_11_, _literal_%_b_);
 -- + if (cql_string_compare(_between_11_, _literal_%_a_) < 0) {
 -- +   cql_set_notnull(_tmp_n_bool_0, 1);
@@ -701,7 +701,7 @@ set b2 := 'b' not between 'a' and 'c';
 set b0_nullable := 'b' not between 'a' and t0_nullable;
 
 -- TEST: not between with nullable strings left
--- + SET b0_nullable := BETWEEN REWRITE _between_12_ := 'b' CHECK (_between_12_ < t0_nullable OR _between_12_ > 'c');
+-- + SET b0_nullable := 'b' NOT BETWEEN t0_nullable AND 'c';
 -- + cql_set_string_ref(&_between_12_, _literal_%_b_);
 -- + cql_combine_nullables(_tmp_n_bool_1, !_between_12_, !t0_nullable, cql_string_compare(_between_12_, t0_nullable) < 0);
 -- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {
@@ -719,8 +719,7 @@ set b0_nullable := 'b' not between 'a' and t0_nullable;
 set b0_nullable := 'b' not between t0_nullable and 'c';
 
 -- TEST: not between with nullable strings null operand
--- verify rewrite
--- + SET b0_nullable := BETWEEN REWRITE _between_13_ := 'b' CHECK (_between_13_ < NULL OR _between_13_ > 'c');
+-- + SET b0_nullable := 'b' NOT BETWEEN null AND 'c';
 -- + cql_set_string_ref(&_between_%, _literal_%_b_);
 -- + cql_set_null(_tmp_n_bool_1);
 -- + if (cql_is_nullable_true(_tmp_n_bool_1.is_null, _tmp_n_bool_1.value)) {

@@ -325,37 +325,37 @@ begin
 end;
 
 -- TEST: simple between
--- + SET b2 := BETWEEN REWRITE _between_0_ := 1 CHECK (_between_0_ >= 0 AND _between_0_ <= 3);
+-- + SET b2 := 1 BETWEEN 0 AND 3;
 -- + _between_0_ = 1
 -- + b2 = _between_0_ >= 0 and _between_0_ <= 3
 set b2 := 1 between 0 and 3;
 
 -- TEST: between with some nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_1_ := i1_nullable CHECK (_between_1_ >= i0_nullable AND _between_1_ <= r2);
+-- + SET i0_nullable := i1_nullable BETWEEN i0_nullable AND r2;
 -- + _between_1_ = i1_nullable
 -- + i0_nullable = cql_to_num(cql_shortcircuit_and(cql_ge(_between_1_, i0_nullable), function() return cql_le(_between_1_, r2) end))
 set i0_nullable := i1_nullable between i0_nullable and r2;
 
 -- TEST: between with different nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_2_ := i1_nullable CHECK (_between_2_ >= r2 AND _between_2_ <= i0_nullable);
+-- + SET i0_nullable := i1_nullable BETWEEN r2 AND i0_nullable;
 -- + _between_2_ = i1_nullable
 -- + i0_nullable = cql_to_num(cql_shortcircuit_and(cql_ge(_between_2_, r2), function() return cql_le(_between_2_, i0_nullable) end))
 set i0_nullable := i1_nullable between r2 and i0_nullable;
 
 -- TEST: simple not between
--- + SET b2 := BETWEEN REWRITE _between_3_ := 1 CHECK (_between_3_ < 0 OR _between_3_ > 3);
+-- + SET b2 := 1 NOT BETWEEN 0 and 3;
 -- + _between_3_ = 1
 -- + b2 = _between_3_ < 0 or _between_3_ > 3
 set b2 := 1 not between 0 and 3;
 
 -- TEST: not between with some nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_4_ := i1_nullable CHECK (_between_4_ < i0_nullable OR _between_4_ > r2);
+-- + SET i0_nullable := i1_nullable NOT BETWEEN i0_nullable AND r2;
 -- + _between_4_ = i1_nullable
 -- + i0_nullable = cql_to_num(cql_shortcircuit_or(cql_lt(_between_4_, i0_nullable), function() return cql_gt(_between_4_, r2) end))
 set i0_nullable := i1_nullable not between i0_nullable and r2;
 
 -- TEST: not between with different nullables
--- + SET i0_nullable := BETWEEN REWRITE _between_5_ := i1_nullable CHECK (_between_5_ < r2 OR _between_5_ > i0_nullable);
+-- + SET i0_nullable := i1_nullable NOT BETWEEN r2 AND i0_nullable;
 -- + _between_5_ = i1_nullable
 -- + i0_nullable = cql_to_num(cql_shortcircuit_or(cql_lt(_between_5_, r2), function() return cql_gt(_between_5_, i0_nullable) end))
 set i0_nullable := i1_nullable not between r2 and i0_nullable;
@@ -571,7 +571,7 @@ set i2 := 3 not in (1, 2, null, 4);
 set i0_nullable := i1_nullable not in (1, 2, null, b0_nullable);
 
 -- TEST: between with strings
--- + SET b2 := BETWEEN REWRITE _between_6_ := 'b' CHECK (_between_6_ >= 'a' AND _between_6_ <= 'c');
+-- + SET b2 := 'b' BETWEEN 'a' AND 'c';
 -- + _between_6_ = "b"
 -- + b2 = _between_6_ >= "a" and _between_6_ <= "c"
 set b2 := 'b' between 'a' and 'c';
@@ -582,13 +582,13 @@ set b2 := 'b' between 'a' and 'c';
 set b0_nullable := 'b' between 'a' and t0_nullable;
 
 -- TEST: between with nullable strings left
--- + SET b0_nullable := BETWEEN REWRITE _between_8_ := 'b' CHECK (_between_8_ >= t0_nullable AND _between_8_ <= 'c');
+-- + SET b0_nullable := 'b' BETWEEN t0_nullable AND 'c';
 -- + _between_8_ = "b"
 -- + b0_nullable = cql_shortcircuit_and(cql_ge(_between_8_, t0_nullable), function() return _between_8_ <= "c" end)
 set b0_nullable := 'b' between t0_nullable and 'c';
 
 -- TEST: between with nullable strings null operand
--- + SET b0_nullable := BETWEEN REWRITE _between_9_ := 'b' CHECK (_between_9_ >= NULL AND _between_9_ <= 'c');
+-- + SET b0_nullable := 'b' BETWEEN NULL AND 'c';
 -- + _between_9_ = "b"
 -- + b0_nullable = cql_shortcircuit_and(nil, function() return _between_9_ <= "c" end)
 set b0_nullable := 'b' between null and 'c';
@@ -599,19 +599,19 @@ set b0_nullable := 'b' between null and 'c';
 set b2 := 'b' not between 'a' and 'c';
 
 -- TEST: not between with nullable strings right
--- + SET b0_nullable := BETWEEN REWRITE _between_11_ := 'b' CHECK (_between_11_ < 'a' OR _between_11_ > t0_nullable);
+-- + SET b0_nullable := 'b' NOT BETWEEN 'a' AND t0_nullable;
 -- + _between_11_ = "b"
 -- + b0_nullable = cql_shortcircuit_or(_between_11_ < "a", function() return cql_gt(_between_11_, t0_nullable) end)
 set b0_nullable := 'b' not between 'a' and t0_nullable;
 
 -- TEST: not between with nullable strings left
--- + SET b0_nullable := BETWEEN REWRITE _between_12_ := 'b' CHECK (_between_12_ < t0_nullable OR _between_12_ > 'c');
+-- + SET b0_nullable := 'b' NOT BETWEEN t0_nullable AND 'c';
 -- + _between_12_ = "b"
 -- + b0_nullable = cql_shortcircuit_or(cql_lt(_between_12_, t0_nullable), function() return _between_12_ > "c" end)
 set b0_nullable := 'b' not between t0_nullable and 'c';
 
 -- TEST: not between with nullable strings null operand
--- + SET b0_nullable := BETWEEN REWRITE _between_13_ := 'b' CHECK (_between_13_ < NULL OR _between_13_ > 'c');
+-- + SET b0_nullable := 'b' NOT BETWEEN null and 'c';
 -- + _between_13_ = "b"
 -- + b0_nullable = cql_shortcircuit_or(nil, function() return _between_13_ > "c" end)
 set b0_nullable := 'b' not between null and 'c';

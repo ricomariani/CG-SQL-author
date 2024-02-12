@@ -137,26 +137,29 @@ static int32_t rcthrown_index = 0;
 static bool_t rcthrown_used = false;
 
 // We set this to true when we have used the error target in the current context
-// The current context is either the current procedure or the current try/catch block
-// If this is true we need to emit the cleanup label.
+// The current context is either the current procedure or the current try/catch
+// block If this is true we need to emit the cleanup label.
 static bool_t error_target_used = false;
 
 // We set this to true if a "return" statement happened in a proc.  This also
-// forces the top level "cql_cleanup" to be emitted.  We need a different flag for this
-// because no matter how deeply nested we are "return" goes to the outermost error target.
-// If this is set we will emit that top level target even if there were no other uses.
+// forces the top level "cql_cleanup" to be emitted.  We need a different flag
+// for this because no matter how deeply nested we are "return" goes to the
+// outermost error target. If this is set we will emit that top level target
+// even if there were no other uses.
 static bool_t return_used = false;
 
-// String literals are frequently duplicated, we want a unique constant for each piece of text
+// String literals are frequently duplicated, we want a unique constant for each
+// piece of text
 static symtab *string_literals;
 
-// Statement text pieces are frequently duplicated, we want a unique constant for each chunk of DML/DDL
-// To avoid confusion with shared fragments and/or extension fragments we call the bits of text
-// used to create SQL with the --compress option "pieces"
+// Statement text pieces are frequently duplicated, we want a unique constant
+// for each chunk of DML/DDL To avoid confusion with shared fragments and/or
+// extension fragments we call the bits of text used to create SQL with the
+// --compress option "pieces"
 static symtab *text_pieces;
 
-// When emitting procedure declarations we do not want duplicates
-// Especially when recursing over referenced procedures via object<proc_name SET>
+// When emitting procedure declarations we do not want duplicates Especially
+// when recursing over referenced procedures via object<proc_name SET>
 static symtab *emitted_proc_decls;
 
 // The current shared fragment number in the current procdure
@@ -191,18 +194,18 @@ static int32_t cur_bound_statement;
 // this holds the text of the generated SQL broken at fragment boundaries
 static bytebuf shared_fragment_strings = {NULL, 0, 0};
 
-// these track the current and max predicate number, these
-// correspond 1:1 with a fragment string in the shared_fragment_strings buffer
+// these track the current and max predicate number, these correspond 1:1 with a
+// fragment string in the shared_fragment_strings buffer
 static int32_t max_fragment_predicate = 0;
 static int32_t cur_fragment_predicate = 0;
 
-// these track the current variable count, we snapshot the previous count
-// before generating each fragment string so we know how many variables were in there
+// These track the current variable count, we snapshot the previous count before
+// generating each fragment string so we know how many variables were in there
 // we use these to emit the appropriate booleans for each bound variable
 static int32_t prev_variable_count;
 static int32_t cur_variable_count;
 
-// emit the line directive, escape the file name using the C convention
+// Emit the line directive, escape the file name using the C convention
 static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
   if (options.test || options.nolines) {
     return;
@@ -214,7 +217,7 @@ static void cg_line_directive(CSTR filename, int32_t lineno, charbuf *output) {
   CHARBUF_CLOSE(tmp);
 }
 
-// use the recursive search to emit the smallest line number in this subtree
+// Use the recursive search to emit the smallest line number in this subtree
 static void cg_line_directive_min(ast_node *ast, charbuf *output) {
   int32_t lineno = cg_find_first_line(ast);
   cg_line_directive(ast->filename, lineno, output);
@@ -299,13 +302,15 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
       while (*trim == ' ') trim++;
 
       if (!strncmp(trim, start_proc, start_proc_len)) {
-        // entering a procedure, we will start to emit additional line directives to stay on the same line
+        // entering a procedure, we will start to emit additional line
+        // directives to stay on the same line
         bprintf(output, "%s\n", line.ptr);
         now_in_proc = true;
         continue;
       }
       else if (!strncmp(trim, end_proc, end_proc_len)) {
-        // leaving a procedure, we will no longer emit additional line directives to stay on the same line
+        // leaving a procedure, we will no longer emit additional line
+        // directives to stay on the same line
         bprintf(output, "%s\n", line.ptr);
         now_in_proc = false;
         continue;
@@ -327,8 +332,8 @@ static void cg_insert_line_directives(CSTR input, charbuf *output)
       }
 
       if (last_line_directive.ptr[0] && !suppress_because_new_directive && now_in_proc) {
-        // this forces us to stay on the current line until we explicitly switch lines
-        // every line becomes
+        // this forces us to stay on the current line until we explicitly switch
+        // lines every line becomes
         // #line 32
         // [whatever]
         bprintf(output, "%s\n", last_line_directive.ptr);
@@ -348,7 +353,7 @@ static CSTR find_literal(CSTR str) {
   return entry ? entry->val : NULL;
 }
 
-// the current proc name or null
+// The current proc name or null
 static CSTR current_proc_name() {
   if (current_proc) {
     ast_node *proc_name_ast = get_proc_name(current_proc);
@@ -359,13 +364,14 @@ static CSTR current_proc_name() {
   return NULL;
 }
 
-// generate an error if the given expression is true (note this drives tracing)
+// Generate an error if the given expression is true (note this drives tracing)
 static void cg_error_on_expr(CSTR expr) {
   bprintf(cg_main_output, "if (%s) { cql_error_trace(); goto %s; }\n", expr, error_target);
   error_target_used = true;
 }
 
-// generate an error if the return code is not the required value (helper for common case)
+// Generate an error if the return code is not the required value 
+// (helper for common case)
 static void cg_error_on_rc_notequal(CSTR required) {
   CHARBUF_OPEN(tmp);
   bprintf(&tmp, "_rc_ != %s", required);
@@ -373,20 +379,20 @@ static void cg_error_on_rc_notequal(CSTR required) {
   CHARBUF_CLOSE(tmp);
 }
 
-// generate an error if the return code is not SQLITE_OK (helper for common case)
+// Generate an error if the return code is not SQLITE_OK (helper for common case)
 static void cg_error_on_not_sqlite_ok() {
   cg_error_on_expr("_rc_ != SQLITE_OK");
 }
 
 // This tells us if a subtree should be wrapped in ()
-// Basically we know the binding strength of the context (pri) and the current element (pri_new)
-// Weaker contexts get parens.  Equal contexts get parens on the right side because all ops
-// are left to right associtive in SQL. Stronger child contexts never need parens because
-// the operator already binds tighter than its parent in the tree.
+// Basically we know the binding strength of the context (pri) and the current
+// element (pri_new) Weaker contexts get parens.  Equal contexts get parens on
+// the right side because all ops are left to right associtive in SQL. Stronger
+// child contexts never need parens because the operator already binds tighter
+// than its parent in the tree.
 static bool_t needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
-  // if the priorities are different then parens are needed
-  // if and only if the new priority (this node) is weaker than the
-  // containing priority (the parent node)
+  // If the priorities are different then parens are needed if and only if the
+  // new priority (this node) is weaker than the containing priority (the parent node)
 
   if (pri_new != pri) {
     return pri_new < pri;
@@ -400,13 +406,14 @@ static bool_t needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
   return ast->parent->right == ast;
 }
 
-// We have a series of masks to remember if we have emitted any given scratch variable.
-// We might need several temporaries at the same level if different types appear
-// at the same level but in practice we tend not to run into such things.  Mostly
-// this works very well at arranging for the same scratch nullable int (or whatever)
-// to be re-used in every statement.  The stack depth is limited to bundles of 64bits
-//  with thisrepresentation. One bit for each stack level tracks if the temp has been
-// generated.  This could be extended if needed...
+// We have a series of masks to remember if we have emitted any given scratch
+// variable. We might need several temporaries at the same level if different
+// types appear at the same level but in practice we tend not to run into such
+// things.  Mostly this works very well at arranging for the same scratch
+// nullable int (or whatever) to be re-used in every statement.  The stack depth
+// is limited to bundles of 64bits with thisrepresentation. One bit for each
+// stack level tracks if the temp has been generated.  This could be extended
+// if needed...
 typedef struct cg_type_masks {
   uint64_t reals[CQL_MAX_STACK/64];
   uint64_t bools[CQL_MAX_STACK/64];
@@ -429,26 +436,27 @@ typedef struct cg_scratch_masks {
 // is cleared when we exit that proc.
 static cg_scratch_masks *_Nullable cg_current_masks;
 
-// just like it sounds
+// Just like it sounds
 static void cg_zero_masks(cg_scratch_masks *_Nonnull masks) {
   memset(masks, 0, sizeof(*masks));
 }
 
 // emit the type decl for the reference and the typeid if needed (msys only)
 static void cg_result_set_type_decl(charbuf *output, CSTR sym, CSTR ref) {
-  // The result type might be defined several times if a base fragment is included in many outputs
-  // they are all equivalent so we guard them here.  For normal queries this doesn't happen
-  // because you only include the proc once.  The other parts of the base fragment are
-  // idempotent to the compiler so no need to guard those prototypes.  Indeed if they are
-  // different because of a build problem, best to let the compiler complain.  If you
-  // generated all the base fragments from the same proc they MUST be the same result so
+  // The result type might be defined several times if a base fragment is
+  // included in many outputs they are all equivalent so we guard them here.
+  // For normal queries this doesn't happen because you only include the proc
+  // once.  The other parts of the base fragment are idempotent to the compiler
+  // so no need to guard those prototypes.  Indeed if they are different because
+  // of a build problem, best to let the compiler complain.  If you generated
+  // all the base fragments from the same proc they MUST be the same result so
   // errors in those parts are for sure build issues.
 
   bprintf(output, "#ifndef result_set_type_decl_%s\n", sym);
   bprintf(output, "#define result_set_type_decl_%s 1\n", sym);
   bprintf(output, "cql_result_set_type_decl(%s, %s);\n", sym, ref);
 
-  // if the result type needs extra type info, let it do so.
+  // If the result type needs extra type info, let it do so.
   if (rt->result_set_type_decl_extra) rt->result_set_type_decl_extra(output, sym, ref);
   bprintf(output, "#endif\n");
 }
@@ -477,7 +485,6 @@ static void cg_var_nullability_annotation(charbuf *output, sem_t sem_type) {
     // `cql_string_ref _Nullable *_Nonnull t`, whereas `TEXT t INOUT NOT NULL`
     // should become `cql_string_ref _Nonnull *_Nonnull t`.
     bprintf(output, "_Nullable ");
-    return;
   } else if (is_not_nullable(sem_type)) {
     bprintf(output, "_Nonnull ");
   } else {
@@ -503,17 +510,17 @@ static void cg_emit_isnull_init(charbuf *output, bool_t is_full_decl) {
   }
 }
 
-// Emit a declaration for a local whose name is base_name and whose type
-// is given by sem_type.   Is_local really only decides if we add ";\n" to
-// the end of the output.  This lets us use the same helper for list of
-// arg-prototypes as a list of declarations.
-// The real "trick" here is:
-//  * flags might say it's an output parameter in which case we declare a pointer
+// Emit a declaration for a local whose name is base_name and whose type is
+// given by sem_type.   Is_local really only decides if we add ";\n" to the end
+// of the output.  This lets us use the same helper for list of arg-prototypes
+// as a list of declarations. The real "trick" here is:
+//  * flags might say it's an output parameter in which case we declare a
+//    pointer
 //  * flags might indicate nullable, in which case we need the struct version
 //  * text is always a reference, nullable or no.  But if you make a text local
 //    then we also gotta clean it up.
-//  * if the declaration is for a variable then we initialize the variable to 0, or NULL
-//    as appropriate
+//  * if the declaration is for a variable then we initialize the variable to 0,
+//    or NULL as appropriate
 static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl) {
   Contract(is_unitary(sem_type) || is_cursor_formal(sem_type));
   Contract(!is_null_type(sem_type));
@@ -621,17 +628,17 @@ static void cg_var_decl(charbuf *output, sem_t sem_type, CSTR base_name, bool_t 
   CHARBUF_CLOSE(name);
 }
 
-// Emits the correct _result_set_ref type based on the sem_type and kind
-// the idea here is that we're generating the return type of a getter function
-// and the getter is returning a result set.  The type kind will have the actual
+// Emits the correct _result_set_ref type based on the sem_type and kind the
+// idea here is that we're generating the return type of a getter function and
+// the getter is returning a result set.  The type kind will have the actual
 // name of the procedure that originally created the result set.  The type will
 // be something like OBJECT<Foo SET> -- we're going to use the "Foo" in the
-// result set type as this corresponds to the result set that the "Foo" procedure
-// creates.
+// result set type as this corresponds to the result set that the "Foo"
+// procedure creates.
 static void cg_result_set_type_from_kind(charbuf *output, sem_t sem_type, CSTR kind) {
   CHARBUF_OPEN(temp);
 
-  // pull out everything up to the leading space
+  // pull out everything up to the leading space before " SET"
   CSTR p = kind;
   for (p = kind; *p != ' '; p++) {
     bputc(&temp, *p);
@@ -651,14 +658,14 @@ static bool_t is_result_set_type(sem_t sem_type, CSTR kind) {
   return core_type_of(sem_type) == SEM_TYPE_OBJECT && kind && ends_in_set(kind);
 }
 
-// This helper generates results for function return types as the name indicates.
-// The only thing that's going on here is that we would like the return type of
-// the result reader functions to be the correct result set type if the return is
-// of type object<procname SET>.   Normally the type kind does not affect codegen
-// at all, integer<foo> and integer<bar> both generate integer types but in this
-// case we're talking about a result set reader and the result set has in it sub
-// result sets.  This is public C interface to to save everyone from doing the casting
-// it happens automatically.
+// This helper generates results for function return types as the name
+// indicates. The only thing that's going on here is that we would like the
+// return type of the result reader functions to be the correct result set type
+// if the return is of type object<procname SET>.   Normally the type kind does
+// not affect codegen at all, integer<foo> and integer<bar> both generate
+// integer types but in this case we're talking about a result set reader and
+// the result set has in it sub result sets.  This is public C interface to to
+// save everyone from doing the casting it happens automatically.
 static void cg_col_reader_type(charbuf *output, sem_t sem_type, CSTR kind, CSTR base_name) {
   if (is_result_set_type(sem_type, kind)) {
     cg_result_set_type_from_kind(output, sem_type, kind);
@@ -670,8 +677,8 @@ static void cg_col_reader_type(charbuf *output, sem_t sem_type, CSTR kind, CSTR 
 }
 
 
-// Sometimes when we need a scratch variable to store an intermediate result
-// we can avoid the scratch variable entirely and use the target of the assignment
+// Sometimes when we need a scratch variable to store an intermediate result we
+// can avoid the scratch variable entirely and use the target of the assignment
 // in flight for the storage.  For instance:
 //   declare x, y integer;
 //   set y := 1;
@@ -680,11 +687,10 @@ static void cg_col_reader_type(charbuf *output, sem_t sem_type, CSTR kind, CSTR 
 //   cql_set_notnull(y, 1);
 //   cql_set_nullable(x, y.is_null, y.value + 3);
 //
-// A scratch variable is not used to hold the result of the RHS of the set because
-// the target of the assignment is known and compatible.
-// The target must match the exact type including nullability.  Note bogus
-// sensitive assignments or incompatible assignments were already ruled out
-// in semantic analysis.
+// A scratch variable is not used to hold the result of the RHS of the set
+// because the target of the assignment is known and compatible. The target must
+// match the exact type including nullability.  Note bogus sensitive assignments
+// or incompatible assignments were already ruled out in semantic analysis.
 static bool_t is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
   if (ast && ast->parent && (is_ast_assign(ast->parent) || is_ast_let_stmt(ast->parent))) {
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
@@ -695,13 +701,13 @@ static bool_t is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
   return false;
 }
 
-// The scratch variable helper uses the given sem_type and the current
-// stack level to create a temporary variable name for that type at that level.
-// If the variable does not already have a declaration (as determined by the masks)
-// then a declaration is added to the scratch_vars section.  This is one of the root
-// ways of getting an .is_null and .value back.  Note that not null variables always
-// have a .is_null of "0" which becomes important when deciding how to assign
-// one result to another.  Everything stays uniform.
+// The scratch variable helper uses the given sem_type and the current stack
+// level to create a temporary variable name for that type at that level. If the
+// variable does not already have a declaration (as determined by the masks)
+// then a declaration is added to the scratch_vars section.  This is one of the
+// root ways of getting an .is_null and .value back.  Note that not null
+// variables always have a .is_null of "0" which becomes important when deciding
+// how to assign one result to another.  Everything stays uniform.
 static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf *is_null, charbuf *value) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
@@ -711,7 +717,8 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
 
   Contract(stack_level < CQL_MAX_STACK);
 
-  // try to avoid creating a scratch variable if we can use the target of an assignment in flight.
+  // Try to avoid creating a scratch variable if we can use the target of an
+  // assignment in flight.
   if (is_assignment_target_reusable(ast, sem_type)) {
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
@@ -726,12 +733,11 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
   else {
     // Generate a scratch variable name of the correct type.  We don't generate
     // the declaration of any given scratch variable more than once.  We use the
-    // current stack level to make the name.  This means that have to burn a stack level
-    // if you want more than one scratch.  Stacklevel is normally increased by
-    // the CG_PUSH_EVAL macro which does the recursion but it can also be manually
-    // increased if temporaries are needed for some other reason.  Any level of
-    // recursion is expected to fix all that.
-
+    // current stack level to make the name.  This means that have to burn a
+    // stack level if you want more than one scratch.  Stacklevel is normally
+    // increased by the CG_PUSH_EVAL macro which does the recursion but it can
+    // also be manually increased if temporaries are needed for some other
+    // reason.  Any level of recursion is expected to fix all that.
     CSTR prefix;
 
     cg_type_masks *pmask;
@@ -790,8 +796,9 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
   // If the is_null and value expressions are desired, generate them here.
   if (is_null && value) {
     if (is_ref_type(sem_type)) {
-      // note that because reference types begin initialized to null we have to check their
-      // value even though they are "non-null" so the is_null expression can't be 0 for these ever.
+      // note that because reference types begin initialized to null we have to
+      // check their value even though they are "non-null" so the is_null
+      // expression can't be 0 for these ever.
       bprintf(is_null, "!%s", var->ptr);
       bprintf(value, "%s", var->ptr);
     }
@@ -808,11 +815,11 @@ static void cg_scratch_var(ast_node *ast, sem_t sem_type, charbuf *var, charbuf 
 
 // This helper deals with one of the most common situations we have a nullable
 // result that has to go into the result variable "var" and it's coming from one
-// or two nullable sources.  The standard combine rules are that if eiter is null
-// the result must be null.  However, some might be known to be not-null at compile
-// time.  This function generates a call to the best runtime helper.  By doing it here
-// all of the callers do not have to know all of the cases.  Here "val" is some
-// arithmetic or logical combination of the values.
+// or two nullable sources.  The standard combine rules are that if eiter is
+// null the result must be null.  However, some might be known to be not-null at
+// compile time.  This function generates a call to the best runtime helper.  By
+// doing it here all of the callers do not have to know all of the cases.  Here
+// "val" is some arithmetic or logical combination of the values.
 static void cg_combine_nullables(charbuf *out, CSTR var, CSTR l_is_null, CSTR r_is_null, CSTR val) {
   // generate the optimal set expression for the target nullable
 
@@ -842,23 +849,26 @@ static void cg_combine_nullables(charbuf *out, CSTR var, CSTR l_is_null, CSTR r_
   }
 }
 
-// We pass this on to the general combine handler, letting it think the second operand was not null.
-// There is of course no second operand.  We do this because one of the args might be a null literal
-// or known not null for some other reason in which case we can make vastly simpler code.  That logic
-// is already done in the above in the general case.  This call probably ends up in
+// We pass this on to the general combine handler, letting it think the second
+// operand was not null. There is of course no second operand.  We do this
+// because one of the args might be a null literal or known not null for some
+// other reason in which case we can make vastly simpler code.  That logic is
+// already done in the above in the general case.  This call probably ends up in
 // cg_set_nullable_nontrivial after the nullchecks are done.
 static void cg_set_nullable(charbuf *out, CSTR var, CSTR is_null, CSTR value) {
   cg_combine_nullables(out, var, is_null, "0", value);
 }
 
-// Set nullable output type to null.  The only trick here is that reference types
-// need the ref counting stuff.
-// NOTE: there are lots of cases where even not-nullable ref types have to be set to null.
-// These correspond to cases where the value is known to be uninitialized and we need
-// to get something sane in there so that there isn't junk.  Or likewise where the value
-// must become uninitialized because it's logically not readable anymore (e.g. in a cursor with no data).
-// We have to free the data... so we have to set it to null... This is a bit weird but the alternative
-// is some not-null sentinel constant string like the empty string which seems worse...
+// Set nullable output type to null.  The only trick here is that reference
+// types need the ref counting stuff.
+// NOTE: there are lots of cases where even not-nullable ref types have to be
+// set to null. These correspond to cases where the value is known to be
+// uninitialized and we need to get something sane in there so that there isn't
+// junk.  Or likewise where the value must become uninitialized because it's
+// logically not readable anymore (e.g. in a cursor with no data). We have to
+// free the data... so we have to set it to null... This is a bit weird but the
+// alternative is some not-null sentinel constant string like the empty string
+// which seems worse...
 static void cg_set_null(charbuf *output, CSTR name, sem_t sem_type) {
   if (is_blob(sem_type)) {
     bprintf(output, "cql_set_blob_ref(&%s, NULL);\n", name);
@@ -874,9 +884,10 @@ static void cg_set_null(charbuf *output, CSTR name, sem_t sem_type) {
   }
 }
 
-// Once we've done any type conversions for the basic types we can do pretty simple assignments
-// The nullable non-reference types typically need of the helper macros unless it's an exact-type copy
-// operation.  This function is used by cg_store near the finish line.
+// Once we've done any type conversions for the basic types we can do pretty
+// simple assignments The nullable non-reference types typically need of the
+// helper macros unless it's an exact-type copy operation.  This function is
+// used by cg_store near the finish line.
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   if (is_text(sem_type_var)) {
     bprintf(output, "cql_set_string_ref(&%s, %s);\n", var, value);
@@ -899,10 +910,10 @@ static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   }
 }
 
-// Functions are a little special in that they can return reference types that come
-// with a +1 reference.  To handle those you do not want to upcount the target.
-// We release whatever we're holding and then hammer it with the new value
-// with no upcount using the +1 we were given.
+// Functions are a little special in that they can return reference types that
+// come with a +1 reference.  To handle those you do not want to upcount the
+// target. We release whatever we're holding and then hammer it with the new
+// value with no upcount using the +1 we were given.
 static void cg_copy_for_create(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   if (is_text(sem_type_var)) {
     bprintf(cg_main_output, "%s(%s);\n", rt->cql_string_release, var);
@@ -916,8 +927,9 @@ static void cg_copy_for_create(charbuf *output, CSTR var, sem_t sem_type_var, CS
   bprintf(output, "%s = %s;\n", var, value);
 }
 
-// This is most general store function.  Given the type of the destination and the type of the source
-// plus the is_null and value of the source it generates the correct operation to set it.
+// This is most general store function.  Given the type of the destination and
+// the type of the source plus the is_null and value of the source it generates
+// the correct operation to set it.
 // * if storing to a boolean from non-boolean first normalize the result to a 0 or 1
 // * for text, emit cql_set_string_ref to do the job
 // * for nullables use cg_set_nullable (see above) to do the job
@@ -978,22 +990,24 @@ static void cg_store(charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_ty
   CHARBUF_CLOSE(adjusted_value);
 }
 
-// This is a simple helper for store where we know that the type of the thing being stored
-// is exactly the same as the type of the thing we are storing.  This is used when we
-// just made a temporary of exactly the correct type to hold an expression.  cg_store
-// handles this all but this helper lets you specify only one type.
+// This is a simple helper for store where we know that the type of the thing
+// being stored is exactly the same as the type of the thing we are storing.
+// This is used when we just made a temporary of exactly the correct type to
+// hold an expression.  cg_store handles this all but this helper lets you
+// specify only one type.
 static void cg_store_same_type(charbuf *output, CSTR var, sem_t sem_type, CSTR is_null, CSTR value) {
   cg_store(output, var, sem_type, sem_type, is_null, value);
 }
 
-// This is the general helper for some kind of comparison.  In fact comparison for
-// the numeric types is exactly like all the other binary operators so really this is
-// here only to special case the code gen for text comparison.  The passed in "op" is
-// the operator between the left and right, so "<=", "<", etc.  String comparisons
-// use the cql_string_compare helper to do the compare and the comparison is changed to be
-// relative to zero.  So x <= y turns into cql_string_compare(x, y) <= 0.  If the arguments
-// are not nullable, the comparison expression goes directly into value.  If the
-// the result is nullable, it goes into a scratch var using the "combine" rules, see above.
+// This is the general helper for some kind of comparison.  In fact comparison
+// for the numeric types is exactly like all the other binary operators so
+// really this is here only to special case the code gen for text comparison.
+// The passed in "op" is the operator between the left and right, so "<=", "<",
+// etc.  String comparisons use the cql_string_compare helper to do the compare
+// and the comparison is changed to be relative to zero.  So x <= y turns into
+// cql_string_compare(x, y) <= 0.  If the arguments are not nullable, the
+// comparison expression goes directly into value.  If the the result is
+// nullable, it goes into a scratch var using the "combine" rules, see above.
 static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_left = ast->left->sem->sem_type;
@@ -1014,7 +1028,8 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
    return;
   }
 
-  // Both sides are text/blob or null; already verified compatible in semantic phase.
+  // Both sides are text/blob or null; already verified compatible in semantic
+  // phase.
 
   CHARBUF_OPEN(comparison);
 
@@ -1077,10 +1092,11 @@ static void cg_binary_compare(ast_node *ast, CSTR op, charbuf *is_null, charbuf 
 //   * is_null and value are the usual outputs
 //   * pri is the strength of the caller
 //   * pri_new is the strength of "op"
-// The helper needs_paren() tells us if we should wrap this subtree in parens (see above)
-// If the inputs are not nullable then we can make the easy case of returning the
-// result in the value string (and 0 for is null).  Otherwise, cg_combine_nullables
-// does the job.
+//
+// The helper needs_paren() tells us if we should wrap this subtree in parens
+// (see above) If the inputs are not nullable then we can make the easy case of
+// returning the result in the value string (and 0 for is null).  Otherwise,
+// cg_combine_nullables does the job.
 static void cg_binary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // left op right
 
@@ -1129,10 +1145,10 @@ static void cg_binary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, 
   CHARBUF_CLOSE(result);
 }
 
-// code gen for expr IS FALSE
-// operands already known to be of the correct type so all we have to do is
+// This is the code gen for <expr> IS FALSE
+// The operands are already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
-// either the helper or just looking at the value
+// either the helper or just looking at the value.
 static void cg_expr_is_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1142,7 +1158,8 @@ static void cg_expr_is_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *
   // expr IS FALSE
   bprintf(is_null, "0"); // the result of is false is never null
 
-  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  // we always put parens because ! is the highest binding, so we can use ROOT,
+  // the callee never needs parens
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
@@ -1155,10 +1172,10 @@ static void cg_expr_is_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *
   CG_POP_EVAL(expr);
 }
 
-// code gen for expr IS NOT FALSE
-// operands already known to be of the correct type so all we have to do is
+// This is the code gen for <expr> IS NOT FALSE
+// The operands are already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
-// either the helper or just looking at the value
+// either the helper or just looking at the value.
 static void cg_expr_is_not_false(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1168,7 +1185,8 @@ static void cg_expr_is_not_false(ast_node *ast, CSTR op, charbuf *is_null, charb
   // expr IS NOT FALSE
   bprintf(is_null, "0"); // the result of is false is never null
 
-  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  // we always put parens because ! is the highest binding, so we can use ROOT,
+  // the callee never needs parens
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
@@ -1181,10 +1199,10 @@ static void cg_expr_is_not_false(ast_node *ast, CSTR op, charbuf *is_null, charb
   CG_POP_EVAL(expr);
 }
 
-// code gen for expr IS TRUE
-// operands already known to be of the correct type so all we have to do is
+// This is th ecode gen for <expr> IS TRUE
+// The operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
-// either the helper or just looking at the value
+// either the helper or just looking at the value.
 static void cg_expr_is_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1194,7 +1212,8 @@ static void cg_expr_is_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *v
   // expr IS TRUE
   bprintf(is_null, "0"); // the result of is true is never null
 
-  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  // we always put parens because ! is the highest binding, so we can use ROOT,
+  // the callee never needs parens
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
@@ -1207,10 +1226,10 @@ static void cg_expr_is_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *v
   CG_POP_EVAL(expr);
 }
 
-// code gen for expr IS NOT TRUE
-// operands already known to be of the correct type so all we have to do is
+// This is the code gen for <expr> IS NOT TRUE
+// The operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
-// either the helper or just looking at the value
+// either the helper or just looking at the value.
 static void cg_expr_is_not_true(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1220,7 +1239,8 @@ static void cg_expr_is_not_true(ast_node *ast, CSTR op, charbuf *is_null, charbu
   // expr IS NOT TRUE
   bprintf(is_null, "0"); // the result of is not true is never null
 
-  // we always put parens because ! is the highest binding, so we can use ROOT, the callee never needs parens
+  // we always put parens because ! is the highest binding, so we can use ROOT,
+  // the callee never needs parens
   CG_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
@@ -1419,9 +1439,9 @@ static void cg_expr_is_not(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   CG_POP_EVAL(l);
 }
 
-// Helper to emit an "if false" condition
-// There are lots of cases where the object is not nullable and we'd like nicer code
-// for those cases, hence this helper.
+// Helper to emit an "if false" condition.
+// There are lots of cases where the object is not nullable and we'd like nicer
+// code for those cases, hence this helper.
 static void cg_if_false(charbuf *output, CSTR is_null, CSTR value) {
   if (!strcmp(is_null, "0")) {
     bprintf(output, "if (!(%s)) {\n", value);
@@ -1436,8 +1456,8 @@ static void cg_if_false(charbuf *output, CSTR is_null, CSTR value) {
 }
 
 // Helper to emit an "if true" condition
-// There are lots of cases where the object is not nullable and we'd like nicer code
-// for those cases, hence this helper.
+// There are lots of cases where the object is not nullable and we'd like nicer
+// code for those cases, hence this helper.
 static void cg_if_true(charbuf *output, CSTR is_null, CSTR value) {
   if (!strcmp(is_null, "0")) {
     bprintf(output, "if (%s) {\n", value);
@@ -1563,16 +1583,18 @@ static void cg_expr_or(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value
   CG_CLEANUP_RESULT_VAR();
 }
 
-// The logical operations are fairly tricky, the code generators for
-// each of them are very similar.  Basically x AND y has to be this:
-//   * if x is false the answer is false and don't evaluate y (null is not false)
-//   * if x is not false and y is false the answer is false (and both were evaluated)
+// The logical operations are fairly tricky, the code generators for each of
+// them are very similar.  Basically x AND y has to be this:
+//   * if x is false the answer is false and don't evaluate y (null is not
+//     false)
+//   * if x is not false and y is false the answer is false (and both were
+//     evaluated)
 //   * if neither is false and either is null the answer is null
-//   * if both are true (only) the answer is true.  See the truth table.
-// To get this code generation we need some if statements...  This is another
-// of the cases where an expression-looking thing actually has statements in the C.
-// There is easy case code if both are known to to be nullable, where the result
-// is directly computed with &&.
+//   * if both are true (only) the answer is true.  See the truth table. To get
+//     this code generation we need some if statements...  This is another of
+//     the cases where an expression-looking thing actually has statements in
+//     the C. There is easy case code if both are known to to be nullable, where
+//     the result is directly computed with &&.
 static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_and(ast));
   Contract(pri_new == C_EXPR_PRI_LAND);
@@ -1610,9 +1632,10 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
   cg_main_output = saved_main;
 
   // Easiest case of all, we can use the logical && operator
-  // we can only do this if everything is non-null and no-statement generation is needed for the right expression
-  // it's ok if statement generation is needed for the left because that never needs to short circuit (left
-  // is always evaluated).
+  // we can only do this if everything is non-null and no-statement generation
+  // is needed for the right expression it's ok if statement generation is
+  // needed for the left because that never needs to short circuit (left is
+  // always evaluated).
   if (!is_nullable(sem_type_result) && right_eval.used == 1) {
     if (needs_paren(ast, pri_new, pri)) {
       bprintf(value, "(");
@@ -1645,8 +1668,8 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
       bprintf(cg_main_output, "%s", right_eval.ptr);
 
       if (!is_nullable(sem_type_result)) {
-        // If the result is not null then neither of the inputs are null
-        // In this branch the left was not false, so it must have been true.
+        // If the result is not null then neither of the inputs are null. In
+        // this branch the left was not false, so it must have been true.
         // Therefore the result is whatever is on the right.  And it's not null.
         cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_right, "0", r_value.ptr);
       }
@@ -1675,12 +1698,12 @@ static void cg_expr_and(ast_node *ast, CSTR str, charbuf *is_null, charbuf *valu
   CG_CLEANUP_RESULT_VAR();
 }
 
-// The unary operators are handled just like the binary operators.  All of the
-// C outputs have the form (op arg).  We just have to decide if we need parens.
-// We use the same rules for parens here as in other places.  "pri" tells us
-// the context of the caller, if it is stronger than our operator then we need parens.
-// As usual, there is the easy case for not-nullables and the "use a temporary" case
-// for nullables.
+// The unary operators are handled just like the binary operators.  All of the C
+// outputs have the form (op arg).  We just have to decide if we need parens. We
+// use the same rules for parens here as in other places.  "pri" tells us the
+// context of the caller, if it is stronger than our operator then we need
+// parens. As usual, there is the easy case for not-nullables and the "use a
+// temporary" case for nullables.
 static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // op [left]
 
@@ -1689,9 +1712,8 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   sem_t sem_type_expr = expr->sem->sem_type;
 
   if (!strcmp(op, "-") && is_ast_num(expr)) {
-    // we have to do special code gen for -9223372036854775808
-    // to avoid compiler warnings...  This is how the literal
-    // gets handled in limits.h as well...
+    // We have to do special code gen for -9223372036854775808 to avoid compiler
+    // warnings...  This is how the literal gets handled in limits.h as well...
     EXTRACT_NUM_TYPE(num_type, expr);
     EXTRACT_NUM_VALUE(lit, expr);
 
@@ -1731,11 +1753,11 @@ static void cg_unary(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, i
   CHARBUF_CLOSE(result);
 }
 
-// The sign function is present in later versions of Sqlite so we want to
-// The strategy is to compute the value of the argument, store it in a temporary
-// and then use the expression (x > 0) - (x < 0) to compute the sign.  The
-// temporary is needed because 'x' appears twice and we do not want to evaluate
-// the expression twice.
+// The sign function is present in later versions of Sqlite so we want to The
+// strategy is to compute the value of the argument, store it in a temporary and
+// then use the expression (x > 0) - (x < 0) to compute the sign.  The temporary
+// is needed because 'x' appears twice and we do not want to evaluate the
+// expression twice.
 static void cg_func_sign(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
@@ -1765,11 +1787,10 @@ static void cg_func_sign(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   CHARBUF_CLOSE(sign_value);
 }
 
-// To do `abs` we have to evaluate the argument and store it somewhere
-// we use the result variable for this.  We don't want to evaluate that
-// expression more than once, hence the temporary storage.  Once we have
-// the value in a result variable, we can test it against zero safely
-// and alter it as needed.
+// To do `abs` we have to evaluate the argument and store it somewhere we use
+// the result variable for this.  We don't want to evaluate that expression more
+// than once, hence the temporary storage.  Once we have the value in a result
+// variable, we can test it against zero safely and alter it as needed.
 static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
@@ -1872,18 +1893,18 @@ static void cg_in_or_not_in_expr_list(ast_node *head, CSTR expr, CSTR result, se
     CG_POP_EVAL(in_expr);
 
     // This comparison clause fully used any temporaries associated with expr
-    // this is kind of like the result variable case, except we didn't store the result
-    // we used it in the "if" test, but we're done with it.
+    // this is kind of like the result variable case, except we didn't store the
+    // result we used it in the "if" test, but we're done with it.
     stack_level = stack_level_saved;
   }
 
   cg_store_same_type(cg_main_output, result, sem_type_result, "0", not_found_value);
 }
 
-// Helper to generate a null result.  For consistency with other nullable results
-// we store it in a scratch variable.  Note that this is a "typed" null.  That is
-// we know the kind of null we are making, a null int, null long, etc.  Again
-// this lets the normal nullability path just work.
+// Helper to generate a null result.  For consistency with other nullable
+// results we store it in a scratch variable.  Note that this is a "typed" null.
+// That is we know the kind of null we are making, a null int, null long, etc.
+// Again this lets the normal nullability path just work.
 static void cg_null_result(ast_node *ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
@@ -1891,10 +1912,9 @@ static void cg_null_result(ast_node *ast, charbuf *is_null, charbuf *value) {
   CG_CLEANUP_RESULT_VAR();
 }
 
-// The [NOT] IN structure is the simplest of the multi-test forms.
-// It's actually a special case of case/when if you like.
-// Each item in the [NOT] IN needs to be evaluated because there is no rule
-// that says they are constants.
+// The [NOT] IN structure is the simplest of the multi-test forms. It's actually
+// a special case of case/when if you like. Each item in the [NOT] IN needs to
+// be evaluated because there is no rule that says they are constants.
 // NOT IN is just a similar reversed check compare IN starting with opposite result value.
 // The general pattern for  X IN (U, V) looks like this
 //
@@ -1936,9 +1956,9 @@ static void cg_expr_in_pred_or_not_in(
     return;
   }
 
-  // The answer will be stored in this scratch variable.
-  // note: we do not allow the assignment variable to be used because it might be
-  // in the candidate list. Since we write to it before we're done the early
+  // The answer will be stored in this scratch variable. note: we do not allow
+  // the assignment variable to be used because it might be in the candidate
+  // list. Since we write to it before we're done the early
   // "result = 1" would kill something like  r := x in (r, b);
   CG_SETUP_RESULT_VAR(NULL, sem_type_result);
 
@@ -1977,9 +1997,9 @@ static void cg_expr_in_pred_or_not_in(
 }
 
 // This helper method emits the alternatives for the case.  If there was an
-// expression the temporary holding the expression is in expr.  Expr has
-// already been tested for null if that was a possibility so we only need its
-// value at this point.
+// expression the temporary holding the expression is in expr.  Expr has already
+// been tested for null if that was a possibility so we only need its value at
+// this point.
 static void cg_case_list(ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
   Contract(is_ast_case_list(head));
 
@@ -2119,8 +2139,8 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
     bprintf(cg_main_output, "  ");
     cg_store_same_type(cg_main_output, temp.ptr, sem_type_expr, expr_is_null.ptr, expr_value.ptr);
 
-    // here "temp" is like a mini-result variable... anything from expr can be released
-    // we only need temp now, so restore to that level.
+    // here "temp" is like a mini-result variable... anything from expr can be
+    // released we only need temp now, so restore to that level.
     stack_level = stack_level_saved;
 
     // If the expression is null, then we go to the else logic.  Note: there is always else logic
@@ -2145,9 +2165,9 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
     bprintf(cg_main_output, "case_else_%d:\n", else_label_number);
   }
 
-  // If there is an else clause, spit out the result for that now.
-  // Note that lack of an else is by-construction a nullable outcome because
-  // the semantics of case say that if you miss all the cases you get null.
+  // If there is an else clause, spit out the result for that now. Note that
+  // lack of an else is by-construction a nullable outcome because the semantics
+  // of case say that if you miss all the cases you get null.
   if (else_expr) {
     cg_line_directive_min(else_expr, cg_main_output);
 
@@ -2172,9 +2192,10 @@ static void cg_expr_case(ast_node *case_expr, CSTR str, charbuf *is_null, charbu
   bprintf(cg_main_output, "} while (0);\n");
 }
 
-// we have built-in support for numeric casts only, the SQL string cast operations are highly
-// complex with interesting parsing rules and so forth.  We don't try to do those at all
-// but there's no reason we can't do the simple numeric conversions in the non-SQL path
+// We have built-in support for numeric casts only, the SQL string cast
+// operations are highly complex with interesting parsing rules and so forth.
+// We don't try to do those at all but there's no reason we can't do the simple
+// numeric conversions in the non-SQL path
 static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(cast_expr));
 
@@ -2241,16 +2262,16 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
   CG_CLEANUP_RESULT_VAR();
 }
 
-// we have built-in type_check fun which use to check an expr strictly match a type.
-// during semantic analysis otherwise error. At the codegen phase we just emit
-// the expr since the type check already succeeded.
+// We have built-in type_check fun which use to check an expr strictly match a
+// type. during semantic analysis otherwise error. At the codegen phase we just
+// emit the expr since the type check already succeeded.
 static void cg_expr_type_check(ast_node *type_check_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_type_check_expr(type_check_expr));
   EXTRACT_ANY_NOTNULL(expr, type_check_expr->left);
 
   CG_PUSH_EVAL(expr, pri_new);
 
-  // type checking of the expression already happened during semantic analysis.
+  // Type checking of the expression already happened during semantic analysis.
   // It's safe to just output it
   bprintf(is_null, "0");
   bprintf(value, "%s", expr_value.ptr);
@@ -2258,9 +2279,9 @@ static void cg_expr_type_check(ast_node *type_check_expr, CSTR str, charbuf *is_
   CG_POP_EVAL(expr);
 }
 
-// A CQL string literal needs to be stored somewhere so it looks like a string_ref.
-// Here is a helper method for creating the name of the literal.  We use
-// some letters from the text of the literal in the variable name to make it
+// A CQL string literal needs to be stored somewhere so it looks like a
+// string_ref. Here is a helper method for creating the name of the literal.  We
+// use some letters from the text of the literal in the variable name to make it
 // easier to find and recognize.
 static bool_t cg_make_nice_literal_name(CSTR str, charbuf *output) {
   // empty buffer (just the null terminator)
@@ -2310,10 +2331,10 @@ static void cg_requote_literal(CSTR str, charbuf *output) {
   CHARBUF_CLOSE(plaintext);
 }
 
-// Here we use the helper above to create a variable name for the literal
-// then we declare that variable and emit the initializer.  The macro
-// cql_string_literal does the job for us while allowing the different
-// string implementations.  These go into the constants section.
+// Here we use the helper above to create a variable name for the literal then
+// we declare that variable and emit the initializer.  The macro
+// cql_string_literal does the job for us while allowing the different string
+// implementations.  These go into the constants section.
 static void cg_string_literal(CSTR str, charbuf *output) {
   Contract(str);
   Contract(str[0] == '\'');
@@ -2335,11 +2356,12 @@ static void cg_string_literal(CSTR str, charbuf *output) {
 }
 
 // The rewritten between expression is designed to be super easy to code gen.
-// The semantic analyzer has already turned the between or not beween into a normal
-// combination of and/or so all we have to do is load up the temporary with the test
-// value and then evaluate the test expression. Between and not between look the same
-// to the codgen (they will have different expressions).  This lets us get all that
-// weird short circuit behavior super easy.  It's literally the AND/OR code running.
+// The semantic analyzer has already turned the between or not beween into a
+// normal combination of and/or so all we have to do is load up the temporary
+// with the test value and then evaluate the test expression. Between and not
+// between look the same to the codgen (they will have different expressions).
+// This lets us get all that weird short circuit behavior super easy.  It's
+// literally the AND/OR code running.
 static void cg_expr_between_rewrite(
   ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_between_rewrite(ast));
@@ -2398,8 +2420,8 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
     return;
   }
 
-  // while generating expressions for the CTE assignments we might have to
-  // rename the proc args to the name in the outermost context
+  // While generating expressions for the CTE assignments we might have to
+  // rename the proc args to the name in the outermost context.
   if (proc_arg_aliases) {
     symtab_entry *entry = symtab_find(proc_arg_aliases, name);
     if (entry) {
@@ -2766,9 +2788,10 @@ static void cg_expr_null(ast_node *expr, CSTR op, charbuf *is_null, charbuf *val
   bprintf(is_null, "1");
 }
 
-// This is the main entry point for codegen of an expression.  It dispatches
-// to one of the above workers for all the complex types and handles a few primitives
-// in place. See the introductory notes to understand is_null and value.
+// This is the main entry point for codegen of an expression.  It dispatches to
+// one of the above workers for all the complex types and handles a few
+// primitives in place. See the introductory notes to understand is_null and
+// value.
 static void cg_expr(ast_node *expr, charbuf *is_null, charbuf *value, int32_t pri) {
   Contract(is_null);
   Contract(value);
@@ -2784,12 +2807,11 @@ static void cg_expr(ast_node *expr, charbuf *is_null, charbuf *value, int32_t pr
 }
 
 // Generates the necessary cleanup call for the given temporary statement
-// Normally we use statement 0 for all our temp statements, but, if we are
-// in a loop, we recognize that the temp statement might be used again
-// in the next iteration.  So instead of eagerly finalizing it, we simply
-// reset it so that we can avoid an expensive prepare in the next iteration.
-// All such "in a loop" statements have an index greater than 0 to ensure
-// they get a unique name.
+// Normally we use statement 0 for all our temp statements, but, if we are in a
+// loop, we recognize that the temp statement might be used again in the next
+// iteration.  So instead of eagerly finalizing it, we simply reset it so that
+// we can avoid an expensive prepare in the next iteration. All such "in a loop"
+// statements have an index greater than 0 to ensure they get a unique name.
 static void cg_temp_stmt_cleanup(int32_t stmt_index, charbuf *output) {
   CHARBUF_OPEN(temp_stmt);
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
@@ -2834,9 +2856,9 @@ static void cg_expr_select(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
   CG_CLEANUP_RESULT_VAR();
 }
 
-// select if nothing is exactly the same codegen as regular select
-// the throwing which is done by default was make explcit.  The normal
-// codegen already does the "throw" (i.e. goto the current error target).
+// "Select ... if nothing throw" is exactly the same codegen as regular select. The throwing
+// that is done by default is simply made explcit.  The normal codegen already does
+// the "throw" (i.e. goto the current error target).
 static void cg_expr_select_if_nothing_throw(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_expr, ast->left);
@@ -2844,12 +2866,12 @@ static void cg_expr_select_if_nothing_throw(ast_node *ast, CSTR op, charbuf *is_
 }
 
 // This helper does the evaluation of the select statement portion of the
-// (SELECT ... IF NOTHING ...) forms.  Importantly the result type of the
-// select might not exactly match the result type of expression because
-// the default value could be of a different type and it might cause the
-// overall expression to be not null.  So here we have to fetch just the
-// select statement part into its own result variable of the exact correct type
-// later we will safely assign that result to the final type if it held a value
+// (SELECT ... IF NOTHING ...) forms.  Importantly the result type of the select
+// might not exactly match the result type of expression because the default
+// value could be of a different type and it might cause the overall expression
+// to be not null.  So here we have to fetch just the select statement part into
+// its own result variable of the exact correct type later we will safely assign
+// that result to the final type if it held a value
 static int32_t cg_expr_select_frag(ast_node *ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
 
@@ -2900,14 +2922,14 @@ static void cg_expr_select_if_nothing(ast_node *ast, CSTR op, charbuf *is_null, 
   CHARBUF_OPEN(select_is_null);
   CHARBUF_OPEN(select_value);
 
-  // the select statement might have a different result type than overall
-  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
+  // The select statement might have a different result type than overall.
+  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real.
   int32_t stmt_index = cg_expr_select_frag(select_stmt, &select_is_null, &select_value);
 
-  // we're inside of the "if (__rc__ == SQLITE_ROW) {" case
-  // we need to store the result of the select in our output variable
-  // note that these are known to be compatible (already verified) but they might not
-  // be the exact same type, hence the copy.  In this case we're definitely using the value.
+  // We're inside of the "if (__rc__ == SQLITE_ROW) {" case. We need to store the
+  // result of the select in our output variable note that these are known to be
+  // compatible (already verified) but they might not be the exact same type,
+  // hence the copy.  In this case we're definitely using the value.
   bprintf(cg_main_output, "  ");
   cg_store(cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_is_null.ptr, select_value.ptr);
 
@@ -3059,9 +3081,9 @@ static void cg_expr_stmt(ast_node *ast) {
 
 // As with the other cases the fact that expressions might require statements
 // complicates the codegen. If there is an else-if (expression) that expression
-// might itself require statements to compute the expression.  Even a logical AND
-// might require statements if there is nullability involved.
-// That means the overall pattern has to look like this, with nesting.
+// might itself require statements to compute the expression.  Even a logical
+// AND might require statements if there is nullability involved. That means the
+// overall pattern has to look like this, with nesting.
 //
 // prep statements;
 //   result = final expression;
@@ -3094,9 +3116,9 @@ static void cg_if_stmt(ast_node *ast) {
   // END IF
 }
 
-// This code uses the same cg_store helper method to do an assignment as
-// is used all over the place for assigning to scratch variables.  All
-// we have to do here is pull the name and types out of the ast.
+// This code uses the same cg_store helper method to do an assignment as is used
+// all over the place for assigning to scratch variables.  All we have to do
+// here is pull the name and types out of the ast.
 static void cg_assign(ast_node *ast) {
   Contract(is_ast_assign(ast) || is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -3147,8 +3169,8 @@ static void cg_param(ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
 
   sem_t sem_type = name_ast->sem->sem_type;
 
-  // If this parameter will be mutated we have to own the reference, so we make an alias
-  // We'll initialize the alias from the argument during param init.
+  // If this parameter will be mutated we have to own the reference, so we make
+  // an alias We'll initialize the alias from the argument during param init.
 
   if (alias_in_ref && !is_out_parameter(sem_type) && was_set_variable(sem_type) && is_ref_type(sem_type)) {
     CHARBUF_OPEN(alias);
@@ -3180,9 +3202,9 @@ static void cg_params(ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
   }
 }
 
-// Emit any initialization code needed for the parameters
-// in particular out parameters assume that there is garbage
-// in the out location, so they hammer a NULL or 0 into that slot.
+// Emit any initialization code needed for the parameters. In particular out
+// parameters assume that there is garbage in the out location, so they hammer a
+// NULL or 0 into that slot.
 static void cg_param_init(ast_node *ast, charbuf *body) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -3208,17 +3230,22 @@ static void cg_param_init(ast_node *ast, charbuf *body) {
     }
   }
 
-  // If this parameter will be mutated we have to own the reference, so we make an alias.
-  // here we initialize the alias from the in parameter.  The variable now has normal
-  // lifetime.
+  // If this parameter will be mutated we have to own the reference, so we make
+  // an alias. Here we initialize the alias from the in parameter.  The variable
+  // now has normal lifetime.
 
   // Example:  proc foo(x text) begin x := 'foo'; end;
-  // the 'x' argument is borrowed, so we don't normallyl release 'x' however we put 'foo' in it
-  // The caller isn't going to release the string 'foo', we aren't because we donm't release 'x'
-  // becaues it's borrowed.  To fix this instead we generate effectively:
+  //
+  // The 'x' argument is borrowed, so we don't normally release 'x' however we
+  // put 'foo' in it The caller isn't going to release the string 'foo', we
+  // aren't because we donm't release 'x' becaues it's borrowed.  To fix this
+  // instead we generate effectively:
+  //
   // proc foo(_in__x text) begin let x := _in__x;  x := 'foo'; end; 
-  // That pattern works as usual and of course _in__x is not mutated so it doesn't have to be
-  // released.  FWIW: Lua codegen doesn't have this problem because Lua manages the refs.
+  //
+  // That pattern works as usual and of course _in__x is not mutated so it
+  // doesn't have to be released.  FWIW: Lua codegen doesn't have this problem
+  // because Lua manages the refs.
 
   if (!is_out_parameter(sem_type) && was_set_variable(sem_type) && is_ref_type(sem_type)) {
     cg_declare_simple_var(sem_type, name);
@@ -3231,8 +3258,8 @@ static void cg_param_init(ast_node *ast, charbuf *body) {
   }
 }
 
-// Walk all the params of a stored proc, if any of them require initialization code
-// in the body, emit that here.
+// Walk all the params of a stored proc, if any of them require initialization
+// code in the body, emit that here.
 static void cg_params_init(ast_node *ast, charbuf *body) {
   Contract(is_ast_params(ast));
 
@@ -3246,11 +3273,12 @@ static void cg_params_init(ast_node *ast, charbuf *body) {
   }
 }
 
-// This is used when we are making a call to a known stored proc.  This is usable
-// only in limited cases where we have previously set up local variables whose
-// names exactly match the formal names of the function we are attempting to call.
-// In particular the function that generates a rowset knows how to call the corresponding
-// function that generates a statement because their signatures exactly match.
+// This is used when we are making a call to a known stored proc.  This is
+// usable only in limited cases where we have previously set up local variables
+// whose names exactly match the formal names of the function we are attempting
+// to call. In particular the function that generates a rowset knows how to call
+// the corresponding function that generates a statement because their
+// signatures exactly match.
 static void cg_param_name(ast_node *ast, charbuf *output) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -3260,8 +3288,8 @@ static void cg_param_name(ast_node *ast, charbuf *output) {
   bprintf(output, "%s", name);
 }
 
-// This loops through the parameters and emits each one as part of a call
-// where we have a local for each parameter.  See above.
+// This loops through the parameters and emits each one as part of a call where
+// we have a local for each parameter.  See above.
 static void cg_param_names(ast_node *ast, charbuf *output) {
   Contract(is_ast_params(ast));
 
@@ -3279,10 +3307,10 @@ static void cg_param_names(ast_node *ast, charbuf *output) {
   }
 }
 
-// row types are emitted in a canonical order to make comparison, hashing
-// and other operations easier.  For now that order is simply primitive
-// types and then reference types.  This will become more strict over time
-// as other areas take advantage of ordering to generate more compact code.
+// Row types are emitted in a canonical order to make comparison, hashing and
+// other operations easier.  For now that order is simply primitive types and
+// then reference types.  This will become more strict over time as other areas
+// take advantage of ordering to generate more compact code.
 static void cg_fields_in_canonical_order(charbuf *output, sem_struct *sptr) {
   uint32_t count = sptr->count;
 
@@ -3316,8 +3344,8 @@ static void cg_fields_in_canonical_order(charbuf *output, sem_struct *sptr) {
 // `cursor_name` is NULL, as is the case for the result type of procs with the
 // OUT keyword, the struct will be named with the current proc name. If
 // `cursor_name` is not NULL, the struct will be named with both the current
-// proc name and the cursor name. The struct includes the _has_row_ boolean
-// plus the fields of the sem_struct provided.
+// proc name and the cursor name. The struct includes the _has_row_ boolean plus
+// the fields of the sem_struct provided.
 static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR cursor_name) {
   Invariant(sptr);
 
@@ -3357,6 +3385,7 @@ static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR cursor_
   CHARBUF_CLOSE(row_type);
 }
 
+// We often need the count of reference types in a struct type
 static int32_t refs_count_sptr(sem_struct *sptr) {
   int32_t refs_count = 0;
 
@@ -3401,14 +3430,15 @@ static void cg_data_types(charbuf *output, sem_struct *sptr, CSTR sym_name) {
   bprintf(output, "\n};\n");
 }
 
-// This is the codegen for a dynamic cursor.  When a function has an arg that is of type
-// CURSOR this means that it accepts any kind of cursor.  So, the cursor argument is replaced
-// with a so-called "dynamic cursor".  This is a bunch of metadata about the cursor such as
-// the names of its fields as well as their types and offsets.  The function can use this
-// information to do its job.  Normally such functions are pretty generic, like format
-// the cursor as a string, or hash the cursor.  But in principle it can be anyuthing.
-// This code generates the necessary variables for a dynamic cursor so that when a call happens
-// later &cursor_name_dyn can be passed for the arg and it's ready to go.
+// This is the codegen for a dynamic cursor.  When a function has an arg that is
+// of type CURSOR this means that it accepts any kind of cursor.  So, the cursor
+// argument is replaced with a so-called "dynamic cursor".  This is a bunch of
+// metadata about the cursor such as the names of its fields as well as their
+// types and offsets.  The function can use this information to do its job.
+// Normally such functions are pretty generic, like format the cursor as a
+// string, or hash the cursor.  But in principle it can be anyuthing. This code
+// generates the necessary variables for a dynamic cursor so that when a call
+// happens later &cursor_name_dyn can be passed for the arg and it's ready to go.
 static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR cols_name, CSTR types_name) {
   CSTR scope = current_proc_name();
   CSTR suffix = (sym_name && scope) ? "_" : "";
@@ -3418,7 +3448,8 @@ static void cg_dynamic_cursor(charbuf *output, sem_struct *sptr, CSTR sym_name, 
   CG_CHARBUF_OPEN_SYM(fields, scope, suffix, sym_name, "_fields");
   int32_t refs_count = refs_count_sptr(sptr);
 
-  // note that cursor field strings are highly duplicative but the compiler will fold these anyway
+  // NOTE: that cursor field strings are highly duplicative but the
+  // compiler/linker will fold these anyway
   bprintf(output, "const char *%s[] = {\n", fields.ptr);
   for (uint32_t i = 0; i < sptr->count; i++) {
     // for consistency with debug info and Lua we use the actual encoded field
@@ -3599,8 +3630,8 @@ static void cg_emit_contracts(ast_node *ast, charbuf *b) {
 
 #define EMIT_DML_PROC 1
 
-// emit a prototype for the fetch results function into the indicated buffer
-// we need some context such as "is it a dml proc" to do this correctly but
+// Emit a prototype for the fetch results function into the indicated buffer we
+// need some context such as "is it a dml proc" to do this correctly but
 // otherwise this is just using some of our standard helpers
 static void cg_emit_fetch_results_prototype(
   bool_t dml_proc,
@@ -3641,10 +3672,9 @@ static void cg_emit_fetch_results_prototype(
   CHARBUF_CLOSE(fetch_results_sym);
 }
 
-// The prototype for the given procedure goes into the given buffer.  This
-// is a naked prototype, so additional arguments could be added -- it will be
-// missing the trailing ")" and it will not have EXPORT or anything like that
-// on it.
+// The prototype for the given procedure goes into the given buffer.  This is a
+// naked prototype, so additional arguments could be added -- it will be missing
+// the trailing ")" and it will not have EXPORT or anything like that on it.
 static void cg_emit_proc_prototype(ast_node *ast, charbuf *proc_decl, bool_t force_fetch_results) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -3998,11 +4028,11 @@ static void cg_create_proc_stmt(ast_node *ast) {
   bprintf(cg_declarations_output, "\n");
 
   if (dml_proc) {
-    // Your cqlrt can define cql_error_report to be whatever it wants. Maybe something
-    // that calls a logging function if _rc_ is not zero.  Maybe it reports if it's
-    // the last thing on the error stack otherwise it just appends a new thing.  Any kind
-    // of tracing can be constructed like this -- entirely up to your cqlrt.
-    //  The default version expands to nothing.
+    // Your cqlrt can define cql_error_report to be whatever it wants. Maybe
+    // something that calls a logging function if _rc_ is not zero.  Maybe it
+    // reports if it's the last thing on the error stack otherwise it just
+    // appends a new thing.  Any kind of tracing can be constructed like this 
+    // it is entirely up to your cqlrt. The default version expands to nothing.
     bprintf(cg_declarations_output, "  cql_error_report();\n");
     empty_statement_needed = false;
   }
@@ -4013,9 +4043,10 @@ static void cg_create_proc_stmt(ast_node *ast) {
   }
 
   if (result_set_proc) {
-    // Because of control flow it's possible that we never actually ran a select statement
-    // even if there were no errors.  Or maybe we caught the error.  In any case if we
-    // are not producing an error then we have to produce an empty result set to go with it.
+    // Because of control flow it's possible that we never actually ran a select
+    // statement even if there were no errors.  Or maybe we caught the error.
+    // In any case if we are not producing an error then we have to produce an
+    // empty result set to go with it.
     bprintf(cg_declarations_output, "  if (_rc_ == SQLITE_OK && !*_result_stmt) _rc_ = cql_no_rows_stmt(_db_, _result_stmt);\n");
     empty_statement_needed = false;
   }
@@ -4075,8 +4106,8 @@ static void cg_alias_of_callback(
 }
 
 // Here we have to emit the prototype for the declared function as a C prototype
-// this is just like our stored procs but we also have a return type.  See cg_declare_proc_stmt
-// for a comparison.
+// this is just like our stored procs but we also have a return type.  See
+// cg_declare_proc_stmt for a comparison.
 static void cg_declare_func_stmt(ast_node *ast) {
   Contract(is_ast_declare_func_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -4210,14 +4241,14 @@ static void cg_declare_vars_type(ast_node *declare_vars_type) {
 
 // This is a callback method handed to the gen_ method that creates SQL for us
 // it will call us every time it finds a variable that needs to be bound.  That
-// variable is replaced by ? in the SQL output.  We end up with a list of variables
-// to bind on a silver platter (but in reverse order).
+// variable is replaced by ? in the SQL output.  We end up with a list of
+// variables to bind on a silver platter (but in reverse order).
 static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer) {
   // all variables have a name
   Contract(ast->sem->name);
 
-  // If the current context is inline function expansion then arg variables
-  // are emitted as is -- we rewrite these so that they come from an inline table
+  // If the current context is inline function expansion then arg variables are
+  // emitted as is -- we rewrite these so that they come from an inline table
   // e.g.
   //   'select x + y'
   // becomes
@@ -4245,9 +4276,9 @@ static bool_t cg_capture_variables(ast_node *ast, void *context, charbuf *buffer
 
 // This is a callback method handed to the gen_ method that creates SQL for us
 // it will call us every time it finds a cte table that needs to be generated.
-// If this is one of the tables that is supposed to be an "argument" then
-// we will remove the stub definition of the CTE.  References to this name
-// will be changed to required table in another callback
+// If this is one of the tables that is supposed to be an "argument" then we
+// will remove the stub definition of the CTE.  References to this name will be
+// changed to required table in another callback
 static bool_t cg_suppress_cte(ast_node *ast, void *context, charbuf *buffer) {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
@@ -4258,12 +4289,12 @@ static bool_t cg_suppress_cte(ast_node *ast, void *context, charbuf *buffer) {
   return !!entry;
 }
 
-// This a callback method handed to the gen_ method that creates SQL for us
-// it will call us every time it finds a table reference that needs to be generated.
-// If this is one of the tables that is supposed to be an "argument" then
-// we will emit the desired value instead of the stub name.   Note that
-// this is always the name of a CTE and CTE of the old name was suppressed
-// using the callback above cg_suppress_cte
+// This a callback method handed to the gen_ method that creates SQL for us it
+// will call us every time it finds a table reference that needs to be
+// generated. If this is one of the tables that is supposed to be an "argument"
+// then we will emit the desired value instead of the stub name.   Note that
+// this is always the name of a CTE and CTE of the old name was suppressed using
+// the callback above cg_suppress_cte
 static bool_t cg_table_rename(ast_node *ast, void *context, charbuf *buffer) {
   // this is a simple table factor, so an actual name...
   EXTRACT_STRING(name, ast);
@@ -4281,11 +4312,11 @@ static bool_t cg_table_rename(ast_node *ast, void *context, charbuf *buffer) {
   return handled;
 }
 
-// This helper method fetchs a single column from a select statement.  The result
-// is to be stored in the local variable "var" which will be in the correct state
-// including nullability.  There are helpers for most cases, otherwise
-// we can use normal sqlite accessors.  Strings of course create a cql_string_ref
-// and blobs create a cql_blog_ref.
+// This helper method fetchs a single column from a select statement.  The
+// result is to be stored in the local variable "var" which will be in the
+// correct state including nullability.  There are helpers for most cases,
+// otherwise we can use normal sqlite accessors.  Strings of course create a
+// cql_string_ref and blobs create a cql_blog_ref.
 static void cg_get_column(sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
   sem_t core_type = core_type_of(sem_type);
 
@@ -4369,9 +4400,9 @@ static void cg_cql_datatype(sem_t sem_type, charbuf *output) {
     }
 }
 
-// CQL uses the helper method cql_multifetch to get all the columns from a statement
-// This helper generates the correct CQL_DATA_TYPE_* data info and emits the
-// correct argument.
+// CQL uses the helper method cql_multifetch to get all the columns from a
+// statement This helper generates the correct CQL_DATA_TYPE_* data info and
+// emits the correct argument.
 static void cg_fetch_column(sem_t sem_type, CSTR var) {
   cg_cql_datatype(sem_type, cg_main_output);
 
@@ -4384,10 +4415,10 @@ static void cg_fetch_column(sem_t sem_type, CSTR var) {
   bprintf(cg_main_output, "%s", var);
 }
 
-// CQL uses the helper method cql_multibind to bind all the columns to a statement
-// This helper generates the correct CQL_DATA_TYPE_* data info and emits the
-// arg in the expected format (pointers for nullable primitives) the value
-// for all ref types plus all non nullables.
+// CQL uses the helper method cql_multibind to bind all the columns to a
+// statement This helper generates the correct CQL_DATA_TYPE_* data info and
+// emits the arg in the expected format (pointers for nullable primitives) the
+// value for all ref types plus all non nullables.
 static void cg_bind_column(sem_t sem_type, CSTR var) {
   cg_cql_datatype(sem_type, cg_main_output);
 
@@ -4434,13 +4465,12 @@ static void ensure_temp_statement(int32_t stmt_index) {
   }
 }
 
-// Now we either find the piece already and get its number or else
-// we can make a new piece.  This is all about creating the shared
-// identifiers.  Note that we use character offsets in the main string
-// as the identifiers so that we can easily offset from the base.  This
-// saves us from having yet another array.  Note also that we might want to
-// encode these ids in a variable length encoding so that we can have more
-// than 64k of them...
+// Now we either find the piece already and get its number or else we can make a
+// new piece.  This is all about creating the shared identifiers.  Note that we
+// use character offsets in the main string as the identifiers so that we can
+// easily offset from the base.  This saves us from having yet another array.
+// Note also that we might want to encode these ids in a variable length
+// encoding so that we can have more than 64k of them...
 static int32_t cg_intern_piece(CSTR str, int32_t len) {
   symtab_entry *entry = symtab_find(text_pieces, str);
   if (entry) {
@@ -4455,8 +4485,8 @@ static int32_t cg_intern_piece(CSTR str, int32_t len) {
 }
 
 // Variable length integer encoding: any byte that starts with the high bit set
-// indicates that there are more bytes.  The last byte does not have the high bit set.
-// So the one-byte encoding is just the simple integer as one byte.
+// indicates that there are more bytes.  The last byte does not have the high
+// bit set. So the one-byte encoding is just the simple integer as one byte.
 static void cg_varinteger(int32_t val, charbuf *output) {
   do {
     // strip 7 bits
@@ -4489,11 +4519,11 @@ static void cg_flush_piece(CSTR start, CSTR cur, charbuf *output) {
 }
 
 // Break the input string into pieces that are likely to be shared, assign each
-// a number and then emit the array of those numbers instead of the original string.
-// We're doing this because there is a lot of redundancy in typically generated
-// SQL (e.g. the words SELECT, DROP, EXISTS appear a lot) and we can encode this
-// much more economically.  Note also column names like system_function_name are
-// broken because the system_ part is often shared.
+// a number and then emit the array of those numbers instead of the original
+// string. We're doing this because there is a lot of redundancy in typically
+// generated SQL (e.g. the words SELECT, DROP, EXISTS appear a lot) and we can
+// encode this much more economically.  Note also column names like
+// system_function_name are broken because the system_ part is often shared.
 cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
   Contract(in);
   int32_t len = (int32_t)strlen(in);
@@ -4530,18 +4560,21 @@ cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
       continue;  // if we found whitespace keep going if we haven't seen at least 4 characters
     }
 
-    // Ok we have something worthy of flushing:
-    // one last chance to grow it some. We dont want single spaces to go into the output
-    // by themselves because it's costly.  Include this space in the token.  Note that
-    // this is already normalized output so multiple spaces are not a possibility.
-    // Space and then newline is also shunned (it'll work but it doesn't happen because
+    // Ok we have something worthy of flushing: one last chance to grow it some.
+    // We dont want single spaces to go into the output by themselves because
+    // it's costly.  Include this space in the token.  Note that this is already
+    // normalized output so multiple spaces are not a possibility. Space and
+    // then newline is also shunned (it'll work but it doesn't happen because
     // gen_sql never creates that stuff).
 
     if (cur_state == 0) {
-      cur++;  // use the space/newline
-      ch = *cur; // put ourselves into the correct state, here we let _ start an alpha-ish sttate after a break
+      // use the space/newline
+      cur++;  
+      // put ourselves into the correct state, here we let _ start an alpha-ish sttate after a break
+      ch = *cur; 
       if ((ch >= 'a' && ch <= 'z') || (ch >= '@' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_') {
-        cur_state = 1;  // back to run of alpha
+        // back to run of alpha
+        cur_state = 1;  
       }
       // note cur has been advanced now and it might be null (!)
     }
@@ -4552,8 +4585,8 @@ cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output) {
       start = cur;
       count++;
 
-      // if we advanced off the end above when we skipped over the space, we can exit now
-      // we don't want to advance again off the end of the string.
+      // if we advanced off the end above when we skipped over the space, we can
+      // exit now we don't want to advance again off the end of the string.
       if (!*cur) {
         break;
       }
@@ -4576,9 +4609,9 @@ static uint32_t cg_fragment_count() {
   return (uint32_t)(shared_fragment_strings.used / sizeof(CSTR));
 }
 
-// when we complete a chunk of fragment text we have to emit the predicates
-// for the variables that were in that chunk.  We do this in the same
-// context as the conditional for that string.
+// When we complete a chunk of fragment text we have to emit the predicates for
+// the variables that were in that chunk.  We do this in the same context as the
+// conditional for that string.
 static void cg_flush_variable_predicates() {
   if (!has_conditional_fragments) {
     return;
@@ -4592,10 +4625,10 @@ static void cg_flush_variable_predicates() {
       cur_fragment_predicate);
     }
     else {
-      // If we're back in previous context we can always just use the predicate value
-      // for that context which was set in an earlier block.
-      // TODO: I think we can prove that it's always true in the code block we are in
-      // so this could be = 1 and hence is the same as the above.
+      // If we're back in previous context we can always just use the predicate
+      // value for that context which was set in an earlier block.
+      // TODO: I think we can prove that it's always true in the code block we
+      // are in so this could be = 1 and hence is the same as the above.
       bprintf(cg_main_output, "_vpreds_%d[%d] = _preds_%d[%d];\n",
         cur_bound_statement,
         prev_variable_count++,
@@ -4605,13 +4638,12 @@ static void cg_flush_variable_predicates() {
   }
 }
 
-// If we have set up the predicate for this chunk of text we can just use it
-// we see that by looking at how many predicates we set up and if we
-// are past that point. If we need a predicate for the current line
-// we use the predicate value for the "current" predicate scope,
-// which nests.  Whatever the current predicate is we use that
-// and make an entry in the array.  So that way there is always
-// one computed predicate for each chunk of text we plan to emit.
+// If we have set up the predicate for this chunk of text we can just use it we
+// see that by looking at how many predicates we set up and if we are past that
+// point. If we need a predicate for the current line we use the predicate value
+// for the "current" predicate scope, which nests.  Whatever the current
+// predicate is we use that and make an entry in the array.  So that way there
+// is always one computed predicate for each chunk of text we plan to emit.
 static void cg_fragment_copy_pred() {
   if (!has_conditional_fragments) {
     return;
@@ -4628,8 +4660,8 @@ static void cg_fragment_copy_pred() {
       max_fragment_predicate++);
   }
   else {
-    // TODO: I think we can prove that it's always true in the code block we are in
-    // so this could be = 1 and hence is the same as the above.
+    // TODO: I think we can prove that it's always true in the code block we are
+    // in so this could be = 1 and hence is the same as the above.
     bprintf(cg_main_output, "_preds_%d[%d] = _preds_%d[%d];\n",
       cur_bound_statement,
       max_fragment_predicate++,
@@ -4640,8 +4672,8 @@ static void cg_fragment_copy_pred() {
   cg_flush_variable_predicates();
 }
 
-// First we make sure we have a predicate row and then we emit the line
-// assuming there is anything to emit...
+// First we make sure we have a predicate row and then we emit the line assuming
+// there is anything to emit...
 static void cg_emit_one_frag(charbuf *buffer) {
   // TODO: can we make this an invariant?
   if (buffer->used > 1) {
@@ -4659,8 +4691,8 @@ static void cg_fragment_stmt(ast_node *stmt, charbuf *buffer) {
   cg_flush_variable_predicates();
 }
 
-// a new block in a conditional, this is the "it's true" case for it
-// assign it a number and move on.  Note the code is always inside of
+// A new block in a conditional, this is the "it's true" case for it assign it a
+// number and move on.  Note the code is always inside of
 // if (the_expression_was_true) {...}
 static void cg_fragment_setpred() {
   cur_fragment_predicate = max_fragment_predicate;
@@ -4747,8 +4779,9 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
   }
 }
 
-// This handles the expression fragment case, this is rewritten so that
-// the arguments of the expression fragment become columns of one row of table
+// This handles the expression fragment case, this is rewritten so that the
+// arguments of the expression fragment become columns of one row of table
+//
 // e.g.
 // @attribute(cql:shared_fragment)
 // create proc ex_frag(x integer)
@@ -4760,10 +4793,11 @@ static void cg_fragment_elseif_list(ast_node *ast, ast_node *elsenode, charbuf *
 //
 // "SELECT x + 2 * x from (select ? as x)"
 //
-// The expression fragment is not allowed to have its own from clause which means
-// we can use the from clause for our own purposes (local binding).  The is very
-// helpful if the fragment happens often or if the argument would otherwise have
-// to be evaluated many times.  But it comes at the cost of a one-row query.
+// The expression fragment is not allowed to have its own from clause which
+// means we can use the from clause for our own purposes (local binding).  The
+// is very helpful if the fragment happens often or if the argument would
+// otherwise have to be evaluated many times.  But it comes at the cost of a
+// one-row query.
 static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
@@ -4803,11 +4837,10 @@ static bool_t cg_inline_func(ast_node *call_ast, void *context, charbuf *buffer)
   in_inline_function_fragment = saved_in_inline_function_fragment;
 
   if (params) {
-    // If there are any args we create a nested select expression
-    // to bind them to the variable names.  Note that this means
-    // args are evaluated once which could be important if there
-    // are SQL functions with side-effects being used (highly rare)
-    // or expensive functions.
+    // If there are any args we create a nested select expression to bind them
+    // to the variable names.  Note that this means args are evaluated once
+    // which could be important if there are SQL functions with side-effects
+    // being used (highly rare) or expensive functions.
     gen_printf(" FROM (SELECT ");
 
     while (params) {
@@ -4888,11 +4921,9 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
     EXTRACT_STRING(formal, cte_binding->right);
     EXTRACT_STRING(actual, cte_binding->left);
 
-    // The "actual" might itself be an alias from the outer scope
-    // be sure to push that down if that's the case.  One level
-    // is always enough because each level does its own push if
-    // needed.
-
+    // The "actual" might itself be an alias from the outer scope be sure to
+    // push that down if that's the case.  One level is always enough because
+    // each level does its own push if needed.
     bool_t handled = false;
 
     if (saved_proc_cte_aliases) {
@@ -4947,14 +4978,15 @@ static bool_t cg_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer)
     sem_t sem_type_expr = expr->sem->sem_type;
 
     // evaluate the expression and assign
-    // note that any arg aliases here are in the context of the caller not the callee
-    // we're setting up the aliases for the callee right now and they aren't ready yet even
-    // but that's ok because the expressions are in the context of the caller.
+    // note that any arg aliases here are in the context of the caller not the
+    // callee we're setting up the aliases for the callee right now and they
+    // aren't ready yet even but that's ok because the expressions are in the
+    // context of the caller.
 
-    // todo: if the evaluation has a nested select statement then we will have to re-enter
-    // all of this.  We can either ban that (which isn't insane really) or else we can
-    // save the codegen state like callbacks and such so that it can re-enter.  That's
-    // the desired path.
+    // todo: if the evaluation has a nested select statement then we will have
+    // to re-enter all of this.  We can either ban that (which isn't insane
+    // really) or else we can save the codegen state like callbacks and such so
+    // that it can re-enter.  That's the desired path.
 
     CG_PUSH_EVAL(expr, C_EXPR_PRI_ASSIGN);
     cg_store(cg_main_output, alias_name, sem_type_var, sem_type_expr, expr_is_null.ptr, expr_value.ptr);
@@ -5043,8 +5075,8 @@ static bool_t cg_search_conditionals_call_in_cte(ast_node *cte_body, void *conte
   has_conditional_fragments |= is_ast_if_stmt(stmt);
   has_shared_fragments = true;
 
-  // recurse the fragment contents, we might find more stuff, like variables
-  // and such deeper in the tree
+  // recurse the fragment contents, we might find more stuff, like variables and
+  // such deeper in the tree
   gen_one_stmt(stmt);
 
   return false;
@@ -5057,10 +5089,10 @@ static bool_t cg_note_variable_exists(ast_node *cte_body, void *context, charbuf
 }
 
 // The inline function counts as a shared fragment and we recurse to find any
-// internal shared fragments or conditional fragments inside of the inline function.
-// Note that even though it has no FROM clause the inline function could have
-// a nested select inside of its select list and therefore all fragment types
-// can appear inside of an inline function fragment.
+// internal shared fragments or conditional fragments inside of the inline
+// function. Note that even though it has no FROM clause the inline function
+// could have a nested select inside of its select list and therefore all
+// fragment types can appear inside of an inline function fragment.
 static bool_t cg_note_inline_func(ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
@@ -5078,18 +5110,17 @@ static bool_t cg_note_inline_func(ast_node *call_ast, void *context, charbuf *bu
   EXTRACT(stmt_list, proc_params_stmts->right);
   EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
 
-  // recurse the fragment contents, we might find more stuff, like variables
-  // and such deeper in the tree
+  // recurse the fragment contents, we might find more stuff, like variables and
+  // such deeper in the tree
   gen_one_stmt(stmt);
 
   has_shared_fragments = true;
   return false;
 }
 
-// We set up a walk of the tree using the echo functions but
-// we are going to note what kinds of things we spotted while doing
-// the walk.  We need to know in advance what style of codegen we'll
-// be doing.
+// We set up a walk of the tree using the echo functions but we are going to
+// note what kinds of things we spotted while doing the walk.  We need to know
+// in advance what style of codegen we'll be doing.
 static void cg_classify_fragments(ast_node *stmt) {
   has_shared_fragments = false;
   has_conditional_fragments = false;
@@ -5107,9 +5138,9 @@ static void cg_classify_fragments(ast_node *stmt) {
 }
 
 // This is the most important function for sqlite access;  it does the heavy
-// lifting of generating the C code to prepare and bind a SQL statement.
-// If cg_exec is true (CG_EXEC) then the statement is executed immediately
-// and finalized.  No results are expected.  To accomplish this we do the following:
+// lifting of generating the C code to prepare and bind a SQL statement. If
+// cg_exec is true (CG_EXEC) then the statement is executed immediately and
+// finalized.  No results are expected.  To accomplish this we do the following:
 //   * figure out the name of the statement, either it's given to us
 //     or we're using the temp statement
 //   * call get_statement_with_callback to get the text of the SQL from the AST
@@ -5318,13 +5349,12 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
   return stmt_index;
 }
 
-// Checks to see if the given statement or statement list is unbound
-// i.e. it does not mention any variables.  We do this so that we
-// detect if the statement is safe to batch with others.  If it had
-// binding then we would need to bind each statement in the block
-// seperately and then there would be no point in batching.
-static bool cg_verify_unbound_stmt(ast_node *stmt)
-{
+// Checks to see if the given statement or statement list is unbound i.e. it
+// does not mention any variables.  We do this so that we detect if the
+// statement is safe to batch with others.  If it had binding then we would need
+// to bind each statement in the block seperately and then there would be no
+// point in batching.
+static bool cg_verify_unbound_stmt(ast_node *stmt) {
   list_item *vars = NULL;
 
   gen_sql_callbacks callbacks;
@@ -5333,19 +5363,19 @@ static bool cg_verify_unbound_stmt(ast_node *stmt)
   callbacks.variables_context = &vars;
 
   CHARBUF_OPEN(temp);
-  gen_set_output_buffer(&temp);
-  gen_statement_with_callbacks(stmt, &callbacks);
+    gen_set_output_buffer(&temp);
+    gen_statement_with_callbacks(stmt, &callbacks);
   CHARBUF_CLOSE(temp);
 
   // vars is pool allocated, so we don't need to free it
   return !vars;
 }
 
-// This emits the declaration for an "auto cursor" -- that is a cursor
-// that includes storage for all the fields it can fetch.  It uses the
-// struct helper to make a suitable struct and the creates the local and
-// initializes its teardown function.  Code also has to go into the cleanup
-// section for suitable teardown.
+// This emits the declaration for an "auto cursor" -- that is a cursor that
+// includes storage for all the fields it can fetch.  It uses the struct helper
+// to make a suitable struct and the creates the local and initializes its
+// teardown function.  Code also has to go into the cleanup section for suitable
+// teardown.
 static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
   Contract(cursor_name);
   Contract(sem);
@@ -5409,12 +5439,13 @@ static void cg_declare_auto_cursor(CSTR cursor_name, sem_node *sem) {
   CHARBUF_CLOSE(row_type);
 }
 
-// Declare group is the form to create a group of  global variables with storage.  Note that
-// this only creates the "extern" form of the group.  There is an emit_group statement that
-// causes the definitions to be emitted see below.  The declarations are protected by #ifdef
-// so that they can appear more than once in various header files without problems.
-// The standard variable declaration helpers are all that is needed here.  Semantic analysis
-// already verified that the group contains only viable globals.
+// Declare group is the form to create a group of  global variables with
+// storage.  Note that this only creates the "extern" form of the group.  There
+// is an emit_group statement that causes the definitions to be emitted see
+// below.  The declarations are protected by #ifdef so that they can appear more
+// than once in various header files without problems. The standard variable
+// declaration helpers are all that is needed here.  Semantic analysis already
+// verified that the group contains only viable globals.
 static void cg_declare_group_stmt(ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
   Contract(!in_var_group_decl);
@@ -5424,18 +5455,16 @@ static void cg_declare_group_stmt(ast_node *ast) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(stmt_list, ast->right);
 
-  // Put a line marker in the header file in case we want a test suite that verifies that.
-  // Note we have to do this only because this only generates declarations so the
-  // normal logic for emitting these doesn't kick in.
+  // Put a line marker in the header file in case we want a test suite that
+  // verifies that. Note we have to do this only because this only generates
+  // declarations so the normal logic for emitting these doesn't kick in.
   if (options.test) {
     bprintf(cg_declarations_output, "\n// The statement ending at line %d\n", ast->lineno);
     bprintf(cg_fwd_ref_output, "\n// The statement ending at line %d\n", ast->lineno);
   }
 
-  // This can be duplicated so make it safe to emit twice.
-  // Note that the struct decls go into a different stream
-  // so we wrap those, too.
-
+  // This can be duplicated so make it safe to emit twice. Note that the struct
+  // decls go into a different stream so we wrap those, too.
   bprintf(cg_header_output, "#ifndef _%s_var_group_decl_\n", name);
   bprintf(cg_header_output, "#define _%s_var_group_decl_ 1\n", name);
 
@@ -5446,19 +5475,19 @@ static void cg_declare_group_stmt(ast_node *ast) {
   bprintf(cg_header_output, "#endif\n");
 }
 
-// Emit group tells CQL to emit the variable definitions for the indicated groups into
-// the current translation unit.  This should be done one time to avoid duplicate symbols
-// at link time.  The indicated groups are enumerated and the definition form is emitted
-// using the normal helpers.
+// Emit group tells CQL to emit the variable definitions for the indicated
+// groups into the current translation unit.  This should be done one time to
+// avoid duplicate symbols at link time.  The indicated groups are enumerated
+// and the definition form is emitted using the normal helpers.
 static void cg_emit_group_stmt(ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
   Contract(!in_var_group_decl);
   Contract(!in_var_group_emit);
 
-  // Put a line marker in the header file in case we want a test suite that verifies that.
-  // Note we have to do this only because this only generates declarations so the
-  // normal logic for emitting these doesn't kick in.
+  // Put a line marker in the header file in case we want a test suite that
+  // verifies that. Note we have to do this only because this only generates
+  // declarations so the normal logic for emitting these doesn't kick in.
   if (options.test) {
     bprintf(cg_declarations_output, "\n// The statement ending at line %d\n", ast->lineno);
     bprintf(cg_fwd_ref_output, "\n// The statement ending at line %d\n", ast->lineno);
@@ -5484,13 +5513,12 @@ static void cg_emit_group_stmt(ast_node *ast) {
   }
 }
 
-// This causes enum declarations to go into the header file.
-// Those enum values  are not even used in our codegen because the ast is
-// rewritten to have the actual value rather than the name.  However this will
-// make it possible to use the enums in callers from C.  The enum values are
-// "public" in this sense.  This is a lot like the gen_sql code except it will be
-// in C format.  Note C has no floating point enums so we have to do those with macros.
-
+// This causes enum declarations to go into the header file. Those enum values
+// are not even used in our codegen because the ast is rewritten to have the
+// actual value rather than the name.  However this will make it possible to use
+// the enums in callers from C.  The enum values are "public" in this sense.
+// This is a lot like the gen_sql code except it will be in C format.  Note C
+// has no floating point enums so we have to do those with macros.
 static void cg_emit_one_enum(ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
@@ -5549,10 +5577,9 @@ static void cg_emit_one_enum(ast_node *ast) {
   bprintf(cg_header_output, "\n#endif\n", name);
 }
 
-// We emit the enums into the current .h file so that C code can
-// use those values to call our procedures.  The generated code
-// from CQL uses the evaluated constants so these symbols are
-// for "others" to use.
+// We emit the enums into the current .h file so that C code can use those
+// values to call our procedures.  The generated code from CQL uses the
+// evaluated constants so these symbols are for "others" to use.
 static void cg_emit_enums_stmt(ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
@@ -5576,13 +5603,12 @@ static void cg_emit_enums_stmt(ast_node *ast) {
   }
 }
 
-// This causes global constant declarations to go into the header file.
-// Those constants are not even used in our codegen because the ast is
-// rewritten to have the actual value rather than the name.  However this will
-// make it possible to use the constant in callers from C.  The constant values are
-// "public" in this sense.  This is a lot like the gen_sql code except it will be
-// in C format.
-
+// This causes global constant declarations to go into the header file. Those
+// constants are not even used in our codegen because the ast is rewritten to
+// have the actual value rather than the name.  However this will make it
+// possible to use the constant in callers from C.  The constant values are
+// "public" in this sense.  This is a lot like the gen_sql code except it will
+// be in C format.
 static void cg_emit_one_const_group(ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -5603,13 +5629,12 @@ static void cg_emit_one_const_group(ast_node *ast) {
       eval_format_number(const_value->sem->value, EVAL_FORMAT_FOR_C, cg_header_output);
     }
     else {
-      // we don't make a string object for string literals that are being emitted, just the C literal
+      // We don't make a string object for string literals that are being
+      // emitted, just the C literal.
       CHARBUF_OPEN(quoted);
-
-      EXTRACT_STRING(literal, const_value->right);
-      cg_requote_literal(literal, &quoted);
-      bprintf(cg_header_output, "%s", quoted.ptr);
-
+        EXTRACT_STRING(literal, const_value->right);
+        cg_requote_literal(literal, &quoted);
+        bprintf(cg_header_output, "%s", quoted.ptr);
       CHARBUF_CLOSE(quoted);
     }
 
@@ -5620,6 +5645,9 @@ static void cg_emit_one_const_group(ast_node *ast) {
   bprintf(cg_header_output, "\n#endif\n", name);
 }
 
+// We're emitting the constants of a group into the output header. We have to
+// have this so that the constants can go into just one header of the developers
+// choice.
 static void cg_emit_constants_stmt(ast_node *ast) {
   Contract(is_ast_emit_constants_stmt(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
@@ -5641,8 +5669,8 @@ static void cg_emit_constants_stmt(ast_node *ast) {
 //  * emit cleanup logic for that local in the cleanup section
 //  * execute the select or call statement that is associated with the cursor
 //    * store the resulting statement for use later in fetch
-//  * declare a hidden has_row local for the cursor so that the cursor name
-//    can be used in expressions to see if a row was fetched.
+//  * declare a hidden has_row local for the cursor so that the cursor name can
+//    be used in expressions to see if a row was fetched.
 static void cg_declare_cursor(ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -5770,23 +5798,24 @@ static void cg_declare_cursor(ast_node *ast) {
   }
 
   if (is_boxed) {
-    // An object will control the lifetime of the cursor.  If the cursor is boxed
-    // this is the object reference that will be used.  This way the exit path is
-    // uniform regardless of whether or not the object was in fact boxed in the
-    // control flow.  This is saying that it might be boxed later so we use this
-    // general mechanism for lifetime. The cg_var_decl helper handles cleanup too.
+    // An object will control the lifetime of the cursor.  If the cursor is
+    // boxed this is the object reference that will be used.  This way the exit
+    // path is uniform regardless of whether or not the object was in fact boxed
+    // in the control flow.  This is saying that it might be boxed later so we
+    // use this general mechanism for lifetime. The cg_var_decl helper handles
+    // cleanup too.
 
     CHARBUF_OPEN(box_name);
     bprintf(&box_name, "%s_object_", cursor_name);
 
     cg_var_decl(cg_declarations_output, SEM_TYPE_OBJECT, box_name.ptr, CG_VAR_DECL_FULL);
 
-    // the unbox case gets the object from the unbox operation above, so skip if unboxing
+    // unbox case gets the object from the unbox operation above, so skip if unboxing
 
     if (!is_unboxing) {
-      // Note we have to clear the stashed box object and then accept the new box without
-      // increasing the retain count on the new box because it starts with a +1 as usual.
-      // This is a job for cg_copy_for_create!
+      // Note we have to clear the stashed box object and then accept the new
+      // box without increasing the retain count on the new box because it
+      // starts with a +1 as usual. This is a job for cg_copy_for_create!
 
       CHARBUF_OPEN(box_value);
       bprintf(&box_value, "cql_box_stmt(%s_stmt)", cursor_name);
@@ -5814,10 +5843,11 @@ static void cg_declare_cursor(ast_node *ast) {
   }
 }
 
-// This is the cursor boxing primitive, we'll make an object variable for this cursor here
-// Note since the cursor is boxed its lifetime is already controlled by an object associated
-// with the cursor.  This happens as soon as the cursor is created, however it is created.
-// The codegen system knows that the cursor may be boxed at some point using the SEM_TYPE_BOXED flag
+// This is the cursor boxing primitive, we'll make an object variable for this
+// cursor here. Note since the cursor is boxed its lifetime is already controlled
+// by an object associated with the cursor.  This happens as soon as the cursor
+// is created, however it is created. The codegen system knows that the cursor
+// may be boxed at some point using the SEM_TYPE_BOXED flag
 static void cg_set_from_cursor(ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
@@ -5842,6 +5872,7 @@ static void cg_set_from_cursor(ast_node *ast) {
   CHARBUF_CLOSE(value);
 }
 
+// We're using the named cursors's semantic type to declare a cursor.
 static void cg_declare_cursor_like(ast_node *name_ast) {
   EXTRACT_STRING(cursor_name, name_ast);
 
@@ -5849,6 +5880,7 @@ static void cg_declare_cursor_like(ast_node *name_ast) {
   cg_declare_auto_cursor(cursor_name, name_ast->sem);
 }
 
+// We're using some other names semantic type to declare a cursor.
 static void cg_declare_cursor_like_name(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   Contract(ast->right);
@@ -5857,6 +5889,7 @@ static void cg_declare_cursor_like_name(ast_node *ast) {
   cg_declare_cursor_like(name_ast);
 }
 
+// we're using the shape of a select statement to declare a cursor
 static void cg_declare_cursor_like_select(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
   Contract(is_select_stmt(ast->right));
@@ -5865,6 +5898,7 @@ static void cg_declare_cursor_like_select(ast_node *ast) {
   cg_declare_cursor_like(name_ast);
 }
 
+// we're using typed names (x int, y real) to make a cursor
 static void cg_declare_cursor_like_typed_names(ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
   Contract(is_ast_typed_names(ast->right));
@@ -5873,9 +5907,9 @@ static void cg_declare_cursor_like_typed_names(ast_node *ast) {
   cg_declare_cursor_like(name_ast);
 }
 
-// The value cursor form for sure will be fetched.   We emit the necessary locals
-// for the cursor here.  Those are one for "_has_row_" field and another for each
-// element of the structure the cursor holds.
+// The value cursor form for sure will be fetched.   We emit the necessary
+// locals for the cursor here.  Those are one for "_has_row_" field and another
+// for each element of the structure the cursor holds.
 static void cg_declare_value_cursor(ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -5888,8 +5922,8 @@ static void cg_declare_value_cursor(ast_node *ast) {
 }
 
 // Fetch values has been checked for the presence of all columns and seed values
-// have already been added if needed.  All we have to generate evaluation of each value
-// and then a store.  There is no "fetch values into name_list" form.
+// have already been added if needed.  All we have to generate evaluation of
+// each value and then a store.  There is no "fetch values into name_list" form.
 static void cg_fetch_values_stmt(ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
@@ -5964,11 +5998,13 @@ static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
 // Fetch has already been rigorously checked so we don't have to worry about
 // argument counts or type mismatches in the codegen.  We have two cases:
 //  * Fetch into variables
-//    * loop over the variables which must match with the columns (!) and
-//      use the cg_get_column helpers to emit the code for a store
+//    * loop over the variables which must match with the columns (!) and use
+//      the cg_get_column helpers to emit the code for a store
 //  * Fetch into auto variables
-//    * loop over the field names of the sem_struct that corresponds to the cursor
+//    * loop over the field names of the sem_struct that corresponds to the
+//      cursor
 //    * set each local according to the automatically generated name as above
+//
 // Note: cg_get_column does the error processing
 static void cg_fetch_stmt(ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
@@ -6002,8 +6038,8 @@ static void cg_fetch_stmt(ast_node *ast) {
 
   CHARBUF_CLOSE(row_test);
 
-  // if there is a row, then we need to read the row into the variables
-  // there are two alternatives: reading into locals/args or reading into
+  // if there is a row, then we need to read the row into the variables there
+  // are two alternatives: reading into locals/args or reading into
   // auto-generated cursor variables.  Either way we get each column.
 
   sem_struct *sptr = ast->left->sem->sptr;
@@ -6012,12 +6048,11 @@ static void cg_fetch_stmt(ast_node *ast) {
     CSTR db_sym = "NULL";
     if (dml_proc) {
       // The db pointer passed to cql_copyoutrow(...) is used only to decode any
-      // encoded columns.
-      // We provide the db pointer only if the result_set to copy were created
-      // by a DML proc. The idea being that if it wasn't a DML proc that made
-      // the result set then it could not have encoded anything since it also,
-      // did not have the db pointer to do the encoding. So our decode call will
-      // match what the proc could have done.
+      // encoded columns. We provide the db pointer only if the result_set to
+      // copy were created by a DML proc. The idea being that if it wasn't a DML
+      // proc that made the result set then it could not have encoded anything
+      // since it also, did not have the db pointer to do the encoding. So our
+      // decode call will match what the proc could have done.
       db_sym = "_db_";
     }
     bprintf(cg_main_output, "cql_copyoutrow(%s, (cql_result_set_ref)%s_result_set_, %s_row_num_, %d",
@@ -6065,12 +6100,13 @@ static void cg_fetch_call_stmt(ast_node *ast) {
 }
 
 // The update cursor statement differs from the more general fetch form in that
-// it is only to be used to tweak fields in an already loaded cursor.  The sematics
-// are that if you try to "update" a cursor with no row the update is ignored.
-// The purpose of this is to let you edit one or two fields of a row as you fetch them
-// before using OUT or OUT UNION or INSERT ... FROM CURSOR.  You want to do this
-// without having to restate all the columns, which besides being verbose makes it hard
-// for people to see what things you are changing and what you are not.
+// it is only to be used to tweak fields in an already loaded cursor.  The
+// sematics are that if you try to "update" a cursor with no row the update is
+// ignored. The purpose of this is to let you edit one or two fields of a row as
+// you fetch them before using OUT or OUT UNION or INSERT ... FROM CURSOR.  You
+// want to do this without having to restate all the columns, which besides
+// being verbose makes it hard for people to see what things you are changing
+// and what you are not.
 static void cg_update_cursor_stmt(ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
@@ -6104,8 +6140,8 @@ static void cg_update_cursor_stmt(ast_node *ast) {
   bprintf(cg_main_output, "}\n");
 }
 
-// Here we just emit the various case labels for the expression list of
-// a SWITCH/WHEN clause.  There isn't much to this.
+// Here we just emit the various case labels for the expression list of a
+// SWITCH/WHEN clause.  There isn't much to this.
 //  * the correct indent level is already set up
 //  * if the constants are 64 make sure we emit them as such
 //  * we know evaluation will work because the semantic pass already checked it
@@ -6133,8 +6169,8 @@ static void cg_switch_expr_list(ast_node *ast, sem_t sem_type_switch_expr) {
 
 // Switch actually generates pretty easily because of the constraints that were
 // placed on the various expressions.  We know that the case lables are all
-// integers and we know that the expression type of the switch expression is
-// a not null integer type so we can easily generate the switch form.  Anything
+// integers and we know that the expression type of the switch expression is a
+// not null integer type so we can easily generate the switch form.  Anything
 // that could go wrong has already been checked.
 static void cg_switch_stmt(ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
@@ -6196,9 +6232,9 @@ static void cg_switch_stmt(ast_node *ast) {
   bprintf(cg_main_output, "}\n", expr_value.ptr);
 }
 
-// "While" suffers from the same problem as IF and as a consequence
-// generating while (expression) would not generalize.
-// The overall pattern for while has to look like this:
+// "While" suffers from the same problem as IF and as a consequence generating
+// while (expression) would not generalize. The overall pattern for while has to
+// look like this:
 //
 //  for (;;) {
 //    prep statements;
@@ -6209,8 +6245,9 @@ static void cg_switch_stmt(ast_node *ast) {
 //  }
 //
 // Note that while can have leave and continue substatements which have to map
-// to break and continue.   That means other top level statements that aren't loops
-// must not create a C loop construct or break/continue would have the wrong target.
+// to break and continue.   That means other top level statements that aren't
+// loops must not create a C loop construct or break/continue would have the
+// wrong target.
 static void cg_while_stmt(ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -6245,24 +6282,26 @@ static void cg_while_stmt(ast_node *ast) {
 }
 
 // The general pattern for this is very simple:
-//   for (;;) {
-//     do the fetch;
-//     if (no rows) break;
-//     do your loop;
+//
+//  for (;;) {
+//    do the fetch;
+//    if (no rows) break;
+//    do your loop;
 //  }
-// It has to be this because the fetch might require many statements.
-// There are helpers for all of this so it's super simple.
+//
+// It has to be this because the fetch might require many statements. There are
+// helpers for all of this so it's super simple.
 static void cg_loop_stmt(ast_node *ast) {
   Contract(is_ast_loop_stmt(ast));
   EXTRACT_NOTNULL(fetch_stmt, ast->left);
   EXTRACT(stmt_list, ast->right);
   EXTRACT_ANY_NOTNULL(cursor_ast, fetch_stmt->left);
 
-  // get the canonical name of the cursor (the name in the tree might be case-sensitively different)
+  // Get the canonical name of the cursor (the name in the tree might be
+  // case-sensitively different)
   CSTR cursor_name = cursor_ast->sem->name;
 
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
-
   bprintf(cg_main_output, "for (;;) {\n");
   CG_PUSH_MAIN_INDENT(loop, 2);
 
@@ -6317,10 +6356,10 @@ static void cg_return_stmt(ast_node *ast) {
   return_used = true;
 }
 
-// Rollback the current procedure savepoint, then perform a return.
-// Note that to rollback a savepoint you have to do the rollback AND the release
-// and then you're unwound to the savepoint state.  The transaction in flight is
-// still in flight if there is one.
+// Rollback the current procedure savepoint, then perform a return. Note that to
+// rollback a savepoint you have to do the rollback AND the release and then
+// you're unwound to the savepoint state.  The transaction in flight is still in
+// flight if there is one.
 static void cg_rollback_return_stmt(ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
@@ -6334,10 +6373,10 @@ static void cg_rollback_return_stmt(ast_node *ast) {
   cg_return_stmt(ast);
 }
 
-// Commits the current procedure savepoint, then perform a return.
-// Note savepoint semantics are just "release" is sort of like commit
-// in that it doesn't rollback and becomes part of the current transaction
-// which may or may not commit but that's what we mean by commit.
+// Commits the current procedure savepoint, then perform a return. Note
+// savepoint semantics are just "release" is sort of like commit in that it
+// doesn't rollback and becomes part of the current transaction which may or may
+// not commit but that's what we mean by commit.
 static void cg_commit_return_stmt(ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
@@ -6349,9 +6388,9 @@ static void cg_commit_return_stmt(ast_node *ast) {
   cg_return_stmt(ast);
 }
 
-// Finalize the statement object associated with the cursor.
-// Note this sets the cursor to null, so you can do it again.  Cleanup
-// might also do this. That's fine.
+// Finalize the statement object associated with the cursor. Note this sets the
+// cursor to null, so you can do it again.  Cleanup might also do this. That's
+// fine.
 static void cg_close_stmt(ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
@@ -6375,20 +6414,21 @@ static void cg_close_stmt(ast_node *ast) {
   }
 }
 
-// The OUT statement copies the current value of a cursor into an implicit
-// OUT structure variable (_result_).  The type of the variable is inferred
-// from the cursor you return.  All OUT statements in any given proc must
-// agree on the exact type (this has already been verified).  At this point
-// all we have to do is copy the fields.
+// The OUT statement copies the current value of a cursor into an implicit OUT
+// structure variable (_result_).  The type of the variable is inferred from the
+// cursor you return.  All OUT statements in any given proc must agree on the
+// exact type (this has already been verified).  At this point all we have to do
+// is copy the fields.
 static void cg_out_stmt(ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
 
-  // get the canonical name of the cursor (the name in the tree might be case-sensitively different)
+  // Get the canonical name of the cursor (the name in the tree might be
+  // case-sensitively different)
   CSTR cursor_name = ast->left->sem->name;
 
   // OUT [cursor_name]
 
-  // if there is a row, then we need to the values into the result
+  // If there is a row, then we need to the values into the result.
   CHARBUF_OPEN(var);
   CHARBUF_OPEN(value);
 
@@ -6430,7 +6470,8 @@ static void cg_out_stmt(ast_node *ast) {
 static void cg_out_union_stmt(ast_node *ast) {
   Contract(is_ast_out_union_stmt(ast));
 
-  // get the canonical name of the cursor (the name in the tree might be case-sensitively different)
+  // get the canonical name of the cursor (the name in the tree might be
+  // case-sensitively different)
   CSTR cursor_name = ast->left->sem->name;
 
   // OUT UNION [cursor_name]
@@ -6440,7 +6481,7 @@ static void cg_out_union_stmt(ast_node *ast) {
   bprintf(cg_main_output, "cql_bytebuf_append(&_rows_, (const void *)&%s, sizeof(%s));\n", cursor_name, cursor_name);
 }
 
-// emit the string literal into the otuput if the current runtime matches
+// Emit the string literal into the otuput if the current runtime matches
 static void cg_echo_stmt(ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(rt_name, ast->left);
@@ -6457,8 +6498,8 @@ static void cg_echo_stmt(ast_node *ast) {
   }
 }
 
-// This is the helper method to dispatch a call to an external function like "printf"
-// given a name in the AST.  This is for when the user coded the call.
+// This is the helper method to dispatch a call to an external function like
+// "printf" given a name in the AST.  This is for when the user coded the call.
 static void cg_call_external(ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -6470,20 +6511,20 @@ static void cg_call_external(ast_node *ast) {
 
 // This is performs an external function call, normalizing strings and passing
 // the current value of nullables.  It's all straight up value-calls.  This form
-// is used when the name might not be in the AST, such as we need a call to
-// a sqlite helper method with user provided args.  All we do here is emit
-// the  name and then use the arg list helper.
-// The arg list helper gives us prep/invocation/cleanup buffers which we must emit.
+// is used when the name might not be in the AST, such as we need a call to a
+// sqlite helper method with user provided args.  All we do here is emit the
+// name and then use the arg list helper. The arg list helper gives us
+// prep/invocation/cleanup buffers which we must emit.
 static void cg_call_named_external(CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(invocation);
   CHARBUF_OPEN(prep);
   CHARBUF_OPEN(cleanup);
 
-  // Note this function is called in an expression context such as
-  // for the builtin "printf" SQL function it can also be called in the call
-  // statement context such as "call printf();"  In the second case it's
-  // top level and the stack doesn't matter as it will be reset but in the first
-  // case we need to restore the temp stack after we are done with the args.
+  // Note this function is called in an expression context such as for the
+  // builtin "printf" SQL function it can also be called in the call statement
+  // context such as "call printf();"  In the second case it's top level and the
+  // stack doesn't matter as it will be reset but in the first case we need to
+  // restore the temp stack after we are done with the args.
   int32_t stack_level_saved = stack_level;
 
   bprintf(&invocation, "%s(", name);
@@ -6501,15 +6542,16 @@ static void cg_call_named_external(CSTR name, ast_node *arg_list) {
 
 // This is the hard work of doing the call actually happens.  We have to:
 //   * evaluate each argument in the arg list
-//     * for string literals, don't make a string_ref, just emit the literal as a quoted string
-//       it's going to a C style call anyway...
+//     * for string literals, don't make a string_ref, just emit the literal as
+//       a quoted string it's going to a C style call anyway...
 //     * for strings
-//       * add a prep statement to convert the string to a const char * in a temporary
+//       * add a prep statement to convert the string to a const char * in a temp
 //       * include the temporary in the arg list
 //       * add a cleanup statement to release the temporary
 //     * for others, use the expression value
 //   * burn the top of the stack, in case the result is stored in a temporary,
-//     each arg gets a fresh top of stack so they don't clobber each others results.
+//     each arg gets a fresh top of stack so they don't clobber each others
+//     results.
 static void cg_emit_external_arglist(ast_node *arg_list, charbuf *prep, charbuf *invocation, charbuf *cleanup) {
   for (ast_node *item = arg_list; item; item = item->right) {
     EXTRACT_ANY(arg, item->left);
@@ -6549,8 +6591,8 @@ static void cg_emit_external_arglist(ast_node *arg_list, charbuf *prep, charbuf 
   }
 }
 
-// We have to release any valid object we have before we call an out function
-// or we will leak a reference.
+// We have to release any valid object we have before we call an out function or
+// we will leak a reference.
 static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_param, CSTR name) {
   if (is_ref_type(sem_type_arg)) {
     if (!is_in_parameter(sem_type_param)) {
@@ -6559,14 +6601,15 @@ static void cg_release_out_arg_before_call(sem_t sem_type_arg, sem_t sem_type_pa
   }
 }
 
-// When performing a call there are several things we might need to do to the arguments
-// in order to get the correct calling convention.
+// When performing a call there are several things we might need to do to the
+// arguments in order to get the correct calling convention.
 //  * strings are already references, they go as is.
 //  * not-nullables can go as is, unless
-//  * if the paramater is not nullable and the argument is compatible but not an exact match,
-//    then we box the argument into a temporary not nullable and pass that through
-//  * finally, both the paramater and the argument was not nullable then we have to recover
-//    the variable name from the evaluated value.
+//  * if the paramater is not nullable and the argument is compatible but not an
+//    exact match, then we box the argument into a temporary not nullable and
+//    pass that through
+//  * finally, both the paramater and the argument was not nullable then we have
+//    to recover the variable name from the evaluated value.
 static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_arg, charbuf *invocation) {
   CG_PUSH_EVAL(arg, C_EXPR_PRI_ROOT);
 
@@ -6616,20 +6659,21 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
 
     // check for bool normalization
     if (is_bool(sem_type_param) && !is_bool(sem_type_arg)) {
-      // If it's not an exact match at this point we're in the not-null case for sure
-      // or we would have had to box above. If the arg is not a bool, normalize now.
-
+      // If it's not an exact match at this point we're in the not-null case for
+      // sure or we would have had to box above. If the arg is not a bool,
+      // normalize now.
       Invariant(!is_nullable(sem_type_arg));
       bprintf(invocation, "(!!(%s))", arg_value.ptr);
       break;
     }
 
     if (is_nullable(sem_type_param)) {
-      // This is the unfortunate case where we have split out a temporary or variable
-      // that was already nullable and we want to use it for the call.  The thing is
-      // we've split that nullable into two parts the .value and the .isnull -- what
-      // we want is to just pass the variable itself, so we're going to look at the
-      // value and reconstruct the variable by stripping off the .value
+      // This is the unfortunate case where we have split out a temporary or
+      // variable that was already nullable and we want to use it for the call.
+      // The thing is we've split that nullable into two parts the .value and
+      // the .isnull -- what we want is to just pass the variable itself, so
+      // we're going to look at the value and reconstruct the variable by
+      // stripping off the .value
 
       const uint32_t dot_value_length = 6;  //  .value is 6 characters.
 
@@ -6654,15 +6698,17 @@ static void cg_emit_one_arg(ast_node *arg, sem_t sem_type_param, sem_t sem_type_
 }
 
 
-// This generates the invocation for a user defined external function.
-// Basically we do a simple C invoke with the matching argument types which are known exactly
-// we do the usual argument conversions using cg_emit_one_arg just like when calling procedures
-// however we capture the return type in a temporary variable created exactly for this purpose.
-// Note we do this without using the usual macros because those would invoke the function twice:
-// one time for is_null and one time for _value which is a no-no.  So here we emit a direct
-// assignment much like we would in cg_store.  Except we don't have to do all the cg_store things
-// because we know the target is a perfectly matching local variable we just created.
-// This code is also used in the proc as func path hence the dml stuff.
+// This generates the invocation for a user defined external function. Basically
+// we do a simple C invoke with the matching argument types which are known
+// exactly we do the usual argument conversions using cg_emit_one_arg just like
+// when calling procedures however we capture the return type in a temporary
+// variable created exactly for this purpose. Note we do this without using the
+// usual macros because those would invoke the function twice: one time for
+// is_null and one time for _value which is a no-no.  So here we emit a direct
+// assignment much like we would in cg_store.  Except we don't have to do all
+// the cg_store things because we know the target is a perfectly matching local
+// variable we just created. This code is also used in the proc as func path
+// hence the dml stuff.
 static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -6712,15 +6758,15 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
   CHARBUF_OPEN(cleanup);
 
   if (unchecked_func) {
-    // This is a bit tricky.  As always in C output there may be
-    // some statements that have to be emitted as part of this
-    // expression.  Some expressions in SQL have flow control like CASE/WHEN/THEN/END
-    // So in this case we want to call the function and capture its result
-    // to do this we have to emit the preparatory statements, then use its
-    // invocation as part of an assignment and then, and only then, emit
-    // the cleanup for the prep work.  Note that the prep work can assign
-    // temporary string variables, commonly in external calls we have to
-    // convert to C string.  As always the lua version of this is much simpler.
+    // This is a bit tricky.  As always in C output there may be some statements
+    // that have to be emitted as part of this expression.  Some expressions in
+    // SQL have flow control like CASE/WHEN/THEN/END So in this case we want to
+    // call the function and capture its result to do this we have to emit the
+    // preparatory statements, then use its invocation as part of an assignment
+    // and then, and only then, emit the cleanup for the prep work.  Note that
+    // the prep work can assign temporary string variables, commonly in external
+    // calls we have to convert to C string.  As always the lua version of this
+    // is much simpler.
     CHARBUF_OPEN(prep);
     bprintf(&invocation, "%s(", func_sym.ptr);
     cg_emit_external_arglist(arg_list, &prep, &invocation, &cleanup);
@@ -6787,10 +6833,10 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
     bprintf(&invocation, ")");
   }
 
-  // Now store the result of the call.
-  // the only trick here is we have to make sure we honor create semantics
-  // otherwise we can just copy the data since the variable is for sure
-  // an exact match for the call return by construction.
+  // Now store the result of the call. The only trick here is we have to make
+  // sure we honor create semantics otherwise we can just copy the data since
+  // the variable is for sure an exact match for the call return by
+  // construction.
 
   if (proc_as_func) {
     // just do the function call, the result variable assignment happens as part of the call
@@ -6822,10 +6868,9 @@ static void cg_user_func(ast_node *ast, charbuf *is_null, charbuf *value) {
 
 // Forward the call processing to the general helper (with cursor arg)
 static void cg_call_stmt(ast_node *ast) {
-  // If the call has a result set it is stored in our result parameter
-  // just like a loose select statement would be.  Note this can be
-  // overridden by a later result which is totally ok.  Same as for select
-  // statements.
+  // If the call has a result set it is stored in our result parameter just like
+  // a loose select statement would be.  Note this can be overridden by a later
+  // result which is totally ok.  Same as for select statements.
   cg_call_stmt_with_cursor(ast, NULL);
 }
 
@@ -6846,9 +6891,9 @@ static void cg_declare_out_call_stmt(ast_node *ast) {
   cg_call_stmt(call_stmt);
 }
 
-// This helper method walks all the args and all the formal paramaters at the same time
-// it gets the appropriate type info for each and then generates the expression
-// for the evaluation of that argument.
+// This helper method walks all the args and all the formal paramaters at the
+// same time it gets the appropriate type info for each and then generates the
+// expression for the evaluation of that argument.
 static void cg_emit_proc_params(proc_params_info *info) {
   // Harvest the input
   ast_node *arg_list = info->arg_list;
@@ -6872,9 +6917,9 @@ static void cg_emit_proc_params(proc_params_info *info) {
     need_comma = true;
   }
 
-  // return info so that output can continue in case more is coming
-  // normally args and params end at the same time but args can end early
-  // in the proc as func case, we generate a temporary out argument as the last arg
+  // return info so that output can continue in case more is coming normally
+  // args and params end at the same time but args can end early in the proc as
+  // func case, we generate a temporary out argument as the last arg
   info->need_comma = need_comma;
   info->arg_list = arg_list;
   info->params = params;
@@ -6888,11 +6933,11 @@ static void cg_emit_proc_params(proc_params_info *info) {
 //      we are a DML proc so we, too, had such an arg.  Pass it along.
 //    * capture the _rc_ return code and do the error processing.
 //  * if the proc returns a relational result (see below) we use the given
-//    cursor to capture it, or else we use the functions result argument
-//    as indicated below
+//    cursor to capture it, or else we use the functions result argument as
+//    indicated below
 //
-// There are a variety of call forms (we'll see the symmetric version of this
-// in cg_create_proc_stmt).  The first thing to consider is, does the procedure
+// There are a variety of call forms (we'll see the symmetric version of this in
+// cg_create_proc_stmt).  The first thing to consider is, does the procedure
 // produce some kind of relational result, there are four ways it can do this:
 //
 //   1. It returns a statement (it used a loose SELECT)
@@ -6900,18 +6945,18 @@ static void cg_emit_proc_params(proc_params_info *info) {
 //   3. It returns a result set (it used OUT UNION)
 //   4. It returns no relational result, just out args maybe.
 //
-//  Now we have to consider this particular call, and the chief question is
-//  are we capturing the relational result in a cursor? If we are then referring
-//  to the above:
+//  Now we have to consider this particular call, and the chief question is are
+//  we capturing the relational result in a cursor? If we are then referring to
+//  the above:
 //
 //   1a. The cursor will be a statement cursor, holding the SQLite statement
 //   2a. The cursor will hold the row, it is a value cursor (you can't step it)
 //   3a. The cursor will hold a pointer to the result set which can be indexed
 //   4a. A cursor cannot be used if there is no relational result.
 //
-//  Note that the error case above has already been detected in semantic analysis
-//  so we would not be here if it happened.  This is true of the other error cases
-//  as well.  If we're doing code-gen we know we're good.
+//  Note that the error case above has already been detected in semantic
+//  analysis so we would not be here if it happened.  This is true of the other
+//  error cases as well.  If we're doing code-gen we know we're good.
 //
 //  If the result is not captured in a cursor then we have the following outcomes
 //
@@ -6922,13 +6967,13 @@ static void cg_emit_proc_params(proc_params_info *info) {
 //      the OUT UNION)
 //  4b. This is a "normal" function call with just normal arguments
 //
-// Compounding the above, the procedure might use the database or not.  If it uses
-// the database (dml_proc) we have to add that argument and we expect a success code.
-// If it doesn't use the database it can still return a relational result with
-// OUT or OUT UNION.  It can't have done a SELECT (no database) or could it have
-// called a procedure that did a SELECT (again, no database).  So the statement
-// cursor case is eliminated. This creates a fairly complex matrix but most of the
-// logic is highly similar.
+// Compounding the above, the procedure might use the database or not.  If it
+// uses the database (dml_proc) we have to add that argument and we expect a
+// success code. If it doesn't use the database it can still return a relational
+// result with OUT or OUT UNION.  It can't have done a SELECT (no database) or
+// could it have called a procedure that did a SELECT (again, no database).  So
+// the statement cursor case is eliminated. This creates a fairly complex matrix
+// but most of the logic is highly similar.
 //
 // In call cases we can use the arg helper method to emit each arg.  There are
 // several rules for each kind of arg, described above in cg_emit_one_arg.
@@ -6968,11 +7013,11 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   if (dml_proc) {
     bprintf(&invocation, "_rc_ = %s(_db_", proc_sym.ptr);
     if (out_union_proc && !cursor_name) {
-      // This is case 3b above.  The tricky bit here is that there might
-      // be more than one such call.  The callee is not going to release
-      // the out arg as it might be junk from the callee's perspective so
-      // we have to release it in case this call is in a loop or if this
-      // call is repeated in some other way
+      // This is case 3b above.  The tricky bit here is that there might be more
+      // than one such call.  The callee is not going to release the out arg as
+      // it might be junk from the callee's perspective so we have to release it
+      // in case this call is in a loop or if this call is repeated in some
+      // other way
       bprintf(cg_main_output, "cql_object_release(*_result_set_);\n");
       bprintf(&invocation, ", (%s *)_result_set_", result_set_ref.ptr);
     }
@@ -6982,8 +7027,8 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
       bprintf(&invocation, ", &%s_result_set_", cursor_name);
     }
     else if (result_set_proc && cursor_name == NULL) {
-      // This is case 1b above, prop the result as our output.  As with case
-      // 3b above we have to pre-release _result_stmt_ because of repetition.
+      // This is case 1b above, prop the result as our output.  As with case 3b
+      // above we have to pre-release _result_stmt_ because of repetition.
       bprintf(cg_main_output, "cql_finalize_stmt(_result_stmt);\n");
       bprintf(&invocation, ", _result_stmt");
     }
@@ -7074,30 +7119,30 @@ static void cg_call_stmt_with_cursor(ast_node *ast, CSTR cursor_name) {
   CHARBUF_CLOSE(invocation);
 }
 
-// Straight up DDL invocation.  The ast has the statement, execute it!
-// We don't minify the aliases because DDL can have views and the view column names
-// can be referred to in users of the view.  Loose select statements can have
-// no external references to column aliases.
+// Straight up DDL invocation.  The ast has the statement, execute it! We don't
+// minify the aliases because DDL can have views and the view column names can
+// be referred to in users of the view.  Loose select statements can have no
+// external references to column aliases.
 static void cg_any_ddl_stmt(ast_node *ast) {
   cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_NO_MINIFY_ALIASES);
 }
 
-// Straight up DML invocation.  The ast has the statement, execute it!
 static void cg_std_dml_exec_stmt(ast_node *ast) {
+// Straight up DML invocation.  The ast has the statement, execute it!
   cg_bound_sql_statement(NULL, ast, CG_EXEC|CG_MINIFY_ALIASES);
 }
 
-// DML with PREPARE.  The ast has the statement.
-// Note: _result_ is the output variable for the sqlite3_stmt we generate
-//       this was previously added when the stored proc params were generated.
+// DML with PREPARE.  The ast has the statement. Note: _result_ is the output
+// variable for the sqlite3_stmt we generate this was previously added when the
+// stored proc params were generated.
 static void cg_select_stmt(ast_node *ast) {
   Contract(is_select_stmt(ast));
   cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
-// DML with PREPARE.  The ast has the statement.
-// Note: _result_ is the output variable for the sqlite3_stmt we generate
-//       this was previously added when the stored proc params were generated.
+// DML with PREPARE.  The ast has the statement. Note: _result_ is the output
+// variable for the sqlite3_stmt we generate this was previously added when the
+// stored proc params were generated.
 static void cg_explain_stmt(ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
   cg_bound_sql_statement("_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
@@ -7109,7 +7154,8 @@ static void cg_with_select_stmt(ast_node *ast) {
   cg_select_stmt(ast);
 }
 
-// Declares the shared _seed_ variable if needed and then loads it from the indicated expression.
+// Declares the shared _seed_ variable if needed and then loads it from the
+// indicated expression.
 static void cg_insert_dummy_spec(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->left); // the seed expr
 
@@ -7174,10 +7220,10 @@ static void cg_upsert_stmt(ast_node *ast) {
 }
 
 // Very little magic is needed to do try/catch in our context.  The error
-// handlers for all the sqlite calls check _rc_ and if it's an error they
-// "goto" the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
-// Inside the try block, the cleanup handler is changed to the catch block.
-// The catch block puts it back.  Otherwise, generate nested statements as usual.
+// handlers for all the sqlite calls check _rc_ and if it's an error they "goto"
+// the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
+// Inside the try block, the cleanup handler is changed to the catch block. The
+// catch block puts it back.  Otherwise, generate nested statements as usual.
 static void cg_trycatch_helper(ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
   CHARBUF_OPEN(catch_start);
   CHARBUF_OPEN(catch_end);
@@ -7282,8 +7328,8 @@ static void cg_proc_savepoint_stmt(ast_node *ast) {
   }
 }
 
-// Convert _rc_ into an error code.  If it already is one keep it.
-// Then go to the current error target.
+// Convert _rc_ into an error code.  If it already is one keep it. Then go to
+// the current error target.
 static void cg_throw_stmt(ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
@@ -7294,10 +7340,10 @@ static void cg_throw_stmt(ast_node *ast) {
   rcthrown_used = true;
 }
 
-// Dispatch to one of the statement helpers using the symbol table.
-// There are special rules for the DDL methods. If they appear in a
-// global context (outside of any stored proc) they do not run, they
-// are considered declarations only.
+// Dispatch to one of the statement helpers using the symbol table. There are
+// special rules for the DDL methods. If they appear in a global context
+// (outside of any stored proc) they do not run, they are considered
+// declarations only.
 static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   // reset the temp stack
   stack_level = 0;
@@ -7319,9 +7365,9 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
   }
 
 
-  // don't emit a # line directive for the echo statement because it be  messed up
-  // if the echo doesn't end in a linefeed and that's legal.  And there is normally
-  // no visible code for these things anyway.
+  // don't emit a # line directive for the echo statement because it be  messed
+  // up if the echo doesn't end in a linefeed and that's legal.  And there is
+  // normally no visible code for these things anyway.
 
   bool_t suppress_line_directive = is_ast_echo_stmt(stmt);
 
@@ -7371,13 +7417,15 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       out = cg_declarations_output;
     }
 
-    // don't contaminate echo output with comments except in test, where we need it for verification
+    // Don't contaminate echo output with comments except in test, where we need
+    // it for verification
     bool_t skip_comment = !options.test && suppress_line_directive;
 
-    // If no code gen in the main buffer, don't add a comment, that will force a global proc
-    // We used to have all kinds of special cases to detect the statements that don't generate code
-    // and that was a bug farm.  So now instead we just look to see if it made code.  If it didn't make
-    // code we will not force the global proc to exist because of the stupid comment...
+    // If no code gen in the main buffer, don't add a comment, that will force a
+    // global proc We used to have all kinds of special cases to detect the
+    // statements that don't generate code and that was a bug farm.  So now
+    // instead we just look to see if it made code.  If it didn't make code we
+    // will not force the global proc to exist because of the stupid comment...
     skip_comment |= (out == cg_main_output && tmp_main.used == 1);
 
     // put a line marker in the header file in case we want a test suite that verifies that
@@ -7385,8 +7433,9 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
       bprintf(cg_header_output, "\n// The statement ending at line %d\n", stmt->lineno);
     }
 
-    // emit comments for most statements: we do not want to require the global proc block
-    // just because there was a comment so this is suppressed for "no code" things
+    // Emit comments for most statements: we do not want to require the global
+    // proc block just because there was a comment so this is suppressed for "no
+    // code" things.
     if (!skip_comment) {
       if (options.test) {
         bprintf(out, "\n// The statement ending at line %d\n", stmt->lineno);
@@ -7403,7 +7452,8 @@ static void cg_one_stmt(ast_node *stmt, ast_node *misc_attrs) {
         gen_misc_attrs(misc_attrs);
       }
       gen_one_stmt(stmt);
-      cg_remove_slash_star_and_star_slash(&tmp); // internal "*/" is fatal. "/*" can also be under certain compilation flags
+      // internal "*/" is fatal. "/*" can also be under certain compilation flags
+      cg_remove_slash_star_and_star_slash(&tmp);
       bprintf(out, "%s", tmp.ptr);
       CHARBUF_CLOSE(tmp);
       bprintf(out, ";\n*/\n");
@@ -7434,9 +7484,9 @@ static void cg_stmt_list(ast_node *head) {
   CHARBUF_OPEN(temp);
   cg_main_output = &temp;
 
-  // Check to see if the block starts with a sequence of DDL/DML, if it does we can execute
-  // it in one go; this saves us a lot of error checking code at the expense of less precise
-  // error tracing.
+  // Check to see if the block starts with a sequence of DDL/DML, if it does we
+  // can execute it in one go; this saves us a lot of error checking code at the
+  // expense of less precise error tracing.
 
   if (in_proc && options.compress) {
     ast_node *ast = head;
@@ -7453,8 +7503,8 @@ static void cg_stmt_list(ast_node *head) {
       prev = ast;
     }
 
-    // try to run the first statements of the statement list in bulk
-    // but only do this if we found at least 2 statements that match
+    // try to run the first statements of the statement list in bulk but only do
+    // this if we found at least 2 statements that match
     if (ast != head && ast != head->right) {
       ast_node *new_head = ast;
 
@@ -7487,13 +7537,11 @@ static void cg_stmt_list(ast_node *head) {
   stmt_nesting_level--;
 }
 
-// Here we generate the type constant for the column
-// The type must be one of the types that we can fetch
-// from SQLite so that means not a struct, not the null type
-// (the null type is reserved for the literal NULL, it's
-// not a storage class) and certainly nothing that is
-// a struct or sentinel type.  Likewise objects cannot
-// be the result of a select, so that's out too.
+// Here we generate the type constant for the column The type must be one of the
+// types that we can fetch from SQLite so that means not a struct, not the null
+// type (the null type is reserved for the literal NULL, it's not a storage
+// class) and certainly nothing that is a struct or sentinel type.  Likewise
+// objects cannot be the result of a select, so that's out too.
 static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
@@ -7531,8 +7579,8 @@ static void cg_data_type(charbuf *output, bool_t encode, sem_t sem_type) {
   }
 }
 
-// All the data you need to make a getter or setter...
-// there's a lot of it and most of it is the same for all cases
+// All the data you need to make a getter or setter... there's a lot of it and
+// most of it is the same for all cases
 typedef struct function_info {
   CSTR name;
   CSTR col;
@@ -7549,19 +7597,22 @@ typedef struct function_info {
   CSTR value_suffix;
 } function_info;
 
-// The inlineable version of the getter can be generated instead of the opened coded version as above
-// This type inlines well because it uses a small number of standard helpers to do the fetching.
-// The situation is not so different from the original open coded case above.
-// This code mirrors cg_proc_result_set_getter
+// The inlineable version of the getter can be generated instead of the opened
+// coded version as above This type inlines well because it uses a small number
+// of standard helpers to do the fetching. The situation is not so different
+// from the original open coded case above. This code mirrors
+// cg_proc_result_set_getter
 // * First we need to compute the name of the getter, it's fairly simple coming
-//   from the name of the procedure that had the select and the field name that we
-//   are getting.
+//   from the name of the procedure that had the select and the field name that
+//   we are getting.
 // * Second we emit the body of the getter there's a few cases here
-//   * for fragments, we don't do our own getting, the master assembled query knows
-//     all the pieces so we delegate to it;  but we need to emit a declaration for
-//     the getter in the master query
-//   * for normal rowsets it's something like cql_result_set_get_bool(result_set, row, column)
-//   * for single row result sets it's just cql_result_set_get_bool(result_set, 0, column)
+//   * for fragments, we don't do our own getting, the master assembled query
+//     knows all the pieces so we delegate to it;  but we need to emit a
+//     declaration for the getter in the master query
+//   * for normal rowsets it's something like
+//     cql_result_set_get_bool(result_set, row, column)
+//   * for single row result sets it's just cql_result_set_get_bool(result_set,
+//     0, column)
 static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 {
   charbuf *h = info->headers;
@@ -7590,8 +7641,8 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
   // not set yet
   Invariant(!out);
 
-  // The inline body will all go into the header file in the normal case.
-  // Note it's ok for these to be static inline because they have a different name
+  // The inline body will all go into the header file in the normal case. Note:
+  // it's ok for these to be static inline because they have a different name
   bprintf(h, "#ifndef _%s_inline_\n", col_getter_sym.ptr);
   bprintf(h, "#define _%s_inline_\n\n", col_getter_sym.ptr);
   bprintf(h, "\nstatic inline %s {\n", func_decl.ptr);
@@ -7657,10 +7708,10 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 #define DO_EMIT_SET_NULL true
 #define DONT_EMIT_SET_NULL false
 
-// This function generate a inline or export version of a setter by using the function_info
-// passed in
-// * 1) We need to compute the name of the setter and also its visibility
-// * 2) We check if the function is setnull type using is_set_null parameter and if true we emit new typed
+// This function generate a inline or export version of a setter by using the
+// function_info passed in
+//  1) We need to compute the name of the setter and also its visibility
+//  2) We check if the function is setnull type using is_set_null parameter and if true we emit new typed
 //      temp new_value_ var and we emit cql_set_null(new_value_), if is not a setnull funtion we emit a
 //      cql_set_notnull(new_value_, new_value). We do this only for types
 //        - cql_nullable_bool
@@ -7668,22 +7719,24 @@ static void cg_proc_result_set_type_based_getter(function_info *_Nonnull info)
 //        - cql_nullable_int32
 //        - cql_nullable_int64
 //      otherwize we skip this step.
-// * 3) Using the correct resultset setter we emit the final set to mutate the resultset: cql_result_set_set_<type>
+//  3) Using the correct resultset setter we emit the final set to mutate the resultset: cql_result_set_set_<type>
+//
 // Examples:
+//
 // using is_set_null = false.
 // extern void query_set_x(query_result_set_ref _Nonnull result_set, cql_int32 new_value) {
 //  cql_nullable_int32 new_value_;
 //  cql_set_notnull(new_value_, new_value);
 //  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
 // }
+//
 // using is_set_null = true.
 // extern void query_set_x_to_null(query_result_set_ref _Nonnull result_set) {
 //  cql_nullable_int32 new_value_;
 //  cql_set_null(new_value_);
 //  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
 // }
-static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_set_null)
-{
+static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_set_null) {
   charbuf *out = info->headers;
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
@@ -7755,7 +7808,8 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_se
     CHARBUF_OPEN(new_value_expr);
 
     if (is_result_set_type(info->ret_type, info->ret_kind)) {
-      // the object setter takes a generic object type, so add the cast, this way all the callers don't have to
+      // the object setter takes a generic object type, so add the cast, this
+      // way all the callers don't have to
       bprintf(&new_value_expr, "(cql_object_ref)");
     }
 
@@ -7774,15 +7828,16 @@ static void cg_proc_result_set_setter(function_info *_Nonnull info, bool_t is_se
   CHARBUF_CLOSE(col_getter_sym);
 }
 
-// Write out the autodrop info into the stream
+// Write out the autodrop info into the stream.
 static void cg_one_autodrop(CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
   Invariant(context);
   charbuf *output = (charbuf *)context;
   bprintf(output, "%s\\0", name);
 }
 
-// If a stored proc is marked with the autodrop annotation when we automatically drop the indicated
-// tables when the proc is finished running.  The attributes should look like this:
+// If a stored proc is marked with the autodrop annotation when we automatically
+// drop the indicated tables when the proc is finished running.  The attributes
+// should look like this:
 // @attribute(cql:autodrop=(table1, table2, ,...))
 static void cg_autodrops(ast_node *misc_attrs, charbuf *output) {
   if (!misc_attrs) {
@@ -7818,14 +7873,17 @@ typedef struct fetch_result_info {
 // there is some variability here and so it's useful to consolidate the logic.
 // The factors are:
 //   * if this is not a DML proc then there's no DB and no return code
-//   * if there is no statement it means we're returning from a value cursor (which implies the above, too)
-//   * we may or may not have references in the data type, so we include those if needed
+//   * if there is no statement it means we're returning from a value cursor
+//     (which implies the above, too)
+//   * we may or may not have references in the data type, so we include those
+//     if needed
 //   * likewise identity columns
-//   * the autodrops helper itself tests for the presence of the attribute in the correct form
+//   * the autodrops helper itself tests for the presence of the attribute in
+//     the correct form
 //
-// The above represents the runtime cql_fetch_info struct that will be used to either fetch all
-// rows or else fetch a single row from a given buffer.  Either way, the metadata is assembled
-// here for use at runtime.
+// The above represents the runtime cql_fetch_info struct that will be used to
+// either fetch all rows or else fetch a single row from a given buffer.  Either
+// way, the metadata is assembled here for use at runtime.
 //
 // Other fields are not conditional.
 static void cg_fetch_info(fetch_result_info *info, charbuf *output)
@@ -7868,17 +7926,19 @@ static void cg_fetch_info(fetch_result_info *info, charbuf *output)
   CHARBUF_CLOSE(tmp);
 }
 
-// If a stored procedure generates a result set then we need to do some extra work
-// to create the C friendly rowset creating and accessing helpers.  If stored
-// proc "foo" creates a row set then we need to:
+// If a stored procedure generates a result set then we need to do some extra
+// work to create the C friendly rowset creating and accessing helpers.  If
+// stored proc "foo" creates a row set then we need to:
 //  * emit a struct "foo_row" that has the shape of each row
 //    * this isn't used by the client code but we use it in our code-gen
 //  * emit a function "foo_fetch_results" that will call "foo" and read the rows
 //    from the statement created by "foo".
-//    * this method will construct a result set object via cql_result_create and store the data
-//    * the remaining functions use cql_result_set_get_data and _get_count to get the data back out
-//  * for each named column emit a function "foo_get_[column-name]" which
-//    gets that column out of the rowset for the indicated row number.
+//    * this method will construct a result set object via cql_result_create and
+//      store the data
+//    * the remaining functions use cql_result_set_get_data and _get_count to
+//      get the data back out
+//  * for each named column emit a function "foo_get_[column-name]" which gets
+//    that column out of the rowset for the indicated row number.
 //  * prototypes for the above go into the main output header file
 static void cg_proc_result_set(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
@@ -7905,7 +7965,8 @@ static void cg_proc_result_set(ast_node *ast) {
 
   bool_t dml_proc = is_dml_proc(ast->sem->sem_type);
 
-  // register the proc name if there is a callback, the particular result type will do whatever it wants
+  // register the proc name if there is a callback, the particular result type
+  // will do whatever it wants
   if (rt->register_proc_name) rt->register_proc_name(name);
 
   charbuf *h = cg_header_output;
@@ -8108,9 +8169,10 @@ static void cg_proc_result_set(ast_node *ast) {
 
   CHARBUF_CLOSE(is_null_getter);
 
-  // Emit foo_result_count, which is really just a proxy to cql_result_set_get_count,
-  // but it is hiding the cql_result_set implementation detail from the API of the generated
-  // code by providing a proc-scoped function for it with the typedef for the result set.
+  // Emit foo_result_count, which is really just a proxy to
+  // cql_result_set_get_count, but it is hiding the cql_result_set
+  // implementation detail from the API of the generated code by providing a
+  // proc-scoped function for it with the typedef for the result set.
 
   bclear(&temp);
   bprintf(&temp, "%s %s(%s _Nonnull result_set)", rt->cql_int32, result_count_sym.ptr, result_set_ref.ptr);
@@ -8123,8 +8185,8 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // Generate fetch result function
   if (uses_out) {
-    // Emit foo_fetch_results, it has the same signature as foo only with a result set
-    // instead of a statement.
+    // Emit foo_fetch_results, it has the same signature as foo only with a
+    // result set instead of a statement.
     bclear(&temp);
     cg_emit_fetch_results_prototype(dml_proc, params, name, result_set_name, &temp);
 
@@ -8184,8 +8246,8 @@ static void cg_proc_result_set(ast_node *ast) {
     bprintf(d, "}\n\n");
   }
   else if (result_set_proc) {
-    // Emit foo_fetch_results, it has the same signature as foo only with a result set
-    // instead of a statement.
+    // Emit foo_fetch_results, it has the same signature as foo only with a
+    // result set instead of a statement.
     bclear(&temp);
     cg_emit_fetch_results_prototype(EMIT_DML_PROC, params, name, result_set_name, &temp);
 
@@ -8317,9 +8379,9 @@ static void cg_proc_result_set(ast_node *ast) {
     }
   }
 
-  // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a resultset.
-  // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
-  // your app is running.
+  // Add a helper function that overrides CQL_DATA_TYPE_ENCODED bit of a
+  // resultset. It's a debugging function that allow you to turn ON/OFF
+  // encoding/decoding when your app is running.
   if (use_encode) {
     bprintf(h, "\nextern void %s(%s col, %s encode);\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
     bprintf(d, "void %s(%s col, %s encode) {\n", set_encoding_sym.ptr, rt->cql_int32, rt->cql_bool);
@@ -8348,13 +8410,13 @@ static void cg_proc_result_set(ast_node *ast) {
   CHARBUF_CLOSE(data_types);
 }
 
-// Main entry point for code-gen.  This will set up the buffers for the global
+// Main entry point for code-gen. This will set up the buffers for the global
 // variables and any loose calls or DML.  Any code that needs to run in the
 // global scope will be added to the global_proc.  This is the only codegen
 // error that is possible.  If you need global code and you don't have a global
-// proc then you can't proceed.  Semantic analysis doƒesn't want to know that stuff.
-// Otherwise all we do is set up the most general buffers for the global case and
-// spit out a function with the correct name.
+// proc then you can't proceed.  Semantic analysis doƒesn't want to know that
+// stuff. Otherwise all we do is set up the most general buffers for the global
+// case and spit out a function with the correct name.
 cql_noexport void cg_c_main(ast_node *head) {
   cql_exit_on_semantic_errors(head);
   exit_on_validating_schema();
@@ -8734,9 +8796,9 @@ cql_noexport void cg_c_init(void) {
 }
 
 // To make sure we start at a zero state.  This is really necessary stuff
-// because of the amalgam.  In the context of the amalgam the compiler
-// might be run more than once without the process exiting. Hence we have
-// to reset the globals and empty the symbol tables.
+// because of the amalgam.  In the context of the amalgam the compiler might be
+// run more than once without the process exiting. Hence we have to reset the
+// globals and empty the symbol tables.
 cql_noexport void cg_c_cleanup() {
   cg_common_cleanup();
 

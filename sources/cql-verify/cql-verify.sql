@@ -183,7 +183,7 @@ begin
 end;
 
 -- Give some helpful text that describes why the expectation failed
--- Tthis is a bunch of string literals so it's easier to look at the
+-- This is a bunch of string literals so it's easier to look at the
 -- code than explain it in english.
 [[private]]
 proc print_fail_details(pat text!, test_output_line int!, expected int!)

@@ -11,6 +11,6 @@ cql_bool starts_with_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonn
 cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle, cql_int32 index);
 cql_int32 index_of_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle);
 
-cql_string_ref str_mid(cql_string_ref in, int startIndex, int length);
-cql_string_ref str_left(cql_string_ref in, int length);
-cql_string_ref str_right(cql_string_ref in, int length);
+cql_string_ref _Nonnull str_mid(cql_string_ref _Nonnull in, int startIndex, int length);
+cql_string_ref _Nonnull str_left(cql_string_ref _Nonnull in, int length);
+cql_string_ref _Nonnull str_right(cql_string_ref _Nonnull in, int length);

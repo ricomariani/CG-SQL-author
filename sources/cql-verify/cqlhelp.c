@@ -1,3 +1,4 @@
+#include <alloca.h>
 #include <stdio.h>
 #include "cqlhelp.h"
 
@@ -141,3 +142,62 @@ cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonn
 
   return result;
 }
+
+// Function to perform MID operation on a C string and return the result using malloc
+cql_string_ref str_mid(cql_string_ref in, int startIndex, int length) {
+  cql_alloc_cstr(inStr, in);
+  int inputLength = strlen(inStr);
+  if (startIndex >= inputLength) {
+    return cql_string_ref_new("");
+  }
+
+  int endIndex = startIndex + length;
+  if (endIndex > inputLength) {
+    endIndex = inputLength;
+  }
+
+  int outputLength = endIndex - startIndex;
+  char *temp = alloca(outputLength + 1); // +1 for null terminator
+
+  strncpy(temp, inStr + startIndex, outputLength);
+  temp[outputLength] = '\0'; // Null-terminate the output string
+
+  cql_free_cstr(inStr, in);
+  return cql_string_ref_new(temp);
+}
+
+cql_string_ref str_left(cql_string_ref in, int length) {
+  cql_alloc_cstr(inStr, in);
+  int inputLength = strlen(inStr);
+  if (length <= 0) {
+    return cql_string_ref_new("");
+  }
+
+  int outputLength = (length < inputLength) ? length : inputLength;
+  char *temp = alloca(outputLength + 1); // +1 for null terminator
+
+  strncpy(temp, inStr, outputLength);
+  temp[outputLength] = '\0'; // Null-terminate the output string
+
+  cql_free_cstr(inStr, in);
+  return cql_string_ref_new(temp);
+}
+
+cql_string_ref str_right(cql_string_ref in, int length) {
+  cql_alloc_cstr(inStr, in);
+  int inputLength = strlen(inStr);
+  if (length <= 0) {
+    return cql_string_ref_new("");
+  }
+
+  int startIndex = (inputLength > length) ? inputLength - length : 0;
+  int outputLength = (startIndex < inputLength) ? inputLength - startIndex : 0;
+  char *temp = alloca(outputLength + 1); // +1 for null terminator
+
+  strncpy(temp, inStr + startIndex, outputLength);
+  temp[outputLength] = '\0'; // Null-terminate the output string
+
+  cql_free_cstr(inStr, in);
+  return cql_string_ref_new(temp);
+}
+

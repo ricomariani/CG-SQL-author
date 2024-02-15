@@ -39,6 +39,9 @@ extern cql_string_ref _Nullable after_text(cql_string_ref _Nullable self, cql_in
 extern cql_bool starts_with_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle);
 extern cql_int32 index_of_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle);
 extern cql_bool contains_at_text(cql_string_ref _Nonnull haystack, cql_string_ref _Nonnull needle, cql_int32 offset);
+extern cql_string_ref _Nullable str_mid(cql_string_ref _Nonnull self, cql_int32 offset, cql_int32 len);
+extern cql_string_ref _Nullable str_right(cql_string_ref _Nonnull self, cql_int32 len);
+extern cql_string_ref _Nullable str_left(cql_string_ref _Nonnull self, cql_int32 len);
 cql_string_literal(_literal_1_FAIL_dump_source, "FAIL");
 cql_string_literal(_literal_2_dump_source, "");
 cql_string_literal(_literal_3_dump_output, ">  ");
@@ -67,62 +70,62 @@ cql_string_literal(_literal_16_The_statement_ending_at_line_read_test_results, "
 #undef cql_error_trace
 #define cql_error_trace() fprintf(stderr, "SQL Failure %d %s: %s %d\n", _rc_, sqlite3_errmsg(_db_), __FILE__, __LINE__)
 
-// Generated from cql-verify.sql:35
+// Generated from cql-verify.sql:38
 
 /*
 DECLARE sql_name TEXT;
 */
 cql_string_ref sql_name = NULL;
 
-// Generated from cql-verify.sql:36
+// Generated from cql-verify.sql:39
 
 /*
 DECLARE result_name TEXT;
 */
 cql_string_ref result_name = NULL;
 
-// Generated from cql-verify.sql:37
-
-/*
-DECLARE attempts INTEGER NOT NULL;
-*/
-cql_int32 attempts = 0;
-
-// Generated from cql-verify.sql:38
-
-/*
-DECLARE errors INTEGER NOT NULL;
-*/
-cql_int32 errors = 0;
-
-// Generated from cql-verify.sql:39
-
-/*
-DECLARE tests INTEGER NOT NULL;
-*/
-cql_int32 tests = 0;
-
 // Generated from cql-verify.sql:40
 
 /*
-DECLARE last_rowid LONG_INT NOT NULL;
+DECLARE attempts INT!;
+*/
+cql_int32 attempts = 0;
+
+// Generated from cql-verify.sql:41
+
+/*
+DECLARE errors INT!;
+*/
+cql_int32 errors = 0;
+
+// Generated from cql-verify.sql:42
+
+/*
+DECLARE tests INT!;
+*/
+cql_int32 tests = 0;
+
+// Generated from cql-verify.sql:43
+
+/*
+DECLARE last_rowid LONG!;
 */
 cql_int64 last_rowid = 0;
 
-// Generated from cql-verify.sql:61
+// Generated from cql-verify.sql:64
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC setup ()
+PROC setup ()
 BEGIN
   CREATE TABLE test_results(
-    line INTEGER NOT NULL,
-    data TEXT NOT NULL
+    line INT!,
+    data TEXT!
   );
   CREATE INDEX __idx__test_results ON test_results (line);
   CREATE TABLE test_input(
-    line INTEGER NOT NULL,
-    data TEXT NOT NULL
+    line INT!,
+    data TEXT!
   );
   CREATE INDEX __idx__test_input ON test_input (line);
 END;
@@ -159,11 +162,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:85
+// Generated from cql-verify.sql:88
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC find_test_output_line (expectation_line INTEGER NOT NULL, OUT test_output_line INTEGER NOT NULL)
+PROC find_test_output_line (expectation_line INT!, OUT test_output_line INT!)
 BEGIN
   TRY
     SET test_output_line := ( SELECT line
@@ -241,13 +244,13 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:104
+// Generated from cql-verify.sql:107
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC find_next (pattern TEXT NOT NULL, test_output_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
+PROC find_next (pattern TEXT!, test_output_line INT!, OUT found INT!)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT rowid
       FROM test_results
       WHERE line = test_output_line AND data LIKE "%" || pattern || "%" AND rowid > last_rowid;
@@ -306,11 +309,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:115
+// Generated from cql-verify.sql:118
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC find_same (pattern TEXT NOT NULL, OUT found INTEGER NOT NULL)
+PROC find_same (pattern TEXT!, OUT found INT!)
 BEGIN
   SET found := ( SELECT data LIKE "%" || pattern || "%"
     FROM test_results
@@ -355,11 +358,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:125
+// Generated from cql-verify.sql:128
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC find_count (pattern TEXT NOT NULL, test_output_line INTEGER NOT NULL, OUT found INTEGER NOT NULL)
+PROC find_count (pattern TEXT!, test_output_line INT!, OUT found INT!)
 BEGIN
   SET found := ( SELECT count(*)
     FROM test_results
@@ -395,11 +398,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:142
+// Generated from cql-verify.sql:145
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC prev_line (test_output_line INTEGER NOT NULL, OUT prev INTEGER NOT NULL)
+PROC prev_line (test_output_line INT!, OUT prev INT!)
 BEGIN
   SET prev := ( SELECT line
     FROM test_results
@@ -445,13 +448,13 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:160
+// Generated from cql-verify.sql:163
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC dump_source (line1 INTEGER NOT NULL, line2 INTEGER NOT NULL, current_line INTEGER NOT NULL)
+PROC dump_source (line1 INT!, line2 INT!, current_line INT!)
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT line, data
       FROM test_input
       WHERE line > line1 AND line <= line2;
@@ -523,14 +526,14 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:183
+// Generated from cql-verify.sql:186
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC dump_output (test_output_line INTEGER NOT NULL, pat TEXT NOT NULL)
+PROC dump_output (test_output_line INT!, pat TEXT!)
 BEGIN
   LET p := ( SELECT "%" || pat || "%" );
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT rowid, line, data
       FROM test_results
       WHERE line = test_output_line;
@@ -621,11 +624,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:212
+// Generated from cql-verify.sql:215
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC print_fail_details (pat TEXT NOT NULL, test_output_line INTEGER NOT NULL, expected INTEGER NOT NULL)
+PROC print_fail_details (pat TEXT!, test_output_line INT!, expected INT!)
 BEGIN
   LET found := find_count(pat, test_output_line);
   LET details := CASE
@@ -697,11 +700,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:241
+// Generated from cql-verify.sql:244
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC print_error_block (test_output_line INTEGER NOT NULL, pat TEXT NOT NULL, expectation_line INTEGER NOT NULL, expected INTEGER NOT NULL)
+PROC print_error_block (test_output_line INT!, pat TEXT!, expectation_line INT!, expected INT!)
 BEGIN
   CALL printf("test results:\n");
   CALL dump_output(test_output_line, pat);
@@ -742,11 +745,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:257
+// Generated from cql-verify.sql:260
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC match_multiline (buffer TEXT NOT NULL, OUT result BOOL NOT NULL)
+PROC match_multiline (buffer TEXT!, OUT result BOOL!)
 BEGIN
   SET result := FALSE;
   IF len_text(buffer) < 7 THEN
@@ -799,13 +802,13 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:340
+// Generated from cql-verify.sql:343
 
 /*
-CREATE PROC match_actual (buffer TEXT NOT NULL, expectation_line INTEGER NOT NULL)
+PROC match_actual (buffer TEXT!, expectation_line INT!)
 BEGIN
-  DECLARE found INTEGER NOT NULL;
-  DECLARE expected INTEGER NOT NULL;
+  DECLARE found INT!;
+  DECLARE expected INT!;
   DECLARE pattern TEXT;
   IF NOT starts_with_text(buffer, "-- ") THEN
     SET last_rowid := 0;
@@ -982,11 +985,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:351
+// Generated from cql-verify.sql:354
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC do_match (buffer TEXT NOT NULL, expectation_line INTEGER NOT NULL)
+PROC do_match (buffer TEXT!, expectation_line INT!)
 BEGIN
   TRY
     CALL match_actual(buffer, expectation_line);
@@ -1024,13 +1027,13 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:366
+// Generated from cql-verify.sql:369
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC process ()
+PROC process ()
 BEGIN
-  DECLARE C CURSOR FOR
+  CURSOR C FOR
     SELECT *
       FROM test_input;
   LOOP FETCH C
@@ -1084,11 +1087,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:404
+// Generated from cql-verify.sql:407
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC read_test_results (result_name TEXT NOT NULL)
+PROC read_test_results (result_name TEXT!)
 BEGIN
   LET result_file := cql_fopen(result_name, "r");
   IF result_file IS NULL THEN
@@ -1178,11 +1181,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:429
+// Generated from cql-verify.sql:432
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC read_test_file (sql_name TEXT NOT NULL)
+PROC read_test_file (sql_name TEXT!)
 BEGIN
   LET sql_file := cql_fopen(sql_name, "r");
   IF sql_file IS NULL THEN
@@ -1258,11 +1261,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:436
+// Generated from cql-verify.sql:439
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC load_data (sql_name TEXT NOT NULL, result_name TEXT NOT NULL)
+PROC load_data (sql_name TEXT!, result_name TEXT!)
 BEGIN
   CALL read_test_results(result_name);
   CALL read_test_file(sql_name);
@@ -1286,11 +1289,11 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:453
+// Generated from cql-verify.sql:456
 
 /*
 @ATTRIBUTE(cql:private)
-CREATE PROC parse_args (args OBJECT<cql_string_list> NOT NULL)
+PROC parse_args (args OBJECT<cql_string_list>!)
 BEGIN
   LET argc := get_object_cql_string_list_count(args);
   IF argc <> 3 THEN
@@ -1342,10 +1345,10 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:465
+// Generated from cql-verify.sql:468
 
 /*
-CREATE PROC dbhelp_main (args OBJECT<cql_string_list> NOT NULL)
+PROC dbhelp_main (args OBJECT<cql_string_list>!)
 BEGIN
   CALL setup();
   CALL parse_args(args);

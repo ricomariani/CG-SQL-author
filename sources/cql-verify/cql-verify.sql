@@ -31,6 +31,9 @@ declare function after_text(self text, `offset` int!) create text;
 declare function starts_with_text(haystack text!, needle text!) bool!;
 declare function index_of_text(haystack text!, needle text!) int!;
 declare function contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
+declare function str_mid(self text!, `offset` int!, `len` int!) create text;
+declare function str_right(self text!, `len` int!) create text;
+declare function str_left(self text!, `len` int!) create text;
 
 var sql_name text;
 var result_name text;

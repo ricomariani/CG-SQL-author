@@ -29,14 +29,14 @@ jobs:
         id: bottlecaps-railroad
         uses: actions/cache@v3
         with:
-          path: ~/rr-2.0-java11
-          key: rr-2.0-java11
+          path: ~/rr-2.2-java11
+          key: rr-2.2-java11
       - name: Cache MISS — Download Bottlecaps RailRoad
         if: steps.bottlecaps-railroad.outputs.cache-hit != 'true'
         run: |
-          wget https://www.bottlecaps.de/rr/download/rr-2.0-java11.zip -O rr-2.0-java11.zip
-          unzip rr-2.0-java11.zip -d ./rr-2.0-java11
-          mv ./rr-2.0-java11 ~/rr-2.0-java11
+          wget https://rr.red-dove.com/download/rr-2.2-SNAPSHOT-java11.zip -O rr-2.2-java11.zip
+          unzip rr-2.2-java11.zip -d ./rr-2.2-java11
+          mv ./rr-2.2-java11 ~/rr-2.2-java11
       - name: Build Grammar outputs
         run: |
           mkdir -p ${{ github.workspace }}/sources/out

@@ -86,10 +86,14 @@ cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull outp
   va_end(args);
 }
 
+// normal charbuf allocation and open goes on the stack
+// this macro is for the case where we want a durable buffer
+// that will be used across multiple functions
 #define ALLOC_AND_OPEN_CHARBUF_REF(x) \
   (x) = (charbuf *)calloc(1, sizeof(charbuf)); \
   bopen(x);
 
+// and here's the cleanup for the durable buffer
 #define CLEANUP_CHARBUF_REF(x) if (x) { bclose(x); free(x);  x = NULL; }
 
 cql_noexport void cg_common_init(void)
@@ -133,6 +137,11 @@ cql_noexport void cg_common_init(void)
 cql_noexport void cg_no_op(ast_node * ast) {
 }
 
+// If there is a semantic error, we should not proceed with code generation.
+// We find such an error at the root of the AST.  Note its important
+// to be pristine in memory usage because the amalgam version of the compiler
+// does not necessarily exit when it's done. It might be used in a long running
+// process, like VSCode, and we don't want to leak memory.
 cql_noexport void cql_exit_on_semantic_errors(ast_node *head) {
   if (head && is_error(head)) {
     cql_error("semantic errors present; no code gen.\n");
@@ -140,6 +149,11 @@ cql_noexport void cql_exit_on_semantic_errors(ast_node *head) {
   }
 }
 
+// If we are here then we've already determined that there is global code to emit.
+// This is code that is outside of any procedure.  This is actually pretty common
+// for instance the CQL unit test pattern relies on global code to make the tests run.
+// If there is no procedure name for the global code then we have a problem.  We
+// can't proceed.
 cql_noexport void exit_on_no_global_proc() {
   if (!global_proc_name) {
     cql_error("There are global statements but no global proc name was specified (use --global_proc)\n");

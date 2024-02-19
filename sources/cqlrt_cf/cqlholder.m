@@ -7,7 +7,7 @@
 
 #include "cqlrt_cf.h"
 
-// CQLHolder is entirly private
+// CQLHolder is entirely private
 
 @interface CQLHolder : NSObject
 

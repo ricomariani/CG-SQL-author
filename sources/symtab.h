@@ -10,11 +10,21 @@
 #include "bytebuf.h"
 #include "charbuf.h"
 
+// each symbol table entry is a key/value pair
+// the key is always a char *, the value can be anything
 typedef struct symtab_entry {
  const char *_Nullable sym;
  void *_Nullable val;
 } symtab_entry;
 
+// The symbol table itself is the usual close hash table form
+// we need the used count and the capacity to manage it
+// additionally the hash function and the comparision function
+// can be changed.  There is a teardown function that can be
+// provided to clean up the payloads when the table is deleted.
+// The normal cleanup just deletes the payload array.  The
+// strings are assumed to be long-lived and owned by something else
+// like the AST.
 typedef struct symtab {
   uint32_t count;
   uint32_t capacity;

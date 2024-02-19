@@ -172,12 +172,11 @@ static void eval_format_real(double real, charbuf *output) {
   CHARBUF_CLOSE(tmp);
 }
 
-// In order to use the eval logic to replace expression trees we
-// need to be able to make a new ast node that represents the result
-// of a calculation.  This function takes such a result and creates
-// a node.  The incoming expression is harvested for file and
-// line info and then replaced in the tree.  It's value is otherwise irrelevant
-// because the computation has already been done.
+// In order to use the eval logic to replace expression trees we need to be able
+// to make a new ast node that represents the result of a calculation.  This
+// function takes such a result and creates a node.  The incoming expression is
+// harvested for file and line info and then replaced in the tree.  It's value
+// is otherwise irrelevant because the computation has already been done.
 // The incoming evaluation result must not be an error node.
 cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
   Contract(result);
@@ -196,8 +195,9 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
   case SEM_TYPE_LONG_INTEGER:
     // we have to special case for MIN_LONG
     if  (result->int64_value == -9223372036854775807LL - 1) {
-      // later stages of the compiler are looking for this case and will rewrite it as "_64(-9223372036854775807) - 1"
-      // we encode it this way because that's how its appears for users
+      // later stages of the compiler are looking for this case and will rewrite
+      // it as "_64(-9223372036854775807) - 1" we encode it this way because
+      // that's how its appears for users
       new_num = new_ast_uminus(new_ast_num(NUM_LONG, dup_printf("9223372036854775808")));
     }
     else {
@@ -241,10 +241,9 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
   return new_num;
 }
 
-// This finds the best type for a numeric operation.
-// We use the "biggest" numeric type that can hold the result.
-// Errors and nulls must have already been handled, they have
-// no business showing up here.
+// This finds the best type for a numeric operation. We use the "biggest"
+// numeric type that can hold the result. Errors and nulls must have already
+// been handled, they have no business showing up here.
 static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   sem_t core_type_left = core_type_of(left->sem_type);
   sem_t core_type_right = core_type_of(right->sem_type);
@@ -276,18 +275,19 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 
 #define DIV_TEST(x)
 
-// All the normal binary operators are handled the same way, only the operator actually varies.
-// The thing is the operator has to be lexically substituted in so that we get the correct
-// math type so much as this much macro is a code smell, the alternative is open coding this
-// for every binary operator which is worse.  The steps are:
+// All the normal binary operators are handled the same way, only the operator
+// actually varies. The thing is the operator has to be lexically substituted in
+// so that we get the correct math type so much as this much macro is a code
+// smell, the alternative is open coding this for every binary operator which is
+// worse.  The steps are:
 //   * any error in the operands results in an error
 //   * any null operand results in a null result
 //   * find the smallest numeric type that will hold the answer
 //   * convert to that type if needed
 //   * apply the operator on that type
 //
-// NOTE: logical AND/OR cannot be on this plan because of their short circuit behavior.
-//       for bitwise operators, see the _NO_REAL version of this macro
+// NOTE: logical AND/OR cannot be on this plan because of their short circuit
+//       behavior. for bitwise operators, see the _NO_REAL version of this macro
 //       for comparisons likewise see below for a slightly different version.
 #define BINARY_OP(op) \
   eval_node left = EVAL_NIL; \
@@ -344,9 +344,9 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   \
   Invariant(result->sem_type == core_type)
 
-// This is exactly like the standard binary operator macro except it is for
-// the operators that are not allowed to apply to real numbers.  e.g.
-// bitwise and/or and left/right shift.
+// This is exactly like the standard binary operator macro except it is for the
+// operators that are not allowed to apply to real numbers.  e.g. bitwise and/or
+// and left/right shift.
 #define BINARY_OP_NO_REAL(op) \
   eval_node left = EVAL_NIL; \
   eval_node right = EVAL_NIL; \
@@ -397,9 +397,9 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
   \
   Invariant(result->sem_type == core_type)
 
-// The final large class of operators are the comparisons. These
-// have similar rules to the normal operators but the return type
-// is bool/null/error.  The flow is pretty similar though
+// The final large class of operators are the comparisons. These have similar
+// rules to the normal operators but the return type is bool/null/error.  The
+// flow is pretty similar though
 //   * any error in the operands results in an error
 //   * any null operand results in a null result
 //   * find the smallest numeric type that will hold the answer
@@ -407,8 +407,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 //   * apply the operator on that type
 //   * return the resulting bool
 //
-// NOTE:  is and is_not cannot be on this plan because of their
-//        null semantics, they are similar, see below.
+// NOTE:  is and is_not cannot be on this plan because of their null semantics,
+//        they are similar, see below.
 #define COMPARE_BINARY_OP(op) \
   eval_node left = EVAL_NIL; \
   eval_node right = EVAL_NIL; \
@@ -556,10 +556,10 @@ static void eval_bin_or(ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(|);
 }
 
-// The 'is' form is very similar to the others but the null handling is different
-// so there's an early out for that;  The logic is:
+// The 'is' form is very similar to the others but the null handling is
+// different so there's an early out for that;  The logic is:
 // * any error in left or right yields an error
-// * if either left or right is null, the result is true if and only if both are null
+// * if either left or right is null, the result is true iff both are null
 // * at this point all the error/null cases are handled so it's just like the
 //   back end of the BINARY_OP case;  the args have arleady been evaluated so:
 //   * compute the smallest type that holds both values

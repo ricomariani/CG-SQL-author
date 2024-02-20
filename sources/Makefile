@@ -12,21 +12,25 @@ endif
 
 O=out
 T=test
-CQL_DIR=./
 
+# SQLITE_PATH is the path to the sqlite3 source code, if it's not defined then
+# we'll use the system sqlite3. This is useful for testing on systems that don't
+# have sqlite3 installed.  sqlite3.c is the amalgamation of the sqlite3 source
+# code, so it's a single file that can be compiled into the various test cases
+# and so forth.  This is also a good way to test a specific version of sqlite3,
+# e.g. the latest new release.
 ifdef SQLITE_PATH
-SQLITE_OBJ=$O/sqlite3.o
-SQLITE_LINK=$(SQLITE_OBJ)
-CFLAGS+=-I$(SQLITE_PATH)
+SQLITE_OBJ = $O/sqlite3.o
+SQLITE_LINK = $(SQLITE_OBJ)
+CFLAGS += -I$(SQLITE_PATH)
 else
-SQLITE_LINK=-lsqlite3
+SQLITE_LINK = -lsqlite3
 endif
 
 SQLITE_LINK+=-pthread -ldl
-CFLAGS+=-I$(CQL_DIR)
-CFLAGS+=-I$O
-CFLAGS+=-g
-CFLAGS+=-Werror
+CFLAGS += -I. -I$O
+CFLAGS += -g
+CFLAGS += -Werror
 
 ifdef CGSQL_GCC
 CFLAGS += -std=c99
@@ -37,28 +41,19 @@ CFLAGS += -fsanitize=address
 endif
 
 ifdef COVERAGE
-CFLAGS+=-O0 --coverage
+CFLAGS += -O0 --coverage
 endif
 
 #note cql itself doesn't use cqlrt.o but we insist that it can be compiled
 PROGRAMS = $O/cql $O/cqlrt.o $O/cqltest.o
 
-all: $O/.hgignore ${PROGRAMS}
-
-$O/.hgignore:
-	mkdir -p $O
-	touch $O/.hgignore
+all: ${PROGRAMS}
 
 OBJECTS = $O/cql.y.o $O/cql.o $O/ast.o $O/gen_sql.o $O/sem.o $O/list.o $O/bytebuf.o $O/charbuf.o \
           $O/cg_common.o $O/cg_c.o $O/cg_objc.o $O/symtab.o $O/compat.o \
           $O/cg_schema.o $O/crc64xz.o $O/sha256.o $O/cg_json_schema.o $O/cg_test_helpers.o $O/encoders.o \
           $O/unit_tests.o $O/cg_query_plan.o ${O}/minipool.o $O/rt.o $O/eval.o \
           $O/rewrite.o $O/printf.o $O/flow.o $O/cg_stats.o $O/cg_lua.o
-
-OBJECTS+=$(ADDITIONAL_OBJECTS)
-
-$O/rt.o: rt.c
-	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -80,21 +75,26 @@ $O/cql.y.c $O/cql.y.h: cql.y encoders.h charbuf.h
 $O/cql.c: cql.l
 	${LEX} -o $*.c $<
 
+# For replacing terminals in the generated language grammar diagram
 $O/replacements: ../scripts/grammar_utils/replacements.l
 	${LEX} -o $O/replacements.c $<
 	${CC} -o $@ $O/replacements.c
 
+# For replacing terminals in the generated CQL JSON grammar diagram
 $O/json_replacements: ../scripts/grammar_utils/json_replacements.l
 	${LEX} -o $O/json_replacements.c $<
 	${CC} -o $@ $O/json_replacements.c
 
+# The dependencies are only approximately correct, you can't trust
+# these in general but the full build is so fast it hardly matters
+
 $O/cql.y.o: $O/cql.y.c $O/cql.y.h
-	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/ast.o: ast.c $O/cql.y.h ast.h
-	$(CC) $(CFLAGS) -c $< -o $@
 
 $O/cql.o: $O/cql.c $O/cql.y.h cql.h ast.h
+
+$O/cql.y.o: $O/cql.y.c $O/cql.y.h
 
 $O/unit_tests.o: unit_tests.c unit_tests.h
 
@@ -161,8 +161,6 @@ amalgam: $O/cql.c $O/cql.y.c $O/cql.y.h
 	bash make_amalgam.sh
 	$(CC) $(CFLAGS) -o $O/cql_amalgam.o -c $O/cql_amalgam.c
 	$(CC) $(CFLAGS) -o $O/cql_amalgam $O/cql_amalgam.o
-
-$O/cql.y.o: $O/cql.y.c $O/cql.y.h
 
 cg_test: $O/cg_test_c.c
 

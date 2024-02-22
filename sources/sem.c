@@ -57,6 +57,10 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 static list_item *backed_tables_list;
 static bool_t in_backing_rewrite;
 
+// This will create the chain of backed tables that we need to rewrite.
+// The point of this is to only initialize the list once and then just add
+// to it as we go.  These may nest so began_backing_rewrite is used to indicate
+// the scope that was outermost.
 #define BEGIN_BACKING_REWRITE() \
   bool_t began_backing_rewrite = false; \
   if (!in_backing_rewrite) { \
@@ -65,12 +69,25 @@ static bool_t in_backing_rewrite;
     began_backing_rewrite = true; \
   }
 
+// This resets the list of tables we need to rewrite. Again we'll do this only once.
+// The END_BACKING_REWRITE macro may nest.  Only the outermost scope does anything.
 #define END_BACKING_REWRITE() \
   if (began_backing_rewrite) { \
     backed_tables_list = NULL; \
     in_backing_rewrite = false; \
   }
 
+// This is going to tell us if we have to do a backing rewrite.  We have to do a
+// backing rewrite if:
+//  * we're not in an error state
+//  * we've started the backing rewrite
+//  * we have a list of backed tables, or
+//  * the table we're processing is backed
+//
+// We'll have a backed table list if there were internal tables in the statement
+// that were backed. The backed table list only requires us use the CTE rewrite
+// for the tables referred to in the list. If the table we're processing is
+// backed then we have to do the full rewrite for that operation type.
 #define BACKING_REWRITE_NEEDED(ast, table_ast) \
   (!is_error(ast) && began_backing_rewrite && \
    (backed_tables_list || (table_ast != NULL && is_backed(table_ast->sem->sem_type))))
@@ -2140,7 +2157,7 @@ CSTR create_group_id(CSTR group_name, CSTR table_name) {
    }
 }
 
-// Helper function to walk the graph stored in recreate_group_deps from 
+// Helper function to walk the graph stored in recreate_group_deps from
 // a starting group name to an ending group name.
 // We perform a simple depth first search.
 static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
@@ -5930,7 +5947,7 @@ static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR 
   bclear(sym);
   sem_t sem_type = expr->sem->sem_type;
   CSTR kind = expr->sem->kind;
-  
+
   if (!kind || !is_unitary(sem_type)) {
     return false;
   }
@@ -5959,7 +5976,7 @@ static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR sc
   }
 
   ast_node *var = find_local_or_global_variable(scope);
- 
+
   if (!var) {
     return SEM_RESOLVE_CONTINUE;
   }
@@ -6201,7 +6218,7 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
           Invariant(is_ast_dot(ast));
           insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
         }
-        
+
         break;
       }
     }
@@ -10597,6 +10614,9 @@ static void sem_table_or_subquery(ast_node *ast) {
       return;
     }
 
+    // If we find a backed table we need to add it to the list. We'll rewrite
+    // these references at the end of the current statement.  The rewrite
+    // happens only once even if a table is in this list several times.
     if (is_backed(table_ast->sem->sem_type)) {
       add_item_to_list(&backed_tables_list, ast);
     }
@@ -11771,6 +11791,9 @@ cql_noexport void sem_select(ast_node *ast) {
   select_level--;
 }
 
+// Top level select statements can trigger the backing actions,
+// nested selects contribute to the tables needing backing but
+// they don't do their own rewrite.
 static void sem_select_rewrite_backing(ast_node *ast) {
   BEGIN_BACKING_REWRITE();
 
@@ -11779,6 +11802,9 @@ static void sem_select_rewrite_backing(ast_node *ast) {
   // select doesn't have a target table like INSERT/UPDATE/DELETE just FROM tables
   ast_node *target_table = NULL;
 
+  // This will do the rewrite as needed.  The backed_tables_list will have been
+  // accumulated from the FROM clauses of the select statement and the FROM clauses
+  // of any nested selects, or selects in CTEs.
   if (BACKING_REWRITE_NEEDED(ast, target_table)) {
     rewrite_select_for_backed_tables(ast, backed_tables_list);
   }
@@ -11818,7 +11844,7 @@ error:
   record_error(ast);
 }
 
-// Top level statement list processing for select, not that a select statement
+// Top level statement list processing for select, note that a select statement
 // can't appear in other places (such as a nested expression).  This is only for
 // select in the context of a statement list.  Others use just 'sem_select'
 static void sem_select_stmt(ast_node *stmt) {
@@ -13053,18 +13079,18 @@ static void sem_create_view_stmt(ast_node *ast) {
   if (name_list) {
     sem_struct *sptr = ast->sem->sptr;
     ast_node *item = name_list;
-  
+
     for (uint32_t i = 0; i < sptr->count; i++) {
       if (!item) {
         report_error(ast, "CQL0101: too few column names specified in view", name);
         record_error(ast);
         return;
       }
-  
+
       // use the names from the VIEW decl rather than the select
       EXTRACT_STRING(col_name, item->left);
       sptr->names[i] = col_name;
-  
+
       item = item->right;
     }
 
@@ -15772,7 +15798,7 @@ static void sem_expr_stmt(ast_node *ast) {
        // so it won't escape the semantic pass
      }
   }
-  
+
   // if there is a x:y x::y or x:::y operation then transform the AST now
   // so that everything looks like normal calls. Just the transform though.
   // We may have to analyze the transformed call as a procedure so we defer that.
@@ -15810,7 +15836,7 @@ static void sem_expr_stmt(ast_node *ast) {
           record_error(ast);
           return;
         }
-    
+
         // expand any FROM forms in the arg list
         // it's still a function call after this.  This would
         // have happened anyway in sem_expr we're doing it sooner.
@@ -16067,8 +16093,6 @@ cleanup:
   END_BACKING_REWRITE();
 }
 
-
-
 // Top level WITH-DELETE form -- create the CTE context and then process
 // the delete statement.
 static void sem_with_delete_stmt(ast_node *stmt) {
@@ -16099,7 +16123,6 @@ static void sem_with_delete_stmt(ast_node *stmt) {
 cleanup:
   sem_pop_cte_state();
 }
-
 
 // This is is the helper that computes the types in an update where
 // you might go update foo set x = y.  This is the "set x = y" portion.
@@ -17869,7 +17892,7 @@ static bool_t sem_validate_compatible_cols_vals(ast_node *name_list, ast_node *v
   return true;
 }
 
-// All legal cases of these operators are re-written 
+// All legal cases of these operators are re-written
 // any that are left are not in a valid position so they get an error
 static void sem_expr_invalid_op(ast_node *ast, CSTR op) {
   report_error(ast, "CQL0492: operator found in an invalid position", op);
@@ -18973,7 +18996,7 @@ static void sem_shared_fragment(ast_node *misc_attrs, ast_node *create_proc_stmt
       ast_node *stmt_list_ast = new_ast_stmt_list(select_nothing_ast, NULL);
       if_alt->right = new_ast_else(stmt_list_ast);
       AST_REWRITE_INFO_RESET();
-  
+
       // better to do the analysis after the rewrite is closed
       // as it happens this doesn't kick off a new rewrite but
       // in general sem_* might rewrite so we want to be done with our

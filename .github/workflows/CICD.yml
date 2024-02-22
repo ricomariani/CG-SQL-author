@@ -21,13 +21,13 @@ jobs:
       - name: Create ${{ github.workspace }}/.www directory in workspace
         run: mkdir -p ${{ github.workspace }}/.www
       - name: Setup java 17 (to generate railroad diagrams)
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'microsoft'
       - name: Attempt to retrieve Bottlecaps RailRoad from cache
         id: bottlecaps-railroad
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/rr-2.2-java11
           key: rr-2.2-java11

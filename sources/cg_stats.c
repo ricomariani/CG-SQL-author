@@ -21,19 +21,23 @@ cql_noexport void cg_stats_main(struct ast_node *root) {}
 #include "symtab.h"
 
 static CSTR cg_stats_current_proc;
-static symtab *stats_data;
+static symtab *stats_table;
 static charbuf *stats_output;
 static symtab *stats_stoplist;
 
+// Recursively walk the AST and accumulate stats The stats are accumulated in a
+// symtab where the key is the type of the node and the value is the count of
+// that type of node. The stoplist is used to avoid accumulating stats for nodes
+// that are present in large numbers.
 static void cg_stats_accumulate(ast_node *node) {
 
   CSTR type = node->type;
 
   if (!symtab_find(stats_stoplist, type)) {
-    symtab_entry *entry = symtab_find(stats_data, type);
+    symtab_entry *entry = symtab_find(stats_table, type);
 
     if (!entry) {
-      symtab_add(stats_data, type, (void *)(intptr_t)1);
+      symtab_add(stats_table, type, (void *)(intptr_t)1);
     }
     else {
       // swizzle an int out of the generic storage
@@ -53,30 +57,45 @@ static void cg_stats_accumulate(ast_node *node) {
   }
 }
 
+// Create a CSV chunk with the stats for each procedure. The CSV chunk has the
+// following format: "procedure_name","node_type",count. The CSV chunk is
+// appended to the stats_output charbuf.  The rows are sorted by node type.
+// The stats are accumulated in a symtab where the key is the type of the node
+// and the value is the count of that type of node. 
 static void cg_stats_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
+  // This is only interesting for debugging, in case of crash the name is useful
+  // and can be dumped to the console.
   cg_stats_current_proc = name;
 
-  stats_data = symtab_new();
+  stats_table = symtab_new();
 
   cg_stats_accumulate(ast);
 
-  uint32_t count = stats_data->count;
-  symtab_entry *stats = symtab_copy_sorted_payload(stats_data, default_symtab_comparator);
+  // we can get the size of the symtab without walking it, then we get the
+  // sorted payload using the helper.  This makes a copy of the payload
+  uint32_t count = stats_table->count;
+  symtab_entry *stats = symtab_copy_sorted_payload(stats_table, default_symtab_comparator);
 
   for (uint32_t i = 0; i < count; i++) {
+  // At this point we just walk the payload entries and write them out
     symtab_entry *entry = &stats[i];
     bprintf(stats_output, "\"%s\",\"%s\",%lld\n", name, entry->sym, (llint_t)entry->val);
   }
 
+  // cleanup
   free(stats);
+  symtab_delete(stats_table);
 
-  symtab_delete(stats_data);
-  stats_data = NULL;
+  // clear the current symbol table so that we don't accidentally use it
+  // and so we detect any data that leaks from it in ASAN mode.
+  stats_table = NULL;
 }
 
+// walk the main statement list looking for create proc statements, enter those
+// and accumulate stats.
 static void cg_stats_stmt_list(ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT(stmt, ast);
@@ -87,6 +106,11 @@ static void cg_stats_stmt_list(ast_node *head) {
   }
 }
 
+// Create a stoplist of nodes that are not interesting for stats. The stoplist
+// is a symtab where the key is the type of the node and the value is NULL.
+// The stoplist is used to avoid accumulating stats for nodes that are present
+// in large numbers and also for nodes that always come as part of a set of
+// related nodes, e.g. "select_having" is always present when "select" is.
 static void cg_stoplist() {
   stats_stoplist = symtab_new();
 
@@ -124,6 +148,21 @@ static void cg_stoplist() {
   symtab_add(s, "proc_params_stmts", NULL);
 }
 
+// The main entry point for the stats code generation. This function is called
+// from the main entry point of the compiler. The function first checks for
+// semantic errors and then calls cg_stats_stmt_list to walk the AST and
+// accumulate stats. The stats are then written to a file.
+// * The file name is the first file name in the options struct.
+// * The file is written in CSV format with the following columns:
+//   * "procedure_name","node_type",count
+// * The procedures are emitted in declaration order.
+// * The nodes are sorted by node type for each procedure.
+//
+// Note that the global variables are reset after execution to ensure that leaks
+// are reported accurately by ASAN.  Also, so that if this code runs more than
+// once in a single process, we don't accidentally accumulate stats from the
+// previous run.  This is possible in the alamgam case, the amlagamated code is
+// linked into some harness and might run multiple times in the same process.
 cql_noexport void cg_stats_main(struct ast_node *root) {
   Contract(options.file_names_count == 1);
   cql_exit_on_semantic_errors(root);

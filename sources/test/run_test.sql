@@ -1040,6 +1040,17 @@ BEGIN
   EXPECT!(did_catch == 0); -- catch did not run
 END);
 
+TEST!(cql_throw,
+BEGIN
+   let result := -1;
+   try
+     cql_throw(12345);
+   catch
+     result := @rc;
+   end;
+   EXPECT!(result = 12345);
+END);
+
 proc case_tester1(value int!, out result integer)
 begin
   result := CASE value

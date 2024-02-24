@@ -5,6 +5,13 @@ require("cqlrt")
 -- The statement ending at line XXXX
 
 --[[
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+--]]
+
+-- The statement ending at line XXXX
+
+--[[
 DECLARE i0_nullable INT;
 --]]
 local i0_nullable

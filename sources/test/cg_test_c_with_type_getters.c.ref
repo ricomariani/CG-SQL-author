@@ -24,6 +24,8 @@ extern cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Non
 extern cql_string_ref _Nullable get_from_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 get_object_cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
+
 extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 #ifndef row_type_decl_emit_object_result_set_row
@@ -60,6 +62,13 @@ typedef struct simple_container_proc_row {
   cql_object_ref _Nullable c;
 } simple_container_proc_row;
 #endif
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
 
 // The statement ending at line XXXX
 

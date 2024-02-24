@@ -348,6 +348,29 @@ DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string T
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}: ok dml_proc
+    | {proc_name_type}
+    | | {name cql_throw}: ok dml_proc
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}: ok
+        | {param}: code: integer notnull variable in
+          | {param_detail}: code: integer notnull variable in
+            | {name code}: code: integer notnull variable in
+            | {notnull}: integer notnull
+              | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 TYPE bool BOOL;
 
   {stmt_and_attr}: ok

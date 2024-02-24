@@ -5834,3 +5834,10 @@ cleanup:
     free(b);
   }
 }
+
+// use the code to create an "exception" if non-zero
+cql_code cql_throw(sqlite3 *_Nonnull db, int code)
+{
+   // this is how we throw
+   return code;
+}

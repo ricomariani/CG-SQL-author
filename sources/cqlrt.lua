@@ -994,3 +994,8 @@ function cql_emit_constants(type, name, values)
   end
   _cql[type][name] = values
 end
+
+-- This will "throw" in the CQL sense if rc != 0
+function cql_throw(db, rc)
+   return rc;
+end;

@@ -24,6 +24,8 @@ extern cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Non
 extern cql_string_ref _Nullable get_from_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 get_object_cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
+
 extern cql_nullable_int32 side_effect1(void);
 extern cql_nullable_int32 side_effect2(void);
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -631,6 +633,13 @@ cql_string_literal(_literal_23_slash_star_and_star_slash, "/*  */");
 cql_string_literal(_literal_24_hi_mutated_in_param_ref, "hi");
 cql_string_literal(_literal_25_xyzzy_clobber1, "xyzzy");
 cql_string_literal(_literal_26_abc_my_proc_check_type, "abc");
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
 
 // The statement ending at line XXXX
 

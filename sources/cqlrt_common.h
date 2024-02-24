@@ -463,4 +463,6 @@ void bgetval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_No
 void bgetval_type(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *_Nonnull *_Nonnull argv);
 
+cql_code cql_throw(sqlite3 *_Nonnull db, int code);
+
 CQL_EXTERN_C_END

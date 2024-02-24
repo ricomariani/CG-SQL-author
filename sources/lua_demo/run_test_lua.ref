@@ -1,6 +1,7 @@
 err: 	101	db info:	101	no more rows available
 err: 	101	db info:	101	no more rows available
 err: 	101	thrown exception
+err: 	12345	thrown exception
 err: 	1	db info:	1	no such table: dummy_table
 err: 	1	db info:	1	no such table: dummy_table
 err: 	101	db info:	101	no more rows available

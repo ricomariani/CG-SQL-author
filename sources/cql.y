@@ -3018,6 +3018,9 @@ cql_noexport CSTR cql_builtin_text() {
     "DECLARE FUNC add_object_cql_string_list(list cql_string_list!, string TEXT!) cql_string_list!;"
 
     "@attribute(cql:builtin)"
+    "DECLARE PROC cql_throw(code int!) using transaction;"
+
+    "@attribute(cql:builtin)"
     "TYPE @ID('bool') bool;"
     "@attribute(cql:builtin)"
     "TYPE @ID('int') int;"

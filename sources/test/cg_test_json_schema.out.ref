@@ -5048,6 +5048,29 @@
 
     The statement ending at line XXXX
 
+    @ATTRIBUTE(cql:builtin)
+    DECLARE PROC cql_throw (code INT!) USING TRANSACTION
+
+    {
+      "name" : "cql_throw",
+      "args" : [
+        {
+          "name" : "code",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "usesDatabase" : 1
+    },
+
+    The statement ending at line XXXX
+
     DECLARE PROC result_proc (id INT, t TEXT) (x INT, y INT)
 
     {

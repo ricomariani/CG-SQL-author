@@ -24,12 +24,21 @@ extern cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Non
 extern cql_string_ref _Nullable get_from_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 get_object_cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
+
 
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
 
 #define serialized_cursor_refs_offset cql_offsetof(serialized_cursor_row, t) // count = 1
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
 
 // The statement ending at line XXXX
 

@@ -58,7 +58,7 @@ jobs:
       - name: Change ownership of generated files to (Github) runner
         run: sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
       - name: Setup Hugo
-        uses: peaceiris/actions-hugo@966dfad3859a5cfc80b6e36761b0b4c7b3dd5e0c
+        uses: peaceiris/actions-hugo@main
         with:
           hugo-version: '0.119.0'
           extended: true

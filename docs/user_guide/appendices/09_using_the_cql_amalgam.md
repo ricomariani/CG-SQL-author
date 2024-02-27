@@ -60,11 +60,13 @@ it to compile things.  But importantly the test script `test.sh` can test the am
 test.sh --use_amalgam
 ```
 
-This runs all the normal tests using the binary built from the amalgam rather than the normal binary.
+This runs all the normal tests using the binary built from the amalgam rather
+than the normal binary.
 
-Normal CQL development practices result in this happening pretty often so the amalgam tends to stay
-in good shape. The code largely works in either form with very few affordances for the amalgam build needed.
-Most developers don't even think about the amalgam build flavor; to a first approximation "it just works".
+Normal CQL development practices result in this happening pretty often so the
+amalgam tends to stay in good shape. The code largely works in either form with
+very few affordances for the amalgam build needed. Most developers don't even
+think about the amalgam build flavor; to a first approximation "it just works".
 
 ### Using the Amalgam
 
@@ -103,9 +105,12 @@ So the general pattern is:
 * include the amalgam
 * add any functions you want that will call the amalgam
 
-Most amalgam functions are `static` to avoid name conflicts. You will want to create your own public functions such as `go_for_it` above that use the amalgam in all the ways you desire.
+Most amalgam functions are `static` to avoid name conflicts. You will want to
+create your own public functions such as `go_for_it` above that use the amalgam
+in all the ways you desire.
 
-You'll want to avoid calling any internal functions other than `cql_main` because they are liable to change.
+You'll want to avoid calling any internal functions other than `cql_main`
+because they are liable to change.
 
 >NOTE: The amalgam is C code not C++ code.  Do not attempt to use it inside of an `extern "C"` block in a C++ file.  It won't build.  If you want a C++ API, expose the C functions you need and write a wrapper class.
 
@@ -143,23 +148,27 @@ Set this symbol so that you own main and cql_main is called at your pleasure.
 
 #### CQL_NO_SYSTEM_HEADERS
 
-The amalgam includes the normal `#include` directives needed to make it compile, things like stdio and such.
-In your situation these headers may not be appropriate.  If `CQL_NO_SYSTEM_HEADERS` is defined then the amalgam
-will not include anything; you can then add whatever headers you need before you include the amalgam.
+The amalgam includes the normal `#include` directives needed to make it compile,
+things like stdio and such. In your situation these headers may not be
+appropriate.  If `CQL_NO_SYSTEM_HEADERS` is defined then the amalgam will not
+include anything; you can then add whatever headers you need before you include
+the amalgam.
 
 
 #### CQL_NO_DIAGNOSTIC_BLOCK
 
-The amalgam includes a set of recommended directives for warnings to suppress and include.  If you want
-to make other choices for these you can suppress the defaults by defining `CQL_NO_DIAGNOSTIC_BLOCK`;
-you can then add whatever diagnostic pragmas you want/need.
+The amalgam includes a set of recommended directives for warnings to suppress
+and include.  If you want to make other choices for these you can suppress the
+defaults by defining `CQL_NO_DIAGNOSTIC_BLOCK`; you can then add whatever
+diagnostic pragmas you want/need.
 
 #### cql_emit_error
 
-The amalgam uses `cql_emit_error` to write its messages to stderr.  The documentation is included in the
-code which is attached here.  If you want the error messages to go somewhere else, define `cql_emit_error`
-as the name of your error handling function.  It should accept a `const char *` and record that string
-however you deem appropriate.
+The amalgam uses `cql_emit_error` to write its messages to stderr.  The
+documentation is included in the code which is attached here.  If you want the
+error messages to go somewhere else, define `cql_emit_error` as the name of your
+error handling function.  It should accept a `const char *` and record that
+string however you deem appropriate.
 
 ```c
 #ifndef cql_emit_error
@@ -193,15 +202,17 @@ void cql_emit_error(const char *err) {
 #endif
 ```
 
-Typically you would `#define cql_emit_error your_error_function` before you include the amalgam and then
-define your_error_function elsewhere in that file (before or after the amalgam is included are both fine).
+Typically you would `#define cql_emit_error your_error_function` before you
+include the amalgam and then define your_error_function elsewhere in that file
+(before or after the amalgam is included are both fine).
 
 #### cql_emit_output
 
-The amalgam uses `cql_emit_output` to write its messages to stdout.  The documentation is included in the
-code which is attached here.  If you want the standard output to go somewhere else, define `cql_emit_output`
-as the name of your output handling function.  It should accept a `const char *` and record that string
-however you deem appropriate.
+The amalgam uses `cql_emit_output` to write its messages to stdout.  The
+documentation is included in the code which is attached here.  If you want the
+standard output to go somewhere else, define `cql_emit_output` as the name of
+your output handling function.  It should accept a `const char *` and record
+that string however you deem appropriate.
 
 ```c
 #ifndef cql_emit_output
@@ -230,15 +241,18 @@ void cql_emit_output(const char *msg) {
 #endif
 ```
 
-Typically you would `#define cql_emit_output your_output_function` before you include the amalgam and then
-define your_error_function elsewhere in that file (before or after the amalgam is included are both fine).
+Typically you would `#define cql_emit_output your_output_function` before you
+include the amalgam and then define your_error_function elsewhere in that file
+(before or after the amalgam is included are both fine).
 
 #### cql_open_file_for_write
 
-If you still want normal file i/o for your output but you simply want to control the placement of the output
-(such as forcing it to be on some virtual drive) you can replace this function by defining `cql_open_file_for_write`.
+If you still want normal file i/o for your output but you simply want to control
+the placement of the output (such as forcing it to be on some virtual drive) you
+can replace this function by defining `cql_open_file_for_write`.
 
-If all you need to do is control the origin of the `FILE *` that is written to, you can replace just this function.
+If all you need to do is control the origin of the `FILE *` that is written to,
+you can replace just this function.
 
 ```c
 #ifndef cql_open_file_for_write
@@ -263,15 +277,18 @@ FILE *_Nonnull cql_open_file_for_write(
 #endif
 ```
 
-Typically you would `#define cql_open_file_for_write your_open_function` before you include the amalgam and then
-define your_open_function elsewhere in that file (before or after the amalgam is included are both fine).
+Typically you would `#define cql_open_file_for_write your_open_function` before
+you include the amalgam and then define your_open_function elsewhere in that
+file (before or after the amalgam is included are both fine).
 
 #### cql_write_file
 
-The amalgam uses `cql_write_file` to write its compilation outputs to the file system.  The documentation is included in the
-code which is attached here.  If you want the compilation output to go somewhere else, define `cql_write_file`
-as the name of your output handling function.  It should accept a `const char *` for the file name and another
-for the data to be written.  You can then store those compilation results however you deem appropriate.
+The amalgam uses `cql_write_file` to write its compilation outputs to the file
+system.  The documentation is included in the code which is attached here.  If
+you want the compilation output to go somewhere else, define `cql_write_file` as
+the name of your output handling function.  It should accept a `const char *`
+for the file name and another for the data to be written.  You can then store
+those compilation results however you deem appropriate.
 
 ```c
 #ifndef cql_write_file
@@ -301,47 +318,53 @@ void cql_write_file(
 #endif
 ```
 
-Typically you would `#define cql_write_file your_write_function` before you include the amalgam and then
-define your_write_function elsewhere in that file (before or after the amalgam is included are both fine).
+Typically you would `#define cql_write_file your_write_function` before you
+include the amalgam and then define your_write_function elsewhere in that file
+(before or after the amalgam is included are both fine).
 
 ### Amalgam LEAN choices
 
-When you include the amalgam, you get everything by default. You may, however, only want some
-limited subset of the compiler's functions in your build.
+When you include the amalgam, you get everything by default. You may, however,
+only want some limited subset of the compiler's functions in your build.
 
-To customize the amalgam, there are a set of configuration pre-processor options.  To opt-in to
-configuration, first define `CQL_AMALGAM_LEAN`. You then have to opt-in to the various pieces
-you might want. The system is useless without the parser, so you can't remove that; but you can
-choose from the list below.
+To customize the amalgam, there are a set of configuration pre-processor
+options.  To opt-in to configuration, first define `CQL_AMALGAM_LEAN`. You then
+have to opt-in to the various pieces you might want. The system is useless
+without the parser, so you can't remove that; but you can choose from the list
+below.
 
 The options are:
-* CQL_AMALGAM_LEAN` : enable lean mode; this must be set or you get everything
+
+* `CQL_AMALGAM_LEAN` : enable lean mode; this must be set or you get everything
+* `CQL_AMALGAM_GEN_SQL` : the echoing features  (required)
+* `CQL_AMALGAM_CG_COMMON` : common code generator pieces (required)
+* `CQL_AMALGAM_SEM` : semantic analysis (required)
 * `CQL_AMALGAM_CG_C` : C codegen
-* `CQL_AMALGAM_CG_COMMON` : common code generator pieces
-* `CQL_AMALGAM_GEN_SQL` : the echoing features
+* `CQL_AMALGAM_CG_LUA` : Lua codegen
 * `CQL_AMALGAM_JSON` : JSON schema output
 * `CQL_AMALGAM_OBJC` : Objective-C code gen
 * `CQL_AMALGAM_QUERY_PLAN` : the query plan creator
 * `CQL_AMALGAM_SCHEMA` : the assorted schema output types
-* `CQL_AMALGAM_SEM` : semantic analysis (needed by most things)
 * `CQL_AMALGAM_TEST_HELPERS` : test helper output
 * `CQL_AMALGAM_UNIT_TESTS` : some internal unit tests, which are pretty much needed by nobody
 
-Note that `CQL_AMALGAM_SEM` is necessary for any of the code generation
-features to work. Likewise, several generators require `CQL_AMALGAM_CG_COMMON` (e.g., C does).
-
-Pick what you want; stubs are created for what you omit to avoid linkage errors.
+Note that `-DCQL_AMALGAM_LEAN -DCQL_AMALGAM_GEN_SQL -DCQL_AMALGAM_SEM -DCQL_AMALGAM_CG_COMMON`
+is the minimal set of slices.  See the `/release/test_amalgam.sh` script to find
+the other valid options.  But basically you can add anything to the minimum set.
+If you don't add `-DCQL_AMALGAM_LEAN` you get everything.
 
 ### Other Notes
 
-The amalgam will use malloc/calloc for its allocations and it is designed to release all memory it
-has allocated when cql_main returns control to you, even in the face of error.
+The amalgam will use malloc/calloc for its allocations and it is designed to
+release all memory it has allocated when cql_main returns control to you, even
+in the face of error.
 
-Internal compilation errors result in an `assert` failure leading to an abort.  This is not supposed
-to ever happen but there can always be bugs.  Normal errors just prevent later phases of the compiler
-from running so you might not see file output, but rather just error output.  In all cases things
-should be cleaned up.
+Internal compilation errors result in an `assert` failure leading to an abort.
+This is not supposed to ever happen but there can always be bugs.  Normal errors
+just prevent later phases of the compiler from running so you might not see file
+output, but rather just error output.  In all cases things should be cleaned up.
 
-The compiler can be called repeatedly with no troubles; it re-initializes on each use. The compiler is
- not multi-threaded so if there is threading you should use some mutex arrangement to keep it safe.
-A thread-safe version would require extensive modifications.
+The compiler can be called repeatedly with no troubles; it re-initializes on
+each use. The compiler is not multi-threaded so if there is threading you should
+use some mutex arrangement to keep it safe. A thread-safe version would require
+extensive modifications.

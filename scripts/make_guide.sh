@@ -72,7 +72,7 @@ in_markdown() {
     print;
 }
 
-END { print "\n" }
+END { print "<div style=\"page-break-after: always;\"></div>\n" }
 EOF
 
 done

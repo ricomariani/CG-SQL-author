@@ -58,7 +58,7 @@ jobs:
       - name: Change ownership of generated files to (Github) runner
         run: sudo chown -R runner:runner ${{ github.workspace }}/scripts/out
       - name: Setup Hugo
-        uses: ricomariani/actions-hugo@main
+        uses: ricomariani/actions-hugo@16ab92f9dbb1f28bb75268a4a5eede16cdc2a6e2
         with:
           hugo-version: '0.119.0'
           extended: true

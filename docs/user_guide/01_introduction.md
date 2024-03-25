@@ -9,28 +9,33 @@ weight: 1
 -- LICENSE file in the root directory of this source tree.
 -->
 
-CQL was designed as a precompiled addition to the SQLite runtime system.  SQLite lacks
-stored procedures, but has a rich C runtime interface that allows you to create any kind
-of control flow mixed with any SQL operations that you might need.  However, SQLite's programming
-interface is both verbose and error-prone in that small changes in SQL statements can require
-significant swizzling of the C code that calls them. Additionally, many of the SQLite runtime functions have error codes
-which must be strictly checked to ensure correct behavior.  In practice, it's easy to get some or all of this wrong.
+CQL was designed as a compiler for the SQLite runtime system. SQLite lacks
+stored procedures but has a rich C runtime interface that allows you to create
+any kind of control flow mixed with any SQL operations that you might need.
+However, SQLite's programming interface is both verbose and error-prone in that
+small changes in SQL statements can require significant swizzling of the C code
+that calls them. Additionally, many of the SQLite runtime functions have error
+codes which must be strictly checked to ensure correct behavior. In practice,
+it's easy to get some or all of this wrong.
 
-CQL simplifies this situation by providing a high level SQL language not unlike the stored procedure
-forms that are available in client/server SQL solutions and lowering that language to "The C you could
-have written to do that job using the normal SQLite interfaces."
+CQL simplifies this situation by providing a high-level SQL language not unlike
+the stored procedure forms that are available in client/server SQL solutions and
+lowering that language to "The C you could have written to do that job using the
+normal SQLite interfaces."
 
-As a result, the C generated is generally very approachable but now the source language does not suffer from
-brittleness due to query or table changes and CQL always generates correct column indices, nullability
-checks, error checks, and the other miscellany needed to use SQLite correctly.
+As a result, the C generated is generally very approachable but now the source
+language does not suffer from brittleness due to query or table changes, and CQL
+always generates correct column indices, nullability checks, error checks, and
+the other miscellany needed to use SQLite correctly.
 
-CQL is also strongly typed, whereas SQLite is very forgiving with regard to what operations
-are allowed on which data.  Strict type checking is much more reasonable given CQL's compiled programming model.
+CQL is also strongly typed, whereas SQLite is very forgiving with regard to what
+operations are allowed on which data. Strict type checking is much more
+reasonable given CQL's compiled programming model.
 
->NOTE:
->CQL was created to help solve problems in the building of Meta Platforms's Messenger application, but this
->content is free from references to Messenger. The CQL code generation here is done in the simplest mode with the
->fewest runtime dependencies allowed for illustration.
+> NOTE: CQL was created to help solve problems in the building of Meta
+> Platforms's Messenger application, but this content is free from references to
+> Messenger. The CQL code generation here is done in the simplest mode with the
+> fewest runtime dependencies allowed for illustration.
 
 ### Getting Started
 
@@ -69,15 +74,17 @@ void hello(void);
 
 The declaration of this function can be found in `hello.h`.
 
+> **NOTE:** `hello.h` attempts to include `cqlrt.h`. To avoid configuring
+> include paths for the compiler, you might keep `cqlrt.h` in the same directory
+> as the examples and avoid that complication. Otherwise, you must make
+> arrangements for the compiler to locate `cqlrt.h`, either by adding it to an
+> `INCLUDE` path or by incorporating some `-I` options to aid the compiler in
+> finding the source.
 
->NOTE: `hello.h` tries to include `cqlrt.h`. To
->avoid configuring include paths for the compiler, you might keep `cqlrt.h` in the same directory as the examples and
->avoid that complication. Otherwise you must make arrangements for the compiler to be able to find `cqlrt.h` either by
->adding it to an `INCLUDE` path or by adding some `-I` options to help the compiler find the source.
-
-That `hello` function is not quite adequate to get a running program, which brings us to the next step in
-getting things running.  Typically you have some kind of client program that will execute the procedures you
-create in CQL.  Let's create a simple one in a file we'll creatively name `main.c`.
+That `hello` function is not quite adequate to get a running program, which
+brings us to the next step in getting things running. Typically, you have some
+kind of client program that will execute the procedures you create in CQL. Let's
+create a simple one in a file we'll creatively name `main.c`.
 
 A very simple CQL main might look like this:
 
@@ -108,16 +115,17 @@ A number of things are going on even in this simple program that are worth discu
 * the procedure `hello` had no arguments, and did not use the database
   * therefore its type signature when compiled will be simply `void hello(void);` so we know how to call it
   * you can see the declaration for yourself by examining the `hello.c` or `hello.h`
-* since nobody used a database we didn't need to initialize one
-* since there are no actual uses of SQLite we didn't need to provide that library
-* for the same reason we didn't need to include a reference to the CQL runtime
+* since nobody used a database, we didn't need to initialize one
+* since there are no actual uses of SQLite, we didn't need to provide that library
+* for the same reason, we didn't need to include a reference to the CQL runtime
 * the function `printf` was declared "no check", so calling it creates a regular C call using whatever arguments are provided, in this case a string
 * the `printf` function is declared in `stdio.h` which is pulled in by `cqlrt.h`, which appears in `hello.c`, so it will be available to call in the generated C code
 * CQL allows string literals with double quotes, and those literals may have most C escape sequences in them, so the "\n" bit works
   * Normal SQL string literals (also supported) use single quotes and do not allow, or need escape characters other than `''` to mean one single quote
 
-All of these facts put together mean that the normal, simple linkage rules result in an executable that prints
-the string "Hello, world" and then a newline.
+All of these facts put together mean that the normal, simple linkage rules
+result in an executable that prints the string "Hello, world" and then a
+newline.
 
 ### Variables and Arithmetic
 
@@ -157,9 +165,7 @@ end;
 ```
 
 You may notice that both the SQL style `--` line prefix comments and the C style `/* */` forms
-are acceptable comment forms. Indeed, it's actually quite normal to pass CQL source through the C pre-processor before giving
-it to the CQL compiler, thereby gaining `#define` and `#include` as well as other pre-processing options
-like token pasting in addition to the aforementioned comment forms.  More on this later.
+are acceptable comment forms.
 
 Like C, in CQL all variables must be declared before they are used.  They remain in scope until the end of the
 procedure in which they are declared, or they are global scoped if they are declared outside of any procedure.  The
@@ -179,20 +185,22 @@ The most basic types are the scalar or "unitary" types (as they are referred to 
 |`object`    |n/a          | an object reference                |
 |`X not null`|x!           | `!` means `not null` in types      |
 
->NOTE: SQLite makes no distinction between integer storage and long integer storage, but the declarations
->tell CQL whether it should use the SQLite methods for binding and reading 64-bit or 32-bit quantities
->when using the variable or column so declared.
+> NOTE: SQLite makes no distinction between integer storage and long integer
+> storage, but the declarations tell CQL whether it should use the SQLite
+> methods for binding and reading 64-bit or 32-bit quantities when using the
+> variable or column so declared.
 
-There will be more notes on these types later, but importantly, all keywords and names in CQL
-are case insensitive just like in the underlying SQL language.   Additionally all of the
-above may be combined with `not null` to indicate that a `null` value may not be stored
-in that variable (as in the example).  When generating the C code, the case used in the declaration
-becomes the canonical case of the variable and all other cases are converted to that in the emitted
-code.  As a result the C remains case sensitively correct.
+There will be more notes on these types later, but importantly, all keywords and
+names in CQL are case insensitive just like in the underlying SQL language.
+Additionally all of the above may be combined with `not null` to indicate that a
+`null` value may not be stored in that variable (as in the example).  When
+generating the C code, the case used in the declaration becomes the canonical
+case of the variable and all other cases are converted to that in the emitted
+code.  As a result, the C remains case sensitively correct.
 
-The size of the reference types is machine dependent, whatever the local pointer size is.  The
-non-reference types use machine independent declarations like `int32_t` to get exactly the desired
-sizes in a portable fashion.
+The size of the reference types is machine dependent, whatever the local pointer
+size is.  The non-reference types use machine independent declarations like
+`int32_t` to get exactly the desired sizes in a portable fashion.
 
 All variables of a reference type are set to `NULL` when they are declared,
 including those that are declared `NOT NULL`. For this reason, all nonnull
@@ -209,10 +217,11 @@ let upper := 300;
 let step := 20;
 ```
 
-This initializes the variables just like in the isomorphic C code.  Statements are seperated by semicolons,
-just like in C.  Here the data type of the variable is inferred because of `let`.
+This initializes the variables just like in the isomorphic C code.  Statements
+are separated by semicolons, just like in C.  In the above, the data type of the
+variable was inferred because the `let` keyword was used.
 
-The table is then printed using a `while` loop
+The table is then printed using a `while` loop.
 
 ```sql
 while fahr <= upper
@@ -221,10 +230,11 @@ begin
 end;
 ```
 
-This has the usual meaning, with the statements in the `begin/end` block being executed repeatedly
-until the condition becomes false.
+The above has the usual meaning, with the statements in the `begin/end` block
+being executed repeatedly until the condition becomes false.
 
-The body of a `begin/end` block such as the one in the `while` statement can contain one or more statements.
+The body of a `begin`/`end` block such as the one in the `while` statement can
+contain one or more statements.
 
 The typical computation of Celsius temperature ensues with this code:
 
@@ -234,20 +244,24 @@ call printf("%d\t%d\n", fahr, celsius);
 fahr += step;
 ```
 
-This computes the celsius and then prints it out, moving on to the next entry in the table. Note that we
-have started using some shorthand.  `SET` can be elided.  And the `+=` assignment operators are also
-supported.  Top level procedure calls can also be made without the `call` keyword, that, too, could have
-been elided.
+This computes the Celsius temperature and then prints it out, moving on to the
+next entry in the table. Note that we have started using some shorthand. `SET`
+can be omitted. And the `+=` assignment operators are also supported.  Top-level
+procedure calls can also be made without the `call` keyword; that, too, could
+have been omitted.
 
-Importantly, the CQL compiler uses the normal SQLite order of operations, which is NOT the C order of operations.
-As a result, the compiler may need to add parentheses in the C output to get the correct order; or it may remove
-some parentheses because they are not needed in the C order even though they were in the SQL order.
+Importantly, the CQL compiler uses the normal SQLite order of operations, which
+is NOT the same as the C order of operations. As a result, the compiler may need
+to add parentheses in the C output to get the correct order; or it may remove
+some parentheses because they are not needed in the C order even though they
+were in the SQL order.
 
-The `printf` call operates as before, with the `fahr` and `celsius` variables being passed on to the C runtime library
-for formatting, unchanged.
+The `printf` call operates as before, with the `fahr` and `celsius` variables
+being passed on to the C runtime library for formatting, unchanged.
 
->NOTE: when calling unknown foreign functions like `printf` string literals are simply passed right through unchanged
->as C string literals. No CQL string object is created.
+> NOTE: When calling "unchecked" native functions like `printf`, string literals
+> are simply passed  through unchanged as C string literals. No CQL string
+> object is created.
 
 ### Basic Conversion Rules
 

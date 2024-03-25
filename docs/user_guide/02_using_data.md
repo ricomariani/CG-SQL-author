@@ -9,14 +9,14 @@ weight: 2
 -- LICENSE file in the root directory of this source tree.
 -->
 
-The point of using CQL is to facilitate access to a SQLite database so we'll
+The point of using CQL is to facilitate access to a SQLite database, so we'll
 switch gears to a slightly more complicated setup.  We'll still keep things
-fairly simple but let's start to use some database features.
+fairly simple, but let's start to use some database features.
 
->NOTE: it is not the intent of this tutorial to also be a primer for the SQLite
->programming language which is so ably documented on https://sqlite.org/. Please
->refer to that site for details on the meaning of the SQL statements used here
->if you are new to SQL.
+> NOTE: It is not the intent of this tutorial to also be a primer for the SQLite
+> programming language, which is ably documented on [sqlite.org](https://sqlite.org/). Please
+> refer to that site for details on the meaning of the SQL statements used here
+> if you are new to SQL.
 
 ### A Sample Program
 
@@ -37,7 +37,7 @@ begin
 end;
 ```
 
-That looks like an interesting little baby program and it appears as though it
+The above is an interesting little baby program, and it appears as though it
 would once again print that most famous of salutations, "Hello, world".
 
 Well, it doesn't.  At least, not yet.  Let's walk through the various things
@@ -46,11 +46,11 @@ about activating CQL from some environment of your choice.
 
 ### Providing a Suitable Database
 
-CQL is just a compiler, it doesn't know how the code it creates will be
-provisioned any more than say clang does.  It creates functions with predictable
+CQL is just a compiler; it doesn't know how the code it creates will be
+provisioned any more than, say, clang does. It creates functions with predictable
 signatures so that they can be called from C just as easily as the SQLite API
 itself, and using the same currency.  Our new version of `hello` now requires a
-database handle because it performs database operations.  Also there are now
+database handle because it performs database operations. Also, there are now
 opportunities for the database operations to fail, and so `hello` now provides a
 return code.
 
@@ -89,8 +89,8 @@ extern CQL_WARN_UNUSED cql_code hello(sqlite3 *_Nonnull _db_);
 ```
 
 This indicates that the database is used and a SQLite return code is provided.
-We're nearly there.  If you attempt to build the program as before there will be
-several link-time errors due to missing functions.  Typically these are resolved
+We're nearly there. If you attempt to build the program as before, there will be
+several link-time errors due to missing functions.  Typically, these are resolved
 by providing the SQLite library to the command line and also adding the CQL
 runtime. The new command line looks something like this:
 
@@ -100,7 +100,7 @@ $ ./hello
 Hello, world
 ```
 
-The cql runtime can be anywhere you want it to be, and of course the usual C
+The CQL runtime can be placed anywhere you want it to be, and of course the usual C
 separate compilation methods can be applied. More on that later.
 
 But actually, that program doesn't quite work yet.  If you run it, you'll get an
@@ -110,8 +110,8 @@ Let's talk about the final missing bit.
 
 ### Declaring Schema
 
-In CQL a loose piece of Data Definition Language (henceforth DDL) does not
-actually create or drop anything. In most CQL programs the normal situation is
+In CQL, a loose piece of Data Definition Language (henceforth DDL) does not
+actually create or drop anything. In most CQL programs, the normal situation is
 that "something" has already created the database and put some data in it.  You
 need to tell the CQL compiler about the schema so that it knows what the tables
 are and what to expect to find in those tables.  This is because typically
@@ -143,7 +143,7 @@ If we rebuild the program, it will now behave as expected.
 
 ### Explaining The New Hello World
 
-Let's go over every important line of the new program, starting from main.
+Let's go over every important line of the new program, starting from main:
 
 ```c
 int rc = sqlite3_open(":memory:", &db);
@@ -160,13 +160,13 @@ We'll need such a database to use our procedure, and we use it in the call here:
 rc = hello(db);
 ```
 
-This provides a valid db handle to our procedure.  Note that the procedure
-doesn't know what database it is supposed to operate on, it expects to be handed
-a suitable database on a silver platter.  In fact any given proc could be used
+This provides a valid database handle to our procedure.  Note that the procedure
+doesn't know what database it is supposed to operate on; it expects to be handed
+a suitable database on a silver platter.  In fact, any given procedure could be used
 with various databases at various times.  Just like SQLite, CQL does not enforce
-any particular database setup; it does what you tell it to.
+any particular database setup; it just uses the provided database.
 
-When `hello` runs we begin with
+When `hello` runs, we begin with:
 
 ```sql
 create table my_data(t text not null);
@@ -178,7 +178,7 @@ fresh/empty database.  More typically you might do `create table if not exists..
 or otherwise have a general attach/create phase or something to that
 effect.  We'll dispense with that here.
 
-Next we'll run the insert statement:
+Next, we'll run the insert statement:
 
 ```sql
 insert into my_data(t) values("Hello, world\n");
@@ -190,7 +190,7 @@ given the escape sequences.  Normally SQLite text has the newlines directly
 embedded in it; that practice isn't very compiler friendly, hence the
 alternative.
 
-Next we declare a local variable to hold our data:
+Next, we declare a local variable to hold our data:
 
 ```sql
 declare t text not null;
@@ -203,16 +203,16 @@ set t := (select * from my_data);
 ```
 
 This form of database reading has very limited usability but it does work for
-this case and it is illustrative.  The presence of `(select ...)` indicates to
+this case and it is illustrative. The presence of `(select ...)` indicates to
 the CQL compiler that the parenthesized expression should be given to SQLite for
 evaluation according to the SQLite rules. The expression is statically checked
 at compile time to ensure that it has exactly one result column. In this case
 the `*` is just column `t`, and actually it would have been clearer to use `t`
 directly here but then there wouldn't be a reason to talk about `*` and multiple
 columns. At run time, the `select` query must return exactly one row or an error
-code will be returned.  It's not uncommon to see `(select ... limit 1)` to force
-the issue.  But that still leaves the possibility of zero rows, which would be
-an error.  We'll talk about more flexible ways to read from the database later.
+code will be returned. It's not uncommon to see `(select ... limit 1)` to force
+the issue. But that still leaves the possibility of zero rows, which would be an
+error. We'll talk about more flexible ways to read from the database later.
 
 > You can declare a variable and assign it in one step with the `LET` keyword, e.g.
 > ```sql
@@ -222,13 +222,13 @@ an error.  We'll talk about more flexible ways to read from the database later.
 > The code would normally be written in this way but for discussion purposes, these examples continue to avoid `LET`.
 
 At this point it seems wise to bring up the unusual expression evaluation
-properties of CQL.  CQL is by necessity a two-headed beast.  On the one side
-there is a rich expression evaluation language for working with local variables.
-Those expressions are compiled into C (or Lua) logic that emulates the behavior
-of SQLite on the data.  It provides complex expression constructs such as `IN`
-and `CASE` but it is ultimately evaluated by C execution.  Alternately, anything
-that is inside of a piece of SQL is necessarily evaluated by SQLite itself.  To
-make this clearer let's change the example a little bit before we move on.
+properties of CQL. CQL is by necessity a two-headed beast. On the one side there
+is a rich expression evaluation language for working with local variables. Those
+expressions are compiled into C (or Lua) logic that emulates the behavior of
+SQLite on the data. It provides complex expression constructs such as `IN` and
+`CASE` but it is ultimately evaluated by C execution. Alternately, anything that
+is inside of a piece of SQL is necessarily evaluated by SQLite itself. To make
+this clearer let's change the example a little bit before we move on.
 
 ```sql
 set t := (select "__"||t||' '||1.234 from my_data);
@@ -236,9 +236,9 @@ set t := (select "__"||t||' '||1.234 from my_data);
 
 This is a somewhat silly example but it illustrates some important things:
 
-* even though SQLite doesn't support double quotes, that's no problem because
-  CQL will convert the expression into single quotes with the correct escape
-  values as a matter of course during compilation
+* even though SQLite doesn't use double quotes for string literals, that's no
+  problem because CQL will convert the string into a single quoted version with
+  the correct escape values as a matter of course during compilation
 * the `||` concatenation operator is evaluated by SQLite
 * you can mix and match both kinds of string literals, they will all be the
   single quote variety by the time SQLite sees them
@@ -253,18 +253,19 @@ Returning now to our code as written, we see something very familiar:
 call printf('%s', t);
 ```
 
-Note that we've used the single quote syntax here for no good reason other than
-illustration. There are no escape sequences here so either form would do the
-job. Importantly, the string literal will not create a string object as before
-but the text variable `t` is of course a string reference.  Before it can be
-used in a call to an un-declared function it must be converted into a temporary
-C string.  This might require allocation in general, that allocation is
+Note that we've used the single quote syntax here for no particular reason other
+than illustration. There are no escape sequences here, so either form would
+suffice. Importantly, the string literal will not create a string object as
+before, but the text variable `t` is, of course, a string reference. Before it
+can be used in a call to an undeclared function, it must be converted into a
+temporary C string. This might require allocation in general; that allocation is
 automatically managed.
 
 Also, note that CQL assumes that calls to "no check" functions should be emitted
-as written. In this way you can use `printf` even though CQL knows nothing about
-it.
-Lastly we have:
+as written. In this way, you can use `printf` even though CQL knows nothing
+about it.
+
+Lastly, we have:
 
 ```sql
 drop table my_data;
@@ -273,11 +274,11 @@ drop table my_data;
 This is not strictly necessary because the database is in memory anyway and the
 program is about to exit but there it is for illustration.
 
-Now the Data Manipulation Language (i.e. insert and select here; and henceforth
-DML) and the DDL might fail for various reasons.  If that happens the proc will
+Now Data Manipulation Language (i.e. insert and select here; and henceforth
+DML) and DDL might fail for various reasons. If that happens the procedure will
 `goto` a cleanup handler and return the failed return code instead of running
-the rest of the code.  Any temporary memory allocations will be freed and any
-pending SQLite statements will be finalized.  More on that later when we discuss
+the rest of the code. Any temporary memory allocations will be freed and any
+pending SQLite statements will be finalized. More on that later when we discuss
 error handling.
 
 With that we have a much more complicated program that prints "Hello, world"
@@ -329,7 +330,8 @@ create table my_data(
 );
 ```
 
-The table now includes a position column to give us some ordering.  That is the primary key.
+The table now includes a position column to give us some ordering.  That is the
+primary key.
 
 ```sql
 insert into my_data values(2, 'World');
@@ -363,7 +365,7 @@ specify target variables, but if you do not do so, then a synthetic structure is
 automatically created to capture the projection of the `select`. In this case
 the columns are `pos` and `txt`.  The automatically created storage exactly
 matches the type of the columns in the select list (which could itself be a
-tricky calculatation) In this case the `select` is quite simple and the columns
+tricky calculation). In this case the `select` is quite simple and the columns
 of the result directly match the schema for `my_data`.  An integer and a string
 reference.  Both not null.
 
@@ -381,9 +383,10 @@ were used in the format string to get the newline in there easily.
 close C;
 ```
 
-The cursor is automatically released at the end of the procedure but in this
-case we'd like to release it before the `drop table` happens so there is an
-explicit `close`. This is frequently elided in favor of the automatic cleanup.
+The cursor is automatically released at the end of the procedure, but in this
+case, we'd like to release it before the `drop table` operation occurs.
+Therefore, an explicit `close` statement is included. However, this sort of
+`close` is frequently omitted since automatic cleanup takes care of it.
 
 If you compile and run this program, you'll get this output:
 
@@ -400,7 +403,7 @@ So the data was inserted and then sorted.
 
 ### Going Crazy
 
-We've only scratched the surface of what SQLite can do and most DML constructs
+We've only scratched the surface of what SQLite can do, and almost all DML constructs
 are supported by CQL. This includes common table expressions, and even recursive
 versions of the same. But remember, when it comes to DML, the CQL compiler only
 has to validate the types and figure out what the result shape will be -- SQLite
@@ -455,7 +458,7 @@ begin
 end;
 ```
 
-This code uses all kinds of SQLite features to produce this text:
+The above code uses various SQLite features to generate this text:
 
 ```bash
 $
@@ -483,7 +486,7 @@ $
                                       +.
 ```
 
-Which probably doesn't come up very often but it does illustrate several things:
+The above won't come up very often, but it does illustrate several things:
 
  * `WITH RECURSIVE` actually provides a full lambda calculus so arbitrary
    computation is possible
@@ -491,4 +494,5 @@ Which probably doesn't come up very often but it does illustrate several things:
    of numbers easily, with no reference to any real data
 
 A working version of this code can be found in the `sources/demo` directory of
-CG/SQL project. Additional demo code is available in [Appendix 10](./appendices/10_working_example.md)
+the CG/SQL project. Additional demo code is available in
+[Appendix 10](./appendices/10_working_example.md)

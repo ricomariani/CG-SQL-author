@@ -714,10 +714,10 @@ the right side of a statement (or a portion therein) cannot be `NULL`:
 
 ##### `SET` statements:
 
-    ```sql
-    SET a := 42;
-    -- `a` is not null here
-    ```
+```sql
+SET a := 42;
+-- `a` is not null here
+```
 
 >NOTE: Assignment improvements from `FETCH` statements are not currently
 >supported. This may change in a future version of CQL.

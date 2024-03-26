@@ -627,7 +627,7 @@ ELSE IF b IS NOT NULL THEN
 END IF;
 ```
 
-#####`CASE` expressions:
+##### `CASE` expressions:
 
 ```sql
 CASE
@@ -640,7 +640,7 @@ CASE
 END;
 ```
 
- #####`IIF` expressions:
+##### `IIF` expressions:
 
 ```sql
 IIF(a IS NOT NULL AND c.x IS NOT NULL,

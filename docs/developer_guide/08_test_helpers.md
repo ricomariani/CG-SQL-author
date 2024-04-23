@@ -18,7 +18,7 @@ so that when reading the source you will have an idea how it all hangs together.
 
 ## Test Helpers
 
-The testability features are described in [Chapter 12](./12_testability_features.md) of the Guide
+The testability features are described in [Chapter 12](../user_guide/12_testability_features.md) of the Guide
 So, we won't be discussing all the details of what can be created.  Instead we're going to go over
 the theory of how the generator works. This generator is somewhat different than others in that
 it only concerns itself with procedures and only those that have been suitably annotated --
@@ -195,7 +195,7 @@ by far and we'll save it for last, let's dispense with the easy stuff.
 All of these are a very simple template.  The language includes just the right features
 to emit these procedures as nearly constant strings. The `LIKE` construct was literally
 designed to make these patterns super simple.  You can see all the patterns
-in [Chapter 12](./12_testability_features.md) but let's look at the code for
+in [Chapter 12](../user_guide/12_testability_features.md) but let's look at the code for
 the first one.  This is "dummy table".
 
 ```c
@@ -376,7 +376,7 @@ walk and the general steps for prosecution go something like this:
  * any given table/view and hence trigger is only visited once
 
 The net of all this, the "found items", is a list of all the tables and views that the procedure uses, directly
-or indirectly.  As discussed in [Chapter 12](./12_testability_features.md#generalized-dummy-test-pattern)
+or indirectly.  As discussed in [Chapter 12](../user_guide/12_testability_features.md#generalized-dummy-test-pattern)
 this walk does not include tables and views used by procedures that `your_proc` calls.
 
 To get the dependencies in the correct order, the tables have been walked following the foreign key chain and all

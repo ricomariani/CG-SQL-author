@@ -1,5 +1,5 @@
 ---
-title: "Chapter 8: Test Helpers"
+title: "Part 8: Test Helpers"
 weight: 8
 ---
 <!---
@@ -242,7 +242,7 @@ that we'll need it by setting a flag in `helper_flags`.
 The code for `close_foo` is even simpler if that's possible.  The great thing is
 all need to know the columns of `foo` has been removed from the test helper.  The
 CQL compiler handles this as a matter of course and it is generally useful.
-See [Chapter 5](./05_cursors.md#reshaping-data-cursor-like-forms)
+See [Chapter 5](../user_guide/05_cursors.md#reshaping-data-cursor-like-forms)
 for more examples.
 
 All the others are equally simple and use similar tricks.  These were the first
@@ -284,7 +284,7 @@ Dummy test will produce the following:
   * FK relationships are obeyed
   * user data may be specified in an attribute and that data will be used in preference to auto-generated data
 
-These are more fully discussed in [Chapter 12](./12_testability_features.md#generalized-dummy-test-pattern).
+These are more fully discussed in [Chapter 12](../user_guide/12_testability_features.md#generalized-dummy-test-pattern).
 
 #### Building the Trigger and Index mappings
 

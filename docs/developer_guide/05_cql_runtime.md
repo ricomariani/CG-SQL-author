@@ -1,5 +1,5 @@
 ---
-title: "Chapter 5: CQL Runtime"
+title: "Part 5: CQL Runtime"
 weight: 5
 ---
 <!---

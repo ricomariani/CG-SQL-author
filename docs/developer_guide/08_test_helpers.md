@@ -11,23 +11,26 @@ weight: 8
 
 ### Preface
 
-Part 8 continues with a discussion of the Test Helper  generation code.
-As in the previous sections, the goal here is not to go over every detail but rather to give
-a sense of how helpers are created in general -- the core strategies and implementation choices --
-so that when reading the source you will have an idea how it all hangs together.
+Part 8 continues with a discussion of the Test Helper  generation code. As in
+the previous sections, the goal here is not to go over every detail but rather
+to give a sense of how helpers are created in general -- the core strategies and
+implementation choices -- so that when reading the source you will have an idea
+how it all hangs together.
 
 ## Test Helpers
 
-The testability features are described in [Chapter 12](../user_guide/12_testability_features.md) of the Guide
-So, we won't be discussing all the details of what can be created.  Instead we're going to go over
-the theory of how the generator works. This generator is somewhat different than others in that
-it only concerns itself with procedures and only those that have been suitably annotated --
-there are large parts of the tree that are of no interest to the test helper logic, including,
-importantly the body of procedures.  Only the signature matters.  As we'll see there is a fairly
-large family of generators that are like this.
+The testability features are described in [Chapter 12](../user_guide/12_testability_features.md)
+of the Guide So, we won't be discussing all the details of what can be created.
+Instead we're going to go over the theory of how the generator works. This
+generator is somewhat different than others in that it only concerns itself with
+procedures and only those that have been suitably annotated -- there are large
+parts of the tree that are of no interest to the test helper logic, including,
+importantly the body of procedures.  Only the signature matters.  As we'll see
+there is a fairly large family of generators that are like this.
 
-We'll have one section for every kind of output, but really only the `dummy_test` helper is
-worthy of detailed discussion the others, as we'll see, are very simple.
+We'll have one section for every kind of output, but really only the
+`dummy_test` helper is worthy of detailed discussion the others, as we'll see,
+are very simple.
 
 ### Initialization
 
@@ -54,11 +57,12 @@ cql_noexport void cg_test_helpers_main(ast_node *head) {
 }
 ```
 
-The text output will be ultimately put into `output_buf` defined here and `helper_flags` will track which kinds of helpers
-we saw.  This helps us to emit the right sections of output as we'll see.
+The text output will be ultimately put into `output_buf` defined here and
+`helper_flags` will track which kinds of helpers we saw.  This helps us to emit
+the right sections of output as we'll see.
 
-The code iterates the AST looking at the top level statement list only and in particular looking for `CREATE PROC`
-statements.
+The code iterates the AST looking at the top level statement list only and in
+particular looking for `CREATE PROC` statements.
 
 ```c
 // Iterate through statement list
@@ -95,13 +99,18 @@ static void cg_test_helpers_stmt_list(ast_node *head) {
 
 There are some preliminaries:
 
-* we make a symbol table that maps from tables names to the list of triggers on that table by walking all the triggers
-* we make a symbol table that maps from tables names to the list of indices on that table by walking all the indices
-* we'll need two buffers one for declarations (that must go first) and one for procedure bodies
+* we make a symbol table that maps from tables names to the list of triggers on
+  that table by walking all the triggers
+* we make a symbol table that maps from tables names to the list of indices on
+  that table by walking all the indices
+* we'll need two buffers one for declarations (that must go first) and one for
+  procedure bodies
 * each `CREATE PROC` statement potentially contributes to both sections
-* `cg_test_helpers_create_proc_stmt` checks for the helper attributes and sets up the dispatch to emit the test helpers
+* `cg_test_helpers_create_proc_stmt` checks for the helper attributes and sets
+  up the dispatch to emit the test helpers
 
-To do this we have to walk any misc attributes on the procedure we're looking for things of the form `@attribute(cql:autotest=xxx)`
+To do this we have to walk any misc attributes on the procedure we're looking
+for things of the form `@attribute(cql:autotest=xxx)`
 
 ```c
 static void cg_test_helpers_create_proc_stmt(ast_node *stmt, ast_node *misc_attrs) {
@@ -119,9 +128,9 @@ static void cg_test_helpers_create_proc_stmt(ast_node *stmt, ast_node *misc_attr
 }
 ```
 
-`find_misc_attrs` calls `test_helpers_find_ast_misc_attr_callback`.  We're going to keep track of
-which kinds of helpers we have found to help us with the output.  This is where `helper_flags`
-comes in. The flags are:
+`find_misc_attrs` calls `test_helpers_find_ast_misc_attr_callback`.  We're going
+to keep track of which kinds of helpers we have found to help us with the
+output.  This is where `helper_flags` comes in. The flags are:
 
 ```c
 #define DUMMY_TABLE           1 // dummy_table attribute flag
@@ -187,16 +196,17 @@ if (has_result_set(stmt) || has_out_stmt_result(stmt) || has_out_union_stmt_resu
 }
 ```
 
-Most of these options are very simple indeed.   `cg_test_helpers_dummy_test` is the trickiest
-by far and we'll save it for last, let's dispense with the easy stuff.
+Most of these options are very simple indeed.   `cg_test_helpers_dummy_test` is
+the trickiest by far and we'll save it for last, let's dispense with the easy
+stuff.
 
 ### Dummy Table, Dummy Insert, Dummy Select, Dummy Result Set
 
-All of these are a very simple template.  The language includes just the right features
-to emit these procedures as nearly constant strings. The `LIKE` construct was literally
-designed to make these patterns super simple.  You can see all the patterns
-in [Chapter 12](../user_guide/12_testability_features.md) but let's look at the code for
-the first one.  This is "dummy table".
+All of these are a very simple template.  The language includes just the right
+features to emit these procedures as nearly constant strings. The `LIKE`
+construct was literally designed to make these patterns super simple.  You can
+see all the patterns in [Chapter 12](../user_guide/12_testability_features.md)
+but let's look at the code for the first one.  This is "dummy table".
 
 ```c
 // Emit an open proc which creates a temp table in the form of the original proc
@@ -217,43 +227,44 @@ static void cg_test_helpers_dummy_table(CSTR name) {
 ```
 
 The purpose of this is to create helper functions that can create a temporary
-table with the same columns in it as the procedure you are trying to mock.
-You can then select rows out of that table (with `dummy_select`) or insert
-rows into the table (with `dummy_insert`).  Or you can make a single
-row result set (often enough) with `dummy_result_set`.
+table with the same columns in it as the procedure you are trying to mock. You
+can then select rows out of that table (with `dummy_select`) or insert rows into
+the table (with `dummy_insert`).  Or you can make a single row result set (often
+enough) with `dummy_result_set`.
 
-As we can see we simply prepend `open_` to the procedure name and use
-that to create a test helper that make the temporary table.  The table's
-columns are defined to be `LIKE` the result shape of the procedure under
-test.  Recall this helper is only available to procedures that return a result set.
-The temporary table gets a `test_` prefix.  Assuming the procedure with the
-annotation is `foo` then this code is universal:
+As we can see we simply prepend `open_` to the procedure name and use that to
+create a test helper that make the temporary table.  The table's columns are
+defined to be `LIKE` the result shape of the procedure under test.  Recall this
+helper is only available to procedures that return a result set. The temporary
+table gets a `test_` prefix.  Assuming the procedure with the annotation is
+`foo` then this code is universal:
 
 ```sql
 CREATE TEMP TABLE test_foo(LIKE foo);
 ```
 
-Is universal, no matter the result shape of `foo` you get a table with those columns.
+Is universal, no matter the result shape of `foo` you get a table with those
+columns.
 
-For this to work we need to emit a declaration of `foo` before this code.  However,
-since we have the full definition of `foo` handy that is no problem.  We remember
-that we'll need it by setting a flag in `helper_flags`.
+For this to work we need to emit a declaration of `foo` before this code.
+However, since we have the full definition of `foo` handy that is no problem.
+We remember that we'll need it by setting a flag in `helper_flags`.
 
 The code for `close_foo` is even simpler if that's possible.  The great thing is
-all need to know the columns of `foo` has been removed from the test helper.  The
-CQL compiler handles this as a matter of course and it is generally useful.
+all need to know the columns of `foo` has been removed from the test helper.
+The CQL compiler handles this as a matter of course and it is generally useful.
 See [Chapter 5](../user_guide/05_cursors.md#reshaping-data-cursor-like-forms)
 for more examples.
 
 All the others are equally simple and use similar tricks.  These were the first
-test helpers.  They're actually not that popular because they are so easy to create
-yourself anyway.
+test helpers.  They're actually not that popular because they are so easy to
+create yourself anyway.
 
 ### Dummy Test
 
-The dummy test code emitter is non-trivial.  Let's quickly review the things it has to
-do and then we can go over how each of these is accomplished.  Assuming we have an procedure
-`your_proc` that has been annotated like this:
+The dummy test code emitter is non-trivial.  Let's quickly review the things it
+has to do and then we can go over how each of these is accomplished.  Assuming
+we have an procedure `your_proc` that has been annotated like this:
 
 ```SQL
 @attribute(cql:autotest=(dummy_test))
@@ -270,26 +281,32 @@ Dummy test will produce the following:
 * `test_your_proc_drop_tables`
   * a procedure that drops those same tables and views
 * `test_your_proc_create_indexes`
-  * a procedure that creates your indices, in a test you may or may not want to create the indices
+  * a procedure that creates your indices, in a test you may or may not want to
+    create the indices
 * `test_your_proc_drop_indexes`
   * a procedure the drops those same indices
 * `test_your_proc_create_triggers`
-  * a procedure that creates your trigger, in a test you may or may not want to create the triggers
+  * a procedure that creates your trigger, in a test you may or may not want to
+    create the triggers
 * `test_your_proc_drop_triggers`
   * a procedure the drops those same triggers
 * `test_your_proc_read_table1`
-  * for each table or view in the `create_tables` a procedure that selects all the data out of that object is created in case you need it
+  * for each table or view in the `create_tables` a procedure that selects all
+    the data out of that object is created in case you need it
 * `test_your_proc_populate_tables`
   * a procedure that loads all the tables from `create_tables` with sample data
   * FK relationships are obeyed
-  * user data may be specified in an attribute and that data will be used in preference to auto-generated data
+  * user data may be specified in an attribute and that data will be used in
+    preference to auto-generated data
 
 These are more fully discussed in [Chapter 12](../user_guide/12_testability_features.md#generalized-dummy-test-pattern).
 
 #### Building the Trigger and Index mappings
 
-In order to know which indices and triggers we might need we have to be able to map from the tables/views in `your_proc` to the indices.
-To set up for this a general purpose reverse mapping is created.  We'll look at the triggers version. The indices version is nearly identical.
+In order to know which indices and triggers we might need we have to be able to
+map from the tables/views in `your_proc` to the indices. To set up for this a
+general purpose reverse mapping is created.  We'll look at the triggers version.
+The indices version is nearly identical.
 
 ```c
 // Walk through all triggers and create a dictionnary of triggers per tables.
@@ -319,23 +336,28 @@ static void init_all_trigger_per_table() {
 
 The steps are pretty simple:
 
-* we make a symbol table that will map from the table name to an array of statements
+* we make a symbol table that will map from the table name to an array of
+  statements
 * there is a convenient `all_triggers` list that has all the triggers
-* from each trigger we `EXTRACT` the table or view name (named `table_name` even if it's a view)
-* we append the trigger statement pointer to the end of such statements for the table
+* from each trigger we `EXTRACT` the table or view name (named `table_name` even
+  if it's a view)
+* we append the trigger statement pointer to the end of such statements for the
+  table
 * any triggers marked with `@delete` are not included for obvious reasons
 
-At the end of this looking up the table name will give you a list of trigger statement AST pointers.  From there
-of course you can get everything you need.
+At the end of this looking up the table name will give you a list of trigger
+statement AST pointers.  From there of course you can get everything you need.
 
-The index version is basically the same, the details of the `EXTRACT` ops to go from index to table name are different
-and of course we start from the `all_indices_list`
+The index version is basically the same, the details of the `EXTRACT` ops to go
+from index to table name are different and of course we start from the
+`all_indices_list`
 
 #### Computing The Dependencies of a Procedure
 
-Sticking with our particular example, in order to determine that tables/views that `your_proc` might need,
-the generator has to walk its entire body looking for things that are tables.  This is handled by the
-`find_all_table_nodes` function.
+Sticking with our particular example, in order to determine that tables/views
+that `your_proc` might need, the generator has to walk its entire body looking
+for things that are tables.  This is handled by the `find_all_table_nodes`
+function.
 
 ```c
 static void find_all_table_nodes(dummy_test_info *info, ast_node *node) {
@@ -364,25 +386,34 @@ static void find_all_table_nodes(dummy_test_info *info, ast_node *node) {
 }
 ```
 
-This code uses the general dependency walker in `cg_common.c` to visit all tables and views. It is a recursive
-walk and the general steps for prosecution go something like this:
+This code uses the general dependency walker in `cg_common.c` to visit all
+tables and views. It is a recursive walk and the general steps for prosecution
+go something like this:
 
 * starting from `your_proc` the entire body of the procedure is visited
- * references to tables or views in update, delete, insert, select etc. statements are identified
+ * references to tables or views in update, delete, insert, select etc.
+   statements are identified
  * each such table/view is added to the found tables list (at most once)
- * for views, the recursion proceeds to the body of the view as though the body had been inline in the procedure
- * for tables, the recursion proceeds to the body of the table to discover any FK relationships that need to be followed
- * if any found item has triggers, the trigger body is walked, any tables/views mentioned there become additional found items
+ * for views, the recursion proceeds to the body of the view as though the body
+   had been inline in the procedure
+ * for tables, the recursion proceeds to the body of the table to discover any
+   FK relationships that need to be followed
+ * if any found item has triggers, the trigger body is walked, any tables/views
+   mentioned there become additional found items
  * any given table/view and hence trigger is only visited once
 
-The net of all this, the "found items", is a list of all the tables and views that the procedure uses, directly
-or indirectly.  As discussed in [Chapter 12](../user_guide/12_testability_features.md#generalized-dummy-test-pattern)
-this walk does not include tables and views used by procedures that `your_proc` calls.
+The net of all this, the "found items", is a list of all the tables and views
+that the procedure uses, directly or indirectly.  As discussed in
+[Chapter12](../user_guide/12_testability_features.md#generalized-dummy-test-pattern)
+this walk does not include tables and views used by procedures that `your_proc`
+calls.
 
-To get the dependencies in the correct order, the tables have been walked following the foreign key chain and all
-views go after all tables.  The views are stitched together.  The business of diving into views/tables/triggers and
-maintainence of the found items is done by the callback function `found_table_or_view`.  The actual source
-is more descriptive comments than code but the code is included here as it is brief.
+To get the dependencies in the correct order, the tables have been walked
+following the foreign key chain and all views go after all tables.  The views
+are stitched together.  The business of diving into views/tables/triggers and
+maintainence of the found items is done by the callback function
+`found_table_or_view`.  The actual source is more descriptive comments than code
+but the code is included here as it is brief.
 
 
 ```c
@@ -412,17 +443,20 @@ static void found_table_or_view(
 }
 ```
 
-The general purpose walker notifies exactly once on each visited table/view and `continue_find_table_node` is used to
-dive into the bodies of views/tables that would otherwise not be searched.  Likewise `find_all_triggers_node`
-dives into the body of any triggers that are on the found item.
+The general purpose walker notifies exactly once on each visited table/view and
+`continue_find_table_node` is used to dive into the bodies of views/tables that
+would otherwise not be searched.  Likewise `find_all_triggers_node` dives into
+the body of any triggers that are on the found item.
 
 
 #### Emitting Indices and Triggers
 
-With the "found tables" computed (creatively stored in a field called `found_tables`) it's very easy to loop over these
-and generate the necessary indices for each found table (keeping in mind the "found table" can be a view).
+With the "found tables" computed (creatively stored in a field called
+`found_tables`) it's very easy to loop over these and generate the necessary
+indices for each found table (keeping in mind the "found table" can be a view).
 
-The `create index statement` is emitted by the usual `gen_statement_with_callbacks` form that echos the AST.
+The `create index statement` is emitted by the usual
+`gen_statement_with_callbacks` form that echos the AST.
 
 The `drop index` can be trivially created by name.
 
@@ -454,25 +488,32 @@ static void cg_emit_index_stmt(
 }
 ```
 
-Triggers are done in exactly the same way except that instead of looping over found tables we can
-actually generate them as they are discovered inside of `find_all_triggers_node`.  Recal that we
-had to visit the triggers when computing the found tables anyway.  We did not have to visit the indices
-hence the difference.
+Triggers are done in exactly the same way except that instead of looping over
+found tables we can actually generate them as they are discovered inside of
+`find_all_triggers_node`.  Recal that we had to visit the triggers when
+computing the found tables anyway.  We did not have to visit the indices hence
+the difference.
 
-These walks allow us to produce: `test_your_proc_create_indexes`, `test_your_proc_drop_indexes`, `test_your_proc_create_triggers`, `test_your_proc_drop_triggers`
+These walks allow us to produce: `test_your_proc_create_indexes`, `test_your_proc_drop_indexes`,
+`test_your_proc_create_triggers`, `test_your_proc_drop_triggers`
 
 #### Emitting Tables and Views
 
-Starting from the found tables, again it is very easy to generate the code to create and drop the tables and views.  The only trick here is that the
-tables depend on one another so order is important.  The tables are discovered with the deepest dependency first, new found items are added to the head
-of the found tables but it's a post-order walk so that means that the deepest tables/views are at the front of the list.  This means the list
-is naturally in the order that it needs to be to delete the tables (parent tables at the end).  So the algorithm goes like this:
+Starting from the found tables, again it is very easy to generate the code to
+create and drop the tables and views.  The only trick here is that the tables
+depend on one another so order is important.  The tables are discovered with the
+deepest dependency first, new found items are added to the head of the found
+tables but it's a post-order walk so that means that the deepest tables/views
+are at the front of the list.  This means the list is naturally in the order
+that it needs to be to delete the tables (parent tables at the end).  So the
+algorithm goes like this:
 
 * emit the drop tables/views in the found order
 * reverse the list
 * emit the create tables/views in the reverse order
 * for each table/view emit the reader `test_your_proc_read_[item]
-* for tables we emit an insertion fragment into `test_your_proc_populate_tables` using `cg_dummy_test_populate`
+* for tables we emit an insertion fragment into `test_your_proc_populate_tables`
+  using `cg_dummy_test_populate`
   * population is discussed in the following sections
 
 As in the other cases `gen_statement_with_callbacks` is used to create the DDL statements:
@@ -480,25 +521,36 @@ As in the other cases `gen_statement_with_callbacks` is used to create the DDL s
   * `CREATE VIEW`
   * `CREATE VIRTUAL TABLE`
 
-The delete side is easily created with ad hoc `DROP TABLE` or `DROP VIEW` statements.
+The delete side is easily created with ad hoc `DROP TABLE` or `DROP VIEW`
+statements.
 
-The reading procedure is always of the form `SELECT * FROM foo` so that too is trivial to generate with a fixed template.  The "echoing" system
-once again is doing a lot of the heavy lifting.
+The reading procedure is always of the form `SELECT * FROM foo` so that too is
+trivial to generate with a fixed template.  The "echoing" system once again is
+doing a lot of the heavy lifting.
 
-These walks give us `test_your_proc_create_tables`, `test_your_proc_drop_tables`, and `test_your_proc_read_[item]` and drive the population process
+These walks give us `test_your_proc_create_tables`,
+`test_your_proc_drop_tables`, and `test_your_proc_read_[item]` and drive the
+population process
 
 #### Gathering Ad Hoc Data To Be Inserted
 
-Before we get into the mechanics of the population code, we have to visit one more area.  It's possible to include data in the the
-`dummy_test` annotaiton itself.  This is data that you want to have populated.  This data will be included in the overall data populator.
-If there is enough of it (at least 2 rows per candidate table) then it might be all the data you get.  Now the data format here is
-not designed to be fully general, after all it's not that hard to just write `INSERT ... VALUES` for all your tables anyway.  The goal
-is to provide something that will help you not have to remember all the FK relationships and maybe let you economically specify some leaf
-data you need and get the rest for free.  It's also possible to manually create dummy data that just won't work, again, scrubbing all
-this is way beyond the ability of a simple test helper.  When the code runs you'll get SQLite errors which can be readily addressed.
+Before we get into the mechanics of the population code, we have to visit one
+more area.  It's possible to include data in the the `dummy_test` annotaiton
+itself.  This is data that you want to have populated.  This data will be
+included in the overall data populator. If there is enough of it (at least 2
+rows per candidate table) then it might be all the data you get.  Now the data
+format here is not designed to be fully general, after all it's not that hard to
+just write `INSERT ... VALUES` for all your tables anyway.  The goal is to
+provide something that will help you not have to remember all the FK
+relationships and maybe let you economically specify some leaf data you need and
+get the rest for free.  It's also possible to manually create dummy data that
+just won't work, again, scrubbing all this is way beyond the ability of a simple
+test helper.  When the code runs you'll get SQLite errors which can be readily
+addressed.
 
-So keeping in mind this sort of "entry level data support" as the goal, we can take a look at how the system works -- it's all
-in the function `collect_dummy_test_info` which includes this helpful comment on structure.
+So keeping in mind this sort of "entry level data support" as the goal, we can
+take a look at how the system works -- it's all in the function
+`collect_dummy_test_info` which includes this helpful comment on structure.
 
 ```c
 // the data attribute looks kind of like this:
@@ -516,11 +568,14 @@ in the function `collect_dummy_test_info` which includes this helpful comment on
 // i.e. first the table then the column names, and then a list of matching columns and values
 ```
 
-So we're going to walk a list of attributes each one begins with a table name, then a list of columns, and then a list of values.
+So we're going to walk a list of attributes each one begins with a table name,
+then a list of columns, and then a list of values.
 
-All of the data is in the symbol table `dummy_test_infos` which is indexed by table name.  For each table name we find
-we ensure there is a symbol table at that slot.  So `dummy_test_infos` is a symbol table of symbol tables.  It's actually
-going to be something like `value_list = dummy_test_infos['table']['column']`
+All of the data is in the symbol table `dummy_test_infos` which is indexed by
+table name.  For each table name we find we ensure there is a symbol table at
+that slot.  So `dummy_test_infos` is a symbol table of symbol tables.  It's
+actually going to be something like `value_list =
+dummy_test_infos['table']['column']`
 
 ```c
   // collect table name from dummy_test info
@@ -529,7 +584,8 @@ going to be something like `value_list = dummy_test_infos['table']['column']`
   symtab *col_syms = symtab_ensure_symtab(dummy_test_infos, table_name);
 ```
 
-Next we're going to find the column names, they are the next entry in the list so we go `right` to get the `column_name_list`
+Next we're going to find the column names, they are the next entry in the list
+so we go `right` to get the `column_name_list`
 
 ```c
 // collect column names from dummy_test info
@@ -547,12 +603,15 @@ for (ast_node *list = column_name_list->left; list; list = list->right) {
 }
 ```
 
-The primary purpose of this part of the loop is then to add the column names to `col_syms` so that they are linked to the dummy info for this table.
-The line `bytebuf *column_values = symtab_ensure_bytebuf(col_syms, column_name);` does this.  And this also creates the byte buffer that will hold
-the eventual values.
+The primary purpose of this part of the loop is then to add the column names to
+`col_syms` so that they are linked to the dummy info for this table. The line
+`bytebuf *column_values = symtab_ensure_bytebuf(col_syms, column_name);` does
+this.  And this also creates the byte buffer that will hold the eventual values.
 
-We also keep a side set of buffers that has the column name, type, and the values in the `col_name`, `col_type`, and `col_data` buffers respectively.
-These are used to handle the foreign key work shortly and they allow us to not have to look up all the names over and over.
+We also keep a side set of buffers that has the column name, type, and the
+values in the `col_name`, `col_type`, and `col_data` buffers respectively. These
+are used to handle the foreign key work shortly and they allow us to not have to
+look up all the names over and over.
 
 ```
 // collect column value from dummy_test info. We can have multiple rows of column value
@@ -579,13 +638,17 @@ for (ast_node *values_ast = column_name_list->right;
 }
 ```
 
-The most important part is `bytebuf_append_var(column_values, misc_attr_value);` this is where the
-attribute value is added to the list of values that are on the column.
+The most important part is `bytebuf_append_var(column_values, misc_attr_value);`
+this is where the attribute value is added to the list of values that are on the
+column.
 
-Finally, the "foreign key stuff".  What we need to do here is check the column name in the table to see if it's part of a foreign
-key and if it is we recursively add the current data value to the referenced column in the reference table.  That way
-if you add an initalizer to a leaf table you don't also have to add it to all the parent tables.  If it wasn't for this
-feature the manual data wouldn't be very useful at all, hand written `INSERT` statements would be just as good.
+Finally, the "foreign key stuff".  What we need to do here is check the column
+name in the table to see if it's part of a foreign key and if it is we
+recursively add the current data value to the referenced column in the reference
+table.  That way if you add an initalizer to a leaf table you don't also have to
+add it to all the parent tables.  If it wasn't for this feature the manual data
+wouldn't be very useful at all, hand written `INSERT` statements would be just
+as good.
 
 
 ```c
@@ -609,29 +672,49 @@ Again the overall structure is something like: `value_list = dummy_test_infos['t
 
 #### Emitting the Table Population Fragments
 
-With any custom initalizers in the `dummy_test_infos` structure we can do the population fragment for any given table.
+With any custom initalizers in the `dummy_test_infos` structure we can do the
+population fragment for any given table.
 
 The general algorithm here goes like this:
 
-* the total number of rows we will generate will be the number of column values in the initializers or else `DUMMY_TEST_INSERT_ROWS`, whichever is larger
-* the insert statement generated will include `dummy_seed([value_seed])` where value_seed starts at 123 and goes up 1 for every row generated
-  * dummy_seed will create values for any missing columns using the seed so any combination of included columns is ok, we'll always get a complete insert
-* foreign key columns use a provided intializer from the parent table if there is one, or else they use 1, 2, 3 etc.
-  * likewise if a column is referenceable by some other table it uses the known sequence 1, 2, 3 etc. for its value rather than the varying seed
-  * in this way child tables can know that partent tables will have a value they can use since both tables will have at least `DUMMY_TEST_INSERT_ROWS` and any rows that were not manually initialized will match
-  * note that foreign key columns always get this treatment, whether they were mentioned or not
-* to mix things up the `dummy_nullables` and `dummy_defaults` are added on every other row which makes missing values be NULL and/or the default value if one is present
+* the total number of rows we will generate will be the number of column values
+  in the initializers or else `DUMMY_TEST_INSERT_ROWS`, whichever is larger
+* the insert statement generated will include `dummy_seed([value_seed])` where
+  value_seed starts at 123 and goes up 1 for every row generated
+  * dummy_seed will create values for any missing columns using the seed so any
+    combination of included columns is ok, we'll always get a complete insert
+* foreign key columns use a provided intializer from the parent table if there
+  is one, or else they use 1, 2, 3 etc.
+  * likewise if a column is referenceable by some other table it uses the known
+    sequence 1, 2, 3 etc. for its value rather than the varying seed
+  * in this way child tables can know that partent tables will have a value they
+    can use since both tables will have at least `DUMMY_TEST_INSERT_ROWS` and
+    any rows that were not manually initialized will match
+  * note that foreign key columns always get this treatment, whether they were
+    mentioned or not
+* to mix things up the `dummy_nullables` and `dummy_defaults` are added on every
+  other row which makes missing values be NULL and/or the default value if one
+  is present
 
-This is enough to generate a set of insert statements for the table in question and since the fragments are generated in the table creation order the resulting insert statements will have the parent tables first so the foreign keys of later tables will be correct.
+This is enough to generate a set of insert statements for the table in question
+and since the fragments are generated in the table creation order the resulting
+insert statements will have the parent tables first so the foreign keys of later
+tables will be correct.
 
-This can go wrong if the manual initializations use keys that conflict with the default generation or if the manual intializations have PK conflicts or other such things.  No attempt is made to sort that out.  The run time errors should be clear and these are, after all, only test helpers.  It's very easy to avoid these hazards
-and you get a pretty clear error message if you don't so that seems good enough.
+This can go wrong if the manual initializations use keys that conflict with the
+default generation or if the manual intializations have PK conflicts or other
+such things.  No attempt is made to sort that out.  The run time errors should
+be clear and these are, after all, only test helpers.  It's very easy to avoid
+these hazards and you get a pretty clear error message if you don't so that
+seems good enough.
 
-These fragments are ultimately combined to make the body of the procedure `test_your_proc_populate_tables`.
+These fragments are ultimately combined to make the body of the procedure
+`test_your_proc_populate_tables`.
 
 ### Recap
 
-The test helpers in `cg_test_helpers.c` are very simple nearly-constant templates with the exception of `dummy_test` which includes:
+The test helpers in `cg_test_helpers.c` are very simple nearly-constant
+templates with the exception of `dummy_test` which includes:
 
 * table and view creation
 * index creation
@@ -646,6 +729,7 @@ Topics covered included:
 * how `dummy_test` handles data initialization
 * how `dummy_test` does its dependency analysis
 
-As with the other parts, no attempt was made to cover every function in detail.  That is
-best done by reading the source code. But there is overall structure here and an understanding
-of the basic principles is helpful before diving into the source code.
+As with the other parts, no attempt was made to cover every function in detail.
+That is best done by reading the source code. But there is overall structure
+here and an understanding of the basic principles is helpful before diving into
+the source code.

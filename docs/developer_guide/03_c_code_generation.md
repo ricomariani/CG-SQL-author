@@ -1,5 +1,5 @@
 ---
-title: "Chapter 3: C Code Generation"
+title: "Part 3: C Code Generation"
 weight: 3
 ---
 <!---

@@ -50,22 +50,56 @@ against a newer sqlite to pass all the tests.
 
 From a bare Ubuntu installation, you might need to add these components:
 
-sudo apt install
+```bash
+sudo apt update
+sudo apt install make
+sudo apt install gcc
+sudo apt install clang
+sudo apt install flex
+sudo apt install bison
+sudo apt install sqlite3
+sudo apt install libsqlite3-dev
+```
 
-* make
-* gcc
-* flex
-* bison
-* sqlite3
-* libsqlite3-dev
+After which you can do the normal builds.
 
-After which I was able to do the normal installations.
+For the coverage build you need:
 
-For the coverage build you need
-* gcovr
+```bash
+sudo apt install gcovr
+```
 
-And if you want to do the AST visualizations in PDF form you need
-* graphviz
+The instructions are helpful for getting gcov
+
+```bash
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get update
+sudo apt-get install -y gcc-10 g++-10
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 1
+```
+
+And if you want to do the AST visualizations in PDF form you need:
+
+```bash
+sudo apt install graphviz
+```
+
+For Lua: 
+
+```bash
+sudo apt install lua5.4
+sudo apt install liblua5.4-dev
+```
+
+Then Luarocks
+
+```bash
+wget https://luarocks.org/releases/luarocks-3.11.0.tar.gz
+tar zxpf luarocks-3.11.0.tar.gz
+cd luarocks-3.11.0
+./configure && make && sudo make install
+sudo luarocks install lsqlite3
+```
 
 ## Options
 
@@ -75,7 +109,7 @@ to try to be more interoperable with gcc.
 * If you add `SQLITE_PATH` to your environment the `Makefile` will try to compile `sqlite3-all.c` from that path
 and it will link that in instead of using `-lsqlite3`.
 
-## Amalgam Build
+## Amalhistgam Build
 
 The amalgam is created by `./make_amalgam.sh` and the result is in `out/cql_amalgam.c`
 

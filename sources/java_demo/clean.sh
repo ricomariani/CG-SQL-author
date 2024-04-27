@@ -5,4 +5,4 @@
 # LICENSE file in the root directory of this source tree.
 
 S=$(cd $(dirname "$0"); pwd)
-rm -f $S/out
+rm -rf $S/out

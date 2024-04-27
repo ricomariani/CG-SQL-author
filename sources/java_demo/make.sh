@@ -62,10 +62,10 @@ echo "making directories"
 mkdir -p $O/sample
 
 echo generating stored procs
-cc -E -x c Sample.sql >$O/Sample.pre
+cp Sample.sql $O
 pushd $O >/dev/null
-${CQL} --in Sample.pre --cg Sample.h Sample.c
-${CQL} --in Sample.pre --rt json_schema --cg Sample.json
+${CQL} --in Sample.sql --cg Sample.h Sample.c
+${CQL} --in Sample.sql --rt json_schema --cg Sample.json
 ../cqljava.py Sample.json --package sample --class Sample >sample/Sample.java
 popd >/dev/null
 

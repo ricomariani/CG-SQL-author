@@ -9,24 +9,26 @@ weight: 4
 -- LICENSE file in the root directory of this source tree.
 -->
 
-All kinds of control flow happens in the context of some procedure. Though we've already introduced examples of procedures let's
-now go over some of the additional aspects we have not yet illustrated.
+Though we've already introduced examples of procedures, let's now go over some
+of the additional aspects we have not yet illustrated, like arguments and
+control-flow.
 
 ### Out Parameters
 
 Consider this procedure:
 
+
 ```sql
-create procedure echo_integer(in arg1 integer not null, out arg2 integer not null)
+create procedure copy_integer(in arg1 integer not null, out arg2 integer not null)
 begin
   set arg2 := arg1;
 end;
 ```
 
-`arg1` has been declared `in`. This is the default: `in arg1 integer not null`
+`arg1` has been declared as `in`. This is the default: `in arg1 integer not null`,
 and `arg1 integer not null` mean the exact same thing.
 
-`arg2`, however, has been declared `out`. When a parameter is declared using
+`arg2`, however, has been declared as `out`. When a parameter is declared using
 `out`, arguments for it are passed by reference. This is similar to by-reference
 arguments in other languages; indeed, they compile into a simple pointer
 reference in the generated C code.
@@ -36,7 +38,7 @@ actually updates a variable in the caller. For example:
 
 ```sql
 declare x int not null;
-call echo_integer(42, x);
+call copy_integer(42, x);
 -- `x` is now 42
 ```
 
@@ -44,13 +46,10 @@ It is important to note that values cannot be passed *into* a procedure via an
 `out` parameter. In fact, `out` parameters are immediately assigned a new value
 as soon as the procedure is called:
 
-- All nullable `out` parameters are set to `null`.
-
-- Nonnull `out` parameters of a non-reference type (e.g., `integer`, `long`,
-  `bool`, et cetera) are set to their default values (`0`, `0.0`, `false`, et
-  cetera).
-
-- Nonnull `out` parameters of a reference type (e.g., `blob`, `object`, and
+* All nullable `out` parameters are set to `null`.
+* Nonnull `out` parameters of a non-reference type (e.g., `integer`, `long`,
+  `bool`, etc.) are set to their default values (`0`, `0.0`, `false`, etc.).
+* Nonnull `out` parameters of a reference type (e.g., `blob`, `object`, and
   `text`) are set to `null` as there are no default values for reference types.
   They must, therefore, be assigned a value within the procedure so that they
   will not be `null` when the procedure returns. CQL enforces this.
@@ -63,25 +62,26 @@ is passed by reference as with `out` parameters.
 `inout` parameters allow for code such as the following:
 
 ```sql
-create procedure times_two(inout arg integer not null)
+proc times_two(inout arg integer not null)
 begin
-  -- note that a variable in the caller is both
-  -- read from and written to
-  set arg := arg + arg;
+  -- note that a variable in the caller is both read from and written to
+   
+  arg += arg; -- this is the same as set arg := arg + arg; 
 end;
 
 let x := 2;
-call times_two(x);
+times_two(x); -- this is the same as call times_two(x)
 -- `x` is now 4
 ```
 
 ### Procedure Calls
 
-The usual `call` syntax is used to invoke a procedure.  It returns no value but it can have any number of `out` arguments.
+The usual `call` syntax is used to invoke a procedure. It returns no value, but
+it can have any number of `out` arguments.
 
-```
+```sql
   declare scratch integer not null;
-  call echo_integer(12, scratch);
+  call copy_integer(12, scratch);
   scratch == 12; -- true
 ```
 
@@ -89,18 +89,20 @@ Let's go over the most essential bits of control flow.
 
 ### The IF statement
 
-The CQL `IF` statement has no syntatic ambiguities at the expense of being somewhat more verbose than many other languages.
-In CQL the `ELSE IF` portion is baked into the `IF` statement, so what you see below is logically a single statement.
+The CQL `IF` statement has no syntactic ambiguities at the expense of being
+somewhat more verbose than many other languages. In CQL, the `ELSE IF` portion
+is baked into the `IF` statement, so what you see below is logically a single
+statement.
 
 ```sql
 create proc checker(foo integer, out result integer not null)
 begin
   if foo = 1 then
-   set result := 1;
+    result := 1;
   else if foo = 2 then
-   set result := 3;
+    result := 3;
   else
-   set result := 5;
+    result := 5;
   end if;
 end;
 ```
@@ -117,13 +119,13 @@ begin
   while x > 0
   begin
    call printf('%d\n', x);
-   set x := x - 1;
+   x -= 1;
   end;
 end;
 ```
 
-The `WHILE` loop has additional keywords that can be used within it to better control the loop.  A more general
-loop might look like this:
+The `WHILE` loop has additional keywords that can be used within it to better
+control the loop. A more general loop might look like this:
 
 ```sql
 declare procedure printf no check;
@@ -132,7 +134,7 @@ create proc looper(x integer not null)
 begin
   while 1
   begin
-   set x := x - 1;
+   x -= 1;
    if x < 0 then
      leave;
    else if x % 100 = 0 then
@@ -153,25 +155,26 @@ Let's go over this peculiar loop:
   end;
 ```
 
-This is an immediate sign that there will be an unusual exit condition.
-The loop will never end without one because `1` will never be false.
+This is an immediate sign that there will be an unusual exit condition. The loop
+will never end without one because `1` will never be false.
 
 ```sql
    if x < 0 then
      leave;
 ```
-Now here we've encoded our exit condition a bit strangely: we might have
-done the equivalent job with a normal condition in the predicate part of
-the `while` statement but for illustration anyway, when x becomes negative
-`leave` will cause us to exit the loop.  This is like `break` in C.
+
+Now here we've encoded our exit condition a bit strangely: we might have done
+the equivalent job with a normal condition in the predicate part of the `while`
+statement but for illustration anyway, when x becomes negative `leave` will
+cause us to exit the loop. This is like `break` in C.
 
 ```sql
    else if x % 100 = 0 then
      continue;
 ```
 
-This bit says that on every 100th iteration we go back to the start of
-the loop.  So the next bit will not run, which is the printing.
+This bit says that on every 100th iteration, we go back to the start of the
+loop. So the next bit will not run, which is the printing.
 
 ```sql
    else if x % 10 = 0 then
@@ -179,17 +182,18 @@ the loop.  So the next bit will not run, which is the printing.
    end if;
 ```
 
-Finishing up the control flow, on every 10th iteration we print the value of the loop variable.
+Finishing up the control flow, on every 10th iteration we print the value of the
+loop variable.
 
 ### The SWITCH Statement
 
-The  CQL `SWITCH` is designed to map to the C `switch` statement for
-better codegen and also to give us the opportunity to do better error
-checking.  `SWITCH` is a *statement* like `IF` not an *expression* like
-`CASE..WHEN..END` so it combines with other statements. The general form
-looks like this:
+ The CQL `SWITCH` is designed to map to the C `switch` statement for better code
+ generation and also to give us the opportunity to do better error checking.
+ `SWITCH` is a *statement* like `IF`, not an *expression* like
+ `CASE..WHEN..END`, so it combines with other statements. The general form looks
+ like this:
 
-```SQL
+```sql
 SWITCH switch-expression [optional ALL VALUES]
 WHEN expr1, expr2, ... THEN
   [statement_list]
@@ -201,6 +205,7 @@ ELSE
   [statement_list]
 END;
 ```
+
 * the switch-expression must be a not-null integral type (`integer not null` or `long integer not null`)
 * the `WHEN` expressions [expr1, expr2, etc.] are made from constant integer expressions (e.g. `5`, `1+7`, `1<<2`, or `my_enum.thing`)
 * the `WHEN` expressions must be compatible with the switch expression (long constants cannot be used if the switch expression is an integer)
@@ -253,15 +258,13 @@ switch x all values
 end;
 ```
 
-Using `THEN NOTHING` allows the compiler to avoid emitting a useless
-`break` in the C code.  Hence that choice is better/clearer than `when
-brush then leave;`
+Using `THEN NOTHING` allows the compiler to avoid emitting a useless `break` in
+the C code. Hence, that choice is better/clearer than `when brush then leave;`.
 
-Note that the presence of `_count` in the enum will not cause an error
-in the above because it starts with `_`.
+Note that the presence of `_count` in the enum will not cause an error in the
+above because it starts with `_`.
 
-The `C` output for this statement will be a direct mapping to a `C`
-switch statement.
+The `C` output for this statement will be a `C` switch statement.
 
 ### The TRY, CATCH, and THROW Statements
 
@@ -317,14 +320,14 @@ then there is a final catch block:
     end;
 ```
 
-Here we see a usage of the `@rc` variable to observe the failed error
-code.  In this case we simply print a diagnostic message and then use the
-`throw` keyword to rethrow the previous failure (exactly what is stored
-in `@rc`).  In general, `throw` will create a failure in the current
-block using the most recent failed result code from SQLite (`@rc`)
-if it is an error, or else the general `SQLITE_ERROR` result code if
-there is no such error.  In this case the failure code for the `update`
-statement will become the result code of the current procedure.
+Here we see a usage of the `@rc` variable to observe the failed error code. In
+this case, we simply print a diagnostic message and then use the `throw` keyword
+to rethrow the previous failure (exactly what is stored in `@rc`). In general,
+`throw` will create a failure in the current block using the most recent failed
+result code from SQLite (`@rc`) if it is an error, or else the general
+`SQLITE_ERROR` result code if there is no such error. In this case, the failure
+code for the `update` statement will become the result code of the current
+procedure.
 
 This leaves only the closing markers:
 
@@ -337,13 +340,12 @@ If control flow reaches the normal end of the procedure it will return `SQLITE_O
 
 ### Procedures as Functions: Motivation and Example
 
-
-The calling convention for CQL stored procedures often (usually) requires
-that the procedure returns a result code from SQLite.  This makes it
-impossible to write a procedure that returns a result like a function,
-as the result position is already used for the error code.  You can
-get around this problem by using `out` arguments as your return codes.
-So for instance, this version of the Fibonacci function is possible.
+The calling convention for CQL stored procedures often requires that the
+procedure return a result code from SQLite. This makes it impossible to write a
+procedure that returns a result like a C function, as the result position is
+already used for the error code. You can get around this problem by using `out`
+arguments as your return results. So, for instance, this version of the Fibonacci
+function is possible.
 
 
 ```sql
@@ -391,9 +393,9 @@ This form is allowed when:
 * the formal parameter for that last argument was marked with `out` (neither `in` nor `inout` are acceptable)
 * the procedure does not return a result set using a `select` statement or `out` statement (more on these later)
 
-If the procedure in question uses SQLite, or calls something that
-uses SQLite, then it might fail.  If that happens the result code
-will propagate just like it would have with the usual `call` form.
-Any failures can be caught with `try/catch` as usual.  This feature is
-really only syntatic sugar for the "awkward" form above, but it does
-allow for slightly better generated C code.
+If the procedure in question uses SQLite, or calls something that uses SQLite,
+then it might fail. If that happens the result code will propagate just like it
+would have with the usual `call` form. Any failures can be caught with
+`try/catch` as usual. The "procedure as function" feature is really only
+syntatic sugar for the "awkward" form above, but it does allow for slightly
+better generated C code.

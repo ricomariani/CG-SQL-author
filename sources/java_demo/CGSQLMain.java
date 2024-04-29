@@ -18,17 +18,14 @@ public class CGSQLMain {
     // get result set handle
     long db = CQLDb.get();
 
-    // make the sample result set
-    long result_set_long = SampleJNI.JavaDemo(db);
-
-    System.out.println("Invoked Javademo");
-
-    CQLResultSet rr = new CQLResultSet(result_set_long);
+    // make the sample result set --> this can be moved into the JNI helper but it isn't yet
+    CQLResultSet rr = new CQLResultSet(SampleJNI.JavaDemo(db));
     SampleJNI.JavaDemoResults results = new SampleJNI.JavaDemoResults(rr);
 
     int rc = results.get_result_code();
     System.out.println("Result code is:" +  rc);
 
+    // get_result_set should return the JavaDemoViewModel but it doesn't yet
     SampleJNI.JavaDemoViewModel data = new SampleJNI.JavaDemoViewModel(results.get_result_set());
 
     // use the results

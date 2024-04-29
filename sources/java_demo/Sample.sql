@@ -22,10 +22,37 @@ begin
   end;
 end;
 
+proc OutArgThing(x integer, inout y integer, out z integer)
+begin
+   z := x + y;
+   y += 1;
+end;
+
+proc NoResult(x integer)
+begin
+  printf("%d\n", x);
+end;
+
+proc OutStatement(x integer not null)
+begin
+  declare C cursor like select x;
+  fetch C using 1 x;
+  out C;
+end;
+
+proc OutUnionStatement(x integer not null)
+begin
+  declare C cursor like select x;
+  fetch C using 1 x;
+  out union C;
+  fetch C using 2 x;
+  out union C;
+end;
+
 /* this is a demo procedure, it's rather silly... */
 @attribute(cql:vault_sensitive)
 @attribute(cql:custom_type_for_encoded_column)
-create proc Sample()
+create proc JavaDemo()
 begin
   /* add the table we will be using */
   create table my_data(

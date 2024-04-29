@@ -6,27 +6,29 @@
  */
 
 import com.acme.cgsql.CQLResultSet;
+import com.acme.cgsql.CQLDb;
 import java.nio.charset.StandardCharsets;
 import sample.*;
 
 public class CGSQLMain {
   public static void main(String[] args) {
-    TestResult.open();
+    // make an empty database (this can be replaced)
+    CQLDb.open();
 
     // get result set handle
-    long handle = TestResult.getTestResult();
+    long db = CQLDb.get();
 
     // make the sample result set
-    Sample.SampleViewModel data = new Sample.SampleViewModel(new CQLResultSet(handle));
+    SampleJNI.JavaDemoViewModel data = new SampleJNI.JavaDemoViewModel(TestResult.JavaDemoFetchResults(db));
 
     // use the results
     dumpResults(data);
 
     // release the connection
-    TestResult.close();
+    CQLDb.close();
   }
 
-  public static void dumpResults(Sample.SampleViewModel data) {
+  public static void dumpResults(SampleJNI.JavaDemoViewModel data) {
     System.out.println("Dumping Results");
     int count = data.getCount();
     System.out.println(String.format("count = %d", count));
@@ -49,7 +51,7 @@ public class CGSQLMain {
          )
      );
 
-      Sample.ChildViewModel child = new Sample.ChildViewModel(data.get_my_child_result(i));
+      SampleJNI.ChildViewModel child = new SampleJNI.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.getCount(); j++) {
         System.out.println(
             String.format("--> Child Row %d: x:%d y:%s", j, child.get_x(j), child.get_y(j)));

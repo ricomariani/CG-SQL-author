@@ -5,14 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import com.acme.cgsql.CQLResultSet;
+
 public final class TestResult {
   static {
     System.loadLibrary("TestResult");
   }
 
-  public static native int open();
+  public static CQLResultSet JavaDemoFetchResults(long db) {
+    // make the sample result set
+    return new CQLResultSet(getTestResult(db));
+  }
 
-  public static native long getTestResult();
-
-  public static native void close();
+  public static native long getTestResult(long db);
 }

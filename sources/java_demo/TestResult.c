@@ -9,35 +9,14 @@
 #include "cqlrt.h"
 #include "Sample.h"
 
-static sqlite3 * _db;
-
-/*
- * Class:     TestResult
- * Method:    open
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_TestResult_open(JNIEnv *env, jclass thiz) {
-  return sqlite3_open(":memory:", &_db);
-}
-
 /*
  * Class:     TestResult
  * Method:    getTestResult
- * Signature: ()J
+ * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_TestResult_getTestResult(JNIEnv *env, jclass thiz) {
-  Sample_result_set_ref result_set;
-  cql_code rc = Sample_fetch_results(_db, &result_set);
+JNIEXPORT jlong JNICALL Java_TestResult_getTestResult(JNIEnv *env, jclass thiz, jlong db) {
+  JavaDemo_result_set_ref result_set;
+  cql_code rc = JavaDemo_fetch_results((sqlite3 *)db, &result_set);
   if (rc) return 0;
   return (jlong)result_set;
-}
-
-/*
- * Class:     TestResult
- * Method:    close
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_TestResult_close(JNIEnv *env, jclass thiz) {
-  sqlite3_close(_db);
-  _db = NULL;
 }

@@ -246,11 +246,18 @@ def emit_proc_c_jni(proc):
         field_count += 1
 
     if projection:
-        row_meta += "  CQL_DATA_TYPE_OBJECT,\n"
+        # the long version of the result set is so that we can have an opaque
+        # handle that we can easily fetch and get into the java world
+        # the object version is so that ref counting is done correctly
+        # the long version won't participate in ref counting which is fine/correct
+        row_meta += "  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // result as long\n"
+        row_meta += "  CQL_DATA_TYPE_OBJECT, // result set as object\n"
+        ref_fields += "  cql_int64 __result_long;\n"
         ref_fields += "  cql_result_set_ref __result;\n"
         ref_field_count += 1
+        row_offsets += f"  cql_offsetof({proc_row_type}, __result_long),\n"
         row_offsets += f"  cql_offsetof({proc_row_type}, __result),\n"
-        field_count += 1
+        field_count += 2
         if first_ref == "":
             first_ref = "__result"
 
@@ -419,12 +426,14 @@ def emit_proc_c_jni(proc):
                 "  // let the row take over the reference, we don't release it"
             )
             print("  row->__result = (cql_result_set_ref)_result_set_;")
+            print("  row->__result_long = (int64_t)_result_set_;")
 
         print("")
         print("  cql_fetch_info info = {")
         if usesDatabase:
             print("    .rc = SQLITE_OK,")
         print(f"    .col_offsets = {p_name}_offsets,")
+        print(f"    .data_types = {p_name}_return_meta,")
 
         if ref_field_count:
             print(f"    .refs_count = {proc_row_type}_refs_count,")
@@ -499,12 +508,13 @@ def emit_projection(p_name, projection, attributes):
 
 # The procedure might have any number of out arguments plus its normal returns
 # We emit them all here
-def emit_proc_return_type(p_name, args):
-    print(
-        f"  static public final class {p_name}Results extends CQLViewModel",
-        end="",
-    )
-    print("   {\n")
+def emit_proc_return_type(proc):
+    p_name = proc["name"]
+    args = proc["args"]
+    projection = "projection" in proc
+    usesDatabase = proc["usesDatabase"]
+
+    print(f"  static public final class {p_name}Results extends CQLViewModel {{")
     print(f"    public {p_name}Results(CQLResultSet resultSet)", end="")
     print("    {")
     print(f"       super(resultSet);")
@@ -540,6 +550,18 @@ def emit_proc_return_type(p_name, args):
 
             col += 1
 
+    if usesDatabase:
+        print(f"    public int get_result_code() {{")
+        print(f"      return mResultSet.getInteger(0, {col});")
+        print("    }\n")
+        col += 1
+
+    if projection:
+        print(f"    public CQLResultSet get_result_set() {{")
+        print(f"      return new CQLResultSet(mResultSet.getLong(0, {col}));")
+        print("    }\n")
+        col += 1
+
     print("    public int getCount() {")
     print(f"      return 1;")
     print("    }\n")
@@ -555,7 +577,7 @@ def emit_proc_java_jni(proc):
     args = proc["args"]
     projection = "projection" in proc
 
-    emit_proc_return_type(p_name, args)
+    emit_proc_return_type(proc)
 
     # Generate Java JNI method declaration
 
@@ -608,14 +630,8 @@ def emit_procinfo(section, s_name):
         # we'd like to emit JNI helpers for other procs too, but not now
 
         if "projection" in src and not emit_c:
-            print(
-                f"  static public final class {p_name}ViewModel extends CQLViewModel",
-                end="",
-            )
-            print("   {\n")
-            print(f"    public {p_name}ViewModel(CQLResultSet resultSet)",
-                  end="")
-            print("    {")
+            print(f"  static public final class {p_name}ViewModel extends CQLViewModel {{")
+            print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
             print(f"       super(resultSet);")
             print("    }\n")
 

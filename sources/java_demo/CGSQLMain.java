@@ -19,7 +19,17 @@ public class CGSQLMain {
     long db = CQLDb.get();
 
     // make the sample result set
-    SampleJNI.JavaDemoViewModel data = new SampleJNI.JavaDemoViewModel(TestResult.JavaDemoFetchResults(db));
+    long result_set_long = SampleJNI.JavaDemo(db);
+
+    System.out.println("Invoked Javademo");
+
+    CQLResultSet rr = new CQLResultSet(result_set_long);
+    SampleJNI.JavaDemoResults results = new SampleJNI.JavaDemoResults(rr);
+
+    int rc = results.get_result_code();
+    System.out.println("Result code is:" +  rc);
+
+    SampleJNI.JavaDemoViewModel data = new SampleJNI.JavaDemoViewModel(results.get_result_set());
 
     // use the results
     dumpResults(data);

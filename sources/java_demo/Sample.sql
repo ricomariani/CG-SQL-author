@@ -22,10 +22,11 @@ begin
   end;
 end;
 
-proc OutArgThing(x integer, inout y integer, out z integer)
+proc OutArgThing(out t text, x integer, inout y integer, out z integer)
 begin
    z := x + y;
    y += 1;
+   t := "xxx";
 end;
 
 proc NoResult(x integer)

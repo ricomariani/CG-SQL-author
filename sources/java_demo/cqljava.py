@@ -42,6 +42,16 @@ def usage():
            "   specifies the output class name for the wrapping java class\n"))
 
 
+# Reference type check
+is_ref_type = {}
+is_ref_type["bool"] = False
+is_ref_type["integer"] = False
+is_ref_type["long"] = False
+is_ref_type["real"] = False
+is_ref_type["object"] = True
+is_ref_type["blob"] = True
+is_ref_type["text"] = True
+
 # Java types for not null cql types
 notnull_types = {}
 notnull_types["bool"] = "bool"
@@ -138,8 +148,13 @@ def emit_proc_c_jni(proc):
 
     field_count = 0
     row_meta = ""
-    row_fields = ""
+    ref_field_count = 0
+    ref_fields = ""
+    val_fields = ""
     row_offsets = ""
+    first_ref = ""
+    proc_row_type = f"{p_name}_return_struct"
+
     for arg in args:
         c_name = arg["name"]
         c_type = arg["type"]
@@ -150,31 +165,42 @@ def emit_proc_c_jni(proc):
         if binding == "out" or binding == "inout":
             field_count += 1
             row_meta += "  " + row_types[c_type]
-            row_fields += "  "
+            row_field = "  "
 
             if isNotNull:
                 row_meta += " | CQL_DATA_TYPE_NOT_NULL"
-                row_fields += c_notnull_types[c_type]
+                row_field += c_notnull_types[c_type]
             else:
-                row_fields += c_nullable_types[c_type]
+                row_field += c_nullable_types[c_type]
 
-            row_fields += " " + c_name + ";\n"
+            row_field += " " + c_name + ";\n"
 
-            row_offsets += f"  cql_offsetof({p_name}_return_struct, {c_name}),\n"
+            if is_ref_type[c_type]:
+                ref_fields += row_field
+                ref_field_count += 1
+                if first_ref == "":
+                    first_ref = c_name
+            else:
+                val_fields += row_field
 
-            row_meta += ",\n"
+            row_offsets += f"  cql_offsetof({proc_row_type}, {c_name}),\n"
+
+            row_meta += f", // {c_name}\n"
 
     if usesDatabase:
         row_meta += "  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,\n"
-        row_fields += "  cql_int32 __rc;\n"
-        row_offsets += f"  cql_offsetof({p_name}_return_struct, __rc),\n"
+        val_fields += "  cql_int32 __rc;\n"
+        row_offsets += f"  cql_offsetof({proc_row_type}, __rc),\n"
         field_count += 1
 
     if projection:
         row_meta += "  CQL_DATA_TYPE_OBJECT,\n"
-        row_fields += "  cql_result_set_ref __result;\n"
-        row_offsets += f"  cql_offsetof({p_name}_return_struct, __result),\n"
+        ref_fields += "  cql_result_set_ref __result;\n"
+        ref_field_count += 1
+        row_offsets += f"  cql_offsetof({proc_row_type}, __result),\n"
         field_count += 1
+        if first_ref == "":
+            first_ref = "__result"
 
     if field_count > 0:
         print("")
@@ -184,9 +210,17 @@ def emit_proc_c_jni(proc):
         print("")
 
         print(f"typedef struct {p_name}_return_struct {{")
-        print(row_fields, end="")
+        print(val_fields, end="")
+        print(ref_fields, end="")
         print(f"}} {p_name}_return_struct;")
         print("")
+
+        if ref_field_count > 0:
+            print(f"#define {proc_row_type}_refs_count {ref_field_count}")
+            print(
+                f"#define {proc_row_type}_refs_offset cql_offsetof({proc_row_type}, {first_ref})"
+            )
+            print("")
 
         print(f"static cql_uint16 {p_name}_offsets[] = {{ {field_count},")
         print(row_offsets, end="")
@@ -199,14 +233,13 @@ def emit_proc_c_jni(proc):
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else False
     projection = "projection" in proc
 
-    print(
-        f"JNIEXPORT {return_type} JNICALL Java_{package_name}_{class_name}_{p_name}("
-    )
+    print(f"JNIEXPORT {return_type} JNICALL Java_", end="")
+    print(f"{package_name}_{class_name}_{p_name}(")
     print("  JNIEnv *env,")
     print("  jclass thiz", end="")
 
     if usesDatabase:
-        print(",\n  long __db", end="")
+        print(",\n  jlong __db", end="")
 
     for arg in args:
         a_name = arg["name"]
@@ -222,8 +255,34 @@ def emit_proc_c_jni(proc):
 
     print(")")
     print("{")
+
+    if usesDatabase:
+        print("  cql_code rc = SQLITE_OK;")
+
     if field_count:
-        print("  return 0;")
+        print("  cql_result_set_ref result_set = NULL;")
+        print(
+            f"  {proc_row_type} *row = ({proc_row_type} *)calloc(1, sizeof({proc_row_type}));"
+        )
+
+        if usesDatabase:
+            print("  row->__rc = rc;")
+
+        print("")
+        print("  cql_fetch_info info = {")
+        if usesDatabase:
+            print("    .rc = SQLITE_OK,")
+        print(f"    .col_offsets = {p_name}_offsets,")
+
+        if ref_field_count:
+            print(f"    .refs_count = {proc_row_type}_refs_count,")
+            print(f"    .refs_offset = {proc_row_type}_refs_offset,")
+        print("    .encode_context_index = -1,")
+        print(f"    .rowsize = sizeof({proc_row_type}),")
+        print("  };")
+
+        print("  cql_one_row_result(&info, (char *)row, 1, &result_set);")
+        print("  return (jlong)result_set;")
     print("}")
 
 

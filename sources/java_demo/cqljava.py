@@ -195,7 +195,8 @@ static jdouble UnboxDouble(JNIEnv *env, jobject boxedDouble)
 def emit_proc_c_jni(proc):
     p_name = proc["name"]
     args = proc["args"]
-    usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else False
+    # if usesDatabase is missing it's a query type and they all use the db
+    usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
     field_count = 0
@@ -289,7 +290,8 @@ def emit_proc_c_jni(proc):
     package_name = cmd_args["package_name"]
     class_name = cmd_args["class_name"]
     return_type = "jlong" if field_count else "void"
-    usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else False
+    # if usesDatabase is missing it's a query type and they all use the db
+    usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
     print(f"JNIEXPORT {return_type} JNICALL Java_", end="")
@@ -511,8 +513,9 @@ def emit_projection(p_name, projection, attributes):
 def emit_proc_return_type(proc):
     p_name = proc["name"]
     args = proc["args"]
+    # if usesDatabase is missing it's a query type and they all use the db
+    usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
-    usesDatabase = proc["usesDatabase"]
 
     print(f"  static public final class {p_name}Results extends CQLViewModel {{")
     print(f"    public {p_name}Results(CQLResultSet resultSet)", end="")
@@ -575,6 +578,8 @@ def emit_proc_return_type(proc):
 def emit_proc_java_jni(proc):
     p_name = proc["name"]
     args = proc["args"]
+    # if usesDatabase is missing it's a query type and they all use the db
+    usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
     emit_proc_return_type(proc)
@@ -584,7 +589,7 @@ def emit_proc_java_jni(proc):
     commaNeeded = False
     params = ""
 
-    if proc["usesDatabase"]:
+    if usesDatabase:
         params += "long __db"
         commaNeeded = True
 
@@ -607,8 +612,8 @@ def emit_proc_java_jni(proc):
         if binding == "inout" or binding == "out":
             outArgs = True
 
-    return_type = "long" if proc[
-        "usesDatabase"] or outArgs or projection else "void"
+
+    return_type = "long" if usesDatabase or outArgs or projection else "void"
     print(f"  // procedure entry point {p_name}")
     print(f"  public static native {return_type} {p_name}(", end="")
     print(params, end="")

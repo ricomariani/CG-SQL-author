@@ -140,6 +140,58 @@ cmd_args["jni_header"] = "something_somethingJNI.h"
 cmd_args["cql_header"] = "something.h"
 
 
+def emit_c_helpers():
+    print("""
+static jboolean UnboxBoolean(JNIEnv *env, jobject boxedBoolean)
+{
+    // Get the class of Boolean
+    jclass booleanClass = (*env)->GetObjectClass(env, boxedBoolean);
+
+    // Get the method ID for booleanValue() method
+    jmethodID booleanValueMethodID = (*env)->GetMethodID(env, booleanClass, "booleanValue", "()Z");
+
+    // Call the booleanValue() method to get the boolean value
+    return (*env)->CallBooleanMethod(env, boxedBoolean, booleanValueMethodID);
+}
+
+static jint UnboxInteger(JNIEnv *env, jobject boxedInteger)
+{
+    // Get the class of Integer
+    jclass integerClass = (*env)->GetObjectClass(env, boxedInteger);
+
+    // Get the method ID for intValue() method
+    jmethodID intValueMethodID = (*env)->GetMethodID(env, integerClass, "intValue", "()I");
+
+    // Call the intValue() method to get the int value
+    return (*env)->CallIntMethod(env, boxedInteger, intValueMethodID);
+}
+
+static jlong UnboxLong(JNIEnv *env, jobject boxedLong)
+{
+    // Get the class of Long
+    jclass longClass = (*env)->GetObjectClass(env, boxedLong);
+
+    // Get the method ID for longValue() method
+    jmethodID longValueMethodID = (*env)->GetMethodID(env, longClass, "longValue", "()J");
+
+    // Call the longValue() method to get the long value
+    return (*env)->CallLongMethod(env, boxedLong, longValueMethodID);
+}
+
+static jdouble UnboxDouble(JNIEnv *env, jobject boxedDouble)
+{
+    // Get the class of Double
+    jclass doubleClass = (*env)->GetObjectClass(env, boxedDouble);
+
+    // Get the method ID for doubleValue() method
+    jmethodID doubleValueMethodID = (*env)->GetMethodID(env, doubleClass, "doubleValue", "()D");
+
+    // Call the doubleValue() method to get the double value
+    return (*env)->CallDoubleMethod(env, boxedDouble, doubleValueMethodID);
+}
+    """)
+
+
 def emit_proc_c_jni(proc):
     p_name = proc["name"]
     args = proc["args"]
@@ -259,6 +311,100 @@ def emit_proc_c_jni(proc):
     if usesDatabase:
         print("  cql_code rc = SQLITE_OK;")
 
+    if projection:
+        print(f"  {p_name}_result_set_ref _result_set_ = NULL;")
+
+    # now it's time to make the call
+    preamble = ""
+    cleanup = ""
+    call = "  "
+
+    if usesDatabase:
+        call += "rc = "
+
+    call += p_name
+    if projection:
+        call += "_fetch_results"
+
+    call += "("
+
+    needsComma = False
+
+    if usesDatabase:
+        call += "(sqlite3*)__db"
+        needsComma = True
+
+    if projection:
+        if needsComma:
+            call += ", "
+        call += "&_result_set_"
+        needsComma = True
+
+    for arg in args:
+        if needsComma:
+            call += ","
+
+        needsComma = True
+        a_name = arg["name"]
+        isNotNull = arg["isNotNull"]
+        a_type = arg["type"]
+        isRef = is_ref_type[a_type]
+
+        binding = arg["binding"] if "binding" in arg else "in"
+        call += f"/* {binding} */"
+
+        if binding == "inout":
+            call += "&"
+
+        if binding == "out":
+            # this arg was not mentioned in the list, it is only part of the result
+            c_type = c_notnull_types[
+                a_type] if isNotNull else c_nullable_types[a_type]
+            preamble += f"{c_type} out_{a_name};\n"
+            call += f"&out_{a_name}"
+        elif isNotNull and not isRef:
+            call += a_name
+        elif a_type == "text":
+            preamble += f"const char *cString_{a_name} = (*env)->GetStringUTFChars(env, {a_name}, NULL);\n"
+            preamble += f"cql_string_ref str_ref_{a_name} = cql_string_ref_new(cString_{a_name});\n"
+            preamble += f"(*env)->ReleaseStringUTFChars(env, {a_name}, cString_{a_name});\n"
+            cleanup += f"cql_string_release(str_ref_{a_name});\n"
+            call += f"str_ref_{a_name}"
+        elif a_type == "blob":
+            preamble += f"jbyte *bytes_{a_name} = (*env)->GetByteArrayElements(env, {a_name}, NULL);"
+            preamble += f"jsize len_{a_name} = (*env)->GetByteArrayLength(env, {a_name}, NULL);"
+            preamble += f"cql_blob_ref blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
+            preamble += f"(*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name});\n"
+            cleanup += f"cql_blob_release(blob_ref{a_name});\n"
+            call += f"blob_ref_{a_name}"
+        elif a_type == "bool":
+            preamble += f"  cql_nullable_bool n_{a_name};\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxBool(env, {a_name}));\n"
+            call += f"n_{a_name}"
+        elif a_type == "integer":
+            preamble += f"  cql_nullable_int32 n_{a_name};\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxInteger(env, {a_name}));\n"
+            call += f"n_{a_name}"
+        elif a_type == "long":
+            preamble += f"  cql_nullable_int64 n_{a_name};\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxLong(env, {a_name}));\n"
+            call += f"n_{a_name}"
+        elif a_type == "real":
+            preamble += f"  cql_nullable_double n_{a_name};\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxDouble(env, {a_name}));\n"
+            call += f"n_{a_name}"
+        else:
+            call += f" /* unsupported arg type {a_type} isnotnull:{isNotNull} */"
+
+    call += ");"
+
+    if preamble != "":
+        print(preamble)
+    print(call)
+    print("  // out bindings not supported yet")
+    if cleanup != "":
+        print(cleanup)
+
     if field_count:
         print("  cql_result_set_ref result_set = NULL;")
         print(
@@ -267,6 +413,12 @@ def emit_proc_c_jni(proc):
 
         if usesDatabase:
             print("  row->__rc = rc;")
+
+        if projection:
+            print(
+                "  // let the row take over the reference, we don't release it"
+            )
+            print("  row->__result = (cql_result_set_ref)_result_set_;")
 
         print("")
         print("  cql_fetch_info info = {")
@@ -283,6 +435,7 @@ def emit_proc_c_jni(proc):
 
         print("  cql_one_row_result(&info, (char *)row, 1, &result_set);")
         print("  return (jlong)result_set;")
+
     print("}")
 
 
@@ -546,12 +699,12 @@ def main():
         cql_header = cmd_args["cql_header"]
 
         if cmd_args["emit_c"]:
-            print("// work in progress")
             print("")
             print("#include \"cqlrt.h\"")
             print(f"#include \"{jni_header}\"")
             print(f"#include \"{cql_header}\"")
             print("")
+            emit_c_helpers()
             emit_procs(data)
         else:
 

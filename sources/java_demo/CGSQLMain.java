@@ -17,7 +17,7 @@ public class CGSQLMain {
     // get result set handle
     long db = CQLDb.get();
 
-    // make the sample result set --> this can be moved into the JNI helper but it isn't yet
+    // get call result code and rowset
     var results = sample.SampleJNI.JavaDemo(db);
 
     System.out.println("Result code is: " +  results.get_result_code());
@@ -54,6 +54,8 @@ public class CGSQLMain {
          )
      );
 
+      // this could be done automatically in the helper, it just isn't yet
+      // var child = data.get_my_child_result(i) should do the job
       var child = new SampleJNI.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.getCount(); j++) {
         System.out.println(

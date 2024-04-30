@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import com.acme.cgsql.CQLResultSet;
 import com.acme.cgsql.CQLDb;
 import java.nio.charset.StandardCharsets;
 import sample.*;
@@ -19,11 +18,11 @@ public class CGSQLMain {
     long db = CQLDb.get();
 
     // make the sample result set --> this can be moved into the JNI helper but it isn't yet
-    SampleJNI.JavaDemoResults results = SampleJNI.JavaDemo(db);
+    var results = sample.SampleJNI.JavaDemo(db);
 
-    System.out.println("Result code is:" +  results.get_result_code());
+    System.out.println("Result code is: " +  results.get_result_code());
 
-    SampleJNI.JavaDemoViewModel data = results.get_result_set();
+    var data = results.get_result_set();
 
     // use the results
     dumpResults(data);
@@ -55,7 +54,7 @@ public class CGSQLMain {
          )
      );
 
-      SampleJNI.ChildViewModel child = new SampleJNI.ChildViewModel(data.get_my_child_result(i));
+      var child = new SampleJNI.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.getCount(); j++) {
         System.out.println(
             String.format("--> Child Row %d: x:%d y:%s", j, child.get_x(j), child.get_y(j)));

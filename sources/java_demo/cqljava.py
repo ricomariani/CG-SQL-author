@@ -468,6 +468,7 @@ def emit_projection(p_name, projection, attributes):
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
         isNotNull = p["isNotNull"]
+        hasOutResult = "hasOutResult" in p and p["hasOutResult"]
 
         vaulted_columns = attributes.get("cql:vault_sensitive", None)
         vault_all = vaulted_columns == 1
@@ -496,14 +497,15 @@ def emit_projection(p_name, projection, attributes):
                 type = "Encoded" + type
                 getter = "Encoded" + getter
 
-        print(f"    public {type} get_{c_name}(int row)", end="")
-        print(" {")
-        print(f"      return mResultSet.get{nullable}{getter}(row, {col});")
+        row_arg = "" if hasOutResult else "int row"
+        row_formal = "0" if hasOutResult else "row"
+
+        print(f"    public {type} get_{c_name}({row_arg}) {{")
+        print(f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});")
         print("    }\n")
 
         if isEncoded:
-            print(f"    public boolean get_{c_name}_IsEncoded()", end="")
-            print(" {")
+            print(f"    public boolean get_{c_name}_IsEncoded() {{")
             print(f"      return mResultSet.getIsEncoded({col});")
             print("    }\n")
 
@@ -520,8 +522,7 @@ def emit_proc_return_type(proc):
     projection = "projection" in proc
 
     print(f"  static public final class {p_name}Results extends CQLViewModel {{")
-    print(f"    public {p_name}Results(CQLResultSet resultSet)", end="")
-    print("    {")
+    print(f"    public {p_name}Results(CQLResultSet resultSet) {{")
     print(f"       super(resultSet);")
     print("    }\n")
 
@@ -548,8 +549,7 @@ def emit_proc_return_type(proc):
             if getter == "ChildResultSet":
                 type = "CQLResultSet"
 
-            print(f"    public {type} get_{c_name}()", end="")
-            print(" {")
+            print(f"    public {type} get_{c_name}() {{")
             print(f"      return mResultSet.get{nullable}{getter}(0, {col});")
             print("    }\n")
 
@@ -631,9 +631,7 @@ def emit_proc_java_jni(proc):
         print(f"     return new {p_name}Results(new CQLResultSet({p_name}JNI({param_names})));")
         print("  }\n")
 
-    print(f"  public static native {return_type} {p_name}{suffix}(", end="")
-    print(params, end="")
-    print(");\n")
+    print(f"  public static native {return_type} {p_name}{suffix}({params});\n")
 
 
 # Here we emit all the information for the procedures that are known
@@ -754,9 +752,7 @@ def main():
             print(f"public class {class_name}")
             print("{")
             print("  static {")
-            print("    System.loadLibrary(\"", end="")
-            print(class_name, end="")
-            print("\");")
+            print(f"    System.loadLibrary(\"{class_name}\");")
             print("  }")
             print("")
 

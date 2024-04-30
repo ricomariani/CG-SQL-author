@@ -293,9 +293,10 @@ def emit_proc_c_jni(proc):
     # if usesDatabase is missing it's a query type and they all use the db
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
+    suffix = "" if field_count == 0 else "JNI"
 
     print(f"JNIEXPORT {return_type} JNICALL Java_", end="")
-    print(f"{package_name}_{class_name}_{p_name}(")
+    print(f"{package_name}_{class_name}_{p_name}{suffix}(")
     print("  JNIEnv *env,")
     print("  jclass thiz", end="")
 
@@ -589,9 +590,11 @@ def emit_proc_java_jni(proc):
 
     commaNeeded = False
     params = ""
+    param_names = ""
 
     if usesDatabase:
         params += "long __db"
+        param_names += "__db"
         commaNeeded = True
 
     outArgs = False
@@ -606,17 +609,29 @@ def emit_proc_java_jni(proc):
 
             if commaNeeded:
                 params += ", "
+                param_names += ", "
 
             params += f"{type} {a_name}"
+            param_names += a_name
             commaNeeded = True
 
         if binding == "inout" or binding == "out":
             outArgs = True
 
+    needs_result = usesDatabase or outArgs or projection
 
-    return_type = "long" if usesDatabase or outArgs or projection else "void"
     print(f"  // procedure entry point {p_name}")
-    print(f"  public static native {return_type} {p_name}(", end="")
+    suffix = ""
+    return_type = "void"
+
+    if needs_result:
+        suffix = "JNI"
+        return_type = "long"
+        print(f"  public static {p_name}Results {p_name}({params}) {{")
+        print(f"     return new {p_name}Results(new CQLResultSet({p_name}JNI({param_names})));")
+        print("  }\n")
+
+    print(f"  public static native {return_type} {p_name}{suffix}(", end="")
     print(params, end="")
     print(");\n")
 

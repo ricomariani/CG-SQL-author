@@ -25,8 +25,7 @@ public class CGSQLMain {
     int rc = results.get_result_code();
     System.out.println("Result code is:" +  rc);
 
-    // get_result_set should return the JavaDemoViewModel but it doesn't yet
-    SampleJNI.JavaDemoViewModel data = new SampleJNI.JavaDemoViewModel(results.get_result_set());
+    SampleJNI.JavaDemoViewModel data = results.get_result_set();
 
     // use the results
     dumpResults(data);

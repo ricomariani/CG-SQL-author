@@ -323,6 +323,12 @@ def emit_proc_c_jni(proc):
     if projection:
         print(f"  {p_name}_result_set_ref _result_set_ = NULL;")
 
+    if field_count:
+        print("  cql_result_set_ref result_set = NULL;")
+        print(
+            f"  {proc_row_type} *row = ({proc_row_type} *)calloc(1, sizeof({proc_row_type}));"
+        )
+
     # now it's time to make the call
     preamble = ""
     cleanup = ""
@@ -349,6 +355,8 @@ def emit_proc_c_jni(proc):
         call += "&_result_set_"
         needsComma = True
 
+    print("  // inout bindings not supported yet")
+
     for arg in args:
         if needsComma:
             call += ","
@@ -369,8 +377,7 @@ def emit_proc_c_jni(proc):
             # this arg was not mentioned in the list, it is only part of the result
             c_type = c_notnull_types[
                 a_type] if isNotNull else c_nullable_types[a_type]
-            preamble += f"{c_type} out_{a_name};\n"
-            call += f"&out_{a_name}"
+            call += f"&row->{a_name}"
         elif isNotNull and not isRef:
             call += a_name
         elif a_type == "text":
@@ -410,16 +417,10 @@ def emit_proc_c_jni(proc):
     if preamble != "":
         print(preamble)
     print(call)
-    print("  // out bindings not supported yet")
     if cleanup != "":
         print(cleanup)
 
     if field_count:
-        print("  cql_result_set_ref result_set = NULL;")
-        print(
-            f"  {proc_row_type} *row = ({proc_row_type} *)calloc(1, sizeof({proc_row_type}));"
-        )
-
         if usesDatabase:
             print("  row->__rc = rc;")
 
@@ -560,8 +561,8 @@ def emit_proc_return_type(proc):
         col += 1
 
     if projection:
-        print(f"    public CQLResultSet get_result_set() {{")
-        print(f"      return new CQLResultSet(mResultSet.getLong(0, {col}));")
+        print(f"    public {p_name}ViewModel get_result_set() {{")
+        print(f"      return new {p_name}ViewModel(new CQLResultSet(mResultSet.getLong(0, {col})));")
         print("    }\n")
         col += 1
 

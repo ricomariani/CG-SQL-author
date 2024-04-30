@@ -460,7 +460,9 @@ def emit_proc_c_jni(proc):
 #  kind : STRING [optional]
 #  isSensitive : BOOL [optional]
 #  isNotNull" : BOOL
-def emit_projection(p_name, projection, attributes):
+def emit_projection(proc, attributes):
+    p_name = proc["name"]
+    projection = proc["projection"]
     col = 0
     for p in projection:
         c_name = p["name"]
@@ -468,7 +470,7 @@ def emit_projection(p_name, projection, attributes):
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
         isNotNull = p["isNotNull"]
-        hasOutResult = "hasOutResult" in p and p["hasOutResult"]
+        hasOutResult = "hasOutResult" in proc and proc["hasOutResult"]
 
         vaulted_columns = attributes.get("cql:vault_sensitive", None)
         vault_all = vaulted_columns == 1
@@ -642,26 +644,26 @@ def emit_proc_java_jni(proc):
 # this entry is not optional!
 def emit_procinfo(section, s_name):
     emit_c = cmd_args["emit_c"]
-    for src in section:
-        p_name = src["name"]
+    for proc in section:
+        p_name = proc["name"]
 
         # for now only procs with a result type, like before
         # we'd like to emit JNI helpers for other procs too, but not now
 
-        if "projection" in src and not emit_c:
+        if "projection" in proc and not emit_c:
             print(f"  static public final class {p_name}ViewModel extends CQLViewModel {{")
             print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
             print(f"       super(resultSet);")
             print("    }\n")
 
-            alist = src.get("attributes", [])
+            alist = proc.get("attributes", [])
             attributes = {}
             for attr in alist:
                 k = attr["name"]
                 v = attr["value"]
                 attributes[k] = v
 
-            emit_projection(p_name, src["projection"], attributes)
+            emit_projection(proc, attributes)
 
             identityResult = "true" if "cql:identity" in attributes else "false"
 
@@ -676,9 +678,9 @@ def emit_procinfo(section, s_name):
             print("  }\n")
 
         if emit_c:
-            emit_proc_c_jni(src)
+            emit_proc_c_jni(proc)
         else:
-            emit_proc_java_jni(src)
+            emit_proc_java_jni(proc)
 
 
 # This walks the various JSON chunks and emits them into the equivalent table:

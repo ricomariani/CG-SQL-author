@@ -34,13 +34,19 @@ import sys
 
 
 def usage():
-    print(("Usage: input.json [options] >result.java\n"
-           "\n"
-           "--package package_name\n"
-           "   specifies the output package name for the java\n"
-           "--class outer_class_name\n"
-           "   specifies the output class name for the wrapping java class\n"))
-
+    print("Usage: input.json [options] >result.java or >result.c\n"
+          "\n"
+          "--emit_c\n"
+          "    activates the  C code pass, run the tool once with this flag once without\n"
+          "--package package_name\n"
+          "   specifies the output package name for the java\n"
+          "--class outer_class_name\n"
+          "   specifies the output class name for the wrapping java class\n"
+          "--jni_header header_file\n"
+          "    specifies the java generated JNI header file to include in the generated C code\n"
+          "--cql_header header_file\n"
+          "    specifies the CQL generated header file to include in the generated C code\n")
+    sys.exit(0)
 
 # Reference type check
 is_ref_type = {}

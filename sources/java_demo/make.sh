@@ -100,8 +100,8 @@ rm $O/__tmp1
 
 echo "compiling native code"
 pushd $O >/dev/null
-${CC} -c ../com_acme_cgsql_CQLResultSet.c
-${CC} -c ../com_acme_cgsql_CQLDb.c
+${CC} -c ../std_jni/com_acme_cgsql_CQLResultSet.c
+${CC} -c ../std_jni/com_acme_cgsql_CQLDb.c
 ${CC} -c sample_SampleJNI.c
 ${CC} -c Sample.c
 

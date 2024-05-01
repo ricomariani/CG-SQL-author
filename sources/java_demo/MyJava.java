@@ -9,7 +9,7 @@ import com.acme.cgsql.CQLDb;
 import java.nio.charset.StandardCharsets;
 import sample.*;
 
-public class CGSQLMain {
+public class MyJava {
   public static void main(String[] args) throws Exception {
     // make an empty database (this can be replaced)
     CQLDb.open();

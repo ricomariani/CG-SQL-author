@@ -113,7 +113,7 @@ popd >/dev/null
 
 echo making .class files
 javac -d $O \
-  CGSQLMain.java \
+  MyJava.java \
   com/acme/cgsql/CQLDb.java \
   com/acme/cgsql/CQLResultSet.java \
   com/acme/cgsql/CQLViewModel.java \
@@ -124,7 +124,7 @@ echo "executing"
 (
   cd $O 
   java -Djava.library.path=. \
-    CGSQLMain \
+    MyJava \
     sample/SampleJNI \
     CQLViewModel \
     com/acme/cgsql/CQLResultSet \

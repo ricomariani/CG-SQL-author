@@ -356,8 +356,6 @@ def emit_proc_c_jni(proc):
         call += "&_result_set_"
         needsComma = True
 
-    print("  // inout bindings not supported yet")
-
     for arg in args:
         if needsComma:
             call += ","
@@ -367,24 +365,26 @@ def emit_proc_c_jni(proc):
         isNotNull = arg["isNotNull"]
         a_type = arg["type"]
         isRef = is_ref_type[a_type]
-
         binding = arg["binding"] if "binding" in arg else "in"
-        call += f"/* {binding} */"
+        inout = (binding == "inout")
+        kind = arg["kind"] if "kind" in arg else ""
+        call += f" /*{binding}*/ "
 
-        if binding == "inout":
+        if inout:
             call += "&"
 
         if binding == "out":
             # this arg was not mentioned in the list, it is only part of the result
-            c_type = c_notnull_types[
-                a_type] if isNotNull else c_nullable_types[a_type]
+            c_type = c_notnull_types[a_type] if isNotNull else c_nullable_types[a_type]
             call += f"&row->{a_name}"
         elif isNotNull and not isRef:
             call += a_name
+            cleanup += f"  row->{a_name} = {a_name};\n" if inout else ""
         elif a_type == "text":
             preamble += f"const char *cString_{a_name} = (*env)->GetStringUTFChars(env, {a_name}, NULL);\n"
             preamble += f"cql_string_ref str_ref_{a_name} = cql_string_ref_new(cString_{a_name});\n"
             preamble += f"(*env)->ReleaseStringUTFChars(env, {a_name}, cString_{a_name});\n"
+            cleanup += f"  cql_set_string_ref(&row->{a_name}, str_ref_{a_name};\n" if inout else ""
             cleanup += f"cql_string_release(str_ref_{a_name});\n"
             call += f"str_ref_{a_name}"
         elif a_type == "blob":
@@ -392,26 +392,31 @@ def emit_proc_c_jni(proc):
             preamble += f"jsize len_{a_name} = (*env)->GetByteArrayLength(env, {a_name}, NULL);"
             preamble += f"cql_blob_ref blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
             preamble += f"(*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name});\n"
+            cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name};\n" if inout else ""
             cleanup += f"cql_blob_release(blob_ref{a_name});\n"
             call += f"blob_ref_{a_name}"
         elif a_type == "bool":
             preamble += f"  cql_nullable_bool n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxBool(env, {a_name}));\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxBool(env, {a_name}));\n"
+            cleanup += f"  row->{a_name} = n_{a_name}" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "integer":
             preamble += f"  cql_nullable_int32 n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxInteger(env, {a_name}));\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxInteger(env, {a_name}));\n"
+            cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "long":
             preamble += f"  cql_nullable_int64 n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxLong(env, {a_name}));\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxLong(env, {a_name}));\n"
+            cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "real":
             preamble += f"  cql_nullable_double n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !!{a_name}, UnboxDouble(env, {a_name}));\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxDouble(env, {a_name}));\n"
+            cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         else:
-            call += f" /* unsupported arg type {a_type} isnotnull:{isNotNull} */"
+            call += f" /* unsupported arg type:'{a_type}' isNotNull:{isNotNull} kind:'{kind}' */"
 
     call += ");"
 

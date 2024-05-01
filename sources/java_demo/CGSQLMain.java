@@ -10,17 +10,23 @@ import java.nio.charset.StandardCharsets;
 import sample.*;
 
 public class CGSQLMain {
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     // make an empty database (this can be replaced)
     CQLDb.open();
 
     // get result set handle
     long db = CQLDb.get();
 
+    var outargs = sample.SampleJNI.OutArgThing(5, 2);
+    Expect(outargs.get_y() == 3, "in out argument not incremented");
+    Expect(outargs.get_z() == 7, "sum not computed");
+    Expect(outargs.get_t().equals("xxx"), "string not assigned");
+
     // get call result code and rowset
     var results = sample.SampleJNI.JavaDemo(db);
 
     System.out.println("Result code is: " +  results.get_result_code());
+    Expect(results.get_result_code() == 0, "rc == SQLITE_OK");
 
     var data = results.get_result_set();
 
@@ -31,10 +37,12 @@ public class CGSQLMain {
     CQLDb.close();
   }
 
-  public static void dumpResults(SampleJNI.JavaDemoViewModel data) {
+  public static void dumpResults(SampleJNI.JavaDemoViewModel data) throws Exception {
     System.out.println("Dumping Results");
     int count = data.getCount();
     System.out.println(String.format("count = %d", count));
+
+    Expect(count == 5, "count == 5");
 
     for (int i = 0; i < count; i++) {
       byte[] bytes = data.get_bytes(i);
@@ -62,5 +70,9 @@ public class CGSQLMain {
             String.format("--> Child Row %d: x:%d y:%s", j, child.get_x(j), child.get_y(j)));
       }
     }
+  }
+
+  public static void Expect(boolean b, String str) throws Exception {
+     if (!b) throw new Exception(str);
   }
 }

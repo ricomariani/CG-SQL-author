@@ -85,7 +85,6 @@ build artifacts afterwards.
 
 Build notes:
 
-* set `CGSQL_GCC=1` if you're using GCC rather than clang
 * set `JAVA_HOME` to the location of your JDK, for `jni.h` and friends.
 * set `SQLITE_PATH` to the location of your SQLite installation if you want to
   use an amalgam build of SQLITE rather than just use `-lsqlite3`

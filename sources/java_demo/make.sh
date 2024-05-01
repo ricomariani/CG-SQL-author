@@ -26,12 +26,6 @@ echo "java located at: ${JAVA_HOME}"
 
 CC="cc -g"
 
-if [ "${CGSQL_GCC}" != "" ] ;
-then
-  # gcc flags removing clang extensions
-  CC="${CC} -std=c99 -D_Nullable= -D_Nonnull="
-fi
-
 if [ "$(uname)" == "Linux" ];
 then
   # linux path variation and -fPIC for .so output

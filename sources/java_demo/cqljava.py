@@ -34,19 +34,22 @@ import sys
 
 
 def usage():
-    print("Usage: input.json [options] >result.java or >result.c\n"
-          "\n"
-          "--emit_c\n"
-          "    activates the  C code pass, run the tool once with this flag once without\n"
-          "--package package_name\n"
-          "   specifies the output package name for the java\n"
-          "--class outer_class_name\n"
-          "   specifies the output class name for the wrapping java class\n"
-          "--jni_header header_file\n"
-          "    specifies the java generated JNI header file to include in the generated C code\n"
-          "--cql_header header_file\n"
-          "    specifies the CQL generated header file to include in the generated C code\n")
+    print(
+        "Usage: input.json [options] >result.java or >result.c\n"
+        "\n"
+        "--emit_c\n"
+        "    activates the  C code pass, run the tool once with this flag once without\n"
+        "--package package_name\n"
+        "   specifies the output package name for the java\n"
+        "--class outer_class_name\n"
+        "   specifies the output class name for the wrapping java class\n"
+        "--jni_header header_file\n"
+        "    specifies the java generated JNI header file to include in the generated C code\n"
+        "--cql_header header_file\n"
+        "    specifies the CQL generated header file to include in the generated C code\n"
+    )
     sys.exit(0)
+
 
 # Reference type check
 is_ref_type = {}
@@ -381,7 +384,8 @@ def emit_proc_c_jni(proc):
 
         if binding == "out":
             # this arg was not mentioned in the list, it is only part of the result
-            c_type = c_notnull_types[a_type] if isNotNull else c_nullable_types[a_type]
+            c_type = c_notnull_types[
+                a_type] if isNotNull else c_nullable_types[a_type]
             call += f"&row->{a_name}"
         elif isNotNull and not isRef:
             call += a_name
@@ -514,7 +518,9 @@ def emit_projection(proc, attributes):
         row_formal = "0" if hasOutResult else "row"
 
         print(f"    public {type} get_{c_name}({row_arg}) {{")
-        print(f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});")
+        print(
+            f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});"
+        )
         print("    }\n")
 
         if isEncoded:
@@ -534,7 +540,8 @@ def emit_proc_return_type(proc):
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
-    print(f"  static public final class {p_name}Results extends CQLViewModel {{")
+    print(
+        f"  static public final class {p_name}Results extends CQLViewModel {{")
     print(f"    public {p_name}Results(CQLResultSet resultSet) {{")
     print(f"       super(resultSet);")
     print("    }\n")
@@ -576,7 +583,9 @@ def emit_proc_return_type(proc):
 
     if projection:
         print(f"    public {p_name}ViewModel get_result_set() {{")
-        print(f"      return new {p_name}ViewModel(new CQLResultSet(mResultSet.getLong(0, {col})));")
+        print(
+            f"      return new {p_name}ViewModel(new CQLResultSet(mResultSet.getLong(0, {col})));"
+        )
         print("    }\n")
         col += 1
 
@@ -663,13 +672,16 @@ def emit_proc_java_jni(proc):
         suffix = "JNI"
         return_type = "long"
         print(f"  public static {p_name}Results {p_name}({params}) {{")
-        print(f"     return new {p_name}Results(new CQLResultSet({p_name}JNI({param_names})));")
+        print(
+            f"     return new {p_name}Results(new CQLResultSet({p_name}JNI({param_names})));"
+        )
         print("  }\n")
 
     # Now we emit the declaration for JNI entry point itself.  This is a simple wrapper
     # to the C code that does the actual work.  If we emitted a result set
     # helper with the "good" name, then this helper gets a JNI suffix.
-    print(f"  public static native {return_type} {p_name}{suffix}({params});\n")
+    print(
+        f"  public static native {return_type} {p_name}{suffix}({params});\n")
 
 
 # Here we emit all the information for the procedures that are known
@@ -681,6 +693,42 @@ def emit_proc_java_jni(proc):
 def emit_procinfo(section, s_name):
     emit_c = cmd_args["emit_c"]
     for proc in section:
+<<<<<<< HEAD
+=======
+        p_name = proc["name"]
+
+        # for now only procs with a result type, like before
+        # we'd like to emit JNI helpers for other procs too, but not now
+
+        if "projection" in proc and not emit_c:
+            print(
+                f"  static public final class {p_name}ViewModel extends CQLViewModel {{"
+            )
+            print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
+            print(f"       super(resultSet);")
+            print("    }\n")
+
+            alist = proc.get("attributes", [])
+            attributes = {}
+            for attr in alist:
+                k = attr["name"]
+                v = attr["value"]
+                attributes[k] = v
+
+            emit_projection(proc, attributes)
+
+            identityResult = "true" if "cql:identity" in attributes else "false"
+
+            print("    @Override")
+            print("    protected boolean hasIdentityColumns() {")
+            print(f"      return {identityResult};")
+            print("    }\n")
+
+            print("    public int getCount() {")
+            print(f"      return mResultSet.getCount();")
+            print("    }")
+            print("  }\n")
+
         if emit_c:
             # emit the C code for the JNI entry points and the supporting metadata
             emit_proc_c_jni(proc)

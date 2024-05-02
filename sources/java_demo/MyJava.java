@@ -22,6 +22,26 @@ public class MyJava {
     Expect(outargs.get_z() == 7, "sum not computed");
     Expect(outargs.get_t().equals("xxx"), "string not assigned");
 
+    // try a no-result procedure
+    sample.SampleJNI.NoResult(1234);
+
+    // try a recursive procedure
+    var fib = sample.SampleJNI.Fib(10);
+    System.out.println("Fibonacci Result is: " + fib.get_result());
+    Expect(55 == fib.get_result(), "Fibnacci value did not compute correctly");
+
+
+    var outS = sample.SampleJNI.OutStatement(314);
+    var outSResult = outS.get_result_set();
+    Expect(1 == outSResult.getCount(), "expected row count is 1");
+    Expect(314 == outSResult.get_x(), "value not echoed with OutStatement");
+
+    var outU = sample.SampleJNI.OutUnionStatement(300);
+    var outUResult = outU.get_result_set();
+    Expect(2 == outUResult.getCount(), "expected row count is 2");
+    Expect(301 == outUResult.get_x(0), "value+1 not echoed with OutUnionStatement");
+    Expect(302 == outUResult.get_x(1), "value+2 not echoed with OutUnionStatement");
+
     // get call result code and rowset
     var results = sample.SampleJNI.JavaDemo(db);
 

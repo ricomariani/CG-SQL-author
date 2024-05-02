@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+declare proc printf no check;
+
 -- Any kind of child result set will do the job for this test
 -- note that with the json based code generation you can have
 -- as many procs per file as you like.
@@ -29,24 +31,33 @@ begin
    t := "xxx";
 end;
 
-proc NoResult(x integer)
+proc Fib(n int!, out result int!)
 begin
-  printf("%d\n", x);
+   if n <= 2 then
+     result := 1;
+   else
+     result := Fib(n-1) + Fib(n-2);
+   end;
 end;
 
-proc OutStatement(x integer not null)
+proc NoResult(x integer)
+begin
+  printf("1234 = %d\n", ifnull(x, -1));
+end;
+
+proc OutStatement(x int!)
 begin
   declare C cursor like select x;
-  fetch C using 1 x;
+  fetch C using x x;
   out C;
 end;
 
-proc OutUnionStatement(x integer not null)
+proc OutUnionStatement(x int!)
 begin
   declare C cursor like select x;
-  fetch C using 1 x;
+  fetch C using x+1 x;
   out union C;
-  fetch C using 2 x;
+  fetch C using x+2 x;
   out union C;
 end;
 

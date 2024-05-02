@@ -507,7 +507,7 @@ def emit_projection(proc, attributes):
             isEncoded = True
             # use custom encoded string type for encoded strings
             if type == "String":
-                type = "Encoded" + type
+                type = "CQLEncodedString"
                 getter = "Encoded" + getter
 
         row_arg = "" if hasOutResult else "int row"
@@ -656,41 +656,43 @@ def emit_proc_java_jni(proc):
 def emit_procinfo(section, s_name):
     emit_c = cmd_args["emit_c"]
     for proc in section:
-        p_name = proc["name"]
-
-        # for now only procs with a result type, like before
-        # we'd like to emit JNI helpers for other procs too, but not now
-
-        if "projection" in proc and not emit_c:
-            print(f"  static public final class {p_name}ViewModel extends CQLViewModel {{")
-            print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
-            print(f"       super(resultSet);")
-            print("    }\n")
-
-            alist = proc.get("attributes", [])
-            attributes = {}
-            for attr in alist:
-                k = attr["name"]
-                v = attr["value"]
-                attributes[k] = v
-
-            emit_projection(proc, attributes)
-
-            identityResult = "true" if "cql:identity" in attributes else "false"
-
-            print("    @Override")
-            print("    protected boolean hasIdentityColumns() {")
-            print(f"      return {identityResult};")
-            print("    }\n")
-
-            print("    public int getCount() {")
-            print(f"      return mResultSet.getCount();")
-            print("    }")
-            print("  }\n")
-
         if emit_c:
+            # emit the C code for the JNI entry points and the supporting metadata
             emit_proc_c_jni(proc)
         else:
+            p_name = proc["name"]
+
+            # for now only procs with a result type, like before
+            # we'd like to emit JNI helpers for other procs too, but not now
+
+            if "projection" in proc:
+                # we unwrap the attributes array into a map for easy access
+                alist = proc.get("attributes", [])
+                attributes = {}
+                for attr in alist:
+                    k = attr["name"]
+                    v = attr["value"]
+                    attributes[k] = v
+
+                print(f"  static public final class {p_name}ViewModel extends CQLViewModel {{")
+                print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
+                print(f"       super(resultSet);")
+                print("    }\n")
+
+                emit_projection(proc, attributes)
+
+                identityResult = "true" if "cql:identity" in attributes else "false"
+
+                print("    @Override")
+                print("    protected boolean hasIdentityColumns() {")
+                print(f"      return {identityResult};")
+                print("    }\n")
+
+                print("    public int getCount() {")
+                print(f"      return mResultSet.getCount();")
+                print("    }")
+                print("  }\n")
+
             emit_proc_java_jni(proc)
 
 
@@ -714,11 +716,15 @@ def main():
     with open(jfile) as json_file:
         data = json.load(json_file)
 
+        # pull the flags, starting with whether we will be emitting C or java
         i = 2
         if sys.argv[i] == "--emit_c":
             cmd_args["emit_c"] = True
             i += 1
 
+        # these are the various fragments we might need, we need all the parts
+        # to generate the C.  The first two are enough for the java, there are
+        # defaults but they are kind of useless.
         while i + 2 <= len(sys.argv):
             if sys.argv[i] == "--class":
                 cmd_args["class_name"] = sys.argv[i + 1]
@@ -732,6 +738,10 @@ def main():
                 usage()
             i += 2
 
+        # Each generated file gets the standard header.
+        # It still uses the Meta header because that was required
+        # by the original license even though none of this is actually
+        # written by Meta at this point.
         print("/*")
         print("* Copyright (c) Meta Platforms, Inc. and affiliates.")
         print("*")
@@ -747,6 +757,10 @@ def main():
         cql_header = cmd_args["cql_header"]
 
         if cmd_args["emit_c"]:
+            # The C code gen has the standard header files per the flags
+            # after which we emit the JNI helpers to unbox int, long, etc.
+            # Finally we emit the actual JNI entry points to invoke the CQL.
+            # These convert the java types to CQL types and back.
             print("")
             print("#include \"cqlrt.h\"")
             print(f"#include \"{jni_header}\"")
@@ -755,12 +769,13 @@ def main():
             emit_c_helpers()
             emit_procs(data)
         else:
-
+            # In the case of Java we emit a package
+            # The JNI needs to import the standard helper classes
             print(f"package {package_name};\n\n")
 
             print("import com.acme.cgsql.CQLResultSet;\n")
             print("import com.acme.cgsql.CQLViewModel;\n")
-            print("import com.acme.cgsql.EncodedString;\n")
+            print("import com.acme.cgsql.CQLEncodedString;\n")
 
             print(f"public class {class_name}")
             print("{")

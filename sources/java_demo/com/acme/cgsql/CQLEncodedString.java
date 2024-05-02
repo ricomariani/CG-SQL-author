@@ -8,7 +8,7 @@
 package com.acme.cgsql;
 
 /**
- * EncodedString is a simple class that encapsulates the encoded string from a ResultSet to restrict
+ * CQLEncodedString is a simple class that encapsulates the encoded string from a ResultSet to restrict
  * and control its access
  *
  * <p>It has no getter so it hides the encoded string.
@@ -17,10 +17,10 @@ package com.acme.cgsql;
  * decoded value of the encoded string directly to the TextView. Like that only the TextView get to
  * have the decode value of the encoded string.
  */
-public class EncodedString {
+public class CQLEncodedString {
   public String mValue;
 
-  public EncodedString(String value) {
+  public CQLEncodedString(String value) {
     mValue = value;
   }
 

@@ -86,8 +86,14 @@ public class MyJava {
       // var child = data.get_my_child_result(i) should do the job
       var child = new SampleJNI.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.getCount(); j++) {
-        System.out.println(
-            String.format("--> Child Row %d: x:%d y:%s", j, child.get_x(j), child.get_y(j)));
+	var x = child.get_x(j);
+	var y = child.get_y(j);
+
+        System.out.println(String.format("--> Child Row %d: x:%d y:%s", j, x, y));
+	Expect(j + 1 == x, "index should correspond to value");
+
+	var x_formatted = String.format("<< %s >>", x);
+	Expect(x_formatted.equals(y), "invalid format transform through the CQL");
       }
     }
   }

@@ -605,11 +605,19 @@ def emit_proc_java_jni(proc):
     params = ""
     param_names = ""
 
+    # if usesDatabase then we need the db argument, in Java it goes in __db
     if usesDatabase:
         params += "long __db"
         param_names += "__db"
         commaNeeded = True
 
+    # Now we walk the arguments and emit the java types for all of the
+    # in and inout arguments.  Note that the java ABI does not use
+    # out arguments, they are returned as part procedures result.  So
+    # there are no "by ref" arguments in the java world. This is just
+    # a convention, you could do it differently if you wanted to, but
+    # this code makes that fairly simple ABI choice so that all results
+    # can use the same access patterns. Rowsets and arguments.
     outArgs = False
     for arg in args:
         a_name = arg["name"]
@@ -617,6 +625,8 @@ def emit_proc_java_jni(proc):
         type = arg["type"]
 
         binding = arg["binding"] if "binding" in arg else "in"
+
+        # Add in and inout arguments to the method signature
         if binding == "inout" or binding == "in":
             type = notnull_types[type] if isNotNull else nullable_types[type]
 
@@ -628,15 +638,27 @@ def emit_proc_java_jni(proc):
             param_names += a_name
             commaNeeded = True
 
+        # For the out args, all we need to know at this point is
+        # that there are some, we'll handle them in the return type.
         if binding == "inout" or binding == "out":
             outArgs = True
 
+    # Any of these demand a return type, the JNI entry point will return
+    # a result set thing for the return shape.  That itself might include
+    # a "normal" result set.  The return type is a nested class that
+    # has the result set and the out arguments.  This is a little bit
+    # more complex than the C version because the C version can return
+    # multiple things in the return shape.  The Java version only
+    # returns one thing, so we wrap the result set and the out arguments.
     needs_result = usesDatabase or outArgs or projection
 
     print(f"  // procedure entry point {p_name}")
     suffix = ""
     return_type = "void"
 
+    # If we need a result type, we emit the JNI entry point as a helper
+    # that maps the returned long to the result type.  This makes things
+    # as easy as possible for the caller.
     if needs_result:
         suffix = "JNI"
         return_type = "long"
@@ -644,6 +666,9 @@ def emit_proc_java_jni(proc):
         print(f"     return new {p_name}Results(new CQLResultSet({p_name}JNI({param_names})));")
         print("  }\n")
 
+    # Now we emit the declaration for JNI entry point itself.  This is a simple wrapper
+    # to the C code that does the actual work.  If we emitted a result set
+    # helper with the "good" name, then this helper gets a JNI suffix.
     print(f"  public static native {return_type} {p_name}{suffix}({params});\n")
 
 

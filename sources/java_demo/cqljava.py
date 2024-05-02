@@ -91,6 +91,7 @@ jni_notnull_types["object"] = "jobject"
 jni_notnull_types["blob"] = "jbyteArray"
 jni_notnull_types["text"] = "jstring"
 
+# JNI types for nullable cql types
 jni_nullable_types = {}
 jni_nullable_types["bool"] = "jobject"
 jni_nullable_types["integer"] = "jobject"
@@ -149,6 +150,14 @@ cmd_args["jni_header"] = "something_somethingJNI.h"
 cmd_args["cql_header"] = "something.h"
 
 
+# Emit the C helpers for unboxing the various types
+# This is a set of functions that unbox the various types
+# from their Java object form into their C form.  This is
+# necessary because the JNI interface only deals with objects
+# and we need to get the actual values out of those objects.
+# Note that in each case we have already confirmed that the object
+# is not null. If the object is of the wrong type, or the contract
+# breaks then the JNI interface will throw an exception.
 def emit_c_helpers():
     print("""
 static jboolean UnboxBoolean(JNIEnv *env, jobject boxedBoolean)
@@ -201,6 +210,15 @@ static jdouble UnboxDouble(JNIEnv *env, jobject boxedDouble)
     """)
 
 
+# Emit the C code for a single procedure
+# this includes
+# * the metadata for the return type
+# * the struct definition for the return type
+# * the JNI entry point for the procedure
+# * the call to the procedure
+# * the marshalling of the results
+# * the return of the results
+# * the cleanup of the results
 def emit_proc_c_jni(proc):
     p_name = proc["name"]
     args = proc["args"]
@@ -217,6 +235,22 @@ def emit_proc_c_jni(proc):
     first_ref = ""
     proc_row_type = f"{p_name}_return_struct"
 
+    # The first thing we do is go through the arguments and build up the
+    # metadata for the return type.  This is a list of CQL_DATA_TYPE_XXX values
+    # that describe the type of each field in the return type. We also build up
+    # the struct definition for the return type. This is a struct with one field
+    # for each argument.  The fields are named the same as the arguments and
+    # have the appropriate type. Note that in the structure the reference types
+    # must go LAST we do this so that we can easily release the references in
+    # the cleanup code.  We only need the offset to the first reference and the
+    # count. This pass is looking for anything that is going to be an out or
+    # inout parameter. Those are the ones that participate in the return type.
+    # Additionally the result type includes a field for the result code if the
+    # procedure uses the database. As well as a field for the result set if the
+    # procedure has a "projection" -- that is if it returns a result set. out
+    # arguments can themselves by complex but for now in and out "object"
+    # arguments are not supported.  The exception being the result set which is
+    # an implicit object type.
     for arg in args:
         c_name = arg["name"]
         c_type = arg["type"]
@@ -249,17 +283,22 @@ def emit_proc_c_jni(proc):
 
             row_meta += f", // {c_name}\n"
 
+    # If the procedure uses the database we need a field for the result code
+    # because it calls SQLite and we need to know if that worked.  If the
+    # return value is not SQLITE_OK then the caller needs to know the error code.
     if usesDatabase:
         row_meta += "  CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,\n"
         val_fields += "  cql_int32 __rc;\n"
         row_offsets += f"  cql_offsetof({proc_row_type}, __rc),\n"
         field_count += 1
 
+    # If the procedure has a projection then we need a field for the result set
+    # actually we have two fields.  One that holds the result set as a long and
+    # one that holds it as an object.  The long version is so that we can easily
+    # pass it back to the java world.  The object version is so that we can
+    # manage the reference count correctly.  The long version won't participate
+    # in ref counting which is fine/correct.
     if projection:
-        # the long version of the result set is so that we can have an opaque
-        # handle that we can easily fetch and get into the java world
-        # the object version is so that ref counting is done correctly
-        # the long version won't participate in ref counting which is fine/correct
         row_meta += "  CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL, // result as long\n"
         row_meta += "  CQL_DATA_TYPE_OBJECT, // result set as object\n"
         ref_fields += "  cql_int64 __result_long;\n"
@@ -271,6 +310,8 @@ def emit_proc_c_jni(proc):
         if first_ref == "":
             first_ref = "__result"
 
+    # from this point on we can use field_count to know if we have any result type at all
+    # if we have such a type then we need to emit the computed metadata and struct definition
     if field_count > 0:
         print("")
         print(f"uint8_t {p_name}_return_meta[] = {{")
@@ -284,6 +325,9 @@ def emit_proc_c_jni(proc):
         print(f"}} {p_name}_return_struct;")
         print("")
 
+        # If there are any reference fields we emit the reference count and offset
+        # recall that this suffices to free the row as all internal references are
+        # at the end of the row.
         if ref_field_count > 0:
             print(f"#define {proc_row_type}_refs_count {ref_field_count}")
             print(
@@ -291,32 +335,60 @@ def emit_proc_c_jni(proc):
             )
             print("")
 
+        # If there are any fields at all we emit the row offsets
+        # note that the field offsets are in LOGICAL order not physical order
+        # access to the fields will be by ordinal and that ordinal is the declared
+        # order not the layout order with refs last.
         print(f"static cql_uint16 {p_name}_offsets[] = {{ {field_count},")
         print(row_offsets, end="")
         print("};")
         print("")
 
+    # Grab the command line arguments the package name and class
+    # we know the return type for the JNI entry point based on fields
+    # we'll need the usesDatabase flag to know if we need to pass the db
     package_name = cmd_args["package_name"]
     class_name = cmd_args["class_name"]
     return_type = "jlong" if field_count else "void"
     # if usesDatabase is missing it's a query type and they all use the db
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
+
+    # Now thinking about the Java code we will emit.  If there are any fields we
+    # will emit a helper function that fetches the results and creates the
+    # appropriate model object automatically.  If there is no result type (a
+    # void proc) then we don't need a helper, we can call the JNI wrapper
+    # directly.  If a helper was generated then the JNI entry point
+    # gets a JNI suffix as the helper is the main entry point.  If there is no
+    # helper then the JNI entry point is the main entry point and it gets no
+    # suffix.  The suffix is used to avoid name collisions in the JNI code.
     suffix = "" if field_count == 0 else "JNI"
 
+    # Now we emit the JNI entry point for the procedure.
+    # The names are canonical based on the package and class name
+    # that defined the entry point.  We expect these arguments to
+    # have the same value when we generate the C as when we generated
+    # the Java.
     print(f"JNIEXPORT {return_type} JNICALL Java_", end="")
     print(f"{package_name}_{class_name}_{p_name}{suffix}(")
     print("  JNIEnv *env,")
     print("  jclass thiz", end="")
 
+    # if we use the database then we need the db argument, because database
     if usesDatabase:
         print(",\n  jlong __db", end="")
 
+    # now we emit the arguments for the procedure, which is all the args
+    # in the proc signature except for the out args.  The out args are
+    # only returned in the result structure.  The inout args arrive
+    # as normal in arguments and are also returned in the result structure.
+    # The Java/JNI ABI has no by-ref arguments!
     for arg in args:
         a_name = arg["name"]
         isNotNull = arg["isNotNull"]
         type = arg["type"]
 
+        # for in or inout arguments we use the nullable or not nullable type as appropriate
         binding = arg["binding"] if "binding" in arg else "in"
         if binding == "inout" or binding == "in":
             type = jni_notnull_types[
@@ -327,26 +399,46 @@ def emit_proc_c_jni(proc):
     print(")")
     print("{")
 
+    # Now we emit the standard locals if needed, one to capture the result code
+    # and another to capture the result set if there is one.  The result set
+
     if usesDatabase:
         print("  cql_code rc = SQLITE_OK;")
 
+    # if the procedure creates a result set then it is captured in "data_result_set"
+    # this is typically the result of a query or something like that
     if projection:
-        print(f"  {p_name}_result_set_ref _result_set_ = NULL;")
+        print(f"  {p_name}_result_set_ref _data_result_set_ = NULL;")
 
+    # if the procedure has outputs, like a return code or a result set, or out arguments
+    # then we need a row to capture those outputs. This row is allocated and filled
+    # like a normal result set but it represents the procedures ABI. It is a single
+    # row result set just like the result of a CQL "out" statement.  Such a row is
+    # never empty, it has at least the result code.
     if field_count:
-        print("  cql_result_set_ref result_set = NULL;")
+        # we make the output result set and the row to capture the results for it
+        print("  cql_result_set_ref outputs_result_set = NULL;")
         print(
             f"  {proc_row_type} *row = ({proc_row_type} *)calloc(1, sizeof({proc_row_type}));"
         )
 
-    # now it's time to make the call
+    # now it's time to make the call, we have variables to hold what goes before
+    # the call, the call, and what goes after the call.  Before the call go things
+    # like variable declarations and unboxing.  After the call goes assignment of
+    # inout arguments and cleanup of any resources that were allocated during the
+    # preamble.
     preamble = ""
     cleanup = ""
     call = "  "
 
+    # if we use the database we need to assign the rc variable with the result
+    # of the call
     if usesDatabase:
         call += "rc = "
 
+    # the call is the name of the procedure, it won't have the JNI suffix
+    # if it has a projection we called the "_fetch_results" version of the
+    # procedure.  This is the version that materializes and returns a result set.
     call += p_name
     if projection:
         call += "_fetch_results"
@@ -362,7 +454,7 @@ def emit_proc_c_jni(proc):
     if projection:
         if needsComma:
             call += ", "
-        call += "&_result_set_"
+        call += "&_data_result_set_"
         needsComma = True
 
     for arg in args:
@@ -444,8 +536,8 @@ def emit_proc_c_jni(proc):
             print(
                 "  // let the row take over the reference, we don't release it"
             )
-            print("  row->__result = (cql_result_set_ref)_result_set_;")
-            print("  row->__result_long = (int64_t)_result_set_;")
+            print("  row->__result = (cql_result_set_ref)_data_result_set_;")
+            print("  row->__result_long = (int64_t)_data_result_set_;")
 
         print("")
         print("  cql_fetch_info info = {")
@@ -461,8 +553,10 @@ def emit_proc_c_jni(proc):
         print(f"    .rowsize = sizeof({proc_row_type}),")
         print("  };")
 
-        print("  cql_one_row_result(&info, (char *)row, 1, &result_set);")
-        print("  return (jlong)result_set;")
+        print(
+            "  cql_one_row_result(&info, (char *)row, 1, &outputs_result_set);"
+        )
+        print("  return (jlong)outputs_result_set;")
 
     print("}")
 
@@ -693,41 +787,6 @@ def emit_proc_java_jni(proc):
 def emit_procinfo(section, s_name):
     emit_c = cmd_args["emit_c"]
     for proc in section:
-<<<<<<< HEAD
-=======
-        p_name = proc["name"]
-
-        # for now only procs with a result type, like before
-        # we'd like to emit JNI helpers for other procs too, but not now
-
-        if "projection" in proc and not emit_c:
-            print(
-                f"  static public final class {p_name}ViewModel extends CQLViewModel {{"
-            )
-            print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
-            print(f"       super(resultSet);")
-            print("    }\n")
-
-            alist = proc.get("attributes", [])
-            attributes = {}
-            for attr in alist:
-                k = attr["name"]
-                v = attr["value"]
-                attributes[k] = v
-
-            emit_projection(proc, attributes)
-
-            identityResult = "true" if "cql:identity" in attributes else "false"
-
-            print("    @Override")
-            print("    protected boolean hasIdentityColumns() {")
-            print(f"      return {identityResult};")
-            print("    }\n")
-
-            print("    public int getCount() {")
-            print(f"      return mResultSet.getCount();")
-            print("    }")
-            print("  }\n")
 
         if emit_c:
             # emit the C code for the JNI entry points and the supporting metadata

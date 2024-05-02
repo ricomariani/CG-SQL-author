@@ -447,16 +447,40 @@ def emit_proc_c_jni(proc):
 
     needsComma = False
 
+    # if we use the database we need to pass the db, this is the first argument
+    # by convention
     if usesDatabase:
         call += "(sqlite3*)__db"
         needsComma = True
 
+    # if the procedure returns a result set that will be the second argument
+    # and it is by reference.  We own this reference after the call.
     if projection:
         if needsComma:
             call += ", "
         call += "&_data_result_set_"
         needsComma = True
 
+    # Now we walk the arguments and emit the call to the procedure.  There
+    # as important things to do at this point:
+    #   * "out" arguments did not exist in the Java call, we use the storage in
+    #     the procedure result row to capture them
+    #
+    #   * "inout" arguments are passed by value in the Java world and then
+    #     returned in the procedure result row.  So we store the provided value
+    #     in a temporary and then pass that temporary by reference to the
+    #     procedure.  The procedure will fill in the value and we will copy it
+    #     back to the output row.
+    #
+    #   * "in" arguments are passed by value in the Java world and are passed by
+    #     value to the procedure.  They are not returned in the result.
+    #
+    #   * for nullable types provided arguments might be in a boxed form like
+    #     boxedBoolean, boxedInteger, boxedLong, boxedDouble.  We need to unbox
+    #     these into their native types before we can pass them to the
+    #     procedure.  Note that they might be null.  They are stored in
+    #     cql_nullable_bool, cql_nullable_int32, cql_nullable_int64,
+    #     cql_nullable_double.  So nulls are not a problem.
     for arg in args:
         if needsComma:
             call += ","
@@ -471,18 +495,34 @@ def emit_proc_c_jni(proc):
         kind = arg["kind"] if "kind" in arg else ""
         call += f" /*{binding}*/ "
 
+        # for inout we will by passing either in input argument or the
+        # converted temporary by reference.  We will also be copying the
+        # result back to the output row.  This starts the inout-ness
         if inout:
             call += "&"
 
         if binding == "out":
-            # this arg was not mentioned in the list, it is only part of the result
+            # If this is an out argument we will be passing the storage in the
+            # result row by reference.  This fully handles the out-ness. Note,
+            # out arguments are not mentioned in the list, they are only part of
+            # the result row.
             c_type = c_notnull_types[
                 a_type] if isNotNull else c_nullable_types[a_type]
             call += f"&row->{a_name}"
         elif isNotNull and not isRef:
+            # Not null and not reference type means we can pass the argument
+            # directly.  We never need to unbox it because it's passed as
+            # a native type.  We don't need to convert it because it's not
+            # a blob or string.  So just go.
             call += a_name
             cleanup += f"  row->{a_name} = {a_name};\n" if inout else ""
         elif a_type == "text":
+            # Text is a string in Java.  We need to "unbox" it into a
+            # cql_string_ref.  We need to release the string ref after the call.
+            # So we emit a temporary string ref, we initialize it from the Java
+            # string and then use it in the call.  For "inout" args, after the
+            # call copy the string reference to the output row.
+            ## bugbug --> null string isn't handled
             preamble += f"const char *cString_{a_name} = (*env)->GetStringUTFChars(env, {a_name}, NULL);\n"
             preamble += f"cql_string_ref str_ref_{a_name} = cql_string_ref_new(cString_{a_name});\n"
             preamble += f"(*env)->ReleaseStringUTFChars(env, {a_name}, cString_{a_name});\n"
@@ -490,6 +530,12 @@ def emit_proc_c_jni(proc):
             cleanup += f"cql_string_release(str_ref_{a_name});\n"
             call += f"str_ref_{a_name}"
         elif a_type == "blob":
+            # Text is a byte in Java.  We need to "unbox" it into a
+            # cql_blob_ref.  We need to release the blob ref after the call. So
+            # we emit a temporary blob ref, we initialize it from the Java blob
+            # and then use it in the call.  For "inout" args, after the call
+            # copy the blob reference to the output row.
+            ## bugbug --> null blob isn't handled
             preamble += f"jbyte *bytes_{a_name} = (*env)->GetByteArrayElements(env, {a_name}, NULL);"
             preamble += f"jsize len_{a_name} = (*env)->GetByteArrayLength(env, {a_name}, NULL);"
             preamble += f"cql_blob_ref blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
@@ -498,49 +544,74 @@ def emit_proc_c_jni(proc):
             cleanup += f"cql_blob_release(blob_ref{a_name});\n"
             call += f"blob_ref_{a_name}"
         elif a_type == "bool":
+            # The boolean type comes as a Boolean from Java which needs to be
+            # unboxed. once it's unboxed we can pass it as a cql_nullable_bool.
+            # For "inout" arguments we copy out the value from the temporary
+            # after the call into the row object.
             preamble += f"  cql_nullable_bool n_{a_name};\n"
             preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxBool(env, {a_name}));\n"
             cleanup += f"  row->{a_name} = n_{a_name}" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "integer":
+            # The integer type comes as a Integer from Java which needs to be
+            # unboxed. once it's unboxed we can pass it as a cql_nullable_int32.
+            # For "inout" arguments we copy out the value from the temporary
+            # after the call into the row object.
             preamble += f"  cql_nullable_int32 n_{a_name};\n"
             preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxInteger(env, {a_name}));\n"
             cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "long":
+            # The long type comes as a Long from Java which needs to be unboxed.
+            # once it's unboxed we can pass it as a cql_nullable_int64.  For
+            # "inout" arguments we copy out the value from the temporary after
+            # the call into the row object.
             preamble += f"  cql_nullable_int64 n_{a_name};\n"
             preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxLong(env, {a_name}));\n"
             cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "real":
+            # The real type comes as a Double from Java which needs to be
+            # unboxed. once it's unboxed we can pass it as a
+            # cql_nullable_double.  For "inout" arguments we copy out the value
+            # from the temporary after the call into the row object.
             preamble += f"  cql_nullable_double n_{a_name};\n"
             preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxDouble(env, {a_name}));\n"
             cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         else:
+            # object types are not supported in this sample
             call += f" /* unsupported arg type:'{a_type}' isNotNull:{isNotNull} kind:'{kind}' */"
 
     call += ");"
 
+    # we're ready, we emit the preamble, the call, and the cleanup
     if preamble != "":
         print(preamble)
     print(call)
     if cleanup != "":
         print(cleanup)
 
+    # if have result fields we fill them in and return the result row
     if field_count:
+        # if we have a result code we need to return that
         if usesDatabase:
             print("  row->__rc = rc;")
 
+        # if we have a result set we need to return that
         if projection:
-            print(
-                "  // let the row take over the reference, we don't release it"
-            )
+            # the java world wants to access the row reference as a "long"
+            # so we store a non-ref counted version of the pointer
+            print("  // the row takes over the result set reference.")
             print("  row->__result = (cql_result_set_ref)_data_result_set_;")
             print("  row->__result_long = (int64_t)_data_result_set_;")
 
+        # to return the row we need to populate a cql_Fetch_info
+        # we have already emitted everything we need to fill it in
+        # so here we can just populate
         print("")
         print("  cql_fetch_info info = {")
+
         if usesDatabase:
             print("    .rc = SQLITE_OK,")
         print(f"    .col_offsets = {p_name}_offsets,")
@@ -553,6 +624,7 @@ def emit_proc_c_jni(proc):
         print(f"    .rowsize = sizeof({proc_row_type}),")
         print("  };")
 
+        # generate and return the one row result set that holds our procedure outputs
         print(
             "  cql_one_row_result(&info, (char *)row, 1, &outputs_result_set);"
         )

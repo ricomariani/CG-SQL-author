@@ -633,8 +633,9 @@ def emit_proc_c_jni(proc):
     print("}")
 
 
-# The procedure might have any number of projected columns if it has a result
-# We emit them all here
+# The procedure might have any number of projected columns if it creates
+# a result set.  We emit class for the reading such a result set here.
+# The relevant parts of the JSON are these fragments:
 # projected_column
 #  name : STRING
 #  type : STRING
@@ -642,23 +643,28 @@ def emit_proc_c_jni(proc):
 #  isSensitive : BOOL [optional]
 #  isNotNull" : BOOL
 def emit_projection(proc, attributes):
+    # the procedure is already known to have a projection or we wouldn't be here
     p_name = proc["name"]
     projection = proc["projection"]
     col = 0
     for p in projection:
         c_name = p["name"]
-        type = p["type"]
+        c_type = p["type"]
         kind = p.get("kind", "")
         isSensitive = p.get("isSensitive", 0)
         isNotNull = p["isNotNull"]
         hasOutResult = "hasOutResult" in proc and proc["hasOutResult"]
 
+        # vaulted columns get encoding treatment, the treatment is defined
+        # the primary docs discuss vaulted columns.
         vaulted_columns = attributes.get("cql:vault_sensitive", None)
         vault_all = vaulted_columns == 1
 
-        getter = getters[type]
-        type = notnull_types[type]
+        # we compute the name of the getter based on the type of the column
+        getter = getters[c_type]
+        c_type = notnull_types[c_type]
 
+        # we tweak the name for nullability if needed
         if isNotNull:
             nullable = ""
         else:
@@ -667,28 +673,33 @@ def emit_projection(proc, attributes):
             else:
                 nullable = "Nullable"
 
+        # the return type for child result sets is not just Object
         if getter == "ChildResultSet":
-            type = "CQLResultSet"
+            c_type = "CQLResultSet"
 
+        # we use the encoded getter if needed
         isEncoded = False
-
         if (isSensitive and vaulted_columns is not None
                 and (vault_all or c_name in vaulted_columns)):
             isEncoded = True
             # use custom encoded string type for encoded strings
-            if type == "String":
-                type = "CQLEncodedString"
+            if c_type == "String":
+                c_type = "CQLEncodedString"
                 getter = "Encoded" + getter
 
+        # if there is only one row (because it was made with an out statement)
+        # then we can elide all the row arguments and just pass "row 0" to the helpers.
         row_arg = "" if hasOutResult else "int row"
         row_formal = "0" if hasOutResult else "row"
 
-        print(f"    public {type} get_{c_name}({row_arg}) {{")
+        # we're done, we're ready to emit the function name and its body
+        print(f"    public {c_type} get_{c_name}({row_arg}) {{")
         print(
             f"      return mResultSet.get{nullable}{getter}({row_formal}, {col});"
         )
         print("    }\n")
 
+        # if the column might be encoded then we emit the IsEncoded helper
         if isEncoded:
             print(f"    public boolean get_{c_name}_IsEncoded() {{")
             print(f"      return mResultSet.getIsEncoded({col});")

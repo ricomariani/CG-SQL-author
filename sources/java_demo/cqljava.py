@@ -210,18 +210,26 @@ static jdouble UnboxDouble(JNIEnv *env, jobject boxedDouble)
     """)
 
 
-# Emit the C code for a single procedure
-# this includes
-# * the metadata for the return type
-# * the struct definition for the return type
-# * the JNI entry point for the procedure
-# * the call to the procedure
-# * the marshalling of the results
-# * the return of the results
-# * the cleanup of the results
-def emit_proc_c_jni(proc):
+# The first thing we do is go through the arguments and build up the
+# metadata for the return type.  This is a list of CQL_DATA_TYPE_XXX values
+# that describe the type of each field in the return type. We also build up
+# the struct definition for the return type. This is a struct with one field
+# for each argument.  The fields are named the same as the arguments and
+# have the appropriate type. Note that in the structure the reference types
+# must go LAST we do this so that we can easily release the references in
+# the cleanup code.  We only need the offset to the first reference and the
+# count. This pass is looking for anything that is going to be an out or
+# inout parameter. Those are the ones that participate in the return type.
+# Additionally the result type includes a field for the result code if the
+# procedure uses the database. As well as a field for the result set if the
+# procedure has a "projection" -- that is if it returns a result set. out
+# arguments can themselves by complex but for now in and out "object"
+# arguments are not supported.  The exception being the result set which is
+# an implicit object type.
+def emit_proc_c_metadata(proc):
     p_name = proc["name"]
     args = proc["args"]
+
     # if usesDatabase is missing it's a query type and they all use the db
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
@@ -235,22 +243,6 @@ def emit_proc_c_jni(proc):
     first_ref = ""
     proc_row_type = f"{p_name}_return_struct"
 
-    # The first thing we do is go through the arguments and build up the
-    # metadata for the return type.  This is a list of CQL_DATA_TYPE_XXX values
-    # that describe the type of each field in the return type. We also build up
-    # the struct definition for the return type. This is a struct with one field
-    # for each argument.  The fields are named the same as the arguments and
-    # have the appropriate type. Note that in the structure the reference types
-    # must go LAST we do this so that we can easily release the references in
-    # the cleanup code.  We only need the offset to the first reference and the
-    # count. This pass is looking for anything that is going to be an out or
-    # inout parameter. Those are the ones that participate in the return type.
-    # Additionally the result type includes a field for the result code if the
-    # procedure uses the database. As well as a field for the result set if the
-    # procedure has a "projection" -- that is if it returns a result set. out
-    # arguments can themselves by complex but for now in and out "object"
-    # arguments are not supported.  The exception being the result set which is
-    # an implicit object type.
     for arg in args:
         c_name = arg["name"]
         c_type = arg["type"]
@@ -343,6 +335,26 @@ def emit_proc_c_jni(proc):
         print(row_offsets, end="")
         print("};")
         print("")
+
+    return {
+        "field_count": field_count,
+        "proc_row_type": proc_row_type,
+        "ref_field_count": ref_field_count
+    }
+
+
+# This emits the main body of the C JNI function, this includes
+# * the JNI entry point for the procedure
+# * the call to the procedure
+# * the marshalling of the results
+# * the return of the results
+# * the cleanup of the results
+def emit_proc_c_func_body(proc, meta_results):
+    p_name = proc["name"]
+    args = proc["args"]
+    field_count = meta_results["field_count"]
+    proc_row_type = meta_results["proc_row_type"]
+    ref_field_count = meta_results["ref_field_count"]
 
     # Grab the command line arguments the package name and class
     # we know the return type for the JNI entry point based on fields
@@ -633,6 +645,20 @@ def emit_proc_c_jni(proc):
     print("}")
 
 
+# Emit the C code for a single procedure
+# this includes
+# * the metadata for the return type
+# * the struct definition for the return type
+# * the JNI entry point for the procedure
+# * the call to the procedure
+# * the marshalling of the results
+# * the return of the results
+# * the cleanup of the results
+def emit_proc_c_jni(proc):
+    meta_results = emit_proc_c_metadata(proc)
+    emit_proc_c_func_body(proc, meta_results)
+
+
 # The procedure might have any number of projected columns if it creates
 # a result set.  We emit a class for the reading such a result set here.
 #
@@ -715,7 +741,7 @@ def emit_result_set_projection(proc, attributes):
 # result set if it's needed.  So both the database result set and the procedures
 # out arguments come back in the form of a result set.  This lets us use the
 # same JNI for both types.
-def emit_proc_return_type(proc):
+def emit_proc_java_return_type(proc):
     p_name = proc["name"]
     args = proc["args"]
     # if usesDatabase is missing it's a query type and they all use the db
@@ -790,7 +816,7 @@ def emit_proc_java_jni(proc):
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
-    emit_proc_return_type(proc)
+    emit_proc_java_return_type(proc)
 
     # Generate Java JNI method declaration
 

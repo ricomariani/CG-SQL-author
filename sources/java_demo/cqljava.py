@@ -634,7 +634,8 @@ def emit_proc_c_jni(proc):
 
 
 # The procedure might have any number of projected columns if it creates
-# a result set.  We emit class for the reading such a result set here.
+# a result set.  We emit a class for the reading such a result set here.
+#
 # The relevant parts of the JSON are these fragments:
 # projected_column
 #  name : STRING
@@ -642,7 +643,7 @@ def emit_proc_c_jni(proc):
 #  kind : STRING [optional]
 #  isSensitive : BOOL [optional]
 #  isNotNull" : BOOL
-def emit_projection(proc, attributes):
+def emit_result_set_projection(proc, attributes):
     # the procedure is already known to have a projection or we wouldn't be here
     p_name = proc["name"]
     projection = proc["projection"]
@@ -709,7 +710,11 @@ def emit_projection(proc, attributes):
 
 
 # The procedure might have any number of out arguments plus its normal returns
-# We emit them all here
+# We emit them all here.  We make a synthetic result set type to hold all those
+# out results as well as the SQLite return code if it's needed and the returned
+# result set if it's needed.  So both the database result set and the procedures
+# out arguments come back in the form of a result set.  This lets us use the
+# same JNI for both types.
 def emit_proc_return_type(proc):
     p_name = proc["name"]
     args = proc["args"]
@@ -717,9 +722,11 @@ def emit_proc_return_type(proc):
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
+    # this is the result type for the procedure out arguments and returns
     print(
-        f"  static public final class {p_name}Results extends CQLViewModel {{")
-    print(f"    public {p_name}Results(CQLResultSet resultSet) {{")
+        f"  static public final class {p_name}ReturnType extends CQLViewModel {{"
+    )
+    print(f"    public {p_name}ReturnType(CQLResultSet resultSet) {{")
     print(f"       super(resultSet);")
     print("    }\n")
 
@@ -836,7 +843,7 @@ def emit_proc_java_jni(proc):
     # more complex than the C version because the C version can return
     # multiple things in the return shape.  The Java version only
     # returns one thing, so we wrap the result set and the out arguments.
-    needs_result = usesDatabase or outArgs or projection
+    needs_return_type = usesDatabase or outArgs or projection
 
     print(f"  // procedure entry point {p_name}")
     suffix = ""
@@ -845,12 +852,12 @@ def emit_proc_java_jni(proc):
     # If we need a result type, we emit the JNI entry point as a helper
     # that maps the returned long to the result type.  This makes things
     # as easy as possible for the caller.
-    if needs_result:
+    if needs_return_type:
         suffix = "JNI"
         return_type = "long"
-        print(f"  public static {p_name}Results {p_name}({params}) {{")
+        print(f"  public static {p_name}ReturnType {p_name}({params}) {{")
         print(
-            f"     return new {p_name}Results(new CQLResultSet({p_name}JNI({param_names})));"
+            f"     return new {p_name}ReturnType(new CQLResultSet({p_name}JNI({param_names})));"
         )
         print("  }\n")
 
@@ -861,69 +868,67 @@ def emit_proc_java_jni(proc):
         f"  public static native {return_type} {p_name}{suffix}({params});\n")
 
 
+def emit_proc_java_projection(proc):
+    p_name = proc["name"]
+    # for now only procs with a result type, like before
+    # we'd like to emit JNI helpers for other procs too, but not now
+
+    if "projection" in proc:
+        # we unwrap the attributes array into a map for easy access
+        alist = proc.get("attributes", [])
+        attributes = {}
+        for attr in alist:
+            k = attr["name"]
+            v = attr["value"]
+            attributes[k] = v
+
+        print(
+            f"  static public final class {p_name}ViewModel extends CQLViewModel {{"
+        )
+        print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
+        print(f"       super(resultSet);")
+        print("    }\n")
+
+        emit_result_set_projection(proc, attributes)
+
+        identityResult = "true" if "cql:identity" in attributes else "false"
+
+        print("    @Override")
+        print("    protected boolean hasIdentityColumns() {")
+        print(f"      return {identityResult};")
+        print("    }\n")
+
+        print("    public int getCount() {")
+        print(f"      return mResultSet.getCount();")
+        print("    }")
+        print("  }\n")
+
+
 # Here we emit all the information for the procedures that are known
 # this is basic info about the name and arguments as well as dependencies.
 # For any chunk of JSON that has the "dependencies" sub-block
 # (see CQL JSON docs) we emit the table dependency info
 # by following the "usesTables" data.  Note that per docs
 # this entry is not optional!
-def emit_procinfo(section, s_name):
+def emit_proc_section(section, s_name):
     emit_c = cmd_args["emit_c"]
     for proc in section:
-
         if emit_c:
             # emit the C code for the JNI entry points and the supporting metadata
             emit_proc_c_jni(proc)
         else:
-            p_name = proc["name"]
-
-            # for now only procs with a result type, like before
-            # we'd like to emit JNI helpers for other procs too, but not now
-
-            if "projection" in proc:
-                # we unwrap the attributes array into a map for easy access
-                alist = proc.get("attributes", [])
-                attributes = {}
-                for attr in alist:
-                    k = attr["name"]
-                    v = attr["value"]
-                    attributes[k] = v
-
-                print(f"  static public final class {p_name}ViewModel extends CQLViewModel {{")
-                print(f"    public {p_name}ViewModel(CQLResultSet resultSet) {{")
-                print(f"       super(resultSet);")
-                print("    }\n")
-
-                emit_projection(proc, attributes)
-
-                identityResult = "true" if "cql:identity" in attributes else "false"
-
-                print("    @Override")
-                print("    protected boolean hasIdentityColumns() {")
-                print(f"      return {identityResult};")
-                print("    }\n")
-
-                print("    public int getCount() {")
-                print(f"      return mResultSet.getCount();")
-                print("    }")
-                print("  }\n")
-
+            emit_proc_java_projection(proc)
             emit_proc_java_jni(proc)
 
 
-# This walks the various JSON chunks and emits them into the equivalent table:
-# * first we walk the tables, this populates:
-#  * we use emit_procinfo for each chunk of procedures that has dependencies
-#     * this is "queries", "inserts", "updates", "deletes", "general", and "generalInserts"
-#     * see the CQL JSON docs for the meaning of each of these sections
-#       * these all have the "dependencies" block in their JSON
+# These are all of the procedure sources
 def emit_procs(data):
-    emit_procinfo(data["queries"], "queries")
-    emit_procinfo(data["deletes"], "deletes")
-    emit_procinfo(data["inserts"], "inserts")
-    emit_procinfo(data["generalInserts"], "generalInserts")
-    emit_procinfo(data["updates"], "updates")
-    emit_procinfo(data["general"], "general")
+    emit_proc_section(data["queries"], "queries")
+    emit_proc_section(data["deletes"], "deletes")
+    emit_proc_section(data["inserts"], "inserts")
+    emit_proc_section(data["generalInserts"], "generalInserts")
+    emit_proc_section(data["updates"], "updates")
+    emit_proc_section(data["general"], "general")
 
 
 def main():

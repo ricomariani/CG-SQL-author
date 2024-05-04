@@ -22,25 +22,31 @@ public class MyJava {
     Expect(outargs.get_z() == 7, "sum not computed");
     Expect(outargs.get_t().equals("prefix__input"), "string not assigned");
 
-    // try a no-result procedures
+    // Test passing of all not nullable primitive types
     sample.SampleJNI.CheckBoolean(true, true);
     sample.SampleJNI.CheckInteger(1234, 1234);
     sample.SampleJNI.CheckLong(12345L, 12345L);
     sample.SampleJNI.CheckReal(2.5, 2.5);
+
+    // Same test using nullable versions (passed boxed)
     sample.SampleJNI.CheckNullableBoolean(true, true);
     sample.SampleJNI.CheckNullableInteger(1234, 1234);
     sample.SampleJNI.CheckNullableLong(12345L, 12345L);
     sample.SampleJNI.CheckNullableReal(2.5, 2.5);
+
+    // And again, this time using null
     sample.SampleJNI.CheckNullableBoolean(null, null);
     sample.SampleJNI.CheckNullableInteger(null, null);
     sample.SampleJNI.CheckNullableLong(null, null);
     sample.SampleJNI.CheckNullableReal(null, null);
 
+    // And again for text
     sample.SampleJNI.CheckText("foo", "foo");
     sample.SampleJNI.CheckText(null, null);
 
-    var b1 = sample.SampleJNI.GetBlob(db, "a blob").get_y();
-    var b2 = sample.SampleJNI.GetBlob(db, "a blob").get_y();
+    // Finally creatge some test blobs and test them
+    var b1 = sample.SampleJNI.CreateBlobFromText(db, "a blob from text").get_test_blob();
+    var b2 = sample.SampleJNI.CreateBlobFromText(db, "a blob from text").get_test_blob();
     sample.SampleJNI.CheckBlob(b1, b2);
     sample.SampleJNI.CheckBlob(null, null);
 

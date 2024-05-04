@@ -10,9 +10,9 @@ declare proc printf no check;
 -- Any kind of child result set will do the job for this test
 -- note that with the json based code generation you can have
 -- as many procs per file as you like.
-create proc Child(i integer not null)
+create proc Child(i int!)
 begin
-  declare C cursor like (x integer not null, y text not null);
+  cursor C like (x int!, y text!);
   let j := 0;
   while j < i
   begin
@@ -24,7 +24,7 @@ begin
   end;
 end;
 
-proc OutArgThing(inout t text, x integer, inout y integer, out z integer)
+proc OutArgThing(inout t text, x int, inout y int, out z int)
 begin
    z := x + y;
    y += 1;
@@ -43,7 +43,7 @@ end;
 [[private]]
 proc Expect(b bool!, msg text!)
 begin
-   declare y integer;
+   var y int;
    if b then
      y := 1;
    else
@@ -53,6 +53,8 @@ begin
   -- force a failure
   y := ifnull_crash(y);
 end;
+
+-- we have a series of check methods that accept every arg type
 
 proc CheckBoolean(x bool!, y bool)
 begin
@@ -104,21 +106,23 @@ begin
   Expect(x is y, "blob values should match");
 end;
 
-proc GetBlob(in x text, out y blob)
+proc CreateBlobFromText(in x text, out test_blob blob)
 begin
-  y := (select CAST(x as blob));
+  -- this is just a cheesy conversion to make
+  -- a blob out of a string
+  test_blob := (select CAST(x as blob));
 end;
 
 proc OutStatement(x int!)
 begin
-  declare C cursor like select x;
+  cursor C like select x;
   fetch C using x x;
   out C;
 end;
 
 proc OutUnionStatement(x int!)
 begin
-  declare C cursor like select x;
+  cursor C like select x;
   fetch C using x+1 x;
   out union C;
   fetch C using x+2 x;
@@ -133,16 +137,15 @@ begin
   /* add the table we will be using */
   create table my_data(
     name text,
-    age integer @sensitive,
+    age int @sensitive,
     thing real,
     bytes blob,
     key1 text,
     key2 text @sensitive);
 
   /* insert some data */
-  declare i integer not null;
-  set i := 0;
-  while (i < 5)
+  let i := 0;
+  while i < 5
   begin
     /* avoiding @dummy_seed even though it's perfect here just so that
      * we don't take a dependency on the printf sqlite function.  If
@@ -156,17 +159,17 @@ begin
       cast("blob_"||i as blob) AS bytes,
       "code_1"||i AS key1,
       "code_2"||i AS key2;
-    set i := i + 1;
+    i += 1;
   end;
 
   set i := 0;
   /* the result will have a variety of data types to exercise the JNI helpers */
-  declare C cursor for select * from my_data;
+  cursor C for select * from my_data;
   loop fetch C
   begin
-    declare result cursor like (like C, my_child_result object<Child set>);
+    cursor result like (like C, my_child_result object<Child set>);
     fetch result from values(from C, Child(i));
     out union result;
-    set i := i + 1;
+    i += 1;
   end;
 end;

@@ -50,6 +50,19 @@ public class MyJava {
     sample.SampleJNI.CheckBlob(b1, b2);
     sample.SampleJNI.CheckBlob(null, null);
 
+    Expect(true == sample.SampleJNI.OutBoolean(true).get_test(), "mismatched out bool");
+    Expect(123 == sample.SampleJNI.OutInteger(123).get_test(), "mismatched out int");
+    Expect(456L == sample.SampleJNI.OutLong(456L).get_test(), "mismatched out long");
+    Expect(8.5 == sample.SampleJNI.OutReal(8.5).get_test(), "mismatched out real");
+    Expect(false == sample.SampleJNI.OutNullableBoolean(false).get_test(), "mismatched nullable out bool");
+    Expect(1234 == sample.SampleJNI.OutNullableInteger(1234).get_test(), "mismatched nullable out int");
+    Expect(4567L == sample.SampleJNI.OutNullableLong(4567L).get_test(), "mismatched nullable out long");
+    Expect(8.25 == sample.SampleJNI.OutNullableReal(8.25).get_test(), "mismatched nullable out real");
+    Expect(sample.SampleJNI.OutNullableBoolean(null).get_test() == null, "mismatched null out bool");
+    Expect(sample.SampleJNI.OutNullableInteger(null).get_test() == null, "mismatched null out int");
+    Expect(sample.SampleJNI.OutNullableLong(null).get_test() == null, "mismatched null out long");
+    Expect(sample.SampleJNI.OutNullableReal(null).get_test() == null, "mismatched null out real");
+
     // try a recursive procedure
     var fib = sample.SampleJNI.Fib(10);
     System.out.println("Fibonacci Result is: " + fib.get_result());

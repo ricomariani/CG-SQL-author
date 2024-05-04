@@ -113,6 +113,46 @@ begin
   test_blob := (select CAST(x as blob));
 end;
 
+proc OutBoolean(in x bool!, out test bool!)
+begin
+  test := x;
+end;
+
+proc OutInteger(in x int!, out test int!)
+begin
+  test := x;
+end;
+
+proc OutLong(in x long!, out test long!)
+begin
+  test := x;
+end;
+
+proc OutReal(in x real!, out test real!)
+begin
+  test := x;
+end;
+
+proc OutNullableBoolean(in x bool, out test bool)
+begin
+  test := x;
+end;
+
+proc OutNullableInteger(in x int, out test int)
+begin
+  test := x;
+end;
+
+proc OutNullableLong(in x long, out test long)
+begin
+  test := x;
+end;
+
+proc OutNullableReal(in x real, out test real)
+begin
+  test := x;
+end;
+
 proc OutStatement(x int!)
 begin
   cursor C like select x;

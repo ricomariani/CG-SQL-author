@@ -770,11 +770,12 @@ def emit_proc_java_return_type(proc):
 
         if binding == "out" or binding == "inout":
             getter = getters[type]
-            type = notnull_types[type]
 
             if isNotNull:
+                type = notnull_types[type]
                 nullable = ""
             else:
+                type = nullable_types[type]
                 if getter == "String" or getter == "Blob" or getter == "ChildResultSet":
                     nullable = ""
                 else:

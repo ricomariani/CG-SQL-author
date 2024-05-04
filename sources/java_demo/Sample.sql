@@ -40,9 +40,23 @@ begin
    end;
 end;
 
+[[private]]
+proc Expect(b bool!, msg text!)
+begin
+   declare y integer;
+   if b then
+     y := 1;
+   else
+     printf("error: %s\n", msg);
+   end;
+
+  -- force a failure
+  y := ifnull_crash(y);
+end;
+
 proc NoResult(x integer)
 begin
-  printf("1234 = %d\n", ifnull(x, -1));
+  Expect(x is 1234, "x should be 1234");
 end;
 
 proc OutStatement(x int!)

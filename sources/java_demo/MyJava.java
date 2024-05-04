@@ -89,7 +89,7 @@ public class MyJava {
 	var x = child.get_x(j);
 	var y = child.get_y(j);
 
-        System.out.println(String.format("--> Child Row %d: x:%d y:%s", j, x, y));
+        System.out.println(String.format("    Child Row %d: x:%d y:%s", j, x, y));
 	Expect(j + 1 == x, "index should correspond to value");
 
 	var x_formatted = String.format("<< %s >>", x);

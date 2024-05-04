@@ -11,6 +11,7 @@ S=$(cd $(dirname "$0"); pwd)
 O=$S/out
 R=$S/..
 
+rm -rf $O
 mkdir -p $O
 
 if [ "${JAVA_HOME}" == "" ] ;

@@ -63,7 +63,7 @@ is_ref_type["text"] = True
 
 # Java types for not null cql types
 notnull_types = {}
-notnull_types["bool"] = "bool"
+notnull_types["bool"] = "boolean"
 notnull_types["integer"] = "int"
 notnull_types["long"] = "long"
 notnull_types["real"] = "double"
@@ -83,7 +83,7 @@ nullable_types["text"] = "String"
 
 # JNI types for not null cql types
 jni_notnull_types = {}
-jni_notnull_types["bool"] = "jbool"
+jni_notnull_types["bool"] = "jboolean"
 jni_notnull_types["integer"] = "jint"
 jni_notnull_types["long"] = "jlong"
 jni_notnull_types["real"] = "jdouble"
@@ -226,7 +226,7 @@ static jdouble UnboxDouble(JNIEnv *env, jobject boxedDouble)
 # arguments can themselves by complex but for now in and out "object"
 # arguments are not supported.  The exception being the result set which is
 # an implicit object type.
-def emit_proc_c_metadata(proc):
+def emit_proc_c_metadata(proc, attributes):
     p_name = proc["name"]
     args = proc["args"]
 
@@ -349,7 +349,7 @@ def emit_proc_c_metadata(proc):
 # * the marshalling of the results
 # * the return of the results
 # * the cleanup of the results
-def emit_proc_c_func_body(proc, meta_results):
+def emit_proc_c_func_body(proc, meta_results, attributes):
     p_name = proc["name"]
     args = proc["args"]
     field_count = meta_results["field_count"]
@@ -658,9 +658,9 @@ def emit_proc_c_func_body(proc, meta_results):
 # * the marshalling of the results
 # * the return of the results
 # * the cleanup of the results
-def emit_proc_c_jni(proc):
-    meta_results = emit_proc_c_metadata(proc)
-    emit_proc_c_func_body(proc, meta_results)
+def emit_proc_c_jni(proc, attributes):
+    meta_results = emit_proc_c_metadata(proc, attributes)
+    emit_proc_c_func_body(proc, meta_results, attributes)
 
 
 # The procedure might have any number of projected columns if it creates
@@ -813,7 +813,7 @@ def emit_proc_java_return_type(proc):
     print("  }\n")
 
 
-def emit_proc_java_jni(proc):
+def emit_proc_java_jni(proc, attributes):
     p_name = proc["name"]
     args = proc["args"]
     # if usesDatabase is missing it's a query type and they all use the db
@@ -898,20 +898,12 @@ def emit_proc_java_jni(proc):
         f"  public static native {return_type} {p_name}{suffix}({params});\n")
 
 
-def emit_proc_java_projection(proc):
+def emit_proc_java_projection(proc, attributes):
     p_name = proc["name"]
     # for now only procs with a result type, like before
     # we'd like to emit JNI helpers for other procs too, but not now
 
     if "projection" in proc:
-        # we unwrap the attributes array into a map for easy access
-        alist = proc.get("attributes", [])
-        attributes = {}
-        for attr in alist:
-            k = attr["name"]
-            v = attr["value"]
-            attributes[k] = v
-
         print(
             f"  static public final class {p_name}ViewModel extends CQLViewModel {{"
         )
@@ -943,12 +935,22 @@ def emit_proc_java_projection(proc):
 def emit_proc_section(section, s_name):
     emit_c = cmd_args["emit_c"]
     for proc in section:
-        if emit_c:
+        # we unwrap the attributes array into a map for easy access
+        alist = proc.get("attributes", [])
+        attributes = {}
+        for attr in alist:
+            k = attr["name"]
+            v = attr["value"]
+            attributes[k] = v
+
+        # no codegen for private methods
+        if "cql:private" not in attributes:
+          if emit_c:
             # emit the C code for the JNI entry points and the supporting metadata
-            emit_proc_c_jni(proc)
-        else:
-            emit_proc_java_projection(proc)
-            emit_proc_java_jni(proc)
+            emit_proc_c_jni(proc, attributes)
+          else:
+            emit_proc_java_projection(proc, attributes)
+            emit_proc_java_jni(proc, attributes)
 
 
 # These are all of the procedure sources

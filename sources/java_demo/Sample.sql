@@ -153,6 +153,46 @@ begin
   test := x;
 end;
 
+proc InOutBoolean(inout test bool!)
+begin
+  test |= true;
+end;
+
+proc InOutInteger(inout test int!)
+begin
+  test += 1;
+end;
+
+proc InOutLong(inout test long!)
+begin
+  test += 1;
+end;
+
+proc InOutReal(inout test real!)
+begin
+  test += 1;
+end;
+
+proc InOutNullableBoolean(inout test bool)
+begin
+  test |= true;
+end;
+
+proc InOutNullableInteger(inout test int)
+begin
+  test += 1;
+end;
+
+proc InOutNullableLong(inout test long)
+begin
+  test += 1;
+end;
+
+proc InOutNullableReal(inout test real)
+begin
+  test += 1;
+end;
+
 proc OutStatement(x int!)
 begin
   cursor C like select x;

@@ -63,6 +63,19 @@ public class MyJava {
     Expect(sample.SampleJNI.OutNullableLong(null).get_test() == null, "mismatched null out long");
     Expect(sample.SampleJNI.OutNullableReal(null).get_test() == null, "mismatched null out real");
 
+    Expect(true == sample.SampleJNI.InOutBoolean(false).get_test(), "mismatched inout bool");
+    Expect(124 == sample.SampleJNI.InOutInteger(123).get_test(), "mismatched inout int");
+    Expect(457L == sample.SampleJNI.InOutLong(456L).get_test(), "mismatched inout long");
+    Expect(9.5 == sample.SampleJNI.InOutReal(8.5).get_test(), "mismatched inout real");
+    Expect(true == sample.SampleJNI.InOutNullableBoolean(false).get_test(), "mismatched nullable inout bool");
+    Expect(1235 == sample.SampleJNI.InOutNullableInteger(1234).get_test(), "mismatched nullable inout int");
+    Expect(4568L == sample.SampleJNI.InOutNullableLong(4567L).get_test(), "mismatched nullable inout long");
+    Expect(9.25 == sample.SampleJNI.InOutNullableReal(8.25).get_test(), "mismatched nullable inout real");
+    Expect(sample.SampleJNI.InOutNullableBoolean(null).get_test() == null, "mismatched null inout bool");
+    Expect(sample.SampleJNI.InOutNullableInteger(null).get_test() == null, "mismatched null inout int");
+    Expect(sample.SampleJNI.InOutNullableLong(null).get_test() == null, "mismatched null inout long");
+    Expect(sample.SampleJNI.InOutNullableReal(null).get_test() == null, "mismatched null inout real");
+
     // try a recursive procedure
     var fib = sample.SampleJNI.Fib(10);
     System.out.println("Fibonacci Result is: " + fib.get_result());

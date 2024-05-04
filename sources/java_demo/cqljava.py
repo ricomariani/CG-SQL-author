@@ -521,6 +521,11 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             c_type = c_notnull_types[
                 a_type] if isNotNull else c_nullable_types[a_type]
             call += f"&row->{a_name}"
+        elif isNotNull and binding == "inout" and a_type == "long":
+            # this special case is needed because jlong is not the same as cql_int64
+            # which is usually a long long.  This copy solves the problem
+            preamble += f"  row->{a_name} = (cql_int64){a_name};\n"
+            call += f"row->{a_name}"
         elif isNotNull and not isRef:
             # Not null and not reference type means we can pass the argument
             # directly.  We never need to unbox it because it's passed as
@@ -566,7 +571,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # after the call into the row object.
             preamble += f"  cql_nullable_bool n_{a_name};\n"
             preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxBoolean(env, {a_name}));\n"
-            cleanup += f"  row->{a_name} = n_{a_name}" if inout else ""
+            cleanup += f"  row->{a_name} = n_{a_name};" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "integer":
             # The integer type comes as a Integer from Java which needs to be

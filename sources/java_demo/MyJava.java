@@ -17,10 +17,10 @@ public class MyJava {
     // get result set handle
     long db = CQLDb.get();
 
-    var outargs = sample.SampleJNI.OutArgThing(5, 2);
+    var outargs = sample.SampleJNI.OutArgThing("_input", 5, 2);
     Expect(outargs.get_y() == 3, "in out argument not incremented");
     Expect(outargs.get_z() == 7, "sum not computed");
-    Expect(outargs.get_t().equals("xxx"), "string not assigned");
+    Expect(outargs.get_t().equals("prefix__input"), "string not assigned");
 
     // try a no-result procedure
     sample.SampleJNI.NoResult(1234);

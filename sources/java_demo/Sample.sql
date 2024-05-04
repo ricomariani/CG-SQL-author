@@ -24,11 +24,11 @@ begin
   end;
 end;
 
-proc OutArgThing(out t text, x integer, inout y integer, out z integer)
+proc OutArgThing(inout t text, x integer, inout y integer, out z integer)
 begin
    z := x + y;
    y += 1;
-   t := "xxx";
+   t := printf("prefix_%s", t);
 end;
 
 proc Fib(n int!, out result int!)

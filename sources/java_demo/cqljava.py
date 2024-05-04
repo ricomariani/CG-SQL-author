@@ -534,12 +534,14 @@ def emit_proc_c_func_body(proc, meta_results):
             # So we emit a temporary string ref, we initialize it from the Java
             # string and then use it in the call.  For "inout" args, after the
             # call copy the string reference to the output row.
-            ## bugbug --> null string isn't handled
-            preamble += f"const char *cString_{a_name} = (*env)->GetStringUTFChars(env, {a_name}, NULL);\n"
-            preamble += f"cql_string_ref str_ref_{a_name} = cql_string_ref_new(cString_{a_name});\n"
-            preamble += f"(*env)->ReleaseStringUTFChars(env, {a_name}, cString_{a_name});\n"
-            cleanup += f"  cql_set_string_ref(&row->{a_name}, str_ref_{a_name};\n" if inout else ""
-            cleanup += f"cql_string_release(str_ref_{a_name});\n"
+            preamble += f"  cql_string_ref str_ref_{a_name} = NULL;\n"
+            preamble += f"  if ({a_name}) {{\n"
+            preamble += f"    const char *cString_{a_name} = (*env)->GetStringUTFChars(env, {a_name}, NULL);\n"
+            preamble += f"    str_ref_{a_name} = cql_string_ref_new(cString_{a_name});\n"
+            preamble += f"    (*env)->ReleaseStringUTFChars(env, {a_name}, cString_{a_name});\n"
+            preamble += f"  }}\n"
+            cleanup += f"  cql_set_string_ref(&row->{a_name}, str_ref_{a_name});\n" if inout else ""
+            cleanup += f"  cql_string_release(str_ref_{a_name});\n"
             call += f"str_ref_{a_name}"
         elif a_type == "blob":
             # Text is a byte in Java.  We need to "unbox" it into a
@@ -547,13 +549,15 @@ def emit_proc_c_func_body(proc, meta_results):
             # we emit a temporary blob ref, we initialize it from the Java blob
             # and then use it in the call.  For "inout" args, after the call
             # copy the blob reference to the output row.
-            ## bugbug --> null blob isn't handled
-            preamble += f"jbyte *bytes_{a_name} = (*env)->GetByteArrayElements(env, {a_name}, NULL);"
-            preamble += f"jsize len_{a_name} = (*env)->GetByteArrayLength(env, {a_name}, NULL);"
-            preamble += f"cql_blob_ref blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
-            preamble += f"(*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name});\n"
-            cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name};\n" if inout else ""
-            cleanup += f"cql_blob_release(blob_ref{a_name});\n"
+            preamble += f"  cql_string_ref str_ref_{a_name} = NULL;\n"
+            preamble += f"  if ({a_name}) {{\n"
+            preamble += f"    jbyte *bytes_{a_name} = (*env)->GetByteArrayElements(env, {a_name}, NULL);"
+            preamble += f"    jsize len_{a_name} = (*env)->GetByteArrayLength(env, {a_name}, NULL);"
+            preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
+            preamble += f"    (*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name});\n"
+            preamble += f"  }}\n"
+            cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name});\n" if inout else ""
+            cleanup += f"  cql_blob_release(blob_ref{a_name});\n"
             call += f"blob_ref_{a_name}"
         elif a_type == "bool":
             # The boolean type comes as a Boolean from Java which needs to be

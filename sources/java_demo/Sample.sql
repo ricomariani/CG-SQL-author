@@ -54,9 +54,29 @@ begin
   y := ifnull_crash(y);
 end;
 
-proc NoResult(x integer)
+proc CheckBoolean(x bool!, y bool)
 begin
-  Expect(x is 1234, "x should be 1234");
+  Expect(x is y, "boolean values should match");
+end;
+
+proc CheckInteger(x int!, y int)
+begin
+  Expect(x is y, "int values should match");
+end;
+
+proc CheckLong(x long!, y long)
+begin
+  Expect(x is y, "long values should match");
+end;
+
+proc CheckReal(x real!, y real)
+begin
+  Expect(x is y, "real values should match");
+end;
+
+proc CheckText(x text!, y text)
+begin
+  Expect(x is y, "text values should match");
 end;
 
 proc OutStatement(x int!)

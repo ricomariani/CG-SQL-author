@@ -565,7 +565,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # For "inout" arguments we copy out the value from the temporary
             # after the call into the row object.
             preamble += f"  cql_nullable_bool n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxBool(env, {a_name}));\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}, UnboxBoolean(env, {a_name}));\n"
             cleanup += f"  row->{a_name} = n_{a_name}" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "integer":

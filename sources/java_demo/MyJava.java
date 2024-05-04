@@ -22,8 +22,12 @@ public class MyJava {
     Expect(outargs.get_z() == 7, "sum not computed");
     Expect(outargs.get_t().equals("prefix__input"), "string not assigned");
 
-    // try a no-result procedure
-    sample.SampleJNI.NoResult(1234);
+    // try a no-result procedures
+    sample.SampleJNI.CheckBoolean(true, true);
+    sample.SampleJNI.CheckInteger(1234, 1234);
+    sample.SampleJNI.CheckLong(12345L, 12345L);
+    sample.SampleJNI.CheckReal(2.5, 2.5);
+    sample.SampleJNI.CheckText("foo", "foo");
 
     // try a recursive procedure
     var fib = sample.SampleJNI.Fib(10);

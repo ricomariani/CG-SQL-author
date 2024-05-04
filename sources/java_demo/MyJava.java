@@ -27,13 +27,25 @@ public class MyJava {
     sample.SampleJNI.CheckInteger(1234, 1234);
     sample.SampleJNI.CheckLong(12345L, 12345L);
     sample.SampleJNI.CheckReal(2.5, 2.5);
+    sample.SampleJNI.CheckNullableBoolean(true, true);
+    sample.SampleJNI.CheckNullableInteger(1234, 1234);
+    sample.SampleJNI.CheckNullableLong(12345L, 12345L);
+    sample.SampleJNI.CheckNullableReal(2.5, 2.5);
+    sample.SampleJNI.CheckNullableBoolean(null, null);
+    sample.SampleJNI.CheckNullableInteger(null, null);
+    sample.SampleJNI.CheckNullableLong(null, null);
+    sample.SampleJNI.CheckNullableReal(null, null);
+
     sample.SampleJNI.CheckText("foo", "foo");
+
+    var b1 = sample.SampleJNI.GetBlob(db, "a blob").get_y();
+    var b2 = sample.SampleJNI.GetBlob(db, "a blob").get_y();
+    sample.SampleJNI.CheckBlob(b1, b2);
 
     // try a recursive procedure
     var fib = sample.SampleJNI.Fib(10);
     System.out.println("Fibonacci Result is: " + fib.get_result());
     Expect(55 == fib.get_result(), "Fibnacci value did not compute correctly");
-
 
     var outS = sample.SampleJNI.OutStatement(314);
     var outSResult = outS.get_result_set();

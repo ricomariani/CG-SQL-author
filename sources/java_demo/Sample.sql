@@ -74,9 +74,39 @@ begin
   Expect(x is y, "real values should match");
 end;
 
-proc CheckText(x text!, y text)
+proc CheckNullableBoolean(x bool, y bool)
+begin
+  Expect(x is y, "boolean values should match");
+end;
+
+proc CheckNullableInteger(x int, y int)
+begin
+  Expect(x is y, "int values should match");
+end;
+
+proc CheckNullableLong(x long, y long)
+begin
+  Expect(x is y, "long values should match");
+end;
+
+proc CheckNullableReal(x real, y real)
+begin
+  Expect(x is y, "real values should match");
+end;
+
+proc CheckText(x text, y text)
 begin
   Expect(x is y, "text values should match");
+end;
+
+proc CheckBlob(x blob, y blob)
+begin
+  Expect(x is y, "blob values should match");
+end;
+
+proc GetBlob(in x text, out y blob)
+begin
+  y := (select CAST(x as blob));
 end;
 
 proc OutStatement(x int!)

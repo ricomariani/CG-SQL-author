@@ -549,15 +549,15 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # we emit a temporary blob ref, we initialize it from the Java blob
             # and then use it in the call.  For "inout" args, after the call
             # copy the blob reference to the output row.
-            preamble += f"  cql_string_ref str_ref_{a_name} = NULL;\n"
+            preamble += f"  cql_blob_ref blob_ref_{a_name} = NULL;\n"
             preamble += f"  if ({a_name}) {{\n"
             preamble += f"    jbyte *bytes_{a_name} = (*env)->GetByteArrayElements(env, {a_name}, NULL);"
-            preamble += f"    jsize len_{a_name} = (*env)->GetByteArrayLength(env, {a_name}, NULL);"
+            preamble += f"    jsize len_{a_name} = (*env)->GetArrayLength(env, {a_name});"
             preamble += f"    blob_ref_{a_name} = cql_blob_ref_new(bytes_{a_name}, len_{a_name});\n"
-            preamble += f"    (*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name});\n"
+            preamble += f"    (*env)->ReleaseByteArrayElements(env, {a_name}, bytes_{a_name}, JNI_ABORT);\n"
             preamble += f"  }}\n"
             cleanup += f"  cql_set_blob_ref(&row->{a_name}, blob_ref_{a_name});\n" if inout else ""
-            cleanup += f"  cql_blob_release(blob_ref{a_name});\n"
+            cleanup += f"  cql_blob_release(blob_ref_{a_name});\n"
             call += f"blob_ref_{a_name}"
         elif a_type == "bool":
             # The boolean type comes as a Boolean from Java which needs to be

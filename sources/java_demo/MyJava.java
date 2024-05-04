@@ -37,10 +37,12 @@ public class MyJava {
     sample.SampleJNI.CheckNullableReal(null, null);
 
     sample.SampleJNI.CheckText("foo", "foo");
+    sample.SampleJNI.CheckText(null, null);
 
     var b1 = sample.SampleJNI.GetBlob(db, "a blob").get_y();
     var b2 = sample.SampleJNI.GetBlob(db, "a blob").get_y();
     sample.SampleJNI.CheckBlob(b1, b2);
+    sample.SampleJNI.CheckBlob(null, null);
 
     // try a recursive procedure
     var fib = sample.SampleJNI.Fib(10);

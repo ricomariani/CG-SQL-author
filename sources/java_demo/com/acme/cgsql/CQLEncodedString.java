@@ -7,15 +7,20 @@
 
 package com.acme.cgsql;
 
-/**
- * CQLEncodedString is a simple class that encapsulates the encoded string from a ResultSet to restrict
- * and control its access
+/*
+ * CQLEncodedString hides the string fields in the result set that were marked as vaulted.
  *
- * <p>It has no getter so it hides the encoded string.
+ * It has no getter so you can't directly extract the string at all.
  *
- * <p>Use case: You could add a method to this class that takes as parameter a TextView and write a
- * decoded value of the encoded string directly to the TextView. Like that only the TextView get to
- * have the decode value of the encoded string.
+ * The way you use this class is you add helper methods to it that directly put the string
+ * to where it needs to go, such as logging, or into a text view, or whatever you might need.
+ *
+ * The idea is that the pieces of code that flow the string to its final destination cannot see
+ * its value so they can't do "the wrong thing" with it.  When you are finally ready to do
+ * whatever actually needs to be done, that final code calls a helper to do the job.
+ *
+ * By using this pattern you can easily spot the pieces of code that actually extract the
+ * string and restrict them in whatever way you want with simple tools.
  */
 public class CQLEncodedString {
   public String mValue;

@@ -11,33 +11,40 @@ weight: 5
 
 ### Preface
 
-Part 5 continues with a discussion of the essentials of the CQL Runtime.
-As in the previous sections, the goal here is not to go over every detail but rather to give
-a sense of how the runtime works in general -- the core strategies and implementation choices --
-so that when reading the source you will have an idea how it all hangs together. To accomplish
-this, we'll illustrate the key pieces that can be customized and we'll discuss some
-interesting cases.
+Part 5 continues with a discussion of the essentials of the CQL Runtime. As in
+the previous sections, the goal here is not to delve into every detail but
+rather to provide an overview of how the runtime operates in general — focusing
+on core strategies and implementation choices — so that when you read the
+source, you'll have an understanding of how it all fits together. To achieve
+this, we'll highlight the main components that can be customized and discuss
+some intriguing cases.
 
 ## CQL Runtime
 
-The parts of the runtime that you can change are in `cqlrt.h`, that file invariably ends by including
-`cqlrt_common.h` which are the runtime parts that you shouldn't change.  Of course this is open source
-so you can change anything, but the common things usually don't need to change -- `cqlrt.h` should
-provide you with everything you need to target new environments.
+The parts of the runtime that you can modify are located in `cqlrt.h`. This file
+inevitably concludes by including `cqlrt_common.h`, which contains the runtime
+components that you shouldn't modify. Of course, since this is open source, you
+have the freedom to modify anything, but typically, the common elements don't
+require alteration. `cqlrt.h` should equip you with everything necessary to
+target new environments.
 
-The compiler itself can be customized see `rt.c` to emit different strings to work with your runtime.
-This is pretty easy to do without creating a merge hell for yourself. Meta Platforms, for instance,  has its
-own CQL runtime customized for use on phones that is not open source (and really I don't think anyone
-would want it anyway).  But the point is that you can make your own. In fact I know of two just within
-Meta Platforms.
+The compiler itself can be tailored; refer to `rt.c` to generate different
+strings for compatibility with your runtime. This customization process is
+relatively straightforward and avoids creating a complicated merging situation.
+For example, Meta Platforms has its own customized CQL runtime designed for
+mobile phones, but it's not open source (and frankly, I doubt anyone would
+desire it anyway). Nevertheless, the key point is that you can create your own
+runtime. In fact, I'm aware of two custom runtimes within Meta Platforms alone.
 
-We'll go over `cqlrt.h` bit by bit.  Keeping in mind it might change but this is
-essentially what's going on.  And the essentials don't change very often.
+We'll dissect `cqlrt.h` step by step, keeping in mind that it might undergo
+changes, but this is essentially its function. Moreover, the fundamental aspects
+tend to remain stable over time.
 
 ### Standard headers
 
-The rest of the system will use these, `cqlrt.h` is responsible for bringing in what you need
-later, or what `cqlrt_common.h` needs on your system.
+The remainder of the system relies on these components. `cqlrt.h` is tasked with
+importing what you'll require later or what `cqlrt_common.h` necessitates on
+your system.
 
 ```c
 #pragma once
@@ -59,11 +66,13 @@ later, or what `cqlrt_common.h` needs on your system.
 
 ### Contract and Error Macros
 
-CQL has a few different macros it uses for errors.  `contract`, `invariant`, and `tripwire`
-usually all map to `assert`.  Note that `tripwire` doesn't have to be fatal, it can log
-in production and continue.  This is a "softer" assertion.  Something that you're trying out
-that you'd like to be a `contract` but maybe there are lingering cases that have to be fixed
-first.
+CQL employs several macros for handling errors: `contract`, `invariant`, and
+`tripwire`, which typically all map to `assert`. It's worth noting that
+`tripwire` doesn't necessarily need to result in a fatal error; it can log
+information in a production environment and continue execution. This represents
+a "softer" assertion — useful for scenarios where you want to enforce a
+condition like a `contract`, but there may be outstanding issues that need to be
+addressed first.
 
 ```c
 #define cql_contract assert
@@ -75,8 +84,9 @@ first.
 
 ### The Value Types
 
-You can define these types to be whatever is appropriate on your system.
-Usually the mapping is pretty obvious.
+You can define these types according to what is suitable for your system.
+Typically, the mapping is straightforward. The standard configuration is
+shown below:
 
 ```c
 // value types
@@ -95,11 +105,12 @@ typedef int cql_code;
 
 ### The Reference Types
 
-The default runtime first defines 4 types of reference objects.
-These are the only reference types that CQL creates itself. In
-fact CQL doesn't actually create `CQL_C_TYPE_OBJECT` but the tests
-do.  CQL never creates raw object things, only external functions
-can do that.
+The default runtime defines four types of reference objects. These are the only
+reference types that CQL generates internally. Actually, CQL doesn't directly
+create `CQL_C_TYPE_OBJECT`, but the tests do. CQL never generates raw object
+instances itself; only external functions have that capability. CQL can be
+instructed to invoke such functions, which leads to object types entering the
+calculus.
 
 ```c
 // metatypes for the straight C implementation
@@ -110,12 +121,12 @@ can do that.
 #define CQL_C_TYPE_OBJECT 4
 ```
 
-All the reference types are reference counted. So they
-need a simple shape that allows them to know their own
-type and have a count.  They also have a finalize method
-to clean up their memory when the count goes to zero.
+All reference types are reference counted. Therefore, they require a basic "base
+type" that enables them to identify their own type and maintain a count.
+Additionally, they possess a finalize method to manage memory cleanup when the
+count reaches zero.
 
-You get to define `cql_type_ref` to be whatever you want.
+You have the freedom to define `cql_type_ref` according to your preferences.
 
 ```c
 // base ref counting struct
@@ -127,9 +138,9 @@ typedef struct cql_type {
 } cql_type;
 ```
 
-Whatever you do with the types you'll need to define
-a retain and release method that uses them as the signature.
-Normal references should have a generic value comparison and a hash.
+Regardless of what you do with the types, you'll need to define a `retain` and
+`release` function with your types in the signature. Normal references should
+include a generic value comparison and a hash function.
 
 ```c
 void cql_retain(cql_type_ref _Nullable ref);
@@ -139,15 +150,17 @@ cql_hash_code cql_ref_hash(cql_type_ref _Nonnull typeref);
 cql_bool cql_ref_equal(cql_type_ref _Nullable typeref1, cql_type_ref _Nullable typeref2);
 ```
 
-Now each of the various kinds of reference types needs an
-object which probably includes the base type above.  It doesn't
-have to.  You can arrange for some other universal way to do
-these.  On iOS these can be easily mapped to `CF` types.
+Each type of reference requires an object, which likely includes the
+aforementioned base type. However, this is adaptable. You can opt for some other
+universal method to perform these operations. For example, on iOS, reference
+types can easily be mapped to `CF` types.
 
-The `retain` and `release` macros should all map to the same thing.
-The compiler emits different variations for readability only. It
-doesn't really work if they don't have common retain/release
-semantics.
+The specialized versions of the `retain` and `release` macros for strings and
+blobs should all map to the same operations. The compiler generates different
+variations for readability purposes only. Functionally, the code depends on all
+reference types having identical retain/release semantics. In certain contexts,
+they are handled generically, such as when cleaning up the reference fields of a
+cursor.
 
 ```c
 // builtin object
@@ -163,7 +176,7 @@ typedef struct cql_object {
 
 Boxed statement gets its own implementation, same as object.
 
-```
+```c
 // builtin statement box
 typedef struct cql_boxed_stmt *cql_boxed_stmt_ref;
 typedef struct cql_boxed_stmt {
@@ -172,8 +185,8 @@ typedef struct cql_boxed_stmt {
 } cql_boxed_stmt;
 ```
 
-Same for blob, and blob has a couple of additional helper macros
-that are used to get information. Blobs also have hash and equality
+The same applies to blobs, and they also have a couple of additional helper
+macros used to retrieve information. Blobs also come with hash and equality
 functions.
 
 ```c
@@ -193,7 +206,7 @@ cql_hash_code cql_blob_hash(cql_blob_ref _Nullable str);
 cql_bool cql_blob_equal(cql_blob_ref _Nullable blob1, cql_blob_ref _Nullable blob2);
 ```
 
-Strings are the same as the others but they have many more functions
+String references are the same as the others but they have many more functions
 associated with them.
 
 ```c

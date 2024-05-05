@@ -2231,26 +2231,6 @@ void cql_initialize_meta(cql_result_set_meta *_Nonnull meta, cql_fetch_info *_No
   meta->dataTypes = info->data_types;
   meta->encodeContextIndex = info->encode_context_index;
   meta->copy = cql_rowset_copy;
-  #ifndef CQL_NO_GETTERS
-      meta->getBoolean = cql_result_set_get_bool_col;
-      meta->getDouble = cql_result_set_get_double_col;
-      meta->getInt32 = cql_result_set_get_int32_col;
-      meta->getInt64 = cql_result_set_get_int64_col;
-      meta->getString = cql_result_set_get_string_col;
-      meta->getObject = cql_result_set_get_object_col;
-      meta->getBlob = cql_result_set_get_blob_col;
-      meta->getIsNull = cql_result_set_get_is_null_col;
-      meta->getIsEncoded = cql_result_set_get_is_encoded_col;
-
-      meta->setBoolean = cql_result_set_set_bool_col;
-      meta->setDouble = cql_result_set_set_double_col;
-      meta->setInt32 = cql_result_set_set_int32_col;
-      meta->setInt64 = cql_result_set_set_int64_col;
-      meta->setString = cql_result_set_set_string_col;
-      meta->setObject = cql_result_set_set_object_col;
-      meta->setBlob = cql_result_set_set_blob_col;
-      meta->setToNull = cql_result_set_set_to_null_col;
-  #endif
 }
 
 // true if any of the columns of this result set are to be encoded

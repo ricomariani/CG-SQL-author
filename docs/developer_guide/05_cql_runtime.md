@@ -221,8 +221,8 @@ cql_string_ref _Nonnull cql_string_ref_new(const char *_Nonnull cstr);
 #define cql_string_release(string) cql_release((cql_type_ref)string);
 ```
 
-The compiler uses this macro to create a named string literal. You decide
-how those will be implemented right here.
+The compiler uses the string literal macro to generate a named string
+literal. You determine the implementation of these literals right here.
 
 ```c
 #define cql_string_literal(name, text) \
@@ -237,7 +237,8 @@ how those will be implemented right here.
   cql_string_ref name = &name##_
 ```
 
-Strings get assorted comparison and hashing functions. Note blob also had a hash.
+Strings have various comparison and hashing functions. It's worth noting that
+blobs also possess a hash function.
 
 ```c
 int cql_string_compare(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
@@ -246,31 +247,32 @@ cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable 
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 ```
 
-Strings can be converted from their reference form to standard C form. These
-macros define how this is done.  Note that temporary allocations are possible
-here but the standard implementation does not actually need to do an alloc.  It
-stores UTF8 in the string pointer so it's ready to go.
+Strings can be converted from their reference form to standard C form using
+these macros. It's important to note that temporary allocations are possible
+with these conversions, but the standard implementation typically doesn't
+require any allocation. It stores UTF-8 in the string pointer, making it readily
+available.
 
 ```c
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
 #define cql_free_cstr(cstr, str) 0
 ```
 
-The macros for result sets have somewhat less flexibility.  The main thing
-that you can do here is add additional fields to the "meta" structure.  It
-needs those key fields because it is created by the compiler.  However the
-API is used to create a result set so that can be any object you like.  It
-only has to respond to the `get_meta`, `get_data`, and `get_count` apis.
-Those can be mapped as you desire.  In principle there could have been
-a macro to create the "meta" as well (a PR for this is welcome) but it's
-really a pain for not much benefit.  The advantage of defining your own "meta"
-is that you can use it to add additional custom APIs to your result set that
-might need some storage.
+The macros for result sets offer somewhat less flexibility. The primary
+customization available here is adding additional fields to the "meta"
+structure. This structure requires those key fields because it's created by the
+compiler. However, the API used to create a result set can be any object of your
+choice. It only needs to respond to the `get_meta`, `get_data`, and `get_count`
+APIs, which you can map as desired. In principle, there could have been a macro
+to create the "meta" as well (pull requests for this are welcome), but it's
+quite cumbersome for minimal benefit. The advantage of defining your own "meta"
+is that you can utilize it to add additional custom APIs to your result set that
+might require some storage.
 
-The additional API `cql_result_set_note_ownership_transferred(result_set)`
-is used in the event that you are moving ownership of the buffers from
-out of CQL's universe.  So like maybe JNI is absorbing the result, or
-Objective C is absorbing the result.  The default implementation is a no-op.
+The additional API `cql_result_set_note_ownership_transferred(result_set)` is
+employed when transferring ownership of the buffers from CQL's universe. For
+instance, if JNI or Objective C absorbs the result. The default implementation
+is a no-op.
 
 ```c
 // builtin result set
@@ -305,9 +307,10 @@ cql_result_set_ref _Nonnull cql_result_set_create(
 
 ### Mocking
 
-The CQL run test needs to do some mocking.  This bit is here for that test.  If you
-want to use the run test with your version of `cqlrt` you'll need to define a
-shim for `sqlite3_step` that can be intercepted.  This probably isn't going to come up.
+The CQL "run test" needs to do some mocking. This bit is here for that test. If
+you want to use the run test with your version of `cqlrt` you'll need to define
+a shim for `sqlite3_step` that can be intercepted. This probably isn't going to
+come up.
 
 ```c
 #ifdef CQL_RUN_TEST
@@ -318,12 +321,13 @@ SQLITE_API cql_code mockable_sqlite3_step(sqlite3_stmt *_Nonnull);
 
 ### Profiling
 
-If you want to support profiling you can implement `cql_profile_start` and `cql_profile_stop`
-to do whatever you want.  The CRC uniquely identifies a procedure (you can log that).  The
-`index` provides you with a place to store something that you can use as a handle in
-your logging system.  Typically an integer.  This lets you assign indices to the procedures
-you actually saw in any given run and then log them or something like that.  No data
-about parameters is provided, this is deliberate.
+If you wish to support profiling, you can implement `cql_profile_start` and
+`cql_profile_stop` to perform custom actions. The provided CRC uniquely
+identifies a procedure (which you can log), while the `index` parameter provides
+a place to store a handle in your logging system, typically an integer. This
+enables you to assign indices to the procedures observed in any given run and
+then log them or perform other operations. Notably, no data about parameters is
+provided intentionally.
 
 ```c
 // No-op implementation of profiling
@@ -333,17 +337,6 @@ about parameters is provided, this is deliberate.
 //   you could emit any junk in the call and it would still compile.
 #define cql_profile_start(crc, index) (void)crc; (void)index;
 #define cql_profile_stop(crc, index)  (void)crc; (void)index;
-```
-
-The definitions in `cqlrt_common.c` can provide codegen than either has generic
-"getters" for each column type (useful for JNI) or produces a unique getter that isn't
-shared.  The rowset metadata will include the values for `getBoolean`, `getDouble` etc.
-if `CQL_NO_GETTERS` is 0.  Getters are a little slower for C but give you a small number
-of functions that need to have JNI if you are targeting Java.
-
-```c
-// the basic version doesn't use column getters
-#define CQL_NO_GETTERS 1
 ```
 
 ### Encoding of Sensitive Columns

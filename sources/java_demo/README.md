@@ -12,10 +12,10 @@ in Java.
 
 ## The Java entry point
 
-This is the main program.  It calls some stored procedures using the generated
+This is the main program. It calls some stored procedures using the generated
 JNI wrappers. The point of `make.sh` (below) is to generate all the JNI needed
-to use the CQL in `Sample.sql`. There are standard JNI helpers to  create the
-runtime environment, but those aer  not specific to any given set of procedures.
+to use the CQL in `Sample.sql`. There are standard JNI helpers to create the
+runtime environment, but those aer not specific to any given set of procedures.
 See below.
 
 * `./MyJava.java`

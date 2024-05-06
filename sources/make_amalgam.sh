@@ -6,7 +6,7 @@
 
 process_license() {
 
-cat <<EOF
+	cat <<EOF
 /*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -18,94 +18,94 @@ EOF
 }
 
 process_extra_h_files() {
-  echo // no extra .h files
+	echo // no extra .h files
 }
 
 process_extra_c_files() {
-  echo // no extra .c files
+	echo // no extra .c files
 }
 
 process_headers() {
-  echo "#ifndef CQL_NO_DIAGNOSTIC_BLOCK"
-  cat "diags.h"
-  echo "#endif"
+	echo "#ifndef CQL_NO_DIAGNOSTIC_BLOCK"
+	cat "diags.h"
+	echo "#endif"
 
-  cat "bytebuf.h"
-  cat "charbuf.h"
-  cat "symtab.h"
-  cat "minipool.h"
-  cat "list.h"
+	cat "bytebuf.h"
+	cat "charbuf.h"
+	cat "symtab.h"
+	cat "minipool.h"
+	cat "list.h"
 
-  cat "ast.h"
-  cat "sem.h"
-  cat "cql.h"
-  cat "encoders.h"
-  cat "eval.h"
-  cat "gen_sql.h"
-  cat "crc64xz.h"
-  cat "cg_common.h"
-  cat "cg_c.h"
-  cat "cg_lua.h"
-  cat "cg_json_schema.h"
-  cat "cg_objc.h"
-  cat "cg_query_plan.h"
-  cat "cg_schema.h"
-  cat "cg_stats.h"
-  cat "cg_test_helpers.h"
-  cat "compat.h"
-  cat "rewrite.h"
-  cat "rt.h"
-  cat "sha256.h"
-  cat "printf.h"
-  cat "flow.h"
+	cat "ast.h"
+	cat "sem.h"
+	cat "cql.h"
+	cat "encoders.h"
+	cat "eval.h"
+	cat "gen_sql.h"
+	cat "crc64xz.h"
+	cat "cg_common.h"
+	cat "cg_c.h"
+	cat "cg_lua.h"
+	cat "cg_json_schema.h"
+	cat "cg_objc.h"
+	cat "cg_query_plan.h"
+	cat "cg_schema.h"
+	cat "cg_stats.h"
+	cat "cg_test_helpers.h"
+	cat "compat.h"
+	cat "rewrite.h"
+	cat "rt.h"
+	cat "sha256.h"
+	cat "printf.h"
+	cat "flow.h"
 
-  process_extra_h_files
+	process_extra_h_files
 }
 
 process_c_files() {
 
-  cat "ast.c"
-  cat "bytebuf.c"
-  cat "cg_c.c"
-  cat "cg_common.c"
-  cat "cg_json_schema.c"
-  cat "cg_lua.c"
-  cat "cg_objc.c"
-  cat "cg_query_plan.c"
-  cat "cg_stats.c"
-  cat "cg_schema.c"
-  cat "cg_test_helpers.c"
-  cat "charbuf.c"
-  cat "compat.c"
-  cat "crc64xz.c"
-  cat "encoders.c"
-  cat "eval.c"
-  cat "flow.c"
-  cat "gen_sql.c"
-  cat "list.c"
-  cat "minipool.c"
-  cat "printf.c"
-  cat "rt.c"
-  cat "rewrite.c"
-  cat "sem.c"
-  cat "sha256.c"
-  cat "symtab.c"
-  cat "unit_tests.c"
+	cat "ast.c"
+	cat "bytebuf.c"
+	cat "cg_c.c"
+	cat "cg_common.c"
+	cat "cg_json_schema.c"
+	cat "cg_lua.c"
+	cat "cg_objc.c"
+	cat "cg_query_plan.c"
+	cat "cg_stats.c"
+	cat "cg_schema.c"
+	cat "cg_test_helpers.c"
+	cat "charbuf.c"
+	cat "compat.c"
+	cat "crc64xz.c"
+	cat "encoders.c"
+	cat "eval.c"
+	cat "flow.c"
+	cat "gen_sql.c"
+	cat "list.c"
+	cat "minipool.c"
+	cat "printf.c"
+	cat "rt.c"
+	cat "rewrite.c"
+	cat "sem.c"
+	cat "sha256.c"
+	cat "symtab.c"
+	cat "unit_tests.c"
 
-  process_extra_c_files
+	process_extra_c_files
 }
 
 create_amalgam() {
 
-process_license >out/cql_amalgam.c
+	process_license >out/cql_amalgam.c
 
-# We do this cheesy business so that the @ and generated are never together in the script
-# if they were it wuold look like the script is auto generated and it isn't.
-echo -n "// @" >>out/cql_amalgam.c
+	# We do this cheesy business so that the @ and generated are never together in the script
+	# if they were it wuold look like the script is auto generated and it isn't.
+	echo -n "// @" >>out/cql_amalgam.c
 
-# We now resume normality starting from the trailing @ with no newline
-# the generated line needs to be first, the rest is normal source order.
-cat <<EOF >>out/cql_amalgam.c
+	# We now resume normality starting from the trailing @ with no newline
+	# the generated line needs to be first, the rest is normal source order.
+	cat <<EOF >>out/cql_amalgam.c
 generated SignedSource<<deadbeef8badf00ddefec8edfacefeed>>
 
 #ifdef _MSC_VER
@@ -202,36 +202,36 @@ typedef const char *CSTR;
 
 EOF
 
-process_headers >out/pass1
-process_c_files >>out/pass1
+	process_headers >out/pass1
+	process_c_files >>out/pass1
 
-# the generated parser has free conversions not easily removed
-cat <<EOF >>out/pass1
+	# the generated parser has free conversions not easily removed
+	cat <<EOF >>out/pass1
 #ifndef _MSC_VER
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 #pragma clang diagnostic ignored "-Wsign-conversion"
 #endif
 EOF
 
-cat "out/cql.y.h" >>out/pass1
-cat "out/cql.y.c" >>out/pass1
-cat "out/cql.c" >>out/pass1
+	cat "out/cql.y.h" >>out/pass1
+	cat "out/cql.y.c" >>out/pass1
+	cat "out/cql.c" >>out/pass1
 
-cat <<EOF >>out/pass1
+	cat <<EOF >>out/pass1
 #ifndef _MSC_VER
 #pragma clang diagnostic pop
 #endif
 EOF
 
-echo "static void cql_reset_globals() {" >>out/pass1
-grep cql_data_decl ./*.h | grep -v '#define' | \
-sed -e "s/ );//" -e "s/.* //" -e "s/\*//" -e "s/^/  /" -e "s/$/ = 0;/"  -e "s/options = 0/memset(\&options, 0, sizeof(options));/" \
->>out/pass1
-echo "}" >>out/pass1
+	echo "static void cql_reset_globals() {" >>out/pass1
+	grep cql_data_decl ./*.h | grep -v '#define' |
+		sed -e "s/ );//" -e "s/.* //" -e "s/\*//" -e "s/^/  /" -e "s/$/ = 0;/" -e "s/options = 0/memset(\&options, 0, sizeof(options));/" \
+			>>out/pass1
+	echo "}" >>out/pass1
 
-#strip the #include directives, we've already done the equivalant work
-grep -v "^ *#include" out/pass1 | grep -v "^ *#pragma once" | grep -v "^ *#line" >>out/cql_amalgam.c
-rm out/pass1
+	#strip the #include directives, we've already done the equivalant work
+	grep -v "^ *#include" out/pass1 | grep -v "^ *#pragma once" | grep -v "^ *#line" >>out/cql_amalgam.c
+	rm out/pass1
 }
 
 create_amalgam

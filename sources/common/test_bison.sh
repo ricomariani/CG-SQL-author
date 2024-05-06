@@ -9,9 +9,9 @@
 
 echo "Testing bison version of " "$1"
 $1 -V
-if [ -n "$($1 -V | grep ' 2[.]3')" ] ; then
- echo Bison 2.3 detected, this is too old.  Use brew install bison to update. See README.md
- exit 91
+if [ -n "$($1 -V | grep ' 2[.]3')" ]; then
+	echo Bison 2.3 detected, this is too old. Use brew install bison to update. See README.md
+	exit 91
 fi
 
 exit 0

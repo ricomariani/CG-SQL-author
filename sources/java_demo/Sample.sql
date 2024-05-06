@@ -10,16 +10,16 @@ declare proc printf no check;
 -- Any kind of child result set will do the job for this test
 -- note that with the json based code generation you can have
 -- as many procs per file as you like.
-create proc Child(i int!)
+create proc Child(lim int!)
 begin
-  cursor C like (x int!, y text!);
-  let j := 0;
-  while j < i
+  cursor C like (irow int!, t text!);
+  let i := 0;
+  while i < lim
   begin
-    set j := j + 1;
+    i += 1;
     fetch C using
-       j x,
-       printf("<< %d >>", j)  y;
+       i irow,
+       printf("'%d'", i)  t;
     out union C;
   end;
 end;

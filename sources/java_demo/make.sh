@@ -56,16 +56,18 @@ echo "making directories"
 
 mkdir -p $O/sample
 
-echo generating stored procs
+echo "generating stored procs C and JSON"
 cp Sample.sql $O
 pushd $O >/dev/null
 ${CQL} --in Sample.sql --cg Sample.h Sample.c
 ${CQL} --in Sample.sql --rt json_schema --cg Sample.json
+
+echo "generating JNI class and the C code for it"
 ../cqljava.py Sample.json --package sample --class SampleJNI >sample/SampleJNI.java
 ../cqljava.py Sample.json --emit_c --package sample --class SampleJNI --jni_header sample_SampleJNI.h --cql_header Sample.h >sample_SampleJNI.c
 popd >/dev/null
 
-echo "regenerating JNI .h file"
+echo "generating JNI .h files using javac"
 javac -h $O -d $O com/acme/cgsql/CQLResultSet.java
 javac -h $O -d $O com/acme/cgsql/CQLDb.java
 javac -h $O -d $O out/sample/SampleJNI.java
@@ -99,14 +101,13 @@ ${CC} -c ../std_jni/com_acme_cgsql_CQLResultSet.c
 ${CC} -c ../std_jni/com_acme_cgsql_CQLDb.c
 ${CC} -c sample_SampleJNI.c
 ${CC} -c Sample.c
-
 ${CC} -o libSampleJNI.${SUFFIX} -shared sample_SampleJNI.o Sample.o $R/cqlrt.c ${SQLITE_LINK}
 ${CC} -o libCQLResultSet.${SUFFIX} -shared com_acme_cgsql_CQLResultSet.o $R/cqlrt.c ${SQLITE_LINK}
 ${CC} -o libCQLDb.${SUFFIX} -shared com_acme_cgsql_CQLDb.o $R/cqlrt.c ${SQLITE_LINK}
 
 popd >/dev/null
 
-echo making .class files
+echo "making .class files using all the generated java plus the sample"
 javac -d $O \
   MyJava.java \
   com/acme/cgsql/CQLDb.java \
@@ -115,7 +116,7 @@ javac -d $O \
   com/acme/cgsql/CQLEncodedString.java \
   $O/sample/SampleJNI.java
 
-echo "executing"
+echo "executing the java program"
 (
   cd $O 
   java -Djava.library.path=. \

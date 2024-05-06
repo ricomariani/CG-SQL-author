@@ -4,7 +4,6 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-
 # cqljson.py -> converts CQL JSON format into various useful outputs
 #
 # The CQL JSON format is documented here:
@@ -25,44 +24,41 @@ import sys
 
 
 def usage():
-    print(
-        (
-            "Usage:\n"
-            "\n"
-            "--table_diagram input.json [universe] > tables.dot\n"
-            "   creates a .dot file for a table diagram\n"
-            "\n"
-            "--region_diagram input.json > regions.dot\n"
-            "   creates a .dot file for a region diagram\n"
-            "\n"
-            "--erd input.json [universe] > erd.dot\n"
-            "   creates a .dot file for an ER diagram\n"
-            "\n"
-            "--sql input.json > inputdb.sql\n"
-            "   creates a .sql file for a database with the schema info\n"
-            "\n"
-            "The [universe] arguments can be:\n"
-            "  * nothing in which case all tables are the used\n"
-            "  * a list of targets which are processed in order\n"
-            "  * a target is:\n"
-            "    * a table name\n"
-            "    * a table name followed by +fks (e.g. foo+fks)\n"
-            "    * a table name followed by +refs (e.g. foo+refs)\n"
-            "    * a table name followed by +graph (e.g. foo+graph)\n"
-            "  * +fks: means the table and all its FK tables, transitively\n"
-            "  * +refs: means the table and all that refer to it via FK, transitively\n"
-            "  * +graphs: means the table and any table linked to it either way, transitively\n"
-            "  * a target may be prefixed with '-' indicating that pattern should be removed\n"
-            "\n"
-            "To create a CQL JSON file you can start with any CQL, but\n"
-            "probably a file with most or all of your schema is the best\n"
-            "choice."
-            "  cql --in your_file.sql --rt json_schema --cg output.json\n"
-            "\n"
-            "To process a .dot file use a command like:\n"
-            "  dot x.dot -Tpdf -o x.pdf\n"
-        )
-    )
+    print((
+        "Usage:\n"
+        "\n"
+        "--table_diagram input.json [universe] > tables.dot\n"
+        "   creates a .dot file for a table diagram\n"
+        "\n"
+        "--region_diagram input.json > regions.dot\n"
+        "   creates a .dot file for a region diagram\n"
+        "\n"
+        "--erd input.json [universe] > erd.dot\n"
+        "   creates a .dot file for an ER diagram\n"
+        "\n"
+        "--sql input.json > inputdb.sql\n"
+        "   creates a .sql file for a database with the schema info\n"
+        "\n"
+        "The [universe] arguments can be:\n"
+        "  * nothing in which case all tables are the used\n"
+        "  * a list of targets which are processed in order\n"
+        "  * a target is:\n"
+        "    * a table name\n"
+        "    * a table name followed by +fks (e.g. foo+fks)\n"
+        "    * a table name followed by +refs (e.g. foo+refs)\n"
+        "    * a table name followed by +graph (e.g. foo+graph)\n"
+        "  * +fks: means the table and all its FK tables, transitively\n"
+        "  * +refs: means the table and all that refer to it via FK, transitively\n"
+        "  * +graphs: means the table and any table linked to it either way, transitively\n"
+        "  * a target may be prefixed with '-' indicating that pattern should be removed\n"
+        "\n"
+        "To create a CQL JSON file you can start with any CQL, but\n"
+        "probably a file with most or all of your schema is the best\n"
+        "choice."
+        "  cql --in your_file.sql --rt json_schema --cg output.json\n"
+        "\n"
+        "To process a .dot file use a command like:\n"
+        "  dot x.dot -Tpdf -o x.pdf\n"))
 
 
 def add_colinfo(colinfo, col, data):
@@ -161,9 +157,12 @@ def emit_erd(data, universe, tables):
                 if not_pk_pass != (c_name in pk):
                     print("<tr>")
                     print(f"<td align='left'>{c_name}</td>")
-                    print(f"<td align='left'>{nntext1}{c_type}{c_kind}{nntext2}</td>")
+                    print(
+                        f"<td align='left'>{nntext1}{c_type}{c_kind}{nntext2}</td>"
+                    )
                     if c_name in colinfo:
-                        print(f"<td align='left'{fkport}>{colinfo[c_name]}</td>")
+                        print(
+                            f"<td align='left'{fkport}>{colinfo[c_name]}</td>")
                     else:
                         print("<td></td>")
                     print("</tr>")
@@ -268,90 +267,86 @@ def emit_region_diagram(data):
 # about usage and to study the metadata to find possible
 # consolidations and stuff like that.
 def emit_schema():
-    print(
-        (
-            "create table tables(\n"
-            "  t_name text primary key,\n"
-            "  region text not null,\n"
-            "  deleted bool not null,\n"
-            "  create_version int not null,\n"
-            "  delete_version int not null,\n"
-            "  recreate bool not null,\n"
-            "  recreate_group text not null);\n"
-            "\n"
-            "create table pks(\n"
-            "  t_name text not null,\n"
-            "  c_name text not null);\n"
-            "\n"
-            "create table columns(\n"
-            "  t_name text not null,\n"
-            "  c_name text not null,\n"
-            "  c_type text not null,\n"
-            "  c_kind text not null,\n"
-            "  c_notnull bool not null,\n"
-            "  primary key (t_name, c_name));\n"
-            "\n"
-            "create table table_attributes(\n"
-            "  t_name text not null,\n"
-            "  a_name text not null,\n"
-            "  value text not null);\n"
-            "\n"
-            "create table regions(\n"
-            "  r_name text primary key);\n"
-            "\n"
-            "create table region_deps(\n"
-            "  rchild text not null,\n"
-            "  rparent text not null);\n"
-            "\n"
-            "create table fks(\n"
-            "  fk_name text not null,\n"
-            "  src_table text not null,\n"
-            "  ref_table text not null,\n"
-            "  src_col text not null,\n"
-            "  ref_col text not null);\n"
-            "\n"
-            "create table procs(\n"
-            "  p_name text not null,\n"
-            "  category text not null,\n"
-            "  primary key (p_name));\n"
-            "\n"
-            "create table proc_projections(\n"
-            "  p_name text not null,\n"
-            "  icol integer not null,\n"
-            "  c_name text not null,\n"
-            "  type text not null,\n"
-            "  kind text,\n"
-            "  is_sensitive bool not null,\n"
-            "  is_not_null bool not null,\n"
-            "  primary key (p_name, icol));\n"
-            "\n"
-            "create table proc_deps(\n"
-            "  p_name text not null,\n"
-            "  t_name text not null);\n"
-            "\n"
-            "create table views(\n"
-            "  v_name text primary key,\n"
-            "  region text not null,\n"
-            "  deleted bool not null,\n"
-            "  create_version int not null,\n"
-            "  delete_version int not null);\n"
-            "\n"
-            "create table proc_view_deps(\n"
-            "  p_name text not null,\n"
-            "  v_name text not null);\n"
-            "\n"
-            "create table triggers(\n"
-            "  tr_name text primary key,\n"
-            "  t_name text,\n"
-            "  region text not null,\n"
-            "  deleted bool not null);\n"
-            "\n"
-            "create table trigger_deps(\n"
-            "  tr_name text not null,\n"
-            "  t_name text not null);\n"
-            "\n"
-        )
-    )
+    print(("create table tables(\n"
+           "  t_name text primary key,\n"
+           "  region text not null,\n"
+           "  deleted bool not null,\n"
+           "  create_version int not null,\n"
+           "  delete_version int not null,\n"
+           "  recreate bool not null,\n"
+           "  recreate_group text not null);\n"
+           "\n"
+           "create table pks(\n"
+           "  t_name text not null,\n"
+           "  c_name text not null);\n"
+           "\n"
+           "create table columns(\n"
+           "  t_name text not null,\n"
+           "  c_name text not null,\n"
+           "  c_type text not null,\n"
+           "  c_kind text not null,\n"
+           "  c_notnull bool not null,\n"
+           "  primary key (t_name, c_name));\n"
+           "\n"
+           "create table table_attributes(\n"
+           "  t_name text not null,\n"
+           "  a_name text not null,\n"
+           "  value text not null);\n"
+           "\n"
+           "create table regions(\n"
+           "  r_name text primary key);\n"
+           "\n"
+           "create table region_deps(\n"
+           "  rchild text not null,\n"
+           "  rparent text not null);\n"
+           "\n"
+           "create table fks(\n"
+           "  fk_name text not null,\n"
+           "  src_table text not null,\n"
+           "  ref_table text not null,\n"
+           "  src_col text not null,\n"
+           "  ref_col text not null);\n"
+           "\n"
+           "create table procs(\n"
+           "  p_name text not null,\n"
+           "  category text not null,\n"
+           "  primary key (p_name));\n"
+           "\n"
+           "create table proc_projections(\n"
+           "  p_name text not null,\n"
+           "  icol integer not null,\n"
+           "  c_name text not null,\n"
+           "  type text not null,\n"
+           "  kind text,\n"
+           "  is_sensitive bool not null,\n"
+           "  is_not_null bool not null,\n"
+           "  primary key (p_name, icol));\n"
+           "\n"
+           "create table proc_deps(\n"
+           "  p_name text not null,\n"
+           "  t_name text not null);\n"
+           "\n"
+           "create table views(\n"
+           "  v_name text primary key,\n"
+           "  region text not null,\n"
+           "  deleted bool not null,\n"
+           "  create_version int not null,\n"
+           "  delete_version int not null);\n"
+           "\n"
+           "create table proc_view_deps(\n"
+           "  p_name text not null,\n"
+           "  v_name text not null);\n"
+           "\n"
+           "create table triggers(\n"
+           "  tr_name text primary key,\n"
+           "  t_name text,\n"
+           "  region text not null,\n"
+           "  deleted bool not null);\n"
+           "\n"
+           "create table trigger_deps(\n"
+           "  tr_name text not null,\n"
+           "  t_name text not null);\n"
+           "\n"))
 
 
 # The procedure might have any number of projected columns if it has a result
@@ -421,7 +416,8 @@ def emit_attr_value(attr):
 def emit_attribute(t_name, attr):
     a_name = attr["name"]
     value = attr["value"]
-    print(f"insert into table_attributes values ('{t_name}', '{a_name}', '", end="")
+    print(f"insert into table_attributes values ('{t_name}', '{a_name}', '",
+          end="")
     emit_attr_value(value)
     print("');")
 

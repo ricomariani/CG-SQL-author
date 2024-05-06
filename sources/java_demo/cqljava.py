@@ -951,12 +951,12 @@ def emit_proc_section(section, s_name):
 
         # no codegen for private methods
         if "cql:private" not in attributes:
-          if emit_c:
-            # emit the C code for the JNI entry points and the supporting metadata
-            emit_proc_c_jni(proc, attributes)
-          else:
-            emit_proc_java_projection(proc, attributes)
-            emit_proc_java_jni(proc, attributes)
+            if emit_c:
+                # emit the C code for the JNI entry points and the supporting metadata
+                emit_proc_c_jni(proc, attributes)
+            else:
+                emit_proc_java_projection(proc, attributes)
+                emit_proc_java_jni(proc, attributes)
 
 
 # These are all of the procedure sources

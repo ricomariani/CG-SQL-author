@@ -20725,7 +20725,7 @@ static void sem_declare_cursor(ast_node *ast) {
 // you have an object variable with a statement in it and you want to
 // make a cursor over that statement.
 static void sem_declare_cursor_for_expr(ast_node *ast) {
-  Contract(is_ast_declare_cursor);
+  Contract(is_ast_declare_cursor(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
   EXTRACT_STRING(name, cursor);

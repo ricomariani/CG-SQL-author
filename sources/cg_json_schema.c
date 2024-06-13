@@ -1356,7 +1356,7 @@ static void cg_json_region_deps(charbuf *output, CSTR sym) {
   ast_node *region = find_region(sym);
   Invariant(region);
 
-  bprintf(output, "\"using\" : [ ", sym);
+  bprintf(output, "\"using\" : [ ");
 
   EXTRACT(region_list, region->right);
   for (ast_node *item = region_list; item; item = item->right) {
@@ -1368,9 +1368,9 @@ static void cg_json_region_deps(charbuf *output, CSTR sym) {
       bprintf(output, ", ");
     }
   }
-  bprintf(output, " ]", sym);
+  bprintf(output, " ]");
 
-  bprintf(output, ",\n\"usingPrivately\" : [ ", sym);
+  bprintf(output, ",\n\"usingPrivately\" : [ ");
 
   for (ast_node *item = region_list; item; item = item->right) {
     Contract(is_ast_region_list(item));
@@ -1381,7 +1381,7 @@ static void cg_json_region_deps(charbuf *output, CSTR sym) {
       bprintf(output, ", ");
     }
   }
-  bprintf(output, " ]", sym);
+  bprintf(output, " ]");
 }
 
 // To compute the deployed_in_region we only need to know its definiton
@@ -1764,11 +1764,11 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
   BEGIN_INDENT(type, 2);
 
   if (is_ast_inout(opt_inout)) {
-    bprintf(output, "\"binding\" : \"inout\",\n", name);
+    bprintf(output, "\"binding\" : \"inout\",\n");
     simple = 0;
   }
   else if (is_ast_out(opt_inout)) {
-    bprintf(output, "\"binding\" : \"out\",\n", name);
+    bprintf(output, "\"binding\" : \"out\",\n");
     simple = 0;
   }
 

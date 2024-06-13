@@ -1195,7 +1195,7 @@ static void cg_schema_manage_indices(charbuf *output, int32_t *drops, int32_t *c
     bprintf(output, "PROC %s_cql_get_unknown_indices()\n", global_proc_name);
     bprintf(output, "BEGIN\n");
     bprintf(output, "  DECLARE C CURSOR FOR SELECT name from sqlite_master where type = 'index'\n");
-    bprintf(output, "    AND name NOT LIKE 'sqlite%%'", names.ptr);
+    bprintf(output, "    AND name NOT LIKE 'sqlite%%'");
     if (names.used > 1) {
       bprintf(output, "\n    AND name NOT IN (%s)", names.ptr);
     }
@@ -1507,7 +1507,7 @@ static void cg_schema_manage_recreate_tables(
     if (strlen(child_group_drops.ptr) != 0 || strlen(migrate_table.ptr) != 0) {
       // Code in this if statement will only run for non-rebuilding recreate groups
       bprintf(&update_proc, "    IF NOT %s_result THEN \n", migrate_key);
-      bprintf(&update_proc, child_group_drops.ptr);
+      bprintf(&update_proc, "%s", child_group_drops.ptr);
       // Updating the CRC for any child group tables we dropped
       for (size_t j = 0; j < drop_count; j++) {
         bprintf(&update_proc, "        CALL %s_cql_set_facet_version('%s_crc', -1L);\n", global_proc_name, neighbors[j]);
@@ -2158,7 +2158,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
   bprintf(&main, "    SELECT T1.facet FROM\n");
   bprintf(&main, "      %s_cql_schema_facets T1\n", global_proc_name);
   bprintf(&main, "      LEFT OUTER JOIN %s_cql_schema_facets_saved T2\n", global_proc_name);
-  bprintf(&main, "        ON T1.facet = T2.facet\n", global_proc_name);
+  bprintf(&main, "        ON T1.facet = T2.facet\n");
   bprintf(&main, "      WHERE T1.version is not T2.version;\n");
   bprintf(&main, "END;\n\n");
 

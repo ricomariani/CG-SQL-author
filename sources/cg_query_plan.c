@@ -442,7 +442,7 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
     bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
 
     if (if_stmt_branch_context > 1) {
-      bprintf(query_plans, "@attribute(cql:query_plan_branch=%lld)\n", if_stmt_branch_context);
+      bprintf(query_plans, "@attribute(cql:query_plan_branch=%lld)\n", (llint_t)if_stmt_branch_context);
     }
 
     gen_set_output_buffer(query_plans);
@@ -917,7 +917,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   cg_qp_stmt_list(head);
 
-  bprintf(&output_buf, rt->source_prefix);
+  bprintf(&output_buf, "%s", rt->source_prefix);
   bprintf(&output_buf, "declare proc printf no check;\n");
 
   // Print special annotation that would rename any table name aliases in

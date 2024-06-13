@@ -791,7 +791,7 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
     bprintf(&gen_read_tables, "BEGIN\n");
     bprintf(&gen_read_tables, "  SELECT * FROM ");
     cg_emit_name_ast(&gen_read_tables, name_ast);
-    bprintf(&gen_read_tables, ";\n", table_name);
+    bprintf(&gen_read_tables, ";\n");
     bprintf(&gen_read_tables, "END;\n");
   }
 

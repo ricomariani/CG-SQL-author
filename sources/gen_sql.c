@@ -1050,10 +1050,10 @@ static void gen_expr_num(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
     }
     else {
       if (!strcmp(val, "0")) {
-        gen_printf("FALSE", val);
+        gen_printf("FALSE");
       }
       else {
-        gen_printf("TRUE", val);
+        gen_printf("TRUE");
       }
     }
   }
@@ -1124,7 +1124,7 @@ static void gen_text_args(ast_node *ast) {
       EXTRACT_STRING(name, txt->left);
       gen_printf("%s(", name);
       gen_macro_args(txt->right);
-      gen_printf(")", name);
+      gen_printf(")");
     }
     else if (is_any_macro_arg_ref(txt)) {
       EXTRACT_STRING(name, txt->left);
@@ -1175,7 +1175,7 @@ static void gen_expr_macro_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s(", name);
   gen_macro_args(ast->right);
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 // note that the final expression might end up with parens or not
@@ -1485,7 +1485,7 @@ cql_noexport CSTR gen_type_hash(ast_node *ast) {
   bool_t first = true;
   for (uint32_t i = 0; i < count; i++) {
      bputc(&tmp, first ? ':' : ',');
-     bprintf(&tmp, ptrs[i]);
+     bprintf(&tmp, "%s", ptrs[i]);
      first = false;
   }
 
@@ -2519,7 +2519,7 @@ static void gen_select_core_macro_ref(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s(", name);
   gen_macro_args(ast->right);
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_select_core_macro_arg_ref(ast_node *ast) {
@@ -2533,7 +2533,7 @@ static void gen_select_expr_macro_ref(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s(", name);
   gen_macro_args(ast->right);
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_select_expr_macro_arg_ref(ast_node *ast) {
@@ -2547,7 +2547,7 @@ static void gen_cte_tables_macro_ref(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s(", name);
   gen_macro_args(ast->right);
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_cte_tables_macro_arg_ref(ast_node *ast) {
@@ -2561,7 +2561,7 @@ static void gen_query_parts_macro_ref(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s(", name);
   gen_macro_args(ast->right);
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_query_parts_macro_arg_ref(ast_node *ast) {
@@ -2858,12 +2858,12 @@ static void gen_cte_decl(ast_node *ast)  {
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s (", name);
   if (is_ast_star(ast->right)) {
-    gen_printf("*", name);
+    gen_printf("*");
   }
   else {
     gen_name_list(ast->right);
   }
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_cte_binding_list(ast_node *ast) {
@@ -3885,7 +3885,7 @@ static void gen_fetch_values_stmt(ast_node *ast) {
     }
     else {
       EXTRACT(insert_list, columns_values->right);
-      gen_printf("FROM VALUES(", name);
+      gen_printf("FROM VALUES(");
       gen_insert_list(insert_list);
       gen_printf(")");
     }
@@ -4510,7 +4510,7 @@ static void gen_fetch_stmt(ast_node *ast) {
 
   gen_printf("FETCH %s", name);
   if (name_list) {
-    gen_printf(" INTO ", name);
+    gen_printf(" INTO ");
     gen_name_list(name_list);
   }
 }
@@ -5228,7 +5228,7 @@ static void gen_expr_macro_def(ast_node *ast) {
 
   gen_printf("@MACRO(EXPR) %s!(", name);
   gen_macro_formals(macro_name_formals->right);
-  gen_printf(")\nBEGIN\n", name);
+  gen_printf(")\nBEGIN\n");
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_root_expr(body);
   GEN_END_INDENT(body_indent);
@@ -5243,7 +5243,7 @@ static void gen_stmt_list_macro_def(ast_node *ast) {
 
   gen_printf("@MACRO(STMT_LIST) %s!(", name);
   gen_macro_formals(macro_name_formals->right);
-  gen_printf(")\nBEGIN\n", name);
+  gen_printf(")\nBEGIN\n");
   gen_stmt_list(body);
   gen_printf("END");
 }
@@ -5256,7 +5256,7 @@ static void gen_select_core_macro_def(ast_node *ast) {
 
   gen_printf("@MACRO(SELECT_CORE) %s!(", name);
   gen_macro_formals(macro_name_formals->right);
-  gen_printf(")\nBEGIN\n", name);
+  gen_printf(")\nBEGIN\n");
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_select_core_list(body);
   GEN_END_INDENT(body_indent);
@@ -5271,7 +5271,7 @@ static void gen_select_expr_macro_def(ast_node *ast) {
 
   gen_printf("@MACRO(SELECT_EXPR) %s!(", name);
   gen_macro_formals(macro_name_formals->right);
-  gen_printf(")\nBEGIN\n", name);
+  gen_printf(")\nBEGIN\n");
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_select_expr_list(body);
   GEN_END_INDENT(body_indent);
@@ -5286,7 +5286,7 @@ static void gen_query_parts_macro_def(ast_node *ast) {
 
   gen_printf("@MACRO(QUERY_PARTS) %s!(", name);
   gen_macro_formals(macro_name_formals->right);
-  gen_printf(")\nBEGIN\n", name);
+  gen_printf(")\nBEGIN\n");
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_query_parts(body);
   GEN_END_INDENT(body_indent);
@@ -5301,7 +5301,7 @@ static void gen_cte_tables_macro_def(ast_node *ast) {
 
   gen_printf("@MACRO(CTE_TABLES) %s!(", name);
   gen_macro_formals(macro_name_formals->right);
-  gen_printf(")\nBEGIN\n", name);
+  gen_printf(")\nBEGIN\n");
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_cte_tables(body, "");
   GEN_END_INDENT(body_indent);
@@ -5313,7 +5313,7 @@ static void gen_stmt_list_macro_ref(ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   gen_printf("%s(", name);
   gen_macro_args(ast->right);
-  gen_printf(")", name);
+  gen_printf(")");
 }
 
 static void gen_stmt_list_macro_arg_ref(ast_node *ast) {

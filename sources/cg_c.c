@@ -1339,7 +1339,7 @@ static void cg_expr_is(ast_node *ast, CSTR op, charbuf *is_null, charbuf *value,
     CG_PUSH_EVAL(r, pri_new);
 
     CSTR equal_func = is_text_op ? rt->cql_string_equal : rt->cql_blob_equal;
-    bprintf(value, "%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr, op);
+    bprintf(value, "%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr);
 
     CG_POP_EVAL(r);
     CG_POP_EVAL(l);
@@ -1406,7 +1406,7 @@ static void cg_expr_is_not(ast_node *ast, CSTR op, charbuf *is_null, charbuf *va
     CG_PUSH_EVAL(r, pri_new);
 
     CSTR equal_func = is_text_exp ? rt->cql_string_equal : rt->cql_blob_equal;
-    bprintf(value, "!%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr, op);
+    bprintf(value, "!%s(%s, %s)", equal_func, l_value.ptr, r_value.ptr);
 
     CG_POP_EVAL(r);
     CG_POP_EVAL(l);
@@ -1448,7 +1448,7 @@ static void cg_if_false(charbuf *output, CSTR is_null, CSTR value) {
   }
   else if (!strcmp(is_null, "1")) {
     // null is not false
-    bprintf(output, "if (0) {\n", value);
+    bprintf(output, "if (0) {\n");
   }
   else {
    bprintf(output, "if (cql_is_nullable_false(%s, %s)) {\n", is_null, value);
@@ -1464,7 +1464,7 @@ static void cg_if_true(charbuf *output, CSTR is_null, CSTR value) {
   }
   else if (!strcmp(is_null, "1")) {
     // null is not true
-    bprintf(output, "if (0) {\n", value);
+    bprintf(output, "if (0) {\n");
   }
   else {
    bprintf(output, "if (cql_is_nullable_true(%s, %s)) {\n", is_null, value);
@@ -2343,7 +2343,7 @@ static void cg_string_literal(CSTR str, charbuf *output) {
   bool_t is_new = cg_make_nice_literal_name(str, &name);
 
   // Emit reference to a new shared string.
-  bprintf(output, name.ptr);
+  bprintf(output, "%s", name.ptr);
 
   if (is_new) {
     // The shared string itself must live forever so it goes in global constants.
@@ -2451,7 +2451,7 @@ static void cg_id(ast_node *expr, charbuf *is_null, charbuf *value) {
     }
     else {
       bprintf(value, "%s", name);
-      bprintf(is_null, "0", name);
+      bprintf(is_null, "0");
     }
   }
 
@@ -3358,7 +3358,7 @@ static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR cursor_
 
   CG_CHARBUF_OPEN_SYM(row_type, scope, suffix, cursor_name, "_row");
 
-  bprintf(output, "\n", NULL);
+  bprintf(output, "\n");
 
   if (is_out_proc) {
     // Since we emit this for each DECLARE PROC as well as CREATE PROC, we need
@@ -3379,7 +3379,7 @@ static void cg_c_struct_for_sptr(charbuf *output, sem_struct *sptr, CSTR cursor_
   bprintf(output, "} %s;\n", row_type.ptr);
 
   if (is_out_proc) {
-    bprintf(output, "#endif\n", NULL);
+    bprintf(output, "#endif\n");
   }
 
   CHARBUF_CLOSE(row_type);
@@ -3989,9 +3989,9 @@ static void cg_create_proc_stmt(ast_node *ast) {
   temp_statement_emitted = saved_temp_emitted;
   seed_declared = saved_seed_declared;
 
-  bprintf(cg_declarations_output, proc_fwd_ref.ptr);
+  bprintf(cg_declarations_output, "%s", proc_fwd_ref.ptr);
   bprintf(cg_declarations_output, "%s) {\n", proc_decl.ptr);
-  bprintf(cg_declarations_output, proc_contracts.ptr);
+  bprintf(cg_declarations_output, "%s", proc_contracts.ptr);
 
   if (dml_proc) {
     cg_emit_rc_vars(cg_declarations_output);
@@ -4038,7 +4038,7 @@ static void cg_create_proc_stmt(ast_node *ast) {
   }
 
   if (proc_cleanup.used > 1) {
-    bprintf(cg_declarations_output, proc_cleanup.ptr);
+    bprintf(cg_declarations_output, "%s", proc_cleanup.ptr);
     empty_statement_needed = false;
   }
 
@@ -5245,7 +5245,7 @@ static int32_t cg_bound_sql_statement(CSTR stmt_name, ast_node *stmt, int32_t cg
     }
     else {
       if (reusing_statement) {
-        bprintf(cg_main_output, "if (!%s_stmt) {\n  ", stmt_name, rt->cql_target_null);
+        bprintf(cg_main_output, "if (!%s_stmt) {\n  ", stmt_name);
       }
       bprintf(cg_main_output, "_rc_ = cql_prepare_frags(_db_, %s%s_stmt,\n  ", amp, stmt_name);
     }
@@ -5574,7 +5574,7 @@ static void cg_emit_one_enum(ast_node *ast) {
        enum_values = enum_values->right;
     }
   }
-  bprintf(cg_header_output, "\n#endif\n", name);
+  bprintf(cg_header_output, "\n#endif\n");
 }
 
 // We emit the enums into the current .h file so that C code can use those
@@ -5642,7 +5642,7 @@ static void cg_emit_one_const_group(ast_node *ast) {
 
     const_values = const_values->right;
   }
-  bprintf(cg_header_output, "\n#endif\n", name);
+  bprintf(cg_header_output, "\n#endif\n");
 }
 
 // We're emitting the constants of a group into the output header. We have to
@@ -6229,7 +6229,7 @@ static void cg_switch_stmt(ast_node *ast) {
   }
 
   CG_POP_MAIN_INDENT(cases);
-  bprintf(cg_main_output, "}\n", expr_value.ptr);
+  bprintf(cg_main_output, "}\n");
 }
 
 // "While" suffers from the same problem as IF and as a consequence generating
@@ -8148,7 +8148,7 @@ static void cg_proc_result_set(ast_node *ast) {
 
   // generate reference and column offsets
   bprintf(&data_types, "};\n");
-  bprintf(d, data_types.ptr);
+  bprintf(d, "%s", data_types.ptr);
 
   if (refs_count && !uses_out) {
     // note: fetch procs have already emitted this.

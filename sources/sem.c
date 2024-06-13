@@ -7681,7 +7681,7 @@ static void sem_special_func_cql_blob_create(ast_node *ast, uint32_t arg_count, 
 
   *is_aggregate = false;
 
-  // cql_blob_get_type can only appear inside of SQL
+  // cql_blob_create can only appear inside of SQL
   if (!sem_validate_appear_inside_sql_stmt(ast)) {
     return;
   }
@@ -7797,7 +7797,7 @@ static void sem_special_func_cql_blob_update(ast_node *ast, uint32_t arg_count, 
 
   *is_aggregate = false;
 
-  // cql_blob_get_type can only appear inside of SQL
+  // cql_blob_update can only appear inside of SQL
   if (!sem_validate_appear_inside_sql_stmt(ast)) {
     return;
   }

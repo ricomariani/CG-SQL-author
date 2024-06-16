@@ -259,7 +259,8 @@ CQL_EXPORT void cql_bytebuf_open(cql_bytebuf *_Nonnull b);
 CQL_EXPORT void cql_bytebuf_close(cql_bytebuf *_Nonnull b);
 CQL_EXPORT void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed);
 CQL_EXPORT void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes);
-CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...);
+CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...)
+                   __attribute__ (( format( printf, 2, 3 ) ));
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor);
 

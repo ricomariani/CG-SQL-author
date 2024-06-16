@@ -46,7 +46,7 @@ cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
 {
   // Print the prefix first
-  bprintf(output, symbol_prefix);
+  bprintf(output, "%s", symbol_prefix);
 
   // Setup the arg list
   va_list args;

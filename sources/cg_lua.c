@@ -417,7 +417,7 @@ static void cg_lua_var_decl(charbuf *output, sem_t sem_type, CSTR name) {
   else {
     // variable groups are global by construction so don't emit "local" for them
     // if we're here this not a variable group
-    bprintf(output, "local ", name);
+    bprintf(output, "local ");
   }
 
   bprintf(output, "%s", name);
@@ -2410,9 +2410,9 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   lua_temp_statement_emitted = saved_temp_emitted;
   lua_seed_declared = saved_lua_seed_declared;
 
-  bprintf(cg_declarations_output, proc_fwd_ref.ptr);
+  bprintf(cg_declarations_output, "%s", proc_fwd_ref.ptr);
   bprintf(cg_declarations_output, "function %s)\n", proc_decl.ptr);
-  bprintf(cg_declarations_output, proc_contracts.ptr);
+  bprintf(cg_declarations_output, "%s", proc_contracts.ptr);
 
   if (dml_proc) {
     cg_lua_emit_rc_vars(cg_declarations_output);
@@ -2450,7 +2450,7 @@ static void cg_lua_create_proc_stmt(ast_node *ast) {
   bprintf(cg_declarations_output, "\n");
 
   if (proc_cleanup.used > 1) {
-    bprintf(cg_declarations_output, proc_cleanup.ptr);
+    bprintf(cg_declarations_output, "%s", proc_cleanup.ptr);
   }
 
   if (result_set_proc) {

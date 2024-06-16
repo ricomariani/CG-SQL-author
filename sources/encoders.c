@@ -343,7 +343,7 @@ cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_N
   bindent(output, &temp_output, 6);
   bclear(&temp_output);
   bprintf(&temp_output, "\n      ");
-  bprintf(output, temp_output.ptr);
+  bprintf(output, "%s", temp_output.ptr);
   CHARBUF_CLOSE(temp_output);
 }
 

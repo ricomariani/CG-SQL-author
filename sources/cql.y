@@ -3061,6 +3061,10 @@ cql_noexport const CSTR cql_builtin_text() {
 int cql_main(int argc, char **argv) {
   int rc;
   CqlState *CS = cql_new_state();
+  if (!CS) {
+    cql_error(CS, "Failed to allocate memory for CqlState.\n");
+    cql_cleanup_and_exit(CS, 1);
+  }
   yylex_init(&CS->scanner);
   CS->cql_exit_code = 0;
   CS->parse_error_occurred = false;

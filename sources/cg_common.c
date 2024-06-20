@@ -446,9 +446,11 @@ cql_noexport void cg_common_cleanup(CqlState* _Nonnull CS) {
   CS->cg_blob_mappings = 0;
 }
 
-CqlState* cql_new_state() {
+CqlState* _Nullable cql_new_state() {
     CqlState *cs = _new(CqlState);
-    memset(cs, 0, sizeof(CqlState));
+    if (cs) {
+        memset(cs, 0, sizeof(CqlState));
+    }
     return cs; 
 }
 

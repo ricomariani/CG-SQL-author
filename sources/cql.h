@@ -70,8 +70,8 @@ typedef struct CqlState CqlState;
 #define _64(x) x##LL
 #endif
 
-CqlState* cql_new_state();
-void cql_free_state(CqlState *CS);
+CqlState* _Nullable cql_new_state();
+void cql_free_state(CqlState* _Nonnull CS);
 
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv);

@@ -126,10 +126,10 @@ jobs:
 
           sudo pip3 install gcovr
           sudo luarocks install lsqlite3
-      - name: Execute test script using Clang in non-interactive mode
-        run: ./test.sh --use_clang --non_interactive
       - name: Execute test script using GCC in non-interactive mode
         run: ./test.sh --use_gcc --non_interactive
+      - name: Execute test script using Clang in non-interactive mode
+        run: ./test.sh --use_clang --non_interactive
       - name: Execute test script in non-interactive mode (Using Amalgam)
         run: ./test.sh --use_clang --use_amalgam --non_interactive
       - name: Execute test script in non-interactive mode with Address Sanitizer enabled

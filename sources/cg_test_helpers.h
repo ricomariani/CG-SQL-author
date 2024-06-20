@@ -9,4 +9,4 @@
 
 #include "cql.h"
 
-cql_noexport void cg_test_helpers_main(struct ast_node *root);
+cql_noexport void cg_test_helpers_main(CqlState* CS, struct ast_node *root);

@@ -4522,7 +4522,7 @@ void bcreatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
     }
 
     int64_t blob_column_type = sqlite3_value_int64(field_type_arg);
-    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+    //int64_t field_value_type = sqlite3_value_type(field_value_arg);
 
     int64_t field_variable_size = 0;
     cql_bool compat = cql_blobtype_vs_argtype_compat(field_value_arg, blob_column_type, &field_variable_size);
@@ -4812,7 +4812,7 @@ void bupdatekey(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       goto cql_error;
     }
 
-    int64_t field_value_type = sqlite3_value_type(field_value_arg);
+    //int64_t field_value_type = sqlite3_value_type(field_value_arg);
     int64_t icol = sqlite3_value_int64(field_index_arg);
 
     if (icol < 0 || icol >= header.column_count) {

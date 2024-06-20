@@ -191,72 +191,74 @@ typedef struct {
   int32_t type;
 } macro_info;
 
-cql_noexport CSTR _Nullable install_macro_args(ast_node *_Nonnull ast);
-cql_noexport void new_macro_formals(void);
-cql_noexport void delete_macro_formals(void);
-cql_noexport bool_t set_macro_info(CSTR _Nonnull name, int32_t macro_type, ast_node *_Nonnull ast);
-cql_noexport bool_t set_macro_arg_info(CSTR _Nonnull name, int32_t macro_type, ast_node *_Nonnull ast);
-cql_noexport macro_info *_Nullable get_macro_arg_info(CSTR _Nonnull name);
-cql_noexport macro_info *_Nullable get_macro_info(CSTR _Nonnull name);
-cql_noexport void expand_macros(ast_node *_Nonnull root);
+typedef void (*AstGenOneStmt)(CqlState*, ast_node*);
+
+cql_noexport CSTR _Nullable install_macro_args(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void new_macro_formals(CqlState* CS);
+cql_noexport void delete_macro_formals(CqlState* CS);
+cql_noexport bool_t set_macro_info(CqlState* CS, CSTR _Nonnull name, int32_t macro_type, ast_node *_Nonnull ast);
+cql_noexport bool_t set_macro_arg_info(CqlState* CS, CSTR _Nonnull name, int32_t macro_type, ast_node *_Nonnull ast);
+cql_noexport macro_info *_Nullable get_macro_arg_info(CqlState* CS, CSTR _Nonnull name);
+cql_noexport macro_info *_Nullable get_macro_info(CqlState* CS, CSTR _Nonnull name);
+cql_noexport void expand_macros(CqlState* CS, ast_node *_Nonnull root);
 
 // from the lexer
-extern int yylineno;
-cql_data_decl( char *_Nullable current_file );
+//extern int yylineno;
+//cql_data_decl( char *_Nullable CS->current_file );
 
 cql_data_decl ( CSTR _Nullable base_fragment_name );
 
-cql_data_decl( bool_t macro_expansion_errors );
+//cql_data_decl( bool_t CS->macro_expansion_errors );
 
-cql_data_decl( minipool *_Nullable ast_pool );
+//cql_data_decl( minipool *_Nullable CS->ast_pool );
 
-#define _ast_pool_new(x) _pool_new(ast_pool, x)
-#define _ast_pool_new_array(x, c) _pool_new_array(ast_pool, x, c)
+#define _ast_pool_new(x) _pool_new(CS->ast_pool, x)
+#define _ast_pool_new_array(x, c) _pool_new_array(CS->ast_pool, x, c)
 
 // reset location to make sure it's not used by the next new nodes. If any
 // new node is created without setting location then the app will crash.
 #define AST_REWRITE_INFO_START() \
-  ast_reset_rewrite_info()
+  ast_reset_rewrite_info(CS)
 
 // end reset location session and make sure SET and RESET were used in synced
 #define AST_REWRITE_INFO_END() \
-  Contract(!current_file && yylineno == -1)
+  Contract(!CS->current_file && yyget_lineno(CS->scanner) == -1)
 
 // any new nodes will be charged to this location
 #define AST_REWRITE_INFO_SET(lineno, filename) \
-  Contract(!current_file && yylineno == -1); \
-  ast_set_rewrite_info(lineno, filename)
+  Contract(!CS->current_file && yyget_lineno(CS->scanner) == -1); \
+  ast_set_rewrite_info(CS, lineno, filename)
 
 // reset the location to make sure it's not used by the next new nodes
 #define AST_REWRITE_INFO_RESET() \
-  Contract(current_file && yylineno > 0); \
-  ast_reset_rewrite_info()
+  Contract(CS->current_file && yyget_lineno(CS->scanner) > 0); \
+  ast_reset_rewrite_info(CS)
 
 // any new nodes will be charged to this location
 #define AST_REWRITE_INFO_SAVE() \
-  int32_t lineno_saved = yylineno; \
-  CSTR current_file_saved = current_file; \
-  ast_reset_rewrite_info()
+  int32_t lineno_saved = yyget_lineno(CS->scanner); \
+  CSTR current_file_saved = CS->current_file; \
+  ast_reset_rewrite_info(CS)
 
 // reset the location to make sure it's not used by the next new nodes
 #define AST_REWRITE_INFO_RESTORE() \
-  ast_set_rewrite_info(lineno_saved, current_file_saved);
+  ast_set_rewrite_info(CS, lineno_saved, current_file_saved);
 
 
-cql_noexport void ast_set_rewrite_info(int32_t lineno, CSTR _Nonnull filename);
-cql_noexport void ast_reset_rewrite_info(void);
+cql_noexport void ast_set_rewrite_info(CqlState* CS, int32_t lineno, CSTR _Nonnull filename);
+cql_noexport void ast_reset_rewrite_info(CqlState* CS);
 
-cql_noexport void ast_init(void);
-cql_noexport void ast_cleanup(void);
+cql_noexport void ast_init(CqlState* CS);
+cql_noexport void ast_cleanup(CqlState* CS);
 
-cql_noexport ast_node *_Nonnull new_ast(const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
-cql_noexport ast_node *_Nonnull new_ast_num(int32_t type, const char *_Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_option(int32_t value);
-cql_noexport ast_node *_Nonnull new_ast_str(CSTR _Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_cstr(CSTR _Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CSTR _Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_qstr_quoted(CSTR _Nonnull value);
-cql_noexport ast_node *_Nonnull new_ast_blob(CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast(CqlState* CS, const char *_Nonnull type, ast_node *_Nullable l, ast_node *_Nullable r);
+cql_noexport ast_node *_Nonnull new_ast_num(CqlState* CS, int32_t type, const char *_Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_option(CqlState* CS, int32_t value);
+cql_noexport ast_node *_Nonnull new_ast_str(CqlState* CS, CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_cstr(CqlState* CS, CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr_escaped(CqlState* CS, CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_qstr_quoted(CqlState* CS, CSTR _Nonnull value);
+cql_noexport ast_node *_Nonnull new_ast_blob(CqlState* CS, CSTR _Nonnull value);
 
 cql_noexport bool_t is_ast_int(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
@@ -282,9 +284,9 @@ cql_noexport bool_t is_primitive(ast_node *_Nullable  node);
 cql_noexport bool_t is_proc(ast_node *_Nullable node);
 cql_noexport bool_t is_region(ast_node *_Nonnull ast);
 
-cql_noexport ast_node *_Nullable get_proc_params(ast_node *_Nonnull ast);
-cql_noexport ast_node *_Nonnull get_proc_name(ast_node *_Nonnull ast);
-cql_noexport ast_node *_Nullable get_func_params(ast_node *_Nonnull func_stmt);
+cql_noexport ast_node *_Nullable get_proc_params(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport ast_node *_Nonnull get_proc_name(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport ast_node *_Nullable get_func_params(CqlState* CS, ast_node *_Nonnull func_stmt);
 
 cql_noexport bool_t ast_has_left(ast_node *_Nullable node);
 cql_noexport bool_t ast_has_right(ast_node *_Nullable enode);
@@ -292,14 +294,14 @@ cql_noexport bool_t ast_has_right(ast_node *_Nullable enode);
 cql_noexport void ast_set_right(ast_node *_Nonnull parent, ast_node *_Nullable right);
 cql_noexport void ast_set_left(ast_node *_Nonnull parent, ast_node *_Nullable left);
 
-cql_noexport bool_t print_ast_value(struct ast_node *_Nonnull node);
-cql_noexport void print_ast_type(ast_node *_Nonnull node);
-cql_noexport void print_ast(ast_node *_Nullable node, ast_node *_Nullable parent, int32_t pad, bool_t flip);
-cql_noexport void print_root_ast(ast_node *_Nullable node);
+cql_noexport bool_t print_ast_value(CqlState* CS, struct ast_node *_Nonnull node);
+cql_noexport void print_ast_type(CqlState* CS, ast_node *_Nonnull node);
+cql_noexport void print_ast(CqlState* CS, ast_node *_Nullable node, ast_node *_Nullable parent, int32_t pad, bool_t flip);
+cql_noexport void print_root_ast(CqlState* CS, ast_node *_Nullable node);
 
-cql_noexport void ast_reset_rewrite_info(void);
-cql_noexport ast_node *_Nullable ast_clone_tree(ast_node *_Nullable ast);
-cql_noexport CSTR _Nonnull convert_cstrlit(CSTR _Nonnull cstr);
+cql_noexport void ast_reset_rewrite_info(CqlState* CS);
+cql_noexport ast_node *_Nullable ast_clone_tree(CqlState* CS, ast_node *_Nullable ast);
+cql_noexport CSTR _Nonnull convert_cstrlit(CqlState* CS, CSTR _Nonnull cstr);
 
 cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator);
 
@@ -466,8 +468,9 @@ cql_noexport CSTR _Nonnull get_compound_operator_name(int32_t compound_operator)
   EXTRACT_NAMED_NAME_AND_SCOPE(name, scope, node)
 
 // For searching proc dependencies/attributes
-typedef void (*find_ast_str_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
-typedef void (*find_ast_num_node_callback)(CSTR _Nonnull found_name, ast_node *_Nonnull num_ast, void *_Nullable context);
+typedef void (*find_ast_str_node_callback)(CqlState* CS, CSTR _Nonnull found_name, ast_node *_Nonnull str_ast, void *_Nullable context);
+typedef void (*find_ast_num_node_callback)(CqlState* CS, CSTR _Nonnull found_name, ast_node *_Nonnull num_ast, void *_Nullable context);
+typedef void (*callback_final_processing_callback)(CqlState* CS, void *_Nullable callback_context);
 
 typedef struct table_callbacks {
   bool_t notify_table_or_view_drops;
@@ -487,75 +490,85 @@ typedef struct table_callbacks {
   find_ast_str_node_callback _Nullable callback_deletes;
   find_ast_str_node_callback _Nullable callback_from;
   find_ast_str_node_callback _Nullable callback_proc;
-  void (*_Nullable callback_final_processing)(void *_Nullable callback_context);
+  callback_final_processing_callback _Nullable callback_final_processing;
   void *_Nullable callback_context;
 } table_callbacks;
 
-cql_noexport void find_table_refs(table_callbacks *_Nonnull data, ast_node *_Nonnull node);
-cql_noexport void continue_find_table_node(table_callbacks *_Nonnull callbacks, ast_node *_Nonnull node);
+cql_noexport void find_table_refs(CqlState* CS, table_callbacks *_Nonnull data, ast_node *_Nonnull node);
+cql_noexport void continue_find_table_node(CqlState* CS, table_callbacks *_Nonnull callbacks, ast_node *_Nonnull node);
 
 
 // Signature of function finding annotation values
 typedef uint32_t (*find_annotation_values)(
+    CqlState* CS,
     ast_node *_Nullable misc_attr_list,
     find_ast_str_node_callback _Nonnull callback,
     void *_Nullable callback_context);
 
 cql_noexport uint32_t find_ok_table_scan(
+   CqlState* CS,
    ast_node *_Nonnull list,
    find_ast_str_node_callback _Nonnull callback,
    void *_Nullable context);
 
 cql_noexport uint32_t find_autodrops(
+   CqlState* CS,
    ast_node *_Nonnull list,
    find_ast_str_node_callback _Nonnull callback,
    void *_Nullable context);
 
 cql_noexport uint32_t find_identity_columns(
+  CqlState* CS,
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable callback_context);
 
 cql_noexport uint32_t find_cql_alias_of(
+  CqlState* CS,
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable context
 );
 
 cql_noexport uint32_t find_attribute_str(
+  CqlState* CS,
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context,
   const char *_Nonnull attribute_name);
 
 cql_noexport uint32_t exists_attribute_str(
+  CqlState* CS,
   ast_node *_Nullable misc_attr_list,
   const char *_Nonnull attribute_name);
 
-cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list);
-cql_noexport uint32_t find_backing_table_attr(ast_node *_Nonnull misc_attr_list);
+cql_noexport uint32_t find_backed_table_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list);
+cql_noexport uint32_t find_backing_table_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list);
 
-cql_noexport CSTR _Nullable get_named_string_attribute_value(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
-cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
+cql_noexport CSTR _Nullable get_named_string_attribute_value(CqlState* CS, ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
+cql_noexport bool_t find_named_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name);
 
 cql_noexport uint32_t find_query_plan_branch(
+  CqlState* CS,
   ast_node *_Nonnull list,
   find_ast_num_node_callback _Nonnull callback,
   void *_Nullable context
 );
 
-cql_noexport bool_t is_table_blob_storage(ast_node *_Nonnull ast);
-cql_noexport bool_t is_table_backing(ast_node *_Nonnull ast);
-cql_noexport bool_t is_table_backed(ast_node *_Nonnull ast);
+cql_noexport bool_t is_table_blob_storage(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport bool_t is_table_backing(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport bool_t is_table_backed(CqlState* CS, ast_node *_Nonnull ast);
 
 // Callback whenever a misc_attr node is found in find_misc_attrs().
 typedef void (*find_ast_misc_attr_callback)(
+  CqlState *CS,
   CSTR _Nullable misc_attr_prefix,
   CSTR _Nonnull misc_attr_name,
   ast_node *_Nullable ast_misc_attr_value_list,
   void *_Nullable context);
 
 cql_noexport void find_misc_attrs(
+  CqlState* CS,
   ast_node *_Nullable misc_attr_list,
   find_ast_misc_attr_callback _Nonnull misc_attr_callback,
   void *_Nullable context);
@@ -590,15 +603,15 @@ cql_noexport size_t ends_in_set(CSTR _Nonnull str);
 
 #endif
 
-AST_DATA_DECL( CSTR _Nonnull k_ast_int );
-AST_DATA_DECL( CSTR _Nonnull k_ast_num );
-AST_DATA_DECL( CSTR _Nonnull k_ast_str );
-AST_DATA_DECL( CSTR _Nonnull k_ast_blob );
+AST_DATA_DECL( const CSTR _Nonnull k_ast_int );
+AST_DATA_DECL( const CSTR _Nonnull k_ast_num );
+AST_DATA_DECL( const CSTR _Nonnull k_ast_str );
+AST_DATA_DECL( const CSTR _Nonnull k_ast_blob );
 
-AST_DATA_DEFN( CSTR _Nonnull k_ast_int = "int" );
-AST_DATA_DEFN( CSTR _Nonnull k_ast_num = "num" );
-AST_DATA_DEFN( CSTR _Nonnull k_ast_str = "str" );
-AST_DATA_DEFN( CSTR _Nonnull k_ast_blob = "blb" );
+AST_DATA_DEFN( const CSTR _Nonnull k_ast_int = "int" );
+AST_DATA_DEFN( const CSTR _Nonnull k_ast_num = "num" );
+AST_DATA_DEFN( const CSTR _Nonnull k_ast_str = "str" );
+AST_DATA_DEFN( const CSTR _Nonnull k_ast_blob = "blb" );
 
 #define AST_DECL_CHECK(x) \
   AST_DATA_DECL(const char *_Nonnull k_ast_ ## x;) \
@@ -608,20 +621,20 @@ AST_DATA_DEFN( CSTR _Nonnull k_ast_blob = "blb" );
 
 #define AST(x) \
   AST_DECL_CHECK(x) \
-  AST_VIS ast_node *_Nonnull new_ast_ ## x(ast_node *_Nullable l, ast_node *_Nullable r); \
-  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(ast_node *_Nullable l, ast_node *_Nullable r) { return new_ast(k_ast_ ## x, l, r); })
+  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l, ast_node *_Nullable r); \
+  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l, ast_node *_Nullable r) { return new_ast(CS, k_ast_ ## x, l, r); })
 
 #define AST1(x) \
   AST_DECL_CHECK(x) \
-  AST_VIS ast_node *_Nonnull new_ast_ ## x(ast_node *_Nullable l); \
-  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(ast_node *_Nullable l) { return new_ast(k_ast_ ## x, l, NULL); })
+  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l); \
+  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l) { return new_ast(CS, k_ast_ ## x, l, NULL); })
 
 #define AST0(x) \
   AST_DECL_CHECK(x) \
-  AST_VIS ast_node *_Nonnull new_ast_ ## x(void); \
-  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x() { return new_ast(k_ast_ ## x, NULL, NULL); })
+  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS); \
+  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS) { return new_ast(CS, k_ast_ ## x, NULL, NULL); })
 
-#ifndef _MSC_VER
+#ifdef __clang__
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-function"
@@ -1026,7 +1039,7 @@ AST1(window_clause)
 AST1(with)
 AST1(with_recursive)
 
-#ifndef _MSC_VER
+#ifdef __clang__
 #pragma clang diagnostic pop
 #endif
 

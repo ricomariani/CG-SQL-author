@@ -21,7 +21,7 @@ typedef struct bytebuf {
 } bytebuf;
 
 cql_noexport void bytebuf_open(bytebuf *_Nonnull buf);
-cql_noexport void bytebuf_close(bytebuf *_Nonnull buf);
+cql_noexport void bytebuf_close(CqlState* CS, bytebuf *_Nonnull buf);
 cql_noexport void *_Nonnull bytebuf_alloc(bytebuf *_Nonnull buf, uint32_t needed);
 cql_noexport void bytebuf_append(bytebuf *_Nonnull buf, const void *_Nonnull bytes, uint32_t count);
 
@@ -32,4 +32,4 @@ cql_noexport void bytebuf_append(bytebuf *_Nonnull buf, const void *_Nonnull byt
 #define bytebuf_append_var(buf, var) bytebuf_append(buf, &var, sizeof(var))
 
 // cleanup a non-null buffer
-#define BYTEBUF_CLEANUP(b) if (b) {bytebuf_close(b); b = NULL; }
+#define BYTEBUF_CLEANUP(b) if (b) {bytebuf_close(CS, b); b = NULL; }

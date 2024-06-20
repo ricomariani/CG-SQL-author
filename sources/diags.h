@@ -7,7 +7,7 @@
 
 // enable lots of extra warnings for cql
 
-#ifndef _MSC_VER
+#ifdef __clang__
 
 #pragma clang diagnostic error "-Wall"
 
@@ -25,9 +25,6 @@
 #pragma clang diagnostic error "-Wshorten-64-to-32"
 #pragma clang diagnostic error "-Wsign-conversion"
 #pragma clang diagnostic error "-Wconversion"
-#pragma clang diagnostic error "-Werror=format-extra-args"
-#pragma clang diagnostic error "-Werror=format-security"
-#pragma clang diagnostic error "-Werror=format="
 
 #ifdef NDEBUG
 // Many symbols are "unused" becuase they only appear in asserts, so we have to suppress

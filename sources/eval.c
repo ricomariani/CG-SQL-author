@@ -24,23 +24,25 @@
 #include "cql.h"
 #include "ast.h"
 #include "cql.y.h"
+#include "cql.lex.h"
 #include "sem.h"
 #include "charbuf.h"
 #include "bytebuf.h"
 #include "list.h"
 #include "symtab.h"
 #include "eval.h"
+#include "cql_state.h"
 
 // This is the symbol table with the ast dispatch when we get to an ast node
 // we look it up here and call the appropriate function whose name matches the ast
 // node type.
-static symtab *evals;
+//static symtab *evals;
 
 // The signature of the various evaluation functions
-typedef void (*eval_dispatch)(ast_node *expr, eval_node *result);
+typedef void (*eval_dispatch)(CqlState* CS, ast_node *expr, eval_node *result);
 
 // Null literal
-static void eval_null(ast_node *expr, eval_node *result) {
+static void eval_null(CqlState* CS, ast_node *expr, eval_node *result) {
   result->sem_type = SEM_TYPE_NULL;
 }
 
@@ -76,7 +78,7 @@ static void eval_num_str(CSTR lit, int32_t num_type, eval_node *result) {
 }
 
 // A number; it could be any of the numeric types with or without a hex prefix
-static void eval_num(ast_node *expr, eval_node *result) {
+static void eval_num(CqlState* CS, ast_node *expr, eval_node *result) {
   EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
 
@@ -163,7 +165,7 @@ cql_noexport void eval_cast_to(eval_node *result, sem_t sem_type) {
   result->sem_type = core_type_target;
 }
 
-static void eval_format_real(double real, charbuf *output) {
+static void eval_format_real(CqlState* CS, double real, charbuf *output) {
   CHARBUF_OPEN(tmp);
   bprintf(&tmp, "%*e", DECIMAL_DIG, real);
   CSTR p = tmp.ptr;
@@ -178,7 +180,7 @@ static void eval_format_real(double real, charbuf *output) {
 // harvested for file and line info and then replaced in the tree.  It's value
 // is otherwise irrelevant because the computation has already been done.
 // The incoming evaluation result must not be an error node.
-cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
+cql_noexport ast_node *eval_set(CqlState* CS, ast_node *expr, eval_node *result) {
   Contract(result);
   sem_t core_type = core_type_of(result->sem_type);
   Contract(core_type != SEM_TYPE_ERROR);
@@ -189,7 +191,7 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
 
   switch (core_type) {
   case SEM_TYPE_INTEGER:
-    new_num = new_ast_num(NUM_INT, dup_printf("%d", result->int32_value));
+    new_num = new_ast_num(CS, NUM_INT, dup_printf(CS, "%d", result->int32_value));
     break;
 
   case SEM_TYPE_LONG_INTEGER:
@@ -198,30 +200,30 @@ cql_noexport ast_node *eval_set(ast_node *expr, eval_node *result) {
       // later stages of the compiler are looking for this case and will rewrite
       // it as "_64(-9223372036854775807) - 1" we encode it this way because
       // that's how its appears for users
-      new_num = new_ast_uminus(new_ast_num(NUM_LONG, dup_printf("9223372036854775808")));
+      new_num = new_ast_uminus(CS, new_ast_num(CS, NUM_LONG, dup_printf(CS, "9223372036854775808")));
     }
     else {
       // other cases, don't need special treatment so we use the most economical encoding
-      new_num = new_ast_num(NUM_LONG, dup_printf("%lld", (llint_t)result->int64_value));
+      new_num = new_ast_num(CS, NUM_LONG, dup_printf(CS, "%lld", (llint_t)result->int64_value));
     }
     break;
 
   case SEM_TYPE_BOOL:
-    new_num = new_ast_num(NUM_BOOL, dup_printf("%d", !!result->bool_value));
+    new_num = new_ast_num(CS, NUM_BOOL, dup_printf(CS, "%d", !!result->bool_value));
     break;
 
   case SEM_TYPE_REAL:
     {
     CHARBUF_OPEN(tmp);
-    eval_format_real(result->real_value, &tmp);
-    new_num = new_ast_num(NUM_REAL, dup_printf("%s", tmp.ptr));
+    eval_format_real(CS, result->real_value, &tmp);
+    new_num = new_ast_num(CS, NUM_REAL, dup_printf(CS, "%s", tmp.ptr));
     CHARBUF_CLOSE(tmp);
     break;
     }
 
   default:
     Invariant(core_type == SEM_TYPE_NULL); // nothing else left
-    new_num = new_ast_null();
+    new_num = new_ast_null(CS);
     break;
   }
 
@@ -292,8 +294,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 #define BINARY_OP(op) \
   eval_node left = EVAL_NIL; \
   eval_node right = EVAL_NIL; \
-  eval(expr->left, &left); \
-  eval(expr->right, &right); \
+  eval(CS, expr->left, &left); \
+  eval(CS, expr->right, &right); \
   \
   if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { \
     result->sem_type = SEM_TYPE_ERROR; \
@@ -350,8 +352,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 #define BINARY_OP_NO_REAL(op) \
   eval_node left = EVAL_NIL; \
   eval_node right = EVAL_NIL; \
-  eval(expr->left, &left); \
-  eval(expr->right, &right); \
+  eval(CS, expr->left, &left); \
+  eval(CS, expr->right, &right); \
   \
   if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { \
     result->sem_type = SEM_TYPE_ERROR; \
@@ -412,8 +414,8 @@ static sem_t eval_combined_type(eval_node *left, eval_node *right) {
 #define COMPARE_BINARY_OP(op) \
   eval_node left = EVAL_NIL; \
   eval_node right = EVAL_NIL; \
-  eval(expr->left, &left); \
-  eval(expr->right, &right); \
+  eval(CS, expr->left, &left); \
+  eval(CS, expr->right, &right); \
   \
   if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) { \
     result->sem_type = SEM_TYPE_ERROR; \
@@ -487,15 +489,15 @@ static bool_t result_is_true(eval_node *result) {
 // Having defined the helper macros all of the normal operators
 // are now just one of the standard expansions
 
-static void eval_add(ast_node *expr, eval_node *result) {
+static void eval_add(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP(+);
 }
 
-static void eval_sub(ast_node *expr, eval_node *result) {
+static void eval_sub(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP(-);
 }
 
-static void eval_mul(ast_node *expr, eval_node *result) {
+static void eval_mul(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP(*);
 }
 
@@ -504,55 +506,55 @@ static void eval_mul(ast_node *expr, eval_node *result) {
 #define DIV_TEST(x) x
 
 // note: BINARY_OP has divide by zero logic
-static void eval_div(ast_node *expr, eval_node *result) {
+static void eval_div(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP(/);
 }
 
 // note: BINARY_OP_NO_REAL has divide by zero logic
-static void eval_mod(ast_node *expr, eval_node *result) {
+static void eval_mod(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(%);
 }
 
 #undef DIV_TEST
 #define DIV_TEST(x)
 
-static void eval_eq(ast_node *expr, eval_node *result) {
+static void eval_eq(CqlState* CS, ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(==);
 }
 
-static void eval_ne(ast_node *expr, eval_node *result) {
+static void eval_ne(CqlState* CS, ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(!=);
 }
 
-static void eval_le(ast_node *expr, eval_node *result) {
+static void eval_le(CqlState* CS, ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(<=);
 }
 
-static void eval_ge(ast_node *expr, eval_node *result) {
+static void eval_ge(CqlState* CS, ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(>=);
 }
 
-static void eval_lt(ast_node *expr, eval_node *result) {
+static void eval_lt(CqlState* CS, ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(<);
 }
 
-static void eval_gt(ast_node *expr, eval_node *result) {
+static void eval_gt(CqlState* CS, ast_node *expr, eval_node *result) {
   COMPARE_BINARY_OP(>);
 }
 
-static void eval_lshift(ast_node *expr, eval_node *result) {
+static void eval_lshift(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(<<);
 }
 
-static void eval_rshift(ast_node *expr, eval_node *result) {
+static void eval_rshift(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(>>);
 }
 
-static void eval_bin_and(ast_node *expr, eval_node *result) {
+static void eval_bin_and(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(&);
 }
 
-static void eval_bin_or(ast_node *expr, eval_node *result) {
+static void eval_bin_or(CqlState* CS, ast_node *expr, eval_node *result) {
   BINARY_OP_NO_REAL(|);
 }
 
@@ -565,11 +567,11 @@ static void eval_bin_or(ast_node *expr, eval_node *result) {
 //   * compute the smallest type that holds both values
 //   * convert to that type
 //   * return true if and only if the values are equal as that type
-static void eval_is(ast_node *expr, eval_node *result) {
+static void eval_is(CqlState* CS, ast_node *expr, eval_node *result) {
   eval_node left = EVAL_NIL;
   eval_node right = EVAL_NIL;
-  eval(expr->left, &left);
-  eval(expr->right, &right);
+  eval(CS, expr->left, &left);
+  eval(CS, expr->right, &right);
 
   if (left.sem_type == SEM_TYPE_ERROR || right.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
@@ -616,8 +618,8 @@ static void eval_is(ast_node *expr, eval_node *result) {
 
 // We can use the 'is' logic to do this, we simply run "is", if the result
 // was a bool (i.e. not an error) then we simply invert the bool.
-static void eval_is_not(ast_node *expr, eval_node *result) {
-  eval_is(expr, result);
+static void eval_is_not(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval_is(CS, expr, result);
   if (result->sem_type == SEM_TYPE_BOOL) {
      result->bool_value = !result->bool_value;
   }
@@ -625,8 +627,8 @@ static void eval_is_not(ast_node *expr, eval_node *result) {
 
 // Not has simple rules;  If the operand is an error or null it is unchanged
 // any other operator is converted to a bool and then inverted.
-static void eval_not(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_not(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
   }
@@ -638,8 +640,8 @@ static void eval_not(ast_node *expr, eval_node *result) {
 
 // Is false has simple rules;  If the operand is an error it is unchanged
 // null becomes FALSE any other is converted to a bool and inverted
-static void eval_is_false(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_is_false(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR) {
     return;
   }
@@ -650,8 +652,8 @@ static void eval_is_false(ast_node *expr, eval_node *result) {
 
 // Is true has simple rules;  If the operand is an error it is unchanged
 // null becomes FALSE any other is converted to a bool.
-static void eval_is_true(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_is_true(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR) {
     return;
   }
@@ -662,8 +664,8 @@ static void eval_is_true(ast_node *expr, eval_node *result) {
 
 // Is not true has simple rules;  If the operand is an error it is unchanged
 // null becomes TRUE any other is converted to a bool and inverted
-static void eval_is_not_true(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_is_not_true(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR) {
     return;
   }
@@ -680,8 +682,8 @@ static void eval_is_not_true(ast_node *expr, eval_node *result) {
 
 // Is not false has simple rules;  If the operand is an error it is unchanged
 // null becomes TRUE any other is converted to a bool
-static void eval_is_not_false(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_is_not_false(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR) {
     return;
   }
@@ -701,8 +703,8 @@ static void eval_is_not_false(ast_node *expr, eval_node *result) {
 //  * integers and long_integers are bitwise inverted with ~
 //  * bool is promoted to integer so the only possible result values are:
 //    -1 for ~0, and -2 for ~1;  This is also what SQLite does.
-static void eval_tilde(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_tilde(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
   }
@@ -732,7 +734,7 @@ static void eval_tilde(ast_node *expr, eval_node *result) {
 // * error or null are unchanged
 // * all others are negated
 // * bool promotes to an integer and is negated so the valid results are 0 and -1
-static void eval_uminus(ast_node *expr, eval_node *result) {
+static void eval_uminus(CqlState* CS, ast_node *expr, eval_node *result) {
 
   if (is_ast_num(expr->left)) {
     EXTRACT_NUM_TYPE(num_type, expr->left);
@@ -746,7 +748,7 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
     }
   }
 
-  eval(expr->left, result);
+  eval(CS, expr->left, result);
   if (result->sem_type == SEM_TYPE_ERROR || result->sem_type == SEM_TYPE_NULL) {
     return;
   }
@@ -785,9 +787,9 @@ static void eval_uminus(ast_node *expr, eval_node *result) {
 //   * if the right arg is false the answer is false
 //   * if either are null the answer is null
 //   * otherwise the answer is true.
-static void eval_and(ast_node *expr, eval_node *result) {
+static void eval_and(CqlState* CS, ast_node *expr, eval_node *result) {
   eval_node left = EVAL_NIL;
-  eval(expr->left, &left);
+  eval(CS, expr->left, &left);
 
   if (left.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
@@ -801,7 +803,7 @@ static void eval_and(ast_node *expr, eval_node *result) {
   }
 
   eval_node right = EVAL_NIL;
-  eval(expr->right, &right);
+  eval(CS, expr->right, &right);
   if (right.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
     return;
@@ -831,9 +833,9 @@ static void eval_and(ast_node *expr, eval_node *result) {
 //   * if the right arg is true the answer is true
 //   * if either are null the answer is null
 //   * otherwise the answer is false.
-static void eval_or(ast_node *expr, eval_node *result) {
+static void eval_or(CqlState* CS, ast_node *expr, eval_node *result) {
   eval_node left = EVAL_NIL;
-  eval(expr->left, &left);
+  eval(CS, expr->left, &left);
 
   if (left.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
@@ -847,7 +849,7 @@ static void eval_or(ast_node *expr, eval_node *result) {
   }
 
   eval_node right = EVAL_NIL;
-  eval(expr->right, &right);
+  eval(CS, expr->right, &right);
   if (right.sem_type == SEM_TYPE_ERROR) {
     result->sem_type = SEM_TYPE_ERROR;
     return;
@@ -870,8 +872,8 @@ static void eval_or(ast_node *expr, eval_node *result) {
 
 // Cast is super easy because we arleady have the eval_cast_to helper
 // we just do the evaluation it and early out on error or null
-static void eval_cast_expr(ast_node *expr, eval_node *result) {
-  eval(expr->left, result);
+static void eval_cast_expr(CqlState* CS, ast_node *expr, eval_node *result) {
+  eval(CS, expr->left, result);
 
   if (result->sem_type == SEM_TYPE_ERROR) {
     return;
@@ -891,7 +893,7 @@ static void eval_cast_expr(ast_node *expr, eval_node *result) {
 //  * null is not equal to anything
 //  * convert to the smallest type that can hold left or right
 //  * compare using that type
-static bool eval_are_equal(eval_node *_left, eval_node *_right) {
+static bool eval_are_equal(CqlState* CS, eval_node *_left, eval_node *_right) {
   eval_node left = *_left;
   eval_node right = *_right;
 
@@ -944,7 +946,7 @@ static bool eval_are_equal(eval_node *_left, eval_node *_right) {
 //   * use the else expression if there is one, else use NULL
 //   * any errors encountered yield an error
 //   * the usual null equality rules apply
-static void eval_case_expr(ast_node *ast, eval_node *result) {
+static void eval_case_expr(CqlState* CS, ast_node *ast, eval_node *result) {
   EXTRACT_ANY(expr, ast->left);
   EXTRACT_NOTNULL(connector, ast->right);
   EXTRACT_NOTNULL(case_list, connector->left);
@@ -954,7 +956,7 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
   if (expr) {
     // This branch has a test expression, save its value
     eval_node test_result = EVAL_NIL;
-    eval(expr, &test_result);
+    eval(CS, expr, &test_result);
     if (test_result.sem_type == SEM_TYPE_ERROR) {
       result->sem_type = SEM_TYPE_ERROR;
       return;
@@ -968,14 +970,14 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
       EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
       eval_node case_result = EVAL_NIL;
-      eval(case_expr, &case_result);
+      eval(CS, case_expr, &case_result);
       if (case_result.sem_type == SEM_TYPE_ERROR) {
         result->sem_type = SEM_TYPE_ERROR;
         return;
       }
 
-      if (eval_are_equal(&test_result, &case_result)) {
-        eval(then_expr, result);
+      if (eval_are_equal(CS, &test_result, &case_result)) {
+        eval(CS, then_expr, result);
         return;
       }
       ast = ast->right;
@@ -991,14 +993,14 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
       EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
       eval_node case_result = EVAL_NIL;
-      eval(case_expr, &case_result);
+      eval(CS, case_expr, &case_result);
       if (case_result.sem_type == SEM_TYPE_ERROR) {
         result->sem_type = SEM_TYPE_ERROR;
         return;
       }
 
       if (result_is_true(&case_result)) {
-        eval(then_expr, result);
+        eval(CS, then_expr, result);
         return;
       }
 
@@ -1008,7 +1010,7 @@ static void eval_case_expr(ast_node *ast, eval_node *result) {
 
   // if we get this far, there's no match, use the else clause if there is one
   if (else_expr) {
-    eval(else_expr, result);
+    eval(CS, else_expr, result);
   }
   else {
     result->sem_type = SEM_TYPE_NULL;
@@ -1039,7 +1041,7 @@ cql_noexport void eval_add_one(eval_node *result) {
   }
 }
 
-cql_noexport void eval_format_number(eval_node *result, int32_t format_mode, charbuf *output) {
+cql_noexport void eval_format_number(CqlState* CS, eval_node *result, int32_t format_mode, charbuf *output) {
   Contract(result->sem_type != SEM_TYPE_ERROR);
   Contract(result->sem_type != SEM_TYPE_NULL);
 
@@ -1078,7 +1080,7 @@ cql_noexport void eval_format_number(eval_node *result, int32_t format_mode, cha
       break;
 
     case SEM_TYPE_REAL:
-      eval_format_real(result->real_value, output);
+      eval_format_real(CS, result->real_value, output);
       break;
 
     default:
@@ -1091,34 +1093,39 @@ cql_noexport void eval_format_number(eval_node *result, int32_t format_mode, cha
   Invariant(output->used > used);
 }
 
-static eval_node err_result = { .sem_type = SEM_TYPE_ERROR };
+static const eval_node err_result = { .sem_type = SEM_TYPE_ERROR };
 
 // Dispatch to the worker function using the token string in the ast and the symbol table
 // any unknown symbols are evaluation errors due to unsupported const expression form.
-cql_noexport void eval(ast_node *expr, eval_node *result) {
+cql_noexport void eval(CqlState* CS, ast_node *expr, eval_node *result) {
   // this saves us a whole lot of string compares...
-  symtab_entry *entry = symtab_find(evals, expr->type);
+  symtab_entry *entry = symtab_find(CS->evals, expr->type);
   if (!entry) {
     *result = err_result;
     return;
   }
 
   eval_dispatch disp = (eval_dispatch)entry->val;
-  disp(expr, result);
+  disp(CS, expr, result);
   if (result->sem_type == SEM_TYPE_ERROR) {
     *result = err_result;  // blast any state that may be in there leaving just the error
   }
 }
 
 #undef EXPR_INIT
-#define EXPR_INIT(x) symtab_add(evals, #x, (void *)eval_ ## x)
+static inline bool_t symtab_add_Evals(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, eval_dispatch _Nullable val_new)
+{
+    return symtab_add(CS, syms, sym_new, val_new);
+}
+
+#define EXPR_INIT(x) symtab_add_Evals(CS, CS->evals, #x, eval_ ## x)
 
 // This method loads up the global symbol table and cleans any pending state we had
-cql_noexport void eval_init() {
+cql_noexport void eval_init(CqlState* CS) {
   // restore all globals and statics we own
-  eval_cleanup();
+  eval_cleanup(CS);
 
-  evals = symtab_new();
+  CS->evals = symtab_new();
 
   EXPR_INIT(null);
   EXPR_INIT(num);
@@ -1153,8 +1160,8 @@ cql_noexport void eval_init() {
 }
 
 // the only global state we have is the symbol table, clean that up
-cql_noexport void eval_cleanup() {
-  SYMTAB_CLEANUP(evals);
+cql_noexport void eval_cleanup(CqlState* CS) {
+  SYMTAB_CLEANUP(CS->evals);
 }
 
 

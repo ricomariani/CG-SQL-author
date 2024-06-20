@@ -17,6 +17,8 @@
 #include "cg_common.h"
 #include "encoders.h"
 #include "cql.y.h"
+#include "cql.lex.h"
+#include "cql_state.h"
 
 // uncomment for HEX
 // #define AST_EMIT_HEX 1
@@ -30,24 +32,24 @@
 //    the gen_one_statement code path
 // #define SUPPRESS_STATEMENT_ECHO
 
-cql_data_defn( minipool *ast_pool );
-cql_data_defn( minipool *str_pool );
-cql_data_defn( char *_Nullable current_file );
-cql_data_defn( bool_t macro_expansion_errors );
+//cql_data_defn( minipool *ast_pool );
+//cql_data_defn( minipool *str_pool );
+//cql_data_defn( char *_Nullable current_file );
+//cql_data_defn( bool_t macro_expansion_errors );
 
-static symtab *macro_table;
-static symtab *macro_arg_table;
-
-typedef struct macro_state_t {
+//static symtab *macro_table;
+//static symtab *macro_arg_table;
+/*
+typedef struct ast_macro_state_t {
   CSTR name;
   CSTR file;
   int32_t line;
-  struct macro_state_t *parent;
+  struct ast_macro_state_t *parent;
   symtab *args;
-} macro_state_t;
+} ast_macro_state_t;
 
-static macro_state_t macro_state;
-
+static ast_macro_state_t macro_state;
+*/
 // Helper object to just hold info in find_attribute_str(...) and find_attribute_num(...)
 typedef struct misc_attrs_type {
   CSTR attribute_name;
@@ -59,43 +61,43 @@ typedef struct misc_attrs_type {
 } misc_attrs_type;
 
 // initialization for the ast and macro expansion pass
-cql_noexport void ast_init() {
-  minipool_open(&ast_pool);
-  minipool_open(&str_pool);
-  macro_table = symtab_new();
-  delete_macro_formals();
-  macro_expansion_errors = false;
+cql_noexport void ast_init(CqlState* CS) {
+  minipool_open(&CS->ast_pool);
+  minipool_open(&CS->str_pool);
+  CS->macro_table = symtab_new();
+  delete_macro_formals(CS);
+  CS->macro_expansion_errors = false;
 
-  macro_state.line = -1;
-  macro_state.file = "<Unknown>";
-  macro_state.name = "None";
-  macro_state.parent = NULL;
+  CS->macro_state.line = -1;
+  CS->macro_state.file = "<Unknown>";
+  CS->macro_state.name = "None";
+  CS->macro_state.parent = NULL;
 }
 
-cql_noexport void ast_cleanup() {
-  delete_macro_formals();
-  if (macro_table) {
-    symtab_delete(macro_table);
+cql_noexport void ast_cleanup(CqlState* CS) {
+  delete_macro_formals(CS);
+  if (CS->macro_table) {
+    symtab_delete(CS, CS->macro_table);
   }
-  macro_table = NULL;
-  minipool_close(&ast_pool);
-  minipool_close(&str_pool);
-  run_lazy_frees();
+  CS->macro_table = NULL;
+  minipool_close(&CS->ast_pool);
+  minipool_close(&CS->str_pool);
+  run_lazy_frees(CS);
 }
 
 // When a rewrite begins outside the context of normal parsing we do not
 // know what file and line number should be attributed to the new nodes.
 // This tells us.
-cql_noexport void ast_set_rewrite_info(int32_t lineno, CSTR filename) {
-  yylineno = lineno;
-  current_file = (char *)filename;
+cql_noexport void ast_set_rewrite_info(CqlState* CS, int32_t lineno, CSTR filename) {
+  yyset_lineno(lineno, CS->scanner);
+  CS->current_file = (char *)filename;
 }
 
 // When we're done with a rewrite we do not want the old info to linger
 // so it is immediately cleaned up.  The macros assert that the state is clean.
-cql_noexport void ast_reset_rewrite_info() {
-  yylineno = -1;
-  current_file = NULL;
+cql_noexport void ast_reset_rewrite_info(CqlState* CS) {
+  yyset_lineno(-1, CS->scanner);
+  CS->current_file = NULL;
 }
 
 // Any number node
@@ -249,14 +251,14 @@ cql_noexport void ast_set_left(ast_node *parent, ast_node *left) {
 // Create a new ast node witht he given left and right.
 // Sets the file and line number from the global state
 // Sets the parent node of the provided children to the new node.
-cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right) {
-  Contract(current_file && yylineno > 0);
+cql_noexport ast_node *new_ast(CqlState* CS, const char *type, ast_node *left, ast_node *right) {
+  Contract(CS->current_file && yyget_lineno(CS->scanner) > 0);
   ast_node *ast = _ast_pool_new(ast_node);
   ast->type = type;
   ast->left = left;
   ast->right = right;
-  ast->lineno = yylineno;
-  ast->filename = current_file;
+  ast->lineno = yyget_lineno(CS->scanner);
+  ast->filename = CS->current_file;
   ast->sem = NULL;
 
   if (left) left->parent = ast;
@@ -268,13 +270,13 @@ cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right
 // Reflecting the fact that this is information about a
 // fact in the AST and not a number it's called new_ast_option
 // for option.
-cql_noexport ast_node *new_ast_option(int32_t value) {
-  Contract(current_file && yylineno > 0);
+cql_noexport ast_node *new_ast_option(CqlState* CS, int32_t value) {
+  Contract(CS->current_file && yyget_lineno(CS->scanner) > 0);
   int_ast_node *iast = _ast_pool_new(int_ast_node);
   iast->type = k_ast_int;
   iast->value = value;
-  iast->lineno = yylineno;
-  iast->filename = current_file;
+  iast->lineno = yyget_lineno(CS->scanner);
+  iast->filename = CS->current_file;
   iast->sem = NULL;
   return (ast_node *)iast;
 }
@@ -282,14 +284,14 @@ cql_noexport ast_node *new_ast_option(int32_t value) {
 // Create a new string node for a string literal
 // These are sql literals by default so we use
 // that string type.
-cql_noexport ast_node *new_ast_str(CSTR value) {
-  Contract(current_file && yylineno > 0);
+cql_noexport ast_node *new_ast_str(CqlState* CS, CSTR value) {
+  Contract(CS->current_file && yyget_lineno(CS->scanner) > 0);
   Contract(value);
   str_ast_node *sast = _ast_pool_new(str_ast_node);
   sast->type = k_ast_str;
   sast->value = value;
-  sast->lineno = yylineno;
-  sast->filename = current_file;
+  sast->lineno = yyget_lineno(CS->scanner);
+  sast->filename = CS->current_file;
   sast->sem = NULL;
   sast->str_type = STRING_TYPE_SQL;
   return (ast_node *)sast;
@@ -303,14 +305,14 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
 // We assume that floating point processing might be slightly
 // different in C vs. SQLite or Lua.  Hence we keep the constant
 // fixed.
-cql_noexport ast_node *new_ast_num(int32_t num_type, CSTR value) {
-  Contract(current_file && yylineno > 0);
+cql_noexport ast_node *new_ast_num(CqlState* CS, int32_t num_type, CSTR value) {
+  Contract(CS->current_file && yyget_lineno(CS->scanner) > 0);
   Contract(value);
   num_ast_node *nast = _ast_pool_new(num_ast_node);
   nast->type = k_ast_num;
   nast->value = value;
-  nast->lineno = yylineno;
-  nast->filename = current_file;
+  nast->lineno = yyget_lineno(CS->scanner);
+  nast->filename = CS->current_file;
   nast->sem = NULL;
   nast->num_type = num_type;
   Contract(nast->value);
@@ -319,13 +321,13 @@ cql_noexport ast_node *new_ast_num(int32_t num_type, CSTR value) {
 
 // Creates a new blob literal.  As with numerics we
 // simply store the text of the literal and pass it through.
-cql_noexport ast_node *new_ast_blob(CSTR value) {
-  Contract(current_file && yylineno > 0);
+cql_noexport ast_node *new_ast_blob(CqlState* CS, CSTR value) {
+  Contract(CS->current_file && yyget_lineno(CS->scanner) > 0);
   str_ast_node *sast = _ast_pool_new(str_ast_node);
   sast->type = k_ast_blob;
   sast->value = value;
-  sast->lineno = yylineno;
-  sast->filename = current_file;
+  sast->lineno = yyget_lineno(CS->scanner);
+  sast->filename = CS->current_file;
   sast->sem = NULL;
   return (ast_node *)sast;
 }
@@ -361,13 +363,13 @@ cql_noexport CSTR get_compound_operator_name(int32_t compound_operator) {
 // C style literals largely because they pass through the C pre-processor better.
 // Even stuff like the empty string '' causes annoying warnings.  However
 // the escaping is lightly different.  Also C string literals have useful escape sequences
-cql_noexport CSTR convert_cstrlit(CSTR cstr) {
+cql_noexport CSTR convert_cstrlit(CqlState* CS, CSTR cstr) {
   CHARBUF_OPEN(decoded);
   CHARBUF_OPEN(encoded);
   cg_decode_c_string_literal(cstr, &decoded);
   cg_encode_string_literal(decoded.ptr, &encoded);
 
-  CSTR result = Strdup(encoded.ptr);
+  CSTR result = Strdup(CS, encoded.ptr);
   CHARBUF_CLOSE(encoded);
   CHARBUF_CLOSE(decoded);
   return result;
@@ -378,9 +380,9 @@ cql_noexport CSTR convert_cstrlit(CSTR cstr) {
 // When we decode this node we will format it
 // in the C way.  But in the AST it's stored in
 // the SQL way.
-cql_noexport ast_node *new_ast_cstr(CSTR value) {
-  value = convert_cstrlit(value);
-  str_ast_node *sast = (str_ast_node *)new_ast_str(value);
+cql_noexport ast_node *new_ast_cstr(CqlState* CS, CSTR value) {
+  value = convert_cstrlit(CS, value);
+  str_ast_node *sast = (str_ast_node *)new_ast_str(CS, value);
   sast->str_type = STRING_TYPE_C;
   return (ast_node *)sast;
 }
@@ -389,11 +391,11 @@ cql_noexport ast_node *new_ast_cstr(CSTR value) {
 // ID text.  So for instance `a b` is X_aX20b.  We do
 // not escaped the text again or wrap it in quotes.
 // We verify that it looks like escaped text.
-cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
+cql_noexport ast_node *new_ast_qstr_escaped(CqlState* CS, CSTR value) {
   Contract(value);
   Contract(value[0] != '`');
 
-  str_ast_node *sast = (str_ast_node *)new_ast_str(value);
+  str_ast_node *sast = (str_ast_node *)new_ast_str(CS, value);
   sast->str_type = STRING_TYPE_QUOTED_ID;
   return (ast_node *)sast;
 }
@@ -407,47 +409,47 @@ cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
 // the bulk of the compiler doesn't have to know about
 // the escaping.  The exceptions are the forgatting code
 // in gen_sql and the ast building code in rewrite.c
-cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
+cql_noexport ast_node *new_ast_qstr_quoted(CqlState* CS, CSTR value) {
   Contract(value);
   Contract(value[0] == '`');
   ast_node *result;
 
   CHARBUF_OPEN(encoded);
     cg_encode_qstr(&encoded, value);
-    result = new_ast_qstr_escaped(Strdup(encoded.ptr));
+    result = new_ast_qstr_escaped(CS, Strdup(CS, encoded.ptr));
   CHARBUF_CLOSE(encoded);
 
   return result;
 }
 
 // for indenting, it just holds spaces.
-static char padbuffer[4096];
+//static char padbuffer[4096];
 
 
 // Emits the value of the node if it is a leaf node.
 // Returns true such a value was emitted.
-cql_noexport bool_t print_ast_value(struct ast_node *node) {
+cql_noexport bool_t print_ast_value(CqlState* CS, struct ast_node *node) {
   bool_t ret = false;
 
   if (is_ast_str(node)) {
     EXTRACT_STRING(str, node);
 
 #ifdef AST_EMIT_HEX
-    cql_output("%llx: ", (long long)node);
+    cql_output(CS, "%llx: ", (long long)node);
 #endif
-    cql_output("%s", padbuffer);
+    cql_output(CS, "%s", CS->padbuffer);
     if (is_strlit(node)) {
-      cql_output("{strlit %s}", str);
+      cql_output(CS, "{strlit %s}", str);
     }
     else {
       if (is_qid(node)) {
         CHARBUF_OPEN(tmp);
-          cg_decode_qstr(&tmp, str);
-          cql_output("{name %s}", tmp.ptr);
+          cg_decode_qstr(CS, &tmp, str);
+          cql_output(CS, "{name %s}", tmp.ptr);
         CHARBUF_CLOSE(tmp);
       }
       else {
-        cql_output("{name %s}", str);
+        cql_output(CS, "{name %s}", str);
       }
     }
     ret = true;
@@ -455,48 +457,48 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
 
   if (is_ast_num(node)) {
 #ifdef AST_EMIT_HEX
-    cql_output("%llx: ", (long long)node);
+    cql_output(CS, "%llx: ", (long long)node);
 #endif
-    cql_output("%s", padbuffer);
+    cql_output(CS, "%s", CS->padbuffer);
 
     EXTRACT_NUM_TYPE(num_type, node);
     EXTRACT_NUM_VALUE(val, node);
 
     if (num_type == NUM_BOOL) {
-      cql_output("{bool %s}", val);
+      cql_output(CS, "{bool %s}", val);
     }
     else if (num_type == NUM_INT) {
-      cql_output("{int %s}", val);
+      cql_output(CS, "{int %s}", val);
     }
     else if (num_type == NUM_LONG) {
-      cql_output("{longint %s}", val);
+      cql_output(CS, "{longint %s}", val);
     }
     else if (num_type == NUM_REAL) {
-      cql_output("{dbl %s}", val);
+      cql_output(CS, "{dbl %s}", val);
     }
     ret = true;
   }
 
   if (is_ast_blob(node)) {
 #ifdef AST_EMIT_HEX
-    cql_output("%llx: ", (long long)node);
+    cql_output(CS, "%llx: ", (long long)node);
 #endif
     EXTRACT_BLOBTEXT(value, node);
-    cql_output("%s", padbuffer);
-    cql_output("{blob %s}", value);
+    cql_output(CS, "%s", CS->padbuffer);
+    cql_output(CS, "{blob %s}", value);
     ret = true;
   }
 
   if (is_ast_int(node)) {
 #ifdef AST_EMIT_HEX
-    cql_output("%llx: ", (long long)node);
+    cql_output(CS, "%llx: ", (long long)node);
 #endif
-    cql_output("%s", padbuffer);
+    cql_output(CS, "%s", CS->padbuffer);
 
     // The join type case is common enough that we have special code for it.
     // The rest are just formatted as a number.
     int_ast_node *inode = (int_ast_node *)node;
-    cql_output("{int %lld}", (llint_t)inode->value);
+    cql_output(CS, "{int %lld}", (llint_t)inode->value);
     if (node->parent->type == k_ast_join_target) {
       CSTR out = NULL;
       switch (inode->value) {
@@ -508,36 +510,36 @@ cql_noexport bool_t print_ast_value(struct ast_node *node) {
         case JOIN_RIGHT:       out = "{join_right}";       break;
       }
       Contract(out); // if this fails there is a bogus join type in the AST
-      cql_output(" %s", out);
+      cql_output(CS, " %s", out);
     }
     ret = true;
   }
 
   if (ret && node->sem) {
-    cql_output(": ");
-    print_sem_type(node->sem);
+    cql_output(CS, ": ");
+    print_sem_type(CS, node->sem);
   }
 
   if (ret) {
-    cql_output("\n");
+    cql_output(CS, "\n");
   }
 
   return ret;
 }
 
 // Prints the node type and the semantic info if there is any
-cql_noexport void print_ast_type(ast_node *node) {
-  cql_output("%s", padbuffer);
-  cql_output("{%s}", node->type);
+cql_noexport void print_ast_type(CqlState* CS, ast_node *node) {
+  cql_output(CS, "%s", CS->padbuffer);
+  cql_output(CS, "{%s}", node->type);
   if (node->sem) {
-    cql_output(": ");
-    print_sem_type(node->sem);
+    cql_output(CS, ": ");
+    print_sem_type(CS, node->sem);
   }
-  cql_output("\n");
+  cql_output(CS, "\n");
 }
 
 // Helper function to get the parameters node out of the ast for a proc.
-cql_noexport ast_node *get_proc_params(ast_node *ast) {
+cql_noexport ast_node *get_proc_params(CqlState* CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   // works for both
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -546,7 +548,7 @@ cql_noexport ast_node *get_proc_params(ast_node *ast) {
 }
 
 // Helper function to get the proc name from a declare_proc_stmt or create_proc_stmt
-cql_noexport ast_node *get_proc_name(ast_node *ast) {
+cql_noexport ast_node *get_proc_name(CqlState* CS, ast_node *ast) {
   if (is_ast_create_proc_stmt(ast)) {
     return ast->left;
   }
@@ -557,7 +559,7 @@ cql_noexport ast_node *get_proc_name(ast_node *ast) {
 }
 
 // Helper function to get the parameters node out of the ast for a func.
-cql_noexport ast_node *get_func_params(ast_node *ast) {
+cql_noexport ast_node *get_func_params(CqlState* CS, ast_node *ast) {
   bool_t select_func = is_ast_declare_select_func_no_check_stmt(ast) || is_ast_declare_select_func_stmt(ast);
   bool_t non_select_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_func_stmt(ast);
   Contract(select_func || non_select_func);
@@ -583,6 +585,7 @@ cql_noexport ast_node *get_func_params(ast_node *ast) {
 //  2- find_ast_misc_attr_callback("cql", "foo", <raoul>, <context>)
 //  3- End
 cql_noexport void find_misc_attrs(
+  CqlState* CS,
   ast_node *_Nullable ast_misc_attrs,
   find_ast_misc_attr_callback _Nonnull misc_attr_callback,
   void *_Nullable context)
@@ -608,7 +611,7 @@ cql_noexport void find_misc_attrs(
     }
 
     Invariant(misc_attr_name);
-    misc_attr_callback(misc_attr_prefix, misc_attr_name, values, context);
+    misc_attr_callback(CS, misc_attr_prefix, misc_attr_name, values, context);
   }
 }
 
@@ -618,7 +621,7 @@ cql_noexport void find_misc_attrs(
 // few Contract enforcement here.  We can't crash if the value is unexpected
 // we just don't recognize it as properly attributed for whatever (e.g. it just
 // isn't a base fragment decl if it has an integer value for the fragment name)
-static void ast_find_ast_misc_attr_callback(
+static void ast_find_ast_misc_attr_callback(CqlState* CS,
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
   ast_node *ast_misc_attr_values,
@@ -644,7 +647,7 @@ static void ast_find_ast_misc_attr_callback(
     if (is_ast_str(ast_misc_attr_values)) {
       if (misc->str_node_callback) {
         EXTRACT_STRING(value, ast_misc_attr_values);
-        misc->str_node_callback(value, ast_misc_attr_values, misc->context);
+        misc->str_node_callback(CS, value, ast_misc_attr_values, misc->context);
       }
       misc->count++;
     }
@@ -654,7 +657,7 @@ static void ast_find_ast_misc_attr_callback(
         if (is_ast_str(list->left)) {
           EXTRACT_STRING(value, list->left);
           if (misc->str_node_callback) {
-            misc->str_node_callback(value, list->left, misc->context);
+            misc->str_node_callback(CS, value, list->left, misc->context);
           }
           misc->count++;
         }
@@ -662,7 +665,7 @@ static void ast_find_ast_misc_attr_callback(
     } else if (is_ast_num(ast_misc_attr_values)) {
       if (misc->num_node_callback) {
         EXTRACT_NUM_VALUE(value, ast_misc_attr_values);
-        misc->num_node_callback(value, ast_misc_attr_values, misc->context);
+        misc->num_node_callback(CS, value, ast_misc_attr_values, misc->context);
       }
     }
   }
@@ -671,6 +674,7 @@ static void ast_find_ast_misc_attr_callback(
 // Helper function to extract the specified string type attribute (if any) from the misc attributes
 // provided, and invoke the callback function
 cql_noexport uint32_t find_attribute_str(
+  CqlState* CS,
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
   void *_Nullable context,
@@ -685,12 +689,12 @@ cql_noexport uint32_t find_attribute_str(
     .count = 0,
   };
 
-  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  find_misc_attrs(CS, misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
   return misc.count;
 }
 
 // check for the presence of the given attribute (duplicates are ok)
-cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name) {
+cql_noexport bool_t find_named_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name) {
   Contract(is_ast_misc_attrs(misc_attr_list));
 
   misc_attrs_type misc = {
@@ -699,13 +703,14 @@ cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Non
     .count = 0,
   };
 
-  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  find_misc_attrs(CS, misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
   return !!misc.count;
 }
 
 // Helper function to extract the specified number type attribute (if any) from the misc attributes
 // provided, and invoke the callback function
 cql_noexport uint32_t find_attribute_num(
+  CqlState* CS,
   ast_node *_Nonnull misc_attr_list,
   find_ast_num_node_callback _Nullable callback,
   void *_Nullable context,
@@ -720,13 +725,13 @@ cql_noexport uint32_t find_attribute_num(
     .count = 0,
   };
 
-  find_misc_attrs(misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
+  find_misc_attrs(CS, misc_attr_list, ast_find_ast_misc_attr_callback, &misc);
   return misc.count;
 }
 
 // This callback helper tests only if the attribute matches the search condition
 // the value is irrelevant for this type of attribute
-static void ast_exists_ast_misc_attr_callback(
+static void ast_exists_ast_misc_attr_callback(CqlState* CS,
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
   ast_node *ast_misc_attr_values,
@@ -745,7 +750,7 @@ static void ast_exists_ast_misc_attr_callback(
 
 // Helper function to return count of given string type attribute
 // in the misc attributes provided
-cql_noexport uint32_t exists_attribute_str(ast_node *_Nullable misc_attr_list, const char *attribute_name)
+cql_noexport uint32_t exists_attribute_str(CqlState* CS, ast_node *_Nullable misc_attr_list, const char *attribute_name)
 {
   if (!misc_attr_list) {
     return 0;
@@ -760,46 +765,50 @@ cql_noexport uint32_t exists_attribute_str(ast_node *_Nullable misc_attr_list, c
     .count = 0,
   };
 
-  find_misc_attrs(misc_attr_list, ast_exists_ast_misc_attr_callback, &misc);
+  find_misc_attrs(CS, misc_attr_list, ast_exists_ast_misc_attr_callback, &misc);
   return misc.count;
 }
 
 // Helper function to extract the ok_table_scan nodes (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_ok_table_scan(
+  CqlState* CS,
   ast_node *_Nonnull list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable context)
 {
-  return find_attribute_str(list, callback, context, "ok_table_scan");
+  return find_attribute_str(CS, list, callback, context, "ok_table_scan");
 }
 
 cql_noexport uint32_t find_query_plan_branch(
+  CqlState* CS,
   ast_node *_Nonnull list,
   find_ast_num_node_callback _Nonnull callback,
   void *_Nullable context
 ) {
-  return find_attribute_num(list, callback, context, "query_plan_branch");
+  return find_attribute_num(CS, list, callback, context, "query_plan_branch");
 }
 
 // Helper function to extract the auto-drop nodes (if any) from the misc attributes
 // provided, and invoke the callback function.
 cql_noexport uint32_t find_autodrops(
+  CqlState* CS,
   ast_node *_Nonnull list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable context)
 {
-  return find_attribute_str(list, callback, context, "autodrop");
+  return find_attribute_str(CS, list, callback, context, "autodrop");
 }
 
 // Helper function to extract the identity columns (if any) from the misc attributes
 // provided, and invoke the callback function
 cql_noexport uint32_t find_identity_columns(
+  CqlState* CS,
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable context)
 {
-  return find_attribute_str(misc_attr_list, callback, context, "identity");
+  return find_attribute_str(CS, misc_attr_list, callback, context, "identity");
 }
 
 // Helper function to select out the cql:alias_of attribute
@@ -808,63 +817,64 @@ cql_noexport uint32_t find_identity_columns(
 // some common native function can implement several equivalent but
 // perhaps different by CQL type external functions.
 cql_noexport uint32_t find_cql_alias_of(
+  CqlState* CS,
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
   void *_Nullable context)
 {
-  return find_attribute_str(misc_attr_list, callback, context, "alias_of");
+  return find_attribute_str(CS, misc_attr_list, callback, context, "alias_of");
 }
 
 // Helper function to extract the blob storage node (if any) from the misc attributes
-cql_noexport bool_t find_blob_storage_attr(ast_node *_Nonnull misc_attr_list)
+cql_noexport bool_t find_blob_storage_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list)
 {
-  return find_named_attr(misc_attr_list, "blob_storage");
+  return find_named_attr(CS, misc_attr_list, "blob_storage");
 }
 
 // Helper function to extract the backing table node (if any) from the misc attributes
-cql_noexport uint32_t find_backing_table_attr(ast_node *_Nonnull misc_attr_list)
+cql_noexport uint32_t find_backing_table_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list)
 {
-  return find_named_attr(misc_attr_list, "backing_table");
+  return find_named_attr(CS, misc_attr_list, "backing_table");
 }
 
 // Helper function to extract the backed table node (if any) from the misc attributes
-cql_noexport uint32_t find_backed_table_attr(ast_node *_Nonnull misc_attr_list)
+cql_noexport uint32_t find_backed_table_attr(CqlState* CS, ast_node *_Nonnull misc_attr_list)
 {
-  return find_attribute_str(misc_attr_list, NULL, NULL, "backed_by");
+  return find_attribute_str(CS, misc_attr_list, NULL, NULL, "backed_by");
 }
 
 // helper to look for the blob storage attribute
-cql_noexport bool_t is_table_blob_storage(ast_node *ast) {
+cql_noexport bool_t is_table_blob_storage(CqlState* CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  return misc_attrs && find_blob_storage_attr(misc_attrs);
+  return misc_attrs && find_blob_storage_attr(CS, misc_attrs);
 }
 
 // helper to look for the backed table attribute
-cql_noexport bool_t is_table_backed(ast_node *ast) {
+cql_noexport bool_t is_table_backed(CqlState* CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  return misc_attrs && find_backed_table_attr(misc_attrs);
+  return misc_attrs && find_backed_table_attr(CS, misc_attrs);
 }
 
 // helper to look for the backing table attribute
-cql_noexport bool_t is_table_backing(ast_node *ast) {
+cql_noexport bool_t is_table_backing(CqlState* CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast) || is_ast_create_virtual_table_stmt(ast));
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  return misc_attrs && find_backing_table_attr(misc_attrs);
+  return misc_attrs && find_backing_table_attr(CS, misc_attrs);
 }
 
 // This can be easily called in the debugger
-cql_noexport void print_root_ast(ast_node *node) {
-  print_ast(node, NULL, 0, false);
+cql_noexport void print_root_ast(CqlState* CS, ast_node *node) {
+  print_ast(CS, node, NULL, 0, false);
 }
 
-cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_t flip) {
+cql_noexport void print_ast(CqlState* CS, ast_node *node, ast_node *parent, int32_t pad, bool_t flip) {
   if (pad == 0) {
-    padbuffer[0] = '\0';
+    CS->padbuffer[0] = '\0';
   }
 
   if (!node) {
@@ -874,81 +884,81 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
 // Verifies that the parent pointer is corrent
 #ifdef EMIT_BROKEN_AST_WARNING
   if (ast_has_right(node) && node->right->parent != node) {
-    cql_output("%llx ast broken right", (long long)node);
+    cql_output(CS, "%llx ast broken right", (long long)node);
     broken(node);
   }
 
   if (ast_has_left(node) && node->left->parent != node) {
-    cql_output("%llx ast broken left", (long long)node);
+    cql_output(CS, "%llx ast broken left", (long long)node);
     broken(node);
   }
 #endif
 
-  if (print_ast_value(node)) {
+  if (print_ast_value(CS, node)) {
     return;
   }
 
   if (is_ast_stmt_list(parent) && is_ast_stmt_list(node)) {
-    print_ast(node->left, node, pad, !node->right);
-    print_ast(node->right, node, pad, 1);
+    print_ast(CS, node->left, node, pad, !node->right);
+    print_ast(CS, node->right, node, pad, 1);
   }
   else {
     if (pad == 2) {
       if (parent && is_ast_stmt_list(parent)) {
         EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, parent);
 
-        if (options.hide_builtins && misc_attrs && find_named_attr(misc_attrs, "builtin")) {
+        if (CS->options.hide_builtins && misc_attrs && find_named_attr(CS, misc_attrs, "builtin")) {
           return;
         }
 
-        cql_output("\n");
-        cql_output("The statement ending at line %d\n\n", node->lineno);
-        gen_stmt_level = 1;
+        cql_output(CS, "\n");
+        cql_output(CS, "The statement ending at line %d\n\n", node->lineno);
+        CS->gen_stmt_level = 1;
 
         if (misc_attrs) {
-          gen_misc_attrs_to_stdout(misc_attrs);
+          gen_misc_attrs_to_stdout(CS, misc_attrs);
         }
 
 #ifndef SUPPRESS_STATEMENT_ECHO
-        gen_one_stmt_to_stdout(stmt);
+        gen_one_stmt_to_stdout(CS, stmt);
 #endif
-        cql_output("\n");
+        cql_output(CS, "\n");
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
         // sem off, nothing to print here
 #else
         // print any error text
         if (stmt->sem && stmt->sem->sem_type == SEM_TYPE_ERROR && stmt->sem->error) {
-          cql_output("%s\n", stmt->sem->error);
+          cql_output(CS, "%s\n", stmt->sem->error);
         }
 #endif
       }
     }
 
 #ifdef AST_EMIT_HEX
-    cql_output("%llx: ", (long long)node);
+    cql_output(CS, "%llx: ", (long long)node);
 #endif
-    print_ast_type(node);
+    print_ast_type(CS, node);
     if (flip && pad >= 2) {
-      padbuffer[pad-2] = ' ';
+      CS->padbuffer[pad-2] = ' ';
     }
     if (pad == 0) {
-      padbuffer[pad] = ' ';
+      CS->padbuffer[pad] = ' ';
     }
     else {
-      padbuffer[pad] = '|';
+      CS->padbuffer[pad] = '|';
     }
-    padbuffer[pad+1] = ' ';
-    padbuffer[pad+2] = '\0';
-    print_ast(node->left, node, pad+2, !node->right);
-    print_ast(node->right, node, pad+2, 1);
-    padbuffer[pad] = '\0';
+    CS->padbuffer[pad+1] = ' ';
+    CS->padbuffer[pad+2] = '\0';
+    print_ast(CS, node->left, node, pad+2, !node->right);
+    print_ast(CS, node->right, node, pad+2, 1);
+    CS->padbuffer[pad] = '\0';
   }
 }
 
 // Recursively finds table nodes, executing the callback for each that is found.  The
 // callback will not be executed more than once for the same table name.
-cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node *node) {
+cql_noexport void continue_find_table_node(CqlState* CS, table_callbacks *callbacks, ast_node *node) {
   // Check the type of node so that we can find the direct references to tables. We
   // can't know the difference between a table or view in the ast, so we will need to
   // later find the definition to see if it points to a create_table_stmt to distinguish
@@ -981,14 +991,14 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
 
     EXTRACT_NAME_AST(name_ast, call_stmt->left);
     EXTRACT_STRING(name, name_ast);
-    ast_node *proc = find_proc(name);
+    ast_node *proc = find_proc(CS, name);
     if (proc) {
       // Look through the proc definition for tables. Just call through recursively.
-      continue_find_table_node(callbacks, proc);
+      continue_find_table_node(CS, callbacks, proc);
     }
 
     if (cte_binding_list) {
-      continue_find_table_node(callbacks, cte_binding_list);
+      continue_find_table_node(CS, callbacks, cte_binding_list);
     }
 
     // no further recursion is needed
@@ -1067,19 +1077,19 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
 
     EXTRACT_NAME_AST(name_ast, node->left);
     EXTRACT_STRING(name, name_ast);
-    ast_node *proc = find_proc(name);
+    ast_node *proc = find_proc(CS, name);
 
     if (proc) {
       // this only happens for ast_call but this check is safe for both
       if (name_ast->sem && (name_ast->sem->sem_type & SEM_TYPE_INLINE_CALL)) {
         // Look through the proc definition for tables because the target will be inlined
-        continue_find_table_node(callbacks, proc);
+        continue_find_table_node(CS, callbacks, proc);
       }
 
-      EXTRACT_STRING(canon_name, get_proc_name(proc));
+      EXTRACT_STRING(canon_name, get_proc_name(CS, proc));
       if (callbacks->callback_proc) {
-        if (symtab_add(callbacks->visited_proc, canon_name, proc)) {
-          callbacks->callback_proc(canon_name, proc, callbacks->callback_context);
+        if (symtab_add(CS, callbacks->visited_proc, canon_name, proc)) {
+          callbacks->callback_proc(CS, canon_name, proc, callbacks->callback_context);
         }
       }
     }
@@ -1088,7 +1098,7 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
   if (table_or_view_name_ast) {
     // Find the definition and see if we have a create_table_stmt.
     EXTRACT_STRING(table_or_view_name, table_or_view_name_ast);
-    ast_node *table_or_view = find_table_or_view_even_deleted(table_or_view_name);
+    ast_node *table_or_view = find_table_or_view_even_deleted(CS, table_or_view_name);
 
     // It's not actually possible to use a deleted table or view in a procedure.
     // If the name lookup here says that we found something deleted it means
@@ -1108,13 +1118,13 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
         EXTRACT_STRING(canonical_name, create_table_name_flags->right);
 
         // Found a table, execute the callback.
-        if (symtab_add(callbacks->visited_any_table, canonical_name, table_or_view)) {
-          callbacks->callback_any_table(canonical_name, table_or_view, callbacks->callback_context);
+        if (symtab_add(CS, callbacks->visited_any_table, canonical_name, table_or_view)) {
+          callbacks->callback_any_table(CS, canonical_name, table_or_view, callbacks->callback_context);
         }
 
         // Emit the second callback if any.
-        if (alt_callback && symtab_add(alt_visited, canonical_name, table_or_view)) {
-          alt_callback(canonical_name, table_or_view, callbacks->callback_context);
+        if (alt_callback && symtab_add(CS, alt_visited, canonical_name, table_or_view)) {
+          alt_callback(CS, canonical_name, table_or_view, callbacks->callback_context);
         }
       } else {
         Contract(is_ast_create_view_stmt(table_or_view));
@@ -1123,15 +1133,15 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
         EXTRACT_NOTNULL(view_details, view_details_select->left);
         EXTRACT_STRING(canonical_name, view_details->left);
 
-        if (symtab_add(callbacks->visited_any_table, canonical_name, table_or_view)) {
+        if (symtab_add(CS, callbacks->visited_any_table, canonical_name, table_or_view)) {
           // Report the view itself
           if (callbacks->callback_any_view) {
-            callbacks->callback_any_view(canonical_name, table_or_view, callbacks->callback_context);
+            callbacks->callback_any_view(CS, canonical_name, table_or_view, callbacks->callback_context);
           }
 
           if (!callbacks->do_not_recurse_views) {
             // Look through the view definition for tables. Just call through recursively.
-            continue_find_table_node(callbacks, table_or_view);
+            continue_find_table_node(CS, callbacks, table_or_view);
           }
         }
       }
@@ -1140,18 +1150,18 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
 
   // Check the left and right nodes.
   if (ast_has_left(node)) {
-    continue_find_table_node(callbacks, node->left);
+    continue_find_table_node(CS, callbacks, node->left);
   }
 
   if (ast_has_right(node)) {
-    continue_find_table_node(callbacks, node->right);
+    continue_find_table_node(CS, callbacks, node->right);
   }
 }
 
 
 // Find references in a proc and invoke the corresponding callback on them
 // this is useful for dependency analysis.
-cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
+cql_noexport void find_table_refs(CqlState* CS, table_callbacks *callbacks, ast_node *node) {
   // Each kind of callback needs its own symbol table because, for instance,
   // you might see a table as an insert and also as an update. If we use
   // a single visited table like we used to then the second kind of usage would
@@ -1166,10 +1176,10 @@ cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
   callbacks->visited_from = symtab_new();
   callbacks->visited_proc = symtab_new();
 
-  continue_find_table_node(callbacks, node);
+  continue_find_table_node(CS, callbacks, node);
 
   if (callbacks->callback_final_processing) {
-    callbacks->callback_final_processing(callbacks->callback_context);
+    callbacks->callback_final_processing(CS, callbacks->callback_context);
   }
 
   SYMTAB_CLEANUP(callbacks->visited_any_table);
@@ -1191,7 +1201,7 @@ cql_noexport size_t ends_in_set(CSTR str) {
 }
 
 // store the discovered attribute in the given storage
-static void record_string_value(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
+static void record_string_value(CqlState* CS, CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
   if (_context) {
     CSTR *target = (CSTR *)_context;
     *target = name;
@@ -1200,15 +1210,15 @@ static void record_string_value(CSTR _Nonnull name, ast_node *_Nonnull _misc_att
 
 // Helper function extracts the named string fragment and gets its value as a string
 // if there is no such attribute or the attribute is not a string you get NULL.
-cql_noexport CSTR get_named_string_attribute_value(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name)
+cql_noexport CSTR get_named_string_attribute_value(CqlState* CS, ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name)
 {
   CSTR result = NULL;
-  find_attribute_str(misc_attr_list, record_string_value, &result, name);
+  find_attribute_str(CS, misc_attr_list, record_string_value, &result, name);
   return result;
 }
 
 // Copy the whole tree recursively
-cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
+cql_noexport ast_node *ast_clone_tree(CqlState* CS, ast_node *_Nullable ast) {
   if (!ast) {
      return NULL;
   }
@@ -1229,8 +1239,8 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   }
   ast_node *_ast = _ast_pool_new(ast_node);
   *_ast = *ast;
-  ast_set_left(_ast, ast_clone_tree(ast->left));
-  ast_set_right(_ast, ast_clone_tree(ast->right));
+  ast_set_left(_ast, ast_clone_tree(CS, ast->left));
+  ast_set_right(_ast, ast_clone_tree(CS, ast->right));
   return _ast;
 }
 
@@ -1238,16 +1248,16 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
 // the existing context and make a new symbol table
 // for macro arguments.  This will be the x! and y!
 // in @macro(expr) foo!(x! expr, y! expr)
-cql_noexport void new_macro_formals() {
-  delete_macro_formals();
-  macro_arg_table = symtab_new();
+cql_noexport void new_macro_formals(CqlState* CS) {
+  delete_macro_formals(CS);
+  CS->macro_arg_table = symtab_new();
 }
 
 // The macro body has ended, clean the symbol table
-cql_noexport void delete_macro_formals() {
-  if (macro_arg_table) {
-    symtab_delete(macro_arg_table);
-    macro_arg_table = NULL;
+cql_noexport void delete_macro_formals(CqlState* CS) {
+  if (CS->macro_arg_table) {
+    symtab_delete(CS, CS->macro_arg_table);
+    CS->macro_arg_table = NULL;
   }
 }
 
@@ -1259,54 +1269,54 @@ cql_noexport void delete_macro_formals() {
 // From this point on foo! will resolve to a macro so it's not possible
 // to redeclare foo! -- any such attempt will not look like an indentifer
 // followed by a macro name.
-cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast) {
+cql_noexport bool_t set_macro_info(CqlState* CS, CSTR name, int32_t macro_type, ast_node *ast) {
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
 
-  return symtab_add(macro_table, dup_printf("%s!", name), minfo);
+  return symtab_add(CS, CS->macro_table, dup_printf(CS, "%s!", name), minfo);
 }
 
 // Recover the macro info given the name (if it exists).
-cql_noexport macro_info *get_macro_info(CSTR name) {
-  symtab_entry *entry = symtab_find(macro_table, name);
+cql_noexport macro_info *get_macro_info(CqlState* CS, CSTR name) {
+  symtab_entry *entry = symtab_find(CS->macro_table, name);
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
 // As above, but for macro arguments.  These are the formal arguments
 // of any macro. The processing is the same except that it goes in a different table.
 // Duplicates lead to errors.
-cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast) {
+cql_noexport bool_t set_macro_arg_info(CqlState* CS, CSTR name, int32_t macro_type, ast_node *ast) {
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
-  return symtab_add(macro_arg_table, dup_printf("%s!", name), minfo);
+  return symtab_add(CS, CS->macro_arg_table, dup_printf(CS, "%s!", name), minfo);
 }
 
 // Recover the macro info given the name (if it exists).
-cql_noexport macro_info *get_macro_arg_info(CSTR name) {
-  symtab_entry *entry = symtab_find(macro_arg_table, name);
+cql_noexport macro_info *get_macro_arg_info(CqlState* CS, CSTR name) {
+  symtab_entry *entry = symtab_find(CS->macro_arg_table, name);
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
 // Look for the name first as an argument and then as a macro body.
 // Note that at this point name will have the ! at the end already.
-cql_noexport int32_t resolve_macro_name(CSTR name) {
+cql_noexport int32_t resolve_macro_name(CqlState* CS, CSTR name) {
   macro_info *minfo;
-  if (macro_arg_table) {
-    minfo = get_macro_arg_info(name);
+  if (CS->macro_arg_table) {
+    minfo = get_macro_arg_info(CS, name);
     if (minfo) {
       return minfo->type;
     }
   }
-  minfo = get_macro_info(name);
+  minfo = get_macro_info(CS, name);
   return minfo ? minfo->type : EOF;
 }
 
 // A new macro is being defined.  We need to add the types of
 // all of the parameter formals into the parameter table
-cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
-  new_macro_formals();
+cql_noexport CSTR install_macro_args(CqlState* CS, ast_node *macro_formals) {
+  new_macro_formals(CS);
   for ( ; macro_formals; macro_formals = macro_formals->right) {
     Contract(is_ast_macro_formals(macro_formals));
     EXTRACT_NOTNULL(macro_formal, macro_formals->left);
@@ -1316,7 +1326,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
 
     // these are the only two cases for now
     int32_t macro_type = macro_type_from_str(type);
-    bool_t success = set_macro_arg_info(name, macro_type, macro_formal);
+    bool_t success = set_macro_arg_info(CS, name, macro_type, macro_formal);
     if (!success) {
       return name;
     }
@@ -1447,7 +1457,7 @@ static void replace_node(ast_node *old, ast_node *new) {
 // The same logic works for all the list types because they all
 // have exactly the same shape.  In CQL, lists are a chain of right
 // pointers with the payload on the left.
-static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
+static bool_t spliced_macro_into_list(CqlState* CS, ast_node *parent, ast_node *new) {
   // if it isn't one of the list types, don't use this method
   if (!(
     is_ast_stmt_list(new) ||
@@ -1481,7 +1491,7 @@ static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
 // expand using gen_any_macro_expansion.  Either way they land
 // unencoded into the output buffer.   The @TEXT handler will
 // then quote them.
-static void expand_text_args(charbuf *output, ast_node *text_args) {
+static void expand_text_args(CqlState* CS, charbuf *output, ast_node *text_args) {
   for (; text_args; text_args = text_args->right) {
     Contract(is_ast_text_args(text_args));
     EXTRACT_ANY_NOTNULL(txt, text_args->left);
@@ -1495,14 +1505,14 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
     else {
       // everything else we just expand as usual
 
-      expand_macros(txt);
+      expand_macros(CS, txt);
       txt = text_args->left;
 
       gen_sql_callbacks callbacks;
       init_gen_sql_callbacks(&callbacks);
       callbacks.mode = gen_mode_echo;
-      gen_set_output_buffer(output);
-      gen_with_callbacks(txt, gen_any_text_arg, &callbacks);
+      gen_set_output_buffer(CS, output);
+      gen_with_callbacks(CS, txt, gen_any_text_arg, &callbacks);
     }
   }
 }
@@ -1510,8 +1520,8 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
 // Report a macro-related error at the given spot with the given message
 // We walk up the chain of macro expansions and report all those too
 // because macro debugging is hard without this info.
-static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
-   cql_error("%s:%d:1: error: in %s : %s%s%s%s\n",
+static void report_macro_error(CqlState* CS, ast_node *ast, CSTR msg, CSTR subj) {
+   cql_error(CS, "%s:%d:1: error: in %s : %s%s%s%s\n",
      ast->filename,
      ast->lineno,
      ast->type,
@@ -1520,21 +1530,21 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
      subj,
      subj ? "'" : "");
 
-  macro_state_t *p = &macro_state;
+  ast_macro_state_t *p = &CS->macro_state;
   while (p->parent) {
-    cql_error(" -> '%s!' in %s:%d\n", p->name, p->file, p->line);
+    cql_error(CS, " -> '%s!' in %s:%d\n", p->name, p->file, p->line);
     p = p->parent;
   }
-  macro_expansion_errors = 1;
+  CS->macro_expansion_errors = 1;
 }
 
 // for @MACRO_FILE -- this gives us the file in which macro
 // expansion began. Very useful for assert macros and such.
 // Note that @MACRO_FILE doesn't yet support path trimming
 // like @FILE but it will.
-static CSTR get_macro_file() {
-  macro_state_t *p = &macro_state;
-  macro_state_t *prev = p;
+static CSTR get_macro_file(CqlState* CS) {
+  ast_macro_state_t *p = &CS->macro_state;
+  ast_macro_state_t *prev = p;
   while (p->parent) {
     prev = p;
     p = p->parent;
@@ -1544,9 +1554,9 @@ static CSTR get_macro_file() {
 
 // for @MACRO_LINE -- this gives us the line in which macro
 // expansion began. Very useful for assert macros and such.
-static int32_t get_macro_line() {
-  macro_state_t *p = &macro_state;
-  macro_state_t *prev = p;
+static int32_t get_macro_line(CqlState* CS) {
+  ast_macro_state_t *p = &CS->macro_state;
+  ast_macro_state_t *prev = p;
   while (p->parent) {
     prev = p;
     p = p->parent;
@@ -1566,12 +1576,12 @@ static int32_t get_macro_line() {
 // will soon change.  @ID could assume the @TEXT if there is not
 // one there.  @ID *is* a valid name so it can go in places
 // expr! could not go.
-static void expand_at_id(ast_node *ast) {
+static void expand_at_id(CqlState* CS, ast_node *ast) {
   Contract(is_ast_at_id(ast));
 
   CHARBUF_OPEN(str);
-  expand_macros(ast->left);
-  expand_text_args(&str, ast->left);
+  expand_macros(CS, ast->left);
+  expand_text_args(CS, &str, ast->left);
 
   CSTR p = str.ptr;
   bool_t ok = true;
@@ -1595,24 +1605,24 @@ static void expand_at_id(ast_node *ast) {
   }
 
   if (!ok) {
-    report_macro_error(ast, "@ID expansion is not a valid identifier", str.ptr);
+    report_macro_error(CS, ast, "@ID expansion is not a valid identifier", str.ptr);
   }
 
-  replace_node(ast, new_ast_str(Strdup(str.ptr)));
+  replace_node(ast, new_ast_str(CS, Strdup(CS, str.ptr)));
   CHARBUF_CLOSE(str);
 }
 
 // Use the helper to concatenate the arguments then encode them as a string.
 // We use C style literals because newlines etc. are likely in the output
 // and so the resulting literal will be much more readable if it is escaped.
-static void expand_at_text(ast_node *ast) {
+static void expand_at_text(CqlState* CS, ast_node *ast) {
   Contract(is_ast_macro_text(ast));
 
   CHARBUF_OPEN(tmp);
   CHARBUF_OPEN(quote);
-  expand_text_args(&tmp, ast->left);
+  expand_text_args(CS, &tmp, ast->left);
   cg_encode_string_literal(tmp.ptr, &quote);
-  ast_node *new = new_ast_str(Strdup(quote.ptr));
+  ast_node *new = new_ast_str(CS, Strdup(CS, quote.ptr));
   str_ast_node *sast = (str_ast_node *)new;
   sast->str_type = STRING_TYPE_C;  
   replace_node(ast, new);
@@ -1624,18 +1634,18 @@ static void expand_at_text(ast_node *ast) {
 // which need treatment in the macro pass.  @FILE and @LINE to not
 // require the macro stack so they can be handled later like all
 // the other constants.
-static void expand_special_ids(ast_node *ast) {
+static void expand_special_ids(CqlState* CS, ast_node *ast) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(name, ast);
 
   if (!strcmp(name, "@MACRO_LINE")) {
-    ast_node *num = new_ast_num(NUM_INT, dup_printf("%d", get_macro_line()));
+    ast_node *num = new_ast_num(CS, NUM_INT, dup_printf(CS, "%d", get_macro_line(CS)));
     replace_node(ast, num);
   }
   else if (!strcmp(name, "@MACRO_FILE")) {
     CHARBUF_OPEN(tmp);
-    cg_encode_string_literal(get_macro_file(), &tmp);
-    ast_node *new = new_ast_str(Strdup(tmp.ptr));
+    cg_encode_string_literal(get_macro_file(CS), &tmp);
+    ast_node *new = new_ast_str(CS, Strdup(CS, tmp.ptr));
     replace_node(ast, new);
     CHARBUF_CLOSE(tmp);
   }
@@ -1648,7 +1658,7 @@ static void expand_special_ids(ast_node *ast) {
 //  * validate the arguments if necessary
 //  * recursively expand the macro body
 //  * link in the expanded body into the correct spot with one of the helpers
-static void expand_macro_refs(ast_node *ast) {
+static void expand_macro_refs(CqlState* CS, ast_node *ast) {
   Contract(is_any_macro_arg_ref(ast) || is_any_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -1658,18 +1668,18 @@ static void expand_macro_refs(ast_node *ast) {
     EXTRACT(macro_args, ast->right);
     if (macro_args) {
       // expand the arguments to the macro before using them
-      expand_macros(macro_args);
+      expand_macros(CS, macro_args);
     }
 
-    minfo = get_macro_info(name);
+    minfo = get_macro_info(CS, name);
   }
   else {
-    minfo = get_macro_arg_info(name);
+    minfo = get_macro_arg_info(CS, name);
   }
 
   Invariant(minfo);
 
-  ast_node *copy = ast_clone_tree(minfo->def);
+  ast_node *copy = ast_clone_tree(CS, minfo->def);
 
   ast_node *body = NULL;
   if (is_any_macro_def(copy)) {
@@ -1682,7 +1692,7 @@ static void expand_macro_refs(ast_node *ast) {
     body = copy->left;
   }
 
-  macro_state_t macro_state_saved = macro_state;
+  ast_macro_state_t macro_state_saved = CS->macro_state;
 
   if (is_any_macro_ref(ast)) {
     // It's a macro reference, we need to set up the argument values
@@ -1693,11 +1703,11 @@ static void expand_macro_refs(ast_node *ast) {
     EXTRACT_STRING(macro_name, macro_name_formals->left);
     EXTRACT(macro_args, ast->right);
 
-    macro_state.parent = &macro_state_saved;
-    macro_state.line = ast->lineno;
-    macro_state.file = ast->filename;
-    macro_state.name = macro_name;
-    macro_arg_table = macro_state.args = symtab_new();
+    CS->macro_state.parent = &macro_state_saved;
+    CS->macro_state.line = ast->lineno;
+    CS->macro_state.file = ast->filename;
+    CS->macro_state.name = macro_name;
+    CS->macro_arg_table = CS->macro_state.args = symtab_new();
 
     // Loop over each formal, we match the type of the argument
     // that is provided against the formal that is required.
@@ -1709,10 +1719,10 @@ static void expand_macro_refs(ast_node *ast) {
       EXTRACT_STRING(type, macro_formal->right);
 
       int32_t macro_type = macro_type_from_str(type);
-      set_macro_arg_info(formal_name, macro_type, macro_arg);
+      set_macro_arg_info(CS, formal_name, macro_type, macro_arg);
 
-      if (!macro_arg_valid(macro_type, macro_arg)) {
-        report_macro_error(macro_arg, "macro type mismatch in argument", formal_name);
+      if (!macro_arg_valid(CS, macro_type, macro_arg)) {
+        report_macro_error(CS, macro_arg, "macro type mismatch in argument", formal_name);
         goto cleanup;
       }
 
@@ -1722,20 +1732,20 @@ static void expand_macro_refs(ast_node *ast) {
 
     // formals left -> not enough args
     if (macro_formals) {
-      report_macro_error(macro_formals->left, "not enough arguments to macro", macro_name);
+      report_macro_error(CS, macro_formals->left, "not enough arguments to macro", macro_name);
       goto cleanup;
     }
 
     // args left -> too many args
     if (macro_args) {
-      report_macro_error(macro_args->left, "too many arguments to macro", macro_name);
+      report_macro_error(CS, macro_args->left, "too many arguments to macro", macro_name);
       goto cleanup;
     }
   }
 
   // it's hugely important to expand what you're going to replace FIRST
   // and then slot it in. Otherwise the recursion is n^2 depth!!!
-  expand_macros(body);
+  expand_macros(CS, body);
 
   // its normal for body to be a different node type
   body = copy->left;
@@ -1756,7 +1766,7 @@ static void expand_macro_refs(ast_node *ast) {
   if (is_ast_text_args(parent)) {
     replace_node(ast, body);
   }
-  else if (spliced_macro_into_list(parent, body)) {
+  else if (spliced_macro_into_list(CS, parent, body)) {
     // done
   }
   else  {
@@ -1764,11 +1774,11 @@ static void expand_macro_refs(ast_node *ast) {
   }
 
 cleanup:
-  if (macro_state.args != macro_state_saved.args && macro_state.args) {
-    symtab_delete(macro_state.args);
+  if (CS->macro_state.args != macro_state_saved.args && CS->macro_state.args) {
+    symtab_delete(CS, CS->macro_state.args);
   }
-  macro_state = macro_state_saved;
-  macro_arg_table = macro_state.args;
+  CS->macro_state = macro_state_saved;
+  CS->macro_arg_table = CS->macro_state.args;
 }
 
 // This is the main recursive workhorse.  It expands macros
@@ -1776,12 +1786,12 @@ cleanup:
 // see macros except for the macro definition nodes.  Which could
 // actually have been removed also but we don't.  Maybe we will
 // some day.  Later passes ignore those.
-cql_export void expand_macros(ast_node *_Nonnull node) {
+cql_export void expand_macros(CqlState* CS, ast_node *_Nonnull node) {
 tail_recurse:
-  if (!options.semantic && options.test && macro_state.line != -1) {
+  if (!CS->options.semantic && CS->options.test && CS->macro_state.line != -1) {
     // in test mode charge the whole macro to the expansion
     // so we can attribute the AST better
-    node->lineno = macro_state.line;
+    node->lineno = CS->macro_state.line;
   }
   // do not recurse into macro definitions
   if (is_any_macro_def(node)) {
@@ -1790,25 +1800,25 @@ tail_recurse:
 
   // handle @ID
   if (is_ast_at_id(node)) {
-    expand_at_id(node);
+    expand_at_id(CS, node);
     return;
   }
 
   // handle @TEXT
   if (is_ast_macro_text(node)) {
-    expand_at_text(node);
+    expand_at_text(CS, node);
     return;
   }
 
   // handle @MACRO_LINE and @MACRO_FILE
   if (is_ast_str(node)) {
-    expand_special_ids(node);
+    expand_special_ids(CS, node);
     return;
   }
 
   // expand macros and macro arguments in place
   if (is_any_macro_arg_ref(node) || is_any_macro_ref(node)) {
-    expand_macro_refs(node);
+    expand_macro_refs(CS, node);
     return;
   }
 
@@ -1822,7 +1832,7 @@ tail_recurse:
       node = node->left;
       goto tail_recurse;
     }
-    expand_macros(node->left);
+    expand_macros(CS, node->left);
   }
 
   // tail recursion here is super important becuase the statement list

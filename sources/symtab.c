@@ -9,8 +9,9 @@
 #include "symtab.h"
 #include "bytebuf.h"
 #include "charbuf.h"
+#include "cql_state.h"
 
-static void symtab_rehash(symtab *syms);
+static void symtab_rehash(CqlState* CS, symtab *syms);
 
 static void set_payload(symtab *syms) {
   syms->payload = (symtab_entry *)calloc(syms->capacity, sizeof(symtab_entry));
@@ -79,12 +80,12 @@ cql_noexport symtab *symtab_new_case_sens() {
 // If there is a teardown function, it is called for each payload.
 // Specifically the *values* of each payload.  The strings are
 // assumed to be long-lived and owned by something else.
-cql_noexport void symtab_delete(symtab *syms) {
+cql_noexport void symtab_delete(CqlState* CS, symtab *syms) {
   if (syms->teardown) {
     for (uint32_t i = 0; i < syms->capacity; i++) {
       void *val = syms->payload[i].val;
       if (val) {
-        syms->teardown(val);
+        syms->teardown(CS, val);
       }
     }
   }
@@ -99,7 +100,7 @@ cql_noexport void symtab_delete(symtab *syms) {
 // and hashing functions can be changed at the time the table is created.
 // But if you change them after inserting anything you will have to rehash the table.
 // Generally, this is a really bad idea.
-cql_noexport bool_t symtab_add(symtab *syms, const char *sym_new, void *val_new) {
+cql_noexport bool_t symtab_add(CqlState* CS, symtab *syms, const char *sym_new, void *val_new) {
   uint32_t hash = syms->hash(sym_new);
   uint32_t offset = hash % syms->capacity;
   symtab_entry *payload = syms->payload;
@@ -114,7 +115,7 @@ cql_noexport bool_t symtab_add(symtab *syms, const char *sym_new, void *val_new)
 
       syms->count++;
       if (syms->count > syms->capacity * SYMTAB_LOAD_FACTOR) {
-        symtab_rehash(syms);
+        symtab_rehash(CS, syms);
       }
 
       // did not find the symbol, return true indicating we added it
@@ -173,7 +174,7 @@ cql_noexport symtab_entry *symtab_find(symtab *syms, const char *sym_needed) {
 // time operation and it's the simplest way spread the
 // values to the new table.  When this is done we
 // can delete the old guts.
-static void symtab_rehash(symtab *syms) {
+static void symtab_rehash(CqlState* CS, symtab *syms) {
   uint32_t old_capacity = syms->capacity;
   symtab_entry *old_payload = syms->payload;
 
@@ -187,7 +188,7 @@ static void symtab_rehash(symtab *syms) {
       continue;
     }
 
-    symtab_add(syms, old_payload[i].sym, old_payload[i].val);
+    symtab_add(CS, syms, old_payload[i].sym, old_payload[i].val);
   }
 
   free(old_payload);
@@ -220,21 +221,21 @@ cql_noexport symtab_entry *symtab_copy_sorted_payload(symtab *syms, int (*compar
 
 // first special case teardown 
 //  * a symbol table with payload of symbol tables
-static void symtab_teardown(void *val) {
-  symtab_delete(val);
+static void symtab_teardown(CqlState* CS, void *val) {
+  symtab_delete(CS, val);
 }
 
 // second special case teardown 
 //  * a symbol table with payload of bytebuffers
-static void bytebuf_teardown(void *val) {
-  bytebuf_close((bytebuf*)val);
+static void bytebuf_teardown(CqlState* CS, void *val) {
+  bytebuf_close(CS, (bytebuf*)val);
   free(val);
 }
 
 // third special case teardown 
 //  * a symbol table with payload of character buffers
-static void charbuf_teardown(void *val) {
-  bclose((charbuf*)val);
+static void charbuf_teardown(CqlState* CS, void *val) {
+  bclose(CS, (charbuf*)val);
   free(val);
 }
 
@@ -242,14 +243,14 @@ static void charbuf_teardown(void *val) {
 // This helper is just for making a symbol table that holds symbol tables.
 // It sets the cleanup function to be one that deletes symbol tables in the payload.
 // This flavor create the table at the named slot for you to use.
-cql_noexport symtab *_Nonnull symtab_ensure_symtab(symtab *syms, const char *name) {
+cql_noexport symtab *_Nonnull symtab_ensure_symtab(CqlState* CS, symtab *syms, const char *name) {
   syms->teardown = symtab_teardown;
   symtab_entry *entry = symtab_find(syms, name);
 
   symtab *value = entry ? (symtab *)entry->val : NULL;
   if (entry == NULL) {
     value = symtab_new();
-    symtab_add(syms, name, value);
+    symtab_add(CS, syms, name, value);
   }
   return value;
 }
@@ -257,16 +258,16 @@ cql_noexport symtab *_Nonnull symtab_ensure_symtab(symtab *syms, const char *nam
 // This helper is just for making a symbol table that holds symbol tables
 // we don't have to do anything special except set the cleanup function
 // to one that deletes symbol tables in the payload.
-cql_noexport bool_t symtab_add_symtab(symtab *syms, CSTR name, symtab *data) {
+cql_noexport bool_t symtab_add_symtab(CqlState* CS, symtab *syms, CSTR name, symtab *data) {
   syms->teardown = symtab_teardown;
-  return symtab_add(syms, name, (void*)data);
+  return symtab_add(CS, syms, name, (void*)data);
 }
 
 // This helper ensures that a byte buffer is present for the given symbol and
 // returns it.  If the symbol value is not present it creates a new byte buffer
 // for that slot. The teardown function is changed to free the byte buffers.
 // Mixing different value types in the same symbol table is a bad idea.
-cql_noexport bytebuf *_Nonnull symtab_ensure_bytebuf(symtab *syms, const char *sym_new) {
+cql_noexport bytebuf *_Nonnull symtab_ensure_bytebuf(CqlState* CS, symtab *syms, const char *sym_new) {
   syms->teardown = bytebuf_teardown;
   symtab_entry *entry = symtab_find(syms, sym_new);
 
@@ -274,15 +275,15 @@ cql_noexport bytebuf *_Nonnull symtab_ensure_bytebuf(symtab *syms, const char *s
   if (entry == NULL) {
     buf = _new(bytebuf);
     bytebuf_open(buf);
-    symtab_add(syms, sym_new, buf);
+    symtab_add(CS, syms, sym_new, buf);
   }
   return buf;
 }
 
 // This helper uses the above to create a byte buffer for the given symbol
 // and then appends the given bytes to that  buffer.
-cql_noexport void symtab_append_bytes(symtab *syms, const char *sym_new, const void *bytes, size_t count) {
-  bytebuf *buf = symtab_ensure_bytebuf(syms, sym_new);
+cql_noexport void symtab_append_bytes(CqlState* CS, symtab *syms, const char *sym_new, const void *bytes, size_t count) {
+  bytebuf *buf = symtab_ensure_bytebuf(CS, syms, sym_new);
   bytebuf_append(buf, bytes, (uint32_t)count);
 }
 
@@ -290,18 +291,18 @@ cql_noexport void symtab_append_bytes(symtab *syms, const char *sym_new, const v
 // be written to with charbuf helpers like bprintf and so forth.  Once you do this
 // the teardown function is changed to free the char buffers.  Mixing different
 // value types in the same symbol table is a bad idea.
-cql_noexport charbuf *_Nonnull symtab_ensure_charbuf(symtab *syms, const char *sym_new) {
+cql_noexport charbuf *_Nonnull symtab_ensure_charbuf(CqlState* CS, symtab *syms, const char *sym_new) {
   syms->teardown = charbuf_teardown;
   symtab_entry *entry = symtab_find(syms, sym_new);
   charbuf *output = entry ? (charbuf *)entry->val : NULL;
   if (!output) {
     // None found, create one
     output = _new(charbuf);
-    bopen(output);
+    bopen(CS, output);
     // This buffer doesn't participate in the normal stack of charbufs
     // it will be freed when the symbol table is torn down
-    charbuf_open_count--;
-    symtab_add(syms, sym_new, output);
+    CS->charbuf_open_count--;
+    symtab_add(CS, syms, sym_new, output);
   }
   return output;
 }

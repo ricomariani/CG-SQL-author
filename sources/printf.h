@@ -38,7 +38,7 @@ typedef struct printf_iterator printf_iterator;
 
 // To create a `printf_iterator`, allocate `sizeof_printf_iterator` bytes of
 // memory and then call `printf_iterator_init` to initialize it.
-extern size_t sizeof_printf_iterator;
+extern const size_t sizeof_printf_iterator;
 
 // Initializes a `printf_iterator` with an optional `format_strlit` (used for
 // reporting errors) and a decoded format string (i.e., the format string absent
@@ -61,6 +61,6 @@ cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *form
 //
 // In the lattermost two cases, parsing is finished and `printf_iterator_next`
 // must not be called again.
-cql_noexport sem_t printf_iterator_next(printf_iterator *iterator);
+cql_noexport sem_t printf_iterator_next(CqlState* CS, printf_iterator *iterator);
 
 #endif

@@ -8,13 +8,14 @@
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_UNIT_TESTS)
 
 // stubs to avoid link errors
-cql_noexport void run_unit_tests() {}
+cql_noexport void run_unit_tests(CS) {}
 
 #else
 
 #include "cql.h"
 #include "cg_common.h"
 #include "unit_tests.h"
+#include "cql_state.h"
 
 // This file implement very simple unit tests for functions that are too complicated
 // to test directly through invocations of the CQL tool.
@@ -26,37 +27,37 @@ cql_noexport void run_unit_tests() {}
 #define TEST_ASSERT assert
 #define STR_EQ(s1, s2) strcmp(s1, s2) == 0
 
-cql_noexport void cg_c_init(void);
-cql_noexport void cg_c_cleanup(void);
-cql_noexport uint32_t cg_statement_pieces(CSTR in, charbuf *output);
+cql_noexport void cg_c_init(CqlState* CS);
+cql_noexport void cg_c_cleanup(CqlState* CS);
+cql_noexport uint32_t cg_statement_pieces(CqlState* CS, CSTR in, charbuf *output);
 
-static bool test_frag_tricky_case() {
-  options.compress = 1;
+static bool test_frag_tricky_case(CqlState* CS) {
+  CS->options.compress = 1;
   CHARBUF_OPEN(tmp);
-  cg_c_init();
+  cg_c_init(CS);
   // get into a state with a single trailing space
-  uint32_t count = cg_statement_pieces("atest btest ", &tmp);
-  cg_c_cleanup();
+  uint32_t count = cg_statement_pieces(CS, "atest btest ", &tmp);
+  cg_c_cleanup(CS);
   CHARBUF_CLOSE(tmp);
 
   // two tokens, no going off the end and making extra tokens!
   return count == 2;
 }
 
-static bool test_Strdup__empty_string() {
-  char* str_copy = Strdup("");
+static bool test_Strdup__empty_string(CqlState* CS) {
+  char* str_copy = Strdup(CS, "");
   bool result = STR_EQ(str_copy, "");
   return result;
 }
 
-static bool test_Strdup__one_character_string() {
-  char* str_copy = Strdup("a");
+static bool test_Strdup__one_character_string(CqlState* CS) {
+  char* str_copy = Strdup(CS, "a");
   bool result = STR_EQ(str_copy, "a");
   return result;
 }
 
-static bool test_Strdup__long_string() {
-  char* str_copy = Strdup("abcd");
+static bool test_Strdup__long_string(CqlState* CS) {
+  char* str_copy = Strdup(CS, "abcd");
   bool result = STR_EQ(str_copy, "abcd");
   return result;
 }
@@ -145,7 +146,7 @@ static bool test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result
   return Strncasecmp("Aac", "aaB", 2) == 0;
 }
 
-static bool test_sha256_example1() {
+static bool test_sha256_example1(CqlState* CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "Foo:x:String");
   bool result = sha256_charbuf(&temp) == -5028419846961717871L;
@@ -153,7 +154,7 @@ static bool test_sha256_example1() {
   return result;
 }
 
-static bool test_sha256_example2() {
+static bool test_sha256_example2(CqlState* CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "id:?Int64");
   bool result = sha256_charbuf(&temp) == -9155171551243524439L;
@@ -161,7 +162,7 @@ static bool test_sha256_example2() {
   return result;
 }
 
-static bool test_sha256_example3() {
+static bool test_sha256_example3(CqlState* CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "x:String");
   bool result = sha256_charbuf(&temp) == -6620767298254076690L;
@@ -169,7 +170,7 @@ static bool test_sha256_example3() {
   return result;
 }
 
-static bool test_sha256_example4() {
+static bool test_sha256_example4(CqlState* CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "fooBar:?Int64");
   bool result = sha256_charbuf(&temp) == -6345014076009057275L;
@@ -177,7 +178,7 @@ static bool test_sha256_example4() {
   return result;
 }
 
-static bool test_sha256_example5() {
+static bool test_sha256_example5(CqlState* CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.");
   bool result = sha256_charbuf(&temp) == -8121930428982087348L;
@@ -185,7 +186,7 @@ static bool test_sha256_example5() {
   return result;
 }
 
-static bool test_sha256_example6() {
+static bool test_sha256_example6(CqlState* CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.123456789");
   bool result = sha256_charbuf(&temp) ==  -4563262961718308998L;
@@ -193,10 +194,10 @@ static bool test_sha256_example6() {
   return result;
 }
 
-cql_noexport void run_unit_tests() {
-  TEST_ASSERT(test_Strdup__empty_string());
-  TEST_ASSERT(test_Strdup__one_character_string());
-  TEST_ASSERT(test_Strdup__long_string());
+cql_noexport void run_unit_tests(CqlState* CS) {
+  TEST_ASSERT(test_Strdup__empty_string(CS));
+  TEST_ASSERT(test_Strdup__one_character_string(CS));
+  TEST_ASSERT(test_Strdup__long_string(CS));
   TEST_ASSERT(test_Strcasecmp__empty_strings());
   TEST_ASSERT(test_Strcasecmp__one_char_strings__result_is_less_than());
   TEST_ASSERT(test_Strcasecmp__one_char_strings__result_is_greater_than());
@@ -218,13 +219,13 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than());
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
   TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
-  TEST_ASSERT(test_frag_tricky_case());
-  TEST_ASSERT(test_sha256_example1());
-  TEST_ASSERT(test_sha256_example2());
-  TEST_ASSERT(test_sha256_example3());
-  TEST_ASSERT(test_sha256_example4());
-  TEST_ASSERT(test_sha256_example5());
-  TEST_ASSERT(test_sha256_example6());
+  TEST_ASSERT(test_frag_tricky_case(CS));
+  TEST_ASSERT(test_sha256_example1(CS));
+  TEST_ASSERT(test_sha256_example2(CS));
+  TEST_ASSERT(test_sha256_example3(CS));
+  TEST_ASSERT(test_sha256_example4(CS));
+  TEST_ASSERT(test_sha256_example5(CS));
+  TEST_ASSERT(test_sha256_example6(CS));
 }
 
 #endif

@@ -57,6 +57,8 @@
 typedef uint8_t bool_t;
 typedef long long int llint_t;
 
+typedef struct CqlState CqlState;
+
 #include "compat.h"
 
 #define u32_not(x) ((uint32_t)(~(x)))
@@ -67,6 +69,9 @@ typedef long long int llint_t;
 #else
 #define _64(x) x##LL
 #endif
+
+CqlState* cql_new_state();
+void cql_free_state(CqlState *CS);
 
 // patternlint-disable-next-line prefer-sized-ints-in-msys
 int main(int argc, char **argv);
@@ -107,7 +112,7 @@ typedef struct cmd_options {
   bool_t dev;                           // option use to activate features in development or dev features
 } cmd_options;
 
-cql_data_decl( cmd_options options );
+//cql_data_decl( cmd_options options );
 
 #define Invariant assert
 #define Contract assert
@@ -128,7 +133,7 @@ typedef enum cg_symbol_case {
   cg_symbol_case_camel,
 } cg_symbol_case;
 
-cql_data_decl( const char *global_proc_name );
+//cql_data_decl( const char *CS->global_proc_name );
 
 typedef struct ast_node *ast_ptr;
 
@@ -136,8 +141,11 @@ typedef struct rtdata {
   // the command line name of this result type
   const char *name;
 
+  // the id prefix to add
+  const char *id_prefix;
+
   // The main code generator function that will be executed.
-  void (*code_generator)(ast_ptr root);
+  void (*code_generator)(CqlState* CS, ast_ptr root);
 
   // The number of file names required by the rt. Use -1 for a variable number
   // of file names that will be verified by the code generator itself based on
@@ -574,39 +582,36 @@ typedef struct rtdata {
 
 cql_data_decl( rtdata *rt );
 
-cql_noexport void cql_cleanup_and_exit(int32_t code);
+cql_noexport void cql_cleanup_and_exit(CqlState* CS, int32_t code);
 
 // output to "stderr"
-cql_noexport void cql_error(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void cql_error(CqlState* CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 
 // output to "stdout"
-cql_noexport void cql_output(const char *format, ...) __attribute__ (( format( printf, 1, 2 ) ));
+cql_noexport void cql_output(CqlState* CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 
 // Creates a file in write mode. Aborts if there's any error.
-cql_export FILE *cql_open_file_for_write(CSTR file_name);
+cql_export FILE *cql_open_file_for_write(CqlState *CS, CSTR file_name);
 
 // Create file, write the data to it, and close the file
-cql_export void cql_write_file(const char *file_name, const char *data);
+cql_export void cql_write_file(CqlState *CS, const char *file_name, const char *data);
 
-cql_noexport void line_directive(const char *directive);
+cql_noexport void line_directive(CqlState* CS, const char *directive);
 
-cql_export void cql_emit_error(const char *err);
+cql_export void cql_emit_error(CqlState* CS, const char *err);
 
 cql_export void cql_emit_output(const char *out);
 
-cql_data_decl( char *current_file );
+//cql_data_decl( char *CS->current_file );
 
-cql_noexport CSTR get_last_doc_comment();
+cql_noexport CSTR get_last_doc_comment(CqlState* CS);
 
 cql_noexport CSTR cql_builtin_text();
 
-cql_noexport void cql_setup_for_builtins(void);
-
 cql_noexport int32_t macro_type_from_str(CSTR type);
 
-cql_noexport bool_t macro_arg_valid(int32_t type, struct ast_node *ast);
+cql_noexport bool_t macro_arg_valid(CqlState* CS, int32_t type, struct ast_node *ast);
 
-cql_noexport void cql_cleanup_open_includes(void);
-cql_noexport void cql_reset_open_includes(void);
+cql_noexport void cql_reset_open_includes(CqlState* CS);
 
-cql_noexport bool_t cql_is_defined(CSTR name);
+cql_noexport bool_t cql_is_defined(CqlState* CS, CSTR name);

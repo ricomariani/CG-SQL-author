@@ -7,5 +7,5 @@
 
 #include "cql.h"
 
-cql_noexport rtdata *find_rtdata(CSTR name);
-cql_noexport void rt_cleanup(void);
+cql_noexport const rtdata *find_rtdata(CqlState* CS, CSTR name);
+cql_noexport void rt_cleanup(CqlState* CS);

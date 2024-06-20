@@ -9,7 +9,7 @@
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_QUERY_PLAN)
 
 // stubs to avoid link errors
-cql_noexport void cg_query_plan_main(ast_node *head) {}
+cql_noexport void cg_query_plan_main(CS, ast_node *head) {}
 
 #else
 
@@ -25,20 +25,23 @@ cql_noexport void cg_query_plan_main(ast_node *head) {}
 #include "cg_common.h"
 #include "sem.h"
 #include "eval.h"
+#include "cql_state.h"
 
-static void cg_qp_one_stmt(ast_node *stmt);
+static void cg_qp_one_stmt(CqlState* CS, ast_node *stmt);
 
-static charbuf *schema_stmts;
-static charbuf *backed_tables;
-static charbuf *query_plans;
-static CSTR current_procedure_name;
-static charbuf *current_ok_table_scan;
-static symtab *virtual_tables;
+//static charbuf *schema_stmts;
+//static charbuf *backed_tables;
+//static charbuf *query_plans;
+//static CSTR current_procedure_name;
+//static charbuf *current_ok_table_scan;
+//static symtab *virtual_tables;
 
 // Count sql statement found in ast
-static uint32_t sql_stmt_count = 0;
+//static uint32_t sql_stmt_count = 0;
 
-static gen_sql_callbacks *cg_qp_callbacks = NULL;
+//static gen_sql_callbacks *cg_qp_callbacks = NULL;
+#define cg_qp_callbacks_lv CS->cg_qp_callbacks
+#define cg_qp_callbacks_rv ((gen_sql_callbacks*)cg_qp_callbacks_lv)
 
 // When generating the query plan report there will be no referrence to
 // virtual table. In case we encounter a virtual table call we replace
@@ -46,27 +49,27 @@ static gen_sql_callbacks *cg_qp_callbacks = NULL;
 // create statement of that table to avoid sqlite error.
 //
 // @see cg_qp_create_virtual_table_stmt()
-static bool_t qp_table_function_callback(
+static bool_t qp_table_function_callback(CqlState* CS,
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
   charbuf *_Nonnull output)
 {
   Contract(is_ast_table_function(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf("%s", name);
+  gen_printf(CS, "%s", name);
 
-  if (!symtab_add(virtual_tables, name, NULL)) {
+  if (!symtab_add(CS, CS->virtual_tables, name, NULL)) {
     // This virtual table is already created
     return true;
   }
 
-  bprintf(schema_stmts, "CREATE TABLE %s (\n", name);
+  bprintf(CS->schema_stmts, "CREATE TABLE %s (\n", name);
 
   sem_join *jptr = ast->sem->jptr;
   uint32_t size = jptr->tables[0]->count;
   for (uint32_t i = 0; i < size; i++) {
     if (i > 0) {
-      bprintf(schema_stmts, ",\n");
+      bprintf(CS->schema_stmts, ",\n");
     }
 
     CSTR type;
@@ -88,10 +91,10 @@ static bool_t qp_table_function_callback(
         Contract(core_type == SEM_TYPE_REAL);
         type = "REAL";
     }
-    bprintf(schema_stmts, "  %s %s", jptr->tables[0]->names[i], type);
+    bprintf(CS->schema_stmts, "  %s %s", jptr->tables[0]->names[i], type);
   }
 
-  bprintf(schema_stmts, "\n);\n");
+  bprintf(CS->schema_stmts, "\n);\n");
   return true;
 }
 
@@ -100,49 +103,49 @@ static bool_t qp_table_function_callback(
 // evaluate so that the entire stream leading to the variable doesn't have
 // to go into the output.  This is also used to replace native function calls
 // that occur in query fragments.
-static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf *output)
+static void qp_emit_constant_one(CqlState* CS, bool_t native_context, sem_t sem_type, charbuf *output)
 {
   bool_t nullable = is_nullable(sem_type) && !is_inferred_notnull(sem_type);
 
   if (nullable) {
-    gen_printf("nullable(");
+    gen_printf(CS, "nullable(");
   }
 
   if (is_bool(sem_type)) {
-    gen_printf("true");
+    gen_printf(CS, "true");
   }
   else if (is_long(sem_type)) {
-    gen_printf("1L");
+    gen_printf(CS, "1L");
   }
   else if (is_real(sem_type)) {
     bprintf(output, "1.0");
   }
   else if (is_numeric(sem_type)) {
-    gen_printf("1");
+    gen_printf(CS, "1");
   }
   else if (is_text(sem_type)) {
-    gen_printf("'1'");
+    gen_printf(CS, "'1'");
   }
   else if (is_object(sem_type)) {
     if (native_context) {
-       gen_printf("trivial_object()");
+       gen_printf(CS, "trivial_object()");
     }
     else {
-       gen_printf("query_plan_trivial_object");
+       gen_printf(CS, "query_plan_trivial_object");
     }
   }
   else {
     Contract(is_blob(sem_type));
     if (native_context) {
-       gen_printf("trivial_blob()");
+       gen_printf(CS, "trivial_blob()");
     }
     else {
-      gen_printf("query_plan_trivial_blob");
+      gen_printf(CS, "query_plan_trivial_blob");
     }
   }
 
   if (nullable) {
-    gen_printf(")");
+    gen_printf(CS, ")");
   }
 }
 
@@ -153,12 +156,12 @@ static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf 
 // even if there are parameters in the real query.
 // Note: if the SQLite query processor were much more fancy this
 // wouldn't work at all. Constants matter.
-static bool_t qp_variables_callback(
+static bool_t qp_variables_callback(CqlState* CS,
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
   charbuf *_Nonnull output)
 {
-  qp_emit_constant_one(false, ast->sem->sem_type, output);
+  qp_emit_constant_one(CS, false, ast->sem->sem_type, output);
   return true;
 }
 
@@ -176,7 +179,7 @@ static bool_t qp_variables_callback(
 // We also do not touch shared fragment expressions, in those
 // cases the sproc body will be inlined as usual so there is no need to replace
 // the call with a constant.
-static bool_t qp_func_callback(
+static bool_t qp_func_callback(CqlState* CS,
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
   charbuf *_Nonnull output)
@@ -190,19 +193,19 @@ static bool_t qp_func_callback(
     return false;
   }
 
-  ast_node *func = find_func(name);
+  ast_node *func = find_func(CS, name);
 
   // note: ast_declare_select_func_stmt does NOT match, they stay
   if (func && is_ast_declare_func_stmt(func)) {
-    qp_emit_constant_one(true, ast->sem->sem_type, output);
+    qp_emit_constant_one(CS, true, ast->sem->sem_type, output);
     return true;
   }
 
   // any inline proc call is proc as func except shared fragment
   // which we checked above
-  ast_node *proc = find_proc(name);
+  ast_node *proc = find_proc(CS, name);
   if (proc) {
-    qp_emit_constant_one(true, ast->sem->sem_type, output);
+    qp_emit_constant_one(CS, true, ast->sem->sem_type, output);
     return true;
   }
 
@@ -212,7 +215,7 @@ static bool_t qp_func_callback(
 // For shared fragments with conditionals, choose one branch and discard the conditional.
 // A one-indexed integer provided by "context" chooses the branch - default is 1 (first branch).
 // Starting from 1 rather than 0 seems more intuitive for the use of @attribute(cql:query_plan_branch)
-static bool_t if_stmt_callback(
+static bool_t if_stmt_callback(CqlState* CS,
   struct ast_node *_Nonnull ast,
   void *_Nullable context,
   charbuf *_Nonnull output)
@@ -255,11 +258,11 @@ static bool_t if_stmt_callback(
     // select a different branch instead for query plan generation.
     Contract(branch_to_keep_index > 1);
     branch_to_keep_index = 1;
-    return if_stmt_callback(ast, (void *) &branch_to_keep_index, output);
+    return if_stmt_callback(CS, ast, (void *) &branch_to_keep_index, output);
   }
 
   Contract(is_ast_select_stmt(stmt) || is_ast_with_select_stmt(stmt));
-  gen_one_stmt(stmt);
+  gen_one_stmt(CS, stmt);
 
   return true;
 }
@@ -267,16 +270,16 @@ static bool_t if_stmt_callback(
 // Emits an explain query plan statement for the given statement node
 // the node could be any kind of DML including the select part of
 // a nested select expression like:  let x:= (select etc.);
-static void cg_qp_explain_query_stmt(ast_node *stmt) {
-  sql_stmt_count++;
+static void cg_qp_explain_query_stmt(CqlState* CS, ast_node *stmt) {
+  CS->sql_stmt_count++;
   CHARBUF_OPEN(proc);
   CHARBUF_OPEN(body);
   CHARBUF_OPEN(sql);
   CHARBUF_OPEN(json_str);
   CHARBUF_OPEN(c_str);
 
-  gen_set_output_buffer(&sql);
-  gen_statement_with_callbacks(stmt, cg_qp_callbacks);
+  gen_set_output_buffer(CS, &sql);
+  gen_statement_with_callbacks(CS, stmt, cg_qp_callbacks_rv);
 
   // the generated statement has to be encoded in different ways, it will go out directly
   // as an explain statement starting from the basic string computed above.  However,
@@ -284,7 +287,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   // the statement.  That's all fine and well but actually the text we want is for the
   // JSON output we will create.  So we have to JSON encode the sql and then quote
   // the JSON as a C string.
-  cg_encode_json_string_literal(sql.ptr, &json_str);
+  cg_encode_json_string_literal(CS, sql.ptr, &json_str);
 
   // Now that we have the JSON string we need all of that in a C string, including the
   // quotes. So we use the single character helper to build a buffer with new quotes.  Note
@@ -298,7 +301,7 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   bprintf(&c_str, "\"");
   for (uint32_t i = 1; i < json_str.used - 2; i++) {
     // json_str can have no control characters, but it might have quotes and backslashes
-    cg_encode_char_as_c_string_literal(json_str.ptr[i], &c_str);
+    cg_encode_char_as_c_string_literal(CS, json_str.ptr[i], &c_str);
   }
   bprintf(&c_str, "\"");
 
@@ -312,29 +315,29 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
   bprintf(&body, "DECLARE stmt TEXT!;\n");
   bprintf(&body, "SET stmt := %s;\n", c_str.ptr);
 
-  bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", sql_stmt_count);
-  if (current_procedure_name && current_ok_table_scan && current_ok_table_scan->used > 1) {
+  bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", CS->sql_stmt_count);
+  if (CS->current_procedure_name && CS->current_ok_table_scan && CS->current_ok_table_scan->used > 1) {
     bprintf(
       &body,
       "INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, \"%s\", \"%s\");\n",
-      sql_stmt_count,
-      current_procedure_name,
-      current_ok_table_scan->ptr
+      CS->sql_stmt_count,
+      CS->current_procedure_name,
+      CS->current_ok_table_scan->ptr
     );
   }
   bprintf(&body, "DECLARE C CURSOR FOR EXPLAIN QUERY PLAN\n");
   bprintf(&body, "%s;\n", sql.ptr);
   bprintf(&body, "LOOP FETCH C\n");
   bprintf(&body, "BEGIN\n");
-  bprintf(&body, "  INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%d, C.iselectid, C.iorder, C.ifrom, C.zdetail);\n", sql_stmt_count);
+  bprintf(&body, "  INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%d, C.iselectid, C.iorder, C.ifrom, C.zdetail);\n", CS->sql_stmt_count);
   bprintf(&body, "END;\n");
 
-  bprintf(&proc, "PROC populate_query_plan_%d()\n", sql_stmt_count);
+  bprintf(&proc, "PROC populate_query_plan_%d()\n", CS->sql_stmt_count);
   bprintf(&proc, "BEGIN\n");
-  bindent(&proc, &body, 2);
+  bindent(CS, &proc, &body, 2);
   bprintf(&proc, "END;\n\n");
 
-  bprintf(query_plans, "%s", proc.ptr);
+  bprintf(CS->query_plans, "%s", proc.ptr);
 
   CHARBUF_CLOSE(c_str);
   CHARBUF_CLOSE(json_str);
@@ -345,31 +348,31 @@ static void cg_qp_explain_query_stmt(ast_node *stmt) {
 
 // Emit a necessary piece of schema, preserve the backing table attributes if they are applicable.
 // This code runs for all kinds of DDL.
-static void cg_qp_sql_stmt(ast_node *ast) {
+static void cg_qp_sql_stmt(CqlState* CS, ast_node *ast) {
   // we only run if the item is not deleted (i.e. delete version == -1) and
   // it is not an aliased item.  That is if there are two copies of create table T1(...)
   // the 2nd identical copy should not be emitted. Same for indices, triggers, and views.
   if (ast->sem->delete_version <= 0 && !is_alias_ast(ast)) {
-    charbuf *out = schema_stmts;
+    charbuf *out = CS->schema_stmts;
     if (is_backing(ast->sem->sem_type)) {
       bprintf(out, "@attribute(cql:backing_table)\n");
     }
     if (is_backed(ast->sem->sem_type)) {
-      out = backed_tables;
+      out = CS->backed_tables;
 
       EXTRACT_MISC_ATTRS(ast, misc_attrs);
-      CSTR backing_table_name = get_named_string_attribute_value(misc_attrs, "backed_by");
+      CSTR backing_table_name = get_named_string_attribute_value(CS, misc_attrs, "backed_by");
       bprintf(out, "@attribute(cql:backed_by=%s)\n", backing_table_name);
     }
-    gen_set_output_buffer(out);
-    gen_statement_with_callbacks(ast, cg_qp_callbacks);
+    gen_set_output_buffer(CS, out);
+    gen_statement_with_callbacks(CS, ast, cg_qp_callbacks_rv);
     bprintf(out, ";\n");
   }
 }
 
 // We're assembling a simple string that has the tables that we are allowed to table scan without
 // generating a warning in the JSON output. This is basically a simple allow list.
-static void cg_qp_ok_table_scan_callback(
+static void cg_qp_ok_table_scan_callback(CqlState* CS,
     CSTR _Nonnull name,
     ast_node* _Nonnull misc_attr_value,
     void* _Nullable context) {
@@ -388,7 +391,7 @@ static void cg_qp_ok_table_scan_callback(
 // If we're processing a conditional fragment and there is an annotation
 // that tells us which branch of the fragment to use then store it.
 // Otherwise we'll analyze the first branch.
-static void cg_qp_query_plan_branch_callback(
+static void cg_qp_query_plan_branch_callback(CqlState* CS,
   CSTR _Nonnull name,
   ast_node* _Nonnull misc_attr_value,
   void* _Nullable context)
@@ -396,7 +399,7 @@ static void cg_qp_query_plan_branch_callback(
   Contract(context && is_ast_num(misc_attr_value));
 
   eval_node result = EVAL_NIL;
-  eval(misc_attr_value, &result);
+  eval(CS, misc_attr_value, &result);
 
   Contract(result.sem_type != SEM_TYPE_ERROR && result.sem_type != SEM_TYPE_NULL);
   eval_cast_to(&result, SEM_TYPE_LONG_INTEGER);
@@ -418,49 +421,49 @@ static void cg_qp_query_plan_branch_callback(
 // e.g: With the info below now available we can now figure out wheter or
 // an alert of scan table can be made on a particular statement id.
 // stmt(id) <-> proc_name <-> table_name (ok_table_scan)
-static void cg_qp_create_proc_stmt(ast_node *ast) {
+static void cg_qp_create_proc_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
-  Contract(current_procedure_name == NULL);
-  Contract(current_ok_table_scan == NULL);
+  Contract(CS->current_procedure_name == NULL);
+  Contract(CS->current_ok_table_scan == NULL);
 
-  if (is_proc_shared_fragment(ast)) {
+  if (is_proc_shared_fragment(CS, ast)) {
     EXTRACT_MISC_ATTRS(ast, misc_attrs);
     int64_t if_stmt_branch_context = 1;
-    find_query_plan_branch(misc_attrs, cg_qp_query_plan_branch_callback, (void *) &if_stmt_branch_context);
+    find_query_plan_branch(CS, misc_attrs, cg_qp_query_plan_branch_callback, (void *) &if_stmt_branch_context);
 
-    cg_qp_callbacks->if_stmt_callback = &if_stmt_callback;
-    cg_qp_callbacks->if_stmt_context = &if_stmt_branch_context;
+    cg_qp_callbacks_rv->if_stmt_callback = &if_stmt_callback;
+    cg_qp_callbacks_rv->if_stmt_context = &if_stmt_branch_context;
 
     // inside of a shared fragment, variables do not need to be remapped at all
     // they are only formals anyway.  Only the variables of "real" stored procs
     // need to be remapped.  If there are internal variables in blobs they will
     // flow from the outer variables.  This has the important side-effect of
     // making it so that no native call occurs inside the shared fragment in a sql context.
-    gen_sql_callback _Nullable variables_callback_saved = cg_qp_callbacks->variables_callback;
-    cg_qp_callbacks->variables_callback = NULL;
+    gen_sql_callback _Nullable variables_callback_saved = cg_qp_callbacks_rv->variables_callback;
+    cg_qp_callbacks_rv->variables_callback = NULL;
 
-    bprintf(query_plans, "@attribute(cql:shared_fragment)\n");
+    bprintf(CS->query_plans, "@attribute(cql:shared_fragment)\n");
 
     if (if_stmt_branch_context > 1) {
-      bprintf(query_plans, "@attribute(cql:query_plan_branch=%lld)\n", (llint_t)if_stmt_branch_context);
+      bprintf(CS->query_plans, "@attribute(cql:query_plan_branch=%lld)\n", (long long int)if_stmt_branch_context);
     }
 
-    gen_set_output_buffer(query_plans);
-    gen_statement_with_callbacks(ast, cg_qp_callbacks);
-    bprintf(query_plans, ";\n\n");
+    gen_set_output_buffer(CS, CS->query_plans);
+    gen_statement_with_callbacks(CS, ast, cg_qp_callbacks_rv);
+    bprintf(CS->query_plans, ";\n\n");
 
     // put the variables callback back in place
-    cg_qp_callbacks->variables_callback = variables_callback_saved;
+    cg_qp_callbacks_rv->variables_callback = variables_callback_saved;
 
     // Don't apply callback outside of shared fragments
-    cg_qp_callbacks->if_stmt_callback = NULL;
-    cg_qp_callbacks->if_stmt_context = NULL;
+    cg_qp_callbacks_rv->if_stmt_callback = NULL;
+    cg_qp_callbacks_rv->if_stmt_context = NULL;
 
     return;
   }
 
   CHARBUF_OPEN(ok_table_scan_buf);
-  current_ok_table_scan = &ok_table_scan_buf;
+  CS->current_ok_table_scan = &ok_table_scan_buf;
 
   // The statement has attributions therefore we should collect the values
   // of "ok_table_scan" attribution if applicable. Otherwise we have nothing
@@ -470,15 +473,15 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
     EXTRACT_NOTNULL(misc_attrs, stmt_and_attr->left);
     EXTRACT_STRING(table_name, ast->left);
 
-    current_procedure_name = table_name;
-    find_ok_table_scan(misc_attrs, cg_qp_ok_table_scan_callback, (void *) &ok_table_scan_buf);
+    CS->current_procedure_name = table_name;
+    find_ok_table_scan(CS, misc_attrs, cg_qp_ok_table_scan_callback, (void *) &ok_table_scan_buf);
   }
 
-  cg_qp_one_stmt(ast->left);
-  cg_qp_one_stmt(ast->right);
+  cg_qp_one_stmt(CS, ast->left);
+  cg_qp_one_stmt(CS, ast->right);
 
-  current_procedure_name = NULL;
-  current_ok_table_scan = NULL;
+  CS->current_procedure_name = NULL;
+  CS->current_ok_table_scan = NULL;
   CHARBUF_CLOSE(ok_table_scan_buf);
 }
 
@@ -489,43 +492,43 @@ static void cg_qp_create_proc_stmt(ast_node *ast) {
 // because primary key and foreign key are not supported in virtual tables.
 // The simples and stretchforward alternative is to rewrite virtual table to a regular table.
 // That won't affect query plan results.
-static void cg_qp_create_virtual_table_stmt(ast_node *node) {
+static void cg_qp_create_virtual_table_stmt(CqlState* CS, ast_node *node) {
   Contract(is_ast_create_virtual_table_stmt(node));
   EXTRACT_NOTNULL(create_table_stmt, node->right);
-  cg_qp_sql_stmt(create_table_stmt);
+  cg_qp_sql_stmt(CS, create_table_stmt);
 }
 
 // We're going to recurse the entire AST looking for matching node types
 // These correspond to the nodes we care about for QP.  That's pretty much
 // only DDL and query statements.  Most other things we keep digging in.
-static void cg_qp_one_stmt(ast_node *stmt) {
+static void cg_qp_one_stmt(CqlState* CS, ast_node *stmt) {
   if (!stmt || is_primitive(stmt)) {
     return;
   }
 
-  symtab_entry *entry = symtab_find(cg_stmts, stmt->type);
+  symtab_entry *entry = symtab_find(CS->cg_stmts, stmt->type);
   if (entry) {
-    ((void (*)(ast_node*))entry->val)(stmt);
+    ((void (*)(CqlState*, ast_node*))entry->val)(CS, stmt);
   } else {
-    cg_qp_one_stmt(stmt->left);
-    cg_qp_one_stmt(stmt->right);
+    cg_qp_one_stmt(CS, stmt->left);
+    cg_qp_one_stmt(CS, stmt->right);
   }
 }
 
 // This is where we walk the root statement list.
-static void cg_qp_stmt_list(ast_node *head) {
+static void cg_qp_stmt_list(CqlState* CS, ast_node *head) {
   Contract(is_ast_stmt_list(head));
   for (ast_node *stmt = head; stmt; stmt = stmt->right) {
-    cg_qp_one_stmt(stmt->left);
+    cg_qp_one_stmt(CS, stmt->left);
   }
 }
 
 // Emit a procedure to load up the no_table_scan table with an insert statement.
 // We use the multi-value form of insert to load all the rows we need.
-static void emit_populate_no_table_scan_proc(charbuf *output) {
+static void emit_populate_no_table_scan_proc(CqlState* CS, charbuf *output) {
   CHARBUF_OPEN(no_scan_tables_buf);
 
-  for (list_item *item = all_tables_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_tables_list; item; item = item->next) {
     if (is_ast_create_table_stmt(item->ast)) {
       EXTRACT_MISC_ATTRS(item->ast, misc_attrs);
       if (misc_attrs != NULL) {
@@ -534,13 +537,13 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
         EXTRACT_NAME_AST(name_ast, create_table_name_flags->right);
         EXTRACT_STRING(name, name_ast);
 
-        if (exists_attribute_str(misc_attrs, "no_table_scan")) {
+        if (exists_attribute_str(CS, misc_attrs, "no_table_scan")) {
           if (no_scan_tables_buf.used > 1) {
             bprintf(&no_scan_tables_buf, ",\n");
           }
           bprintf(&no_scan_tables_buf, "    (\"");
           if (is_qid(name_ast)) {
-            cg_unquote_encoded_qstr(&no_scan_tables_buf, name);
+            cg_unquote_encoded_qstr(CS, &no_scan_tables_buf, name);
           }
           else {
              bprintf(&no_scan_tables_buf, "%s", name);
@@ -564,10 +567,10 @@ static void emit_populate_no_table_scan_proc(charbuf *output) {
 }
 
 // Emit function declarations for "declare select function"
-static void cg_qp_emit_declare_func(charbuf *output) {
+static void cg_qp_emit_declare_func(CqlState* CS, charbuf *output) {
   // Emit declare functions because it may be needed for schema and query validation
-  gen_set_output_buffer(output);
-  for (list_item *item = all_functions_list; item; item = item->next) {
+  gen_set_output_buffer(CS, output);
+  for (list_item *item = CS->sem.all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
     bool_t is_select_func =
       is_ast_declare_select_func_stmt(any_func) ||
@@ -576,12 +579,12 @@ static void cg_qp_emit_declare_func(charbuf *output) {
 
     if (is_select_func) {
       EXTRACT_MISC_ATTRS(any_func, misc_attrs);
-      bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
+      bool_t deterministic = misc_attrs && !!find_named_attr(CS, misc_attrs, "deterministic");
       if (deterministic) {
         bprintf(output, "@attribute(cql:deterministic)\n");
       }
 
-      gen_statement_with_callbacks(any_func, cg_qp_callbacks);
+      gen_statement_with_callbacks(CS, any_func, cg_qp_callbacks_rv);
       bprintf(output, ";\n");
     }
   }
@@ -591,8 +594,8 @@ static void cg_qp_emit_declare_func(charbuf *output) {
 // The stub isn't actually called in the context of query plan creation
 // so it doesn't have to do anything.  The runtime helper cql_create_udf_stub
 // handles the particulars.
-static void cg_qp_emit_udf_stubs(charbuf *output) {
-  for (list_item *item = all_functions_list; item; item = item->next) {
+static void cg_qp_emit_udf_stubs(CqlState* CS, charbuf *output) {
+  for (list_item *item = CS->sem.all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
     bool_t is_select_func =
       is_ast_declare_select_func_stmt(any_func) ||
@@ -610,12 +613,12 @@ static void cg_qp_emit_udf_stubs(charbuf *output) {
 // Generate the schema required by the procedures in this translation unit
 // plus the standard schema for query plan storage and emit any UDF stubs
 // at this time as well.  See above for the UDF stub code.
-static void cg_qp_emit_create_schema_proc(charbuf *output) {
+static void cg_qp_emit_create_schema_proc(CqlState* CS, charbuf *output) {
   bprintf(output, "PROC create_schema()\n");
   bprintf(output, "BEGIN\n");
 
-  cg_qp_emit_udf_stubs(output);
-  bindent(output, schema_stmts, 2);
+  cg_qp_emit_udf_stubs(CS, output);
+  bindent(CS, output, CS->schema_stmts, 2);
   bprintf(output,
     "%s",
     "  CREATE TABLE sql_temp(\n"
@@ -648,14 +651,14 @@ static void cg_qp_emit_create_schema_proc(charbuf *output) {
     "\n"
   );
 
-  bprintf(output, "%s", backed_tables->ptr);
+  bprintf(output, "%s", CS->backed_tables->ptr);
 }
 
-static void emit_populate_tables_proc(charbuf *output) {
-  bprintf(output, "%s", query_plans->ptr);
+static void emit_populate_tables_proc(CqlState* CS, charbuf *output) {
+  bprintf(output, "%s", CS->query_plans->ptr);
 }
 
-static void emit_print_sql_statement_proc(charbuf *output) {
+static void emit_print_sql_statement_proc(CqlState* CS, charbuf *output) {
   bprintf(output,
     "%s",
     "PROC print_sql_statement(sql_id int!)\n"
@@ -668,7 +671,7 @@ static void emit_print_sql_statement_proc(charbuf *output) {
   );
 }
 
-static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
+static void emit_populate_table_scan_alert_table_proc(CqlState* CS, charbuf *output) {
   bprintf(output,
     "%s",
     "PROC populate_table_scan_alert_table(table_ text!)\n"
@@ -687,7 +690,7 @@ static void emit_populate_table_scan_alert_table_proc(charbuf *output) {
   );
 }
 
-static void emit_populate_b_tree_alert_table_proc(charbuf *output) {
+static void emit_populate_b_tree_alert_table_proc(CqlState* CS, charbuf *output) {
   bprintf(output,
     "%s",
     "PROC populate_b_tree_alert_table()\n"
@@ -701,7 +704,7 @@ static void emit_populate_b_tree_alert_table_proc(charbuf *output) {
   );
 }
 
-static void emit_print_query_violation_proc(charbuf *output) {
+static void emit_print_query_violation_proc(CqlState* CS, charbuf *output) {
   bprintf(output,
     "%s",
     "PROC print_query_violation()\n"
@@ -733,7 +736,7 @@ static void emit_print_query_violation_proc(charbuf *output) {
   );
 }
 
-static void emit_print_query_plan_stat_proc(charbuf *output) {
+static void emit_print_query_plan_stat_proc(CqlState* CS, charbuf *output) {
   bprintf(output,
     "%s",
     "PROC print_query_plan_stat(id_ int!)\n"
@@ -805,7 +808,7 @@ static void emit_print_query_plan_stat_proc(charbuf *output) {
   );
 }
 
-static void emit_print_query_plan_graph_proc(charbuf *output) {
+static void emit_print_query_plan_graph_proc(CqlState* CS, charbuf *output) {
   bprintf(output,
     "%s",
     "PROC print_query_plan_graph(id_ int!)\n"
@@ -836,7 +839,7 @@ static void emit_print_query_plan_graph_proc(charbuf *output) {
   );
 }
 
-static void emit_print_query_plan(charbuf *output) {
+static void emit_print_query_plan(CqlState* CS, charbuf *output) {
   bprintf(output,
     "PROC print_query_plan(sql_id int!)\n"
     "BEGIN\n"
@@ -852,23 +855,23 @@ static void emit_print_query_plan(charbuf *output) {
 }
 
 #undef STMT_INIT
-#define STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_qp_ ## x)
+#define STMT_INIT(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_qp_ ## x)
 
 #undef STMT_INIT_EXPL
-#define STMT_INIT_EXPL(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_qp_explain_query_stmt)
+#define STMT_INIT_EXPL(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_qp_explain_query_stmt)
 
 #undef STMT_INIT_DDL
-#define STMT_INIT_DDL(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_qp_sql_stmt)
+#define STMT_INIT_DDL(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_qp_sql_stmt)
 
-cql_noexport void cg_query_plan_main(ast_node *head) {
-  sql_stmt_count = 0; // reset statics
+cql_noexport void cg_query_plan_main(CqlState* CS, ast_node *head) {
+  CS->sql_stmt_count = 0; // reset statics
 
-  Contract(options.file_names_count == 1);
-  cql_exit_on_semantic_errors(head);
-  exit_on_validating_schema();
+  Contract(CS->options.file_names_count == 1);
+  cql_exit_on_semantic_errors(CS, head);
+  exit_on_validating_schema(CS);
 
-  cg_stmts = symtab_new();
-  virtual_tables = symtab_new();
+  CS->cg_stmts = symtab_new();
+  CS->virtual_tables = symtab_new();
 
   STMT_INIT(create_proc_stmt);
 
@@ -900,11 +903,11 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   STMT_INIT_EXPL(commit_trans_stmt);
 
   CHARBUF_OPEN(query_plans_buf);
-  query_plans = &query_plans_buf;
+  CS->query_plans = &query_plans_buf;
   CHARBUF_OPEN(schema_stmts_buf);
-  schema_stmts = &schema_stmts_buf;
+  CS->schema_stmts = &schema_stmts_buf;
   CHARBUF_OPEN(backed_tables_buf);
-  backed_tables = &backed_tables_buf;
+  CS->backed_tables = &backed_tables_buf;
   CHARBUF_OPEN(output_buf);
 
   gen_sql_callbacks callbacks;
@@ -913,18 +916,18 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   callbacks.variables_callback = qp_variables_callback;
   callbacks.table_function_callback = qp_table_function_callback;
   callbacks.func_callback = qp_func_callback;
-  cg_qp_callbacks = &callbacks;
+  cg_qp_callbacks_lv = &callbacks;
 
-  cg_qp_stmt_list(head);
+  cg_qp_stmt_list(CS, head);
 
-  bprintf(&output_buf, "%s", rt->source_prefix);
+  bprintf(&output_buf, "%s", CS->rt->source_prefix);
   bprintf(&output_buf, "declare proc printf no check;\n");
 
   // Print special annotation that would rename any table name aliases in
   // SELECT queries to include table names. Makes query plans more informative.
   bprintf(&output_buf, "@keep_table_name_in_aliases;\n");
 
-  if (!sql_stmt_count) {
+  if (!CS->sql_stmt_count) {
     bprintf(&output_buf,
       "create proc query_plan()\n"
       "begin\n"
@@ -936,45 +939,45 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
       "end;\n"
     );
 
-    cql_write_file(options.file_names[0], output_buf.ptr);
+    cql_write_file(CS, CS->options.file_names[0], output_buf.ptr);
 
     goto cleanup;
   }
 
   bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
 
-  bprintf(&output_buf, 
+  bprintf(&output_buf,
     "proc trivial_object()\n"
     "begin\n"
     "  select 1 x;\n"
     "end;\n\n"
   );
 
-  bprintf(&output_buf, 
+  bprintf(&output_buf,
     "proc trivial_blob(out result blob not null)\n"
     "begin\n"
     "  set result := (select x'41');\n"
     "end;\n\n"
   );
 
-  if (options.test) {
+  if (CS->options.test) {
     while (head->right) {
       head = head->right;
     }
     bprintf(&output_buf, "-- The statement ending at line %d\n\n", head->left->lineno);
   }
 
-  cg_qp_emit_declare_func(&output_buf);
-  cg_qp_emit_create_schema_proc(&output_buf);
-  emit_populate_no_table_scan_proc(&output_buf);
-  emit_populate_tables_proc(&output_buf);
-  emit_populate_table_scan_alert_table_proc(&output_buf);
-  emit_populate_b_tree_alert_table_proc(&output_buf);
-  emit_print_query_violation_proc(&output_buf);
-  emit_print_sql_statement_proc(&output_buf);
-  emit_print_query_plan_stat_proc(&output_buf);
-  emit_print_query_plan_graph_proc(&output_buf);
-  emit_print_query_plan(&output_buf);
+  cg_qp_emit_declare_func(CS, &output_buf);
+  cg_qp_emit_create_schema_proc(CS, &output_buf);
+  emit_populate_no_table_scan_proc(CS, &output_buf);
+  emit_populate_tables_proc(CS, &output_buf);
+  emit_populate_table_scan_alert_table_proc(CS, &output_buf);
+  emit_populate_b_tree_alert_table_proc(CS, &output_buf);
+  emit_print_query_violation_proc(CS, &output_buf);
+  emit_print_sql_statement_proc(CS, &output_buf);
+  emit_print_query_plan_stat_proc(CS, &output_buf);
+  emit_print_query_plan_graph_proc(CS, &output_buf);
+  emit_print_query_plan(CS, &output_buf);
 
   bprintf(&output_buf, "PROC query_plan()\n");
   bprintf(&output_buf, "BEGIN\n");
@@ -985,8 +988,8 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "    CALL printf(\"failed populating no_table_scan table\\n\");\n");
   bprintf(&output_buf, "    THROW;\n");
   bprintf(&output_buf, "  END;\n");
-  
-  for (uint32_t i = 1; i <= sql_stmt_count; i++) {
+
+  for (uint32_t i = 1; i <= CS->sql_stmt_count; i++) {
     bprintf(&output_buf, "  TRY\n");
     bprintf(&output_buf, "    CALL populate_query_plan_%d();\n", i);
     bprintf(&output_buf, "  CATCH\n");
@@ -999,7 +1002,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "  CALL print_query_violation();\n");
   bprintf(&output_buf, "  CALL printf(\"\\\"plans\\\" : [\\n\");\n");
   bprintf(&output_buf, "  LET q := 1;\n");
-  bprintf(&output_buf, "  WHILE q <= %d\n", sql_stmt_count);
+  bprintf(&output_buf, "  WHILE q <= %d\n", CS->sql_stmt_count);
   bprintf(&output_buf, "  BEGIN\n");
   bprintf(&output_buf, "    CALL printf(\"%%s\", IIF(q == 1, \"\", \",\\n\"));\n");
   bprintf(&output_buf, "    CALL print_query_plan(q);\n");
@@ -1010,7 +1013,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   bprintf(&output_buf, "END;\n");
 
-  cql_write_file(options.file_names[0], output_buf.ptr);
+  cql_write_file(CS, CS->options.file_names[0], output_buf.ptr);
   goto cleanup;
 
 cleanup:
@@ -1018,17 +1021,17 @@ cleanup:
   CHARBUF_CLOSE(backed_tables_buf);
   CHARBUF_CLOSE(schema_stmts_buf);
   CHARBUF_CLOSE(query_plans_buf);
-  SYMTAB_CLEANUP(cg_stmts);
-  SYMTAB_CLEANUP(virtual_tables);
+  SYMTAB_CLEANUP(CS->cg_stmts);
+  SYMTAB_CLEANUP(CS->virtual_tables);
 
   // Force the globals to null state so that they do not look like roots to LeakSanitizer
   // all of these should have been freed already.  This is the final safety net to prevent
   // non-reporting of leaks.
 
-  backed_tables = NULL;
-  schema_stmts = NULL;
-  query_plans = NULL;
-  cg_qp_callbacks = NULL;
+  CS->backed_tables = NULL;
+  CS->schema_stmts = NULL;
+  CS->query_plans = NULL;
+  cg_qp_callbacks_lv = NULL;
 }
 
 #endif

@@ -58,6 +58,7 @@ process_headers() {
 	cat "sha256.h"
 	cat "printf.h"
 	cat "flow.h"
+	cat "cql_state.h"
 
 	process_extra_h_files
 }
@@ -143,6 +144,8 @@ typedef uint8_t bool_t;
 typedef long long int llint_t;
 typedef const char *CSTR;
 
+typedef struct CqlState CqlState;
+
 // In the amalgam build, most things do not need to be visible.  Only the
 // API exported by the amalgam should be extern so as to avoid contamination
 // of the namespace.
@@ -157,7 +160,7 @@ typedef const char *CSTR;
 #define cql_data_defn(x)
 
 // map the global yy parser variables and functions to something not likely to conflict
-
+/*
 #define yy_flex_debug cql_yy_flex_debug
 #define yychar cql_yychar
 #define yyin cql_yyin
@@ -167,7 +170,6 @@ typedef const char *CSTR;
 #define yynerrs cql_yynerrs
 #define yyout cql_yyout
 #define yytext cql_yytext
-
 #define yy_create_buffer cql_yy_create_buffer
 #define yy_delete_buffer cql_yy_delete_buffer
 #define yy_flush_buffer cql_yy_flush_buffer
@@ -193,8 +195,17 @@ typedef const char *CSTR;
 #define yyrestart cql_yyrestart
 #define yyset_debug cql_yyset_debug
 #define yyset_in cql_yyset_in
-#define yyset_lineno cql_yyset_lineno
+//#define yyset_lineno cql_yyset_lineno
 #define yyset_out cql_yyset_out
+*/
+
+typedef void* yyscan_t;
+void yyset_lineno ( int _line_number , yyscan_t yyscanner );
+int yyget_lineno ( yyscan_t yyscanner );
+void yyset_in  ( FILE * _in_str , yyscan_t yyscanner );
+int yylex_init (yyscan_t* scanner);
+int yylex_destroy ( yyscan_t yyscanner );
+void yyrestart ( FILE *input_file , yyscan_t yyscanner );
 
 #ifndef _MSC_VER
 #pragma clang diagnostic push
@@ -223,9 +234,9 @@ EOF
 #endif
 EOF
 
-	echo "static void cql_reset_globals() {" >>out/pass1
+	echo "static void cql_reset_globals(CqlState *CS) {" >>out/pass1
 	grep cql_data_decl ./*.h | grep -v '#define' |
-		sed -e "s/ );//" -e "s/.* //" -e "s/\*//" -e "s/^/  /" -e "s/$/ = 0;/" -e "s/options = 0/memset(\&options, 0, sizeof(options));/" \
+		sed -e "s/ );//" -e "s/.* //" -e "s/\*//" -e "s/^/  /" -e "s/$/ = 0;/" -e "s/options = 0/memset(\&CS->options, 0, sizeof(CS->options));/" \
 			>>out/pass1
 	echo "}" >>out/pass1
 

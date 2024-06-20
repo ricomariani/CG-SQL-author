@@ -17,5 +17,5 @@ typedef struct list_item {
   struct list_item *next;
 } list_item;
 
-cql_noexport void add_item_to_list(list_item **head, struct ast_node *ast);
+cql_noexport void add_item_to_list(CqlState* CS, list_item **head, struct ast_node *ast);
 cql_noexport void reverse_list(list_item **head);

@@ -10,8 +10,9 @@
 #include "cql.h"
 #include "ast.h"
 #include "list.h"
+#include "cql_state.h"
 
-cql_noexport void add_item_to_list(list_item **head, struct ast_node *ast) {
+cql_noexport void add_item_to_list(CqlState* CS, list_item **head, struct ast_node *ast) {
   list_item *item = _ast_pool_new(list_item);
   item->next = *head;
   item->ast = ast;

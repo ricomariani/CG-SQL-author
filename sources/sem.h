@@ -13,9 +13,9 @@ typedef uint64_t sem_t;
 
 // minimal stuff goes here
 
-cql_noexport void sem_main(ast_node *node);
-cql_noexport void sem_cleanup(void);
-cql_noexport void print_sem_type(struct sem_node *sem);
+cql_noexport void sem_main(CS, ast_node *node);
+cql_noexport void sem_cleanup(CS);
+cql_noexport void print_sem_type(CS, struct sem_node *sem);
 
 #else
 
@@ -209,8 +209,8 @@ typedef struct schema_annotation {
 #define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
 #define SEM_EXPR_CONTEXT_FLAGS          0x1FFF // all the flag bits
 
-#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
-#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
+#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(CS->sem.current_expr_context & (x)))
+#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(CS->sem.current_expr_context & (x)))
 
 cql_noexport sem_t core_type_of(sem_t sem_type);
 cql_noexport sem_t sensitive_flag(sem_t sem_type);
@@ -266,84 +266,84 @@ cql_noexport bool_t is_autotest_dummy_insert(CSTR name);
 cql_noexport bool_t is_autotest_dummy_select(CSTR name);
 cql_noexport bool_t is_autotest_dummy_result_set(CSTR name);
 cql_noexport bool_t is_autotest_dummy_test(CSTR name);
-cql_noexport bool_t is_referenceable_by_foreign_key(ast_node *ref_table, CSTR column_name);
+cql_noexport bool_t is_referenceable_by_foreign_key(CqlState* CS, ast_node *ref_table, CSTR column_name);
 cql_noexport bool_t is_inline_func_call(ast_node *call_ast);
-cql_noexport bool_t is_proc_private(ast_node *proc_stmt);
-cql_noexport bool_t is_proc_suppress_result_set(ast_node *proc_stmt);
-cql_noexport bool_t is_proc_suppress_getters(ast_node *proc_stmt);
-cql_noexport bool_t is_proc_emit_setters(ast_node *proc_stmt);
-cql_noexport bool_t is_proc_shared_fragment(ast_node *ast);
+cql_noexport bool_t is_proc_private(CqlState* CS, ast_node *proc_stmt);
+cql_noexport bool_t is_proc_suppress_result_set(CqlState* CS, ast_node *proc_stmt);
+cql_noexport bool_t is_proc_suppress_getters(CqlState* CS, ast_node *proc_stmt);
+cql_noexport bool_t is_proc_emit_setters(CqlState* CS, ast_node *proc_stmt);
+cql_noexport bool_t is_proc_shared_fragment(CqlState* CS, ast_node *ast);
 cql_noexport bool_t is_alias_ast(ast_node *ast);
 cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *ast);
 
-cql_noexport ast_node* new_str_or_qstr(CSTR name, sem_t sem_type);
+cql_noexport ast_node* new_str_or_qstr(CqlState* CS, CSTR name, sem_t sem_type);
 cql_noexport CSTR sem_get_name(ast_node *ast);
 cql_noexport ast_node *sem_get_name_ast(ast_node *ast);
-cql_noexport CSTR create_group_id(CSTR group_name, CSTR table_name);
+cql_noexport CSTR create_group_id(CqlState* CS, CSTR group_name, CSTR table_name);
 
 // Exit if schema validation directive was seen
-cql_noexport void exit_on_validating_schema(void);
+cql_noexport void exit_on_validating_schema(CqlState* CS);
 
-cql_noexport void sem_main(ast_node *node);
-cql_noexport void sem_cleanup(void);
-cql_noexport void print_sem_type(struct sem_node *sem);
+cql_noexport void sem_main(CqlState* CS, ast_node *node);
+cql_noexport void sem_cleanup(CqlState* CS);
+cql_noexport void print_sem_type(CqlState* CS, struct sem_node *sem);
 cql_noexport int32_t sem_column_index(sem_struct *sptr, CSTR name);
 
-cql_noexport ast_node *find_proc(CSTR name);
-cql_noexport bytebuf *find_proc_arg_info(CSTR name);
-cql_noexport ast_node *find_local_or_global_variable(CSTR name);
-cql_noexport ast_node *find_region(CSTR name);
-cql_noexport ast_node *find_func(CSTR name);
-cql_noexport ast_node *find_unchecked_func(CSTR name);
-cql_noexport ast_node *find_table_or_view_even_deleted(CSTR name);
-cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CSTR name, ast_node *err_target, CSTR msg);
-cql_noexport symtab *find_default_values(CSTR name);
-cql_noexport bool_t add_default_values(symtab *def_values, CSTR name);
-cql_noexport void sem_resolve_id(ast_node *ast, CSTR name, CSTR scope);
-cql_noexport ast_node *find_enum(CSTR name);
-cql_noexport ast_node *find_recreate_migrator(CSTR name);
-cql_noexport ast_node *find_constant_group(CSTR name);
-cql_noexport ast_node *find_variable_group(CSTR name);
-cql_noexport ast_node *find_constant(CSTR name);
+cql_noexport ast_node *find_proc(CqlState* CS, CSTR name);
+cql_noexport bytebuf *find_proc_arg_info(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_local_or_global_variable(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_region(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_func(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_unchecked_func(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_table_or_view_even_deleted(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CqlState* CS, CSTR name, ast_node *err_target, CSTR msg);
+cql_noexport symtab *find_default_values(CqlState* CS, CSTR name);
+cql_noexport bool_t add_default_values(CqlState* CS, symtab *def_values, CSTR name);
+cql_noexport void sem_resolve_id(CqlState* CS, ast_node *ast, CSTR name, CSTR scope);
+cql_noexport ast_node *find_enum(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_recreate_migrator(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_constant_group(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_variable_group(CqlState* CS, CSTR name);
+cql_noexport ast_node *find_constant(CqlState* CS, CSTR name);
 cql_noexport int32_t find_col_in_sptr(sem_struct *sptr, CSTR name);
 cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs);
-cql_noexport void sem_accumulate_full_region_image(symtab *regions, CSTR name);
-cql_noexport void sem_accumulate_public_region_image(symtab *regions, CSTR name);
-cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name);
-cql_noexport void init_encode_info(ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg);
+cql_noexport void sem_accumulate_full_region_image(CqlState* CS, symtab *regions, CSTR name);
+cql_noexport void sem_accumulate_public_region_image(CqlState* CS, symtab *regions, CSTR name);
+cql_noexport sem_t find_column_type(CqlState* CS, CSTR table_name, CSTR column_name);
+cql_noexport void init_encode_info(CqlState* CS, ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg);
 cql_noexport bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab *encode_columns_arg);
 
 #define LIKEABLE_FOR_ARGS   1
 #define LIKEABLE_FOR_VALUES 2
 
-cql_noexport ast_node *sem_find_shape_def(ast_node *shape_def, int32_t likeable_for);
-cql_noexport ast_node *sem_find_shape_def_base(ast_node *like_ast, int32_t likeable_for);
-cql_noexport ast_node *sem_find_likeable_from_expr_type(ast_node *var);
-cql_noexport ast_node *find_named_type(CSTR name);
+cql_noexport ast_node *sem_find_shape_def(CqlState* CS, ast_node *shape_def, int32_t likeable_for);
+cql_noexport ast_node *sem_find_shape_def_base(CqlState* CS, ast_node *like_ast, int32_t likeable_for);
+cql_noexport ast_node *sem_find_likeable_from_expr_type(CqlState* CS, ast_node *var);
+cql_noexport ast_node *find_named_type(CqlState* CS, CSTR name);
 
-cql_noexport void record_error(ast_node *ast);
-cql_noexport void record_ok(ast_node *ast);
-cql_noexport void report_error(ast_node *ast, CSTR msg, CSTR subject);
-cql_noexport void sem_one_stmt(ast_node *ast);
-cql_noexport void sem_root_expr(ast_node *node, uint32_t expr_context);
-cql_noexport void sem_expr(ast_node *node);
-cql_noexport void sem_cursor(ast_node *ast);
-cql_noexport ast_node *find_arg_bundle(CSTR name);
-cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name);
-cql_noexport void sem_add_flags(ast_node *ast, sem_t flags);
+cql_noexport void record_error(CqlState* CS, ast_node *ast);
+cql_noexport void record_ok(CqlState* CS, ast_node *ast);
+cql_noexport void report_error(CqlState* CS, ast_node *ast, CSTR msg, CSTR subject);
+cql_noexport void sem_one_stmt(CqlState* CS, ast_node *ast);
+cql_noexport void sem_root_expr(CqlState* CS, ast_node *node, uint32_t expr_context);
+cql_noexport void sem_expr(CqlState* CS, ast_node *node);
+cql_noexport void sem_cursor(CqlState* CS, ast_node *ast);
+cql_noexport ast_node *find_arg_bundle(CqlState* CS, CSTR name);
+cql_noexport bool_t add_arg_bundle(CqlState* CS, ast_node *ast, CSTR name);
+cql_noexport void sem_add_flags(CqlState* CS, ast_node *ast, sem_t flags);
 cql_noexport ast_node *first_arg(ast_node *arg_list);
 cql_noexport ast_node *second_arg(ast_node *arg_list);
 cql_noexport ast_node *third_arg(ast_node *arg_list);
-cql_noexport void sem_verify_no_anon_no_null_columns(ast_node *ast);
-cql_noexport void sem_verify_identical_columns(ast_node *expected, ast_node *actual, CSTR target);
-cql_noexport void sem_validate_cursor_blob_compat(ast_node *ast_error, ast_node *cursor, ast_node *blob, ast_node *dest, ast_node *src);
-cql_noexport void sem_any_shape(ast_node *ast);
-cql_noexport sem_node *new_sem(sem_t sem_type);
-cql_noexport bool_t sem_verify_assignment(ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
-cql_noexport void sem_select(ast_node *node);
+cql_noexport void sem_verify_no_anon_no_null_columns(CqlState* CS, ast_node *ast);
+cql_noexport void sem_verify_identical_columns(CqlState* CS, ast_node *expected, ast_node *actual, CSTR target);
+cql_noexport void sem_validate_cursor_blob_compat(CqlState* CS, ast_node *ast_error, ast_node *cursor, ast_node *blob, ast_node *dest, ast_node *src);
+cql_noexport void sem_any_shape(CqlState* CS, ast_node *ast);
+cql_noexport sem_node *new_sem(CqlState* CS, sem_t sem_type);
+cql_noexport bool_t sem_verify_assignment(CqlState* CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name);
+cql_noexport void sem_select(CqlState* CS, ast_node *node);
 cql_noexport ast_node *sem_recover_with_stmt(ast_node *ast);
 cql_noexport ast_node *sem_skip_with(ast_node *ast);
-cql_noexport bool_t is_table_not_physical(ast_node *table_ast);
+cql_noexport bool_t is_table_not_physical(CqlState* CS, ast_node *table_ast);
 
 #endif
 
@@ -353,52 +353,52 @@ typedef struct cte_state {
   symtab *ctes;
 } cte_state;
 
-cql_data_decl( bytebuf *schema_annotations );
-cql_data_decl( bytebuf *recreate_annotations );
+//cql_data_decl( bytebuf *CS->sem.schema_annotations );
+//cql_data_decl( bytebuf *CS->sem.recreate_annotations );
 
-cql_data_decl( struct list_item *all_tables_list );
-cql_data_decl( struct list_item *all_subscriptions_list );
-cql_data_decl( struct list_item *all_functions_list );
-cql_data_decl( struct list_item *all_views_list );
-cql_data_decl( struct list_item *all_indices_list );
-cql_data_decl( struct list_item *all_triggers_list );
-cql_data_decl( struct list_item *all_regions_list );
-cql_data_decl( struct list_item *all_ad_hoc_list );
-cql_data_decl( struct list_item *all_select_functions_list );
-cql_data_decl( struct list_item *all_enums_list );
-cql_data_decl( struct list_item *all_constant_groups_list );
-cql_data_decl( symtab *schema_regions );
-cql_data_decl( ast_node *current_proc );
-cql_data_decl( charbuf *error_capture );
-cql_data_decl( cte_state *cte_cur );
-cql_data_decl( symtab *ref_sources_for_target_table );
-cql_data_decl( symtab *ref_targets_for_source_table );
+//cql_data_decl( struct list_item *CS->sem.all_tables_list );
+//cql_data_decl( struct list_item *CS->sem.all_subscriptions_list );
+//cql_data_decl( struct list_item *CS->sem.all_functions_list );
+//cql_data_decl( struct list_item *CS->sem.all_views_list );
+//cql_data_decl( struct list_item *CS->sem.all_indices_list );
+//cql_data_decl( struct list_item *CS->sem.all_triggers_list );
+//cql_data_decl( struct list_item *CS->sem.all_regions_list );
+//cql_data_decl( struct list_item *CS->sem.all_ad_hoc_list );
+//cql_data_decl( struct list_item *CS->sem.all_select_functions_list );
+//cql_data_decl( struct list_item *CS->sem.all_enums_list );
+//cql_data_decl( struct list_item *CS->sem.all_constant_groups_list );
+//cql_data_decl( symtab *CS->sem.schema_regions );
+//cql_data_decl( ast_node *CS->sem.current_proc );
+//cql_data_decl( charbuf *CS->sem.error_capture );
+//cql_data_decl( cte_state *CS->sem.cte_cur );
+//cql_data_decl( symtab *CS->sem.ref_sources_for_target_table );
+//cql_data_decl( symtab *CS->sem.ref_targets_for_source_table );
 
 // True if we are presently emitting a vault stored proc.
 // A stored proc with attribution vault_sensitive is a vault stored proc
-cql_data_decl( bool_t use_encode );
-cql_data_decl( CSTR encode_context_column );
+//cql_data_decl( bool_t CS->sem.use_encode );
+//cql_data_decl( CSTR CS->sem.encode_context_column );
 
 // List of column names reference in a stored proc that we should vault
-cql_data_decl( symtab *encode_columns );
+//cql_data_decl( symtab *CS->sem.encode_columns );
 
 // These are the symbol tables with the accumulated included/excluded regions
-cql_data_decl( symtab *included_regions );
-cql_data_decl( symtab *excluded_regions );
-cql_data_decl( sem_t global_proc_flags );
+//cql_data_decl( symtab *CS->sem.included_regions );
+//cql_data_decl( symtab *CS->sem.excluded_regions );
+//cql_data_decl( sem_t CS->sem.global_proc_flags );
 
 // This is the table for all the migration procs for any recreate procs or groups
 // that might need them, these are the second form of ad hoc schema migration
-cql_data_decl( symtab *ad_hoc_recreate_actions );
+//cql_data_decl( symtab *CS->sem.ad_hoc_recreate_actions );
 
 // If the current context is a upsert statement
-cql_data_decl( bool_t in_upsert );
-cql_data_decl( bool_t in_upsert_rewrite );
+//cql_data_decl( bool_t CS->sem.in_upsert );
+//cql_data_decl( bool_t CS->sem.in_upsert_rewrite );
 
 // hold the table ast query in the current upsert statement.
-cql_data_decl ( ast_node *current_upsert_table_ast );
+//cql_data_decl ( ast_node *CS->sem.current_upsert_table_ast );
 // This is the symbol table with the recreate group dependencies where an edge B -> A means A FKs to B
-cql_data_decl( symtab *recreate_group_deps );
+//cql_data_decl( symtab *CS->sem.recreate_group_deps );
 
 // Truthy when the @keep_table_name_in_aliases_stmt directive is used.
-cql_data_decl( bool_t keep_table_name_in_aliases );
+//cql_data_decl( bool_t CS->sem.keep_table_name_in_aliases );

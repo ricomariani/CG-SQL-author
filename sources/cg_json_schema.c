@@ -9,7 +9,7 @@
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_JSON)
 
 // stubs to avoid link errors
-cql_noexport void cg_json_schema_main(ast_node *head) {}
+cql_noexport void cg_json_schema_main(CS, ast_node *head) {}
 
 #else
 
@@ -28,13 +28,14 @@ cql_noexport void cg_json_schema_main(ast_node *head) {}
 #include "symtab.h"
 #include "encoders.h"
 #include "eval.h"
+#include "cql_state.h"
 
-static void cg_fragment_with_params(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
-static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
-static void cg_json_fk_target_options(charbuf *output, ast_node *ast);
-static void cg_json_emit_region_info(charbuf *output, ast_node *ast);
-static void cg_json_dependencies(charbuf *output, ast_node *ast);
-static void cg_json_data_type(charbuf *output, sem_t sem_type, CSTR kind);
+static void cg_fragment_with_params(CqlState* CS, charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
+static void cg_fragment_with_params_raw(CqlState* CS, charbuf *output, CSTR frag, ast_node *ast, gen_func fn);
+static void cg_json_fk_target_options(CqlState* CS, charbuf *output, ast_node *ast);
+static void cg_json_emit_region_info(CqlState* CS, charbuf *output, ast_node *ast);
+static void cg_json_dependencies(CqlState* CS, charbuf *output, ast_node *ast);
+static void cg_json_data_type(CqlState* CS, charbuf *output, sem_t sem_type, CSTR kind);
 
 // These little helpers are for handling comma seperated lists where you may or may
 // not need a comma in various places.  The local tracks if there is an item already
@@ -46,15 +47,15 @@ static void cg_json_data_type(charbuf *output, sem_t sem_type, CSTR kind);
 
 // These are the main output buffers for the various forms of statements we support
 // we build these up as we encounter them, redirecting the local 'output' to one of these
-static charbuf *queries;
-static charbuf *deletes;
-static charbuf *inserts;
-static charbuf *updates;
-static charbuf *general;
-static charbuf *general_inserts;
+//static charbuf *queries;
+//static charbuf *deletes;
+//static charbuf *inserts;
+//static charbuf *updates;
+//static charbuf *general;
+//static charbuf *general_inserts;
 
 // We use this to track every table we've ever seen and we remember what stored procedures use it
-static symtab *tables_to_procs;
+//static symtab *tables_to_procs;
 
 // The callback function for dependency analysis gets this structure as the anonymous context
 typedef struct json_context {
@@ -70,29 +71,29 @@ typedef struct json_context {
 } json_context;
 
 // magic string to sanity check the context cuz we're paranoid
-static char cookie_str[] = "cookie";
+static const char cookie_str[] = "cookie";
 
 // compute the CRC for an arbitrary statement
-static llint_t crc_stmt(ast_node *stmt) {
+static llint_t crc_stmt(CqlState* CS, ast_node *stmt) {
   CHARBUF_OPEN(temp);
 
   // Format the text with full annotations, this text isn't going to SQLite but it should capture
   // all aspects of the table/view/index/trigger including annotations.
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
-  gen_set_output_buffer(&temp);
-  gen_statement_with_callbacks(stmt, &callbacks);
+  gen_set_output_buffer(CS, &temp);
+  gen_statement_with_callbacks(CS, stmt, &callbacks);
   llint_t result = (llint_t)crc_charbuf(&temp);
 
   CHARBUF_CLOSE(temp);
   return result;
 }
 
-static void cg_json_sql_name_ex(charbuf *output, CSTR name, bool qid) {
+static void cg_json_sql_name_ex(CqlState* CS, charbuf *output, CSTR name, bool qid) {
   if (qid) {
     CHARBUF_OPEN(sql_name);
-    cg_unquote_encoded_qstr(&sql_name, name);
-    cg_pretty_quote_plaintext(sql_name.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
+    cg_unquote_encoded_qstr(CS, &sql_name, name);
+    cg_pretty_quote_plaintext(CS, sql_name.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
     CHARBUF_CLOSE(sql_name);
   }
   else {
@@ -100,23 +101,23 @@ static void cg_json_sql_name_ex(charbuf *output, CSTR name, bool qid) {
   }
 }
 
-static void cg_json_sptr_sql_name(charbuf *output, sem_struct *sptr, int32_t i) {
+static void cg_json_sptr_sql_name(CqlState* CS, charbuf *output, sem_struct *sptr, int32_t i) {
   CSTR name = sptr->names[i];
-  cg_json_sql_name_ex(output, name, !!(sptr->semtypes[i] & SEM_TYPE_QID));
+  cg_json_sql_name_ex(CS, output, name, !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
-static void cg_json_sql_name(charbuf *output, ast_node *ast) {
+static void cg_json_sql_name(CqlState* CS, charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
-  cg_json_sql_name_ex(output, name, is_qid(ast));
+  cg_json_sql_name_ex(CS, output, name, is_qid(ast));
 }
 
-static void add_name_to_output(charbuf* output, ast_node *ast) {
+static void add_name_to_output(CqlState* CS, charbuf* output, ast_node *ast) {
   Contract(output);
   ast_node *name_ast = sem_get_name_ast(ast);
   if (output->used > 1) {
     bprintf(output, ", ");
   }
-  cg_json_sql_name(output, name_ast);
+  cg_json_sql_name(CS, output, name_ast);
 }
 
 // This is the callback function that tells us a view name was found in the body
@@ -124,12 +125,12 @@ static void add_name_to_output(charbuf* output, ast_node *ast) {
 // is how we remember which proc we were processing.   For each table we have
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
-static void cg_found_view(CSTR view_name, ast_node *name_ast, void* pvContext) {
+static void cg_found_view(CqlState* CS, CSTR view_name, ast_node *name_ast, void* pvContext) {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
   Contract(context->used_views);
 
-  add_name_to_output(context->used_views, name_ast);
+  add_name_to_output(CS, context->used_views, name_ast);
 }
 
 // This is the callback function that tells us a table name was found in the body
@@ -137,7 +138,7 @@ static void cg_found_view(CSTR view_name, ast_node *name_ast, void* pvContext) {
 // is how we remember which proc we were processing.   For each table we have
 // a character buffer.  We look it up, create it if not present, and write into it.
 // We also write into the buffer for the current proc which came in with the context.
-static void cg_found_table(CSTR table_name, ast_node *table_ast, void* pvContext) {
+static void cg_found_table(CqlState* CS, CSTR table_name, ast_node *table_ast, void* pvContext) {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
   Contract(context->used_tables);
@@ -145,59 +146,59 @@ static void cg_found_table(CSTR table_name, ast_node *table_ast, void* pvContext
   ast_node *proc_ast = context->proc_ast;
 
   if (is_ast_create_proc_stmt(proc_ast)) {
-    Contract(tables_to_procs);
+    Contract(CS->tables_to_procs);
 
-    charbuf* output = symtab_ensure_charbuf(tables_to_procs, table_name);
+    charbuf* output = symtab_ensure_charbuf(CS, CS->tables_to_procs, table_name);
 
     // Get the proc name and add it to the list for this table
-    add_name_to_output(output, proc_ast);
+    add_name_to_output(CS, output, proc_ast);
   }
 
-  add_name_to_output(context->used_tables, table_ast);
+  add_name_to_output(CS, context->used_tables, table_ast);
 }
 
-static void cg_found_insert(CSTR table_name, ast_node *table_ast, void *pvContext)
+static void cg_found_insert(CqlState* CS, CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
 
-  add_name_to_output(context->insert_tables, table_ast);
+  add_name_to_output(CS, context->insert_tables, table_ast);
 }
 
-static void cg_found_update(CSTR table_name, ast_node *table_ast, void *pvContext)
+static void cg_found_update(CqlState* CS, CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
 
-  add_name_to_output(context->update_tables, table_ast);
+  add_name_to_output(CS, context->update_tables, table_ast);
 }
 
-static void cg_found_delete(CSTR table_name, ast_node *table_ast, void *pvContext)
+static void cg_found_delete(CqlState* CS, CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
 
-  add_name_to_output(context->delete_tables, table_ast);
+  add_name_to_output(CS, context->delete_tables, table_ast);
 }
 
-static void cg_found_from(CSTR table_name, ast_node *table_ast, void *pvContext)
+static void cg_found_from(CqlState* CS, CSTR table_name, ast_node *table_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
-  add_name_to_output(context->from_tables, table_ast);
+  add_name_to_output(CS, context->from_tables, table_ast);
 }
 
-static void cg_found_proc(CSTR proc_name, ast_node *name_ast, void *pvContext)
+static void cg_found_proc(CqlState* CS, CSTR proc_name, ast_node *name_ast, void *pvContext)
 {
   json_context *context = (json_context *)pvContext;
   Contract(context->cookie == cookie_str);  // sanity check
-  add_name_to_output(context->used_procs, name_ast);
+  add_name_to_output(CS, context->used_procs, name_ast);
 }
 
 // When processing generated SQL we get a callback every time a variable appears
 // in the output stream.  This method records the variable name for use later
 // in the _parameters array.
-static bool_t cg_json_record_var(struct ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull output) {
+static bool_t cg_json_record_var(CqlState* CS, struct ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull output) {
   // If this invariant fails that means the code is using cg_fragment when
   // cg_fragment_with_params is required (because variables were used).
   Invariant(context);
@@ -211,28 +212,28 @@ static bool_t cg_json_record_var(struct ast_node *_Nonnull ast, void *_Nullable 
   return true;
 }
 
-static void cg_json_test_details(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
-  if (options.test) {
+static void cg_json_test_details(CqlState* CS, charbuf *output, ast_node *ast, ast_node *misc_attrs) {
+  if (CS->options.test) {
     bprintf(output, "\nThe statement ending at line %d\n", ast->lineno);
     bprintf(output, "\n");
 
-    gen_set_output_buffer(output);
+    gen_set_output_buffer(CS, output);
     if (misc_attrs) {
-      gen_with_callbacks(misc_attrs, gen_misc_attrs, NULL);
+      gen_with_callbacks(CS, misc_attrs, gen_misc_attrs, NULL);
     }
-    gen_with_callbacks(ast, gen_one_stmt, NULL);
+    gen_with_callbacks(CS, ast, gen_one_stmt, NULL);
     bprintf(output, "\n\n");
   }
 }
 
 // Just extract a name from the AST and emit it
-static void cg_json_name(charbuf *output, ast_node *ast) {
+static void cg_json_name(CqlState* CS, charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   bprintf(output, "%s", name);
 }
 
 // Emit a quoted string into the JSON
-static void cg_json_emit_string(charbuf *output, ast_node *ast) {
+static void cg_json_emit_string(CqlState* CS, charbuf *output, ast_node *ast) {
   Invariant(is_strlit(ast));
   EXTRACT_STRING(str, ast);
 
@@ -241,7 +242,7 @@ static void cg_json_emit_string(charbuf *output, ast_node *ast) {
   CHARBUF_OPEN(str2);
   // requote it as a c style literal
   cg_decode_string_literal(str, &str1);
-  cg_encode_json_string_literal(str1.ptr, &str2);
+  cg_encode_json_string_literal(CS, str1.ptr, &str2);
   bprintf(output, "%s", str2.ptr);
   CHARBUF_CLOSE(str2);
   CHARBUF_CLOSE(str1);
@@ -258,11 +259,11 @@ static void cg_json_emit_string(charbuf *output, ast_node *ast) {
 // * a quoted name `foo bar`
 // * null
 // String literals have to be unescaped from SQL format and reescaped into C format
-static void cg_json_attr_value(charbuf *output, ast_node *ast) {
+static void cg_json_attr_value(CqlState* CS, charbuf *output, ast_node *ast) {
   if (is_ast_misc_attr_value_list(ast)) {
     bprintf(output, "[");
     for (ast_node *item = ast; item; item = item->right) {
-      cg_json_attr_value(output, item->left);
+      cg_json_attr_value(CS, output, item->left);
       if (item->right) {
         bprintf(output, ", ");
       }
@@ -273,11 +274,11 @@ static void cg_json_attr_value(charbuf *output, ast_node *ast) {
     EXTRACT_STRING(str, ast);
 
     if (is_strlit(ast)) {
-      cg_json_emit_string(output, ast);
+      cg_json_emit_string(CS, output, ast);
     }
     else {
       // an identifier or QID
-      cg_json_sql_name_ex(output, str, is_qid(ast));
+      cg_json_sql_name_ex(CS, output, str, is_qid(ast));
     }
   }
   else if (is_ast_null(ast)) {
@@ -285,34 +286,34 @@ static void cg_json_attr_value(charbuf *output, ast_node *ast) {
     bprintf(output, "null");
   }
   else {
-    gen_set_output_buffer(output);
+    gen_set_output_buffer(CS, output);
     gen_sql_callbacks callbacks;
     init_gen_sql_callbacks(&callbacks);
     callbacks.mode = gen_mode_sql;
     callbacks.convert_hex = true;  // json doesn't support hex numbers
-    gen_with_callbacks(ast, gen_root_expr, &callbacks);
+    gen_with_callbacks(CS, ast, gen_root_expr, &callbacks);
   }
 }
 
 // Emit a single miscellaneous attribute name/value pair
 // The name could be of the form foo:bar in which case we emit foo_bar
 // The value is any of the legal values handled above in cg_json_attr_value.
-static void cg_json_misc_attr(charbuf *output, ast_node *ast) {
+static void cg_json_misc_attr(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
   bprintf(output, "{\n");
   BEGIN_INDENT(attr, 2);
   bprintf(output, "\"name\" : \"");
   if (is_ast_dot(ast->left)) {
-    cg_json_name(output, ast->left->left);
+    cg_json_name(CS, output, ast->left->left);
     bprintf(output, ":");
-    cg_json_name(output, ast->left->right);
+    cg_json_name(CS, output, ast->left->right);
   }
   else {
-    cg_json_name(output, ast->left);
+    cg_json_name(CS, output, ast->left);
   }
   bprintf(output, "\",\n\"value\" : ");
   if (ast->right) {
-    cg_json_attr_value(output, ast->right);
+    cg_json_attr_value(CS, output, ast->right);
   }
   else {
     bprintf(output, "1");
@@ -323,7 +324,7 @@ static void cg_json_misc_attr(charbuf *output, ast_node *ast) {
 
 // Emit a list of attributes for the current entity, it could be any kind of entity.
 // Whatever it is we spit out the attributes here in array format.
-static void cg_json_misc_attrs(charbuf *output, ast_node *_Nonnull list) {
+static void cg_json_misc_attrs(CqlState* CS, charbuf *output, ast_node *_Nonnull list) {
   Contract(is_ast_misc_attrs(list));
   bprintf(output, "\"attributes\" : [\n");
   BEGIN_INDENT(attr, 2);
@@ -331,7 +332,7 @@ static void cg_json_misc_attrs(charbuf *output, ast_node *_Nonnull list) {
 
   for (ast_node *item = list; item; item = item->right) {
     COMMA;
-    cg_json_misc_attr(output, item->left);
+    cg_json_misc_attr(CS, output, item->left);
   }
   END_LIST;
   END_INDENT(attr);
@@ -355,21 +356,21 @@ typedef struct col_info {
 } col_info;
 
 
-static void cg_json_default_value(charbuf *output, ast_node *def) {
+static void cg_json_default_value(CqlState* CS, charbuf *output, ast_node *def) {
   if (is_ast_uminus(def)) {
     def = def->left;
     bprintf(output, "-");
   }
-  cg_json_attr_value(output, def);
+  cg_json_attr_value(CS, output, def);
 }
 
 // Emits the JSON for all ad-hoc migration procs as a list
-static void cg_json_ad_hoc_migration_procs(charbuf* output) {
+static void cg_json_ad_hoc_migration_procs(CqlState* CS, charbuf* output) {
   bprintf(output, "\"adHocMigrationProcs\" : [\n");
   BEGIN_INDENT(list, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_ad_hoc_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_ad_hoc_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_schema_ad_hoc_migration_stmt(ast));
 
@@ -384,16 +385,16 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
       misc_attrs = misc;
     }
 
-    cg_json_test_details(output, ast, misc_attrs);
+    cg_json_test_details(CS, output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
-    bprintf(output, "\"CRC\" : \"%lld\",\n", crc_stmt(ast));
+    bprintf(output, "\"CRC\" : \"%lld\",\n", crc_stmt(CS, ast));
 
     if (misc_attrs) {
-      cg_json_misc_attrs(output, misc_attrs);
+      cg_json_misc_attrs(CS, output, misc_attrs);
       bprintf(output, ",\n");
     }
 
@@ -402,8 +403,8 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
     bprintf(output, "\n}");
   }
 
-  uint32_t count = ad_hoc_recreate_actions->count;
-  symtab_entry *actions = symtab_copy_sorted_payload(ad_hoc_recreate_actions, default_symtab_comparator);
+  uint32_t count = CS->sem.ad_hoc_recreate_actions->count;
+  symtab_entry *actions = symtab_copy_sorted_payload(CS->sem.ad_hoc_recreate_actions, default_symtab_comparator);
 
   for (uint32_t i = 0; i < count; i++) {
     ast_node *ast = (ast_node *)actions[i].val;
@@ -417,16 +418,16 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
       misc_attrs = misc;
     }
 
-    cg_json_test_details(output, ast, misc_attrs);
+    cg_json_test_details(CS, output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", proc);
-    bprintf(output, "\"CRC\" : \"%lld\",\n", crc_stmt(ast));
+    bprintf(output, "\"CRC\" : \"%lld\",\n", crc_stmt(CS, ast));
 
     if (misc_attrs) {
-      cg_json_misc_attrs(output, misc_attrs);
+      cg_json_misc_attrs(CS, output, misc_attrs);
       bprintf(output, ",\n");
     }
 
@@ -442,7 +443,7 @@ static void cg_json_ad_hoc_migration_procs(charbuf* output) {
 }
 
 // Emits the name and value for each value in the enumeration
-static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
+static void cg_json_enum_values(CqlState* CS, ast_node *enum_values, charbuf *output) {
   Contract(is_ast_enum_values(enum_values));
 
   bprintf(output, "\"values\" : [\n");
@@ -460,7 +461,7 @@ static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
 
      bprintf(output, "  \"name\" : \"%s\",\n", enum_name);
      bprintf(output, "  \"value\" : ");
-     eval_format_number(enum_name_ast->sem->value, EVAL_FORMAT_NORMAL, output);
+     eval_format_number(CS, enum_name_ast->sem->value, EVAL_FORMAT_NORMAL, output);
      bprintf(output, "\n}");
 
      enum_values = enum_values->right;
@@ -473,12 +474,12 @@ static void cg_json_enum_values(ast_node *enum_values, charbuf *output) {
 }
 
 // Emits the JSON for all enumerations
-static void cg_json_enums(charbuf* output) {
+static void cg_json_enums(CqlState* CS, charbuf* output) {
   bprintf(output, "\"enums\" : [\n");
   BEGIN_INDENT(list, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_enums_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_enums_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_declare_enum_stmt(ast));
     EXTRACT_NOTNULL(typed_name, ast->left);
@@ -487,16 +488,16 @@ static void cg_json_enums(charbuf* output) {
     EXTRACT_STRING(name, name_ast);
     EXTRACT_ANY_NOTNULL(type, typed_name->right);
 
-    cg_json_test_details(output, ast, NULL);
+    cg_json_test_details(CS, output, ast, NULL);
 
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
-    cg_json_data_type(output, type->sem->sem_type | SEM_TYPE_NOTNULL, NULL);
+    cg_json_data_type(CS, output, type->sem->sem_type | SEM_TYPE_NOTNULL, NULL);
     bprintf(output, ",\n");
 
-    cg_json_enum_values(enum_values, output);
+    cg_json_enum_values(CS, enum_values, output);
 
     END_INDENT(t);
     bprintf(output, "}");
@@ -508,7 +509,7 @@ static void cg_json_enums(charbuf* output) {
 }
 
 // emits the type and value for each constant in the constant group
-static void cg_json_const_values(ast_node *const_values, charbuf *output) {
+static void cg_json_const_values(CqlState* CS, ast_node *const_values, charbuf *output) {
   Contract(is_ast_const_values(const_values));
 
   bprintf(output, "\"values\" : [\n");
@@ -527,16 +528,16 @@ static void cg_json_const_values(ast_node *const_values, charbuf *output) {
 
      bprintf(output, "  \"name\" : \"%s\",\n", const_name);
      BEGIN_INDENT(type, 2);
-       cg_json_data_type(output, const_expr->sem->sem_type, const_expr->sem->kind);
+       cg_json_data_type(CS, output, const_expr->sem->sem_type, const_expr->sem->kind);
      END_INDENT(type);
      bprintf(output, ",\n");
      bprintf(output, "  \"value\" : ");
 
      if (is_strlit(const_expr)) {
-       cg_json_emit_string(output, const_expr);
+       cg_json_emit_string(CS, output, const_expr);
      }
      else {
-       eval_format_number(const_expr->sem->value, EVAL_FORMAT_NORMAL, output);
+       eval_format_number(CS, const_expr->sem->value, EVAL_FORMAT_NORMAL, output);
      }
 
      bprintf(output, "\n}");
@@ -553,26 +554,26 @@ static void cg_json_const_values(ast_node *const_values, charbuf *output) {
 // Emits the JSON for all the global constants
 // note that these are in groups for convenience but they are all global
 // scope, not like enums.
-static void cg_json_constant_groups(charbuf* output) {
+static void cg_json_constant_groups(CqlState* CS, charbuf* output) {
   bprintf(output, "\"constantGroups\" : [\n");
   BEGIN_INDENT(list, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_constant_groups_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_constant_groups_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_declare_const_stmt(ast));
     EXTRACT_NAME_AST(name_ast, ast->left);
     EXTRACT_NOTNULL(const_values, ast->right);
     EXTRACT_STRING(name, name_ast);
 
-    cg_json_test_details(output, ast, NULL);
+    cg_json_test_details(CS, output, ast, NULL);
 
     COMMA;
     bprintf(output, "{\n");
     BEGIN_INDENT(t, 2);
     bprintf(output, "\"name\" : \"%s\",\n", name);
 
-    cg_json_const_values(const_values, output);
+    cg_json_const_values(CS, const_values, output);
 
     END_INDENT(t);
     bprintf(output, "}");
@@ -584,12 +585,12 @@ static void cg_json_constant_groups(charbuf* output) {
 }
 
 // Emits the JSON for all the unsubscription directives
-static void cg_json_subscriptions(charbuf* output) {
+static void cg_json_subscriptions(CqlState* CS, charbuf* output) {
   bprintf(output, "\"subscriptions\" : [\n");
   BEGIN_INDENT(list, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_subscriptions_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_subscriptions_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_schema_unsub_stmt(ast));
 
@@ -598,7 +599,7 @@ static void cg_json_subscriptions(charbuf* output) {
     EXTRACT_STRING(name, version_annotation->right);
     CSTR region = ast->sem->region;
 
-    cg_json_test_details(output, ast, NULL);
+    cg_json_test_details(CS, output, ast, NULL);
 
     COMMA;
     bprintf(output, "{\n");
@@ -606,7 +607,7 @@ static void cg_json_subscriptions(charbuf* output) {
     bprintf(output, "\"type\" : \"unsub\",\n");
     bprintf(output, "\"table\" : \"%s\"", name);
     if (region) {
-      cg_json_emit_region_info(output, ast);
+      cg_json_emit_region_info(CS, output, ast);
     }
     bprintf(output, ",\n\"version\" : %d\n", vers);
     END_INDENT(t);
@@ -618,7 +619,7 @@ static void cg_json_subscriptions(charbuf* output) {
   bprintf(output, "]");
 }
 
-static void cg_migration_proc(ast_node *ast, charbuf *output) {
+static void cg_migration_proc(CqlState* CS, ast_node *ast, charbuf *output) {
   if (is_ast_dot(ast)) {
     EXTRACT_NOTNULL(dot, ast);
     EXTRACT_STRING(lhs, dot->left);
@@ -633,13 +634,13 @@ static void cg_migration_proc(ast_node *ast, charbuf *output) {
 
 // Searches for an "ast_create" node from a list and emits the name of the migration
 // proc associated with it, if any
-static void cg_json_added_migration_proc(charbuf *output, ast_node *list) {
+static void cg_json_added_migration_proc(CqlState* CS, charbuf *output, ast_node *list) {
   for (ast_node *attr = list; attr; attr = attr->right) {
     if (is_ast_create_attr(attr)){
       EXTRACT(version_annotation, attr->left);
       if (version_annotation && version_annotation->right) {
         bprintf(output,",\n\"addedMigrationProc\" : ");
-        cg_migration_proc(version_annotation->right, output);
+        cg_migration_proc(CS, version_annotation->right, output);
       }
     }
   }
@@ -647,13 +648,13 @@ static void cg_json_added_migration_proc(charbuf *output, ast_node *list) {
 
 // Searches for an "ast_delete" node from a list and emits the name of the migration
 // proc associated with it, if any
-static void cg_json_deleted_migration_proc(charbuf *output, ast_node *list) {
+static void cg_json_deleted_migration_proc(CqlState* CS, charbuf *output, ast_node *list) {
   for (ast_node *attr = list; attr; attr = attr->right) {
     if (is_ast_delete_attr(attr)){
       EXTRACT(version_annotation, attr->left);
       if (version_annotation && version_annotation->right) {
-        bprintf(output,",\n\"deletedMigrationProc\" : ");
-        cg_migration_proc(version_annotation->right, output);
+        bprintf(output, ",\n\"deletedMigrationProc\" : ");
+        cg_migration_proc(CS, version_annotation->right, output);
       }
     }
   }
@@ -661,7 +662,7 @@ static void cg_json_deleted_migration_proc(charbuf *output, ast_node *list) {
 
 // Crack the semantic info for the column and emit that into the main output
 // examine the attributes and emit those as needed.
-static void cg_json_col_attrs(charbuf *output, col_info *info) {
+static void cg_json_col_attrs(CqlState* CS, charbuf *output, col_info *info) {
   // most of the attributes are in the semantic type, we don't have to walk the tree for them
   // we do need to check for a default value.
   // Note that there are implications associated with this flags and semantic analysis
@@ -678,16 +679,16 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
   bprintf(output, ",\n\"isAdded\" : %d", is_added);
   if (is_added) {
     bprintf(output, ",\n\"addedVersion\" : %d", col->sem->create_version);
-    cg_json_added_migration_proc(output, info->attrs);
+    cg_json_added_migration_proc(CS, output, info->attrs);
   }
   bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
   if (is_deleted) {
     bprintf(output, ",\n\"deletedVersion\" : %d", col->sem->delete_version);
-    cg_json_deleted_migration_proc(output, info->attrs);
+    cg_json_deleted_migration_proc(CS, output, info->attrs);
   }
 
   if (sem_type & SEM_TYPE_PK) {
-    cg_json_sql_name_ex(info->col_pk, name, !!(sem_type & SEM_TYPE_QID));
+    cg_json_sql_name_ex(CS, info->col_pk, name, !!(sem_type & SEM_TYPE_QID));
   }
 
   if (sem_type & SEM_TYPE_UK) {
@@ -700,10 +701,10 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
 
     bprintf(info->col_uk, "{\n");
     bprintf(info->col_uk, "  \"name\" : ");
-    cg_json_sql_name_ex(info->col_uk, tmp.ptr, is_qid);
+    cg_json_sql_name_ex(CS, info->col_uk, tmp.ptr, is_qid);
     bprintf(info->col_uk, ",\n");
     bprintf(info->col_uk, "  \"columns\" : [ ");
-    cg_json_sql_name_ex(info->col_uk, name, is_qid);
+    cg_json_sql_name_ex(CS, info->col_uk, name, is_qid);
     bprintf(info->col_uk, " ],\n");
     bprintf(info->col_uk, "  \"sortOrders\" : [ \"\" ]\n");
     bprintf(info->col_uk, "}");
@@ -722,16 +723,16 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
       bprintf(output, "{\n");
       BEGIN_INDENT(fk, 2)
       bprintf(output, "\"columns\" : [ \"%s\" ]", name);
-      cg_json_fk_target_options(output, attr->left);
+      cg_json_fk_target_options(CS, output, attr->left);
       END_INDENT(fk);
-      bprintf(output,"\n}");
+      bprintf(output, "\n}");
     }
     output = saved;
   }
 
   if (sem_type & SEM_TYPE_HAS_DEFAULT) {
     bprintf(output, ",\n\"defaultValue\" : ");
-    cg_json_default_value(output, sem_get_col_default_value(info->attrs));
+    cg_json_default_value(CS, output, sem_get_col_default_value(info->attrs));
   }
 
   if (sem_type & SEM_TYPE_HAS_COLLATE) {
@@ -739,7 +740,7 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
     for (ast_node *attr = info->attrs; attr; attr = attr->right) {
       if (is_ast_col_attrs_collate(attr)) {
         bprintf(output, ",\n\"collate\" : ");
-        cg_json_attr_value(output, attr->left);
+        cg_json_attr_value(CS, output, attr->left);
       }
     }
   }
@@ -749,13 +750,13 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
     for (ast_node *attr = info->attrs; attr; attr = attr->right) {
       if (is_ast_col_attrs_check(attr)) {
         EXTRACT_ANY_NOTNULL(when_expr, attr->left);
-        cg_fragment_with_params(output, "checkExpr", when_expr, gen_root_expr);
+        cg_fragment_with_params(CS, output, "checkExpr", when_expr, gen_root_expr);
       }
     }
   }
 
   if (info->is_backed) {
-    bprintf(output, ",\n\"typeHash\" : %s", get_field_hash(name, sem_type));
+    bprintf(output, ",\n\"typeHash\" : %s", get_field_hash(CS, name, sem_type));
   }
 
   // end with mandatory columns, this makes the json validation with yacc a little easier
@@ -765,7 +766,7 @@ static void cg_json_col_attrs(charbuf *output, col_info *info) {
 }
 
 // Starting from a semantic type, emit the appropriate JSON type
-static void cg_json_data_type(charbuf *output, sem_t sem_type, CSTR kind) {
+static void cg_json_data_type(CqlState* CS, charbuf *output, sem_t sem_type, CSTR kind) {
   sem_t core_type = core_type_of(sem_type);
 
   BEGIN_LIST;
@@ -803,7 +804,7 @@ static void cg_json_data_type(charbuf *output, sem_t sem_type, CSTR kind) {
 // for the column.  If there are any miscellaneous attributes emit them as well.
 // Finally gather the column attributes like not null etc. and emit those using
 // the helper methods above.
-static void cg_json_col_def(charbuf *output, col_info *info) {
+static void cg_json_col_def(CqlState* CS, charbuf *output, col_info *info) {
   ast_node *def = info->def;
 
   Contract(is_ast_col_def(def));
@@ -817,29 +818,29 @@ static void cg_json_col_def(charbuf *output, col_info *info) {
   BEGIN_INDENT(col, 2);
 
   bprintf(output, "\"name\" : ");
-  cg_json_sql_name(output, name_ast);
+  cg_json_sql_name(CS, output, name_ast);
   bprintf(output, ",\n");
 
   if (misc_attrs) {
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
     bprintf(output, ",\n");
   }
-  cg_json_data_type(output, def->sem->sem_type, def->sem->kind);
+  cg_json_data_type(CS, output, def->sem->sem_type, def->sem->kind);
 
   info->attrs = attrs;
-  cg_json_col_attrs(output, info);
+  cg_json_col_attrs(CS, output, info);
 
   END_INDENT(col);
   bprintf(output, "\n}");
 }
 
 // Emits a list of names into a one-line array of quoted names
-static void cg_json_name_list(charbuf *output, ast_node *list) {
+static void cg_json_name_list(CqlState* CS, charbuf *output, ast_node *list) {
   Contract(is_ast_name_list(list));
 
   for (ast_node *item = list; item; item = item->right) {
     bprintf(output, "\"");
-    cg_json_name(output, item->left);
+    cg_json_name(CS, output, item->left);
     bprintf(output, "\"");
     if (item->right) {
       bprintf(output, ", ");
@@ -849,24 +850,24 @@ static void cg_json_name_list(charbuf *output, ast_node *list) {
 
 // This is useful for expressions known to have no parameters (e.g. constraint expressions)
 // variables are illegal in such things so there can be no binding needed
-static void cg_json_vanilla_expr(charbuf *output, ast_node *expr) {
+static void cg_json_vanilla_expr(CqlState* CS, charbuf *output, ast_node *expr) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
-  gen_set_output_buffer(output);
-  gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  gen_set_output_buffer(CS, output);
+  gen_with_callbacks(CS, expr, gen_root_expr, &callbacks);
 }
 
 // Similar to the above, this is also a list of names but we emit two arrays
 // one array for the names and another array for the sort orders specified if any.
 // Note unspecified sort orders are emitted as "".
-static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *list) {
+static void cg_json_indexed_columns(CqlState* CS, charbuf *cols, charbuf *orders, ast_node *list) {
   for (ast_node *item = list; item; item = item->right) {
     Contract(is_ast_indexed_columns(list));
     EXTRACT_NOTNULL(indexed_column, item->left);
 
     bprintf(cols, "\"");
-    cg_json_vanilla_expr(cols, indexed_column->left);
+    cg_json_vanilla_expr(CS, cols, indexed_column->left);
     bprintf(cols, "\"");
 
     if (is_ast_asc(indexed_column->right)) {
@@ -887,7 +888,7 @@ static void cg_json_indexed_columns(charbuf *cols, charbuf *orders, ast_node *li
 }
 
 // The primary key def is emitted just as an ordinary name list
-static void cg_json_pk_def(charbuf *output, ast_node *def) {
+static void cg_json_pk_def(CqlState* CS, charbuf *output, ast_node *def) {
   Contract(is_ast_pk_def(def));
   EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
   EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
@@ -895,7 +896,7 @@ static void cg_json_pk_def(charbuf *output, ast_node *def) {
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(CS, &cols, &orders, indexed_columns);
 
   bprintf(output, "\"primaryKey\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"primaryKeySortOrders\" : [ %s ],\n", orders.ptr);
@@ -908,28 +909,28 @@ static void cg_json_pk_def(charbuf *output, ast_node *def) {
 // resolution action emitted without cloning that code.  gen_fk_action
 // has a different contract than the usual generators (it doesn't take an AST)
 // so I can't use the usual fragment helpers.
-static void cg_json_action(charbuf *output, int32_t action) {
+static void cg_json_action(CqlState* CS, charbuf *output, int32_t action) {
   CHARBUF_OPEN(sql);
-  gen_set_output_buffer(&sql);
+  gen_set_output_buffer(CS, &sql);
   if (!action) {
     action = FK_NO_ACTION;
   }
-  gen_fk_action(action);
+  gen_fk_action(CS, action);
   bprintf(output, "\"%s\"", sql.ptr);
   CHARBUF_CLOSE(sql);
 }
 
 // Here we generate the update and delete actions plus the isDeferred state
 // Everything is sitting pretty in the AST.
-static void cg_json_fk_flags(charbuf *output, int32_t flags) {
+static void cg_json_fk_flags(CqlState* CS, charbuf *output, int32_t flags) {
   int32_t action = (flags & FK_ON_UPDATE) >> 4;
 
   bprintf(output, ",\n\"onUpdate\" : ");
-  cg_json_action(output, action);
+  cg_json_action(CS, output, action);
 
   action = (flags & FK_ON_DELETE);
   bprintf(output, ",\n\"onDelete\" : ");
-  cg_json_action(output, action);
+  cg_json_action(CS, output, action);
 
   // in sqlite anything that is not:
   // DEFERRABLE INITIALLY DEFERRED  is immediate
@@ -942,7 +943,7 @@ static void cg_json_fk_flags(charbuf *output, int32_t flags) {
 // Generates the properties for a foreign key's target and the options
 // that means the referencedTable, the columns as well as the flags
 // using the helper above.
-static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
+static void cg_json_fk_target_options(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
 
   EXTRACT_NOTNULL(fk_target, ast->left);
@@ -953,16 +954,16 @@ static void cg_json_fk_target_options(charbuf *output, ast_node *ast) {
   bprintf(output, ",\n\"referenceTable\" : \"%s\"", table_name);
 
   bprintf(output, ",\n\"referenceColumns\" : [ ");
-  cg_json_name_list(output, ref_list);
+  cg_json_name_list(CS, output, ref_list);
   bprintf(output, " ]");
-  cg_json_fk_flags(output, flags);
+  cg_json_fk_flags(CS, output, flags);
 }
 
-static void cg_json_opt_constraint_name(charbuf *output, ast_node *def) {
+static void cg_json_opt_constraint_name(CqlState* CS, charbuf *output, ast_node *def) {
   if (def->left) {
     EXTRACT_NAME_AST(constraint_name_ast, def->left);
     bprintf(output, "\"name\" : ");
-    cg_json_sql_name(output, constraint_name_ast);
+    cg_json_sql_name(CS, output, constraint_name_ast);
     bprintf(output, ",\n");
   }
 }
@@ -970,36 +971,36 @@ static void cg_json_opt_constraint_name(charbuf *output, ast_node *def) {
 // A full FK definition consists of the constrained columns
 // and the FK target.  This takes care of the columns and defers
 // to the above for the target (the target is used in other cases too)
-static void cg_json_fk_def(charbuf *output, ast_node *def) {
+static void cg_json_fk_def(CqlState* CS, charbuf *output, ast_node *def) {
   Contract(is_ast_fk_def(def));
   EXTRACT_NOTNULL(fk_info, def->right);
   EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
   EXTRACT_NOTNULL(fk_target_options, fk_info->right);
 
-  cg_json_opt_constraint_name(output, def);
+  cg_json_opt_constraint_name(CS, output, def);
 
   bprintf(output, "\"columns\" : [ ");
-  cg_json_name_list(output, src_list);
+  cg_json_name_list(CS, output, src_list);
   bprintf(output, " ]");
 
-  cg_json_fk_target_options(output, fk_target_options);
+  cg_json_fk_target_options(CS, output, fk_target_options);
 }
 
 // A unique key definition is just the name of the key and then
 // the participating columns.
-static void cg_json_unq_def(charbuf *output, ast_node *def) {
+static void cg_json_unq_def(CqlState* CS, charbuf *output, ast_node *def) {
   Contract(is_ast_unq_def(def));
   EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
   EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(uk, 2);
-  cg_json_opt_constraint_name(output, def);
+  cg_json_opt_constraint_name(CS, output, def);
 
   CHARBUF_OPEN(cols);
   CHARBUF_OPEN(orders);
 
-  cg_json_indexed_columns(&cols, &orders, indexed_columns);
+  cg_json_indexed_columns(CS, &cols, &orders, indexed_columns);
 
   bprintf(output, "\"columns\" : [ %s ]", cols.ptr);
   bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -1012,14 +1013,14 @@ static void cg_json_unq_def(charbuf *output, ast_node *def) {
 }
 
 // A check constraint is just an expression, possibly named
-static void cg_json_check_def(charbuf *output, ast_node *def) {
+static void cg_json_check_def(CqlState* CS, charbuf *output, ast_node *def) {
   Contract(is_ast_check_def(def));
   EXTRACT_ANY_NOTNULL(expr, def->right);
 
   bprintf(output, "{\n");
   BEGIN_INDENT(chk, 2);
-  cg_json_opt_constraint_name(output, def);
-  cg_fragment_with_params_raw(output, "checkExpr", expr, gen_root_expr);
+  cg_json_opt_constraint_name(CS, output, def);
+  cg_fragment_with_params_raw(CS, output, "checkExpr", expr, gen_root_expr);
   END_INDENT(chk);
   bprintf(output, "\n}");
 }
@@ -1032,7 +1033,7 @@ static void cg_json_check_def(charbuf *output, ast_node *def) {
 // That's ok, those are just buffered up and emitted with each section.
 // All this several passes business just results in for sure all the column direct
 // stuff comes before non column related stuff in each section.
-static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
+static void cg_json_col_key_list(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_ANY(list, ast->right);
   Contract(is_ast_col_key_list(list));
@@ -1057,7 +1058,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
         COMMA;
         info.def = def;
         info.attrs = NULL;
-        cg_json_col_def(output, &info);
+        cg_json_col_def(CS, output, &info);
       }
     }
     END_LIST;
@@ -1076,7 +1077,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
       for (ast_node *item = list; item; item = item->right) {
         EXTRACT_ANY_NOTNULL(def, item->left);
         if (is_ast_pk_def(def)) {
-          cg_json_pk_def(output, def);
+          cg_json_pk_def(CS, output, def);
           pk_def = def;
         }
       }
@@ -1107,7 +1108,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
         COMMA;
         bprintf(output, "{\n");
         BEGIN_INDENT(fk, 2);
-        cg_json_fk_def(output, def);
+        cg_json_fk_def(CS, output, def);
         END_INDENT(fk);
         bprintf(output, "\n}");
       }
@@ -1129,7 +1130,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
       EXTRACT_ANY_NOTNULL(def, item->left);
       if (is_ast_unq_def(def)) {
         COMMA;
-        cg_json_unq_def(output, def);
+        cg_json_unq_def(CS, output, def);
       }
     }
     END_LIST;
@@ -1145,7 +1146,7 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
       EXTRACT_ANY_NOTNULL(def, item->left);
       if (is_ast_check_def(def)) {
         COMMA;
-        cg_json_check_def(output, def);
+        cg_json_check_def(CS, output, def);
       }
     }
     END_LIST;
@@ -1161,12 +1162,12 @@ static void cg_json_col_key_list(charbuf *output, ast_node *ast) {
 // Here we walk all the indices, extract out the key info for each index and
 // emit it.  The indices have a few flags plus columns and a sort order for
 // each column.
-static void cg_json_indices(charbuf *output) {
+static void cg_json_indices(CqlState* CS, charbuf *output) {
   bprintf(output, "\"indices\" : [\n");
   BEGIN_INDENT(indices, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_indices_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_indices_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_create_index_stmt(ast));
 
@@ -1188,7 +1189,7 @@ static void cg_json_indices(charbuf *output) {
       misc_attrs = misc;
     }
 
-    cg_json_test_details(output, ast, misc_attrs);
+    cg_json_test_details(CS, output, ast, misc_attrs);
 
     COMMA;
     bprintf(output, "{\n");
@@ -1197,10 +1198,10 @@ static void cg_json_indices(charbuf *output) {
 
     bool_t is_deleted = ast->sem->delete_version > 0;
     bprintf(output, "\"name\" : ");
-    cg_json_sql_name(output, index_name_ast);
-    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
+    cg_json_sql_name(CS, output, index_name_ast);
+    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(CS, ast));
     bprintf(output, ",\n\"table\" : ");
-    cg_json_sql_name(output, table_name_ast);
+    cg_json_sql_name(CS, output, table_name_ast);
     bprintf(output, ",\n\"isUnique\" : %d", !!(flags & INDEX_UNIQUE));
     bprintf(output, ",\n\"ifNotExists\" : %d", !!(flags & INDEX_IFNE));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
@@ -1209,24 +1210,24 @@ static void cg_json_indices(charbuf *output) {
     }
 
     if (ast->sem->region) {
-      cg_json_emit_region_info(output, ast);
+      cg_json_emit_region_info(CS, output, ast);
     }
 
     if (opt_where) {
       bprintf(output, ",\n\"where\" : \"");
-      cg_json_vanilla_expr(output, opt_where->left);
+      cg_json_vanilla_expr(CS, output, opt_where->left);
       bprintf(output, "\"");
     }
 
     if (misc_attrs) {
       bprintf(output, ",\n");
-      cg_json_misc_attrs(output, misc_attrs);
+      cg_json_misc_attrs(CS, output, misc_attrs);
     }
 
     CHARBUF_OPEN(cols);
     CHARBUF_OPEN(orders);
 
-    cg_json_indexed_columns(&cols, &orders, indexed_columns);
+    cg_json_indexed_columns(CS, &cols, &orders, indexed_columns);
 
     bprintf(output, ",\n\"columns\" : [ %s ]", cols.ptr);
     bprintf(output, ",\n\"sortOrders\" : [ %s ]", orders.ptr);
@@ -1243,7 +1244,7 @@ static void cg_json_indices(charbuf *output) {
   bprintf(output, "]");
 }
 
-static void cg_json_opt_bool(charbuf *output, int32_t flag, CSTR desc) {
+static void cg_json_opt_bool(CqlState* CS, charbuf *output, int32_t flag, CSTR desc) {
   if (flag) {
     bprintf(output, ",\n\"%s\" : 1", desc);
   }
@@ -1252,12 +1253,12 @@ static void cg_json_opt_bool(charbuf *output, int32_t flag, CSTR desc) {
 // Here we walk all the triggers, we extract the essential flags from
 // the trigger statement and emit those into the metadata as well. The main
 // body is emitted verbatim.
-static void cg_json_triggers(charbuf *output) {
+static void cg_json_triggers(CqlState* CS, charbuf *output) {
   bprintf(output, "\"triggers\" : [\n");
   BEGIN_INDENT(indices, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_triggers_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_triggers_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_create_trigger_stmt(ast));
 
@@ -1289,10 +1290,10 @@ static void cg_json_triggers(charbuf *output) {
       misc_attrs = misc;
     }
 
-    cg_json_test_details(output, ast, misc_attrs);
+    cg_json_test_details(CS, output, ast, misc_attrs);
 
     // use the canonical name (which may be case-sensitively different)
-    ast_node *canonical_ast = find_table_or_view_even_deleted(table_name);
+    ast_node *canonical_ast = find_table_or_view_even_deleted(CS, table_name);
     ast_node *target_name_ast = sem_get_name_ast(canonical_ast);
 
     COMMA;
@@ -1302,10 +1303,10 @@ static void cg_json_triggers(charbuf *output) {
 
     bool_t is_deleted = ast->sem->delete_version > 0;
     bprintf(output, "\"name\" : ");
-    cg_json_sql_name(output, trigger_name_ast);
-    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
+    cg_json_sql_name(CS, output, trigger_name_ast);
+    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(CS, ast));
     bprintf(output, ",\n\"target\" : ");
-    cg_json_sql_name(output, target_name_ast);
+    cg_json_sql_name(CS, output, target_name_ast);
     bprintf(output, ",\n\"isTemp\" : %d", !!(flags & TRIGGER_IS_TEMP));
     bprintf(output, ",\n\"ifNotExists\" : %d", !!(flags & TRIGGER_IF_NOT_EXISTS));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
@@ -1314,33 +1315,33 @@ static void cg_json_triggers(charbuf *output) {
     }
 
     // only one of these
-    cg_json_opt_bool(output, (flags & TRIGGER_BEFORE), "isBeforeTrigger");
-    cg_json_opt_bool(output, (flags & TRIGGER_AFTER), "isAfterTrigger");
-    cg_json_opt_bool(output, (flags & TRIGGER_INSTEAD_OF), "isInsteadOfTrigger");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_BEFORE), "isBeforeTrigger");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_AFTER), "isAfterTrigger");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_INSTEAD_OF), "isInsteadOfTrigger");
 
     // only one of these
-    cg_json_opt_bool(output, (flags & TRIGGER_DELETE), "isDeleteTrigger");
-    cg_json_opt_bool(output, (flags & TRIGGER_INSERT), "isInsertTrigger");
-    cg_json_opt_bool(output, (flags & TRIGGER_UPDATE), "isUpdateTrigger");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_DELETE), "isDeleteTrigger");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_INSERT), "isInsertTrigger");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_UPDATE), "isUpdateTrigger");
 
-    cg_json_opt_bool(output, (flags & TRIGGER_FOR_EACH_ROW), "forEachRow");
+    cg_json_opt_bool(CS, output, (flags & TRIGGER_FOR_EACH_ROW), "forEachRow");
 
     if (when_expr) {
-      cg_fragment_with_params(output, "whenExpr", when_expr, gen_root_expr);
+      cg_fragment_with_params(CS, output, "whenExpr", when_expr, gen_root_expr);
     }
 
-    cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
+    cg_fragment_with_params(CS, output, "statement", ast, gen_one_stmt);
 
     if (ast->sem->region) {
-      cg_json_emit_region_info(output, ast);
+      cg_json_emit_region_info(CS, output, ast);
     }
 
     if (misc_attrs) {
       bprintf(output, ",\n");
-      cg_json_misc_attrs(output, misc_attrs);
+      cg_json_misc_attrs(CS, output, misc_attrs);
     }
 
-    cg_json_dependencies(output, ast);
+    cg_json_dependencies(CS, output, ast);
 
     END_INDENT(trigger);
     bprintf(output, "\n}");
@@ -1351,9 +1352,9 @@ static void cg_json_triggers(charbuf *output) {
   bprintf(output, "]");
 }
 
-static void cg_json_region_deps(charbuf *output, CSTR sym) {
+static void cg_json_region_deps(CqlState* CS, charbuf *output, CSTR sym) {
   // Every name we encounter has already been validated!
-  ast_node *region = find_region(sym);
+  ast_node *region = find_region(CS, sym);
   Invariant(region);
 
   bprintf(output, "\"using\" : [ ");
@@ -1394,12 +1395,12 @@ static void cg_json_region_deps(charbuf *output, CSTR sym) {
 // * note that deployable regions do not necessarily cover everything so
 //   if the object is in a region that is not yet in an deployable region
 //   it's marked as an orphan.
-static CSTR get_deployed_in_region(ast_node *ast) {
+static CSTR get_deployed_in_region(CqlState* CS, ast_node *ast) {
   CSTR deployedInRegion = "(orphan)";
   // if we are in no region at all, we're an orphan
   if (ast->sem->region) {
     // this is the region we are in, look it up
-    ast_node *reg = find_region(ast->sem->region);
+    ast_node *reg = find_region(CS, ast->sem->region);
 
     // the region of that region is our deployment region
     if (reg->sem->region) {
@@ -1411,33 +1412,33 @@ static CSTR get_deployed_in_region(ast_node *ast) {
 }
 
 // Emit the region info and the deployment region info as needed
-static void cg_json_emit_region_info(charbuf *output, ast_node *ast) {
+static void cg_json_emit_region_info(CqlState* CS, charbuf *output, ast_node *ast) {
   bprintf(output, ",\n\"region\" : \"%s\"", ast->sem->region);
-  bprintf(output, ",\n\"deployedInRegion\" : \"%s\"", get_deployed_in_region(ast));
+  bprintf(output, ",\n\"deployedInRegion\" : \"%s\"", get_deployed_in_region(CS, ast));
 }
 
 // Here we walk all the regions, we get the dependency information for
 // that region and emit it.
 //
-static void cg_json_regions(charbuf *output) {
+static void cg_json_regions(CqlState* CS, charbuf *output) {
   bprintf(output, "\"regions\" : [\n");
   BEGIN_INDENT(regout, 2);
   BEGIN_LIST;
 
-  symtab_entry *regs = symtab_copy_sorted_payload(schema_regions, default_symtab_comparator);
+  symtab_entry *regs = symtab_copy_sorted_payload(CS->sem.schema_regions, default_symtab_comparator);
 
-  for (list_item *item = all_regions_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_regions_list; item; item = item->next) {
     ast_node *ast = item->ast;
     EXTRACT_STRING(name, ast->left);
 
-    cg_json_test_details(output, ast, NULL);
+    cg_json_test_details(CS, output, ast, NULL);
 
     COMMA;
     bprintf(output, "{\n\"name\" : \"%s\",\n", name);
-    CSTR deployedInRegion = get_deployed_in_region(ast);
+    CSTR deployedInRegion = get_deployed_in_region(CS, ast);
     bprintf(output, "\"isDeployableRoot\" : %d,\n", !!(ast->sem->sem_type & SEM_TYPE_DEPLOYABLE));
     bprintf(output, "\"deployedInRegion\" : \"%s\",\n", deployedInRegion);
-    cg_json_region_deps(output, name);
+    cg_json_region_deps(CS, output, name);
     bprintf(output, "\n}");
   }
   END_LIST;
@@ -1448,7 +1449,7 @@ static void cg_json_regions(charbuf *output) {
 
 // Emit the result columns in the select list -- their names and types.
 // This is the projection of the select.
-static void cg_json_projection(charbuf *output, ast_node *ast) {
+static void cg_json_projection(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
 
@@ -1463,9 +1464,9 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
     bprintf(output, "{\n");
     BEGIN_INDENT(type, 2);
     bprintf(output, "\"name\" : ");
-    cg_json_sptr_sql_name(output, sptr, (int32_t)i);
+    cg_json_sptr_sql_name(CS, output, sptr, (int32_t)i);
     bprintf(output, ",\n");
-    cg_json_data_type(output, sptr->semtypes[i], sptr->kinds[i]);
+    cg_json_data_type(CS, output, sptr->semtypes[i], sptr->kinds[i]);
     END_INDENT(type);
     bprintf(output, "\n}");
   }
@@ -1478,12 +1479,12 @@ static void cg_json_projection(charbuf *output, ast_node *ast) {
 // they are in fact nothing more than named select statements.  However
 // the output here is somewhat simplified.  We only emit the whole select
 // statement and any binding args, we don't also emit all the pieces of the select.
-static void cg_json_views(charbuf *output) {
+static void cg_json_views(CqlState* CS, charbuf *output) {
   bprintf(output, "\"views\" : [\n");
   BEGIN_INDENT(views, 2);
 
   int32_t i = 0;
-  for (list_item *item = all_views_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_views_list; item; item = item->next) {
     ast_node *ast = item->ast;
     Invariant(is_ast_create_view_stmt(ast));
 
@@ -1494,7 +1495,7 @@ static void cg_json_views(charbuf *output) {
       misc_attrs = misc;
     }
 
-    cg_json_test_details(output, ast, misc_attrs);
+    cg_json_test_details(CS, output, ast, misc_attrs);
 
     EXTRACT_OPTION(flags, ast->left);
     EXTRACT_NOTNULL(view_and_attrs, ast->right);
@@ -1511,27 +1512,27 @@ static void cg_json_views(charbuf *output) {
     bool_t is_deleted = ast->sem->delete_version > 0;
     BEGIN_INDENT(view, 2);
     bprintf(output, "\"name\" : ");
-    cg_json_sql_name(output, name_ast);
-    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
+    cg_json_sql_name(CS, output, name_ast);
+    bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(CS, ast));
     bprintf(output, ",\n\"isTemp\" : %d", !!(flags & VIEW_IS_TEMP));
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted);
     if (is_deleted) {
       bprintf(output, ",\n\"deletedVersion\" : %d", ast->sem->delete_version);
-      cg_json_deleted_migration_proc(output, view_and_attrs);
+      cg_json_deleted_migration_proc(CS, output, view_and_attrs);
     }
 
     if (ast->sem->region) {
-      cg_json_emit_region_info(output, ast);
+      cg_json_emit_region_info(CS, output, ast);
     }
 
     if (misc_attrs) {
       bprintf(output, ",\n");
-      cg_json_misc_attrs(output, misc_attrs);
+      cg_json_misc_attrs(CS, output, misc_attrs);
     }
 
-    cg_json_projection(output, select_stmt);
-    cg_fragment_with_params(output, "select", select_stmt, gen_one_stmt);
-    cg_json_dependencies(output, ast);
+    cg_json_projection(CS, output, select_stmt);
+    cg_fragment_with_params(CS, output, "select", select_stmt, gen_one_stmt);
+    cg_json_dependencies(CS, output, ast);
     END_INDENT(view);
     bprintf(output, "\n}\n");
     i++;
@@ -1541,7 +1542,7 @@ static void cg_json_views(charbuf *output) {
   bprintf(output, "]");
 }
 
-static void cg_json_table_indices(list_item *head, charbuf *output) {
+static void cg_json_table_indices(CqlState* CS, list_item *head, charbuf *output) {
   bprintf(output, "\"indices\" : [ ");
 
   bool_t needs_comma = 0;
@@ -1561,7 +1562,7 @@ static void cg_json_table_indices(list_item *head, charbuf *output) {
       bprintf(output, ", ");
     }
 
-    cg_json_sql_name(output, index_name_ast);
+    cg_json_sql_name(CS, output, index_name_ast);
     needs_comma = 1;
   }
   bprintf(output, " ]");
@@ -1570,7 +1571,7 @@ static void cg_json_table_indices(list_item *head, charbuf *output) {
 // The table output is the tables name, the assorted flags, and misc attributes
 // the rest of the table output is produced by walking the column and key list
 // using the helper above.
-static void cg_json_table(charbuf *output, ast_node *ast) {
+static void cg_json_table(CqlState* CS, charbuf *output, ast_node *ast) {
   Invariant(is_ast_create_table_stmt(ast));
 
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
@@ -1596,7 +1597,7 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
     misc_attrs = misc;
   }
 
-  cg_json_test_details(output, ast, misc_attrs);
+  cg_json_test_details(CS, output, ast, misc_attrs);
 
   bprintf(output, "{\n");
 
@@ -1608,32 +1609,32 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   bool_t is_unsub = ast->sem->unsubscribed > 0;
 
   bprintf(output, "\"name\" : ");
-  cg_json_sql_name(output, name_ast);
+  cg_json_sql_name(CS, output, name_ast);
 
   CHARBUF_OPEN(table_schema);
   gen_sql_callbacks schema_callbacks;
   init_gen_sql_callbacks(&schema_callbacks);
   schema_callbacks.mode = gen_mode_sql;
-  gen_set_output_buffer(&table_schema);
-  gen_statement_with_callbacks(ast, &schema_callbacks);
+  gen_set_output_buffer(CS, &table_schema);
+  gen_statement_with_callbacks(CS, ast, &schema_callbacks);
   bprintf(output, ",\n\"schema\" : ");
-  cg_encode_json_string_literal(table_schema.ptr, output);
+  cg_encode_json_string_literal(CS, table_schema.ptr, output);
   CHARBUF_CLOSE(table_schema);
 
-  bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(ast));
+  bprintf(output, ",\n\"CRC\" : \"%lld\"", crc_stmt(CS, ast));
   bprintf(output, ",\n\"isTemp\" : %d", !!temp);
   bprintf(output, ",\n\"ifNotExists\" : %d", !!if_not_exist);
   bprintf(output, ",\n\"withoutRowid\" : %d", !!no_rowid);
   bprintf(output, ",\n\"isAdded\" : %d", is_added);
   if (is_added) {
     bprintf(output, ",\n\"addedVersion\" : %d", ast->sem->create_version);
-    cg_json_added_migration_proc(output, table_flags_attrs);
+    cg_json_added_migration_proc(CS, output, table_flags_attrs);
   }
   // deleted state includes deleted or unsubscribed
     bprintf(output, ",\n\"isDeleted\" : %d", is_deleted || is_unsub);
   if (is_deleted) {
     bprintf(output, ",\n\"deletedVersion\" : %d", ast->sem->delete_version);
-    cg_json_deleted_migration_proc(output, table_flags_attrs);
+    cg_json_deleted_migration_proc(CS, output, table_flags_attrs);
   }
   bprintf(output, ",\n\"isRecreated\": %d", ast->sem->recreate);
 
@@ -1650,11 +1651,11 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
   }
   else if (is_backed(ast->sem->sem_type)) {
     bprintf(output, ",\n\"isBacked\" : 1");
-    bprintf(output, ",\n\"typeHash\" : %s", gen_type_hash(ast));
+    bprintf(output, ",\n\"typeHash\" : %s", gen_type_hash(CS, ast));
   }
 
   if (ast->sem->region) {
-    cg_json_emit_region_info(output, ast);
+    cg_json_emit_region_info(CS, output, ast);
   }
 
   if (is_virtual_ast(ast)) {
@@ -1669,20 +1670,20 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
       bprintf(output, ",\n\"moduleArgs\" : ");
       if (is_ast_following(module_args)) {
         CHARBUF_OPEN(sql);
-          gen_set_output_buffer(&sql);
+          gen_set_output_buffer(CS, &sql);
           gen_sql_callbacks callbacks;
           init_gen_sql_callbacks(&callbacks);
-          gen_with_callbacks(col_key_list, gen_col_key_list, &callbacks);
-          cg_encode_json_string_literal(sql.ptr, output);
+          gen_with_callbacks(CS, col_key_list, gen_col_key_list, &callbacks);
+          cg_encode_json_string_literal(CS, sql.ptr, output);
         CHARBUF_CLOSE(sql);
       }
       else {
         CHARBUF_OPEN(sql);
-          gen_set_output_buffer(&sql);
+          gen_set_output_buffer(CS, &sql);
           gen_sql_callbacks callbacks;
           init_gen_sql_callbacks(&callbacks);
-          gen_with_callbacks(module_args, gen_misc_attr_value_list, &callbacks);
-          cg_encode_json_string_literal(sql.ptr, output);
+          gen_with_callbacks(CS, module_args, gen_misc_attr_value_list, &callbacks);
+          cg_encode_json_string_literal(CS, sql.ptr, output);
         CHARBUF_CLOSE(sql);
       }
     }
@@ -1692,16 +1693,16 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
 
   if (ast->sem->table_info->index_list) {
     COMMA;
-    cg_json_table_indices(ast->sem->table_info->index_list, output);
+    cg_json_table_indices(CS, ast->sem->table_info->index_list, output);
   }
 
   if (misc_attrs) {
     COMMA;
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
   }
 
   COMMA;
-  cg_json_col_key_list(output, ast);
+  cg_json_col_key_list(CS, output, ast);
 
   END_INDENT(table);
   END_LIST;
@@ -1709,18 +1710,18 @@ static void cg_json_table(charbuf *output, ast_node *ast) {
 }
 
 // The tables section is simply an array of table entries under the tables key
-static void cg_json_tables(charbuf *output) {
+static void cg_json_tables(CqlState* CS, charbuf *output) {
   bprintf(output, "\"tables\" : [\n");
   BEGIN_INDENT(tables, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_tables_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_tables_list; item; item = item->next) {
     ast_node *ast = item->ast;
     if (is_virtual_ast(ast)) {
       continue;
     }
     COMMA;
-    cg_json_table(output, ast);
+    cg_json_table(CS, output, ast);
   }
 
   END_INDENT(tables);
@@ -1729,18 +1730,18 @@ static void cg_json_tables(charbuf *output) {
 }
 
 // The tables section is simply an array of table entries under the tables key
-static void cg_json_virtual_tables(charbuf *output) {
+static void cg_json_virtual_tables(CqlState* CS, charbuf *output) {
   bprintf(output, "\"virtualTables\" : [\n");
   BEGIN_INDENT(tables, 2);
   BEGIN_LIST;
 
-  for (list_item *item = all_tables_list; item; item = item->next) {
+  for (list_item *item = CS->sem.all_tables_list; item; item = item->next) {
     ast_node *ast = item->ast;
     if (!is_virtual_ast(ast)) {
       continue;
     }
     COMMA;
-    cg_json_table(output, ast);
+    cg_json_table(CS, output, ast);
   }
 
   END_INDENT(tables);
@@ -1752,7 +1753,7 @@ static void cg_json_virtual_tables(charbuf *output) {
 // used as the legal arguments to the statement we are binding.  If any of
 // the parameters are of the 'out' flavor then this proc is "complex"
 // so we simply return false and let it fall into the general bucket.
-static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
+static bool_t cg_json_param(CqlState* CS, charbuf *output, ast_node *ast, CSTR *infos) {
   Contract(is_ast_param(ast));
   EXTRACT_ANY(opt_inout, ast->left);
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -1796,7 +1797,7 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
     }
   }
 
-  cg_json_data_type(output, ast->sem->sem_type, ast->sem->kind);
+  cg_json_data_type(CS, output, ast->sem->sem_type, ast->sem->kind);
 
   END_INDENT(type);
 
@@ -1806,7 +1807,7 @@ static bool_t cg_json_param(charbuf *output, ast_node *ast, CSTR *infos) {
 
 // Here we walk all the parameters of a stored proc and process each in turn.
 // If any parameter is not valid, the entire proc becomes not valid.
-static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
+static bool_t cg_json_params(CqlState* CS, charbuf *output, ast_node *ast, CSTR *infos) {
   bool_t simple = 1;
 
   BEGIN_LIST;
@@ -1816,7 +1817,7 @@ static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
 
     COMMA;
 
-    simple &= cg_json_param(output, param, infos);
+    simple &= cg_json_param(CS, output, param, infos);
 
     ast = ast->right;
 
@@ -1831,20 +1832,20 @@ static bool_t cg_json_params(charbuf *output, ast_node *ast, CSTR *infos) {
   return simple;
 }
 
-static bool_t found_shared_fragment;
+//static bool_t found_shared_fragment;
 
 // simply record the factthat we found a shared fragment
-static bool_t cg_json_call_in_cte(ast_node *cte_body, void *context, charbuf *buffer) {
-  found_shared_fragment = true;
+static bool_t cg_json_call_in_cte(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+  CS->found_shared_fragment = true;
   return false;
 }
 
 // Use the indicated generation function to create a SQL fragment.  The fragment
 // may have parameters.  They are captured and emitted as an array.
-static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) {
+static void cg_fragment_with_params_raw(CqlState* CS, charbuf *output, CSTR frag, ast_node *ast, gen_func fn) {
   CHARBUF_OPEN(sql);
   CHARBUF_OPEN(vars);
-  gen_set_output_buffer(&sql);
+  gen_set_output_buffer(CS, &sql);
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = cg_json_record_var;
@@ -1852,11 +1853,11 @@ static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *as
   callbacks.star_callback = cg_expand_star;
   callbacks.cte_proc_callback = cg_json_call_in_cte;
 
-  found_shared_fragment = false;
+  CS->found_shared_fragment = false;
 
   bprintf(output, "\"%s\" : ", frag);
-  gen_with_callbacks(ast, fn, &callbacks);
-  cg_pretty_quote_plaintext(sql.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
+  gen_with_callbacks(CS, ast, fn, &callbacks);
+  cg_pretty_quote_plaintext(CS, sql.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
   bprintf(output, ",\n\"%sArgs\" : [ %s ]", frag, vars.ptr);
 
   CHARBUF_CLOSE(vars);
@@ -1865,18 +1866,18 @@ static void cg_fragment_with_params_raw(charbuf *output, CSTR frag, ast_node *as
 
 // Same as the above, but the most common case requires continuing a list
 // so this helper does that.
-static void cg_fragment_with_params(charbuf *output, CSTR frag, ast_node *ast, gen_func fn)
+static void cg_fragment_with_params(CqlState* CS, charbuf *output, CSTR frag, ast_node *ast, gen_func fn)
 {
   bprintf(output, ",\n");
-  cg_fragment_with_params_raw(output, frag, ast, fn);
+  cg_fragment_with_params_raw(CS, output, frag, ast, fn);
 }
 
 // Use the indicated generation function to create a SQL fragment.  The fragment
 // may not have parameters.  This is not suitable for use where expressions
 // will be present.
-static void cg_fragment(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) {
+static void cg_fragment(CqlState* CS, charbuf *output, CSTR frag, ast_node *ast, gen_func fn) {
   CHARBUF_OPEN(sql);
-  gen_set_output_buffer(&sql);
+  gen_set_output_buffer(CS, &sql);
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.variables_callback = cg_json_record_var;
@@ -1884,8 +1885,8 @@ static void cg_fragment(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) 
   callbacks.star_callback = cg_expand_star;
 
   bprintf(output, ",\n\"%s\" : ", frag);
-  gen_with_callbacks(ast, fn, &callbacks);
-  cg_pretty_quote_plaintext(sql.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
+  gen_with_callbacks(CS, ast, fn, &callbacks);
+  cg_pretty_quote_plaintext(CS, sql.ptr, output, PRETTY_QUOTE_JSON | PRETTY_QUOTE_SINGLE_LINE);
 
   CHARBUF_CLOSE(sql);
 }
@@ -1897,10 +1898,10 @@ static void cg_fragment(charbuf *output, CSTR frag, ast_node *ast, gen_func fn) 
 //  * the big fragment for everything
 //  * the select list
 //  * the expression list and the optional (and highly important) other clauses
-static void cg_json_select_stmt(charbuf *output, ast_node *ast) {
+static void cg_json_select_stmt(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(is_select_stmt(ast));
 
-  cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
+  cg_fragment_with_params(CS, output, "statement", ast, gen_one_stmt);
 }
 
 // Here we emit the following bits of information
@@ -1909,7 +1910,7 @@ static void cg_json_select_stmt(charbuf *output, ast_node *ast) {
 // * the insert columns (the ones we are specifying)
 // * a fragment for the entire statement with all the args
 // * [optional] a fragment for each inserted value with its args
-static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_values) {
+static void cg_json_insert_stmt(CqlState* CS, charbuf *output, ast_node *ast, bool_t emit_values) {
   // Both insert types have been unified in the AST
   Contract(is_insert_stmt(ast));
   ast_node *insert_stmt = ast;
@@ -1939,13 +1940,13 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
   CSTR name = name_ast->sem->sptr->struct_name;
 
   bprintf(output, ",\n\"table\" : \"%s\"", name);
-  cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
+  cg_fragment_with_params(CS, output, "statement", ast, gen_one_stmt);
 
-  cg_fragment(output, "statementType", insert_type, gen_insert_type);
+  cg_fragment(CS, output, "statementType", insert_type, gen_insert_type);
 
   bprintf(output, ",\n\"columns\" : [ ");
   if (name_list) {
-    cg_json_name_list(output, name_list);
+    cg_json_name_list(CS, output, name_list);
   }
   bprintf(output, " ]");
 
@@ -1976,7 +1977,7 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
       COMMA;
       bprintf(output, "{\n");
       BEGIN_INDENT(v2, 2);
-      cg_fragment_with_params_raw(output, "value", item->left, gen_root_expr);
+      cg_fragment_with_params_raw(CS, output, "value", item->left, gen_root_expr);
       END_INDENT(v2);
       bprintf(output, "\n}");
     }
@@ -1988,7 +1989,7 @@ static void cg_json_insert_stmt(charbuf *output, ast_node *ast, bool_t emit_valu
 
 // Delete statement gets the table name and the full statement and args
 // as one fragment.
-static void cg_json_delete_stmt(charbuf *output, ast_node * ast) {
+static void cg_json_delete_stmt(CqlState* CS, charbuf *output, ast_node * ast) {
   Contract(is_delete_stmt(ast));
   ast_node *delete_stmt = is_ast_with_delete_stmt(ast) ? ast->right : ast;
   EXTRACT_NAME_AST(name_ast, delete_stmt->left);
@@ -1997,12 +1998,12 @@ static void cg_json_delete_stmt(charbuf *output, ast_node * ast) {
   CSTR name = name_ast->sem->sptr->struct_name;
 
   bprintf(output, ",\n\"table\" : \"%s\"", name);
-  cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
+  cg_fragment_with_params(CS, output, "statement", ast, gen_one_stmt);
 }
 
 // Update statement gets the table name and the full statement and args
 // as one fragment.
-static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
+static void cg_json_update_stmt(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(is_update_stmt(ast));
   ast_node *update_stmt = is_ast_with_update_stmt(ast) ? ast->right : ast;
 
@@ -2012,41 +2013,41 @@ static void cg_json_update_stmt(charbuf *output, ast_node *ast) {
   CSTR name = name_ast->sem->sptr->struct_name;
 
   bprintf(output, ",\n\"table\" : \"%s\"", name);
-  cg_fragment_with_params(output, "statement", ast, gen_one_stmt);
+  cg_fragment_with_params(CS, output, "statement", ast, gen_one_stmt);
 }
 
 // Start a new section for any kind of thing, if testing we spew the test info here
 // This lets us attribute the output to a particular line number in the test file.
 // This code also adds the pesky comma that goes before any new items in the same
 // section.
-static void cg_begin_item_attrs(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
+static void cg_begin_item_attrs(CqlState* CS, charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   Contract(ast);
 
   if (output->used > 1) bprintf(output, ",\n");
-  cg_json_test_details(output, ast, misc_attrs);
+  cg_json_test_details(CS, output, ast, misc_attrs);
   bprintf(output, "{\n");
 }
 
 // For symetry we have this lame end function
-static void cg_end_proc(charbuf *output, ast_node *ast) {
+static void cg_end_proc(CqlState* CS, charbuf *output, ast_node *ast) {
   bprintf(output, "\n}");
 }
 
 // Emit the arguments to the proc, track if they are valid (i.e. no OUT args)
 // If not valid, the proc will be "general"
-static bool_t cg_parameters(charbuf *output, ast_node *ast) {
+static bool_t cg_parameters(CqlState* CS, charbuf *output, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
   bool_t simple = 1;
 
-  bytebuf *arg_info = find_proc_arg_info(name);
+  bytebuf *arg_info = find_proc_arg_info(CS, name);
   CSTR *infos = arg_info ? (CSTR *)arg_info->ptr : NULL;
 
   bprintf(output, ",\n\"args\" : [\n");
   BEGIN_INDENT(parms, 2);
-  simple = cg_json_params(output, params, infos);
+  simple = cg_json_params(CS, output, params, infos);
   END_INDENT(parms);
   bprintf(output, "]");
 
@@ -2057,7 +2058,7 @@ static bool_t cg_parameters(charbuf *output, ast_node *ast) {
 // the proc with the DML directly and bind it.  The code gen can some idea of what's
 // going on in the simple cases -- it's a single row insert.  In those cases it's
 // possible to skip the C codegen entirely.  You can just bind and run the DML.
-bool_t static is_simple_insert(ast_node *ast) {
+static bool_t is_simple_insert(CqlState* CS, ast_node *ast) {
   if (!is_ast_insert_stmt(ast)) {
     return false;
   }
@@ -2094,9 +2095,9 @@ bool_t static is_simple_insert(ast_node *ast) {
   return true;
 }
 
-static void cg_json_general_proc(ast_node *ast, ast_node *misc_attrs, CSTR params) {
-  charbuf *output = general;
-  cg_begin_item_attrs(output, ast, misc_attrs);
+static void cg_json_general_proc(CqlState* CS, ast_node *ast, ast_node *misc_attrs, CSTR params) {
+  charbuf *output = CS->general;
+  cg_begin_item_attrs(CS, output, ast, misc_attrs);
   sem_t sem_type = ast->sem->sem_type;
   BEGIN_INDENT(proc, 2)
   bprintf(output, "%s", params);
@@ -2106,7 +2107,7 @@ static void cg_json_general_proc(ast_node *ast, ast_node *misc_attrs, CSTR param
   bool_t select_result = !uses_out && !uses_out_union && has_any_result_set;
 
   if (has_any_result_set) {
-    cg_json_projection(output, ast);
+    cg_json_projection(CS, output, ast);
   }
 
   // clearer coding of the result types including out union called out seperately
@@ -2136,7 +2137,7 @@ static void cg_json_general_proc(ast_node *ast, ast_node *misc_attrs, CSTR param
 // (or some other read-context) or if they are the subject of an insert, update,
 // or delete.  We also track the use of nested procedures and produce a list of
 // procs the subject might call.  Of course no proc calls ever appear in triggers.
-static void cg_json_dependencies(charbuf *output, ast_node *ast) {
+static void cg_json_dependencies(CqlState* CS, charbuf *output, ast_node *ast) {
   json_context context;
   CHARBUF_OPEN(used_tables);
   CHARBUF_OPEN(used_views);
@@ -2169,7 +2170,7 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
       .callback_proc = cg_found_proc,
       .callback_context = &context,
   };
-  find_table_refs(&callbacks, ast);
+  find_table_refs(CS, &callbacks, ast);
 
   if (insert_tables.used > 1) {
     bprintf(output, ",\n\"insertTables\" : [ %s ]", insert_tables.ptr);
@@ -2202,7 +2203,7 @@ static void cg_json_dependencies(charbuf *output, ast_node *ast) {
 }
 
 
-static void cg_defined_in_file(charbuf *output, ast_node *ast) {
+static void cg_defined_in_file(CqlState* CS, charbuf *output, ast_node *ast) {
   CHARBUF_OPEN(tmp);
     // quote the file as a json style literaj
     CSTR filename = ast->filename;
@@ -2214,41 +2215,41 @@ static void cg_defined_in_file(charbuf *output, ast_node *ast) {
     if (slash) {
       filename = slash + 1;
     }
-    cg_encode_json_string_literal(filename, &tmp);
+    cg_encode_json_string_literal(CS, filename, &tmp);
     bprintf(output, ",\n\"definedInFile\" : %s",  tmp.ptr);
   CHARBUF_CLOSE(tmp);
 }
 
-static void cg_defined_on_line(charbuf *output, ast_node *ast) {
+static void cg_defined_on_line(CqlState* CS, charbuf *output, ast_node *ast) {
   int32_t lineno = cg_find_first_line(ast);
   bprintf(output, ",\n\"definedOnLine\" : %d", lineno);
 }
 
-static void cg_json_declare_interface(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_interface(CqlState* CS, charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
-  cg_begin_item_attrs(output, ast, NULL);
+  cg_begin_item_attrs(CS, output, ast, NULL);
 
   BEGIN_INDENT(interface, 2);
   bprintf(output, "\"name\" : \"%s\"", name);
-  cg_defined_in_file(output, ast);
-  cg_defined_on_line(output, ast);
+  cg_defined_in_file(CS, output, ast);
+  cg_defined_on_line(CS, output, ast);
 
   if (misc_attrs) {
     bprintf(output, ",\n");
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
   }
 
-  cg_json_projection(output, ast);
+  cg_json_projection(CS, output, ast);
   END_INDENT(interface);
 
-  cg_end_proc(output, ast);
+  cg_end_proc(CS, output, ast);
 }
 
-static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_func(CqlState* CS, charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   bool_t select_func = is_ast_declare_select_func_no_check_stmt(ast) || is_ast_declare_select_func_stmt(ast);
   bool_t non_select_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_func_stmt(ast);
   bool_t no_check_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast);
@@ -2268,7 +2269,7 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
     // emit parameters.
     bprintf(output, ",\n\"args\" : [\n");
     BEGIN_INDENT(parms, 2);
-    cg_json_params(output, params, NULL);
+    cg_json_params(CS, output, params, NULL);
     END_INDENT(parms);
     bprintf(output, "]");
   }
@@ -2276,7 +2277,7 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
   // emit attributes.
   if (misc_attrs) {
     bprintf(output, ",\n");
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
   }
 
   // emit return type.
@@ -2285,7 +2286,7 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
   bool_t creates_object = false;
   if (is_ast_typed_names(data_type)) {
     // table valued function
-    cg_json_projection(output, data_type);
+    cg_json_projection(CS, output, data_type);
   }
   else {
     if (is_ast_create_data_type(data_type)) {
@@ -2295,7 +2296,7 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
 
     bprintf(output, ",\n\"returnType\" : {\n");
     BEGIN_INDENT(type, 2);
-    cg_json_data_type(output, data_type->sem->sem_type, data_type->sem->kind);
+    cg_json_data_type(CS, output, data_type->sem->sem_type, data_type->sem->kind);
     END_INDENT(type);
     bprintf(output, "\n}");
   }
@@ -2309,19 +2310,19 @@ static void cg_json_declare_func(charbuf *stmt_out, ast_node *ast, ast_node *mis
 
   // add this function to the list.
   output = stmt_out;
-  cg_begin_item_attrs(output, ast, misc_attrs);
+  cg_begin_item_attrs(CS, output, ast, misc_attrs);
   BEGIN_INDENT(func, 2);
   bprintf(output, "%s", declare_func_buffer.ptr);
   END_INDENT(func);
 
   // clean up
   CHARBUF_CLOSE(declare_func_buffer);
-  cg_end_proc(output, ast);
+  cg_end_proc(CS, output, ast);
 }
 
 
 // the no check version has no args, and it is never DML, and never has a shape
-static void cg_json_declare_proc_no_check(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_proc_no_check(CqlState* CS, charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_proc_no_check_stmt(ast));
   EXTRACT_ANY_NOTNULL(proc_name, ast->left);
   EXTRACT_STRING(name, proc_name);
@@ -2335,22 +2336,22 @@ static void cg_json_declare_proc_no_check(charbuf *stmt_out, ast_node *ast, ast_
   // emit attributes.
   if (misc_attrs) {
     bprintf(output, ",\n");
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
   }
 
   // add this proc to the list.
   output = stmt_out;
-  cg_begin_item_attrs(output, ast, misc_attrs);
+  cg_begin_item_attrs(CS, output, ast, misc_attrs);
   BEGIN_INDENT(proc, 2);
   bprintf(output, "%s", declare_proc_buffer.ptr);
   END_INDENT(proc);
 
   // cleanup
   CHARBUF_CLOSE(declare_proc_buffer);
-  cg_end_proc(output, ast);
+  cg_end_proc(CS, output, ast);
 }
 
-static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_declare_proc(CqlState* CS, charbuf *stmt_out, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_NAME_AST(name_ast, proc_name_type->left);
@@ -2367,21 +2368,21 @@ static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *mis
   // emit parameters.
   bprintf(output, ",\n\"args\" : [\n");
   BEGIN_INDENT(parms, 2);
-  cg_json_params(output, params, NULL);
+  cg_json_params(CS, output, params, NULL);
   END_INDENT(parms);
   bprintf(output, "]");
 
   // emit attributes.
   if (misc_attrs) {
     bprintf(output, ",\n");
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
   }
 
   // emit projections.
   sem_t sem_type = ast->sem->sem_type;
   bool_t has_any_result_set = !!ast->sem->sptr;
   if (has_any_result_set) {
-    cg_json_projection(output, ast);
+    cg_json_projection(CS, output, ast);
   }
 
   // emit use db or not.
@@ -2389,14 +2390,14 @@ static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *mis
 
   // add this proc to the list.
   output = stmt_out;
-  cg_begin_item_attrs(output, ast, misc_attrs);
+  cg_begin_item_attrs(CS, output, ast, misc_attrs);
   BEGIN_INDENT(proc, 2);
   bprintf(output, "%s", declare_proc_buffer.ptr);
   END_INDENT(proc);
 
   // cleanup
   CHARBUF_CLOSE(declare_proc_buffer);
-  cg_end_proc(output, ast);
+  cg_end_proc(CS, output, ast);
 }
 
 // If we find a procedure definition we crack its arguments and first statement
@@ -2405,7 +2406,7 @@ static void cg_json_declare_proc(charbuf *stmt_out, ast_node *ast, ast_node *mis
 // output stream for the type of statement and then a suitable helper is dispatched.
 // Additionally, each procedure includes an array of tables that it uses regardless
 // of the type of procedure.
-static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_create_proc(CqlState* CS, charbuf *unused, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(unused == NULL);  // proc output is complicated, this code knows what to do
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -2416,7 +2417,7 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
 
   // shared fragments are invisible to the JSON or anything else, they have
   // no external interface.
-  if (is_proc_shared_fragment(ast)) {
+  if (is_proc_shared_fragment(CS, ast)) {
     return;
   }
 
@@ -2424,25 +2425,25 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
   charbuf *output = &param_buffer;
 
   bprintf(output, "\"name\" : \"%s\"", name);
-  cg_defined_in_file(output, name_ast);
-  cg_defined_on_line(output, ast);
+  cg_defined_in_file(CS, output, name_ast);
+  cg_defined_on_line(CS, output, ast);
 
-  bool_t simple = cg_parameters(output, ast);
+  bool_t simple = cg_parameters(CS, output, ast);
 
-  cg_json_dependencies(output, ast);
+  cg_json_dependencies(CS, output, ast);
 
   if (ast->sem->region) {
-    cg_json_emit_region_info(output, ast);
+    cg_json_emit_region_info(CS, output, ast);
   }
 
   if (misc_attrs) {
     bprintf(output, ",\n");
-    cg_json_misc_attrs(output, misc_attrs);
+    cg_json_misc_attrs(CS, output, misc_attrs);
   }
 
   if (!stmt_list) {
-    output = general;
-    cg_json_general_proc(ast, misc_attrs, param_buffer.ptr);
+    output = CS->general;
+    cg_json_general_proc(CS, ast, misc_attrs, param_buffer.ptr);
     goto cleanup;
   }
 
@@ -2456,56 +2457,56 @@ static void cg_json_create_proc(charbuf *unused, ast_node *ast, ast_node *misc_a
   // we have to see if it uses shared fragments, this can't be "simple"
   // because the parameters can be synthetic and require assignments and such
   if (simple && is_select_stmt(stmt)) {
-    found_shared_fragment = false;
+    CS->found_shared_fragment = false;
     CHARBUF_OPEN(scratch);
-    cg_json_select_stmt(&scratch, stmt); // easy way to walk the tree
+    cg_json_select_stmt(CS, &scratch, stmt); // easy way to walk the tree
     CHARBUF_CLOSE(scratch);
-    simple = !found_shared_fragment;
+    simple = !CS->found_shared_fragment;
   }
 
   if (simple && is_select_stmt(stmt)) {
-    output = queries;
-    cg_begin_item_attrs(output, ast, misc_attrs);
+    output = CS->queries;
+    cg_begin_item_attrs(CS, output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
-    cg_json_projection(output, stmt);
-    cg_json_select_stmt(output, stmt);
+    cg_json_projection(CS, output, stmt);
+    cg_json_select_stmt(CS, output, stmt);
     END_INDENT(proc);
   }
   else if (simple && is_insert_stmt(stmt)) {
-    bool_t simple_insert = is_simple_insert(stmt);
+    bool_t simple_insert = is_simple_insert(CS, stmt);
 
-    output = simple_insert ? inserts : general_inserts;
-    cg_begin_item_attrs(output, ast, misc_attrs);
+    output = simple_insert ? CS->inserts : CS->general_inserts;
+    cg_begin_item_attrs(CS, output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
-    cg_json_insert_stmt(output, stmt, simple_insert);
+    cg_json_insert_stmt(CS, output, stmt, simple_insert);
     END_INDENT(proc);
   }
   else if (simple && is_delete_stmt(stmt)) {
-    output = deletes;
-    cg_begin_item_attrs(output, ast, misc_attrs);
+    output = CS->deletes;
+    cg_begin_item_attrs(CS, output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
-    cg_json_delete_stmt(output, stmt);
+    cg_json_delete_stmt(CS, output, stmt);
     END_INDENT(proc);
   }
   else if (simple && is_update_stmt(stmt)) {
-    output = updates;
-    cg_begin_item_attrs(output, ast, misc_attrs);
+    output = CS->updates;
+    cg_begin_item_attrs(CS, output, ast, misc_attrs);
     BEGIN_INDENT(proc, 2);
     bprintf(output, "%s", param_buffer.ptr);
-    cg_json_update_stmt(output, stmt);
+    cg_json_update_stmt(CS, output, stmt);
     END_INDENT(proc);
   }
   else {
-    output = general;
-    cg_json_general_proc(ast, misc_attrs, param_buffer.ptr);
+    output = CS->general;
+    cg_json_general_proc(CS, ast, misc_attrs, param_buffer.ptr);
   }
 
 cleanup:
   CHARBUF_CLOSE(param_buffer);
-  cg_end_proc(output, ast);
+  cg_end_proc(CS, output, ast);
 }
 
 // This lets us have top level attributes that go into the main output stream
@@ -2513,7 +2514,7 @@ cleanup:
 // are placed as an attribution on the statements "declare database object".
 // Attributes for any object variables named *database are unified so that
 // different schema fragments can contribute easily.
-static void cg_json_database_var(charbuf *output, ast_node *ast, ast_node *misc_attrs) {
+static void cg_json_database_var(CqlState* CS, charbuf *output, ast_node *ast, ast_node *misc_attrs) {
   Contract(is_ast_declare_vars_type(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -2530,7 +2531,7 @@ static void cg_json_database_var(charbuf *output, ast_node *ast, ast_node *misc_
         bprintf(output, "\n");
       }
 
-      cg_json_test_details(output, ast, misc_attrs);
+      cg_json_test_details(CS, output, ast, misc_attrs);
 
       BEGIN_INDENT(attr, 2);
 
@@ -2547,7 +2548,7 @@ static void cg_json_database_var(charbuf *output, ast_node *ast, ast_node *misc_
           bprintf(output, ",\n");
         }
         first_attr = false;
-        cg_json_misc_attr(output, item->left);
+        cg_json_misc_attr(CS, output, item->left);
       }
 
       END_INDENT(attr);
@@ -2559,19 +2560,24 @@ static void cg_json_database_var(charbuf *output, ast_node *ast, ast_node *misc_
 // all the generic statement handlers look like this
 // this is a custom functor to call them
 typedef struct {
-  void (*func)(charbuf *out, ast_node *ast, ast_node *misc_attrs);
+  void (*func)(CqlState* CS, charbuf *out, ast_node *ast, ast_node *misc_attrs);
   charbuf *out;
 } json_dispatch;
+
+static bool_t symtab_add_json_expr_dispatch_func(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, json_dispatch _Nullable *val_new)
+{
+    return symtab_add(CS, syms, sym_new, val_new);
+}
 
 #undef STMT_INIT
 #define STMT_INIT(x, func, out) \
   json_dispatch json_disp_ ## x = { func,  out }; \
-  symtab_add(stmts, k_ast_ ## x, (void *)&json_disp_ ##x)
+  symtab_add_json_expr_dispatch_func(CS, stmts, k_ast_ ## x, &json_disp_ ##x)
 
 // Here we create several buffers for the various statement types and then redirect
 // output into the appropriate buffer as we walk the statements.  Finally each buffer
 // is emitted in order.
-static void cg_json_stmt_list(charbuf *output, ast_node *head) {
+static void cg_json_stmt_list(CqlState* CS, charbuf *output, ast_node *head) {
   CHARBUF_OPEN(query_buf);
   CHARBUF_OPEN(insert_buf);
   CHARBUF_OPEN(update_buf);
@@ -2587,12 +2593,12 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
   CHARBUF_OPEN(declare_no_check_select_funcs_buf);
   CHARBUF_OPEN(declare_interfaces_buf);
 
-  queries = &query_buf;
-  inserts = &insert_buf;
-  updates = &update_buf;
-  deletes = &delete_buf;
-  general = &general_buf;
-  general_inserts = &general_inserts_buf;
+  CS->queries = &query_buf;
+  CS->inserts = &insert_buf;
+  CS->updates = &update_buf;
+  CS->deletes = &delete_buf;
+  CS->general = &general_buf;
+  CS->general_inserts = &general_inserts_buf;
 
   symtab *stmts = symtab_new();
 
@@ -2623,65 +2629,65 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
     }
 
     json_dispatch *disp = (json_dispatch *)entry->val;
-    disp->func(disp->out, stmt, misc_attrs);
+    disp->func(CS, disp->out, stmt, misc_attrs);
   }
 
-  symtab_delete(stmts);
+  symtab_delete(CS, stmts);
 
   bprintf(output, "\"attributes\" : [");
   bprintf(output, "%s", attributes_buf.ptr);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"queries\" : [\n");
-  bindent(output, queries, 2);
+  bindent(CS, output, CS->queries, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"inserts\" : [\n");
-  bindent(output, inserts, 2);
+  bindent(CS, output, CS->inserts, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"generalInserts\" : [\n");
-  bindent(output, general_inserts, 2);
+  bindent(CS, output, CS->general_inserts, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"updates\" : [\n");
-  bindent(output, updates, 2);
+  bindent(CS, output, CS->updates, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"deletes\" : [\n");
-  bindent(output, deletes, 2);
+  bindent(CS, output, CS->deletes, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"general\" : [\n");
-  bindent(output, general, 2);
+  bindent(CS, output, CS->general, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareProcs\" : [\n");
-  bindent(output, &declare_procs_buf, 2);
+  bindent(CS, output, &declare_procs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareNoCheckProcs\" : [\n");
-  bindent(output, &declare_no_check_procs_buf, 2);
+  bindent(CS, output, &declare_no_check_procs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareFuncs\" : [\n");
-  bindent(output, &declare_funcs_buf, 2);
+  bindent(CS, output, &declare_funcs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareNoCheckFuncs\" : [\n");
-  bindent(output, &declare_no_check_funcs_buf, 2);
+  bindent(CS, output, &declare_no_check_funcs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareSelectFuncs\" : [\n");
-  bindent(output, &declare_select_funcs_buf, 2);
+  bindent(CS, output, &declare_select_funcs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"declareNoCheckSelectFuncs\" : [\n");
-  bindent(output, &declare_no_check_select_funcs_buf, 2);
+  bindent(CS, output, &declare_no_check_select_funcs_buf, 2);
   bprintf(output, "\n],\n");
 
   bprintf(output, "\"interfaces\" : [\n");
-  bindent(output, &declare_interfaces_buf, 2);
+  bindent(CS, output, &declare_interfaces_buf, 2);
   bprintf(output, "\n]");
 
   CHARBUF_CLOSE(declare_interfaces_buf);
@@ -2701,12 +2707,12 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
 
   // Ensure the globals do not hold any pointers so that leaksan will find any leaks
   // All of these have already been freed (above)
-  queries = NULL;
-  deletes = NULL;
-  inserts = NULL;
-  updates = NULL;
-  general = NULL;
-  general_inserts = NULL;
+  CS->queries = NULL;
+  CS->deletes = NULL;
+  CS->inserts = NULL;
+  CS->updates = NULL;
+  CS->general = NULL;
+  CS->general_inserts = NULL;
 }
 
 // Here we emit a top level fragment that has all the tables and
@@ -2714,9 +2720,9 @@ static void cg_json_stmt_list(charbuf *output, ast_node *head) {
 // from the proc section where each proc defines which tables it uses.
 // i.e. we can use this map to go from a dirty table name to a list of
 // affected queries/updates etc.
-static void cg_json_table_users(charbuf *output) {
-  uint32_t count = tables_to_procs->count;
-  symtab_entry *deps = symtab_copy_sorted_payload(tables_to_procs, default_symtab_comparator);
+static void cg_json_table_users(CqlState* CS, charbuf *output) {
+  uint32_t count = CS->tables_to_procs->count;
+  symtab_entry *deps = symtab_copy_sorted_payload(CS->tables_to_procs, default_symtab_comparator);
 
   bprintf(output, "\"tableUsers\" : {\n");
   BEGIN_INDENT(users, 2);
@@ -2735,54 +2741,54 @@ static void cg_json_table_users(charbuf *output) {
 }
 
 // Main entry point for json schema format
-cql_noexport void cg_json_schema_main(ast_node *head) {
-  Contract(options.file_names_count == 1);
+cql_noexport void cg_json_schema_main(CqlState* CS, ast_node *head) {
+  Contract(CS->options.file_names_count == 1);
 
-  cql_exit_on_semantic_errors(head);
+  cql_exit_on_semantic_errors(CS, head);
 
-  tables_to_procs = symtab_new();
+  CS->tables_to_procs = symtab_new();
 
   CHARBUF_OPEN(main);
   charbuf *output = &main;
 
-  bprintf(output, "%s", rt->source_prefix);
+  bprintf(output, "%s", CS->rt->source_prefix);
 
   // master dictionary begins
   bprintf(output, "\n{\n");
   BEGIN_INDENT(defs, 2);
-  cg_json_tables(output);
+  cg_json_tables(CS, output);
   bprintf(output, ",\n");
-  cg_json_virtual_tables(output);
+  cg_json_virtual_tables(CS, output);
   bprintf(output, ",\n");
-  cg_json_views(output);
+  cg_json_views(CS, output);
   bprintf(output, ",\n");
-  cg_json_indices(output);
+  cg_json_indices(CS, output);
   bprintf(output, ",\n");
-  cg_json_triggers(output);
+  cg_json_triggers(CS, output);
   bprintf(output, ",\n");
-  cg_json_stmt_list(output, head);
+  cg_json_stmt_list(CS, output, head);
   bprintf(output, ",\n");
-  cg_json_regions(output);
+  cg_json_regions(CS, output);
   bprintf(output, ",\n");
-  cg_json_ad_hoc_migration_procs(output);
+  cg_json_ad_hoc_migration_procs(CS, output);
   bprintf(output, ",\n");
-  cg_json_enums(output);
+  cg_json_enums(CS, output);
   bprintf(output, ",\n");
-  cg_json_constant_groups( output);
+  cg_json_constant_groups(CS, output);
   bprintf(output, ",\n");
-  cg_json_subscriptions( output);
+  cg_json_subscriptions(CS, output);
 
-  if (options.test) {
+  if (CS->options.test) {
     bprintf(output, ",\n");
-    cg_json_table_users(output);
+    cg_json_table_users(CS, output);
   }
 
   END_INDENT(defs);
   bprintf(output, "\n}\n");
 
-  cql_write_file(options.file_names[0], output->ptr);
+  cql_write_file(CS, CS->options.file_names[0], output->ptr);
   CHARBUF_CLOSE(main);
 
-  SYMTAB_CLEANUP(tables_to_procs);
+  SYMTAB_CLEANUP(CS->tables_to_procs);
 }
 #endif

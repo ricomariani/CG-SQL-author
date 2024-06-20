@@ -8,6 +8,7 @@
 #include "cql.h"
 #include "minipool.h"
 #include <stdlib.h>
+#include "cql_state.h"
 
 #define MAX(a,b) ((a >b ) ? a : b)
 
@@ -83,20 +84,20 @@ cql_noexport void *minipool_alloc(minipool *pool, uint32_t needed) {
   return result;
 }
 
-static lazy_free *_Nullable lazy_frees;
+//static lazy_free *_Nullable lazy_frees;
 
-cql_noexport void add_lazy_free(lazy_free *p) {
-  p->next = lazy_frees;
-  lazy_frees = p;
+cql_noexport void add_lazy_free(CqlState* CS, lazy_free *p) {
+  p->next = CS->lazy_frees;
+  CS->lazy_frees = p;
 }
 
-cql_noexport void run_lazy_frees() {
-  lazy_free *head = lazy_frees;
+cql_noexport void run_lazy_frees(CqlState* CS) {
+  lazy_free *head = CS->lazy_frees;
   while (head) {
     lazy_free *next = head->next;
-    head->teardown(head->context);
+    head->teardown(CS, head->context);
     free(head);
     head = next;
   }
-  lazy_frees = NULL;
+  CS->lazy_frees = NULL;
 }

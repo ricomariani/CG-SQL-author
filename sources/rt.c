@@ -23,8 +23,9 @@
 // These are the various result types we can produce
 // they include useful string fragments for the code generator
 
-static rtdata rt_c = {
+static const rtdata rt_c = {
   .name = "c",
+  .id_prefix = "_rtc_",
   .code_generator = &cg_c_main,
   .required_file_names_count = -1,
   .header_prefix =
@@ -99,8 +100,9 @@ static rtdata rt_c = {
   .cql_target_null = "NULL",
 };
 
-static rtdata rt_lua = {
+static const rtdata rt_lua = {
   .name = "lua",
+  .id_prefix = "_rtlua_",
   .code_generator = &cg_lua_main,
   .required_file_names_count = 1,
   .header_prefix = "",
@@ -118,8 +120,9 @@ static rtdata rt_lua = {
   .symbol_prefix = ""
 };
 
-static rtdata rt_objc = {
+static const rtdata rt_objc = {
   .name = "objc",
+  .id_prefix = "_rtoc_",
   .code_generator = &cg_objc_main,
   .required_file_names_count = 1,
   // note the @ is split from the generated so that tools don't think this is a generated file
@@ -146,8 +149,9 @@ static rtdata rt_objc = {
   .cql_result_set_note_ownership_transferred = "cql_result_set_note_ownership_transferred",
 };
 
-static rtdata rt_schema_upgrade = {
+static const rtdata rt_schema_upgrade = {
   .name = "schema_upgrade",
+  .id_prefix = "",
   .code_generator = &cg_schema_upgrade_main,
   .required_file_names_count = 1,
   .source_prefix =
@@ -155,8 +159,9 @@ static rtdata rt_schema_upgrade = {
   .symbol_case = cg_symbol_case_camel,
 };
 
-static rtdata rt_schema_sqlite = {
+static const rtdata rt_schema_sqlite = {
   .name = "schema_sqlite",
+  .id_prefix = "",
   .code_generator = &cg_schema_sqlite_main,
   .required_file_names_count = 1,
   .source_prefix =
@@ -164,8 +169,9 @@ static rtdata rt_schema_sqlite = {
   .symbol_case = cg_symbol_case_camel,
 };
 
-static rtdata rt_schema = {
+static const rtdata rt_schema = {
   .name = "schema",
+  .id_prefix = "",
   .code_generator = &cg_schema_main,
   .required_file_names_count = 1,
   .source_prefix =
@@ -173,37 +179,41 @@ static rtdata rt_schema = {
   .symbol_case = cg_symbol_case_camel,
 };
 
-static rtdata rt_json_schema = {
+static const rtdata rt_json_schema = {
   .name = "json_schema",
+  .id_prefix = "",
   .code_generator = &cg_json_schema_main,
   .required_file_names_count = 1,
   .source_prefix = "",
   .symbol_case = cg_symbol_case_camel,
 };
 
-static rtdata rt_test_helpers = {
+static const rtdata rt_test_helpers = {
   .name = "test_helpers",
+  .id_prefix = "_rtt_",
   .code_generator = &cg_test_helpers_main,
   .required_file_names_count = 1,
   .source_prefix =
     RT_AUTOGEN("--") "\n",
 };
 
-static rtdata rt_query_plan = {
+static const rtdata rt_query_plan = {
   .name = "query_plan",
+  .id_prefix = "",
   .code_generator = &cg_query_plan_main,
   .required_file_names_count = 1,
   .source_prefix =
     RT_AUTOGEN("--") "\n",
 };
 
-static rtdata rt_stats = {
+static const rtdata rt_stats = {
   .name = "stats",
+  .id_prefix = "",
   .code_generator = &cg_stats_main,
   .required_file_names_count = 1,
 };
 
-static rtdata *(rt_all[]) = {
+static const rtdata *const (rt_all[]) = {
   &rt_c,
   &rt_objc,
   &rt_lua,
@@ -217,11 +227,11 @@ static rtdata *(rt_all[]) = {
   NULL,
 };
 
-cql_noexport rtdata *find_rtdata(CSTR name) {
-  rt_cleanup();
+cql_noexport const rtdata *find_rtdata(CqlState* CS, CSTR name) {
+  rt_cleanup(CS);
 
   int32_t i = 0;
-  rtdata *rt_ = NULL;
+  const rtdata *rt_ = NULL;
   while ((rt_ = rt_all[i])) {
     if (!strcmp(rt_->name, name)) {
        break;
@@ -232,5 +242,5 @@ cql_noexport rtdata *find_rtdata(CSTR name) {
   return rt_;
 }
 
-cql_noexport void rt_cleanup() {
+cql_noexport void rt_cleanup(CqlState* CS) {
 }

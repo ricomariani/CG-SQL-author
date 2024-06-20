@@ -16,15 +16,15 @@
 
 cql_noexport void cg_decode_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_encode_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
-cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *_Nonnull output);
-cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *_Nonnull output);
+cql_noexport void cg_encode_char_as_c_string_literal(CqlState* CS, char c, charbuf *_Nonnull output);
+cql_noexport void cg_encode_char_as_json_string_literal(CqlState* CS, char c, charbuf *_Nonnull output);
 
-cql_noexport void cg_encode_json_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
-cql_noexport void cg_encode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_json_string_literal(CqlState* CS, CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_encode_c_string_literal(CqlState* CS, CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_decode_c_string_literal(CSTR _Nonnull str, charbuf *_Nonnull output);
-cql_noexport void cg_pretty_quote_plaintext(CSTR _Nonnull str, charbuf *_Nonnull output, uint32_t flags);
+cql_noexport void cg_pretty_quote_plaintext(CqlState* CS, CSTR _Nonnull str, charbuf *_Nonnull output, uint32_t flags);
 cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b);
-cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_Nonnull output);
+cql_noexport void cg_pretty_quote_compressed_text(CqlState* CS, CSTR _Nonnull str, charbuf *_Nonnull output);
 cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr);
-cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr);
-cql_noexport void cg_unquote_encoded_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr);
+cql_noexport void cg_decode_qstr(CqlState* CS, charbuf *_Nonnull output, CSTR _Nonnull qstr);
+cql_noexport void cg_unquote_encoded_qstr(CqlState* CS, charbuf *_Nonnull output, CSTR _Nonnull qstr);

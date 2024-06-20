@@ -8,6 +8,7 @@
 #include "cql.h"
 #include "charbuf.h"
 #include "encoders.h"
+#include "cql_state.h"
 
 // This converts from SQL string literal format to plain output
 // Note that SQL string literal have no escapes except for double quote
@@ -57,7 +58,7 @@ static void emit_hex_digit(uint32_t ch, charbuf *output) {
 }
 
 // This converts from a plain string to C string literal
-cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
+cql_noexport void cg_encode_char_as_c_string_literal(CqlState* CS, char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
 
@@ -101,7 +102,7 @@ cql_noexport void cg_encode_char_as_c_string_literal(char c, charbuf *output) {
 // UnicodexEscapeSequence ::
 //      u HexDigit HexDigit HexDigit HexDigit
 //
-cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output) {
+cql_noexport void cg_encode_char_as_json_string_literal(CqlState* CS, char c, charbuf *output) {
   const char quote = '"';
   const char backslash = '\\';
 
@@ -129,27 +130,27 @@ cql_noexport void cg_encode_char_as_json_string_literal(char c, charbuf *output)
 }
 
 // This converts from a plain string to C string literal
-cql_noexport void cg_encode_c_string_literal(CSTR str, charbuf *output) {
+cql_noexport void cg_encode_c_string_literal(CqlState* CS, CSTR str, charbuf *output) {
   const char quote = '"';
   const char *p = str;
 
   bputc(output, quote);
 
   for ( ;p[0]; p++) {
-    cg_encode_char_as_c_string_literal(p[0], output);
+    cg_encode_char_as_c_string_literal(CS, p[0], output);
   }
   bputc(output, quote);
 }
 
 // This converts from a plain string to JSON string literal
-cql_noexport void cg_encode_json_string_literal(CSTR str, charbuf *output) {
+cql_noexport void cg_encode_json_string_literal(CqlState* CS, CSTR str, charbuf *output) {
   const char quote = '"';
   const char *p = str;
 
   bputc(output, quote);
 
   for ( ;p[0]; p++) {
-    cg_encode_char_as_json_string_literal(p[0], output);
+    cg_encode_char_as_json_string_literal(CS, p[0], output);
   }
   bputc(output, quote);
 }
@@ -235,7 +236,7 @@ cql_noexport void cg_decode_c_string_literal(CSTR str, charbuf *output) {
 //  * do C string processing
 //  * turn linefeeds into spaces (we break the string here for readability)
 //    * or remove the unquoted linefeeds and indentation
-cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t flags) {
+cql_noexport void cg_pretty_quote_plaintext(CqlState* CS, CSTR str, charbuf *output, uint32_t flags) {
   Contract(str);
 
   const char squote = '\'';
@@ -292,10 +293,10 @@ cql_noexport void cg_pretty_quote_plaintext(CSTR str, charbuf *output, uint32_t 
     }
     else {
       if (for_json) {
-        cg_encode_char_as_json_string_literal(p[0], output);
+        cg_encode_char_as_json_string_literal(CS, p[0], output);
       }
       else {
-        cg_encode_char_as_c_string_literal(p[0], output);
+        cg_encode_char_as_c_string_literal(CS, p[0], output);
       }
     }
   }
@@ -328,19 +329,19 @@ cql_noexport void cg_remove_slash_star_and_star_slash(charbuf *_Nonnull b) {
 
 // Helper to case on string arguments to cql_compressed() and output
 // readable multi-line strings when necessary.
-cql_noexport void cg_pretty_quote_compressed_text(CSTR _Nonnull str, charbuf *_Nonnull output) {
+cql_noexport void cg_pretty_quote_compressed_text(CqlState* CS, CSTR _Nonnull str, charbuf *_Nonnull output) {
   // In the case of an empty compressed string - cql_compressed("") we do not want
   // extra newlines
   if (strlen(str) == 0) {
-    cg_pretty_quote_plaintext(str, output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+    cg_pretty_quote_plaintext(CS, str, output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
     return;
   }
 
   // Otherwise, we want the SQL string to be new-line separated and indented for readability
   CHARBUF_OPEN(temp_output);
   bprintf(&temp_output, "\n  ");
-  cg_pretty_quote_plaintext(str, &temp_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
-  bindent(output, &temp_output, 6);
+  cg_pretty_quote_plaintext(CS, str, &temp_output, PRETTY_QUOTE_C | PRETTY_QUOTE_MULTI_LINE);
+  bindent(CS, output, &temp_output, 6);
   bclear(&temp_output);
   bprintf(&temp_output, "\n      ");
   bprintf(output, "%s", temp_output.ptr);
@@ -394,7 +395,7 @@ cql_noexport void cg_encode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   }
 }
 
-cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
+cql_noexport void cg_decode_qstr(CqlState* CS, charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
 
   // The string was quoted but didn't require escapes, just put the original back-quotes back
@@ -419,7 +420,7 @@ cql_noexport void cg_decode_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   bputc(output, '`');
 }
 
-cql_noexport void cg_unquote_encoded_qstr(charbuf *_Nonnull output, CSTR _Nonnull qstr) {
+cql_noexport void cg_unquote_encoded_qstr(CqlState* CS, charbuf *_Nonnull output, CSTR _Nonnull qstr) {
   Contract(qstr);
 
   // The string was quoted but didn't require escapes, just put the original back-quotes back

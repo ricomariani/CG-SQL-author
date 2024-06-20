@@ -68,16 +68,16 @@
 
 #define CG_PUSH_MAIN_INDENT(tag, indent) \
 CHARBUF_OPEN(tag##_buf); \
-charbuf *tag##_main_saved = cg_main_output; \
+charbuf *tag##_main_saved = CS->cg_main_output; \
 int32_t tag##_indent = indent; \
-cg_main_output = &tag##_buf; \
+CS->cg_main_output = &tag##_buf; \
 
 #define CG_PUSH_MAIN_INDENT2(tag) \
 CG_PUSH_MAIN_INDENT(tag, 2)
 
 #define CG_POP_MAIN_INDENT(tag) \
-cg_main_output = tag##_main_saved; \
-bindent(cg_main_output, &tag##_buf, tag##_indent); \
+CS->cg_main_output = tag##_main_saved; \
+bindent(CS, CS->cg_main_output, &tag##_buf, tag##_indent); \
 CHARBUF_CLOSE(tag##_buf);
 
 #define CG_TEMP_STMT_BASE_NAME(index, output) \
@@ -92,7 +92,7 @@ CHARBUF_CLOSE(tag##_buf);
 #define CG_PUSH_EVAL(expr, pri) \
 CHARBUF_OPEN(expr##_is_null); \
 CHARBUF_OPEN(expr##_value); \
-cg_expr(expr, &expr##_is_null, &expr##_value, pri);
+cg_expr(CS, expr, &expr##_is_null, &expr##_value, pri);
 
 // Close the buffers used for the above.
 // The scratch stack is not restored so that any temporaries used in
@@ -110,15 +110,15 @@ CHARBUF_CLOSE(expr##_is_null);
 CHARBUF_OPEN(name); \
 CHARBUF_OPEN(name##_is_null); \
 CHARBUF_OPEN(name##_value); \
-cg_scratch_var(NULL, sem_type, &name, &name##_is_null, &name##_value); \
-stack_level++;
+cg_scratch_var(CS, NULL, sem_type, &name, &name##_is_null, &name##_value); \
+CS->cg_c.stack_level++;
 
 // Release the buffers for the temporary, restore the stack level.
 #define CG_POP_TEMP(name) \
 CHARBUF_CLOSE(name##_value); \
 CHARBUF_CLOSE(name##_is_null); \
 CHARBUF_CLOSE(name); \
-stack_level--;
+CS->cg_c.stack_level--;
 
 // Make a scratch variable to hold the final result of an evaluation.
 // It may or may not be used.  It should be the first thing you put
@@ -126,21 +126,21 @@ stack_level--;
 // If you use this variable you can reclaim other temporaries that come
 // from deeper in the tree since they will no longer be needed.
 #define CG_RESERVE_RESULT_VAR(ast, sem_type) \
-int32_t stack_level_reserved = stack_level; \
+int32_t stack_level_reserved = CS->cg_c.stack_level; \
 sem_t sem_type_reserved = sem_type; \
 ast_node *ast_reserved = ast; \
 CHARBUF_OPEN(result_var); \
 CHARBUF_OPEN(result_var_is_null); \
 CHARBUF_OPEN(result_var_value); \
-stack_level++;
+CS->cg_c.stack_level++;
 
 // If the result variable is going to be used, this writes its name
 // and .value and .is_null into the is_null and value fields.
 #define CG_USE_RESULT_VAR() \
-int32_t stack_level_now = stack_level; \
-stack_level = stack_level_reserved; \
-cg_scratch_var(ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value); \
-stack_level = stack_level_now; \
+int32_t stack_level_now = CS->cg_c.stack_level; \
+CS->cg_c.stack_level = stack_level_reserved; \
+cg_scratch_var(CS, ast_reserved, sem_type_reserved, &result_var, &result_var_is_null, &result_var_value); \
+CS->cg_c.stack_level = stack_level_now; \
 Invariant(result_var.used > 1); \
 bprintf(is_null, "%s", result_var_is_null.ptr); \
 bprintf(value, "%s", result_var_value.ptr)
@@ -151,7 +151,7 @@ bprintf(value, "%s", result_var_value.ptr)
 // are captured in this result.  We know it was used if it
 // has .used > 1 (there is always a trailing null so empty is 1).
 #define CG_CLEANUP_RESULT_VAR() \
-if (result_var.used > 1) stack_level = stack_level_reserved + 1; \
+if (result_var.used > 1) CS->cg_c.stack_level = stack_level_reserved + 1; \
 CHARBUF_CLOSE(result_var_value); \
 CHARBUF_CLOSE(result_var_is_null); \
 CHARBUF_CLOSE(result_var);
@@ -174,10 +174,10 @@ CHARBUF_CLOSE(adjusted_target);
 
 #define CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, symbol_prefix, ...) \
 CHARBUF_OPEN(name); \
-cg_sym_name(rt->symbol_case, &name, symbol_prefix, ##__VA_ARGS__, NULL)
+cg_sym_name(CS, CS->rt->symbol_case, &name, symbol_prefix, ##__VA_ARGS__, NULL)
 
 #define CG_CHARBUF_OPEN_SYM(name, ...) \
-CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, rt->symbol_prefix, ##__VA_ARGS__)
+CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, CS->rt->symbol_prefix, ##__VA_ARGS__)
 
 // This is the symbol table for all the tokens.
 // This saves us from having a giant switch for the AST types
@@ -186,29 +186,44 @@ CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, rt->symbol_prefix, ##__VA_ARGS__)
 // Note: semantic analysis knows about more function than code-gen does
 // that's because many functions are only legal in the context of SQL
 // so we have no codegen for them.  But we do need to verify correctness.
-#define STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_ ## x)
-#define NO_OP_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_no_op)
-#define DDL_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_any_ddl_stmt)
-#define STD_DML_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_std_dml_exec_stmt)
-#define COMMON_STMT_INIT(x) symtab_add(cg_stmts, k_ast_ ## x, (void *)cg_common_ ## x)
-#define FUNC_INIT(x) symtab_add(cg_funcs, # x, (void *)cg_func_ ## x)
+static inline bool_t symtab_add_GenOneStmt(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, AstGenOneStmt _Nullable val_new)
+{
+    return symtab_add(CS, syms, sym_new, val_new);
+}
+
+typedef void (*cg_func_type)(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value);
+static inline bool_t symtab_add_CgFuncType(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_func_type _Nullable val_new)
+{
+    return symtab_add(CS, syms, sym_new, val_new);
+}
+
+#define STMT_INIT(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_ ## x)
+#define NO_OP_STMT_INIT(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_no_op)
+#define DDL_STMT_INIT(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_any_ddl_stmt)
+#define STD_DML_STMT_INIT(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_std_dml_exec_stmt)
+#define COMMON_STMT_INIT(x) symtab_add_GenOneStmt(CS, CS->cg_stmts, k_ast_ ## x, cg_common_ ## x)
+#define FUNC_INIT(x) symtab_add_CgFuncType(CS, CS->cg_funcs, # x, cg_func_ ## x)
 #define EXPR_INIT(x, func, str, pri_new) \
   static cg_expr_dispatch expr_disp_ ## x = { func, str, pri_new }; \
-  symtab_add(cg_exprs, k_ast_ ## x, (void *)&expr_disp_ ## x);
+  symtab_add_CgExprDispatch(CS, CS->cg_exprs, k_ast_ ## x, &expr_disp_ ## x);
 
-typedef void (*cg_expr_dispatch_func)(ast_node *_Nonnull ast,
+typedef void (*cg_expr_dispatch_func)(CqlState* CS, ast_node *_Nonnull ast,
                                       CSTR _Nonnull op,
                                       charbuf *_Nonnull is_null,
                                       charbuf *_Nonnull value,
                                       int32_t pri,
                                       int32_t pri_new);
-
 // for dispatching expression types
 typedef struct cg_expr_dispatch {
   cg_expr_dispatch_func _Nonnull func;
   CSTR _Nonnull str;
   int32_t pri_new;
 } cg_expr_dispatch;
+
+static inline bool_t symtab_add_CgExprDispatch(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_expr_dispatch _Nullable *val_new)
+{
+    return symtab_add(CS, syms, sym_new, val_new);
+}
 
 // Used by the cte_proc_context attribute in gen_sql_callbacks
 typedef struct {
@@ -218,45 +233,45 @@ typedef struct {
 
 // These are pre-loaded with pointers to functions for handling the
 // root statements and functions.
-cql_data_decl( symtab *_Nullable cg_stmts );
-cql_data_decl( symtab *_Nullable cg_funcs );
-cql_data_decl( symtab *_Nullable cg_exprs );
+//cql_data_decl( symtab *_Nullable CS->cg_stmts );
+//cql_data_decl( symtab *_Nullable CS->cg_funcs );
+//cql_data_decl( symtab *_Nullable CS->cg_exprs );
 
 // Several code generators track the nesting level of their blocks for
 // various purposes, mostly indenting and diagnostic output.
-cql_data_decl( int32_t stmt_nesting_level );
+//cql_data_decl( int32_t CS->stmt_nesting_level );
 
 // This is the first of two major outputs, this one holds the .h file output
 // it will get the prototypes of all the functions we generate.
-cql_data_decl( charbuf *_Nullable cg_header_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_header_output );
 
 // This is current place where statements should be going.  It begins
 // as a buffer that holds the original.c file but it is normal for this
 // to get temporarily redirected into other places, such as the body of
 // a stored proc.
-cql_data_decl( charbuf *_Nullable cg_main_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_main_output );
 
 // This will spill into the main buffer at the end.  String literals go here.
-cql_data_decl( charbuf *_Nullable cg_constants_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_constants_output );
 
 // This will spill into the main buffer at the end.  Extern declarations go here
-cql_data_decl( charbuf *_Nullable cg_fwd_ref_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_fwd_ref_output );
 
 // All local variable declarations are hoisted to the front of the resulting C.
 // This prevents C lexical scoping from affecting SQL scoping rules.
-cql_data_decl( charbuf *_Nullable cg_declarations_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_declarations_output );
 
 // Scratch variables go into their own section and will go out adjacent to
 // local variable declarations.
-cql_data_decl( charbuf *_Nullable cg_scratch_vars_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_scratch_vars_output );
 
 // Any on-exit cleanup goes here. This is going to be the code to finalize
 // any sql statements that were generated and also to release any strings
 // we were holding on to.
-cql_data_decl( charbuf *_Nullable cg_cleanup_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_cleanup_output );
 
 // The definitions of all of the statement pieces go into this section
-cql_data_decl( charbuf *_Nullable cg_pieces_output );
+//cql_data_decl( charbuf *_Nullable CS->cg_pieces_output );
 
 // Prints a symbol name, along with any configured prefix, to the specified buffer.
 // Multiple CSTRs may be supplied to build the name, which will be concatenated
@@ -264,37 +279,37 @@ cql_data_decl( charbuf *_Nullable cg_pieces_output );
 // The prefix will be included as specified.
 //
 // All input names are assumed to be in snake case already.
-cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...);
+cql_noexport void cg_sym_name(CqlState* CS, cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...);
 
 // Initializes all of the common buffers and sym tables.
-cql_noexport void cg_common_init(void);
+cql_noexport void cg_common_init(CqlState* CS);
 
 // cleanup the global state
-cql_noexport void cg_common_cleanup(void);
+cql_noexport void cg_common_cleanup(CqlState* CS);
 
 // Exit if any semantic errors
-cql_noexport void cql_exit_on_semantic_errors(ast_node *_Nullable head);
+cql_noexport void cql_exit_on_semantic_errors(CqlState* CS, ast_node *_Nullable head);
 
 // Exit if no global proc name specified
-cql_noexport void exit_on_no_global_proc(void);
+cql_noexport void exit_on_no_global_proc(CqlState* CS);
 
 // For the common case of "semantic-only" nodes
-cql_noexport void cg_no_op(ast_node *_Nonnull ast);
+cql_noexport void cg_no_op(CqlState* CS, ast_node *_Nonnull ast);
 
 // For expanding select *
-cql_noexport bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
+cql_noexport bool_t cg_expand_star(CqlState* CS, ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
 
 cql_noexport int32_t cg_find_first_line(ast_node *_Nonnull ast);
 
 // blob config helpers
-cql_noexport void cg_common_blob_get_key_type_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_get_val_type_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_get_key_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_get_val_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_create_key_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_create_val_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_update_key_stmt(ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_update_val_stmt(ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_key_type_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_val_type_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_key_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_val_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_create_key_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_create_val_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_update_key_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_update_val_stmt(CqlState* CS, ast_node *_Nonnull ast);
 
 typedef struct cg_blob_mappings_struct {
   CSTR _Nullable blob_get_key_type;
@@ -313,7 +328,7 @@ typedef struct cg_blob_mappings_struct {
   bool_t blob_update_val_use_offsets;
 } cg_blob_mappings_t;
 
-cql_data_decl( cg_blob_mappings_t *_Nullable cg_blob_mappings );
+//cql_data_decl( cg_blob_mappings_t *_Nullable CS->cg_blob_mappings );
 
 // Hashing helpers
 
@@ -322,6 +337,6 @@ cql_noexport int64_t sha256_charbuf(charbuf *_Nonnull input);
 
 // name foratting helpers
 
-cql_noexport void cg_emit_name(charbuf *_Nonnull output, CSTR _Nonnull name, bool_t qid);
-cql_noexport void cg_emit_name_ast(charbuf *_Nonnull output, ast_node *_Nonnull name_ast);
-cql_noexport void cg_emit_sptr_index(charbuf *_Nonnull output, sem_struct *_Nonnull sptr, uint32_t i);
+cql_noexport void cg_emit_name(CqlState* CS, charbuf *_Nonnull output, CSTR _Nonnull name, bool_t qid);
+cql_noexport void cg_emit_name_ast(CqlState* CS, charbuf *_Nonnull output, ast_node *_Nonnull name_ast);
+cql_noexport void cg_emit_sptr_index(CqlState* CS, charbuf *_Nonnull output, sem_struct *_Nonnull sptr, uint32_t i);

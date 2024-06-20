@@ -134,7 +134,7 @@ cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
 cql_bool cql_string_equal(cql_string_ref _Nullable s1, cql_string_ref _Nullable s2);
 int cql_string_like(cql_string_ref _Nonnull s1, cql_string_ref _Nonnull s2);
 #define cql_alloc_cstr(cstr, str) const char *_Nonnull cstr = (str)->ptr
-#define cql_free_cstr(cstr, str) 0
+#define cql_free_cstr(cstr, str)
 
 // builtin result set
 typedef struct cql_result_set *cql_result_set_ref;

@@ -9,4 +9,4 @@
 
 #include "cql.h"
 
-cql_noexport void cg_objc_main(struct ast_node *root);
+cql_noexport void cg_objc_main(CqlState* CS, struct ast_node *root);

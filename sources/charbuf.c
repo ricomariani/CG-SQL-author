@@ -7,32 +7,33 @@
 
 #include "cql.h"
 #include "charbuf.h"
+#include "cql_state.h"
 
-cql_data_defn( int32_t charbuf_open_count );
-cql_data_defn( pending_charbuf *__charbufs_in_flight; )
+//cql_data_defn( int32_t charbuf_open_count );
+//cql_data_defn( pending_charbuf *__charbufs_in_flight; )
 
-cql_noexport void release_open_charbufs() {
-  while (__charbufs_in_flight) {
-    bclose(__charbufs_in_flight->buf);
-    __charbufs_in_flight = __charbufs_in_flight->prev;
+cql_noexport void release_open_charbufs(CqlState* CS) {
+  while (CS->__charbufs_in_flight) {
+    bclose(CS, CS->__charbufs_in_flight->buf);
+    CS->__charbufs_in_flight = CS->__charbufs_in_flight->prev;
   }
 }
 
-cql_noexport void bopen(charbuf* b) {
+cql_noexport void bopen(CqlState* CS, charbuf* b) {
   b->max = CHARBUF_INTERNAL_SIZE;
   b->ptr = &b->internal[0];
   bclear(b);
-  charbuf_open_count++;
+  CS->charbuf_open_count++;
 }
 
-cql_noexport void bclose(charbuf *b) {
+cql_noexport void bclose(CqlState* CS, charbuf *b) {
   if (b->ptr != &b->internal[0]) {
     free(b->ptr);
   }
   b->ptr = NULL;
   b->max = 0;
   b->used = 0;
-  charbuf_open_count--;
+  CS->charbuf_open_count--;
 }
 
 cql_noexport void bclear(charbuf *b) {
@@ -83,13 +84,13 @@ cql_noexport void bprintf(charbuf *b, const char *format, ...) {
  va_end(args);
 }
 
-cql_noexport CSTR dup_printf(const char *format, ...) {
+cql_noexport CSTR dup_printf(CqlState* CS, const char *format, ...) {
  CSTR result;
  va_list args;
  va_start(args, format);
  CHARBUF_OPEN(tmp);
  vbprintf(&tmp, format, args);
- result = Strdup(tmp.ptr);
+ result = Strdup(CS, tmp.ptr);
  CHARBUF_CLOSE(tmp);
  va_end(args);
  return result;
@@ -117,7 +118,7 @@ cql_noexport void bputc(charbuf *b, char c) {
  b->ptr[b->used++] = 0; // put a new null in place, for sure room for this
 }
 
-cql_noexport void bindent(charbuf *output, charbuf *input, int32_t indent) {
+cql_noexport void bindent(CqlState* CS, charbuf *output, charbuf *input, int32_t indent) {
   if (indent == 0) {
     bprintf(output, "%s", input->ptr);
     return;

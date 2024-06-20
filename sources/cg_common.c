@@ -9,10 +9,10 @@
 
 // minimal stubs to avoid link errors
 
-cql_noexport void cg_common_cleanup() {}
-void cql_exit_on_semantic_errors(ast_node *head) {}
+cql_noexport void cg_common_cleanup(CS) {}
+void cql_exit_on_semantic_errors(CS, ast_node *head) {}
 
-cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
+//cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 
 #else
 
@@ -21,20 +21,21 @@ cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 #include "sem.h"
 #include "symtab.h"
 #include "encoders.h"
+#include "cql_state.h"
 
 // Storage declarations
-cql_data_defn( symtab *_Nullable cg_stmts );
-cql_data_defn( symtab *_Nullable cg_funcs );
-cql_data_defn( symtab *_Nullable cg_exprs );
-cql_data_defn( charbuf *_Nullable cg_header_output );
-cql_data_defn( charbuf *_Nullable cg_main_output );
-cql_data_defn( charbuf *_Nullable cg_fwd_ref_output );
-cql_data_defn( charbuf *_Nullable cg_constants_output );
-cql_data_defn( charbuf *_Nullable cg_declarations_output );
-cql_data_defn( charbuf *_Nullable cg_scratch_vars_output );
-cql_data_defn( charbuf *_Nullable cg_cleanup_output );
-cql_data_defn( charbuf *_Nullable cg_pieces_output );
-cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
+//cql_data_defn( symtab *_Nullable cg_stmts );
+//cql_data_defn( symtab *_Nullable cg_funcs );
+//cql_data_defn( symtab *_Nullable cg_exprs );
+//cql_data_defn( charbuf *_Nullable cg_header_output );
+//cql_data_defn( charbuf *_Nullable cg_main_output );
+//cql_data_defn( charbuf *_Nullable cg_fwd_ref_output );
+//cql_data_defn( charbuf *_Nullable cg_constants_output );
+//cql_data_defn( charbuf *_Nullable cg_declarations_output );
+//cql_data_defn( charbuf *_Nullable cg_scratch_vars_output );
+//cql_data_defn( charbuf *_Nullable cg_cleanup_output );
+//cql_data_defn( charbuf *_Nullable cg_pieces_output );
+//cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 
 
 // Prints a symbol name, along with any configured prefix, to the specified buffer.
@@ -43,7 +44,7 @@ cql_data_defn( cg_blob_mappings_t *_Nullable cg_blob_mappings );
 // The prefix will be included as specified.
 //
 // All input names are assumed to be in snake case already.
-cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
+cql_noexport void cg_sym_name(CqlState* CS, cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
 {
   // Print the prefix first
   bprintf(output, "%s", symbol_prefix);
@@ -91,50 +92,50 @@ cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull outp
 // that will be used across multiple functions
 #define ALLOC_AND_OPEN_CHARBUF_REF(x) \
   (x) = (charbuf *)calloc(1, sizeof(charbuf)); \
-  bopen(x);
+  bopen(CS, x);
 
 // and here's the cleanup for the durable buffer
-#define CLEANUP_CHARBUF_REF(x) if (x) { bclose(x); free(x);  x = NULL; }
+#define CLEANUP_CHARBUF_REF(x) if (x) { bclose(CS, x); free(x);  x = NULL; }
 
-cql_noexport void cg_common_init(void)
+cql_noexport void cg_common_init(CqlState* CS)
 {
   // All of these will leak, but we don't care.  The tool will shut down after running cg, so it is pointless to clean
   // up after ourselves here.
-  cg_stmts = symtab_new();
-  cg_funcs = symtab_new();
-  cg_exprs = symtab_new();
+  CS->cg_stmts = symtab_new();
+  CS->cg_funcs = symtab_new();
+  CS->cg_exprs = symtab_new();
 
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_header_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_main_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_fwd_ref_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_constants_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_declarations_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_scratch_vars_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_cleanup_output);
-  ALLOC_AND_OPEN_CHARBUF_REF(cg_pieces_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_header_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_main_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_fwd_ref_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_constants_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_declarations_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_scratch_vars_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_cleanup_output);
+  ALLOC_AND_OPEN_CHARBUF_REF(CS->cg_pieces_output);
 
-  cg_blob_mappings = calloc(1, sizeof(cg_blob_mappings_t));
+  CS->cg_blob_mappings = calloc(1, sizeof(cg_blob_mappings_t));
 
   // Default mappings, these are going to be overwritten almost certainly
   // but we need some not null default or else everywhere the mapping code
   // will have to deal with nulls.
-  cg_blob_mappings->blob_get_key_type = "bgetkey_type";
-  cg_blob_mappings->blob_get_val_type = "bgetval_type";
-  cg_blob_mappings->blob_get_key = "bgetkey";
-  cg_blob_mappings->blob_get_key_use_offsets = true;
-  cg_blob_mappings->blob_get_val = "bgetval";
-  cg_blob_mappings->blob_create_key = "bcreatekey";
-  cg_blob_mappings->blob_create_key_use_offsets = true;
-  cg_blob_mappings->blob_create_val = "bcreateval";
-  cg_blob_mappings->blob_update_key = "bupdatekey";
-  cg_blob_mappings->blob_update_key_use_offsets = true;
-  cg_blob_mappings->blob_update_val = "bupdateval";
+  CS->cg_blob_mappings->blob_get_key_type = "bgetkey_type";
+  CS->cg_blob_mappings->blob_get_val_type = "bgetval_type";
+  CS->cg_blob_mappings->blob_get_key = "bgetkey";
+  CS->cg_blob_mappings->blob_get_key_use_offsets = true;
+  CS->cg_blob_mappings->blob_get_val = "bgetval";
+  CS->cg_blob_mappings->blob_create_key = "bcreatekey";
+  CS->cg_blob_mappings->blob_create_key_use_offsets = true;
+  CS->cg_blob_mappings->blob_create_val = "bcreateval";
+  CS->cg_blob_mappings->blob_update_key = "bupdatekey";
+  CS->cg_blob_mappings->blob_update_key_use_offsets = true;
+  CS->cg_blob_mappings->blob_update_val = "bupdateval";
 
-  if (rt->cql_post_common_init) rt->cql_post_common_init();
+  if (CS->rt->cql_post_common_init) CS->rt->cql_post_common_init();
 }
 
 // lots of AST nodes require no action -- this guy is very good at that.
-cql_noexport void cg_no_op(ast_node * ast) {
+cql_noexport void cg_no_op(CqlState* CS, ast_node * ast) {
 }
 
 // If there is a semantic error, we should not proceed with code generation.
@@ -142,10 +143,10 @@ cql_noexport void cg_no_op(ast_node * ast) {
 // to be pristine in memory usage because the amalgam version of the compiler
 // does not necessarily exit when it's done. It might be used in a long running
 // process, like VSCode, and we don't want to leak memory.
-cql_noexport void cql_exit_on_semantic_errors(ast_node *head) {
+cql_noexport void cql_exit_on_semantic_errors(CqlState* CS, ast_node *head) {
   if (head && is_error(head)) {
-    cql_error("semantic errors present; no code gen.\n");
-    cql_cleanup_and_exit(1);
+    cql_error(CS, "semantic errors present; no code gen.\n");
+    cql_cleanup_and_exit(CS, 1);
   }
 }
 
@@ -154,10 +155,10 @@ cql_noexport void cql_exit_on_semantic_errors(ast_node *head) {
 // for instance the CQL unit test pattern relies on global code to make the tests run.
 // If there is no procedure name for the global code then we have a problem.  We
 // can't proceed.
-cql_noexport void exit_on_no_global_proc() {
-  if (!global_proc_name) {
-    cql_error("There are global statements but no global proc name was specified (use --global_proc)\n");
-    cql_cleanup_and_exit(1);
+cql_noexport void exit_on_no_global_proc(CqlState* CS) {
+  if (!CS->global_proc_name) {
+    cql_error(CS, "There are global statements but no global proc name was specified (use --global_proc)\n");
+    cql_cleanup_and_exit(CS, 1);
   }
 }
 
@@ -194,7 +195,7 @@ cql_noexport void exit_on_no_global_proc() {
 // |         | {select_expr_list_con}: select: { A: integer variable }
 // |           | {select_expr_list}: select: { A: integer variable }
 // |           | | ...
-bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer) {
+bool_t cg_expand_star(CqlState* CS, ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer) {
   Contract(is_ast_star(ast) || is_ast_table_star(ast));
   Contract(ast->sem);
   Contract(!is_error(ast));  // already "ok" at least
@@ -230,7 +231,7 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         }
         else {
           bprintf(buffer, "[");
-          cg_unquote_encoded_qstr(buffer, sptr->names[i]);
+          cg_unquote_encoded_qstr(CS, buffer, sptr->names[i]);
           bprintf(buffer, "]");
         }
       }
@@ -249,7 +250,7 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         }
         first = false;
 
-        if (keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
+        if (CS->sem.keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
           // In case of QID the table alias is already encoded and ready to use
           // It's like that because it is always of the from "[table table_name as some_alias]"
           // so we decode the QID stuff when we make the alias
@@ -258,7 +259,7 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         } else {
           if (is_qid(ast->left)) {
             bprintf(buffer, "[");
-            cg_unquote_encoded_qstr(buffer, ast->sem->name);
+            cg_unquote_encoded_qstr(CS, buffer, ast->sem->name);
             bprintf(buffer, "]");
           }
           else {
@@ -273,7 +274,7 @@ bool_t cg_expand_star(ast_node *_Nonnull ast, void *_Nullable context, charbuf *
         }
         else {
           bprintf(buffer, "[");
-          cg_unquote_encoded_qstr(buffer, sptr->names[i]);
+          cg_unquote_encoded_qstr(CS, buffer, sptr->names[i]);
           bprintf(buffer, "]");
         }
       }
@@ -328,72 +329,72 @@ int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
   return line;
 }
 
-cql_noexport void cg_common_blob_get_key_type_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_get_key_type_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  cg_blob_mappings->blob_get_key_type = name;
+  CS->cg_blob_mappings->blob_get_key_type = name;
 }
 
-cql_noexport void cg_common_blob_get_val_type_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_get_val_type_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  cg_blob_mappings->blob_get_val_type = name;
+  CS->cg_blob_mappings->blob_get_val_type = name;
 }
 
-cql_noexport void cg_common_blob_get_key_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_get_key_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  cg_blob_mappings->blob_get_key = name;
-  cg_blob_mappings->blob_get_key_use_offsets = !!offset;
+  CS->cg_blob_mappings->blob_get_key = name;
+  CS->cg_blob_mappings->blob_get_key_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_get_val_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_get_val_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  cg_blob_mappings->blob_get_val = name;
-  cg_blob_mappings->blob_get_val_use_offsets = !!offset;
+  CS->cg_blob_mappings->blob_get_val = name;
+  CS->cg_blob_mappings->blob_get_val_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_create_key_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_create_key_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_create_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  cg_blob_mappings->blob_create_key = name;
-  cg_blob_mappings->blob_create_key_use_offsets = !!offset;
+  CS->cg_blob_mappings->blob_create_key = name;
+  CS->cg_blob_mappings->blob_create_key_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_create_val_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_create_val_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_create_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  cg_blob_mappings->blob_create_val = name;
-  cg_blob_mappings->blob_create_val_use_offsets = !!offset;
+  CS->cg_blob_mappings->blob_create_val = name;
+  CS->cg_blob_mappings->blob_create_val_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_update_key_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_update_key_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_update_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  cg_blob_mappings->blob_update_key = name;
-  cg_blob_mappings->blob_update_key_use_offsets = !!offset;
+  CS->cg_blob_mappings->blob_update_key = name;
+  CS->cg_blob_mappings->blob_update_key_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_update_val_stmt(ast_node *ast) {
+cql_noexport void cg_common_blob_update_val_stmt(CqlState* CS, ast_node *ast) {
   Contract(is_ast_blob_update_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  cg_blob_mappings->blob_update_val = name;
-  cg_blob_mappings->blob_update_val_use_offsets = !!offset;
+  CS->cg_blob_mappings->blob_update_val = name;
+  CS->cg_blob_mappings->blob_update_val_use_offsets = !!offset;
 }
 
 // What's going on here is that the AST is generated on REDUCE operations.
@@ -408,9 +409,9 @@ cql_noexport int32_t cg_find_first_line(ast_node *ast) {
   return cg_find_first_line_recursive(ast, ast->filename);
 }
 
-cql_noexport void cg_emit_name(charbuf *output, CSTR name, bool_t qid) {
+cql_noexport void cg_emit_name(CqlState* CS, charbuf *output, CSTR name, bool_t qid) {
   if (qid) {
-    cg_decode_qstr(output, name);
+    cg_decode_qstr(CS, output, name);
   }
   else {
     bprintf(output, "%s", name);
@@ -418,31 +419,41 @@ cql_noexport void cg_emit_name(charbuf *output, CSTR name, bool_t qid) {
 }
 
 // emit a name or a quoted name as needed
-cql_noexport void cg_emit_name_ast(charbuf *output, ast_node *name_ast) {
+cql_noexport void cg_emit_name_ast(CqlState* CS, charbuf *output, ast_node *name_ast) {
   EXTRACT_STRING(name, name_ast);
-  cg_emit_name(output, name, is_qid(name_ast));
+  cg_emit_name(CS, output, name, is_qid(name_ast));
 }
 
-cql_noexport void cg_emit_sptr_index(charbuf *output, sem_struct *sptr, uint32_t i) {
-  cg_emit_name(output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
+cql_noexport void cg_emit_sptr_index(CqlState* CS, charbuf *output, sem_struct *sptr, uint32_t i) {
+  cg_emit_name(CS, output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
-cql_noexport void cg_common_cleanup() {
-  SYMTAB_CLEANUP(cg_stmts);
-  SYMTAB_CLEANUP(cg_funcs);
-  SYMTAB_CLEANUP(cg_exprs);
+cql_noexport void cg_common_cleanup(CqlState* CS) {
+  SYMTAB_CLEANUP(CS->cg_stmts);
+  SYMTAB_CLEANUP(CS->cg_funcs);
+  SYMTAB_CLEANUP(CS->cg_exprs);
 
-  CLEANUP_CHARBUF_REF(cg_header_output);
-  CLEANUP_CHARBUF_REF(cg_main_output);
-  CLEANUP_CHARBUF_REF(cg_fwd_ref_output);
-  CLEANUP_CHARBUF_REF(cg_constants_output);
-  CLEANUP_CHARBUF_REF(cg_declarations_output);
-  CLEANUP_CHARBUF_REF(cg_scratch_vars_output);
-  CLEANUP_CHARBUF_REF(cg_cleanup_output);
-  CLEANUP_CHARBUF_REF(cg_pieces_output)
+  CLEANUP_CHARBUF_REF(CS->cg_header_output);
+  CLEANUP_CHARBUF_REF(CS->cg_main_output);
+  CLEANUP_CHARBUF_REF(CS->cg_fwd_ref_output);
+  CLEANUP_CHARBUF_REF(CS->cg_constants_output);
+  CLEANUP_CHARBUF_REF(CS->cg_declarations_output);
+  CLEANUP_CHARBUF_REF(CS->cg_scratch_vars_output);
+  CLEANUP_CHARBUF_REF(CS->cg_cleanup_output);
+  CLEANUP_CHARBUF_REF(CS->cg_pieces_output)
 
-  free(cg_blob_mappings);
-  cg_blob_mappings = 0;
+  free(CS->cg_blob_mappings);
+  CS->cg_blob_mappings = 0;
+}
+
+CqlState* cql_new_state() {
+    CqlState *cs = _new(CqlState);
+    memset(cs, 0, sizeof(CqlState));
+    return cs; 
+}
+
+void cql_free_state(CqlState* CS) {
+    free(CS);
 }
 
 #endif

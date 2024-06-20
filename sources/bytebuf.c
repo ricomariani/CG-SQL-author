@@ -17,7 +17,7 @@ cql_noexport void bytebuf_open(bytebuf *_Nonnull buf) {
 // The close operation releases any allocated memory
 // Note that bytebuf itself is most often on the stack so it's not freed
 // if the bytebuf was allocated it's owned by whoever allocated it.
-cql_noexport void bytebuf_close(bytebuf *_Nonnull buf) {
+cql_noexport void bytebuf_close(CqlState* CS, bytebuf *_Nonnull buf) {
   free(buf->ptr);
   buf->max = 0;
   buf->ptr = NULL;

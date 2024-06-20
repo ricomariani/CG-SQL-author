@@ -9,4 +9,4 @@
  * Run all known CQL unit test. Crashes and prints an error message if any
  * of the tests fails.
  */
-cql_noexport void run_unit_tests(void);
+cql_noexport void run_unit_tests(CqlState* CS);

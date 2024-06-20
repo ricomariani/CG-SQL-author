@@ -27,11 +27,11 @@ cql_noexport void run_unit_tests(CS) {}
 #define TEST_ASSERT assert
 #define STR_EQ(s1, s2) strcmp(s1, s2) == 0
 
-cql_noexport void cg_c_init(CqlState* CS);
-cql_noexport void cg_c_cleanup(CqlState* CS);
-cql_noexport uint32_t cg_statement_pieces(CqlState* CS, CSTR in, charbuf *output);
+cql_noexport void cg_c_init(CqlState* _Nonnull CS);
+cql_noexport void cg_c_cleanup(CqlState* _Nonnull CS);
+cql_noexport uint32_t cg_statement_pieces(CqlState* _Nonnull CS, CSTR in, charbuf *output);
 
-static bool test_frag_tricky_case(CqlState* CS) {
+static bool test_frag_tricky_case(CqlState* _Nonnull CS) {
   CS->options.compress = 1;
   CHARBUF_OPEN(tmp);
   cg_c_init(CS);
@@ -44,19 +44,19 @@ static bool test_frag_tricky_case(CqlState* CS) {
   return count == 2;
 }
 
-static bool test_Strdup__empty_string(CqlState* CS) {
+static bool test_Strdup__empty_string(CqlState* _Nonnull CS) {
   char* str_copy = Strdup(CS, "");
   bool result = STR_EQ(str_copy, "");
   return result;
 }
 
-static bool test_Strdup__one_character_string(CqlState* CS) {
+static bool test_Strdup__one_character_string(CqlState* _Nonnull CS) {
   char* str_copy = Strdup(CS, "a");
   bool result = STR_EQ(str_copy, "a");
   return result;
 }
 
-static bool test_Strdup__long_string(CqlState* CS) {
+static bool test_Strdup__long_string(CqlState* _Nonnull CS) {
   char* str_copy = Strdup(CS, "abcd");
   bool result = STR_EQ(str_copy, "abcd");
   return result;
@@ -146,7 +146,7 @@ static bool test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result
   return Strncasecmp("Aac", "aaB", 2) == 0;
 }
 
-static bool test_sha256_example1(CqlState* CS) {
+static bool test_sha256_example1(CqlState* _Nonnull CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "Foo:x:String");
   bool result = sha256_charbuf(&temp) == -5028419846961717871L;
@@ -154,7 +154,7 @@ static bool test_sha256_example1(CqlState* CS) {
   return result;
 }
 
-static bool test_sha256_example2(CqlState* CS) {
+static bool test_sha256_example2(CqlState* _Nonnull CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "id:?Int64");
   bool result = sha256_charbuf(&temp) == -9155171551243524439L;
@@ -162,7 +162,7 @@ static bool test_sha256_example2(CqlState* CS) {
   return result;
 }
 
-static bool test_sha256_example3(CqlState* CS) {
+static bool test_sha256_example3(CqlState* _Nonnull CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "x:String");
   bool result = sha256_charbuf(&temp) == -6620767298254076690L;
@@ -170,7 +170,7 @@ static bool test_sha256_example3(CqlState* CS) {
   return result;
 }
 
-static bool test_sha256_example4(CqlState* CS) {
+static bool test_sha256_example4(CqlState* _Nonnull CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "fooBar:?Int64");
   bool result = sha256_charbuf(&temp) == -6345014076009057275L;
@@ -178,7 +178,7 @@ static bool test_sha256_example4(CqlState* CS) {
   return result;
 }
 
-static bool test_sha256_example5(CqlState* CS) {
+static bool test_sha256_example5(CqlState* _Nonnull CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.");
   bool result = sha256_charbuf(&temp) == -8121930428982087348L;
@@ -186,7 +186,7 @@ static bool test_sha256_example5(CqlState* CS) {
   return result;
 }
 
-static bool test_sha256_example6(CqlState* CS) {
+static bool test_sha256_example6(CqlState* _Nonnull CS) {
   CHARBUF_OPEN(temp);
   bprintf(&temp, "XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.XXXXXXXXX.123456789");
   bool result = sha256_charbuf(&temp) ==  -4563262961718308998L;
@@ -194,7 +194,7 @@ static bool test_sha256_example6(CqlState* CS) {
   return result;
 }
 
-cql_noexport void run_unit_tests(CqlState* CS) {
+cql_noexport void run_unit_tests(CqlState* _Nonnull CS) {
   TEST_ASSERT(test_Strdup__empty_string(CS));
   TEST_ASSERT(test_Strdup__one_character_string(CS));
   TEST_ASSERT(test_Strdup__long_string(CS));

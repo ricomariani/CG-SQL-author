@@ -29,13 +29,13 @@ cql_noexport void cg_schema_sqlite_main(CS, ast_node *head) {}
 #include "encoders.h"
 #include "cql_state.h"
 
-static void cg_generate_schema_by_mode(CqlState* CS, charbuf *output, int32_t mode);
-static void cg_generate_baseline_tables(CqlState* CS, charbuf *output);
-static void cg_schema_emit_baseline_tables_proc(CqlState* CS, charbuf *output, charbuf *baseline);
-static void cg_schema_manage_views(CqlState* CS, charbuf *output, int32_t *drops, int32_t *creates);
-static void cg_schema_manage_triggers(CqlState* CS, charbuf *output, int32_t *drops, int32_t *creates);
-static void cg_schema_manage_indices(CqlState* CS, charbuf *output, int32_t *drops, int32_t *creates);
-static void cg_schema_manage_recreate_tables(CqlState* CS, charbuf *output, charbuf *decls, recreate_annotation *recreates, size_t count);
+static void cg_generate_schema_by_mode(CqlState* _Nonnull CS, charbuf *output, int32_t mode);
+static void cg_generate_baseline_tables(CqlState* _Nonnull CS, charbuf *output);
+static void cg_schema_emit_baseline_tables_proc(CqlState* _Nonnull CS, charbuf *output, charbuf *baseline);
+static void cg_schema_manage_views(CqlState* _Nonnull CS, charbuf *output, int32_t *drops, int32_t *creates);
+static void cg_schema_manage_triggers(CqlState* _Nonnull CS, charbuf *output, int32_t *drops, int32_t *creates);
+static void cg_schema_manage_indices(CqlState* _Nonnull CS, charbuf *output, int32_t *drops, int32_t *creates);
+static void cg_schema_manage_recreate_tables(CqlState* _Nonnull CS, charbuf *output, charbuf *decls, recreate_annotation *recreates, size_t count);
 
 // We declare all schema we might depend on in this upgrade (this is the include list)
 // e.g. we need all our dependent tables so that we can legally use them in an FK
@@ -61,7 +61,7 @@ static void cg_schema_manage_recreate_tables(CqlState* CS, charbuf *output, char
 // state as we move through the upgrade process.
 #define SCHEMA_FLAG_UNSUB SEM_TYPE_NOTNULL
 
-static void cg_schema_name_as_cql_string(CqlState* CS, charbuf *output, ast_node *ast) {
+static void cg_schema_name_as_cql_string(CqlState* _Nonnull CS, charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   if (is_qid(ast)) {
     cg_decode_qstr(CS, output, name);
@@ -71,7 +71,7 @@ static void cg_schema_name_as_cql_string(CqlState* CS, charbuf *output, ast_node
   }
 }
 
-static void cg_schema_name_quoted(CqlState* CS, charbuf *output, ast_node *ast) {
+static void cg_schema_name_quoted(CqlState* _Nonnull CS, charbuf *output, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   CHARBUF_OPEN(tmp);
   if (is_qid(ast)) {
@@ -91,7 +91,7 @@ static void cg_schema_name_quoted(CqlState* CS, charbuf *output, ast_node *ast) 
 // If the mode is SCHEMA_TO_UPGRADE then we include the above but we reject
 // anything on the exclude list.  That list corresponds to things that are upgraded
 // elsewhere.
-static bool_t include_from_region(CqlState* CS, CSTR region, int32_t mode) {
+static bool_t include_from_region(CqlState* _Nonnull CS, CSTR region, int32_t mode) {
 
   // if the object is in no region then we only include it if included regions is unconstrained.
   // a no-region object can't be excluded, so this test is all we need for no region objects.
@@ -182,7 +182,7 @@ static int recreate_comparator(const void *v1, const void *v2) {
 
 // Emit the template for ending the upgrade to a particular schema version.
 static void cg_schema_end_version(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   charbuf *output,
   charbuf *upgrade,
   charbuf *pending,
@@ -208,7 +208,7 @@ static void cg_schema_end_version(
 
 // This is the callback method handed to the gen_ method that creates SQL for us
 // it will call us every time it a col definition to give us a chance to suppress it
-static bool_t cg_suppress_new_col_def(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_suppress_new_col_def(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   Contract(is_ast_col_def(ast));
   Contract(ast->sem);
 
@@ -219,13 +219,13 @@ static bool_t cg_suppress_new_col_def(CqlState* CS, ast_node *ast, void *context
 
 // This is the callback method handed to the gen_ method to force a
 // IF NOT EXISTS qualifier on create table statements.
-static bool_t cg_schema_force_if_not_exists(CqlState* CS, ast_node *ast, void *context, charbuf *output) {
+static bool_t cg_schema_force_if_not_exists(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *output) {
   bprintf(output, "IF NOT EXISTS ");
   return true;
 }
 
 // Emit the helper procedures for the upgrade
-static void cg_schema_helpers(CqlState* CS, charbuf *decls) {
+static void cg_schema_helpers(CqlState* _Nonnull CS, charbuf *decls) {
   bprintf(decls, "-- facets table declaration --\n");
   bprintf(decls, "CREATE TABLE IF NOT EXISTS %s_cql_schema_facets(\n", CS->global_proc_name);
   bprintf(decls, "  facet TEXT NOT NULL PRIMARY KEY,\n");
@@ -352,7 +352,7 @@ static void cg_schema_helpers(CqlState* CS, charbuf *decls) {
 }
 
 // Emit the delcaration of the sqlite_master table so we can read from it.
-static void cg_schema_emit_sqlite_master(CqlState* CS, charbuf *decls) {
+static void cg_schema_emit_sqlite_master(CqlState* _Nonnull CS, charbuf *decls) {
   bprintf(decls, "-- declare sqlite_master -- \n");
   bprintf(decls, "CREATE TABLE sqlite_master (\n");
   bprintf(decls, "  type TEXT NOT NULL,\n");          // The type of database object such as table, index, trigger or view.
@@ -362,7 +362,7 @@ static void cg_schema_emit_sqlite_master(CqlState* CS, charbuf *decls) {
   bprintf(decls, "  sql TEXT\n);\n\n");      // the DDL to CREATE this object
 }
 
-static void cg_schema_emit_facet_functions(CqlState* CS, charbuf *decls) {
+static void cg_schema_emit_facet_functions(CqlState* _Nonnull CS, charbuf *decls) {
   bprintf(decls, "-- declare facet helpers-- \n");
   bprintf(decls, "DECLARE facet_data TYPE OBJECT<facet_data>;\n");
   bprintf(decls, "DECLARE %s_facets facet_data;\n", CS->global_proc_name);
@@ -372,7 +372,7 @@ static void cg_schema_emit_facet_functions(CqlState* CS, charbuf *decls) {
   bprintf(decls, "DECLARE FUNCTION cql_facet_find(facets facet_data, facet TEXT NOT NULL) LONG NOT NULL;\n\n");
 }
 
-static void cg_schema_emit_recreate_update_functions(CqlState* CS, charbuf *decls) {
+static void cg_schema_emit_recreate_update_functions(CqlState* _Nonnull CS, charbuf *decls) {
   bprintf(decls, "-- declare recreate update helpers-- \n");
   bprintf(decls, "DECLARE PROCEDURE cql_rebuild_recreate_group (tables TEXT NOT NULL, indices TEXT NOT NULL, deletes TEXT NOT NULL, out result BOOL NOT NULL) USING TRANSACTION;\n");
 }
@@ -381,7 +381,7 @@ static void cg_schema_emit_recreate_update_functions(CqlState* CS, charbuf *decl
 // Note these items correspond to create version -1 (no annotation)
 // See cg_generate_baseline_tables for more details on which tables are included
 // (e.g. not temp, not @recreate)
-static void cg_schema_emit_baseline_tables_proc(CqlState* CS, charbuf *output, charbuf *baseline) {
+static void cg_schema_emit_baseline_tables_proc(CqlState* _Nonnull CS, charbuf *output, charbuf *baseline) {
   cg_generate_baseline_tables(CS, baseline);
 
   if (baseline->used > 1 && CS->options.min_schema_version == 0) {
@@ -393,7 +393,7 @@ static void cg_schema_emit_baseline_tables_proc(CqlState* CS, charbuf *output, c
 }
 
 // Emit all temp schema
-static bool_t cg_schema_emit_temp_schema_proc(CqlState* CS, charbuf *output) {
+static bool_t cg_schema_emit_temp_schema_proc(CqlState* _Nonnull CS, charbuf *output) {
   CHARBUF_OPEN(temp_schema);
 
   cg_generate_schema_by_mode(CS, &temp_schema, SCHEMA_TO_UPGRADE | SCHEMA_TEMP_ITEMS);
@@ -423,7 +423,7 @@ static bool_t cg_schema_emit_temp_schema_proc(CqlState* CS, charbuf *output) {
 //
 // Note: we don't have to deal with indices, triggers, or views they are always
 // on the @recreate plan.  So this is tables exclusively.
-static void cg_generate_baseline_tables(CqlState* CS, charbuf *output) {
+static void cg_generate_baseline_tables(CqlState* _Nonnull CS, charbuf *output) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.col_def_callback = cg_suppress_new_col_def;
@@ -491,7 +491,7 @@ static void cg_generate_baseline_tables(CqlState* CS, charbuf *output) {
 // DDL inside of procs.  In schema upgrade mode we do not error on that.
 // The normal situation is that there must be exactly one DDL fragment
 // for one object.
-static void cg_generate_schema_by_mode(CqlState* CS, charbuf *output, int32_t mode) {
+static void cg_generate_schema_by_mode(CqlState* _Nonnull CS, charbuf *output, int32_t mode) {
 
   // non-null-callbacks will generate SQL for Sqlite (no attributes)
   gen_sql_callbacks callbacks;
@@ -748,7 +748,7 @@ static void cg_generate_schema_by_mode(CqlState* CS, charbuf *output, int32_t mo
 
 //static symtab *full_drop_funcs;
 
-static void cg_schema_name_as_sql_string(CqlState* CS, charbuf *output, ast_node *ast) {
+static void cg_schema_name_as_sql_string(CqlState* _Nonnull CS, charbuf *output, ast_node *ast) {
   CHARBUF_OPEN(tmp);
   EXTRACT_STRING(name, ast);
   if (is_qid(ast)) {
@@ -781,7 +781,7 @@ static void cg_schema_name_as_sql_string(CqlState* CS, charbuf *output, ast_node
 // destroyed as needing recreation.  We only generate the function
 // one time even though it might be called from several locations
 // and recursively.
-static void emit_full_drop(CqlState* CS, ast_node *target_ast, charbuf *decls) {
+static void emit_full_drop(CqlState* _Nonnull CS, ast_node *target_ast, charbuf *decls) {
   ast_node *table_name_ast = sem_get_name_ast(target_ast);
   EXTRACT_STRING(target_name, table_name_ast);
 
@@ -866,7 +866,7 @@ static void emit_full_drop(CqlState* CS, ast_node *target_ast, charbuf *decls) {
 
 // This entry point is for generating a full image of the declared schema
 // this is used to create the "previous" schema for the next run.
-cql_noexport void cg_schema_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_schema_main(CqlState* _Nonnull CS, ast_node *head) {
   Invariant(CS->options.file_names_count == 1);
   cql_exit_on_semantic_errors(CS, head);
 
@@ -880,7 +880,7 @@ cql_noexport void cg_schema_main(CqlState* CS, ast_node *head) {
 
 // This entry point is for generating a full image of the declared schema with no CQL business
 // this is used to create a schema declaration for SQLite
-cql_noexport void cg_schema_sqlite_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_schema_sqlite_main(CqlState* _Nonnull CS, ast_node *head) {
   Invariant(CS->options.file_names_count == 1);
   cql_exit_on_semantic_errors(CS, head);
 
@@ -893,7 +893,7 @@ cql_noexport void cg_schema_sqlite_main(CqlState* CS, ast_node *head) {
   CHARBUF_CLOSE(output_file);
 }
 
-static void cg_schema_manage_triggers(CqlState* CS, charbuf *output, int32_t *drops, int32_t *creates) {
+static void cg_schema_manage_triggers(CqlState* _Nonnull CS, charbuf *output, int32_t *drops, int32_t *creates) {
   Contract(creates);
   Contract(drops);
   CHARBUF_OPEN(create);
@@ -998,7 +998,7 @@ static void cg_schema_manage_triggers(CqlState* CS, charbuf *output, int32_t *dr
   CHARBUF_CLOSE(create);
 }
 
-static void cg_schema_manage_views(CqlState* CS, charbuf *output, int32_t *drops, int32_t *creates) {
+static void cg_schema_manage_views(CqlState* _Nonnull CS, charbuf *output, int32_t *drops, int32_t *creates) {
   Contract(creates);
   Contract(drops);
   CHARBUF_OPEN(create);
@@ -1093,7 +1093,7 @@ static void cg_schema_manage_views(CqlState* CS, charbuf *output, int32_t *drops
   CHARBUF_CLOSE(create);
 }
 
-static void cg_schema_manage_indices(CqlState* CS, charbuf *output, int32_t *drops, int32_t *creates) {
+static void cg_schema_manage_indices(CqlState* _Nonnull CS, charbuf *output, int32_t *drops, int32_t *creates) {
   Contract(creates);
   Contract(drops);
   CHARBUF_OPEN(create);
@@ -1248,7 +1248,7 @@ static void cg_schema_manage_indices(CqlState* CS, charbuf *output, int32_t *dro
   CHARBUF_CLOSE(create);
 }
 
-static void cg_schema_add_recreate_table(CqlState* CS, charbuf *buf, crc_t table_crc, charbuf facet, charbuf update_tables, CSTR table_key)
+static void cg_schema_add_recreate_table(CqlState* _Nonnull CS, charbuf *buf, crc_t table_crc, charbuf facet, charbuf update_tables, CSTR table_key)
 {
   bprintf(buf, "  IF cql_facet_find(%s_facets, '%s') != %lld THEN\n", CS->global_proc_name,
         facet.ptr, (llint_t)table_crc);
@@ -1263,7 +1263,7 @@ static void cg_schema_add_recreate_table(CqlState* CS, charbuf *buf, crc_t table
 }
 
 // Helper function to emit all table drops from a given recreate group name
-static void emit_recreate_group_drops(CqlState* CS, charbuf *drops_buf, CSTR gname, symtab* recreate_group_drops) {
+static void emit_recreate_group_drops(CqlState* _Nonnull CS, charbuf *drops_buf, CSTR gname, symtab* recreate_group_drops) {
   bytebuf *buf = symtab_ensure_bytebuf(CS, recreate_group_drops, gname);
   size_t count = buf->used / sizeof(CSTR);
   CSTR *table_names_array = (CSTR *) (buf->ptr);
@@ -1281,7 +1281,7 @@ static void emit_recreate_group_drops(CqlState* CS, charbuf *drops_buf, CSTR gna
 // Set to keep track of which functions we have emitted group_drops functions for
 //static symtab *group_drop_funcs;
 
-static void emit_group_drop(CqlState* CS, CSTR group_name, charbuf *decls, symtab *recreate_group_drops) {
+static void emit_group_drop(CqlState* _Nonnull CS, CSTR group_name, charbuf *decls, symtab *recreate_group_drops) {
   if (symtab_find(CS->group_drop_funcs, group_name)) {
     return;
   }
@@ -1325,7 +1325,7 @@ static void emit_group_drop(CqlState* CS, CSTR group_name, charbuf *decls, symta
 }
 
 static void cg_schema_manage_recreate_tables(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   charbuf *output,
   charbuf *decls,
   recreate_annotation *notes,
@@ -1579,7 +1579,7 @@ static void cg_schema_manage_recreate_tables(
 
 //static int32_t max_group_ordinal = 0;
 
-static void topological_walk_recreate_group_deps_helper(CqlState* CS, symtab *recreate_group_ordinals, CSTR curr_gname)
+static void topological_walk_recreate_group_deps_helper(CqlState* _Nonnull CS, symtab *recreate_group_ordinals, CSTR curr_gname)
 {
   symtab_entry *entry = symtab_find(recreate_group_ordinals, curr_gname);
   bytebuf *buf = symtab_ensure_bytebuf(CS, CS->sem.recreate_group_deps, curr_gname);
@@ -1597,7 +1597,7 @@ static void topological_walk_recreate_group_deps_helper(CqlState* CS, symtab *re
   entry->val = (void*) (int64_t) (CS->max_group_ordinal++);
 }
 
-static void topological_walk_recreate_group_deps(CqlState* CS, recreate_annotation** recreates, size_t recreate_items_count) {
+static void topological_walk_recreate_group_deps(CqlState* _Nonnull CS, recreate_annotation** recreates, size_t recreate_items_count) {
   // Create temporary symbol table to hold all recreate groups and their ordinal assignments
   symtab *recreate_group_ordinals = symtab_new();
   // Clean out symbol table by initializing all groups to have ordinal = -1
@@ -1645,7 +1645,7 @@ static void topological_walk_recreate_group_deps(CqlState* CS, recreate_annotati
   symtab_delete(CS, recreate_group_ordinals);
 }
 
-static llint_t cg_schema_compute_crc(CqlState* CS,
+static llint_t cg_schema_compute_crc(CqlState* _Nonnull CS,
     schema_annotation** notes,
     size_t* schema_items_count,
     recreate_annotation** recreates,
@@ -1709,7 +1709,7 @@ static llint_t cg_schema_compute_crc(CqlState* CS,
 }
 
 // Main entry point for schema upgrade code-gen.
-cql_noexport void cg_schema_upgrade_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_schema_upgrade_main(CqlState* _Nonnull CS, ast_node *head) {
   Contract(CS->options.file_names_count == 1);
 
   cql_exit_on_semantic_errors(CS, head);

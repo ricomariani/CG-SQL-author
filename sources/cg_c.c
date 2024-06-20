@@ -34,28 +34,28 @@ cql_noexport void cg_c_cleanup(CS) {}
 #include "cql.lex.h"
 #include "cql_state.h"
 
-static void cg_expr(CqlState* CS, ast_node *node, charbuf *is_null, charbuf *value, int32_t pri);
-static void cg_stmt_list(CqlState* CS, ast_node *node);
-static void cg_get_column(CqlState* CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output);
-static void cg_binary(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new);
-static void cg_store_same_type(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type, CSTR is_null, CSTR value);
-static void cg_store(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR is_null, CSTR value);
-static void cg_call_stmt_with_cursor(CqlState* CS, ast_node *ast, CSTR cursor_name);
-static void cg_proc_result_set(CqlState* CS, ast_node *ast);
-static void cg_var_decl(CqlState* CS, charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl);
-static void cg_emit_external_arglist(CqlState* CS, ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
-static void cg_call_named_external(CqlState* CS, CSTR name, ast_node *expr_list);
-static void cg_user_func(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf *value);
-static void cg_copy(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
-static void cg_insert_dummy_spec(CqlState* CS, ast_node *ast);
-static void cg_release_out_arg_before_call(CqlState* CS, sem_t sem_type_arg, sem_t sem_type_param, CSTR name);
-static void cg_refs_offset(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
-static void cg_col_offsets(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
-static void cg_declare_simple_var(CqlState* CS, sem_t sem_type, CSTR name);
-static void cg_data_type(CqlState* CS, charbuf *output, bool_t encode, sem_t sem_type);
-cql_noexport uint32_t cg_statement_pieces(CqlState* CS, CSTR in, charbuf *output);
+static void cg_expr(CqlState* _Nonnull CS, ast_node *node, charbuf *is_null, charbuf *value, int32_t pri);
+static void cg_stmt_list(CqlState* _Nonnull CS, ast_node *node);
+static void cg_get_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output);
+static void cg_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new);
+static void cg_store_same_type(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type, CSTR is_null, CSTR value);
+static void cg_store(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR is_null, CSTR value);
+static void cg_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, CSTR cursor_name);
+static void cg_proc_result_set(CqlState* _Nonnull CS, ast_node *ast);
+static void cg_var_decl(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl);
+static void cg_emit_external_arglist(CqlState* _Nonnull CS, ast_node *expr_list, charbuf *prep, charbuf *invocation, charbuf *cleanup);
+static void cg_call_named_external(CqlState* _Nonnull CS, CSTR name, ast_node *expr_list);
+static void cg_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null, charbuf *value);
+static void cg_copy(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
+static void cg_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast);
+static void cg_release_out_arg_before_call(CqlState* _Nonnull CS, sem_t sem_type_arg, sem_t sem_type_param, CSTR name);
+static void cg_refs_offset(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR offset_sym_name, CSTR struct_name);
+static void cg_col_offsets(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name);
+static void cg_declare_simple_var(CqlState* _Nonnull CS, sem_t sem_type, CSTR name);
+static void cg_data_type(CqlState* _Nonnull CS, charbuf *output, bool_t encode, sem_t sem_type);
+cql_noexport uint32_t cg_statement_pieces(CqlState* _Nonnull CS, CSTR in, charbuf *output);
 
-cql_noexport void cg_c_init(CqlState* CS);
+cql_noexport void cg_c_init(CqlState* _Nonnull CS);
 
 // This lets us emit proc or func args and get back the state we need to continue
 typedef struct {
@@ -65,10 +65,10 @@ typedef struct {
    ast_node *arg_list;  // these are the actual arguments
 } proc_params_info;
 
-static void cg_emit_proc_params(CqlState* CS, proc_params_info *info);
+static void cg_emit_proc_params(CqlState* _Nonnull CS, proc_params_info *info);
 
 // Emits a sql statement with bound args.  Returns temp statement index used if any
-static int32_t cg_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node *stmt, int32_t cg_exec);
+static int32_t cg_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name, ast_node *stmt, int32_t cg_exec);
 
 // These globals represent the major state of the code-generator
 
@@ -209,7 +209,7 @@ static int32_t cg_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node *st
 //static int32_t cur_variable_count;
 
 // Emit the line directive, escape the file name using the C convention
-static void cg_line_directive(CqlState* CS, CSTR filename, int32_t lineno, charbuf *output) {
+static void cg_line_directive(CqlState* _Nonnull CS, CSTR filename, int32_t lineno, charbuf *output) {
   if (CS->options.test || CS->options.nolines) {
     return;
   }
@@ -221,14 +221,14 @@ static void cg_line_directive(CqlState* CS, CSTR filename, int32_t lineno, charb
 }
 
 // Use the recursive search to emit the smallest line number in this subtree
-static void cg_line_directive_min(CqlState* CS, ast_node *ast, charbuf *output) {
+static void cg_line_directive_min(CqlState* _Nonnull CS, ast_node *ast, charbuf *output) {
   int32_t lineno = cg_find_first_line(ast);
   cg_line_directive(CS, ast->filename, lineno, output);
 }
 
 // The line number in the node is the last line number in the subtree because
 // that is when the REDUCE operation happened when building the AST.
-static void cg_line_directive_max(CqlState* CS, ast_node *ast, charbuf *output) {
+static void cg_line_directive_max(CqlState* _Nonnull CS, ast_node *ast, charbuf *output) {
   cg_line_directive(CS, ast->filename, ast->lineno, output);
 }
 
@@ -280,7 +280,7 @@ static void cg_line_directive_max(CqlState* CS, ast_node *ast, charbuf *output) 
 // }
 // #undef _PROC_
 //
-static void cg_insert_line_directives(CqlState* CS, CSTR input, charbuf *output)
+static void cg_insert_line_directives(CqlState* _Nonnull CS, CSTR input, charbuf *output)
 {
    CHARBUF_OPEN(last_line_directive);
    CHARBUF_OPEN(line);
@@ -351,13 +351,13 @@ static void cg_insert_line_directives(CqlState* CS, CSTR input, charbuf *output)
 }
 
 // return the symbol name for the string literal if there is one
-static CSTR find_literal(CqlState* CS, CSTR str) {
+static CSTR find_literal(CqlState* _Nonnull CS, CSTR str) {
   symtab_entry *entry = symtab_find(CS->cg_c.string_literals, str);
   return entry ? entry->val : NULL;
 }
 
 // The current proc name or null
-static CSTR current_proc_name(CqlState* CS) {
+static CSTR current_proc_name(CqlState* _Nonnull CS) {
   if (CS->sem.current_proc) {
     ast_node *proc_name_ast = get_proc_name(CS, CS->sem.current_proc);
     EXTRACT_STRING(proc_name, proc_name_ast);
@@ -368,14 +368,14 @@ static CSTR current_proc_name(CqlState* CS) {
 }
 
 // Generate an error if the given expression is true (note this drives tracing)
-static void cg_error_on_expr(CqlState* CS, CSTR expr) {
+static void cg_error_on_expr(CqlState* _Nonnull CS, CSTR expr) {
   bprintf(CS->cg_main_output, "if (%s) { cql_error_trace(); goto %s; }\n", expr, CS->cg_c.error_target);
   CS->cg_c.error_target_used = true;
 }
 
 // Generate an error if the return code is not the required value 
 // (helper for common case)
-static void cg_error_on_rc_notequal(CqlState* CS, CSTR required) {
+static void cg_error_on_rc_notequal(CqlState* _Nonnull CS, CSTR required) {
   CHARBUF_OPEN(tmp);
   bprintf(&tmp, "_rc_ != %s", required);
   cg_error_on_expr(CS, tmp.ptr);
@@ -383,7 +383,7 @@ static void cg_error_on_rc_notequal(CqlState* CS, CSTR required) {
 }
 
 // Generate an error if the return code is not SQLITE_OK (helper for common case)
-static void cg_error_on_not_sqlite_ok(CqlState* CS) {
+static void cg_error_on_not_sqlite_ok(CqlState* _Nonnull CS) {
   cg_error_on_expr(CS, "_rc_ != SQLITE_OK");
 }
 
@@ -447,7 +447,7 @@ static void cg_zero_masks(cg_scratch_masks *_Nonnull masks) {
 }
 
 // emit the type decl for the reference and the typeid if needed (msys only)
-static void cg_result_set_type_decl(CqlState* CS, charbuf *output, CSTR sym, CSTR ref) {
+static void cg_result_set_type_decl(CqlState* _Nonnull CS, charbuf *output, CSTR sym, CSTR ref) {
   // The result type might be defined several times if a base fragment is
   // included in many outputs they are all equivalent so we guard them here.
   // For normal CS->queries this doesn't happen because you only include the proc
@@ -478,7 +478,7 @@ static void cg_result_set_type_decl(CqlState* CS, charbuf *output, CSTR sym, CST
 #define CG_PROC_PARAMS_IN_ALIAS 1
 
 // Emit the nullability annotation for a BLOB, OBJECT, or TEXT variable.
-static void cg_var_nullability_annotation(CqlState* CS, charbuf *output, sem_t sem_type) {
+static void cg_var_nullability_annotation(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type) {
   Contract(is_ref_type(sem_type));
 
   if (is_out_parameter(sem_type) && !is_in_parameter(sem_type)) {
@@ -497,19 +497,19 @@ static void cg_var_nullability_annotation(CqlState* CS, charbuf *output, sem_t s
   }
 }
 
-static void cg_emit_null_init(CqlState* CS, charbuf *output, bool_t is_full_decl) {
+static void cg_emit_null_init(CqlState* _Nonnull CS, charbuf *output, bool_t is_full_decl) {
   if (is_full_decl) {
     bprintf(output, " = NULL");
   }
 }
 
-static void cg_emit_zero_init(CqlState* CS, charbuf *output, bool_t is_full_decl) {
+static void cg_emit_zero_init(CqlState* _Nonnull CS, charbuf *output, bool_t is_full_decl) {
   if (is_full_decl) {
     bprintf(output, " = 0");
   }
 }
 
-static void cg_emit_isnull_init(CqlState* CS, charbuf *output, bool_t is_full_decl) {
+static void cg_emit_isnull_init(CqlState* _Nonnull CS, charbuf *output, bool_t is_full_decl) {
   if (is_full_decl) {
     bprintf(output, " = { .is_null = 1 }");
   }
@@ -526,7 +526,7 @@ static void cg_emit_isnull_init(CqlState* CS, charbuf *output, bool_t is_full_de
 //    then we also gotta clean it up.
 //  * if the declaration is for a variable then we initialize the variable to 0,
 //    or NULL as appropriate
-static void cg_var_decl(CqlState* CS, charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl) {
+static void cg_var_decl(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type, CSTR base_name, bool_t is_full_decl) {
   Contract(is_unitary(sem_type) || is_cursor_formal(sem_type));
   Contract(!is_null_type(sem_type));
   Contract(CS->cg_main_output);
@@ -640,7 +640,7 @@ static void cg_var_decl(CqlState* CS, charbuf *output, sem_t sem_type, CSTR base
 // be something like OBJECT<Foo SET> -- we're going to use the "Foo" in the
 // result set type as this corresponds to the result set that the "Foo"
 // procedure creates.
-static void cg_result_set_type_from_kind(CqlState* CS, charbuf *output, sem_t sem_type, CSTR kind) {
+static void cg_result_set_type_from_kind(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type, CSTR kind) {
   CHARBUF_OPEN(temp);
 
   // pull out everything up to the leading space before " SET"
@@ -671,7 +671,7 @@ static bool_t is_result_set_type(sem_t sem_type, CSTR kind) {
 // integer types but in this case we're talking about a result set reader and
 // the result set has in it sub result sets.  This is public C interface to to
 // save everyone from doing the casting it happens automatically.
-static void cg_col_reader_type(CqlState* CS, charbuf *output, sem_t sem_type, CSTR kind, CSTR base_name) {
+static void cg_col_reader_type(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type, CSTR kind, CSTR base_name) {
   if (is_result_set_type(sem_type, kind)) {
     cg_result_set_type_from_kind(CS, output, sem_type, kind);
     bprintf(output, "%s", base_name);
@@ -713,7 +713,7 @@ static bool_t is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
 // root ways of getting an .is_null and .value back.  Note that not null
 // variables always have a .is_null of "0" which becomes important when deciding
 // how to assign one result to another.  Everything stays uniform.
-static void cg_scratch_var(CqlState* CS, ast_node *ast, sem_t sem_type, charbuf *var, charbuf *is_null, charbuf *value) {
+static void cg_scratch_var(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type, charbuf *var, charbuf *is_null, charbuf *value) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
 
@@ -825,7 +825,7 @@ static void cg_scratch_var(CqlState* CS, ast_node *ast, sem_t sem_type, charbuf 
 // compile time.  This function generates a call to the best runtime helper.  By
 // doing it here all of the callers do not have to know all of the cases.  Here
 // "val" is some arithmetic or logical combination of the values.
-static void cg_combine_nullables(CqlState* CS, charbuf *out, CSTR var, CSTR l_is_null, CSTR r_is_null, CSTR val) {
+static void cg_combine_nullables(CqlState* _Nonnull CS, charbuf *out, CSTR var, CSTR l_is_null, CSTR r_is_null, CSTR val) {
   // generate the optimal set expression for the target nullable
 
   if (!strcmp(l_is_null, "1") || !strcmp(r_is_null, "1")) {
@@ -860,7 +860,7 @@ static void cg_combine_nullables(CqlState* CS, charbuf *out, CSTR var, CSTR l_is
 // other reason in which case we can make vastly simpler code.  That logic is
 // already done in the above in the general case.  This call probably ends up in
 // cg_set_nullable_nontrivial after the nullchecks are done.
-static void cg_set_nullable(CqlState* CS, charbuf *out, CSTR var, CSTR is_null, CSTR value) {
+static void cg_set_nullable(CqlState* _Nonnull CS, charbuf *out, CSTR var, CSTR is_null, CSTR value) {
   cg_combine_nullables(CS, out, var, is_null, "0", value);
 }
 
@@ -874,7 +874,7 @@ static void cg_set_nullable(CqlState* CS, charbuf *out, CSTR var, CSTR is_null, 
 // free the data... so we have to set it to null... This is a bit weird but the
 // alternative is some not-null sentinel constant string like the empty string
 // which seems worse...
-static void cg_set_null(CqlState* CS, charbuf *output, CSTR name, sem_t sem_type) {
+static void cg_set_null(CqlState* _Nonnull CS, charbuf *output, CSTR name, sem_t sem_type) {
   if (is_blob(sem_type)) {
     bprintf(output, "cql_set_blob_ref(&%s, NULL);\n", name);
   }
@@ -893,7 +893,7 @@ static void cg_set_null(CqlState* CS, charbuf *output, CSTR name, sem_t sem_type
 // simple assignments The nullable non-reference types typically need of the
 // helper macros unless it's an exact-type copy operation.  This function is
 // used by cg_store near the finish line.
-static void cg_copy(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
+static void cg_copy(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   if (is_text(sem_type_var)) {
     bprintf(output, "cql_set_string_ref(&%s, %s);\n", var, value);
   }
@@ -919,7 +919,7 @@ static void cg_copy(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var,
 // come with a +1 reference.  To handle those you do not want to upcount the
 // target. We release whatever we're holding and then hammer it with the new
 // value with no upcount using the +1 we were given.
-static void cg_copy_for_create(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
+static void cg_copy_for_create(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   if (is_text(sem_type_var)) {
     bprintf(CS->cg_main_output, "%s(%s);\n", CS->rt->cql_string_release, var);
   }
@@ -939,7 +939,7 @@ static void cg_copy_for_create(CqlState* CS, charbuf *output, CSTR var, sem_t se
 // * for text, emit cql_set_string_ref to do the job
 // * for nullables use cg_set_nullable (see above) to do the job
 // * for not-nullables x = y is all you need.
-static void cg_store(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR is_null, CSTR value) {
+static void cg_store(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR is_null, CSTR value) {
   CHARBUF_OPEN(adjusted_value);
   CG_BEGIN_ADJUST_FOR_OUTARG(var, sem_type_var);
 
@@ -1000,7 +1000,7 @@ static void cg_store(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var
 // This is used when we just made a temporary of exactly the correct type to
 // hold an expression.  cg_store handles this all but this helper lets you
 // specify only one type.
-static void cg_store_same_type(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type, CSTR is_null, CSTR value) {
+static void cg_store_same_type(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type, CSTR is_null, CSTR value) {
   cg_store(CS, output, var, sem_type, sem_type, is_null, value);
 }
 
@@ -1013,7 +1013,7 @@ static void cg_store_same_type(CqlState* CS, charbuf *output, CSTR var, sem_t se
 // cql_string_compare(x, y) <= 0.  If the arguments are not nullable, the
 // comparison expression goes directly into value.  If the the result is
 // nullable, it goes into a scratch var using the "combine" rules, see above.
-static void cg_binary_compare(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_binary_compare(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_left = ast->left->sem->sem_type;
   sem_t sem_type_right = ast->right->sem->sem_type;
@@ -1102,7 +1102,7 @@ static void cg_binary_compare(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_
 // (see above) If the inputs are not nullable then we can make the easy case of
 // returning the result in the value string (and 0 for is null).  Otherwise,
 // cg_combine_nullables does the job.
-static void cg_binary(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // left op right
 
   ast_node *l = ast->left;
@@ -1154,7 +1154,7 @@ static void cg_binary(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, ch
 // The operands are already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value.
-static void cg_expr_is_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_is_false(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -1181,7 +1181,7 @@ static void cg_expr_is_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_n
 // The operands are already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value.
-static void cg_expr_is_not_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_is_not_false(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -1208,7 +1208,7 @@ static void cg_expr_is_not_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *
 // The operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value.
-static void cg_expr_is_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_is_true(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -1235,7 +1235,7 @@ static void cg_expr_is_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_nu
 // The operands already known to be of the correct type so all we have to do is
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value.
-static void cg_expr_is_not_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_is_not_true(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -1261,7 +1261,7 @@ static void cg_expr_is_not_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *i
 // The code-gen for is_null is one of the easiest.  The recursive call
 // produces is_null as one of the outputs.  Use that.  Our is_null result
 // is always zero because IS NULL is never, itself, null.
-static void cg_expr_is_null(CqlState* CS, ast_node *expr, charbuf *is_null, charbuf *value) {
+static void cg_expr_is_null(CqlState* _Nonnull CS, ast_node *expr, charbuf *is_null, charbuf *value) {
   sem_t sem_type_expr = expr->sem->sem_type;
 
   // expr IS NULL
@@ -1285,7 +1285,7 @@ static void cg_expr_is_null(CqlState* CS, ast_node *expr, charbuf *is_null, char
 // The code-gen for is_not_null is one of the easiest.  The recursive call
 // produces is_null as one of the outputs.  Invert that.  Our is_null result
 // is always zero because IS NOT NULL is never, itself, null.
-static void cg_expr_is_not_null(CqlState* CS, ast_node *expr, charbuf *is_null, charbuf *value) {
+static void cg_expr_is_not_null(CqlState* _Nonnull CS, ast_node *expr, charbuf *is_null, charbuf *value) {
   sem_t sem_type_expr = expr->sem->sem_type;
 
   // expr IS NOT NULL
@@ -1314,7 +1314,7 @@ static void cg_expr_is_not_null(CqlState* CS, ast_node *expr, charbuf *is_null, 
 //  * otherwise use the messy formula
 //    * both are either null or both not null AND
 //    * either they are null or their values are equal
-static void cg_expr_is(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_is(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is(ast));
   EXTRACT_ANY_NOTNULL(l, ast->left);
   EXTRACT_ANY_NOTNULL(r, ast->right);
@@ -1381,7 +1381,7 @@ static void cg_expr_is(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, c
 //  * if the args are text, use the text comparor runtime helper (with !)
 //  * if the args are non-nullable or reference types (not text) inequality works
 //  * otherwise use the messy IS formula (qv), but invert the result
-static void cg_expr_is_not(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_is_not(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not(ast));
   EXTRACT_ANY_NOTNULL(l, ast->left);
   EXTRACT_ANY_NOTNULL(r, ast->right);
@@ -1447,7 +1447,7 @@ static void cg_expr_is_not(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_nul
 // Helper to emit an "if false" condition.
 // There are lots of cases where the object is not nullable and we'd like nicer
 // code for those cases, hence this helper.
-static void cg_if_false(CqlState* CS, charbuf *output, CSTR is_null, CSTR value) {
+static void cg_if_false(CqlState* _Nonnull CS, charbuf *output, CSTR is_null, CSTR value) {
   if (!strcmp(is_null, "0")) {
     bprintf(output, "if (!(%s)) {\n", value);
   }
@@ -1463,7 +1463,7 @@ static void cg_if_false(CqlState* CS, charbuf *output, CSTR is_null, CSTR value)
 // Helper to emit an "if true" condition
 // There are lots of cases where the object is not nullable and we'd like nicer
 // code for those cases, hence this helper.
-static void cg_if_true(CqlState* CS, charbuf *output, CSTR is_null, CSTR value) {
+static void cg_if_true(CqlState* _Nonnull CS, charbuf *output, CSTR is_null, CSTR value) {
   if (!strcmp(is_null, "0")) {
     bprintf(output, "if (%s) {\n", value);
   }
@@ -1486,7 +1486,7 @@ static void cg_if_true(CqlState* CS, charbuf *output, CSTR is_null, CSTR value) 
 // of the cases where an expression-looking thing actually has statements in the C.
 // There is easy case code if both are known to to be nullable, where the result
 // is directly computed with ||.
-static void cg_expr_or(CqlState* CS, ast_node *ast, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_or(CqlState* _Nonnull CS, ast_node *ast, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_or(ast));
   Contract(pri_new == C_EXPR_PRI_LOR);
 
@@ -1600,7 +1600,7 @@ static void cg_expr_or(CqlState* CS, ast_node *ast, CSTR str, charbuf *is_null, 
 //     the cases where an expression-looking thing actually has statements in
 //     the C. There is easy case code if both are known to to be nullable, where
 //     the result is directly computed with &&.
-static void cg_expr_and(CqlState* CS, ast_node *ast, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_and(CqlState* _Nonnull CS, ast_node *ast, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_and(ast));
   Contract(pri_new == C_EXPR_PRI_LAND);
 
@@ -1709,7 +1709,7 @@ static void cg_expr_and(CqlState* CS, ast_node *ast, CSTR str, charbuf *is_null,
 // context of the caller, if it is stronger than our operator then we need
 // parens. As usual, there is the easy case for not-nullables and the "use a
 // temporary" case for nullables.
-static void cg_unary(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_unary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // op [left]
 
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1763,7 +1763,7 @@ static void cg_unary(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, cha
 // then use the expression (x > 0) - (x < 0) to compute the sign.  The temporary
 // is needed because 'x' appears twice and we do not want to evaluate the
 // expression twice.
-static void cg_func_sign(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_sign(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1796,7 +1796,7 @@ static void cg_func_sign(CqlState* CS, ast_node *call_ast, charbuf *is_null, cha
 // the result variable for this.  We don't want to evaluate that expression more
 // than once, hence the temporary storage.  Once we have the value in a result
 // variable, we can test it against zero safely and alter it as needed.
-static void cg_func_abs(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_abs(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1856,7 +1856,7 @@ static void cg_func_abs(CqlState* CS, ast_node *call_ast, charbuf *is_null, char
 // one for nullables and one for not nullables.  Note expr is already known
 // to be not null here.  There was previous codegen for that case.  The result
 // is either bool or nullable bool.
-static void cg_in_or_not_in_expr_list(CqlState* CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result, bool_t is_not_in) {
+static void cg_in_or_not_in_expr_list(CqlState* _Nonnull CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result, bool_t is_not_in) {
   Contract(is_bool(sem_type_result));
   CSTR found_value = is_not_in ? "0" : "1";
   CSTR not_found_value = is_not_in ? "1" : "0";
@@ -1910,7 +1910,7 @@ static void cg_in_or_not_in_expr_list(CqlState* CS, ast_node *head, CSTR expr, C
 // results we store it in a scratch variable.  Note that this is a "typed" null.
 // That is we know the kind of null we are making, a null int, null long, etc.
 // Again this lets the normal nullability path just work.
-static void cg_null_result(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf *value) {
+static void cg_null_result(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
   cg_set_null(CS, CS->cg_main_output, result_var.ptr, sem_type_result);
@@ -1945,7 +1945,7 @@ static void cg_null_result(CqlState* CS, ast_node *ast, charbuf *is_null, charbu
 //   } while (0);
 //
 // The result ends up in the is_null and value fields as usual.
-static void cg_expr_in_pred_or_not_in(CqlState* CS,
+static void cg_expr_in_pred_or_not_in(CqlState* _Nonnull CS,
   ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_in_pred(ast) || is_ast_not_in(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left)
@@ -2005,7 +2005,7 @@ static void cg_expr_in_pred_or_not_in(CqlState* CS,
 // expression the temporary holding the expression is in expr.  Expr has already
 // been tested for null if that was a possibility so we only need its value at
 // this point.
-static void cg_case_list(CqlState* CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
+static void cg_case_list(CqlState* _Nonnull CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
   Contract(is_ast_case_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -2106,7 +2106,7 @@ static void cg_case_list(CqlState* CS, ast_node *head, CSTR expr, CSTR result, s
 //
 // If the X is omitted then U and V are normal boolean expressions and
 // the code becomes if (U) etc  if (V) etc. with no temp.
-static void cg_expr_case(CqlState* CS, ast_node *case_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_case(CqlState* _Nonnull CS, ast_node *case_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_case_expr(case_expr));
   EXTRACT_ANY(expr, case_expr->left);
   EXTRACT_NOTNULL(connector, case_expr->right);
@@ -2201,7 +2201,7 @@ static void cg_expr_case(CqlState* CS, ast_node *case_expr, CSTR str, charbuf *i
 // operations are highly complex with interesting parsing rules and so forth.
 // We don't try to do those at all but there's no reason we can't do the simple
 // numeric conversions in the non-SQL path
-static void cg_expr_cast(CqlState* CS, ast_node *cast_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_cast(CqlState* _Nonnull CS, ast_node *cast_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(cast_expr));
 
   sem_t sem_type_result = cast_expr->sem->sem_type;
@@ -2270,7 +2270,7 @@ static void cg_expr_cast(CqlState* CS, ast_node *cast_expr, CSTR str, charbuf *i
 // We have built-in type_check fun which use to check an expr strictly match a
 // type. during semantic analysis otherwise error. At the codegen phase we just
 // emit the expr since the type check already succeeded.
-static void cg_expr_type_check(CqlState* CS, ast_node *type_check_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_type_check(CqlState* _Nonnull CS, ast_node *type_check_expr, CSTR str, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_type_check_expr(type_check_expr));
   EXTRACT_ANY_NOTNULL(expr, type_check_expr->left);
 
@@ -2288,7 +2288,7 @@ static void cg_expr_type_check(CqlState* CS, ast_node *type_check_expr, CSTR str
 // string_ref. Here is a helper method for creating the name of the literal.  We
 // use some letters from the text of the literal in the variable name to make it
 // easier to find and recognize.
-static bool_t cg_make_nice_literal_name(CqlState* CS, CSTR str, charbuf *output) {
+static bool_t cg_make_nice_literal_name(CqlState* _Nonnull CS, CSTR str, charbuf *output) {
   // empty buffer (just the null terminator)
   Contract(output->used == 1);
 
@@ -2329,7 +2329,7 @@ static bool_t cg_make_nice_literal_name(CqlState* CS, CSTR str, charbuf *output)
 //  * the single quotes around the string become double quotes
 //  * escaped single quote becomes just single quote
 //  * backslash escapes are preserved
-static void cg_requote_literal(CqlState* CS, CSTR str, charbuf *output) {
+static void cg_requote_literal(CqlState* _Nonnull CS, CSTR str, charbuf *output) {
   CHARBUF_OPEN(plaintext);
   cg_decode_string_literal(str, &plaintext);
   cg_encode_c_string_literal(CS, plaintext.ptr, output);
@@ -2340,7 +2340,7 @@ static void cg_requote_literal(CqlState* CS, CSTR str, charbuf *output) {
 // we declare that variable and emit the initializer.  The macro
 // cql_string_literal does the job for us while allowing the different string
 // implementations.  These go into the constants section.
-static void cg_string_literal(CqlState* CS, CSTR str, charbuf *output) {
+static void cg_string_literal(CqlState* _Nonnull CS, CSTR str, charbuf *output) {
   Contract(str);
   Contract(str[0] == '\'');
 
@@ -2367,7 +2367,7 @@ static void cg_string_literal(CqlState* CS, CSTR str, charbuf *output) {
 // between look the same to the codgen (they will have different expressions).
 // This lets us get all that weird short circuit behavior super easy.  It's
 // literally the AND/OR code running.
-static void cg_expr_between_rewrite(CqlState* CS,
+static void cg_expr_between_rewrite(CqlState* _Nonnull CS,
   ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_between_rewrite(ast));
   EXTRACT_NOTNULL(range, ast->right);
@@ -2409,7 +2409,7 @@ static void cg_expr_between_rewrite(CqlState* CS,
 // Note: It's important to use the semantic name sem->name rather than the text
 // of the ast because the user might refer case insensitively to the variable FoO
 // and we need to emit the canonical name (e.g. foo, or Foo, or whatever it was).
-static void cg_id(CqlState* CS, ast_node *expr, charbuf *is_null, charbuf *value) {
+static void cg_id(CqlState* _Nonnull CS, ast_node *expr, charbuf *is_null, charbuf *value) {
   sem_t sem_type = expr->sem->sem_type;
   Invariant(is_variable(sem_type));
 
@@ -2478,7 +2478,7 @@ static void cg_id(CqlState* CS, ast_node *expr, charbuf *is_null, charbuf *value
 //     evaluate Y;
 //     result = Y;
 //   } while (0);
-static void cg_func_coalesce(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_coalesce(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2531,13 +2531,13 @@ static void cg_func_coalesce(CqlState* CS, ast_node *call_ast, charbuf *is_null,
 }
 
 // Ifnull is an alias for coalesce, with only two args.
-static void cg_func_ifnull(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_ifnull(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   cg_func_coalesce(CS, call_ast, is_null, value);
 }
 
 // The sensitive wrapper does nothing at codegen time, we just foward evaluation
 // down into its one and only argument.
-static void cg_func_sensitive(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_sensitive(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2556,7 +2556,7 @@ static void cg_func_sensitive(CqlState* CS, ast_node *call_ast, charbuf *is_null
 
 // The nullable wrapper does nothing at codegen time, we just foward evaluation
 // down into its one and only argument.
-static void cg_func_nullable(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_nullable(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2580,7 +2580,7 @@ typedef enum {
 } attest_notnull_variant;
 
 // Generates code for all functions of the attest_notnull family.
-static void cg_func_attest_notnull(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value, attest_notnull_variant variant) {
+static void cg_func_attest_notnull(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value, attest_notnull_variant variant) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2623,12 +2623,12 @@ static void cg_func_attest_notnull(CqlState* CS, ast_node *call_ast, charbuf *is
 }
 
 // As the name suggests, we yield a not null result but throw if the argument was null
-static void cg_func_ifnull_throw(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_ifnull_throw(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   cg_func_attest_notnull(CS, call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_THROW);
 }
 
 // As the name suggests, we yield a not null result but crash/assert if the argument was null
-static void cg_func_ifnull_crash(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_ifnull_crash(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   cg_func_attest_notnull(CS, call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_CRASH);
 }
 
@@ -2636,7 +2636,7 @@ static void cg_func_ifnull_crash(CqlState* CS, ast_node *call_ast, charbuf *is_n
 // opt-in to the compressed string pieces mode if they have highly duplicated strings
 // this is really the most useful in the schema generator -- more kinds of strings
 // can participate in the pieces plan.
-static void cg_func_cql_compressed(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_cql_compressed(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2672,25 +2672,25 @@ static void cg_func_cql_compressed(CqlState* CS, ast_node *call_ast, charbuf *is
 // just changing the type directly, is that there are also representational
 // differences between values of nullable and nonnull types; some conversion is
 // required.
-static void cg_func_cql_inferred_notnull(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_cql_inferred_notnull(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   cg_func_attest_notnull(CS, call_ast, is_null, value, ATTEST_NOTNULL_VARIANT_INFERRED);
 }
 
 // There's a helper for this method, just call it.  Super easy.
-static void cg_func_changes(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf *value) {
+static void cg_func_changes(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0");
   bprintf(value, "sqlite3_changes(_db_)");
 }
 
 // There's a helper for this method, just call it.  Super easy.
-static void cg_func_last_insert_rowid(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf *value) {
+static void cg_func_last_insert_rowid(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null, charbuf *value) {
   bprintf(is_null, "0");
   bprintf(value, "sqlite3_last_insert_rowid(_db_)");
 }
 
 // Printf also has a helper, we just call it.  There are other helpers to emit
 // a call to an external (not stored proc) function.  Use that.
-static void cg_func_printf(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
+static void cg_func_printf(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2709,7 +2709,7 @@ static void cg_func_printf(CqlState* CS, ast_node *call_ast, charbuf *is_null, c
 
 // wrapper function for the builtin cql_get_blob_size
 // all we have to do is figure out if we need a temporary or not to hold the answer
-static void cg_func_cql_get_blob_size(CqlState* CS, ast_node *ast, charbuf*is_null, charbuf *value) {
+static void cg_func_cql_get_blob_size(CqlState* _Nonnull CS, ast_node *ast, charbuf*is_null, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2729,7 +2729,7 @@ static void cg_func_cql_get_blob_size(CqlState* CS, ast_node *ast, charbuf*is_nu
 // This is some kind of function call in an expression context.  Look up the method
 // and call one of the cg_func_* workers above.  All arg combos are known to be good
 // because semantic analysis verified them already.
-static void cg_expr_call(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_call(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -2747,7 +2747,7 @@ static void cg_expr_call(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null,
 }
 
 // Numeric literal, spit it out.
-static void cg_expr_num(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_num(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_num(expr));
   EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
@@ -2764,7 +2764,7 @@ static void cg_expr_num(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null,
 }
 
 // we generate a simple string literal or an identifier here, both use the "str" node
-static void cg_expr_str(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_str(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // String could be an id, or a literal -- literals start with single quote.
   Contract(is_ast_str(expr));
   EXTRACT_STRING(str, expr);
@@ -2779,14 +2779,14 @@ static void cg_expr_str(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null,
 }
 
 // the "dot" operator (e.g. C.x) is handled on the ID path
-static void cg_expr_dot(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_dot(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   // X.Y has a net local name computed by semantic analysis.  Use it like any other id.
   Contract(is_ast_dot(expr));
   cg_id(CS, expr, is_null, value);
 }
 
 // the null constant
-static void cg_expr_null(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_null(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(expr));
   // null literal
   bprintf(value, "NULL");
@@ -2797,7 +2797,7 @@ static void cg_expr_null(CqlState* CS, ast_node *expr, CSTR op, charbuf *is_null
 // one of the above workers for all the complex types and handles a few
 // primitives in place. See the introductory notes to understand is_null and
 // value.
-static void cg_expr(CqlState* CS, ast_node *expr, charbuf *is_null, charbuf *value, int32_t pri) {
+static void cg_expr(CqlState* _Nonnull CS, ast_node *expr, charbuf *is_null, charbuf *value, int32_t pri) {
   Contract(is_null);
   Contract(value);
   Contract(value->used == 1);  // just the null (i.e. empty buffer)
@@ -2817,7 +2817,7 @@ static void cg_expr(CqlState* CS, ast_node *expr, charbuf *is_null, charbuf *val
 // iteration.  So instead of eagerly finalizing it, we simply reset it so that
 // we can avoid an expensive prepare in the next iteration. All such "in a loop"
 // statements have an index greater than 0 to ensure they get a unique name.
-static void cg_temp_stmt_cleanup(CqlState* CS, int32_t stmt_index, charbuf *output) {
+static void cg_temp_stmt_cleanup(CqlState* _Nonnull CS, int32_t stmt_index, charbuf *output) {
   CHARBUF_OPEN(temp_stmt);
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
   // if statement index 0 then we're not re-using this statement in a loop
@@ -2837,7 +2837,7 @@ static void cg_temp_stmt_cleanup(CqlState* CS, int32_t stmt_index, charbuf *outp
 //    which is of exactly the right type
 //  * use that variable as the result.
 // The helper methods take care of sqlite error management.
-static void cg_expr_select(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_select_stmt(ast));
 
   // SELECT [select_opts] [select_expr_list_con]
@@ -2864,7 +2864,7 @@ static void cg_expr_select(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_nul
 // "Select ... if nothing throw" is exactly the same codegen as regular select. The throwing
 // that is done by default is simply made explcit.  The normal codegen already does
 // the "throw" (i.e. goto the current error target).
-static void cg_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_expr, ast->left);
   cg_expr_select(CS, select_expr, op, is_null, value, pri, pri_new);
@@ -2877,7 +2877,7 @@ static void cg_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR op
 // to be not null.  So here we have to fetch just the select statement part into
 // its own result variable of the exact correct type later we will safely assign
 // that result to the final type if it held a value
-static int32_t cg_expr_select_frag(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf *value) {
+static int32_t cg_expr_select_frag(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
 
   CG_SETUP_RESULT_VAR(ast, sem_type_result);
@@ -2909,7 +2909,7 @@ static int32_t cg_expr_select_frag(CqlState* CS, ast_node *ast, charbuf *is_null
 //  * use that variable as the result.
 //  * if there is no row, we use the default expression
 // The helper methods takes care of sqlite error management.
-static void cg_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_expr(ast));
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
@@ -2963,7 +2963,7 @@ static void cg_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op, char
 //  * use that variable as the result.
 //  * if there is no row, or the returned value is null we use the default expression
 // The helper methods take care of sqlite error management.
-static void cg_expr_select_if_nothing_or_null(CqlState* CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_or_null_expr(ast));
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
@@ -3012,7 +3012,7 @@ static void cg_expr_select_if_nothing_or_null(CqlState* CS, ast_node *ast, CSTR 
 // and one statement list.  It can happen in the context of the top level
 // if or any else-if.  The conditional generated requires either simple true
 // for not nulls or nullable true (i.e. null is false, false is false).
-static void cg_cond_action(CqlState* CS, ast_node *ast) {
+static void cg_cond_action(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -3044,7 +3044,7 @@ static void cg_cond_action(CqlState* CS, ast_node *ast) {
 
 // Recursively emits the else-if chain.  These have to nest to allow for
 // expressions to generate statements.
-static void cg_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsenode) {
+static void cg_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_node *elsenode) {
   if (ast) {
     Contract(is_ast_elseif(ast));
     EXTRACT(cond_action, ast->left);
@@ -3072,7 +3072,7 @@ static void cg_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsenode) {
 // We could optimize this more by looking to see if
 // the expression could possibly have side effects
 // and not emitting it if it is side-effect free.
-static void cg_expr_stmt(CqlState* CS, ast_node *ast) {
+static void cg_expr_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_expr_stmt(ast));
 
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -3105,7 +3105,7 @@ static void cg_expr_stmt(CqlState* CS, ast_node *ast) {
 //      statements;
 //     }
 //   }
-static void cg_if_stmt(CqlState* CS, ast_node *ast) {
+static void cg_if_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
 
   EXTRACT_NOTNULL(cond_action, ast->left);
@@ -3124,7 +3124,7 @@ static void cg_if_stmt(CqlState* CS, ast_node *ast) {
 // This code uses the same cg_store helper method to do an assignment as is used
 // all over the place for assigning to scratch variables.  All we have to do
 // here is pull the name and types out of the ast.
-static void cg_assign(CqlState* CS, ast_node *ast) {
+static void cg_assign(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_assign(ast) || is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -3145,7 +3145,7 @@ static void cg_assign(CqlState* CS, ast_node *ast) {
 
 // In the LET statement, we declare the variable based on type, emit that
 // then do the usual SET codegen.
-static void cg_let_stmt(CqlState* CS, ast_node *ast) {
+static void cg_let_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -3156,7 +3156,7 @@ static void cg_let_stmt(CqlState* CS, ast_node *ast) {
 
 // In the CONST statement, emit the same codegen as LET statement.
 // Immutability enforcement is done during semantic analysis.
-static void cg_const_stmt(CqlState* CS, ast_node *ast) {
+static void cg_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_const_stmt(ast));
   cg_let_stmt(CS, ast);
 }
@@ -3164,7 +3164,7 @@ static void cg_const_stmt(CqlState* CS, ast_node *ast) {
 // This is the processing for a single parameter in a stored proc declaration.
 // All we have to do is emit the type signature of that parameter.  This is
 // precisely what cg_var_decl with CG_VAR_DECL_PROTO is for...
-static void cg_param(CqlState* CS, ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
+static void cg_param(CqlState* _Nonnull CS, ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_NAME_AST(name_ast, param_detail->left)
@@ -3190,7 +3190,7 @@ static void cg_param(CqlState* CS, ast_node *ast, charbuf *decls, bool_t alias_i
 
 // Walk all the params of a stored proc and emit each one with a comma where needed.
 // cg_param does all the hard work.
-static void cg_params(CqlState* CS, ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
+static void cg_params(CqlState* _Nonnull CS, ast_node *ast, charbuf *decls, bool_t alias_in_ref) {
   Contract(is_ast_params(ast));
 
   while (ast) {
@@ -3210,7 +3210,7 @@ static void cg_params(CqlState* CS, ast_node *ast, charbuf *decls, bool_t alias_
 // Emit any initialization code needed for the parameters. In particular out
 // parameters assume that there is garbage in the out location, so they hammer a
 // NULL or 0 into that slot.
-static void cg_param_init(CqlState* CS, ast_node *ast, charbuf *body) {
+static void cg_param_init(CqlState* _Nonnull CS, ast_node *ast, charbuf *body) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_NAME_AST(name_ast, param_detail->left)
@@ -3265,7 +3265,7 @@ static void cg_param_init(CqlState* CS, ast_node *ast, charbuf *body) {
 
 // Walk all the params of a stored proc, if any of them require initialization
 // code in the body, emit that here.
-static void cg_params_init(CqlState* CS, ast_node *ast, charbuf *body) {
+static void cg_params_init(CqlState* _Nonnull CS, ast_node *ast, charbuf *body) {
   Contract(is_ast_params(ast));
 
   while (ast) {
@@ -3284,7 +3284,7 @@ static void cg_params_init(CqlState* CS, ast_node *ast, charbuf *body) {
 // to call. In particular the function that generates a rowset knows how to call
 // the corresponding function that generates a statement because their
 // signatures exactly match.
-static void cg_param_name(CqlState* CS, ast_node *ast, charbuf *output) {
+static void cg_param_name(CqlState* _Nonnull CS, ast_node *ast, charbuf *output) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_NAME_AST(name_ast, param_detail->left)
@@ -3295,7 +3295,7 @@ static void cg_param_name(CqlState* CS, ast_node *ast, charbuf *output) {
 
 // This loops through the parameters and emits each one as part of a call where
 // we have a local for each parameter.  See above.
-static void cg_param_names(CqlState* CS, ast_node *ast, charbuf *output) {
+static void cg_param_names(CqlState* _Nonnull CS, ast_node *ast, charbuf *output) {
   Contract(is_ast_params(ast));
 
   while (ast) {
@@ -3316,7 +3316,7 @@ static void cg_param_names(CqlState* CS, ast_node *ast, charbuf *output) {
 // other operations easier.  For now that order is simply primitive types and
 // then reference types.  This will become more strict over time as other areas
 // take advantage of ordering to generate more compact code.
-static void cg_fields_in_canonical_order(CqlState* CS, charbuf *output, sem_struct *sptr) {
+static void cg_fields_in_canonical_order(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr) {
   uint32_t count = sptr->count;
 
   // first primitive types
@@ -3351,7 +3351,7 @@ static void cg_fields_in_canonical_order(CqlState* CS, charbuf *output, sem_stru
 // `cursor_name` is not NULL, the struct will be named with both the current
 // proc name and the cursor name. The struct includes the _has_row_ boolean plus
 // the fields of the sem_struct provided.
-static void cg_c_struct_for_sptr(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR cursor_name) {
+static void cg_c_struct_for_sptr(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR cursor_name) {
   Invariant(sptr);
 
   CSTR scope = current_proc_name(CS);
@@ -3404,7 +3404,7 @@ static int32_t refs_count_sptr(sem_struct *sptr) {
 }
 
 // Emit the offsets for the given struct type into the output with the given name
-static void cg_col_offsets(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name) {
+static void cg_col_offsets(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR struct_name) {
   uint32_t count = sptr->count;
 
   CSTR prefix = CS->cg_c.in_var_group_emit ? "" : "static ";
@@ -3419,7 +3419,7 @@ static void cg_col_offsets(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR
   bprintf(output, "\n};\n");
 }
 
-static void cg_data_types(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR sym_name) {
+static void cg_data_types(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR sym_name) {
   CSTR prefix = CS->cg_c.in_var_group_emit ? "" : "static ";
 
   bprintf(output, "\n%suint8_t %s[] = {\n", prefix, sym_name);
@@ -3444,7 +3444,7 @@ static void cg_data_types(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR 
 // string, or hash the cursor.  But in principle it can be anyuthing. This code
 // generates the necessary variables for a dynamic cursor so that when a call
 // happens later &cursor_name_dyn can be passed for the arg and it's ready to go.
-static void cg_dynamic_cursor(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR cols_name, CSTR types_name) {
+static void cg_dynamic_cursor(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR sym_name, CSTR cols_name, CSTR types_name) {
   CSTR scope = current_proc_name(CS);
   CSTR suffix = (sym_name && scope) ? "_" : "";
   scope = scope ? scope : "";
@@ -3482,7 +3482,7 @@ static void cg_dynamic_cursor(CqlState* CS, charbuf *output, sem_struct *sptr, C
 }
 
 // Emit the offsets for the reference types in the given struct type into the output
-static void cg_refs_offset(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR offset_sym, CSTR struct_name) {
+static void cg_refs_offset(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR offset_sym, CSTR struct_name) {
   int32_t refs_count = refs_count_sptr(sptr);
 
   bprintf(output, "\n#define %s ", offset_sym);
@@ -3495,7 +3495,7 @@ static void cg_refs_offset(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR
   }
 }
 
-static void find_identity_columns_callback(CqlState* CS, CSTR _Nonnull name, ast_node *_Nonnull found_ast, void *_Nullable context) {
+static void find_identity_columns_callback(CqlState* _Nonnull CS, CSTR _Nonnull name, ast_node *_Nonnull found_ast, void *_Nullable context) {
   Invariant(context);
   charbuf *output = (charbuf*)context;
 
@@ -3515,7 +3515,7 @@ static void find_identity_columns_callback(CqlState* CS, CSTR _Nonnull name, ast
 // Emit the array of identity columns (used by cql_rows_same to determine which columns identify the "same" record)
 // Return 1 if any identity columns were found; otherwise 0
 static bool_t cg_identity_columns(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   charbuf *headers_output,
   charbuf *defs_output,
   CSTR proc_name,
@@ -3541,7 +3541,7 @@ static bool_t cg_identity_columns(
 // in the row structure. Since the references are stored together and are
 // at the end of the row you can alway clean up a row using just the offset
 // and the count.
-static void cg_struct_teardown_info(CqlState* CS, charbuf *output, sem_struct *sptr, CSTR name) {
+static void cg_struct_teardown_info(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, CSTR name) {
   Invariant(sptr);
 
   int32_t refs_count = refs_count_sptr(sptr);
@@ -3568,7 +3568,7 @@ static void cg_struct_teardown_info(CqlState* CS, charbuf *output, sem_struct *s
 
 // Emit the return code variables for the procedure
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
-static void cg_emit_rc_vars(CqlState* CS, charbuf *output) {
+static void cg_emit_rc_vars(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output, "  %s _rc_ = SQLITE_OK;\n", CS->rt->cql_code);
 }
 
@@ -3584,7 +3584,7 @@ static void cg_emit_rc_vars(CqlState* CS, charbuf *output) {
 //
 // The contracts emitted always match the _Notnull parameter attributes in the
 // declaration of the procedure.
-static void cg_emit_contracts(CqlState* CS, ast_node *ast, charbuf *b) {
+static void cg_emit_contracts(CqlState* _Nonnull CS, ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
 
@@ -3640,7 +3640,7 @@ static void cg_emit_contracts(CqlState* CS, ast_node *ast, charbuf *b) {
 // need some context such as "is it a dml proc" to do this correctly but
 // otherwise this is just using some of our standard helpers
 static void cg_emit_fetch_results_prototype(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   bool_t dml_proc,
   ast_node *params,
   CSTR proc_name,
@@ -3682,7 +3682,7 @@ static void cg_emit_fetch_results_prototype(
 // The prototype for the given procedure goes into the given buffer.  This is a
 // naked prototype, so additional arguments could be added -- it will be missing
 // the trailing ")" and it will not have EXPORT or anything like that on it.
-static void cg_emit_proc_prototype(CqlState* CS, ast_node *ast, charbuf *proc_decl, bool_t force_fetch_results) {
+static void cg_emit_proc_prototype(CqlState* _Nonnull CS, ast_node *ast, charbuf *proc_decl, bool_t force_fetch_results) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -3788,7 +3788,7 @@ static void cg_emit_proc_prototype(CqlState* CS, ast_node *ast, charbuf *proc_de
 //  * procedures that use SQL will get a hidden _db_ argument
 //  * procedures that return a result set will get a statement output
 //    * and the additional procedures for creating the result set and accessing it are emitted
-static void cg_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void cg_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -4096,7 +4096,7 @@ static void cg_create_proc_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_c.prepared_statement_index = c_prepared_statement_index_saved;
 }
 
-static void cg_alias_of_callback(CqlState* CS,
+static void cg_alias_of_callback(CqlState* _Nonnull CS,
   CSTR _Nonnull func_name, // underlying name of function this alias is of
   ast_node* _Nonnull misc_attr_value,
   void* _Nullable context // func ast
@@ -4115,7 +4115,7 @@ static void cg_alias_of_callback(CqlState* CS,
 // Here we have to emit the prototype for the declared function as a C prototype
 // this is just like our stored procs but we also have a return type.  See
 // cg_declare_proc_stmt for a comparison.
-static void cg_declare_func_stmt(CqlState* CS, ast_node *ast) {
+static void cg_declare_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_func_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -4150,7 +4150,7 @@ static void cg_declare_func_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // emit the proc with the appropriate invocation prefix
-static void cg_emit_proc_decl_from_invocation(CqlState* CS, bool_t private_proc, CSTR invocation) {
+static void cg_emit_proc_decl_from_invocation(CqlState* _Nonnull CS, bool_t private_proc, CSTR invocation) {
   if (private_proc) {
     bprintf(CS->cg_declarations_output, "%s);\n\n", invocation);
   }
@@ -4160,7 +4160,7 @@ static void cg_emit_proc_decl_from_invocation(CqlState* CS, bool_t private_proc,
 }
 
 // Emit the prototype for the declared method, but no body.
-static void cg_declare_proc_stmt(CqlState* CS, ast_node *ast) {
+static void cg_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_NAME_AST(name_ast, proc_name_type->left);
@@ -4217,7 +4217,7 @@ static void cg_declare_proc_stmt(CqlState* CS, ast_node *ast) {
   CHARBUF_CLOSE(proc_decl);
 }
 
-static void cg_declare_simple_var(CqlState* CS, sem_t sem_type, CSTR name) {
+static void cg_declare_simple_var(CqlState* _Nonnull CS, sem_t sem_type, CSTR name) {
   // if in a variable group we only emit the header part of the declarations
   if (!CS->cg_c.in_var_group_decl) {
     cg_var_decl(CS, CS->cg_declarations_output, sem_type, name, CG_VAR_DECL_FULL);
@@ -4232,7 +4232,7 @@ static void cg_declare_simple_var(CqlState* CS, sem_t sem_type, CSTR name) {
 // Emit a bunch of variable declarations for normal variables.
 // cg_var_decl does exactly this job for us.  Add any global variables to
 // the header file output.
-static void cg_declare_vars_type(CqlState* CS, ast_node *declare_vars_type) {
+static void cg_declare_vars_type(CqlState* _Nonnull CS, ast_node *declare_vars_type) {
   Contract(is_ast_declare_vars_type(declare_vars_type));
   EXTRACT_NOTNULL(name_list, declare_vars_type->left);
 
@@ -4250,7 +4250,7 @@ static void cg_declare_vars_type(CqlState* CS, ast_node *declare_vars_type) {
 // it will call us every time it finds a variable that needs to be bound.  That
 // variable is replaced by ? in the SQL output.  We end up with a list of
 // variables to bind on a silver platter (but in reverse order).
-static bool_t cg_capture_variables(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_capture_variables(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   // all variables have a name
   Contract(ast->sem->name);
 
@@ -4286,7 +4286,7 @@ static bool_t cg_capture_variables(CqlState* CS, ast_node *ast, void *context, c
 // If this is one of the tables that is supposed to be an "argument" then we
 // will remove the stub definition of the CTE.  References to this name will be
 // changed to required table in another callback
-static bool_t cg_suppress_cte(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_suppress_cte(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
   EXTRACT_STRING(name, cte_decl->left);
@@ -4302,7 +4302,7 @@ static bool_t cg_suppress_cte(CqlState* CS, ast_node *ast, void *context, charbu
 // then we will emit the desired value instead of the stub name.   Note that
 // this is always the name of a CTE and CTE of the old name was suppressed using
 // the callback above cg_suppress_cte
-static bool_t cg_table_rename(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_table_rename(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   // this is a simple table factor, so an actual name...
   EXTRACT_STRING(name, ast);
   bool_t handled = false;
@@ -4324,7 +4324,7 @@ static bool_t cg_table_rename(CqlState* CS, ast_node *ast, void *context, charbu
 // correct state including nullability.  There are helpers for most cases,
 // otherwise we can use normal sqlite accessors.  Strings of course create a
 // cql_string_ref and blobs create a cql_blog_ref.
-static void cg_get_column(CqlState* CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
+static void cg_get_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
   sem_t core_type = core_type_of(sem_type);
 
   bprintf(output, "  ");
@@ -4375,7 +4375,7 @@ static void cg_get_column(CqlState* CS, sem_t sem_type, CSTR cursor, int32_t ind
   }
 }
 
-static void cg_cql_datatype(CqlState* CS, sem_t sem_type, charbuf *output) {
+static void cg_cql_datatype(CqlState* _Nonnull CS, sem_t sem_type, charbuf *output) {
   if (!is_nullable(sem_type)) {
     bprintf(output, "CQL_DATA_TYPE_NOT_NULL | ");
   }
@@ -4410,7 +4410,7 @@ static void cg_cql_datatype(CqlState* CS, sem_t sem_type, charbuf *output) {
 // CQL uses the helper method cql_multifetch to get all the columns from a
 // statement This helper generates the correct CQL_DATA_TYPE_* data info and
 // emits the correct argument.
-static void cg_fetch_column(CqlState* CS, sem_t sem_type, CSTR var) {
+static void cg_fetch_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR var) {
   cg_cql_datatype(CS, sem_type, CS->cg_main_output);
 
   bprintf(CS->cg_main_output, ", ");
@@ -4426,7 +4426,7 @@ static void cg_fetch_column(CqlState* CS, sem_t sem_type, CSTR var) {
 // statement This helper generates the correct CQL_DATA_TYPE_* data info and
 // emits the arg in the expected format (pointers for nullable primitives) the
 // value for all ref types plus all non nullables.
-static void cg_bind_column(CqlState* CS, sem_t sem_type, CSTR var) {
+static void cg_bind_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR var) {
   cg_cql_datatype(CS, sem_type, CS->cg_main_output);
 
   bprintf(CS->cg_main_output, ", ");
@@ -4453,7 +4453,7 @@ static void cg_bind_column(CqlState* CS, sem_t sem_type, CSTR var) {
 
 // Emit a declaration for the temporary statement _temp_stmt_ if we haven't
 // already done so.  Also emit the cleanup once.
-static void ensure_temp_statement(CqlState* CS, int32_t stmt_index) {
+static void ensure_temp_statement(CqlState* _Nonnull CS, int32_t stmt_index) {
   // index 0 is the shared temp statement, all others are unique and are emitted every time
   if (CS->cg_c.temp_statement_emitted && stmt_index == 0) {
     return;
@@ -4478,7 +4478,7 @@ static void ensure_temp_statement(CqlState* CS, int32_t stmt_index) {
 // easily offset from the base.  This saves us from having yet another array.
 // Note also that we might want to encode these ids in a variable length
 // encoding so that we can have more than 64k of them...
-static int32_t cg_intern_piece(CqlState* CS, CSTR str, int32_t len) {
+static int32_t cg_intern_piece(CqlState* _Nonnull CS, CSTR str, int32_t len) {
   symtab_entry *entry = symtab_find(CS->cg_c.text_pieces, str);
   if (entry) {
     return (int32_t)(int64_t)(entry->val);
@@ -4494,7 +4494,7 @@ static int32_t cg_intern_piece(CqlState* CS, CSTR str, int32_t len) {
 // Variable length integer encoding: any byte that starts with the high bit set
 // indicates that there are more bytes.  The last byte does not have the high
 // bit set. So the one-byte encoding is just the simple integer as one byte.
-static void cg_varinteger(CqlState* CS, int32_t val, charbuf *output) {
+static void cg_varinteger(CqlState* _Nonnull CS, int32_t val, charbuf *output) {
   do {
     // strip 7 bits
     uint32_t byte = val & 0x7f;
@@ -4510,7 +4510,7 @@ static void cg_varinteger(CqlState* CS, int32_t val, charbuf *output) {
 // We found a shareable fragment, encode it for emission into the literal.
 // Importantly these ids are 32 bits but we store them in a variable length
 // encoding because 32 bits everywhere eats the savings
-static void cg_flush_piece(CqlState* CS, CSTR start, CSTR cur, charbuf *output) {
+static void cg_flush_piece(CqlState* _Nonnull CS, CSTR start, CSTR cur, charbuf *output) {
   CHARBUF_OPEN(temp);
   int32_t len = (int32_t)(cur - start);
 
@@ -4531,7 +4531,7 @@ static void cg_flush_piece(CqlState* CS, CSTR start, CSTR cur, charbuf *output) 
 // generated SQL (e.g. the words SELECT, DROP, EXISTS appear a lot) and we can
 // encode this much more economically.  Note also column names like
 // system_function_name are broken because the system_ part is often shared.
-cql_noexport uint32_t cg_statement_pieces(CqlState* CS, CSTR in, charbuf *output) {
+cql_noexport uint32_t cg_statement_pieces(CqlState* _Nonnull CS, CSTR in, charbuf *output) {
   Contract(in);
   int32_t len = (int32_t)strlen(in);
   Contract(len);
@@ -4612,14 +4612,14 @@ cql_noexport uint32_t cg_statement_pieces(CqlState* CS, CSTR in, charbuf *output
 }
 
 // This tells us how many fragments we emitted using some size math
-static uint32_t cg_fragment_count(CqlState* CS) {
+static uint32_t cg_fragment_count(CqlState* _Nonnull CS) {
   return (uint32_t)(CS->cg_c.shared_fragment_strings.used / sizeof(CSTR));
 }
 
 // When we complete a chunk of fragment text we have to emit the predicates for
 // the variables that were in that chunk.  We do this in the same context as the
 // conditional for that string.
-static void cg_flush_variable_predicates(CqlState* CS) {
+static void cg_flush_variable_predicates(CqlState* _Nonnull CS) {
   if (!CS->cg_c.has_conditional_fragments) {
     return;
   }
@@ -4651,7 +4651,7 @@ static void cg_flush_variable_predicates(CqlState* CS) {
 // for the "current" predicate scope, which nests.  Whatever the current
 // predicate is we use that and make an entry in the array.  So that way there
 // is always one computed predicate for each chunk of text we plan to emit.
-static void cg_fragment_copy_pred(CqlState* CS) {
+static void cg_fragment_copy_pred(CqlState* _Nonnull CS) {
   if (!CS->cg_c.has_conditional_fragments) {
     return;
   }
@@ -4681,7 +4681,7 @@ static void cg_fragment_copy_pred(CqlState* CS) {
 
 // First we make sure we have a predicate row and then we emit the line assuming
 // there is anything to emit...
-static void cg_emit_one_frag(CqlState* CS, charbuf *buffer) {
+static void cg_emit_one_frag(CqlState* _Nonnull CS, charbuf *buffer) {
   // TODO: can we make this an invariant?
   if (buffer->used > 1) {
     cg_fragment_copy_pred(CS);
@@ -4692,7 +4692,7 @@ static void cg_emit_one_frag(CqlState* CS, charbuf *buffer) {
 }
 
 // Emit a fragment from a statement, note that this can nest
-static void cg_fragment_stmt(CqlState* CS, ast_node *stmt, charbuf *buffer) {
+static void cg_fragment_stmt(CqlState* _Nonnull CS, ast_node *stmt, charbuf *buffer) {
   gen_one_stmt(CS, stmt);
   cg_emit_one_frag(CS, buffer);
   cg_flush_variable_predicates(CS);
@@ -4701,7 +4701,7 @@ static void cg_fragment_stmt(CqlState* CS, ast_node *stmt, charbuf *buffer) {
 // A new block in a conditional, this is the "it's true" case for it assign it a
 // number and move on.  Note the code is always inside of
 // if (the_expression_was_true) {...}
-static void cg_fragment_setpred(CqlState* CS) {
+static void cg_fragment_setpred(CqlState* _Nonnull CS) {
   CS->cg_c.cur_fragment_predicate = CS->cg_c.max_fragment_predicate;
   if (CS->cg_c.has_conditional_fragments) {
     bprintf(CS->cg_main_output, "_preds_%d[%d] = 1;\n",
@@ -4712,7 +4712,7 @@ static void cg_fragment_setpred(CqlState* CS) {
 
 // Emit the if condition for the conditional fragment and then generate the
 // predicate setting as well as the SQL for that part of the fragment.
-static void cg_fragment_cond_action(CqlState* CS, ast_node *ast, charbuf *buffer) {
+static void cg_fragment_cond_action(CqlState* _Nonnull CS, ast_node *ast, charbuf *buffer) {
   Contract(is_ast_cond_action(ast));
   EXTRACT_NOTNULL(stmt_list, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -4752,7 +4752,7 @@ static void cg_fragment_cond_action(CqlState* CS, ast_node *ast, charbuf *buffer
 // to the end we deal with the elsenode.  We can't do the else node in the caller
 // because we need to emit it inside the deepest matching parens.  So we just
 // push the elsenode down the recursion until its needed.
-static void cg_fragment_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsenode, charbuf *buffer) {
+static void cg_fragment_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_node *elsenode, charbuf *buffer) {
   if (ast) {
     Contract(is_ast_elseif(ast));
     EXTRACT(cond_action, ast->left);
@@ -4805,7 +4805,7 @@ static void cg_fragment_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsen
 // is very helpful if the fragment happens often or if the argument would
 // otherwise have to be evaluated many times.  But it comes at the cost of a
 // one-row query.
-static bool_t cg_inline_func(CqlState* CS, ast_node *call_ast, void *context, charbuf *buffer) {
+static bool_t cg_inline_func(CqlState* _Nonnull CS, ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
@@ -4901,7 +4901,7 @@ static bool_t cg_inline_func(CqlState* CS, ast_node *call_ast, void *context, ch
 //    tables in the target procedure to be the values that were provided
 //  * any such args/aliases have been pre-validated during semantic analysis
 //  * code gen is designed to keep as many string literals identical as possible so that they can be folded
-static bool_t cg_call_in_cte(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t cg_call_in_cte(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
 
@@ -5067,7 +5067,7 @@ static bool_t cg_call_in_cte(CqlState* CS, ast_node *cte_body, void *context, ch
 // this check but we do have to recurse the search as the normal walk doesn't
 // go into the body of shared fragments and the conditionals might be deeper
 // in the tree.
-static bool_t cg_search_conditionals_call_in_cte(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t cg_search_conditionals_call_in_cte(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT_STRING(name, call_stmt->left);
 
@@ -5090,7 +5090,7 @@ static bool_t cg_search_conditionals_call_in_cte(CqlState* CS, ast_node *cte_bod
 }
 
 // We simply record that we found some variables, any variables
-static bool_t cg_note_variable_exists(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t cg_note_variable_exists(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   CS->cg_c.has_variables = true;
   return false;
 }
@@ -5100,7 +5100,7 @@ static bool_t cg_note_variable_exists(CqlState* CS, ast_node *cte_body, void *co
 // function. Note that even though it has no FROM clause the inline function
 // could have a nested select inside of its select list and therefore all
 // fragment types can appear inside of an inline function fragment.
-static bool_t cg_note_inline_func(CqlState* CS, ast_node *call_ast, void *context, charbuf *buffer) {
+static bool_t cg_note_inline_func(CqlState* _Nonnull CS, ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
@@ -5128,7 +5128,7 @@ static bool_t cg_note_inline_func(CqlState* CS, ast_node *call_ast, void *contex
 // We set up a walk of the tree using the echo functions but we are going to
 // note what kinds of things we spotted while doing the walk.  We need to know
 // in advance what style of codegen we'll be doing.
-static void cg_classify_fragments(CqlState* CS, ast_node *stmt) {
+static void cg_classify_fragments(CqlState* _Nonnull CS, ast_node *stmt) {
   CS->cg_c.has_shared_fragments = false;
   CS->cg_c.has_conditional_fragments = false;
   CS->cg_c.has_variables = false;
@@ -5156,7 +5156,7 @@ static void cg_classify_fragments(CqlState* CS, ast_node *stmt) {
 //   * if CG_EXEC and no variables we can use the simpler sqlite3_exec form
 //   * bind any variables
 //   * if there are variables CG_EXEC will step and finalize
-static int32_t cg_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node *stmt, int32_t cg_flags) {
+static int32_t cg_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name, ast_node *stmt, int32_t cg_flags) {
   list_item *vars = NULL;
   CSTR amp = "&";
 
@@ -5361,7 +5361,7 @@ static int32_t cg_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node *st
 // statement is safe to batch with others.  If it had binding then we would need
 // to bind each statement in the block seperately and then there would be no
 // point in batching.
-static bool cg_verify_unbound_stmt(CqlState* CS, ast_node *stmt) {
+static bool cg_verify_unbound_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   list_item *vars = NULL;
 
   gen_sql_callbacks callbacks;
@@ -5383,7 +5383,7 @@ static bool cg_verify_unbound_stmt(CqlState* CS, ast_node *stmt) {
 // to make a suitable struct and the creates the local and initializes its
 // teardown function.  Code also has to go into the cleanup section for suitable
 // teardown.
-static void cg_declare_auto_cursor(CqlState* CS, CSTR cursor_name, sem_node *sem) {
+static void cg_declare_auto_cursor(CqlState* _Nonnull CS, CSTR cursor_name, sem_node *sem) {
   Contract(cursor_name);
   Contract(sem);
 
@@ -5453,7 +5453,7 @@ static void cg_declare_auto_cursor(CqlState* CS, CSTR cursor_name, sem_node *sem
 // than once in various header files without problems. The standard variable
 // declaration helpers are all that is needed here.  Semantic analysis already
 // verified that the group contains only viable globals.
-static void cg_declare_group_stmt(CqlState* CS, ast_node *ast) {
+static void cg_declare_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
   Contract(!CS->cg_c.in_var_group_decl);
   Contract(!CS->cg_c.in_var_group_emit);
@@ -5486,7 +5486,7 @@ static void cg_declare_group_stmt(CqlState* CS, ast_node *ast) {
 // groups into the current translation unit.  This should be done one time to
 // avoid duplicate symbols at link time.  The indicated groups are enumerated
 // and the definition form is emitted using the normal helpers.
-static void cg_emit_group_stmt(CqlState* CS, ast_node *ast) {
+static void cg_emit_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
   Contract(!CS->cg_c.in_var_group_decl);
@@ -5526,7 +5526,7 @@ static void cg_emit_group_stmt(CqlState* CS, ast_node *ast) {
 // the enums in callers from C.  The enum values are "public" in this sense.
 // This is a lot like the gen_sql code except it will be in C format.  Note C
 // has no floating point enums so we have to do those with macros.
-static void cg_emit_one_enum(CqlState* CS, ast_node *ast) {
+static void cg_emit_one_enum(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
@@ -5587,7 +5587,7 @@ static void cg_emit_one_enum(CqlState* CS, ast_node *ast) {
 // We emit the enums into the current .h file so that C code can use those
 // values to call our procedures.  The generated code from CQL uses the
 // evaluated constants so these symbols are for "others" to use.
-static void cg_emit_enums_stmt(CqlState* CS, ast_node *ast) {
+static void cg_emit_enums_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -5616,7 +5616,7 @@ static void cg_emit_enums_stmt(CqlState* CS, ast_node *ast) {
 // possible to use the constant in callers from C.  The constant values are
 // "public" in this sense.  This is a lot like the gen_sql code except it will
 // be in C format.
-static void cg_emit_one_const_group(CqlState* CS, ast_node *ast) {
+static void cg_emit_one_const_group(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(const_values, ast->right);
@@ -5655,7 +5655,7 @@ static void cg_emit_one_const_group(CqlState* CS, ast_node *ast) {
 // We're emitting the constants of a group into the output header. We have to
 // have this so that the constants can go into just one header of the developers
 // choice.
-static void cg_emit_constants_stmt(CqlState* CS, ast_node *ast) {
+static void cg_emit_constants_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_constants_stmt(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
 
@@ -5678,7 +5678,7 @@ static void cg_emit_constants_stmt(CqlState* CS, ast_node *ast) {
 //    * store the resulting statement for use later in fetch
 //  * declare a hidden has_row local for the cursor so that the cursor name can
 //    be used in expressions to see if a row was fetched.
-static void cg_declare_cursor(CqlState* CS, ast_node *ast) {
+static void cg_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
@@ -5855,7 +5855,7 @@ static void cg_declare_cursor(CqlState* CS, ast_node *ast) {
 // by an object associated with the cursor.  This happens as soon as the cursor
 // is created, however it is created. The codegen system knows that the cursor
 // may be boxed at some point using the SEM_TYPE_BOXED flag
-static void cg_set_from_cursor(CqlState* CS, ast_node *ast) {
+static void cg_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
@@ -5880,7 +5880,7 @@ static void cg_set_from_cursor(CqlState* CS, ast_node *ast) {
 }
 
 // We're using the named cursors's semantic type to declare a cursor.
-static void cg_declare_cursor_like(CqlState* CS, ast_node *name_ast) {
+static void cg_declare_cursor_like(CqlState* _Nonnull CS, ast_node *name_ast) {
   EXTRACT_STRING(cursor_name, name_ast);
 
   Contract(name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE);
@@ -5888,7 +5888,7 @@ static void cg_declare_cursor_like(CqlState* CS, ast_node *name_ast) {
 }
 
 // We're using some other names semantic type to declare a cursor.
-static void cg_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
+static void cg_declare_cursor_like_name(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   Contract(ast->right);
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -5897,7 +5897,7 @@ static void cg_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
 }
 
 // we're using the shape of a select statement to declare a cursor
-static void cg_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
+static void cg_declare_cursor_like_select(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
   Contract(is_select_stmt(ast->right));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -5906,7 +5906,7 @@ static void cg_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
 }
 
 // we're using typed names (x int, y real) to make a cursor
-static void cg_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
+static void cg_declare_cursor_like_typed_names(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
   Contract(is_ast_typed_names(ast->right));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -5917,7 +5917,7 @@ static void cg_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
 // The value cursor form for sure will be fetched.   We emit the necessary
 // locals for the cursor here.  Those are one for "_has_row_" field and another
 // for each element of the structure the cursor holds.
-static void cg_declare_value_cursor(CqlState* CS, ast_node *ast) {
+static void cg_declare_value_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
@@ -5931,7 +5931,7 @@ static void cg_declare_value_cursor(CqlState* CS, ast_node *ast) {
 // Fetch values has been checked for the presence of all columns and seed values
 // have already been added if needed.  All we have to generate evaluation of
 // each value and then a store.  There is no "fetch values into name_list" form.
-static void cg_fetch_values_stmt(CqlState* CS, ast_node *ast) {
+static void cg_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
   EXTRACT(insert_dummy_spec, ast->left);
@@ -5970,7 +5970,7 @@ static void cg_fetch_values_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // native blob storage support, these are just dyn cursor calls
-static void cg_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
+static void cg_fetch_cursor_from_blob_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   CSTR cursor_name = ast->left->sem->name;
 
@@ -5989,7 +5989,7 @@ static void cg_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // native blob storage support, these are just dyn cursor calls
-static void cg_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void cg_set_blob_from_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_blob_from_cursor_stmt(ast));
 
   CSTR blob_name  = ast->left->sem->name;
@@ -6013,7 +6013,7 @@ static void cg_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
 //    * set each local according to the automatically generated name as above
 //
 // Note: cg_get_column does the error processing
-static void cg_fetch_stmt(CqlState* CS, ast_node *ast) {
+static void cg_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
   EXTRACT(name_list, ast->right);
@@ -6098,7 +6098,7 @@ static void cg_fetch_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void cg_fetch_call_stmt(CqlState* CS, ast_node *ast) {
+static void cg_fetch_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   EXTRACT_STRING(cursor_name, ast->left);
   EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
@@ -6114,7 +6114,7 @@ static void cg_fetch_call_stmt(CqlState* CS, ast_node *ast) {
 // want to do this without having to restate all the columns, which besides
 // being verbose makes it hard for people to see what things you are changing
 // and what you are not.
-static void cg_update_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void cg_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
@@ -6153,7 +6153,7 @@ static void cg_update_cursor_stmt(CqlState* CS, ast_node *ast) {
 //  * if the constants are 64 make sure we emit them as such
 //  * we know evaluation will work because the semantic pass already checked it
 //  * formatting numbers never fails
-static void cg_switch_expr_list(CqlState* CS, ast_node *ast, sem_t sem_type_switch_expr) {
+static void cg_switch_expr_list(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type_switch_expr) {
   Contract(is_ast_expr_list(ast));
 
   while (ast) {
@@ -6179,7 +6179,7 @@ static void cg_switch_expr_list(CqlState* CS, ast_node *ast, sem_t sem_type_swit
 // integers and we know that the expression type of the switch expression is a
 // not null integer type so we can easily generate the switch form.  Anything
 // that could go wrong has already been checked.
-static void cg_switch_stmt(CqlState* CS, ast_node *ast) {
+static void cg_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
   EXTRACT_NOTNULL(switch_body, ast->right);
   EXTRACT_ANY_NOTNULL(expr, switch_body->left);
@@ -6255,7 +6255,7 @@ static void cg_switch_stmt(CqlState* CS, ast_node *ast) {
 // to break and continue.   That means other top level statements that aren't
 // loops must not create a C loop construct or break/continue would have the
 // wrong target.
-static void cg_while_stmt(CqlState* CS, ast_node *ast) {
+static void cg_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -6298,7 +6298,7 @@ static void cg_while_stmt(CqlState* CS, ast_node *ast) {
 //
 // It has to be this because the fetch might require many statements. There are
 // helpers for all of this so it's super simple.
-static void cg_loop_stmt(CqlState* CS, ast_node *ast) {
+static void cg_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_loop_stmt(ast));
   EXTRACT_NOTNULL(fetch_stmt, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -6335,7 +6335,7 @@ static void cg_loop_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Only SQL loops are allowed to use C loops, so "continue" is perfect
-static void cg_continue_stmt(CqlState* CS, ast_node *ast) {
+static void cg_continue_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
   // CONTINUE
@@ -6343,7 +6343,7 @@ static void cg_continue_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Only SQL loops are allowed to use C loops, so "break" is perfect
-static void cg_leave_stmt(CqlState* CS, ast_node *ast) {
+static void cg_leave_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   // LEAVE
@@ -6351,7 +6351,7 @@ static void cg_leave_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // We go to the main cleanup label and exit the current procedure
-static void cg_return_stmt(CqlState* CS, ast_node *ast) {
+static void cg_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
   // RETURN
@@ -6367,7 +6367,7 @@ static void cg_return_stmt(CqlState* CS, ast_node *ast) {
 // rollback a savepoint you have to do the rollback AND the release and then
 // you're unwound to the savepoint state.  The transaction in flight is still in
 // flight if there is one.
-static void cg_rollback_return_stmt(CqlState* CS, ast_node *ast) {
+static void cg_rollback_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -6384,7 +6384,7 @@ static void cg_rollback_return_stmt(CqlState* CS, ast_node *ast) {
 // savepoint semantics are just "release" is sort of like commit in that it
 // doesn't rollback and becomes part of the current transaction which may or may
 // not commit but that's what we mean by commit.
-static void cg_commit_return_stmt(CqlState* CS, ast_node *ast) {
+static void cg_commit_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -6398,7 +6398,7 @@ static void cg_commit_return_stmt(CqlState* CS, ast_node *ast) {
 // Finalize the statement object associated with the cursor. Note this sets the
 // cursor to null, so you can do it again.  Cleanup might also do this. That's
 // fine.
-static void cg_close_stmt(CqlState* CS, ast_node *ast) {
+static void cg_close_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
   EXTRACT_STRING(name, cursor_ast);
@@ -6426,7 +6426,7 @@ static void cg_close_stmt(CqlState* CS, ast_node *ast) {
 // cursor you return.  All OUT statements in any given proc must agree on the
 // exact type (this has already been verified).  At this point all we have to do
 // is copy the fields.
-static void cg_out_stmt(CqlState* CS, ast_node *ast) {
+static void cg_out_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
 
   // Get the canonical name of the cursor (the name in the tree might be
@@ -6474,7 +6474,7 @@ static void cg_out_stmt(CqlState* CS, ast_node *ast) {
   CHARBUF_CLOSE(var);
 }
 
-static void cg_out_union_stmt(CqlState* CS, ast_node *ast) {
+static void cg_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_stmt(ast));
 
   // get the canonical name of the cursor (the name in the tree might be
@@ -6489,7 +6489,7 @@ static void cg_out_union_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Emit the string literal into the otuput if the current runtime matches
-static void cg_echo_stmt(CqlState* CS, ast_node *ast) {
+static void cg_echo_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(rt_name, ast->left);
   EXTRACT_STRING(str, ast->right);
@@ -6507,7 +6507,7 @@ static void cg_echo_stmt(CqlState* CS, ast_node *ast) {
 
 // This is the helper method to dispatch a call to an external function like
 // "printf" given a name in the AST.  This is for when the user coded the call.
-static void cg_call_external(CqlState* CS, ast_node *ast) {
+static void cg_call_external(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -6522,7 +6522,7 @@ static void cg_call_external(CqlState* CS, ast_node *ast) {
 // sqlite helper method with user provided args.  All we do here is emit the
 // name and then use the arg list helper. The arg list helper gives us
 // prep/invocation/cleanup buffers which we must emit.
-static void cg_call_named_external(CqlState* CS, CSTR name, ast_node *arg_list) {
+static void cg_call_named_external(CqlState* _Nonnull CS, CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(invocation);
   CHARBUF_OPEN(prep);
   CHARBUF_OPEN(cleanup);
@@ -6559,7 +6559,7 @@ static void cg_call_named_external(CqlState* CS, CSTR name, ast_node *arg_list) 
 //   * burn the top of the stack, in case the result is stored in a temporary,
 //     each arg gets a fresh top of stack so they don't clobber each others
 //     results.
-static void cg_emit_external_arglist(CqlState* CS, ast_node *arg_list, charbuf *prep, charbuf *invocation, charbuf *cleanup) {
+static void cg_emit_external_arglist(CqlState* _Nonnull CS, ast_node *arg_list, charbuf *prep, charbuf *invocation, charbuf *cleanup) {
   for (ast_node *item = arg_list; item; item = item->right) {
     EXTRACT_ANY(arg, item->left);
     sem_t sem_type_arg = arg->sem->sem_type;
@@ -6600,7 +6600,7 @@ static void cg_emit_external_arglist(CqlState* CS, ast_node *arg_list, charbuf *
 
 // We have to release any valid object we have before we call an out function or
 // we will leak a reference.
-static void cg_release_out_arg_before_call(CqlState* CS, sem_t sem_type_arg, sem_t sem_type_param, CSTR name) {
+static void cg_release_out_arg_before_call(CqlState* _Nonnull CS, sem_t sem_type_arg, sem_t sem_type_param, CSTR name) {
   if (is_ref_type(sem_type_arg)) {
     if (!is_in_parameter(sem_type_param)) {
       cg_store(CS, CS->cg_main_output, name, sem_type_arg, sem_type_arg, "1", "NULL");
@@ -6617,7 +6617,7 @@ static void cg_release_out_arg_before_call(CqlState* CS, sem_t sem_type_arg, sem
 //    pass that through
 //  * finally, both the paramater and the argument was not nullable then we have
 //    to recover the variable name from the evaluated value.
-static void cg_emit_one_arg(CqlState* CS, ast_node *arg, sem_t sem_type_param, sem_t sem_type_arg, charbuf *invocation) {
+static void cg_emit_one_arg(CqlState* _Nonnull CS, ast_node *arg, sem_t sem_type_param, sem_t sem_type_arg, charbuf *invocation) {
   CG_PUSH_EVAL(arg, C_EXPR_PRI_ROOT);
 
   do {
@@ -6716,7 +6716,7 @@ static void cg_emit_one_arg(CqlState* CS, ast_node *arg, sem_t sem_type_param, s
 // the cg_store things because we know the target is a perfectly matching local
 // variable we just created. This code is also used in the proc as func path
 // hence the dml stuff.
-static void cg_user_func(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf *value) {
+static void cg_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -6874,7 +6874,7 @@ static void cg_user_func(CqlState* CS, ast_node *ast, charbuf *is_null, charbuf 
 }
 
 // Forward the call processing to the general helper (with cursor arg)
-static void cg_call_stmt(CqlState* CS, ast_node *ast) {
+static void cg_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // If the call has a result set it is stored in our result parameter just like
   // a loose select statement would be.  Note this can be overridden by a later
   // result which is totally ok.  Same as for select statements.
@@ -6882,7 +6882,7 @@ static void cg_call_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // emit the declarations for anything implicitly declared then do a normal call
-static void cg_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
+static void cg_declare_out_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_out_call_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
   EXTRACT(arg_list, call_stmt->right);
@@ -6901,7 +6901,7 @@ static void cg_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
 // This helper method walks all the args and all the formal paramaters at the
 // same time it gets the appropriate type info for each and then generates the
 // expression for the evaluation of that argument.
-static void cg_emit_proc_params(CqlState* CS, proc_params_info *info) {
+static void cg_emit_proc_params(CqlState* _Nonnull CS, proc_params_info *info) {
   // Harvest the input
   ast_node *arg_list = info->arg_list;
   ast_node *params = info->params;
@@ -6984,7 +6984,7 @@ static void cg_emit_proc_params(CqlState* CS, proc_params_info *info) {
 //
 // In call cases we can use the arg helper method to emit each arg.  There are
 // several rules for each kind of arg, described above in cg_emit_one_arg.
-static void cg_call_stmt_with_cursor(CqlState* CS, ast_node *ast, CSTR cursor_name) {
+static void cg_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -7130,11 +7130,11 @@ static void cg_call_stmt_with_cursor(CqlState* CS, ast_node *ast, CSTR cursor_na
 // minify the aliases because DDL can have views and the view column names can
 // be referred to in users of the view.  Loose select statements can have no
 // external references to column aliases.
-static void cg_any_ddl_stmt(CqlState* CS, ast_node *ast) {
+static void cg_any_ddl_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   cg_bound_sql_statement(CS, NULL, ast, CG_EXEC|CG_NO_MINIFY_ALIASES);
 }
 
-static void cg_std_dml_exec_stmt(CqlState* CS, ast_node *ast) {
+static void cg_std_dml_exec_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 // Straight up DML invocation.  The ast has the statement, execute it!
   cg_bound_sql_statement(CS, NULL, ast, CG_EXEC|CG_MINIFY_ALIASES);
 }
@@ -7142,7 +7142,7 @@ static void cg_std_dml_exec_stmt(CqlState* CS, ast_node *ast) {
 // DML with PREPARE.  The ast has the statement. Note: _result_ is the output
 // variable for the sqlite3_stmt we generate this was previously added when the
 // stored proc params were generated.
-static void cg_select_stmt(CqlState* CS, ast_node *ast) {
+static void cg_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_select_stmt(ast));
   cg_bound_sql_statement(CS, "_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
@@ -7150,20 +7150,20 @@ static void cg_select_stmt(CqlState* CS, ast_node *ast) {
 // DML with PREPARE.  The ast has the statement. Note: _result_ is the output
 // variable for the sqlite3_stmt we generate this was previously added when the
 // stored proc params were generated.
-static void cg_explain_stmt(CqlState* CS, ast_node *ast) {
+static void cg_explain_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
   cg_bound_sql_statement(CS, "_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
 // DML with PREPARE.  The ast has the statement.
-static void cg_with_select_stmt(CqlState* CS, ast_node *ast) {
+static void cg_with_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_select_stmt(ast));
   cg_select_stmt(CS, ast);
 }
 
 // Declares the shared _seed_ variable if needed and then loads it from the
 // indicated expression.
-static void cg_insert_dummy_spec(CqlState* CS, ast_node *ast) {
+static void cg_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->left); // the seed expr
 
   CSTR name = "_seed_";
@@ -7182,7 +7182,7 @@ static void cg_insert_dummy_spec(CqlState* CS, ast_node *ast) {
 }
 
 // set up the seed variable for dummy data if the relevant node is present
-static void cg_opt_seed_process(CqlState* CS, ast_node *ast) {
+static void cg_opt_seed_process(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_ANY(insert_dummy_spec, insert_type->left);
@@ -7193,7 +7193,7 @@ static void cg_opt_seed_process(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_insert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
 
   cg_opt_seed_process(CS, ast);
@@ -7201,7 +7201,7 @@ static void cg_insert_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_with_insert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_with_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_insert_stmt(ast));
   EXTRACT_NOTNULL(insert_stmt, ast->right);
   cg_opt_seed_process(CS, insert_stmt);
@@ -7209,7 +7209,7 @@ static void cg_with_insert_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_with_upsert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_with_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_upsert_stmt(ast));
   EXTRACT_NOTNULL(upsert_stmt, ast->right);
   EXTRACT_NOTNULL(insert_stmt, upsert_stmt->left);
@@ -7218,7 +7218,7 @@ static void cg_with_upsert_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_upsert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_upsert_stmt(ast));
   EXTRACT_NOTNULL(insert_stmt, ast->left);
 
@@ -7231,7 +7231,7 @@ static void cg_upsert_stmt(CqlState* CS, ast_node *ast) {
 // the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
 // Inside the try block, the cleanup handler is changed to the catch block. The
 // catch block puts it back.  Otherwise, generate nested statements as usual.
-static void cg_trycatch_helper(CqlState* CS, ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
+static void cg_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
   CHARBUF_OPEN(catch_start);
   CHARBUF_OPEN(catch_end);
 
@@ -7304,7 +7304,7 @@ static void cg_trycatch_helper(CqlState* CS, ast_node *try_list, ast_node *try_e
 }
 
 // the helper does all the work, see those notes
-static void cg_trycatch_stmt(CqlState* CS, ast_node *ast) {
+static void cg_trycatch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_trycatch_stmt(ast));
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
@@ -7313,7 +7313,7 @@ static void cg_trycatch_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // this is just a special try/catch
-static void cg_proc_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void cg_proc_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_proc_savepoint_stmt(ast));
   EXTRACT(stmt_list, ast->left);
 
@@ -7337,7 +7337,7 @@ static void cg_proc_savepoint_stmt(CqlState* CS, ast_node *ast) {
 
 // Convert _rc_ into an error code.  If it already is one keep it. Then go to
 // the current error target.
-static void cg_throw_stmt(CqlState* CS, ast_node *ast) {
+static void cg_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   bprintf(CS->cg_main_output, "_rc_ = cql_best_error(%s);\n", CS->cg_c.rcthrown_current);
@@ -7351,7 +7351,7 @@ static void cg_throw_stmt(CqlState* CS, ast_node *ast) {
 // special rules for the DDL methods. If they appear in a global context
 // (outside of any stored proc) they do not run, they are considered
 // declarations only.
-static void cg_one_stmt(CqlState* CS, ast_node *stmt, ast_node *misc_attrs) {
+static void cg_one_stmt(CqlState* _Nonnull CS, ast_node *stmt, ast_node *misc_attrs) {
   // reset the temp stack
   CS->cg_c.stack_level = 0;
 
@@ -7480,7 +7480,7 @@ static void cg_one_stmt(CqlState* CS, ast_node *stmt, ast_node *misc_attrs) {
 }
 
 // Emit the nested statements with one more level of indenting.
-static void cg_stmt_list(CqlState* CS, ast_node *head) {
+static void cg_stmt_list(CqlState* _Nonnull CS, ast_node *head) {
   if (!head) {
     return;
   }
@@ -7549,7 +7549,7 @@ static void cg_stmt_list(CqlState* CS, ast_node *head) {
 // type (the null type is reserved for the literal NULL, it's not a storage
 // class) and certainly nothing that is a struct or sentinel type.  Likewise
 // objects cannot be the result of a select, so that's out too.
-static void cg_data_type(CqlState* CS, charbuf *output, bool_t encode, sem_t sem_type) {
+static void cg_data_type(CqlState* _Nonnull CS, charbuf *output, bool_t encode, sem_t sem_type) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
 
@@ -7620,7 +7620,7 @@ typedef struct function_info {
 //     cql_result_set_get_bool(result_set, row, column)
 //   * for single row result sets it's just cql_result_set_get_bool(result_set,
 //     0, column)
-static void cg_proc_result_set_type_based_getter(CqlState* CS, function_info *_Nonnull info)
+static void cg_proc_result_set_type_based_getter(CqlState* _Nonnull CS, function_info *_Nonnull info)
 {
   charbuf *h = info->headers;
   charbuf *out = NULL;
@@ -7743,7 +7743,7 @@ static void cg_proc_result_set_type_based_getter(CqlState* CS, function_info *_N
 //  cql_set_null(new_value_);
 //  cql_result_set_set_int32_col((cql_result_set_ref)result_set, 0, 2, new_value_);
 // }
-static void cg_proc_result_set_setter(CqlState* CS, function_info *_Nonnull info, bool_t is_set_null) {
+static void cg_proc_result_set_setter(CqlState* _Nonnull CS, function_info *_Nonnull info, bool_t is_set_null) {
   charbuf *out = info->headers;
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(
@@ -7836,7 +7836,7 @@ static void cg_proc_result_set_setter(CqlState* CS, function_info *_Nonnull info
 }
 
 // Write out the autodrop info into the stream.
-static void cg_one_autodrop(CqlState* CS, CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
+static void cg_one_autodrop(CqlState* _Nonnull CS, CSTR _Nonnull name, ast_node *_Nonnull misc_attr_value, void *_Nullable context) {
   Invariant(context);
   charbuf *output = (charbuf *)context;
   bprintf(output, "%s\\0", name);
@@ -7846,7 +7846,7 @@ static void cg_one_autodrop(CqlState* CS, CSTR _Nonnull name, ast_node *_Nonnull
 // drop the indicated tables when the proc is finished running.  The attributes
 // should look like this:
 // @attribute(cql:autodrop=(table1, table2, ,...))
-static void cg_autodrops(CqlState* CS, ast_node *misc_attrs, charbuf *output) {
+static void cg_autodrops(CqlState* _Nonnull CS, ast_node *misc_attrs, charbuf *output) {
   if (!misc_attrs) {
      return;
   }
@@ -7893,7 +7893,7 @@ typedef struct fetch_result_info {
 // way, the metadata is assembled here for use at runtime.
 //
 // Other fields are not conditional.
-static void cg_fetch_info(CqlState* CS, fetch_result_info *info, charbuf *output)
+static void cg_fetch_info(CqlState* _Nonnull CS, fetch_result_info *info, charbuf *output)
 {
   CHARBUF_OPEN(tmp);
     if (info->prefix) {
@@ -7947,7 +7947,7 @@ static void cg_fetch_info(CqlState* CS, fetch_result_info *info, charbuf *output
 //  * for each named column emit a function "foo_get_[column-name]" which gets
 //    that column out of the rowset for the indicated row number.
 //  * prototypes for the above go into the main output header file
-static void cg_proc_result_set(CqlState* CS, ast_node *ast) {
+static void cg_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(is_struct(ast->sem->sem_type));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -8424,7 +8424,7 @@ static void cg_proc_result_set(CqlState* CS, ast_node *ast) {
 // proc then you can't proceed.  Semantic analysis doƒesn't want to know that
 // stuff. Otherwise all we do is set up the most general buffers for the global
 // case and spit out a function with the correct name.
-cql_noexport void cg_c_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_c_main(CqlState* _Nonnull CS, ast_node *head) {
   CS->cg_c.error_target = CQL_CLEANUP_DEFAULT_LABEL;
   CS->cg_c.rcthrown_current = CQL_RCTHROWN_DEFAULT;
   CS->cg_c.shared_fragment_strings.ptr = NULL;
@@ -8615,7 +8615,7 @@ cql_noexport void cg_c_main(CqlState* CS, ast_node *head) {
   cg_c_cleanup(CS);
 }
 
-cql_noexport void cg_c_init(CqlState* CS) {
+cql_noexport void cg_c_init(CqlState* _Nonnull CS) {
   cg_c_cleanup(CS); // reset globals/statics
   cg_common_init(CS);
 
@@ -8812,7 +8812,7 @@ cql_noexport void cg_c_init(CqlState* CS) {
 // because of the amalgam.  In the context of the amalgam the compiler might be
 // run more than once without the process exiting. Hence we have to reset the
 // globals and empty the symbol tables.
-cql_noexport void cg_c_cleanup(CqlState* CS) {
+cql_noexport void cg_c_cleanup(CqlState* _Nonnull CS) {
   cg_common_cleanup(CS);
 
   SYMTAB_CLEANUP(CS->cg_c.string_literals);

@@ -9,6 +9,6 @@
 
 #include "ast.h"
 
-cql_noexport void cg_schema_main(CqlState* CS, struct ast_node *root);
-cql_noexport void cg_schema_upgrade_main(CqlState* CS, struct ast_node *root);
-cql_noexport void cg_schema_sqlite_main(CqlState* CS, struct ast_node *root);
+cql_noexport void cg_schema_main(CqlState* _Nonnull CS, struct ast_node *root);
+cql_noexport void cg_schema_upgrade_main(CqlState* _Nonnull CS, struct ast_node *root);
+cql_noexport void cg_schema_sqlite_main(CqlState* _Nonnull CS, struct ast_node *root);

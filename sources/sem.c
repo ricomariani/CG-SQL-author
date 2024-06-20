@@ -185,86 +185,86 @@ typedef void sem_func(CqlState *CS, ast_node *ast, uint32_t arg_count);
 typedef void sem_special_func(CqlState *CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
 
 // forward references for mutual recursion cases
-static void sem_expr_invalid_op(CqlState* CS, ast_node *ast, CSTR op);
-static void sem_stmt_list(CqlState* CS, ast_node *ast);
-static void sem_stmt_list_in_current_flow_context(CqlState* CS, ast_node *ast);
-static void sem_stmt_list_within_loop(CqlState* CS, ast_node *stmt_list, ast_node *true_expr);
-static void sem_select_rewrite_backing(CqlState* CS, ast_node *node);
-static void sem_select_core_list(CqlState* CS, ast_node *ast);
-static void sem_query_parts(CqlState* CS, ast_node *node);
-static void sem_table_function(CqlState* CS, ast_node *node);
-static void sem_as_alias(CqlState* CS, ast_node *node, CSTR *alias_target, ast_node *ast_target);
-static void sem_fetch_stmt(CqlState* CS, ast_node *ast);
-static void sem_fetch_values_stmt(CqlState* CS, ast_node *ast);
-static void sem_call_stmt_opt_cursor(CqlState* CS, ast_node *ast, CSTR cursor_name);
-static void sem_resolve_cursor_field(CqlState* CS, ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
-static bool_t sem_try_as_cursor(CqlState* CS, ast_node *ast, bool_t *hard_fail);
-static bool_t sem_validate_context(CqlState* CS, ast_node *ast, CSTR name, uint32_t valid_contexts);
-static void sem_validate_dot_transform(CqlState* CS, ast_node *ast, CSTR choice1, CSTR choice2);
-static void sem_expr_select(CqlState* CS, ast_node *ast, CSTR cstr);
-static void sem_with_select_stmt(CqlState* CS, ast_node *ast);
-static void sem_upsert_stmt(CqlState* CS, ast_node *ast);
-static void sem_with_upsert_stmt(CqlState* CS, ast_node *ast);
-static void sem_with_select(CqlState* CS, ast_node *ast);
-static void sem_explain(CqlState* CS, ast_node *ast);
-static void sem_validate_args(CqlState* CS, ast_node *ast, ast_node *arg_list);
-static void sem_validate_args_vs_formals(CqlState* CS, ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func);
-static void sem_validate_old_object_or_marked_create(CqlState* CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name);
-static void sem_validate_marked_create_or_delete(CqlState* CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name);
-static bool_t sem_validate_compatible_table_cols_vals(CqlState* CS, ast_node *table_ast, ast_node *name_list, ast_node *insert_list);
-static bool_t sem_validate_compatible_table_cols_select(CqlState* CS, ast_node *table_ast, ast_node *name_list, ast_node *select_stmt);
-static bool_t sem_validate_compatible_cols_vals(CqlState* CS, ast_node *name_list, ast_node *values);
-static void enqueue_pending_region_validation(CqlState* CS, ast_node *prev, ast_node *cur, CSTR name);
-static void sem_validate_previous_deployable_region(CqlState* CS, ast_node *root, deployable_validation *v);
-static void sem_opt_where(CqlState* CS, ast_node *ast);
-static void sem_opt_orderby(CqlState* CS, ast_node *ast);
-static void sem_opt_filter_clause(CqlState* CS, ast_node *ast);
-static bool_t sem_validate_identical_text(CqlState* CS, ast_node *prev_def, ast_node *def, gen_func fn, gen_sql_callbacks *callbacks);
-static bool_t sem_validate_identical_ddl(CqlState* CS, ast_node *cur, ast_node *prev);
-static void sem_setup_region_filters(CqlState* CS);
-static void sem_inside_create_proc_stmt(CqlState* CS, ast_node *ast);
-static void sem_declare_cursor_for_expr(CqlState* CS, ast_node *ast);
-static sem_join * new_sem_join(CqlState* CS, uint32_t count);
-static void sem_validate_check_expr_for_table(CqlState* CS, ast_node *table, ast_node *expr, CSTR context);
-static void sem_validate_index_expr_for_jptr(CqlState* CS, sem_join *jptr, ast_node *expr);
-static void sem_numeric_expr(CqlState* CS, ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
-static void sem_misc_attrs_basic(CqlState* CS, ast_node *ast);
-static void sem_data_type_var(CqlState* CS, ast_node *ast);
-static CSTR sem_combine_kinds_general(CqlState* CS, ast_node *ast, CSTR kind_left, CSTR kind_right);
-static CSTR sem_combine_kinds(CqlState* CS, ast_node *ast, CSTR current_kind);
-static bool_t sem_select_stmt_is_mixed_results(CqlState* CS, ast_node *ast);
-static bool_t sem_verify_legal_variable_name(CqlState* CS, ast_node *variable, CSTR name);
-static void sem_verify_no_anon_columns(CqlState* CS, ast_node *ast);
-static void sem_verify_no_null_columns(CqlState* CS, ast_node *ast);
-static bool_t sem_verify_no_duplicate_names(CqlState* CS, ast_node *name_list);
-static bool_t sem_verify_no_duplicate_shape_exprs(CqlState* CS, ast_node *shape_exprs);
-static sem_t *find_mutable_type(CqlState* CS, CSTR name, CSTR scope);
-static void sem_set_notnull_improved(CqlState* CS, CSTR name, CSTR scope);
-static void sem_unset_notnull_improved(CqlState* CS, CSTR name, CSTR scope);
-static void sem_unset_global_notnull_improvements(CqlState* CS);
-static void sem_set_has_row_improved(CqlState* CS, CSTR cursor_name);
-static void sem_unset_has_row_improved(CqlState* CS, CSTR cursor_name);
-static void sem_set_improvements_for_true_condition(CqlState* CS, ast_node *ast);
-static void sem_set_improvements_for_false_condition(CqlState* CS, ast_node *ast);
+static void sem_expr_invalid_op(CqlState* _Nonnull CS, ast_node *ast, CSTR op);
+static void sem_stmt_list(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_stmt_list_in_current_flow_context(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_stmt_list_within_loop(CqlState* _Nonnull CS, ast_node *stmt_list, ast_node *true_expr);
+static void sem_select_rewrite_backing(CqlState* _Nonnull CS, ast_node *node);
+static void sem_select_core_list(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_query_parts(CqlState* _Nonnull CS, ast_node *node);
+static void sem_table_function(CqlState* _Nonnull CS, ast_node *node);
+static void sem_as_alias(CqlState* _Nonnull CS, ast_node *node, CSTR *alias_target, ast_node *ast_target);
+static void sem_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_call_stmt_opt_cursor(CqlState* _Nonnull CS, ast_node *ast, CSTR cursor_name);
+static void sem_resolve_cursor_field(CqlState* _Nonnull CS, ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
+static bool_t sem_try_as_cursor(CqlState* _Nonnull CS, ast_node *ast, bool_t *hard_fail);
+static bool_t sem_validate_context(CqlState* _Nonnull CS, ast_node *ast, CSTR name, uint32_t valid_contexts);
+static void sem_validate_dot_transform(CqlState* _Nonnull CS, ast_node *ast, CSTR choice1, CSTR choice2);
+static void sem_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr);
+static void sem_with_select_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_with_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_with_select(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_explain(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_validate_args(CqlState* _Nonnull CS, ast_node *ast, ast_node *arg_list);
+static void sem_validate_args_vs_formals(CqlState* _Nonnull CS, ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func);
+static void sem_validate_old_object_or_marked_create(CqlState* _Nonnull CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name);
+static void sem_validate_marked_create_or_delete(CqlState* _Nonnull CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name);
+static bool_t sem_validate_compatible_table_cols_vals(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *name_list, ast_node *insert_list);
+static bool_t sem_validate_compatible_table_cols_select(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *name_list, ast_node *select_stmt);
+static bool_t sem_validate_compatible_cols_vals(CqlState* _Nonnull CS, ast_node *name_list, ast_node *values);
+static void enqueue_pending_region_validation(CqlState* _Nonnull CS, ast_node *prev, ast_node *cur, CSTR name);
+static void sem_validate_previous_deployable_region(CqlState* _Nonnull CS, ast_node *root, deployable_validation *v);
+static void sem_opt_where(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_opt_orderby(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_opt_filter_clause(CqlState* _Nonnull CS, ast_node *ast);
+static bool_t sem_validate_identical_text(CqlState* _Nonnull CS, ast_node *prev_def, ast_node *def, gen_func fn, gen_sql_callbacks *callbacks);
+static bool_t sem_validate_identical_ddl(CqlState* _Nonnull CS, ast_node *cur, ast_node *prev);
+static void sem_setup_region_filters(CqlState* _Nonnull CS);
+static void sem_inside_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_declare_cursor_for_expr(CqlState* _Nonnull CS, ast_node *ast);
+static sem_join * new_sem_join(CqlState* _Nonnull CS, uint32_t count);
+static void sem_validate_check_expr_for_table(CqlState* _Nonnull CS, ast_node *table, ast_node *expr, CSTR context);
+static void sem_validate_index_expr_for_jptr(CqlState* _Nonnull CS, sem_join *jptr, ast_node *expr);
+static void sem_numeric_expr(CqlState* _Nonnull CS, ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context);
+static void sem_misc_attrs_basic(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_data_type_var(CqlState* _Nonnull CS, ast_node *ast);
+static CSTR sem_combine_kinds_general(CqlState* _Nonnull CS, ast_node *ast, CSTR kind_left, CSTR kind_right);
+static CSTR sem_combine_kinds(CqlState* _Nonnull CS, ast_node *ast, CSTR current_kind);
+static bool_t sem_select_stmt_is_mixed_results(CqlState* _Nonnull CS, ast_node *ast);
+static bool_t sem_verify_legal_variable_name(CqlState* _Nonnull CS, ast_node *variable, CSTR name);
+static void sem_verify_no_anon_columns(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_verify_no_null_columns(CqlState* _Nonnull CS, ast_node *ast);
+static bool_t sem_verify_no_duplicate_names(CqlState* _Nonnull CS, ast_node *name_list);
+static bool_t sem_verify_no_duplicate_shape_exprs(CqlState* _Nonnull CS, ast_node *shape_exprs);
+static sem_t *find_mutable_type(CqlState* _Nonnull CS, CSTR name, CSTR scope);
+static void sem_set_notnull_improved(CqlState* _Nonnull CS, CSTR name, CSTR scope);
+static void sem_unset_notnull_improved(CqlState* _Nonnull CS, CSTR name, CSTR scope);
+static void sem_unset_global_notnull_improvements(CqlState* _Nonnull CS);
+static void sem_set_has_row_improved(CqlState* _Nonnull CS, CSTR cursor_name);
+static void sem_unset_has_row_improved(CqlState* _Nonnull CS, CSTR cursor_name);
+static void sem_set_improvements_for_true_condition(CqlState* _Nonnull CS, ast_node *ast);
+static void sem_set_improvements_for_false_condition(CqlState* _Nonnull CS, ast_node *ast);
 static bool_t variable_should_require_initialization(sem_t sem_type);
-static void reset_enforcements(CqlState* CS);
-static uint32_t sem_with_depth(CqlState* CS);
-static ast_node *sem_find_table(CqlState* CS, CSTR name, ast_node *ast_error);
-static void sem_shared_cte(CqlState* CS, ast_node *cte_body);
-static void sem_declare_proc_stmt(CqlState* CS, ast_node *ast);
-static bool sem_create_migration_proc_prototype(CqlState* CS, ast_node *origin, CSTR name);
+static void reset_enforcements(CqlState* _Nonnull CS);
+static uint32_t sem_with_depth(CqlState* _Nonnull CS);
+static ast_node *sem_find_table(CqlState* _Nonnull CS, CSTR name, ast_node *ast_error);
+static void sem_shared_cte(CqlState* _Nonnull CS, ast_node *cte_body);
+static void sem_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static bool sem_create_migration_proc_prototype(CqlState* _Nonnull CS, ast_node *origin, CSTR name);
 static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_orderby);
-static void sem_non_blob_storage_table(CqlState* CS, ast_node *ast_error, ast_node *ast_table);
-static void sem_non_backed_table(CqlState* CS, ast_node *ast_error, ast_node *ast_table);
-static ast_node *sem_synthesize_current_locals(CqlState* CS);
-static CSTR find_column_kind(CqlState* CS, CSTR table_name, CSTR column_name);
-static void sem_assign(CqlState* CS, ast_node *ast);
-static void insert_table_alias_string_overide(CqlState* CS, ast_node *_Nonnull ast, CSTR _Nonnull table_name);
-static bool_t sem_binary_prep_helper(CqlState* CS, ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
-static void rewrite_column_values_for_update_stmts(CqlState* CS, ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
+static void sem_non_blob_storage_table(CqlState* _Nonnull CS, ast_node *ast_error, ast_node *ast_table);
+static void sem_non_backed_table(CqlState* _Nonnull CS, ast_node *ast_error, ast_node *ast_table);
+static ast_node *sem_synthesize_current_locals(CqlState* _Nonnull CS);
+static CSTR find_column_kind(CqlState* _Nonnull CS, CSTR table_name, CSTR column_name);
+static void sem_assign(CqlState* _Nonnull CS, ast_node *ast);
+static void insert_table_alias_string_overide(CqlState* _Nonnull CS, ast_node *_Nonnull ast, CSTR _Nonnull table_name);
+static bool_t sem_binary_prep_helper(CqlState* _Nonnull CS, ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
+static void rewrite_column_values_for_update_stmts(CqlState* _Nonnull CS, ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
 
 // create a new id node either qid or normal based on the bool
-cql_noexport ast_node *new_str_or_qstr(CqlState* CS, CSTR name, sem_t sem_type) {
+cql_noexport ast_node *new_str_or_qstr(CqlState* _Nonnull CS, CSTR name, sem_t sem_type) {
   if (sem_type & SEM_TYPE_QID) {
     return new_ast_qstr_escaped(CS, name);
   }
@@ -276,13 +276,13 @@ cql_noexport ast_node *new_str_or_qstr(CqlState* CS, CSTR name, sem_t sem_type) 
 
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
-static bool_t sem_reverse_apply_if_needed(CqlState* CS, ast_node *ast, bool_t analyze);
+static bool_t sem_reverse_apply_if_needed(CqlState* _Nonnull CS, ast_node *ast, bool_t analyze);
 
-static void lazy_free_symtab(CqlState* CS, void *syms) {
+static void lazy_free_symtab(CqlState* _Nonnull CS, void *syms) {
   symtab_delete(CS, syms);
 }
 
-static void add_pending_symtab_free(CqlState* CS, symtab *syms) {
+static void add_pending_symtab_free(CqlState* _Nonnull CS, symtab *syms) {
   lazy_free *p = _new(lazy_free);
   p->context = syms;
   p->teardown = lazy_free_symtab;
@@ -334,7 +334,7 @@ typedef struct dummy_info {
   bool_t use_null;              // use null for the dummy value rather than the seed
 } dummy_info;
 
-static void sem_synthesize_dummy_value(CqlState* CS, dummy_info *info);
+static void sem_synthesize_dummy_value(CqlState* _Nonnull CS, dummy_info *info);
 
 // When processing version attributes there's a lot going on and loose arguments are insane.  So hence this struct.
 typedef struct version_attrs_info {
@@ -361,20 +361,20 @@ typedef struct version_attrs_info {
 } version_attrs_info;
 
 // extracts the useful information out of @create and @delete versions
-static bool_t sem_validate_version_attrs(CqlState* CS, version_attrs_info *vers_info);
+static bool_t sem_validate_version_attrs(CqlState* _Nonnull CS, version_attrs_info *vers_info);
 
 // validates previous and current attributes for valid progression
-static bool_t sem_validate_attrs_prev_cur(CqlState* CS, version_attrs_info *prev, version_attrs_info *cur, ast_node *name_ast);
+static bool_t sem_validate_attrs_prev_cur(CqlState* _Nonnull CS, version_attrs_info *prev, version_attrs_info *cur, ast_node *name_ast);
 
 // ensures DDL inside of a proc has no attributes
-static bool_t sem_validate_vers_ok_in_context(CqlState* CS, version_attrs_info *vers);
+static bool_t sem_validate_vers_ok_in_context(CqlState* _Nonnull CS, version_attrs_info *vers);
 
 // records an annotation from the version info
-static void sem_record_annotation_from_vers_info(CqlState* CS, version_attrs_info *vers_info);
+static void sem_record_annotation_from_vers_info(CqlState* _Nonnull CS, version_attrs_info *vers_info);
 
 // Validate whether or not an object is usable with a schema region. The object
 // can only be a table, view, trigger or index.
-static bool_t sem_validate_object_ast_in_current_region(CqlState* CS,
+static bool_t sem_validate_object_ast_in_current_region(CqlState* _Nonnull CS,
     CSTR name,
     ast_node *table_ast,
     ast_node *err_target,
@@ -607,7 +607,7 @@ typedef struct sem_joinscope {
 
 // for dispatching expression types
 typedef struct sem_expr_dispatch {
-  void (*func)(CqlState* CS, ast_node *ast, CSTR str);
+  void (*func)(CqlState* _Nonnull CS, ast_node *ast, CSTR str);
   CSTR str;
 } sem_expr_dispatch;
 
@@ -628,7 +628,7 @@ typedef struct pending_table_validation {
 #define pending_table_validations_head_lv CS->sem.pending_table_validations_head
 #define pending_table_validations_head_rv ((pending_table_validation*)pending_table_validations_head_lv)
 
-static void sem_validate_fk_attr(CqlState* CS, pending_table_validation *pending);
+static void sem_validate_fk_attr(CqlState* _Nonnull CS, pending_table_validation *pending);
 
 // for verifying that a particular shared fragment call does not cause name conflicts inside the fragment
 typedef struct binding_info {
@@ -643,7 +643,7 @@ typedef struct binding_info {
 // then we have to defer the validation until we're done with the table and
 // have compute all the types of all the columns.  So store the data so we can
 // run it later
-static void enqueue_pending_table_validation(CqlState* CS, pending_table_validation *pending) {
+static void enqueue_pending_table_validation(CqlState* _Nonnull CS, pending_table_validation *pending) {
   pending_table_validation *v = _ast_pool_new(pending_table_validation);
   *v = *pending;
   v->next = pending_table_validations_head_rv;
@@ -657,7 +657,7 @@ static void enqueue_pending_table_validation(CqlState* CS, pending_table_validat
 // column names in the table.  FK references seem like they could be resolved immediately
 // until you consider that a table may FK to its own columns so we have to know
 // all the names to be sure to give correct errors in that case, too.
-static void run_pending_table_validations(CqlState* CS) {
+static void run_pending_table_validations(CqlState* _Nonnull CS) {
   pending_table_validation *v = pending_table_validations_head_rv;
 
   for (; v; v = v->next) {
@@ -698,7 +698,7 @@ error:
 //     because that can match no syntactically correct "T".
 //   * do semantic analysis as usual on the expression, any numeric is
 //     ok for a bool
-static void sem_validate_check_expr_for_table(CqlState* CS, ast_node *table, ast_node *expr, CSTR context) {
+static void sem_validate_check_expr_for_table(CqlState* _Nonnull CS, ast_node *table, ast_node *expr, CSTR context) {
   Contract(is_ast_create_table_stmt(table));
   Contract(expr);
 
@@ -730,7 +730,7 @@ static void sem_validate_check_expr_for_table(CqlState* CS, ast_node *table, ast
   }
 }
 
-static void sem_validate_index_expr_for_jptr(CqlState* CS, sem_join *jptr, ast_node *expr) {
+static void sem_validate_index_expr_for_jptr(CqlState* _Nonnull CS, sem_join *jptr, ast_node *expr) {
   Contract(jptr);
   Contract(expr);
 
@@ -798,7 +798,7 @@ typedef struct name_check {
   uint32_t count;            // the count of names
 } name_check;
 
-static bool_t sem_name_check(CqlState* CS, name_check *check);
+static bool_t sem_name_check(CqlState* _Nonnull CS, name_check *check);
 
 // This is the setup for looking for a list of names in a particular join scope.  This is useful for
 // making sure names are from (e.g.) the names in the select list, or the names of the
@@ -812,14 +812,14 @@ static void init_name_check(name_check *check, ast_node *name_list, sem_join *jp
 }
 
 // Releases the temp info.
-static void destroy_name_check(CqlState* CS, name_check *check) {
+static void destroy_name_check(CqlState* _Nonnull CS, name_check *check) {
   symtab_delete(CS, check->names);
   check->name_list_tail = NULL;
   check->count = 0;
 }
 
 // create a durable copy of the text of a simple expression
-static CSTR dup_expr_text_buffer(CqlState* CS, charbuf *tmp, ast_node *expr) {
+static CSTR dup_expr_text_buffer(CqlState* _Nonnull CS, charbuf *tmp, ast_node *expr) {
   CSTR result = NULL;
 
   gen_sql_callbacks callbacks;
@@ -833,7 +833,7 @@ static CSTR dup_expr_text_buffer(CqlState* CS, charbuf *tmp, ast_node *expr) {
 }
 
 // create a durable copy of the text of a simple expression
-CSTR dup_expr_text(CqlState* CS, ast_node *expr) {
+CSTR dup_expr_text(CqlState* _Nonnull CS, ast_node *expr) {
   CHARBUF_OPEN(tmp);
   CSTR result = dup_expr_text_buffer(CS, &tmp, expr);
   CHARBUF_CLOSE(tmp);
@@ -841,7 +841,7 @@ CSTR dup_expr_text(CqlState* CS, ast_node *expr) {
 }
 
 // get the text for the expression, avoid the memory alloc for the easy case
-static CSTR expr_as_text(CqlState* CS, ast_node *expr) {
+static CSTR expr_as_text(CqlState* _Nonnull CS, ast_node *expr) {
   if (is_ast_str(expr)) {
    // easy case, super common, we have the name handy
    EXTRACT_STRING(name, expr);
@@ -855,7 +855,7 @@ static CSTR expr_as_text(CqlState* CS, ast_node *expr) {
 // The name list item could be either indexed columns or a vanilla name list
 // indexed columns have extra shape and might hold an expression. If an expression
 // then we need to use the text of the expression as the value.
-CSTR string_from_name_list_item(CqlState* CS, ast_node *node) {
+CSTR string_from_name_list_item(CqlState* _Nonnull CS, ast_node *node) {
   Contract(is_ast_indexed_columns(node) || is_ast_name_list(node));
 
   if (is_ast_indexed_columns(node)) {
@@ -870,7 +870,7 @@ CSTR string_from_name_list_item(CqlState* CS, ast_node *node) {
 }
 
 // Check if two name list nodes have the same members (in any order)
-static bool_t is_name_list_equal(CqlState* CS, ast_node *name_list1, ast_node *name_list2) {
+static bool_t is_name_list_equal(CqlState* _Nonnull CS, ast_node *name_list1, ast_node *name_list2) {
   symtab *cache = symtab_new();
 
   uint32_t count1 = 0;
@@ -909,7 +909,7 @@ static bool_t is_name_list_equal(CqlState* CS, ast_node *name_list1, ast_node *n
 // indexed_columns1 = (a, c) return false
 // indexed_columns1 = (d) return false
 // indexed_columns1 = (b, d) return false
-static bool_t is_either_list_a_subset(CqlState* CS, ast_node *indexed_columns1, ast_node *indexed_columns2) {
+static bool_t is_either_list_a_subset(CqlState* _Nonnull CS, ast_node *indexed_columns1, ast_node *indexed_columns2) {
   ast_node *a1 = indexed_columns1;
   ast_node *a2 = indexed_columns2;
   while (a1 && a2) {
@@ -1007,7 +1007,7 @@ static ast_node *find_next_unique_key(ast_node *unq_def) {
 // unique.  And likewise if this key is completely contained in any
 // previous key then that previous key is goofy because this smaller
 // key is already unique.
-static bool_t is_unique_key_valid(CqlState* CS, ast_node *table_ast, ast_node *uk) {
+static bool_t is_unique_key_valid(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *uk) {
   Contract(is_ast_create_table_stmt(table_ast) && is_ast_unq_def(uk));
   EXTRACT_NOTNULL(indexed_columns_conflict_clause, uk->right);
   EXTRACT_NAMED_NOTNULL(indexed_columns1, indexed_columns, indexed_columns_conflict_clause->left);
@@ -1029,7 +1029,7 @@ static bool_t is_unique_key_valid(CqlState* CS, ast_node *table_ast, ast_node *u
 // We can only check the range if the integer evaluates to a constant which is
 // common enough that we try to do this here.  If it's a not something we recognize
 // is a constant then all bets are off.
-static bool_t is_num_int_in_range(CqlState* CS, ast_node *ast, int64_t lower, int64_t upper) {
+static bool_t is_num_int_in_range(CqlState* _Nonnull CS, ast_node *ast, int64_t lower, int64_t upper) {
   // any non-integer type is out;  can't be "real" or "null" in particular which are
   // usually considered numeric compat but not here.  This is an index.
   if (!is_any_int(ast->sem->sem_type)) {
@@ -1051,41 +1051,41 @@ static bool_t is_num_int_in_range(CqlState* CS, ast_node *ast, int64_t lower, in
 }
 
 // Wrappers for the func table.
-static bool_t add_func(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_func(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.funcs, name, ast);
 }
 
-ast_node *find_func(CqlState* CS, CSTR name) {
+ast_node *find_func(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.funcs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-static bool_t add_unchecked_func(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_unchecked_func(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.unchecked_funcs, name, ast);
 }
 
-cql_noexport ast_node *find_unchecked_func(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_unchecked_func(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.unchecked_funcs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-ast_node *find_recreate_migrator(CqlState* CS, CSTR name) {
+ast_node *find_recreate_migrator(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.ad_hoc_recreate_actions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrappers for the index list (note we only use these for validation).
-static void add_index(CqlState* CS, ast_node *ast, CSTR name) {
+static void add_index(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   symtab_add(CS, CS->sem.indices, name, ast);
 }
 
-static ast_node *find_index(CqlState* CS, CSTR name) {
+static ast_node *find_index(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.indices, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // returns the node only if it exists and is not restricted by the schema region.
-static ast_node *find_usable_index(CqlState* CS, CSTR name, ast_node *err_target, CSTR msg) {
+static ast_node *find_usable_index(CqlState* _Nonnull CS, CSTR name, ast_node *err_target, CSTR msg) {
   ast_node *index_ast = find_index(CS, name);
   if (!index_ast) {
     report_error(CS, err_target, msg, name);
@@ -1109,7 +1109,7 @@ cql_noexport bool_t is_error(ast_node *ast) {
 }
 
 // These tables do not get deployed, they are logical constructs only
-cql_noexport bool_t is_table_not_physical(CqlState* CS, ast_node *table_ast) {
+cql_noexport bool_t is_table_not_physical(CqlState* _Nonnull CS, ast_node *table_ast) {
   return is_table_blob_storage(CS, table_ast) || is_table_backed(CS, table_ast);
 }
 
@@ -1397,7 +1397,7 @@ cql_noexport bool_t is_autotest_dummy_test(CSTR name) {
 }
 
 // helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_private(CqlState* CS, ast_node *_Nonnull proc_stmt) {
+cql_noexport bool_t is_proc_private(CqlState* _Nonnull CS, ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
   EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
@@ -1405,7 +1405,7 @@ cql_noexport bool_t is_proc_private(CqlState* CS, ast_node *_Nonnull proc_stmt) 
 }
 
 // helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_suppress_result_set(CqlState* CS, ast_node *_Nonnull proc_stmt) {
+cql_noexport bool_t is_proc_suppress_result_set(CqlState* _Nonnull CS, ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
   EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
@@ -1413,7 +1413,7 @@ cql_noexport bool_t is_proc_suppress_result_set(CqlState* CS, ast_node *_Nonnull
 }
 
 // helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_suppress_getters(CqlState* CS, ast_node *_Nonnull proc_stmt) {
+cql_noexport bool_t is_proc_suppress_getters(CqlState* _Nonnull CS, ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
   EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
@@ -1421,7 +1421,7 @@ cql_noexport bool_t is_proc_suppress_getters(CqlState* CS, ast_node *_Nonnull pr
 }
 
 // helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_emit_setters(CqlState* CS, ast_node *_Nonnull proc_stmt) {
+cql_noexport bool_t is_proc_emit_setters(CqlState* _Nonnull CS, ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
   EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
@@ -1429,7 +1429,7 @@ cql_noexport bool_t is_proc_emit_setters(CqlState* CS, ast_node *_Nonnull proc_s
 }
 
 // helper to search for the indicated misc attribute on a procedure
-cql_noexport bool_t is_proc_shared_fragment(CqlState* CS, ast_node *_Nonnull proc_stmt) {
+cql_noexport bool_t is_proc_shared_fragment(CqlState* _Nonnull CS, ast_node *_Nonnull proc_stmt) {
   Contract(is_ast_create_proc_stmt(proc_stmt) || is_ast_declare_proc_stmt(proc_stmt));
   EXTRACT_MISC_ATTRS(proc_stmt, misc_attrs);
 
@@ -1437,7 +1437,7 @@ cql_noexport bool_t is_proc_shared_fragment(CqlState* CS, ast_node *_Nonnull pro
 }
 
 // Detect if column name is sensitive in result set
-bool_t is_sensitive_column_in_result_set(CqlState* CS, CSTR name) {
+bool_t is_sensitive_column_in_result_set(CqlState* _Nonnull CS, CSTR name) {
   sem_struct *sptr = CS->sem.current_proc->sem->sptr;
   uint32_t count = sptr->count;
   for (uint32_t i = 0; i < count; i++) {
@@ -1452,7 +1452,7 @@ bool_t is_sensitive_column_in_result_set(CqlState* CS, CSTR name) {
 }
 
 // This is used to ensure column name (param 'name') is part of the proc return struct
-static void sem_column_name_exist_in_result_set(CqlState* CS, CSTR name, ast_node *misc_attr_value, void *context) {
+static void sem_column_name_exist_in_result_set(CqlState* _Nonnull CS, CSTR name, ast_node *misc_attr_value, void *context) {
   EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
   Contract(CS->sem.current_proc);
   sem_struct *sptr = CS->sem.current_proc->sem->sptr;
@@ -1474,7 +1474,7 @@ static void sem_column_name_exist_in_result_set(CqlState* CS, CSTR name, ast_nod
 }
 
 // This is used to ensure column type matches the specified encode context column type
-static void sem_column_name_match_encode_context_column_type(CqlState* CS, CSTR name, ast_node *misc_attrs)
+static void sem_column_name_match_encode_context_column_type(CqlState* _Nonnull CS, CSTR name, ast_node *misc_attrs)
 {
   if (!CS->sem.enforcement.strict_encode_context_type) {
     return;
@@ -1517,7 +1517,7 @@ bool_t should_encode_col(CSTR col, sem_t sem_type, bool_t use_encode_arg, symtab
 }
 
 // encode context column in vault_sensitive attribute must not be sensitive
-static void enforce_non_sensitive_context_column(CqlState* CS, CSTR name, ast_node *misc_attrs)
+static void enforce_non_sensitive_context_column(CqlState* _Nonnull CS, CSTR name, ast_node *misc_attrs)
 {
   if (is_sensitive_column_in_result_set(CS, name)) {
     report_error(CS, misc_attrs, "CQL0400: encode context column can't be sensitive", name);
@@ -1528,7 +1528,7 @@ static void enforce_non_sensitive_context_column(CqlState* CS, CSTR name, ast_no
 }
 
 // report error if encode context column mode is on and no encode context column is provided
-static void enforce_encode_context_column_with_strict_mode(CqlState* CS, ast_node *misc_attrs)
+static void enforce_encode_context_column_with_strict_mode(CqlState* _Nonnull CS, ast_node *misc_attrs)
 {
   if (CS->sem.enforcement.strict_encode_context) {
     report_error(CS, misc_attrs, "CQL0401: context column must be specified if strict encode context column mode is enabled", "vault_sensitive");
@@ -1538,7 +1538,7 @@ static void enforce_encode_context_column_with_strict_mode(CqlState* CS, ast_nod
 
 // Enforce the specified column name must be valid string.
 // Return false if column is not valid string.
-static bool_t vault_sensitive_encode_column_valid_string(CqlState* CS, ast_node *misc_attr_value, ast_node *misc_attrs)
+static bool_t vault_sensitive_encode_column_valid_string(CqlState* _Nonnull CS, ast_node *misc_attr_value, ast_node *misc_attrs)
 {
   if (!is_id(misc_attr_value)) {
     report_error(CS, misc_attr_value, "CQL0363: all arguments must be names", "vault_sensitive");
@@ -1554,7 +1554,7 @@ static bool_t vault_sensitive_encode_column_valid_string(CqlState* CS, ast_node 
 // This is the place we add all the to-be-encoded columns to a list.
 // The passed in ast_misc_attrs may contain non string values (like list),
 // which are considered to be error cases and skipped here.
-static void vault_sensitive_encode_columns(CqlState* CS, ast_node *ast_misc_attrs, symtab *vault_column_list, ast_node *misc_attrs) {
+static void vault_sensitive_encode_columns(CqlState* _Nonnull CS, ast_node *ast_misc_attrs, symtab *vault_column_list, ast_node *misc_attrs) {
   for (ast_node *list = ast_misc_attrs; list; list = list->right) {
     // any non-string values are error cases
     if (is_ast_str(list->left)) {
@@ -1596,7 +1596,7 @@ typedef struct encode_info {
 // format (b) has extra encode context column specified.
 // both encode context column and encode columns need to be present in resultSet
 static void sem_find_ast_misc_attr_vault_sensitive_callback(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
   ast_node *ast_misc_attr_value_list,
@@ -1700,7 +1700,7 @@ enforce_encode_context_column_with_strict_mode(CS, misc_attrs);
   }
 }
 
-cql_noexport void init_encode_info(CqlState* CS, ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg) {
+cql_noexport void init_encode_info(CqlState* _Nonnull CS, ast_node *misc_attrs, bool_t *use_encode_arg, CSTR *encode_context_column_arg, symtab *encode_columns_arg) {
   *use_encode_arg = misc_attrs && exists_attribute_str(CS, misc_attrs, "vault_sensitive");
   if (*use_encode_arg) {
     encode_info info;
@@ -1728,7 +1728,7 @@ typedef struct subs_info {
 // those versions might be different than the "final" version after all the upgrades
 // are applied.  So, for instance, checking that they are the same as the declared
 // version would be counter-productive.
-static bool_t will_add_current_entity(CqlState* CS) {
+static bool_t will_add_current_entity(CqlState* _Nonnull CS) {
   return !(CS->sem.validating_previous_schema) && !(CS->sem.schema_upgrade_script && CS->sem.current_proc);
 }
 
@@ -1796,14 +1796,14 @@ static void init_version_attrs_info(version_attrs_info *vers_info, CSTR name, as
 }
 
 // Simple wrappers for the tables list.
-static void add_table_or_view(CqlState* CS, ast_node *ast) {
+static void add_table_or_view(CqlState* _Nonnull CS, ast_node *ast) {
   symtab_add(CS, CS->sem.tables, ast->sem->sptr->struct_name, ast);
 }
 
 // Validates whether or not an object is usable within the current schema
 // region. The object can only be a table, view, trigger or index. If not valid,
 // reports an error using `err_target` and `msg`, if present.
-static bool_t sem_validate_object_ast_in_current_region(CqlState* CS, CSTR name,
+static bool_t sem_validate_object_ast_in_current_region(CqlState* _Nonnull CS, CSTR name,
                                              ast_node *table_ast,
                                              ast_node *err_target,
                                              CSTR msg) {
@@ -1849,7 +1849,7 @@ static bool_t sem_validate_object_ast_in_current_region(CqlState* CS, CSTR name,
 
 // Only callers that want to ensure no conflict of names (whether deleted or not)
 // use this version. Deleted names are not good for anything but de-duping against.
-ast_node *find_table_or_view_even_deleted(CqlState* CS, CSTR name) {
+ast_node *find_table_or_view_even_deleted(CqlState* _Nonnull CS, CSTR name) {
   Contract(name);
 
   symtab_entry *entry = symtab_find(CS->sem.tables, name);
@@ -1860,7 +1860,7 @@ ast_node *find_table_or_view_even_deleted(CqlState* CS, CSTR name) {
 // Returns the node only if it exists and is not restricted by the schema
 // region. If not found, reports an error using `err_target` and `msg`, if
 // present.
-static ast_node *find_usable_table_or_view_even_deleted(CqlState* CS, CSTR name, ast_node *err_target, CSTR msg) {
+static ast_node *find_usable_table_or_view_even_deleted(CqlState* _Nonnull CS, CSTR name, ast_node *err_target, CSTR msg) {
   Contract(name);
   Contract((err_target && msg) || (!err_target && !msg));
 
@@ -1881,7 +1881,7 @@ static ast_node *find_usable_table_or_view_even_deleted(CqlState* CS, CSTR name,
 
 // Returns the node only if the table is not deleted; most clients use this. If
 // not found, reports an error using `err_target` and `msg`, if present.
-cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CqlState* CS, CSTR name, ast_node *err_target, CSTR msg) {
+cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CqlState* _Nonnull CS, CSTR name, ast_node *err_target, CSTR msg) {
   Contract(name);
   Contract((err_target && msg) || (!err_target && !msg));
 
@@ -1935,7 +1935,7 @@ cql_noexport ast_node *find_usable_and_not_deleted_table_or_view(CqlState* CS, C
 // exists with the given name in the given scope and give an error.  The exception
 // here is that it's normal to hide the definition of a backed table because it
 // isn't real.  But otherwise if the name already exists an error is coming.
-static bool_t name_hides_root_table(CqlState* CS, CSTR name) {
+static bool_t name_hides_root_table(CqlState* _Nonnull CS, CSTR name) {
   Contract(name);
 
   ast_node *table_ast = find_usable_and_not_deleted_table_or_view(CS, name, NULL, NULL);
@@ -1944,13 +1944,13 @@ static bool_t name_hides_root_table(CqlState* CS, CSTR name) {
   return table_ast && !is_backed(table_ast->sem->sem_type);
 }
 
-static void add_cte(CqlState* CS, ast_node *ast) {
+static void add_cte(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(CS->sem.cte_cur);
   Contract(CS->sem.cte_cur->ctes);
   symtab_add(CS, CS->sem.cte_cur->ctes, ast->sem->sptr->struct_name, ast);
 }
 
-static ast_node *find_cte(CqlState* CS, CSTR name) {
+static ast_node *find_cte(CqlState* _Nonnull CS, CSTR name) {
   cte_state *state = CS->sem.cte_cur;
   while (state) {
     symtab_entry *entry = symtab_find(state->ctes, name);
@@ -1964,7 +1964,7 @@ static ast_node *find_cte(CqlState* CS, CSTR name) {
 }
 
 // Wrappers for the default values table
-cql_noexport symtab *find_default_values(CqlState* CS, CSTR name) {
+cql_noexport symtab *find_default_values(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.table_default_values, name);
   return entry ? (symtab*)(entry->val) : NULL;
 }
@@ -1972,41 +1972,41 @@ cql_noexport symtab *find_default_values(CqlState* CS, CSTR name) {
 // When processing the schema, record default values for each table
 // so that we can find them quickly.  This is a symbol table of symbol tables.
 // We store them here rather than on the sem_node because they are sparse
-cql_noexport bool_t add_default_values(CqlState* CS, symtab *def_values, CSTR name) {
+cql_noexport bool_t add_default_values(CqlState* _Nonnull CS, symtab *def_values, CSTR name) {
   return symtab_add_symtab(CS, CS->sem.table_default_values, name, def_values);
 }
 
 // Wrappers for the trigger table.
-static bool_t add_trigger(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_trigger(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.triggers, name, ast);
 }
 
 // Wrapper for triggers.
-static ast_node *find_trigger(CqlState* CS, CSTR name) {
+static ast_node *find_trigger(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.triggers, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrapper for variable groups.
-cql_noexport ast_node *find_variable_group(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_variable_group(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.variable_groups, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrapper for constant groups.
-cql_noexport ast_node *find_constant_group(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_constant_group(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.constant_groups, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrapper for constants.
-cql_noexport ast_node *find_constant(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_constant(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.constants, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Returns the node only if it exists and is not restricted by the schema region.
-static ast_node *find_usable_trigger(CqlState* CS, CSTR name, ast_node *err_target, CSTR msg) {
+static ast_node *find_usable_trigger(CqlState* _Nonnull CS, CSTR name, ast_node *err_target, CSTR msg) {
   ast_node *trigger_ast = find_trigger(CS, name);
 
   if (!trigger_ast) {
@@ -2022,21 +2022,21 @@ static ast_node *find_usable_trigger(CqlState* CS, CSTR name, ast_node *err_targ
 }
 
 // Wrappers for the enum table.
-static bool_t add_enum(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_enum(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.enums, name, ast);
 }
 
-ast_node *find_enum(CqlState* CS, CSTR name) {
+ast_node *find_enum(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.enums, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrappers for the arg bundles table.
-cql_noexport bool_t add_arg_bundle(CqlState* CS, ast_node *ast, CSTR name) {
+cql_noexport bool_t add_arg_bundle(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.arg_bundles, name, ast);
 }
 
-cql_noexport ast_node *find_arg_bundle(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_arg_bundle(CqlState* _Nonnull CS, CSTR name) {
   if (!Strcasecmp(name,  "LOCALS")) {
     return sem_synthesize_current_locals(CS);
   }
@@ -2045,54 +2045,54 @@ cql_noexport ast_node *find_arg_bundle(CqlState* CS, CSTR name) {
 }
 
 // Wrappers for the proc table.
-static bool_t add_proc(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_proc(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.procs, name, ast);
 }
 
-cql_noexport ast_node *find_proc(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_proc(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrappers for the unchecked proc table.
-static bool_t add_unchecked_proc(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_unchecked_proc(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.unchecked_procs, name, ast);
 }
 
-cql_noexport ast_node *find_unchecked_proc(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_unchecked_proc(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.unchecked_procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-cql_noexport bytebuf *find_proc_arg_info(CqlState* CS, CSTR name) {
+cql_noexport bytebuf *find_proc_arg_info(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.proc_arg_info, name);
   return entry ? (bytebuf *)(entry->val) : NULL;
 }
 
 // Wrapper for upgrade procedures (e.g. in an @create directive)
-static ast_node *find_upgrade_proc(CqlState* CS, CSTR name) {
+static ast_node *find_upgrade_proc(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.upgrade_procs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrapper for ad hoc migration procs (from @SCHEMA_AD_HOC_MIGRATION)
-static ast_node *find_ad_hoc_migrate(CqlState* CS, CSTR name) {
+static ast_node *find_ad_hoc_migrate(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.ad_hoc_migrates, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrappers for interfaces table (user defined shapes)
-static bool_t add_interface_type(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_interface_type(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.interfaces, name, ast);
 }
 
-ast_node *find_interface_type(CqlState* CS, CSTR name) {
+ast_node *find_interface_type(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.interfaces, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
 // Wrappers for the region table.
-cql_noexport ast_node *find_region(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_region(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->sem.schema_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
@@ -2101,7 +2101,7 @@ cql_noexport ast_node *find_region(CqlState* CS, CSTR name) {
 // types declared in a procedure are local to that procedure and stored in their
 // own symbol table. The local symbol table is always searched first to find named type
 // otherwise the global storage is used.
-static bool_t add_named_type(CqlState* CS, CSTR name, ast_node *ast) {
+static bool_t add_named_type(CqlState* _Nonnull CS, CSTR name, ast_node *ast) {
 
   // the target symbol table, local or global
   symtab *tab = CS->sem.current_proc ? CS->sem.local_types : CS->sem.global_types;
@@ -2133,7 +2133,7 @@ static bool_t add_named_type(CqlState* CS, CSTR name, ast_node *ast) {
 
 // Look up the named type node from the relevant symbol tables.
 // Recall that local named types are in their own table.
-cql_noexport ast_node *find_named_type(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_named_type(CqlState* _Nonnull CS, CSTR name) {
   symtab_entry *entry = NULL;
   // We first try to find it in local storage because it has
   // higher priority otherwise we look into the global storage
@@ -2147,18 +2147,18 @@ cql_noexport ast_node *find_named_type(CqlState* CS, CSTR name) {
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-static ast_node *find_cur_region(CqlState* CS, CSTR name) {
+static ast_node *find_cur_region(CqlState* _Nonnull CS, CSTR name) {
   // During previous schema validation the current region is the previous ones.
   symtab_entry *entry = symtab_find(CS->sem.new_regions, name);
   return entry ? (ast_node*)(entry->val) : NULL;
 }
 
-static bool_t add_region(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t add_region(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   return symtab_add(CS, CS->sem.schema_regions, name, ast);
 }
 
 // Helper function to create unique ID to store recreate group dependencies in symbol table
-CSTR create_group_id(CqlState* CS, CSTR group_name, CSTR table_name) {
+CSTR create_group_id(CqlState* _Nonnull CS, CSTR group_name, CSTR table_name) {
   // These names are used as keys in symbol tables and were selected to match the facet names
    Contract(table_name);
    if (group_name && group_name[0]) {
@@ -2172,7 +2172,7 @@ CSTR create_group_id(CqlState* CS, CSTR group_name, CSTR table_name) {
 // Helper function to walk the graph stored in recreate_group_deps from
 // a starting group name to an ending group name.
 // We perform a simple depth first search.
-static bool_t walk_recreate_group_deps (CqlState* CS, CSTR start, CSTR end) {
+static bool_t walk_recreate_group_deps (CqlState* _Nonnull CS, CSTR start, CSTR end) {
   if (!Strcasecmp(start, end)) {
     return true;
   }
@@ -2188,7 +2188,7 @@ static bool_t walk_recreate_group_deps (CqlState* CS, CSTR start, CSTR end) {
   return false;
 }
 
-static bool_t add_group_dependency_to_recreate_group(CqlState* CS, CSTR group_name, CSTR new_dependent_group_name) {
+static bool_t add_group_dependency_to_recreate_group(CqlState* _Nonnull CS, CSTR group_name, CSTR new_dependent_group_name) {
   // We don't want to create self-cycles in our symbol table
   if (!Strcasecmp(group_name, new_dependent_group_name)) return true;
 
@@ -2354,7 +2354,7 @@ static void get_sem_flags(sem_t sem_type, charbuf *out) {
 }
 
 // For debug/test output, prettyprint a structure type
-static void print_sem_struct(CqlState* CS, sem_struct *sptr) {
+static void print_sem_struct(CqlState* _Nonnull CS, sem_struct *sptr) {
   cql_output(CS, "%s: { ", sptr->struct_name);
   for (uint32_t i = 0; i < sptr->count; i++) {
     if (i != 0) {
@@ -2383,7 +2383,7 @@ static void print_sem_struct(CqlState* CS, sem_struct *sptr) {
 }
 
 // For debug/test output, prettyprint a join type
-static void print_sem_join(CqlState* CS, sem_join *jptr) {
+static void print_sem_join(CqlState* _Nonnull CS, sem_join *jptr) {
   Contract(jptr);
   Contract(jptr->count);
 
@@ -2405,7 +2405,7 @@ static void print_sem_join(CqlState* CS, sem_join *jptr) {
 }
 
 // This dispatches the other helpers to prettyprint the net type
-cql_noexport void print_sem_type(CqlState* CS, sem_node *sem) {
+cql_noexport void print_sem_type(CqlState* _Nonnull CS, sem_node *sem) {
 
   // in the event of error marking, disregard everything else
   if (is_sem_error(sem)) {
@@ -2470,7 +2470,7 @@ cql_noexport void print_sem_type(CqlState* CS, sem_node *sem) {
 // The standard error reporter, the ast node is used to get the line number
 // the message is logged and the subject is cited if present.  The type
 // of node is also included but it's frequently useless...
-cql_noexport void report_error(CqlState* CS, ast_node *ast, CSTR msg, CSTR subject) {
+cql_noexport void report_error(CqlState* _Nonnull CS, ast_node *ast, CSTR msg, CSTR subject) {
   CSTR subj1 = "";
   CSTR subj2 = "";
   CSTR subj3 = "";
@@ -2497,7 +2497,7 @@ cql_noexport void report_error(CqlState* CS, ast_node *ast, CSTR msg, CSTR subje
       subj1, subj2, subj3);
 }
 
-static void cql_attach_captured_errors(CqlState* CS, ast_node *stmt) {
+static void cql_attach_captured_errors(CqlState* _Nonnull CS, ast_node *stmt) {
    if (is_error(stmt)) {
       // If you hit this invariant it almost certainly means that
       // an error was attached to a node in the AST but that node
@@ -2515,7 +2515,7 @@ static void cql_attach_captured_errors(CqlState* CS, ast_node *stmt) {
 // the general case is more flexible but typically not needed.  Since these
 // errors don't flow up we have to mark the root directly so that the system
 // knows there were semantic errors.  This flow is only for deferred errors.
-static void report_and_capture_error(CqlState* CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
+static void report_and_capture_error(CqlState* _Nonnull CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
   CHARBUF_OPEN(errbuf);
 
   if (CS->options.print_ast) {
@@ -2536,7 +2536,7 @@ static void report_and_capture_error(CqlState* CS, ast_node *root, ast_node *ast
 
 // Error reporter for appending extra info on mismatched sem types where
 // exact type is expected.
-static void report_sem_type_mismatch(CqlState* CS,
+static void report_sem_type_mismatch(CqlState* _Nonnull CS,
     sem_t sem_expected_type,
     sem_t sem_actual_type,
     ast_node *node,
@@ -2560,7 +2560,7 @@ static void report_sem_type_mismatch(CqlState* CS,
 }
 
 // This is the basic constructor for the semantic info node.
-cql_noexport sem_node * new_sem(CqlState* CS, sem_t sem_type) {
+cql_noexport sem_node * new_sem(CqlState* _Nonnull CS, sem_t sem_type) {
   sem_node *sem = _ast_pool_new(sem_node);
   memset(sem, 0, sizeof(*sem));
   sem->sem_type = sem_type;
@@ -2571,7 +2571,7 @@ cql_noexport sem_node * new_sem(CqlState* CS, sem_t sem_type) {
 
 // Sets additional flags for `ast->sem->sem_type` without mutating other
 // copies of `ast->sem`.
-cql_noexport void sem_add_flags(CqlState* CS, ast_node *ast, sem_t flags) {
+cql_noexport void sem_add_flags(CqlState* _Nonnull CS, ast_node *ast, sem_t flags) {
   sem_node *sem = _ast_pool_new(sem_node);
   memcpy(sem, ast->sem, sizeof(sem_node));
   sem->sem_type |= flags;
@@ -2580,7 +2580,7 @@ cql_noexport void sem_add_flags(CqlState* CS, ast_node *ast, sem_t flags) {
 
 // Removes specified flags for `ast->sem->sem_type` without mutating other
 // copies of `ast->sem`.
-cql_noexport void sem_remove_flags(CqlState* CS, ast_node *ast, sem_t flags) {
+cql_noexport void sem_remove_flags(CqlState* _Nonnull CS, ast_node *ast, sem_t flags) {
   sem_node *sem = _ast_pool_new(sem_node);
   memcpy(sem, ast->sem, sizeof(sem_node));
   sem->sem_type &= sem_not(flags);
@@ -2589,7 +2589,7 @@ cql_noexport void sem_remove_flags(CqlState* CS, ast_node *ast, sem_t flags) {
 
 // Like `sem_add_flags`, but completely replaces the flags instead of adding
 // additional flags.
-static void sem_replace_flags(CqlState* CS, ast_node *ast, sem_t flags) {
+static void sem_replace_flags(CqlState* _Nonnull CS, ast_node *ast, sem_t flags) {
   sem_node *sem = _ast_pool_new(sem_node);
   memcpy(sem, ast->sem, sizeof(sem_node));
   sem->sem_type = flags;
@@ -2601,7 +2601,7 @@ static void sem_replace_flags(CqlState* CS, ast_node *ast, sem_t flags) {
 // it is shared.
 //static sem_node *sem_ok;
 
-static sem_node *ok_sentinel(CqlState* CS) {
+static sem_node *ok_sentinel(CqlState* _Nonnull CS) {
   if (CS->sem.sem_ok) {
     return CS->sem.sem_ok;
   }
@@ -2625,20 +2625,20 @@ int32_t sem_column_index(sem_struct *sptr, CSTR name) {
 }
 
 // Stow the ok marker somewhere.
-cql_noexport void record_ok(CqlState* CS, ast_node *ast) {
+cql_noexport void record_ok(CqlState* _Nonnull CS, ast_node *ast) {
   ast->sem = ok_sentinel(CS);
 }
 
 // Errors may be annotated with information so we make a unique error
 // node for every place we're placing a new error.
-cql_noexport void record_error(CqlState* CS, ast_node *ast) {
+cql_noexport void record_error(CqlState* _Nonnull CS, ast_node *ast) {
   ast->sem = new_sem(CS, SEM_TYPE_ERROR);
 }
 
 // Some math operators like << >> & | % only make sense on integers
 // This function does the extra checking to ensure they do not get real values
 // as arguments.  It's a post-pass after the normal math checks.
-static void sem_reject_real(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_reject_real(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   if (!is_error(ast)) {
     sem_t core_type = core_type_of(ast->sem->sem_type);
     if (core_type == SEM_TYPE_REAL) {
@@ -2650,7 +2650,7 @@ static void sem_reject_real(CqlState* CS, ast_node *ast, CSTR op) {
 
 // sem_struct records the information for one "table" it's an array
 // of names and primitive types.
-static sem_struct * new_sem_struct(CqlState* CS, CSTR name, uint32_t count) {
+static sem_struct * new_sem_struct(CqlState* _Nonnull CS, CSTR name, uint32_t count) {
   sem_struct *sptr = _ast_pool_new(sem_struct);
   sptr->struct_name = name;
   sptr->count = count;
@@ -2672,7 +2672,7 @@ static sem_struct * new_sem_struct(CqlState* CS, CSTR name, uint32_t count) {
 // note that a single table can be a "join" if it's all there is
 // the current result of the FROM clause as it accumulates is
 // one of these.
-static sem_join * new_sem_join(CqlState* CS, uint32_t count) {
+static sem_join * new_sem_join(CqlState* _Nonnull CS, uint32_t count) {
   sem_join *jptr = _ast_pool_new(sem_join);
   jptr->count = count;
   jptr->names = _ast_pool_new_array(CSTR, count);
@@ -2692,7 +2692,7 @@ static sem_join * new_sem_join(CqlState* CS, uint32_t count) {
 // the result of the join will have Y with all nullable columns
 // because it's a left outer join.  This method produces a sem_struct
 // with the indicated removals.
-static sem_struct *sem_clone_struct_strip_flags(CqlState* CS, sem_struct *sptr, sem_t strip) {
+static sem_struct *sem_clone_struct_strip_flags(CqlState* _Nonnull CS, sem_struct *sptr, sem_t strip) {
   sem_struct *result = new_sem_struct(CS, sptr->struct_name, sptr->count);
   for (uint32_t i = 0; i < sptr->count; i++) {
     result->names[i] = sptr->names[i];
@@ -2705,7 +2705,7 @@ static sem_struct *sem_clone_struct_strip_flags(CqlState* CS, sem_struct *sptr, 
 // When making the initial join scope for a table we want
 // to get rid of other table-ish flags like HAS_DEFAULT and AUTOINCREMENT
 // they don't contribute to anything and they make the tree ugly.
-static sem_struct *new_sem_struct_strip_table_flags(CqlState* CS, sem_struct *sptr) {
+static sem_struct *new_sem_struct_strip_table_flags(CqlState* _Nonnull CS, sem_struct *sptr) {
   sem_t allowed_flags =
        SEM_TYPE_CORE |
        SEM_TYPE_NOTNULL |
@@ -2723,7 +2723,7 @@ static sem_struct *new_sem_struct_strip_table_flags(CqlState* CS, sem_struct *sp
 }
 
 // Create a base join type from a single struct.
-static sem_join *sem_join_from_sem_struct(CqlState* CS, sem_struct *sptr) {
+static sem_join *sem_join_from_sem_struct(CqlState* _Nonnull CS, sem_struct *sptr) {
   sem_join *jptr = new_sem_join(CS, 1);
   jptr->names[0] = sptr->struct_name;
   jptr->tables[0] = new_sem_struct_strip_table_flags(CS, sptr);
@@ -2732,7 +2732,7 @@ static sem_join *sem_join_from_sem_struct(CqlState* CS, sem_struct *sptr) {
 }
 
 // If either of the types is an object then produce an error on the ast.
-static bool_t error_any_object(CqlState* CS, ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
+static bool_t error_any_object(CqlState* _Nonnull CS, ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
   if (is_object(core_type_left)) {
     report_error(CS, ast->left, "CQL0002: left operand cannot be an object in", op);
     record_error(CS, ast);
@@ -2749,7 +2749,7 @@ static bool_t error_any_object(CqlState* CS, ast_node *ast, sem_t core_type_left
 }
 
 // If either of the types is a blob then produce an error on the ast.
-static bool_t error_any_blob_types(CqlState* CS, ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
+static bool_t error_any_blob_types(CqlState* _Nonnull CS, ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
   if (is_blob(core_type_left)) {
     report_error(CS, ast->left, "CQL0004: left operand cannot be a blob in", op);
     record_error(CS, ast);
@@ -2766,7 +2766,7 @@ static bool_t error_any_blob_types(CqlState* CS, ast_node *ast, sem_t core_type_
 }
 
 // If either of the types is text then produce an error on the ast.
-static bool_t error_any_text_types(CqlState* CS, ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
+static bool_t error_any_text_types(CqlState* _Nonnull CS, ast_node *ast, sem_t core_type_left, sem_t core_type_right, CSTR op) {
   if (is_text(core_type_left)) {
     report_error(CS, ast->left, "CQL0007: left operand cannot be a string in", op);
     record_error(CS, ast);
@@ -2784,7 +2784,7 @@ static bool_t error_any_text_types(CqlState* CS, ast_node *ast, sem_t core_type_
 
 // This is the work horse of semantic analysis, it checks if sem_type_needed
 // is compatible with core_type_found and generates an error if it is not.
-static bool_t sem_verify_compat(CqlState* CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
+static bool_t sem_verify_compat(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
   // normalize even if we weren't given core types
   sem_t core_type_needed = core_type_of(sem_type_needed);
   sem_t core_type_found = core_type_of(sem_type_found);
@@ -2846,7 +2846,7 @@ static bool_t sem_verify_compat(CqlState* CS, ast_node *ast, sem_t sem_type_need
 // with symmetric operations like X == Y where either side can be promoted.  In an assignment the left
 // side cannot be promoted so the store can be lossy.  This checks for the lossy cases that are otherwise
 // compatible.  That is, we assume that the above has already been called.
-static bool_t sem_verify_safe_assign(CqlState* CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
+static bool_t sem_verify_safe_assign(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR subject) {
   // normalize even if we weren't given core types
   sem_t core_type_needed = core_type_of(sem_type_needed);
   sem_t core_type_found = core_type_of(sem_type_found);
@@ -2914,7 +2914,7 @@ error:
 // * the variable must be sensitive if the assignment is sensitive
 // * the variable type must be bigger than the expression type
 // Here ast is used only to give a place to put any errors.
-cql_noexport bool_t sem_verify_assignment(CqlState* CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
+cql_noexport bool_t sem_verify_assignment(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type_needed, sem_t sem_type_found, CSTR var_name) {
   if (is_constant(sem_type_needed)) {
     report_error(CS, ast, "CQL0502: Cannot re-assign value to constant variable", var_name);
     return false;
@@ -3036,7 +3036,7 @@ static sem_t sem_combine_types(sem_t sem_type_1, sem_t sem_type_2) {
 // the context here is used to create a better error location;
 // the caller often has a good idea what line number would be a better choice
 // than the expression itself.
-static void sem_numeric_expr(CqlState* CS, ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context) {
+static void sem_numeric_expr(CqlState* _Nonnull CS, ast_node *expr, ast_node *context, CSTR subject, uint32_t expr_context) {
   Contract(expr);
   sem_root_expr(CS, expr, expr_context);
 
@@ -3052,7 +3052,7 @@ static void sem_numeric_expr(CqlState* CS, ast_node *expr, ast_node *context, CS
 }
 
 // Given two table nodes attempt to produce the join of them according to the join type.
-static void join_tables(CqlState* CS, ast_node *t1, ast_node *t2, ast_node *result, int32_t join_type) {
+static void join_tables(CqlState* _Nonnull CS, ast_node *t1, ast_node *t2, ast_node *result, int32_t join_type) {
   if (is_error(t1) || is_error(t2)) {
     record_error(CS, result);
     return;
@@ -3164,7 +3164,7 @@ static void sem_add_flags_to_join(sem_join *jptr, sem_t flags) {
 }
 
 // Given a column ast type convert it to the appropriate sem_type.
-static void sem_data_type_column(CqlState* CS, ast_node *ast) {
+static void sem_data_type_column(CqlState* _Nonnull CS, ast_node *ast) {
   // The data_type could be a declare named type, therefore
   // we should rewrite the node to the real type
   rewrite_data_type_if_needed(CS, ast);
@@ -3242,7 +3242,7 @@ static void sem_data_type_column(CqlState* CS, ast_node *ast) {
 
 // Create the semantic type, it might be wrapped
 // in a not_null node, or @sensitive node, extract that and add to flags.
-static void sem_data_type_var(CqlState* CS, ast_node *ast) {
+static void sem_data_type_var(CqlState* _Nonnull CS, ast_node *ast) {
   // The data_type could be a declare named type, therefore
   // we should rewrite the node to the real type
   rewrite_data_type_if_needed(CS, ast);
@@ -3318,7 +3318,7 @@ static void sem_data_type_var(CqlState* CS, ast_node *ast) {
 
 // Use the standard name checker to check for valid names in this scope
 // Items must be in scope and no duplicate names are allowed.
-static bool_t sem_validate_name_list(CqlState* CS, ast_node *name_list, sem_join *jptr) {
+static bool_t sem_validate_name_list(CqlState* _Nonnull CS, ast_node *name_list, sem_join *jptr) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_name_list(name_list) || is_ast_indexed_columns(name_list));
 
@@ -3334,7 +3334,7 @@ static bool_t sem_validate_name_list(CqlState* CS, ast_node *name_list, sem_join
 //  * the index should be present (but maybe marked with @delete)
 //  * the index has to have a compatible create version
 //  * the index has to have a compatible delete version
-static void sem_validate_previous_index(CqlState* CS, ast_node *prev_index) {
+static void sem_validate_previous_index(CqlState* _Nonnull CS, ast_node *prev_index) {
   Contract(!current_joinscope_lv);
 
   Contract(is_ast_create_index_stmt(prev_index));
@@ -3421,7 +3421,7 @@ static void sem_update_column_type(ast_node *table_ast, ast_node *columns, sem_t
 // a proc because indices and triggers must be removed entirely if their table is ever deleted
 // at which point the migration proc would vanish.  To avoid this problem we don't support
 // migration procs on these objects.
-static bool_t sem_validate_no_delete_migration(CqlState* CS, version_attrs_info *vers_info, ast_node *ast, CSTR obj_name) {
+static bool_t sem_validate_no_delete_migration(CqlState* _Nonnull CS, version_attrs_info *vers_info, ast_node *ast, CSTR obj_name) {
   Contract(vers_info);
   Contract(vers_info->create_version < 0);
   Contract(!vers_info->create_proc);
@@ -3438,7 +3438,7 @@ static bool_t sem_validate_no_delete_migration(CqlState* CS, version_attrs_info 
 // Top level index creation, we don't really do anything with indices
 // in CQL but we do validate that they make sense (so we lookup all the names)
 // using the helper above.
-static void sem_create_index_stmt(CqlState* CS, ast_node *ast) {
+static void sem_create_index_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
 
   Contract(is_ast_create_index_stmt(ast));
@@ -3599,7 +3599,7 @@ static void sem_create_index_stmt(CqlState* CS, ast_node *ast) {
 // Similar to other constraints, we don't actually do anything with this
 // other than offer some validation.  Again we use the usual helpers
 // for name lookup within the context of this one PK/AK
-static void sem_unq_def(CqlState* CS, ast_node *table_ast, ast_node *def) {
+static void sem_unq_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_unq_def(def));
@@ -3634,7 +3634,7 @@ static void sem_unq_def(CqlState* CS, ast_node *table_ast, ast_node *def) {
 // If we are in strict mode, then we validate that each FK has some choice
 // for on update and/or on delete.  The choice might still be "do nothing"
 // but you can't just leave it blank.
-static bool_t sem_validate_fk_flags(CqlState* CS, ast_node *def, int32_t flags) {
+static bool_t sem_validate_fk_flags(CqlState* _Nonnull CS, ast_node *def, int32_t flags) {
   if (CS->sem.enforcement.strict_fk_update) {
     if (0 == (flags & FK_ON_UPDATE)) {
       report_error(CS, def, "CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key", NULL);
@@ -3669,7 +3669,7 @@ static bool_t sem_validate_fk_flags(CqlState* CS, ast_node *def, int32_t flags) 
 // Then the reference is not valid.
 // Additionally:
 //   * the referenced table must be created in an version that came before the referencing table
-static ast_node *find_and_validate_referenced_table(CqlState* CS, CSTR table_name, ast_node *err_target, version_attrs_info *table_info) {
+static ast_node *find_and_validate_referenced_table(CqlState* _Nonnull CS, CSTR table_name, ast_node *err_target, version_attrs_info *table_info) {
 
   // The previous schema might have different regions, @recreate groups and other things than the now current schema;
   // it was validated for self consistency when it was created so we don't need to re-check it now and we already validated
@@ -3765,7 +3765,7 @@ static ast_node *find_and_validate_referenced_table(CqlState* CS, CSTR table_nam
 // a specific column name.
 // This is used in autotest(dummy_test) to figure out if a column should have
 // an explicit value to avoid sql foreign key violation
-static bool_t validate_referenceable_column_callback(CqlState* CS, ast_node *indexed_columns, void *context) {
+static bool_t validate_referenceable_column_callback(CqlState* _Nonnull CS, ast_node *indexed_columns, void *context) {
   Contract(is_ast_indexed_columns(indexed_columns));
   CSTR column_name = (CSTR)context;
 
@@ -3800,7 +3800,7 @@ static bool_t is_column_unique_key(ast_node *ref_table_ast, CSTR column_name) {
 }
 
 // find_referenceable_colunns's callback
-typedef bool_t (*validate_referenceable_columns_callback)(CqlState* CS, ast_node *name_list, void *context);
+typedef bool_t (*validate_referenceable_columns_callback)(CqlState* _Nonnull CS, ast_node *name_list, void *context);
 
 // Walkthrough create table node for table "table_name" and/or all the create
 // index node to find :
@@ -3808,7 +3808,7 @@ typedef bool_t (*validate_referenceable_columns_callback)(CqlState* CS, ast_node
 //   - CREATE INDEX name ON name([name_list]) statement
 // The found nodes are passed to the callback to do validation. As soon as the
 // callback return true the walkthrough stop otherwise it continues.
-static bool_t find_referenceable_columns(CqlState* CS,
+static bool_t find_referenceable_columns(CqlState* _Nonnull CS,
   ast_node *ref_table_ast,
   validate_referenceable_columns_callback callback,
   void *context
@@ -3886,7 +3886,7 @@ static bool_t find_referenceable_columns(CqlState* CS,
 //  - a group of primary key e.g: create table t (a text, b text, primary key (a, b))
 //  - listed in CONSTRAINT UNIQUE statement e.g: create table t (a text, constraint unique (a))
 //  - listed in a CREATE UNIQUE INDEX statement e.g: create index unique on t(a)
-cql_noexport bool_t is_referenceable_by_foreign_key(CqlState* CS, ast_node *ref_table_ast, CSTR column_name)
+cql_noexport bool_t is_referenceable_by_foreign_key(CqlState* _Nonnull CS, ast_node *ref_table_ast, CSTR column_name)
 {
   return is_column_unique_key(ref_table_ast, column_name)
     || find_referenceable_columns(CS,
@@ -3898,7 +3898,7 @@ cql_noexport bool_t is_referenceable_by_foreign_key(CqlState* CS, ast_node *ref_
 // find_referenceable_columns's callback. It returns true if both name lists
 // have the same items (in any order). This is used to figure out a list of columns
 // in a foreign key clause are referenceable.
-static bool_t validate_referenceable_fk_def_callback(CqlState* CS, ast_node *name_list, void *context) {
+static bool_t validate_referenceable_fk_def_callback(CqlState* _Nonnull CS, ast_node *name_list, void *context) {
   Contract(is_ast_name_list(context) || is_ast_indexed_columns(context));
   return is_name_list_equal(CS, name_list, (ast_node *)context);
 }
@@ -3911,7 +3911,7 @@ static bool_t validate_referenceable_fk_def_callback(CqlState* CS, ast_node *nam
 //  - a group of primary key e.g: create table t (a text, b text, primary key (a, b))
 //  - listed in CONSTRAINT UNIQUE statement e.g: create table t (a text, constraint unique (a))
 //  - listed in a CREATE UNIQUE INDEX statement e.g: create index unique on t(a)
-static sem_t sem_validate_referenceable_fk_def(CqlState* CS, ast_node *ref_table_ast, ast_node *name_list) {
+static sem_t sem_validate_referenceable_fk_def(CqlState* _Nonnull CS, ast_node *ref_table_ast, ast_node *name_list) {
   Contract(is_ast_name_list(name_list));
 
   EXTRACT_NOTNULL(create_table_name_flags, ref_table_ast->left);
@@ -3993,7 +3993,7 @@ cql_noexport CSTR sem_get_name(ast_node *ast) {
 // These symbol tables track ast dependencies by name
 // This tells use which tables refer to which other tables by FK (both directions)
 // And which views refer to which tables by name (both directions)
-static void record_table_dependencies(CqlState* CS, ast_node *src_ast, ast_node *target_ast) {
+static void record_table_dependencies(CqlState* _Nonnull CS, ast_node *src_ast, ast_node *target_ast) {
   Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
 
   // note this will verify that it is one of the known dependency types also
@@ -4008,7 +4008,7 @@ static void record_table_dependencies(CqlState* CS, ast_node *src_ast, ast_node 
 // other than offer some validation.  Again we use the usual helpers
 // for name lookup within the context of this one FK.  Note that
 // the FK has to be queried against two tables to fully validate it.
-static void sem_fk_def(CqlState* CS, ast_node *table_ast, ast_node *def, version_attrs_info *table_info) {
+static void sem_fk_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def, version_attrs_info *table_info) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_fk_def(def));
@@ -4124,7 +4124,7 @@ static void sem_fk_def(CqlState* CS, ast_node *table_ast, ast_node *def, version
 // Similar to other constraints, we don't actually do anything with this
 // other than offer some validation.  Again we use the usual helpers
 // for name lookup within the context of this one PK.
-static void sem_pk_def(CqlState* CS, ast_node *table_ast, ast_node *def) {
+static void sem_pk_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_create_table_stmt(table_ast));
   Contract(is_ast_pk_def(def));
@@ -4168,7 +4168,7 @@ static void sem_pk_def(CqlState* CS, ast_node *table_ast, ast_node *def) {
 //
 // If this is ever generalized something fancier might be needed here
 // like a name table or something.  For now, keeping it simple.
-static void sem_validate_builtin_migration_proc(CqlState* CS, ast_node *ast, uint32_t code, CSTR name) {
+static void sem_validate_builtin_migration_proc(CqlState* _Nonnull CS, ast_node *ast, uint32_t code, CSTR name) {
   bool_t is_from_recreate = !Strcasecmp(CQL_FROM_RECREATE, name);
   bool_t is_module_warn = !Strcasecmp(CQL_MODULE_WARN, name);
 
@@ -4194,7 +4194,7 @@ static void sem_validate_builtin_migration_proc(CqlState* CS, ast_node *ast, uin
   return;
 }
 
-static bool_t sem_validate_version(CqlState* CS, uint32_t code, ast_node *ast, int32_t *version, CSTR *out_proc) {
+static bool_t sem_validate_version(CqlState* _Nonnull CS, uint32_t code, ast_node *ast, int32_t *version, CSTR *out_proc) {
   Contract(version);
   EXTRACT(version_annotation, ast->left);
   EXTRACT_OPTION(vers, version_annotation->left);
@@ -4281,7 +4281,7 @@ static bool_t sem_validate_version(CqlState* CS, uint32_t code, ast_node *ast, i
 // When we find @create, @delete or @recreate we have to record that we found such an annotation.
 // Later, if/when we generate schema we will be able to walk through these in a suitable sort order
 // and then emit the appropriate migrations.
-static void record_schema_annotation(CqlState* CS, int32_t vers, ast_node *target_ast, CSTR target_name, uint32_t type, ast_node *def, ast_node *ast, int32_t ordinal) {
+static void record_schema_annotation(CqlState* _Nonnull CS, int32_t vers, ast_node *target_ast, CSTR target_name, uint32_t type, ast_node *def, ast_node *ast, int32_t ordinal) {
   Contract(target_ast);
   Contract(target_name);
   switch (type) {
@@ -4310,7 +4310,7 @@ static void record_schema_annotation(CqlState* CS, int32_t vers, ast_node *targe
 
 // Recreate annotations get stored in a different stream, they are processed in order as well but
 // they don't merge in with the others.  So we're building up two buffers.
-static void record_recreate_annotation(CqlState* CS, ast_node *target_ast, CSTR target_name, CSTR group_name, ast_node *annotation) {
+static void record_recreate_annotation(CqlState* _Nonnull CS, ast_node *target_ast, CSTR target_name, CSTR group_name, ast_node *annotation) {
   recreate_annotation *note = bytebuf_alloc(CS->sem.recreate_annotations, sizeof(*note));
 
   note->target_name = target_name;
@@ -4324,7 +4324,7 @@ static void record_recreate_annotation(CqlState* CS, ast_node *target_ast, CSTR 
 
 // This applies the validation for a FK in the context of a column, so that
 // single column is the FK to the outside reference.
-static void sem_col_attrs_fk(CqlState* CS, ast_node *fk, ast_node *def, col_def_info *info) {
+static void sem_col_attrs_fk(CqlState* _Nonnull CS, ast_node *fk, ast_node *def, col_def_info *info) {
   Contract(is_ast_col_attrs_fk(fk));
   Contract(is_ast_col_def(def));
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
@@ -4395,7 +4395,7 @@ static void sem_col_attrs_fk(CqlState* CS, ast_node *fk, ast_node *def, col_def_
 // That's ok, we know the node for the current table without having to look it up.
 // Note: these validations run in the context of the table being validated before
 // that table is accepted, not later.  We're still "in" the table, if you will.
-void sem_validate_fk_attr(CqlState* CS, pending_table_validation *pending) {
+void sem_validate_fk_attr(CqlState* _Nonnull CS, pending_table_validation *pending) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
 
   ast_node *fk = pending->fk;
@@ -4443,7 +4443,7 @@ void sem_validate_fk_attr(CqlState* CS, pending_table_validation *pending) {
 
 // Parse out the column information for this column and add the necessary flags
 // to the semantic type.  Note that we don't care about all of these flags.
-static sem_t sem_col_attrs(CqlState* CS, ast_node *def, ast_node *head, col_def_info *info) {
+static sem_t sem_col_attrs(CqlState* _Nonnull CS, ast_node *def, ast_node *head, col_def_info *info) {
   Contract(head);
   Contract(info);
 
@@ -4627,7 +4627,7 @@ static sem_t sem_col_attrs(CqlState* CS, ast_node *def, ast_node *head, col_def_
 // note that we need to carry some state here to do the validation.  We
 // track the number of auto-increment columns we've seen so far and
 // complain if we see more than one.
-static void sem_col_def(CqlState* CS, ast_node *def, col_def_info *info) {
+static void sem_col_def(CqlState* _Nonnull CS, ast_node *def, col_def_info *info) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
 
@@ -4780,7 +4780,7 @@ static void sem_col_def(CqlState* CS, ast_node *def, col_def_info *info) {
 // Queue a pending check validation, this is just like the columns case
 // we could do this right away because constraints come after columns
 // but we may as well just do the checks all the same.
-static void sem_check_def(CqlState* CS, ast_node *table_ast, ast_node *def) {
+static void sem_check_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def) {
   EXTRACT_ANY_NOTNULL(expr, def->right)
   pending_table_validation pending = {
       .table_ast = table_ast,
@@ -4795,7 +4795,7 @@ static void sem_check_def(CqlState* CS, ast_node *table_ast, ast_node *def) {
 // Dispatch the correct constraint type.  Release the saved table items
 // (used to find duplicates) when done.  This is always clean on entry
 // because this can't nest.
-static void sem_constraints(CqlState* CS, ast_node *table_ast, ast_node *col_key_list, col_def_info *info) {
+static void sem_constraints(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *col_key_list, col_def_info *info) {
   Contract(is_ast_col_key_list(col_key_list));
   Invariant(!current_joinscope_lv && !CS->sem.table_items);
   CS->sem.table_items = symtab_new();
@@ -4833,7 +4833,7 @@ static void sem_constraints(CqlState* CS, ast_node *table_ast, ast_node *col_key
 // right expression, then they check those for errors.  Then they need
 // the types of those expressions and the combined_flags of the result.  This
 // does exactly that for its various callers.  Returns true if all is well.
-static bool_t sem_binary_prep(CqlState* CS, ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
+static bool_t sem_binary_prep(CqlState* _Nonnull CS, ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
   EXTRACT_ANY_NOTNULL(left, ast->left);
   EXTRACT_ANY_NOTNULL(right, ast->right);
 
@@ -4845,7 +4845,7 @@ static bool_t sem_binary_prep(CqlState* CS, ast_node *ast, sem_t *core_type_left
 }
 
 // Same as sem_binary_prep, but with flow analysis for AND/OR logical operators.
-static bool_t sem_binary_prep_with_flow_analysis(CqlState* CS, ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags, CSTR op) {
+static bool_t sem_binary_prep_with_flow_analysis(CqlState* _Nonnull CS, ast_node *ast, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags, CSTR op) {
   Contract(!strcmp(op, "OR") || !strcmp(op, "AND"));
 
   EXTRACT_ANY_NOTNULL(left, ast->left);
@@ -4864,7 +4864,7 @@ static bool_t sem_binary_prep_with_flow_analysis(CqlState* CS, ast_node *ast, se
   return sem_binary_prep_helper(CS, ast, left, right, core_type_left, core_type_right, combined_flags);
 }
 
-static bool_t sem_binary_prep_helper(CqlState* CS, ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
+static bool_t sem_binary_prep_helper(CqlState* _Nonnull CS, ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags) {
   if (is_error(left) || is_error(right)) {
     record_error(CS, ast);
     *core_type_left = SEM_TYPE_ERROR;
@@ -4885,7 +4885,7 @@ static bool_t sem_binary_prep_helper(CqlState* CS, ast_node *ast, ast_node *left
 
 // Validates string compatible left and right and computes the result type.
 // Works for like and not like, and helper for match, glob, and regexp.
-static void sem_binary_like(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_like(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
   if (!sem_binary_prep(CS, ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
@@ -4907,7 +4907,7 @@ static void sem_binary_like(CqlState* CS, ast_node *ast, CSTR op) {
 }
 
 // validates the left arg of collate, the right arg can be any id
-static void sem_collate(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_collate(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   Contract(is_ast_collate(ast));
   Contract(is_ast_str(ast->right));
   EXTRACT_ANY_NOTNULL(left, ast->left);
@@ -4930,7 +4930,7 @@ static void sem_collate(CqlState* CS, ast_node *ast, CSTR op) {
 }
 
 // Validates string/number compatible left and right and the result type should always be string
-static void sem_concat(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_concat(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   Contract(is_ast_concat(ast));
   EXTRACT_ANY_NOTNULL(left, ast->left);
   EXTRACT_ANY_NOTNULL(right, ast->right);
@@ -4970,7 +4970,7 @@ static void sem_concat(CqlState* CS, ast_node *ast, CSTR op) {
 }
 
 // match/glob/regexp are just like 'like' but it can only appear inside of SQL
-static void sem_binary_match(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_match(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
     report_error(CS, ast, "CQL0044: operator may only appear in the context of a SQL statement", op);
     record_error(CS, ast);
@@ -4981,7 +4981,7 @@ static void sem_binary_match(CqlState* CS, ast_node *ast, CSTR op) {
 
 // For all math operations, we combine the types and yield the type that
 // holds both using the helper.  If any text, that's an error.
-static void sem_binary_math(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_math(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
   if (!sem_binary_prep(CS, ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
@@ -5018,14 +5018,14 @@ static void sem_binary_math(CqlState* CS, ast_node *ast, CSTR op) {
 
 // For all math operations, we combine the types and yield the type that
 // holds both using the helper.  If any text, that's an error.
-static void sem_binary_integer_math(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_integer_math(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_binary_math(CS, ast, op);
   sem_reject_real(CS, ast, op);
 }
 
 // For all the logical operands, the result is always a boolean.  Again
 // text type inputs result in an error.
-static void sem_binary_logical(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_logical(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
   bool_t has_error;
@@ -5047,7 +5047,7 @@ static void sem_binary_logical(CqlState* CS, ast_node *ast, CSTR op) {
   ast->sem = new_sem(CS, SEM_TYPE_BOOL | combined_flags);
 }
 
-static void sem_binary_eq_or_ne(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_eq_or_ne(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
   if (!sem_binary_prep(CS, ast, &core_type_left, &core_type_right, &combined_flags)) {
@@ -5076,7 +5076,7 @@ static void sem_binary_eq_or_ne(CqlState* CS, ast_node *ast, CSTR op) {
 
 // The comparison types always return a boolean and can accept anything
 // that is compatible on the left or the right.
-static void sem_binary_compare(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_compare(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
   if (!sem_binary_prep(CS, ast, &core_type_left, &core_type_right, &combined_flags)) {
     return;
@@ -5106,7 +5106,7 @@ static void sem_binary_compare(CqlState* CS, ast_node *ast, CSTR op) {
 
 // Any const node is evaluated at compile time.  The kinds of sub-expressions
 // that are allowed are limited.  See the "eval" function for more on this.
-static void sem_expr_const(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_expr_const(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   Contract(is_ast_const(ast));
 
   sem_root_expr(CS, ast->left, SEM_EXPR_CONTEXT_NONE);
@@ -5133,7 +5133,7 @@ static void sem_expr_const(CqlState* CS, ast_node *ast, CSTR op) {
 // to visit the left side (it's always the left node even if the operator goes on the right)
 // if that's ok then we need the combined_flags and core type.  There is only
 // the one.  Returns true if everything is ok.
-static bool_t sem_unary_prep(CqlState* CS, ast_node *ast, sem_t *core_type, sem_t *combined_flags) {
+static bool_t sem_unary_prep(CqlState* _Nonnull CS, ast_node *ast, sem_t *core_type, sem_t *combined_flags) {
   // op left | left op
   sem_expr(CS, ast->left);
 
@@ -5154,7 +5154,7 @@ static bool_t sem_unary_prep(CqlState* CS, ast_node *ast, sem_t *core_type, sem_
   return true;
 }
 
-static bool_t sem_validate_numeric(CqlState* CS, ast_node *ast, sem_t core_type, CSTR op) {
+static bool_t sem_validate_numeric(CqlState* _Nonnull CS, ast_node *ast, sem_t core_type, CSTR op) {
   if (is_blob(core_type)) {
     report_error(CS, ast->left, "CQL0045: blob operand not allowed in", op);
     record_error(CS, ast);
@@ -5178,7 +5178,7 @@ static bool_t sem_validate_numeric(CqlState* CS, ast_node *ast, sem_t core_type,
 
 // The only unary math operators are '-' and '~'
 // Reference types are not allowed
-static void sem_unary_math(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_unary_math(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type, combined_flags;
   if (!sem_unary_prep(CS, ast, &core_type, &combined_flags)) {
     return;
@@ -5204,14 +5204,14 @@ static void sem_unary_math(CqlState* CS, ast_node *ast, CSTR op) {
   // hence ast->sem->name = ast->left->sem->name is WRONG here and it is not missing on accident
 }
 
-static void sem_unary_integer_math(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_unary_integer_math(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_unary_math(CS, ast, op);
   sem_reject_real(CS, ast, op);
 }
 
 // The only logical unary operator is 'NOT' but there might be others some day.
 // Text is not allowed.
-static void sem_unary_logical(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_unary_logical(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type, combined_flags;
   if (!sem_unary_prep(CS, ast, &core_type, &combined_flags)) {
     return;
@@ -5227,7 +5227,7 @@ static void sem_unary_logical(CqlState* CS, ast_node *ast, CSTR op) {
 }
 
 // This is used for IS TRUE and IS FALSE
-static void sem_unary_is_true_or_false(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_unary_is_true_or_false(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   if (CS->sem.enforcement.strict_is_true) {
     report_error(CS, ast, "CQL0403: operator may not be used because it is not supported on old versions of SQLite", op);
     record_error(CS, ast);
@@ -5248,7 +5248,7 @@ static void sem_unary_is_true_or_false(CqlState* CS, ast_node *ast, CSTR op) {
 }
 
 // IS and IS NOT are special in that they return a not null boolean.
-static void sem_binary_is_or_is_not(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_binary_is_or_is_not(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   sem_t core_type_left, core_type_right, combined_flags;
 
   if (!sem_binary_prep(CS, ast, &core_type_left, &core_type_right, &combined_flags)) {
@@ -5274,7 +5274,7 @@ static void sem_binary_is_or_is_not(CqlState* CS, ast_node *ast, CSTR op) {
 
 // Do analysis on an argument, notably * can only appear in count(*)
 // so this is where that validation happens.  Otherwise recurse.
-static void sem_arg_expr(CqlState* CS, ast_node *ast, bool_t is_count) {
+static void sem_arg_expr(CqlState* _Nonnull CS, ast_node *ast, bool_t is_count) {
   if (is_ast_star(ast)) {
     if (is_count) {
       ast->sem = new_sem(CS, SEM_TYPE_INTEGER);
@@ -5295,7 +5295,7 @@ static void sem_arg_expr(CqlState* CS, ast_node *ast, bool_t is_count) {
 // arguments with the function and each other.  That doesn't happen here.
 // This just gets the type of each arg and makes sure independently they are
 // not bogus.
-static void sem_arg_list(CqlState* CS, ast_node *head, bool_t is_count) {
+static void sem_arg_list(CqlState* _Nonnull CS, ast_node *head, bool_t is_count) {
   Contract(!head || is_ast_arg_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -5353,7 +5353,7 @@ static sem_t type_with_finalized_nullability_improvement(sem_t type) {
 // all the columns of all the tables in the selects join result.  This does
 // the work of assembling that struct.  Note the result of a select is a struct type.
 // This means that join types only appear in the FROM part of DML
-static void sem_select_star(CqlState* CS, ast_node *ast) {
+static void sem_select_star(CqlState* _Nonnull CS, ast_node *ast) {
   if (!current_joinscope_lv || !current_joinscope_rv->jptr) {
     report_error(CS, ast, "CQL0052: select * cannot be used with no FROM clause", NULL);
     record_error(CS, ast);
@@ -5403,7 +5403,7 @@ static void sem_select_star(CqlState* CS, ast_node *ast) {
 // this will give us the total space required.  In pass two we will those in
 // (see sem_select_table_star_add).  In pass 1 we do all the error checking so that
 // by the time we're running pass 2 nothing can go wrong.
-static uint32_t sem_select_table_star_count(CqlState* CS, ast_node *ast) {
+static uint32_t sem_select_table_star_count(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_star(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -5447,7 +5447,7 @@ static uint32_t sem_select_table_star_count(CqlState* CS, ast_node *ast) {
 // the result struct has already been allocated with enough room those the table at
 // the indicated index.  We do this operation in two passes so we know how much to
 // allocate and this is pass 2 where we fill in the values
-static int32_t sem_select_table_star_add(CqlState* CS, ast_node *ast, sem_struct *sptr, int32_t index) {
+static int32_t sem_select_table_star_add(CqlState* _Nonnull CS, ast_node *ast, sem_struct *sptr, int32_t index) {
   Contract(is_ast_table_star(ast));
   EXTRACT_STRING(name, ast->left);
   Invariant(current_joinscope_lv);
@@ -5481,7 +5481,7 @@ static int32_t sem_select_table_star_add(CqlState* CS, ast_node *ast, sem_struct
 // This check is important for a variety of cases, but the main ones are:
 //  - select * or select T.*  -> we can't expand the start if there aren't names
 //  - select results -> we can't make the getters if the columns don't have names
-static void sem_verify_no_anon_columns(CqlState* CS, ast_node *ast) {
+static void sem_verify_no_anon_columns(CqlState* _Nonnull CS, ast_node *ast) {
    // Sanity check our arguments, it is for sure a struct type.
   Invariant(is_struct(ast->sem->sem_type));
   sem_struct *sptr = ast->sem->sptr;
@@ -5498,7 +5498,7 @@ static void sem_verify_no_anon_columns(CqlState* CS, ast_node *ast) {
 }
 
 // ensure none of the columns have null type
-static void sem_verify_no_null_columns(CqlState* CS, ast_node *ast) {
+static void sem_verify_no_null_columns(CqlState* _Nonnull CS, ast_node *ast) {
    // Sanity check our arguments, it is for sure a struct type.
   Invariant(is_struct(ast->sem->sem_type));
   sem_struct *sptr = ast->sem->sptr;
@@ -5516,7 +5516,7 @@ static void sem_verify_no_null_columns(CqlState* CS, ast_node *ast) {
 // is well formed for re-use.  That means every column must have a name and a type
 // This is so that we know, for instance, the name and type of every column in
 // a result set from the select statement.
-cql_noexport void sem_verify_no_anon_no_null_columns(CqlState* CS, ast_node *ast) {
+cql_noexport void sem_verify_no_anon_no_null_columns(CqlState* _Nonnull CS, ast_node *ast) {
   sem_verify_no_anon_columns(CS, ast);
   if (!is_error(ast)) {
     sem_verify_no_null_columns(CS, ast);
@@ -5536,7 +5536,7 @@ static void sem_emit_one_sptr_type(charbuf *output, sem_struct *sptr, uint32_t i
 
 // given that we found sptr differences in one of the places that the types must match
 // we use this helper to tell the user what's different in detail
-static void sem_emit_column_diff_diagnostics(CqlState* CS, ast_node *left, ast_node *right) {
+static void sem_emit_column_diff_diagnostics(CqlState* _Nonnull CS, ast_node *left, ast_node *right) {
   Invariant(is_struct(left->sem->sem_type));
   sem_struct *sptr_left = left->sem->sptr;
   Invariant(is_struct(right->sem->sem_type));
@@ -5595,7 +5595,7 @@ static void sem_emit_column_diff_diagnostics(CqlState* CS, ast_node *left, ast_n
   CHARBUF_CLOSE(report);
 }
 
-static sem_struct *sem_unify_compatible_columns(CqlState* CS, ast_node *left, ast_node *right) {
+static sem_struct *sem_unify_compatible_columns(CqlState* _Nonnull CS, ast_node *left, ast_node *right) {
   Invariant(is_struct(left->sem->sem_type));
   sem_struct *sptr_left = left->sem->sptr;
   Invariant(is_struct(right->sem->sem_type));
@@ -5661,7 +5661,7 @@ static sem_struct *sem_unify_compatible_columns(CqlState* CS, ast_node *left, as
   return sptr;
 }
 
-cql_noexport void sem_verify_identical_columns(CqlState* CS, ast_node *expected, ast_node *actual, CSTR target) {
+cql_noexport void sem_verify_identical_columns(CqlState* _Nonnull CS, ast_node *expected, ast_node *actual, CSTR target) {
   Contract(actual);
   Contract(expected);
   sem_struct *sptr_expected = expected->sem->sptr;
@@ -5721,7 +5721,7 @@ cql_noexport void sem_verify_identical_columns(CqlState* CS, ast_node *expected,
 // at this point, especially if the proc already has some other select return.
 // This is where we make sure all the kinds of selects that might be returned
 // are 100% compatible.
-static void sem_update_proc_type_for_select(CqlState* CS, ast_node *ast) {
+static void sem_update_proc_type_for_select(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t is_out = is_ast_out_stmt(ast);
   bool_t is_out_union = is_ast_out_union_stmt(ast);
   bool_t is_select = is_select_stmt(ast);
@@ -5846,7 +5846,7 @@ static ast_node *get_named_param(ast_node *params, CSTR name) {
 
 // Like `report_error`, but does nothing if `ast` is NULL. Used to make it
 // easier to handle a NULL AST in the `sem_try_resolve_*` family of functions.
-static void report_resolve_error(CqlState* CS, ast_node *ast, CSTR msg, CSTR subject) {
+static void report_resolve_error(CqlState* _Nonnull CS, ast_node *ast, CSTR msg, CSTR subject) {
   if (ast) {
     report_error(CS, ast, msg, subject);
   }
@@ -5854,7 +5854,7 @@ static void report_resolve_error(CqlState* CS, ast_node *ast, CSTR msg, CSTR sub
 
 // Like `record_error`, but does nothing if `ast` is NULL. Used to make it
 // easier to handle a NULL AST in the `sem_try_resolve_*` family of functions.
-static void record_resolve_error(CqlState* CS, ast_node *ast) {
+static void record_resolve_error(CqlState* _Nonnull CS, ast_node *ast) {
   if (ast) {
     record_error(CS, ast);
   }
@@ -5869,7 +5869,7 @@ typedef enum {
   SEM_RESOLVE_STOP = 1
 } sem_resolve;
 
-static sem_resolve sem_try_resolve_locals_bundle(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_locals_bundle(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -5906,7 +5906,7 @@ static sem_resolve sem_try_resolve_locals_bundle(CqlState* CS, ast_node *ast, CS
   return SEM_RESOLVE_STOP;
 }
 
-static sem_resolve sem_try_resolve_arguments_bundle(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_arguments_bundle(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -5947,11 +5947,11 @@ static sem_resolve sem_try_resolve_arguments_bundle(CqlState* CS, ast_node *ast,
   return SEM_RESOLVE_STOP;
 }
 
-static bool_t find_any_callable(CqlState* CS, CSTR name) {
+static bool_t find_any_callable(CqlState* _Nonnull CS, CSTR name) {
   return find_proc(CS, name) || find_unchecked_proc(CS, name) || find_func(CS, name) || find_unchecked_func(CS, name);
 }
 
-static bool_t try_find_possible_dot_overload(CqlState* CS, charbuf *sym, ast_node *expr, CSTR name, CSTR choice1, CSTR choice2) {
+static bool_t try_find_possible_dot_overload(CqlState* _Nonnull CS, charbuf *sym, ast_node *expr, CSTR name, CSTR choice1, CSTR choice2) {
   Contract(sym);
   Contract(expr);
   Contract(name);
@@ -5979,7 +5979,7 @@ static bool_t try_find_possible_dot_overload(CqlState* CS, charbuf *sym, ast_nod
   return false;
 }
 
-static sem_resolve sem_try_resolve_dot_rewrite(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_dot_rewrite(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6012,7 +6012,7 @@ static sem_resolve sem_try_resolve_dot_rewrite(CqlState* CS, ast_node *ast, CSTR
 
 // This helper adds new variables global or local, it also tracks the unitary locals
 // so that we can do the LOCALS shape
-static void add_variable(CqlState* CS, CSTR name, ast_node *variable) {
+static void add_variable(CqlState* _Nonnull CS, CSTR name, ast_node *variable) {
   // We could be working on locals and not unitary_locals inside of proc declarations
   // so we have to check both things.
   if (CS->sem.current_variables == CS->sem.locals && CS->sem.unitary_locals) {
@@ -6025,7 +6025,7 @@ static void add_variable(CqlState* CS, CSTR name, ast_node *variable) {
 }
 
 // Look for the given name as a local or global variable.  First local.
-cql_noexport ast_node *find_local_or_global_variable(CqlState* CS, CSTR name) {
+cql_noexport ast_node *find_local_or_global_variable(CqlState* _Nonnull CS, CSTR name) {
   // look in the two variable tables, in order, first match wins
   symtab_entry *entry = symtab_find(CS->sem.locals, name);
 
@@ -6036,7 +6036,7 @@ cql_noexport ast_node *find_local_or_global_variable(CqlState* CS, CSTR name) {
   return entry ? entry->val : NULL;
 }
 
-static sem_resolve sem_try_resolve_variable(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_variable(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6073,7 +6073,7 @@ static sem_resolve sem_try_resolve_variable(CqlState* CS, ast_node *ast, CSTR na
 }
 
 // Returns true if okay, else false.
-static bool_t sem_resolve_column_does_not_conflict_with_variable(CqlState* CS, ast_node *ast, CSTR column_name, CSTR table_name) {
+static bool_t sem_resolve_column_does_not_conflict_with_variable(CqlState* _Nonnull CS, ast_node *ast, CSTR column_name, CSTR table_name) {
   Contract(column_name);
 
   // It is an error if a column hides a local/global. This is only a problem if
@@ -6094,7 +6094,7 @@ static bool_t sem_resolve_column_does_not_conflict_with_variable(CqlState* CS, a
 // the columns in the current join scope or else in one of the parent
 // join-scopes. If the name is ambiguous at any given level then it is an error,
 // but inner scopes are allowed to hide the names of outer scopes.
-static sem_resolve sem_try_resolve_column(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_column(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6194,7 +6194,7 @@ static sem_resolve sem_try_resolve_column(CqlState* CS, ast_node *ast, CSTR name
   return SEM_RESOLVE_STOP;
 }
 
-static sem_resolve sem_try_resolve_rowid(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_rowid(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6264,7 +6264,7 @@ static sem_resolve sem_try_resolve_rowid(CqlState* CS, ast_node *ast, CSTR name,
 // column shadows a variable. Returns `true` if the column was found, else
 // `false`. Returning `true` does not imply that semantic analysis was
 // successful.
-static bool_t sem_find_column_for_name(CqlState* CS, ast_node *ast, CSTR name) {
+static bool_t sem_find_column_for_name(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   Contract(ast);
   Contract(name);
 
@@ -6287,7 +6287,7 @@ static bool_t sem_find_column_for_name(CqlState* CS, ast_node *ast, CSTR name) {
   return found;
 }
 
-static void sem_resolve_cursor_field(CqlState* CS, ast_node *ast, ast_node *cursor, CSTR field, sem_t **type_ptr) {
+static void sem_resolve_cursor_field(CqlState* _Nonnull CS, ast_node *ast, ast_node *cursor, CSTR field, sem_t **type_ptr) {
   Contract(cursor);
   Contract(field);
   Contract(type_ptr);
@@ -6325,7 +6325,7 @@ static void sem_resolve_cursor_field(CqlState* CS, ast_node *ast, ast_node *curs
   record_resolve_error(CS, ast);
 }
 
-static sem_resolve sem_try_resolve_cursor_field(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_cursor_field(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6342,7 +6342,7 @@ static sem_resolve sem_try_resolve_cursor_field(CqlState* CS, ast_node *ast, CST
   return SEM_RESOLVE_STOP;
 }
 
-static sem_resolve sem_try_resolve_enum(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_enum(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6383,7 +6383,7 @@ static sem_resolve sem_try_resolve_enum(CqlState* CS, ast_node *ast, CSTR name, 
   return SEM_RESOLVE_STOP;
 }
 
-static sem_resolve sem_try_resolve_global_constant(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_global_constant(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6410,7 +6410,7 @@ static sem_resolve sem_try_resolve_global_constant(CqlState* CS, ast_node *ast, 
   return SEM_RESOLVE_STOP;
 }
 
-static sem_resolve sem_try_resolve_arg_bundle(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static sem_resolve sem_try_resolve_arg_bundle(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
@@ -6496,13 +6496,13 @@ static sem_resolve sem_try_resolve_arg_bundle(CqlState* CS, ast_node *ast, CSTR 
 // performing semantic analysis, call `sem_resolve_id` (or, if within an
 // expression, `sem_resolve_id_expr`). Alternatively, if one wants to get a
 // mutable type from the environment, call `find_mutable_type`.
-static void sem_resolve_id_with_type(CqlState* CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
+static void sem_resolve_id_with_type(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
   Contract(name);
   Contract(type_ptr);
 
   *type_ptr = NULL;
 
-  sem_resolve (*resolver[])(CqlState* CS, ast_node *ast, CSTR, CSTR, sem_t **) = {
+  sem_resolve (*resolver[])(CqlState* _Nonnull CS, ast_node *ast, CSTR, CSTR, sem_t **) = {
     sem_try_resolve_arguments_bundle,
     sem_try_resolve_locals_bundle,
     sem_try_resolve_column,
@@ -6532,7 +6532,7 @@ static void sem_resolve_id_with_type(CqlState* CS, ast_node *ast, CSTR name, CST
 // Resolves a (potentially qualified) identifier, writing semantic information
 // into `ast` if successful, or reporting and recording an error for `ast` if
 // not.
-cql_noexport void sem_resolve_id(CqlState* CS, ast_node *ast, CSTR name, CSTR scope) {
+cql_noexport void sem_resolve_id(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope) {
   Contract(is_id_or_dot(ast));
   Contract(name);
 
@@ -6545,7 +6545,7 @@ cql_noexport void sem_resolve_id(CqlState* CS, ast_node *ast, CSTR name, CSTR sc
 // is to be used only for *references* to a previously declared variable, the
 // combination of flags indicating a completed initialization, if present, will
 // be removed as they serve no purpose outside of declarations.
-static void sem_validate_variable_referenced_is_initialized_if_required(CqlState* CS, ast_node *ast) {
+static void sem_validate_variable_referenced_is_initialized_if_required(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_id_or_dot(ast));
   Contract(ast->sem);
   Contract(is_variable(ast->sem->sem_type));
@@ -6576,7 +6576,7 @@ static bool_t auto_cursor_field_requires_has_row_check(sem_t sem_type) {
 // Given the AST of an auto cursor field access and the type of the auto cursor
 // itself, returns true if a has-row check has been performed appropriately (if
 // required), else false.
-static void sem_validate_auto_cursor_field_accessed_has_row_check_if_required(CqlState* CS, ast_node *ast, sem_t cursor_type) {
+static void sem_validate_auto_cursor_field_accessed_has_row_check_if_required(CqlState* _Nonnull CS, ast_node *ast, sem_t cursor_type) {
   Contract(is_ast_dot(ast));
   Contract(ast->sem);
   Contract(is_variable(ast->sem->sem_type));
@@ -6608,7 +6608,7 @@ static void sem_validate_auto_cursor_field_accessed_has_row_check_if_required(Cq
 
 // Given an AST that may represent a cursor field reference, validate that the
 // requirements for has-row checks have been met.
-static void sem_validate_has_row_check_requirements_if_applicable(CqlState* CS, ast_node *ast) {
+static void sem_validate_has_row_check_requirements_if_applicable(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
 
@@ -6631,7 +6631,7 @@ static void sem_validate_has_row_check_requirements_if_applicable(CqlState* CS, 
 
 // Given an AST that may represent a variable reference, validate that the
 // requirements for initialization have been met.
-static void sem_validate_initialization_requirements_if_applicable(CqlState* CS, ast_node *ast) {
+static void sem_validate_initialization_requirements_if_applicable(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
 
@@ -6645,7 +6645,7 @@ static void sem_validate_initialization_requirements_if_applicable(CqlState* CS,
 }
 
 // Analyze a cursor used as an expression; this is the has-row boolean case.
-static void sem_cursor_as_expression(CqlState* CS, ast_node *ast) {
+static void sem_cursor_as_expression(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
   Contract(is_cursor(ast->sem->sem_type));
@@ -6670,7 +6670,7 @@ static void sem_cursor_as_expression(CqlState* CS, ast_node *ast) {
 
 // Analyze an expression subject to a nonnull improvement and rewrite it, if
 // appropriate.
-static void sem_notnull_improved_expr(CqlState* CS, ast_node *ast) {
+static void sem_notnull_improved_expr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_id_or_dot(ast));
   Contract(ast->sem);
   Contract(ast->sem->sem_type & SEM_TYPE_INFERRED_NOTNULL);
@@ -6704,7 +6704,7 @@ static void sem_notnull_improved_expr(CqlState* CS, ast_node *ast) {
 }
 
 // Like `sem_resolve_id`, but specific to expression contexts.
-static void sem_resolve_id_expr(CqlState* CS, ast_node *ast, CSTR name, CSTR scope) {
+static void sem_resolve_id_expr(CqlState* _Nonnull CS, ast_node *ast, CSTR name, CSTR scope) {
   Contract(is_id_or_dot(ast));
   Contract(name);
 
@@ -6745,7 +6745,7 @@ static void sem_resolve_id_expr(CqlState* CS, ast_node *ast, CSTR name, CSTR sco
 // the original binding and thus corresponds to the type set via
 // `sem_resolve_id`, *not* the type set via `sem_resolve_id_expr`. See the
 // documentation for `sem_resolve_id_with_type` for limitations.
-static sem_t *find_mutable_type(CqlState* CS, CSTR name, CSTR scope) {
+static sem_t *find_mutable_type(CqlState* _Nonnull CS, CSTR name, CSTR scope) {
   Contract(name);
 
   sem_t *type = NULL;
@@ -6757,7 +6757,7 @@ static sem_t *find_mutable_type(CqlState* CS, CSTR name, CSTR scope) {
 // Like `find_mutable_type`, but sets `is_global` to true if the name/scope pair
 // refers to either a global variable or the field of a global auto cursor
 // (i.e., anything that is both global and mutable).
-static sem_t *find_mutable_type_and_global_status(CqlState* CS, CSTR name, CSTR scope, bool_t *is_global) {
+static sem_t *find_mutable_type_and_global_status(CqlState* _Nonnull CS, CSTR name, CSTR scope, bool_t *is_global) {
   Contract(name);
   Contract(is_global);
 
@@ -6834,7 +6834,7 @@ static sem_t *find_mutable_type_and_global_status(CqlState* CS, CSTR name, CSTR 
 // If there is a current object type, then the next item must match
 // If there is no such type, then an object type that arrives becomes the required type
 // if they ever don't match record an error
-static CSTR sem_combine_kinds_general(CqlState* CS, ast_node *ast, CSTR kind_left, CSTR kind_right) {
+static CSTR sem_combine_kinds_general(CqlState* _Nonnull CS, ast_node *ast, CSTR kind_left, CSTR kind_right) {
   if (kind_right) {
     if (kind_left) {
       if (Strcasecmp(kind_left, kind_right)) {
@@ -6850,7 +6850,7 @@ static CSTR sem_combine_kinds_general(CqlState* CS, ast_node *ast, CSTR kind_lef
 }
 
 // helper to crack the ast nodes first and then call the normal comparisons
-static CSTR sem_combine_kinds(CqlState* CS, ast_node *ast, CSTR kind_right) {
+static CSTR sem_combine_kinds(CqlState* _Nonnull CS, ast_node *ast, CSTR kind_right) {
   CSTR kind_left = ast->sem->kind;
   return sem_combine_kinds_general(CS, ast, kind_left, kind_right);
 }
@@ -6874,7 +6874,7 @@ static CSTR sem_combine_kinds(CqlState* CS, ast_node *ast, CSTR kind_right) {
 // `has_expression_to_match` is false though. This is because something like
 // "CASE 0 WHEN x IS NOT NULL THEN x ELSE y" will only ever take the first
 // branch when "x" IS null despite the "IS NOT NULL" check.
-static void sem_case_list(CqlState* CS,
+static void sem_case_list(CqlState* _Nonnull CS,
   ast_node *head,
   bool_t has_expression_to_match,
   sem_t sem_type_required_for_when,
@@ -6975,7 +6975,7 @@ static void sem_case_list(CqlState* CS,
 // type of the expr in "case [expr]" if there is one, then we do the else
 // handling. Note that the absence of an else forces the case to have a possibly
 // null result.
-cql_noexport void sem_case(CqlState* CS, ast_node *ast, bool_t is_iif) {
+cql_noexport void sem_case(CqlState* _Nonnull CS, ast_node *ast, bool_t is_iif) {
   Contract(is_ast_case_expr(ast));
   EXTRACT_ANY(expr, ast->left);
   EXTRACT_NOTNULL(connector, ast->right);
@@ -7068,7 +7068,7 @@ error:
   goto cleanup;
 }
 
-static void sem_expr_case(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_case(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_case_expr(ast));
 
   sem_case(CS, ast, IS_CASE);
@@ -7076,7 +7076,7 @@ static void sem_expr_case(CqlState* CS, ast_node *ast, CSTR cstr) {
 
 // if we get here we are re-evaluating a subtree, this rewritten bit
 // is necessarily processed so we don't have to do it again
-static void sem_expr_between_rewrite(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_between_rewrite(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_between_rewrite(ast));
   return;
 }
@@ -7084,7 +7084,7 @@ static void sem_expr_between_rewrite(CqlState* CS, ast_node *ast, CSTR cstr) {
 // Between requires type compatibility between all three of its arguments.
 // Nullability follows the usual rules, if any might be null then the result
 // type might be null.  In any case the result's core type is BOOL.
-static void sem_expr_between_or_not_between(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_between_or_not_between(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_between(ast) || is_ast_not_between(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
@@ -7213,7 +7213,7 @@ static void sem_expr_between_or_not_between(CqlState* CS, ast_node *ast, CSTR cs
 
 // For cast expressions we use the type provided for the semantic type
 // the only trick is that we preserve the combined_flags of the input argument.
-static void sem_expr_cast(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_cast(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_cast_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -7268,7 +7268,7 @@ static void sem_expr_cast(CqlState* CS, ast_node *ast, CSTR cstr) {
   ast->sem->kind = data_type->sem->kind;
 }
 
-static void sem_expr_type_check(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_type_check(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_type_check_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(type, ast->right);
@@ -7325,7 +7325,7 @@ static void sem_expr_type_check(CqlState* CS, ast_node *ast, CSTR cstr) {
 // is a not null type if we find a not null item in the list.  There should be
 // nothing after that item.  Note that ifnull and coalesce are really the same thing
 // except ifnull must have exactly two arguments.
-static void sem_coalesce(CqlState* CS, ast_node *call_ast, bool_t is_ifnull) {
+static void sem_coalesce(CqlState* _Nonnull CS, ast_node *call_ast, bool_t is_ifnull) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -7421,7 +7421,7 @@ static void sem_coalesce(CqlState* CS, ast_node *call_ast, bool_t is_ifnull) {
 // items must be type compatible.  Note that in this case the nullability of
 // the items does not matter, only the nullability of the item being tested.
 // Note that null in (null) is null, not true.
-static void sem_expr_in_pred_or_not_in(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_in_pred_or_not_in(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_in_pred(ast) || is_ast_not_in(ast));
   EXTRACT_ANY_NOTNULL(needle, ast->left);
 
@@ -7512,7 +7512,7 @@ static void sem_expr_in_pred_or_not_in(CqlState* CS, ast_node *ast, CSTR cstr) {
 // This is a helper method that logs an error if the indicated counts
 // do not match.  It doesn't actually walk the list.  We always have to
 // do that for other reasons anyway so there is no additional walk here.
-static bool_t sem_validate_arg_count(CqlState* CS, ast_node *ast, uint32_t count, uint32_t expected) {
+static bool_t sem_validate_arg_count(CqlState* _Nonnull CS, ast_node *ast, uint32_t count, uint32_t expected) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -7528,7 +7528,7 @@ static bool_t sem_validate_arg_count(CqlState* CS, ast_node *ast, uint32_t count
 }
 
 // This helper method checks the given name against the current context
-static bool_t sem_validate_context(CqlState* CS, ast_node *ast, CSTR name, uint32_t valid_contexts) {
+static bool_t sem_validate_context(CqlState* _Nonnull CS, ast_node *ast, CSTR name, uint32_t valid_contexts) {
   if (CURRENT_EXPR_CONTEXT_IS(valid_contexts)) {
     return true;
   }
@@ -7539,7 +7539,7 @@ static bool_t sem_validate_context(CqlState* CS, ast_node *ast, CSTR name, uint3
 }
 
 // This helper method checks the function against the mask of its valid contexts.
-static bool_t sem_validate_function_context(CqlState* CS, ast_node *ast, uint32_t valid_contexts) {
+static bool_t sem_validate_function_context(CqlState* _Nonnull CS, ast_node *ast, uint32_t valid_contexts) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -7551,7 +7551,7 @@ static bool_t sem_validate_function_context(CqlState* CS, ast_node *ast, uint32_
 // in the current expression context.  Exists cannot be used in GROUP BY
 // for instance.  Nor does it make sense in a loose expression outside of
 // a select.
-static bool_t sem_validate_exists_context(CqlState* CS, ast_node *ast) {
+static bool_t sem_validate_exists_context(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_exists_expr(ast));
 
   return sem_validate_context(CS, ast, "exists",
@@ -7564,7 +7564,7 @@ static bool_t sem_validate_exists_context(CqlState* CS, ast_node *ast) {
 
 // Compute the type of an exists subexpression.  The context must be valid
 // the nested select must be ok.  The result will be a not null boolean.
-static void sem_expr_exists(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_exists(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_exists_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
 
@@ -7582,7 +7582,7 @@ static void sem_expr_exists(CqlState* CS, ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(CS, SEM_TYPE_BOOL | SEM_TYPE_NOTNULL | sem_sensitive);
 }
 
-static bool_t sem_validate_window_context(CqlState* CS, ast_node *ast) {
+static bool_t sem_validate_window_context(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -7597,7 +7597,7 @@ static bool_t sem_validate_window_context(CqlState* CS, ast_node *ast) {
 
 // Aggregate functions can only be used in certain places.  For instance
 // they may not appear in a WHERE clause.  Validate the current context.
-static bool_t sem_validate_aggregate_context(CqlState* CS, ast_node *ast) {
+static bool_t sem_validate_aggregate_context(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -7622,19 +7622,19 @@ static bool_t sem_validate_aggregate_context(CqlState* CS, ast_node *ast) {
 }
 
 // validate the node appear inside SQL statement
-static bool_t sem_validate_appear_inside_sql_stmt(CqlState* CS, ast_node *ast) {
+static bool_t sem_validate_appear_inside_sql_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   return sem_validate_function_context(CS, ast, u32_not(SEM_EXPR_CONTEXT_NONE));
 }
 
 // validate the node appear inside SQL statement
-static bool_t sem_validate_sql_not_constraint(CqlState* CS, ast_node *ast) {
+static bool_t sem_validate_sql_not_constraint(CqlState* _Nonnull CS, ast_node *ast) {
   return sem_validate_function_context(CS, ast, u32_not(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_CONSTRAINT));
 }
 
 // cql_blob_get_type(blob) -- this will ultimately expand into
 // user_defined_blob_get_type(blob).  We have this helper because it returns nullable or not
 // nullable depending on the input blob.  Otherwise this is very nearly a normal function.
-static void sem_special_func_cql_blob_get_type(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_cql_blob_get_type(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -7685,7 +7685,7 @@ static void sem_special_func_cql_blob_get_type(CqlState* CS, ast_node *ast, uint
 // but it is possible to call the function directly -- the rewrite is only sugar after all
 // we we have to check even if it's usually redundant.
 //
-static void sem_special_func_cql_blob_create(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_cql_blob_create(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -7801,7 +7801,7 @@ static void sem_special_func_cql_blob_create(CqlState* CS, ast_node *ast, uint32
 // but it is possible to call the function directly -- the rewrite is only sugar after all
 // we we have to check even if it's usually redundant.
 //
-static void sem_special_func_cql_blob_update(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_cql_blob_update(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -7921,7 +7921,7 @@ static void sem_special_func_cql_blob_update(CqlState* CS, ast_node *ast, uint32
 // In all other stages, it stays as is.  As a consequence, we also get a dependency on the
 // backed table.  When we visit this kind of node we also want to create a dependency on
 // the backing table.
-static void sem_special_func_cql_blob_get(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_cql_blob_get(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -7996,7 +7996,7 @@ static void sem_special_func_cql_blob_get(CqlState* CS, ast_node *ast, uint32_t 
 }
 
 // You can count anything, you always get an integer
-static void sem_special_func_count(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_count(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8026,7 +8026,7 @@ static void sem_special_func_count(CqlState* CS, ast_node *ast, uint32_t arg_cou
 }
 
 // You can min/max numerics and strings, you get what you started with.
-static void sem_aggr_func_min_or_max(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_min_or_max(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8099,7 +8099,7 @@ static void sem_aggr_func_min_or_max(CqlState* CS, ast_node *ast, uint32_t arg_c
 }
 
 // You can round real numbers, you may specify a precision
-static void sem_func_round(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_round(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8156,17 +8156,17 @@ static void sem_func_round(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // Min and Max are the same validation
-static void sem_aggr_func_max(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_max(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_aggr_func_min_or_max(CS, ast, arg_count);
 }
 
 // Min and Max are the same validation
-static void sem_aggr_func_min(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_min(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_aggr_func_min_or_max(CS, ast, arg_count);
 }
 
 // Avg validation -> any numeric is ok, but you get a real back.
-static void sem_aggr_func_avg(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_avg(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8200,14 +8200,14 @@ static void sem_aggr_func_avg(CqlState* CS, ast_node *ast, uint32_t arg_count) {
   // ast->sem->name is not set here because e.g. avg(x) is not named "x"
 }
 
-static void sem_func_ifnull(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_ifnull(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_coalesce(CS, ast, 1);  // set "ifnull"
 }
 
 // This is a wrapper function that tells the code generator to compress
 // the string literal into fragments like we do for statements.  This
 // will do nothing unless --compress has been selected
-static void sem_func_cql_compressed(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_cql_compressed(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8241,7 +8241,7 @@ static void sem_func_cql_compressed(CqlState* CS, ast_node *ast, uint32_t arg_co
 // has to prop sensitivity.  We should probably have a syntax for
 // nullable args get nullable results and sensitive args get sensitive
 // results but we don't have one at this time.
-static void sem_func_cql_get_blob_size(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_cql_get_blob_size(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8273,7 +8273,7 @@ static void sem_func_cql_get_blob_size(CqlState* CS, ast_node *ast, uint32_t arg
   name_ast->sem = ast->sem = new_sem(CS, sem_type);
 }
 
-static void sem_func_length(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_length(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8307,7 +8307,7 @@ static void sem_func_length(CqlState* CS, ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(CS, sem_type);
 }
 
-static void sem_func_trim(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_trim(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8347,16 +8347,16 @@ static void sem_func_trim(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // ltrim has the same semantics as trim
-static void sem_func_ltrim(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_ltrim(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_func_trim(CS, ast, arg_count);
 }
 
 // rtrim has the same semantics as trim
-static void sem_func_rtrim(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_rtrim(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_func_trim(CS, ast, arg_count);
 }
 
-static void sem_func_nullif(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_nullif(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8393,7 +8393,7 @@ static void sem_func_nullif(CqlState* CS, ast_node *ast, uint32_t arg_count) {
   // ast->sem->name is not set here because e.g. nullif(x) is not named "x"
 }
 
-static void sem_func_instr(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_instr(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8426,7 +8426,7 @@ static void sem_func_instr(CqlState* CS, ast_node *ast, uint32_t arg_count) {
   // the kind of instr is generic, the integer returned has no kind even if the strings do
 }
 
-static void sem_func_sign(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_sign(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8464,7 +8464,7 @@ static void sem_func_sign(CqlState* CS, ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(CS, SEM_TYPE_INTEGER | combined_flags);
 }
 
-static void sem_func_abs(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_abs(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8492,7 +8492,7 @@ static void sem_func_abs(CqlState* CS, ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg->sem->kind;
 }
 
-static void sem_func_char(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_char(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8535,7 +8535,7 @@ static void sem_func_char(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 
 // Validate the variable argument is a auto cursor. This is called to validate
 // cql_cursor_diff_xxx(X,Y) arguments.
-static bool_t sem_validate_cursor_from_variable(CqlState* CS, ast_node *ast, CSTR target) {
+static bool_t sem_validate_cursor_from_variable(CqlState* _Nonnull CS, ast_node *ast, CSTR target) {
   if (is_variable(ast->sem->sem_type)) {
     sem_cursor(CS, ast);
     return !is_error(ast);
@@ -8551,7 +8551,7 @@ static bool_t sem_validate_cursor_from_variable(CqlState* CS, ast_node *ast, CST
 // performed (in the case of ifnull_throw and ifnull_crash, which are used
 // directly by the programmer), or not (in the case of cql_inferred_notnull, which
 // will only show up as the product of rewrite rules).
-static void sem_func_attest_notnull(CqlState* CS, ast_node *ast, uint32_t arg_count, uint32_t valid_contexts) {
+static void sem_func_attest_notnull(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, uint32_t valid_contexts) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8581,7 +8581,7 @@ static void sem_func_attest_notnull(CqlState* CS, ast_node *ast, uint32_t arg_co
 }
 
 // uses attest notnull semantic helper
-static void sem_func_ifnull_throw(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_ifnull_throw(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(CS, ast, arg_count, SEM_EXPR_CONTEXT_NONE);
 
   // "throw" implies that we have a return code which implies all of the proc
@@ -8591,13 +8591,13 @@ static void sem_func_ifnull_throw(CqlState* CS, ast_node *ast, uint32_t arg_coun
 }
 
 // uses attest notnull semantic helper
-static void sem_func_ifnull_crash(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_ifnull_crash(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_func_attest_notnull(CS, ast, arg_count, SEM_EXPR_CONTEXT_NONE);
 }
 
 // Special function that tells us the expression as been already verified to be not null
 // due to control flow or other context.
-static void sem_special_func_cql_inferred_notnull(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_cql_inferred_notnull(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT_NOTNULL(arg_list, call_arg_list->right);
 
@@ -8623,7 +8623,7 @@ static void sem_special_func_cql_inferred_notnull(CqlState* CS, ast_node *ast, u
 // cql_cursor_diff_xxx is a CQL builtin function that compare the values of a
 // row between two cursors.
 // Note cql_cursor_diff_xxx is also rewritten to a case_expr node
-static bool_t validate_cql_cursor_diff(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static bool_t validate_cql_cursor_diff(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8680,7 +8680,7 @@ static bool_t validate_cql_cursor_diff(CqlState* CS, ast_node *ast, uint32_t arg
   return true;
 }
 
-static void sem_func_cql_cursor_diff_col(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_cql_cursor_diff_col(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   if (!validate_cql_cursor_diff(CS, ast, arg_count)) {
     return;
   }
@@ -8690,7 +8690,7 @@ static void sem_func_cql_cursor_diff_col(CqlState* CS, ast_node *ast, uint32_t a
   rewrite_cql_cursor_diff(CS, ast, true);
 }
 
-static void sem_func_cql_cursor_diff_val(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_cql_cursor_diff_val(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   if (!validate_cql_cursor_diff(CS, ast, arg_count)) {
     return;
   }
@@ -8702,7 +8702,7 @@ static void sem_func_cql_cursor_diff_val(CqlState* CS, ast_node *ast, uint32_t a
 
 // This is a special function because we do not want to analyze the arguments
 // until after the rewrite to a CASE expression.
-static void sem_special_func_iif(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_iif(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
 
   if (!sem_validate_arg_count(CS, ast, arg_count, 3)) {
@@ -8715,7 +8715,7 @@ static void sem_special_func_iif(CqlState* CS, ast_node *ast, uint32_t arg_count
   sem_case(CS, ast, IS_IIF);
 }
 
-static void sem_func_upper(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_upper(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8747,11 +8747,11 @@ static void sem_func_upper(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // lower has the same rules as upper
-static void sem_func_lower(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_lower(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_func_upper(CS, ast, arg_count);
 }
 
-static void sem_func_coalesce(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_coalesce(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_coalesce(CS, ast, 0);  // do not set "ifnull"
 }
 
@@ -8759,7 +8759,7 @@ static void sem_func_coalesce(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 // we're dealing with numerics, we are in the right context,
 // and have one arg.  Note sum with more than one arg is not supported
 // in SQLite, so there's no "non-aggregate" case like min/max.
-static void sem_validate_sum_or_total(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_validate_sum_or_total(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8787,7 +8787,7 @@ static void sem_validate_sum_or_total(CqlState* CS, ast_node *ast, uint32_t arg_
 }
 
 // Sum validation -> any numeric is ok
-static void sem_aggr_func_sum(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_sum(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8818,7 +8818,7 @@ static void sem_aggr_func_sum(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // Total validation -> any numeric is ok
-static void sem_aggr_func_total(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_total(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8844,7 +8844,7 @@ static void sem_aggr_func_total(CqlState* CS, ast_node *ast, uint32_t arg_count)
 }
 
 // Substr validation -> 2 or 3 args, first arg is a string, the others are integers
-static void sem_func_substr(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_substr(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8917,7 +8917,7 @@ static void sem_func_substr(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // Validates SQLite's replace(input, find, replace_with) function.
-static void sem_func_replace(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_replace(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8961,7 +8961,7 @@ static void sem_func_replace(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // generic function to do basic validation for builtin window functions.
-static void sem_validate_window_func(CqlState* CS,
+static void sem_validate_window_func(CqlState* _Nonnull CS,
   ast_node *ast,
   uint32_t arg_count_actual,
   uint32_t arg_count_needed_min,
@@ -8984,32 +8984,32 @@ static void sem_validate_window_func(CqlState* CS,
 }
 
 // Validation of the builtin window function row_number(...). It takes 0 arguments
-static void sem_func_row_number(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_row_number(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_validate_window_func(CS, ast, arg_count, 0, 0, SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
 }
 
 // Validation of the builtin window function rank(...). It takes 0 arguments
-static void sem_func_rank(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_rank(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_validate_window_func(CS, ast, arg_count, 0, 0, SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
 }
 
 // Validation of the builtin window function dense_rank(...). It takes 0 arguments
-static void sem_func_dense_rank(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_dense_rank(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_validate_window_func(CS, ast, arg_count, 0, 0, SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
 }
 
 // Validation of the builtin window function percent_rank(...). It takes 0 arguments
-static void sem_func_percent_rank(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_percent_rank(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_validate_window_func(CS, ast, arg_count, 0, 0, SEM_TYPE_REAL | SEM_TYPE_NOTNULL);
 }
 
 // Validation of the builtin window function cume_dist(...). It takes 0 arguments
-static void sem_func_cume_dist(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_cume_dist(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_validate_window_func(CS, ast, arg_count, 0, 0, SEM_TYPE_REAL | SEM_TYPE_NOTNULL);
 }
 
 // Validation of the builtin window function ntile(...). It takes one integer argument
-static void sem_func_ntile(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_ntile(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9036,7 +9036,7 @@ static void sem_func_ntile(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 
 // Validation of the builtin window function lag(...). It takes three parameters
 // with two of them optional.
-static void sem_func_lag(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_lag(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9122,13 +9122,13 @@ static void sem_func_lag(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 
 // Validation of the builtin window function lead(...). It takes three parameters
 // with two of them optional.
-static void sem_func_lead(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_lead(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   // semantically lead() is the same as lag() therefore we can use the same code.
   sem_func_lag(CS, ast, arg_count);
 }
 
 // Validation of the builtin window function first_value(...). It takes one expression parameter
-static void sem_func_first_value(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_first_value(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9148,12 +9148,12 @@ static void sem_func_first_value(CqlState* CS, ast_node *ast, uint32_t arg_count
 }
 
 // Validation of the builtin window function last_value(...). It takes one expression parameter
-static void sem_func_last_value(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_last_value(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_func_first_value(CS, ast, arg_count);
 }
 
 // Validation of the builtin window function nth_value(...). It takes two parameters
-static void sem_func_nth_value(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_nth_value(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9185,7 +9185,7 @@ static void sem_func_nth_value(CqlState* CS, ast_node *ast, uint32_t arg_count) 
 
 // The group_concat function has an optional separator, otherwise
 // it accepts anything and it results in a string.
-static void sem_aggr_func_group_concat(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_aggr_func_group_concat(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9231,7 +9231,7 @@ static void sem_aggr_func_group_concat(CqlState* CS, ast_node *ast, uint32_t arg
 
 // All of the date formats are strings until converted to something else.
 // Validate the format args, nothing else is really needed.
-static void sem_strftime(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t has_format, sem_t sem_type) {
+static void sem_strftime(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t has_format, sem_t sem_type) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9308,30 +9308,30 @@ static void sem_strftime(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t
   name_ast->sem = ast->sem = new_sem(CS, sem_type);
 }
 
-static void sem_func_strftime(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_strftime(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_strftime(CS, ast, arg_count, 1, SEM_TYPE_TEXT);
 }
 
-static void sem_func_date(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_date(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_strftime(CS, ast, arg_count, 0, SEM_TYPE_TEXT);
 }
 
-static void sem_func_time(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_time(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_strftime(CS, ast, arg_count, 0, SEM_TYPE_TEXT);
 }
 
-static void sem_func_datetime(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_datetime(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_strftime(CS, ast, arg_count, 0, SEM_TYPE_TEXT);
 }
 
-static void sem_func_julianday(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_julianday(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   sem_strftime(CS, ast, arg_count, 0, SEM_TYPE_REAL);
 }
 
 // The "ptr" function is used to get the memory address of an object at runtime
 // as a LONG INT. This is useful when calling SQLite functions as they are
 // unable to deal with objects directly.
-static void sem_special_func_ptr(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
+static void sem_special_func_ptr(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9362,7 +9362,7 @@ static void sem_special_func_ptr(CqlState* CS, ast_node *ast, uint32_t arg_count
 // not sensitive  and have it be treated as sensitive.  This is really
 // only needed to get argument types to match in compound select
 // statements or other similar situations.
-static void sem_func_sensitive(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_sensitive(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9385,7 +9385,7 @@ static void sem_func_sensitive(CqlState* CS, ast_node *ast, uint32_t arg_count) 
 // not nullable and have it be treated as nullable.  This is really
 // only needed to get argument types to match in compound select
 // statements or other similar situations.
-static void sem_func_nullable(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_nullable(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9407,7 +9407,7 @@ static void sem_func_nullable(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 // This is a helper method that performs validation for builtin functions that have no arguments
 // and only require a database connection. They are fair game in most places and since they take
 // no args, not a lot can go wrong.
-static bool sem_validate_db_func_with_no_args(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static bool sem_validate_db_func_with_no_args(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   CS->sem.has_dml = 1;
 
   if (!sem_validate_arg_count(CS, ast, arg_count, 0)) {
@@ -9430,7 +9430,7 @@ static bool sem_validate_db_func_with_no_args(CqlState* CS, ast_node *ast, uint3
 }
 
 // The random function gives you a random long_int
-static void sem_func_random(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_random(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
@@ -9447,7 +9447,7 @@ static void sem_func_random(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 
 // The likely function is a no-op function used for query optimizations.
 // It tells the query planner that the given (one) argument is probably a boolean value of `true`.
-static void sem_func_likely(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_likely(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -9471,7 +9471,7 @@ static void sem_func_likely(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 
 // The changes function is used to get the integer number of rows changed
 // by the most recent update/insert/delete.
-static void sem_func_changes(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_changes(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
@@ -9483,7 +9483,7 @@ static void sem_func_changes(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 }
 
 // The last_insert_rowid function is used to get the rowid of the most recently inserted row with a rowid.
-static void sem_func_last_insert_rowid(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_last_insert_rowid(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
@@ -9499,7 +9499,7 @@ static void sem_func_last_insert_rowid(CqlState* CS, ast_node *ast, uint32_t arg
 // procedure being called, verify that the format string is valid and that the
 // arguments provided match up appropriately. Returns `true` if successful, else
 // `false`.
-static bool_t sem_validate_args_for_format(CqlState* CS,
+static bool_t sem_validate_args_for_format(CqlState* _Nonnull CS,
   ast_node *arg_list,
   ast_node *format_strlit,
   CSTR format_string,
@@ -9547,7 +9547,7 @@ static bool_t sem_validate_args_for_format(CqlState* CS,
 
 // Returns the decoded format string (i.e., the string literal absent the
 // surrounding quotes) for initializing a `printf_iterator`.
-static CSTR format_string_from_format_strlit(CqlState* CS, ast_node *format_strlit) {
+static CSTR format_string_from_format_strlit(CqlState* _Nonnull CS, ast_node *format_strlit) {
   Contract(is_ast_str(format_strlit));
 
   CSTR result;
@@ -9563,7 +9563,7 @@ static CSTR format_string_from_format_strlit(CqlState* CS, ast_node *format_strl
 
 // The printf function converts its arguments to a string. It must be called
 // with a string literal containing the format string as its first argument.
-static void sem_func_printf(CqlState* CS, ast_node *ast, uint32_t arg_count) {
+static void sem_func_printf(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -9631,7 +9631,7 @@ static void sem_func_printf(CqlState* CS, ast_node *ast, uint32_t arg_count) {
 
 // Compute the semantic type of each argument, this is minimally necessary
 // If any arguments are not internally consistent report that error.
-static void sem_validate_args(CqlState* CS, ast_node *ast, ast_node *arg_list) {
+static void sem_validate_args(CqlState* _Nonnull CS, ast_node *ast, ast_node *arg_list) {
   for (ast_node *item = arg_list; item; item = item->right) {
     EXTRACT_ANY(expr, item->left);
     sem_expr(CS, expr);
@@ -9651,7 +9651,7 @@ static void sem_validate_args(CqlState* CS, ast_node *ast, ast_node *arg_list) {
 //  * If this is declared with the select keyword then
 //     * we can ONLY use these in SQL, not in a loose expression
 //  * args have to be checked and compatible with formals
-static void sem_user_func(CqlState* CS, ast_node *ast, ast_node *user_func) {
+static void sem_user_func(CqlState* _Nonnull CS, ast_node *ast, ast_node *user_func) {
   Contract(is_ast_call(ast));
   Contract(user_func);
   bool_t select_func = is_ast_declare_select_func_no_check_stmt(user_func) || is_ast_declare_select_func_stmt(user_func);
@@ -9756,7 +9756,7 @@ bool_t is_no_clause_simple_select(ast_node *select_stmt) {
   return false;
 }
 
-static bool_t find_shared_cte_with_args(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t find_shared_cte_with_args(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(arg_list, call_stmt->right);
   *(bool_t *)context |= arg_list != NULL;
@@ -9764,7 +9764,7 @@ static bool_t find_shared_cte_with_args(CqlState* CS, ast_node *cte_body, void *
   return false;
 }
 
-static bool_t has_nested_shared_cte_with_args(CqlState* CS, ast_node *stmt) {
+static bool_t has_nested_shared_cte_with_args(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_select_stmt(stmt));
   bool_t found_nested_shared_cte_with_args = false;
 
@@ -9787,7 +9787,7 @@ static bool_t has_nested_shared_cte_with_args(CqlState* CS, ast_node *stmt) {
 //    * target therefore has no out-arguments
 //  * target has no select clauses like FROM etc.
 //  * target has one column, it's just a SQL expression
-static void sem_validate_expression_fragment(CqlState* CS, ast_node *ast, ast_node *proc) {
+static void sem_validate_expression_fragment(CqlState* _Nonnull CS, ast_node *ast, ast_node *proc) {
   Contract(is_ast_call(ast));
   Contract(is_proc(proc));
 
@@ -9858,7 +9858,7 @@ static void sem_validate_expression_fragment(CqlState* CS, ast_node *ast, ast_no
 //    * the last formal must be an OUT arg and it must be a scalar type
 //    * that out arg will be treated as the return value of the "function"
 //    * in code-gen we will create a temporary for it, semantic analysis doesn't care
-static void sem_proc_as_func(CqlState* CS, ast_node *ast, ast_node *proc) {
+static void sem_proc_as_func(CqlState* _Nonnull CS, ast_node *ast, ast_node *proc) {
   Contract(is_ast_call(ast));
   Contract(is_proc(proc));
 
@@ -9918,7 +9918,7 @@ static void sem_proc_as_func(CqlState* CS, ast_node *ast, ast_node *proc) {
 
 // This validates that RAISE is being used in the context of a trigger and that
 // it has the correct args.
-static void sem_expr_raise(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_raise(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_raise(ast));
   EXTRACT_OPTION(flags, ast->left);
   EXTRACT_ANY(expr, ast->right);
@@ -9952,7 +9952,7 @@ static void sem_expr_raise(CqlState* CS, ast_node *ast, CSTR cstr) {
 // has a type kind.  If it does then we can rewrite it into a function call.  The
 // call might be to an invalid function but that's ok.  The next level of errors
 // checks all that and the arguments.  The mapping gets all the usual benefits
-static void sem_validate_array_transform(CqlState* CS, ast_node *ast,  CSTR op) {
+static void sem_validate_array_transform(CqlState* _Nonnull CS, ast_node *ast,  CSTR op) {
   EXTRACT_ANY_NOTNULL(array, ast->left);
   sem_expr(CS, array);
   if (is_error(array)) {
@@ -9972,7 +9972,7 @@ static void sem_validate_array_transform(CqlState* CS, ast_node *ast,  CSTR op) 
 }
 
 // If the array transform is legal then set it up
-static void sem_expr_array(CqlState* CS, ast_node *ast,  CSTR op) {
+static void sem_expr_array(CqlState* _Nonnull CS, ast_node *ast,  CSTR op) {
   sem_validate_array_transform(CS, ast, op);
   if (!is_error(ast)) {
     sem_expr(CS, ast);
@@ -9982,7 +9982,7 @@ static void sem_expr_array(CqlState* CS, ast_node *ast,  CSTR op) {
 // This validates that the call is to one of the functions that we know and
 // then delegates to the appropriate shared helper function for that type
 // of call for additional validation.
-static void sem_expr_call(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_call(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -10113,7 +10113,7 @@ additional_checks:
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
 
-static bool_t sem_reverse_apply_if_needed(CqlState* CS, ast_node *ast, bool_t analyze) {
+static bool_t sem_reverse_apply_if_needed(CqlState* _Nonnull CS, ast_node *ast, bool_t analyze) {
   symtab_entry *entry = symtab_find(CS->sem.exprs, ast->type);
   Invariant(entry);
   sem_expr_dispatch *disp = (sem_expr_dispatch*)entry->val;
@@ -10142,7 +10142,7 @@ static bool_t sem_reverse_apply_if_needed(CqlState* CS, ast_node *ast, bool_t an
 }
 
 // Validates the right arg of ':', '::' and then rewrites the ast node
-static void sem_reverse_apply(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_reverse_apply(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast));
   bool_t failed = sem_reverse_apply_if_needed(CS, ast, SEM_REVERSE_APPLY_ANALYZE_CALL);
   if (failed) {
@@ -10151,7 +10151,7 @@ static void sem_reverse_apply(CqlState* CS, ast_node *ast, CSTR op) {
   }
 }
 
-static void sem_opt_filter_clause(CqlState* CS, ast_node *ast) {
+static void sem_opt_filter_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_filter_clause(ast));
   EXTRACT_NOTNULL(opt_where, ast->left);
 
@@ -10161,7 +10161,7 @@ static void sem_opt_filter_clause(CqlState* CS, ast_node *ast) {
   ast->sem = opt_where->sem;
 }
 
-static void sem_opt_partition_by(CqlState* CS, ast_node *ast) {
+static void sem_opt_partition_by(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_partition_by(ast));
   EXTRACT_NOTNULL(expr_list, ast->left);
 
@@ -10173,7 +10173,7 @@ static void sem_opt_partition_by(CqlState* CS, ast_node *ast) {
   POP_EXPR_CONTEXT();
 }
 
-static void sem_opt_frame_spec(CqlState* CS, ast_node *ast) {
+static void sem_opt_frame_spec(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_frame_spec(ast));
   EXTRACT_OPTION(flags, ast->left);
   EXTRACT_NOTNULL(expr_list, ast->right);
@@ -10215,7 +10215,7 @@ static void sem_opt_frame_spec(CqlState* CS, ast_node *ast) {
   record_ok(CS, ast);
 }
 
-static void sem_window_defn(CqlState* CS, ast_node *ast) {
+static void sem_window_defn(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_defn(ast));
   EXTRACT(opt_partition_by, ast->left);
   EXTRACT_NOTNULL(window_defn_orderby, ast->right);
@@ -10245,7 +10245,7 @@ static void sem_window_defn(CqlState* CS, ast_node *ast) {
 }
 
 // Check whether a window name definition was referenced
-static void sem_window_reference(CqlState* CS, ast_node *ast) {
+static void sem_window_reference(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_name_defn(ast));
   EXTRACT_STRING(window_name, ast->left);
 
@@ -10275,7 +10275,7 @@ static void sem_window_reference(CqlState* CS, ast_node *ast) {
   record_error(CS, ast);
 }
 
-static void sem_window_name_defn(CqlState* CS, ast_node *ast) {
+static void sem_window_name_defn(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_name_defn(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(window_defn, ast->right);
@@ -10295,7 +10295,7 @@ static void sem_window_name_defn(CqlState* CS, ast_node *ast) {
   record_ok(CS, ast);
 }
 
-static bool_t sem_window_name_defn_list(CqlState* CS, ast_node *ast) {
+static bool_t sem_window_name_defn_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_name_defn_list(ast));
   EXTRACT_NOTNULL(window_name_defn, ast->left);
   EXTRACT(window_name_defn_list, ast->right);
@@ -10312,7 +10312,7 @@ static bool_t sem_window_name_defn_list(CqlState* CS, ast_node *ast) {
   return error;
 }
 
-static void sem_window_clause(CqlState* CS, ast_node *ast) {
+static void sem_window_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_clause(ast));
   EXTRACT_NOTNULL(window_name_defn_list, ast->left);
   bool_t error =false;
@@ -10329,7 +10329,7 @@ static void sem_window_clause(CqlState* CS, ast_node *ast) {
 }
 
 // Check whether a window name was defined.
-static void sem_window_name(CqlState* CS, ast_node *ast) {
+static void sem_window_name(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(window_name, ast);
   EXTRACT_NOTNULL(window_func_inv, ast->parent);
@@ -10365,7 +10365,7 @@ static void sem_window_name(CqlState* CS, ast_node *ast) {
   record_ok(CS, ast);
 }
 
-static void sem_window_name_or_defn(CqlState* CS, ast_node *ast) {
+static void sem_window_name_or_defn(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t error = false;
 
   if (is_ast_str(ast)) {
@@ -10389,7 +10389,7 @@ static void sem_window_name_or_defn(CqlState* CS, ast_node *ast) {
 // that we know and then delegates to the appropriate shared helper function for
 // that type of window function call for additional validation. We compute the
 // semantic type of all the arguments before we validate the particular function.
-static void sem_expr_window_func_inv(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_window_func_inv(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   if (CS->sem.enforcement.strict_window_func) {
     report_error(CS, ast, "CQL0312: window function invocation are forbidden if strict window function mode is enabled", NULL);
     record_error(CS, ast);
@@ -10435,7 +10435,7 @@ static void sem_expr_window_func_inv(CqlState* CS, ast_node *ast, CSTR cstr) {
 // There are cases where nesting can happen that changes the context,
 // e.g. you can put a nested select in a where clause and that nested select
 // could legally have aggregates.  This keeps the stack of contexts.
-cql_noexport void sem_root_expr(CqlState* CS, ast_node *ast, uint32_t expr_context) {
+cql_noexport void sem_root_expr(CqlState* _Nonnull CS, ast_node *ast, uint32_t expr_context) {
   PUSH_EXPR_CONTEXT(expr_context);
   sem_expr(CS, ast);
   POP_EXPR_CONTEXT();
@@ -10444,7 +10444,7 @@ cql_noexport void sem_root_expr(CqlState* CS, ast_node *ast, uint32_t expr_conte
 // This is the primary dispatch for all expression types.  We find the
 // type of expression and then dispatch to the appropriate helper.  This
 //  is also where the leaf types are handled (e.g. literals)
-cql_noexport void sem_expr(CqlState* CS, ast_node *ast) {
+cql_noexport void sem_expr(CqlState* _Nonnull CS, ast_node *ast) {
 
   // These are all the expressions there are, we have to find it in this table
   // or else someone added a new expression type and it isn't supported yet.
@@ -10458,7 +10458,7 @@ cql_noexport void sem_expr(CqlState* CS, ast_node *ast) {
 // this is done is that whoever should get the alias remembers themselves
 // as the alias target and that person then is renamed.  This is almost always
 // someone's sem->name field.
-static void sem_as_alias(CqlState* CS, ast_node *ast, CSTR *alias_target, ast_node *ast_target) {
+static void sem_as_alias(CqlState* _Nonnull CS, ast_node *ast, CSTR *alias_target, ast_node *ast_target) {
   EXTRACT_STRING(name, ast->left);
   // AS [name]
   if (alias_target) {
@@ -10473,7 +10473,7 @@ static void sem_as_alias(CqlState* CS, ast_node *ast, CSTR *alias_target, ast_no
 // This is a possibly aliased element in the select list.  A "select expression"
 // The current joinscope is already set appropriately for this evaluation by
 // the caller.  There may be none (if there is no from clause).
-static void sem_select_expr(CqlState* CS, ast_node *ast) {
+static void sem_select_expr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT(opt_as_alias, ast->right);
@@ -10501,7 +10501,7 @@ static void sem_select_expr(CqlState* CS, ast_node *ast) {
 // element and that is handled with a special helper.
 // Otherwise, get each item and validate.  At this point we compute the
 // net result type of the select from the select list.
-static void sem_select_expr_list(CqlState* CS, ast_node *ast) {
+static void sem_select_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
 
   if (is_ast_star(ast->left)) {
@@ -10586,7 +10586,7 @@ static void sem_select_expr_list(CqlState* CS, ast_node *ast) {
 // table names.  Note this is not a table alias, but an actual table
 // or cte.  So we don't use this for instance to resolve "T1.x" that's
 // done by normal name resolution rules.
-static ast_node *sem_find_table(CqlState* CS, CSTR name, ast_node *ast_error) {
+static ast_node *sem_find_table(CqlState* _Nonnull CS, CSTR name, ast_node *ast_error) {
   ast_node *table_ast = find_cte(CS, name);
   if (!table_ast) {
     table_ast = find_usable_and_not_deleted_table_or_view(CS,
@@ -10611,7 +10611,7 @@ static ast_node *sem_find_table(CqlState* CS, CSTR name, ast_node *ast_error) {
 // * a select subquery (select X,Y from..) as T2
 // * a list of table references select * from (X, Y, Z)
 // Here we dispatch to the appropriate helper for each case.
-static void sem_table_or_subquery(CqlState* CS, ast_node *ast) {
+static void sem_table_or_subquery(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_or_subquery(ast));
 
   EXTRACT_ANY_NOTNULL(factor, ast->left);
@@ -10704,7 +10704,7 @@ static void sem_table_or_subquery(CqlState* CS, ast_node *ast) {
 // This method validates that all the columns are present on both sides of the
 // join, that they are unique, and they are comparable.
 // The return code tells us if any columns had SENSITIVE data.
-static sem_t sem_join_using_columns(CqlState* CS, ast_node *join, ast_node *join_cond, sem_join *left, sem_join *right) {
+static sem_t sem_join_using_columns(CqlState* _Nonnull CS, ast_node *join, ast_node *join_cond, sem_join *left, sem_join *right) {
   EXTRACT_ANY_NOTNULL(cond_type, join_cond->left);
   EXTRACT_NOTNULL(name_list, join_cond->right);
   Contract(is_ast_using(cond_type));
@@ -10781,7 +10781,7 @@ static sem_t sem_join_using_columns(CqlState* CS, ast_node *join, ast_node *join
 // The on expression should be something that can be used as a bool
 // so any numeric will do.
 // The return code tells us if the ON condition used SENSITIVE data.
-static sem_t sem_join_cond_on(CqlState* CS, ast_node *join, ast_node *join_cond) {
+static sem_t sem_join_cond_on(CqlState* _Nonnull CS, ast_node *join, ast_node *join_cond) {
   EXTRACT_ANY_NOTNULL(cond_type, join_cond->left);
   EXTRACT_ANY_NOTNULL(expr, join_cond->right);
   Contract(is_ast_on(cond_type));
@@ -10809,7 +10809,7 @@ static sem_t sem_join_cond_on(CqlState* CS, ast_node *join, ast_node *join_cond)
 //  * the table factor that is to be joined (see above for legal table factors)
 // We have to assemble these things and validate that the parts are all legal.
 // This is where the actual join type can be computed.
-static void sem_join_target(CqlState* CS, ast_node *ast) {
+static void sem_join_target(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_target(ast));
 
   // find the left table reference of the join
@@ -10862,7 +10862,7 @@ static void sem_join_target(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void sem_table_or_subquery_list(CqlState* CS, ast_node *ast) {
+static void sem_table_or_subquery_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_or_subquery_list(ast));
   EXTRACT_NOTNULL(table_or_subquery, ast->left);
   EXTRACT_ANY(table_or_subquery_list, ast->right);
@@ -10886,7 +10886,7 @@ static void sem_table_or_subquery_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void sem_join_target_list(CqlState* CS, ast_node *ast) {
+static void sem_join_target_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_target_list(ast));
   do {
     EXTRACT_NOTNULL(join_target, ast->left);
@@ -10898,7 +10898,7 @@ static void sem_join_target_list(CqlState* CS, ast_node *ast) {
 
 // join clause subtree comprises all the join statement of the select statement.
 // hold a table_or_subquery node on the left and join target list on the right
-static void sem_join_clause(CqlState* CS, ast_node *ast) {
+static void sem_join_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_clause(ast));
   EXTRACT_NOTNULL(table_or_subquery, ast->left);
   EXTRACT_NOTNULL(join_target_list, ast->right);
@@ -10942,7 +10942,7 @@ static void sem_join_clause(CqlState* CS, ast_node *ast) {
 // it's just the cross product.  INNER join is used here to get the right
 // nullabilty result but actually it's not really an inner join in any
 // other respect.
-static void sem_query_parts(CqlState* CS, ast_node *ast) {
+static void sem_query_parts(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast));
   if (is_ast_table_or_subquery_list(ast)) {
     sem_table_or_subquery_list(CS, ast);
@@ -10962,7 +10962,7 @@ static void sem_query_parts(CqlState* CS, ast_node *ast) {
 // * arg expressions must match formal parameters
 // The name of the resulting table is the name of the function
 //  * but it can be aliased later with "AS"
-static void sem_table_function(CqlState* CS, ast_node *ast) {
+static void sem_table_function(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_function(ast));
 
   EXTRACT_NAME_AST(name_ast, ast->left)
@@ -11024,7 +11024,7 @@ static void sem_table_function(CqlState* CS, ast_node *ast) {
 // A group-by list is a list of [expression].  These each
 // need to be validated.  Note this is a place where the expression context
 // changes.
-static void sem_groupby_list(CqlState* CS, ast_node *head) {
+static void sem_groupby_list(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_groupby_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -11046,7 +11046,7 @@ static void sem_groupby_list(CqlState* CS, ast_node *head) {
 // A order-by list is a list of [expression, ASC/DESC].  These each
 // need to be validated.  Note this is a place where the expression context
 // changes.
-static void sem_orderby_list(CqlState* CS, ast_node *head) {
+static void sem_orderby_list(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_orderby_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -11065,7 +11065,7 @@ static void sem_orderby_list(CqlState* CS, ast_node *head) {
 }
 
 // Simple numeric expression will do for where;  set a new context.
-static void sem_opt_where(CqlState* CS, ast_node *ast) {
+static void sem_opt_where(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_where(ast));
 
   // WHERE [ast->left]
@@ -11073,7 +11073,7 @@ static void sem_opt_where(CqlState* CS, ast_node *ast) {
 }
 
 // Simple numeric expression will do for having;  set a new context.
-static void sem_opt_having(CqlState* CS, ast_node *ast) {
+static void sem_opt_having(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_having(ast));
 
   // HAVING [ast->left]
@@ -11081,7 +11081,7 @@ static void sem_opt_having(CqlState* CS, ast_node *ast) {
 }
 
 // Window clause in the select stmt
-static void sem_opt_select_window(CqlState* CS, ast_node *ast) {
+static void sem_opt_select_window(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_select_window(ast));
   EXTRACT_NOTNULL(window_clause, ast->left);
 
@@ -11092,7 +11092,7 @@ static void sem_opt_select_window(CqlState* CS, ast_node *ast) {
 }
 
 // The group-by node, if present, simply delegates to the groupby_list helper.
-static void sem_opt_groupby(CqlState* CS, ast_node *ast) {
+static void sem_opt_groupby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_groupby(ast));
   EXTRACT_NOTNULL(groupby_list, ast->left);
 
@@ -11107,7 +11107,7 @@ static void sem_opt_groupby(CqlState* CS, ast_node *ast) {
 }
 
 // The order-by node, if present, simply delegates to the orderby_list helper.
-static void sem_opt_orderby(CqlState* CS, ast_node *ast) {
+static void sem_opt_orderby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_orderby(ast));
   EXTRACT_NOTNULL(orderby_list, ast->left);
 
@@ -11122,7 +11122,7 @@ static void sem_opt_orderby(CqlState* CS, ast_node *ast) {
 }
 
 // Limit can be any numeric.  It may not refer to any columns, only variables.
-static void sem_opt_limit(CqlState* CS, ast_node *ast) {
+static void sem_opt_limit(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_limit(ast));
 
   PUSH_JOIN_BLOCK();
@@ -11134,7 +11134,7 @@ static void sem_opt_limit(CqlState* CS, ast_node *ast) {
 }
 
 // Offset can be any numeric.  It may not refer to any columns, only variables.
-static void sem_opt_offset(CqlState* CS, ast_node *ast) {
+static void sem_opt_offset(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_offset(ast));
 
   PUSH_JOIN_BLOCK();
@@ -11149,7 +11149,7 @@ static void sem_opt_offset(CqlState* CS, ast_node *ast) {
 // all the stuff that starts with FROM.  You can do select 1,2 without going
 // here but after that you get all the goodness.  Here we extract each of
 // the fragments and pass them along to the appropriate helper.
-static void sem_select_from(CqlState* CS, ast_node *ast) {
+static void sem_select_from(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_from_etc(ast));
   EXTRACT_ANY(query_parts, ast->left);
 
@@ -11167,7 +11167,7 @@ static void sem_select_from(CqlState* CS, ast_node *ast) {
 
 // Do the semantic analysis of ORDER BY ... LIMIT ... OFFSET nodes.
 // It also expect that the join table infos are already pushed into the join stack by the callsite.
-static bool_t sem_select_orderby(CqlState* CS, ast_node *ast) {
+static bool_t sem_select_orderby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_orderby(ast));
   EXTRACT(opt_orderby, ast->left);
   EXTRACT_NOTNULL(select_limit, ast->right);
@@ -11228,7 +11228,7 @@ static bool_t sem_select_orderby(CqlState* CS, ast_node *ast) {
   return error;
 }
 
-static sem_t sem_select_where_etc(CqlState* CS, ast_node *ast) {
+static sem_t sem_select_where_etc(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_from_etc(ast));
 
   EXTRACT_NOTNULL(select_where, ast->right);
@@ -11289,7 +11289,7 @@ static sem_t sem_select_where_etc(CqlState* CS, ast_node *ast) {
 // `SEM_TYPE_ALIAS`. This is used by `sem_select_expr_list_con` to catch any
 // references to an alias, or references to a column that shadows an alias, from
 // a WHERE, GROUP BY, HAVING, or WINDOW clause.
-static sem_struct *select_expr_list_alias_sptr(CqlState* CS, ast_node *select_expr_list) {
+static sem_struct *select_expr_list_alias_sptr(CqlState* _Nonnull CS, ast_node *select_expr_list) {
   Contract(is_ast_select_expr_list(select_expr_list));
 
   list_item *aliases = NULL;
@@ -11325,7 +11325,7 @@ static sem_struct *select_expr_list_alias_sptr(CqlState* CS, ast_node *select_ex
 // helpers for both of these.  Note that if there is a FROM clause we push
 // that joinscope so that evaluations of the select list can use the results of
 // the join.  Otherwise you get your parent's chain, or nothing.
-static void sem_select_expr_list_con(CqlState* CS, ast_node *ast) {
+static void sem_select_expr_list_con(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_list_con(ast));
   EXTRACT_NOTNULL(select_expr_list, ast->left);
   EXTRACT_NOTNULL(select_from_etc, ast->right);
@@ -11464,7 +11464,7 @@ static void sem_select_expr_list_con(CqlState* CS, ast_node *ast) {
 // * all expressions in the same column should be of compatible types
 // * if any exression is senstive its entire column becomes senstive
 
-static void sem_values(CqlState* CS, ast_node *ast) {
+static void sem_values(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_values(ast));
   EXTRACT(insert_list, ast->left);
 
@@ -11579,7 +11579,7 @@ static void sem_values(CqlState* CS, ast_node *ast) {
 // include [WITH ...], [ORDERBY ... LIMIT OFFSET ...]. Note that most of the clauses
 // in a select statement are optional. This function execute the semantic
 // anlysis of the select-core component.
-static void sem_select_core(CqlState* CS, ast_node *ast) {
+static void sem_select_core(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core(ast));
 
   EXTRACT_ANY(any_select_opts, ast->left);
@@ -11605,7 +11605,7 @@ static void sem_select_core(CqlState* CS, ast_node *ast) {
 // in [select_core]. If we dont do that then the list of used symbols in a
 // select statement will be incomplete and minify_aliases feature (CG_MINIFY_ALIASES)
 // won't work correctly
-static void sem_add_used_symbols(CqlState* CS, symtab **used_symbols, symtab *add_symbols) {
+static void sem_add_used_symbols(CqlState* _Nonnull CS, symtab **used_symbols, symtab *add_symbols) {
   if (*used_symbols == NULL) {
     *used_symbols = add_symbols;
   }
@@ -11621,7 +11621,7 @@ static void sem_add_used_symbols(CqlState* CS, symtab **used_symbols, symtab *ad
 // Like sem_select_orderby, but with the restriction that ordering can only be
 // specified via indices (e.g., 2) and simple name expressions (e.g, x), not
 // arbitrary expressions (e.g., x + y).
-static bool_t sem_select_orderby_with_simple_ordering_only(CqlState* CS, ast_node *ast) {
+static bool_t sem_select_orderby_with_simple_ordering_only(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_orderby(ast));
 
   if (sem_select_orderby(CS, ast)) {
@@ -11654,7 +11654,7 @@ static bool_t sem_select_orderby_with_simple_ordering_only(CqlState* CS, ast_nod
 
 // A select statement in any context, it has the options (which we don't care
 // about for semantic analysis) plus the statement itself.
-static void sem_select_no_with(CqlState* CS, ast_node *ast) {
+static void sem_select_no_with(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_stmt(ast));
   EXTRACT_NOTNULL(select_core_list, ast->left);
   EXTRACT_NOTNULL(select_orderby, ast->right);
@@ -11736,7 +11736,7 @@ static void sem_select_no_with(CqlState* CS, ast_node *ast) {
 
 // Compound select statements must have compatible columns and exact name
 // match of the columns in the select list.  We enforce that here.
-static void sem_select_core_list(CqlState* CS, ast_node *ast) {
+static void sem_select_core_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_list(ast));
   EXTRACT_NOTNULL(select_core, ast->left);
   EXTRACT(select_core_compound, ast->right);
@@ -11788,7 +11788,7 @@ static void sem_select_core_list(CqlState* CS, ast_node *ast) {
 }
 
 // Any select in any context (used when a select appears within another statement)
-cql_noexport void sem_select(CqlState* CS, ast_node *ast) {
+cql_noexport void sem_select(CqlState* _Nonnull CS, ast_node *ast) {
   CS->sem.select_level++;
   if (is_ast_with_select_stmt(ast)) {
     sem_with_select(CS, ast);
@@ -11806,7 +11806,7 @@ cql_noexport void sem_select(CqlState* CS, ast_node *ast) {
 // Top level select statements can trigger the backing actions,
 // nested selects contribute to the tables needing backing but
 // they don't do their own rewrite.
-static void sem_select_rewrite_backing(CqlState* CS, ast_node *ast) {
+static void sem_select_rewrite_backing(CqlState* _Nonnull CS, ast_node *ast) {
   BEGIN_BACKING_REWRITE();
 
   sem_select(CS, ast);
@@ -11829,7 +11829,7 @@ static void sem_select_rewrite_backing(CqlState* CS, ast_node *ast) {
 // But since it is known to generate zero rows the data types are
 // irrelevant.  We just make it go along for the ride so that it doesn't
 // cause errors in the fragment but creates errors elsewhere.
-static void sem_select_nothing_stmt(CqlState* CS, ast_node *ast) {
+static void sem_select_nothing_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_nothing_stmt(ast));
 
   if (!CS->sem.current_proc) goto error;
@@ -11859,7 +11859,7 @@ error:
 // Top level statement list processing for select, note that a select statement
 // can't appear in other places (such as a nested expression).  This is only for
 // select in the context of a statement list.  Others use just 'sem_select'
-static void sem_select_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_select_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   sem_select_rewrite_backing(CS, stmt);
 
   sem_update_proc_type_for_select(CS, stmt);
@@ -11867,7 +11867,7 @@ static void sem_select_stmt(CqlState* CS, ast_node *stmt) {
 
 // Any explain in any context (used when a explain appears within another statement)
 // e.g: declare c cursor for explain query plan ...
-static void sem_explain(CqlState* CS, ast_node *stmt) {
+static void sem_explain(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_explain_stmt(stmt) && CS->sem.current_explain_stmt == NULL);
   EXTRACT_OPTION(query_plan, stmt->left);
   EXTRACT_ANY_NOTNULL(sql_stmt, stmt->right);
@@ -11932,7 +11932,7 @@ cleanup:
 // Top level statement list processing for explain stmt, note that an explain
 // statement can't appear in other places (such as a cursor stmt).  This is only
 // for explain in the context of a statement list.  Others use just 'sem_explain'
-static void sem_explain_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_explain_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   sem_explain(CS, stmt);
   sem_update_proc_type_for_select(CS, stmt);
 }
@@ -11945,7 +11945,7 @@ static void sem_explain_stmt(CqlState* CS, ast_node *stmt) {
 //  * number of CTE columns matches number of select columns
 //
 // The type of the CTE is inferred from the column types of the select.
-static void sem_cte_decl(CqlState* CS, ast_node *ast, ast_node *select_core)  {
+static void sem_cte_decl(CqlState* _Nonnull CS, ast_node *ast, ast_node *select_core)  {
   Contract(is_ast_cte_decl(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -12012,7 +12012,7 @@ static void sem_cte_decl(CqlState* CS, ast_node *ast, ast_node *select_core)  {
 // provides the callback for any per CTE actions
 typedef struct shared_cte_info {
   void *context;
-  void (*callback)(CqlState* CS, void *context, CSTR cte_name, ast_node *cte_decl);
+  void (*callback)(CqlState* _Nonnull CS, void *context, CSTR cte_name, ast_node *cte_decl);
 
   // information for errors detected during walk
   ast_node *missing_else;
@@ -12034,7 +12034,7 @@ typedef struct shared_cte_info {
 //     with source(*) like (select 1 x)
 //     select * from source where x = bb;
 //   end if;
-static void sem_accumulate_cte_info(CqlState* CS, ast_node *stmt, shared_cte_info *info)
+static void sem_accumulate_cte_info(CqlState* _Nonnull CS, ast_node *stmt, shared_cte_info *info)
 {
   Contract(is_ast_with_select_stmt(stmt));
   EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
@@ -12057,7 +12057,7 @@ static void sem_accumulate_cte_info(CqlState* CS, ast_node *stmt, shared_cte_inf
 // Walk a statement list inside of a shared fragment
 // in all such cases there can only be one statement in the list
 // anything else is an error and is dutifully recorded.
-static void sem_accumulate_stmt_list(CqlState* CS, ast_node *ast, shared_cte_info *info) {
+static void sem_accumulate_stmt_list(CqlState* _Nonnull CS, ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_stmt_list(ast));
 
   // all the statement lists must have exactly one statement
@@ -12082,7 +12082,7 @@ static void sem_accumulate_stmt_list(CqlState* CS, ast_node *ast, shared_cte_inf
 // The cond_action node is the predicate of an IF/ELSEIF and its statement list
 // the statement list must be non-empty.  The expression doesn't contribute
 // to the CTEs and is therefore ignored (it's checked elsewhere)
-static void sem_accumulate_cond_action(CqlState* CS, ast_node *ast, shared_cte_info *info) {
+static void sem_accumulate_cond_action(CqlState* _Nonnull CS, ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
   if (!stmt_list) {
@@ -12094,7 +12094,7 @@ static void sem_accumulate_cond_action(CqlState* CS, ast_node *ast, shared_cte_i
 }
 
 // Here we simply walk the elseif chain processing each statement list
-static void sem_accumulate_elseif_list(CqlState* CS, ast_node *ast, shared_cte_info *info) {
+static void sem_accumulate_elseif_list(CqlState* _Nonnull CS, ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_elseif(ast));
 
   while (ast) {
@@ -12110,7 +12110,7 @@ static void sem_accumulate_elseif_list(CqlState* CS, ast_node *ast, shared_cte_i
 // actually optional for shared fragments so we will give an error
 // if it is absent.  Otherwise the helpers above descend into the pieces.
 // In each case we record the ast_node that should get the error if there is one.
-static void sem_accumulate_if_stmt(CqlState* CS, ast_node *ast, shared_cte_info *info) {
+static void sem_accumulate_if_stmt(CqlState* _Nonnull CS, ast_node *ast, shared_cte_info *info) {
   Contract(is_ast_if_stmt(ast));
   EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_NOTNULL(if_alt, ast->right);
@@ -12140,7 +12140,7 @@ static void sem_accumulate_if_stmt(CqlState* CS, ast_node *ast, shared_cte_info 
 // make a declare proc for that migration out of thin air and add it to the
 // known proc decls as usual so that we can report errors later if the migration
 // proc we find does not match.
-static bool sem_create_migration_proc_prototype(CqlState* CS, ast_node *origin, CSTR name)
+static bool sem_create_migration_proc_prototype(CqlState* _Nonnull CS, ast_node *origin, CSTR name)
 {
  /*
   {declare_proc_stmt}
@@ -12166,7 +12166,7 @@ static bool sem_create_migration_proc_prototype(CqlState* CS, ast_node *origin, 
 // that is, either one select, or else an if statement with one select
 // in each branch. We figure out which case we're in and then accumulate the
 // pieces using the callback to tell our caller what we found.
-static void sem_accumulate_proc_cte_info(CqlState* CS, ast_node *create_proc_stmt, shared_cte_info *info) {
+static void sem_accumulate_proc_cte_info(CqlState* _Nonnull CS, ast_node *create_proc_stmt, shared_cte_info *info) {
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
 
   EXTRACT_NOTNULL(proc_params_stmts, create_proc_stmt->right);
@@ -12187,7 +12187,7 @@ static void sem_accumulate_proc_cte_info(CqlState* CS, ast_node *create_proc_stm
 // Save the name of the first table parameter that we find, this is
 // used in a context were we just want to know that there are none
 // so if we find one that's the error.
-static void found_any_table_params_callback(CqlState* CS, void *context, CSTR name, ast_node *cte_decl) {
+static void found_any_table_params_callback(CqlState* _Nonnull CS, void *context, CSTR name, ast_node *cte_decl) {
   // save the first name we find
   if (!*(CSTR *)context) {
     *(CSTR*)context = name;
@@ -12197,7 +12197,7 @@ static void found_any_table_params_callback(CqlState* CS, void *context, CSTR na
 // Here we ensure that the called shared fragment does not need any table bindings
 // because none were provided!
 static void sem_shared_fragment_ensure_no_table_binding(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   ast_node *call_stmt,
   ast_node *create_proc_stmt)
 {
@@ -12227,7 +12227,7 @@ static void sem_shared_fragment_ensure_no_table_binding(
 // we're doing this because we will want this list to know if all of the required table parameters
 // are covered by the USING clause of the call.  We will have previously checked that
 // any duplicated table parameter names have exactly the same type.
-static void make_distinct_table_params_list_callback(CqlState* CS, void *context, CSTR cte_name, ast_node *cte_decl) {
+static void make_distinct_table_params_list_callback(CqlState* _Nonnull CS, void *context, CSTR cte_name, ast_node *cte_decl) {
   list_item **head = (list_item**)context;
 
   // check for duplicates, ignore any, we only need one copy
@@ -12280,7 +12280,7 @@ static void make_distinct_table_params_list_callback(CqlState* CS, void *context
 // shared fragment.  Note that we don't have to walk where there is no binding
 // nor do we have to walk if the binding does not forward an argument that is provided
 // externally.
-cql_noexport void sem_check_bound_cte_name_conflict(CqlState* CS, ast_node *node, binding_info *info) {
+cql_noexport void sem_check_bound_cte_name_conflict(CqlState* _Nonnull CS, ast_node *node, binding_info *info) {
   if (is_ast_cte_table(node)) {
     EXTRACT_NOTNULL(cte_decl, node->left);
     EXTRACT_ANY_NOTNULL(cte_body, node->right);
@@ -12363,7 +12363,7 @@ cql_noexport void sem_check_bound_cte_name_conflict(CqlState* CS, ast_node *node
 // have to exist and be compatible with the table parameters. There can be no
 // extras and no conflicts.
 static void sem_shared_fragment_table_binding(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   ast_node *call_stmt,
   ast_node *create_proc_stmt,
   ast_node *cte_binding_list)
@@ -12591,7 +12591,7 @@ cleanup:
 }
 
 // We've found a shared fragment call site, process the fragment
-static void sem_shared_cte(CqlState* CS, ast_node *cte_body) {
+static void sem_shared_cte(CqlState* _Nonnull CS, ast_node *cte_body) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
 
@@ -12653,7 +12653,7 @@ cleanup:
 //      that part is not allowed to have recursive mention to the CTE
 //  * bind the CTE to the analyzed select
 //  * analyze the rest of the select if we only analyzed the first part
-static void sem_cte_table(CqlState* CS, ast_node *ast)  {
+static void sem_cte_table(CqlState* _Nonnull CS, ast_node *ast)  {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
   EXTRACT_ANY_NOTNULL(cte_body, ast->right);
@@ -12783,7 +12783,7 @@ static void sem_cte_table(CqlState* CS, ast_node *ast)  {
 }
 
 // Walk the list of CTE tables in the WITH clause and set up each one.
-static void sem_cte_tables(CqlState* CS, ast_node *head)  {
+static void sem_cte_tables(CqlState* _Nonnull CS, ast_node *head)  {
   Contract(is_ast_cte_tables(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -12799,7 +12799,7 @@ static void sem_cte_tables(CqlState* CS, ast_node *head)  {
 }
 
 // This tells us how deeply nested we are in CTE expressions at the moment
-static uint32_t sem_with_depth(CqlState* CS) {
+static uint32_t sem_with_depth(CqlState* _Nonnull CS) {
   uint32_t depth = 0;
   cte_state *head = CS->sem.cte_cur;
   while (head) {
@@ -12812,7 +12812,7 @@ static uint32_t sem_with_depth(CqlState* CS) {
 // Add a new set of tables to the stack
 // Needed because WITH statements can be nested due to nested selects
 // So there can be multiple scopes within one select statement.
-static void sem_push_cte_state(CqlState* CS) {
+static void sem_push_cte_state(CqlState* _Nonnull CS) {
   cte_state *new_state = _ast_pool_new(cte_state);
 
   new_state->prev = CS->sem.cte_cur;
@@ -12821,7 +12821,7 @@ static void sem_push_cte_state(CqlState* CS) {
 }
 
 // Remove this CTE from the stack
-static void sem_pop_cte_state(CqlState* CS) {
+static void sem_pop_cte_state(CqlState* _Nonnull CS) {
   Contract(CS->sem.cte_cur);
   Contract(CS->sem.cte_cur->ctes);
 
@@ -12834,7 +12834,7 @@ static void sem_pop_cte_state(CqlState* CS) {
 // Set up a new CTE context, chaining to the previous one (in case of
 // nested selects) and then do semantic analysis of the select that
 // was scoped by the WITH.
-static void sem_with_select(CqlState* CS, ast_node *ast) {
+static void sem_with_select(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_select_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
   EXTRACT(cte_tables, with_prefix->left);
@@ -12861,7 +12861,7 @@ cleanup:
 }
 
 // top level with-select stmt
-static void sem_with_select_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_with_select_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_with_select_stmt(stmt));
   Invariant(CS->sem.cte_cur == NULL);
   sem_select_rewrite_backing(CS, stmt);
@@ -12876,7 +12876,7 @@ static void sem_with_select_stmt(CqlState* CS, ast_node *stmt) {
 //  * the view has to have a compatible create version
 //  * the view has to have a compatible delete version
 //  * the view create flags (like TEMP, or IF NOT EXISTS) must be the same
-static void sem_validate_previous_view(CqlState* CS, ast_node *prev_view) {
+static void sem_validate_previous_view(CqlState* _Nonnull CS, ast_node *prev_view) {
   Contract(!current_joinscope_lv);
 
   Contract(is_ast_create_view_stmt(prev_view));
@@ -12920,7 +12920,7 @@ static void sem_validate_previous_view(CqlState* CS, ast_node *prev_view) {
 //  * the trigger should be present (but maybe marked with @delete)
 //  * the trigger has to have a compatible delete version
 //  * the create flags (like TEMP, or IF NOT EXISTS) must be the same
-static void sem_validate_previous_trigger(CqlState* CS, ast_node *prev_trigger) {
+static void sem_validate_previous_trigger(CqlState* _Nonnull CS, ast_node *prev_trigger) {
   Contract(!current_joinscope_lv);
   Contract(is_ast_create_trigger_stmt(prev_trigger));
 
@@ -12966,7 +12966,7 @@ static void sem_validate_previous_trigger(CqlState* CS, ast_node *prev_trigger) 
 }
 
 // When we locate a table used by a view we simply add that info to the dependency map in both directions
-static void sem_found_dep_in_view(CqlState* CS, CSTR _Nonnull name, ast_node *_Nonnull target_ast, void *_Nullable context) {
+static void sem_found_dep_in_view(CqlState* _Nonnull CS, CSTR _Nonnull name, ast_node *_Nonnull target_ast, void *_Nullable context) {
   Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
   EXTRACT_NOTNULL(create_view_stmt, context);
 
@@ -12978,7 +12978,7 @@ static void sem_found_dep_in_view(CqlState* CS, CSTR _Nonnull name, ast_node *_N
 // there are no lingering views still using it. We don't have to worry about nested views
 // because if the main view uses a nested view and that nested view uses the table then the nested view itself
 // will cause an error to be reported.
-static void sem_record_view_dependencies(CqlState* CS, ast_node *ast) {
+static void sem_record_view_dependencies(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
 
   table_callbacks callbacks = {
@@ -12996,7 +12996,7 @@ static void sem_record_view_dependencies(CqlState* CS, ast_node *ast) {
 // The view will be added to the table/view list.
 // Views must not be allowed to have any NULL type columns, all nulls must be converted to
 // some type with a CAST.
-static void sem_create_view_stmt(CqlState* CS, ast_node *ast) {
+static void sem_create_view_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT(view_and_attrs, ast->right);
@@ -13150,7 +13150,7 @@ static void sem_create_view_stmt(CqlState* CS, ast_node *ast) {
 
 // Parse out the version attributes for this target for use in the semantic type
 // Returns true if all is well, false if there was an error.
-static bool_t sem_validate_version_attrs(CqlState* CS, version_attrs_info *vers_info) {
+static bool_t sem_validate_version_attrs(CqlState* _Nonnull CS, version_attrs_info *vers_info) {
   Contract(vers_info);
   Contract(vers_info->target_ast);
 
@@ -13232,7 +13232,7 @@ static bool_t sem_validate_version_attrs(CqlState* CS, version_attrs_info *vers_
 
 // Ensure that the table parameter is not a backed table, if it is
 // then mark an error at the indicated location
-static void sem_non_backed_table(CqlState* CS, ast_node *ast_error, ast_node *ast_table) {
+static void sem_non_backed_table(CqlState* _Nonnull CS, ast_node *ast_error, ast_node *ast_table) {
   Contract(ast_error);
   Contract(ast_table);
 
@@ -13251,7 +13251,7 @@ static void sem_non_backed_table(CqlState* CS, ast_node *ast_error, ast_node *as
 
 // Ensure that the table parameter is not blob storage, if it is
 // then mark an error at the indicated location
-static void sem_non_blob_storage_table(CqlState* CS, ast_node *ast_error, ast_node *ast_table) {
+static void sem_non_blob_storage_table(CqlState* _Nonnull CS, ast_node *ast_error, ast_node *ast_table) {
   Contract(ast_error);
   Contract(ast_table);
 
@@ -13271,7 +13271,7 @@ static void sem_non_blob_storage_table(CqlState* CS, ast_node *ast_error, ast_no
 // This is the basic checking for the drop table statement
 // * the table must exist in some version
 // * it has to be a table and not a view
-static void sem_drop_table_stmt(CqlState* CS, ast_node *ast) {
+static void sem_drop_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_table_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
@@ -13307,7 +13307,7 @@ static void sem_drop_table_stmt(CqlState* CS, ast_node *ast) {
 // This is the basic checking for the drop view statement
 // * the view must exist in some version
 // * it has to be a view and not a table
-static void sem_drop_view_stmt(CqlState* CS, ast_node *ast) {
+static void sem_drop_view_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_view_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
@@ -13333,7 +13333,7 @@ static void sem_drop_view_stmt(CqlState* CS, ast_node *ast) {
 // This is the basic checking for the drop index statement
 // * the index must exist (have been declared) in some version
 // * it could be deleted now, that's ok, but the name has to be valid
-static void sem_drop_index_stmt(CqlState* CS, ast_node *ast) {
+static void sem_drop_index_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_index_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
@@ -13350,7 +13350,7 @@ static void sem_drop_index_stmt(CqlState* CS, ast_node *ast) {
 // This is the basic checking for the drop trigger statement
 // * the trigger must exist (have been declared) in some version
 // * it could be deleted now, that's ok, but the name has to be valid
-static void sem_drop_trigger_stmt(CqlState* CS, ast_node *ast) {
+static void sem_drop_trigger_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_trigger_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->right);
   EXTRACT_STRING(name, name_ast);
@@ -13418,7 +13418,7 @@ static bool_t sem_match_optional_string(CSTR prev, CSTR cur) {
 //  * delete migration proc identical (both have none or both the same)
 //
 // Errors are attached here.
-static bool_t sem_validate_attrs_prev_cur(CqlState* CS, version_attrs_info *prev, version_attrs_info *cur, ast_node *name_ast) {
+static bool_t sem_validate_attrs_prev_cur(CqlState* _Nonnull CS, version_attrs_info *prev, version_attrs_info *cur, ast_node *name_ast) {
   Contract(name_ast);
   EXTRACT_STRING(name, name_ast);
 
@@ -13505,7 +13505,7 @@ cql_noexport ast_node *sem_get_col_default_value(ast_node *attrs) {
 //  * @delete can "arrive" but never change
 //  * if the column has a default value it has to change
 // Any failures produces an error on the column
-static void sem_validate_col_def_prev_cur(CqlState* CS, ast_node *def, ast_node *prev_def, version_attrs_info *cur_info, version_attrs_info *prev_info) {
+static void sem_validate_col_def_prev_cur(CqlState* _Nonnull CS, ast_node *def, ast_node *prev_def, version_attrs_info *cur_info, version_attrs_info *prev_info) {
   // pull out the current column info
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
@@ -13608,7 +13608,7 @@ static void sem_validate_col_def_prev_cur(CqlState* CS, ast_node *def, ast_node 
 // a schema failure (removing it does). Here we do not generate the text of @senstive
 // by providing callbacks so it looks like we're generating for SQLite.  This is
 // deliberate and the tests verify this.
-static bool_t sem_validate_identical_coldef(CqlState* CS, ast_node *def, ast_node *prev_def) {
+static bool_t sem_validate_identical_coldef(CqlState* _Nonnull CS, ast_node *def, ast_node *prev_def) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   return sem_validate_identical_text(CS, def, prev_def, gen_col_or_key, &callbacks);
@@ -13616,13 +13616,13 @@ static bool_t sem_validate_identical_coldef(CqlState* CS, ast_node *def, ast_nod
 
 // This is the callback method handed to the gen_ method to force a
 // no IF NOT EXISTS qualifier on create table or view statements.
-static bool_t force_no_if_not_exists(CqlState* CS, ast_node *ast, void *context, charbuf *output) {
+static bool_t force_no_if_not_exists(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *output) {
   // no output
   return true; // handled
 }
 
 // Full text comparison (including all options) but excluding "IF NOT EXISTS"
-static bool_t sem_validate_identical_ddl(CqlState* CS, ast_node *cur, ast_node *prev) {
+static bool_t sem_validate_identical_ddl(CqlState* _Nonnull CS, ast_node *cur, ast_node *prev) {
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the options to count, so NOT for sqlite output
@@ -13634,7 +13634,7 @@ static bool_t sem_validate_identical_ddl(CqlState* CS, ast_node *cur, ast_node *
 // the declarations will have not yet been analyzed. This callback allows for
 // named types to be resolved in such unanalyzed declarations so that the
 // comparison can be made properly.
-static bool_t sem_named_type_gen_sql_callback(CqlState* CS, ast_node *ast, void *context, charbuf *buf) {
+static bool_t sem_named_type_gen_sql_callback(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buf) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(name, ast);
 
@@ -13653,7 +13653,7 @@ static bool_t sem_named_type_gen_sql_callback(CqlState* CS, ast_node *ast, void 
 // Several places require identical definitions if names are duplicated
 // This method does the job for a variety of objects, it generates the canoncial text
 // for the AST and verifies that it is identical.  This works for all kinds of objects.
-static bool_t sem_validate_identical_text(CqlState* CS, ast_node *prev, ast_node *cur, gen_func fn, gen_sql_callbacks *callbacks) {
+static bool_t sem_validate_identical_text(CqlState* _Nonnull CS, ast_node *prev, ast_node *cur, gen_func fn, gen_sql_callbacks *callbacks) {
   CHARBUF_OPEN(prev_sql);
   CHARBUF_OPEN(cur_sql);
 
@@ -13699,7 +13699,7 @@ static bool_t sem_validate_identical_text(CqlState* CS, ast_node *prev, ast_node
 // recapitulate all of the same walking that the text generator does.
 // That is a maintenance problem but also doing it this way is economical
 // and it ensures that the string decoding is bug-free.
-static bool_t sem_validate_identical_funcs(CqlState* CS, ast_node *prev_func, ast_node *cur_func) {
+static bool_t sem_validate_identical_funcs(CqlState* _Nonnull CS, ast_node *prev_func, ast_node *cur_func) {
   CHARBUF_OPEN(prev_sql);
   CHARBUF_OPEN(cur_sql);
 
@@ -13723,7 +13723,7 @@ static bool_t sem_validate_identical_funcs(CqlState* CS, ast_node *prev_func, as
 // recapitulate all of the same walking that the text generator does.
 // That is a maintenance problem but also doing it this way is economical
 // and it ensures that the string decoding is bug-free.
-static bool_t sem_validate_identical_procs(CqlState* CS, ast_node *prev_proc, ast_node *cur_proc) {
+static bool_t sem_validate_identical_procs(CqlState* _Nonnull CS, ast_node *prev_proc, ast_node *cur_proc) {
   return sem_validate_identical_text(CS, prev_proc, cur_proc, gen_declare_proc_from_create_or_decl, NULL);
 }
 
@@ -13738,7 +13738,7 @@ static bool_t sem_validate_identical_procs(CqlState* CS, ast_node *prev_proc, as
 //  * if the new verision has more columns they have to be all at the end and be marked create
 //  * new columns can't be marked with @create and @delete
 //  * the table create flags (like TEMP, or IF NOT EXISTS) must be the same
-static void sem_validate_previous_table(CqlState* CS, ast_node *prev_table) {
+static void sem_validate_previous_table(CqlState* _Nonnull CS, ast_node *prev_table) {
   Contract(!current_joinscope_lv);
   Contract(is_ast_create_table_stmt(prev_table));
   EXTRACT_NAMED_NOTNULL(prev_create_table_name_flags, create_table_name_flags, prev_table->left);
@@ -13982,7 +13982,7 @@ static void sem_validate_previous_table(CqlState* CS, ast_node *prev_table) {
 // Verison info can be gathered from tables, views, or indices (columns are done seperately)
 // Here we emit a record the annotation with the correct code into the pending annotations buffer
 // this will be later sorted and used to drive schema migration if schema codegen happens.
-static void sem_record_annotation_from_vers_info(CqlState* CS, version_attrs_info *vers_info) {
+static void sem_record_annotation_from_vers_info(CqlState* _Nonnull CS, version_attrs_info *vers_info) {
   ast_node *target_ast = vers_info->target_ast;
 
   if (is_ast_create_table_stmt(target_ast) && is_table_not_physical(CS, target_ast)) {
@@ -14017,7 +14017,7 @@ typedef struct trigger_dep_context {
 } trigger_dep_context;
 
 // When we locate a table used by a view we simply add that info to the dependency map in both directions
-static void sem_found_dep_in_trigger(CqlState* CS, CSTR _Nonnull target_name, ast_node *_Nonnull target_ast, void *_Nullable context) {
+static void sem_found_dep_in_trigger(CqlState* _Nonnull CS, CSTR _Nonnull target_name, ast_node *_Nonnull target_ast, void *_Nullable context) {
   Contract(is_ast_create_table_stmt(target_ast) || is_ast_create_view_stmt(target_ast));
 
   trigger_dep_context *info  = context;
@@ -14035,7 +14035,7 @@ static void sem_found_dep_in_trigger(CqlState* CS, CSTR _Nonnull target_name, as
 // there are no lingering triggers still using it.  We don't have to worry about views inside
 // the body because if the trigger uses a view and the view uses a table then that view itself
 // will cause an error to be reported if you attempt to unsubscribe the table.
-static void sem_record_trigger_dependencies(CqlState* CS, ast_node *ast) {
+static void sem_record_trigger_dependencies(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_trigger_stmt(ast));
 
   EXTRACT_NOTNULL(trigger_body_vers, ast->right);
@@ -14072,7 +14072,7 @@ static void sem_record_trigger_dependencies(CqlState* CS, ast_node *ast) {
 //  * The RAISE function may be used inside a trigger (NYI)
 //  * The table_name must be a table (not a view) UNLESS the trigger type is TRIGGER_INSTEAD_OF
 //  * select statements inside the statement block do not count as returns for the proc
-static void sem_create_trigger_stmt(CqlState* CS, ast_node *ast) {
+static void sem_create_trigger_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_trigger_stmt(ast));
 
   EXTRACT_OPTION(flags, ast->left);
@@ -14287,7 +14287,7 @@ static void sem_create_trigger_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static bool_t sem_validate_virtual_table_vers(CqlState* CS, version_attrs_info *table_vers_info) {
+static bool_t sem_validate_virtual_table_vers(CqlState* _Nonnull CS, version_attrs_info *table_vers_info) {
   Contract(table_vers_info);
   EXTRACT_NOTNULL(create_table_stmt, table_vers_info->target_ast);
 
@@ -14306,7 +14306,7 @@ static bool_t sem_validate_virtual_table_vers(CqlState* CS, version_attrs_info *
 // If you are putting DDL inside of a procedure then it is going to run regardless; these
 // entires do not get versioning attributes, those are reserved for schema declarations outside
 // of any procedure.
-static bool_t sem_validate_vers_ok_in_context(CqlState* CS, version_attrs_info *vers) {
+static bool_t sem_validate_vers_ok_in_context(CqlState* _Nonnull CS, version_attrs_info *vers) {
   bool_t is_versioned = vers->create_version > 0 || vers->delete_version > 0;
 
   // virtual tables are always recreate, this is hard coded, so disregard that as a versioning error
@@ -14325,7 +14325,7 @@ static bool_t sem_validate_vers_ok_in_context(CqlState* CS, version_attrs_info *
   return true;
 }
 
-static void report_invalid_blob_storage_column(CqlState* CS, ast_node *ast, CSTR reason, CSTR column, CSTR table) {
+static void report_invalid_blob_storage_column(CqlState* _Nonnull CS, ast_node *ast, CSTR reason, CSTR column, CSTR table) {
   Contract(ast);
   Contract(reason);
   Contract(table);
@@ -14338,7 +14338,7 @@ static void report_invalid_blob_storage_column(CqlState* CS, ast_node *ast, CSTR
 // validate that the indicated col_def is ok for blob storage
 // this basically means it has to be ultra simple
 // no autoinc, no fk, no pk, no default value
-static void sem_blob_storage_col_def(CqlState* CS, ast_node *table_ast, ast_node *def, CSTR table_name) {
+static void sem_blob_storage_col_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def, CSTR table_name) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
 
@@ -14395,7 +14395,7 @@ static void sem_blob_storage_col_def(CqlState* CS, ast_node *table_ast, ast_node
   }
 }
 
-static void report_invalid_blob_storage(CqlState* CS, ast_node *ast, CSTR reason, CSTR table) {
+static void report_invalid_blob_storage(CqlState* _Nonnull CS, ast_node *ast, CSTR reason, CSTR table) {
   Contract(ast);
   Contract(reason);
   Contract(table);
@@ -14405,7 +14405,7 @@ static void report_invalid_blob_storage(CqlState* CS, ast_node *ast, CSTR reason
   record_error(CS, ast);
 }
 
-static void sem_validate_table_for_blob_storage(CqlState* CS, ast_node *ast) {
+static void sem_validate_table_for_blob_storage(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
@@ -14455,7 +14455,7 @@ static void sem_validate_table_for_blob_storage(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void report_invalid_backing_column(CqlState* CS, ast_node *ast, CSTR reason, CSTR column, CSTR table) {
+static void report_invalid_backing_column(CqlState* _Nonnull CS, ast_node *ast, CSTR reason, CSTR column, CSTR table) {
   Contract(ast);
   Contract(reason);
   Contract(table);
@@ -14468,7 +14468,7 @@ static void report_invalid_backing_column(CqlState* CS, ast_node *ast, CSTR reas
 // validate that the indicated col_def is ok for blob storage
 // this basically means it has to be ultra simple
 // no autoinc, no fk, no pk, no default value
-static void sem_backing_col_def(CqlState* CS, ast_node *table_ast, ast_node *def, CSTR table_name) {
+static void sem_backing_col_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def, CSTR table_name) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
 
@@ -14546,7 +14546,7 @@ static void sem_backing_col_def(CqlState* CS, ast_node *table_ast, ast_node *def
   }
 }
 
-static void report_invalid_backing(CqlState* CS, ast_node *ast, CSTR reason, CSTR table) {
+static void report_invalid_backing(CqlState* _Nonnull CS, ast_node *ast, CSTR reason, CSTR table) {
   Contract(ast);
   Contract(reason);
   Contract(table);
@@ -14556,7 +14556,7 @@ static void report_invalid_backing(CqlState* CS, ast_node *ast, CSTR reason, CST
   record_error(CS, ast);
 }
 
-static void sem_validate_table_for_backing(CqlState* CS, ast_node *ast) {
+static void sem_validate_table_for_backing(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
@@ -14637,7 +14637,7 @@ static void sem_validate_table_for_backing(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void report_invalid_backed_column(CqlState* CS, ast_node *ast, CSTR reason, CSTR column, CSTR table) {
+static void report_invalid_backed_column(CqlState* _Nonnull CS, ast_node *ast, CSTR reason, CSTR column, CSTR table) {
   Contract(ast);
   Contract(reason);
   Contract(table);
@@ -14650,7 +14650,7 @@ static void report_invalid_backed_column(CqlState* CS, ast_node *ast, CSTR reaso
 // validate that the indicated col_def is ok for blob storage
 // this basically means it has to be ultra simple
 // no autoinc, no fk, no default value, no unique constraints etc.
-static void sem_backed_col_def(CqlState* CS, ast_node *table_ast, ast_node *def, CSTR table_name) {
+static void sem_backed_col_def(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *def, CSTR table_name) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
 
@@ -14715,7 +14715,7 @@ static void sem_backed_col_def(CqlState* CS, ast_node *table_ast, ast_node *def,
   }
 }
 
-static void report_invalid_backed(CqlState* CS, ast_node *ast, CSTR reason, CSTR table) {
+static void report_invalid_backed(CqlState* _Nonnull CS, ast_node *ast, CSTR reason, CSTR table) {
   Contract(ast);
   Contract(reason);
   Contract(table);
@@ -14725,7 +14725,7 @@ static void report_invalid_backed(CqlState* CS, ast_node *ast, CSTR reason, CSTR
   record_error(CS, ast);
 }
 
-static void sem_validate_table_for_backed(CqlState* CS, ast_node *ast) {
+static void sem_validate_table_for_backed(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
@@ -14944,7 +14944,7 @@ static void sem_validate_table_for_backed(CqlState* CS, ast_node *ast) {
 // * no duplicate column names
 // * recursive correctness of constraints (see above)
 // The table will be added to the table/view list.
-static void sem_create_table_stmt(CqlState* CS, ast_node *ast) {
+static void sem_create_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
@@ -15250,7 +15250,7 @@ cleanup:
 // enough to represent an arbitrary LISP program but not totally arbitrary,
 // but it requires no validation beyond syntax!  So we're left with the
 // part that tells us the table shape.
-void sem_create_virtual_table_stmt(CqlState* CS, ast_node *ast) {
+void sem_create_virtual_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_virtual_table_stmt(ast));
 
   EXTRACT_NOTNULL(module_info, ast->left);
@@ -15312,7 +15312,7 @@ void sem_create_virtual_table_stmt(CqlState* CS, ast_node *ast) {
 // possible the table is gone in the latest version.  We still have to run
 // the intervening upgrade steps so basically DDL gets to ignore the current
 // state.
-static void sem_alter_table_add_column_stmt(CqlState* CS, ast_node *ast) {
+static void sem_alter_table_add_column_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_alter_table_add_column_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -15426,7 +15426,7 @@ static void sem_alter_table_add_column_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Enables a nonnull improvement, if possible.
-static void sem_set_notnull_improved(CqlState* CS, CSTR name, CSTR scope) {
+static void sem_set_notnull_improved(CqlState* _Nonnull CS, CSTR name, CSTR scope) {
   Contract(name);
 
   bool_t is_global = false;
@@ -15459,7 +15459,7 @@ static void sem_set_notnull_improved(CqlState* CS, CSTR name, CSTR scope) {
 // subject to improvement, but it must only be called with a name/scope pair
 // referring to something has a mutable type (e.g., it must not be an unbound
 // variable, a cursor used an expression, an enum case, et cetera).
-static void sem_unset_notnull_improved(CqlState* CS, CSTR name, CSTR scope) {
+static void sem_unset_notnull_improved(CqlState* _Nonnull CS, CSTR name, CSTR scope) {
   Contract(name);
 
   sem_t *type = find_mutable_type(CS, name, scope);
@@ -15481,7 +15481,7 @@ static void sem_unset_notnull_improved(CqlState* CS, CSTR name, CSTR scope) {
 }
 
 // Unsets notnull improvements for all currently improved globals.
-static void sem_unset_global_notnull_improvements(CqlState* CS) {
+static void sem_unset_global_notnull_improvements(CqlState* _Nonnull CS) {
   for (global_notnull_improvement_item *head = global_notnull_improvements_rv; head; head = head->next) {
     if (*head->type & SEM_TYPE_INFERRED_NOTNULL) {
       flow_unset_flag_for_type(CS, SEM_TYPE_INFERRED_NOTNULL, head->type);
@@ -15494,7 +15494,7 @@ static void sem_unset_global_notnull_improvements(CqlState* CS) {
 // improvements within the current flow context. Generally speaking, calls to
 // this function should be bounded by a new flow context corresponding to the
 // portion of the program for which the condition `ast` must be be true.
-static void sem_set_improvements_for_true_condition(CqlState* CS, ast_node* ast)
+static void sem_set_improvements_for_true_condition(CqlState* _Nonnull CS, ast_node* ast)
 {
   Contract(ast);
 
@@ -15566,7 +15566,7 @@ static void sem_set_improvements_for_true_condition(CqlState* CS, ast_node* ast)
 //
 //   IF not c THEN RETURN;
 //   -- `c` is known to have a row here
-static void sem_set_improvements_for_false_condition(CqlState* CS, ast_node *ast) {
+static void sem_set_improvements_for_false_condition(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
 
   if (is_ast_or(ast)) {
@@ -15603,7 +15603,7 @@ static void sem_set_improvements_for_false_condition(CqlState* CS, ast_node *ast
 // Which is what we mean by a conditional action.  We have to validate
 // that the condition is numeric and the statements have no errors.
 // There's helper for all that.
-static void sem_cond_action(CqlState* CS, ast_node *ast) {
+static void sem_cond_action(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -15646,7 +15646,7 @@ static void sem_cond_action(CqlState* CS, ast_node *ast) {
 
 // Enables an initialization improvement for a variable if the improvement does
 // not already exist.
-static void sem_set_initialization_improved(CqlState* CS, CSTR name, CSTR scope) {
+static void sem_set_initialization_improved(CqlState* _Nonnull CS, CSTR name, CSTR scope) {
   Contract(name);
 
   sem_t *type = find_mutable_type(CS, name, scope);
@@ -15662,7 +15662,7 @@ static void sem_set_initialization_improved(CqlState* CS, CSTR name, CSTR scope)
 
 // Enables a has-row improvement for an auto cursor if the improvement does not
 // already exist.
-static void sem_set_has_row_improved(CqlState* CS, CSTR cursor_name) {
+static void sem_set_has_row_improved(CqlState* _Nonnull CS, CSTR cursor_name) {
   Contract(cursor_name);
 
   sem_t *type = find_mutable_type(CS, cursor_name, NULL);
@@ -15679,7 +15679,7 @@ static void sem_set_has_row_improved(CqlState* CS, CSTR cursor_name) {
 // Disables a has-row improvement for an auto cursor if the improvement exists.
 // This must be called after every FETCH that is not guaranteed to result in a
 // row.
-static void sem_unset_has_row_improved(CqlState* CS, CSTR cursor_name) {
+static void sem_unset_has_row_improved(CqlState* _Nonnull CS, CSTR cursor_name) {
   Contract(cursor_name);
 
   sem_t *type = find_mutable_type(CS, cursor_name, NULL);
@@ -15697,7 +15697,7 @@ static void sem_unset_has_row_improved(CqlState* CS, CSTR cursor_name) {
 // conditional actions (see above).  We just walk the list and
 // decorate each piece accordingly, if anything goes wrong mark the
 // head with an error.
-static void sem_elseif_list(CqlState* CS, ast_node *head) {
+static void sem_elseif_list(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_elseif(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -15760,7 +15760,7 @@ static bool_t stmt_list_contains_control_stmt(ast_node *ast) {
 // a procedure and convert the tree into a procedure call. This means
 // that at the top level if it could be a proc call or a func call (both can exist, e.g. printf)
 // the proc call gets priority!  This is not an accident!  Because printf.
-static void sem_expr_stmt(CqlState* CS, ast_node *ast) {
+static void sem_expr_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_expr_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -15924,7 +15924,7 @@ static void sem_expr_stmt(CqlState* CS, ast_node *ast) {
 // at this point is decoding of the if pieces and calling out to the helpers.
 // The else clause is the only thing that isn't a cond_action.  This is
 // basically just calling out and marking errors up the stack as needed.
-static void sem_if_stmt(CqlState* CS, ast_node *ast) {
+static void sem_if_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
   EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_NOTNULL(if_alt, ast->right);
@@ -16021,7 +16021,7 @@ error:
 //   IF expr THROW;
 //
 //  As with IF statements, nullability improvements are possible.
-static void sem_guard_stmt(CqlState* CS, ast_node *ast) {
+static void sem_guard_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_guard_stmt(ast));
   EXTRACT_ANY_NOTNULL(control_stmt, ast->right);
   Invariant(is_control_stmt(control_stmt));
@@ -16049,7 +16049,7 @@ cql_noexport ast_node *sem_skip_with(ast_node *ast) {
 // This is the delete analyzer, it sets up a joinscope for the table being
 // deleted and the validates the WHERE if present against that joinscope.
 // Additionally we verify that the table actually was defined and is not a view.
-static void sem_delete_stmt(CqlState* CS, ast_node *ast) {
+static void sem_delete_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -16109,7 +16109,7 @@ cleanup:
 
 // Top level WITH-DELETE form -- create the CTE context and then process
 // the delete statement.
-static void sem_with_delete_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_with_delete_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_with_delete_stmt(stmt));
   EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
   EXTRACT(cte_tables, with_prefix->left);
@@ -16145,7 +16145,7 @@ cleanup:
 // To do this we temporarily hide the variables head.  We verify that the types
 // are compatible and we also handle the special case of trying to set a
 // not-nullable type to null.
-static void sem_update_entry(CqlState* CS, ast_node *ast, symtab *update_columns, sem_join *from_jptr) {
+static void sem_update_entry(CqlState* _Nonnull CS, ast_node *ast, symtab *update_columns, sem_join *from_jptr) {
   Contract(is_ast_update_entry(ast));
   Contract(current_joinscope_lv);
 
@@ -16221,7 +16221,7 @@ static void sem_update_entry(CqlState* CS, ast_node *ast, symtab *update_columns
 
 // This is the list of updates we need to perform, we walk the list here and handle
 // each one, reporting errors as we go.
-static void sem_update_list(CqlState* CS, ast_node *head, sem_join *from_jptr) {
+static void sem_update_list(CqlState* _Nonnull CS, ast_node *head, sem_join *from_jptr) {
   Contract(is_ast_update_list(head));
 
   symtab *update_columns = symtab_new();
@@ -16247,7 +16247,7 @@ static void sem_update_list(CqlState* CS, ast_node *head, sem_join *from_jptr) {
 // and sets up the joinscope for the table(s) being updated.  If there are
 // optional clauses they are evaluated just like in a select statement
 // with those same helper methods.
-static void sem_update_stmt(CqlState* CS, ast_node *ast) {
+static void sem_update_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
   EXTRACT_ANY(name_ast, ast->left);
   EXTRACT_NOTNULL(update_set, ast->right);
@@ -16437,7 +16437,7 @@ cleanup:
 // The insert list specifies the values that are to be updated.
 // The type of each value must match the type of the column.
 // If there are too many or too few columns, that is also an error.
-static void sem_update_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void sem_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
@@ -16524,7 +16524,7 @@ static void sem_update_cursor_stmt(CqlState* CS, ast_node *ast) {
 
 // Top level WITH-UPDATE form -- create the CTE context and then process
 // the update statement.
-static void sem_with_update_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_with_update_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_with_update_stmt(stmt));
   EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
   EXTRACT(cte_tables, with_prefix->left);
@@ -16553,7 +16553,7 @@ cleanup:
   sem_pop_cte_state(CS);
 }
 
-static int32_t sem_insert_dummy_spec(CqlState* CS, ast_node *ast) {
+static int32_t sem_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
   EXTRACT_OPTION(flags, ast->right);
 
@@ -16580,7 +16580,7 @@ static int32_t sem_insert_dummy_spec(CqlState* CS, ast_node *ast) {
 // row.  We do this so that we can still do dummy defaults on the simple
 // insert form even though it looks like a select statement.  It can be just
 // a value list.
-static bool_t sem_validate_one_values_row(CqlState* CS, ast_node *stmt, ast_node **insert_list) {
+static bool_t sem_validate_one_values_row(CqlState* _Nonnull CS, ast_node *stmt, ast_node **insert_list) {
   Contract(insert_list);
   *insert_list = NULL;
 
@@ -16639,7 +16639,7 @@ error:
 // If there are too many or too few columns, that is also an error.
 // By the time we get here, column_spec is populated with a synthetic (possibly empty)
 // list and we have normalized on the insert columns form.
-static void sem_column_spec_and_values(CqlState* CS, ast_node *ast, ast_node *table_ast) {
+static void sem_column_spec_and_values(CqlState* _Nonnull CS, ast_node *ast, ast_node *table_ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
@@ -16842,7 +16842,7 @@ static void sem_column_spec_and_values(CqlState* CS, ast_node *ast, ast_node *ta
 // We check that the table exists and then we walk the columns and the value list
 // using the  helper above to make sure they are valid for the table.
 // Also we cannot insert into a view.
-static void sem_insert_stmt(CqlState* CS, ast_node *ast) {
+static void sem_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
@@ -17007,7 +17007,7 @@ static bool_t is_root_select_stmt_has_opt_where_node (ast_node *ast, int32_t *se
 
 // Top level WITH-UPSERT form -- create the CTE context and then process
 // the upsert statement.
-static void sem_with_upsert_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_with_upsert_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_with_upsert_stmt(stmt));
   EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
   EXTRACT(cte_tables, with_prefix->left);
@@ -17038,7 +17038,7 @@ cleanup:
 
 // The semantic analysis of upsert_stmt consist in runing insert_stmt, update_stmt
 // analysis and validate node (conflict_target) which belong only to upsert tree
-static void sem_upsert_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_upsert_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_upsert_stmt(stmt) && !CS->sem.in_upsert && !CS->sem.current_upsert_table_ast);
   if (CS->sem.enforcement.strict_upsert_stmt) {
     report_error(CS, stmt, "CQL0289: upsert statement are forbidden if strict upsert statement mode is enabled", NULL);
@@ -17193,7 +17193,7 @@ error:
 
 // Top level WITH-INSERT form -- create the CTE context and then process
 // the insert statement.
-static void sem_with_insert_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_with_insert_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_with_insert_stmt(stmt));
   EXTRACT_ANY_NOTNULL(with_prefix, stmt->left)
   EXTRACT(cte_tables, with_prefix->left);
@@ -17229,7 +17229,7 @@ cleanup:
 // only need to know the destination so that when we check if the columns are the same
 // we can complaint accurately that the source doesn't match the target rather than
 // the reverse.
-cql_noexport void sem_validate_cursor_blob_compat(CqlState* CS,
+cql_noexport void sem_validate_cursor_blob_compat(CqlState* _Nonnull CS,
   ast_node *ast_error,
   ast_node *cursor,
   ast_node *blob,
@@ -17330,7 +17330,7 @@ cql_noexport void sem_validate_cursor_blob_compat(CqlState* CS,
 }
 
 // Check for matching cursor and blob
-static void sem_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
+static void sem_fetch_cursor_from_blob_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
 
@@ -17342,7 +17342,7 @@ static void sem_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Check for matching cursor and blob
-static void sem_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void sem_set_blob_from_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_blob_from_cursor_stmt(ast));
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
 
@@ -17378,7 +17378,7 @@ static void sem_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
 // Note: fetch values doesn't go through SQlite and so we can't use the (CAST printf() as blob) trick
 //     to make dummy blob data.  Well, we could but it would have to be even more complex.
 //     (select CAST(printf(...) as blob))  which seems excessive so we just punt.
-static void sem_fetch_values_stmt(CqlState* CS, ast_node *ast) {
+static void sem_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
 
@@ -17577,7 +17577,7 @@ static void sem_fetch_values_stmt(CqlState* CS, ast_node *ast) {
 // of the table they belong to.  Or look up column names in both sides
 // of an FK relationship.  This is only used to evaluate at the top level
 // if it's happening in the context of a join that's wrong.
-static bool_t sem_name_check(CqlState* CS, name_check *check) {
+static bool_t sem_name_check(CqlState* _Nonnull CS, name_check *check) {
   bool_t valid = true;
   PUSH_JOIN_BLOCK()
   PUSH_JOIN(name_check, check->jptr);
@@ -17647,7 +17647,7 @@ static bool_t sem_name_check(CqlState* CS, name_check *check) {
 // which is the format of string and blob columns given a dummy seed value for the %d.
 // The local variable "seed" is used for the column.  These AST nodes will be used
 // in the rewrite of the dummy columns for string and blobs.
-static ast_node *printf_col_for_dummy(CqlState* CS, CSTR col, CSTR seed_name) {
+static ast_node *printf_col_for_dummy(CqlState* _Nonnull CS, CSTR col, CSTR seed_name) {
   ast_node *ast_printf = new_ast_str(CS, "printf");
   CSTR fmt = dup_printf(CS, "'%s_%%d'", col);  // this turns into 'col_%d'
   ast_node *ast_string = new_ast_str(CS, fmt);
@@ -17667,7 +17667,7 @@ static ast_node *printf_col_for_dummy(CqlState* CS, CSTR col, CSTR seed_name) {
 // is initialized from the dummy value expression.  That will be part of
 // codegen later.  For now we only need insert the columns.  They will be
 // validated later.  This validation can't actually fail.
-static void sem_synthesize_dummy_value(CqlState* CS, dummy_info *info) {
+static void sem_synthesize_dummy_value(CqlState* _Nonnull CS, dummy_info *info) {
   CSTR seed_name = "_seed_";
   symtab *scope = CS->sem.locals ? CS->sem.locals : CS->sem.globals;
   Invariant(scope);
@@ -17735,7 +17735,7 @@ static void sem_synthesize_dummy_value(CqlState* CS, dummy_info *info) {
 
 // Ensure that the values are valid and the types of the values are compatible
 // with the types of the columns.
-static bool_t sem_validate_compatible_table_cols_vals(CqlState* CS, ast_node *table_ast, ast_node *name_list, ast_node *insert_list) {
+static bool_t sem_validate_compatible_table_cols_vals(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *name_list, ast_node *insert_list) {
   Contract(is_ast_create_table_stmt(table_ast));
 
   ast_node *value = insert_list;
@@ -17774,7 +17774,7 @@ static bool_t sem_validate_compatible_table_cols_vals(CqlState* CS, ast_node *ta
 }
 
 // Ensure that the columns of the select are compatible with the columns of the table in the order specified
-static bool_t sem_validate_compatible_table_cols_select(CqlState* CS, ast_node *table_ast, ast_node *name_list, ast_node *select_stmt) {
+static bool_t sem_validate_compatible_table_cols_select(CqlState* _Nonnull CS, ast_node *table_ast, ast_node *name_list, ast_node *select_stmt) {
   Contract(is_ast_create_table_stmt(table_ast));
 
   sem_struct *sptr_select = select_stmt->sem->sptr;
@@ -17879,7 +17879,7 @@ static bool_t sem_validate_compatible_table_cols_select(CqlState* CS, ast_node *
 
 // Check that the indicated columns are compatible with the corresponding expressions
 // Note the count has already been verified.
-static bool_t sem_validate_compatible_cols_vals(CqlState* CS, ast_node *name_list, ast_node *values) {
+static bool_t sem_validate_compatible_cols_vals(CqlState* _Nonnull CS, ast_node *name_list, ast_node *values) {
   ast_node *value = values;
 
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
@@ -17908,7 +17908,7 @@ static bool_t sem_validate_compatible_cols_vals(CqlState* CS, ast_node *name_lis
 
 // All legal cases of these operators are re-written
 // any that are left are not in a valid position so they get an error
-static void sem_expr_invalid_op(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_expr_invalid_op(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   report_error(CS, ast, "CQL0492: operator found in an invalid position", op);
   record_error(CS, ast);
 }
@@ -17916,7 +17916,7 @@ static void sem_expr_invalid_op(CqlState* CS, ast_node *ast, CSTR op) {
 // The set statement is for local assignment.  We just validate
 // that the target exists and is compatible with the source.
 // There are special cases for cursor variables, which cannot be set.
-static void sem_assign(CqlState* CS, ast_node *ast) {
+static void sem_assign(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_assign(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -17973,7 +17973,7 @@ static void sem_assign(CqlState* CS, ast_node *ast) {
   sem_set_initialization_improved(CS, name, NULL);
 }
 
-static void sem_let_stmt(CqlState* CS, ast_node *ast) {
+static void sem_let_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
 
   EXTRACT_ANY_NOTNULL(variable, ast->left)
@@ -18014,7 +18014,7 @@ static void sem_let_stmt(CqlState* CS, ast_node *ast) {
 
 // CONST variable declaration are equivalent to LET declarations, but
 // the variable ast has the extra CONST sem_type flag, which marks it immutable
-static void sem_const_stmt(CqlState* CS, ast_node *ast) {
+static void sem_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_const_stmt(ast));
   sem_let_stmt(CS, ast);
 
@@ -18070,7 +18070,7 @@ static bool_t param_should_require_initialization(sem_t sem_type) {
 // A single a proc parameter, it gets its semantic type by the helper
 // for the type of a variable.  The main thing that needs to be done here
 // is to ensure the name doesn't conflict, and record it as a new local.
-static void sem_param(CqlState* CS, ast_node *ast) {
+static void sem_param(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_ANY(opt_inout, ast->left);
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -18129,7 +18129,7 @@ static void sem_param(CqlState* CS, ast_node *ast) {
 // for a value cursor (or equivalent).  If it's proc args then we want to keep
 // the OUT arg bit of the arguments.  If it's for values we lose it and just
 // keep the procedure shape.
-static ast_node *sem_find_likeable_proc_args(CqlState* CS, ast_node *like_ast, int32_t likeable_for) {
+static ast_node *sem_find_likeable_proc_args(CqlState* _Nonnull CS, ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
   Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
 
@@ -18232,7 +18232,7 @@ error:
 // then we want to keep the OUT bit of the arguments.  If it's for values
 // we lose it and just keep the type info.  This only matters if the source of shape
 // is ultimately procedure arguments
-cql_noexport ast_node *sem_find_shape_def_base(CqlState* CS, ast_node *like_ast, int32_t likeable_for) {
+cql_noexport ast_node *sem_find_shape_def_base(CqlState* _Nonnull CS, ast_node *like_ast, int32_t likeable_for) {
   Contract(is_ast_like(like_ast));
   Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
 
@@ -18328,7 +18328,7 @@ error:
 // then we want to keep the OUT bit of the arguments.  If it's for values
 // we lose it and just keep the type info.  This only matters if the source of shape
 // is ultimately procedure arguments.
-cql_noexport ast_node *sem_find_shape_def(CqlState* CS, ast_node *shape_def, int32_t likeable_for) {
+cql_noexport ast_node *sem_find_shape_def(CqlState* _Nonnull CS, ast_node *shape_def, int32_t likeable_for) {
   Contract(is_ast_shape_def(shape_def));
   Contract(likeable_for == LIKEABLE_FOR_ARGS || likeable_for == LIKEABLE_FOR_VALUES);
 
@@ -18435,7 +18435,7 @@ cleanup:
 
 // All we have to do here is walk the parameter list and use the helper above
 // for each parameter.
-static void sem_params(CqlState* CS, ast_node *head, bytebuf *args_info) {
+static void sem_params(CqlState* _Nonnull CS, ast_node *head, bytebuf *args_info) {
   Contract(is_ast_params(head));
 
   rewrite_params(CS, head, args_info);
@@ -18501,7 +18501,7 @@ static void sem_params(CqlState* CS, ast_node *head, bytebuf *args_info) {
 // There will be two "id" columns in that result.  Basically you can't use select *
 // then because of the code-gen would give errors in naming those columns (and it's
 // confusing as hell).
-static void sem_validate_unique_names_struct_type(CqlState* CS, ast_node *ast) {
+static void sem_validate_unique_names_struct_type(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
   Contract(is_struct(ast->sem->sem_type));
@@ -18524,7 +18524,7 @@ static void sem_validate_unique_names_struct_type(CqlState* CS, ast_node *ast) {
 }
 
 // Find the column type of a column in a table. Return 0 if not found
-cql_noexport sem_t find_column_type(CqlState* CS, CSTR table_name, CSTR column_name) {
+cql_noexport sem_t find_column_type(CqlState* _Nonnull CS, CSTR table_name, CSTR column_name) {
   ast_node *table_ast = find_table_or_view_even_deleted(CS, table_name);
   if (table_ast) {
     for (uint32_t i = 0; i < table_ast->sem->sptr->count; i++) {
@@ -18537,7 +18537,7 @@ cql_noexport sem_t find_column_type(CqlState* CS, CSTR table_name, CSTR column_n
 }
 
 // Find the column kind of a column in a table. Return NULL if not found
-static CSTR find_column_kind(CqlState* CS, CSTR table_name, CSTR column_name) {
+static CSTR find_column_kind(CqlState* _Nonnull CS, CSTR table_name, CSTR column_name) {
   CSTR result = NULL;
   ast_node *table_ast = find_table_or_view_even_deleted(CS, table_name);
   if (table_ast) {
@@ -18551,14 +18551,14 @@ static CSTR find_column_kind(CqlState* CS, CSTR table_name, CSTR column_name) {
   return result;
 }
 
-static void report_dummy_test_error(CqlState* CS, ast_node *target, CSTR message, CSTR subject, int32_t *error) {
+static void report_dummy_test_error(CqlState* _Nonnull CS, ast_node *target, CSTR message, CSTR subject, int32_t *error) {
   report_error(CS, target, message, subject);
   record_error(CS, target);
   *error = true;
 }
 
 // semantic analysis of dummy_test info. Return true if the node is processed otherwise false
-static bool_t sem_autotest_dummy_test(CqlState* CS,
+static bool_t sem_autotest_dummy_test(CqlState* _Nonnull CS,
   ast_node *misc_attr_value_list,
   void *context)
 {
@@ -18770,7 +18770,7 @@ cleanup:
 // All of these will do complex code gen if an autotest codegen pass is selected
 // but for here we just verify that the attribute is of the correct form and hence
 // could be used.
-static void sem_find_ast_misc_attr_callback(CqlState* CS,
+static void sem_find_ast_misc_attr_callback(CqlState* _Nonnull CS,
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
   ast_node *ast_misc_attr_value_list,
@@ -18854,7 +18854,7 @@ static void sem_find_ast_misc_attr_callback(CqlState* CS,
 //                         )
 //           )
 //  "..." can be any autotest attribution name except "dummy_test"
-static void sem_autotests(CqlState* CS, ast_node *misc_attrs) {
+static void sem_autotests(CqlState* _Nonnull CS, ast_node *misc_attrs) {
   Contract(is_ast_misc_attrs(misc_attrs));
   int32_t error = false;
 
@@ -18867,7 +18867,7 @@ static void sem_autotests(CqlState* CS, ast_node *misc_attrs) {
 }
 
 // Check wheter or not the values of the attribution are valid names of columns in the current proc's result_set
-static uint32_t sem_column_name_annotation(CqlState* CS, ast_node *misc_attrs, find_annotation_values find, CSTR target) {
+static uint32_t sem_column_name_annotation(CqlState* _Nonnull CS, ast_node *misc_attrs, find_annotation_values find, CSTR target) {
   Contract(is_ast_misc_attrs(misc_attrs));
   Contract(CS->sem.annotation_target == NULL);
   record_ok(CS, misc_attrs);
@@ -18879,7 +18879,7 @@ static uint32_t sem_column_name_annotation(CqlState* CS, ast_node *misc_attrs, f
 }
 
 // Check the autodrop to make sure it is conformant, it has to be a valid temp table.
-static void sem_one_autodrop(CqlState* CS, CSTR name, ast_node *misc_attr_value, void *context) {
+static void sem_one_autodrop(CqlState* _Nonnull CS, CSTR name, ast_node *misc_attr_value, void *context) {
   EXTRACT_NOTNULL(misc_attrs, (ast_node *)context);
 
   // temp tables are never @deleted, look only for not_deleted tables
@@ -18916,7 +18916,7 @@ static void sem_one_autodrop(CqlState* CS, CSTR name, ast_node *misc_attr_value,
 // If a stored proc is marked with the autodrop annotation then we automatically drop the indicated
 // tables when the proc is finished running.  The attributes should look like this:
 // @attribute(cql:autodrop=(table1, table2, ,...))
-static uint32_t sem_autodrops(CqlState* CS, ast_node *misc_attrs) {
+static uint32_t sem_autodrops(CqlState* _Nonnull CS, ast_node *misc_attrs) {
   Contract(is_ast_misc_attrs(misc_attrs));
   record_ok(CS, misc_attrs);
   return find_autodrops(CS, misc_attrs, sem_one_autodrop, misc_attrs);
@@ -18933,7 +18933,7 @@ typedef struct bind_equivalence_info {
 // Here we must verify that if we found two table parameters of the same name that they are of the
 // same exact type.  Since they have the same name there will be one table binding for the both
 // of them and so if their type is not identical then no one binding could satisfy both
-static void verify_identical_table_params_callback(CqlState* CS, void *context, CSTR name, ast_node *cte_decl) {
+static void verify_identical_table_params_callback(CqlState* _Nonnull CS, void *context, CSTR name, ast_node *cte_decl) {
   bind_equivalence_info *info = (bind_equivalence_info *)context;
 
   symtab_entry *entry = symtab_find(info->names, name);
@@ -18955,7 +18955,7 @@ static void verify_identical_table_params_callback(CqlState* CS, void *context, 
 // shared form of one select statement, with no OUT or IN/OUT args
 // The attribute should look like this:
 // @attribute(cql:shared_fragment)
-static void sem_shared_fragment(CqlState* CS, ast_node *misc_attrs, ast_node *create_proc_stmt) {
+static void sem_shared_fragment(CqlState* _Nonnull CS, ast_node *misc_attrs, ast_node *create_proc_stmt) {
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
   Contract(is_ast_misc_attrs(misc_attrs));
 
@@ -19102,7 +19102,7 @@ static bool_t sem_has_extra_clauses(ast_node *select_from_etc, ast_node *select_
 // which is to say the procedures result type has to be a superset of the interface columns
 //   * note there can be more than one interface
 //   * we will eventually allow columns that are compatable with trivial conversion (e.g. not null -> nullable)
-static void sem_validate_one_interface(CqlState* CS, CSTR _Nonnull interface_name, ast_node *_Nonnull attr, void *_Nullable context) {
+static void sem_validate_one_interface(CqlState* _Nonnull CS, CSTR _Nonnull interface_name, ast_node *_Nonnull attr, void *_Nullable context) {
   ast_node *create_proc_stmt = (ast_node *)context;
 
   Contract(is_ast_create_proc_stmt(create_proc_stmt));
@@ -19167,7 +19167,7 @@ cleanup:
 // Returns true if all parameters of the current procedure that require
 // initialization have been initialized, else false. Any errors that occur will
 // be reported as occurring at the location of `error_ast`.
-static bool_t sem_validate_current_proc_params_are_initialized(CqlState* CS, ast_node *error_ast) {
+static bool_t sem_validate_current_proc_params_are_initialized(CqlState* _Nonnull CS, ast_node *error_ast) {
   Contract(CS->sem.current_proc);
   Contract(error_ast);
 
@@ -19192,7 +19192,7 @@ static bool_t sem_validate_current_proc_params_are_initialized(CqlState* CS, ast
 //
 // This returns a bool because it has to handle the null stmt_list case so the usual contract
 // of putting the error on the ast doesn't work.  Returns true on error.
-static void sem_inside_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void sem_inside_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -19294,7 +19294,7 @@ error:
 
 // Helper function to validate that ok_table_scan attribution is semantically correctly.
 // ok_table_scan value can only be a table name and should be used in a create proc statement
-static void sem_validate_ok_table_scan_value(CqlState* CS, ast_node *misc_attrs, ast_node *ast_misc_attr_value) {
+static void sem_validate_ok_table_scan_value(CqlState* _Nonnull CS, ast_node *misc_attrs, ast_node *ast_misc_attr_value) {
   if (!is_ast_str(ast_misc_attr_value)) {
     report_error(CS, ast_misc_attr_value, "CQL0325: ok_table_scan attribute must be a name", NULL);
     record_error(CS, ast_misc_attr_value);
@@ -19316,7 +19316,7 @@ static void sem_validate_ok_table_scan_value(CqlState* CS, ast_node *misc_attrs,
 // It's used by the test helpers runtime to know on which tables it's are ok to
 // have allow table scan in a stored proc.
 static void sem_misc_attrs_ok_table_scan(
-    CqlState* CS,
+    CqlState* _Nonnull CS,
     CSTR misc_attr_prefix,
     CSTR misc_attr_name,
     ast_node *ast_misc_attr_values,
@@ -19361,7 +19361,7 @@ static void sem_misc_attrs_ok_table_scan(
 // It's used by the test helpers runtime to know on which tables it's forbidden
 // to have table scan.
 static void sem_misc_attrs_no_table_scan(
-    CqlState* CS,
+    CqlState* _Nonnull CS,
     CSTR misc_attr_prefix,
     CSTR misc_attr_name,
     ast_node *ast_misc_attr_values,
@@ -19396,7 +19396,7 @@ static void sem_misc_attrs_no_table_scan(
 // <context_column_name> can be any column name in the resultset, and will be passed in as encoding context param
 // <column_name1>, <column_name2>, ... are the column names to be encoded if eligible.
 static void sem_misc_attrs_vault_sensitive(
-    CqlState* CS,
+    CqlState* _Nonnull CS,
     CSTR misc_attr_prefix,
     CSTR misc_attr_name,
     ast_node *ast_misc_attr_values,
@@ -19428,7 +19428,7 @@ static void sem_misc_attrs_vault_sensitive(
 // The attribute can only be used in a declare func statement.
 // It also must have a non-empty string argument.
 static void sem_misc_attrs_alias_of(
-    CqlState* CS,
+    CqlState* _Nonnull CS,
     CSTR misc_attr_prefix,
     CSTR misc_attr_name,
     ast_node *ast_misc_attr_values,
@@ -19460,7 +19460,7 @@ static void sem_misc_attrs_alias_of(
 // the value can only be table names.
 // no_table_scan: can only be assigned to a create table statement and
 // has not value.
-static void sem_misc_attrs_callback(CqlState* CS,
+static void sem_misc_attrs_callback(CqlState* _Nonnull CS,
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
   ast_node *ast_misc_attr_values,
@@ -19494,7 +19494,7 @@ static void sem_misc_attrs_callback(CqlState* CS,
 }
 
 // Semantic analysis of any attributions that can appear in any statement
-static void sem_misc_attrs(CqlState* CS, ast_node *ast) {
+static void sem_misc_attrs(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_misc_attrs(ast));
 
   // Assume the node is ok;  only some nodes get semantic analysis.
@@ -19516,7 +19516,7 @@ static void sem_misc_attrs(CqlState* CS, ast_node *ast) {
 //  * select statements that are loose in the proc represent the "return" of that
 //    select;  this changes the signature to include a sqlite3_stmt **pstmt parameter
 //
-static void sem_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void sem_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
@@ -19735,7 +19735,7 @@ cleanup:
 // Validate the name is unique in the given name list and attach the type
 // to the name in the semantic type.  The only thing that can go wrong here
 // is if the name is not unique.  The type ast has no error cases.
-static void sem_typed_name(CqlState* CS, ast_node *typed_name, symtab *names) {
+static void sem_typed_name(CqlState* _Nonnull CS, ast_node *typed_name, symtab *names) {
   Contract(is_ast_typed_name(typed_name));
   EXTRACT_NAME_AST(name_ast, typed_name->left);
   EXTRACT_STRING(name, name_ast);
@@ -19756,7 +19756,7 @@ static void sem_typed_name(CqlState* CS, ast_node *typed_name, symtab *names) {
 // One the types are determined, we create the struct type with
 // the correct number of fields and simply copy in the type of
 // each name into the sptr.
-static void sem_typed_names(CqlState* CS, ast_node *head) {
+static void sem_typed_names(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_typed_names(head));
 
   rewrite_typed_names(CS, head);
@@ -19800,7 +19800,7 @@ static void sem_typed_names(CqlState* CS, ast_node *head) {
 // Function declarations are simpler than proc; there is
 // no possibility of a result set return, there must be a return type
 // (use proc if there is none).  Optional args as usual. Also args can be unchecked.
-static void sem_declare_func_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   bool_t select_func = is_ast_declare_select_func_no_check_stmt(ast) || is_ast_declare_select_func_stmt(ast);
   bool_t non_select_func = is_ast_declare_func_no_check_stmt(ast) || is_ast_declare_func_stmt(ast);
@@ -19915,7 +19915,7 @@ static void sem_declare_func_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // This is a helper function for handling select function declarations
-static void sem_declare_select_func_stmt_common(CqlState* CS, ast_node *ast) {
+static void sem_declare_select_func_stmt_common(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast) || is_ast_declare_select_func_no_check_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -19952,7 +19952,7 @@ static void sem_declare_select_func_stmt_common(CqlState* CS, ast_node *ast) {
 // The same helper is used for all the declare func cases.  This
 // will be a native call with external calling convention just
 // like a no check proc.
-static void sem_declare_func_no_check_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_func_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_func_no_check_stmt(ast));
   sem_declare_func_stmt(CS, ast);
 }
@@ -19961,7 +19961,7 @@ static void sem_declare_func_no_check_stmt(CqlState* CS, ast_node *ast) {
 // Note that we cannot verify that SQLite actually knows this UDF
 // You have to take steps yourself to register the UDF or there will
 // be run time errors.
-static void sem_declare_select_func_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_select_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast));
   sem_declare_select_func_stmt_common(CS, ast);
 }
@@ -19969,7 +19969,7 @@ static void sem_declare_select_func_stmt(CqlState* CS, ast_node *ast) {
 // This is similar to sem_declare_select_func_stmt, except
 // parameters are marked to be unchecked. So calls to this function
 // won't have their arguments type checked.
-static void sem_declare_select_func_no_check_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_select_func_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_select_func_no_check_stmt(ast));
   sem_declare_select_func_stmt_common(CS, ast);
 }
@@ -19988,7 +19988,7 @@ static void sem_declare_select_func_no_check_stmt(CqlState* CS, ast_node *ast) {
 //
 // Note that qualified names are untouched and the current enum is not
 // yet in scope.
-static void sem_replace_seen_enum_values(CqlState* CS, ast_node *ast, symtab *names) {
+static void sem_replace_seen_enum_values(CqlState* _Nonnull CS, ast_node *ast, symtab *names) {
   Contract(ast);
 
   // we're lookign only for unqualified names
@@ -20040,7 +20040,7 @@ static void sem_replace_seen_enum_values(CqlState* CS, ast_node *ast, symtab *na
 //   * the value expressions can include other enums (because those will
 //     become constants) and they can include names that were previously
 //     defined in this enum, those are replaced with constants in a pre-step.
-static void sem_declare_enum_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_enum_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
@@ -20159,7 +20159,7 @@ cleanup:
 // you do "@emit_variable_group foo" then we will emit "int foo".  This
 // mirrors enums and constants which have the same problem and solve it the
 // same way.
-static void sem_declare_group_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
 
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -20218,7 +20218,7 @@ static void sem_declare_group_stmt(CqlState* CS, ast_node *ast) {
 // Here we will eventually emit the the actual group variable definitions into
 // the output stream. In semantic analysis we only have to verify that the group
 // name is valid. See `sem_declare_group_stmt` above for more details.
-static void sem_emit_group_stmt(CqlState* CS, ast_node *ast) {
+static void sem_emit_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -20250,7 +20250,7 @@ static void sem_emit_group_stmt(CqlState* CS, ast_node *ast) {
 //   * the value expressions can include other constants
 //   * numeric constants expressions are evaluated at compile time
 //   * string constants must be a string literal
-static void sem_declare_const_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -20363,7 +20363,7 @@ static void sem_declare_const_stmt(CqlState* CS, ast_node *ast) {
 // Declares an external procedure that can be called with any combination of C args
 // this is intended for procedures like `printf` that cannot be readily described with
 // CQL strict types.
-static void sem_declare_proc_no_check_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_proc_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_proc_no_check_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -20391,7 +20391,7 @@ static void sem_declare_proc_no_check_stmt(CqlState* CS, ast_node *ast) {
 //    declare proc X(id integer) using transaction;
 // 3. a proc that returns a result set, you provide the result columns
 //    declare proc X(id integer) : (A bool not null, B text);
-static void sem_declare_proc_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
@@ -20497,7 +20497,7 @@ static void sem_declare_proc_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void sem_declare_interface_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_interface_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(!current_joinscope_lv);  // I don't belong inside a select(!)
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
@@ -20560,7 +20560,7 @@ static void sem_declare_interface_stmt(CqlState* CS, ast_node *ast) {
 //  * locals cannot conflict with each other
 //  * scopes do not nest in CQL so any local is the same anywhere no matter
 //    where it appears, it can be used any point later.  This could be changed.
-static bool_t sem_verify_legal_variable_name(CqlState* CS, ast_node *variable, CSTR name) {
+static bool_t sem_verify_legal_variable_name(CqlState* _Nonnull CS, ast_node *variable, CSTR name) {
   // Do not erroneously warn about duplicate variables if we're reanalyzing
   // a statement list within a loop.
   if (CS->sem.current_loop_analysis_state != LOOP_ANALYSIS_STATE_REANALYZE) {
@@ -20586,7 +20586,7 @@ static bool_t sem_verify_legal_variable_name(CqlState* CS, ast_node *variable, C
 // Variables gain the SEM_TYPE_VARIABLE info in their semantic node and
 // their sem->name field is set.  Later if any case-insensitive match
 // hits the variable, the sem->name field can be used to get the canonical name.
-static void sem_declare_vars_type(CqlState* CS, ast_node *declare_vars_type) {
+static void sem_declare_vars_type(CqlState* _Nonnull CS, ast_node *declare_vars_type) {
   Contract(is_ast_declare_vars_type(declare_vars_type));
   EXTRACT_NOTNULL(name_list, declare_vars_type->left);
   EXTRACT_ANY_NOTNULL(data_type, declare_vars_type->right);
@@ -20634,7 +20634,7 @@ static void sem_declare_vars_type(CqlState* CS, ast_node *declare_vars_type) {
 // This declare a new local or global name for a type. It validate
 // the data type and store the name declared. The name can be use
 // in any places in the cql syntax where data type are.
-static void sem_declare_named_type(CqlState* CS, ast_node *ast) {
+static void sem_declare_named_type(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_named_type(ast));
   EXTRACT_ANY(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -20668,7 +20668,7 @@ static void sem_declare_named_type(CqlState* CS, ast_node *ast) {
 //   * cursor names have the same rules duplicates as other variables
 // With this in mind, both cases simply recurse on either the select or the call
 // and then pull out the struct type and use it for the cursor.
-static void sem_declare_cursor(CqlState* CS, ast_node *ast) {
+static void sem_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
@@ -20743,7 +20743,7 @@ static void sem_declare_cursor(CqlState* CS, ast_node *ast) {
 // This is the "unboxing" primitive for cursors.  The idea here is that
 // you have an object variable with a statement in it and you want to
 // make a cursor over that statement.
-static void sem_declare_cursor_for_expr(CqlState* CS, ast_node *ast) {
+static void sem_declare_cursor_for_expr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -20793,7 +20793,7 @@ static void sem_declare_cursor_for_expr(CqlState* CS, ast_node *ast) {
 // there is some string massaging to check for and remove the
 // " CURSOR" or " SET" and a temporary node is created so we can re-use
 // the usual likeable name check.
-cql_noexport ast_node *sem_find_likeable_from_expr_type(CqlState* CS, ast_node *expr) {
+cql_noexport ast_node *sem_find_likeable_from_expr_type(CqlState* _Nonnull CS, ast_node *expr) {
   // it has to be a typed object expression
   if (!is_object(expr->sem->sem_type) || !expr->sem->kind) {
     CSTR expr_text = dup_expr_text(CS, expr);
@@ -20846,7 +20846,7 @@ cql_noexport ast_node *sem_find_likeable_from_expr_type(CqlState* CS, ast_node *
 // unboxing primitive above.  There are a number of things that can go wrong
 // here.  There must be a suitable cursor, a suitable shape, and the shape
 // must exactly match the cursor shape for starters.
-static void sem_set_from_cursor(CqlState* CS, ast_node *ast) {
+static void sem_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
   EXTRACT_STRING(cursor_name, cursor);
@@ -20914,7 +20914,7 @@ static void sem_set_from_cursor(CqlState* CS, ast_node *ast) {
 // such as a table, a view, another cursor, or a procedure that returns a result set.
 // These are the so called "value cursors" in that they have no underlying statement
 // that they move through.  You can just load them up with a row and pass them around.
-static void sem_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
+static void sem_declare_cursor_like_name(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_ANY_NOTNULL(new_cursor_ast, ast->left);
   EXTRACT_STRING(new_cursor_name, new_cursor_ast);
@@ -20951,7 +20951,7 @@ static void sem_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
 // if also the most verbose.
 // * The select must be itself valid.
 // * The cursor name must be unique
-static void sem_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
+static void sem_declare_cursor_like_select(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
   Contract(is_select_stmt(ast->right));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
@@ -20998,7 +20998,7 @@ static void sem_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
 // * the typed names must be valid types/names with no duplicate column names etc.
 //   * they make include rewrites using LIKE internally
 // * The cursor name must be unique
-static void sem_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
+static void sem_declare_cursor_like_typed_names(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
   EXTRACT_NOTNULL(typed_names, ast->right);
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
@@ -21029,7 +21029,7 @@ static void sem_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
 
 
 // Here we're just checking that the proc mentioned in the call statement uses the OUT cursor form
-static void sem_call_stmt_has_out_stmt_result_for_cursor(CqlState* CS, ast_node *call_stmt, CSTR name) {
+static void sem_call_stmt_has_out_stmt_result_for_cursor(CqlState* _Nonnull CS, ast_node *call_stmt, CSTR name) {
   Contract(is_ast_call_stmt(call_stmt));
 
   if (!has_out_stmt_result(call_stmt)) {
@@ -21045,7 +21045,7 @@ static void sem_call_stmt_has_out_stmt_result_for_cursor(CqlState* CS, ast_node 
 // * the call must be semantically valid
 // * the procedure must return an OUT parameter (not a result set)
 // * the cursor name must be unique
-static void sem_declare_value_cursor(CqlState* CS, ast_node *ast) {
+static void sem_declare_value_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
@@ -21081,7 +21081,7 @@ static void sem_declare_value_cursor(CqlState* CS, ast_node *ast) {
   add_variable(CS, name, cursor);
 }
 
-static ast_node *sem_synthesize_current_locals(CqlState* CS) {
+static ast_node *sem_synthesize_current_locals(CqlState* _Nonnull CS) {
   if (!CS->sem.current_proc) {
     return NULL;
   }
@@ -21116,7 +21116,7 @@ static ast_node *sem_synthesize_current_locals(CqlState* CS) {
 
 // Try to analyze the name first as an arg bundle, and that fails, then try as a cursor
 // these are the two shapes that hold data.
-cql_noexport void sem_any_shape(CqlState* CS, ast_node *ast) {
+cql_noexport void sem_any_shape(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast);
   ast_node *shape = find_arg_bundle(CS, name);
 
@@ -21152,7 +21152,7 @@ cql_noexport void sem_any_shape(CqlState* CS, ast_node *ast) {
 //  In those cases, we specifically verify that is, in fact, a cursor.  In other
 //  cases, the name of a cursor refers to a boolean that indicates whether the
 //  cursor presently has a value.
-cql_noexport void sem_cursor(CqlState* CS, ast_node *ast) {
+cql_noexport void sem_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   if (!is_id(ast)) {
     CSTR expr_text = dup_expr_text(CS, ast);
     report_error(CS, ast, "CQL0205: not a cursor", expr_text);
@@ -21176,7 +21176,7 @@ cql_noexport void sem_cursor(CqlState* CS, ast_node *ast) {
 
 // If we can consume the ast as a cursor then do so
 // used if we might have a cursor context
-static bool_t sem_try_as_cursor(CqlState* CS, ast_node *ast, bool_t *hard_fail) {
+static bool_t sem_try_as_cursor(CqlState* _Nonnull CS, ast_node *ast, bool_t *hard_fail) {
   *hard_fail = false;
 
   if (!is_id(ast)) {
@@ -21210,7 +21210,7 @@ typedef struct case_val {
 // * the case expressions must be constant expressions
 // * the case expressions must promote to the type of the expression with no loss
 // * if all_values was specified you can't use else or it's a joke
-static void sem_switch_expr_list(CqlState* CS, ast_node *ast, sem_t core_type, bytebuf *case_data) {
+static void sem_switch_expr_list(CqlState* _Nonnull CS, ast_node *ast, sem_t core_type, bytebuf *case_data) {
   Contract(is_ast_expr_list(ast));
   ast_node *head = ast;
 
@@ -21279,7 +21279,7 @@ static int case_val_comparator(const void *v1, const void *v2) {
 //    * we report extra values on either side as "missing" or "invalid"
 //  * if the merge ends prematurely, whichever side has more values yields an error for missing or extra values
 // After that clean up the memory and we're done...
-static void sem_check_all_values_condition(CqlState* CS, ast_node *expr, bytebuf *case_buffer) {
+static void sem_check_all_values_condition(CqlState* _Nonnull CS, ast_node *expr, bytebuf *case_buffer) {
   bytebuf *enum_buffer = _ast_pool_new(bytebuf);
   bytebuf_open(enum_buffer);
 
@@ -21390,7 +21390,7 @@ cleanup:
 // * the statement list must have no errors
 // * the expressions can't be just "else..."
 // * if all_values was specified you can't use else or it's a joke
-static void sem_switch_cases(CqlState* CS, ast_node *ast, ast_node *expr, bool_t all_values) {
+static void sem_switch_cases(CqlState* _Nonnull CS, ast_node *ast, ast_node *expr, bool_t all_values) {
   Contract(is_ast_switch_case(ast));
 
   sem_t core_type = core_type_of(expr->sem->sem_type);
@@ -21512,7 +21512,7 @@ cleanup:
 //  * the type of switch expression must be an enum
 //  * all the values in the enum must be covered by the switch
 //  * if all_values was specified you can't use else or it's a joke
-static void sem_switch_stmt(CqlState* CS, ast_node *ast) {
+static void sem_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
   EXTRACT_OPTION(all_values, ast->left);
   EXTRACT_NOTNULL(switch_body, ast->right);
@@ -21554,7 +21554,7 @@ cleanup:
 //  * the condition must be numeric
 //  * the statement list must be error-free
 //  * loop_depth is increased allowing the use of interior leave/continue
-static void sem_while_stmt(CqlState* CS, ast_node *ast) {
+static void sem_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -21588,7 +21588,7 @@ static void sem_while_stmt(CqlState* CS, ast_node *ast) {
 // literally has an embedded fetch, you simply use the fetch helper to
 // validate that the fetch is good and then visit the statement list.
 // Loop depth is increased as with while.
-static void sem_loop_stmt(CqlState* CS, ast_node *ast) {
+static void sem_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_loop_stmt(ast));
   EXTRACT_NOTNULL(fetch_stmt, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -21650,7 +21650,7 @@ typedef CSTR (*name_func)(ast_node *ast);
 // extracts the name from the left.  This is n^2 which ends up being mostly ok
 // because n is usually pretty small.  Like single digits.  If it ever matters
 // this could use a temporary name table to do the job.
-static bool_t sem_verify_no_duplicate_names_func(CqlState* CS, ast_node *list, name_func func) {
+static bool_t sem_verify_no_duplicate_names_func(CqlState* _Nonnull CS, ast_node *list, name_func func) {
   Contract(list);
   Contract(func);
 
@@ -21676,7 +21676,7 @@ static bool_t sem_verify_no_duplicate_names_func(CqlState* CS, ast_node *list, n
 // There are many cases where a list of names must have no duplicates;
 // This helper walks the list and reports an error if there are two
 // names that are case-insensitively the same.
-static bool_t sem_verify_no_duplicate_names(CqlState* CS, ast_node *name_list) {
+static bool_t sem_verify_no_duplicate_names(CqlState* _Nonnull CS, ast_node *name_list) {
   Contract(is_ast_name_list(name_list));
   return sem_verify_no_duplicate_names_func(CS, name_list, name_from_name_list_node);
 }
@@ -21684,13 +21684,13 @@ static bool_t sem_verify_no_duplicate_names(CqlState* CS, ast_node *name_list) {
 // There are many cases where a list of names must have no duplicates;
 // This helper walks the list and reports an error if there are two
 // names that are case-insensitively the same.
-static bool_t sem_verify_no_duplicate_shape_exprs(CqlState* CS, ast_node *shape_exprs) {
+static bool_t sem_verify_no_duplicate_shape_exprs(CqlState* _Nonnull CS, ast_node *shape_exprs) {
   Contract(is_ast_shape_exprs(shape_exprs));
   return sem_verify_no_duplicate_names_func(CS, shape_exprs, name_from_shape_expr_node);
 }
 
 // Just like the above except it's a region list (so there is an extra node in the AST)
-static bool_t sem_verify_no_duplicate_regions(CqlState* CS, ast_node *region_list) {
+static bool_t sem_verify_no_duplicate_regions(CqlState* _Nonnull CS, ast_node *region_list) {
   Contract(is_ast_region_list(region_list));
   return sem_verify_no_duplicate_names_func(CS, region_list, name_from_region_list_node);
 }
@@ -21698,7 +21698,7 @@ static bool_t sem_verify_no_duplicate_regions(CqlState* CS, ast_node *region_lis
 // Verifies that an expression passed as an OUT or INOUT argument for a call is
 // the name of a valid variable. If it is not, reports an error indicating for
 // which parameter such a name was expected.
-static void sem_validate_arg_is_name_of_existing_variable(CqlState* CS, ast_node *arg, CSTR param_name) {
+static void sem_validate_arg_is_name_of_existing_variable(CqlState* _Nonnull CS, ast_node *arg, CSTR param_name) {
   if (!is_id_or_dot(arg)) {
     goto error;
   }
@@ -21732,7 +21732,7 @@ error:
 // Analyzes an argument passed for an OUT or INOUT parameter by verifying that
 // it is a valid variable and that it has been initialized (if necessary), and
 // then sets appropriate improvements.
-static void sem_arg_for_out_param(CqlState* CS, ast_node *arg, ast_node *param) {
+static void sem_arg_for_out_param(CqlState* _Nonnull CS, ast_node *arg, ast_node *param) {
   Contract(arg);
   Contract(is_ast_param(param));
 
@@ -21776,7 +21776,7 @@ static void sem_arg_for_out_param(CqlState* CS, ast_node *arg, ast_node *param) 
 // Given an argument that (typically) has not yet been checked and a formal
 // parameter that has been, check the argument and verify that it is allowed to
 // be passed for that particular parameter.
-static bool_t sem_validate_arg_vs_formal(CqlState* CS, ast_node *arg, ast_node *param) {
+static bool_t sem_validate_arg_vs_formal(CqlState* _Nonnull CS, ast_node *arg, ast_node *param) {
   Contract(arg);
   Contract(param);
   Contract(param->sem);
@@ -21903,7 +21903,7 @@ static int out_tagged_id_comparator(const void *a, const void *b) {
 // and INOUT arguments were allowed to alias, setting a variable passed in via
 // an OUT or INOUT parameter could cause the values of other parameters to be
 // unexpectedly mutated.
-static bool_t sem_validate_out_args_are_unique(CqlState* CS, ast_node *arg_list, ast_node *params) {
+static bool_t sem_validate_out_args_are_unique(CqlState* _Nonnull CS, ast_node *arg_list, ast_node *params) {
   Contract(!arg_list || is_ast_arg_list(arg_list) || is_ast_expr_list(arg_list));
   Contract(!params || is_ast_params(params));
 
@@ -22002,7 +22002,7 @@ static bool_t sem_validate_out_args_are_unique(CqlState* CS, ast_node *arg_list,
 //      * the type of the variable must be an exact type match for the formal
 //    * non-out parameters must be type-compatible, but exact match is not
 //      required
-static void sem_validate_args_vs_formals(CqlState* CS, ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
+static void sem_validate_args_vs_formals(CqlState* _Nonnull CS, ast_node *ast, CSTR name, ast_node *arg_list, ast_node *params, bool_t proc_as_func) {
   ast_node *arg_item = arg_list;
   ast_node *param_item = params;
 
@@ -22103,7 +22103,7 @@ static void sem_validate_args_vs_formals(CqlState* CS, ast_node *ast, CSTR name,
 //    * if the formal is an out parameter the argument must be a variable
 //      * the type of the variable must be an exact type match for the formal
 //    * non-out parameters must be type-compatible, but exact match is not required
-static void sem_call_stmt_opt_cursor(CqlState* CS, ast_node *ast, CSTR cursor_name) {
+static void sem_call_stmt_opt_cursor(CqlState* _Nonnull CS, ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
@@ -22198,7 +22198,7 @@ static void sem_call_stmt_opt_cursor(CqlState* CS, ast_node *ast, CSTR cursor_na
 // possible in that case we simply record that this is an auto_cursor and then
 // later we will allow the use of C.field during analysis.
 // Of course "C" must be a valid cursor.
-static void sem_fetch_stmt(CqlState* CS, ast_node *ast) {
+static void sem_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT(name_list, ast->right);
@@ -22343,7 +22343,7 @@ static void sem_fetch_stmt(CqlState* CS, ast_node *ast) {
 
 // In this form we're working on a cursor that is going to be loaded by making a call.  This call statement
 // must be using the OUT statement and its OUT value must exactly match the shape of the target cursor.
-static void sem_fetch_call_stmt(CqlState* CS, ast_node *ast) {
+static void sem_fetch_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   Contract(is_ast_call_stmt(ast->right));
   EXTRACT_ANY_NOTNULL(cursor, ast->left)
@@ -22385,7 +22385,7 @@ static void sem_fetch_call_stmt(CqlState* CS, ast_node *ast) {
 // Fetch the next statement assuming we're on a statement
 // this is only tricky because the parent node might not be a statement
 // list due to the way attributes on statements work.
-static ast_node *get_next_stmt(CqlState* CS, ast_node *ast) {
+static ast_node *get_next_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   ast_node *parent = ast->parent;
 
   if (is_ast_stmt_list(parent)) {
@@ -22399,7 +22399,7 @@ static ast_node *get_next_stmt(CqlState* CS, ast_node *ast) {
 
 // Some of the control flow statements like LEAVE, CONTINUE, and RETURN should have nothing
 // after them.  This handles those cases in a uniform way.
-static void sem_last_statement_in_block(CqlState* CS, ast_node *ast) {
+static void sem_last_statement_in_block(CqlState* _Nonnull CS, ast_node *ast) {
   if (get_next_stmt(CS, ast)) {
     report_error(CS, ast, "CQL0308: statement should be the last thing in a statement list", NULL);
     record_error(CS, ast);
@@ -22410,7 +22410,7 @@ static void sem_last_statement_in_block(CqlState* CS, ast_node *ast) {
 }
 
 // We just need to ensure that continue is inside a loop.
-static void sem_continue_stmt(CqlState* CS, ast_node *ast) {
+static void sem_continue_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
   // CONTINUE
@@ -22424,7 +22424,7 @@ static void sem_continue_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // We just need to ensure that leave is inside a loop.
-static void sem_leave_stmt(CqlState* CS, ast_node *ast) {
+static void sem_leave_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   // LEAVE
@@ -22439,7 +22439,7 @@ static void sem_leave_stmt(CqlState* CS, ast_node *ast) {
 
 // Return should not appear at the top level, it's redundant.  It also should be
 // the last thing in a statement block.
-static void sem_return_common(CqlState* CS, ast_node *ast) {
+static void sem_return_common(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
   // RETURN
@@ -22464,7 +22464,7 @@ static void sem_return_common(CqlState* CS, ast_node *ast) {
 
 // The usual return rules plus a return statement may not appear inside of a proc savepoint
 // you have to use either rollback or commit return.
-static void sem_return_stmt(CqlState* CS, ast_node *ast) {
+static void sem_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   if (CS->sem.in_proc_savepoint) {
     report_error(CS, ast, "CQL0352: use COMMIT RETURN or ROLLBACK RETURN in within a proc savepoint block", NULL);
     record_error(CS, ast);
@@ -22474,7 +22474,7 @@ static void sem_return_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Must be inside of a proc savepoint plus the usual return rules
-static void sem_commit_return_stmt(CqlState* CS, ast_node *ast) {
+static void sem_commit_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
   if (!CS->sem.in_proc_savepoint) {
@@ -22488,7 +22488,7 @@ static void sem_commit_return_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Must be inside of a proc savepoint plus the usual return rules
-static void sem_rollback_return_stmt(CqlState* CS, ast_node *ast) {
+static void sem_rollback_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
   if (!CS->sem.in_proc_savepoint) {
@@ -22504,7 +22504,7 @@ static void sem_rollback_return_stmt(CqlState* CS, ast_node *ast) {
 // The rules here:
 //  * it must be in a procedure
 //  * it must be at the top level
-static void sem_proc_savepoint_stmt(CqlState* CS, ast_node *ast)
+static void sem_proc_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast)
 {
   Contract(is_ast_proc_savepoint_stmt(ast));
   EXTRACT(stmt_list, ast->left);
@@ -22590,7 +22590,7 @@ static void sem_proc_savepoint_stmt(CqlState* CS, ast_node *ast)
 // that parameter initialization checking becomes useless. There is nothing we
 // can do about that here: We must simply assume the programmer has used it
 // appropriately.
-void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(CqlState* CS,
+void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(CqlState* _Nonnull CS,
   CSTR _Nullable misc_attr_prefix,
   CSTR _Nonnull misc_attr_name,
   ast_node *_Nullable ast_misc_attr_value_list,
@@ -22637,7 +22637,7 @@ void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(CqlState* CS,
 }
 
 // No analysis needed here other than that the two statement lists are ok.
-static void sem_trycatch_stmt(CqlState* CS, ast_node *ast) {
+static void sem_trycatch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_trycatch_stmt(ast));
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
@@ -22701,7 +22701,7 @@ static void sem_trycatch_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Throw can literally go anywhere, so it's ok.
-static void sem_throw_stmt(CqlState* CS, ast_node *ast) {
+static void sem_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   // "throw" implies that we have a return code which implies all of the proc
@@ -22713,7 +22713,7 @@ static void sem_throw_stmt(CqlState* CS, ast_node *ast) {
   sem_last_statement_in_block(CS, ast);
 }
 
-static void sem_verify_transaction_ok(CqlState* CS, ast_node *ast) {
+static void sem_verify_transaction_ok(CqlState* _Nonnull CS, ast_node *ast) {
   if (CS->sem.enforcement.strict_transaction) {
     report_error(CS, ast, "CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.", NULL);
     record_error(CS, ast);
@@ -22724,13 +22724,13 @@ static void sem_verify_transaction_ok(CqlState* CS, ast_node *ast) {
 }
 
 // Begin trans can go anywhere, it's ok.
-static void sem_begin_trans_stmt(CqlState* CS, ast_node *ast) {
+static void sem_begin_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
   sem_verify_transaction_ok(CS, ast);
 }
 
 // Commit trans can go anywhere, it's ok.
-static void sem_commit_trans_stmt(CqlState* CS, ast_node *ast) {
+static void sem_commit_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_trans_stmt(ast));
   sem_verify_transaction_ok(CS, ast);
 }
@@ -22738,7 +22738,7 @@ static void sem_commit_trans_stmt(CqlState* CS, ast_node *ast) {
 // Rollback trans can go anywhere but if you're using the format
 // where you rollback to a particular save point then we must have
 // seen that name in a savepoint statement or it's an error.
-static void sem_rollback_trans_stmt(CqlState* CS, ast_node *ast) {
+static void sem_rollback_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
   if (!ast->left) {
@@ -22764,7 +22764,7 @@ static void sem_rollback_trans_stmt(CqlState* CS, ast_node *ast) {
 
 // The savepoint statement can go anywhere but we do record this savepoint name
 // as having been seen so we can verify it in rollback.
-static void sem_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void sem_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_savepoint_stmt(ast));
   rewrite_proclit(CS, ast->left);
   if (is_error(ast->left)) {
@@ -22782,7 +22782,7 @@ static void sem_savepoint_stmt(CqlState* CS, ast_node *ast) {
 
 // Release savepoint can go anywhere but we must have
 // seen that name in a savepoint statement or it's an error.
-static void sem_release_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void sem_release_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
   rewrite_proclit(CS, ast->left);
   if (is_error(ast->left)) {
@@ -22801,7 +22801,7 @@ static void sem_release_savepoint_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // For close [cursor], we just validate that the name is in fact a cursor.
-static void sem_close_stmt(CqlState* CS, ast_node *ast) {
+static void sem_close_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
 
@@ -22825,7 +22825,7 @@ static void sem_close_stmt(CqlState* CS, ast_node *ast) {
 
 // For out [cursor], we first validate that the name is a cursor
 // then we set the output type of the procedure we're in accordingly
-static void sem_out_any(CqlState* CS, ast_node *ast) {
+static void sem_out_any(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_stmt(ast) || is_ast_out_union_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
 
@@ -22853,17 +22853,17 @@ static void sem_out_any(CqlState* CS, ast_node *ast) {
   sem_update_proc_type_for_select(CS, ast);
 }
 
-static void sem_out_stmt(CqlState* CS, ast_node *ast) {
+static void sem_out_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
   sem_out_any(CS, ast);
 }
 
-static void sem_out_union_stmt(CqlState* CS, ast_node *ast) {
+static void sem_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_stmt(ast));
   sem_out_any(CS, ast);
 }
 
-static void sem_out_union_parent_child_stmt(CqlState* CS, ast_node *ast) {
+static void sem_out_union_parent_child_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
   rewrite_out_union_parent_child_stmt(CS, ast);
 
@@ -22873,14 +22873,14 @@ static void sem_out_union_parent_child_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // echo is valid in any context
-static void sem_echo_stmt(CqlState* CS, ast_node *ast) {
+static void sem_echo_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(str, ast->right);
 
   record_ok(CS, ast);
 }
 
-static void sem_previous_schema_stmt(CqlState* CS, ast_node *ast) {
+static void sem_previous_schema_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_previous_schema_stmt(ast));
 
   sem_setup_region_filters(CS);
@@ -22930,7 +22930,7 @@ static void sem_previous_schema_stmt(CqlState* CS, ast_node *ast) {
 // 1) ignore DDL in stored procs for declaration purposes; only DDL outside of a proc counts
 // 2) do not make any columns "deleted" thereby allowing all annotations to be present
 //    so they can be used to validate other aspects of the migration script.
-static void sem_schema_upgrade_script_stmt(CqlState* CS, ast_node *ast) {
+static void sem_schema_upgrade_script_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_upgrade_script_stmt(ast));
 
   if (CS->sem.current_proc) {
@@ -22954,7 +22954,7 @@ static void sem_schema_upgrade_script_stmt(CqlState* CS, ast_node *ast) {
 // the columns deleted for the version in question rather than the current version.
 // This is important because older schema migration procs might still refer to
 // old columns.  Those columns truly exist at that schema version.
-static void sem_schema_upgrade_version_stmt(CqlState* CS, ast_node *ast) {
+static void sem_schema_upgrade_version_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_upgrade_version_stmt(ast));
   EXTRACT_OPTION(vers, ast->left);
 
@@ -22988,14 +22988,14 @@ static void sem_schema_upgrade_version_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // forward to the more general version with no cursor
-static void sem_call_stmt(CqlState* CS, ast_node *ast) {
+static void sem_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   sem_call_stmt_opt_cursor(CS, ast, NULL);
   if (is_struct(ast->sem->sem_type)) {
     sem_update_proc_type_for_select(CS, ast);
   }
 }
 
-static void sem_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_out_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_out_call_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
 
@@ -23131,7 +23131,7 @@ static void sem_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
 // what the statement is yet (such as we're walking a statement list) this will
 // dispatch to the correct method.  Also, the top level statement captures
 // any errors.
-cql_noexport void sem_one_stmt(CqlState* CS, ast_node *stmt) {
+cql_noexport void sem_one_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   CHARBUF_OPEN(errbuf);
   bool_t capture_now = CS->options.print_ast && CS->sem.error_capture == NULL;
 
@@ -23205,7 +23205,7 @@ cql_noexport void sem_one_stmt(CqlState* CS, ast_node *stmt) {
 // looking for any CONST expressions.  If we find one, we evaluate
 // that.  Anything that's not a CONST express is known to be a literal
 // or just a name.
-static void sem_misc_attr_value(CqlState* CS, ast_node *ast) {
+static void sem_misc_attr_value(CqlState* _Nonnull CS, ast_node *ast) {
   // nested attributes, we just recurse on those
   if (is_ast_misc_attr_value_list(ast)) {
     for (ast_node *item = ast; item; item = item->right) {
@@ -23233,7 +23233,7 @@ static void sem_misc_attr_value(CqlState* CS, ast_node *ast) {
 // them with actual literals and reveal any errors in those expressions.
 // Most attributes don't need any processing because they are arbitrary names
 // or regular literals.
-static void sem_misc_attrs_basic(CqlState* CS, ast_node *ast) {
+static void sem_misc_attrs_basic(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_misc_attrs(ast));
 
   ast_node *head = ast;
@@ -23258,7 +23258,7 @@ static void sem_misc_attrs_basic(CqlState* CS, ast_node *ast) {
 // for cases where we want to analyze a statement list within a particular type
 // of flow context (e.g., a branch context) or within a particular instance of
 // an existing context.
-static void sem_stmt_list_in_current_flow_context(CqlState* CS, ast_node *head) {
+static void sem_stmt_list_in_current_flow_context(CqlState* _Nonnull CS, ast_node *head) {
   Contract(head);
 
   CS->sem.sem_stmt_level++;
@@ -23288,7 +23288,7 @@ static void sem_stmt_list_in_current_flow_context(CqlState* CS, ast_node *head) 
 // This helper just walks the list and processes each statement.  If anything
 // goes wrong the first node in the list is marked as "error" so that callers
 // can see that the net statement list is in error without walking each node.
-static void sem_stmt_list(CqlState* CS, ast_node *head) {
+static void sem_stmt_list(CqlState* _Nonnull CS, ast_node *head) {
   // ensures we always clear this before ending any top level statement
   Invariant(!CS->sem.in_backing_rewrite);
 
@@ -23307,7 +23307,7 @@ static void sem_stmt_list(CqlState* CS, ast_node *head) {
 // if the body of the loop is presently executing. (Due to the fact that one can
 // jump out of a loop, no assumptions can be made about `true_expr` after the
 // loop exits, and so no negative improvements are set.)
-static void sem_stmt_list_within_loop(CqlState* CS, ast_node *stmt_list, ast_node *true_expr) {
+static void sem_stmt_list_within_loop(CqlState* _Nonnull CS, ast_node *stmt_list, ast_node *true_expr) {
   Contract(stmt_list);
 
   loop_analysis_state saved_loop_analysis_state = CS->sem.current_loop_analysis_state;
@@ -23384,7 +23384,7 @@ cleanup:
 }
 
 // Expression type for current proc literal
-static void sem_expr_proclit(CqlState* CS, ast_node *ast) {
+static void sem_expr_proclit(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_str(ast));
 
   // name already known to match or we wouldn't be here
@@ -23408,7 +23408,7 @@ static void sem_expr_proclit(CqlState* CS, ast_node *ast) {
 // yet know that you are a DML proc.  Generating an error would be annoying.
 // This also has the useful property that you can force a proc to be dml
 // with "if @rc then endif;" which is useful when you are trying to create mocks.
-static void sem_expr_at_rc(CqlState* CS, ast_node *ast) {
+static void sem_expr_at_rc(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_str(ast));
   ast->sem = new_sem(CS, SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL| SEM_TYPE_VARIABLE);
   ast->sem->name = "@rc";
@@ -23416,7 +23416,7 @@ static void sem_expr_at_rc(CqlState* CS, ast_node *ast) {
 }
 
 // Expression type for numeric primitives
-static void sem_expr_num(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_num(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_num(ast));
 
   // we've processed this node before, we want to save the type kind
@@ -23448,7 +23448,7 @@ static void sem_expr_num(CqlState* CS, ast_node *ast, CSTR cstr) {
 }
 
 // Expression type for blob literals, valid only in a SQL context
-static void sem_expr_blob(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_blob(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_blob(ast));
 
   if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
@@ -23462,7 +23462,7 @@ static void sem_expr_blob(CqlState* CS, ast_node *ast, CSTR cstr) {
 }
 
 // Expression type for string or identifier primitives
-static void sem_expr_str(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_str(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(str, ast);
   if (is_strlit(ast)) {
@@ -23481,13 +23481,13 @@ static void sem_expr_str(CqlState* CS, ast_node *ast, CSTR cstr) {
 }
 
 // Expression type for constant NULL
-static void sem_expr_null(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_null(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_null(ast));
   // null literal
   ast->sem = new_sem(CS, SEM_TYPE_NULL);
 }
 
-static void sem_validate_dot_transform(CqlState* CS, ast_node *ast, CSTR choice1, CSTR choice2) {
+static void sem_validate_dot_transform(CqlState* _Nonnull CS, ast_node *ast, CSTR choice1, CSTR choice2) {
   Contract(is_ast_dot(ast));
   Contract(is_id(ast->right));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -23522,7 +23522,7 @@ static void sem_validate_dot_transform(CqlState* CS, ast_node *ast, CSTR choice1
 }
 
 // Expression type for scoped name.
-static void sem_expr_dot(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_dot(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_ast_dot(ast));
   Contract(is_id(ast->right));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -23580,7 +23580,7 @@ static void sem_expr_dot(CqlState* CS, ast_node *ast, CSTR cstr) {
 //     * if compound report error
 //     * if VALUES -> ok
 //     * if not compound, report error if top node is a join
-static bool_t sem_select_stmt_is_mixed_results(CqlState* CS, ast_node *ast) {
+static bool_t sem_select_stmt_is_mixed_results(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_select_stmt(ast));
   Contract(!is_ast_explain_stmt(ast));  // disallowed by grammar
 
@@ -23630,7 +23630,7 @@ static bool_t sem_select_stmt_is_mixed_results(CqlState* CS, ast_node *ast) {
 }
 
 // helper function to check if a select expression with a built-in aggregate function will always return a row
-static bool_t sem_check_aggregate_select_expr_must_return_a_row(CqlState* CS, ast_node *ast, ast_node *select_where) {
+static bool_t sem_check_aggregate_select_expr_must_return_a_row(CqlState* _Nonnull CS, ast_node *ast, ast_node *select_where) {
   Contract(is_ast_select_stmt(ast));
   Contract(is_ast_select_where(select_where));
 
@@ -23675,7 +23675,7 @@ static bool_t sem_check_aggregate_select_expr_must_return_a_row(CqlState* CS, as
 //   there is no FROM and no WHERE  e.g. (select 1)
 //   the select list is only COUNT or TOTAL e.g. (select count(*) from somewhere)
 // anything that looks complicated -> we assume it might not return rows
-static bool_t sem_select_expr_must_return_a_row(CqlState* CS, ast_node *ast) {
+static bool_t sem_select_expr_must_return_a_row(CqlState* _Nonnull CS, ast_node *ast) {
   // we only handle simple select forms, WITH etc. are assumed to be complex
   // and might return null or whatever...
 
@@ -23766,7 +23766,7 @@ static bool_t sem_select_expr_must_return_a_row(CqlState* CS, ast_node *ast) {
 }
 
 // Expression type for nested select expression
-static void sem_expr_select(CqlState* CS, ast_node *ast, CSTR cstr) {
+static void sem_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   Contract(is_select_stmt(ast));
   EXTRACT_ANY_NOTNULL(parent, ast->parent);
 
@@ -23864,7 +23864,7 @@ static void sem_expr_select(CqlState* CS, ast_node *ast, CSTR cstr) {
 // the only difference is that it is legal inside of strict select if nothing
 // because the user has made the throw explicit so they're saying they
 // know it's gonna throw and that's ok.
-static void sem_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_expr, ast->left);
   sem_expr_select(CS, select_expr, op);
@@ -23878,7 +23878,7 @@ static void sem_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR o
 //   * nullable or sensitive if either is nullable or sensitive
 //   * type kind must be compatible
 //   * special case SELECT ... IF NOTHING OR NULL ... is not null if the right are is not null
-static void sem_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op) {
+static void sem_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   // same rules for both forms
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
 
@@ -23927,7 +23927,7 @@ static void sem_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op) {
 //
 // Note: this processing does not happen in the context of a statement
 // so we have to do our own error capture logic.
-static void sem_validate_all_tables_not_in_previous(CqlState* CS, ast_node *root) {
+static void sem_validate_all_tables_not_in_previous(CqlState* _Nonnull CS, ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "CQL0309: new table must be added with @create(%d) or later", CS->sem.max_previous_schema_version);
 
@@ -23955,7 +23955,7 @@ static void sem_validate_all_tables_not_in_previous(CqlState* CS, ast_node *root
 //
 // Note: this processing does not happen in the context of a statement
 // so we have to do our own error capture logic.
-static void sem_validate_old_object_or_marked_create(CqlState* CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
+static void sem_validate_old_object_or_marked_create(CqlState* _Nonnull CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
   Contract(root);
   Contract(ast);
   Contract(err_msg);
@@ -23991,7 +23991,7 @@ static void sem_validate_old_object_or_marked_create(CqlState* CS, ast_node *roo
 //
 // Note: this processing does not happen in the context of a statement
 // so we have to do our own error capture logic.
-static void sem_validate_all_prev_recreate_tables(CqlState* CS, ast_node *root) {
+static void sem_validate_all_prev_recreate_tables(CqlState* _Nonnull CS, ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "CQL0399: table must leave @recreate management with @create(%d) or later", CS->sem.max_previous_schema_version);
 
@@ -24016,7 +24016,7 @@ static void sem_validate_all_prev_recreate_tables(CqlState* CS, ast_node *root) 
 //
 // Note: this processing does not happen in the context of a statement
 // so we have to do our own error capture logic.
-static void sem_validate_marked_create_or_delete(CqlState* CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
+static void sem_validate_marked_create_or_delete(CqlState* _Nonnull CS, ast_node *root, ast_node *ast, CSTR err_msg, CSTR name) {
   Contract(root);
   Contract(ast);
   Contract(err_msg);
@@ -24037,7 +24037,7 @@ static void sem_validate_marked_create_or_delete(CqlState* CS, ast_node *root, a
 // created columns.
 // Note: this processing does not happen in the context of a statement
 // so we have to do our own error capture logic.
-static void sem_validate_all_columns_not_in_previous(CqlState* CS, ast_node *root) {
+static void sem_validate_all_columns_not_in_previous(CqlState* _Nonnull CS, ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "CQL0310: new column must be added with @create(%d) or later", CS->sem.max_previous_schema_version);
 
@@ -24055,7 +24055,7 @@ static void sem_validate_all_columns_not_in_previous(CqlState* CS, ast_node *roo
   CHARBUF_CLOSE(err_msg);
 }
 
-static void sem_enforcement_options(CqlState* CS, ast_node *ast, bool_t strict) {
+static void sem_enforcement_options(CqlState* _Nonnull CS, ast_node *ast, bool_t strict) {
   EXTRACT_OPTION(option, ast);
 
   switch (option) {
@@ -24168,7 +24168,7 @@ static void sem_enforcement_options(CqlState* CS, ast_node *ast, bool_t strict) 
 //
 // Note: this processing does not happen in the context of a statement
 // so we have to do our own error capture logic.
-static void sem_validate_all_ad_hoc_not_in_previous(CqlState* CS, ast_node *root) {
+static void sem_validate_all_ad_hoc_not_in_previous(CqlState* _Nonnull CS, ast_node *root) {
   CHARBUF_OPEN(err_msg);
   bprintf(&err_msg, "new ad hoc rule must be added at version %d or later", CS->sem.max_previous_schema_version);
 
@@ -24186,33 +24186,33 @@ static void sem_validate_all_ad_hoc_not_in_previous(CqlState* CS, ast_node *root
 }
 
 // switch to strict mode
-static void sem_enforce_strict_stmt(CqlState* CS, ast_node * ast) {
+static void sem_enforce_strict_stmt(CqlState* _Nonnull CS, ast_node * ast) {
   Contract(is_ast_enforce_strict_stmt(ast));
   sem_enforcement_options(CS, ast->left, 1);
   record_ok(CS, ast);
 }
 
 // switch to normal mode
-static void sem_enforce_normal_stmt(CqlState* CS, ast_node * ast) {
+static void sem_enforce_normal_stmt(CqlState* _Nonnull CS, ast_node * ast) {
   Contract(is_ast_enforce_normal_stmt(ast));
   sem_enforcement_options(CS, ast->left, 0);
   record_ok(CS, ast);
 }
 
-static void reset_enforcements(CqlState* CS) {
+static void reset_enforcements(CqlState* _Nonnull CS) {
   memset(&CS->sem.enforcement, 0, sizeof(CS->sem.enforcement));
   CS->sem.enforcement.strict_cast = true;
 }
 
 // reset all to normal mode
-static void sem_enforce_reset_stmt(CqlState* CS, ast_node * ast) {
+static void sem_enforce_reset_stmt(CqlState* _Nonnull CS, ast_node * ast) {
   Contract(is_ast_enforce_reset_stmt(ast));
   reset_enforcements(CS);
   record_ok(CS, ast);
 }
 
 // save current enforcement options
-static void sem_enforce_push_stmt(CqlState* CS, ast_node *ast) {
+static void sem_enforce_push_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_push_stmt(ast));
   // this item will be freed with the pool
   enforcement_stack_record *item = _ast_pool_new(enforcement_stack_record);
@@ -24223,7 +24223,7 @@ static void sem_enforce_push_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // restore previous options
-static void sem_enforce_pop_stmt(CqlState* CS, ast_node *ast) {
+static void sem_enforce_pop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_pop_stmt(ast));
   enforcement_stack_record *item = enforcement_stack_rv;
 
@@ -24239,7 +24239,7 @@ static void sem_enforce_pop_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Ensure that the schema directives are not inside of a procedure
-static bool_t verify_schema_region_out_of_proc(CqlState* CS, ast_node *ast) {
+static bool_t verify_schema_region_out_of_proc(CqlState* _Nonnull CS, ast_node *ast) {
   if (CS->sem.current_proc) {
     report_error(CS, ast, "CQL0248: schema region directives may not appear inside of a procedure", NULL);
     return false;
@@ -24251,7 +24251,7 @@ static bool_t verify_schema_region_out_of_proc(CqlState* CS, ast_node *ast) {
 
 // Checks to see if a given region has any links that peek into the middle of an owned
 // Section; these are illegal
-static void sem_validate_region_links(CqlState* CS, ast_node *ast) {
+static void sem_validate_region_links(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_region(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -24288,7 +24288,7 @@ static void sem_validate_region_links(CqlState* CS, ast_node *ast) {
 // Here we validate:
 //  * the region name is unique
 //  * the dependencies (if any) are unique and exist
-static void sem_declare_schema_region_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_region(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT(region_list, ast->right);
@@ -24362,7 +24362,7 @@ static void sem_declare_schema_region_stmt(CqlState* CS, ast_node *ast) {
 
 // Recursively marks all the contained regions that are not already deployment regions
 // as being deployed in this region.
-static void sem_mark_deployment_subgraph(CqlState* CS, CSTR current, CSTR owner) {
+static void sem_mark_deployment_subgraph(CqlState* _Nonnull CS, CSTR current, CSTR owner) {
   // Every name we encounter has already been validated!
   ast_node *region = find_region(CS, current);
   Invariant(region);
@@ -24393,7 +24393,7 @@ static void sem_mark_deployment_subgraph(CqlState* CS, CSTR current, CSTR owner)
 
 // A deployable region is a regular region plus additional rules
 // We first declare the region and then check for the containment rules
-static void sem_declare_deployable_region_stmt(CqlState* CS, ast_node *ast) {
+static void sem_declare_deployable_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_deployable_region_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -24443,7 +24443,7 @@ typedef struct region_walk {
 
 // Recursively builds the set of all regions that are antecedents of the given region
 // This will let us quickly test if any given object should be visible in the current context.
-static void sem_walk_regions(CqlState* CS, region_walk *acc, CSTR name) {
+static void sem_walk_regions(CqlState* _Nonnull CS, region_walk *acc, CSTR name) {
   // First try to add, and see if we've already visited this region.
   // The region shape is a DAG so it's possible to get to the same place
   // two different ways.
@@ -24478,7 +24478,7 @@ static void sem_walk_regions(CqlState* CS, region_walk *acc, CSTR name) {
 }
 
 // Just use the helper above to do all regions
-cql_noexport void sem_accumulate_full_region_image(CqlState* CS, symtab *r, CSTR name) {
+cql_noexport void sem_accumulate_full_region_image(CqlState* _Nonnull CS, symtab *r, CSTR name) {
   region_walk acc = {
     .regions = r,
     .root_name = name,
@@ -24489,7 +24489,7 @@ cql_noexport void sem_accumulate_full_region_image(CqlState* CS, symtab *r, CSTR
 }
 
 // Just use the helper above to do only public regions
-cql_noexport void sem_accumulate_public_region_image(CqlState* CS, symtab *r, CSTR name) {
+cql_noexport void sem_accumulate_public_region_image(CqlState* _Nonnull CS, symtab *r, CSTR name) {
   region_walk acc = {
     .regions = r,
     .root_name = name,
@@ -24506,7 +24506,7 @@ cql_noexport void sem_accumulate_public_region_image(CqlState* CS, symtab *r, CS
 // do a quick in/out test on the include an exclude list and get the right output.
 // It also means that anything that can go wrong will go wrong right here;   After this
 // all region names are known to be good.
-static symtab *sem_accumulate_regions(CqlState* CS, uint32_t count, char **regions) {
+static symtab *sem_accumulate_regions(CqlState* _Nonnull CS, uint32_t count, char **regions) {
   symtab *result = symtab_new();
 
   for (uint32_t i = 0; i < count; i++) {
@@ -24526,7 +24526,7 @@ static symtab *sem_accumulate_regions(CqlState* CS, uint32_t count, char **regio
 // To make the region filters, we have to compute the transitive closure of all the regions
 // that were specified on the command line.  There are two such region lists and we process
 // those lists here.
-static void sem_setup_region_filters(CqlState* CS) {
+static void sem_setup_region_filters(CqlState* _Nonnull CS) {
   // reset these guys if they are already loaded
   SYMTAB_CLEANUP(CS->sem.included_regions);
   SYMTAB_CLEANUP(CS->sem.excluded_regions);
@@ -24549,7 +24549,7 @@ static void sem_setup_region_filters(CqlState* CS) {
 // only pieces of schema that are in the same region or a dependent region.
 // Here we validate that region we are entering is in fact a valid region
 // and that there isn't already a schema region.
-static void sem_begin_schema_region_stmt(CqlState* CS, ast_node * ast) {
+static void sem_begin_schema_region_stmt(CqlState* _Nonnull CS, ast_node * ast) {
   Contract(is_ast_begin_schema_region_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -24589,7 +24589,7 @@ static void sem_begin_schema_region_stmt(CqlState* CS, ast_node * ast) {
 
 // Leaving a schema region puts you back in the default region.
 // Here we check that we are in a schema region.
-static void sem_end_schema_region_stmt(CqlState* CS, ast_node * ast) {
+static void sem_end_schema_region_stmt(CqlState* _Nonnull CS, ast_node * ast) {
   Contract(is_ast_end_schema_region_stmt(ast));
 
   // @END_SCHEMA_REGION
@@ -24613,7 +24613,7 @@ static void sem_end_schema_region_stmt(CqlState* CS, ast_node * ast) {
   record_ok(CS, ast);
 }
 
-static void sem_validate_previous_ad_hoc(CqlState* CS, ast_node *prev, CSTR name, int32_t version) {
+static void sem_validate_previous_ad_hoc(CqlState* _Nonnull CS, ast_node *prev, CSTR name, int32_t version) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(prev));
 
   // The ad hoc migrates are not mixed with any other kind of migrate scripts in their symbol table, so:
@@ -24645,7 +24645,7 @@ static void sem_validate_previous_ad_hoc(CqlState* CS, ast_node *prev, CSTR name
   sem_add_flags(CS, schema_ad_hoc_migration_stmt, SEM_TYPE_VALIDATED);
 }
 
-static void sem_schema_unsub_stmt(CqlState* CS, ast_node *ast) {
+static void sem_schema_unsub_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_unsub_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
   EXTRACT_STRING(name, version_annotation->right);
@@ -24724,7 +24724,7 @@ static void sem_schema_unsub_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void sem_schema_ad_hoc_migration_stmt_for_version(CqlState* CS, ast_node *ast) {
+static void sem_schema_ad_hoc_migration_stmt_for_version(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
 
@@ -24759,7 +24759,7 @@ static void sem_schema_ad_hoc_migration_stmt_for_version(CqlState* CS, ast_node 
 }
 
 // this is where you specify a procedure that should be run if you need to recreate a table or a table group
-static void sem_schema_ad_hoc_migration_stmt_for_recreate(CqlState* CS, ast_node *ast) {
+static void sem_schema_ad_hoc_migration_stmt_for_recreate(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   EXTRACT_STRING(group, ast->left);
   EXTRACT_STRING(proc, ast->right);
@@ -24787,7 +24787,7 @@ static void sem_schema_ad_hoc_migration_stmt_for_recreate(CqlState* CS, ast_node
   record_ok(CS, ast);
 }
 
-static void sem_schema_ad_hoc_migration_stmt(CqlState* CS, ast_node *ast) {
+static void sem_schema_ad_hoc_migration_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   if (ast->right) {
     sem_schema_ad_hoc_migration_stmt_for_recreate(CS, ast);
@@ -24797,7 +24797,7 @@ static void sem_schema_ad_hoc_migration_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void enqueue_pending_region_validation(CqlState* CS, ast_node *prev, ast_node *cur, CSTR name) {
+static void enqueue_pending_region_validation(CqlState* _Nonnull CS, ast_node *prev, ast_node *cur, CSTR name) {
   // we're processing the previous item when we enqueue, if that item has no region
   // then it is allowed to make any change it wants to.
   if (!CS->sem.current_region) {
@@ -24816,7 +24816,7 @@ static void enqueue_pending_region_validation(CqlState* CS, ast_node *prev, ast_
 
 // Given some schema object (any kind of ast) look to see if it has a region
 // if does have a deployment region then make sure it didn't change.
-static void sem_validate_previous_deployable_region(CqlState* CS, ast_node *root, deployable_validation *v) {
+static void sem_validate_previous_deployable_region(CqlState* _Nonnull CS, ast_node *root, deployable_validation *v) {
   // if there was no previous deployment region you can acquire one
   CSTR prev_region = v->prev_region;
   ast_node *cur = v->cur;
@@ -24866,7 +24866,7 @@ static void sem_validate_previous_deployable_region(CqlState* CS, ast_node *root
 
 // At this point everything is all queued up and ready to go, just run through the pending
 // validations and do them.
-static void sem_validate_all_deployable_regions(CqlState* CS, ast_node *root) {
+static void sem_validate_all_deployable_regions(CqlState* _Nonnull CS, ast_node *root) {
   uint32_t count = CS->sem.deployable_validations->used / sizeof(deployable_validation);
 
   deployable_validation *validations = (deployable_validation *)CS->sem.deployable_validations->ptr;
@@ -24881,7 +24881,7 @@ static void sem_validate_all_deployable_regions(CqlState* CS, ast_node *root) {
   }
 }
 
-static void sem_emit_enums_stmt(CqlState* CS, ast_node *ast) {
+static void sem_emit_enums_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -24901,7 +24901,7 @@ static void sem_emit_enums_stmt(CqlState* CS, ast_node *ast) {
   record_ok(CS, ast);
 }
 
-static void sem_emit_constants_stmt(CqlState* CS, ast_node *ast) {
+static void sem_emit_constants_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_constants_stmt(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
 
@@ -24927,54 +24927,54 @@ static void sem_emit_constants_stmt(CqlState* CS, ast_node *ast) {
 // appropriate replacements can be made
 
 // always good to go, see above
-static void sem_blob_get_key_type_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_get_key_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_type_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_get_val_type_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_get_val_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_type_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_get_key_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_get_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_get_val_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_get_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_create_key_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_create_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_create_key_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_create_val_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_create_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_create_val_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_update_key_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_update_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_update_key_stmt(ast));
   record_ok(CS, ast);
 }
 
 // always good to go, see above
-static void sem_blob_update_val_stmt(CqlState* CS, ast_node *ast) {
+static void sem_blob_update_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_update_val_stmt(ast));
   record_ok(CS, ast);
 }
 
-static void sem_keep_table_name_in_aliases_stmt(CqlState* CS, ast_node *ast) {
+static void sem_keep_table_name_in_aliases_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
   record_ok(CS, ast);
 
@@ -24983,7 +24983,7 @@ static void sem_keep_table_name_in_aliases_stmt(CqlState* CS, ast_node *ast) {
 
 // Add a special sem node to a string node to represent an "override" of the original string value.
 // This is currently used only for overriding table name aliases for better explain query plan analysis.
-static void insert_table_alias_string_overide(CqlState* CS, ast_node *_Nonnull ast, CSTR _Nonnull table_name) {
+static void insert_table_alias_string_overide(CqlState* _Nonnull CS, ast_node *_Nonnull ast, CSTR _Nonnull table_name) {
   Contract(CS->sem.keep_table_name_in_aliases);
   Contract(is_ast_str(ast));
   EXTRACT_STRING(original_alias, ast);
@@ -25033,7 +25033,7 @@ cql_noexport CSTR get_inserted_table_alias_string_override(ast_node *_Nonnull as
 
 // Helper for doing series of potential rewrites on column_values node for
 // update and update cursor statements.
-static void rewrite_column_values_for_update_stmts(CqlState* CS, ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr) {
+static void rewrite_column_values_for_update_stmts(CqlState* _Nonnull CS, ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr) {
   // Any parent ast node to attach sem_err if needed.
   Contract(ast);
   // columns_values ast node to validate and rewrite
@@ -25068,14 +25068,14 @@ static void rewrite_column_values_for_update_stmts(CqlState* CS, ast_node *_Nonn
 
 // This is for the macro def statments that have no meaning in this pass
 // macros are already expanded
-static void sem_no_op_stmt(CqlState* CS, ast_node *stmt) {
+static void sem_no_op_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   record_ok(CS, stmt);
 }
 
 // Most codegen types are not compatible with previous schema generation because it adds stuff to the AST
 // and that stuff isn't even fully type evaluated.  So the best thing to do is punt on codegen if we
 // did that sort of validation.
-cql_noexport void exit_on_validating_schema(CqlState* CS) {
+cql_noexport void exit_on_validating_schema(CqlState* _Nonnull CS) {
   if (CS->sem.validating_previous_schema) {
     cql_error(CS, "This code generation mode is not compatible with @previous_schema validation mode.\n");
     cql_cleanup_and_exit(CS, 1);
@@ -25089,8 +25089,8 @@ cql_noexport void exit_on_validating_schema(CqlState* CS) {
 #define NO_OP_STMT_INIT(x) symtab_add_GenOneStmt(CS, syms, k_ast_ ## x, sem_no_op_stmt)
 
 #undef FUNC_INIT
-typedef void (*sem_func_init_type)(CqlState* CS, ast_node *call_ast, uint32_t arg );
-static inline bool_t symtab_add_sem_FuncIit(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_func_init_type _Nullable val_new)
+typedef void (*sem_func_init_type)(CqlState* _Nonnull CS, ast_node *call_ast, uint32_t arg );
+static inline bool_t symtab_add_sem_FuncIit(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_func_init_type _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -25104,22 +25104,22 @@ static inline bool_t symtab_add_sem_FuncIit(CqlState* CS, symtab *_Nonnull syms,
 // registered via `FUNC_INIT`. It must also indicate if it is an aggregate
 // function so that `sem_expr_call` knows how to handle it.
 #undef SPECIAL_FUNC_INIT
-typedef void (*SemSpecialFuncInit)(CqlState* CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
-static inline bool_t symtab_add_SemSpecialFuncInit(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, SemSpecialFuncInit _Nullable val_new)
+typedef void (*SemSpecialFuncInit)(CqlState* _Nonnull CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
+static inline bool_t symtab_add_SemSpecialFuncInit(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, SemSpecialFuncInit _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
 #define SPECIAL_FUNC_INIT(x) symtab_add_SemSpecialFuncInit(CS, CS->sem.builtin_special_funcs, #x, sem_special_func_ ## x)
 
 #undef AGGR_FUNC_INIT
-static inline bool_t symtab_add_SemBuiltinAggregatedFuncs(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_func _Nullable val_new)
+static inline bool_t symtab_add_SemBuiltinAggregatedFuncs(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_func _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
 #define AGGR_FUNC_INIT(x) symtab_add_SemBuiltinAggregatedFuncs(CS, CS->sem.builtin_aggregated_funcs, #x, sem_aggr_func_ ## x)
 
 #undef EXPR_INIT
-static inline bool_t symtab_add_SemExprDispatch(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_expr_dispatch _Nullable *val_new)
+static inline bool_t symtab_add_SemExprDispatch(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_expr_dispatch _Nullable *val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -25128,7 +25128,7 @@ static inline bool_t symtab_add_SemExprDispatch(CqlState* CS, symtab *_Nonnull s
   symtab_add_SemExprDispatch(CS, CS->sem.exprs, k_ast_ ## x, &expr_disp_ ## x);
 
 #undef MISC_ATTR_INIT
-static inline bool_t symtab_add_SemMiscAttributes(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_misc_attribute_callback _Nullable val_new)
+static inline bool_t symtab_add_SemMiscAttributes(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_misc_attribute_callback _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -25137,7 +25137,7 @@ static inline bool_t symtab_add_SemMiscAttributes(CqlState* CS, symtab *_Nonnull
 // This method loads up the global symbol tables in either empty state or
 // with the appropriate tokens ready to go.  Using our own symbol tables for
 // dispatch saves us a lot of if/else string comparison verbosity.
-cql_noexport void sem_main(CqlState* CS, ast_node *ast) {
+cql_noexport void sem_main(CqlState* _Nonnull CS, ast_node *ast) {
   // restore all globals and statics we own
   sem_cleanup(CS);
   eval_init(CS);
@@ -25510,7 +25510,7 @@ cql_noexport void sem_main(CqlState* CS, ast_node *ast) {
 }
 
 // This method frees all the global state of the semantic analyzer
-cql_noexport void sem_cleanup(CqlState* CS) {
+cql_noexport void sem_cleanup(CqlState* _Nonnull CS) {
   eval_cleanup(CS);
 
   BYTEBUF_CLEANUP(CS->sem.deployable_validations);

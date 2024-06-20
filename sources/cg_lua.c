@@ -48,43 +48,43 @@ cql_noexport void cg_lua_cleanup(CS) {}
 #define LUA_EXPR_PRI_UNARY 10
 #define LUA_EXPR_PRI_HIGHEST 999
 
-typedef void (*LuaFuncInt)(CqlState* CS, ast_node *call_ast, charbuf *value);
+typedef void (*LuaFuncInt)(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value);
 
-static bool_t symtab_add_LuaFuncInt(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, LuaFuncInt _Nullable val_new)
+static bool_t symtab_add_LuaFuncInt(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, LuaFuncInt _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
 
-static bool_t symtab_add_lua_expr_dispatch_func(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_lua_expr_dispatch _Nullable *val_new)
+static bool_t symtab_add_lua_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_lua_expr_dispatch _Nullable *val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
 
-static void cg_lua_expr(CqlState* CS, ast_node *node, charbuf *value, int32_t pri);
-static void cg_lua_stmt_list(CqlState* CS, ast_node *node);
-static void cg_lua_get_column(CqlState* CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output);
-static void cg_lua_binary(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new);
-static void cg_lua_is_or_is_not(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new);
-static void cg_lua_store_same_type(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type, CSTR value);
-static void cg_lua_store(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR value);
-static void cg_lua_call_stmt_with_cursor(CqlState* CS, ast_node *ast, CSTR cursor_name);
-static void cg_lua_proc_result_set(CqlState* CS, ast_node *ast);
-static void cg_lua_var_decl(CqlState* CS, charbuf *output, sem_t sem_type, CSTR base_name);
-static void cg_lua_emit_external_arglist(CqlState* CS, ast_node *expr_list, charbuf *invocation);
-static void cg_lua_call_named_external(CqlState* CS, CSTR name, ast_node *expr_list);
-static void cg_lua_user_func(CqlState* CS, ast_node *ast, charbuf *value);
-static void cg_lua_copy(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
-static void cg_lua_insert_dummy_spec(CqlState* CS, ast_node *ast);
-static void cg_lua_declare_simple_var(CqlState* CS, sem_t sem_type, CSTR name);
+static void cg_lua_expr(CqlState* _Nonnull CS, ast_node *node, charbuf *value, int32_t pri);
+static void cg_lua_stmt_list(CqlState* _Nonnull CS, ast_node *node);
+static void cg_lua_get_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output);
+static void cg_lua_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new);
+static void cg_lua_is_or_is_not(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new);
+static void cg_lua_store_same_type(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type, CSTR value);
+static void cg_lua_store(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR value);
+static void cg_lua_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, CSTR cursor_name);
+static void cg_lua_proc_result_set(CqlState* _Nonnull CS, ast_node *ast);
+static void cg_lua_var_decl(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type, CSTR base_name);
+static void cg_lua_emit_external_arglist(CqlState* _Nonnull CS, ast_node *expr_list, charbuf *invocation);
+static void cg_lua_call_named_external(CqlState* _Nonnull CS, CSTR name, ast_node *expr_list);
+static void cg_lua_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *value);
+static void cg_lua_copy(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value);
+static void cg_lua_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast);
+static void cg_lua_declare_simple_var(CqlState* _Nonnull CS, sem_t sem_type, CSTR name);
 static void cg_lua_put_typecode(charbuf *output, sem_t sem_type);
-cql_noexport void cg_lua_init(CqlState* CS);
+cql_noexport void cg_lua_init(CqlState* _Nonnull CS);
 
 // lots of AST nodes require no action -- this guy is very good at that.
-static void cg_lua_no_op(CqlState* CS, ast_node * ast) {
+static void cg_lua_no_op(CqlState* _Nonnull CS, ast_node * ast) {
 }
 
 // Emits a sql statement with bound args.
-static int32_t cg_lua_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node *stmt, int32_t cg_lua_exec);
+static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name, ast_node *stmt, int32_t cg_lua_exec);
 
 // These globals represent the major state of the code-generator
 
@@ -197,7 +197,7 @@ static int32_t cg_lua_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node
 //static bool_t lua_in_inline_function_fragment;
 
 // the current proc name or null
-static CSTR lua_current_proc_name(CqlState* CS) {
+static CSTR lua_current_proc_name(CqlState* _Nonnull CS) {
   CSTR result = NULL;
   if (CS->sem.current_proc) {
     ast_node *proc_name_ast = get_proc_name(CS, CS->sem.current_proc);
@@ -209,13 +209,13 @@ static CSTR lua_current_proc_name(CqlState* CS) {
 }
 
 // generate an error if the given expression is true (note this drives tracing)
-static void cg_lua_error_on_expr(CqlState* CS, CSTR expr) {
+static void cg_lua_error_on_expr(CqlState* _Nonnull CS, CSTR expr) {
   bprintf(CS->cg_main_output, "if %s then cql_error_trace(_rc_, _db_); goto %s; end\n", expr, CS->cg_lua.error_target);
   CS->cg_lua.error_target_used = true;
 }
 
 // generate an error if the return code is not the required value (helper for common case)
-static void cg_lua_error_on_rc_notequal(CqlState* CS, CSTR required) {
+static void cg_lua_error_on_rc_notequal(CqlState* _Nonnull CS, CSTR required) {
   CHARBUF_OPEN(tmp);
   bprintf(&tmp, "_rc_ ~= %s", required);
   cg_lua_error_on_expr(CS, tmp.ptr);
@@ -223,7 +223,7 @@ static void cg_lua_error_on_rc_notequal(CqlState* CS, CSTR required) {
 }
 
 // generate an error if the return code is not CQL_OK (helper for common case)
-static void cg_lua_error_on_not_sqlite_ok(CqlState* CS) {
+static void cg_lua_error_on_not_sqlite_ok(CqlState* _Nonnull CS) {
   cg_lua_error_on_expr(CS, "_rc_ ~= CQL_OK");
 }
 
@@ -251,7 +251,7 @@ static bool_t lua_needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
 
 // emits a cql_to_num call including a few special cases
 // e.g. cql_to_num(true) and cql_to_num(false) are very common
-static void cg_lua_emit_to_num(CqlState* CS, charbuf *output, CSTR input) {
+static void cg_lua_emit_to_num(CqlState* _Nonnull CS, charbuf *output, CSTR input) {
   if (!strcmp("true", input)) {
     bprintf(output, "1");
     return;
@@ -269,7 +269,7 @@ static void cg_lua_emit_to_num(CqlState* CS, charbuf *output, CSTR input) {
 
 // converts a boolean into a number if necessary
 // this is important because stuff like "true + 1 == 2" must be true
-static void cg_lua_to_num(CqlState* CS, sem_t sem_type, charbuf *value) {
+static void cg_lua_to_num(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value) {
   if (is_bool(sem_type)) {
      CHARBUF_OPEN(temp);
      bprintf(&temp, "%s", value->ptr);
@@ -280,7 +280,7 @@ static void cg_lua_to_num(CqlState* CS, sem_t sem_type, charbuf *value) {
 }
 
 // emits a cql_to_float call
-static void cg_lua_emit_to_float(CqlState* CS, charbuf *output, CSTR input) {
+static void cg_lua_emit_to_float(CqlState* _Nonnull CS, charbuf *output, CSTR input) {
   if (!strcmp("nil", input)) {
     bprintf(output, "nil");
     return;
@@ -290,7 +290,7 @@ static void cg_lua_emit_to_float(CqlState* CS, charbuf *output, CSTR input) {
 
 // converts a boolean into a number if necessary
 // this is important because stuff like "true + 1 == 2" must be true
-static void cg_lua_to_float(CqlState* CS, sem_t sem_type, charbuf *value) {
+static void cg_lua_to_float(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value) {
   if (!is_real(sem_type)) {
      CHARBUF_OPEN(temp);
      bprintf(&temp, "%s", value->ptr);
@@ -302,7 +302,7 @@ static void cg_lua_to_float(CqlState* CS, sem_t sem_type, charbuf *value) {
 
 // Emits cql_to_bool include special cases for the most common conversions
 // 0, 1, and nil all get hard coded treatment, otherwise use the helper.
-static void cg_lua_emit_to_bool(CqlState* CS, charbuf *output, CSTR input) {
+static void cg_lua_emit_to_bool(CqlState* _Nonnull CS, charbuf *output, CSTR input) {
   if (!strcmp("1", input)) {
     bprintf(output, "true");
     return;
@@ -322,7 +322,7 @@ static void cg_lua_emit_to_bool(CqlState* CS, charbuf *output, CSTR input) {
 // in lua 0 is not falsey.  So we must always generate stuff like
 // if cql_to_bool(int_expression) if we have a numeric exprecession and
 // need a boolean expression.
-static void cg_lua_to_bool(CqlState* CS, sem_t sem_type, charbuf *value) {
+static void cg_lua_to_bool(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value) {
   if (!is_bool(sem_type)) {
      CHARBUF_OPEN(temp);
      bprintf(&temp, "%s", value->ptr);
@@ -375,7 +375,7 @@ static void cg_lua_zero_masks(cg_lua_scratch_masks *_Nonnull masks) {
 // much like the _Nonnull clang option which can't prevent a global variable from starting
 // at null.  It's a bit weird but there isn't really a viable alternative short of some
 // non-null BS value which seems worse.
-static void cg_lua_emit_local_init(CqlState* CS, charbuf *output, sem_t sem_type)
+static void cg_lua_emit_local_init(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type)
 {
   if (is_nullable(sem_type)) {
     // no init needed
@@ -416,7 +416,7 @@ static void cg_lua_emit_local_init(CqlState* CS, charbuf *output, sem_t sem_type
 //  * flags might indicate nullable, in which case we need the struct version
 //  * text is always a reference, nullable or no.  But if you make a text local
 //    then we also gotta clean it up.
-static void cg_lua_var_decl(CqlState* CS, charbuf *output, sem_t sem_type, CSTR name) {
+static void cg_lua_var_decl(CqlState* _Nonnull CS, charbuf *output, sem_t sem_type, CSTR name) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
   Contract(CS->cg_main_output);
@@ -467,7 +467,7 @@ static bool_t lua_is_assignment_target_reusable(ast_node *ast, sem_t sem_type) {
 // stack level to create a temporary variable name for that type at that level.
 // If the variable does not already have a declaration (as determined by the masks)
 // then a declaration is added to the scratch_vars section.
-static void cg_lua_scratch_var(CqlState* CS, ast_node *ast, sem_t sem_type, charbuf *var, charbuf *value) {
+static void cg_lua_scratch_var(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type, charbuf *var, charbuf *value) {
   Contract(is_unitary(sem_type));
   Contract(!is_null_type(sem_type));
 
@@ -554,14 +554,14 @@ static void cg_lua_scratch_var(CqlState* CS, ast_node *ast, sem_t sem_type, char
 }
 
 // Set nullable output type to null.
-static void cg_lua_set_null(CqlState* CS, charbuf *output, CSTR name, sem_t sem_type) {
+static void cg_lua_set_null(CqlState* _Nonnull CS, charbuf *output, CSTR name, sem_t sem_type) {
   bprintf(output, "%s = nil\n", name);
 }
 
 // Once we've done any type conversions for the basic types we can do pretty simple assignments
 // The nullable non-reference types typically need of the helper macros unless it's an exact-type copy
 // operation.  This function is used by cg_lua_store near the finish line.
-static void cg_lua_copy(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
+static void cg_lua_copy(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   bprintf(output, "%s = %s\n", var, value);
 }
 
@@ -569,7 +569,7 @@ static void cg_lua_copy(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_
 // plus the value of the source it generates the correct operation to set it.
 // * if storing to a boolean from a non-boolean normalize the result to true/false
 // * if storing to a non-boolean from a boolean normalize the result to 0/1
-static void cg_lua_store(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR value) {
+static void cg_lua_store(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, sem_t sem_type_expr, CSTR value) {
   // dead store -- source = target
   if (!strcmp(var, value)) {
     // dead store -- source = target
@@ -598,7 +598,7 @@ static void cg_lua_store(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type
 // is exactly the same as the type of the thing we are storing.  This is used when we
 // just made a temporary of exactly the correct type to hold an expression.  cg_lua_store
 // handles this all but this helper lets you specify only one type.
-static void cg_lua_store_same_type(CqlState* CS, charbuf *output, CSTR var, sem_t sem_type, CSTR value) {
+static void cg_lua_store_same_type(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type, CSTR value) {
   cg_lua_store(CS, output, var, sem_type, sem_type, value);
 }
 
@@ -612,7 +612,7 @@ static void cg_lua_store_same_type(CqlState* CS, charbuf *output, CSTR var, sem_
 // If the inputs are not nullable then we can make the easy case of returning the
 // result in the value string (and 0 for is null).  Otherwise, cg_lua_combine_nullables
 // does the job.
-static void cg_lua_binary(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // left op right
   bool_t force_call = false;
 
@@ -702,7 +702,7 @@ static void cg_lua_binary(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, 
 // The helper lua_needs_paren() tells us if we should wrap this subtree in parens (see above)
 // If the inputs are not nullable then we can make the easy case of returning the
 // result in the value string (and 0 for is null).
-static void cg_lua_is_or_is_not(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_is_or_is_not(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // left op right
 
   ast_node *l = ast->left;
@@ -740,7 +740,7 @@ static void cg_lua_is_or_is_not(CqlState* CS, ast_node *ast, CSTR op, charbuf *v
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
 // this must never return nil
-static void cg_lua_expr_is_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_is_false(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -768,7 +768,7 @@ static void cg_lua_expr_is_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
 // this must never return nil
-static void cg_lua_expr_is_not_false(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_is_not_false(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_false(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -797,7 +797,7 @@ static void cg_lua_expr_is_not_false(CqlState* CS, ast_node *ast, CSTR op, charb
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
 // this must never return nil
-static void cg_lua_expr_is_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_is_true(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -824,7 +824,7 @@ static void cg_lua_expr_is_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *v
 // check for nullable or not nullable and generate the appropriate code using
 // either the helper or just looking at the value
 // this must never return nil
-static void cg_lua_expr_is_not_true(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_is_not_true(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_is_not_true(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -852,7 +852,7 @@ static void cg_lua_expr_is_not_true(CqlState* CS, ast_node *ast, CSTR op, charbu
 // each of them are very similar.  In simple cases the direct operator can be
 // used, otherwise we wrap the right operand in an anonymous function to defer
 // its evaluation and then do the logical op with short circuiting via a helper
-static void cg_lua_expr_and_or(CqlState* CS, ast_node *ast, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_and_or(CqlState* _Nonnull CS, ast_node *ast, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_or(ast) || is_ast_and(ast));
   Contract(pri_new == LUA_EXPR_PRI_LOR || pri_new == LUA_EXPR_PRI_LAND);
 
@@ -911,7 +911,7 @@ static void cg_lua_expr_and_or(CqlState* CS, ast_node *ast, CSTR str, charbuf *v
 // LUA outputs have the form (op arg).  We just have to decide if we need parens.
 // We use the same rules for parens here as in other places.  "pri" tells us
 // the context of the caller, if it is stronger than our operator then we need parens.
-static void cg_lua_unary(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_unary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // op [left]
 
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -964,7 +964,7 @@ static void cg_lua_unary(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, i
 }
 
 // sign has a standard helper
-static void cg_lua_func_sign(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_sign(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -980,7 +980,7 @@ static void cg_lua_func_sign(CqlState* CS, ast_node *call_ast, charbuf *value) {
 }
 
 // abs has a standard helper
-static void cg_lua_func_abs(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_abs(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1000,7 +1000,7 @@ static void cg_lua_func_abs(CqlState* CS, ast_node *call_ast, charbuf *value) {
 // for blob comparison for flexibility. Note expr is already known
 // to be not null here.  There was previous codegen for that case.  The result
 // is either bool or nullable bool.
-static void cg_lua_in_or_not_in_expr_list(CqlState* CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result, bool_t is_not_in) {
+static void cg_lua_in_or_not_in_expr_list(CqlState* _Nonnull CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result, bool_t is_not_in) {
   Contract(is_bool(sem_type_result));
   CSTR found_value = is_not_in ? "false" : "true";
   CSTR not_found_value = is_not_in ? "true" : "false";
@@ -1069,7 +1069,7 @@ static void cg_lua_in_or_not_in_expr_list(CqlState* CS, ast_node *head, CSTR exp
 //   until true
 //
 // The result ends up in the is_null and value fields as usual.
-static void cg_lua_expr_in_pred_or_not_in(CqlState* CS,
+static void cg_lua_expr_in_pred_or_not_in(CqlState* _Nonnull CS,
   ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_in_pred(ast) || is_ast_not_in(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left)
@@ -1128,7 +1128,7 @@ static void cg_lua_expr_in_pred_or_not_in(CqlState* CS,
 // expression the temporary holding the expression is in expr.  Expr has
 // already been tested for null if that was a possibility so we only need its
 // value at this point.
-static void cg_lua_case_list(CqlState* CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
+static void cg_lua_case_list(CqlState* _Nonnull CS, ast_node *head, CSTR expr, CSTR result, sem_t sem_type_result) {
   Contract(is_ast_case_list(head));
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -1205,7 +1205,7 @@ static void cg_lua_case_list(CqlState* CS, ast_node *head, CSTR expr, CSTR resul
 //
 // If the X is omitted then U and V are normal boolean expressions and
 // the code becomes if (U) etc  if (V) etc. with no temp.
-static void cg_lua_expr_case(CqlState* CS, ast_node *case_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_case(CqlState* _Nonnull CS, ast_node *case_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_case_expr(case_expr));
   EXTRACT_ANY(expr, case_expr->left);
   EXTRACT_NOTNULL(connector, case_expr->right);
@@ -1291,7 +1291,7 @@ static void cg_lua_expr_case(CqlState* CS, ast_node *case_expr, CSTR str, charbu
 // we have built-in support for numeric casts only, the SQL string cast operations are highly
 // complex with interesting parsing rules and so forth.  We don't try to do those at all
 // but there's no reason we can't do the simple numeric conversions in the non-SQL path
-static void cg_lua_expr_cast(CqlState* CS, ast_node *cast_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_cast(CqlState* _Nonnull CS, ast_node *cast_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(cast_expr));
 
   ast_node *expr = cast_expr->left;
@@ -1329,7 +1329,7 @@ static void cg_lua_expr_cast(CqlState* CS, ast_node *cast_expr, CSTR str, charbu
 // we have built-in type_check fun which use to check an expr strictly match a type.
 // during semantic analysis otherwise error. At the codegen phase we just emit
 // the expr since the type check already succeeded.
-static void cg_lua_expr_type_check(CqlState* CS, ast_node *type_check_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_type_check(CqlState* _Nonnull CS, ast_node *type_check_expr, CSTR str, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_type_check_expr(type_check_expr));
   EXTRACT_ANY_NOTNULL(expr, type_check_expr->left);
 
@@ -1346,7 +1346,7 @@ static void cg_lua_expr_type_check(CqlState* CS, ast_node *type_check_expr, CSTR
 //  * the single quotes around the string become double quotes
 //  * escaped single quote becomes just single quote
 //  * backslash escapes are preserved
-static void cg_lua_requote_literal(CqlState* CS, CSTR str, charbuf *output) {
+static void cg_lua_requote_literal(CqlState* _Nonnull CS, CSTR str, charbuf *output) {
   CHARBUF_OPEN(plaintext);
   cg_decode_string_literal(str, &plaintext);
   cg_encode_c_string_literal(CS, plaintext.ptr, output);
@@ -1357,7 +1357,7 @@ static void cg_lua_requote_literal(CqlState* CS, CSTR str, charbuf *output) {
 // then we declare that variable and emit the initializer.  The macro
 // cql_string_literal does the job for us while allowing the different
 // string implementations.  These go into the constants section.
-static void cg_lua_string_literal(CqlState* CS, CSTR str, charbuf *output) {
+static void cg_lua_string_literal(CqlState* _Nonnull CS, CSTR str, charbuf *output) {
   Contract(str);
   Contract(str[0] == '\'');
 
@@ -1371,7 +1371,7 @@ static void cg_lua_string_literal(CqlState* CS, CSTR str, charbuf *output) {
 // value and then evaluate the test expression. Between and not between look the same
 // to the codgen (they will have different expressions).  This lets us get all that
 // weird short circuit behavior super easy.  It's literally the AND/OR code running.
-static void cg_lua_expr_between_rewrite(CqlState* CS,
+static void cg_lua_expr_between_rewrite(CqlState* _Nonnull CS,
   ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_between_rewrite(ast));
   EXTRACT_NOTNULL(range, ast->right);
@@ -1411,7 +1411,7 @@ static void cg_lua_expr_between_rewrite(CqlState* CS,
 // Note: It's important to use the semantic name sem->name rather than the text
 // of the ast because the user might refer case insensitively to the variable FoO
 // and we need to emit the canonical name (e.g. foo, or Foo, or whatever it was).
-static void cg_lua_id(CqlState* CS, ast_node *expr, charbuf *value) {
+static void cg_lua_id(CqlState* _Nonnull CS, ast_node *expr, charbuf *value) {
   sem_t sem_type = expr->sem->sem_type;
   Invariant(is_variable(sem_type));
 
@@ -1470,7 +1470,7 @@ static void cg_lua_id(CqlState* CS, ast_node *expr, charbuf *value) {
 //     evaluate Y
 //     result = Y
 //   until true
-static void cg_lua_func_coalesce(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_coalesce(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1514,12 +1514,12 @@ static void cg_lua_func_coalesce(CqlState* CS, ast_node *call_ast, charbuf *valu
 }
 
 // Ifnull is an alias for coalesce, with only two args.
-static void cg_lua_func_ifnull(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_ifnull(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   cg_lua_func_coalesce(CS, call_ast, value);
 }
 
 // no-op function, we just force parents to not screw up the order of ops
-static void cg_lua_func_sensitive(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_sensitive(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1537,7 +1537,7 @@ static void cg_lua_func_sensitive(CqlState* CS, ast_node *call_ast, charbuf *val
 }
 
 // no-op function, we just force parents to not screw up the order of ops
-static void cg_lua_func_nullable(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_nullable(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1561,7 +1561,7 @@ typedef enum {
 } lua_attest_notnull_variant;
 
 // Generates code for all functions of the attest_notnull family.
-static void cg_lua_func_attest_notnull(CqlState* CS, ast_node *call_ast, charbuf *value, lua_attest_notnull_variant variant) {
+static void cg_lua_func_attest_notnull(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value, lua_attest_notnull_variant variant) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1604,11 +1604,11 @@ static void cg_lua_func_attest_notnull(CqlState* CS, ast_node *call_ast, charbuf
   CG_LUA_POP_EVAL(expr);
 }
 
-static void cg_lua_func_ifnull_throw(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_ifnull_throw(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   cg_lua_func_attest_notnull(CS, call_ast, value, LUA_ATTEST_NOTNULL_VARIANT_THROW);
 }
 
-static void cg_lua_func_ifnull_crash(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_ifnull_crash(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   cg_lua_func_attest_notnull(CS, call_ast, value, LUA_ATTEST_NOTNULL_VARIANT_CRASH);
 }
 
@@ -1618,13 +1618,13 @@ static void cg_lua_func_ifnull_crash(CqlState* CS, ast_node *call_ast, charbuf *
 // just changing the type directly, is that there are also representational
 // differences between values of nullable and nonnull types; some conversion is
 // required.
-static void cg_lua_func_cql_inferred_notnull(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_cql_inferred_notnull(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   cg_lua_func_attest_notnull(CS, call_ast, value, LUA_ATTEST_NOTNULL_VARIANT_INFERRED);
 }
 
 // This is a no-op for now, that is no compression.
 // i.e. lua codegen doesn't have compressed string forms yet so we just emit a normal literal
-static void cg_lua_func_cql_compressed(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_cql_compressed(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1637,18 +1637,18 @@ static void cg_lua_func_cql_compressed(CqlState* CS, ast_node *call_ast, charbuf
 }
 
 // There's a helper for this method, just call it.  Super easy.
-static void cg_lua_func_changes(CqlState* CS, ast_node *ast, charbuf *value) {
+static void cg_lua_func_changes(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
   bprintf(value, "cql_changes(_db_)");
 }
 
 // There's a helper for this method, just call it.  Super easy.
-static void cg_lua_func_last_insert_rowid(CqlState* CS, ast_node *ast, charbuf *value) {
+static void cg_lua_func_last_insert_rowid(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
   bprintf(value, "cql_last_insert_rowid(_db_)");
 }
 
 // Printf also has a helper, we just call it.  There are other helpers to emit
 // a call to an external (not stored proc) function.  Use that.
-static void cg_lua_func_printf(CqlState* CS, ast_node *call_ast, charbuf *value) {
+static void cg_lua_func_printf(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *value) {
   Contract(is_ast_call(call_ast));
   EXTRACT_NAME_AST(name_ast, call_ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1665,7 +1665,7 @@ static void cg_lua_func_printf(CqlState* CS, ast_node *call_ast, charbuf *value)
 
 // wrapper function for the builtin cql_get_blob_size
 // this is super simple in LUA because the nullable case is the same as the not nullable case
-static void cg_lua_func_cql_get_blob_size(CqlState* CS, ast_node *ast, charbuf *value) {
+static void cg_lua_func_cql_get_blob_size(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1684,7 +1684,7 @@ static void cg_lua_func_cql_get_blob_size(CqlState* CS, ast_node *ast, charbuf *
 // This is some kind of function call in an expression context.  Look up the method
 // and call one of the cg_lua_func_* workers above.  All arg combos are known to be good
 // because semantic analysis verified them already.
-static void cg_lua_expr_call(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_call(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
@@ -1702,7 +1702,7 @@ static void cg_lua_expr_call(CqlState* CS, ast_node *ast, CSTR op, charbuf *valu
 }
 
 // Numeric literal, spit it out.
-static void cg_lua_expr_num(CqlState* CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_num(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_num(expr));
   EXTRACT_NUM_TYPE(num_type, expr);
   EXTRACT_NUM_VALUE(lit, expr);
@@ -1718,7 +1718,7 @@ static void cg_lua_expr_num(CqlState* CS, ast_node *expr, CSTR op, charbuf *valu
 }
 
 // string nodes are simple in LUA as we can generate simple ids or string literals consistently
-static void cg_lua_expr_str(CqlState* CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_str(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // String could be an id, or a literal -- literals start with single quote.
   Contract(is_ast_str(expr));
   EXTRACT_STRING(str, expr);
@@ -1732,14 +1732,14 @@ static void cg_lua_expr_str(CqlState* CS, ast_node *expr, CSTR op, charbuf *valu
 }
 
 // the "dot" operator (e.g. C.x) is handled on the ID path
-static void cg_lua_expr_dot(CqlState* CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_dot(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   // X.Y has a net local name computed by semantic analysis.  Use it like any other id.
   Contract(is_ast_dot(expr));
   cg_lua_id(CS, expr, value);
 }
 
 // the null constant
-static void cg_lua_expr_null(CqlState* CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_null(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(expr));
   // null literal
   bprintf(value, "nil");
@@ -1748,7 +1748,7 @@ static void cg_lua_expr_null(CqlState* CS, ast_node *expr, CSTR op, charbuf *val
 // This is the main entry point for codegen of an expression.  It dispatches
 // to one of the above workers for all the complex types and handles a few primitives
 // in place.
-static void cg_lua_expr(CqlState* CS, ast_node *expr, charbuf *value, int32_t pri) {
+static void cg_lua_expr(CqlState* _Nonnull CS, ast_node *expr, charbuf *value, int32_t pri) {
   Contract(value);
   Contract(value->used == 1);  // just the null (i.e. empty buffer)
 
@@ -1767,7 +1767,7 @@ static void cg_lua_expr(CqlState* CS, ast_node *expr, charbuf *value, int32_t pr
 //    which is of exactly the right type
 //  * use that variable as the result.
 // The helper methods take care of sqlite error management.
-static void cg_lua_expr_select(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_select_stmt(ast));
 
   // SELECT [select_opts] [select_expr_list_con]
@@ -1802,7 +1802,7 @@ static void cg_lua_expr_select(CqlState* CS, ast_node *ast, CSTR op, charbuf *va
 // select if nothing is exactly the same codegen as regular select
 // the throwing which is done by default was make explcit.  The normal
 // codegen already does the "throw" (i.e. goto the current error target).
-static void cg_lua_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_expr, ast->left);
   cg_lua_expr_select(CS, select_expr, op, value, pri, pri_new);
@@ -1815,7 +1815,7 @@ static void cg_lua_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CST
 // overall expression to be not null.  So here we have to fetch just the
 // select statement part into its own result variable of the exact correct type
 // later we will safely assign that result to the final type if it held a value
-static int32_t cg_lua_expr_select_frag(CqlState* CS, ast_node *ast, charbuf *value) {
+static int32_t cg_lua_expr_select_frag(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
   sem_t sem_type_result = ast->sem->sem_type;
 
   CG_LUA_SETUP_RESULT_VAR(ast, sem_type_result);
@@ -1848,7 +1848,7 @@ static int32_t cg_lua_expr_select_frag(CqlState* CS, ast_node *ast, charbuf *val
 //  * use that variable as the result.
 //  * if there is no row, we use the default expression
 // The helper methods takes care of sqlite error management.
-static void cg_lua_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_expr(ast));
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
@@ -1911,7 +1911,7 @@ static void cg_lua_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op, 
 //  * use that variable as the result.
 //  * if there is no row, or the returned value is null we use the default expression
 // The helper methods take care of sqlite error management.
-static void cg_lua_expr_select_if_nothing_or_null(CqlState* CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
+static void cg_lua_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_or_null_expr(ast));
 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
@@ -1979,7 +1979,7 @@ static void cg_lua_expr_select_if_nothing_or_null(CqlState* CS, ast_node *ast, C
 // truthy
 // if false then print("truthy") end;
 //
-static void cg_lua_cond_action(CqlState* CS, ast_node *ast) {
+static void cg_lua_cond_action(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -2003,7 +2003,7 @@ static void cg_lua_cond_action(CqlState* CS, ast_node *ast) {
 
 // Recursively emits the else-if chain.  These have to nest to allow for
 // expressions to generate statements.
-static void cg_lua_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsenode) {
+static void cg_lua_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_node *elsenode) {
   if (ast) {
     Contract(is_ast_elseif(ast));
     EXTRACT(cond_action, ast->left);
@@ -2030,7 +2030,7 @@ static void cg_lua_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsenode) 
 // We could optimize this more by looking to see if
 // the expression could possibly have side effects
 // and not emitting it if it is side-effect free.
-static void cg_lua_expr_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_expr_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_expr_stmt(ast));
 
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -2062,7 +2062,7 @@ static void cg_lua_expr_stmt(CqlState* CS, ast_node *ast) {
 //      statements
 //     end
 //   end
-static void cg_lua_if_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_if_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
 
   EXTRACT_NOTNULL(cond_action, ast->left);
@@ -2081,7 +2081,7 @@ static void cg_lua_if_stmt(CqlState* CS, ast_node *ast) {
 // This code uses the same cg_lua_store helper method to do an assignment as
 // is used all over the place for assigning to scratch variables.  All
 // we have to do here is pull the name and types out of the ast.
-static void cg_lua_assign(CqlState* CS, ast_node *ast) {
+static void cg_lua_assign(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_assign(ast) || is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -2102,7 +2102,7 @@ static void cg_lua_assign(CqlState* CS, ast_node *ast) {
 
 // In the LET statement, we declare the variable based on type, emit that
 // then do the usual SET codegen.
-static void cg_lua_let_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_let_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_let_stmt(ast) || is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -2113,13 +2113,13 @@ static void cg_lua_let_stmt(CqlState* CS, ast_node *ast) {
 
 // In the CONST statement, emit the same codegen as LET statement.
 // Immutability enforcement is done during semantic analysis.
-static void cg_lua_const_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_const_stmt(ast));
   cg_lua_let_stmt(CS, ast);
 }
 
 // Walk all the params of a stored proc and emit each one with a comma where needed.
-static void cg_lua_params(CqlState* CS, ast_node *ast, charbuf *decls, charbuf *returns) {
+static void cg_lua_params(CqlState* _Nonnull CS, ast_node *ast, charbuf *decls, charbuf *returns) {
   Contract(is_ast_params(ast));
 
   while (ast) {
@@ -2148,7 +2148,7 @@ static void cg_lua_params(CqlState* CS, ast_node *ast, charbuf *decls, charbuf *
 // Emit any initialization code needed for the parameters
 // in particular out parameters assume that there is garbage
 // in the out location, so they hammer a NULL or 0 into that slot.
-static void cg_lua_param_init(CqlState* CS, ast_node *ast, charbuf *body) {
+static void cg_lua_param_init(CqlState* _Nonnull CS, ast_node *ast, charbuf *body) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_NAME_AST(name_ast, param_detail->left)
@@ -2168,7 +2168,7 @@ static void cg_lua_param_init(CqlState* CS, ast_node *ast, charbuf *body) {
 
 // Walk all the params of a stored proc, if any of them require initialization code
 // in the body, emit that here.
-static void cg_lua_params_init(CqlState* CS, ast_node *ast, charbuf *body) {
+static void cg_lua_params_init(CqlState* _Nonnull CS, ast_node *ast, charbuf *body) {
   Contract(is_ast_params(ast));
 
   while (ast) {
@@ -2183,7 +2183,7 @@ static void cg_lua_params_init(CqlState* CS, ast_node *ast, charbuf *body) {
 
 // Emit the return code variables for the procedure
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
-static void cg_lua_emit_rc_vars(CqlState* CS, charbuf *output) {
+static void cg_lua_emit_rc_vars(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output, "  local _rc_ = CQL_OK\n");
 }
 
@@ -2192,7 +2192,7 @@ static void cg_lua_emit_rc_vars(CqlState* CS, charbuf *output) {
 // * out args are not really args, they are return values so nothing to check
 // * inout args are in as an arg and out as as a return value, so check if not null
 //
-static void cg_lua_emit_contracts(CqlState* CS, ast_node *ast, charbuf *b) {
+static void cg_lua_emit_contracts(CqlState* _Nonnull CS, ast_node *ast, charbuf *b) {
   Contract(is_ast_params(ast));
   Contract(b);
 
@@ -2226,7 +2226,7 @@ static void cg_lua_emit_contracts(CqlState* CS, ast_node *ast, charbuf *b) {
 }
 
 // emit the fetch results function defintion (not the body) into the indicated buffer
-static void cg_lua_emit_fetch_results_prototype(CqlState* CS,
+static void cg_lua_emit_fetch_results_prototype(CqlState* _Nonnull CS,
   bool_t dml_proc,
   ast_node *params,
   CSTR proc_name,
@@ -2257,7 +2257,7 @@ static void cg_lua_emit_fetch_results_prototype(CqlState* CS,
 // is a naked prototype, so additional arguments could be added -- it will be
 // missing the trailing ")" and it will not have EXPORT or anything like that
 // on it.
-static void cg_lua_emit_proc_prototype(CqlState* CS, ast_node *ast, charbuf *proc_decl) {
+static void cg_lua_emit_proc_prototype(CqlState* _Nonnull CS, ast_node *ast, charbuf *proc_decl) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
@@ -2325,7 +2325,7 @@ static void cg_lua_emit_proc_prototype(CqlState* CS, ast_node *ast, charbuf *pro
 //  * procedures that return a result set will get a statement result value
 //    * and the additional procedures for creating the result set and accessing it are emitted
 //  * cursor OUT forms get rows output or a single row output
-static void cg_lua_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -2556,14 +2556,14 @@ static void cg_lua_create_proc_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_lua.prepared_statement_index = lua_prepared_statement_index_saved;
 }
 
-static void cg_lua_declare_simple_var(CqlState* CS, sem_t sem_type, CSTR name) {
+static void cg_lua_declare_simple_var(CqlState* _Nonnull CS, sem_t sem_type, CSTR name) {
   cg_lua_var_decl(CS, CS->cg_declarations_output, sem_type, name);
 }
 
 // Emit a bunch of variable declarations for normal variables.
 // cg_lua_var_decl does exactly this job for us.  Add any global variables to
 // the header file output.
-static void cg_lua_declare_vars_type(CqlState* CS, ast_node *declare_vars_type) {
+static void cg_lua_declare_vars_type(CqlState* _Nonnull CS, ast_node *declare_vars_type) {
   Contract(is_ast_declare_vars_type(declare_vars_type));
   EXTRACT_NOTNULL(name_list, declare_vars_type->left);
 
@@ -2581,7 +2581,7 @@ static void cg_lua_declare_vars_type(CqlState* CS, ast_node *declare_vars_type) 
 // it will call us every time it finds a variable that needs to be bound.  That
 // variable is replaced by ? in the SQL output.  We end up with a list of variables
 // to bind on a silver platter (but in reverse order).
-static bool_t cg_lua_capture_variables(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_lua_capture_variables(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   // all variables have a name
   Contract(ast->sem->name);
 
@@ -2617,7 +2617,7 @@ static bool_t cg_lua_capture_variables(CqlState* CS, ast_node *ast, void *contex
 // If this is one of the tables that is supposed to be an "argument" then
 // we will remove the stub definition of the CTE.  References to this name
 // will be changed to required table in another callback
-static bool_t cg_lua_suppress_cte(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_lua_suppress_cte(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
   EXTRACT_STRING(name, cte_decl->left);
@@ -2633,7 +2633,7 @@ static bool_t cg_lua_suppress_cte(CqlState* CS, ast_node *ast, void *context, ch
 // we will emit the desired value instead of the stub name.   Note that
 // this is always the name of a CTE and CTE of the old name was suppressed
 // using the callback above cg_lua_suppress_cte
-static bool_t cg_lua_table_rename(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t cg_lua_table_rename(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   // this is a simple table factor, so an actual name...
   EXTRACT_STRING(name, ast);
   bool_t handled = false;
@@ -2652,7 +2652,7 @@ static bool_t cg_lua_table_rename(CqlState* CS, ast_node *ast, void *context, ch
 
 // This helper method fetches a single column from a select statement.  The result
 // is to be stored in the local variable "var"
-static void cg_lua_get_column(CqlState* CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
+static void cg_lua_get_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
   if (core_type_of(sem_type) == SEM_TYPE_BOOL) {
     bprintf(output, "  %s = cql_to_bool(cql_get_value(%s, %d))\n", var, cursor, index);
   } else {
@@ -2662,7 +2662,7 @@ static void cg_lua_get_column(CqlState* CS, sem_t sem_type, CSTR cursor, int32_t
 
 // Emit a declaration for the temporary statement _temp_stmt_ if we haven't
 // already done so.  Also emit the cleanup once.
-static void lua_ensure_temp_statement(CqlState* CS, int32_t stmt_index) {
+static void lua_ensure_temp_statement(CqlState* _Nonnull CS, int32_t stmt_index) {
   if (CS->cg_lua.temp_statement_emitted && stmt_index == 0) {
     return;
   }
@@ -2682,14 +2682,14 @@ static void lua_ensure_temp_statement(CqlState* CS, int32_t stmt_index) {
 }
 
 // This tells us how many fragments we emitted using some size math
-static uint32_t cg_lua_fragment_count(CqlState* CS) {
+static uint32_t cg_lua_fragment_count(CqlState* _Nonnull CS) {
   return (uint32_t)(CS->cg_lua.shared_fragment_strings.used / sizeof(CSTR));
 }
 
 // when we complete a chunk of fragment text we have to emit the predicates
 // for the variables that were in that chunk.  We do this in the same
 // context as the conditional for that string.
-static void cg_lua_flush_variable_predicates(CqlState* CS) {
+static void cg_lua_flush_variable_predicates(CqlState* _Nonnull CS) {
   if (!CS->cg_lua.has_conditional_fragments) {
     return;
   }
@@ -2722,7 +2722,7 @@ static void cg_lua_flush_variable_predicates(CqlState* CS) {
 // which nests.  Whatever the current predicate is we use that
 // and make an entry in the array.  So that way there is always
 // one computed predicate for each chunk of text we plan to emit.
-static void cg_lua_fragment_copy_pred(CqlState* CS) {
+static void cg_lua_fragment_copy_pred(CqlState* _Nonnull CS) {
   if (!CS->cg_lua.has_conditional_fragments) {
     return;
   }
@@ -2752,7 +2752,7 @@ static void cg_lua_fragment_copy_pred(CqlState* CS) {
 
 // First we make sure we have a predicate row and then we emit the line
 // assuming there is anything to emit...
-static void cg_lua_emit_one_frag(CqlState* CS, charbuf *buffer) {
+static void cg_lua_emit_one_frag(CqlState* _Nonnull CS, charbuf *buffer) {
   // TODO: can we make this an invariant?
   if (buffer->used > 1) {
     cg_lua_fragment_copy_pred(CS);
@@ -2763,7 +2763,7 @@ static void cg_lua_emit_one_frag(CqlState* CS, charbuf *buffer) {
 }
 
 // Emit a fragment from a statement, note that this can nest
-static void cg_lua_fragment_stmt(CqlState* CS, ast_node *stmt, charbuf *buffer) {
+static void cg_lua_fragment_stmt(CqlState* _Nonnull CS, ast_node *stmt, charbuf *buffer) {
   gen_one_stmt(CS, stmt);
   cg_lua_emit_one_frag(CS, buffer);
   cg_lua_flush_variable_predicates(CS);
@@ -2772,7 +2772,7 @@ static void cg_lua_fragment_stmt(CqlState* CS, ast_node *stmt, charbuf *buffer) 
 // a new block in a conditional, this is the "it's true" case for it
 // assign it a number and move on.  Note the code is always inside of
 // if (the_expression_was_true) {...}
-static void cg_lua_fragment_setpred(CqlState* CS) {
+static void cg_lua_fragment_setpred(CqlState* _Nonnull CS) {
   CS->cg_lua.cur_fragment_predicate = CS->cg_lua.max_fragment_predicate;
   if (CS->cg_lua.has_conditional_fragments) {
     bprintf(CS->cg_main_output, "_preds_%d[%d] = true\n",
@@ -2783,7 +2783,7 @@ static void cg_lua_fragment_setpred(CqlState* CS) {
 
 // Emit the if condition for the conditional fragment and then generate the
 // predicate setting as well as the SQL for that part of the fragment.
-static void cg_lua_fragment_cond_action(CqlState* CS, ast_node *ast, charbuf *buffer) {
+static void cg_lua_fragment_cond_action(CqlState* _Nonnull CS, ast_node *ast, charbuf *buffer) {
   Contract(is_ast_cond_action(ast));
   EXTRACT_NOTNULL(stmt_list, ast->right);
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -2813,7 +2813,7 @@ static void cg_lua_fragment_cond_action(CqlState* CS, ast_node *ast, charbuf *bu
 // to the end we deal with the elsenode.  We can't do the else node in the caller
 // because we need to emit it inside the deepest matching parens.  So we just
 // push the elsenode down the recursion until its needed.
-static void cg_lua_fragment_elseif_list(CqlState* CS, ast_node *ast, ast_node *elsenode, charbuf *buffer) {
+static void cg_lua_fragment_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_node *elsenode, charbuf *buffer) {
   if (ast) {
     Contract(is_ast_elseif(ast));
     EXTRACT(cond_action, ast->left);
@@ -2863,7 +2863,7 @@ static void cg_lua_fragment_elseif_list(CqlState* CS, ast_node *ast, ast_node *e
 // we can use the from clause for our own purposes (local binding).  The is very
 // helpful if the fragment happens often or if the argument would otherwise have
 // to be evaluated many times.  But it comes at the cost of a one-row query.
-static bool_t cg_lua_inline_func(CqlState* CS, ast_node *call_ast, void *context, charbuf *buffer) {
+static bool_t cg_lua_inline_func(CqlState* _Nonnull CS, ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
@@ -2960,7 +2960,7 @@ static bool_t cg_lua_inline_func(CqlState* CS, ast_node *call_ast, void *context
 //    tables in the target procedure to be the values that were provided
 //  * any such args/aliases have been pre-validated during semantic analysis
 //  * code gen is designed to keep as many string literals identical as possible so that they can be folded
-static bool_t cg_lua_call_in_cte(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t cg_lua_call_in_cte(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT(cte_binding_list, cte_body->right);
 
@@ -3134,7 +3134,7 @@ static bool_t cg_lua_call_in_cte(CqlState* CS, ast_node *cte_body, void *context
 // this check but we do have to recurse the search as the normal walk doesn't
 // go into the body of shared fragments and the conditionals might be deeper
 // in the tree.
-static bool_t cg_lua_search_conditionals_call_in_cte(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t cg_lua_search_conditionals_call_in_cte(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   EXTRACT_NOTNULL(call_stmt, cte_body->left);
   EXTRACT_STRING(name, call_stmt->left);
 
@@ -3157,7 +3157,7 @@ static bool_t cg_lua_search_conditionals_call_in_cte(CqlState* CS, ast_node *cte
 }
 
 // We simply record that we found some variables, any variables
-static bool_t cg_lua_note_variable_exists(CqlState* CS, ast_node *cte_body, void *context, charbuf *buffer) {
+static bool_t cg_lua_note_variable_exists(CqlState* _Nonnull CS, ast_node *cte_body, void *context, charbuf *buffer) {
   CS->cg_lua.has_variables = true;
   return false;
 }
@@ -3167,7 +3167,7 @@ static bool_t cg_lua_note_variable_exists(CqlState* CS, ast_node *cte_body, void
 // Note that even though it has no FROM clause the inline function could have
 // a nested select inside of its select list and therefore all fragment types
 // can appear inside of an inline function fragment.
-static bool_t cg_lua_note_inline_func(CqlState* CS, ast_node *call_ast, void *context, charbuf *buffer) {
+static bool_t cg_lua_note_inline_func(CqlState* _Nonnull CS, ast_node *call_ast, void *context, charbuf *buffer) {
   Contract(is_ast_call(call_ast));
   EXTRACT_STRING(proc_name, call_ast->left);
   EXTRACT_NOTNULL(call_arg_list, call_ast->right);
@@ -3197,7 +3197,7 @@ static bool_t cg_lua_note_inline_func(CqlState* CS, ast_node *call_ast, void *co
 // we are going to note what kinds of things we spotted while doing
 // the walk.  We need to know in advance what style of codegen we'll
 // be doing.
-static void cg_lua_classify_fragments(CqlState* CS, ast_node *stmt) {
+static void cg_lua_classify_fragments(CqlState* _Nonnull CS, ast_node *stmt) {
   CS->cg_lua.has_shared_fragments = false;
   CS->cg_lua.has_conditional_fragments = false;
   CS->cg_lua.has_variables = false;
@@ -3225,7 +3225,7 @@ static void cg_lua_classify_fragments(CqlState* CS, ast_node *stmt) {
 //   * if CG_EXEC and no variables we can use the simpler sqlite3_exec form
 //   * bind any variables
 //   * if there are variables CG_EXEC will step and finalize
-static int32_t cg_lua_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node *stmt, int32_t cg_lua_flags) {
+static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name, ast_node *stmt, int32_t cg_lua_flags) {
   list_item *vars = NULL;
 
   CS->cg_lua.cur_bound_statement++;
@@ -3409,7 +3409,7 @@ static int32_t cg_lua_bound_sql_statement(CqlState* CS, CSTR stmt_name, ast_node
   return stmt_index;
 }
 
-static void cg_lua_emit_field_names(CqlState* CS, charbuf *output, sem_struct *sptr) {
+static void cg_lua_emit_field_names(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr) {
   Contract(sptr);
 
   bprintf(output, "{ ");
@@ -3480,7 +3480,7 @@ static void cg_lua_emit_field_types(charbuf *output, sem_struct *sptr) {
 // that includes storage for all the fields it can fetch.  In LUA all
 // cursors have storage.  When you do FETCH INTO first the cursor is loaded
 // and then the variables are assigned, so there is only the one path.
-static void cg_lua_declare_auto_cursor(CqlState* CS, CSTR cursor_name, sem_struct *sptr) {
+static void cg_lua_declare_auto_cursor(CqlState* _Nonnull CS, CSTR cursor_name, sem_struct *sptr) {
   Contract(cursor_name);
   Contract(sptr);
 
@@ -3506,7 +3506,7 @@ static void cg_lua_declare_auto_cursor(CqlState* CS, CSTR cursor_name, sem_struc
 //    * store the resulting statement for use later in fetch
 //  * declare a hidden has_row local for the cursor so that the cursor name
 //    can be used in expressions to see if a row was fetched.
-static void cg_lua_declare_cursor(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
@@ -3631,7 +3631,7 @@ static void cg_lua_declare_cursor(CqlState* CS, ast_node *ast) {
 // Note since the cursor is boxed its lifetime is already controlled by an object associated
 // with the cursor.  This happens as soon as the cursor is created, however it is created.
 // The codegen system knows that the cursor may be boxed at some point using the SEM_TYPE_BOXED flag
-static void cg_lua_set_from_cursor(CqlState* CS, ast_node *ast) {
+static void cg_lua_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_ANY_NOTNULL(variable, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
@@ -3642,14 +3642,14 @@ static void cg_lua_set_from_cursor(CqlState* CS, ast_node *ast) {
   bprintf(CS->cg_main_output, "%s = %s_stmt\n", var_name, cursor_name);
 }
 
-static void cg_lua_declare_cursor_like(CqlState* CS, ast_node *name_ast) {
+static void cg_lua_declare_cursor_like(CqlState* _Nonnull CS, ast_node *name_ast) {
   EXTRACT_STRING(cursor_name, name_ast);
 
   Contract(name_ast->sem->sem_type & SEM_TYPE_HAS_SHAPE_STORAGE);
   cg_lua_declare_auto_cursor(CS, cursor_name, name_ast->sem->sptr);
 }
 
-static void cg_lua_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_cursor_like_name(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   Contract(ast->right);
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -3657,7 +3657,7 @@ static void cg_lua_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
   cg_lua_declare_cursor_like(CS, name_ast);
 }
 
-static void cg_lua_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_cursor_like_select(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
   Contract(is_select_stmt(ast->right));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -3665,7 +3665,7 @@ static void cg_lua_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
   cg_lua_declare_cursor_like(CS, name_ast);
 }
 
-static void cg_lua_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_cursor_like_typed_names(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
   Contract(is_ast_typed_names(ast->right));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -3675,7 +3675,7 @@ static void cg_lua_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) 
 
 // The value cursor form for sure will be fetched.   We emit the necessary locals
 // for the cursor here.
-static void cg_lua_declare_value_cursor(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_value_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(cursor_name, name_ast);
@@ -3688,7 +3688,7 @@ static void cg_lua_declare_value_cursor(CqlState* CS, ast_node *ast) {
 
 // Fetch values has been checked for the presence of all columns and seed values
 // have already been added if needed.
-static void cg_lua_fetch_values_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
   EXTRACT(insert_dummy_spec, ast->left);
@@ -3727,7 +3727,7 @@ static void cg_lua_fetch_values_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // native blob storage support, these are just cursor calls
-static void cg_lua_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_fetch_cursor_from_blob_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   CSTR cursor_name = ast->left->sem->name;
 
@@ -3744,7 +3744,7 @@ static void cg_lua_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // native blob storage support, these are just cursor calls
-static void cg_lua_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_set_blob_from_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_blob_from_cursor_stmt(ast));
 
   CSTR blob_name  = ast->left->sem->name;
@@ -3764,7 +3764,7 @@ static void cg_lua_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
 //    * loop over the field names of the sem_struct that corresponds to the cursor
 //    * set each local according to the automatically generated name as above
 // Note: cg_lua_get_column does the error processing
-static void cg_lua_fetch_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
   EXTRACT(name_list, ast->right);
@@ -3820,7 +3820,7 @@ static void cg_lua_fetch_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void cg_lua_fetch_call_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_fetch_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   EXTRACT_STRING(cursor_name, ast->left);
   EXTRACT_ANY_NOTNULL(call_stmt, ast->right);
@@ -3835,7 +3835,7 @@ static void cg_lua_fetch_call_stmt(CqlState* CS, ast_node *ast) {
 // before using OUT or OUT UNION or INSERT ... FROM CURSOR.  You want to do this
 // without having to restate all the columns, which besides being verbose makes it hard
 // for people to see what things you are changing and what you are not.
-static void cg_lua_update_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
@@ -3873,7 +3873,7 @@ static void cg_lua_update_cursor_stmt(CqlState* CS, ast_node *ast) {
 //  * the correct indent level is already set up
 //  * we know evaluation will work because the semantic pass already checked it
 //  * formatting numbers never fails, we use LUA number format
-static void cg_lua_switch_expr_list(CqlState* CS, ast_node *ast, sem_t sem_type_switch_expr, CSTR val) {
+static void cg_lua_switch_expr_list(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type_switch_expr, CSTR val) {
   Contract(is_ast_expr_list(ast));
 
   bprintf(CS->cg_main_output, "if ");
@@ -3907,7 +3907,7 @@ static void cg_lua_switch_expr_list(CqlState* CS, ast_node *ast, sem_t sem_type_
 // statement so we just generate a series of IF statements and an ELSE case.
 // We put all that into a repeat .. until true loop so that we can use "break"
 // to get out of the loop.
-static void cg_lua_switch_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
   EXTRACT_NOTNULL(switch_body, ast->right);
   EXTRACT_ANY_NOTNULL(expr, switch_body->left);
@@ -3994,7 +3994,7 @@ static void cg_lua_switch_stmt(CqlState* CS, ast_node *ast) {
 // Note that while can have leave and continue substatements which have to map
 // to break and goto ::continue::.   That means other top level statements that aren't loops
 // must not create a C loop construct or break/continue would have the wrong target.
-static void cg_lua_while_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -4047,7 +4047,7 @@ static void cg_lua_while_stmt(CqlState* CS, ast_node *ast) {
 //   end
 // It has to be this because the fetch might require many statements.
 // There are helpers for all of this so it's super simple.
-static void cg_lua_loop_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_loop_stmt(ast));
   EXTRACT_NOTNULL(fetch_stmt, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -4090,7 +4090,7 @@ static void cg_lua_loop_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Only SQL loops are allowed to use C loops, so "continue" is perfect
-static void cg_lua_continue_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_continue_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
   // CONTINUE
@@ -4099,7 +4099,7 @@ static void cg_lua_continue_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // Only SQL loops are allowed to use C loops, so "break" is perfect
-static void cg_lua_leave_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_leave_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   // LEAVE
@@ -4107,7 +4107,7 @@ static void cg_lua_leave_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // We go to the main cleanup label and exit the current procedure
-static void cg_lua_return_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_return_stmt(ast) || is_ast_rollback_return_stmt(ast) || is_ast_commit_return_stmt(ast));
 
   // RETURN
@@ -4123,7 +4123,7 @@ static void cg_lua_return_stmt(CqlState* CS, ast_node *ast) {
 // Note that to rollback a savepoint you have to do the rollback AND the release
 // and then you're unwound to the savepoint state.  The transaction in flight is
 // still in flight if there is one.
-static void cg_lua_rollback_return_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_rollback_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -4140,7 +4140,7 @@ static void cg_lua_rollback_return_stmt(CqlState* CS, ast_node *ast) {
 // Note savepoint semantics are just "release" is sort of like commit
 // in that it doesn't rollback and becomes part of the current transaction
 // which may or may not commit but that's what we mean by commit.
-static void cg_lua_commit_return_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_commit_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -4154,7 +4154,7 @@ static void cg_lua_commit_return_stmt(CqlState* CS, ast_node *ast) {
 // Finalize the statement object associated with the cursor.
 // Note this sets the cursor to null, so you can do it again.  Cleanup
 // might also do this. That's fine.
-static void cg_lua_close_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_close_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor_ast, ast->left);
   EXTRACT_STRING(name, cursor_ast);
@@ -4176,7 +4176,7 @@ static void cg_lua_close_stmt(CqlState* CS, ast_node *ast) {
 // from the cursor you return.  All OUT statements in any given proc must
 // agree on the exact type (this has already been verified).  At this point
 // all we have to do is copy the fields.
-static void cg_lua_out_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_out_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
 
   // get the canonical name of the cursor (the name in the tree might be case-sensitively different)
@@ -4187,7 +4187,7 @@ static void cg_lua_out_stmt(CqlState* CS, ast_node *ast) {
   bprintf(CS->cg_main_output, "_result_ = cql_clone_row(%s)\n", cursor_name);
 }
 
-static void cg_lua_out_union_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_stmt(ast));
 
   // get the canonical name of the cursor (the name in the tree might be case-sensitively different)
@@ -4201,7 +4201,7 @@ static void cg_lua_out_union_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // emit the string literal into the otuput if the current runtime matches
-static void cg_lua_echo_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_echo_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(rt_name, ast->left);
   EXTRACT_STRING(str, ast->right);
@@ -4219,7 +4219,7 @@ static void cg_lua_echo_stmt(CqlState* CS, ast_node *ast) {
 
 // This is the helper method to dispatch a call to an external function like "printf"
 // given a name in the AST.  This is for when the user coded the call.
-static void cg_lua_call_external(CqlState* CS, ast_node *ast) {
+static void cg_lua_call_external(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -4234,7 +4234,7 @@ static void cg_lua_call_external(CqlState* CS, ast_node *ast) {
 // a sqlite helper method with user provided args.  All we do here is emit
 // the  name and then use the arg list helper.
 // The arg list helper gives us prep/invocation/cleanup buffers which we must emit.
-static void cg_lua_call_named_external(CqlState* CS, CSTR name, ast_node *arg_list) {
+static void cg_lua_call_named_external(CqlState* _Nonnull CS, CSTR name, ast_node *arg_list) {
   CHARBUF_OPEN(invocation);
 
   // Note this function is called in an expression context such as
@@ -4260,7 +4260,7 @@ static void cg_lua_call_named_external(CqlState* CS, CSTR name, ast_node *arg_li
 //   * emit a standard call for the lot
 //   * there are no out args, so any reference to an out arg means the local copy
 //   * there is no return value (that's what native functions are for)
-static void cg_lua_emit_external_arglist(CqlState* CS, ast_node *arg_list, charbuf *invocation) {
+static void cg_lua_emit_external_arglist(CqlState* _Nonnull CS, ast_node *arg_list, charbuf *invocation) {
   for (ast_node *item = arg_list; item; item = item->right) {
     EXTRACT_ANY(arg, item->left);
 
@@ -4282,7 +4282,7 @@ static void cg_lua_emit_external_arglist(CqlState* CS, ast_node *arg_list, charb
 //    then we box the argument into a temporary not nullable and pass that through
 //  * finally, both the paramater and the argument was not nullable then we have to recover
 //    the variable name from the evaluated value.
-static void cg_lua_emit_one_arg(CqlState* CS, ast_node *arg, sem_t sem_type_param, sem_t sem_type_arg, charbuf *invocation, charbuf *returns) {
+static void cg_lua_emit_one_arg(CqlState* _Nonnull CS, ast_node *arg, sem_t sem_type_param, sem_t sem_type_arg, charbuf *invocation, charbuf *returns) {
   CG_LUA_PUSH_EVAL(arg, LUA_EXPR_PRI_ROOT);
 
   if (is_out_parameter(sem_type_param)) {
@@ -4321,7 +4321,7 @@ static void cg_lua_emit_one_arg(CqlState* CS, ast_node *arg, sem_t sem_type_para
 // we do the usual argument conversions using cg_lua_emit_one_arg just like when calling procedures
 // however we capture the return type in a temporary variable created exactly for this purpose.
 // This code is also used in the proc as func path hence the dml stuff
-static void cg_lua_user_func(CqlState* CS, ast_node *ast, charbuf *value) {
+static void cg_lua_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -4411,7 +4411,7 @@ static void cg_lua_user_func(CqlState* CS, ast_node *ast, charbuf *value) {
 }
 
 // Forward the call processing to the general helper (with cursor arg)
-static void cg_lua_call_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // If the call has a result set it is stored in our result parameter
   // just like a loose select statement would be.  Note this can be
   // overridden by a later result which is totally ok.  Same as for select
@@ -4420,7 +4420,7 @@ static void cg_lua_call_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // emit the declarations for anything implicitly declared then do a normal call
-static void cg_lua_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_out_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_out_call_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
   EXTRACT(arg_list, call_stmt->right);
@@ -4440,7 +4440,7 @@ static void cg_lua_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
 // This helper method walks all the args and all the formal paramaters at the same time
 // it gets the appropriate type info for each and then generates the expression
 // for the evaluation of that argument.
-static void cg_lua_emit_proc_params(CqlState* CS, charbuf *output, charbuf *results, ast_node *params, ast_node *args) {
+static void cg_lua_emit_proc_params(CqlState* _Nonnull CS, charbuf *output, charbuf *results, ast_node *params, ast_node *args) {
   for (ast_node *item = args; item; item = item->right, params = params->right) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
     sem_t sem_type_arg = arg->sem->sem_type;
@@ -4505,7 +4505,7 @@ static void cg_lua_emit_proc_params(CqlState* CS, charbuf *output, charbuf *resu
 //
 // In call cases we can use the arg helper method to emit each arg.  There are
 // several rules for each kind of arg, described above in cg_lua_emit_one_arg.
-static void cg_lua_call_stmt_with_cursor(CqlState* CS, ast_node *ast, CSTR cursor_name) {
+static void cg_lua_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, CSTR cursor_name) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -4624,35 +4624,35 @@ static void cg_lua_call_stmt_with_cursor(CqlState* CS, ast_node *ast, CSTR curso
 // We don't minify the aliases because DDL can have views and the view column names
 // can be referred to in users of the view.  Loose select statements can have
 // no external references to column aliases.
-static void cg_lua_any_ddl_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_any_ddl_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   cg_lua_bound_sql_statement(CS, NULL, ast, CG_EXEC|CG_NO_MINIFY_ALIASES);
 }
 
 // Straight up DML invocation.  The ast has the statement, execute it!
-static void cg_lua_std_dml_exec_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_std_dml_exec_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   cg_lua_bound_sql_statement(CS, NULL, ast, CG_EXEC|CG_MINIFY_ALIASES);
 }
 
 // DML with PREPARE.  The ast has the statement.
 // Note: _result_ is the output variable for the sqlite3_stmt we generate
 //       this was previously added when the stored proc params were generated.
-static void cg_lua_select_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_select_stmt(ast));
   cg_lua_bound_sql_statement(CS, "_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
 // DML with PREPARE.  The ast has the statement.
-static void cg_lua_with_select_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_with_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_select_stmt(ast));
   cg_lua_select_stmt(CS, ast);
 }
 
-static void cg_lua_explain_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_explain_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
   cg_lua_bound_sql_statement(CS, "_result", ast, CG_PREPARE|CG_MINIFY_ALIASES);
 }
 
-static void cg_lua_insert_dummy_spec(CqlState* CS, ast_node *ast) {
+static void cg_lua_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->left); // the seed expr
 
   CSTR name = "_seed_";
@@ -4670,7 +4670,7 @@ static void cg_lua_insert_dummy_spec(CqlState* CS, ast_node *ast) {
   CG_LUA_POP_EVAL(expr);
 }
 
-static void cg_lua_opt_seed_process(CqlState* CS, ast_node *ast) {
+static void cg_lua_opt_seed_process(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_ANY(insert_dummy_spec, insert_type->left);
@@ -4681,7 +4681,7 @@ static void cg_lua_opt_seed_process(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_lua_insert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
 
   cg_lua_opt_seed_process(CS, ast);
@@ -4689,7 +4689,7 @@ static void cg_lua_insert_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_lua_with_insert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_with_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_insert_stmt(ast));
   EXTRACT_NOTNULL(insert_stmt, ast->right);
   cg_lua_opt_seed_process(CS, insert_stmt);
@@ -4697,7 +4697,7 @@ static void cg_lua_with_insert_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_lua_with_upsert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_with_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_upsert_stmt(ast));
   EXTRACT_NOTNULL(upsert_stmt, ast->right);
   EXTRACT_NOTNULL(insert_stmt, upsert_stmt->left);
@@ -4706,7 +4706,7 @@ static void cg_lua_with_upsert_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // DML invocation but first set the seed variable if present
-static void cg_lua_upsert_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_upsert_stmt(ast));
   EXTRACT_NOTNULL(insert_stmt, ast->left);
 
@@ -4719,7 +4719,7 @@ static void cg_lua_upsert_stmt(CqlState* CS, ast_node *ast) {
 // "goto" the current error target.  That target is usually CQL_CLEANUP_DEFAULT_LABEL.
 // Inside the try block, the cleanup handler is changed to the catch block.
 // The catch block puts it back.  Otherwise, generate nested statements as usual.
-static void cg_lua_trycatch_helper(CqlState* CS, ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
+static void cg_lua_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, ast_node *try_extras, ast_node *catch_list) {
   CHARBUF_OPEN(catch_start);
   CHARBUF_OPEN(catch_end);
 
@@ -4794,7 +4794,7 @@ static void cg_lua_trycatch_helper(CqlState* CS, ast_node *try_list, ast_node *t
 }
 
 // the helper does all the work, see those notes
-static void cg_lua_trycatch_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_trycatch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_trycatch_stmt(ast));
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
@@ -4803,7 +4803,7 @@ static void cg_lua_trycatch_stmt(CqlState* CS, ast_node *ast) {
 }
 
 // this is just a special try/catch
-static void cg_lua_proc_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_proc_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_proc_savepoint_stmt(ast));
   EXTRACT(stmt_list, ast->left);
 
@@ -4827,7 +4827,7 @@ static void cg_lua_proc_savepoint_stmt(CqlState* CS, ast_node *ast) {
 
 // Convert _rc_ into an error code.  If it already is one keep it.
 // Then go to the current error target.
-static void cg_lua_throw_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   bprintf(CS->cg_main_output, "_rc_ = cql_best_error(%s)\n", CS->cg_lua.rcthrown_current);
@@ -4841,7 +4841,7 @@ static void cg_lua_throw_stmt(CqlState* CS, ast_node *ast) {
 // rather than ignore it in the tests.  We don't want it to blend
 // with the next group so we explicity make a do nothing function
 // just so that we get the test directives.
-static void cg_lua_declare_group_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_declare_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   if (CS->options.test) {
     bprintf(CS->cg_main_output, "-- declare group emits no lua\n");
   }
@@ -4851,7 +4851,7 @@ static void cg_lua_declare_group_stmt(CqlState* CS, ast_node *ast) {
 // the current translation unit.  This should be done one time to avoid duplicate symbols
 // at link time.  The indicated groups are enumerated and the definition form is emitted
 // using the normal helpers.
-static void cg_lua_emit_group_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_emit_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -4885,7 +4885,7 @@ static void cg_lua_emit_group_stmt(CqlState* CS, ast_node *ast) {
 }
 
 
-static void cg_lua_emit_one_enum(CqlState* CS, ast_node *ast) {
+static void cg_lua_emit_one_enum(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
@@ -4918,7 +4918,7 @@ static void cg_lua_emit_one_enum(CqlState* CS, ast_node *ast) {
 // use those values to call our procedures.  The generated code
 // from CQL uses the evaluated constants so these symbols are
 // for "others" to use.
-static void cg_lua_emit_enums_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_emit_enums_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -4949,7 +4949,7 @@ static void cg_lua_emit_enums_stmt(CqlState* CS, ast_node *ast) {
 // in Lua format.  Note that cql_emit_constants can be replaced to put the
 // constants where they should be in your world
 
-static void cg_lua_emit_one_const_group(CqlState* CS, ast_node *ast) {
+static void cg_lua_emit_one_const_group(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(const_values, ast->right);
@@ -4991,7 +4991,7 @@ static void cg_lua_emit_one_const_group(CqlState* CS, ast_node *ast) {
 }
 
 // emit the declared constants into the output stream using cql_emit_constants
-static void cg_lua_emit_constants_stmt(CqlState* CS, ast_node *ast) {
+static void cg_lua_emit_constants_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_constants_stmt(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
 
@@ -5011,7 +5011,7 @@ static void cg_lua_emit_constants_stmt(CqlState* CS, ast_node *ast) {
 // There are special rules for the DDL methods. If they appear in a
 // global context (outside of any stored proc) they do not run, they
 // are considered declarations only.
-static void cg_lua_one_stmt(CqlState* CS, ast_node *stmt, ast_node *misc_attrs) {
+static void cg_lua_one_stmt(CqlState* _Nonnull CS, ast_node *stmt, ast_node *misc_attrs) {
   // we're going to compute the fragment name if needed but we always start clean
 
   // reset the temp stack
@@ -5133,7 +5133,7 @@ static void cg_lua_one_stmt(CqlState* CS, ast_node *stmt, ast_node *misc_attrs) 
 }
 
 // Emit the nested statements with one more level of indenting.
-static void cg_lua_stmt_list(CqlState* CS, ast_node *head) {
+static void cg_lua_stmt_list(CqlState* _Nonnull CS, ast_node *head) {
   if (!head) {
     return;
   }
@@ -5188,7 +5188,7 @@ typedef struct lua_function_info {
 //  * for each named column emit a function "foo_get_[column-name]" which
 //    gets that column out of the rowset for the indicated row number.
 //  * prototypes for the above go into the main output header file
-static void cg_lua_proc_result_set(CqlState* CS, ast_node *ast) {
+static void cg_lua_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(is_struct(ast->sem->sem_type));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -5358,7 +5358,7 @@ static void cg_lua_proc_result_set(CqlState* CS, ast_node *ast) {
 // proc then you can't proceed.  Semantic analysis doƒesn't want to know that stuff.
 // Otherwise all we do is set up the most general buffers for the global case and
 // spit out a function with the correct name.
-cql_noexport void cg_lua_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_lua_main(CqlState* _Nonnull CS, ast_node *head) {
   CS->cg_lua.error_target = CQL_CLEANUP_DEFAULT_LABEL;
   CS->cg_lua.rcthrown_current = CQL_LUA_RCTHROWN_DEFAULT;
   CS->cg_lua.shared_fragment_strings.ptr = NULL;
@@ -5424,7 +5424,7 @@ cql_noexport void cg_lua_main(CqlState* CS, ast_node *head) {
   cg_lua_cleanup(CS);
 }
 
-cql_noexport void cg_lua_init(CqlState* CS) {
+cql_noexport void cg_lua_init(CqlState* _Nonnull CS) {
   cg_lua_cleanup(CS); // reset globals/statics
   cg_common_init(CS);
 
@@ -5612,7 +5612,7 @@ cql_noexport void cg_lua_init(CqlState* CS) {
 // because of the amalgam.  In the context of the amalgam the compiler
 // might be run more than once without the process exiting. Hence we have
 // to reset the globals and empty the symbol tables.
-cql_noexport void cg_lua_cleanup(CqlState* CS) {
+cql_noexport void cg_lua_cleanup(CqlState* _Nonnull CS) {
   cg_common_cleanup(CS);
 
   SYMTAB_CLEANUP(CS->cg_lua.named_temporaries);

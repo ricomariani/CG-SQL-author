@@ -35,17 +35,17 @@
 #include "encoders.h"
 #include "cql_state.h"
 
-static ast_node *rewrite_gen_arg_list(CqlState* CS, charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type);
-static ast_node *rewrite_gen_printf_call(CqlState* CS, CSTR format, ast_node *arg_list);
-static ast_node *rewrite_gen_iif_case_expr(CqlState* CS, ast_node *expr, ast_node *val1, ast_node *val2);
-static ast_node *rewrite_gen_case_expr(CqlState* CS, ast_node *var1, ast_node *var2, bool_t report_column_name);
-static bool_t rewrite_one_def(CqlState* CS, ast_node *head);
-static void rewrite_one_typed_name(CqlState* CS, ast_node *typed_name, symtab *used_names);
-static void rewrite_from_shape_args(CqlState* CS, ast_node *head);
+static ast_node *rewrite_gen_arg_list(CqlState* _Nonnull CS, charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type);
+static ast_node *rewrite_gen_printf_call(CqlState* _Nonnull CS, CSTR format, ast_node *arg_list);
+static ast_node *rewrite_gen_iif_case_expr(CqlState* _Nonnull CS, ast_node *expr, ast_node *val1, ast_node *val2);
+static ast_node *rewrite_gen_case_expr(CqlState* _Nonnull CS, ast_node *var1, ast_node *var2, bool_t report_column_name);
+static bool_t rewrite_one_def(CqlState* _Nonnull CS, ast_node *head);
+static void rewrite_one_typed_name(CqlState* _Nonnull CS, ast_node *typed_name, symtab *used_names);
+static void rewrite_from_shape_args(CqlState* _Nonnull CS, ast_node *head);
 
 // @PROC can be used in place of an ID in various places
 // replace that name if appropriate
-cql_noexport void rewrite_proclit(CqlState* CS, ast_node *ast) {
+cql_noexport void rewrite_proclit(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(name, ast);
   CSTR newname = process_proclit(CS, ast, name);
@@ -66,7 +66,7 @@ cql_noexport void rewrite_proclit(CqlState* CS, ast_node *ast) {
 //   FETCH C(a,b, etc.) FROM VALUES(D.col1, D.col2, etc.)
 // and it can then be type checked as usual.
 //
-cql_noexport void rewrite_insert_list_from_shape(CqlState* CS, ast_node *ast, ast_node *from_shape, uint32_t count) {
+cql_noexport void rewrite_insert_list_from_shape(CqlState* _Nonnull CS, ast_node *ast, ast_node *from_shape, uint32_t count) {
   Contract(is_ast_columns_values(ast));
   Contract(is_ast_from_shape(from_shape));
   Contract(count > 0);
@@ -143,7 +143,7 @@ cql_noexport void rewrite_insert_list_from_shape(CqlState* CS, ast_node *ast, as
 //
 // There are good helpers for creating the name list and for finding
 // the likeable object.  So we just use those for all the heavy lifting.
-cql_noexport void rewrite_like_column_spec_if_needed(CqlState* CS, ast_node *columns_values) {
+cql_noexport void rewrite_like_column_spec_if_needed(CqlState* _Nonnull CS, ast_node *columns_values) {
   Contract(is_ast_columns_values(columns_values) || is_ast_from_shape(columns_values));
   EXTRACT_NOTNULL(column_spec, columns_values->left);
   EXTRACT_ANY(shape_def, column_spec->left);
@@ -172,7 +172,7 @@ cql_noexport void rewrite_like_column_spec_if_needed(CqlState* CS, ast_node *col
 //  * Note: By this point column_spec has already  been rewritten so that it is for sure not
 //    null if it was absent.  It will be an empty name list.
 // All we're doing here is setting up the call to the worker using the appropriate AST args
-cql_noexport void rewrite_from_shape_if_needed(CqlState* CS, ast_node *ast_stmt, ast_node *columns_values)
+cql_noexport void rewrite_from_shape_if_needed(CqlState* _Nonnull CS, ast_node *ast_stmt, ast_node *columns_values)
 {
   Contract(ast_stmt); // we can record the error on any statement
   Contract(is_ast_columns_values(columns_values));
@@ -230,7 +230,7 @@ cql_noexport void rewrite_from_shape_if_needed(CqlState* CS, ast_node *ast_stmt,
 // FROM [shape] [LIKE type ] entries we encounter.  We don't validate
 // the types here.  That happens after expansion.  It's possible that the
 // types don't match at all, but we don't care yet.
-static void rewrite_from_shape_args(CqlState* CS, ast_node *head) {
+static void rewrite_from_shape_args(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_expr_list(head) || is_ast_arg_list(head) || is_ast_insert_list(head));
 
   // We might need to make arg_list nodes, insert_list nodes, or expr_list nodes, they are the
@@ -301,7 +301,7 @@ static void rewrite_from_shape_args(CqlState* CS, ast_node *head) {
 // Walk the list of column definitions looking for any of the
 // "LIKE table/proc/view". If any are found, replace that parameter with
 // the table/prov/view columns
-cql_noexport bool_t rewrite_col_key_list(CqlState* CS, ast_node *head) {
+cql_noexport bool_t rewrite_col_key_list(CqlState* _Nonnull CS, ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     Contract(is_ast_col_key_list(ast));
 
@@ -320,7 +320,7 @@ cql_noexport bool_t rewrite_col_key_list(CqlState* CS, ast_node *head) {
 // - Look up the parameters to the table/view/proc
 // - Create a col_def node for each field of the table/view/proc
 // - Reconstruct the ast
-cql_noexport bool_t rewrite_one_def(CqlState* CS, ast_node *head) {
+cql_noexport bool_t rewrite_one_def(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_col_key_list(head));
   EXTRACT_NOTNULL(shape_def, head->left);
 
@@ -414,7 +414,7 @@ static CSTR best_shape_type_name(ast_node *shape) {
 // * for each additional column create a param node and link it in.
 // * emit any given name only once, (so you can do like T1, like T1 even if both have the same pk)
 // * arg names get a _ suffix so they don't conflict with column names
-static ast_node *rewrite_one_param(CqlState* CS, ast_node *param, symtab *param_names, bytebuf *args_info) {
+static ast_node *rewrite_one_param(CqlState* _Nonnull CS, ast_node *param, symtab *param_names, bytebuf *args_info) {
   Contract(is_ast_param(param));
   EXTRACT_NOTNULL(param_detail, param->right);
   EXTRACT_ANY(shape_name_ast, param_detail->left);
@@ -545,7 +545,7 @@ static ast_node *rewrite_one_param(CqlState* CS, ast_node *param, symtab *param_
 
 // The name @proc refers to the current procedure name, this can appear in various
 // contexts either as a literal string or a valid id.  If it matches replace it here
-cql_noexport CSTR process_proclit(CqlState* CS, ast_node *ast, CSTR name) {
+cql_noexport CSTR process_proclit(CqlState* _Nonnull CS, ast_node *ast, CSTR name) {
   if (!Strcasecmp(name, "@proc")) {
     if (!CS->sem.current_proc) {
        report_error(CS, ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
@@ -562,7 +562,7 @@ cql_noexport CSTR process_proclit(CqlState* CS, ast_node *ast, CSTR name) {
   return name;
 }
 
-cql_noexport ast_node *rewrite_gen_data_type(CqlState* CS, sem_t sem_type, CSTR kind) {
+cql_noexport ast_node *rewrite_gen_data_type(CqlState* _Nonnull CS, sem_t sem_type, CSTR kind) {
   ast_node *ast = NULL;
   ast_node *kind_ast = kind ? new_ast_str(CS, kind) : NULL;
 
@@ -591,7 +591,7 @@ cql_noexport ast_node *rewrite_gen_data_type(CqlState* CS, sem_t sem_type, CSTR 
 
 // If no name list then fake a name list so that both paths are the same
 // no name list is the same as all the names
-cql_noexport ast_node *rewrite_gen_full_column_list(CqlState* CS, sem_struct *sptr) {
+cql_noexport ast_node *rewrite_gen_full_column_list(CqlState* _Nonnull CS, sem_struct *sptr) {
   Contract(sptr);
   ast_node *name_list = NULL;
   ast_node *name_list_tail = NULL;
@@ -620,7 +620,7 @@ cql_noexport ast_node *rewrite_gen_full_column_list(CqlState* CS, sem_struct *sp
 
 // This helper function rewrites the expr_names ast to the columns_values ast.
 // e.g: fetch C using 1 a, 2 b, 3 c; ==> fetch C (a,b,c) values (1, 2, 3);
-cql_noexport void rewrite_expr_names_to_columns_values(CqlState* CS, ast_node *columns_values) {
+cql_noexport void rewrite_expr_names_to_columns_values(CqlState* _Nonnull CS, ast_node *columns_values) {
   Contract(is_ast_expr_names(columns_values));
 
   AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
@@ -655,7 +655,7 @@ cql_noexport void rewrite_expr_names_to_columns_values(CqlState* CS, ast_node *c
 
 // This helper function rewrites the select statement ast to the columns_values ast.
 // e.g: insert into X using select 1 a, 2 b, 3 c; ==> insert into X (a,b,c) values (1, 2, 3);
-cql_noexport void rewrite_select_stmt_to_columns_values(CqlState* CS, ast_node *columns_values) {
+cql_noexport void rewrite_select_stmt_to_columns_values(CqlState* _Nonnull CS, ast_node *columns_values) {
   EXTRACT_ANY_NOTNULL(select_stmt, columns_values);
   Contract(is_select_stmt(select_stmt));
 
@@ -724,7 +724,7 @@ cql_noexport void rewrite_select_stmt_to_columns_values(CqlState* CS, ast_node *
 //  FETCH C(x,y) FROM ARGUMENTS @dummy_seed(...) -- x,y from args, the rest are dummy
 //
 // This is harder to explain than it is to code.
-cql_noexport void rewrite_empty_column_list(CqlState* CS, ast_node *columns_values, sem_struct *sptr)
+cql_noexport void rewrite_empty_column_list(CqlState* _Nonnull CS, ast_node *columns_values, sem_struct *sptr)
 {
   Invariant(is_ast_columns_values(columns_values) || is_ast_from_shape(columns_values));
   EXTRACT(column_spec, columns_values->left);
@@ -743,7 +743,7 @@ cql_noexport void rewrite_empty_column_list(CqlState* CS, ast_node *columns_valu
 
 // We can't just return the error in the tree like we usually do because
 // arg_list might be null and we're trying to do all the helper logic here.
-cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(CqlState* CS, ast_node *arg_list) {
+cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(CqlState* _Nonnull CS, ast_node *arg_list) {
   if (arg_list) {
     // if there are any cursor forms in the arg list that need to be expanded, do that here.
     rewrite_from_shape_args(CS, arg_list);
@@ -757,7 +757,7 @@ cql_noexport bool_t rewrite_shape_forms_in_list_if_needed(CqlState* CS, ast_node
 // rewrite call node with cql_cursor_diff_xxx(X,Y) to a case_expr statement
 // e.g: C1 and C2 are two cursor variable with the same shape
 // cql_cursor_diff_xxx(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
-cql_noexport void rewrite_cql_cursor_diff(CqlState* CS, ast_node *ast, bool_t report_column_name) {
+cql_noexport void rewrite_cql_cursor_diff(CqlState* _Nonnull CS, ast_node *ast, bool_t report_column_name) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -799,7 +799,7 @@ cql_noexport void rewrite_cql_cursor_diff(CqlState* CS, ast_node *ast, bool_t re
 // rewrite, it's very much the case that the rewritten expression may not be
 // semantically valid due to an error in the input program, so we simply let the
 // caller deal with it.
-cql_noexport void rewrite_iif(CqlState* CS, ast_node *ast) {
+cql_noexport void rewrite_iif(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -836,7 +836,7 @@ cql_noexport void rewrite_iif(CqlState* CS, ast_node *ast) {
 //   * make sure all the columns have a name and a reasonable type
 //   * make a name list for the column names
 //   * swap it in
-cql_noexport void rewrite_cte_name_list_from_columns(CqlState* CS, ast_node *ast, ast_node *select_core) {
+cql_noexport void rewrite_cte_name_list_from_columns(CqlState* _Nonnull CS, ast_node *ast, ast_node *select_core) {
   Contract(is_ast_cte_decl(ast));
   EXTRACT_NOTNULL(star, ast->right)
 
@@ -863,7 +863,7 @@ cql_noexport void rewrite_cte_name_list_from_columns(CqlState* CS, ast_node *ast
 // * replace the "like T" slug with the first column of T
 // * for each additional column create a typed name node and link it in.
 // * emit any given name only once, (so you can do like T1, like T1 even if both have the same pk)
-static void rewrite_one_typed_name(CqlState* CS, ast_node *typed_name, symtab *used_names) {
+static void rewrite_one_typed_name(CqlState* _Nonnull CS, ast_node *typed_name, symtab *used_names) {
   Contract(is_ast_typed_name(typed_name));
   EXTRACT_ANY(shape_name_ast, typed_name->left);
   EXTRACT_NOTNULL(shape_def, typed_name->right);
@@ -941,7 +941,7 @@ static void rewrite_one_typed_name(CqlState* CS, ast_node *typed_name, symtab *u
 
 // Walk the typed name list looking for any of the "like T" forms
 // if any is found, replace that entry  with the table/shape columns
-cql_noexport void rewrite_typed_names(CqlState* CS, ast_node *head) {
+cql_noexport void rewrite_typed_names(CqlState* _Nonnull CS, ast_node *head) {
   symtab *used_names = symtab_new();
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -1006,7 +1006,7 @@ static void rewrite_replace_space_if_needed(char *new_name) {
 // Walk through the ast and grab the arg list as well as the function name.
 // Create a new call node using these two and the argument passed in
 // prior to the ':' symbol.
-cql_noexport void rewrite_reverse_apply(CqlState* CS, ast_node *_Nonnull head, CSTR op) {
+cql_noexport void rewrite_reverse_apply(CqlState* _Nonnull CS, ast_node *_Nonnull head, CSTR op) {
   Contract(is_ast_reverse_apply(head) || is_ast_reverse_apply_typed(head) || is_ast_reverse_apply_poly(head));
   Contract(op[0] == ':');  // this : or :: or :::
   EXTRACT_ANY_NOTNULL(argument, head->left);
@@ -1061,7 +1061,7 @@ cql_noexport void rewrite_reverse_apply(CqlState* CS, ast_node *_Nonnull head, C
 
 // Walk the param list looking for any of the "like T" forms
 // if any is found, replace that parameter with the table/shape columns
-cql_noexport void rewrite_params(CqlState* CS, ast_node *head, bytebuf *args_info) {
+cql_noexport void rewrite_params(CqlState* _Nonnull CS, ast_node *head, bytebuf *args_info) {
   symtab *param_names = symtab_new();
 
   for (ast_node *ast = head; ast; ast = ast->right) {
@@ -1114,7 +1114,7 @@ static CSTR coretype_format(sem_t sem_type) {
 }
 
 // Generate arg_list nodes and formatting values for a printf(...) ast
-static ast_node *rewrite_gen_arg_list(CqlState* CS, charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type) {
+static ast_node *rewrite_gen_arg_list(CqlState* _Nonnull CS, charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type) {
   // left to arg_list node
   ast_node *dot = new_ast_dot(CS, new_ast_str(CS, cusor_name), new_ast_str(CS, col_name));
   // If the argument is blob type we need to print just its size therefore we rewrite
@@ -1136,7 +1136,7 @@ static ast_node *rewrite_gen_arg_list(CqlState* CS, charbuf* format_buf, CSTR cu
 // function.
 // e.g: cusor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
 // e.g: cusor_name = C, dot_name = x, type = blob PRINTF("length %d blob", cql_get_blob_size(C.x));
-static ast_node *rewrite_gen_printf_call(CqlState* CS, CSTR format, ast_node *arg_list) {
+static ast_node *rewrite_gen_printf_call(CqlState* _Nonnull CS, CSTR format, ast_node *arg_list) {
   CSTR copy_format = dup_printf(CS, "'%s'", format);
   // right to call_arg_list node
   ast_node *first_arg_list = new_ast_arg_list(CS, new_ast_str(CS, copy_format), arg_list);
@@ -1148,7 +1148,7 @@ static ast_node *rewrite_gen_printf_call(CqlState* CS, CSTR format, ast_node *ar
 }
 
 // Generates a call to nullable with `ast` as the argument.
-static ast_node *rewrite_gen_nullable(CqlState* CS, ast_node *ast) {
+static ast_node *rewrite_gen_nullable(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
 
   return new_ast_call(CS, 
@@ -1161,7 +1161,7 @@ static ast_node *rewrite_gen_nullable(CqlState* CS, ast_node *ast) {
 // This helper generates a case_expr node that check if an expression to return value or
 // otherwise another value
 // e.g: (expr, val1, val2) => CASE WHEN expr THEN val2 ELSE val1;
-static ast_node *rewrite_gen_iif_case_expr(CqlState* CS, ast_node *expr, ast_node *val1, ast_node *val2) {
+static ast_node *rewrite_gen_iif_case_expr(CqlState* _Nonnull CS, ast_node *expr, ast_node *val1, ast_node *val2) {
   // left case_list node
   ast_node *when = new_ast_when(CS, expr, val1);
   // left connector node
@@ -1179,7 +1179,7 @@ static ast_node *rewrite_gen_iif_case_expr(CqlState* CS, ast_node *expr, ast_nod
 // cql_cursor_diff_col(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN 'x' WHEN C1.y IS NOT C2.y THEN 'y'
 // cql_cursor_diff_val(C1, C2); ===> CASE WHEN C1.x IS NOT C2.x THEN printf('column:%s left:%s right:%s', 'y', printf('%s', C1.x), printf('%s', C2.x))
 //                                        WHEN C1.y IS NOT C2.y THEN printf('column:%s left:%s right:%s', 'y', printf('%s', C1.y), printf('%s', C2.y))
-static ast_node *rewrite_gen_case_expr(CqlState* CS, ast_node *var1, ast_node *var2, bool_t report_column_name) {
+static ast_node *rewrite_gen_case_expr(CqlState* _Nonnull CS, ast_node *var1, ast_node *var2, bool_t report_column_name) {
   Contract(is_variable(var1->sem->sem_type));
   Contract(is_variable(var2->sem->sem_type));
 
@@ -1283,7 +1283,7 @@ static ast_node *rewrite_gen_case_expr(CqlState* CS, ast_node *var1, ast_node *v
 // This helper rewrites col_def_type_attrs->right nodes to include notnull and sensitive
 // flag from the data type of a column in create table statement. This is only applicable
 // if column data type of the column is the name of an emum type or a declared named type.
-cql_noexport void rewrite_right_col_def_type_attrs_if_needed(CqlState* CS, ast_node *ast) {
+cql_noexport void rewrite_right_col_def_type_attrs_if_needed(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_col_def_type_attrs(ast));
   EXTRACT_NOTNULL(col_def_name_type, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, col_def_name_type->right);
@@ -1318,7 +1318,7 @@ cql_noexport void rewrite_right_col_def_type_attrs_if_needed(CqlState* CS, ast_n
 
 // Rewrite a data type represented as a string node to the
 // actual type if the string name is a declared type.
-cql_noexport void rewrite_data_type_if_needed(CqlState* CS, ast_node *ast) {
+cql_noexport void rewrite_data_type_if_needed(CqlState* _Nonnull CS, ast_node *ast) {
   ast_node *data_type = NULL;
   if (is_ast_create_data_type(ast)) {
     data_type = ast->left;
@@ -1368,7 +1368,7 @@ cql_noexport void rewrite_data_type_if_needed(CqlState* CS, ast_node *ast) {
 }
 
 // Wraps an id or dot in a call to cql_inferred_notnull.
-cql_noexport void rewrite_nullable_to_notnull(CqlState* CS, ast_node *_Nonnull ast) {
+cql_noexport void rewrite_nullable_to_notnull(CqlState* _Nonnull CS, ast_node *_Nonnull ast) {
   Contract(is_id_or_dot(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -1402,7 +1402,7 @@ cql_noexport void rewrite_nullable_to_notnull(CqlState* CS, ast_node *_Nonnull a
 
 // Rewrites a guard statement of the form `IF expr stmt` to a regular if
 // statement of the form `IF expr THEN stmt END IF`.
-cql_noexport void rewrite_guard_stmt_to_if_stmt(CqlState* CS, ast_node *_Nonnull ast) {
+cql_noexport void rewrite_guard_stmt_to_if_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast) {
   Contract(is_ast_guard_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -1424,7 +1424,7 @@ cql_noexport void rewrite_guard_stmt_to_if_stmt(CqlState* CS, ast_node *_Nonnull
 // do so. This allows programmers to enjoy the usual subtyping semantics of
 // `sem_verify_assignment` while making sure that all types match up exactly for
 // calls to `sqlite3_mprintf` in the C output.
-cql_noexport void rewrite_printf_inserting_casts_as_needed(CqlState* CS, ast_node *ast, CSTR format_string) {
+cql_noexport void rewrite_printf_inserting_casts_as_needed(CqlState* _Nonnull CS, ast_node *ast, CSTR format_string) {
   Contract(is_ast_call(ast));
   Contract(!is_error(ast));
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -1501,7 +1501,7 @@ static void add_tail(ast_node **head, ast_node **tail, ast_node *node) {
   *tail = node;
 }
 
-static void append_scoped_name(CqlState* CS, ast_node **head, ast_node **tail, CSTR scope, CSTR name) {
+static void append_scoped_name(CqlState* _Nonnull CS, ast_node **head, ast_node **tail, CSTR scope, CSTR name) {
   ast_node *expr = NULL;
   if (scope) {
     expr = new_ast_dot(CS, new_ast_str(CS, scope), new_ast_str(CS, name));
@@ -1534,7 +1534,7 @@ static sem_struct *jfind_table(jfind_t *jfind, CSTR name) {
 // These will tell us the disambiguated location of any given column name
 // and its duplicate status as well fast access to the sem_struct for
 // any scope within the jptr -- this will be the jptr of a FROM clause.
-static void jfind_init(CqlState* CS, jfind_t *jfind, sem_join *jptr) {
+static void jfind_init(CqlState* _Nonnull CS, jfind_t *jfind, sem_join *jptr) {
   jfind->jptr = jptr;
 
   // this will map from column name to the first table that has that column
@@ -1564,7 +1564,7 @@ static void jfind_init(CqlState* CS, jfind_t *jfind, sem_join *jptr) {
 }
 
 // cleanup the helper tables so we don't leak in the amalgam
-static void jfind_cleanup(CqlState* CS, jfind_t *jfind) {
+static void jfind_cleanup(CqlState* _Nonnull CS, jfind_t *jfind) {
   if (jfind->location) {
     symtab_delete(CS, jfind->location);
   }
@@ -1580,7 +1580,7 @@ static void jfind_cleanup(CqlState* CS, jfind_t *jfind) {
 // for the same column name (maybe different index) in the actual column.  We
 // have to do this because we want to make sure that when you say COLUMNS(X like foo)
 // that the foo columns of X are the same type as those in foo.
-static bool_t verify_matched_column(CqlState* CS,
+static bool_t verify_matched_column(CqlState* _Nonnull CS,
   ast_node *ast,
   sem_struct *sptr_reqd,
   uint32_t i_reqd,
@@ -1624,7 +1624,7 @@ cleanup:
 // instance of COLUMNS(...) in the select list.  When we process this, we
 // will replace it with its expansion.  Note that each one is independent
 // so often you really only need one (distinct is less powerful if you have two or more).
-static void rewrite_column_calculation(CqlState* CS, ast_node *column_calculation, jfind_t *jfind) {
+static void rewrite_column_calculation(CqlState* _Nonnull CS, ast_node *column_calculation, jfind_t *jfind) {
   Contract(is_ast_column_calculation(column_calculation));
 
   bool_t distinct = !!column_calculation->right;
@@ -1777,7 +1777,7 @@ cleanup:
 // tables/columns you requested.  SQLite, has no support for this sort of thing
 // so it, and indeed the rest of the compilation chain, will just see the result
 // of the expansion.
-cql_noexport void rewrite_select_expr_list(CqlState* CS, ast_node *ast, sem_join *jptr_from) {
+cql_noexport void rewrite_select_expr_list(CqlState* _Nonnull CS, ast_node *ast, sem_join *jptr_from) {
   Contract(is_ast_select_expr_list_con(ast));
   EXTRACT_NOTNULL(select_expr_list, ast->left);
 
@@ -1832,7 +1832,7 @@ cleanup:
 // set_blob_from_cursor_stmt.  These only have very simple forms,
 // the idea is that if you need any slicing, extraction,
 // or whatever, you do it with the cursors not blobs.
-cql_noexport bool_t try_rewrite_blob_fetch_forms(CqlState* CS, ast_node *ast) {
+cql_noexport bool_t try_rewrite_blob_fetch_forms(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast) || is_ast_set_from_cursor(ast));
 
   ast_node *cursor = NULL;
@@ -1917,7 +1917,7 @@ rewrite_or_fail:
 
 //static int32_t cursor_base;
 
-static ast_node *shape_exprs_from_name_list(CqlState* CS, ast_node *ast) {
+static ast_node *shape_exprs_from_name_list(CqlState* _Nonnull CS, ast_node *ast) {
   if (!ast) {
     return NULL;
   }
@@ -1931,7 +1931,7 @@ static ast_node *shape_exprs_from_name_list(CqlState* CS, ast_node *ast) {
 }
 
 // This creates the statements for each child partition creation
-static ast_node *rewrite_child_partition_creation(CqlState* CS, ast_node *child_results, int32_t cursor_num, ast_node *tail) {
+static ast_node *rewrite_child_partition_creation(CqlState* _Nonnull CS, ast_node *child_results, int32_t cursor_num, ast_node *tail) {
   if (!child_results) {
     return tail;
   }
@@ -2044,7 +2044,7 @@ static ast_node *rewrite_child_partition_creation(CqlState* CS, ast_node *child_
   ))));
 }
 
-static ast_node *build_child_typed_names(CqlState* CS, ast_node *child_results, int32_t child_index) {
+static ast_node *build_child_typed_names(CqlState* _Nonnull CS, ast_node *child_results, int32_t child_index) {
   if (!child_results) {
     return NULL;
   }
@@ -2082,7 +2082,7 @@ static ast_node *build_child_typed_names(CqlState* CS, ast_node *child_results, 
   );
 }
 
-static ast_node *rewrite_out_cursor_declare(CqlState* CS,
+static ast_node *rewrite_out_cursor_declare(CqlState* _Nonnull CS,
   CSTR parent_proc_name,
   CSTR out_cursor_name,
   ast_node *child_results,
@@ -2110,7 +2110,7 @@ static ast_node *rewrite_out_cursor_declare(CqlState* CS,
   );
 }
 
-ast_node *rewrite_load_child_keys_from_parent(CqlState* CS,
+ast_node *rewrite_load_child_keys_from_parent(CqlState* _Nonnull CS,
   ast_node *child_results,
   CSTR parent_cursor_name,
   int32_t cursor_num,
@@ -2151,7 +2151,7 @@ ast_node *rewrite_load_child_keys_from_parent(CqlState* CS,
   );
 }
 
-static ast_node *rewrite_insert_children_partitions(CqlState* CS,
+static ast_node *rewrite_insert_children_partitions(CqlState* _Nonnull CS,
   ast_node *child_results,
   int32_t cursor_num)
 {
@@ -2181,7 +2181,7 @@ static ast_node *rewrite_insert_children_partitions(CqlState* CS,
   );
 }
 
-static ast_node *rewrite_declare_parent_cursor(CqlState* CS,
+static ast_node *rewrite_declare_parent_cursor(CqlState* _Nonnull CS,
   CSTR parent_cursor_name,
   ast_node *parent_call_stmt,
   ast_node *tail)
@@ -2199,7 +2199,7 @@ static ast_node *rewrite_declare_parent_cursor(CqlState* CS,
   );
 }
 
-static ast_node *rewrite_fetch_results(CqlState* CS,
+static ast_node *rewrite_fetch_results(CqlState* _Nonnull CS,
   CSTR out_cursor_name,
   CSTR parent_cursor_name,
   ast_node *child_results)
@@ -2239,7 +2239,7 @@ static ast_node *rewrite_fetch_results(CqlState* CS,
   );
 }
 
-static ast_node *rewrite_loop_fetch_parent_cursor(CqlState* CS,
+static ast_node *rewrite_loop_fetch_parent_cursor(CqlState* _Nonnull CS,
   CSTR parent_cursor_name,
   CSTR out_cursor_name,
   ast_node *child_results)
@@ -2309,7 +2309,7 @@ static ast_node *rewrite_loop_fetch_parent_cursor(CqlState* CS,
 //   END;
 // END;
 //
-cql_noexport void rewrite_out_union_parent_child_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void rewrite_out_union_parent_child_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
 
   AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
@@ -2389,7 +2389,7 @@ typedef struct {
 // shape.  We peel off the first item and then recurse to add the nested item.  Not
 // especially economical but fine for any normal sized table.  This can be made non-recursive
 // if it ever matters.
-static ast_node *rewrite_backed_expr_list(CqlState* CS, backed_expr_list_info *info, uint32_t index) {
+static ast_node *rewrite_backed_expr_list(CqlState* _Nonnull CS, backed_expr_list_info *info, uint32_t index) {
   sem_struct *sptr = info->backed_table->sem->sptr;
   if (index >= sptr->count) {
     return NULL;
@@ -2455,7 +2455,7 @@ static ast_node *rewrite_backed_expr_list(CqlState* CS, backed_expr_list_info *i
 // This is a fixed shape with just names plugged in except for the expression list
 // which is generated by a helper above.
 // Here the table "backing" has two blob columns "k" and "v" for the key and value storage.
-cql_noexport void rewrite_shared_fragment_from_backed_table(CqlState* CS, ast_node *_Nonnull backed_table) {
+cql_noexport void rewrite_shared_fragment_from_backed_table(CqlState* _Nonnull CS, ast_node *_Nonnull backed_table) {
   EXTRACT_MISC_ATTRS(backed_table, misc_attrs);
 
   AST_REWRITE_INFO_SET(backed_table->lineno, backed_table->filename);
@@ -2600,7 +2600,7 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(CqlState* CS, ast_no
 // Note that walking the list in this way effectively reverses the order the items
 // will appear in the  CTE list.
 static void rewrite_backed_table_ctes(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   list_item *backed_tables_list,
   ast_node **pcte_tables,
   ast_node **pcte_tail)
@@ -2660,7 +2660,7 @@ static void rewrite_backed_table_ctes(
 // This is the magic, we have tracked the backed tables so now we can insert calls to
 // the generated shared fragments (see above) for each such table.  Once we've done that,
 // the select will "just work." because the backed table has been aliased by a correct CTE.
-cql_noexport void rewrite_statement_backed_table_ctes(CqlState* CS,
+cql_noexport void rewrite_statement_backed_table_ctes(CqlState* _Nonnull CS,
   ast_node *_Nonnull stmt,
   list_item *_Nonnull backed_tables_list)
 {
@@ -2716,7 +2716,7 @@ cql_noexport void rewrite_statement_backed_table_ctes(CqlState* CS,
 // a with select in the process rewrite_statement_backed_table_ctes
 // does exactly this job.  All the statement types use that helper
 // to get the CTE structure correct.
-cql_noexport void rewrite_select_for_backed_tables(CqlState* CS,
+cql_noexport void rewrite_select_for_backed_tables(CqlState* _Nonnull CS,
   ast_node *_Nonnull stmt,
   list_item *_Nonnull backed_tables_list)
 {
@@ -2745,7 +2745,7 @@ typedef struct create_blob_args_info {
 // This walks the name list and generates either the args for the key or the args for the value
 // both are just going to be V.col_name from the _vals alias and the backed table.column.
 // The info we need to flows in the info variable.
-static ast_node *rewrite_create_blob_args(CqlState* CS, create_blob_args_info *info) {
+static ast_node *rewrite_create_blob_args(CqlState* _Nonnull CS, create_blob_args_info *info) {
   Invariant(info->backed_table->sem);
   Invariant(info->backed_table->sem->table_info);
   Invariant(info->backed_table->sem->sptr);
@@ -2869,7 +2869,7 @@ static ast_node *rewrite_create_blob_args(CqlState* CS, create_blob_args_info *i
 
 // This walks the name list and generates either the key create call or the value create call
 // This is the fixed part of the call.
-static ast_node *rewrite_blob_create(CqlState* CS, bool_t for_key, ast_node *backed_table, ast_node *name_list) {
+static ast_node *rewrite_blob_create(CqlState* _Nonnull CS, bool_t for_key, ast_node *backed_table, ast_node *name_list) {
 
   // set up state for the recursion, (note it will clean the symbol table)
   create_blob_args_info info = {
@@ -2893,7 +2893,7 @@ static ast_node *rewrite_blob_create(CqlState* CS, bool_t for_key, ast_node *bac
 }
 
 // create the wrapper for a cql_blob_get call for the given blob, backed table name and column name
-static ast_node *cql_blob_get_call (CqlState* CS, CSTR blob_field, sem_t sem_type_blob, CSTR backed_table, CSTR col) {
+static ast_node *cql_blob_get_call (CqlState* _Nonnull CS, CSTR blob_field, sem_t sem_type_blob, CSTR backed_table, CSTR col) {
   // this is just cql_blob_get(blob_field, backed_table.col)
   return new_ast_call(CS, 
     new_ast_str(CS, "cql_blob_get"),
@@ -2925,7 +2925,7 @@ typedef struct update_rewrite_info {
 } update_rewrite_info;
 
 // if we found any references to backed columns extract from the blob
-static void rewrite_blob_column_references(CqlState* CS, update_rewrite_info *info, ast_node *ast) {
+static void rewrite_blob_column_references(CqlState* _Nonnull CS, update_rewrite_info *info, ast_node *ast) {
   // the name nodes have all we need in the semantic payload
   if (is_ast_str(ast) || is_ast_dot(ast)) {
     if (ast->sem && ast->sem->backed_table) {
@@ -2961,7 +2961,7 @@ static void rewrite_blob_column_references(CqlState* CS, update_rewrite_info *in
 
 // This walks the update list and generates either the args for the key or the args for the value
 // the values come from the assignment in the update entry list
-static ast_node *rewrite_update_blob_args(CqlState* CS, update_rewrite_info *info, ast_node *update_list) {
+static ast_node *rewrite_update_blob_args(CqlState* _Nonnull CS, update_rewrite_info *info, ast_node *update_list) {
   if (!update_list) {
     return NULL;
   }
@@ -2995,7 +2995,7 @@ static ast_node *rewrite_update_blob_args(CqlState* CS, update_rewrite_info *inf
 
 // This walks the name list and generates either the key update call or the value update call
 // This is the fixed part of the call.
-static ast_node *rewrite_blob_update(CqlState* CS,
+static ast_node *rewrite_blob_update(CqlState* _Nonnull CS,
   bool_t for_key,
   sem_struct *sptr_backing,
   ast_node *backed_table,
@@ -3040,7 +3040,7 @@ static ast_node *rewrite_blob_update(CqlState* CS,
 
 // This helper creates the select list we will need to get the values out
 // from the statement that was the insert list (it could be values or a select statement)
-static ast_node *rewrite_insert_list_as_select_values(CqlState* CS, ast_node *insert_list) {
+static ast_node *rewrite_insert_list_as_select_values(CqlState* _Nonnull CS, ast_node *insert_list) {
   return new_ast_select_stmt(CS, 
     new_ast_select_core_list(CS, 
       new_ast_select_core(CS, 
@@ -3092,7 +3092,7 @@ static ast_node *rewrite_insert_list_as_select_values(CqlState* CS, ast_node *in
 // Those calls expand to include the hash codes if needed and field types.
 //
 cql_noexport void rewrite_insert_statement_for_backed_table(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   ast_node *ast,
   list_item *backed_tables_list)
 {
@@ -3322,7 +3322,7 @@ replace_backed_tables_only:
   }
 }
 
-static ast_node *rewrite_select_rowid(CqlState* CS,
+static ast_node *rewrite_select_rowid(CqlState* _Nonnull CS,
   CSTR backed_table_name,
   ast_node *opt_where,
   ast_node *opt_orderby,
@@ -3381,7 +3381,7 @@ static ast_node *rewrite_select_rowid(CqlState* CS,
     );
 }
 
-cql_noexport void rewrite_delete_statement_for_backed_table(CqlState* CS,
+cql_noexport void rewrite_delete_statement_for_backed_table(CqlState* _Nonnull CS,
   ast_node *ast,
   list_item *backed_tables_list)
 {
@@ -3456,7 +3456,7 @@ replace_backed_tables_only:
 }
 
 cql_noexport void rewrite_update_statement_for_backed_table(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   ast_node *ast,
   list_item *backed_tables_list)
 {
@@ -3599,7 +3599,7 @@ replace_backed_tables_only:
   }
 }
 
-cql_noexport void rewrite_upsert_statement_for_backed_table(CqlState* CS,
+cql_noexport void rewrite_upsert_statement_for_backed_table(CqlState* _Nonnull CS,
   ast_node *ast,
   list_item *backed_tables_list)
 {
@@ -3672,7 +3672,7 @@ cql_noexport void rewrite_upsert_statement_for_backed_table(CqlState* CS,
 
 // The expression node has been identified to be a procedure call
 // Rewrite it as a call operation
-cql_noexport void rewrite_func_call_as_proc_call(CqlState* CS, ast_node *_Nonnull ast) {
+cql_noexport void rewrite_func_call_as_proc_call(CqlState* _Nonnull CS, ast_node *_Nonnull ast) {
   Contract(is_ast_expr_stmt(ast));
   EXTRACT_NOTNULL(call, ast->left);
   EXTRACT_NAME_AST(name_ast, call->left);
@@ -3692,7 +3692,7 @@ cql_noexport void rewrite_func_call_as_proc_call(CqlState* CS, ast_node *_Nonnul
   ast_set_right(ast, new->right);
 }
 
-cql_noexport bool_t rewrite_ast_star_if_needed(CqlState* CS, ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
+cql_noexport bool_t rewrite_ast_star_if_needed(CqlState* _Nonnull CS, ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
   if (!arg_list) {
     return true;
   }
@@ -3720,7 +3720,7 @@ cql_noexport bool_t rewrite_ast_star_if_needed(CqlState* CS, ast_node *_Nullable
 }
 
 
-cql_noexport void rewrite_op_equals_assignment_if_needed(CqlState* CS, ast_node *_Nonnull expr, CSTR _Nonnull op) {
+cql_noexport void rewrite_op_equals_assignment_if_needed(CqlState* _Nonnull CS, ast_node *_Nonnull expr, CSTR _Nonnull op) {
   Contract(expr);
   Contract(op);
 
@@ -3787,7 +3787,7 @@ cql_noexport void rewrite_op_equals_assignment_if_needed(CqlState* CS, ast_node 
 // This helper does the job of rewriting the array into a function call.,
 // In the set case a second rewrite moves the assigned into the end of
 // the arg list.
-cql_noexport void rewrite_array_as_call(CqlState* CS, ast_node *_Nonnull expr, CSTR _Nonnull new_name) {
+cql_noexport void rewrite_array_as_call(CqlState* _Nonnull CS, ast_node *_Nonnull expr, CSTR _Nonnull new_name) {
   Contract(is_ast_array(expr));
   EXTRACT_ANY_NOTNULL(array, expr->left);
   EXTRACT_NOTNULL(arg_list, expr->right);
@@ -3817,7 +3817,7 @@ cql_noexport void rewrite_array_as_call(CqlState* CS, ast_node *_Nonnull expr, C
 
 // Appends the given argument to the end of an existing (not empty)
 // call argument list
-cql_noexport void rewrite_append_arg(CqlState* CS, ast_node *_Nonnull call, ast_node *_Nonnull arg) {
+cql_noexport void rewrite_append_arg(CqlState* _Nonnull CS, ast_node *_Nonnull call, ast_node *_Nonnull arg) {
   Contract(is_ast_call(call));
   EXTRACT_NOTNULL(call_arg_list, call->right);
   EXTRACT_NOTNULL(arg_list, call_arg_list->right);
@@ -3833,7 +3833,7 @@ cql_noexport void rewrite_append_arg(CqlState* CS, ast_node *_Nonnull call, ast_
   AST_REWRITE_INFO_RESET();
 }
 
-cql_noexport void rewrite_dot_as_call(CqlState* CS, ast_node *_Nonnull dot, CSTR _Nonnull new_name) {
+cql_noexport void rewrite_dot_as_call(CqlState* _Nonnull CS, ast_node *_Nonnull dot, CSTR _Nonnull new_name) {
   Contract(is_ast_dot(dot));
   EXTRACT_ANY_NOTNULL(expr, dot->left);
   
@@ -3861,7 +3861,7 @@ cql_noexport void rewrite_dot_as_call(CqlState* CS, ast_node *_Nonnull dot, CSTR
   
 }
 
-cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(CqlState* CS, ast_node *_Nonnull columns_values) {
+cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(CqlState* _Nonnull CS, ast_node *_Nonnull columns_values) {
     EXTRACT_NOTNULL(column_spec, columns_values->left);
     EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
     EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);

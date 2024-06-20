@@ -186,13 +186,13 @@ CG_CHARBUF_OPEN_SYM_WITH_PREFIX(name, CS->rt->symbol_prefix, ##__VA_ARGS__)
 // Note: semantic analysis knows about more function than code-gen does
 // that's because many functions are only legal in the context of SQL
 // so we have no codegen for them.  But we do need to verify correctness.
-static inline bool_t symtab_add_GenOneStmt(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, AstGenOneStmt _Nullable val_new)
+static inline bool_t symtab_add_GenOneStmt(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, AstGenOneStmt _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
 
-typedef void (*cg_func_type)(CqlState* CS, ast_node *call_ast, charbuf *is_null, charbuf *value);
-static inline bool_t symtab_add_CgFuncType(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_func_type _Nullable val_new)
+typedef void (*cg_func_type)(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value);
+static inline bool_t symtab_add_CgFuncType(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_func_type _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -207,7 +207,7 @@ static inline bool_t symtab_add_CgFuncType(CqlState* CS, symtab *_Nonnull syms, 
   static cg_expr_dispatch expr_disp_ ## x = { func, str, pri_new }; \
   symtab_add_CgExprDispatch(CS, CS->cg_exprs, k_ast_ ## x, &expr_disp_ ## x);
 
-typedef void (*cg_expr_dispatch_func)(CqlState* CS, ast_node *_Nonnull ast,
+typedef void (*cg_expr_dispatch_func)(CqlState* _Nonnull CS, ast_node *_Nonnull ast,
                                       CSTR _Nonnull op,
                                       charbuf *_Nonnull is_null,
                                       charbuf *_Nonnull value,
@@ -220,7 +220,7 @@ typedef struct cg_expr_dispatch {
   int32_t pri_new;
 } cg_expr_dispatch;
 
-static inline bool_t symtab_add_CgExprDispatch(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_expr_dispatch _Nullable *val_new)
+static inline bool_t symtab_add_CgExprDispatch(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_expr_dispatch _Nullable *val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -279,37 +279,37 @@ typedef struct {
 // The prefix will be included as specified.
 //
 // All input names are assumed to be in snake case already.
-cql_noexport void cg_sym_name(CqlState* CS, cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...);
+cql_noexport void cg_sym_name(CqlState* _Nonnull CS, cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...);
 
 // Initializes all of the common buffers and sym tables.
-cql_noexport void cg_common_init(CqlState* CS);
+cql_noexport void cg_common_init(CqlState* _Nonnull CS);
 
 // cleanup the global state
-cql_noexport void cg_common_cleanup(CqlState* CS);
+cql_noexport void cg_common_cleanup(CqlState* _Nonnull CS);
 
 // Exit if any semantic errors
-cql_noexport void cql_exit_on_semantic_errors(CqlState* CS, ast_node *_Nullable head);
+cql_noexport void cql_exit_on_semantic_errors(CqlState* _Nonnull CS, ast_node *_Nullable head);
 
 // Exit if no global proc name specified
-cql_noexport void exit_on_no_global_proc(CqlState* CS);
+cql_noexport void exit_on_no_global_proc(CqlState* _Nonnull CS);
 
 // For the common case of "semantic-only" nodes
-cql_noexport void cg_no_op(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_no_op(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 
 // For expanding select *
-cql_noexport bool_t cg_expand_star(CqlState* CS, ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
+cql_noexport bool_t cg_expand_star(CqlState* _Nonnull CS, ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer);
 
 cql_noexport int32_t cg_find_first_line(ast_node *_Nonnull ast);
 
 // blob config helpers
-cql_noexport void cg_common_blob_get_key_type_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_get_val_type_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_get_key_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_get_val_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_create_key_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_create_val_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_update_key_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void cg_common_blob_update_val_stmt(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_key_type_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_val_type_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_key_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_get_val_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_create_key_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_create_val_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_update_key_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void cg_common_blob_update_val_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 
 typedef struct cg_blob_mappings_struct {
   CSTR _Nullable blob_get_key_type;
@@ -337,6 +337,6 @@ cql_noexport int64_t sha256_charbuf(charbuf *_Nonnull input);
 
 // name foratting helpers
 
-cql_noexport void cg_emit_name(CqlState* CS, charbuf *_Nonnull output, CSTR _Nonnull name, bool_t qid);
-cql_noexport void cg_emit_name_ast(CqlState* CS, charbuf *_Nonnull output, ast_node *_Nonnull name_ast);
-cql_noexport void cg_emit_sptr_index(CqlState* CS, charbuf *_Nonnull output, sem_struct *_Nonnull sptr, uint32_t i);
+cql_noexport void cg_emit_name(CqlState* _Nonnull CS, charbuf *_Nonnull output, CSTR _Nonnull name, bool_t qid);
+cql_noexport void cg_emit_name_ast(CqlState* _Nonnull CS, charbuf *_Nonnull output, ast_node *_Nonnull name_ast);
+cql_noexport void cg_emit_sptr_index(CqlState* _Nonnull CS, charbuf *_Nonnull output, sem_struct *_Nonnull sptr, uint32_t i);

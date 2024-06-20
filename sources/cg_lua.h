@@ -9,10 +9,10 @@
 
 #include "cql.h"
 
-cql_noexport void cg_lua_main(CqlState* CS, struct ast_node *_Nonnull root);
-cql_noexport void cg_lua_cleanup(CqlState* CS);
+cql_noexport void cg_lua_main(CqlState* _Nonnull CS, struct ast_node *_Nonnull root);
+cql_noexport void cg_lua_cleanup(CqlState* _Nonnull CS);
 
-typedef void (*cg_lua_expr_dispatch_func)(CqlState* CS, ast_node *_Nonnull ast,
+typedef void (*cg_lua_expr_dispatch_func)(CqlState* _Nonnull CS, ast_node *_Nonnull ast,
                                       CSTR _Nonnull op,
                                       charbuf *_Nonnull value,
                                       int32_t pri,

@@ -29,7 +29,7 @@ cql_noexport void cg_objc_main(CS, ast_node *head) {}
 // Whether a text column in the result set of a proc is encoded
 //static bool_t is_string_column_encoded = 0;
 
-static void cg_objc_proc_result_set_c_getter(CqlState* CS,
+static void cg_objc_proc_result_set_c_getter(CqlState* _Nonnull CS,
   bool_t fetch_proc,
   charbuf *buffer,
   CSTR name,
@@ -49,7 +49,7 @@ static void cg_objc_proc_result_set_c_getter(CqlState* CS,
 }
 
 static void cg_objc_proc_result_set_getter(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   bool_t fetch_proc,
   CSTR name,
   CSTR col_name,
@@ -212,7 +212,7 @@ static void cg_objc_proc_result_set_getter(
   CHARBUF_CLOSE(return_type);
 }
 
-static void cg_objc_proc_result_set(CqlState* CS, ast_node *ast) {
+static void cg_objc_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(is_struct(ast->sem->sem_type));
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -446,7 +446,7 @@ static void cg_objc_proc_result_set(CqlState* CS, ast_node *ast) {
   CS->sem.encode_context_column = NULL;
 }
 
-static void cg_objc_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void cg_objc_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -460,7 +460,7 @@ static void cg_objc_create_proc_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void cg_objc_one_stmt(CqlState* CS, ast_node *stmt) {
+static void cg_objc_one_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   // DDL operations not in a procedure are ignored
   // but they can declare schema during the semantic pass
   if (is_ast_create_proc_stmt(stmt)) {
@@ -468,7 +468,7 @@ static void cg_objc_one_stmt(CqlState* CS, ast_node *stmt) {
   }
 }
 
-static void cg_objc_stmt_list(CqlState* CS, ast_node *head) {
+static void cg_objc_stmt_list(CqlState* _Nonnull CS, ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT_AND_MISC_ATTRS(stmt, misc_attrs, ast);
     if (is_ast_create_proc_stmt(stmt) && is_proc_shared_fragment(CS, stmt)) {
@@ -481,12 +481,12 @@ static void cg_objc_stmt_list(CqlState* CS, ast_node *head) {
 }
 
 
-static void cg_objc_init(CqlState* CS) {
+static void cg_objc_init(CqlState* _Nonnull CS) {
   cg_common_init(CS);
 }
 
 // Main entry point for code-gen.
-cql_noexport void cg_objc_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_objc_main(CqlState* _Nonnull CS, ast_node *head) {
   Invariant(CS->options.file_names_count == 1);
   Invariant(CS->is_string_column_encoded == 0);
   if (!CS->options.objc_c_include_path) {

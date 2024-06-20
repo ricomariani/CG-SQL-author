@@ -44,7 +44,7 @@ void cql_exit_on_semantic_errors(CS, ast_node *head) {}
 // The prefix will be included as specified.
 //
 // All input names are assumed to be in snake case already.
-cql_noexport void cg_sym_name(CqlState* CS, cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
+cql_noexport void cg_sym_name(CqlState* _Nonnull CS, cg_symbol_case symbol_case, charbuf *_Nonnull output, CSTR _Nonnull symbol_prefix, CSTR _Nonnull name, ...)
 {
   // Print the prefix first
   bprintf(output, "%s", symbol_prefix);
@@ -97,7 +97,7 @@ cql_noexport void cg_sym_name(CqlState* CS, cg_symbol_case symbol_case, charbuf 
 // and here's the cleanup for the durable buffer
 #define CLEANUP_CHARBUF_REF(x) if (x) { bclose(CS, x); free(x);  x = NULL; }
 
-cql_noexport void cg_common_init(CqlState* CS)
+cql_noexport void cg_common_init(CqlState* _Nonnull CS)
 {
   // All of these will leak, but we don't care.  The tool will shut down after running cg, so it is pointless to clean
   // up after ourselves here.
@@ -135,7 +135,7 @@ cql_noexport void cg_common_init(CqlState* CS)
 }
 
 // lots of AST nodes require no action -- this guy is very good at that.
-cql_noexport void cg_no_op(CqlState* CS, ast_node * ast) {
+cql_noexport void cg_no_op(CqlState* _Nonnull CS, ast_node * ast) {
 }
 
 // If there is a semantic error, we should not proceed with code generation.
@@ -143,7 +143,7 @@ cql_noexport void cg_no_op(CqlState* CS, ast_node * ast) {
 // to be pristine in memory usage because the amalgam version of the compiler
 // does not necessarily exit when it's done. It might be used in a long running
 // process, like VSCode, and we don't want to leak memory.
-cql_noexport void cql_exit_on_semantic_errors(CqlState* CS, ast_node *head) {
+cql_noexport void cql_exit_on_semantic_errors(CqlState* _Nonnull CS, ast_node *head) {
   if (head && is_error(head)) {
     cql_error(CS, "semantic errors present; no code gen.\n");
     cql_cleanup_and_exit(CS, 1);
@@ -155,7 +155,7 @@ cql_noexport void cql_exit_on_semantic_errors(CqlState* CS, ast_node *head) {
 // for instance the CQL unit test pattern relies on global code to make the tests run.
 // If there is no procedure name for the global code then we have a problem.  We
 // can't proceed.
-cql_noexport void exit_on_no_global_proc(CqlState* CS) {
+cql_noexport void exit_on_no_global_proc(CqlState* _Nonnull CS) {
   if (!CS->global_proc_name) {
     cql_error(CS, "There are global statements but no global proc name was specified (use --global_proc)\n");
     cql_cleanup_and_exit(CS, 1);
@@ -195,7 +195,7 @@ cql_noexport void exit_on_no_global_proc(CqlState* CS) {
 // |         | {select_expr_list_con}: select: { A: integer variable }
 // |           | {select_expr_list}: select: { A: integer variable }
 // |           | | ...
-bool_t cg_expand_star(CqlState* CS, ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer) {
+bool_t cg_expand_star(CqlState* _Nonnull CS, ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull buffer) {
   Contract(is_ast_star(ast) || is_ast_table_star(ast));
   Contract(ast->sem);
   Contract(!is_error(ast));  // already "ok" at least
@@ -329,21 +329,21 @@ int32_t cg_find_first_line_recursive(ast_node *ast, CSTR filename) {
   return line;
 }
 
-cql_noexport void cg_common_blob_get_key_type_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_get_key_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   CS->cg_blob_mappings->blob_get_key_type = name;
 }
 
-cql_noexport void cg_common_blob_get_val_type_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_get_val_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   CS->cg_blob_mappings->blob_get_val_type = name;
 }
 
-cql_noexport void cg_common_blob_get_key_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_get_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -352,7 +352,7 @@ cql_noexport void cg_common_blob_get_key_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_blob_mappings->blob_get_key_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_get_val_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_get_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -361,7 +361,7 @@ cql_noexport void cg_common_blob_get_val_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_blob_mappings->blob_get_val_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_create_key_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_create_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_create_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -370,7 +370,7 @@ cql_noexport void cg_common_blob_create_key_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_blob_mappings->blob_create_key_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_create_val_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_create_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_create_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -379,7 +379,7 @@ cql_noexport void cg_common_blob_create_val_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_blob_mappings->blob_create_val_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_update_key_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_update_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_update_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -388,7 +388,7 @@ cql_noexport void cg_common_blob_update_key_stmt(CqlState* CS, ast_node *ast) {
   CS->cg_blob_mappings->blob_update_key_use_offsets = !!offset;
 }
 
-cql_noexport void cg_common_blob_update_val_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void cg_common_blob_update_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_update_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -409,7 +409,7 @@ cql_noexport int32_t cg_find_first_line(ast_node *ast) {
   return cg_find_first_line_recursive(ast, ast->filename);
 }
 
-cql_noexport void cg_emit_name(CqlState* CS, charbuf *output, CSTR name, bool_t qid) {
+cql_noexport void cg_emit_name(CqlState* _Nonnull CS, charbuf *output, CSTR name, bool_t qid) {
   if (qid) {
     cg_decode_qstr(CS, output, name);
   }
@@ -419,16 +419,16 @@ cql_noexport void cg_emit_name(CqlState* CS, charbuf *output, CSTR name, bool_t 
 }
 
 // emit a name or a quoted name as needed
-cql_noexport void cg_emit_name_ast(CqlState* CS, charbuf *output, ast_node *name_ast) {
+cql_noexport void cg_emit_name_ast(CqlState* _Nonnull CS, charbuf *output, ast_node *name_ast) {
   EXTRACT_STRING(name, name_ast);
   cg_emit_name(CS, output, name, is_qid(name_ast));
 }
 
-cql_noexport void cg_emit_sptr_index(CqlState* CS, charbuf *output, sem_struct *sptr, uint32_t i) {
+cql_noexport void cg_emit_sptr_index(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr, uint32_t i) {
   cg_emit_name(CS, output, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
-cql_noexport void cg_common_cleanup(CqlState* CS) {
+cql_noexport void cg_common_cleanup(CqlState* _Nonnull CS) {
   SYMTAB_CLEANUP(CS->cg_stmts);
   SYMTAB_CLEANUP(CS->cg_funcs);
   SYMTAB_CLEANUP(CS->cg_exprs);
@@ -452,7 +452,7 @@ CqlState* cql_new_state() {
     return cs; 
 }
 
-void cql_free_state(CqlState* CS) {
+void cql_free_state(CqlState* _Nonnull CS) {
     free(CS);
 }
 

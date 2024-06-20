@@ -35,7 +35,7 @@ cql_noexport void gen_stmt_list_to_stdout(CS, ast_node *ast) {}
 
 // for dispatching expression types
 typedef struct gen_expr_dispatch {
-  void (*func)(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
+  void (*func)(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
   CSTR str;
   int32_t pri_new;
 } gen_expr_dispatch;
@@ -50,35 +50,35 @@ typedef struct gen_expr_dispatch {
 //static symtab *used_alias_syms = NULL;
 
 // forward references for things that appear out of order or mutually call each other
-static void gen_select_core_list(CqlState* CS, ast_node *ast);
-static void gen_groupby_list(CqlState* CS, ast_node *_Nonnull ast);
-static void gen_orderby_list(CqlState* CS, ast_node *_Nonnull ast);
-static void gen_stmt_list(CqlState* CS, ast_node *_Nullable ast);
-static void gen_expr(CqlState* CS, ast_node *_Nonnull ast, int32_t pri);
-static void gen_version_attrs(CqlState* CS, ast_node *_Nullable ast);
-static void gen_col_def(CqlState* CS, ast_node *_Nonnull ast);
-static void gen_query_parts(CqlState* CS, ast_node *ast);
-static void gen_select_stmt(CqlState* CS, ast_node *_Nonnull ast);
-static void gen_opt_where(CqlState* CS, ast_node *ast);
-static void gen_opt_orderby(CqlState* CS, ast_node *ast);
-static void gen_shape_arg(CqlState* CS, ast_node *ast);
-static void gen_insert_list(CqlState* CS, ast_node *_Nullable ast);
-static void gen_column_spec(CqlState* CS, ast_node *ast);
-static void gen_from_shape(CqlState* CS, ast_node *ast);
-static void gen_opt_filter_clause(CqlState* CS, ast_node *ast);
-static void gen_if_not_exists(CqlState* CS, ast_node *ast, bool_t if_not_exist);
-static void gen_shape_def(CqlState* CS, ast_node *ast);
-static void gen_expr_names(CqlState* CS, ast_node *ast);
-static void gen_conflict_clause(CqlState* CS, ast_node *ast);
-static void gen_call_stmt(CqlState* CS, ast_node *ast);
-static void gen_shared_cte(CqlState* CS, ast_node *ast);
-static bool_t gen_found_set_kind(CqlState* CS, ast_node *ast, void *context, charbuf *buffer);
-static void gen_cte_tables(CqlState* CS, ast_node *ast, CSTR prefix);
-static void gen_select_expr_list(CqlState* CS, ast_node *ast);
-static void gen_select_expr_macro_ref(CqlState* CS, ast_node *ast);
-static void gen_select_expr_macro_arg_ref(CqlState* CS, ast_node *ast);
-static void gen_expr_at_id(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
-static void gen_select_expr(CqlState* CS, ast_node *ast);
+static void gen_select_core_list(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_groupby_list(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+static void gen_orderby_list(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+static void gen_stmt_list(CqlState* _Nonnull CS, ast_node *_Nullable ast);
+static void gen_expr(CqlState* _Nonnull CS, ast_node *_Nonnull ast, int32_t pri);
+static void gen_version_attrs(CqlState* _Nonnull CS, ast_node *_Nullable ast);
+static void gen_col_def(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+static void gen_query_parts(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_select_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+static void gen_opt_where(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_opt_orderby(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_shape_arg(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_insert_list(CqlState* _Nonnull CS, ast_node *_Nullable ast);
+static void gen_column_spec(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_from_shape(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_opt_filter_clause(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_if_not_exists(CqlState* _Nonnull CS, ast_node *ast, bool_t if_not_exist);
+static void gen_shape_def(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_expr_names(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_conflict_clause(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_call_stmt(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_shared_cte(CqlState* _Nonnull CS, ast_node *ast);
+static bool_t gen_found_set_kind(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer);
+static void gen_cte_tables(CqlState* _Nonnull CS, ast_node *ast, CSTR prefix);
+static void gen_select_expr_list(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_select_expr_macro_ref(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_select_expr_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast);
+static void gen_expr_at_id(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
+static void gen_select_expr(CqlState* _Nonnull CS, ast_node *ast);
 
 //static int32_t gen_indent = 0;
 //static int32_t pending_indent = 0;
@@ -92,7 +92,7 @@ static void gen_select_expr(CqlState* CS, ast_node *ast);
   CS->gen_indent = name##_level; \
   if (CS->pending_indent > CS->gen_indent) CS->pending_indent = CS->gen_indent;
 
-cql_noexport void gen_printf(CqlState* CS, const char *format, ...) {
+cql_noexport void gen_printf(CqlState* _Nonnull CS, const char *format, ...) {
  CHARBUF_OPEN(tmp);
  va_list args;
  va_start(args, format);
@@ -112,13 +112,13 @@ cql_noexport void gen_printf(CqlState* CS, const char *format, ...) {
  CHARBUF_CLOSE(tmp);
 }
 
-static void gen_literal(CqlState* CS, CSTR literal) {
+static void gen_literal(CqlState* _Nonnull CS, CSTR literal) {
   for (int32_t i = 0; i < CS->pending_indent; i++) bputc(CS->gen_output, ' ');
   CS->pending_indent = 0;
   bprintf(CS->gen_output, "%s", literal);
 }
 
-cql_noexport void gen_to_stdout(CqlState* CS, ast_node *ast, gen_func fn) {
+cql_noexport void gen_to_stdout(CqlState* _Nonnull CS, ast_node *ast, gen_func fn) {
   gen_callbacks_lv = NULL;
   charbuf *gen_saved = CS->gen_output;
   CHARBUF_OPEN(sql_out);
@@ -129,38 +129,38 @@ cql_noexport void gen_to_stdout(CqlState* CS, ast_node *ast, gen_func fn) {
   CS->gen_output = gen_saved;
 }
 
-static bool_t suppress_attributes(CqlState* CS) {
+static bool_t suppress_attributes(CqlState* _Nonnull CS) {
   return gen_callbacks_lv && (gen_callbacks_rv->mode == gen_mode_sql || gen_callbacks_rv->mode == gen_mode_no_annotations);
 }
 
-static bool_t for_sqlite(CqlState* CS) {
+static bool_t for_sqlite(CqlState* _Nonnull CS) {
   return gen_callbacks_lv && gen_callbacks_rv->mode == gen_mode_sql;
 }
 
-cql_noexport void gen_stmt_list_to_stdout(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_stmt_list_to_stdout(CqlState* _Nonnull CS, ast_node *ast) {
   gen_to_stdout(CS, ast, gen_stmt_list);
 }
 
-cql_noexport void gen_one_stmt_to_stdout(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_one_stmt_to_stdout(CqlState* _Nonnull CS, ast_node *ast) {
   gen_to_stdout(CS, ast, gen_one_stmt);
   cql_output(CS, ";\n");
 }
 
-cql_noexport void gen_misc_attrs_to_stdout(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_misc_attrs_to_stdout(CqlState* _Nonnull CS, ast_node *ast) {
   gen_to_stdout(CS, ast, gen_misc_attrs);
 }
 
-cql_noexport void gen_with_callbacks(CqlState* CS, ast_node *ast, gen_func fn, gen_sql_callbacks *_callbacks) {
+cql_noexport void gen_with_callbacks(CqlState* _Nonnull CS, ast_node *ast, gen_func fn, gen_sql_callbacks *_callbacks) {
   gen_callbacks_lv = _callbacks;
   (*fn)(CS, ast);
   gen_callbacks_lv = NULL;
 }
 
-cql_noexport void gen_col_def_with_callbacks(CqlState* CS, ast_node *ast, gen_sql_callbacks *_callbacks) {
+cql_noexport void gen_col_def_with_callbacks(CqlState* _Nonnull CS, ast_node *ast, gen_sql_callbacks *_callbacks) {
   gen_with_callbacks(CS, ast, gen_col_def, _callbacks);
 }
 
-cql_noexport void gen_statement_with_callbacks(CqlState* CS, ast_node *ast, gen_sql_callbacks *_callbacks) {
+cql_noexport void gen_statement_with_callbacks(CqlState* _Nonnull CS, ast_node *ast, gen_sql_callbacks *_callbacks) {
   // works for statements or statement lists
   if (is_ast_stmt_list(ast)) {
     CS->gen_stmt_level = -1;  // the first statement list does not indent
@@ -172,12 +172,12 @@ cql_noexport void gen_statement_with_callbacks(CqlState* CS, ast_node *ast, gen_
   }
 }
 
-cql_noexport void gen_statement_and_attributes_with_callbacks(CqlState* CS, ast_node *ast, gen_sql_callbacks *_callbacks) {
+cql_noexport void gen_statement_and_attributes_with_callbacks(CqlState* _Nonnull CS, ast_node *ast, gen_sql_callbacks *_callbacks) {
   CS->gen_stmt_level = 0;  // nested statement lists will indent
   gen_with_callbacks(CS, ast, gen_one_stmt_and_misc_attrs, _callbacks);
 }
 
-cql_noexport void gen_set_output_buffer(CqlState* CS, struct charbuf *buffer) {
+cql_noexport void gen_set_output_buffer(CqlState* _Nonnull CS, struct charbuf *buffer) {
   CS->gen_output = buffer;
 }
 
@@ -199,7 +199,7 @@ static void gen_name_ex(CqlState*CS, CSTR name, bool_t is_qid) {
   CHARBUF_CLOSE(tmp);
 }
 
-static void gen_name(CqlState* CS, ast_node *ast) {
+static void gen_name(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_at_id(ast)) {
     gen_expr_at_id(CS, ast, "", 0, 0);
     return;
@@ -209,18 +209,18 @@ static void gen_name(CqlState* CS, ast_node *ast) {
   gen_name_ex(CS, name, is_qid(ast));
 }
 
-static void gen_sptr_name(CqlState* CS, sem_struct *sptr, uint32_t i) {
+static void gen_sptr_name(CqlState* _Nonnull CS, sem_struct *sptr, uint32_t i) {
   gen_name_ex(CS, sptr->names[i], !!(sptr->semtypes[i] & SEM_TYPE_QID));
 }
 
-static void gen_constraint_name(CqlState* CS, ast_node *ast) {
+static void gen_constraint_name(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast);
   gen_printf(CS, "CONSTRAINT ");
   gen_name(CS, name_ast);
   gen_printf(CS, " ");
 }
 
-static void gen_name_list(CqlState* CS, ast_node *list) {
+static void gen_name_list(CqlState* _Nonnull CS, ast_node *list) {
   Contract(is_ast_name_list(list));
 
   for (ast_node *item = list; item; item = item->right) {
@@ -231,7 +231,7 @@ static void gen_name_list(CqlState* CS, ast_node *list) {
   }
 }
 
-cql_noexport void gen_misc_attr_value_list(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_misc_attr_value_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_misc_attr_value_list(ast));
   for (ast_node *item = ast; item; item = item->right) {
     gen_misc_attr_value(CS, item->left);
@@ -241,7 +241,7 @@ cql_noexport void gen_misc_attr_value_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-cql_noexport void gen_misc_attr_value(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_misc_attr_value(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_misc_attr_value_list(ast)) {
     gen_printf(CS, "(");
     gen_misc_attr_value_list(CS, ast);
@@ -252,7 +252,7 @@ cql_noexport void gen_misc_attr_value(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_misc_attr(CqlState* CS, ast_node *ast) {
+static void gen_misc_attr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
 
   gen_printf(CS, "@ATTRIBUTE(");
@@ -271,7 +271,7 @@ static void gen_misc_attr(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")\n");
 }
 
-cql_noexport void gen_misc_attrs(CqlState* CS, ast_node *list) {
+cql_noexport void gen_misc_attrs(CqlState* _Nonnull CS, ast_node *list) {
   Contract(is_ast_misc_attrs(list));
 
   // misc attributes don't go into the output if we are writing for Sqlite
@@ -284,7 +284,7 @@ cql_noexport void gen_misc_attrs(CqlState* CS, ast_node *list) {
   }
 }
 
-static void gen_type_kind(CqlState* CS, CSTR name) {
+static void gen_type_kind(CqlState* _Nonnull CS, CSTR name) {
   // we don't always have an ast node for this, we make a fake one for the callback
   str_ast_node sast = {
     .type = k_ast_str,
@@ -310,7 +310,7 @@ static void gen_type_kind(CqlState* CS, CSTR name) {
   }
 }
 
-static void gen_not_null(CqlState* CS) {
+static void gen_not_null(CqlState* _Nonnull CS) {
   if (for_sqlite(CS)) {
     gen_printf(CS, " NOT NULL");
   }
@@ -319,7 +319,7 @@ static void gen_not_null(CqlState* CS) {
   }
 }
 
-void gen_data_type(CqlState* CS, ast_node *ast) {
+void gen_data_type(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
     gen_printf(CS, "CREATE ");
     gen_data_type(CS, ast->left);
@@ -396,7 +396,7 @@ void gen_data_type(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_indexed_column(CqlState* CS, ast_node *ast) {
+static void gen_indexed_column(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_indexed_column(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
 
@@ -409,7 +409,7 @@ static void gen_indexed_column(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_indexed_columns(CqlState* CS, ast_node *ast) {
+static void gen_indexed_columns(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_indexed_columns(ast));
   for (ast_node *item = ast; item; item = item->right) {
     gen_indexed_column(CS, item->left);
@@ -419,7 +419,7 @@ static void gen_indexed_columns(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_create_index_stmt(CqlState* CS, ast_node *ast) {
+static void gen_create_index_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_index_stmt(ast));
   EXTRACT_NOTNULL(create_index_on_list, ast->left);
   EXTRACT_NOTNULL(flags_names_attrs, ast->right);
@@ -451,7 +451,7 @@ static void gen_create_index_stmt(CqlState* CS, ast_node *ast) {
   gen_version_attrs(CS, attrs);
 }
 
-static void gen_unq_def(CqlState* CS, ast_node *def) {
+static void gen_unq_def(CqlState* _Nonnull CS, ast_node *def) {
   Contract(is_ast_unq_def(def));
   EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
   EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
@@ -469,7 +469,7 @@ static void gen_unq_def(CqlState* CS, ast_node *def) {
   }
 }
 
-static void gen_check_def(CqlState* CS, ast_node *def) {
+static void gen_check_def(CqlState* _Nonnull CS, ast_node *def) {
   Contract(is_ast_check_def(def));
   if (def->left) {
     gen_constraint_name(CS, def->left);
@@ -481,7 +481,7 @@ static void gen_check_def(CqlState* CS, ast_node *def) {
   gen_printf(CS, ")");
 }
 
-cql_noexport void gen_fk_action(CqlState* CS, int32_t action) {
+cql_noexport void gen_fk_action(CqlState* _Nonnull CS, int32_t action) {
   switch (action) {
     case FK_SET_NULL:
       gen_printf(CS, "SET NULL");
@@ -503,7 +503,7 @@ cql_noexport void gen_fk_action(CqlState* CS, int32_t action) {
   }
 }
 
-static void gen_fk_flags(CqlState* CS, int32_t flags) {
+static void gen_fk_flags(CqlState* _Nonnull CS, int32_t flags) {
   if (flags) {
     gen_printf(CS, " ");
   }
@@ -546,7 +546,7 @@ static void gen_fk_flags(CqlState* CS, int32_t flags) {
   }
 }
 
-static void gen_fk_target_options(CqlState* CS, ast_node *ast) {
+static void gen_fk_target_options(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fk_target_options(ast));
   EXTRACT_NOTNULL(fk_target, ast->left);
   EXTRACT_OPTION(flags, ast->right);
@@ -561,7 +561,7 @@ static void gen_fk_target_options(CqlState* CS, ast_node *ast) {
   gen_fk_flags(CS, flags);
 }
 
-static void gen_fk_def(CqlState* CS, ast_node *def) {
+static void gen_fk_def(CqlState* _Nonnull CS, ast_node *def) {
   Contract(is_ast_fk_def(def));
   EXTRACT(fk_info, def->right);
   EXTRACT_NAMED_NOTNULL(src_list, name_list, fk_info->left);
@@ -577,7 +577,7 @@ static void gen_fk_def(CqlState* CS, ast_node *def) {
   gen_fk_target_options(CS, fk_target_options);
 }
 
-static void gen_conflict_clause(CqlState* CS, ast_node *ast) {
+static void gen_conflict_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_int(ast));
   EXTRACT_OPTION(conflict_clause_opt, ast);
 
@@ -601,7 +601,7 @@ static void gen_conflict_clause(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_pk_def(CqlState* CS, ast_node *def) {
+static void gen_pk_def(CqlState* _Nonnull CS, ast_node *def) {
   Contract(is_ast_pk_def(def));
   EXTRACT_NOTNULL(indexed_columns_conflict_clause, def->right);
   EXTRACT_NOTNULL(indexed_columns, indexed_columns_conflict_clause->left);
@@ -619,7 +619,7 @@ static void gen_pk_def(CqlState* CS, ast_node *def) {
   }
 }
 
-static void gen_version_and_proc(CqlState* CS, ast_node *ast)
+static void gen_version_and_proc(CqlState* _Nonnull CS, ast_node *ast)
 {
   Contract(is_ast_version_annotation(ast));
   EXTRACT_OPTION(vers, ast->left);
@@ -640,7 +640,7 @@ static void gen_version_and_proc(CqlState* CS, ast_node *ast)
   }
 }
 
-static void gen_recreate_attr(CqlState* CS, ast_node *attr) {
+static void gen_recreate_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_recreate_attr(attr));
   if (!suppress_attributes(CS)) {
     // attributes do not appear when writing out commands for Sqlite
@@ -652,7 +652,7 @@ static void gen_recreate_attr(CqlState* CS, ast_node *attr) {
   }
 }
 
-static void gen_create_attr(CqlState* CS, ast_node *attr) {
+static void gen_create_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_create_attr(attr));
   if (!suppress_attributes(CS)) {
     // attributes do not appear when writing out commands for Sqlite
@@ -662,7 +662,7 @@ static void gen_create_attr(CqlState* CS, ast_node *attr) {
   }
 }
 
-static void gen_delete_attr(CqlState* CS, ast_node *attr) {
+static void gen_delete_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_delete_attr(attr));
 
   // attributes do not appear when writing out commands for Sqlite
@@ -676,7 +676,7 @@ static void gen_delete_attr(CqlState* CS, ast_node *attr) {
   }
 }
 
-static void gen_sensitive_attr(CqlState* CS, ast_node *attr) {
+static void gen_sensitive_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_sensitive_attr(attr));
   if (!for_sqlite(CS)) {
     // attributes do not appear when writing out commands for Sqlite
@@ -684,7 +684,7 @@ static void gen_sensitive_attr(CqlState* CS, ast_node *attr) {
   }
 }
 
-static void gen_col_attrs(CqlState* CS, ast_node *_Nullable attrs) {
+static void gen_col_attrs(CqlState* _Nonnull CS, ast_node *_Nullable attrs) {
   for (ast_node *attr = attrs; attr; attr = attr->right) {
     if (is_ast_create_attr(attr)) {
       gen_create_attr(CS, attr);
@@ -735,7 +735,7 @@ static void gen_col_attrs(CqlState* CS, ast_node *_Nullable attrs) {
   }
 }
 
-static void gen_col_def(CqlState* CS, ast_node *def) {
+static void gen_col_def(CqlState* _Nonnull CS, ast_node *def) {
   Contract(is_ast_col_def(def));
   EXTRACT_NOTNULL(col_def_type_attrs, def->left);
   EXTRACT(misc_attrs, def->right);
@@ -768,7 +768,7 @@ static void gen_col_def(CqlState* CS, ast_node *def) {
   gen_col_attrs(CS, attrs);
 }
 
-cql_export bool_t eval_star_callback(CqlState* CS, ast_node *ast) {
+cql_export bool_t eval_star_callback(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_star(ast) || is_ast_table_star(ast));
   bool_t suppress = 0;
 
@@ -782,7 +782,7 @@ cql_export bool_t eval_star_callback(CqlState* CS, ast_node *ast) {
   return suppress;
 }
 
-cql_noexport bool_t eval_column_callback(CqlState* CS, ast_node *ast) {
+cql_noexport bool_t eval_column_callback(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_col_def(ast));
   bool_t suppress = 0;
 
@@ -805,7 +805,7 @@ bool_t eval_variables_callback(CS, ast_node *ast) {
 
 #else
 
-bool_t eval_variables_callback(CqlState* CS, ast_node *ast) {
+bool_t eval_variables_callback(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t suppress = 0;
   if (gen_callbacks_lv && gen_callbacks_rv->variables_callback && ast->sem && is_variable(ast->sem->sem_type)) {
     CHARBUF_OPEN(buf);
@@ -817,7 +817,7 @@ bool_t eval_variables_callback(CqlState* CS, ast_node *ast) {
 }
 #endif
 
-cql_noexport void gen_col_or_key(CqlState* CS, ast_node *def) {
+cql_noexport void gen_col_or_key(CqlState* _Nonnull CS, ast_node *def) {
   if (is_ast_col_def(def)) {
     gen_col_def(CS, def);
   } else if (is_ast_pk_def(def)) {
@@ -834,7 +834,7 @@ cql_noexport void gen_col_or_key(CqlState* CS, ast_node *def) {
   }
 }
 
-cql_noexport void gen_col_key_list(CqlState* CS, ast_node *list) {
+cql_noexport void gen_col_key_list(CqlState* _Nonnull CS, ast_node *list) {
   Contract(is_ast_col_key_list(list));
   bool_t need_comma = 0;
 
@@ -858,7 +858,7 @@ cql_noexport void gen_col_key_list(CqlState* CS, ast_node *list) {
   GEN_END_INDENT(coldefs);
 }
 
-static void gen_select_opts(CqlState* CS, ast_node *ast) {
+static void gen_select_opts(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_opts(ast));
   EXTRACT_ANY_NOTNULL(opt, ast->left);
 
@@ -874,7 +874,7 @@ static void gen_select_opts(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_binary_no_spaces(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_binary_no_spaces(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(CS, "(");
   gen_expr(CS, ast->left, pri_new);
   gen_printf(CS, "%s", op);
@@ -882,7 +882,7 @@ static void gen_binary_no_spaces(CqlState* CS, ast_node *ast, CSTR op, int32_t p
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_binary(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 
   // We add parens if our priority is less than the parent priority
   // meaning something like this:
@@ -903,27 +903,27 @@ static void gen_binary(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_unary(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_unary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(CS, "(");
   gen_printf(CS, "%s", op);
   gen_expr(CS, ast->left, pri_new);
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_postfix(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_postfix(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(CS, "(");
   gen_expr(CS, ast->left, pri_new);
   gen_printf(CS, " %s", op);
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_expr_const(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_const(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   gen_printf(CS, "CONST(");
   gen_expr(CS, ast->left, pri_new);
   gen_printf(CS, ")");
 }
 
-static void gen_uminus(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_uminus(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(CS, "(");
   gen_printf(CS, "%s", op);
 
@@ -944,7 +944,7 @@ static void gen_uminus(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_concat(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_concat(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_concat(ast));
 
   if (pri_new < pri) gen_printf(CS, "(");
@@ -954,7 +954,7 @@ static void gen_concat(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_arg_expr(CqlState* CS, ast_node *ast) {
+static void gen_arg_expr(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_star(ast)) {
     gen_printf(CS, "*");
   }
@@ -966,7 +966,7 @@ static void gen_arg_expr(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_expr_exists(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_exists(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_exists_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
 
@@ -978,7 +978,7 @@ static void gen_expr_exists(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, i
   gen_printf(CS, ")");
 }
 
-static void gen_arg_list(CqlState* CS, ast_node *ast) {
+static void gen_arg_list(CqlState* _Nonnull CS, ast_node *ast) {
   while (ast) {
     gen_arg_expr(CS, ast->left);
     if (ast->right) {
@@ -988,7 +988,7 @@ static void gen_arg_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_expr_list(CqlState* CS, ast_node *ast) {
+static void gen_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
   while (ast) {
     gen_root_expr(CS, ast->left);
     if (ast->right) {
@@ -998,7 +998,7 @@ static void gen_expr_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_shape_arg(CqlState* CS, ast_node *ast) {
+static void gen_shape_arg(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_from_shape(ast));
   EXTRACT_STRING(shape, ast->left);
   gen_printf(CS, "FROM %s", shape);
@@ -1008,7 +1008,7 @@ static void gen_shape_arg(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_case_list(CqlState* CS, ast_node *ast) {
+static void gen_case_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_case_list(ast));
 
   while (ast) {
@@ -1027,18 +1027,18 @@ static void gen_case_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_expr_table_star(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_table_star(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_table_star(ast));
   gen_name(CS, ast->left);
   gen_printf(CS, ".*");
 }
 
-static void gen_expr_star(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_star(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_star(ast));
   gen_printf(CS, "*");
 }
 
-static void gen_expr_num(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_num(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_num(ast));
   EXTRACT_NUM_VALUE(val, ast);
   EXTRACT_NUM_TYPE(num_type, ast);
@@ -1071,7 +1071,7 @@ static void gen_expr_num(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int3
   }
 }
 
-static void gen_expr_blob(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_blob(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_blob(ast));
   EXTRACT_BLOBTEXT(str, ast);
 
@@ -1079,7 +1079,7 @@ static void gen_expr_blob(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int
   gen_printf(CS, "%s", str);
 }
 
-static void gen_macro_args(CqlState* CS, ast_node *ast) {
+static void gen_macro_args(CqlState* _Nonnull CS, ast_node *ast) {
   for ( ; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(arg, ast->left);
     if (is_ast_expr_macro_arg(arg)) {
@@ -1119,7 +1119,7 @@ static void gen_macro_args(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_text_args(CqlState* CS, ast_node *ast) {
+static void gen_text_args(CqlState* _Nonnull CS, ast_node *ast) {
   for (; ast; ast = ast->right) {
     Contract(is_ast_text_args(ast));
     EXTRACT_ANY_NOTNULL(txt, ast->left);
@@ -1143,13 +1143,13 @@ static void gen_text_args(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_expr_macro_text(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_macro_text(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   gen_printf(CS, "@TEXT(");
   gen_text_args(CS, ast->left);
   gen_printf(CS, ")");
 }
 
-cql_noexport void gen_any_text_arg(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_any_text_arg(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_cte_tables(ast)) {
     gen_cte_tables(CS, ast, "");
   }
@@ -1174,7 +1174,7 @@ cql_noexport void gen_any_text_arg(CqlState* CS, ast_node *ast) {
 // but in this form no parens are needed, the replacement will
 // naturally cause parens around a lower binding macro or macro arg
 // hence we ignore pri and pri new just like for say identifiers
-static void gen_expr_macro_ref(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_macro_ref(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_expr_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s(", name);
@@ -1186,20 +1186,20 @@ static void gen_expr_macro_ref(CqlState* CS, ast_node *ast, CSTR op, int32_t pri
 // but in this form no parens are needed, the replacement will
 // naturally cause parens around a lower binding macro or macro arg
 // hence we ignore pri and pri new just like for say identifiers
-static void gen_expr_macro_arg_ref(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_expr_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s", name);
 }
 
-static void gen_expr_at_id(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_at_id(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_at_id(ast));
   gen_printf(CS, "@ID(");
   gen_text_args(CS, ast->left);
   gen_printf(CS, ")");
 }
 
-static void gen_expr_str(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_str(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(str, ast);
 
@@ -1234,12 +1234,12 @@ static void gen_expr_str(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int3
   }
 }
 
-static void gen_expr_null(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_null(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(ast));
   gen_printf(CS, "NULL");
 }
 
-static void gen_expr_dot(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_dot(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_dot(ast));
 
   // the general case is not variables tables etc. the notifications do not fire
@@ -1319,7 +1319,7 @@ static void gen_expr_dot(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int3
 #endif
 }
 
-static void gen_expr_in_pred(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_in_pred(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_in_pred(ast));
   if (pri_new < pri) gen_printf(CS, "(");
   gen_expr(CS, ast->left, pri_new);
@@ -1340,7 +1340,7 @@ static void gen_expr_in_pred(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, 
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_expr_not_in(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_not_in(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_not_in(ast));
   if (pri_new < pri) gen_printf(CS, "(");
   gen_expr(CS, ast->left, pri_new);
@@ -1366,7 +1366,7 @@ static void gen_expr_not_in(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, i
 // for them to bind to fields and generate hashes.  We have to pick some
 // canonical thing so we canonicalize to camelCase.  It's not perfect but it seems
 // like the best trade-off. Lots of languages wrap SQLite columns.
-static void gen_append_field_desc(CqlState* CS, charbuf *tmp, CSTR cname, sem_t sem_type) {
+static void gen_append_field_desc(CqlState* _Nonnull CS, charbuf *tmp, CSTR cname, sem_t sem_type) {
   cg_sym_name(CS, cg_symbol_case_camel, tmp, "", cname, NULL); // no prefix camel
   bputc(tmp, ':');
 
@@ -1400,7 +1400,7 @@ static void gen_append_field_desc(CqlState* CS, charbuf *tmp, CSTR cname, sem_t 
 // to an output stream and it takes ad hoc parameters, suitable for external
 // callers but otherwise the same.  They could be folded but there's nothing
 // to fold really other than the sha256 stuff which is already folded...
-cql_noexport CSTR get_field_hash(CqlState* CS, CSTR name, sem_t sem_type) {
+cql_noexport CSTR get_field_hash(CqlState* _Nonnull CS, CSTR name, sem_t sem_type) {
   CHARBUF_OPEN(tmp);
   gen_append_field_desc(CS, &tmp, name, sem_type);
   int64_t hash = sha256_charbuf(&tmp);
@@ -1413,7 +1413,7 @@ cql_noexport CSTR get_field_hash(CqlState* CS, CSTR name, sem_t sem_type) {
 // presumes that semantic analysis has already happened. Its
 // otherwise meaningless.  There must also be live blob mappings
 // again all this would be screen out much earlier if it was otherwise.
-static void gen_field_hash(CqlState* CS, ast_node *ast) {
+static void gen_field_hash(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_dot(ast));
   Contract(CS->cg_blob_mappings);
   Contract(ast->sem);
@@ -1438,7 +1438,7 @@ static int case_cmp(void *p1, void *p2) {
 
 // The type hash considers all of the not null fields plus the type name
 // as the core identity of the type.
-cql_noexport CSTR gen_type_hash(CqlState* CS, ast_node *ast) {
+cql_noexport CSTR gen_type_hash(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(ast);
   Contract(ast->sem);
   Contract(ast->sem->sptr);
@@ -1506,7 +1506,7 @@ cache_hit:
   return dup_printf(CS, "%lld", (llint_t)hash);
 }
 
-static void gen_cql_blob_get_type(CqlState* CS, ast_node *ast) {
+static void gen_cql_blob_get_type(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(CS->cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -1560,7 +1560,7 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
   return -1;
 }
 
-static void gen_cql_blob_get(CqlState* CS, ast_node *ast) {
+static void gen_cql_blob_get(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(CS->cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -1637,7 +1637,7 @@ static const int32_t sem_type_to_blob_type[] = {
   CQL_BLOB_TYPE_ENTITY
 };
 
-static void gen_cql_blob_create(CqlState* CS, ast_node *ast) {
+static void gen_cql_blob_create(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(CS->cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -1701,7 +1701,7 @@ static void gen_cql_blob_create(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_cql_blob_update(CqlState* CS, ast_node *ast) {
+static void gen_cql_blob_update(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call(ast));
   Contract(CS->cg_blob_mappings);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
@@ -1756,7 +1756,7 @@ static void gen_cql_blob_update(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_array(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_array(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_array(ast));
   EXTRACT_ANY_NOTNULL(array, ast->left);
   EXTRACT_NOTNULL(arg_list, ast->right);
@@ -1769,7 +1769,7 @@ static void gen_array(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t
   gen_printf(CS, "]");
 }
 
-static void gen_expr_call(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_call(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -1848,7 +1848,7 @@ static void gen_expr_call(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int
   }
 }
 
-static void gen_opt_filter_clause(CqlState* CS, ast_node *ast) {
+static void gen_opt_filter_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_filter_clause(ast));
   EXTRACT_NOTNULL(opt_where, ast->left);
 
@@ -1857,7 +1857,7 @@ static void gen_opt_filter_clause(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_opt_partition_by(CqlState* CS, ast_node *ast) {
+static void gen_opt_partition_by(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_partition_by(ast));
   EXTRACT_NOTNULL(expr_list, ast->left);
 
@@ -1865,7 +1865,7 @@ static void gen_opt_partition_by(CqlState* CS, ast_node *ast) {
   gen_expr_list(CS, expr_list);
 }
 
-static void gen_frame_spec_flags(CqlState* CS, int32_t flags) {
+static void gen_frame_spec_flags(CqlState* _Nonnull CS, int32_t flags) {
   if (flags & FRAME_TYPE_RANGE) {
     gen_printf(CS, "RANGE");
   }
@@ -1909,13 +1909,13 @@ static void gen_frame_spec_flags(CqlState* CS, int32_t flags) {
   }
 }
 
-static void gen_frame_type(CqlState* CS, int32_t flags) {
+static void gen_frame_type(CqlState* _Nonnull CS, int32_t flags) {
   Invariant(flags == (flags & FRAME_TYPE_FLAGS));
   gen_frame_spec_flags(CS, flags);
   gen_printf(CS, " ");
 }
 
-static void gen_frame_exclude(CqlState* CS, int32_t flags) {
+static void gen_frame_exclude(CqlState* _Nonnull CS, int32_t flags) {
   Invariant(flags == (flags & FRAME_EXCLUDE_FLAGS));
   if (flags != FRAME_EXCLUDE_NONE) {
     gen_printf(CS, " ");
@@ -1923,7 +1923,7 @@ static void gen_frame_exclude(CqlState* CS, int32_t flags) {
   gen_frame_spec_flags(CS, flags);
 }
 
-static void gen_frame_boundary(CqlState* CS, ast_node *ast, int32_t flags) {
+static void gen_frame_boundary(CqlState* _Nonnull CS, ast_node *ast, int32_t flags) {
   EXTRACT_ANY(expr, ast->left);
   Invariant(flags == (flags & FRAME_BOUNDARY_FLAGS));
 
@@ -1934,7 +1934,7 @@ static void gen_frame_boundary(CqlState* CS, ast_node *ast, int32_t flags) {
   gen_frame_spec_flags(CS, flags);
 }
 
-static void gen_frame_boundary_start(CqlState* CS, ast_node *ast, int32_t flags) {
+static void gen_frame_boundary_start(CqlState* _Nonnull CS, ast_node *ast, int32_t flags) {
   Contract(is_ast_expr_list(ast));
   EXTRACT_ANY(expr, ast->left);
   Invariant(flags == (flags & FRAME_BOUNDARY_START_FLAGS));
@@ -1947,7 +1947,7 @@ static void gen_frame_boundary_start(CqlState* CS, ast_node *ast, int32_t flags)
   gen_frame_spec_flags(CS, flags);
 }
 
-static void gen_frame_boundary_end(CqlState* CS, ast_node *ast, int32_t flags) {
+static void gen_frame_boundary_end(CqlState* _Nonnull CS, ast_node *ast, int32_t flags) {
   Contract(is_ast_expr_list(ast));
   EXTRACT_ANY(expr, ast->right);
   Invariant(flags == (flags & FRAME_BOUNDARY_END_FLAGS));
@@ -1960,7 +1960,7 @@ static void gen_frame_boundary_end(CqlState* CS, ast_node *ast, int32_t flags) {
   gen_frame_spec_flags(CS, flags);
 }
 
-static void gen_opt_frame_spec(CqlState* CS, ast_node *ast) {
+static void gen_opt_frame_spec(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_frame_spec(ast));
   EXTRACT_OPTION(flags, ast->left);
   EXTRACT_NOTNULL(expr_list, ast->right);
@@ -1988,7 +1988,7 @@ static void gen_opt_frame_spec(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_window_defn(CqlState* CS, ast_node *ast) {
+static void gen_window_defn(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_defn(ast));
   EXTRACT(opt_partition_by, ast->left);
   EXTRACT_NOTNULL(window_defn_orderby, ast->right);
@@ -2018,7 +2018,7 @@ static void gen_window_defn(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_name_or_window_defn(CqlState* CS, ast_node *ast) {
+static void gen_name_or_window_defn(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_str(ast)) {
     EXTRACT_STRING(window_name, ast);
     gen_printf(CS, " %s", window_name);
@@ -2029,7 +2029,7 @@ static void gen_name_or_window_defn(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_expr_window_func_inv(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_window_func_inv(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_window_func_inv(ast));
   EXTRACT_NOTNULL(call, ast->left);
   EXTRACT_ANY_NOTNULL(name_or_window_defn, ast->right);
@@ -2040,7 +2040,7 @@ static void gen_expr_window_func_inv(CqlState* CS, ast_node *ast, CSTR op, int32
   gen_name_or_window_defn(CS, name_or_window_defn);
 }
 
-static void gen_expr_raise(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_raise(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_raise(ast));
   EXTRACT_OPTION(flags, ast->left);
   EXTRACT_ANY(expr, ast->right);
@@ -2061,7 +2061,7 @@ static void gen_expr_raise(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, in
   gen_printf(CS, ")");
 }
 
-static void gen_expr_between(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_between(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_between(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
@@ -2074,7 +2074,7 @@ static void gen_expr_between(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, 
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_expr_not_between(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_not_between(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_not_between(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
@@ -2087,7 +2087,7 @@ static void gen_expr_not_between(CqlState* CS, ast_node *ast, CSTR op, int32_t p
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_expr_between_rewrite(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_between_rewrite(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_between_rewrite(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
@@ -2112,7 +2112,7 @@ static void gen_expr_between_rewrite(CqlState* CS, ast_node *ast, CSTR op, int32
   if (pri_new < pri) gen_printf(CS, ")");
 }
 
-static void gen_expr_case(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_case(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_case_expr(ast));
   EXTRACT_ANY(expr, ast->left);
   EXTRACT_NOTNULL(connector, ast->right);
@@ -2138,14 +2138,14 @@ static void gen_expr_case(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int
   gen_printf(CS, "END");
 }
 
-static void gen_expr_select(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_select_stmt(ast));
   gen_printf(CS, "( ");
   gen_select_stmt(CS, ast);
   gen_printf(CS, " )");
 }
 
-static void gen_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   gen_printf(CS, "( ");
@@ -2153,7 +2153,7 @@ static void gen_expr_select_if_nothing_throw(CqlState* CS, ast_node *ast, CSTR o
   gen_printf(CS, " IF NOTHING THROW )");
 }
 
-static void gen_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(else_expr, ast->right);
@@ -2165,7 +2165,7 @@ static void gen_expr_select_if_nothing(CqlState* CS, ast_node *ast, CSTR op, int
   gen_printf(CS, " )");
 }
 
-static void gen_expr_type_check(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_type_check(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_type_check_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(type, ast->right);
@@ -2186,7 +2186,7 @@ static void gen_expr_type_check(CqlState* CS, ast_node *ast, CSTR op, int32_t pr
   }
 }
 
-static void gen_expr_cast(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+static void gen_expr_cast(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_cast_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -2223,7 +2223,7 @@ static void gen_expr_cast(CqlState* CS, ast_node *ast, CSTR op, int32_t pri, int
   gen_printf(CS, ")");
 }
 
-static void gen_expr(CqlState* CS, ast_node *ast, int32_t pri) {
+static void gen_expr(CqlState* _Nonnull CS, ast_node *ast, int32_t pri) {
   // These are all the expressions there are, we have to find it in this table
   // or else someone added a new expression type and it isn't supported yet.
   symtab_entry *entry = symtab_find(CS->gen_exprs, ast->type);
@@ -2232,18 +2232,18 @@ static void gen_expr(CqlState* CS, ast_node *ast, int32_t pri) {
   disp->func(CS, ast, disp->str, pri, disp->pri_new);
 }
 
-cql_noexport void gen_root_expr(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_root_expr(CqlState* _Nonnull CS, ast_node *ast) {
   gen_expr(CS, ast, EXPR_PRI_ROOT);
 }
 
-static void gen_as_alias(CqlState* CS, ast_node *ast) {
+static void gen_as_alias(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
 
   gen_printf(CS, " AS ");
   gen_name(CS, name_ast);
 }
 
-static void gen_as_alias_with_override(CqlState* CS, ast_node *ast) {
+static void gen_as_alias_with_override(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(CS->sem.keep_table_name_in_aliases);
 
   CSTR name = get_inserted_table_alias_string_override(ast);
@@ -2252,7 +2252,7 @@ static void gen_as_alias_with_override(CqlState* CS, ast_node *ast) {
   gen_printf(CS, " AS %s", name);
 }
 
-static void gen_select_expr(CqlState* CS, ast_node *ast) {
+static void gen_select_expr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT(opt_as_alias, ast->right);
@@ -2270,7 +2270,7 @@ static void gen_select_expr(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_col_calc(CqlState* CS, ast_node *ast) {
+static void gen_col_calc(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_col_calc(ast));
   if (ast->left) {
     EXTRACT_NAME_AND_SCOPE(ast->left);
@@ -2289,7 +2289,7 @@ static void gen_col_calc(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_col_calcs(CqlState* CS, ast_node *ast) {
+static void gen_col_calcs(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_col_calcs(ast));
   ast_node *item = ast;
   while (item) {
@@ -2301,7 +2301,7 @@ static void gen_col_calcs(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_column_calculation(CqlState* CS, ast_node *ast) {
+static void gen_column_calculation(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_column_calculation(ast));
   gen_printf(CS, "@COLUMNS(");
   if (ast->right) {
@@ -2311,7 +2311,7 @@ static void gen_column_calculation(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_select_expr_list(CqlState* CS, ast_node *ast) {
+static void gen_select_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
   symtab *temp = CS->used_alias_syms;
   CS->used_alias_syms = NULL;
 
@@ -2378,7 +2378,7 @@ static void gen_select_expr_list(CqlState* CS, ast_node *ast) {
   CS->used_alias_syms = temp;
 }
 
-static void gen_table_or_subquery(CqlState* CS, ast_node *ast) {
+static void gen_table_or_subquery(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_or_subquery(ast));
 
   EXTRACT_ANY_NOTNULL(factor, ast->left);
@@ -2449,7 +2449,7 @@ static void gen_table_or_subquery(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_join_cond(CqlState* CS, ast_node *ast) {
+static void gen_join_cond(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_cond(ast));
   EXTRACT_ANY_NOTNULL(cond_type, ast->left);
 
@@ -2466,7 +2466,7 @@ static void gen_join_cond(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_join_target(CqlState* CS, ast_node *ast) {
+static void gen_join_target(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_target(ast));
   EXTRACT_OPTION(join_type, ast->left);
 
@@ -2489,7 +2489,7 @@ static void gen_join_target(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_join_target_list(CqlState* CS, ast_node *ast) {
+static void gen_join_target_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_target_list(ast));
 
   for (ast_node *item = ast; item; item = item->right) {
@@ -2498,7 +2498,7 @@ static void gen_join_target_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_join_clause(CqlState* CS, ast_node *ast) {
+static void gen_join_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_join_clause(ast));
   EXTRACT_NOTNULL(table_or_subquery, ast->left);
   EXTRACT_NOTNULL(join_target_list, ast->right);
@@ -2507,7 +2507,7 @@ static void gen_join_clause(CqlState* CS, ast_node *ast) {
   gen_join_target_list(CS, join_target_list);
 }
 
-static void gen_table_or_subquery_list(CqlState* CS, ast_node *ast) {
+static void gen_table_or_subquery_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_table_or_subquery_list(ast));
 
   for (ast_node *item = ast; item; item = item->right) {
@@ -2518,7 +2518,7 @@ static void gen_table_or_subquery_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_select_core_macro_ref(CqlState* CS, ast_node *ast) {
+static void gen_select_core_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s(", name);
@@ -2526,13 +2526,13 @@ static void gen_select_core_macro_ref(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_select_core_macro_arg_ref(CqlState* CS, ast_node *ast) {
+static void gen_select_core_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s", name);
 }
 
-static void gen_select_expr_macro_ref(CqlState* CS, ast_node *ast) {
+static void gen_select_expr_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s(", name);
@@ -2540,13 +2540,13 @@ static void gen_select_expr_macro_ref(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_select_expr_macro_arg_ref(CqlState* CS, ast_node *ast) {
+static void gen_select_expr_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s", name);
 }
 
-static void gen_cte_tables_macro_ref(CqlState* CS, ast_node *ast) {
+static void gen_cte_tables_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cte_tables_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s(", name);
@@ -2554,13 +2554,13 @@ static void gen_cte_tables_macro_ref(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_cte_tables_macro_arg_ref(CqlState* CS, ast_node *ast) {
+static void gen_cte_tables_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cte_tables_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s", name);
 }
 
-static void gen_query_parts_macro_ref(CqlState* CS, ast_node *ast) {
+static void gen_query_parts_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_query_parts_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s(", name);
@@ -2568,13 +2568,13 @@ static void gen_query_parts_macro_ref(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_query_parts_macro_arg_ref(CqlState* CS, ast_node *ast) {
+static void gen_query_parts_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_query_parts_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s", name);
 }
 
-static void gen_query_parts(CqlState* CS, ast_node *ast) {
+static void gen_query_parts(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_table_or_subquery_list(ast)) {
     gen_table_or_subquery_list(CS, ast);
   }
@@ -2590,7 +2590,7 @@ static void gen_query_parts(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_asc_desc(CqlState* CS, ast_node *ast) {
+static void gen_asc_desc(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_asc(ast)) {
     gen_printf(CS, " ASC");
     if (ast->left && is_ast_nullslast(ast->left)) {
@@ -2608,7 +2608,7 @@ static void gen_asc_desc(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_groupby_list(CqlState* CS, ast_node *ast) {
+static void gen_groupby_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_groupby_list(ast));
 
   for (ast_node *item = ast; item; item = item->right) {
@@ -2624,7 +2624,7 @@ static void gen_groupby_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_orderby_list(CqlState* CS, ast_node *ast) {
+static void gen_orderby_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_orderby_list(ast));
 
   for (ast_node *item = ast; item; item = item->right) {
@@ -2642,14 +2642,14 @@ static void gen_orderby_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_opt_where(CqlState* CS, ast_node *ast) {
+static void gen_opt_where(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_where(ast));
 
   gen_printf(CS, "WHERE ");
   gen_root_expr(CS, ast->left);
 }
 
-static void gen_opt_groupby(CqlState* CS, ast_node *ast) {
+static void gen_opt_groupby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_groupby(ast));
   EXTRACT_NOTNULL(groupby_list, ast->left);
 
@@ -2657,7 +2657,7 @@ static void gen_opt_groupby(CqlState* CS, ast_node *ast) {
   gen_groupby_list(CS, groupby_list);
 }
 
-static void gen_opt_orderby(CqlState* CS, ast_node *ast) {
+static void gen_opt_orderby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_orderby(ast));
   EXTRACT_NOTNULL(orderby_list, ast->left);
 
@@ -2665,21 +2665,21 @@ static void gen_opt_orderby(CqlState* CS, ast_node *ast) {
   gen_orderby_list(CS, orderby_list);
 }
 
-static void gen_opt_limit(CqlState* CS, ast_node *ast) {
+static void gen_opt_limit(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_limit(ast));
 
   gen_printf(CS, "\n  LIMIT ");
   gen_root_expr(CS, ast->left);
 }
 
-static void gen_opt_offset(CqlState* CS, ast_node *ast) {
+static void gen_opt_offset(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_offset(ast));
 
   gen_printf(CS, "\n  OFFSET ");
   gen_root_expr(CS, ast->left);
 }
 
-static void gen_window_name_defn(CqlState* CS, ast_node *ast) {
+static void gen_window_name_defn(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_name_defn(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(window_defn, ast->right);
@@ -2688,7 +2688,7 @@ static void gen_window_name_defn(CqlState* CS, ast_node *ast) {
   gen_window_defn(CS, window_defn);
 }
 
-static void gen_window_name_defn_list(CqlState* CS, ast_node *ast) {
+static void gen_window_name_defn_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_name_defn_list(ast));
   for (ast_node *item = ast; item; item = item->right) {
     EXTRACT_NOTNULL(window_name_defn, item->left);
@@ -2699,14 +2699,14 @@ static void gen_window_name_defn_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_window_clause(CqlState* CS, ast_node *ast) {
+static void gen_window_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_window_clause(ast));
   EXTRACT_NOTNULL(window_name_defn_list, ast->left);
 
   gen_window_name_defn_list(CS, window_name_defn_list);
 }
 
-static void gen_opt_select_window(CqlState* CS, ast_node *ast) {
+static void gen_opt_select_window(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_select_window(ast));
   EXTRACT_NOTNULL(window_clause, ast->left);
 
@@ -2714,7 +2714,7 @@ static void gen_opt_select_window(CqlState* CS, ast_node *ast) {
   gen_window_clause(CS, window_clause);
 }
 
-static void gen_select_from_etc(CqlState* CS, ast_node *ast) {
+static void gen_select_from_etc(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_from_etc(ast));
 
   EXTRACT_ANY(query_parts, ast->left);
@@ -2749,7 +2749,7 @@ static void gen_select_from_etc(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_select_orderby(CqlState* CS, ast_node *ast) {
+static void gen_select_orderby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_orderby(ast));
   EXTRACT(opt_orderby, ast->left);
   EXTRACT_NOTNULL(select_limit, ast->right);
@@ -2769,7 +2769,7 @@ static void gen_select_orderby(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_select_expr_list_con(CqlState* CS, ast_node *ast) {
+static void gen_select_expr_list_con(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_list_con(ast));
   EXTRACT(select_expr_list, ast->left);
   EXTRACT(select_from_etc, ast->right);
@@ -2788,7 +2788,7 @@ cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *cb)
   cb->mode = gen_mode_sql;
 }
 
-static void gen_select_statement_type(CqlState* CS, ast_node *ast) {
+static void gen_select_statement_type(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core(ast));
   EXTRACT_ANY(select_opts, ast->left);
 
@@ -2803,7 +2803,7 @@ static void gen_select_statement_type(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_values(CqlState* CS, ast_node *ast) {
+static void gen_values(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_values(ast));
   for (ast_node *item = ast; item; item = item->right) {
     EXTRACT(insert_list, item->left);
@@ -2818,7 +2818,7 @@ static void gen_values(CqlState* CS, ast_node *ast) {
   }
 }
 
-cql_noexport void gen_select_core(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_select_core(CqlState* _Nonnull CS, ast_node *ast) {
 
   if (is_ast_select_core_macro_ref(ast)) {
     gen_select_core_macro_ref(CS, ast);
@@ -2848,7 +2848,7 @@ cql_noexport void gen_select_core(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_select_no_with(CqlState* CS, ast_node *ast) {
+static void gen_select_no_with(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_stmt(ast));
   EXTRACT_NOTNULL(select_core_list, ast->left);
   EXTRACT_NOTNULL(select_orderby, ast->right);
@@ -2857,7 +2857,7 @@ static void gen_select_no_with(CqlState* CS, ast_node *ast) {
   gen_select_orderby(CS, select_orderby);
 }
 
-static void gen_cte_decl(CqlState* CS, ast_node *ast)  {
+static void gen_cte_decl(CqlState* _Nonnull CS, ast_node *ast)  {
   Contract(is_ast_cte_decl(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s (", name);
@@ -2870,7 +2870,7 @@ static void gen_cte_decl(CqlState* CS, ast_node *ast)  {
   gen_printf(CS, ")");
 }
 
-static void gen_cte_binding_list(CqlState* CS, ast_node *ast) {
+static void gen_cte_binding_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cte_binding_list(ast));
 
   while (ast) {
@@ -2886,7 +2886,7 @@ static void gen_cte_binding_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_shared_cte(CqlState* CS, ast_node *ast) {
+static void gen_shared_cte(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_shared_cte(ast));
   bool_t has_cte_procs_callback = gen_callbacks_lv && gen_callbacks_rv->cte_proc_callback;
   bool_t handled = false;
@@ -2906,7 +2906,7 @@ static void gen_shared_cte(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_cte_table(CqlState* CS, ast_node *ast)  {
+static void gen_cte_table(CqlState* _Nonnull CS, ast_node *ast)  {
   Contract(is_ast_cte_table(ast));
   EXTRACT(cte_decl, ast->left);
   EXTRACT_ANY_NOTNULL(cte_body, ast->right);
@@ -2944,7 +2944,7 @@ static void gen_cte_table(CqlState* CS, ast_node *ast)  {
   }
 }
 
-static void gen_cte_tables(CqlState* CS, ast_node *ast, CSTR prefix) {
+static void gen_cte_tables(CqlState* _Nonnull CS, ast_node *ast, CSTR prefix) {
   bool_t first = true;
 
   while (ast) {
@@ -2992,7 +2992,7 @@ static void gen_cte_tables(CqlState* CS, ast_node *ast, CSTR prefix) {
   }
 }
 
-static void gen_with_prefix(CqlState* CS, ast_node *ast) {
+static void gen_with_prefix(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(cte_tables, ast->left);
   CSTR prefix;
 
@@ -3013,7 +3013,7 @@ static void gen_with_prefix(CqlState* CS, ast_node *ast) {
   GEN_END_INDENT(cte_indent);
 }
 
-static void gen_with_select_stmt(CqlState* CS, ast_node *ast) {
+static void gen_with_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_select_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
   EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
@@ -3022,7 +3022,7 @@ static void gen_with_select_stmt(CqlState* CS, ast_node *ast) {
   gen_select_stmt(CS, select_stmt);
 }
 
-static void gen_select_core_list(CqlState* CS, ast_node *ast) {
+static void gen_select_core_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_list(ast));
 
   EXTRACT_ANY_NOTNULL(select_core, ast->left);
@@ -3048,7 +3048,7 @@ static void gen_select_core_list(CqlState* CS, ast_node *ast) {
 // hence none of the code generators need to even know
 // this is happening (again, just like select *).
 // This approach gives us optimal sql for very little cost.
-static void gen_select_nothing_stmt(CqlState* CS, ast_node *ast) {
+static void gen_select_nothing_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_nothing_stmt(ast));
 
   if (!for_sqlite(CS) || !ast->sem || !ast->sem->sptr) {
@@ -3076,7 +3076,7 @@ static void gen_select_nothing_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, " WHERE 0");
 }
 
-static void gen_select_stmt(CqlState* CS, ast_node *ast) {
+static void gen_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_with_select_stmt(ast)) {
     gen_with_select_stmt(CS, ast);
   }
@@ -3086,7 +3086,7 @@ static void gen_select_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_version_attrs(CqlState* CS, ast_node *_Nullable ast) {
+static void gen_version_attrs(CqlState* _Nonnull CS, ast_node *_Nullable ast) {
   for (ast_node *attr = ast; attr; attr = attr->right) {
     if (is_ast_recreate_attr(attr)) {
       gen_recreate_attr(CS, attr);
@@ -3105,7 +3105,7 @@ static void gen_version_attrs(CqlState* CS, ast_node *_Nullable ast) {
 // the if_not_exists flag forcing it to be either ignored or enabled.  Both are potentially
 // needed.  When emitting schema creation scripts for instance we always use IF NOT EXISTS
 // even if the schema declaration didn't have it (which it usually doesn't).
-static void gen_if_not_exists(CqlState* CS, ast_node *ast, bool_t if_not_exist) {
+static void gen_if_not_exists(CqlState* _Nonnull CS, ast_node *ast, bool_t if_not_exist) {
   bool_t if_not_exists_callback = gen_callbacks_lv && gen_callbacks_rv->if_not_exists_callback;
   bool_t handled = false;
 
@@ -3118,13 +3118,13 @@ static void gen_if_not_exists(CqlState* CS, ast_node *ast, bool_t if_not_exist) 
   }
 }
 
-static void gen_eponymous(CqlState* CS, ast_node *ast, bool_t is_eponymous) {
+static void gen_eponymous(CqlState* _Nonnull CS, ast_node *ast, bool_t is_eponymous) {
   if (!for_sqlite(CS) && is_eponymous) {
     gen_printf(CS, "@EPONYMOUS ");
   }
 }
 
-static void gen_create_view_stmt(CqlState* CS, ast_node *ast) {
+static void gen_create_view_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_view_stmt(ast));
   EXTRACT_OPTION(flags, ast->left);
   EXTRACT(view_and_attrs, ast->right);
@@ -3156,7 +3156,7 @@ static void gen_create_view_stmt(CqlState* CS, ast_node *ast) {
   GEN_END_INDENT(sel);
 }
 
-static void gen_create_trigger_stmt(CqlState* CS, ast_node *ast) {
+static void gen_create_trigger_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_trigger_stmt(ast));
 
   EXTRACT_OPTION(flags, ast->left);
@@ -3233,7 +3233,7 @@ static void gen_create_trigger_stmt(CqlState* CS, ast_node *ast) {
   gen_version_attrs(CS, trigger_attrs);
 }
 
-static void gen_create_table_stmt(CqlState* CS, ast_node *ast) {
+static void gen_create_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_table_stmt(ast));
   EXTRACT_NOTNULL(create_table_name_flags, ast->left);
   EXTRACT_NOTNULL(table_flags_attrs, create_table_name_flags->left);
@@ -3264,7 +3264,7 @@ static void gen_create_table_stmt(CqlState* CS, ast_node *ast) {
   gen_version_attrs(CS, table_attrs);
 }
 
-static void gen_create_virtual_table_stmt(CqlState* CS, ast_node *ast) {
+static void gen_create_virtual_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_virtual_table_stmt(ast));
   EXTRACT_NOTNULL(module_info, ast->left);
   EXTRACT_NOTNULL(create_table_stmt, ast->right);
@@ -3329,7 +3329,7 @@ static void gen_create_virtual_table_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_drop_view_stmt(CqlState* CS, ast_node *ast) {
+static void gen_drop_view_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_view_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
@@ -3341,7 +3341,7 @@ static void gen_drop_view_stmt(CqlState* CS, ast_node *ast) {
   gen_name(CS, name_ast);
 }
 
-static void gen_drop_table_stmt(CqlState* CS, ast_node *ast) {
+static void gen_drop_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_table_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
@@ -3353,7 +3353,7 @@ static void gen_drop_table_stmt(CqlState* CS, ast_node *ast) {
   gen_name(CS, name_ast);
 }
 
-static void gen_drop_index_stmt(CqlState* CS, ast_node *ast) {
+static void gen_drop_index_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_index_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
@@ -3365,7 +3365,7 @@ static void gen_drop_index_stmt(CqlState* CS, ast_node *ast) {
   gen_name(CS, name_ast);
 }
 
-static void gen_drop_trigger_stmt(CqlState* CS, ast_node *ast) {
+static void gen_drop_trigger_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_drop_trigger_stmt(ast));
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
@@ -3377,7 +3377,7 @@ static void gen_drop_trigger_stmt(CqlState* CS, ast_node *ast) {
   gen_name(CS, name_ast);
 }
 
-static void gen_alter_table_add_column_stmt(CqlState* CS, ast_node *ast) {
+static void gen_alter_table_add_column_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_alter_table_add_column_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(col_def, ast->right);
@@ -3388,7 +3388,7 @@ static void gen_alter_table_add_column_stmt(CqlState* CS, ast_node *ast) {
   gen_col_def(CS, col_def);
 }
 
-bool_t eval_if_stmt_callback(CqlState* CS, ast_node *ast) {
+bool_t eval_if_stmt_callback(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
 
   bool_t suppress = 0;
@@ -3401,7 +3401,7 @@ bool_t eval_if_stmt_callback(CqlState* CS, ast_node *ast) {
   return suppress;
 }
 
-static void gen_cond_action(CqlState* CS, ast_node *ast) {
+static void gen_cond_action(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cond_action(ast));
   EXTRACT(stmt_list, ast->right);
 
@@ -3410,7 +3410,7 @@ static void gen_cond_action(CqlState* CS, ast_node *ast) {
   gen_stmt_list(CS, stmt_list);
 }
 
-static void gen_elseif_list(CqlState* CS, ast_node *ast) {
+static void gen_elseif_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_elseif(ast));
 
   while (ast) {
@@ -3422,7 +3422,7 @@ static void gen_elseif_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_if_stmt(CqlState* CS, ast_node *ast) {
+static void gen_if_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
   EXTRACT_NOTNULL(cond_action, ast->left);
   EXTRACT_NOTNULL(if_alt, ast->right);
@@ -3449,7 +3449,7 @@ static void gen_if_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_guard_stmt(CqlState* CS, ast_node *ast) {
+static void gen_guard_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_guard_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
@@ -3460,13 +3460,13 @@ static void gen_guard_stmt(CqlState* CS, ast_node *ast) {
   gen_one_stmt(CS, stmt);
 }
 
-static void gen_expr_stmt(CqlState* CS, ast_node *ast) {
+static void gen_expr_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_expr_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   gen_expr(CS, expr, EXPR_PRI_ROOT);
 }
 
-static void gen_delete_stmt(CqlState* CS, ast_node *ast) {
+static void gen_delete_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_delete_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(opt_where, ast->right);
@@ -3479,7 +3479,7 @@ static void gen_delete_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_with_delete_stmt(CqlState* CS, ast_node *ast) {
+static void gen_with_delete_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_delete_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
   EXTRACT_NOTNULL(delete_stmt, ast->right);
@@ -3488,7 +3488,7 @@ static void gen_with_delete_stmt(CqlState* CS, ast_node *ast) {
   gen_delete_stmt(CS, delete_stmt);
 }
 
-static void gen_update_entry(CqlState* CS, ast_node *ast) {
+static void gen_update_entry(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_entry(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->right)
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -3497,7 +3497,7 @@ static void gen_update_entry(CqlState* CS, ast_node *ast) {
   gen_root_expr(CS, expr);
 }
 
-static void gen_update_list(CqlState* CS, ast_node *ast) {
+static void gen_update_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_list(ast));
 
   int32_t count = 0;
@@ -3533,7 +3533,7 @@ static void gen_update_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_from_shape(CqlState* CS, ast_node *ast) {
+static void gen_from_shape(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_from_shape(ast));
   EXTRACT_STRING(shape_name, ast->right);
   EXTRACT_ANY(column_spec, ast->left);
@@ -3541,7 +3541,7 @@ static void gen_from_shape(CqlState* CS, ast_node *ast) {
   gen_column_spec(CS, column_spec);
 }
 
-static void gen_update_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void gen_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_cursor_stmt(ast));
   EXTRACT_ANY(cursor, ast->left);
   EXTRACT_STRING(name, cursor);
@@ -3570,7 +3570,7 @@ static void gen_update_cursor_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_update_stmt(CqlState* CS, ast_node *ast) {
+static void gen_update_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_update_stmt(ast));
   EXTRACT_NOTNULL(update_set, ast->right);
   EXTRACT_ANY_NOTNULL(update_list, update_set->left);
@@ -3626,7 +3626,7 @@ static void gen_update_stmt(CqlState* CS, ast_node *ast) {
   GEN_END_INDENT(up);
 }
 
-static void gen_with_update_stmt(CqlState* CS, ast_node *ast) {
+static void gen_with_update_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_update_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
   EXTRACT_NOTNULL(update_stmt, ast->right);
@@ -3635,7 +3635,7 @@ static void gen_with_update_stmt(CqlState* CS, ast_node *ast) {
   gen_update_stmt(CS, update_stmt);
 }
 
-static void gen_insert_list(CqlState* CS, ast_node *_Nullable ast) {
+static void gen_insert_list(CqlState* _Nonnull CS, ast_node *_Nullable ast) {
   Contract(!ast || is_ast_insert_list(ast));
 
   while (ast) {
@@ -3655,7 +3655,7 @@ static void gen_insert_list(CqlState* CS, ast_node *_Nullable ast) {
   }
 }
 
-cql_noexport void gen_insert_type(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_insert_type(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_insert_or_ignore(ast)) {
     gen_printf(CS, "INSERT OR IGNORE");
   }
@@ -3680,7 +3680,7 @@ cql_noexport void gen_insert_type(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_insert_dummy_spec(CqlState* CS, ast_node *ast) {
+static void gen_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_dummy_spec(ast) || is_ast_seed_stub(ast));
   EXTRACT_ANY_NOTNULL(seed_expr, ast->left);
   EXTRACT_OPTION(flags, ast->right);
@@ -3702,7 +3702,7 @@ static void gen_insert_dummy_spec(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_shape_def_base(CqlState* CS, ast_node *ast) {
+static void gen_shape_def_base(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_like(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY(from_args, ast->right);
@@ -3714,7 +3714,7 @@ static void gen_shape_def_base(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_shape_expr(CqlState* CS, ast_node *ast) {
+static void gen_shape_expr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_shape_expr(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
@@ -3724,7 +3724,7 @@ static void gen_shape_expr(CqlState* CS, ast_node *ast) {
   gen_name(CS, name_ast);
 }
 
-static void gen_shape_exprs(CqlState* CS, ast_node *ast) {
+static void gen_shape_exprs(CqlState* _Nonnull CS, ast_node *ast) {
  Contract(is_ast_shape_exprs(ast));
 
   while (ast) {
@@ -3737,7 +3737,7 @@ static void gen_shape_exprs(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_shape_def(CqlState* CS, ast_node *ast) {
+static void gen_shape_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_shape_def(ast));
   EXTRACT_NOTNULL(like, ast->left);
   gen_shape_def_base(CS, like);
@@ -3749,7 +3749,7 @@ static void gen_shape_def(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_column_spec(CqlState* CS, ast_node *ast) {
+static void gen_column_spec(CqlState* _Nonnull CS, ast_node *ast) {
   // allow null column_spec here so we don't have to test it everywhere
   if (ast) {
     gen_printf(CS, "(");
@@ -3766,7 +3766,7 @@ static void gen_column_spec(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_insert_stmt(CqlState* CS, ast_node *ast) {
+static void gen_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(insert_type, ast->left);
   EXTRACT_NOTNULL(name_columns_values, ast->right);
@@ -3818,7 +3818,7 @@ static void gen_insert_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_with_insert_stmt(CqlState* CS, ast_node *ast) {
+static void gen_with_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_insert_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
   EXTRACT_NOTNULL(insert_stmt, ast->right);
@@ -3827,7 +3827,7 @@ static void gen_with_insert_stmt(CqlState* CS, ast_node *ast) {
   gen_insert_stmt(CS, insert_stmt);
 }
 
-static void gen_expr_names(CqlState* CS, ast_node *ast) {
+static void gen_expr_names(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_expr_names(ast));
 
   for (ast_node *list = ast; list; list = list->right) {
@@ -3844,7 +3844,7 @@ static void gen_expr_names(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
+static void gen_fetch_cursor_from_blob_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_ANY_NOTNULL(blob, ast->right);
@@ -3855,7 +3855,7 @@ static void gen_fetch_cursor_from_blob_stmt(CqlState* CS, ast_node *ast) {
   gen_expr(CS, blob, EXPR_PRI_ROOT);
 }
 
-static void gen_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
+static void gen_set_blob_from_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_blob_from_cursor_stmt(ast));
   EXTRACT_ANY_NOTNULL(blob, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
@@ -3866,7 +3866,7 @@ static void gen_set_blob_from_cursor_stmt(CqlState* CS, ast_node *ast) {
   gen_expr(CS, cursor, EXPR_PRI_ROOT);
 }
 
-static void gen_fetch_values_stmt(CqlState* CS, ast_node *ast) {
+static void gen_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
   EXTRACT(insert_dummy_spec, ast->left);
@@ -3900,7 +3900,7 @@ static void gen_fetch_values_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_assign(CqlState* CS, ast_node *ast) {
+static void gen_assign(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_assign(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -3911,7 +3911,7 @@ static void gen_assign(CqlState* CS, ast_node *ast) {
   gen_root_expr(CS, expr);
 }
 
-static void gen_let_stmt(CqlState* CS, ast_node *ast) {
+static void gen_let_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_let_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -3922,7 +3922,7 @@ static void gen_let_stmt(CqlState* CS, ast_node *ast) {
   gen_root_expr(CS, expr);
 }
 
-static void gen_const_stmt(CqlState* CS, ast_node *ast) {
+static void gen_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_const_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
@@ -3933,7 +3933,7 @@ static void gen_const_stmt(CqlState* CS, ast_node *ast) {
   gen_root_expr(CS, expr);
 }
 
-static void gen_opt_inout(CqlState* CS, ast_node *ast) {
+static void gen_opt_inout(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_in(ast)) {
     gen_printf(CS, "IN ");
   }
@@ -3948,7 +3948,7 @@ static void gen_opt_inout(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_normal_param(CqlState* CS, ast_node *ast) {
+static void gen_normal_param(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_ANY(opt_inout, ast->left);
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -3961,7 +3961,7 @@ static void gen_normal_param(CqlState* CS, ast_node *ast) {
   gen_data_type(CS, data_type);
 }
 
-static void gen_like_param(CqlState* CS, ast_node *ast) {
+static void gen_like_param(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_param(ast));
   EXTRACT_NOTNULL(param_detail, ast->right);
   EXTRACT_NOTNULL(shape_def, param_detail->right);
@@ -3974,7 +3974,7 @@ static void gen_like_param(CqlState* CS, ast_node *ast) {
   gen_shape_def(CS, shape_def);
 }
 
-static void gen_param(CqlState* CS, ast_node *ast) {
+static void gen_param(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_param(ast));
 
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -3986,7 +3986,7 @@ static void gen_param(CqlState* CS, ast_node *ast) {
   }
 }
 
-cql_noexport void gen_params(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_params(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_params(ast));
 
   for (ast_node *cur = ast; cur; cur = cur->right) {
@@ -4001,7 +4001,7 @@ cql_noexport void gen_params(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void gen_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -4019,7 +4019,7 @@ static void gen_create_proc_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_declare_proc_from_create_proc(CqlState* CS, ast_node *ast) {
+static void gen_declare_proc_from_create_proc(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   Contract(!for_sqlite(CS));
   EXTRACT_STRING(name, ast->left);
@@ -4095,7 +4095,7 @@ static void gen_declare_proc_from_create_proc(CqlState* CS, ast_node *ast) {
 // even with no checking because declares form a partial order.
 //static symtab *closure_emitted;
 
-static bool_t gen_found_set_kind(CqlState* CS, ast_node *ast, void *context, charbuf *buffer) {
+static bool_t gen_found_set_kind(CqlState* _Nonnull CS, ast_node *ast, void *context, charbuf *buffer) {
   EXTRACT_STRING(name, ast);
   ast_node *proc = NULL;
 
@@ -4129,7 +4129,7 @@ static bool_t gen_found_set_kind(CqlState* CS, ast_node *ast, void *context, cha
   return false;
 }
 
-cql_noexport void gen_declare_proc_closure(CqlState* CS, ast_node *ast, symtab *emitted) {
+cql_noexport void gen_declare_proc_closure(CqlState* _Nonnull CS, ast_node *ast, symtab *emitted) {
   gen_sql_callbacks callbacks = {
      .set_kind_callback = gen_found_set_kind,
      .set_kind_context = emitted
@@ -4161,7 +4161,7 @@ cql_noexport void gen_declare_proc_closure(CqlState* CS, ast_node *ast, symtab *
   CS->closure_emitted = NULL;
 }
 
-static void gen_typed_name(CqlState* CS, ast_node *ast) {
+static void gen_typed_name(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(typed_name, ast);
   EXTRACT_ANY(name, typed_name->left);
   EXTRACT_ANY_NOTNULL(type, typed_name->right);
@@ -4179,7 +4179,7 @@ static void gen_typed_name(CqlState* CS, ast_node *ast) {
   }
 }
 
-void gen_typed_names(CqlState* CS, ast_node *ast) {
+void gen_typed_names(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_typed_names(ast));
 
   for (ast_node *item = ast; item; item = item->right) {
@@ -4192,14 +4192,14 @@ void gen_typed_names(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_declare_proc_no_check_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_proc_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_proc_no_check_stmt(ast));
   EXTRACT_ANY_NOTNULL(proc_name, ast->left);
   EXTRACT_STRING(name, proc_name);
   gen_printf(CS, "DECLARE PROC %s NO CHECK", name);
 }
 
-cql_noexport void gen_declare_interface_stmt(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_declare_interface_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_interface_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
@@ -4212,7 +4212,7 @@ cql_noexport void gen_declare_interface_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_declare_proc_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_proc_stmt(ast));
   EXTRACT_NOTNULL(proc_name_type, ast->left);
   EXTRACT_STRING(name, proc_name_type->left);
@@ -4266,7 +4266,7 @@ static void gen_declare_proc_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, " USING TRANSACTION");
 }
 
-cql_noexport void gen_declare_proc_from_create_or_decl(CqlState* CS, ast_node *ast) {
+cql_noexport void gen_declare_proc_from_create_or_decl(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast) || is_ast_declare_proc_stmt(ast));
   if (is_ast_create_proc_stmt(ast)) {
     gen_declare_proc_from_create_proc(CS, ast);
@@ -4276,7 +4276,7 @@ cql_noexport void gen_declare_proc_from_create_or_decl(CqlState* CS, ast_node *a
   }
 }
 
-static void gen_declare_select_func_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_select_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_select_func_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -4301,7 +4301,7 @@ static void gen_declare_select_func_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_declare_select_func_no_check_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_select_func_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_select_func_no_check_stmt(ast));
   EXTRACT_STRING(name, ast-> left);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -4321,7 +4321,7 @@ static void gen_declare_select_func_no_check_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_declare_func_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_func_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -4337,7 +4337,7 @@ static void gen_declare_func_stmt(CqlState* CS, ast_node *ast) {
   gen_data_type(CS, ret_data_type);
 }
 
-static void gen_declare_func_no_check_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_func_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_func_no_check_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(func_params_return, ast->right);
@@ -4348,7 +4348,7 @@ static void gen_declare_func_no_check_stmt(CqlState* CS, ast_node *ast) {
   gen_data_type(CS, ret_data_type);
 }
 
-static void gen_declare_vars_type(CqlState* CS, ast_node *ast) {
+static void gen_declare_vars_type(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_vars_type(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -4359,7 +4359,7 @@ static void gen_declare_vars_type(CqlState* CS, ast_node *ast) {
   gen_data_type(CS, data_type);
 }
 
-static void gen_declare_cursor(CqlState* CS, ast_node *ast) {
+static void gen_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(source, ast->right);
@@ -4379,7 +4379,7 @@ static void gen_declare_cursor(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
+static void gen_declare_cursor_like_name(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_name(ast));
   EXTRACT_STRING(new_cursor_name, ast->left);
   EXTRACT_NOTNULL(shape_def, ast->right);
@@ -4388,7 +4388,7 @@ static void gen_declare_cursor_like_name(CqlState* CS, ast_node *ast) {
   gen_shape_def(CS, shape_def);
 }
 
-static void gen_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
+static void gen_declare_cursor_like_select(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_select(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
@@ -4397,7 +4397,7 @@ static void gen_declare_cursor_like_select(CqlState* CS, ast_node *ast) {
   gen_one_stmt(CS, stmt);
 }
 
-static void gen_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
+static void gen_declare_cursor_like_typed_names(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_cursor_like_typed_names(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(typed_names, ast->right);
@@ -4407,7 +4407,7 @@ static void gen_declare_cursor_like_typed_names(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_declare_named_type(CqlState* CS, ast_node *ast) {
+static void gen_declare_named_type(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_named_type(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
@@ -4418,7 +4418,7 @@ static void gen_declare_named_type(CqlState* CS, ast_node *ast) {
   gen_data_type(CS, data_type);
 }
 
-static void gen_declare_value_cursor(CqlState* CS, ast_node *ast) {
+static void gen_declare_value_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_value_cursor(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
@@ -4427,7 +4427,7 @@ static void gen_declare_value_cursor(CqlState* CS, ast_node *ast) {
   gen_one_stmt(CS, stmt);
 }
 
-static void gen_declare_enum_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_enum_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
@@ -4455,7 +4455,7 @@ static void gen_declare_enum_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "\n)");
 }
 
-static void gen_declare_group_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(stmt_list, ast->right);
@@ -4471,7 +4471,7 @@ static void gen_declare_group_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_declare_const_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(const_values, ast->right);
@@ -4497,7 +4497,7 @@ static void gen_declare_const_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "\n)");
 }
 
-static void gen_set_from_cursor(CqlState* CS, ast_node *ast) {
+static void gen_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_set_from_cursor(ast));
   EXTRACT_NAME_AST(var_name_ast, ast->left);
   EXTRACT_STRING(cursor_name, ast->right);
@@ -4507,7 +4507,7 @@ static void gen_set_from_cursor(CqlState* CS, ast_node *ast) {
   gen_printf(CS, " FROM CURSOR %s", cursor_name);
 }
 
-static void gen_fetch_stmt(CqlState* CS, ast_node *ast) {
+static void gen_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT(name_list, ast->right);
@@ -4519,7 +4519,7 @@ static void gen_fetch_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_switch_cases(CqlState* CS, ast_node *ast) {
+static void gen_switch_cases(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_switch_case(ast));
 
   while (ast) {
@@ -4553,7 +4553,7 @@ static void gen_switch_cases(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_switch_stmt(CqlState* CS, ast_node *ast) {
+static void gen_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_switch_stmt(ast));
   EXTRACT_OPTION(all_values, ast->left);
   EXTRACT_NOTNULL(switch_body, ast->right);
@@ -4574,7 +4574,7 @@ static void gen_switch_stmt(CqlState* CS, ast_node *ast) {
   gen_switch_cases(CS, switch_case);
 }
 
-static void gen_while_stmt(CqlState* CS, ast_node *ast) {
+static void gen_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_while_stmt(ast));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -4589,7 +4589,7 @@ static void gen_while_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_loop_stmt(CqlState* CS, ast_node *ast) {
+static void gen_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_loop_stmt(ast));
   EXTRACT_NOTNULL(fetch_stmt, ast->left);
   EXTRACT(stmt_list, ast->right);
@@ -4603,7 +4603,7 @@ static void gen_loop_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_call_stmt(CqlState* CS, ast_node *ast) {
+static void gen_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_call_stmt(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
@@ -4618,13 +4618,13 @@ static void gen_call_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_declare_out_call_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_out_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NOTNULL(call_stmt, ast->left);
   gen_printf(CS, "DECLARE OUT ");
   gen_call_stmt(CS, call_stmt);
 }
 
-static void gen_fetch_call_stmt(CqlState* CS, ast_node *ast) {
+static void gen_fetch_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_fetch_call_stmt(ast));
   Contract(is_ast_call_stmt(ast->right));
   EXTRACT_STRING(cursor_name, ast->left);
@@ -4634,37 +4634,37 @@ static void gen_fetch_call_stmt(CqlState* CS, ast_node *ast) {
   gen_call_stmt(CS, call_stmt);
 }
 
-static void gen_continue_stmt(CqlState* CS, ast_node *ast) {
+static void gen_continue_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
   gen_printf(CS, "CONTINUE");
 }
 
-static void gen_leave_stmt(CqlState* CS, ast_node *ast) {
+static void gen_leave_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   gen_printf(CS, "LEAVE");
 }
 
-static void gen_return_stmt(CqlState* CS, ast_node *ast) {
+static void gen_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_return_stmt(ast));
 
   gen_printf(CS, "RETURN");
 }
 
-static void gen_rollback_return_stmt(CqlState* CS, ast_node *ast) {
+static void gen_rollback_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
   gen_printf(CS, "ROLLBACK RETURN");
 }
 
-static void gen_commit_return_stmt(CqlState* CS, ast_node *ast) {
+static void gen_commit_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
   gen_printf(CS, "COMMIT RETURN");
 }
 
-static void gen_proc_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void gen_proc_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_proc_savepoint_stmt(ast));
   EXTRACT(stmt_list, ast->left);
 
@@ -4674,13 +4674,13 @@ static void gen_proc_savepoint_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_throw_stmt(CqlState* CS, ast_node *ast) {
+static void gen_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
   gen_printf(CS, "THROW");
 }
 
-static void gen_begin_trans_stmt(CqlState* CS, ast_node *ast) {
+static void gen_begin_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
   EXTRACT_OPTION(mode, ast->left);
 
@@ -4698,13 +4698,13 @@ static void gen_begin_trans_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_commit_trans_stmt(CqlState* CS, ast_node *ast) {
+static void gen_commit_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_trans_stmt(ast));
 
   gen_printf(CS, "COMMIT");
 }
 
-static void gen_rollback_trans_stmt(CqlState* CS, ast_node *ast) {
+static void gen_rollback_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
   gen_printf(CS, "ROLLBACK");
@@ -4715,21 +4715,21 @@ static void gen_rollback_trans_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void gen_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_savepoint_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "SAVEPOINT %s", name);
 }
 
-static void gen_release_savepoint_stmt(CqlState* CS, ast_node *ast) {
+static void gen_release_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "RELEASE %s", name);
 }
 
-static void gen_trycatch_stmt(CqlState* CS, ast_node *ast) {
+static void gen_trycatch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_trycatch_stmt(ast));
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
@@ -4741,28 +4741,28 @@ static void gen_trycatch_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_close_stmt(CqlState* CS, ast_node *ast) {
+static void gen_close_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "CLOSE %s", name);
 }
 
-static void gen_out_stmt(CqlState* CS, ast_node *ast) {
+static void gen_out_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "OUT %s", name);
 }
 
-static void gen_out_union_stmt(CqlState* CS, ast_node *ast) {
+static void gen_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "OUT UNION %s", name);
 }
 
-static void gen_child_results(CqlState* CS, ast_node *ast) {
+static void gen_child_results(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_child_results(ast));
 
   ast_node *item = ast;
@@ -4798,7 +4798,7 @@ static void gen_child_results(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_out_union_parent_child_stmt(CqlState* CS, ast_node *ast) {
+static void gen_out_union_parent_child_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
   EXTRACT_NOTNULL(child_results, ast->right);
@@ -4809,7 +4809,7 @@ static void gen_out_union_parent_child_stmt(CqlState* CS, ast_node *ast) {
   gen_child_results(CS, child_results);
 }
 
-static void gen_echo_stmt(CqlState* CS, ast_node *ast) {
+static void gen_echo_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(rt_name, ast->left);
 
@@ -4817,26 +4817,26 @@ static void gen_echo_stmt(CqlState* CS, ast_node *ast) {
   gen_root_expr(CS, ast->right);  // emit the quoted literal
 }
 
-static void gen_schema_upgrade_script_stmt(CqlState* CS, ast_node *ast) {
+static void gen_schema_upgrade_script_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_upgrade_script_stmt(ast));
 
   gen_printf(CS, "@SCHEMA_UPGRADE_SCRIPT");
 }
 
-static void gen_schema_upgrade_version_stmt(CqlState* CS, ast_node *ast) {
+static void gen_schema_upgrade_version_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_upgrade_version_stmt(ast));
   EXTRACT_OPTION(vers, ast->left);
 
   gen_printf(CS, "@SCHEMA_UPGRADE_VERSION (%d)", vers);
 }
 
-static void gen_previous_schema_stmt(CqlState* CS, ast_node *ast) {
+static void gen_previous_schema_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_previous_schema_stmt(ast));
 
   gen_printf(CS, "@PREVIOUS_SCHEMA");
 }
 
-static void gen_enforcement_options(CqlState* CS, ast_node *ast) {
+static void gen_enforcement_options(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_OPTION(option, ast);
 
   switch (option) {
@@ -4936,34 +4936,34 @@ static void gen_enforcement_options(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_enforce_strict_stmt(CqlState* CS, ast_node *ast) {
+static void gen_enforce_strict_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_strict_stmt(ast));
   gen_printf(CS, "@ENFORCE_STRICT ");
   gen_enforcement_options(CS, ast->left);
 }
 
-static void gen_enforce_normal_stmt(CqlState* CS, ast_node *ast) {
+static void gen_enforce_normal_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_normal_stmt(ast));
   gen_printf(CS, "@ENFORCE_NORMAL ");
   gen_enforcement_options(CS, ast->left);
 }
 
-static void gen_enforce_reset_stmt(CqlState* CS, ast_node *ast) {
+static void gen_enforce_reset_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_reset_stmt(ast));
   gen_printf(CS, "@ENFORCE_RESET");
 }
 
-static void gen_enforce_push_stmt(CqlState* CS, ast_node *ast) {
+static void gen_enforce_push_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_push_stmt(ast));
   gen_printf(CS, "@ENFORCE_PUSH");
 }
 
-static void gen_enforce_pop_stmt(CqlState* CS, ast_node *ast) {
+static void gen_enforce_pop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_pop_stmt(ast));
   gen_printf(CS, "@ENFORCE_POP");
 }
 
-static void gen_region_spec(CqlState* CS, ast_node *ast) {
+static void gen_region_spec(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_region_spec(ast));
   EXTRACT_OPTION(type, ast->right);
   bool_t is_private = (type == PRIVATE_REGION);
@@ -4974,7 +4974,7 @@ static void gen_region_spec(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_region_list(CqlState* CS, ast_node *ast) {
+static void gen_region_list(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_region_list(ast));
   while (ast) {
     gen_region_spec(CS, ast->left);
@@ -4985,7 +4985,7 @@ static void gen_region_list(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_declare_deployable_region_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_deployable_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_deployable_region_stmt(ast));
   gen_printf(CS, "@DECLARE_DEPLOYABLE_REGION ");
   gen_name(CS, ast->left);
@@ -4995,7 +4995,7 @@ static void gen_declare_deployable_region_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_declare_schema_region_stmt(CqlState* CS, ast_node *ast) {
+static void gen_declare_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_schema_region_stmt(ast));
   gen_printf(CS, "@DECLARE_SCHEMA_REGION ");
   gen_name(CS, ast->left);
@@ -5005,18 +5005,18 @@ static void gen_declare_schema_region_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_begin_schema_region_stmt(CqlState* CS, ast_node *ast) {
+static void gen_begin_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_begin_schema_region_stmt(ast));
   gen_printf(CS, "@BEGIN_SCHEMA_REGION ");
   gen_name(CS, ast->left);
 }
 
-static void gen_end_schema_region_stmt(CqlState* CS, ast_node *ast) {
+static void gen_end_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_end_schema_region_stmt(ast));
   gen_printf(CS, "@END_SCHEMA_REGION");
 }
 
-static void gen_schema_unsub_stmt(CqlState* CS, ast_node *ast) {
+static void gen_schema_unsub_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_unsub_stmt(ast));
   EXTRACT_NOTNULL(version_annotation, ast->left);
   EXTRACT_NAME_AST(name_ast, version_annotation->right);
@@ -5026,7 +5026,7 @@ static void gen_schema_unsub_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_schema_ad_hoc_migration_stmt(CqlState* CS, ast_node *ast) {
+static void gen_schema_ad_hoc_migration_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_ad_hoc_migration_stmt(ast));
   EXTRACT_ANY_NOTNULL(l, ast->left);
   EXTRACT_ANY(r, ast->right);
@@ -5045,7 +5045,7 @@ static void gen_schema_ad_hoc_migration_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_emit_group_stmt(CqlState* CS, ast_node *ast) {
+static void gen_emit_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -5057,7 +5057,7 @@ static void gen_emit_group_stmt(CqlState* CS, ast_node *ast) {
 }
 
 
-static void gen_emit_enums_stmt(CqlState* CS, ast_node *ast) {
+static void gen_emit_enums_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
 
@@ -5068,7 +5068,7 @@ static void gen_emit_enums_stmt(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_emit_constants_stmt(CqlState* CS, ast_node *ast) {
+static void gen_emit_constants_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_constants_stmt(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
 
@@ -5076,7 +5076,7 @@ static void gen_emit_constants_stmt(CqlState* CS, ast_node *ast) {
   gen_name_list(CS, name_list);
 }
 
-static void gen_conflict_target(CqlState* CS, ast_node *ast) {
+static void gen_conflict_target(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_conflict_target(ast));
   EXTRACT(indexed_columns, ast->left);
   EXTRACT(opt_where, ast->right);
@@ -5094,7 +5094,7 @@ static void gen_conflict_target(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_upsert_update(CqlState* CS, ast_node *ast) {
+static void gen_upsert_update(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_upsert_update(ast));
   EXTRACT_NOTNULL(conflict_target, ast->left);
   EXTRACT(update_stmt, ast->right);
@@ -5108,7 +5108,7 @@ static void gen_upsert_update(CqlState* CS, ast_node *ast) {
   }
 }
 
-static void gen_upsert_stmt(CqlState* CS, ast_node *ast) {
+static void gen_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_upsert_stmt(ast));
 
   EXTRACT_NOTNULL(insert_stmt, ast->left);
@@ -5118,7 +5118,7 @@ static void gen_upsert_stmt(CqlState* CS, ast_node *ast) {
   gen_upsert_update(CS, upsert_update);
 }
 
-static void gen_with_upsert_stmt(CqlState* CS, ast_node *ast) {
+static void gen_with_upsert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_with_upsert_stmt(ast));
   EXTRACT_ANY_NOTNULL(with_prefix, ast->left)
   EXTRACT_NOTNULL(upsert_stmt, ast->right);
@@ -5127,21 +5127,21 @@ static void gen_with_upsert_stmt(CqlState* CS, ast_node *ast) {
   gen_upsert_stmt(CS, upsert_stmt);
 }
 
-static void gen_blob_get_key_type_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_get_key_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "@BLOB_GET_KEY_TYPE %s", name);
 }
 
-static void gen_blob_get_val_type_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_get_val_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
   gen_printf(CS, "@BLOB_GET_VAL_TYPE %s", name);
 }
 
-static void gen_blob_get_key_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_get_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -5149,7 +5149,7 @@ static void gen_blob_get_key_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "@BLOB_GET_KEY %s%s", name, offset ? " OFFSET" : "");
 }
 
-static void gen_blob_get_val_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_get_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -5157,7 +5157,7 @@ static void gen_blob_get_val_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "@BLOB_GET_VAL %s%s", name, offset ? " OFFSET" : "");
 }
 
-static void gen_blob_create_key_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_create_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_create_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -5165,7 +5165,7 @@ static void gen_blob_create_key_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "@BLOB_CREATE_KEY %s%s", name, offset ? " OFFSET" : "");
 }
 
-static void gen_blob_create_val_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_create_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_create_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -5173,7 +5173,7 @@ static void gen_blob_create_val_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "@BLOB_CREATE_VAL %s%s", name, offset ? " OFFSET" : "");
 }
 
-static void gen_blob_update_key_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_update_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_update_key_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -5181,7 +5181,7 @@ static void gen_blob_update_key_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "@BLOB_UPDATE_KEY %s%s", name, offset ? " OFFSET" : "");
 }
 
-static void gen_blob_update_val_stmt(CqlState* CS, ast_node *ast) {
+static void gen_blob_update_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_update_val_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
@@ -5189,12 +5189,12 @@ static void gen_blob_update_val_stmt(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "@BLOB_UPDATE_VAL %s%s", name, offset ? " OFFSET" : "");
 }
 
-static void gen_keep_table_name_in_aliases_stmt(CqlState* CS, ast_node *ast) {
+static void gen_keep_table_name_in_aliases_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
   gen_printf(CS, "@KEEP_TABLE_NAME_IN_ALIASES");
 }
 
-static void gen_explain_stmt(CqlState* CS, ast_node *ast) {
+static void gen_explain_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_explain_stmt(ast));
   EXTRACT_OPTION(query_plan, ast->left);
   EXTRACT_ANY_NOTNULL(stmt_target, ast->right);
@@ -5207,14 +5207,14 @@ static void gen_explain_stmt(CqlState* CS, ast_node *ast) {
   gen_one_stmt(CS, stmt_target);
 }
 
-static void gen_macro_formal(CqlState* CS, ast_node *macro_formal) {
+static void gen_macro_formal(CqlState* _Nonnull CS, ast_node *macro_formal) {
   Contract(is_ast_macro_formal(macro_formal));
   EXTRACT_STRING(l, macro_formal->left);
   EXTRACT_STRING(r, macro_formal->right);
   gen_printf(CS, "%s! %s", l, r);
 }
 
-static void gen_macro_formals(CqlState* CS, ast_node *macro_formals) {
+static void gen_macro_formals(CqlState* _Nonnull CS, ast_node *macro_formals) {
   for ( ; macro_formals; macro_formals = macro_formals->right) {
      Contract(is_ast_macro_formals(macro_formals));
      gen_macro_formal(CS, macro_formals->left);
@@ -5224,7 +5224,7 @@ static void gen_macro_formals(CqlState* CS, ast_node *macro_formals) {
   }
 }
 
-static void gen_expr_macro_def(CqlState* CS, ast_node *ast) {
+static void gen_expr_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_expr_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
@@ -5239,7 +5239,7 @@ static void gen_expr_macro_def(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "\nEND");
 }
 
-static void gen_stmt_list_macro_def(CqlState* CS, ast_node *ast) {
+static void gen_stmt_list_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_stmt_list_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
@@ -5252,7 +5252,7 @@ static void gen_stmt_list_macro_def(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_select_core_macro_def(CqlState* CS, ast_node *ast) {
+static void gen_select_core_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
@@ -5267,7 +5267,7 @@ static void gen_select_core_macro_def(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "\nEND");
 }
 
-static void gen_select_expr_macro_def(CqlState* CS, ast_node *ast) {
+static void gen_select_expr_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
@@ -5282,7 +5282,7 @@ static void gen_select_expr_macro_def(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "\nEND");
 }
 
-static void gen_query_parts_macro_def(CqlState* CS, ast_node *ast) {
+static void gen_query_parts_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_query_parts_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
@@ -5297,7 +5297,7 @@ static void gen_query_parts_macro_def(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "\nEND");
 }
 
-static void gen_cte_tables_macro_def(CqlState* CS, ast_node *ast) {
+static void gen_cte_tables_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cte_tables_macro_def(ast));
   EXTRACT_NOTNULL(macro_name_formals, ast->left);
   EXTRACT_ANY_NOTNULL(body, ast->right);
@@ -5312,7 +5312,7 @@ static void gen_cte_tables_macro_def(CqlState* CS, ast_node *ast) {
   gen_printf(CS, "END");
 }
 
-static void gen_stmt_list_macro_ref(CqlState* CS, ast_node *ast) {
+static void gen_stmt_list_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_stmt_list_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s(", name);
@@ -5320,7 +5320,7 @@ static void gen_stmt_list_macro_ref(CqlState* CS, ast_node *ast) {
   gen_printf(CS, ")");
 }
 
-static void gen_stmt_list_macro_arg_ref(CqlState* CS, ast_node *ast) {
+static void gen_stmt_list_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_stmt_list_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
   gen_printf(CS, "%s", name);
@@ -5328,7 +5328,7 @@ static void gen_stmt_list_macro_arg_ref(CqlState* CS, ast_node *ast) {
 
 //cql_data_defn( int32_t gen_stmt_level );
 
-static void gen_stmt_list(CqlState* CS, ast_node *root) {
+static void gen_stmt_list(CqlState* _Nonnull CS, ast_node *root) {
   if (!root) {
     return;
   }
@@ -5373,7 +5373,7 @@ static void gen_stmt_list(CqlState* CS, ast_node *root) {
   CS->gen_stmt_level--;
 }
 
-cql_noexport void gen_one_stmt(CqlState* CS, ast_node *stmt)  {
+cql_noexport void gen_one_stmt(CqlState* _Nonnull CS, ast_node *stmt)  {
   symtab_entry *entry = symtab_find(CS->gen_stmts, stmt->type);
 
   // These are all the statements there are, we have to find it in this table
@@ -5382,7 +5382,7 @@ cql_noexport void gen_one_stmt(CqlState* CS, ast_node *stmt)  {
   ((AstGenOneStmt)entry->val)(CS, stmt);
 }
 
-cql_noexport void gen_one_stmt_and_misc_attrs(CqlState* CS, ast_node *stmt)  {
+cql_noexport void gen_one_stmt_and_misc_attrs(CqlState* _Nonnull CS, ast_node *stmt)  {
   EXTRACT_MISC_ATTRS(stmt, misc_attrs);
   if (misc_attrs) {
     gen_misc_attrs(CS, misc_attrs);
@@ -5393,7 +5393,7 @@ cql_noexport void gen_one_stmt_and_misc_attrs(CqlState* CS, ast_node *stmt)  {
 // so the name doesn't otherwise conflict in the amalgam
 #undef output
 
-static bool_t symtab_add_sql_expr_dispatch_func(CqlState* CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, gen_expr_dispatch _Nullable *val_new)
+static bool_t symtab_add_sql_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, gen_expr_dispatch _Nullable *val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -5406,7 +5406,7 @@ static bool_t symtab_add_sql_expr_dispatch_func(CqlState* CS, symtab *_Nonnull s
   static gen_expr_dispatch expr_disp_ ## x = { func, str, pri_new }; \
   symtab_add_sql_expr_dispatch_func(CS, CS->gen_exprs, k_ast_ ## x, &expr_disp_ ## x);
 
-cql_noexport void gen_init(CqlState* CS) {
+cql_noexport void gen_init(CqlState* _Nonnull CS) {
   CS->gen_stmts = symtab_new();
   CS->gen_exprs = symtab_new();
 
@@ -5606,7 +5606,7 @@ cql_noexport void gen_init(CqlState* CS) {
   EXPR_INIT(reverse_apply_poly, gen_binary_no_spaces, ":::", EXPR_PRI_REVERSE_APPLY);
 }
 
-cql_export void gen_cleanup(CqlState* CS) {
+cql_export void gen_cleanup(CqlState* _Nonnull CS) {
   SYMTAB_CLEANUP(CS->gen_stmts);
   SYMTAB_CLEANUP(CS->gen_exprs);
   CS->gen_output = NULL;

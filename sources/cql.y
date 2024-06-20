@@ -53,7 +53,7 @@
 }
 
 %code provides {
-#define YY_DECL int yylex(YYSTYPE *yylval_param, CqlState* CS, yyscan_t yyscanner)
+#define YY_DECL int yylex(YYSTYPE *yylval_param, CqlState* _Nonnull CS, yyscan_t yyscanner)
 YY_DECL;
 }
 
@@ -103,19 +103,19 @@ YY_DECL;
   #define YY_ATTRIBUTE_UNUSED __attribute__((unused))
 #endif
 
-cql_noexport void cql_setup_for_builtins(CqlState* CS, yyscan_t scanner);
-cql_noexport void cql_cleanup_open_includes(CqlState* CS, yyscan_t scanner);
+cql_noexport void cql_setup_for_builtins(CqlState* _Nonnull CS, yyscan_t scanner);
+cql_noexport void cql_cleanup_open_includes(CqlState* _Nonnull CS, yyscan_t scanner);
 
 
-static void parse_cmd(CqlState* CS, int argc, char **argv);
-static void print_dot(CqlState* CS, struct ast_node* node);
-static ast_node *file_literal(CqlState* CS, ast_node *);
+static void parse_cmd(CqlState* _Nonnull CS, int argc, char **argv);
+static void print_dot(CqlState* _Nonnull CS, struct ast_node* node);
+static ast_node *file_literal(CqlState* _Nonnull CS, ast_node *);
 static void cql_exit_on_parse_errors();
-static void parse_cleanup(CqlState* CS);
+static void parse_cleanup(CqlState* _Nonnull CS);
 static void cql_usage();
-static ast_node *make_statement_node(CqlState* CS, ast_node *misc_attrs, ast_node *any_stmt);
-static ast_node *make_coldef_node(CqlState* CS, ast_node *col_def_tye_attrs, ast_node *misc_attrs);
-static ast_node *reduce_str_chain(CqlState* CS, ast_node *str_chain);
+static ast_node *make_statement_node(CqlState* _Nonnull CS, ast_node *misc_attrs, ast_node *any_stmt);
+static ast_node *make_coldef_node(CqlState* _Nonnull CS, ast_node *col_def_tye_attrs, ast_node *misc_attrs);
+static ast_node *reduce_str_chain(CqlState* _Nonnull CS, ast_node *str_chain);
 
 // Set to true upon a call to `yyerror`.
 //static bool_t parse_error_occurred;
@@ -125,7 +125,7 @@ static void cql_setup_defines(CqlState *CS);
 static void cql_cleanup_defines(CqlState *CS);
 static void cql_add_define(CqlState *CS, CSTR name);
 
-void yyerror(CqlState* CS, yyscan_t scanner, const char *s, ...);
+void yyerror(CqlState* _Nonnull CS, yyscan_t scanner, const char *s, ...);
 
 #ifdef __clang__
 #pragma clang diagnostic push
@@ -2753,7 +2753,7 @@ macro_type:
 #pragma clang diagnostic pop
 #endif
 
-void yyerror(CqlState* CS, yyscan_t scanner, const char *format, ...) {
+void yyerror(CqlState* _Nonnull CS, yyscan_t scanner, const char *format, ...) {
   va_list args;
   va_start(args, format);
 
@@ -2771,7 +2771,7 @@ void yyerror(CqlState* CS, yyscan_t scanner, const char *format, ...) {
 
 //static uint64_t next_id = 0;
 
-static void print_dot(CqlState* CS, struct ast_node *node) {
+static void print_dot(CqlState* _Nonnull CS, struct ast_node *node) {
   assert(node);
   uint64_t id = CS->next_id++;
 
@@ -2853,7 +2853,7 @@ static void print_dot(CqlState* CS, struct ast_node *node) {
 
 //cql_data_defn( rtdata *rt );
 
-static int32_t gather_arg_params(CqlState* CS, int32_t a, int32_t argc, char **argv, uint32_t *out_count, char ***out_args);
+static int32_t gather_arg_params(CqlState* _Nonnull CS, int32_t a, int32_t argc, char **argv, uint32_t *out_count, char ***out_args);
 
 static int32_t gather_arg_param(CqlState *CS, int32_t a, int32_t argc, char **argv, char **out_arg, const char *errmsg);
 
@@ -3110,19 +3110,19 @@ int cql_main(int argc, char **argv) {
 // Use the longjmp buffer with the indicated code, see the comments above
 // for why this has to be this way.  Note we do this in one line so that
 // we don't get bogus code coverage errors for not covering the trialing brace
-_Noreturn void cql_cleanup_and_exit(CqlState* CS, int32_t code)
+_Noreturn void cql_cleanup_and_exit(CqlState* _Nonnull CS, int32_t code)
 { release_open_charbufs(CS); CS->cql_exit_code = code;  longjmp(CS->cql_for_exit, 1); }
 
-static void cql_exit_on_parse_errors(CqlState* CS) {
+static void cql_exit_on_parse_errors(CqlState* _Nonnull CS) {
   cql_error(CS, "Parse errors found, no further passes will run.\n");
   cql_cleanup_and_exit(CS, 2);
 }
 
-static void parse_cleanup(CqlState* CS) {
+static void parse_cleanup(CqlState* _Nonnull CS) {
   CS->parse_error_occurred = false;
 }
 
-static int32_t gather_arg_params(CqlState* CS, int32_t a, int32_t argc, char **argv, uint32_t *out_count, char ***out_args) {
+static int32_t gather_arg_params(CqlState* _Nonnull CS, int32_t a, int32_t argc, char **argv, uint32_t *out_count, char ***out_args) {
   if (a + 1 < argc) {
     a++;
     *out_args = &argv[a];
@@ -3155,7 +3155,7 @@ static int32_t gather_arg_param(CqlState *CS, int32_t a, int32_t argc, char **ar
 
 extern int yylineno;
 
-void line_directive(CqlState* CS, const char *directive) {
+void line_directive(CqlState* _Nonnull CS, const char *directive) {
   char *directive_start = strchr(directive, '#');
   Invariant(directive_start != NULL);
   char *line_start = strchr(directive_start + 1, ' ');
@@ -3181,7 +3181,7 @@ void line_directive(CqlState* CS, const char *directive) {
 // the node includes a search term, the literal begins at the pattern
 // that is present.  So if the current dir is /var/foo/bar/baz/YourProjectRoot
 // you can start at YourProjectRoot easily.
-static ast_node *file_literal(CqlState* CS, ast_node *ast) {
+static ast_node *file_literal(CqlState* _Nonnull CS, ast_node *ast) {
   CHARBUF_OPEN(filter);
   EXTRACT_STRING(str, ast);
   cg_decode_string_literal(str, &filter);
@@ -3217,7 +3217,7 @@ static ast_node *file_literal(CqlState* CS, ast_node *ast) {
 // this API but doing so might result in unexpected cleanup paths that have
 // not been tested.
 
-void cql_emit_error(CqlState* CS, const char *err) {
+void cql_emit_error(CqlState* _Nonnull CS, const char *err) {
   fprintf(stderr, "%s", err);
   if (CS->sem.error_capture) {
     bprintf(CS->sem.error_capture, "%s", err);
@@ -3251,7 +3251,7 @@ void cql_emit_output(const char *msg) {
 // if you are trying to integrate with CQL you only have to handle the much
 // simpler cql_emit_error API.
 
-void cql_error(CqlState* CS, const char *format, ...)  {
+void cql_error(CqlState* _Nonnull CS, const char *format, ...)  {
   va_list args;
   va_start(args, format);
   CHARBUF_OPEN(err);
@@ -3266,7 +3266,7 @@ void cql_error(CqlState* CS, const char *format, ...)  {
 // if you are trying to integrate with CQL you only have to handle the much
 // simple cql_emit_output API.
 
-void cql_output(CqlState* CS, const char *format, ...)  {
+void cql_output(CqlState* _Nonnull CS, const char *format, ...)  {
   va_list args;
   va_start(args, format);
   CHARBUF_OPEN(err);
@@ -3282,7 +3282,7 @@ void cql_output(CqlState* CS, const char *format, ...)  {
 // but if all you need to do is adjust the path or something like that you could replace
 // this method instead.  This presumes that a FILE * is still ok for your scenario.
 
-FILE *_Nonnull cql_open_file_for_write(CqlState* CS, const char *_Nonnull file_name) {
+FILE *_Nonnull cql_open_file_for_write(CqlState* _Nonnull CS, const char *_Nonnull file_name) {
   FILE *file;
   if (!(file = fopen(file_name, "w"))) {
     cql_error(CS, "unable to open %s for write\n", file_name);
@@ -3395,7 +3395,7 @@ static void cql_usage() {
     );
 }
 
-static ast_node *make_statement_node(CqlState* CS, ast_node *misc_attrs, ast_node *any_stmt)
+static ast_node *make_statement_node(CqlState* _Nonnull CS, ast_node *misc_attrs, ast_node *any_stmt)
 {
   // This is the equivalent of:
   //
@@ -3425,7 +3425,7 @@ static ast_node *make_statement_node(CqlState* CS, ast_node *misc_attrs, ast_nod
 }
 
 // creates a column definition node with a doc comment if needed
-static ast_node *make_coldef_node(CqlState* CS, ast_node *col_def_type_attrs, ast_node *misc_attrs)
+static ast_node *make_coldef_node(CqlState* _Nonnull CS, ast_node *col_def_type_attrs, ast_node *misc_attrs)
 {
   // This is the equivalent of:
   //
@@ -3445,7 +3445,7 @@ static ast_node *make_coldef_node(CqlState* CS, ast_node *col_def_type_attrs, as
 
 // When a chain of strings appears like this "xxx" "yyy" we reduce it to a single
 // string literal by concatenating all the pieces.
-static ast_node *reduce_str_chain(CqlState* CS, ast_node *str_chain) {
+static ast_node *reduce_str_chain(CqlState* _Nonnull CS, ast_node *str_chain) {
   Contract(is_ast_str_chain(str_chain));
 
   // trivial case, length one chain
@@ -3502,7 +3502,7 @@ cql_noexport int32_t macro_type_from_str(CSTR type) {
   return macro_type;
 }
 
-cql_noexport bool_t macro_arg_valid(CqlState* CS, int32_t macro_type, ast_node *macro_arg) {
+cql_noexport bool_t macro_arg_valid(CqlState* _Nonnull CS, int32_t macro_type, ast_node *macro_arg) {
   bool_t valid = false;
   switch (macro_type) {
     case EXPR_MACRO:         valid = is_ast_expr_macro_arg(macro_arg); break;

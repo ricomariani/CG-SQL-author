@@ -30,17 +30,17 @@
 #include <symtab.h>
 #include "cql_state.h"
 
-void yyerror(CqlState* CS, yyscan_t yyscanner, const char *s, ...);
+void yyerror(CqlState* _Nonnull CS, yyscan_t yyscanner, const char *s, ...);
 void line_directive(CqlState *CS, const char *);
-char *Strdup(CqlState* CS, const char *);
+char *Strdup(CqlState* _Nonnull CS, const char *);
 //static CSTR last_doc_comment = NULL;
 #ifndef YY_DECL
-#define YY_DECL int yylex(YYSTYPE *yylval_param, CqlState* CS, yyscan_t yyscanner)
+#define YY_DECL int yylex(YYSTYPE *yylval_param, CqlState* _Nonnull CS, yyscan_t yyscanner)
 #endif
 
-cql_noexport int32_t resolve_macro_name(CqlState* CS, const char *);
-static bool_t cql_already_processed_file(CqlState* CS, CSTR);
-static void cql_record_processed_file(CqlState* CS, CSTR);
+cql_noexport int32_t resolve_macro_name(CqlState* _Nonnull CS, const char *);
+static bool_t cql_already_processed_file(CqlState* _Nonnull CS, CSTR);
+static void cql_record_processed_file(CqlState* _Nonnull CS, CSTR);
 
 #ifndef CQL_AMALGAM
 // already in the headers in the amalgam
@@ -56,7 +56,7 @@ int fileno(FILE *);
 #endif
 
 
-cql_noexport CSTR get_last_doc_comment(CqlState* CS) {
+cql_noexport CSTR get_last_doc_comment(CqlState* _Nonnull CS) {
   CSTR result = CS->last_doc_comment;
   CS->last_doc_comment = NULL;
   return result;
@@ -87,7 +87,7 @@ typedef struct cql_ifdef_state_t {
 
 //static symtab *processed_files;
 
-cql_noexport void cql_reset_open_includes(CqlState* CS) {
+cql_noexport void cql_reset_open_includes(CqlState* _Nonnull CS) {
   CS->cql_include_index = 0;
   size_t sz = sizeof(cql_include_state)*MAX_INCLUDES;
   if(!CS->cql_includes) {
@@ -100,7 +100,7 @@ cql_noexport void cql_reset_open_includes(CqlState* CS) {
   }
 }
 
-cql_noexport void cql_cleanup_open_includes(CqlState* CS, yyscan_t scanner) {
+cql_noexport void cql_cleanup_open_includes(CqlState* _Nonnull CS, yyscan_t scanner) {
   while (cql_ifdef_state_lv) {
      cql_ifdef_state_t *prev = cql_ifdef_state_rv->prev;
      free(cql_ifdef_state_lv);
@@ -114,15 +114,15 @@ cql_noexport void cql_cleanup_open_includes(CqlState* CS, yyscan_t scanner) {
   cql_reset_open_includes(CS);
 }
 
-static void cql_setup_for_include(CqlState* CS, CSTR str, yyscan_t scanner);
-static void cql_finish_stream(CqlState* CS, yyscan_t scanner);
+static void cql_setup_for_include(CqlState* _Nonnull CS, CSTR str, yyscan_t scanner);
+static void cql_finish_stream(CqlState* _Nonnull CS, yyscan_t scanner);
 
-static void cql_record_processed_file(CqlState* CS, CSTR str) {
+static void cql_record_processed_file(CqlState* _Nonnull CS, CSTR str) {
   Contract(CS->processed_files);
   symtab_add(CS, CS->processed_files, Strdup(CS, str), NULL);
 }
 
-static bool_t cql_already_processed_file(CqlState* CS, CSTR str) {
+static bool_t cql_already_processed_file(CqlState* _Nonnull CS, CSTR str) {
   Contract(CS->processed_files);
   return !!symtab_find(CS->processed_files, str);
 }
@@ -606,7 +606,7 @@ X'({hex}{hex})*'                 { yylval->sval = Strdup(CS, yytext); return BLO
 
 %%
 
-static void cql_setup_for_include(CqlState* CS, CSTR str, yyscan_t scanner) {
+static void cql_setup_for_include(CqlState* _Nonnull CS, CSTR str, yyscan_t scanner) {
   if (!CS->processed_files) {
     CS->processed_files = symtab_new();
   }
@@ -685,7 +685,7 @@ done:
 //static bool cql_delete_main_buffer = false;
 //static YY_BUFFER_STATE cql_main_buffer;
 
-cql_noexport void cql_setup_for_builtins(CqlState* CS, yyscan_t scanner) {
+cql_noexport void cql_setup_for_builtins(CqlState* _Nonnull CS, yyscan_t scanner) {
   // stash a buffer for the main input, note that we might already have a buffer
   // in the amalgam case, if we do then use that.
   struct yyguts_t * yyg = (struct yyguts_t*)scanner;
@@ -704,7 +704,7 @@ cql_noexport void cql_setup_for_builtins(CqlState* CS, yyscan_t scanner) {
   CS->cql_builtins_processing = true;
 }
 
-static void cql_finish_stream(CqlState* CS, yyscan_t scanner) {
+static void cql_finish_stream(CqlState* _Nonnull CS, yyscan_t scanner) {
   // when we read the end of the temporary buffer we switch to the main buffer
   CS->cql_builtins_processing = false;
   struct yyguts_t * yyg = (struct yyguts_t*)scanner;

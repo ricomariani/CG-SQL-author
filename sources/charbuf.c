@@ -12,21 +12,21 @@
 //cql_data_defn( int32_t charbuf_open_count );
 //cql_data_defn( pending_charbuf *__charbufs_in_flight; )
 
-cql_noexport void release_open_charbufs(CqlState* CS) {
+cql_noexport void release_open_charbufs(CqlState* _Nonnull CS) {
   while (CS->__charbufs_in_flight) {
     bclose(CS, CS->__charbufs_in_flight->buf);
     CS->__charbufs_in_flight = CS->__charbufs_in_flight->prev;
   }
 }
 
-cql_noexport void bopen(CqlState* CS, charbuf* b) {
+cql_noexport void bopen(CqlState* _Nonnull CS, charbuf* b) {
   b->max = CHARBUF_INTERNAL_SIZE;
   b->ptr = &b->internal[0];
   bclear(b);
   CS->charbuf_open_count++;
 }
 
-cql_noexport void bclose(CqlState* CS, charbuf *b) {
+cql_noexport void bclose(CqlState* _Nonnull CS, charbuf *b) {
   if (b->ptr != &b->internal[0]) {
     free(b->ptr);
   }
@@ -84,7 +84,7 @@ cql_noexport void bprintf(charbuf *b, const char *format, ...) {
  va_end(args);
 }
 
-cql_noexport CSTR dup_printf(CqlState* CS, const char *format, ...) {
+cql_noexport CSTR dup_printf(CqlState* _Nonnull CS, const char *format, ...) {
  CSTR result;
  va_list args;
  va_start(args, format);
@@ -118,7 +118,7 @@ cql_noexport void bputc(charbuf *b, char c) {
  b->ptr[b->used++] = 0; // put a new null in place, for sure room for this
 }
 
-cql_noexport void bindent(CqlState* CS, charbuf *output, charbuf *input, int32_t indent) {
+cql_noexport void bindent(CqlState* _Nonnull CS, charbuf *output, charbuf *input, int32_t indent) {
   if (indent == 0) {
     bprintf(output, "%s", input->ptr);
     return;

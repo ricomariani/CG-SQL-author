@@ -10,7 +10,7 @@
 #include "minipool.h"
 #include "cql_state.h"
 
-cql_noexport char *_Nonnull Strdup(CqlState* CS, const char *_Nonnull s) {
+cql_noexport char *_Nonnull Strdup(CqlState* _Nonnull CS, const char *_Nonnull s) {
   uint32_t length = (uint32_t)(strlen(s) + 1);
   void *result = minipool_alloc(CS->str_pool, length);
   Invariant(result);

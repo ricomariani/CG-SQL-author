@@ -145,7 +145,7 @@ typedef struct rtdata {
   const char *id_prefix;
 
   // The main code generator function that will be executed.
-  void (*code_generator)(CqlState* CS, ast_ptr root);
+  void (*code_generator)(CqlState* _Nonnull CS, ast_ptr root);
 
   // The number of file names required by the rt. Use -1 for a variable number
   // of file names that will be verified by the code generator itself based on
@@ -582,13 +582,13 @@ typedef struct rtdata {
 
 cql_data_decl( rtdata *rt );
 
-cql_noexport void cql_cleanup_and_exit(CqlState* CS, int32_t code);
+cql_noexport void cql_cleanup_and_exit(CqlState* _Nonnull CS, int32_t code);
 
 // output to "stderr"
-cql_noexport void cql_error(CqlState* CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport void cql_error(CqlState* _Nonnull CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 
 // output to "stdout"
-cql_noexport void cql_output(CqlState* CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport void cql_output(CqlState* _Nonnull CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 
 // Creates a file in write mode. Aborts if there's any error.
 cql_export FILE *cql_open_file_for_write(CqlState *CS, CSTR file_name);
@@ -596,22 +596,22 @@ cql_export FILE *cql_open_file_for_write(CqlState *CS, CSTR file_name);
 // Create file, write the data to it, and close the file
 cql_export void cql_write_file(CqlState *CS, const char *file_name, const char *data);
 
-cql_noexport void line_directive(CqlState* CS, const char *directive);
+cql_noexport void line_directive(CqlState* _Nonnull CS, const char *directive);
 
-cql_export void cql_emit_error(CqlState* CS, const char *err);
+cql_export void cql_emit_error(CqlState* _Nonnull CS, const char *err);
 
 cql_export void cql_emit_output(const char *out);
 
 //cql_data_decl( char *CS->current_file );
 
-cql_noexport CSTR get_last_doc_comment(CqlState* CS);
+cql_noexport CSTR get_last_doc_comment(CqlState* _Nonnull CS);
 
 cql_noexport CSTR cql_builtin_text();
 
 cql_noexport int32_t macro_type_from_str(CSTR type);
 
-cql_noexport bool_t macro_arg_valid(CqlState* CS, int32_t type, struct ast_node *ast);
+cql_noexport bool_t macro_arg_valid(CqlState* _Nonnull CS, int32_t type, struct ast_node *ast);
 
-cql_noexport void cql_reset_open_includes(CqlState* CS);
+cql_noexport void cql_reset_open_includes(CqlState* _Nonnull CS);
 
-cql_noexport bool_t cql_is_defined(CqlState* CS, CSTR name);
+cql_noexport bool_t cql_is_defined(CqlState* _Nonnull CS, CSTR name);

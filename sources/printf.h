@@ -61,6 +61,6 @@ cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *form
 //
 // In the lattermost two cases, parsing is finished and `printf_iterator_next`
 // must not be called again.
-cql_noexport sem_t printf_iterator_next(CqlState* CS, printf_iterator *iterator);
+cql_noexport sem_t printf_iterator_next(CqlState* _Nonnull CS, printf_iterator *iterator);
 
 #endif

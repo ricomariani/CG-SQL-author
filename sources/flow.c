@@ -141,7 +141,7 @@ static void append_history(flow_history *history, flow_history history_to_append
 
 // Given `history`, returns an array that points to each item within it and sets
 // `*count` to the total number of items.
-static flow_history_item **array_from_history(CqlState* CS, flow_history history, uint32_t *count) {
+static flow_history_item **array_from_history(CqlState* _Nonnull CS, flow_history history, uint32_t *count) {
   Contract(count);
 
   uint32_t length = 0;
@@ -200,7 +200,7 @@ static int history_item_comparator(const void *a, const void *b) {
 }
 
 // Returns a new history item given initial values.
-static flow_history_item *history_item_new(CqlState* CS, sem_t *type, sem_t flag, flow_history_delta delta) {
+static flow_history_item *history_item_new(CqlState* _Nonnull CS, sem_t *type, sem_t flag, flow_history_delta delta) {
   Contract(type);
   Contract(is_single_flag(flag));
 
@@ -230,7 +230,7 @@ static void reverse_history(flow_history *history) {
 }
 
 // Clones a history and returns the new copy.
-static flow_history clone_history(CqlState* CS, flow_history history) {
+static flow_history clone_history(CqlState* _Nonnull CS, flow_history history) {
   flow_history new_history = NULL;
 
   for (flow_history_item *item = history; item; item = item->next) {
@@ -246,7 +246,7 @@ static flow_history clone_history(CqlState* CS, flow_history history) {
 
 // Given a pointer to a history, adds a new history item to it with the initial
 // values provided.
-static void record_in_history(CqlState* CS, flow_history *history, sem_t *type, sem_t flag, flow_history_delta delta) {
+static void record_in_history(CqlState* _Nonnull CS, flow_history *history, sem_t *type, sem_t flag, flow_history_delta delta) {
   Contract(history);
   Contract(type);
   Contract(is_single_flag(flag));
@@ -258,7 +258,7 @@ static void record_in_history(CqlState* CS, flow_history *history, sem_t *type, 
 
 // Sets `flag` on `*type` and records it in the history of the the current
 // context. This must never be called if the flag is already set.
-cql_noexport void flow_set_flag_for_type(CqlState* CS, sem_t flag, sem_t *type) {
+cql_noexport void flow_set_flag_for_type(CqlState* _Nonnull CS, sem_t flag, sem_t *type) {
   Contract(current_context_lv);
   Contract(is_single_flag(flag));
   Contract(type);
@@ -271,7 +271,7 @@ cql_noexport void flow_set_flag_for_type(CqlState* CS, sem_t flag, sem_t *type) 
 
 // Un-sets `flag` on `*type` and records it in the history of the the current
 // context. This must never be called unless the flag is already set.
-cql_noexport void flow_unset_flag_for_type(CqlState* CS, sem_t flag, sem_t *type) {
+cql_noexport void flow_unset_flag_for_type(CqlState* _Nonnull CS, sem_t flag, sem_t *type) {
   Contract(current_context_lv);
   Contract(is_single_flag(flag));
   Contract(type);
@@ -291,7 +291,7 @@ cql_noexport void flow_unset_flag_for_type(CqlState* CS, sem_t flag, sem_t *type
 
 // Creates a new context with the kind provided and adds it to the current
 // context. This does NOT initialize any kind-specific members.
-static void push_context_with_kind(CqlState* CS, flow_context_kind kind) {
+static void push_context_with_kind(CqlState* _Nonnull CS, flow_context_kind kind) {
   flow_context *context = _ast_pool_new(flow_context);
   context->parent = current_context_rv;
   context->kind = kind;
@@ -302,7 +302,7 @@ static void push_context_with_kind(CqlState* CS, flow_context_kind kind) {
 
 // Given a history, iterates over it and calls `func` with the delta sum of each
 // type/flag combination.
-static void with_delta_sums_of_history(CqlState* CS, flow_history history, void func(CqlState* CS, sem_t *type, sem_t flag, int32_t delta_sum)) {
+static void with_delta_sums_of_history(CqlState* _Nonnull CS, flow_history history, void func(CqlState* _Nonnull CS, sem_t *type, sem_t flag, int32_t delta_sum)) {
   Contract(func);
 
   uint32_t item_count;
@@ -333,13 +333,13 @@ static void with_delta_sums_of_history(CqlState* CS, flow_history history, void 
 // Asserts that the `delta_sum` calculated for a particular type/flag
 // combination present in some context's history is within [-1, 1] as is
 // required for `merge_effects` to work properly.
-static void invariant_delta_sum(CqlState* CS, sem_t *type, sem_t flag, int32_t delta_sum) {
+static void invariant_delta_sum(CqlState* _Nonnull CS, sem_t *type, sem_t flag, int32_t delta_sum) {
   Invariant(delta_sum >= -1 && delta_sum <= 1);
 }
 
 // Moves the history of the current context to the start of the history of the
 // parent context (if any) so that it can manage it however it chooses.
-static void move_history_to_parent(CqlState* CS) {
+static void move_history_to_parent(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
 
   if (current_context_rv->parent) {
@@ -365,13 +365,13 @@ static void move_history_to_parent(CqlState* CS) {
 // Pushes a normal context. Unless one is pushing a context for a group of
 // branches (e.g., within an IF or CASE) or pushing a branch itself, one should
 // simply push a normal context.
-cql_noexport void _flow_push_context_normal(CqlState* CS) {
+cql_noexport void _flow_push_context_normal(CqlState* _Nonnull CS) {
   push_context_with_kind(CS, FLOW_CONTEXT_KIND_NORMAL);
 }
 
 // Un-sets all of the improvements in the current history while leaving the
 // history itself unchanged.
-static void unset_all_improvements(CqlState* CS) {
+static void unset_all_improvements(CqlState* _Nonnull CS) {
   for (flow_history_item *item = current_context_rv->history; item; item = item->next) {
     switch (item->delta) {
       case FLOW_HISTORY_DELTA_UNSET:
@@ -385,7 +385,7 @@ static void unset_all_improvements(CqlState* CS) {
 }
 
 // Pops a normal context, unsetting all improvements made within it.
-cql_noexport void _flow_pop_context_normal(CqlState* CS) {
+cql_noexport void _flow_pop_context_normal(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_NORMAL);
 
@@ -398,7 +398,7 @@ cql_noexport void _flow_pop_context_normal(CqlState* CS) {
 
 // Pushes a new branch group context. Only branch contexts may be created within
 // it.
-cql_noexport void _flow_push_context_branch_group(CqlState* CS) {
+cql_noexport void _flow_push_context_branch_group(CqlState* _Nonnull CS) {
   push_context_with_kind(CS, FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
   current_context_rv->branch_group.branch_histories = NULL;
@@ -415,7 +415,7 @@ cql_noexport void _flow_push_context_branch_group(CqlState* CS) {
 // when it was initially unset, or by simply not affecting it at all). Each
 // branch, therefore, can be assigned a value of -1, 1, or 0 respectively. These
 // are totalled up and represent the `delta_sum`.
-static void merge_effects(CqlState* CS, sem_t *type, sem_t flag, int32_t delta_sum) {
+static void merge_effects(CqlState* _Nonnull CS, sem_t *type, sem_t flag, int32_t delta_sum) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
   Contract(current_context_rv->branch_group.branch_count > 0);
@@ -472,7 +472,7 @@ static void merge_effects(CqlState* CS, sem_t *type, sem_t flag, int32_t delta_s
 
 // Records whether or not the current branch group context has a catch-all
 // branch or otherwise covers all possible cases.
-cql_noexport void flow_set_context_branch_group_covers_all_cases(CqlState* CS, bool_t covers_all_cases) {
+cql_noexport void flow_set_context_branch_group_covers_all_cases(CqlState* _Nonnull CS, bool_t covers_all_cases) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
@@ -482,7 +482,7 @@ cql_noexport void flow_set_context_branch_group_covers_all_cases(CqlState* CS, b
 // Records the presence of an empty branch within the branch group. This is
 // equivalent to calling `_flow_push_context_branch` immediately followed by
 // `_flow_pop_context_branch` and exists only for the sake of convenience.
-cql_noexport void flow_context_branch_group_add_empty_branch(CqlState* CS) {
+cql_noexport void flow_context_branch_group_add_empty_branch(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
@@ -491,7 +491,7 @@ cql_noexport void flow_context_branch_group_add_empty_branch(CqlState* CS) {
 
 // Pops the current branch group, calculating the total effect of all of its
 // branches in the process.
-cql_noexport void _flow_pop_context_branch_group(CqlState* CS) {
+cql_noexport void _flow_pop_context_branch_group(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
@@ -525,7 +525,7 @@ cql_noexport void _flow_pop_context_branch_group(CqlState* CS) {
 // conditional, including any "else" or catch-all branch, otherwise
 // `_flow_pop_context_branch_group` may improve something too optimistically due
 // to a lack of sufficient information.
-cql_noexport void _flow_push_context_branch(CqlState* CS) {
+cql_noexport void _flow_push_context_branch(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_BRANCH_GROUP);
 
@@ -568,7 +568,7 @@ cql_noexport void _flow_push_context_branch(CqlState* CS) {
 
 // Sets whether or not the current context always jumps to the end of the
 // nearest enclosing jump context or some statement beyond it.
-cql_noexport void flow_set_context_always_jumps(CqlState* CS, bool_t always_jumps) {
+cql_noexport void flow_set_context_always_jumps(CqlState* _Nonnull CS, bool_t always_jumps) {
   Contract(current_context_lv);
 
   if (current_context_rv->kind != FLOW_CONTEXT_KIND_BRANCH) {
@@ -582,7 +582,7 @@ cql_noexport void flow_set_context_always_jumps(CqlState* CS, bool_t always_jump
 
 // Pop a branch context, reverting the history within it such that it will be as
 // though nothing ever happened.
-cql_noexport void _flow_pop_context_branch(CqlState* CS) {
+cql_noexport void _flow_pop_context_branch(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_BRANCH);
 
@@ -659,7 +659,7 @@ cql_noexport void _flow_pop_context_branch(CqlState* CS) {
 
 // Pushes a jump context such that `current_context` will be identical to
 // `top_jump_context`.
-cql_noexport void _flow_push_context_jump(CqlState* CS) {
+cql_noexport void _flow_push_context_jump(CqlState* _Nonnull CS) {
   push_context_with_kind(CS, FLOW_CONTEXT_KIND_JUMP);
 
   current_context_rv->jump.nearest_jump_context = top_jump_context_rv;
@@ -669,7 +669,7 @@ cql_noexport void _flow_push_context_jump(CqlState* CS) {
 }
 
 // Pops the current jump context and updates `top_jump_context` accordingly.
-cql_noexport void _flow_pop_context_jump(CqlState* CS) {
+cql_noexport void _flow_pop_context_jump(CqlState* _Nonnull CS) {
   Contract(current_context_lv);
   Contract(current_context_rv->kind == FLOW_CONTEXT_KIND_JUMP);
 

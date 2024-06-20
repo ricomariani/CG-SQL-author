@@ -12,6 +12,8 @@ T="test"
 
 CQL="./$O/cql"
 
+xSQLITE_PATH="SQLITE_PATH=$HOME/dev/dadbiz++/third-party/dad/sqlite3-orig"
+
 # shellcheck disable=SC2034
 ERROR_DOC="../docs/user_guide/appendices/04_error_codes.md"
 
@@ -32,7 +34,7 @@ while [ "$1" != "" ]; do
 		export CC
 		shift 1
 	elif [ "$1" == "--coverage" ]; then
-		MAKE_COVERAGE_ARGS="COVERAGE=1"
+		MAKE_COVERAGE_ARGS="COVERAGE=1 $xSQLITE_PATH"
 		TEST_COVERAGE_ARGS="--coverage"
 		shift 1
 	elif [ "$1" == "--use_amalgam" ]; then
@@ -59,7 +61,7 @@ extra_tests() {
 	echo "no extra tests at this time"
 }
 
-MAKE_ARGS="${MAKE_COVERAGE_ARGS}"
+MAKE_ARGS="${MAKE_COVERAGE_ARGS} $xSQLITE_PATH"
 
 do_make() {
 	if [ "${MAKE_ARGS}" == "" ]; then

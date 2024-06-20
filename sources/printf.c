@@ -133,7 +133,7 @@ static printf_flags printf_flag_of_char(char c) {
 }
 
 // Indicates an error in the format string and sets `SEM_TYPE_ERROR`.
-static void printf_iterator_error(CqlState* CS, printf_iterator *iterator, CSTR msg, CSTR subject) {
+static void printf_iterator_error(CqlState* _Nonnull CS, printf_iterator *iterator, CSTR msg, CSTR subject) {
   if (iterator->ast) {
     report_error(CS, iterator->ast, msg, subject);
     record_error(CS, iterator->ast);
@@ -151,7 +151,7 @@ static bool_t printf_is_flag_char(char c) {
 // associated with the current substituion. This must not be called with a
 // character that does not correspond to a flag. Sets `SEM_TYPE_ERROR` if the
 // flag character is a duplicate or if there is an invalid combination of flags.
-static void printf_iterator_add_flag_char(CqlState* CS, printf_iterator *iterator, char c) {
+static void printf_iterator_add_flag_char(CqlState* _Nonnull CS, printf_iterator *iterator, char c) {
   Contract(iterator);
   Contract(iterator->sem_type == SEM_TYPE_PENDING);
   Contract(iterator->state == PRINTF_STATE_FLAG);
@@ -180,7 +180,7 @@ static void printf_iterator_add_flag_char(CqlState* CS, printf_iterator *iterato
 // Records the width specifier for the current substition. Sets `SEM_TYPE_ERROR`
 // if the substitution has no width but one is required for a previously
 // recorded flag to make sense.
-static void printf_set_width(CqlState* CS, printf_iterator *iterator, printf_width width) {
+static void printf_set_width(CqlState* _Nonnull CS, printf_iterator *iterator, printf_width width) {
   Contract(iterator);
   Contract(iterator->sem_type == SEM_TYPE_PENDING);
   Contract(iterator->state == PRINTF_STATE_WIDTH);
@@ -207,7 +207,7 @@ static void printf_set_width(CqlState* CS, printf_iterator *iterator, printf_wid
 // if the specifier is `PRINTF_STATE_LENGTH_LONG` (as 'l' serves no purpose in
 // SQLite) or if a length specifier has been combined with a flag that doesn't
 // make sense with a length specifier.
-static void printf_set_length(CqlState* CS, printf_iterator *iterator, printf_length length) {
+static void printf_set_length(CqlState* _Nonnull CS, printf_iterator *iterator, printf_length length) {
   Contract(iterator);
   Contract(iterator->sem_type == SEM_TYPE_PENDING);
   Contract(iterator->state == PRINTF_STATE_LENGTH_LONG || iterator->state == PRINTF_STATE_LENGTH_LONG_LONG);
@@ -234,7 +234,7 @@ static void printf_set_length(CqlState* CS, printf_iterator *iterator, printf_le
 // compatible with the previously recorded flags or length specifier, or if the
 // type specifier is not allowed in CQL, or if the character provided does not
 // correspond to any type specifier.
-static void printf_iterator_set_type_char(CqlState* CS, printf_iterator *iterator, char c) {
+static void printf_iterator_set_type_char(CqlState* _Nonnull CS, printf_iterator *iterator, char c) {
   Contract(iterator);
   Contract(iterator->sem_type == SEM_TYPE_PENDING);
   Contract(iterator->state == PRINTF_STATE_TYPE);
@@ -336,7 +336,7 @@ static void printf_iterator_reset(printf_iterator *iterator) {
 
 // Prepares the iterator for the next call to `printf_iterator_next` after
 // encountering a '*' width specifier.
-static void printf_iterator_suspend_for_star(CqlState* CS, printf_iterator *iterator) {
+static void printf_iterator_suspend_for_star(CqlState* _Nonnull CS, printf_iterator *iterator) {
   Contract(iterator);
   Contract(iterator->state == PRINTF_STATE_WIDTH);
   Contract(iterator->width == PRINTF_WIDTH_NONE);
@@ -363,7 +363,7 @@ static void printf_iterator_suspend_for_star(CqlState* CS, printf_iterator *iter
 
 // Returns the type of the next substitution, else `SEM_TYPE_OK` if no
 // substitutions remain or `SEM_TYPE_ERROR` in the case of an error.
-cql_noexport sem_t printf_iterator_next(CqlState* CS, printf_iterator *iterator) {
+cql_noexport sem_t printf_iterator_next(CqlState* _Nonnull CS, printf_iterator *iterator) {
   Contract(iterator);
   Contract(iterator->sem_type == SEM_TYPE_PENDING);
   // We should either be at the start of a substituion or resuming a

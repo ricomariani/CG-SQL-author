@@ -13,38 +13,38 @@
 
 //cql_data_decl( int32_t CS->gen_stmt_level );
 
-cql_noexport void gen_init(CqlState* CS);
-cql_noexport void gen_cleanup(CqlState* CS);
-cql_noexport void gen_printf(CqlState* CS, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
-cql_noexport void gen_set_output_buffer(CqlState* CS, struct charbuf *_Nonnull buffer);
+cql_noexport void gen_init(CqlState* _Nonnull CS);
+cql_noexport void gen_cleanup(CqlState* _Nonnull CS);
+cql_noexport void gen_printf(CqlState* _Nonnull CS, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport void gen_set_output_buffer(CqlState* _Nonnull CS, struct charbuf *_Nonnull buffer);
 
 typedef void (*_Nonnull gen_func)(CqlState *CS, ast_node *_Nonnull ast);
 
-cql_noexport CSTR _Nonnull gen_type_hash(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport CSTR _Nonnull get_field_hash(CqlState* CS, CSTR _Nonnull cname, sem_t sem_type);
-cql_noexport void gen_stmt_list_to_stdout(CqlState* CS, ast_node *_Nullable ast);
-cql_noexport void gen_select_core(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_one_stmt_to_stdout(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_misc_attrs_to_stdout(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_root_expr(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_col_or_key(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_params(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_declare_proc_from_create_or_decl(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_declare_proc_closure(CqlState* CS, ast_node *_Nonnull ast, symtab *_Nullable already_done);
-cql_noexport void gen_declare_interface_stmt(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_one_stmt(CqlState* CS, ast_node *_Nonnull stmt);
-cql_noexport void gen_one_stmt_and_misc_attrs(CqlState* CS, ast_node *_Nonnull stmt);
-cql_noexport void gen_misc_attrs(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_misc_attr_value(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_misc_attr_value_list(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_fk_action(CqlState* CS, int32_t action);
-cql_noexport void gen_insert_type(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport void gen_col_key_list(CqlState* CS, ast_node *_Nonnull list);
-cql_noexport void gen_typed_names(CqlState* CS, ast_node *_Nullable ast);
-cql_noexport void gen_data_type(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport CSTR _Nonnull gen_type_hash(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport CSTR _Nonnull get_field_hash(CqlState* _Nonnull CS, CSTR _Nonnull cname, sem_t sem_type);
+cql_noexport void gen_stmt_list_to_stdout(CqlState* _Nonnull CS, ast_node *_Nullable ast);
+cql_noexport void gen_select_core(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_one_stmt_to_stdout(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_misc_attrs_to_stdout(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_root_expr(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_col_or_key(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_params(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_declare_proc_from_create_or_decl(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_declare_proc_closure(CqlState* _Nonnull CS, ast_node *_Nonnull ast, symtab *_Nullable already_done);
+cql_noexport void gen_declare_interface_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_one_stmt(CqlState* _Nonnull CS, ast_node *_Nonnull stmt);
+cql_noexport void gen_one_stmt_and_misc_attrs(CqlState* _Nonnull CS, ast_node *_Nonnull stmt);
+cql_noexport void gen_misc_attrs(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_misc_attr_value(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_misc_attr_value_list(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_fk_action(CqlState* _Nonnull CS, int32_t action);
+cql_noexport void gen_insert_type(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport void gen_col_key_list(CqlState* _Nonnull CS, ast_node *_Nonnull list);
+cql_noexport void gen_typed_names(CqlState* _Nonnull CS, ast_node *_Nullable ast);
+cql_noexport void gen_data_type(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 
 // automatically sets the output buffer and printf's the results of the above
-cql_noexport void gen_to_stdout(CqlState* CS, ast_node *_Nullable ast, gen_func fn);
+cql_noexport void gen_to_stdout(CqlState* _Nonnull CS, ast_node *_Nullable ast, gen_func fn);
 
 // signature for a callback, you get your context plus the ast
 // if you return true then the normal output is suppressed
@@ -180,12 +180,12 @@ cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *_Nullable callbacks)
 
 // Generate helper methods
 
-cql_noexport void gen_with_callbacks(CqlState* CS, ast_node *_Nonnull ast, gen_func fn, gen_sql_callbacks *_Nullable _callbacks);
-cql_noexport void gen_col_def_with_callbacks(CqlState* CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
+cql_noexport void gen_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_func fn, gen_sql_callbacks *_Nullable _callbacks);
+cql_noexport void gen_col_def_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_statement_with_callbacks(CqlState *CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
-cql_noexport void gen_statement_and_attributes_with_callbacks(CqlState* CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
-cql_noexport void gen_any_text_arg(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport void gen_statement_and_attributes_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
+cql_noexport void gen_any_text_arg(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 
-cql_noexport bool_t eval_star_callback(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport bool_t eval_variables_callback(CqlState* CS, ast_node *_Nonnull ast);
-cql_noexport bool_t eval_column_callback(CqlState* CS, ast_node *_Nonnull ast);
+cql_noexport bool_t eval_star_callback(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport bool_t eval_variables_callback(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+cql_noexport bool_t eval_column_callback(CqlState* _Nonnull CS, ast_node *_Nonnull ast);

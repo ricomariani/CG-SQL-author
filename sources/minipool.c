@@ -86,12 +86,12 @@ cql_noexport void *minipool_alloc(minipool *pool, uint32_t needed) {
 
 //static lazy_free *_Nullable lazy_frees;
 
-cql_noexport void add_lazy_free(CqlState* CS, lazy_free *p) {
+cql_noexport void add_lazy_free(CqlState* _Nonnull CS, lazy_free *p) {
   p->next = CS->lazy_frees;
   CS->lazy_frees = p;
 }
 
-cql_noexport void run_lazy_frees(CqlState* CS) {
+cql_noexport void run_lazy_frees(CqlState* _Nonnull CS) {
   lazy_free *head = CS->lazy_frees;
   while (head) {
     lazy_free *next = head->next;

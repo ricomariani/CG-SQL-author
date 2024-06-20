@@ -26,11 +26,11 @@ cql_noexport void *_Nonnull minipool_alloc(minipool *_Nonnull pool, uint32_t nee
 typedef struct lazy_free {
   struct lazy_free *_Nullable next;
   void *_Nullable context;
-  void (*_Nonnull teardown)(CqlState* CS, void *_Nullable context);
+  void (*_Nonnull teardown)(CqlState* _Nonnull CS, void *_Nullable context);
 } lazy_free;
 
-cql_noexport void add_lazy_free(CqlState* CS, lazy_free *_Nonnull p);
-cql_noexport void run_lazy_frees(CqlState* CS);
+cql_noexport void add_lazy_free(CqlState* _Nonnull CS, lazy_free *_Nonnull p);
+cql_noexport void run_lazy_frees(CqlState* _Nonnull CS);
 
 #define _pool_new(p, x) ((x*)minipool_alloc(p, (int32_t)sizeof(x)))
 #define _pool_new_array(p, x, c) ((x*)minipool_alloc(p, c*(int32_t)sizeof(x)))

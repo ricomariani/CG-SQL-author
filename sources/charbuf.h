@@ -28,15 +28,15 @@ typedef struct pending_charbuf {
 //cql_data_decl( int32_t CS->charbuf_open_count );
 //cql_data_decl( pending_charbuf *CS->__charbufs_in_flight );
 
-cql_noexport void bopen(CqlState* CS, charbuf* b);
-cql_noexport void bclose(CqlState* CS, charbuf *b);
+cql_noexport void bopen(CqlState* _Nonnull CS, charbuf* b);
+cql_noexport void bclose(CqlState* _Nonnull CS, charbuf *b);
 cql_noexport void bclear(charbuf *b);
-cql_noexport void release_open_charbufs(CqlState* CS);
+cql_noexport void release_open_charbufs(CqlState* _Nonnull CS);
 cql_noexport void vbprintf(charbuf *b, const char *format, va_list args);
 cql_noexport void bprintf(charbuf *b, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
-cql_noexport CSTR dup_printf(CqlState* CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport CSTR dup_printf(CqlState* _Nonnull CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 cql_noexport void bputc(charbuf *b, char c);
-cql_noexport void bindent(CqlState* CS, charbuf *output, charbuf *input, int32_t indent);
+cql_noexport void bindent(CqlState* _Nonnull CS, charbuf *output, charbuf *input, int32_t indent);
 cql_noexport bool_t breadline(charbuf *output, CSTR *data);
 
 #define CHARBUF_OPEN(x) \

@@ -30,7 +30,7 @@ cql_noexport void cg_stats_main(CS, struct ast_node *root) {}
 // symtab where the key is the type of the node and the value is the count of
 // that type of node. The stoplist is used to avoid accumulating stats for nodes
 // that are present in large numbers.
-static void cg_stats_accumulate(CqlState* CS, ast_node *node) {
+static void cg_stats_accumulate(CqlState* _Nonnull CS, ast_node *node) {
 
   CSTR type = node->type;
 
@@ -63,7 +63,7 @@ static void cg_stats_accumulate(CqlState* CS, ast_node *node) {
 // appended to the stats_output charbuf.  The rows are sorted by node type.
 // The stats are accumulated in a symtab where the key is the type of the node
 // and the value is the count of that type of node. 
-static void cg_stats_create_proc_stmt(CqlState* CS, ast_node *ast) {
+static void cg_stats_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
@@ -97,7 +97,7 @@ static void cg_stats_create_proc_stmt(CqlState* CS, ast_node *ast) {
 
 // walk the main statement list looking for create proc statements, enter those
 // and accumulate stats.
-static void cg_stats_stmt_list(CqlState* CS, ast_node *head) {
+static void cg_stats_stmt_list(CqlState* _Nonnull CS, ast_node *head) {
   for (ast_node *ast = head; ast; ast = ast->right) {
     EXTRACT_STMT(stmt, ast);
 
@@ -112,7 +112,7 @@ static void cg_stats_stmt_list(CqlState* CS, ast_node *head) {
 // The stoplist is used to avoid accumulating stats for nodes that are present
 // in large numbers and also for nodes that always come as part of a set of
 // related nodes, e.g. "select_having" is always present when "select" is.
-static void cg_stoplist(CqlState* CS) {
+static void cg_stoplist(CqlState* _Nonnull CS) {
   CS->stats_stoplist = symtab_new();
 
   symtab *s = CS->stats_stoplist;
@@ -164,7 +164,7 @@ static void cg_stoplist(CqlState* CS) {
 // once in a single process, we don't accidentally accumulate stats from the
 // previous run.  This is possible in the alamgam case, the amlagamated code is
 // linked into some harness and might run multiple times in the same process.
-cql_noexport void cg_stats_main(CqlState* CS, struct ast_node *root) {
+cql_noexport void cg_stats_main(CqlState* _Nonnull CS, struct ast_node *root) {
   Contract(CS->options.file_names_count == 1);
   cql_exit_on_semantic_errors(CS, root);
   exit_on_validating_schema(CS);

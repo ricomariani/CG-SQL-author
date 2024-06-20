@@ -74,29 +74,29 @@ typedef struct dummy_test_info {
   list_item *pending_triggers;
 } dummy_test_info;
 
-static void find_all_table_nodes(CqlState* CS, dummy_test_info *info, ast_node *node);
+static void find_all_table_nodes(CqlState* _Nonnull CS, dummy_test_info *info, ast_node *node);
 
-static void cg_dummy_test_populate(CqlState* CS, charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed);
+static void cg_dummy_test_populate(CqlState* _Nonnull CS, charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed);
 
 // The dummy_table, dummy_insert, dummy_select and dummy_result_set attributions
 // will reference the original procedure by name in a LIKE clause.  In order to get its
 // result type, we need to emit a declaration for the proc because its body will not be
 // in the test helper file.  This function tells us if we need to emit that declaration.
-static bool is_declare_proc_needed(CqlState* CS) {
+static bool is_declare_proc_needed(CqlState* _Nonnull CS) {
   int32_t needed = DUMMY_TABLE | DUMMY_INSERT | DUMMY_SELECT | DUMMY_RESULT_SET;
   return !!(CS->th.helper_flags & needed);
 }
 
 // Emit a declaration for the proc so that the signature is known by
 // the generated dummy procs.  See above.
-static void cg_test_helpers_declare_proc(CqlState* CS, ast_node *ast) {
+static void cg_test_helpers_declare_proc(CqlState* _Nonnull CS, ast_node *ast) {
   bprintf(CS->th.cg_th_decls, "\n");
   gen_set_output_buffer(CS, CS->th.cg_th_decls);
   gen_declare_proc_closure(CS, ast, CS->th.test_helper_decls_emitted);
 }
 
 static bool_t cg_test_helpers_force_if_not_exists(
-  CqlState* CS,
+  CqlState* _Nonnull CS,
   ast_node *_Nonnull ast,
   void *_Nullable context,
   charbuf *_Nonnull output)
@@ -107,7 +107,7 @@ static bool_t cg_test_helpers_force_if_not_exists(
 
 // Emit an open proc which creates a temp table in the form of the original proc
 // Emit a close proc which drops the temp table
-static void cg_test_helpers_dummy_table(CqlState* CS, CSTR name) {
+static void cg_test_helpers_dummy_table(CqlState* _Nonnull CS, CSTR name) {
   bprintf(CS->th.cg_th_procs, "\n");
   bprintf(CS->th.cg_th_procs, "PROC open_%s()\n", name);
   bprintf(CS->th.cg_th_procs, "BEGIN\n");
@@ -122,7 +122,7 @@ static void cg_test_helpers_dummy_table(CqlState* CS, CSTR name) {
 }
 
 // Emit a dummy insert to the temp table using FROM ARGUMENTS
-static void cg_test_helpers_dummy_insert(CqlState* CS, CSTR name) {
+static void cg_test_helpers_dummy_insert(CqlState* _Nonnull CS, CSTR name) {
   bprintf(CS->th.cg_th_procs, "\n");
   bprintf(CS->th.cg_th_procs, "PROC insert_%s(LIKE %s)\n", name, name);
   bprintf(CS->th.cg_th_procs, "BEGIN\n");
@@ -132,7 +132,7 @@ static void cg_test_helpers_dummy_insert(CqlState* CS, CSTR name) {
 
 // Emit a dummy select from the temp table which will have a result set
 // that matches that of the original proc
-static void cg_test_helpers_dummy_select(CqlState* CS, CSTR name) {
+static void cg_test_helpers_dummy_select(CqlState* _Nonnull CS, CSTR name) {
   bprintf(CS->th.cg_th_procs, "\n");
   bprintf(CS->th.cg_th_procs, "PROC select_%s()\n", name);
   bprintf(CS->th.cg_th_procs, "BEGIN\n");
@@ -142,7 +142,7 @@ static void cg_test_helpers_dummy_select(CqlState* CS, CSTR name) {
 
 // Emit a procedure that takes in arguments by the shape of the procedure
 // and produces a result set
-static void cg_test_helpers_dummy_result_set(CqlState* CS, CSTR name) {
+static void cg_test_helpers_dummy_result_set(CqlState* _Nonnull CS, CSTR name) {
   bprintf(CS->th.cg_th_procs, "\n");
   bprintf(CS->th.cg_th_procs, "PROC generate_%s_row(LIKE %s)\n", name, name);
   bprintf(CS->th.cg_th_procs, "BEGIN\n");
@@ -154,7 +154,7 @@ static void cg_test_helpers_dummy_result_set(CqlState* CS, CSTR name) {
 
 // triggers have to go after all else because their dependencies are in any order
 // and we do not want to alter the table create order by processing a trigger
-static void enqueue_all_triggers_node(CqlState* CS, dummy_test_info *info, CSTR table_or_view_name) {
+static void enqueue_all_triggers_node(CqlState* _Nonnull CS, dummy_test_info *info, CSTR table_or_view_name) {
   symtab_entry *triggers_entry = symtab_find(CS->th.all_tables_with_triggers, table_or_view_name);
 
   if (triggers_entry) {
@@ -179,7 +179,7 @@ static void enqueue_all_triggers_node(CqlState* CS, dummy_test_info *info, CSTR 
 }
 
 // process all the pending triggers
-static void process_pending_triggers(CqlState* CS, void *_Nullable context) {
+static void process_pending_triggers(CqlState* _Nonnull CS, void *_Nullable context) {
   dummy_test_info *info = (dummy_test_info *)context;
 
   gen_sql_callbacks callbacks;
@@ -223,7 +223,7 @@ static void process_pending_triggers(CqlState* CS, void *_Nullable context) {
 //  - looks up all table relationships instead of just tables reference in a proc (follows the FKs)
 //  - looks up drop table statements
 //  - looks up triggers, and then the tables referenced in those triggers
-static void found_table_or_view(CqlState* CS, CSTR _Nonnull table_or_view_name, ast_node *_Nonnull table_or_view, void *_Nullable context) {
+static void found_table_or_view(CqlState* _Nonnull CS, CSTR _Nonnull table_or_view_name, ast_node *_Nonnull table_or_view, void *_Nullable context) {
   Contract(table_or_view);
 
   dummy_test_info *info = (dummy_test_info *)context;
@@ -268,7 +268,7 @@ static void found_table_or_view(CqlState* CS, CSTR _Nonnull table_or_view_name, 
   }
 }
 
-static void find_all_table_nodes(CqlState* CS, dummy_test_info *info, ast_node *node) {
+static void find_all_table_nodes(CqlState* _Nonnull CS, dummy_test_info *info, ast_node *node) {
   table_callbacks callbacks = {
     .callback_any_table = found_table_or_view,
     .callback_any_view = found_table_or_view,
@@ -296,7 +296,7 @@ static void find_all_table_nodes(CqlState* CS, dummy_test_info *info, ast_node *
 
 // Format the value in node accordingly to the node type. The semantic analysis
 // has already made sure the ast node type matches the column type in the table
-static void cg_dummy_test_column_value(CqlState* CS, charbuf *output, ast_node *value) {
+static void cg_dummy_test_column_value(CqlState* _Nonnull CS, charbuf *output, ast_node *value) {
   if (is_ast_uminus(value)) {
     Contract(is_ast_num(value->left));
     bprintf(output, "%s", "-");
@@ -325,7 +325,7 @@ static void cg_dummy_test_column_value(CqlState* CS, charbuf *output, ast_node *
 // "table_name" and column "column_name". We use this function to find parent
 // column to do some validation to avoid foreign key violations in insert statement
 // we emit.
-static void find_parent_column(CqlState* CS,
+static void find_parent_column(CqlState* _Nonnull CS,
   ast_node *_Nullable *_Nonnull referenced_table_ast,
   CSTR _Nullable *_Nonnull referenced_column,
   CSTR table_name,
@@ -431,7 +431,7 @@ static int32_t cg_validate_value_range(int32_t value) {
 // e.g: Foo table has a foreign key column 'A' referencing column 'B' on the table Bar.
 // If a value for column 'B' of table Bar was specified in dummy_test info then that
 // value will be populated to column 'B' of table Foo
-static void cg_parent_column_value(CqlState* CS, charbuf *output, CSTR table_name, CSTR column_name, int32_t index) {
+static void cg_parent_column_value(CqlState* _Nonnull CS, charbuf *output, CSTR table_name, CSTR column_name, int32_t index) {
   ast_node *referenced_table_ast;
   CSTR referenced_column;
   find_parent_column(CS, &referenced_table_ast, &referenced_column, table_name, column_name);
@@ -456,7 +456,7 @@ static void cg_parent_column_value(CqlState* CS, charbuf *output, CSTR table_nam
 }
 
 // Emit a literal using an integer value base on the sem type.  e.g. quote it, cast it to blog, etc.
-static void cg_dummy_test_emit_integer_value(CqlState* CS, charbuf *output, sem_t col_type, int32_t value) {
+static void cg_dummy_test_emit_integer_value(CqlState* _Nonnull CS, charbuf *output, sem_t col_type, int32_t value) {
   if (is_numeric(col_type)) {
     bprintf(output, "%d", value);
   } else if (is_blob(col_type)) {
@@ -470,7 +470,7 @@ static void cg_dummy_test_emit_integer_value(CqlState* CS, charbuf *output, sem_
 // but also info in dummy_test attribute. If column's values are provided in
 // dummy_test info for the table, it'll be used otherwise @dummy_seed is used to
 // populated seed value into table.
-static void cg_dummy_test_populate(CqlState* CS, charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed) {
+static void cg_dummy_test_populate(CqlState* _Nonnull CS, charbuf *gen_insert_tables, ast_node *table_ast, int32_t *dummy_value_seed) {
   Contract(is_ast_create_table_stmt(table_ast));
 
   // do not emit populate for backing tables, let backed tables do the job
@@ -583,7 +583,7 @@ static void cg_dummy_test_populate(CqlState* CS, charbuf *gen_insert_tables, ast
 }
 
 // Walk through all triggers and create a dictionnary of triggers per tables.
-static void init_all_trigger_per_table(CqlState* CS) {
+static void init_all_trigger_per_table(CqlState* _Nonnull CS) {
   Contract(CS->th.all_tables_with_triggers == NULL);
   CS->th.all_tables_with_triggers = symtab_new();
 
@@ -606,7 +606,7 @@ static void init_all_trigger_per_table(CqlState* CS) {
   }
 }
 
-static void init_all_indexes_per_table(CqlState* CS) {
+static void init_all_indexes_per_table(CqlState* _Nonnull CS) {
   Contract(CS->th.all_tables_with_indexes == NULL);
   CS->th.all_tables_with_indexes = symtab_new();
 
@@ -626,7 +626,7 @@ static void init_all_indexes_per_table(CqlState* CS) {
 }
 
 // Emit create and drop index statement for all indexes on a table.
-static void cg_emit_index_stmt(CqlState* CS,
+static void cg_emit_index_stmt(CqlState* _Nonnull CS,
   ast_node *table_name_ast,
   charbuf *gen_create_indexes,
   charbuf *gen_drop_indexes,
@@ -662,7 +662,7 @@ static void cg_emit_index_stmt(CqlState* CS,
 //  - Read tables reference in the create proc statement.
 // The tables are created, populated and drop in an specific order to avoid foreign key violation or table not existing errors.
 // But also the data populated in the foreign key columns of these tables do not violate the foreign key constraint.
-static void cg_test_helpers_dummy_test(CqlState* CS, ast_node *stmt) {
+static void cg_test_helpers_dummy_test(CqlState* _Nonnull CS, ast_node *stmt) {
   Contract(is_ast_create_proc_stmt(stmt));
   EXTRACT_STRING(proc_name, stmt->left);
 
@@ -968,7 +968,7 @@ static bool_t is_column_value_present(bytebuf *column_values, sem_t column_type,
 //      "id" in table "Bar". If the user has manually added a value for the column "id" in
 //      the table "Foo" in dummy_test info then this method will add the same value
 //      to column "id" of the table "Bar" into its dummy_test info.
-static void add_value_to_referenced_table(CqlState* CS,
+static void add_value_to_referenced_table(CqlState* _Nonnull CS,
   CSTR table_name,
   CSTR column_name,
   sem_t column_type,
@@ -1005,7 +1005,7 @@ static void add_value_to_referenced_table(CqlState* CS,
 // is a set of columns and values which will later be used in the generated
 // data insertion procedure.  This is entirely optional but if you want specific
 // data to be inserted you can put it in the attribute.
-static void collect_dummy_test_info(CqlState* CS,
+static void collect_dummy_test_info(CqlState* _Nonnull CS,
   ast_node *_Nullable misc_attr_value_list,
   void *_Nullable context)
 {
@@ -1101,7 +1101,7 @@ static void collect_dummy_test_info(CqlState* CS,
 // This is invoked for every misc attribute on every create proc statement
 // in this translation unit.  We're looking for attributes of the form cql:autotest=(...)
 // and we ignore anything else.
-static void test_helpers_find_ast_misc_attr_callback(CqlState* CS,
+static void test_helpers_find_ast_misc_attr_callback(CqlState* _Nonnull CS,
   CSTR _Nullable misc_attr_prefix,
   CSTR _Nonnull misc_attr_name,
   ast_node *_Nullable ast_misc_attr_value_list,
@@ -1212,7 +1212,7 @@ static void test_helpers_find_ast_misc_attr_callback(CqlState* CS,
 // Having found a create proc statement, we set up to get the attributes on it.
 // The find_misc_attrs callback will be invoked for every attribute on the procedure.
 // test_helpers_find_ast_misc_attr_callback() will look for the relevant ones.
-static void cg_test_helpers_create_proc_stmt(CqlState* CS, ast_node *stmt, ast_node *misc_attrs) {
+static void cg_test_helpers_create_proc_stmt(CqlState* _Nonnull CS, ast_node *stmt, ast_node *misc_attrs) {
   Contract(is_ast_create_proc_stmt(stmt));
 
   if (misc_attrs) {
@@ -1227,7 +1227,7 @@ static void cg_test_helpers_create_proc_stmt(CqlState* CS, ast_node *stmt, ast_n
 }
 
 // Iterate through statement list
-static void cg_test_helpers_stmt_list(CqlState* CS, ast_node *head) {
+static void cg_test_helpers_stmt_list(CqlState* _Nonnull CS, ast_node *head) {
   Contract(is_ast_stmt_list(head));
   init_all_trigger_per_table(CS);
   init_all_indexes_per_table(CS);
@@ -1263,7 +1263,7 @@ static void cg_test_helpers_stmt_list(CqlState* CS, ast_node *head) {
 // Force the globals to null state so that they do not look like roots to LeakSanitizer
 // all of these should have been freed already.  This is the final safety net to prevent
 // non-reporting of leaks.
-static void cg_test_helpers_reset_globals(CqlState* CS) {
+static void cg_test_helpers_reset_globals(CqlState* _Nonnull CS) {
   CS->th.gen_create_triggers = NULL;
   CS->th.gen_drop_triggers = NULL;
   CS->th.all_tables_with_triggers = NULL;
@@ -1277,7 +1277,7 @@ static void cg_test_helpers_reset_globals(CqlState* CS) {
 }
 
 // Main entry point for test_helpers
-cql_noexport void cg_test_helpers_main(CqlState* CS, ast_node *head) {
+cql_noexport void cg_test_helpers_main(CqlState* _Nonnull CS, ast_node *head) {
   Contract(CS->options.file_names_count == 1);
   cql_exit_on_semantic_errors(CS, head);
   exit_on_validating_schema(CS);

@@ -34,12 +34,12 @@ typedef struct eval_node {
   bool_t  bool_value;
 } eval_node;
 
-cql_noexport void eval_init(CqlState* CS);
-cql_noexport void eval_cleanup(CqlState* CS);
-cql_noexport void eval(CqlState* CS, ast_node *_Nonnull expr, eval_node *_Nonnull result);
-cql_noexport ast_node *_Nonnull eval_set(CqlState* CS, ast_node *_Nonnull expr, eval_node *_Nonnull result);
+cql_noexport void eval_init(CqlState* _Nonnull CS);
+cql_noexport void eval_cleanup(CqlState* _Nonnull CS);
+cql_noexport void eval(CqlState* _Nonnull CS, ast_node *_Nonnull expr, eval_node *_Nonnull result);
+cql_noexport ast_node *_Nonnull eval_set(CqlState* _Nonnull CS, ast_node *_Nonnull expr, eval_node *_Nonnull result);
 cql_noexport void eval_cast_to(eval_node *_Nonnull result, sem_t sem_type);
 cql_noexport void eval_add_one(eval_node *_Nonnull result);
-cql_noexport void eval_format_number(CqlState* CS, eval_node *_Nonnull result, int32_t format_mode, charbuf *_Nonnull output);
+cql_noexport void eval_format_number(CqlState* _Nonnull CS, eval_node *_Nonnull result, int32_t format_mode, charbuf *_Nonnull output);
 
 #endif

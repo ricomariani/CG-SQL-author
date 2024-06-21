@@ -91,7 +91,11 @@ cql_noexport void cql_reset_open_includes(CqlState* _Nonnull CS) {
   CS->cql_include_index = 0;
   size_t sz = sizeof(cql_include_state)*MAX_INCLUDES;
   if(!CS->cql_includes) {
-      CS->cql_includes = malloc(sz);
+    CS->cql_includes = malloc(sz);
+    if (!CS->cql_includes) {
+      cql_error(CS, "Failed to allocate memory for cql_includes.\n");
+      cql_cleanup_and_exit(CS, 1);
+    }
   }
   memset(CS->cql_includes, 0, sz);
   if (CS->processed_files) {
@@ -112,6 +116,8 @@ cql_noexport void cql_cleanup_open_includes(CqlState* _Nonnull CS, yyscan_t scan
      yy_delete_buffer(inc->buf, scanner);
   }
   cql_reset_open_includes(CS);
+  free(CS->cql_includes);
+  CS->cql_includes = NULL;
 }
 
 static void cql_setup_for_include(CqlState* _Nonnull CS, CSTR str, yyscan_t scanner);

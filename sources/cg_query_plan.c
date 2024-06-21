@@ -5,6 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#undef FMT
+#ifdef FMT_DEBUG
+#define FMT(x) "(_q%d_)" x, __LINE__
+#else
+#define FMT(x) x
+#endif
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_QUERY_PLAN)
 
@@ -63,13 +69,13 @@ static bool_t qp_table_function_callback(CqlState* _Nonnull CS,
     return true;
   }
 
-  bprintf(CS->schema_stmts, "CREATE TABLE %s (\n", name);
+  bprintf(CS->schema_stmts, FMT("CREATE TABLE %s (\n"), name);
 
   sem_join *jptr = ast->sem->jptr;
   uint32_t size = jptr->tables[0]->count;
   for (uint32_t i = 0; i < size; i++) {
     if (i > 0) {
-      bprintf(CS->schema_stmts, ",\n");
+      bprintf(CS->schema_stmts, FMT(",\n"));
     }
 
     CSTR type;
@@ -91,10 +97,10 @@ static bool_t qp_table_function_callback(CqlState* _Nonnull CS,
         Contract(core_type == SEM_TYPE_REAL);
         type = "REAL";
     }
-    bprintf(CS->schema_stmts, "  %s %s", jptr->tables[0]->names[i], type);
+    bprintf(CS->schema_stmts, FMT("  %s %s"), jptr->tables[0]->names[i], type);
   }
 
-  bprintf(CS->schema_stmts, "\n);\n");
+  bprintf(CS->schema_stmts, FMT("\n);\n"));
   return true;
 }
 
@@ -118,7 +124,7 @@ static void qp_emit_constant_one(CqlState* _Nonnull CS, bool_t native_context, s
     gen_printf(CS, "1L");
   }
   else if (is_real(sem_type)) {
-    bprintf(output, "1.0");
+    bprintf(output, FMT("1.0"));
   }
   else if (is_numeric(sem_type)) {
     gen_printf(CS, "1");
@@ -298,46 +304,46 @@ static void cg_qp_explain_query_stmt(CqlState* _Nonnull CS, ast_node *stmt) {
   // that's technically what we need but actually JSON encoding followed by another
   // round of JSON encoding necessarily produces the same output. This code once did two JSON
   // encodings it was only pedantically wrong.
-  bprintf(&c_str, "\"");
+  bprintf(&c_str, FMT("\""));
   for (uint32_t i = 1; i < json_str.used - 2; i++) {
     // json_str can have no control characters, but it might have quotes and backslashes
     cg_encode_char_as_c_string_literal(CS, json_str.ptr[i], &c_str);
   }
-  bprintf(&c_str, "\"");
+  bprintf(&c_str, FMT("\""));
 
-  bprintf(&body, "LET query_plan_trivial_object := trivial_object();\n");
-  bprintf(&body, "LET query_plan_trivial_blob := trivial_blob();\n\n");
+  bprintf(&body, FMT("LET query_plan_trivial_object := trivial_object();\n"));
+  bprintf(&body, FMT("LET query_plan_trivial_blob := trivial_blob();\n\n"));
 
   // The properly stringified literal can now be safely stored in a local variable with no loss.
   // The C encoded will be unescaped when it is compiled and the JSON goes directly to the output
   // so that we correctly generate a JSON fragment as a result of running this code.  The JSON
   // string has escaped any quotes etc. that were in the original SQL.
-  bprintf(&body, "DECLARE stmt TEXT!;\n");
-  bprintf(&body, "SET stmt := %s;\n", c_str.ptr);
+  bprintf(&body, FMT("DECLARE stmt TEXT!;\n"));
+  bprintf(&body, FMT("SET stmt := %s;\n"), c_str.ptr);
 
-  bprintf(&body, "INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n", CS->sql_stmt_count);
+  bprintf(&body, FMT("INSERT INTO sql_temp(id, sql) VALUES(%d, stmt);\n"), CS->sql_stmt_count);
   if (CS->current_procedure_name && CS->current_ok_table_scan && CS->current_ok_table_scan->used > 1) {
     bprintf(
       &body,
-      "INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, \"%s\", \"%s\");\n",
+      FMT("INSERT INTO ok_table_scan(sql_id, proc_name, table_names) VALUES(%d, \"%s\", \"%s\");\n"),
       CS->sql_stmt_count,
       CS->current_procedure_name,
       CS->current_ok_table_scan->ptr
     );
   }
-  bprintf(&body, "DECLARE C CURSOR FOR EXPLAIN QUERY PLAN\n");
-  bprintf(&body, "%s;\n", sql.ptr);
-  bprintf(&body, "LOOP FETCH C\n");
-  bprintf(&body, "BEGIN\n");
-  bprintf(&body, "  INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%d, C.iselectid, C.iorder, C.ifrom, C.zdetail);\n", CS->sql_stmt_count);
-  bprintf(&body, "END;\n");
+  bprintf(&body, FMT("DECLARE C CURSOR FOR EXPLAIN QUERY PLAN\n"));
+  bprintf(&body, FMT("%s;\n"), sql.ptr);
+  bprintf(&body, FMT("LOOP FETCH C\n"));
+  bprintf(&body, FMT("BEGIN\n"));
+  bprintf(&body, FMT("  INSERT INTO plan_temp(sql_id, iselectid, iorder, ifrom, zdetail) VALUES(%d, C.iselectid, C.iorder, C.ifrom, C.zdetail);\n"), CS->sql_stmt_count);
+  bprintf(&body, FMT("END;\n"));
 
-  bprintf(&proc, "PROC populate_query_plan_%d()\n", CS->sql_stmt_count);
-  bprintf(&proc, "BEGIN\n");
+  bprintf(&proc, FMT("PROC populate_query_plan_%d()\n"), CS->sql_stmt_count);
+  bprintf(&proc, FMT("BEGIN\n"));
   bindent(CS, &proc, &body, 2);
-  bprintf(&proc, "END;\n\n");
+  bprintf(&proc, FMT("END;\n\n"));
 
-  bprintf(CS->query_plans, "%s", proc.ptr);
+  bprintf(CS->query_plans, FMT("%s"), proc.ptr);
 
   CHARBUF_CLOSE(c_str);
   CHARBUF_CLOSE(json_str);
@@ -355,18 +361,18 @@ static void cg_qp_sql_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   if (ast->sem->delete_version <= 0 && !is_alias_ast(ast)) {
     charbuf *out = CS->schema_stmts;
     if (is_backing(ast->sem->sem_type)) {
-      bprintf(out, "@attribute(cql:backing_table)\n");
+      bprintf(out, FMT("@attribute(cql:backing_table)\n"));
     }
     if (is_backed(ast->sem->sem_type)) {
       out = CS->backed_tables;
 
       EXTRACT_MISC_ATTRS(ast, misc_attrs);
       CSTR backing_table_name = get_named_string_attribute_value(CS, misc_attrs, "backed_by");
-      bprintf(out, "@attribute(cql:backed_by=%s)\n", backing_table_name);
+      bprintf(out, FMT("@attribute(cql:backed_by=%s)\n"), backing_table_name);
     }
     gen_set_output_buffer(CS, out);
     gen_statement_with_callbacks(CS, ast, cg_qp_callbacks_rv);
-    bprintf(out, ";\n");
+    bprintf(out, FMT(";\n"));
   }
 }
 
@@ -381,11 +387,11 @@ static void cg_qp_ok_table_scan_callback(CqlState* _Nonnull CS,
   charbuf *ok_table_scan_buf = (charbuf *)context;
   EXTRACT_STRING(table_name, misc_attr_value);
   if (ok_table_scan_buf->used > 1) {
-    bprintf(ok_table_scan_buf, ",");
+    bprintf(ok_table_scan_buf, FMT(","));
   }
   // The "#" around the name make it easier to do a whole-word
   // match on the table name later
-  bprintf(ok_table_scan_buf, "#%s#", table_name);
+  bprintf(ok_table_scan_buf, FMT("#%s#"), table_name);
 }
 
 // If we're processing a conditional fragment and there is an annotation
@@ -442,15 +448,15 @@ static void cg_qp_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     gen_sql_callback _Nullable variables_callback_saved = cg_qp_callbacks_rv->variables_callback;
     cg_qp_callbacks_rv->variables_callback = NULL;
 
-    bprintf(CS->query_plans, "@attribute(cql:shared_fragment)\n");
+    bprintf(CS->query_plans, FMT("@attribute(cql:shared_fragment)\n"));
 
     if (if_stmt_branch_context > 1) {
-      bprintf(CS->query_plans, "@attribute(cql:query_plan_branch=%lld)\n", (long long int)if_stmt_branch_context);
+      bprintf(CS->query_plans, FMT("@attribute(cql:query_plan_branch=%lld)\n"), (long long int)if_stmt_branch_context);
     }
 
     gen_set_output_buffer(CS, CS->query_plans);
     gen_statement_with_callbacks(CS, ast, cg_qp_callbacks_rv);
-    bprintf(CS->query_plans, ";\n\n");
+    bprintf(CS->query_plans, FMT(";\n\n"));
 
     // put the variables callback back in place
     cg_qp_callbacks_rv->variables_callback = variables_callback_saved;
@@ -539,29 +545,29 @@ static void emit_populate_no_table_scan_proc(CqlState* _Nonnull CS, charbuf *out
 
         if (exists_attribute_str(CS, misc_attrs, "no_table_scan")) {
           if (no_scan_tables_buf.used > 1) {
-            bprintf(&no_scan_tables_buf, ",\n");
+            bprintf(&no_scan_tables_buf, FMT(",\n"));
           }
-          bprintf(&no_scan_tables_buf, "    (\"");
+          bprintf(&no_scan_tables_buf, FMT("    (\""));
           if (is_qid(name_ast)) {
             cg_unquote_encoded_qstr(CS, &no_scan_tables_buf, name);
           }
           else {
-             bprintf(&no_scan_tables_buf, "%s", name);
+             bprintf(&no_scan_tables_buf, FMT("%s"), name);
           }
-          bprintf(&no_scan_tables_buf, "\")");
+          bprintf(&no_scan_tables_buf, FMT("\")"));
         }
       }
     }
   }
 
-  bprintf(output, "PROC populate_no_table_scan()\n");
-  bprintf(output, "BEGIN\n");
+  bprintf(output, FMT("PROC populate_no_table_scan()\n"));
+  bprintf(output, FMT("BEGIN\n"));
 
   if (no_scan_tables_buf.used > 1) {
-    bprintf(output, "  INSERT OR IGNORE INTO no_table_scan(table_name) VALUES\n%s;\n", no_scan_tables_buf.ptr);
+    bprintf(output, FMT("  INSERT OR IGNORE INTO no_table_scan(table_name) VALUES\n%s;\n"), no_scan_tables_buf.ptr);
   }
 
-  bprintf(output, "END;\n");
+  bprintf(output, FMT("END;\n"));
 
   CHARBUF_CLOSE(no_scan_tables_buf);
 }
@@ -581,11 +587,11 @@ static void cg_qp_emit_declare_func(CqlState* _Nonnull CS, charbuf *output) {
       EXTRACT_MISC_ATTRS(any_func, misc_attrs);
       bool_t deterministic = misc_attrs && !!find_named_attr(CS, misc_attrs, "deterministic");
       if (deterministic) {
-        bprintf(output, "@attribute(cql:deterministic)\n");
+        bprintf(output, FMT("@attribute(cql:deterministic)\n"));
       }
 
       gen_statement_with_callbacks(CS, any_func, cg_qp_callbacks_rv);
-      bprintf(output, ";\n");
+      bprintf(output, FMT(";\n"));
     }
   }
 }
@@ -605,7 +611,7 @@ static void cg_qp_emit_udf_stubs(CqlState* _Nonnull CS, charbuf *output) {
 
     if (is_select_func) {
       EXTRACT_STRING(name, any_func->left);
-      bprintf(output, "  call cql_create_udf_stub(\"%s\");\n", name);
+      bprintf(output, FMT("  call cql_create_udf_stub(\"%s\");\n"), name);
     }
   }
 }
@@ -614,13 +620,13 @@ static void cg_qp_emit_udf_stubs(CqlState* _Nonnull CS, charbuf *output) {
 // plus the standard schema for query plan storage and emit any UDF stubs
 // at this time as well.  See above for the UDF stub code.
 static void cg_qp_emit_create_schema_proc(CqlState* _Nonnull CS, charbuf *output) {
-  bprintf(output, "PROC create_schema()\n");
-  bprintf(output, "BEGIN\n");
+  bprintf(output, FMT("PROC create_schema()\n"));
+  bprintf(output, FMT("BEGIN\n"));
 
   cg_qp_emit_udf_stubs(CS, output);
   bindent(CS, output, CS->schema_stmts, 2);
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "  CREATE TABLE sql_temp(\n"
     "    id INT! PRIMARY KEY,\n"
     "    sql TEXT!\n"
@@ -651,16 +657,16 @@ static void cg_qp_emit_create_schema_proc(CqlState* _Nonnull CS, charbuf *output
     "\n"
   );
 
-  bprintf(output, "%s", CS->backed_tables->ptr);
+  bprintf(output, FMT("%s"), CS->backed_tables->ptr);
 }
 
 static void emit_populate_tables_proc(CqlState* _Nonnull CS, charbuf *output) {
-  bprintf(output, "%s", CS->query_plans->ptr);
+  bprintf(output, FMT("%s"), CS->query_plans->ptr);
 }
 
 static void emit_print_sql_statement_proc(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "PROC print_sql_statement(sql_id int!)\n"
     "BEGIN\n"
     "  DECLARE C CURSOR FOR SELECT * FROM sql_temp WHERE id = sql_id LIMIT 1;\n"
@@ -673,7 +679,7 @@ static void emit_print_sql_statement_proc(CqlState* _Nonnull CS, charbuf *output
 
 static void emit_populate_table_scan_alert_table_proc(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "PROC populate_table_scan_alert_table(table_ text!)\n"
     "BEGIN\n"
     "  INSERT OR IGNORE INTO table_scan_alert\n"
@@ -692,7 +698,7 @@ static void emit_populate_table_scan_alert_table_proc(CqlState* _Nonnull CS, cha
 
 static void emit_populate_b_tree_alert_table_proc(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "PROC populate_b_tree_alert_table()\n"
     "BEGIN\n"
     "  INSERT OR IGNORE INTO b_tree_alert\n"
@@ -706,7 +712,7 @@ static void emit_populate_b_tree_alert_table_proc(CqlState* _Nonnull CS, charbuf
 
 static void emit_print_query_violation_proc(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "PROC print_query_violation()\n"
     "BEGIN\n"
     "  CALL populate_b_tree_alert_table();\n"
@@ -738,7 +744,7 @@ static void emit_print_query_violation_proc(CqlState* _Nonnull CS, charbuf *outp
 
 static void emit_print_query_plan_stat_proc(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "PROC print_query_plan_stat(id_ int!)\n"
     "BEGIN\n"
     "  CALL printf(\"   \\\"stats\\\" : {\\n\");\n"
@@ -810,7 +816,7 @@ static void emit_print_query_plan_stat_proc(CqlState* _Nonnull CS, charbuf *outp
 
 static void emit_print_query_plan_graph_proc(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "%s",
+    FMT("%s"),
     "PROC print_query_plan_graph(id_ int!)\n"
     "BEGIN\n"
     "  DECLARE C CURSOR FOR\n"
@@ -841,7 +847,7 @@ static void emit_print_query_plan_graph_proc(CqlState* _Nonnull CS, charbuf *out
 
 static void emit_print_query_plan(CqlState* _Nonnull CS, charbuf *output) {
   bprintf(output,
-    "PROC print_query_plan(sql_id int!)\n"
+    FMT("PROC print_query_plan(sql_id int!)\n"
     "BEGIN\n"
     "  CALL printf(\"  {\\n\");\n"
     "  CALL printf(\"   \\\"id\\\" : %%d,\\n\", sql_id);\n"
@@ -850,7 +856,7 @@ static void emit_print_query_plan(CqlState* _Nonnull CS, charbuf *output) {
     "  CALL print_query_plan_graph(sql_id);\n"
     "  CALL printf(\"  }\");\n"
     "END;\n"
-    "\n"
+    "\n")
   );
 }
 
@@ -920,23 +926,23 @@ cql_noexport void cg_query_plan_main(CqlState* _Nonnull CS, ast_node *head) {
 
   cg_qp_stmt_list(CS, head);
 
-  bprintf(&output_buf, "%s", CS->rt->source_prefix);
-  bprintf(&output_buf, "declare proc printf no check;\n");
+  bprintf(&output_buf, FMT("%s"), CS->rt->source_prefix);
+  bprintf(&output_buf, FMT("declare proc printf no check;\n"));
 
   // Print special annotation that would rename any table name aliases in
   // SELECT queries to include table names. Makes query plans more informative.
-  bprintf(&output_buf, "@keep_table_name_in_aliases;\n");
+  bprintf(&output_buf, FMT("@keep_table_name_in_aliases;\n"));
 
   if (!CS->sql_stmt_count) {
     bprintf(&output_buf,
-      "create proc query_plan()\n"
+      FMT("create proc query_plan()\n"
       "begin\n"
       "  -- Force the dml proc signature\n"
       "  let i := @rc;\n"
       "\n"
       "  -- No statements found: Print an empty query plan\n"
       "  call printf(\"{ \\\"plans\\\": [] }\\n\");\n"
-      "end;\n"
+      "end;\n")
     );
 
     cql_write_file(CS, CS->options.file_names[0], output_buf.ptr);
@@ -944,27 +950,27 @@ cql_noexport void cg_query_plan_main(CqlState* _Nonnull CS, ast_node *head) {
     goto cleanup;
   }
 
-  bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
+  bprintf(&output_buf, FMT("declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n"));
 
   bprintf(&output_buf,
-    "proc trivial_object()\n"
+    FMT("proc trivial_object()\n"
     "begin\n"
     "  select 1 x;\n"
-    "end;\n\n"
+    "end;\n\n")
   );
 
   bprintf(&output_buf,
-    "proc trivial_blob(out result blob not null)\n"
+    FMT("proc trivial_blob(out result blob not null)\n"
     "begin\n"
     "  set result := (select x'41');\n"
-    "end;\n\n"
+    "end;\n\n")
   );
 
   if (CS->options.test) {
     while (head->right) {
       head = head->right;
     }
-    bprintf(&output_buf, "-- The statement ending at line %d\n\n", head->left->lineno);
+    bprintf(&output_buf, FMT("-- The statement ending at line %d\n\n"), head->left->lineno);
   }
 
   cg_qp_emit_declare_func(CS, &output_buf);
@@ -979,39 +985,39 @@ cql_noexport void cg_query_plan_main(CqlState* _Nonnull CS, ast_node *head) {
   emit_print_query_plan_graph_proc(CS, &output_buf);
   emit_print_query_plan(CS, &output_buf);
 
-  bprintf(&output_buf, "PROC query_plan()\n");
-  bprintf(&output_buf, "BEGIN\n");
-  bprintf(&output_buf, "  CALL create_schema();\n");
-  bprintf(&output_buf, "  TRY\n");
-  bprintf(&output_buf, "    CALL populate_no_table_scan();\n");
-  bprintf(&output_buf, "  CATCH\n");
-  bprintf(&output_buf, "    CALL printf(\"failed populating no_table_scan table\\n\");\n");
-  bprintf(&output_buf, "    THROW;\n");
-  bprintf(&output_buf, "  END;\n");
+  bprintf(&output_buf, FMT("PROC query_plan()\n"));
+  bprintf(&output_buf, FMT("BEGIN\n"));
+  bprintf(&output_buf, FMT("  CALL create_schema();\n"));
+  bprintf(&output_buf, FMT("  TRY\n"));
+  bprintf(&output_buf, FMT("    CALL populate_no_table_scan();\n"));
+  bprintf(&output_buf, FMT("  CATCH\n"));
+  bprintf(&output_buf, FMT("    CALL printf(\"failed populating no_table_scan table\\n\");\n"));
+  bprintf(&output_buf, FMT("    THROW;\n"));
+  bprintf(&output_buf, FMT("  END;\n"));
 
   for (uint32_t i = 1; i <= CS->sql_stmt_count; i++) {
-    bprintf(&output_buf, "  TRY\n");
-    bprintf(&output_buf, "    CALL populate_query_plan_%d();\n", i);
-    bprintf(&output_buf, "  CATCH\n");
-    bprintf(&output_buf, "    CALL printf(\"failed populating query %d\\n\");\n", i);
-    bprintf(&output_buf, "    THROW;\n");
-    bprintf(&output_buf, "  END;\n");
+    bprintf(&output_buf, FMT("  TRY\n"));
+    bprintf(&output_buf, FMT("    CALL populate_query_plan_%d();\n"), i);
+    bprintf(&output_buf, FMT("  CATCH\n"));
+    bprintf(&output_buf, FMT("    CALL printf(\"failed populating query %d\\n\");\n"), i);
+    bprintf(&output_buf, FMT("    THROW;\n"));
+    bprintf(&output_buf, FMT("  END;\n"));
   }
 
-  bprintf(&output_buf, "  CALL printf(\"{\\n\");\n");
-  bprintf(&output_buf, "  CALL print_query_violation();\n");
-  bprintf(&output_buf, "  CALL printf(\"\\\"plans\\\" : [\\n\");\n");
-  bprintf(&output_buf, "  LET q := 1;\n");
-  bprintf(&output_buf, "  WHILE q <= %d\n", CS->sql_stmt_count);
-  bprintf(&output_buf, "  BEGIN\n");
-  bprintf(&output_buf, "    CALL printf(\"%%s\", IIF(q == 1, \"\", \",\\n\"));\n");
-  bprintf(&output_buf, "    CALL print_query_plan(q);\n");
-  bprintf(&output_buf, "    SET q := q + 1;\n");
-  bprintf(&output_buf, "  END;\n");
-  bprintf(&output_buf, "  CALL printf(\"\\n]\\n\");\n");
-  bprintf(&output_buf, "  CALL printf(\"}\");\n");
+  bprintf(&output_buf, FMT("  CALL printf(\"{\\n\");\n"));
+  bprintf(&output_buf, FMT("  CALL print_query_violation();\n"));
+  bprintf(&output_buf, FMT("  CALL printf(\"\\\"plans\\\" : [\\n\");\n"));
+  bprintf(&output_buf, FMT("  LET q := 1;\n"));
+  bprintf(&output_buf, FMT("  WHILE q <= %d\n"), CS->sql_stmt_count);
+  bprintf(&output_buf, FMT("  BEGIN\n"));
+  bprintf(&output_buf, FMT("    CALL printf(\"%%s\", IIF(q == 1, \"\", \",\\n\"));\n"));
+  bprintf(&output_buf, FMT("    CALL print_query_plan(q);\n"));
+  bprintf(&output_buf, FMT("    SET q := q + 1;\n"));
+  bprintf(&output_buf, FMT("  END;\n"));
+  bprintf(&output_buf, FMT("  CALL printf(\"\\n]\\n\");\n"));
+  bprintf(&output_buf, FMT("  CALL printf(\"}\");\n"));
 
-  bprintf(&output_buf, "END;\n");
+  bprintf(&output_buf, FMT("END;\n"));
 
   cql_write_file(CS, CS->options.file_names[0], output_buf.ptr);
   goto cleanup;

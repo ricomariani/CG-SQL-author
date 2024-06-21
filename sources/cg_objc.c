@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#undef FMT
+#ifdef FMT_DEBUG
+#define FMT(x) "(_o%d_)" x, __LINE__
+#else
+#define FMT(x) x
+#endif
+
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_OBJC)
 
 // stubs to avoid link errors
@@ -44,7 +51,7 @@ static void cg_objc_proc_result_set_c_getter(CqlState* _Nonnull CS,
     col_name,
     sym_suffix);
 
-  bprintf(buffer, "%s(cResultSet%s)", col_getter_sym.ptr, fetch_proc ? "" : ", row");
+  bprintf(buffer, FMT("%s(cResultSet%s)"), col_getter_sym.ptr, fetch_proc ? "" : ", row");
   CHARBUF_CLOSE(col_getter_sym);
 }
 
@@ -83,73 +90,73 @@ static void cg_objc_proc_result_set_getter(
       case SEM_TYPE_LONG_INTEGER:
       case SEM_TYPE_REAL:
       case SEM_TYPE_BOOL:
-        bprintf(&return_type, "%s", "NSNumber *_Nullable");
+        bprintf(&return_type, FMT("%s"), "NSNumber *_Nullable");
         return_type_separator = " ";
-         bprintf(&value_convert_begin, "%s", "@(");
+         bprintf(&value_convert_begin, FMT("%s"), "@(");
         value_convert_end = ")";
         c_getter_suffix = "_value";
         cg_objc_proc_result_set_c_getter(CS, fetch_proc, &value, name, col_name, "_is_null");
-        bprintf(&value, " ? nil : ");
+        bprintf(&value, FMT(" ? nil : "));
         break;
       case SEM_TYPE_BLOB:
-        bprintf(&return_type, "%s_Nullable", CS->rt->cql_blob_ref);
+        bprintf(&return_type, FMT("%s_Nullable"), CS->rt->cql_blob_ref);
         return_type_separator = " ";
-        bprintf(&value_convert_begin, "(__bridge %s)", CS->rt->cql_blob_ref);
+        bprintf(&value_convert_begin, FMT("(__bridge %s)"), CS->rt->cql_blob_ref);
         break;
       case SEM_TYPE_TEXT:
         if (encode && custom_type_for_encoded_column) {
           CS->is_string_column_encoded = 1;
-          bprintf(&return_type, "%s *_Nullable", CS->rt->cql_string_ref_encode);
-          bprintf(&value_convert_begin, "(__bridge %s *)", CS->rt->cql_string_ref_encode);
+          bprintf(&return_type, FMT("%s *_Nullable"), CS->rt->cql_string_ref_encode);
+          bprintf(&value_convert_begin, FMT("(__bridge %s *)"), CS->rt->cql_string_ref_encode);
         } else {
-          bprintf(&return_type, "%s_Nullable", CS->rt->cql_string_ref);
-          bprintf(&value_convert_begin, "(__bridge %s)", CS->rt->cql_string_ref);
+          bprintf(&return_type, FMT("%s_Nullable"), CS->rt->cql_string_ref);
+          bprintf(&value_convert_begin, FMT("(__bridge %s)"), CS->rt->cql_string_ref);
         }
         return_type_separator = " ";
         break;
       case SEM_TYPE_OBJECT:
-        bprintf(&return_type, "%s_Nullable", CS->rt->cql_object_ref);
+        bprintf(&return_type, FMT("%s_Nullable"), CS->rt->cql_object_ref);
         return_type_separator = " ";
-        bprintf(&value_convert_begin, "(__bridge %s)", CS->rt->cql_object_ref);
+        bprintf(&value_convert_begin, FMT("(__bridge %s)"), CS->rt->cql_object_ref);
         break;
     }
   } else {
     switch (core_type) {
       case SEM_TYPE_INTEGER:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", CS->rt->cql_int32);
+        bprintf(&return_type, FMT("%s"), CS->rt->cql_int32);
         break;
       case SEM_TYPE_LONG_INTEGER:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", CS->rt->cql_int64);
+        bprintf(&return_type, FMT("%s"), CS->rt->cql_int64);
         break;
       case SEM_TYPE_REAL:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", CS->rt->cql_double);
+        bprintf(&return_type, FMT("%s"), CS->rt->cql_double);
         break;
       case SEM_TYPE_BOOL:
         return_type_separator = " ";
-        bprintf(&return_type, "%s", CS->rt->cql_bool);
+        bprintf(&return_type, FMT("%s"), CS->rt->cql_bool);
         value_convert_end = " ? YES : NO";
         break;
       case SEM_TYPE_TEXT:
         if (encode && custom_type_for_encoded_column) {
           CS->is_string_column_encoded = 1;
-          bprintf(&return_type, "%s", CS->rt->cql_string_ref_encode);
+          bprintf(&return_type, FMT("%s"), CS->rt->cql_string_ref_encode);
           bprintf(&value_convert_begin, "(__bridge %s *)", CS->rt->cql_string_ref_encode);
         } else {
-          bprintf(&return_type, "%s", CS->rt->cql_string_ref);
+          bprintf(&return_type, FMT("%s"), CS->rt->cql_string_ref);
           bprintf(&value_convert_begin, "(__bridge %s)", CS->rt->cql_string_ref);
         }
         break;
       case SEM_TYPE_BLOB:
-        bprintf(&return_type, "%s", CS->rt->cql_blob_ref);
-        bprintf(&value_convert_begin, "(__bridge %s)", CS->rt->cql_blob_ref);
+        bprintf(&return_type, FMT("%s"), CS->rt->cql_blob_ref);
+        bprintf(&value_convert_begin, FMT("(__bridge %s)"), CS->rt->cql_blob_ref);
         break;
       case SEM_TYPE_OBJECT:
-        bprintf(&return_type, "%s", CS->rt->cql_object_ref);
+        bprintf(&return_type, FMT("%s"), CS->rt->cql_object_ref);
         return_type_separator = " ";
-        bprintf(&value_convert_begin, "(__bridge %s)", CS->rt->cql_object_ref);
+        bprintf(&value_convert_begin, FMT("(__bridge %s)"), CS->rt->cql_object_ref);
         break;
     }
   }
@@ -169,13 +176,13 @@ static void cg_objc_proc_result_set_getter(
                                   c_getter_suffix);
 
   if (fetch_proc) {
-    bprintf(&value, "%s%s(cResultSet)%s",
+    bprintf(&value, FMT("%s%s(cResultSet)%s"),
             value_convert_begin.ptr,
             c_getter.ptr,
             value_convert_end);
   }
   else {
-    bprintf(&value, "%s%s(cResultSet, row)%s",
+    bprintf(&value, FMT("%s%s(cResultSet, row)%s"),
             value_convert_begin.ptr,
             c_getter.ptr,
             value_convert_end);
@@ -183,7 +190,7 @@ static void cg_objc_proc_result_set_getter(
 
   if (fetch_proc) {
     bprintf(output,
-            "\nstatic inline %s%s%s(%s *resultSet)\n",
+            FMT("\nstatic inline %s%s%s(%s *resultSet)\n"),
             return_type.ptr,
             return_type_separator,
             objc_getter.ptr,
@@ -191,7 +198,7 @@ static void cg_objc_proc_result_set_getter(
   }
   else {
     bprintf(output,
-            "\nstatic inline %s%s%s(%s *resultSet, %s row)\n",
+            FMT("\nstatic inline %s%s%s(%s *resultSet, %s row)\n"),
             return_type.ptr,
             return_type_separator,
             objc_getter.ptr,
@@ -199,11 +206,11 @@ static void cg_objc_proc_result_set_getter(
             CS->rt->cql_int32);
   }
 
-  bprintf(output, "{\n");
+  bprintf(output, FMT("{\n"));
 
-  bprintf(output, "  %s cResultSet = %s(resultSet);\n", c_result_set_ref, c_convert);
-  bprintf(output, "  return %s;\n", value.ptr);
-  bprintf(output, "}\n");
+  bprintf(output, FMT("  %s cResultSet = %s(resultSet);\n"), c_result_set_ref, c_convert);
+  bprintf(output, FMT("  return %s;\n"), value.ptr);
+  bprintf(output, FMT("}\n"));
 
   CHARBUF_CLOSE(c_getter);
   CHARBUF_CLOSE(objc_getter);
@@ -250,31 +257,31 @@ static void cg_objc_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
 
   CSTR classname = objc_name.ptr;
 
-  bprintf(h, "\n@class %s;\n", classname);
-  bprintf(h, "\n#ifdef CQL_EMIT_OBJC_INTERFACES\n");
-  bprintf(h, "@interface %s\n", classname);
-  bprintf(h, "@end\n");
-  bprintf(h, "#endif\n");
+  bprintf(h, FMT("\n@class %s;\n"), classname);
+  bprintf(h, FMT("\n#ifdef CQL_EMIT_OBJC_INTERFACES\n"));
+  bprintf(h, FMT("@interface %s\n"), classname);
+  bprintf(h, FMT("@end\n"));
+  bprintf(h, FMT("#endif\n"));
 
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(objc_convert, "", objc_name.ptr, "_from_", c_name.ptr);
 
-  bprintf(h, "\nstatic inline %s *%s(%s resultSet)\n", objc_name.ptr, objc_convert.ptr, c_result_set_ref.ptr);
-  bprintf(h, "{\n");
-  bprintf(h, "  return (__bridge %s *)resultSet;\n", objc_name.ptr);
-  bprintf(h, "}\n");
+  bprintf(h, FMT("\nstatic inline %s *%s(%s resultSet)\n"), objc_name.ptr, objc_convert.ptr, c_result_set_ref.ptr);
+  bprintf(h, FMT("{\n"));
+  bprintf(h, FMT("  return (__bridge %s *)resultSet;\n"), objc_name.ptr);
+  bprintf(h, FMT("}\n"));
 
   CHARBUF_CLOSE(objc_convert);
 
   bprintf(
     h,
-    "\nstatic inline %s %s(%s *resultSet)\n",
+    FMT("\nstatic inline %s %s(%s *resultSet)\n"),
     c_result_set_ref.ptr,
     c_convert.ptr,
     objc_name.ptr);
 
-  bprintf(h, "{\n");
-  bprintf(h, "  return (__bridge %s)resultSet;\n", c_result_set_ref.ptr);
-  bprintf(h, "}\n");
+  bprintf(h, FMT("{\n"));
+  bprintf(h, FMT("  return (__bridge %s)resultSet;\n"), c_result_set_ref.ptr);
+  bprintf(h, FMT("}\n"));
 
   bool_t out_stmt_proc = has_out_stmt_result(ast);
   // extension fragments use SELECT and are incompatible with the single row result set form using OUT
@@ -310,13 +317,13 @@ static void cg_objc_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
             c_getter, c_name.ptr, "_get_", col, "_is_encoded");
 
         bprintf(h,
-            "\nstatic inline %s %s(%s *resultSet)\n",
+            FMT("\nstatic inline %s %s(%s *resultSet)\n"),
             CS->rt->cql_bool,
             objc_getter.ptr,
             objc_result_set_name.ptr);
-        bprintf(h, "{\n");
-        bprintf(h, "  return %s(%s(resultSet));\n", c_getter.ptr, c_convert.ptr);
-        bprintf(h, "}\n");
+        bprintf(h, FMT("{\n"));
+        bprintf(h, FMT("  return %s(%s(resultSet));\n"), c_getter.ptr, c_convert.ptr);
+        bprintf(h, FMT("}\n"));
 
         CHARBUF_CLOSE(c_getter);
         CHARBUF_CLOSE(objc_getter);
@@ -327,28 +334,28 @@ static void cg_objc_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
     // It's a debugging function that allow you to turn ON/OFF encoding/decoding when
     // your app is running.
     bprintf(h,
-            "\nstatic inline void %sSetEncoding(%s col, %s encode)\n",
+            FMT("\nstatic inline void %sSetEncoding(%s col, %s encode)\n"),
             objc_name.ptr,
             CS->rt->cql_int32,
             CS->rt->cql_bool);
-    bprintf(h, "{\n");
-    bprintf(h, "  return %sSetEncoding(col, encode);\n", c_name.ptr);
-    bprintf(h, "}\n");
+    bprintf(h, FMT("{\n"));
+    bprintf(h, FMT("  return %sSetEncoding(col, encode);\n"), c_name.ptr);
+    bprintf(h, FMT("}\n"));
   }
 
   CG_CHARBUF_OPEN_SYM(cgs_result_count, name, "_result_count");
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(result_count, CS->rt->impl_symbol_prefix, name, "_result_count");
 
   bprintf(h,
-          "\nstatic inline %s %s(%s *resultSet)\n",
+          FMT("\nstatic inline %s %s(%s *resultSet)\n"),
           CS->rt->cql_int32,
           cgs_result_count.ptr,
           objc_result_set_name.ptr);
 
 
-  bprintf(h, "{\n");
-  bprintf(h, "  return %s(%s(resultSet));\n", result_count.ptr, c_convert.ptr);
-  bprintf(h, "}\n");
+  bprintf(h, FMT("{\n"));
+  bprintf(h, FMT("  return %s(%s(resultSet));\n"), result_count.ptr, c_convert.ptr);
+  bprintf(h, FMT("}\n"));
 
   CHARBUF_CLOSE(result_count);
   CHARBUF_CLOSE(cgs_result_count);
@@ -359,27 +366,27 @@ static void cg_objc_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t generate_copy = misc_attrs && exists_attribute_str(CS, misc_attrs, "generate_copy");
   if (generate_copy) {
     bprintf(h,
-            "\nstatic inline %s *%s(%s *resultSet",
+            FMT("\nstatic inline %s *%s(%s *resultSet"),
             objc_result_set_name.ptr,
             cgs_copy_func_name.ptr,
             objc_result_set_name.ptr);
     if (!out_stmt_proc) {
       bprintf(h,
-              ", %s from, %s count",
+              FMT(", %s from, %s count"),
               CS->rt->cql_int32,
               CS->rt->cql_int32);
     }
-    bprintf(h, ")\n");
-    bprintf(h, "{\n");
-    bprintf(h, "  %s copy;\n", c_result_set_ref.ptr);
+    bprintf(h, FMT(")\n"));
+    bprintf(h, FMT("{\n"));
+    bprintf(h, FMT("  %s copy;\n"), c_result_set_ref.ptr);
     bprintf(h,
-            "  %s(%s(resultSet), &copy%s);\n",
+            FMT("  %s(%s(resultSet), &copy%s);\n"),
             copy_func_name.ptr,
             c_convert.ptr,
             out_stmt_proc ? "" : ", from, count");
-    bprintf(h, "  %s(copy);\n", CS->rt->cql_result_set_note_ownership_transferred);
-    bprintf(h, "  return (__bridge_transfer %s *)copy;\n", objc_name.ptr);
-    bprintf(h, "}\n");
+    bprintf(h, FMT("  %s(copy);\n"), CS->rt->cql_result_set_note_ownership_transferred);
+    bprintf(h, FMT("  return (__bridge_transfer %s *)copy;\n"), objc_name.ptr);
+    bprintf(h, FMT("}\n"));
   }
 
   CHARBUF_CLOSE(copy_func_name);
@@ -392,42 +399,42 @@ static void cg_objc_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
   CG_CHARBUF_OPEN_SYM_WITH_PREFIX(eq_func_name, CS->rt->impl_symbol_prefix, name, opt_row, "_equal");
 
   bprintf(h,
-          "\nstatic inline NSUInteger %s(%s *resultSet",
+          FMT("\nstatic inline NSUInteger %s(%s *resultSet"),
           cgs_hash_func_name.ptr,
           objc_name.ptr);
   if (!out_stmt_proc) {
-    bprintf(h, ", %s row", CS->rt->cql_int32);
+    bprintf(h, FMT(", %s row"), CS->rt->cql_int32);
   }
-  bprintf(h, ")\n");
-  bprintf(h, "{\n");
+  bprintf(h, FMT(")\n"));
+  bprintf(h, FMT("{\n"));
   bprintf(h,
-          "  return %s(%s(resultSet)%s);\n",
+          FMT("  return %s(%s(resultSet)%s);\n"),
           hash_func_name.ptr,
           c_convert.ptr,
           out_stmt_proc ? "" : ", row");
-  bprintf(h, "}\n");
+  bprintf(h, FMT("}\n"));
 
   bprintf(h,
-          "\nstatic inline BOOL %s(%s *resultSet1",
+          FMT("\nstatic inline BOOL %s(%s *resultSet1"),
           cgs_eq_func_name.ptr,
           objc_name.ptr);
   if (!out_stmt_proc) {
-    bprintf(h, ", %s row1", CS->rt->cql_int32);
+    bprintf(h, FMT(", %s row1"), CS->rt->cql_int32);
   }
-  bprintf(h, ", %s *resultSet2", objc_name.ptr);
+  bprintf(h, FMT(", %s *resultSet2"), objc_name.ptr);
   if (!out_stmt_proc) {
-    bprintf(h, ", %s row2", CS->rt->cql_int32);
+    bprintf(h, FMT(", %s row2"), CS->rt->cql_int32);
   }
-  bprintf(h, ")\n");
-  bprintf(h, "{\n");
+  bprintf(h, FMT(")\n"));
+  bprintf(h, FMT("{\n"));
   bprintf(h,
-          "  return %s(%s(resultSet1)%s, %s(resultSet2)%s);\n",
+          FMT("  return %s(%s(resultSet1)%s, %s(resultSet2)%s);\n"),
           eq_func_name.ptr,
           c_convert.ptr,
           out_stmt_proc ? "" : ", row1",
           c_convert.ptr,
           out_stmt_proc ? "" : ", row2");
-  bprintf(h, "}\n");
+  bprintf(h, FMT("}\n"));
 
   CHARBUF_CLOSE(eq_func_name);
   CHARBUF_CLOSE(cgs_eq_func_name);
@@ -501,20 +508,20 @@ cql_noexport void cg_objc_main(CqlState* _Nonnull CS, ast_node *head) {
   CHARBUF_OPEN(header_file);
   CHARBUF_OPEN(imports);
 
-  bprintf(&header_file, "%s", CS->rt->header_prefix);
-  bprintf(&header_file, "\n#import <%s>\n", CS->options.objc_c_include_path);
+  bprintf(&header_file, FMT("%s"), CS->rt->header_prefix);
+  bprintf(&header_file, FMT("\n#import <%s>\n"), CS->options.objc_c_include_path);
 
   // gen objc code ....
   cg_objc_stmt_list(CS, head);
 
-  bprintf(&header_file, "%s", CS->rt->header_wrapper_begin);
+  bprintf(&header_file, FMT("%s"), CS->rt->header_wrapper_begin);
 
   if (CS->is_string_column_encoded) {
-    bprintf(&header_file, "\n@class %s;\n", CS->rt->cql_string_ref_encode);
+    bprintf(&header_file, FMT("\n@class %s;\n"), CS->rt->cql_string_ref_encode);
   }
 
-  bprintf(&header_file, "%s", CS->cg_header_output->ptr);
-  bprintf(&header_file, "%s", CS->rt->header_wrapper_end);
+  bprintf(&header_file, FMT("%s"), CS->cg_header_output->ptr);
+  bprintf(&header_file, FMT("%s"), CS->rt->header_wrapper_end);
 
   CSTR header_file_name = CS->options.file_names[0];
   cql_write_file(CS, header_file_name, header_file.ptr);

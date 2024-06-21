@@ -5,6 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#undef FMT
+#ifdef FMT_DEBUG
+#define FMT(x) "(_s%d_)" x, __LINE__
+#else
+#define FMT(x) x
+#endif
+
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_GEN_SQL)
 
 // stubs to avoid link errors,
@@ -115,7 +122,7 @@ cql_noexport void gen_printf(CqlState* _Nonnull CS, const char *format, ...) {
 static void gen_literal(CqlState* _Nonnull CS, CSTR literal) {
   for (int32_t i = 0; i < CS->pending_indent; i++) bputc(CS->gen_output, ' ');
   CS->pending_indent = 0;
-  bprintf(CS->gen_output, "%s", literal);
+  bprintf(CS->gen_output, FMT("%s"), literal);
 }
 
 cql_noexport void gen_to_stdout(CqlState* _Nonnull CS, ast_node *ast, gen_func fn) {
@@ -186,15 +193,15 @@ static void gen_name_ex(CqlState*CS, CSTR name, bool_t is_qid) {
   if (is_qid) {
     if (!for_sqlite(CS)) {
       cg_decode_qstr(CS, &tmp, name);
-      gen_printf(CS, "%s", tmp.ptr);
+      gen_printf(CS, FMT("%s"), tmp.ptr);
     }
     else {
       cg_unquote_encoded_qstr(CS, &tmp, name);
-      gen_printf(CS, "[%s]", tmp.ptr);
+      gen_printf(CS, FMT("[%s]"), tmp.ptr);
     }
   }
   else {
-    gen_printf(CS, "%s", name);
+    gen_printf(CS, FMT("%s"), name);
   }
   CHARBUF_CLOSE(tmp);
 }
@@ -215,9 +222,9 @@ static void gen_sptr_name(CqlState* _Nonnull CS, sem_struct *sptr, uint32_t i) {
 
 static void gen_constraint_name(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast);
-  gen_printf(CS, "CONSTRAINT ");
+  gen_printf(CS, FMT("CONSTRAINT "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
 }
 
 static void gen_name_list(CqlState* _Nonnull CS, ast_node *list) {
@@ -226,7 +233,7 @@ static void gen_name_list(CqlState* _Nonnull CS, ast_node *list) {
   for (ast_node *item = list; item; item = item->right) {
     gen_name(CS, item->left);
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -236,16 +243,16 @@ cql_noexport void gen_misc_attr_value_list(CqlState* _Nonnull CS, ast_node *ast)
   for (ast_node *item = ast; item; item = item->right) {
     gen_misc_attr_value(CS, item->left);
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
 
 cql_noexport void gen_misc_attr_value(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_misc_attr_value_list(ast)) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_misc_attr_value_list(CS, ast);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
   else {
     gen_root_expr(CS, ast);
@@ -255,20 +262,20 @@ cql_noexport void gen_misc_attr_value(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_misc_attr(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_misc_attr(ast));
 
-  gen_printf(CS, "@ATTRIBUTE(");
+  gen_printf(CS, FMT("@ATTRIBUTE("));
   if (is_ast_dot(ast->left)) {
     gen_name(CS, ast->left->left);
-    gen_printf(CS, ":");
+    gen_printf(CS, FMT(":"));
     gen_name(CS, ast->left->right);
   }
   else {
     gen_name(CS, ast->left);
   }
   if (ast->right) {
-    gen_printf(CS, "=");
+    gen_printf(CS, FMT("="));
     gen_misc_attr_value(CS, ast->right);
   }
-  gen_printf(CS, ")\n");
+  gen_printf(CS, FMT(")\n"));
 }
 
 cql_noexport void gen_misc_attrs(CqlState* _Nonnull CS, ast_node *list) {
@@ -300,28 +307,28 @@ static void gen_type_kind(CqlState* _Nonnull CS, CSTR name) {
     if (callback && ends_in_set(name)) {
       CHARBUF_OPEN(buf);
       suppress = callback(CS, ast, gen_callbacks_rv->set_kind_context, &buf);
-      gen_printf(CS, "%s", buf.ptr);
+      gen_printf(CS, FMT("%s"), buf.ptr);
       CHARBUF_CLOSE(buf);
     }
   }
 
   if (!suppress) {
-    gen_printf(CS, "<%s>", name);
+    gen_printf(CS, FMT("<%s>"), name);
   }
 }
 
 static void gen_not_null(CqlState* _Nonnull CS) {
   if (for_sqlite(CS)) {
-    gen_printf(CS, " NOT NULL");
+    gen_printf(CS, FMT(" NOT NULL"));
   }
   else {
-    gen_printf(CS, "!");
+    gen_printf(CS, FMT("!"));
   }
 }
 
 void gen_data_type(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_create_data_type(ast)) {
-    gen_printf(CS, "CREATE ");
+    gen_printf(CS, FMT("CREATE "));
     gen_data_type(CS, ast->left);
     return;
   }
@@ -333,7 +340,7 @@ void gen_data_type(CqlState* _Nonnull CS, ast_node *ast) {
   else if (is_ast_sensitive_attr(ast)) {
     gen_data_type(CS, ast->left);
     if (!for_sqlite(CS)) {
-      gen_printf(CS, " @SENSITIVE");
+      gen_printf(CS, FMT(" @SENSITIVE"));
     }
     return;
   }
@@ -342,33 +349,33 @@ void gen_data_type(CqlState* _Nonnull CS, ast_node *ast) {
       // we could use INT here but there is schema out
       // there that won't match if we do, seems risky
       // to change the canonical SQL output
-      gen_printf(CS, "INTEGER");
+      gen_printf(CS, FMT("INTEGER"));
     }
     else {
-      gen_printf(CS, "INT");
+      gen_printf(CS, FMT("INT"));
     }
   } else if (is_ast_type_text(ast)) {
-    gen_printf(CS, "TEXT");
+    gen_printf(CS, FMT("TEXT"));
   } else if (is_ast_type_blob(ast)) {
-    gen_printf(CS, "BLOB");
+    gen_printf(CS, FMT("BLOB"));
   } else if (is_ast_type_object(ast)) {
-    gen_printf(CS, "OBJECT");
+    gen_printf(CS, FMT("OBJECT"));
   } else if (is_ast_type_long(ast)) {
     if (for_sqlite(CS)) {
       // we could use INT here but there is schema out
       // there that won't match if we do, seems risky
       // to change the canonical SQL output
-      gen_printf(CS, "LONG_INT");
+      gen_printf(CS, FMT("LONG_INT"));
     }
     else {
-      gen_printf(CS, "LONG");
+      gen_printf(CS, FMT("LONG"));
     }
   } else if (is_ast_type_real(ast)) {
-    gen_printf(CS, "REAL");
+    gen_printf(CS, FMT("REAL"));
   } else if (is_ast_type_bool(ast)) {
-    gen_printf(CS, "BOOL");
+    gen_printf(CS, FMT("BOOL"));
   } else if (is_ast_type_cursor(ast)) {
-    gen_printf(CS, "CURSOR");
+    gen_printf(CS, FMT("CURSOR"));
   } else {
     bool_t suppress = false;
     if (gen_callbacks_lv) {
@@ -376,7 +383,7 @@ void gen_data_type(CqlState* _Nonnull CS, ast_node *ast) {
       if (callback) {
         CHARBUF_OPEN(buf);
         suppress = callback(CS, ast, gen_callbacks_rv->named_type_context, &buf);
-        gen_printf(CS, "%s", buf.ptr);
+        gen_printf(CS, FMT("%s"), buf.ptr);
         CHARBUF_CLOSE(buf);
         return;
       }
@@ -402,10 +409,10 @@ static void gen_indexed_column(CqlState* _Nonnull CS, ast_node *ast) {
 
   gen_root_expr(CS, expr);
   if (is_ast_asc(ast->right)) {
-    gen_printf(CS, " ASC");
+    gen_printf(CS, FMT(" ASC"));
   }
   else if (is_ast_desc(ast->right)) {
-    gen_printf(CS, " DESC");
+    gen_printf(CS, FMT(" DESC"));
   }
 }
 
@@ -414,7 +421,7 @@ static void gen_indexed_columns(CqlState* _Nonnull CS, ast_node *ast) {
   for (ast_node *item = ast; item; item = item->right) {
     gen_indexed_column(CS, item->left);
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -432,20 +439,20 @@ static void gen_create_index_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(index_name_ast, create_index_on_list->left);
   EXTRACT_NAME_AST(table_name_ast, create_index_on_list->right);
 
-  gen_printf(CS, "CREATE ");
+  gen_printf(CS, FMT("CREATE "));
   if (flags & INDEX_UNIQUE) {
-    gen_printf(CS, "UNIQUE ");
+    gen_printf(CS, FMT("UNIQUE "));
   }
-  gen_printf(CS, "INDEX ");
+  gen_printf(CS, FMT("INDEX "));
   gen_if_not_exists(CS, ast, !!(flags & INDEX_IFNE));
   gen_name(CS, index_name_ast);
-  gen_printf(CS, " ON ");
+  gen_printf(CS, FMT(" ON "));
   gen_name(CS, table_name_ast);
-  gen_printf(CS, " (");
+  gen_printf(CS, FMT(" ("));
   gen_indexed_columns(CS, indexed_columns);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
   if (opt_where) {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     gen_opt_where(CS, opt_where);
   }
   gen_version_attrs(CS, attrs);
@@ -461,9 +468,9 @@ static void gen_unq_def(CqlState* _Nonnull CS, ast_node *def) {
     gen_constraint_name(CS, def->left);
   }
 
-  gen_printf(CS, "UNIQUE (");
+  gen_printf(CS, FMT("UNIQUE ("));
   gen_indexed_columns(CS, indexed_columns);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
   if (conflict_clause) {
     gen_conflict_clause(CS, conflict_clause);
   }
@@ -476,54 +483,54 @@ static void gen_check_def(CqlState* _Nonnull CS, ast_node *def) {
   }
 
   EXTRACT_ANY_NOTNULL(expr, def->right);
-  gen_printf(CS, "CHECK (");
+  gen_printf(CS, FMT("CHECK ("));
   gen_root_expr(CS, expr);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 cql_noexport void gen_fk_action(CqlState* _Nonnull CS, int32_t action) {
   switch (action) {
     case FK_SET_NULL:
-      gen_printf(CS, "SET NULL");
+      gen_printf(CS, FMT("SET NULL"));
       break;
     case FK_SET_DEFAULT:
-      gen_printf(CS, "SET DEFAULT");
+      gen_printf(CS, FMT("SET DEFAULT"));
       break;
     case FK_CASCADE:
-      gen_printf(CS, "CASCADE");
+      gen_printf(CS, FMT("CASCADE"));
       break;
     case FK_RESTRICT:
-      gen_printf(CS, "RESTRICT");
+      gen_printf(CS, FMT("RESTRICT"));
       break;
     default:
       // this is all that's left, it better be this...
       Contract(action == FK_NO_ACTION);
-      gen_printf(CS, "NO ACTION");
+      gen_printf(CS, FMT("NO ACTION"));
       break;
   }
 }
 
 static void gen_fk_flags(CqlState* _Nonnull CS, int32_t flags) {
   if (flags) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
 
   int32_t action = (flags & FK_ON_UPDATE) >> 4;
 
   if (action) {
-    gen_printf(CS, "ON UPDATE ");
+    gen_printf(CS, FMT("ON UPDATE "));
     gen_fk_action(CS, action);
     if (flags & (FK_ON_DELETE|FK_DEFERRABLES)) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
     }
   }
 
   action = (flags & FK_ON_DELETE);
   if (action) {
-    gen_printf(CS, "ON DELETE ");
+    gen_printf(CS, FMT("ON DELETE "));
     gen_fk_action(CS, action);
     if (flags & FK_DEFERRABLES) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
     }
   }
 
@@ -531,17 +538,17 @@ static void gen_fk_flags(CqlState* _Nonnull CS, int32_t flags) {
     Contract(flags & (FK_DEFERRABLE|FK_NOT_DEFERRABLE));
     if (flags & FK_DEFERRABLE) {
       Contract(!(flags & FK_NOT_DEFERRABLE));
-      gen_printf(CS, "DEFERRABLE");
+      gen_printf(CS, FMT("DEFERRABLE"));
     }
     else {
-      gen_printf(CS, "NOT DEFERRABLE");
+      gen_printf(CS, FMT("NOT DEFERRABLE"));
     }
     if (flags & FK_INITIALLY_IMMEDIATE) {
       Contract(!(flags & FK_INITIALLY_DEFERRED));
-      gen_printf(CS, " INITIALLY IMMEDIATE");
+      gen_printf(CS, FMT(" INITIALLY IMMEDIATE"));
     }
     else if (flags & FK_INITIALLY_DEFERRED) {
-      gen_printf(CS, " INITIALLY DEFERRED");
+      gen_printf(CS, FMT(" INITIALLY DEFERRED"));
     }
   }
 }
@@ -553,11 +560,11 @@ static void gen_fk_target_options(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(table_name_ast, fk_target->left);
   EXTRACT_NAMED_NOTNULL(ref_list, name_list, fk_target->right);
 
-  gen_printf(CS, "REFERENCES ");
+  gen_printf(CS, FMT("REFERENCES "));
   gen_name(CS, table_name_ast);
-  gen_printf(CS, " (");
+  gen_printf(CS, FMT(" ("));
   gen_name_list(CS, ref_list);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
   gen_fk_flags(CS, flags);
 }
 
@@ -571,9 +578,9 @@ static void gen_fk_def(CqlState* _Nonnull CS, ast_node *def) {
     gen_constraint_name(CS, def->left);
   }
 
-  gen_printf(CS, "FOREIGN KEY (");
+  gen_printf(CS, FMT("FOREIGN KEY ("));
   gen_name_list(CS, src_list);
-  gen_printf(CS, ") ");
+  gen_printf(CS, FMT(") "));
   gen_fk_target_options(CS, fk_target_options);
 }
 
@@ -581,22 +588,22 @@ static void gen_conflict_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_int(ast));
   EXTRACT_OPTION(conflict_clause_opt, ast);
 
-  gen_printf(CS, " ON CONFLICT ");
+  gen_printf(CS, FMT(" ON CONFLICT "));
   switch (conflict_clause_opt) {
     case ON_CONFLICT_ROLLBACK:
-      gen_printf(CS, "ROLLBACK");
+      gen_printf(CS, FMT("ROLLBACK"));
       break;
     case ON_CONFLICT_ABORT:
-      gen_printf(CS, "ABORT");
+      gen_printf(CS, FMT("ABORT"));
       break;
     case ON_CONFLICT_FAIL:
-      gen_printf(CS, "FAIL");
+      gen_printf(CS, FMT("FAIL"));
       break;
     case ON_CONFLICT_IGNORE:
-      gen_printf(CS, "IGNORE");
+      gen_printf(CS, FMT("IGNORE"));
       break;
     case ON_CONFLICT_REPLACE:
-      gen_printf(CS, "REPLACE");
+      gen_printf(CS, FMT("REPLACE"));
       break;
   }
 }
@@ -611,9 +618,9 @@ static void gen_pk_def(CqlState* _Nonnull CS, ast_node *def) {
     gen_constraint_name(CS, def->left);
   }
 
-  gen_printf(CS, "PRIMARY KEY (");
+  gen_printf(CS, FMT("PRIMARY KEY ("));
   gen_indexed_columns(CS, indexed_columns);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
   if (conflict_clause) {
     gen_conflict_clause(CS, conflict_clause);
   }
@@ -623,19 +630,19 @@ static void gen_version_and_proc(CqlState* _Nonnull CS, ast_node *ast)
 {
   Contract(is_ast_version_annotation(ast));
   EXTRACT_OPTION(vers, ast->left);
-  gen_printf(CS, "%d", vers);
+  gen_printf(CS, FMT("%d"), vers);
   if (ast->right) {
     if (is_ast_dot(ast->right)) {
       EXTRACT_NOTNULL(dot, ast->right);
       EXTRACT_STRING(lhs, dot->left);
       EXTRACT_STRING(rhs, dot->right);
 
-      gen_printf(CS, ", %s:%s", lhs, rhs);
+      gen_printf(CS, FMT(", %s:%s"), lhs, rhs);
     }
     else
     {
       EXTRACT_STRING(name, ast->right);
-      gen_printf(CS, ", %s", name);
+      gen_printf(CS, FMT(", %s"), name);
     }
   }
 }
@@ -644,10 +651,10 @@ static void gen_recreate_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_recreate_attr(attr));
   if (!suppress_attributes(CS)) {
     // attributes do not appear when writing out commands for Sqlite
-    gen_printf(CS, " @RECREATE");
+    gen_printf(CS, FMT(" @RECREATE"));
     if (attr->left) {
       EXTRACT_STRING(group_name, attr->left);
-      gen_printf(CS, "(%s)", group_name);
+      gen_printf(CS, FMT("(%s)"), group_name);
     }
   }
 }
@@ -656,9 +663,9 @@ static void gen_create_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_create_attr(attr));
   if (!suppress_attributes(CS)) {
     // attributes do not appear when writing out commands for Sqlite
-    gen_printf(CS, " @CREATE(");
+    gen_printf(CS, FMT(" @CREATE("));
     gen_version_and_proc(CS, attr->left);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
@@ -667,11 +674,11 @@ static void gen_delete_attr(CqlState* _Nonnull CS, ast_node *attr) {
 
   // attributes do not appear when writing out commands for Sqlite
   if (!suppress_attributes(CS)) {
-    gen_printf(CS, " @DELETE");
+    gen_printf(CS, FMT(" @DELETE"));
     if (attr->left) {
-      gen_printf(CS, "(");
+      gen_printf(CS, FMT("("));
       gen_version_and_proc(CS, attr->left);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
   }
 }
@@ -680,7 +687,7 @@ static void gen_sensitive_attr(CqlState* _Nonnull CS, ast_node *attr) {
   Contract (is_ast_sensitive_attr(attr));
   if (!for_sqlite(CS)) {
     // attributes do not appear when writing out commands for Sqlite
-    gen_printf(CS, " @SENSITIVE");
+    gen_printf(CS, FMT(" @SENSITIVE"));
   }
 }
 
@@ -703,33 +710,33 @@ static void gen_col_attrs(CqlState* _Nonnull CS, ast_node *_Nullable attrs) {
       EXTRACT(col_attrs_autoinc, autoinc_and_conflict_clause->left);
       EXTRACT_ANY(conflict_clause, autoinc_and_conflict_clause->right);
 
-      gen_printf(CS, " PRIMARY KEY");
+      gen_printf(CS, FMT(" PRIMARY KEY"));
       if (conflict_clause) {
         gen_conflict_clause(CS, conflict_clause);
       }
       if (col_attrs_autoinc) {
-        gen_printf(CS, " AUTOINCREMENT");
+        gen_printf(CS, FMT(" AUTOINCREMENT"));
       }
     } else if (is_ast_col_attrs_unique(attr)) {
-      gen_printf(CS, " UNIQUE");
+      gen_printf(CS, FMT(" UNIQUE"));
       if (attr->left) {
         gen_conflict_clause(CS, attr->left);
       }
     } else if (is_ast_col_attrs_hidden(attr)) {
-      gen_printf(CS, " HIDDEN");
+      gen_printf(CS, FMT(" HIDDEN"));
     } else if (is_ast_col_attrs_fk(attr)) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
       gen_fk_target_options(CS, attr->left);
     } else if (is_ast_col_attrs_check(attr)) {
-      gen_printf(CS, " CHECK(");
+      gen_printf(CS, FMT(" CHECK("));
       gen_root_expr(CS, attr->left);
-      gen_printf(CS, ") ");
+      gen_printf(CS, FMT(") "));
     } else if (is_ast_col_attrs_collate(attr)) {
-      gen_printf(CS, " COLLATE ");
+      gen_printf(CS, FMT(" COLLATE "));
       gen_root_expr(CS, attr->left);
     } else {
       Contract(is_ast_col_attrs_default(attr));
-      gen_printf(CS, " DEFAULT ");
+      gen_printf(CS, FMT(" DEFAULT "));
       gen_root_expr(CS, attr->left);
     }
   }
@@ -749,7 +756,7 @@ static void gen_col_def(CqlState* _Nonnull CS, ast_node *def) {
   }
 
   gen_name(CS, name_ast);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // with no SEM we can't do this conversion, we're just doing vanilla echos
@@ -759,7 +766,7 @@ static void gen_col_def(CqlState* _Nonnull CS, ast_node *def) {
     // semantic checking must have already validated that this is either an integer or long_integer
     sem_t core_type = core_type_of(def->sem->sem_type);
     Contract(core_type == SEM_TYPE_INTEGER || core_type == SEM_TYPE_LONG_INTEGER);
-    gen_printf(CS, "INTEGER");
+    gen_printf(CS, FMT("INTEGER"));
   }
   else {
     gen_data_type(CS, data_type);
@@ -775,7 +782,7 @@ cql_export bool_t eval_star_callback(CqlState* _Nonnull CS, ast_node *ast) {
   if (gen_callbacks_lv && gen_callbacks_rv->star_callback && ast->sem) {
     CHARBUF_OPEN(buf);
     suppress = gen_callbacks_rv->star_callback(CS, ast, gen_callbacks_rv->star_context, &buf);
-    gen_printf(CS, "%s", buf.ptr);
+    gen_printf(CS, FMT("%s"), buf.ptr);
     CHARBUF_CLOSE(buf);
   }
 
@@ -789,7 +796,7 @@ cql_noexport bool_t eval_column_callback(CqlState* _Nonnull CS, ast_node *ast) {
   if (gen_callbacks_lv && gen_callbacks_rv->col_def_callback && ast->sem) {
     CHARBUF_OPEN(buf);
     suppress = gen_callbacks_rv->col_def_callback(CS, ast, gen_callbacks_rv->col_def_context, &buf);
-    gen_printf(CS, "%s", buf.ptr);
+    gen_printf(CS, FMT("%s"), buf.ptr);
     CHARBUF_CLOSE(buf);
   }
 
@@ -810,7 +817,7 @@ bool_t eval_variables_callback(CqlState* _Nonnull CS, ast_node *ast) {
   if (gen_callbacks_lv && gen_callbacks_rv->variables_callback && ast->sem && is_variable(ast->sem->sem_type)) {
     CHARBUF_OPEN(buf);
     suppress = gen_callbacks_rv->variables_callback(CS, ast, gen_callbacks_rv->variables_context, &buf);
-    gen_printf(CS, "%s", buf.ptr);
+    gen_printf(CS, FMT("%s"), buf.ptr);
     CHARBUF_CLOSE(buf);
   }
   return suppress;
@@ -849,7 +856,7 @@ cql_noexport void gen_col_key_list(CqlState* _Nonnull CS, ast_node *list) {
     }
 
     if (need_comma) {
-      gen_printf(CS, ",\n");
+      gen_printf(CS, FMT(",\n"));
     }
     need_comma = 1;
 
@@ -863,23 +870,23 @@ static void gen_select_opts(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(opt, ast->left);
 
   if (is_ast_all(opt)) {
-    gen_printf(CS, " ALL");
+    gen_printf(CS, FMT(" ALL"));
   }
   else if (is_ast_distinct(opt)) {
-    gen_printf(CS, " DISTINCT");
+    gen_printf(CS, FMT(" DISTINCT"));
   }
   else {
     Contract(is_ast_distinctrow(opt));
-    gen_printf(CS, " DISTINCTROW");
+    gen_printf(CS, FMT(" DISTINCTROW"));
   }
 }
 
 static void gen_binary_no_spaces(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, "%s", op);
+  gen_printf(CS, FMT("%s"), op);
   gen_expr(CS, ast->right, pri_new + 1);
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -896,36 +903,36 @@ static void gen_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pr
   // effectively it's like we're one binding strength higher for our right child
   // so we call it with pri_new + 1.  If it's equal to us it must emit parens
 
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " %s ", op);
+  gen_printf(CS, FMT(" %s "), op);
   gen_expr(CS, ast->right, pri_new + 1);
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_unary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  if (pri_new < pri) gen_printf(CS, "(");
-  gen_printf(CS, "%s", op);
+  if (pri_new < pri) gen_printf(CS, FMT("("));
+  gen_printf(CS, FMT("%s"), op);
   gen_expr(CS, ast->left, pri_new);
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_postfix(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " %s", op);
-  if (pri_new < pri) gen_printf(CS, ")");
+  gen_printf(CS, FMT(" %s"), op);
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_const(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  gen_printf(CS, "CONST(");
+  gen_printf(CS, FMT("CONST("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_uminus(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  if (pri_new < pri) gen_printf(CS, "(");
-  gen_printf(CS, "%s", op);
+  if (pri_new < pri) gen_printf(CS, FMT("("));
+  gen_printf(CS, FMT("%s"), op);
 
   // we don't ever want -- in the output because that's a comment
   CHARBUF_OPEN(tmp);
@@ -935,28 +942,28 @@ static void gen_uminus(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pr
   CS->gen_output = saved;
 
   if (tmp.ptr[0] == '-') {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
 
-  gen_printf(CS, "%s", tmp.ptr);
+  gen_printf(CS, FMT("%s"), tmp.ptr);
   CHARBUF_CLOSE(tmp);
 
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_concat(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_concat(ast));
 
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " %s ", op);
+  gen_printf(CS, FMT(" %s "), op);
   gen_expr(CS, ast->right, pri_new);
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_arg_expr(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_star(ast)) {
-    gen_printf(CS, "*");
+    gen_printf(CS, FMT("*"));
   }
   else if (is_ast_from_shape(ast)) {
     gen_shape_arg(CS, ast);
@@ -970,19 +977,19 @@ static void gen_expr_exists(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32
   Contract(is_ast_exists_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
 
-  gen_printf(CS, "EXISTS (");
+  gen_printf(CS, FMT("EXISTS ("));
   GEN_BEGIN_INDENT(sel, 2);
     CS->pending_indent = 0;
     gen_select_stmt(CS, select_stmt);
   GEN_END_INDENT(sel);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_arg_list(CqlState* _Nonnull CS, ast_node *ast) {
   while (ast) {
     gen_arg_expr(CS, ast->left);
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
     ast = ast->right;
   }
@@ -992,7 +999,7 @@ static void gen_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
   while (ast) {
     gen_root_expr(CS, ast->left);
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
     ast = ast->right;
   }
@@ -1001,9 +1008,9 @@ static void gen_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_shape_arg(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_from_shape(ast));
   EXTRACT_STRING(shape, ast->left);
-  gen_printf(CS, "FROM %s", shape);
+  gen_printf(CS, FMT("FROM %s"), shape);
   if (ast->right) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     gen_shape_def(CS, ast->right);
   }
 }
@@ -1017,11 +1024,11 @@ static void gen_case_list(CqlState* _Nonnull CS, ast_node *ast) {
     EXTRACT_ANY_NOTNULL(then_expr, when->right);
 
     // additional parens never needed because WHEN/THEN act like parens
-    gen_printf(CS, "WHEN ");
+    gen_printf(CS, FMT("WHEN "));
     gen_root_expr(CS, case_expr);
-    gen_printf(CS, " THEN ");
+    gen_printf(CS, FMT(" THEN "));
     gen_root_expr(CS, then_expr);
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
 
     ast = ast->right;
   }
@@ -1030,12 +1037,12 @@ static void gen_case_list(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_expr_table_star(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_table_star(ast));
   gen_name(CS, ast->left);
-  gen_printf(CS, ".*");
+  gen_printf(CS, FMT(".*"));
 }
 
 static void gen_expr_star(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_star(ast));
-  gen_printf(CS, "*");
+  gen_printf(CS, FMT("*"));
 }
 
 static void gen_expr_num(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1046,18 +1053,18 @@ static void gen_expr_num(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t 
 
   if (has_hex_prefix(val) && gen_callbacks_lv && gen_callbacks_rv->convert_hex) {
     int64_t v = strtol(val, NULL, 16);
-    gen_printf(CS, "%lld", (llint_t)v);
+    gen_printf(CS, FMT("%lld"), (llint_t)v);
   }
   else {
     if (for_sqlite(CS) || num_type != NUM_BOOL) {
-      gen_printf(CS, "%s", val);
+      gen_printf(CS, FMT("%s"), val);
     }
     else {
       if (!strcmp(val, "0")) {
-        gen_printf(CS, "FALSE");
+        gen_printf(CS, FMT("FALSE"));
       }
       else {
-        gen_printf(CS, "TRUE");
+        gen_printf(CS, FMT("TRUE"));
       }
     }
   }
@@ -1067,7 +1074,7 @@ static void gen_expr_num(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t 
   }
 
   if (num_type == NUM_LONG) {
-    gen_printf(CS, "L");
+    gen_printf(CS, FMT("L"));
   }
 }
 
@@ -1076,7 +1083,7 @@ static void gen_expr_blob(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t
   EXTRACT_BLOBTEXT(str, ast);
 
   // blob literals are easy, we just emit them, there's no conversion or anything like that
-  gen_printf(CS, "%s", str);
+  gen_printf(CS, FMT("%s"), str);
 }
 
 static void gen_macro_args(CqlState* _Nonnull CS, ast_node *ast) {
@@ -1086,35 +1093,35 @@ static void gen_macro_args(CqlState* _Nonnull CS, ast_node *ast) {
       gen_root_expr(CS, arg->left);
     }
     else if (is_ast_query_parts_macro_arg(arg)) {
-      gen_printf(CS, "FROM(");
+      gen_printf(CS, FMT("FROM("));
       gen_query_parts(CS, arg->left);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
     else if (is_ast_select_core_macro_arg(arg)) {
-      gen_printf(CS, "ALL(");
+      gen_printf(CS, FMT("ALL("));
       gen_select_core_list(CS, arg->left);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
     else if (is_ast_select_expr_macro_arg(arg)) {
-      gen_printf(CS, "SELECT(");
+      gen_printf(CS, FMT("SELECT("));
       gen_select_expr_list(CS, arg->left);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
     else if (is_ast_cte_tables_macro_arg(arg)) {
-      gen_printf(CS, "WITH(\n");
+      gen_printf(CS, FMT("WITH(\n"));
       GEN_BEGIN_INDENT(tables, 2);
         gen_cte_tables(CS, arg->left, "");
       GEN_END_INDENT(tables);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
     else {
       Contract(is_ast_stmt_list_macro_arg(arg));
-      gen_printf(CS, "\nBEGIN\n");
+      gen_printf(CS, FMT("\nBEGIN\n"));
       gen_stmt_list(CS, arg->left);
-      gen_printf(CS, "END");
+      gen_printf(CS, FMT("END"));
     }
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -1126,27 +1133,27 @@ static void gen_text_args(CqlState* _Nonnull CS, ast_node *ast) {
 
     if (is_any_macro_ref(txt)) {
       EXTRACT_STRING(name, txt->left);
-      gen_printf(CS, "%s(", name);
+      gen_printf(CS, FMT("%s("), name);
       gen_macro_args(CS, txt->right);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
     else if (is_any_macro_arg_ref(txt)) {
       EXTRACT_STRING(name, txt->left);
-      gen_printf(CS, "%s", name);
+      gen_printf(CS, FMT("%s"), name);
     }
     else {
       gen_root_expr(CS, txt);
     }
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
 
 static void gen_expr_macro_text(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  gen_printf(CS, "@TEXT(");
+  gen_printf(CS, FMT("@TEXT("));
   gen_text_args(CS, ast->left);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 cql_noexport void gen_any_text_arg(CqlState* _Nonnull CS, ast_node *ast) {
@@ -1177,9 +1184,9 @@ cql_noexport void gen_any_text_arg(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_expr_macro_ref(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_expr_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   gen_macro_args(CS, ast->right);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 // note that the final expression might end up with parens or not
@@ -1189,14 +1196,14 @@ static void gen_expr_macro_ref(CqlState* _Nonnull CS, ast_node *ast, CSTR op, in
 static void gen_expr_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_expr_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s", name);
+  gen_printf(CS, FMT("%s"), name);
 }
 
 static void gen_expr_at_id(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_at_id(ast));
-  gen_printf(CS, "@ID(");
+  gen_printf(CS, FMT("@ID("));
   gen_text_args(CS, ast->left);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_str(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1236,7 +1243,7 @@ static void gen_expr_str(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t 
 
 static void gen_expr_null(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(ast));
-  gen_printf(CS, "NULL");
+  gen_printf(CS, FMT("NULL"));
 }
 
 static void gen_expr_dot(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1291,7 +1298,7 @@ static void gen_expr_dot(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t 
   if (left) {
      gen_name(CS, left);
   }
-  gen_printf(CS, ".");
+  gen_printf(CS, FMT("."));
   gen_name(CS, right);
 #else
   bool_t is_arguments = false;
@@ -1303,17 +1310,17 @@ static void gen_expr_dot(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t 
 
   if (is_arguments) {
     // special case for rewritten arguments, hide the "ARGUMENTS." stuff
-    gen_printf(CS, "%s", ast->sem->name);
+    gen_printf(CS, FMT("%s"), ast->sem->name);
   }
   else if (CS->sem.keep_table_name_in_aliases && get_inserted_table_alias_string_override(ast)) {
-    gen_printf(CS, "%s.", get_inserted_table_alias_string_override(ast));
+    gen_printf(CS, FMT("%s."), get_inserted_table_alias_string_override(ast));
     gen_name(CS, right);
   }
   else {
     if (left) {
       gen_name(CS, left);
     }
-    gen_printf(CS, ".");
+    gen_printf(CS, FMT("."));
     gen_name(CS, right);
   }
 #endif
@@ -1321,9 +1328,9 @@ static void gen_expr_dot(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t 
 
 static void gen_expr_in_pred(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_in_pred(ast));
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " IN (");
+  gen_printf(CS, FMT(" IN ("));
   if (ast->right == NULL) {
     /* nothing */
   }
@@ -1335,16 +1342,16 @@ static void gen_expr_in_pred(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int3
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
     gen_select_stmt(CS, select_stmt);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_not_in(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_not_in(ast));
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " NOT IN (");
+  gen_printf(CS, FMT(" NOT IN ("));
   if (ast->right == NULL) {
     /* nothing */
   }
@@ -1356,9 +1363,9 @@ static void gen_expr_not_in(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32
     EXTRACT_ANY_NOTNULL(select_stmt, ast->right);
     gen_select_stmt(CS, select_stmt);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 // Append field name and type to the buffer.  Canonicalize column name to camel case.
@@ -1376,22 +1383,22 @@ static void gen_append_field_desc(CqlState* _Nonnull CS, charbuf *tmp, CSTR cnam
 
   switch (core_type_of(sem_type)) {
     case SEM_TYPE_BOOL:
-      bprintf(tmp, "Bool");
+      bprintf(tmp, FMT("Bool"));
       break;
     case SEM_TYPE_INTEGER:
-      bprintf(tmp, "Int32");
+      bprintf(tmp, FMT("Int32"));
       break;
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(tmp, "Int64");
+      bprintf(tmp, FMT("Int64"));
       break;
     case SEM_TYPE_TEXT:
-      bprintf(tmp, "String");
+      bprintf(tmp, FMT("String"));
       break;
     case SEM_TYPE_REAL:
-      bprintf(tmp, "Float64");
+      bprintf(tmp, FMT("Float64"));
       break;
     case SEM_TYPE_BLOB:
-      bprintf(tmp, "Blob");
+      bprintf(tmp, FMT("Blob"));
       break;
   }
 }
@@ -1422,7 +1429,7 @@ static void gen_field_hash(CqlState* _Nonnull CS, ast_node *ast) {
   CHARBUF_OPEN(tmp);
   gen_append_field_desc(CS, &tmp, cname, ast->sem->sem_type);
   int64_t hash = sha256_charbuf(&tmp);
-  gen_printf(CS, "%lld", (llint_t)hash);
+  gen_printf(CS, FMT("%lld"), (llint_t)hash);
   CHARBUF_CLOSE(tmp);
 }
 
@@ -1489,7 +1496,7 @@ cql_noexport CSTR gen_type_hash(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t first = true;
   for (uint32_t i = 0; i < count; i++) {
      bputc(&tmp, first ? ':' : ',');
-     bprintf(&tmp, "%s", ptrs[i]);
+     bprintf(&tmp, FMT("%s"), ptrs[i]);
      first = false;
   }
 
@@ -1514,9 +1521,9 @@ static void gen_cql_blob_get_type(CqlState* _Nonnull CS, ast_node *ast) {
 
   CSTR func = CS->cg_blob_mappings->blob_get_key_type;
 
-  gen_printf(CS, "%s(", func);
+  gen_printf(CS, FMT("%s("), func);
   gen_root_expr(CS, first_arg(arg_list));
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 #define CQL_SEARCH_COL_KEYS true
@@ -1583,7 +1590,7 @@ static void gen_cql_blob_get(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t offsets = pk_col_offset >= 0 ?
     CS->cg_blob_mappings->blob_get_key_use_offsets : CS->cg_blob_mappings->blob_get_val_use_offsets;
 
-  gen_printf(CS, "%s(", func);
+  gen_printf(CS, FMT("%s("), func);
   gen_root_expr(CS, first_arg(arg_list));
 
   if (offsets) {
@@ -1599,12 +1606,12 @@ static void gen_cql_blob_get(CqlState* _Nonnull CS, ast_node *ast) {
     else {
       Invariant(offset < table_ast->sem->table_info->key_count);
     }
-    gen_printf(CS, ", %d)", offset);
+    gen_printf(CS, FMT(", %d)"), offset);
   }
   else {
-    gen_printf(CS, ", ");
+    gen_printf(CS, FMT(", "));
     gen_field_hash(CS, table_expr);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
@@ -1671,7 +1678,7 @@ static void gen_cql_blob_create(CqlState* _Nonnull CS, ast_node *ast) {
   ast_node *table_ast = find_table_or_view_even_deleted(CS, t_name);
   Invariant(table_ast);
 
-  gen_printf(CS, "%s(%s", func, gen_type_hash(CS, table_ast));
+  gen_printf(CS, FMT("%s(%s"), func, gen_type_hash(CS, table_ast));
 
   // 2n+1 args already confirmed, safe to do this
   for (ast_node *args = arg_list->right; args; args = args->right->right) {
@@ -1684,21 +1691,21 @@ static void gen_cql_blob_create(CqlState* _Nonnull CS, ast_node *ast) {
        if (!is_pk) {
          EXTRACT_STRING(cname, col->right);
          int32_t offset = get_table_col_offset(table_ast, cname, CQL_SEARCH_COL_VALUES);
-         gen_printf(CS, ", %d", offset);
+         gen_printf(CS, FMT(", %d"), offset);
        }
      }
      else {
-       gen_printf(CS, ", ");
+       gen_printf(CS, FMT(", "));
        gen_field_hash(CS, col);
      }
 
-     gen_printf(CS, ", ");
+     gen_printf(CS, FMT(", "));
      gen_root_expr(CS, val);
 
-     gen_printf(CS, ", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
+     gen_printf(CS, FMT(", %d"), sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
   }
 
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_cql_blob_update(CqlState* _Nonnull CS, ast_node *ast) {
@@ -1726,7 +1733,7 @@ static void gen_cql_blob_update(CqlState* _Nonnull CS, ast_node *ast) {
   ast_node *table_ast = find_table_or_view_even_deleted(CS, t_name);
   Invariant(table_ast);
 
-  gen_printf(CS, "%s(", func);
+  gen_printf(CS, FMT("%s("), func);
   gen_root_expr(CS, first_arg(arg_list));
 
   // 2n+1 args already confirmed, safe to do this
@@ -1739,21 +1746,21 @@ static void gen_cql_blob_update(CqlState* _Nonnull CS, ast_node *ast) {
       int32_t offset = get_table_col_offset(table_ast, cname,
          is_pk ? CQL_SEARCH_COL_KEYS : CQL_SEARCH_COL_VALUES);
       Invariant(offset >= 0);
-      gen_printf(CS, ", %d", offset);
+      gen_printf(CS, FMT(", %d"), offset);
      }
      else {
-       gen_printf(CS, ", ");
+       gen_printf(CS, FMT(", "));
        gen_field_hash(CS, col);
      }
-     gen_printf(CS, ", ");
+     gen_printf(CS, FMT(", "));
      gen_root_expr(CS, val);
      if (!is_pk) {
        // you never need the item types for the key blob becasue it always has all the fields
-       gen_printf(CS, ", %d", sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
+       gen_printf(CS, FMT(", %d"), sem_type_to_blob_type[core_type_of(col->sem->sem_type)]);
      }
   }
 
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_array(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1761,12 +1768,12 @@ static void gen_array(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri
   EXTRACT_ANY_NOTNULL(array, ast->left);
   EXTRACT_NOTNULL(arg_list, ast->right);
 
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, array, pri_new);
-  if (pri_new < pri) gen_printf(CS, ")");
-  gen_printf(CS, "[");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
+  gen_printf(CS, FMT("["));
   gen_arg_list(CS, arg_list);
-  gen_printf(CS, "]");
+  gen_printf(CS, FMT("]"));
 }
 
 static void gen_expr_call(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -1836,12 +1843,12 @@ static void gen_expr_call(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t
     }
   }
 
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   if (distinct) {
-    gen_printf(CS, "DISTINCT ");
+    gen_printf(CS, FMT("DISTINCT "));
   }
   gen_arg_list(CS, arg_list);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 
   if (opt_filter_clause) {
     gen_opt_filter_clause(CS, opt_filter_clause);
@@ -1852,73 +1859,73 @@ static void gen_opt_filter_clause(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_filter_clause(ast));
   EXTRACT_NOTNULL(opt_where, ast->left);
 
-  gen_printf(CS, " FILTER (");
+  gen_printf(CS, FMT(" FILTER ("));
   gen_opt_where(CS, opt_where);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_opt_partition_by(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_partition_by(ast));
   EXTRACT_NOTNULL(expr_list, ast->left);
 
-  gen_printf(CS, "PARTITION BY ");
+  gen_printf(CS, FMT("PARTITION BY "));
   gen_expr_list(CS, expr_list);
 }
 
 static void gen_frame_spec_flags(CqlState* _Nonnull CS, int32_t flags) {
   if (flags & FRAME_TYPE_RANGE) {
-    gen_printf(CS, "RANGE");
+    gen_printf(CS, FMT("RANGE"));
   }
   if (flags & FRAME_TYPE_ROWS) {
-    gen_printf(CS, "ROWS");
+    gen_printf(CS, FMT("ROWS"));
   }
   if (flags & FRAME_TYPE_GROUPS) {
-    gen_printf(CS, "GROUPS");
+    gen_printf(CS, FMT("GROUPS"));
   }
   if (flags & FRAME_BOUNDARY_UNBOUNDED || flags & FRAME_BOUNDARY_START_UNBOUNDED) {
-    gen_printf(CS, "UNBOUNDED PRECEDING");
+    gen_printf(CS, FMT("UNBOUNDED PRECEDING"));
   }
   if (flags & FRAME_BOUNDARY_PRECEDING ||
       flags & FRAME_BOUNDARY_START_PRECEDING ||
       flags & FRAME_BOUNDARY_END_PRECEDING) {
-    gen_printf(CS, "PRECEDING");
+    gen_printf(CS, FMT("PRECEDING"));
   }
   if (flags & FRAME_BOUNDARY_CURRENT_ROW ||
       flags & FRAME_BOUNDARY_START_CURRENT_ROW ||
       flags & FRAME_BOUNDARY_END_CURRENT_ROW) {
-    gen_printf(CS, "CURRENT ROW");
+    gen_printf(CS, FMT("CURRENT ROW"));
   }
   if (flags & FRAME_BOUNDARY_START_FOLLOWING ||
       flags & FRAME_BOUNDARY_END_FOLLOWING) {
-    gen_printf(CS, "FOLLOWING");
+    gen_printf(CS, FMT("FOLLOWING"));
   }
   if (flags & FRAME_BOUNDARY_END_UNBOUNDED) {
-    gen_printf(CS, "UNBOUNDED FOLLOWING");
+    gen_printf(CS, FMT("UNBOUNDED FOLLOWING"));
   }
   if (flags & FRAME_EXCLUDE_NO_OTHERS) {
-    gen_printf(CS, "EXCLUDE NO OTHERS");
+    gen_printf(CS, FMT("EXCLUDE NO OTHERS"));
   }
   if (flags & FRAME_EXCLUDE_CURRENT_ROW) {
-    gen_printf(CS, "EXCLUDE CURRENT ROW");
+    gen_printf(CS, FMT("EXCLUDE CURRENT ROW"));
   }
   if (flags & FRAME_EXCLUDE_GROUP) {
-    gen_printf(CS, "EXCLUDE GROUP");
+    gen_printf(CS, FMT("EXCLUDE GROUP"));
   }
   if (flags & FRAME_EXCLUDE_TIES) {
-    gen_printf(CS, "EXCLUDE TIES");
+    gen_printf(CS, FMT("EXCLUDE TIES"));
   }
 }
 
 static void gen_frame_type(CqlState* _Nonnull CS, int32_t flags) {
   Invariant(flags == (flags & FRAME_TYPE_FLAGS));
   gen_frame_spec_flags(CS, flags);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
 }
 
 static void gen_frame_exclude(CqlState* _Nonnull CS, int32_t flags) {
   Invariant(flags == (flags & FRAME_EXCLUDE_FLAGS));
   if (flags != FRAME_EXCLUDE_NONE) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
   gen_frame_spec_flags(CS, flags);
 }
@@ -1929,7 +1936,7 @@ static void gen_frame_boundary(CqlState* _Nonnull CS, ast_node *ast, int32_t fla
 
   if (expr) {
     gen_root_expr(CS, expr);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
   gen_frame_spec_flags(CS, flags);
 }
@@ -1939,10 +1946,10 @@ static void gen_frame_boundary_start(CqlState* _Nonnull CS, ast_node *ast, int32
   EXTRACT_ANY(expr, ast->left);
   Invariant(flags == (flags & FRAME_BOUNDARY_START_FLAGS));
 
-  gen_printf(CS, "BETWEEN ");
+  gen_printf(CS, FMT("BETWEEN "));
   if (expr) {
     gen_root_expr(CS, expr);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
   gen_frame_spec_flags(CS, flags);
 }
@@ -1952,10 +1959,10 @@ static void gen_frame_boundary_end(CqlState* _Nonnull CS, ast_node *ast, int32_t
   EXTRACT_ANY(expr, ast->right);
   Invariant(flags == (flags & FRAME_BOUNDARY_END_FLAGS));
 
-  gen_printf(CS, " AND ");
+  gen_printf(CS, FMT(" AND "));
   if (expr) {
     gen_root_expr(CS, expr);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
   gen_frame_spec_flags(CS, flags);
 }
@@ -1998,7 +2005,7 @@ static void gen_window_defn(CqlState* _Nonnull CS, ast_node *ast) {
   // the first optional element never needs a space
   bool need_space = 0;
 
-  gen_printf(CS, " (");
+  gen_printf(CS, FMT(" ("));
   if (opt_partition_by) {
     Invariant(!need_space);
     gen_opt_partition_by(CS, opt_partition_by);
@@ -2006,22 +2013,22 @@ static void gen_window_defn(CqlState* _Nonnull CS, ast_node *ast) {
   }
 
   if (opt_orderby) {
-    if (need_space) gen_printf(CS, " ");
+    if (need_space) gen_printf(CS, FMT(" "));
     gen_opt_orderby(CS, opt_orderby);
     need_space = 1;
   }
 
   if (opt_frame_spec) {
-    if (need_space) gen_printf(CS, " ");
+    if (need_space) gen_printf(CS, FMT(" "));
     gen_opt_frame_spec(CS, opt_frame_spec);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_name_or_window_defn(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_str(ast)) {
     EXTRACT_STRING(window_name, ast);
-    gen_printf(CS, " %s", window_name);
+    gen_printf(CS, FMT(" %s"), window_name);
   }
   else {
     Contract(is_ast_window_defn(ast));
@@ -2034,9 +2041,9 @@ static void gen_expr_window_func_inv(CqlState* _Nonnull CS, ast_node *ast, CSTR 
   EXTRACT_NOTNULL(call, ast->left);
   EXTRACT_ANY_NOTNULL(name_or_window_defn, ast->right);
 
-  gen_printf(CS, "\n  ");
+  gen_printf(CS, FMT("\n  "));
   gen_expr_call(CS, call, op, pri, pri_new);
-  gen_printf(CS, " OVER");
+  gen_printf(CS, FMT(" OVER"));
   gen_name_or_window_defn(CS, name_or_window_defn);
 }
 
@@ -2047,44 +2054,44 @@ static void gen_expr_raise(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_
 
   Contract(flags >= RAISE_IGNORE && flags <= RAISE_FAIL);
 
-  gen_printf(CS, "RAISE(");
+  gen_printf(CS, FMT("RAISE("));
   switch (flags) {
-    case RAISE_IGNORE: gen_printf(CS, "IGNORE"); break;
-    case RAISE_ROLLBACK: gen_printf(CS, "ROLLBACK"); break;
-    case RAISE_ABORT: gen_printf(CS, "ABORT"); break;
-    case RAISE_FAIL: gen_printf(CS, "FAIL"); break;
+    case RAISE_IGNORE: gen_printf(CS, FMT("IGNORE")); break;
+    case RAISE_ROLLBACK: gen_printf(CS, FMT("ROLLBACK")); break;
+    case RAISE_ABORT: gen_printf(CS, FMT("ABORT")); break;
+    case RAISE_FAIL: gen_printf(CS, FMT("FAIL")); break;
   }
   if (expr) {
-    gen_printf(CS, ", ");
+    gen_printf(CS, FMT(", "));
     gen_root_expr(CS, expr);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_between(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_between(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " BETWEEN ");
+  gen_printf(CS, FMT(" BETWEEN "));
   gen_expr(CS, range->left, pri_new);
-  gen_printf(CS, " AND ");
+  gen_printf(CS, FMT(" AND "));
   gen_expr(CS, range->right, pri_new + 1); // the usual rules for the right operand (see gen_binary)
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_not_between(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_not_between(ast));
   EXTRACT_NOTNULL(range, ast->right);
 
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
   gen_expr(CS, ast->left, pri_new);
-  gen_printf(CS, " NOT BETWEEN ");
+  gen_printf(CS, FMT(" NOT BETWEEN "));
   gen_expr(CS, range->left, pri_new);
-  gen_printf(CS, " AND ");
+  gen_printf(CS, FMT(" AND "));
   gen_expr(CS, range->right, pri_new + 1); // the usual rules for the right operand (see gen_binary)
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_between_rewrite(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2096,20 +2103,20 @@ static void gen_expr_between_rewrite(CqlState* _Nonnull CS, ast_node *ast, CSTR 
   // the echoed codegen to reparse in tests -- this isn't a case of sugar, we've
   // added a codegen temporary into the AST and it really doesn't belong in the output
 
-  if (pri_new < pri) gen_printf(CS, "(");
+  if (pri_new < pri) gen_printf(CS, FMT("("));
 
   gen_expr(CS, ast->left, pri_new);
   if (is_ast_or(range->right)) {
-    gen_printf(CS, " NOT BETWEEN ");
+    gen_printf(CS, FMT(" NOT BETWEEN "));
   }
   else {
-    gen_printf(CS, " BETWEEN ");
+    gen_printf(CS, FMT(" BETWEEN "));
   }
   gen_expr(CS, range->right->left->right, pri_new);
-  gen_printf(CS, " AND ");
+  gen_printf(CS, FMT(" AND "));
   gen_expr(CS, range->right->right->right, pri_new);
 
-  if (pri_new < pri) gen_printf(CS, ")");
+  if (pri_new < pri) gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr_case(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2120,37 +2127,37 @@ static void gen_expr_case(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t
   EXTRACT_ANY(else_expr, connector->right);
 
   // case is like parens already, you never need more parens
-  gen_printf(CS, "CASE");
+  gen_printf(CS, FMT("CASE"));
   if (expr) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     // case can have expression or just when clauses
     gen_root_expr(CS, expr);
   }
-  gen_printf(CS, "\n");
+  gen_printf(CS, FMT("\n"));
   GEN_BEGIN_INDENT(case_list, 2);
   gen_case_list(CS, case_list);
   if (else_expr) {
-    gen_printf(CS, "ELSE ");
+    gen_printf(CS, FMT("ELSE "));
     gen_root_expr(CS, else_expr);
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
   }
   GEN_END_INDENT(case_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_select_stmt(ast));
-  gen_printf(CS, "( ");
+  gen_printf(CS, FMT("( "));
   gen_select_stmt(CS, ast);
-  gen_printf(CS, " )");
+  gen_printf(CS, FMT(" )"));
 }
 
 static void gen_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_select_if_nothing_throw_expr(ast));
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
-  gen_printf(CS, "( ");
+  gen_printf(CS, FMT("( "));
   gen_select_stmt(CS, select_stmt);
-  gen_printf(CS, " IF NOTHING THROW )");
+  gen_printf(CS, FMT(" IF NOTHING THROW )"));
 }
 
 static void gen_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2158,11 +2165,11 @@ static void gen_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CST
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(else_expr, ast->right);
 
-  gen_printf(CS, "( ");
+  gen_printf(CS, FMT("( "));
   gen_select_stmt(CS, select_stmt);
-  gen_printf(CS, " %s ", op);
+  gen_printf(CS, FMT(" %s "), op);
   gen_root_expr(CS, else_expr);
-  gen_printf(CS, " )");
+  gen_printf(CS, FMT(" )"));
 }
 
 static void gen_expr_type_check(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2178,11 +2185,11 @@ static void gen_expr_type_check(CqlState* _Nonnull CS, ast_node *ast, CSTR op, i
   else {
     // note that this will be rewritten to nothing during semantic analysis, it only exists
     // to force an manual compile time type check (useful in macros and such)
-    gen_printf(CS, "TYPE_CHECK(");
+    gen_printf(CS, FMT("TYPE_CHECK("));
     gen_expr(CS, expr, EXPR_PRI_ROOT);
-    gen_printf(CS, " AS ");
+    gen_printf(CS, FMT(" AS "));
     gen_data_type(CS, type);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
@@ -2195,7 +2202,7 @@ static void gen_expr_cast(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t
     if (is_ast_null(expr)) {
       // when generating the actual SQL for Sqlite, we don't need to include cast expressions on NULL
       // we only need those for type checking.
-      gen_printf(CS, "NULL");
+      gen_printf(CS, FMT("NULL"));
       return;
     }
 
@@ -2207,20 +2214,20 @@ static void gen_expr_cast(CqlState* _Nonnull CS, ast_node *ast, CSTR op, int32_t
       sem_t core_type_expr = core_type_of(expr->sem->sem_type);
       sem_t core_type_ast = core_type_of(ast->sem->sem_type);
       if (core_type_expr == core_type_ast) {
-        gen_printf(CS, "(");
+        gen_printf(CS, FMT("("));
         gen_expr(CS, expr, EXPR_PRI_ROOT);
-        gen_printf(CS, ")");
+        gen_printf(CS, FMT(")"));
         return;
       }
     }
 #endif
   }
 
-  gen_printf(CS, "CAST(");
+  gen_printf(CS, FMT("CAST("));
   gen_expr(CS, expr, EXPR_PRI_ROOT);
-  gen_printf(CS, " AS ");
+  gen_printf(CS, FMT(" AS "));
   gen_data_type(CS, data_type);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_expr(CqlState* _Nonnull CS, ast_node *ast, int32_t pri) {
@@ -2239,7 +2246,7 @@ cql_noexport void gen_root_expr(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_as_alias(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
 
-  gen_printf(CS, " AS ");
+  gen_printf(CS, FMT(" AS "));
   gen_name(CS, name_ast);
 }
 
@@ -2249,7 +2256,7 @@ static void gen_as_alias_with_override(CqlState* _Nonnull CS, ast_node *ast) {
   CSTR name = get_inserted_table_alias_string_override(ast);
   Invariant(name);
 
-  gen_printf(CS, " AS %s", name);
+  gen_printf(CS, FMT(" AS %s"), name);
 }
 
 static void gen_select_expr(CqlState* _Nonnull CS, ast_node *ast) {
@@ -2275,12 +2282,12 @@ static void gen_col_calc(CqlState* _Nonnull CS, ast_node *ast) {
   if (ast->left) {
     EXTRACT_NAME_AND_SCOPE(ast->left);
     if (scope) {
-      gen_printf(CS, "%s.%s", scope, name);
+      gen_printf(CS, FMT("%s.%s"), scope, name);
     } else {
-      gen_printf(CS, "%s", name);
+      gen_printf(CS, FMT("%s"), name);
     }
     if (ast->right) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
     }
   }
 
@@ -2295,7 +2302,7 @@ static void gen_col_calcs(CqlState* _Nonnull CS, ast_node *ast) {
   while (item) {
     gen_col_calc(CS, item->left);
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
     item = item->right;
   }
@@ -2303,12 +2310,12 @@ static void gen_col_calcs(CqlState* _Nonnull CS, ast_node *ast) {
 
 static void gen_column_calculation(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_column_calculation(ast));
-  gen_printf(CS, "@COLUMNS(");
+  gen_printf(CS, FMT("@COLUMNS("));
   if (ast->right) {
-    gen_printf(CS, "DISTINCT ");
+    gen_printf(CS, FMT("DISTINCT "));
   }
   gen_col_calcs(CS, ast->left);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_select_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
@@ -2329,7 +2336,7 @@ static void gen_select_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
   int32_t indent = count == 4 ? 4 : 0;
 
   if (indent) {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
   }
 
   int32_t pending_indent_saved = CS->pending_indent;
@@ -2348,14 +2355,14 @@ static void gen_select_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
     }
     else if (is_ast_star(expr)) {
       if (!eval_star_callback(CS, expr)) {
-        gen_printf(CS, "*");
+        gen_printf(CS, FMT("*"));
       }
     }
     else if (is_ast_table_star(expr)) {
       if (!eval_star_callback(CS, expr)) {
         EXTRACT_NOTNULL(table_star, expr);
         gen_name(CS, table_star->left);
-        gen_printf(CS, ".*");
+        gen_printf(CS, FMT(".*"));
       }
     }
     else if (is_ast_column_calculation(expr)) {
@@ -2367,10 +2374,10 @@ static void gen_select_expr_list(CqlState* _Nonnull CS, ast_node *ast) {
     }
     if (item->right) {
       if (indent) {
-         gen_printf(CS, ",\n");
+         gen_printf(CS, FMT(",\n"));
       }
       else {
-         gen_printf(CS, ", ");
+         gen_printf(CS, FMT(", "));
       }
     }
   }
@@ -2398,17 +2405,17 @@ static void gen_table_or_subquery(CqlState* _Nonnull CS, ast_node *ast) {
     }
   }
   else if (is_ast_select_stmt(factor) || is_ast_with_select_stmt(factor)) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     GEN_BEGIN_INDENT(sel, 2);
     CS->pending_indent = 0;
     gen_select_stmt(CS, factor);
     GEN_END_INDENT(sel);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
   else if (is_ast_shared_cte(factor)) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_shared_cte(CS, factor);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
   else if (is_ast_table_function(factor)) {
     bool_t has_table_function_callback = gen_callbacks_lv && gen_callbacks_rv->table_function_callback;
@@ -2420,9 +2427,9 @@ static void gen_table_or_subquery(CqlState* _Nonnull CS, ast_node *ast) {
     if (!handled_table_function) {
       EXTRACT_STRING(name, factor->left);
       EXTRACT(arg_list, factor->right);
-      gen_printf(CS, "%s(", name);
+      gen_printf(CS, FMT("%s("), name);
       gen_arg_list(CS, arg_list);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
   }
   else {
@@ -2431,11 +2438,11 @@ static void gen_table_or_subquery(CqlState* _Nonnull CS, ast_node *ast) {
       gen_query_parts(CS, factor);
     }
     else {
-      gen_printf(CS, "(\n");
+      gen_printf(CS, FMT("(\n"));
       GEN_BEGIN_INDENT(qp, 2);
       gen_query_parts(CS, factor);
       GEN_END_INDENT(qp);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
   }
 
@@ -2454,15 +2461,15 @@ static void gen_join_cond(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(cond_type, ast->left);
 
   if (is_ast_on(cond_type)) {
-    gen_printf(CS, " ON ");
+    gen_printf(CS, FMT(" ON "));
     gen_root_expr(CS, ast->right);
   }
   else {
     // only other ast type that is allowed
     Contract(is_ast_using(cond_type));
-    gen_printf(CS, " USING (");
+    gen_printf(CS, FMT(" USING ("));
     gen_name_list(CS, ast->right);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
@@ -2471,12 +2478,12 @@ static void gen_join_target(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_OPTION(join_type, ast->left);
 
   switch (join_type) {
-    case JOIN_INNER: gen_printf(CS, "\nINNER JOIN "); break;
-    case JOIN_CROSS: gen_printf(CS, "\nCROSS JOIN "); break;
-    case JOIN_LEFT_OUTER: gen_printf(CS, "\nLEFT OUTER JOIN "); break;
-    case JOIN_RIGHT_OUTER: gen_printf(CS, "\nRIGHT OUTER JOIN "); break;
-    case JOIN_LEFT: gen_printf(CS, "\nLEFT JOIN "); break;
-    case JOIN_RIGHT: gen_printf(CS, "\nRIGHT JOIN "); break;
+    case JOIN_INNER: gen_printf(CS, FMT("\nINNER JOIN ")); break;
+    case JOIN_CROSS: gen_printf(CS, FMT("\nCROSS JOIN ")); break;
+    case JOIN_LEFT_OUTER: gen_printf(CS, FMT("\nLEFT OUTER JOIN ")); break;
+    case JOIN_RIGHT_OUTER: gen_printf(CS, FMT("\nRIGHT OUTER JOIN ")); break;
+    case JOIN_LEFT: gen_printf(CS, FMT("\nLEFT JOIN ")); break;
+    case JOIN_RIGHT: gen_printf(CS, FMT("\nRIGHT JOIN ")); break;
   }
 
   EXTRACT_NOTNULL(table_join, ast->right);
@@ -2513,7 +2520,7 @@ static void gen_table_or_subquery_list(CqlState* _Nonnull CS, ast_node *ast) {
   for (ast_node *item = ast; item; item = item->right) {
     gen_table_or_subquery(CS, item->left);
     if (item->right) {
-      gen_printf(CS, ",\n");
+      gen_printf(CS, FMT(",\n"));
     }
   }
 }
@@ -2521,57 +2528,57 @@ static void gen_table_or_subquery_list(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_select_core_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   gen_macro_args(CS, ast->right);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_select_core_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_core_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s", name);
+  gen_printf(CS, FMT("%s"), name);
 }
 
 static void gen_select_expr_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   gen_macro_args(CS, ast->right);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_select_expr_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_expr_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s", name);
+  gen_printf(CS, FMT("%s"), name);
 }
 
 static void gen_cte_tables_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cte_tables_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   gen_macro_args(CS, ast->right);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_cte_tables_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_cte_tables_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s", name);
+  gen_printf(CS, FMT("%s"), name);
 }
 
 static void gen_query_parts_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_query_parts_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   gen_macro_args(CS, ast->right);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_query_parts_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_query_parts_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s", name);
+  gen_printf(CS, FMT("%s"), name);
 }
 
 static void gen_query_parts(CqlState* _Nonnull CS, ast_node *ast) {
@@ -2592,15 +2599,15 @@ static void gen_query_parts(CqlState* _Nonnull CS, ast_node *ast) {
 
 static void gen_asc_desc(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_asc(ast)) {
-    gen_printf(CS, " ASC");
+    gen_printf(CS, FMT(" ASC"));
     if (ast->left && is_ast_nullslast(ast->left)) {
-      gen_printf(CS, " NULLS LAST");
+      gen_printf(CS, FMT(" NULLS LAST"));
     }
   }
   else if (is_ast_desc(ast)) {
-    gen_printf(CS, " DESC");
+    gen_printf(CS, FMT(" DESC"));
     if (ast->left && is_ast_nullsfirst(ast->left)) {
-      gen_printf(CS, " NULLS FIRST");
+      gen_printf(CS, FMT(" NULLS FIRST"));
     }
   }
   else {
@@ -2619,7 +2626,7 @@ static void gen_groupby_list(CqlState* _Nonnull CS, ast_node *ast) {
     gen_root_expr(CS, expr);
 
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -2637,7 +2644,7 @@ static void gen_orderby_list(CqlState* _Nonnull CS, ast_node *ast) {
     gen_asc_desc(CS, opt_asc_desc);
 
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -2645,7 +2652,7 @@ static void gen_orderby_list(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_opt_where(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_where(ast));
 
-  gen_printf(CS, "WHERE ");
+  gen_printf(CS, FMT("WHERE "));
   gen_root_expr(CS, ast->left);
 }
 
@@ -2653,7 +2660,7 @@ static void gen_opt_groupby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_groupby(ast));
   EXTRACT_NOTNULL(groupby_list, ast->left);
 
-  gen_printf(CS, "\n  GROUP BY ");
+  gen_printf(CS, FMT("\n  GROUP BY "));
   gen_groupby_list(CS, groupby_list);
 }
 
@@ -2661,21 +2668,21 @@ static void gen_opt_orderby(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_orderby(ast));
   EXTRACT_NOTNULL(orderby_list, ast->left);
 
-  gen_printf(CS, "ORDER BY ");
+  gen_printf(CS, FMT("ORDER BY "));
   gen_orderby_list(CS, orderby_list);
 }
 
 static void gen_opt_limit(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_limit(ast));
 
-  gen_printf(CS, "\n  LIMIT ");
+  gen_printf(CS, FMT("\n  LIMIT "));
   gen_root_expr(CS, ast->left);
 }
 
 static void gen_opt_offset(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_offset(ast));
 
-  gen_printf(CS, "\n  OFFSET ");
+  gen_printf(CS, FMT("\n  OFFSET "));
   gen_root_expr(CS, ast->left);
 }
 
@@ -2684,7 +2691,7 @@ static void gen_window_name_defn(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(window_defn, ast->right);
 
-  gen_printf(CS, "\n    %s AS", name);
+  gen_printf(CS, FMT("\n    %s AS"), name);
   gen_window_defn(CS, window_defn);
 }
 
@@ -2694,7 +2701,7 @@ static void gen_window_name_defn_list(CqlState* _Nonnull CS, ast_node *ast) {
     EXTRACT_NOTNULL(window_name_defn, item->left);
     gen_window_name_defn(CS, window_name_defn);
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -2710,7 +2717,7 @@ static void gen_opt_select_window(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_opt_select_window(ast));
   EXTRACT_NOTNULL(window_clause, ast->left);
 
-  gen_printf(CS, "\n  WINDOW ");
+  gen_printf(CS, FMT("\n  WINDOW "));
   gen_window_clause(CS, window_clause);
 }
 
@@ -2727,21 +2734,21 @@ static void gen_select_from_etc(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(opt_select_window, select_having->right);
 
   if (query_parts) {
-    gen_printf(CS, "\n  FROM ");
+    gen_printf(CS, FMT("\n  FROM "));
     GEN_BEGIN_INDENT(from, 4);
       CS->pending_indent = 0;
       gen_query_parts(CS, query_parts);
     GEN_END_INDENT(from);
   }
   if (opt_where) {
-    gen_printf(CS, "\n  ");
+    gen_printf(CS, FMT("\n  "));
     gen_opt_where(CS, opt_where);
   }
   if (opt_groupby) {
     gen_opt_groupby(CS, opt_groupby);
   }
   if (opt_having) {
-    gen_printf(CS, "\n  HAVING ");
+    gen_printf(CS, FMT("\n  HAVING "));
     gen_root_expr(CS, opt_having->left);
   }
   if (opt_select_window) {
@@ -2758,7 +2765,7 @@ static void gen_select_orderby(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(opt_offset, select_offset->left);
 
   if (opt_orderby) {
-    gen_printf(CS, "\n  ");
+    gen_printf(CS, FMT("\n  "));
     gen_opt_orderby(CS, opt_orderby);
   }
   if (opt_limit) {
@@ -2793,9 +2800,9 @@ static void gen_select_statement_type(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(select_opts, ast->left);
 
   if (select_opts && is_ast_select_values(select_opts)) {
-    gen_printf(CS, "VALUES");
+    gen_printf(CS, FMT("VALUES"));
   } else {
-    gen_printf(CS, "SELECT");
+    gen_printf(CS, FMT("SELECT"));
     if (select_opts) {
       Contract(is_ast_select_opts(select_opts));
       gen_select_opts(CS, select_opts);
@@ -2807,13 +2814,13 @@ static void gen_values(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_values(ast));
   for (ast_node *item = ast; item; item = item->right) {
     EXTRACT(insert_list, item->left);
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     if (insert_list) {
       gen_insert_list(CS, insert_list);
     }
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -2860,14 +2867,14 @@ static void gen_select_no_with(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_cte_decl(CqlState* _Nonnull CS, ast_node *ast)  {
   Contract(is_ast_cte_decl(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s (", name);
+  gen_printf(CS, FMT("%s ("), name);
   if (is_ast_star(ast->right)) {
-    gen_printf(CS, "*");
+    gen_printf(CS, FMT("*"));
   }
   else {
     gen_name_list(CS, ast->right);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_cte_binding_list(CqlState* _Nonnull CS, ast_node *ast) {
@@ -2877,10 +2884,10 @@ static void gen_cte_binding_list(CqlState* _Nonnull CS, ast_node *ast) {
      EXTRACT_NOTNULL(cte_binding, ast->left);
      EXTRACT_STRING(actual, cte_binding->left);
      EXTRACT_STRING(formal, cte_binding->right);
-     gen_printf(CS, "%s AS %s", actual, formal);
+     gen_printf(CS, FMT("%s AS %s"), actual, formal);
 
      if (ast->right) {
-       gen_printf(CS, ", ");
+       gen_printf(CS, FMT(", "));
      }
      ast = ast->right;
   }
@@ -2900,7 +2907,7 @@ static void gen_shared_cte(CqlState* _Nonnull CS, ast_node *ast) {
     EXTRACT(cte_binding_list, ast->right);
     gen_call_stmt(CS, call_stmt);
     if (cte_binding_list) {
-      gen_printf(CS, " USING ");
+      gen_printf(CS, FMT(" USING "));
       gen_cte_binding_list(CS, cte_binding_list);
     }
   }
@@ -2914,33 +2921,33 @@ static void gen_cte_table(CqlState* _Nonnull CS, ast_node *ast)  {
   gen_cte_decl(CS, cte_decl);
 
   if (is_ast_like(cte_body)) {
-    gen_printf(CS, " LIKE ");
+    gen_printf(CS, FMT(" LIKE "));
     if (is_ast_str(cte_body->left)) {
       gen_name(CS, cte_body->left);
     }
    else {
-     gen_printf(CS, "(\n");
+     gen_printf(CS, FMT("(\n"));
      GEN_BEGIN_INDENT(cte_indent, 2);
        gen_select_stmt(CS, cte_body->left);
      GEN_END_INDENT(cte_indent);
-     gen_printf(CS, "\n)");
+     gen_printf(CS, FMT("\n)"));
    }
    return;
   }
 
-  gen_printf(CS, " AS (");
+  gen_printf(CS, FMT(" AS ("));
 
   if (is_ast_shared_cte(cte_body)) {
     gen_shared_cte(CS, cte_body);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
   else {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     GEN_BEGIN_INDENT(cte_indent, 2);
       // the only other alternative is the select statement form
       gen_select_stmt(CS, cte_body);
     GEN_END_INDENT(cte_indent);
-    gen_printf(CS, "\n)");
+    gen_printf(CS, FMT("\n)"));
   }
 }
 
@@ -2966,11 +2973,11 @@ static void gen_cte_tables(CqlState* _Nonnull CS, ast_node *ast, CSTR prefix) {
 
     if (!handled) {
       if (first) {
-        gen_printf(CS, "%s", prefix);
+        gen_printf(CS, FMT("%s"), prefix);
         first = false;
       }
       else {
-        gen_printf(CS, ",\n");
+        gen_printf(CS, FMT(",\n"));
       }
 
       if (is_ast_cte_tables_macro_ref(cte_table)) {
@@ -2988,7 +2995,7 @@ static void gen_cte_tables(CqlState* _Nonnull CS, ast_node *ast, CSTR prefix) {
   }
 
   if (!first) {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
   }
 }
 
@@ -3036,7 +3043,7 @@ static void gen_select_core_list(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_OPTION(compound_operator, select_core_compound->left);
   EXTRACT_NOTNULL(select_core_list, select_core_compound->right);
 
-  gen_printf(CS, "\n%s\n", get_compound_operator_name(compound_operator));
+  gen_printf(CS, FMT("\n%s\n"), get_compound_operator_name(compound_operator));
   gen_select_core_list(CS, select_core_list);
 }
 
@@ -3052,28 +3059,28 @@ static void gen_select_nothing_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_select_nothing_stmt(ast));
 
   if (!for_sqlite(CS) || !ast->sem || !ast->sem->sptr) {
-    gen_printf(CS, "SELECT NOTHING");
+    gen_printf(CS, FMT("SELECT NOTHING"));
     return;
   }
 
   // we just generate the right number of dummy columns for Sqlite
   // type doesn't matter because it's going to be "WHERE 0"
 
-  gen_printf(CS, "SELECT ");
+  gen_printf(CS, FMT("SELECT "));
   sem_struct *sptr = ast->sem->sptr;
   for (uint32_t i = 0; i < sptr->count; i++) {
     if (i) {
-      gen_printf(CS, ",");
+      gen_printf(CS, FMT(","));
     }
 
     if (gen_callbacks_lv && gen_callbacks_rv->minify_aliases) {
-      gen_printf(CS, "0");
+      gen_printf(CS, FMT("0"));
     } else {
-      gen_printf(CS, "0 ");
+      gen_printf(CS, FMT("0 "));
       gen_sptr_name(CS, sptr, i);
     }
   }
-  gen_printf(CS, " WHERE 0");
+  gen_printf(CS, FMT(" WHERE 0"));
 }
 
 static void gen_select_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -3114,13 +3121,13 @@ static void gen_if_not_exists(CqlState* _Nonnull CS, ast_node *ast, bool_t if_no
   }
 
   if (if_not_exist && !handled) {
-    gen_printf(CS, "IF NOT EXISTS ");
+    gen_printf(CS, FMT("IF NOT EXISTS "));
   }
 }
 
 static void gen_eponymous(CqlState* _Nonnull CS, ast_node *ast, bool_t is_eponymous) {
   if (!for_sqlite(CS) && is_eponymous) {
-    gen_printf(CS, "@EPONYMOUS ");
+    gen_printf(CS, FMT("@EPONYMOUS "));
   }
 }
 
@@ -3137,19 +3144,19 @@ static void gen_create_view_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   bool_t if_not_exist = !!(flags & VIEW_IF_NOT_EXISTS);
 
-  gen_printf(CS, "CREATE ");
+  gen_printf(CS, FMT("CREATE "));
   if (flags & VIEW_IS_TEMP) {
-    gen_printf(CS, "TEMP ");
+    gen_printf(CS, FMT("TEMP "));
   }
-  gen_printf(CS, "VIEW ");
+  gen_printf(CS, FMT("VIEW "));
   gen_if_not_exists(CS, ast, if_not_exist);
   gen_name(CS, name_ast);
   if (name_list) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_name_list(CS, name_list);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
-  gen_printf(CS, " AS\n");
+  gen_printf(CS, FMT(" AS\n"));
   GEN_BEGIN_INDENT(sel, 2);
   gen_select_stmt(CS, select_stmt);
   gen_version_attrs(CS, attrs);
@@ -3181,55 +3188,55 @@ static void gen_create_trigger_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(when_expr, trigger_when_stmts->left);
   EXTRACT_NOTNULL(stmt_list, trigger_when_stmts->right);
 
-  gen_printf(CS, "CREATE ");
+  gen_printf(CS, FMT("CREATE "));
   if (flags & TRIGGER_IS_TEMP) {
-    gen_printf(CS, "TEMP ");
+    gen_printf(CS, FMT("TEMP "));
   }
-  gen_printf(CS, "TRIGGER ");
+  gen_printf(CS, FMT("TRIGGER "));
   gen_if_not_exists(CS, ast, !!(flags & TRIGGER_IF_NOT_EXISTS));
 
   gen_name(CS, trigger_name_ast);
-  gen_printf(CS, "\n  ");
+  gen_printf(CS, FMT("\n  "));
 
   if (flags & TRIGGER_BEFORE) {
-    gen_printf(CS, "BEFORE ");
+    gen_printf(CS, FMT("BEFORE "));
   }
   else if (flags & TRIGGER_AFTER) {
-    gen_printf(CS, "AFTER ");
+    gen_printf(CS, FMT("AFTER "));
   }
   else if (flags & TRIGGER_INSTEAD_OF) {
-    gen_printf(CS, "INSTEAD OF ");
+    gen_printf(CS, FMT("INSTEAD OF "));
   }
 
   if (flags & TRIGGER_DELETE) {
-    gen_printf(CS, "DELETE ");
+    gen_printf(CS, FMT("DELETE "));
   }
   else if (flags & TRIGGER_INSERT) {
-    gen_printf(CS, "INSERT ");
+    gen_printf(CS, FMT("INSERT "));
   }
   else {
-    gen_printf(CS, "UPDATE ");
+    gen_printf(CS, FMT("UPDATE "));
     if (name_list) {
-      gen_printf(CS, "OF ");
+      gen_printf(CS, FMT("OF "));
       gen_name_list(CS, name_list);
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
     }
   }
-  gen_printf(CS, "ON ");
+  gen_printf(CS, FMT("ON "));
   gen_name(CS, table_name_ast);
 
   if (flags & TRIGGER_FOR_EACH_ROW) {
-    gen_printf(CS, "\n  FOR EACH ROW");
+    gen_printf(CS, FMT("\n  FOR EACH ROW"));
   }
 
   if (when_expr) {
-    gen_printf(CS, "\n  WHEN ");
+    gen_printf(CS, FMT("\n  WHEN "));
     gen_root_expr(CS, when_expr);
   }
 
-  gen_printf(CS, "\nBEGIN\n");
+  gen_printf(CS, FMT("\nBEGIN\n"));
   gen_stmt_list(CS, stmt_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
   gen_version_attrs(CS, trigger_attrs);
 }
 
@@ -3246,20 +3253,20 @@ static void gen_create_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t if_not_exist = !!(flags & TABLE_IF_NOT_EXISTS);
   bool_t no_rowid = !!(flags & TABLE_IS_NO_ROWID);
 
-  gen_printf(CS, "CREATE ");
+  gen_printf(CS, FMT("CREATE "));
   if (temp) {
-    gen_printf(CS, "TEMP ");
+    gen_printf(CS, FMT("TEMP "));
   }
 
-  gen_printf(CS, "TABLE ");
+  gen_printf(CS, FMT("TABLE "));
   gen_if_not_exists(CS, ast, if_not_exist);
 
   gen_name(CS, table_name_ast);
-  gen_printf(CS, "(\n");
+  gen_printf(CS, FMT("(\n"));
   gen_col_key_list(CS, col_key_list);
-  gen_printf(CS, "\n)");
+  gen_printf(CS, FMT("\n)"));
   if (no_rowid) {
-    gen_printf(CS, " WITHOUT ROWID");
+    gen_printf(CS, FMT(" WITHOUT ROWID"));
   }
   gen_version_attrs(CS, table_attrs);
 }
@@ -3280,22 +3287,22 @@ static void gen_create_virtual_table_stmt(CqlState* _Nonnull CS, ast_node *ast) 
   bool_t if_not_exist = !!(flags & TABLE_IF_NOT_EXISTS);
   bool_t is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
 
-  gen_printf(CS, "CREATE VIRTUAL TABLE ");
+  gen_printf(CS, FMT("CREATE VIRTUAL TABLE "));
   gen_if_not_exists(CS, ast, if_not_exist);
   gen_eponymous(CS, ast, is_eponymous);
-  gen_printf(CS, "%s USING %s", name, module_name);
+  gen_printf(CS, FMT("%s USING %s"), name, module_name);
 
   if (!for_sqlite(CS)) {
     if (is_ast_following(module_args)) {
-      gen_printf(CS, " (ARGUMENTS FOLLOWING) ");
+      gen_printf(CS, FMT(" (ARGUMENTS FOLLOWING) "));
     }
     else if (module_args) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
       gen_misc_attr_value(CS, module_args);
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
     }
     else {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
     }
 
     // When emitting to SQLite we do not include the column declaration part
@@ -3307,9 +3314,9 @@ static void gen_create_virtual_table_stmt(CqlState* _Nonnull CS, ast_node *ast) 
     // and this will mean that you can't make a foreign key to a virtual table which is probably
     // a wise thing.
 
-    gen_printf(CS, "AS (\n");
+    gen_printf(CS, FMT("AS (\n"));
     gen_col_key_list(CS, col_key_list);
-    gen_printf(CS, "\n)");
+    gen_printf(CS, FMT("\n)"));
 
     // delete attribute is the only option (recreate by default)
     if (!is_ast_recreate_attr(table_attrs)) {
@@ -3319,11 +3326,11 @@ static void gen_create_virtual_table_stmt(CqlState* _Nonnull CS, ast_node *ast) 
   }
   else {
     if (is_ast_following(module_args)) {
-      gen_printf(CS, " (\n");
+      gen_printf(CS, FMT(" (\n"));
       gen_col_key_list(CS, col_key_list);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     } else if (module_args) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
       gen_misc_attr_value(CS, module_args);
     }
   }
@@ -3334,9 +3341,9 @@ static void gen_drop_view_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
 
-  gen_printf(CS, "DROP VIEW ");
+  gen_printf(CS, FMT("DROP VIEW "));
   if (if_exists) {
-    gen_printf(CS, "IF EXISTS ");
+    gen_printf(CS, FMT("IF EXISTS "));
   }
   gen_name(CS, name_ast);
 }
@@ -3346,9 +3353,9 @@ static void gen_drop_table_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
 
-  gen_printf(CS, "DROP TABLE ");
+  gen_printf(CS, FMT("DROP TABLE "));
   if (if_exists) {
-    gen_printf(CS, "IF EXISTS ");
+    gen_printf(CS, FMT("IF EXISTS "));
   }
   gen_name(CS, name_ast);
 }
@@ -3358,9 +3365,9 @@ static void gen_drop_index_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
 
-  gen_printf(CS, "DROP INDEX ");
+  gen_printf(CS, FMT("DROP INDEX "));
   if (if_exists) {
-    gen_printf(CS, "IF EXISTS ");
+    gen_printf(CS, FMT("IF EXISTS "));
   }
   gen_name(CS, name_ast);
 }
@@ -3370,9 +3377,9 @@ static void gen_drop_trigger_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(if_exists, ast->left);
   EXTRACT_NAME_AST(name_ast, ast->right);
 
-  gen_printf(CS, "DROP TRIGGER ");
+  gen_printf(CS, FMT("DROP TRIGGER "));
   if (if_exists) {
-    gen_printf(CS, "IF EXISTS ");
+    gen_printf(CS, FMT("IF EXISTS "));
   }
   gen_name(CS, name_ast);
 }
@@ -3382,9 +3389,9 @@ static void gen_alter_table_add_column_stmt(CqlState* _Nonnull CS, ast_node *ast
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(col_def, ast->right);
 
-  gen_printf(CS, "ALTER TABLE ");
+  gen_printf(CS, FMT("ALTER TABLE "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " ADD COLUMN ");
+  gen_printf(CS, FMT(" ADD COLUMN "));
   gen_col_def(CS, col_def);
 }
 
@@ -3395,7 +3402,7 @@ bool_t eval_if_stmt_callback(CqlState* _Nonnull CS, ast_node *ast) {
   if (gen_callbacks_lv && gen_callbacks_rv->if_stmt_callback) {
     CHARBUF_OPEN(buf);
     suppress = gen_callbacks_rv->if_stmt_callback(CS, ast, gen_callbacks_rv->if_stmt_context, &buf);
-    gen_printf(CS, "%s", buf.ptr);
+    gen_printf(CS, FMT("%s"), buf.ptr);
     CHARBUF_CLOSE(buf);
   }
   return suppress;
@@ -3406,7 +3413,7 @@ static void gen_cond_action(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(stmt_list, ast->right);
 
   gen_root_expr(CS, ast->left);
-  gen_printf(CS, " THEN\n");
+  gen_printf(CS, FMT(" THEN\n"));
   gen_stmt_list(CS, stmt_list);
 }
 
@@ -3416,7 +3423,7 @@ static void gen_elseif_list(CqlState* _Nonnull CS, ast_node *ast) {
   while (ast) {
     Contract(is_ast_elseif(ast));
     EXTRACT(cond_action, ast->left);
-    gen_printf(CS, "ELSE IF ");
+    gen_printf(CS, FMT("ELSE IF "));
     gen_cond_action(CS, cond_action);
     ast = ast->right;
   }
@@ -3433,7 +3440,7 @@ static void gen_if_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     return;
   }
 
-  gen_printf(CS, "IF ");
+  gen_printf(CS, FMT("IF "));
   gen_cond_action(CS, cond_action);
 
   if (elseif) {
@@ -3441,12 +3448,12 @@ static void gen_if_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   }
 
   if (elsenode) {
-    gen_printf(CS, "ELSE\n");
+    gen_printf(CS, FMT("ELSE\n"));
     EXTRACT(stmt_list, elsenode->left);
     gen_stmt_list(CS, stmt_list);
   }
 
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_guard_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -3454,9 +3461,9 @@ static void gen_guard_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf(CS, "IF ");
+  gen_printf(CS, FMT("IF "));
   gen_expr(CS, expr, EXPR_PRI_ROOT);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
   gen_one_stmt(CS, stmt);
 }
 
@@ -3471,10 +3478,10 @@ static void gen_delete_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(opt_where, ast->right);
 
-  gen_printf(CS, "DELETE FROM ");
+  gen_printf(CS, FMT("DELETE FROM "));
   gen_name(CS, name_ast);
   if (opt_where) {
-    gen_printf(CS, " WHERE ");
+    gen_printf(CS, FMT(" WHERE "));
     gen_root_expr(CS, opt_where->left);
   }
 }
@@ -3493,7 +3500,7 @@ static void gen_update_entry(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(expr, ast->right)
   EXTRACT_NAME_AST(name_ast, ast->left);
   gen_name(CS, name_ast);
-  gen_printf(CS, " = ");
+  gen_printf(CS, FMT(" = "));
   gen_root_expr(CS, expr);
 }
 
@@ -3506,27 +3513,27 @@ static void gen_update_list(CqlState* _Nonnull CS, ast_node *ast) {
   }
 
   if (count <= 4) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     for (ast_node *item = ast; item; item = item->right) {
       Contract(is_ast_update_list(item));
       EXTRACT_NOTNULL(update_entry, item->left);
 
       gen_update_entry(CS, update_entry);
       if (item->right) {
-        gen_printf(CS, ", ");
+        gen_printf(CS, FMT(", "));
       }
     }
   }
   else {
     GEN_BEGIN_INDENT(set_indent, 2);
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     for (ast_node *item = ast; item; item = item->right) {
       Contract(is_ast_update_list(item));
       EXTRACT_NOTNULL(update_entry, item->left);
   
       gen_update_entry(CS, update_entry);
       if (item->right) {
-        gen_printf(CS, ",\n");
+        gen_printf(CS, FMT(",\n"));
       }
     }
     GEN_END_INDENT(set_indent);
@@ -3537,7 +3544,7 @@ static void gen_from_shape(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_from_shape(ast));
   EXTRACT_STRING(shape_name, ast->right);
   EXTRACT_ANY(column_spec, ast->left);
-  gen_printf(CS, "FROM %s", shape_name);
+  gen_printf(CS, FMT("FROM %s"), shape_name);
   gen_column_spec(CS, column_spec);
 }
 
@@ -3547,10 +3554,10 @@ static void gen_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, cursor);
   EXTRACT_ANY_NOTNULL(columns_values, ast->right);
 
-  gen_printf(CS, "UPDATE CURSOR %s", name);
+  gen_printf(CS, FMT("UPDATE CURSOR %s"), name);
 
   if (is_ast_expr_names(columns_values)) {
-    gen_printf(CS, " USING ");
+    gen_printf(CS, FMT(" USING "));
     gen_expr_names(CS, columns_values);
   }
   else {
@@ -3558,14 +3565,14 @@ static void gen_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     EXTRACT_ANY(insert_list, columns_values->right);
 
     gen_column_spec(CS, column_spec);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     if (is_ast_from_shape(insert_list)) {
       gen_from_shape(CS, insert_list);
     }
     else {
-      gen_printf(CS, "FROM VALUES(");
+      gen_printf(CS, FMT("FROM VALUES("));
       gen_insert_list(CS, insert_list);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
   }
 }
@@ -3582,42 +3589,42 @@ static void gen_update_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(opt_orderby, update_orderby->left);
   EXTRACT(opt_limit, update_orderby->right);
 
-  gen_printf(CS, "UPDATE");
+  gen_printf(CS, FMT("UPDATE"));
   if (ast->left) {
     EXTRACT_NAME_AST(name_ast, ast->left);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     gen_name(CS, name_ast);
   }
   GEN_BEGIN_INDENT(up, 2);
 
-  gen_printf(CS, "\nSET");
+  gen_printf(CS, FMT("\nSET"));
   if (is_ast_columns_values(update_list)) {
     // UPDATE table_name SET ([opt_column_spec]) = ([from_shape])
     EXTRACT(column_spec, update_list->left);
     EXTRACT_ANY_NOTNULL(from_shape_or_insert_list, update_list->right);
 
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     gen_column_spec(CS, column_spec);
-    gen_printf(CS, " = ");
+    gen_printf(CS, FMT(" = "));
 
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_insert_list(CS, from_shape_or_insert_list);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   } else {
     // UPDATE table_name SET [update_list] FROM [query_parts]
     gen_update_list(CS, update_list);
   }
 
   if (query_parts) {
-    gen_printf(CS, "\nFROM ");
+    gen_printf(CS, FMT("\nFROM "));
     gen_query_parts(CS, query_parts);
   }
   if (opt_where) {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     gen_opt_where(CS, opt_where);
   }
   if (opt_orderby) {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     gen_opt_orderby(CS, opt_orderby);
   }
   if (opt_limit) {
@@ -3649,7 +3656,7 @@ static void gen_insert_list(CqlState* _Nonnull CS, ast_node *_Nullable ast) {
     }
 
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
     ast = ast->right;
   }
@@ -3657,26 +3664,26 @@ static void gen_insert_list(CqlState* _Nonnull CS, ast_node *_Nullable ast) {
 
 cql_noexport void gen_insert_type(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_insert_or_ignore(ast)) {
-    gen_printf(CS, "INSERT OR IGNORE");
+    gen_printf(CS, FMT("INSERT OR IGNORE"));
   }
   else if (is_ast_insert_or_replace(ast)) {
-    gen_printf(CS, "INSERT OR REPLACE");
+    gen_printf(CS, FMT("INSERT OR REPLACE"));
   }
   else if (is_ast_insert_replace(ast)) {
-    gen_printf(CS, "REPLACE");
+    gen_printf(CS, FMT("REPLACE"));
   }
   else if (is_ast_insert_or_abort(ast)) {
-    gen_printf(CS, "INSERT OR ABORT");
+    gen_printf(CS, FMT("INSERT OR ABORT"));
   }
   else if (is_ast_insert_or_fail(ast)) {
-    gen_printf(CS, "INSERT OR FAIL");
+    gen_printf(CS, FMT("INSERT OR FAIL"));
   }
   else if (is_ast_insert_or_rollback(ast)) {
-     gen_printf(CS, "INSERT OR ROLLBACK");
+     gen_printf(CS, FMT("INSERT OR ROLLBACK"));
   }
   else {
     Contract(is_ast_insert_normal(ast));
-    gen_printf(CS, "INSERT");
+    gen_printf(CS, FMT("INSERT"));
   }
 }
 
@@ -3689,16 +3696,16 @@ static void gen_insert_dummy_spec(CqlState* _Nonnull CS, ast_node *ast) {
     return;
   }
 
-  gen_printf(CS, " @DUMMY_SEED(");
+  gen_printf(CS, FMT(" @DUMMY_SEED("));
   gen_root_expr(CS, seed_expr);
   gen_printf(CS, ")");
 
   if (flags & INSERT_DUMMY_DEFAULTS) {
-    gen_printf(CS, " @DUMMY_DEFAULTS");
+    gen_printf(CS, FMT(" @DUMMY_DEFAULTS"));
   }
 
   if (flags & INSERT_DUMMY_NULLABLES) {
-    gen_printf(CS, " @DUMMY_NULLABLES");
+    gen_printf(CS, FMT(" @DUMMY_NULLABLES"));
   }
 }
 
@@ -3707,10 +3714,10 @@ static void gen_shape_def_base(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY(from_args, ast->right);
 
-  gen_printf(CS, "LIKE ");
+  gen_printf(CS, FMT("LIKE "));
   gen_name(CS, name_ast);
   if (from_args) {
-    gen_printf(CS, " ARGUMENTS");
+    gen_printf(CS, FMT(" ARGUMENTS"));
   }
 }
 
@@ -3719,7 +3726,7 @@ static void gen_shape_expr(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
 
   if (!ast->right) {
-    gen_printf(CS, "-");
+    gen_printf(CS, FMT("-"));
   }
   gen_name(CS, name_ast);
 }
@@ -3731,7 +3738,7 @@ static void gen_shape_exprs(CqlState* _Nonnull CS, ast_node *ast) {
     Contract(is_ast_shape_exprs(ast));
     gen_shape_expr(CS, ast->left);
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
     ast = ast->right;
   }
@@ -3743,16 +3750,16 @@ static void gen_shape_def(CqlState* _Nonnull CS, ast_node *ast) {
   gen_shape_def_base(CS, like);
 
   if (ast->right) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_shape_exprs(CS, ast->right);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
 static void gen_column_spec(CqlState* _Nonnull CS, ast_node *ast) {
   // allow null column_spec here so we don't have to test it everywhere
   if (ast) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     if (is_ast_shape_def(ast->left)) {
       gen_shape_def(CS, ast->left);
     }
@@ -3762,7 +3769,7 @@ static void gen_column_spec(CqlState* _Nonnull CS, ast_node *ast) {
         gen_name_list(CS, name_list);
       }
     }
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
@@ -3775,15 +3782,15 @@ static void gen_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(insert_dummy_spec, insert_type->left);
 
   gen_insert_type(CS, insert_type);
-  gen_printf(CS, " INTO ");
+  gen_printf(CS, FMT(" INTO "));
   gen_name(CS, name_ast);
 
   if (is_ast_expr_names(columns_values)) {
-    gen_printf(CS, " USING ");
+    gen_printf(CS, FMT(" USING "));
     gen_expr_names(CS, columns_values);
   }
   else if (is_select_stmt(columns_values)) {
-    gen_printf(CS, " USING ");
+    gen_printf(CS, FMT(" USING "));
     gen_select_stmt(CS, columns_values);
   }
   else if (is_ast_columns_values(columns_values)) {
@@ -3792,19 +3799,19 @@ static void gen_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     gen_column_spec(CS, column_spec);
 
     if (is_select_stmt(insert_list)) {
-      gen_printf(CS, "\n");
+      gen_printf(CS, FMT("\n"));
       GEN_BEGIN_INDENT(sel, 2);
         gen_select_stmt(CS, insert_list);
       GEN_END_INDENT(sel);
     }
     else if (is_ast_from_shape(insert_list)) {
-      gen_printf(CS, " ");
+      gen_printf(CS, FMT(" "));
       gen_from_shape(CS, insert_list);
     }
     else {
-      gen_printf(CS, " VALUES(");
+      gen_printf(CS, FMT(" VALUES("));
       gen_insert_list(CS, insert_list);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
 
     if (insert_dummy_spec) {
@@ -3814,7 +3821,7 @@ static void gen_insert_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   else {
     // INSERT [conflict resolution] INTO name DEFAULT VALUES
     Contract(is_ast_default_columns_values(columns_values));
-    gen_printf(CS, " DEFAULT VALUES");
+    gen_printf(CS, FMT(" DEFAULT VALUES"));
   }
 }
 
@@ -3839,7 +3846,7 @@ static void gen_expr_names(CqlState* _Nonnull CS, ast_node *ast) {
     gen_as_alias(CS, opt_as_alias);
 
     if (list->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -3849,9 +3856,9 @@ static void gen_fetch_cursor_from_blob_stmt(CqlState* _Nonnull CS, ast_node *ast
   EXTRACT_ANY_NOTNULL(cursor, ast->left);
   EXTRACT_ANY_NOTNULL(blob, ast->right);
 
-  gen_printf(CS, "FETCH ");
+  gen_printf(CS, FMT("FETCH "));
   gen_expr(CS, cursor, EXPR_PRI_ROOT);
-  gen_printf(CS, " FROM BLOB ");
+  gen_printf(CS, FMT(" FROM BLOB "));
   gen_expr(CS, blob, EXPR_PRI_ROOT);
 }
 
@@ -3860,9 +3867,9 @@ static void gen_set_blob_from_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) 
   EXTRACT_ANY_NOTNULL(blob, ast->left);
   EXTRACT_ANY_NOTNULL(cursor, ast->right);
 
-  gen_printf(CS, "SET ");
+  gen_printf(CS, FMT("SET "));
   gen_expr(CS, blob, EXPR_PRI_ROOT);
-  gen_printf(CS, " FROM CURSOR ");
+  gen_printf(CS, FMT(" FROM CURSOR "));
   gen_expr(CS, cursor, EXPR_PRI_ROOT);
 }
 
@@ -3874,24 +3881,24 @@ static void gen_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, name_columns_values->left);
   EXTRACT_ANY_NOTNULL(columns_values, name_columns_values->right);
 
-  gen_printf(CS, "FETCH %s", name);
+  gen_printf(CS, FMT("FETCH %s"), name);
 
   if (is_ast_expr_names(columns_values)) {
-    gen_printf(CS, " USING ");
+    gen_printf(CS, FMT(" USING "));
     gen_expr_names(CS, columns_values);
   } else {
     EXTRACT(column_spec, columns_values->left);
     gen_column_spec(CS, column_spec);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
 
     if (is_ast_from_shape(columns_values->right)) {
       gen_from_shape(CS, columns_values->right);
     }
     else {
       EXTRACT(insert_list, columns_values->right);
-      gen_printf(CS, "FROM VALUES(");
+      gen_printf(CS, FMT("FROM VALUES("));
       gen_insert_list(CS, insert_list);
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
     }
   }
 
@@ -3905,9 +3912,9 @@ static void gen_assign(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf(CS, "SET ");
+  gen_printf(CS, FMT("SET "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " := ");
+  gen_printf(CS, FMT(" := "));
   gen_root_expr(CS, expr);
 }
 
@@ -3916,9 +3923,9 @@ static void gen_let_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf(CS, "LET ");
+  gen_printf(CS, FMT("LET "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " := ");
+  gen_printf(CS, FMT(" := "));
   gen_root_expr(CS, expr);
 }
 
@@ -3927,21 +3934,21 @@ static void gen_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  gen_printf(CS, "CONST ");
+  gen_printf(CS, FMT("CONST "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " := ");
+  gen_printf(CS, FMT(" := "));
   gen_root_expr(CS, expr);
 }
 
 static void gen_opt_inout(CqlState* _Nonnull CS, ast_node *ast) {
   if (is_ast_in(ast)) {
-    gen_printf(CS, "IN ");
+    gen_printf(CS, FMT("IN "));
   }
   else if (is_ast_out(ast)) {
-    gen_printf(CS, "OUT ");
+    gen_printf(CS, FMT("OUT "));
   }
   else if (is_ast_inout(ast)) {
-    gen_printf(CS, "INOUT ");
+    gen_printf(CS, FMT("INOUT "));
   }
   else {
     Contract(!ast);
@@ -3957,7 +3964,7 @@ static void gen_normal_param(CqlState* _Nonnull CS, ast_node *ast) {
 
   gen_opt_inout(CS, opt_inout);
   gen_name(CS, name_ast);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
   gen_data_type(CS, data_type);
 }
 
@@ -3968,7 +3975,7 @@ static void gen_like_param(CqlState* _Nonnull CS, ast_node *ast) {
 
   if (param_detail->left) {
     EXTRACT_STRING(name, param_detail->left);
-    gen_printf(CS, "%s ", name);
+    gen_printf(CS, FMT("%s "), name);
   }
 
   gen_shape_def(CS, shape_def);
@@ -3996,7 +4003,7 @@ cql_noexport void gen_params(CqlState* _Nonnull CS, ast_node *ast) {
     gen_param(CS, param);
 
     if (cur->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -4008,15 +4015,15 @@ static void gen_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(stmt_list, proc_params_stmts->right);
 
-  gen_printf(CS, "PROC ");
+  gen_printf(CS, FMT("PROC "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " (");
+  gen_printf(CS, FMT(" ("));
   if (params) {
     gen_params(CS, params);
   }
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   gen_stmt_list(CS, stmt_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_declare_proc_from_create_proc(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4026,34 +4033,34 @@ static void gen_declare_proc_from_create_proc(CqlState* _Nonnull CS, ast_node *a
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT(params, proc_params_stmts->left);
 
-  gen_printf(CS, "DECLARE PROC %s (", name);
+  gen_printf(CS, FMT("DECLARE PROC %s ("), name);
   if (params) {
     gen_params(CS, params);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
   // if no SEM then we can't do the full declaration, do the best we can with just AST
 #else
   if (ast->sem) {
     if (has_out_stmt_result(ast)) {
-      gen_printf(CS, " OUT");
+      gen_printf(CS, FMT(" OUT"));
     }
 
     if (has_out_union_stmt_result(ast)) {
-      gen_printf(CS, " OUT UNION");
+      gen_printf(CS, FMT(" OUT UNION"));
     }
 
     if (is_struct(ast->sem->sem_type)) {
       sem_struct *sptr = ast->sem->sptr;
 
-      gen_printf(CS, " (");
+      gen_printf(CS, FMT(" ("));
       for (uint32_t i = 0; i < sptr->count; i++) {
         gen_sptr_name(CS, sptr, i);
-        gen_printf(CS, " ");
+        gen_printf(CS, FMT(" "));
 
         sem_t sem_type = sptr->semtypes[i];
-        gen_printf(CS, "%s", coretype_string(sem_type));
+        gen_printf(CS, FMT("%s"), coretype_string(sem_type));
 
         CSTR kind = sptr->kinds[i];
         if (kind) {
@@ -4065,22 +4072,22 @@ static void gen_declare_proc_from_create_proc(CqlState* _Nonnull CS, ast_node *a
         }
 
         if (sensitive_flag(sem_type)) {
-          gen_printf(CS, " @SENSITIVE");
+          gen_printf(CS, FMT(" @SENSITIVE"));
         }
 
         if (i + 1 < sptr->count) {
-          gen_printf(CS, ", ");
+          gen_printf(CS, FMT(", "));
         }
       }
-      gen_printf(CS, ")");
+      gen_printf(CS, FMT(")"));
 
       if ((has_out_stmt_result(ast) || has_out_union_stmt_result(ast)) && is_dml_proc(ast->sem->sem_type)) {
         // out [union] can be DML or not, so we have to specify
-        gen_printf(CS, " USING TRANSACTION");
+        gen_printf(CS, FMT(" USING TRANSACTION"));
       }
     }
     else if (is_dml_proc(ast->sem->sem_type)) {
-      gen_printf(CS, " USING TRANSACTION");
+      gen_printf(CS, FMT(" USING TRANSACTION"));
     }
   }
 #endif
@@ -4119,7 +4126,7 @@ static bool_t gen_found_set_kind(CqlState* _Nonnull CS, ast_node *ast, void *con
       gen_declare_proc_from_create_or_decl(CS, proc);
 
       CS->gen_output = CS->closure_output;
-      gen_printf(CS, "%s;\n", current.ptr);
+      gen_printf(CS, FMT("%s;\n"), current.ptr);
 
       CS->gen_output = gen_output_saved;
       CHARBUF_CLOSE(current);
@@ -4150,7 +4157,7 @@ cql_noexport void gen_declare_proc_closure(CqlState* _Nonnull CS, ast_node *ast,
     gen_declare_proc_from_create_proc(CS, ast);
 
     CS->gen_output = CS->closure_output;
-    gen_printf(CS, "%s;\n", current.ptr);
+    gen_printf(CS, FMT("%s;\n"), current.ptr);
   CHARBUF_CLOSE(current);
 
   // Make sure we're clean on exit -- mainly so that ASAN leak detection
@@ -4168,7 +4175,7 @@ static void gen_typed_name(CqlState* _Nonnull CS, ast_node *ast) {
 
   if (name) {
     gen_name(CS, name);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
 
   if (is_ast_shape_def(type)) {
@@ -4187,7 +4194,7 @@ void gen_typed_names(CqlState* _Nonnull CS, ast_node *ast) {
     gen_typed_name(CS, item->left);
 
     if (item->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
   }
 }
@@ -4196,7 +4203,7 @@ static void gen_declare_proc_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast)
   Contract(is_ast_declare_proc_no_check_stmt(ast));
   EXTRACT_ANY_NOTNULL(proc_name, ast->left);
   EXTRACT_STRING(name, proc_name);
-  gen_printf(CS, "DECLARE PROC %s NO CHECK", name);
+  gen_printf(CS, FMT("DECLARE PROC %s NO CHECK"), name);
 }
 
 cql_noexport void gen_declare_interface_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4205,11 +4212,11 @@ cql_noexport void gen_declare_interface_stmt(CqlState* _Nonnull CS, ast_node *as
   EXTRACT_NOTNULL(proc_params_stmts, ast->right);
   EXTRACT_NOTNULL(typed_names, proc_params_stmts->right);
 
-  gen_printf(CS, "DECLARE INTERFACE %s", name);
+  gen_printf(CS, FMT("DECLARE INTERFACE %s"), name);
 
-  gen_printf(CS, " (");
+  gen_printf(CS, FMT(" ("));
   gen_typed_names(CS, typed_names);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4221,25 +4228,25 @@ static void gen_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT(typed_names, proc_params_stmts->right);
 
-  gen_printf(CS, "DECLARE PROC %s (", name);
+  gen_printf(CS, FMT("DECLARE PROC %s ("), name);
   if (params) {
     gen_params(CS, params);
   }
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 
   if (type & PROC_FLAG_USES_OUT) {
-    gen_printf(CS, " OUT");
+    gen_printf(CS, FMT(" OUT"));
   }
 
   if (type & PROC_FLAG_USES_OUT_UNION) {
-    gen_printf(CS, " OUT UNION");
+    gen_printf(CS, FMT(" OUT UNION"));
   }
 
   if (typed_names) {
     Contract(type & PROC_FLAG_STRUCT_TYPE);
-    gen_printf(CS, " (");
+    gen_printf(CS, FMT(" ("));
     gen_typed_names(CS, typed_names);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 
   // we don't emit USING TRANSACTION unless it's needed
@@ -4251,7 +4258,7 @@ static void gen_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // out can be either, so emit it if needed
   if (type & (PROC_FLAG_USES_OUT | PROC_FLAG_USES_OUT_UNION)) {
-    gen_printf(CS, " USING TRANSACTION");
+    gen_printf(CS, FMT(" USING TRANSACTION"));
     return;
   }
 
@@ -4263,7 +4270,7 @@ static void gen_declare_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // it's not an OUT and it doesn't have a result but it does use DML
   // the only flag combo left is a basic dml proc.
   Contract(type == PROC_FLAG_USES_DML);
-  gen_printf(CS, " USING TRANSACTION");
+  gen_printf(CS, FMT(" USING TRANSACTION"));
 }
 
 cql_noexport void gen_declare_proc_from_create_or_decl(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4283,17 +4290,17 @@ static void gen_declare_select_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(params, func_params_return->left);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf(CS, "DECLARE SELECT FUNC %s (", name);
+  gen_printf(CS, FMT("DECLARE SELECT FUNC %s ("), name);
   if (params) {
     gen_params(CS, params);
   }
-  gen_printf(CS, ") ");
+  gen_printf(CS, FMT(") "));
 
   if (is_ast_typed_names(ret_data_type)) {
     // table valued function
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_typed_names(CS, ret_data_type);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
   else {
     // standard function
@@ -4307,13 +4314,13 @@ static void gen_declare_select_func_no_check_stmt(CqlState* _Nonnull CS, ast_nod
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf(CS, "DECLARE SELECT FUNC %s NO CHECK ", name);
+  gen_printf(CS, FMT("DECLARE SELECT FUNC %s NO CHECK "), name);
 
   if (is_ast_typed_names(ret_data_type)) {
     // table valued function
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_typed_names(CS, ret_data_type);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
   else {
     // standard function
@@ -4328,11 +4335,11 @@ static void gen_declare_func_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(params, func_params_return->left);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf(CS, "DECLARE FUNC %s (", name);
+  gen_printf(CS, FMT("DECLARE FUNC %s ("), name);
   if (params) {
     gen_params(CS, params);
   }
-  gen_printf(CS, ") ");
+  gen_printf(CS, FMT(") "));
 
   gen_data_type(CS, ret_data_type);
 }
@@ -4343,7 +4350,7 @@ static void gen_declare_func_no_check_stmt(CqlState* _Nonnull CS, ast_node *ast)
   EXTRACT_NOTNULL(func_params_return, ast->right);
   EXTRACT_ANY_NOTNULL(ret_data_type, func_params_return->right);
 
-  gen_printf(CS, "DECLARE FUNC %s NO CHECK ", name);
+  gen_printf(CS, FMT("DECLARE FUNC %s NO CHECK "), name);
 
   gen_data_type(CS, ret_data_type);
 }
@@ -4353,9 +4360,9 @@ static void gen_declare_vars_type(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NOTNULL(name_list, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
 
-  gen_printf(CS, "DECLARE ");
+  gen_printf(CS, FMT("DECLARE "));
   gen_name_list(CS, name_list);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
   gen_data_type(CS, data_type);
 }
 
@@ -4364,17 +4371,17 @@ static void gen_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(source, ast->right);
 
-  gen_printf(CS, "CURSOR %s FOR", name);
+  gen_printf(CS, FMT("CURSOR %s FOR"), name);
 
   if (is_select_stmt(source) || is_ast_call_stmt(source)) {
     // The two statement cases are unified
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     GEN_BEGIN_INDENT(cursor, 2);
       gen_one_stmt(CS, source);
     GEN_END_INDENT(cursor);
   }
   else {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     gen_root_expr(CS, source);
   }
 }
@@ -4384,7 +4391,7 @@ static void gen_declare_cursor_like_name(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(new_cursor_name, ast->left);
   EXTRACT_NOTNULL(shape_def, ast->right);
 
-  gen_printf(CS, "CURSOR %s ", new_cursor_name);
+  gen_printf(CS, FMT("CURSOR %s "), new_cursor_name);
   gen_shape_def(CS, shape_def);
 }
 
@@ -4393,7 +4400,7 @@ static void gen_declare_cursor_like_select(CqlState* _Nonnull CS, ast_node *ast)
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf(CS, "CURSOR %s LIKE ", name);
+  gen_printf(CS, FMT("CURSOR %s LIKE "), name);
   gen_one_stmt(CS, stmt);
 }
 
@@ -4402,9 +4409,9 @@ static void gen_declare_cursor_like_typed_names(CqlState* _Nonnull CS, ast_node 
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(typed_names, ast->right);
 
-  gen_printf(CS, "CURSOR %s LIKE (", name);
+  gen_printf(CS, FMT("CURSOR %s LIKE ("), name);
   gen_typed_names(CS, typed_names);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_declare_named_type(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4412,9 +4419,9 @@ static void gen_declare_named_type(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_ANY_NOTNULL(data_type, ast->right);
 
-  gen_printf(CS, "TYPE ");
+  gen_printf(CS, FMT("TYPE "));
   gen_name(CS, name_ast);
-  gen_printf(CS, " ");
+  gen_printf(CS, FMT(" "));
   gen_data_type(CS, data_type);
 }
 
@@ -4423,7 +4430,7 @@ static void gen_declare_value_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_ANY_NOTNULL(stmt, ast->right);
 
-  gen_printf(CS, "CURSOR %s FETCH FROM ", name);
+  gen_printf(CS, FMT("CURSOR %s FETCH FROM "), name);
   gen_one_stmt(CS, stmt);
 }
 
@@ -4431,70 +4438,70 @@ static void gen_declare_enum_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_enum_stmt(ast));
   EXTRACT_NOTNULL(typed_name, ast->left);
   EXTRACT_NOTNULL(enum_values, ast->right);
-  gen_printf(CS, "DECLARE ENUM ");
+  gen_printf(CS, FMT("DECLARE ENUM "));
   gen_typed_name(CS, typed_name);
-  gen_printf(CS, " (");
+  gen_printf(CS, FMT(" ("));
 
   while (enum_values) {
      EXTRACT_NOTNULL(enum_value, enum_values->left);
      EXTRACT_STRING(enum_name, enum_value->left);
      EXTRACT_ANY(expr, enum_value->right);
 
-     gen_printf(CS, "\n  %s", enum_name);
+     gen_printf(CS, FMT("\n  %s"), enum_name);
      if (expr) {
-       gen_printf(CS, " = ");
+       gen_printf(CS, FMT(" = "));
        gen_root_expr(CS, expr);
      }
 
      if (enum_values->right) {
-       gen_printf(CS, ",");
+       gen_printf(CS, FMT(","));
      }
 
      enum_values = enum_values->right;
   }
-  gen_printf(CS, "\n)");
+  gen_printf(CS, FMT("\n)"));
 }
 
 static void gen_declare_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_group_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(stmt_list, ast->right);
-  gen_printf(CS, "DECLARE GROUP %s\nBEGIN\n", name);
+  gen_printf(CS, FMT("DECLARE GROUP %s\nBEGIN\n"), name);
 
   while (stmt_list) {
      EXTRACT_ANY_NOTNULL(stmt, stmt_list->left);
-     gen_printf(CS, "  ");
+     gen_printf(CS, FMT("  "));
      gen_one_stmt(CS, stmt);
-     gen_printf(CS, ";\n");
+     gen_printf(CS, FMT(";\n"));
      stmt_list = stmt_list->right;
   }
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_declare_const_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_const_stmt(ast));
   EXTRACT_STRING(name, ast->left);
   EXTRACT_NOTNULL(const_values, ast->right);
-  gen_printf(CS, "DECLARE CONST GROUP %s (", name);
+  gen_printf(CS, FMT("DECLARE CONST GROUP %s ("), name);
 
   while (const_values) {
      EXTRACT_NOTNULL(const_value, const_values->left);
      EXTRACT_STRING(const_name, const_value->left);
      EXTRACT_ANY(expr, const_value->right);
 
-     gen_printf(CS, "\n  %s", const_name);
+     gen_printf(CS, FMT("\n  %s"), const_name);
      if (expr) {
-       gen_printf(CS, " = ");
+       gen_printf(CS, FMT(" = "));
        gen_root_expr(CS, expr);
      }
 
      if (const_values->right) {
-       gen_printf(CS, ",");
+       gen_printf(CS, FMT(","));
      }
 
      const_values = const_values->right;
   }
-  gen_printf(CS, "\n)");
+  gen_printf(CS, FMT("\n)"));
 }
 
 static void gen_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4502,9 +4509,9 @@ static void gen_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(var_name_ast, ast->left);
   EXTRACT_STRING(cursor_name, ast->right);
 
-  gen_printf(CS, "SET ");
+  gen_printf(CS, FMT("SET "));
   gen_name(CS, var_name_ast);
-  gen_printf(CS, " FROM CURSOR %s", cursor_name);
+  gen_printf(CS, FMT(" FROM CURSOR %s"), cursor_name);
 }
 
 static void gen_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4512,9 +4519,9 @@ static void gen_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT(name_list, ast->right);
 
-  gen_printf(CS, "FETCH %s", name);
+  gen_printf(CS, FMT("FETCH %s"), name);
   if (name_list) {
-    gen_printf(CS, " INTO ");
+    gen_printf(CS, FMT(" INTO "));
     gen_name_list(CS, name_list);
   }
 }
@@ -4528,29 +4535,29 @@ static void gen_switch_cases(CqlState* _Nonnull CS, ast_node *ast) {
         EXTRACT_NOTNULL(expr_list, connector->left);
         EXTRACT(stmt_list, connector->right);
 
-        gen_printf(CS, "  WHEN ");
+        gen_printf(CS, FMT("  WHEN "));
         gen_expr_list(CS, expr_list);
         if (stmt_list) {
-            gen_printf(CS, " THEN\n");
+            gen_printf(CS, FMT(" THEN\n"));
             GEN_BEGIN_INDENT(statement, 2);
               gen_stmt_list(CS, stmt_list);
             GEN_END_INDENT(statement);
         }
         else {
-          gen_printf(CS, " THEN NOTHING\n");
+          gen_printf(CS, FMT(" THEN NOTHING\n"));
         }
      }
      else {
         EXTRACT_NOTNULL(stmt_list, connector->right);
 
-        gen_printf(CS, "  ELSE\n");
+        gen_printf(CS, FMT("  ELSE\n"));
         GEN_BEGIN_INDENT(statement, 2);
           gen_stmt_list(CS, stmt_list);
         GEN_END_INDENT(statement);
      }
      ast = ast->right;
   }
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4563,13 +4570,13 @@ static void gen_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // SWITCH [expr] [switch_body] END
   // SWITCH [expr] ALL VALUES [switch_body] END
 
-  gen_printf(CS, "SWITCH ");
+  gen_printf(CS, FMT("SWITCH "));
   gen_root_expr(CS, expr);
 
   if (all_values) {
-    gen_printf(CS, " ALL VALUES");
+    gen_printf(CS, FMT(" ALL VALUES"));
   }
-  gen_printf(CS, "\n");
+  gen_printf(CS, FMT("\n"));
 
   gen_switch_cases(CS, switch_case);
 }
@@ -4581,12 +4588,12 @@ static void gen_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // WHILE [expr] BEGIN [stmt_list] END
 
-  gen_printf(CS, "WHILE ");
+  gen_printf(CS, FMT("WHILE "));
   gen_root_expr(CS, expr);
 
-  gen_printf(CS, "\nBEGIN\n");
+  gen_printf(CS, FMT("\nBEGIN\n"));
   gen_stmt_list(CS, stmt_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4596,11 +4603,11 @@ static void gen_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
 
-  gen_printf(CS, "LOOP ");
+  gen_printf(CS, FMT("LOOP "));
   gen_fetch_stmt(CS, fetch_stmt);
-  gen_printf(CS, "\nBEGIN\n");
+  gen_printf(CS, FMT("\nBEGIN\n"));
   gen_stmt_list(CS, stmt_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4608,19 +4615,19 @@ static void gen_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT(arg_list, ast->right);
 
-  gen_printf(CS, "CALL ");
+  gen_printf(CS, FMT("CALL "));
   gen_name(CS, name_ast);
-  gen_printf(CS, "(");
+  gen_printf(CS, FMT("("));
   if (arg_list) {
     gen_arg_list(CS, arg_list);
   }
 
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_declare_out_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NOTNULL(call_stmt, ast->left);
-  gen_printf(CS, "DECLARE OUT ");
+  gen_printf(CS, FMT("DECLARE OUT "));
   gen_call_stmt(CS, call_stmt);
 }
 
@@ -4630,67 +4637,67 @@ static void gen_fetch_call_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(cursor_name, ast->left);
   EXTRACT_NOTNULL(call_stmt, ast->right);
 
-  gen_printf(CS, "FETCH %s FROM ", cursor_name);
+  gen_printf(CS, FMT("FETCH %s FROM "), cursor_name);
   gen_call_stmt(CS, call_stmt);
 }
 
 static void gen_continue_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
-  gen_printf(CS, "CONTINUE");
+  gen_printf(CS, FMT("CONTINUE"));
 }
 
 static void gen_leave_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
-  gen_printf(CS, "LEAVE");
+  gen_printf(CS, FMT("LEAVE"));
 }
 
 static void gen_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_return_stmt(ast));
 
-  gen_printf(CS, "RETURN");
+  gen_printf(CS, FMT("RETURN"));
 }
 
 static void gen_rollback_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_return_stmt(ast));
 
-  gen_printf(CS, "ROLLBACK RETURN");
+  gen_printf(CS, FMT("ROLLBACK RETURN"));
 }
 
 static void gen_commit_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_return_stmt(ast));
 
-  gen_printf(CS, "COMMIT RETURN");
+  gen_printf(CS, FMT("COMMIT RETURN"));
 }
 
 static void gen_proc_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_proc_savepoint_stmt(ast));
   EXTRACT(stmt_list, ast->left);
 
-  gen_printf(CS, "PROC SAVEPOINT");
-  gen_printf(CS, "\nBEGIN\n");
+  gen_printf(CS, FMT("PROC SAVEPOINT"));
+  gen_printf(CS, FMT("\nBEGIN\n"));
   gen_stmt_list(CS, stmt_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
-  gen_printf(CS, "THROW");
+  gen_printf(CS, FMT("THROW"));
 }
 
 static void gen_begin_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_begin_trans_stmt(ast));
   EXTRACT_OPTION(mode, ast->left);
 
-  gen_printf(CS, "BEGIN");
+  gen_printf(CS, FMT("BEGIN"));
 
   if (mode == TRANS_IMMEDIATE) {
-    gen_printf(CS, " IMMEDIATE");
+    gen_printf(CS, FMT(" IMMEDIATE"));
   }
   else if (mode == TRANS_EXCLUSIVE) {
-    gen_printf(CS, " EXCLUSIVE");
+    gen_printf(CS, FMT(" EXCLUSIVE"));
   }
   else {
     // this is the default, and only remaining case, no additional output needed
@@ -4701,17 +4708,17 @@ static void gen_begin_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 static void gen_commit_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_commit_trans_stmt(ast));
 
-  gen_printf(CS, "COMMIT");
+  gen_printf(CS, FMT("COMMIT"));
 }
 
 static void gen_rollback_trans_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_rollback_trans_stmt(ast));
 
-  gen_printf(CS, "ROLLBACK");
+  gen_printf(CS, FMT("ROLLBACK"));
 
   if (ast->left) {
     EXTRACT_STRING(name, ast->left);
-    gen_printf(CS, " TO %s", name);
+    gen_printf(CS, FMT(" TO %s"), name);
   }
 }
 
@@ -4719,14 +4726,14 @@ static void gen_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_savepoint_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "SAVEPOINT %s", name);
+  gen_printf(CS, FMT("SAVEPOINT %s"), name);
 }
 
 static void gen_release_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_release_savepoint_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "RELEASE %s", name);
+  gen_printf(CS, FMT("RELEASE %s"), name);
 }
 
 static void gen_trycatch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4734,32 +4741,32 @@ static void gen_trycatch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NAMED(try_list, stmt_list, ast->left);
   EXTRACT_NAMED(catch_list, stmt_list, ast->right);
 
-  gen_printf(CS, "TRY\n");
+  gen_printf(CS, FMT("TRY\n"));
   gen_stmt_list(CS, try_list);
-  gen_printf(CS, "CATCH\n");
+  gen_printf(CS, FMT("CATCH\n"));
   gen_stmt_list(CS, catch_list);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_close_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_close_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "CLOSE %s", name);
+  gen_printf(CS, FMT("CLOSE %s"), name);
 }
 
 static void gen_out_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "OUT %s", name);
+  gen_printf(CS, FMT("OUT %s"), name);
 }
 
 static void gen_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_out_union_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "OUT UNION %s", name);
+  gen_printf(CS, FMT("OUT UNION %s"), name);
 }
 
 static void gen_child_results(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4780,18 +4787,18 @@ static void gen_child_results(CqlState* _Nonnull CS, ast_node *ast) {
       child_column_name = name;
     }
 
-    gen_printf(CS, "\n  ");
+    gen_printf(CS, FMT("\n  "));
     gen_call_stmt(CS, call_stmt);
-    gen_printf(CS, " USING (");
+    gen_printf(CS, FMT(" USING ("));
     gen_name_list(CS, name_list);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
 
     if (child_column_name) {
-      gen_printf(CS, " AS %s", child_column_name);
+      gen_printf(CS, FMT(" AS %s"), child_column_name);
     }
 
     if (item->right) {
-      gen_printf(CS, " AND");
+      gen_printf(CS, FMT(" AND"));
     }
 
     item = item->right;
@@ -4803,9 +4810,9 @@ static void gen_out_union_parent_child_stmt(CqlState* _Nonnull CS, ast_node *ast
   EXTRACT_NOTNULL(call_stmt, ast->left);
   EXTRACT_NOTNULL(child_results, ast->right);
 
-  gen_printf(CS, "OUT UNION ");
+  gen_printf(CS, FMT("OUT UNION "));
   gen_call_stmt(CS, call_stmt);
-  gen_printf(CS, " JOIN ");
+  gen_printf(CS, FMT(" JOIN "));
   gen_child_results(CS, child_results);
 }
 
@@ -4813,27 +4820,27 @@ static void gen_echo_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_echo_stmt(ast));
   EXTRACT_STRING(rt_name, ast->left);
 
-  gen_printf(CS, "@ECHO %s, ", rt_name);
+  gen_printf(CS, FMT("@ECHO %s, "), rt_name);
   gen_root_expr(CS, ast->right);  // emit the quoted literal
 }
 
 static void gen_schema_upgrade_script_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_upgrade_script_stmt(ast));
 
-  gen_printf(CS, "@SCHEMA_UPGRADE_SCRIPT");
+  gen_printf(CS, FMT("@SCHEMA_UPGRADE_SCRIPT"));
 }
 
 static void gen_schema_upgrade_version_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_schema_upgrade_version_stmt(ast));
   EXTRACT_OPTION(vers, ast->left);
 
-  gen_printf(CS, "@SCHEMA_UPGRADE_VERSION (%d)", vers);
+  gen_printf(CS, FMT("@SCHEMA_UPGRADE_VERSION (%d)"), vers);
 }
 
 static void gen_previous_schema_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_previous_schema_stmt(ast));
 
-  gen_printf(CS, "@PREVIOUS_SCHEMA");
+  gen_printf(CS, FMT("@PREVIOUS_SCHEMA"));
 }
 
 static void gen_enforcement_options(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4841,126 +4848,126 @@ static void gen_enforcement_options(CqlState* _Nonnull CS, ast_node *ast) {
 
   switch (option) {
     case ENFORCE_CAST:
-      gen_printf(CS, "CAST");
+      gen_printf(CS, FMT("CAST"));
       break;
 
     case ENFORCE_STRICT_JOIN:
-      gen_printf(CS, "JOIN");
+      gen_printf(CS, FMT("JOIN"));
       break;
 
     case ENFORCE_FK_ON_UPDATE:
-      gen_printf(CS, "FOREIGN KEY ON UPDATE");
+      gen_printf(CS, FMT("FOREIGN KEY ON UPDATE"));
       break;
 
     case ENFORCE_UPSERT_STMT:
-      gen_printf(CS, "UPSERT STATEMENT");
+      gen_printf(CS, FMT("UPSERT STATEMENT"));
       break;
 
     case ENFORCE_WINDOW_FUNC:
-      gen_printf(CS, "WINDOW FUNCTION");
+      gen_printf(CS, FMT("WINDOW FUNCTION"));
       break;
 
     case ENFORCE_WITHOUT_ROWID:
-      gen_printf(CS, "WITHOUT ROWID");
+      gen_printf(CS, FMT("WITHOUT ROWID"));
       break;
 
     case ENFORCE_TRANSACTION:
-      gen_printf(CS, "TRANSACTION");
+      gen_printf(CS, FMT("TRANSACTION"));
       break;
 
     case ENFORCE_SELECT_IF_NOTHING:
-      gen_printf(CS, "SELECT IF NOTHING");
+      gen_printf(CS, FMT("SELECT IF NOTHING"));
       break;
 
     case ENFORCE_INSERT_SELECT:
-      gen_printf(CS, "INSERT SELECT");
+      gen_printf(CS, FMT("INSERT SELECT"));
       break;
 
     case ENFORCE_TABLE_FUNCTION:
-      gen_printf(CS, "TABLE FUNCTION");
+      gen_printf(CS, FMT("TABLE FUNCTION"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_COLUMN:
-      gen_printf(CS, "ENCODE CONTEXT COLUMN");
+      gen_printf(CS, FMT("ENCODE CONTEXT COLUMN"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_INTEGER:
-      gen_printf(CS, "ENCODE CONTEXT TYPE INTEGER");
+      gen_printf(CS, FMT("ENCODE CONTEXT TYPE INTEGER"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_LONG_INTEGER:
-      gen_printf(CS, "ENCODE CONTEXT TYPE LONG_INTEGER");
+      gen_printf(CS, FMT("ENCODE CONTEXT TYPE LONG_INTEGER"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_REAL:
-      gen_printf(CS, "ENCODE CONTEXT TYPE REAL");
+      gen_printf(CS, FMT("ENCODE CONTEXT TYPE REAL"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BOOL:
-      gen_printf(CS, "ENCODE CONTEXT TYPE BOOL");
+      gen_printf(CS, FMT("ENCODE CONTEXT TYPE BOOL"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_TEXT:
-      gen_printf(CS, "ENCODE CONTEXT TYPE TEXT");
+      gen_printf(CS, FMT("ENCODE CONTEXT TYPE TEXT"));
       break;
 
     case ENFORCE_ENCODE_CONTEXT_TYPE_BLOB:
-      gen_printf(CS, "ENCODE CONTEXT TYPE BLOB");
+      gen_printf(CS, FMT("ENCODE CONTEXT TYPE BLOB"));
       break;
 
     case ENFORCE_IS_TRUE:
-      gen_printf(CS, "IS TRUE");
+      gen_printf(CS, FMT("IS TRUE"));
       break;
 
     case ENFORCE_SIGN_FUNCTION:
-      gen_printf(CS, "SIGN FUNCTION");
+      gen_printf(CS, FMT("SIGN FUNCTION"));
       break;
 
     case ENFORCE_CURSOR_HAS_ROW:
-      gen_printf(CS, "CURSOR HAS ROW");
+      gen_printf(CS, FMT("CURSOR HAS ROW"));
       break;
 
     case ENFORCE_UPDATE_FROM:
-      gen_printf(CS, "UPDATE FROM");
+      gen_printf(CS, FMT("UPDATE FROM"));
       break;
 
     case ENFORCE_AND_OR_NOT_NULL_CHECK:
-      gen_printf(CS, "AND OR NOT NULL CHECK");
+      gen_printf(CS, FMT("AND OR NOT NULL CHECK"));
       break;
 
     default:
       // this is all that's left
       Contract(option == ENFORCE_FK_ON_DELETE);
-      gen_printf(CS, "FOREIGN KEY ON DELETE");
+      gen_printf(CS, FMT("FOREIGN KEY ON DELETE"));
       break;
   }
 }
 
 static void gen_enforce_strict_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_strict_stmt(ast));
-  gen_printf(CS, "@ENFORCE_STRICT ");
+  gen_printf(CS, FMT("@ENFORCE_STRICT "));
   gen_enforcement_options(CS, ast->left);
 }
 
 static void gen_enforce_normal_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_normal_stmt(ast));
-  gen_printf(CS, "@ENFORCE_NORMAL ");
+  gen_printf(CS, FMT("@ENFORCE_NORMAL "));
   gen_enforcement_options(CS, ast->left);
 }
 
 static void gen_enforce_reset_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_reset_stmt(ast));
-  gen_printf(CS, "@ENFORCE_RESET");
+  gen_printf(CS, FMT("@ENFORCE_RESET"));
 }
 
 static void gen_enforce_push_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_push_stmt(ast));
-  gen_printf(CS, "@ENFORCE_PUSH");
+  gen_printf(CS, FMT("@ENFORCE_PUSH"));
 }
 
 static void gen_enforce_pop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_enforce_pop_stmt(ast));
-  gen_printf(CS, "@ENFORCE_POP");
+  gen_printf(CS, FMT("@ENFORCE_POP"));
 }
 
 static void gen_region_spec(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4970,7 +4977,7 @@ static void gen_region_spec(CqlState* _Nonnull CS, ast_node *ast) {
 
   gen_name(CS, ast->left);
   if (is_private) {
-    gen_printf(CS, " PRIVATE");
+    gen_printf(CS, FMT(" PRIVATE"));
   }
 }
 
@@ -4979,7 +4986,7 @@ static void gen_region_list(CqlState* _Nonnull CS, ast_node *ast) {
   while (ast) {
     gen_region_spec(CS, ast->left);
     if (ast->right) {
-      gen_printf(CS, ", ");
+      gen_printf(CS, FMT(", "));
     }
     ast = ast->right;
   }
@@ -4987,33 +4994,33 @@ static void gen_region_list(CqlState* _Nonnull CS, ast_node *ast) {
 
 static void gen_declare_deployable_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_deployable_region_stmt(ast));
-  gen_printf(CS, "@DECLARE_DEPLOYABLE_REGION ");
+  gen_printf(CS, FMT("@DECLARE_DEPLOYABLE_REGION "));
   gen_name(CS, ast->left);
   if (ast->right) {
-    gen_printf(CS, " USING ");
+    gen_printf(CS, FMT(" USING "));
     gen_region_list(CS, ast->right);
   }
 }
 
 static void gen_declare_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_declare_schema_region_stmt(ast));
-  gen_printf(CS, "@DECLARE_SCHEMA_REGION ");
+  gen_printf(CS, FMT("@DECLARE_SCHEMA_REGION "));
   gen_name(CS, ast->left);
   if (ast->right) {
-    gen_printf(CS, " USING ");
+    gen_printf(CS, FMT(" USING "));
     gen_region_list(CS, ast->right);
   }
 }
 
 static void gen_begin_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_begin_schema_region_stmt(ast));
-  gen_printf(CS, "@BEGIN_SCHEMA_REGION ");
+  gen_printf(CS, FMT("@BEGIN_SCHEMA_REGION "));
   gen_name(CS, ast->left);
 }
 
 static void gen_end_schema_region_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_end_schema_region_stmt(ast));
-  gen_printf(CS, "@END_SCHEMA_REGION");
+  gen_printf(CS, FMT("@END_SCHEMA_REGION"));
 }
 
 static void gen_schema_unsub_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5021,9 +5028,9 @@ static void gen_schema_unsub_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NOTNULL(version_annotation, ast->left);
   EXTRACT_NAME_AST(name_ast, version_annotation->right);
 
-  gen_printf(CS, "@UNSUB(");
+  gen_printf(CS, FMT("@UNSUB("));
   gen_name(CS, name_ast);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_schema_ad_hoc_migration_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5035,13 +5042,13 @@ static void gen_schema_ad_hoc_migration_stmt(CqlState* _Nonnull CS, ast_node *as
   if (r) {
     EXTRACT_STRING(group, l);
     EXTRACT_STRING(proc, r);
-    gen_printf(CS, "@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE(");
-    gen_printf(CS, "%s, %s)", group, proc);
+    gen_printf(CS, FMT("@SCHEMA_AD_HOC_MIGRATION FOR @RECREATE("));
+    gen_printf(CS, FMT("%s, %s)"), group, proc);
   }
   else {
-    gen_printf(CS, "@SCHEMA_AD_HOC_MIGRATION(");
+    gen_printf(CS, FMT("@SCHEMA_AD_HOC_MIGRATION("));
     gen_version_and_proc(CS, l);
-    gen_printf(CS, ")");
+    gen_printf(CS, FMT(")"));
   }
 }
 
@@ -5049,9 +5056,9 @@ static void gen_emit_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_group_stmt(ast));
   EXTRACT(name_list, ast->left);
 
-  gen_printf(CS, "@EMIT_GROUP");
+  gen_printf(CS, FMT("@EMIT_GROUP"));
   if (name_list) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     gen_name_list(CS, name_list);
   }
 }
@@ -5061,9 +5068,9 @@ static void gen_emit_enums_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_enums_stmt(ast));
   EXTRACT(name_list, ast->left);
 
-  gen_printf(CS, "@EMIT_ENUMS");
+  gen_printf(CS, FMT("@EMIT_ENUMS"));
   if (name_list) {
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
     gen_name_list(CS, name_list);
   }
 }
@@ -5072,7 +5079,7 @@ static void gen_emit_constants_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_emit_constants_stmt(ast));
   EXTRACT_NOTNULL(name_list, ast->left);
 
-  gen_printf(CS, "@EMIT_CONSTANTS ");
+  gen_printf(CS, FMT("@EMIT_CONSTANTS "));
   gen_name_list(CS, name_list);
 }
 
@@ -5081,16 +5088,16 @@ static void gen_conflict_target(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(indexed_columns, ast->left);
   EXTRACT(opt_where, ast->right);
 
-  gen_printf(CS, "\nON CONFLICT ");
+  gen_printf(CS, FMT("\nON CONFLICT "));
   if (indexed_columns) {
-    gen_printf(CS, "(");
+    gen_printf(CS, FMT("("));
     gen_indexed_columns(CS, indexed_columns);
-    gen_printf(CS, ") ");
+    gen_printf(CS, FMT(") "));
   }
   if (opt_where) {
-    gen_printf(CS, "\n");
+    gen_printf(CS, FMT("\n"));
     gen_opt_where(CS, opt_where);
-    gen_printf(CS, " ");
+    gen_printf(CS, FMT(" "));
   }
 }
 
@@ -5100,11 +5107,11 @@ static void gen_upsert_update(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT(update_stmt, ast->right);
 
   gen_conflict_target(CS, conflict_target);
-  gen_printf(CS, "DO ");
+  gen_printf(CS, FMT("DO "));
   if (update_stmt) {
     gen_update_stmt(CS, update_stmt);
   } else {
-    gen_printf(CS, "NOTHING");
+    gen_printf(CS, FMT("NOTHING"));
   }
 }
 
@@ -5131,14 +5138,14 @@ static void gen_blob_get_key_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_key_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "@BLOB_GET_KEY_TYPE %s", name);
+  gen_printf(CS, FMT("@BLOB_GET_KEY_TYPE %s"), name);
 }
 
 static void gen_blob_get_val_type_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_blob_get_val_type_stmt(ast));
   EXTRACT_STRING(name, ast->left);
 
-  gen_printf(CS, "@BLOB_GET_VAL_TYPE %s", name);
+  gen_printf(CS, FMT("@BLOB_GET_VAL_TYPE %s"), name);
 }
 
 static void gen_blob_get_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5146,7 +5153,7 @@ static void gen_blob_get_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  gen_printf(CS, "@BLOB_GET_KEY %s%s", name, offset ? " OFFSET" : "");
+  gen_printf(CS, FMT("@BLOB_GET_KEY %s%s"), name, offset ? " OFFSET" : "");
 }
 
 static void gen_blob_get_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5154,7 +5161,7 @@ static void gen_blob_get_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  gen_printf(CS, "@BLOB_GET_VAL %s%s", name, offset ? " OFFSET" : "");
+  gen_printf(CS, FMT("@BLOB_GET_VAL %s%s"), name, offset ? " OFFSET" : "");
 }
 
 static void gen_blob_create_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5162,7 +5169,7 @@ static void gen_blob_create_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  gen_printf(CS, "@BLOB_CREATE_KEY %s%s", name, offset ? " OFFSET" : "");
+  gen_printf(CS, FMT("@BLOB_CREATE_KEY %s%s"), name, offset ? " OFFSET" : "");
 }
 
 static void gen_blob_create_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5170,7 +5177,7 @@ static void gen_blob_create_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  gen_printf(CS, "@BLOB_CREATE_VAL %s%s", name, offset ? " OFFSET" : "");
+  gen_printf(CS, FMT("@BLOB_CREATE_VAL %s%s"), name, offset ? " OFFSET" : "");
 }
 
 static void gen_blob_update_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5178,7 +5185,7 @@ static void gen_blob_update_key_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  gen_printf(CS, "@BLOB_UPDATE_KEY %s%s", name, offset ? " OFFSET" : "");
+  gen_printf(CS, FMT("@BLOB_UPDATE_KEY %s%s"), name, offset ? " OFFSET" : "");
 }
 
 static void gen_blob_update_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5186,12 +5193,12 @@ static void gen_blob_update_val_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(name, ast->left);
   EXTRACT_OPTION(offset, ast->right);
 
-  gen_printf(CS, "@BLOB_UPDATE_VAL %s%s", name, offset ? " OFFSET" : "");
+  gen_printf(CS, FMT("@BLOB_UPDATE_VAL %s%s"), name, offset ? " OFFSET" : "");
 }
 
 static void gen_keep_table_name_in_aliases_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_keep_table_name_in_aliases_stmt(ast));
-  gen_printf(CS, "@KEEP_TABLE_NAME_IN_ALIASES");
+  gen_printf(CS, FMT("@KEEP_TABLE_NAME_IN_ALIASES"));
 }
 
 static void gen_explain_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5199,11 +5206,11 @@ static void gen_explain_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_OPTION(query_plan, ast->left);
   EXTRACT_ANY_NOTNULL(stmt_target, ast->right);
 
-  gen_printf(CS, "EXPLAIN");
+  gen_printf(CS, FMT("EXPLAIN"));
   if (query_plan == EXPLAIN_QUERY_PLAN) {
-    gen_printf(CS, " QUERY PLAN");
+    gen_printf(CS, FMT(" QUERY PLAN"));
   }
-  gen_printf(CS, "\n");
+  gen_printf(CS, FMT("\n"));
   gen_one_stmt(CS, stmt_target);
 }
 
@@ -5211,7 +5218,7 @@ static void gen_macro_formal(CqlState* _Nonnull CS, ast_node *macro_formal) {
   Contract(is_ast_macro_formal(macro_formal));
   EXTRACT_STRING(l, macro_formal->left);
   EXTRACT_STRING(r, macro_formal->right);
-  gen_printf(CS, "%s! %s", l, r);
+  gen_printf(CS, FMT("%s! %s"), l, r);
 }
 
 static void gen_macro_formals(CqlState* _Nonnull CS, ast_node *macro_formals) {
@@ -5219,7 +5226,7 @@ static void gen_macro_formals(CqlState* _Nonnull CS, ast_node *macro_formals) {
      Contract(is_ast_macro_formals(macro_formals));
      gen_macro_formal(CS, macro_formals->left);
      if (macro_formals->right) {
-       gen_printf(CS, ", ");
+       gen_printf(CS, FMT(", "));
      }
   }
 }
@@ -5230,13 +5237,13 @@ static void gen_expr_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_formals->left);
 
-  gen_printf(CS, "@MACRO(EXPR) %s!(", name);
+  gen_printf(CS, FMT("@MACRO(EXPR) %s!("), name);
   gen_macro_formals(CS, macro_name_formals->right);
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_root_expr(CS, body);
   GEN_END_INDENT(body_indent);
-  gen_printf(CS, "\nEND");
+  gen_printf(CS, FMT("\nEND"));
 }
 
 static void gen_stmt_list_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5245,11 +5252,11 @@ static void gen_stmt_list_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_formals->left);
 
-  gen_printf(CS, "@MACRO(STMT_LIST) %s!(", name);
+  gen_printf(CS, FMT("@MACRO(STMT_LIST) %s!("), name);
   gen_macro_formals(CS, macro_name_formals->right);
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   gen_stmt_list(CS, body);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_select_core_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5258,13 +5265,13 @@ static void gen_select_core_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_formals->left);
 
-  gen_printf(CS, "@MACRO(SELECT_CORE) %s!(", name);
+  gen_printf(CS, FMT("@MACRO(SELECT_CORE) %s!("), name);
   gen_macro_formals(CS, macro_name_formals->right);
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_select_core_list(CS, body);
   GEN_END_INDENT(body_indent);
-  gen_printf(CS, "\nEND");
+  gen_printf(CS, FMT("\nEND"));
 }
 
 static void gen_select_expr_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5273,13 +5280,13 @@ static void gen_select_expr_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_formals->left);
 
-  gen_printf(CS, "@MACRO(SELECT_EXPR) %s!(", name);
+  gen_printf(CS, FMT("@MACRO(SELECT_EXPR) %s!("), name);
   gen_macro_formals(CS, macro_name_formals->right);
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_select_expr_list(CS, body);
   GEN_END_INDENT(body_indent);
-  gen_printf(CS, "\nEND");
+  gen_printf(CS, FMT("\nEND"));
 }
 
 static void gen_query_parts_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5288,13 +5295,13 @@ static void gen_query_parts_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_formals->left);
 
-  gen_printf(CS, "@MACRO(QUERY_PARTS) %s!(", name);
+  gen_printf(CS, FMT("@MACRO(QUERY_PARTS) %s!("), name);
   gen_macro_formals(CS, macro_name_formals->right);
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_query_parts(CS, body);
   GEN_END_INDENT(body_indent);
-  gen_printf(CS, "\nEND");
+  gen_printf(CS, FMT("\nEND"));
 }
 
 static void gen_cte_tables_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
@@ -5303,27 +5310,27 @@ static void gen_cte_tables_macro_def(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(body, ast->right);
   EXTRACT_STRING(name, macro_name_formals->left);
 
-  gen_printf(CS, "@MACRO(CTE_TABLES) %s!(", name);
+  gen_printf(CS, FMT("@MACRO(CTE_TABLES) %s!("), name);
   gen_macro_formals(CS, macro_name_formals->right);
-  gen_printf(CS, ")\nBEGIN\n");
+  gen_printf(CS, FMT(")\nBEGIN\n"));
   GEN_BEGIN_INDENT(body_indent, 2);
     gen_cte_tables(CS, body, "");
   GEN_END_INDENT(body_indent);
-  gen_printf(CS, "END");
+  gen_printf(CS, FMT("END"));
 }
 
 static void gen_stmt_list_macro_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_stmt_list_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s(", name);
+  gen_printf(CS, FMT("%s("), name);
   gen_macro_args(CS, ast->right);
-  gen_printf(CS, ")");
+  gen_printf(CS, FMT(")"));
 }
 
 static void gen_stmt_list_macro_arg_ref(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_stmt_list_macro_arg_ref(ast));
   EXTRACT_STRING(name, ast->left);
-  gen_printf(CS, "%s", name);
+  gen_printf(CS, FMT("%s"), name);
 }
 
 //cql_data_defn( int32_t gen_stmt_level );
@@ -5351,7 +5358,7 @@ static void gen_stmt_list(CqlState* _Nonnull CS, ast_node *root) {
     }
 
     if (CS->gen_stmt_level == 1 && !first_stmt) {
-      gen_printf(CS, "\n");
+      gen_printf(CS, FMT("\n"));
     }
 
     first_stmt = false;
@@ -5362,10 +5369,10 @@ static void gen_stmt_list(CqlState* _Nonnull CS, ast_node *root) {
     gen_one_stmt(CS, stmt);
 
     if (CS->gen_stmt_level == 0 && semi->right == NULL) {
-      gen_printf(CS, ";");
+      gen_printf(CS, FMT(";"));
     }
     else {
-      gen_printf(CS, ";\n");
+      gen_printf(CS, FMT(";\n"));
     }
   }
 

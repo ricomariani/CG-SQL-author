@@ -32,6 +32,13 @@ cql_noexport void cg_lua_cleanup(CS) {}
 #include "cql.lex.h"
 #include "cql_state.h"
 
+#undef FMT
+#ifdef FMT_DEBUG
+#define FMT(x) "(_l%d_)" x, __LINE__
+#else
+#define FMT(x) x
+#endif
+
 // relevant LUA binding order
 #define LUA_EXPR_PRI_ROOT -999
 #define LUA_EXPR_PRI_ASSIGN 0
@@ -210,14 +217,14 @@ static CSTR lua_current_proc_name(CqlState* _Nonnull CS) {
 
 // generate an error if the given expression is true (note this drives tracing)
 static void cg_lua_error_on_expr(CqlState* _Nonnull CS, CSTR expr) {
-  bprintf(CS->cg_main_output, "if %s then cql_error_trace(_rc_, _db_); goto %s; end\n", expr, CS->cg_lua.error_target);
+  bprintf(CS->cg_main_output, FMT("if %s then cql_error_trace(_rc_, _db_); goto %s; end\n"), expr, CS->cg_lua.error_target);
   CS->cg_lua.error_target_used = true;
 }
 
 // generate an error if the return code is not the required value (helper for common case)
 static void cg_lua_error_on_rc_notequal(CqlState* _Nonnull CS, CSTR required) {
   CHARBUF_OPEN(tmp);
-  bprintf(&tmp, "_rc_ ~= %s", required);
+  bprintf(&tmp, FMT("_rc_ ~= %s"), required);
   cg_lua_error_on_expr(CS, tmp.ptr);
   CHARBUF_CLOSE(tmp);
 }
@@ -253,18 +260,18 @@ static bool_t lua_needs_paren(ast_node *ast, int32_t pri_new, int32_t pri) {
 // e.g. cql_to_num(true) and cql_to_num(false) are very common
 static void cg_lua_emit_to_num(CqlState* _Nonnull CS, charbuf *output, CSTR input) {
   if (!strcmp("true", input)) {
-    bprintf(output, "1");
+    bprintf(output, FMT("1"));
     return;
   }
   if (!strcmp("false", input)) {
-    bprintf(output, "0");
+    bprintf(output, FMT("0"));
     return;
   }
   if (!strcmp("nil", input)) {
-    bprintf(output, "nil");
+    bprintf(output, FMT("nil"));
     return;
   }
-  bprintf(output, "cql_to_num(%s)", input);
+  bprintf(output, FMT("cql_to_num(%s)"), input);
 }
 
 // converts a boolean into a number if necessary
@@ -272,7 +279,7 @@ static void cg_lua_emit_to_num(CqlState* _Nonnull CS, charbuf *output, CSTR inpu
 static void cg_lua_to_num(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value) {
   if (is_bool(sem_type)) {
      CHARBUF_OPEN(temp);
-     bprintf(&temp, "%s", value->ptr);
+     bprintf(&temp, FMT("%s"), value->ptr);
      bclear(value);
      cg_lua_emit_to_num(CS, value, temp.ptr);
      CHARBUF_CLOSE(temp);
@@ -282,10 +289,10 @@ static void cg_lua_to_num(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value)
 // emits a cql_to_float call
 static void cg_lua_emit_to_float(CqlState* _Nonnull CS, charbuf *output, CSTR input) {
   if (!strcmp("nil", input)) {
-    bprintf(output, "nil");
+    bprintf(output, FMT("nil"));
     return;
   }
-  bprintf(output, "cql_to_float(%s)", input);
+  bprintf(output, FMT("cql_to_float(%s)"), input);
 }
 
 // converts a boolean into a number if necessary
@@ -293,7 +300,7 @@ static void cg_lua_emit_to_float(CqlState* _Nonnull CS, charbuf *output, CSTR in
 static void cg_lua_to_float(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value) {
   if (!is_real(sem_type)) {
      CHARBUF_OPEN(temp);
-     bprintf(&temp, "%s", value->ptr);
+     bprintf(&temp, FMT("%s"), value->ptr);
      bclear(value);
      cg_lua_emit_to_float(CS, value, temp.ptr);
      CHARBUF_CLOSE(temp);
@@ -304,18 +311,18 @@ static void cg_lua_to_float(CqlState* _Nonnull CS, sem_t sem_type, charbuf *valu
 // 0, 1, and nil all get hard coded treatment, otherwise use the helper.
 static void cg_lua_emit_to_bool(CqlState* _Nonnull CS, charbuf *output, CSTR input) {
   if (!strcmp("1", input)) {
-    bprintf(output, "true");
+    bprintf(output, FMT("true"));
     return;
   }
   if (!strcmp("0", input)) {
-    bprintf(output, "false");
+    bprintf(output, FMT("false"));
     return;
   }
   if (!strcmp("nil", input)) {
-    bprintf(output, "nil");
+    bprintf(output, FMT("nil"));
     return;
   }
-  bprintf(output, "cql_to_bool(%s)", input);
+  bprintf(output, FMT("cql_to_bool(%s)"), input);
 }
 
 // converts a numeric type into a boolean, this is important because
@@ -325,7 +332,7 @@ static void cg_lua_emit_to_bool(CqlState* _Nonnull CS, charbuf *output, CSTR inp
 static void cg_lua_to_bool(CqlState* _Nonnull CS, sem_t sem_type, charbuf *value) {
   if (!is_bool(sem_type)) {
      CHARBUF_OPEN(temp);
-     bprintf(&temp, "%s", value->ptr);
+     bprintf(&temp, FMT("%s"), value->ptr);
      bclear(value);
      cg_lua_emit_to_bool(CS, value, temp.ptr);
      CHARBUF_CLOSE(temp);
@@ -379,7 +386,7 @@ static void cg_lua_emit_local_init(CqlState* _Nonnull CS, charbuf *output, sem_t
 {
   if (is_nullable(sem_type)) {
     // no init needed
-    bprintf(output, "\n");
+    bprintf(output, FMT("\n"));
     return;
   }
 
@@ -387,22 +394,22 @@ static void cg_lua_emit_local_init(CqlState* _Nonnull CS, charbuf *output, sem_t
   switch (core_type) {
     case SEM_TYPE_INTEGER:
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(output, " = 0\n");
+      bprintf(output, FMT(" = 0\n"));
       break;
 
     case SEM_TYPE_TEXT:
     case SEM_TYPE_BLOB:
     case SEM_TYPE_OBJECT:
       // no init needed     
-      bprintf(output, "\n");
+      bprintf(output, FMT("\n"));
       break;
 
     case SEM_TYPE_REAL:
-      bprintf(output, " = 0.0\n");
+      bprintf(output, FMT(" = 0.0\n"));
       break;
 
     case SEM_TYPE_BOOL:
-      bprintf(output, " = false\n");
+      bprintf(output, FMT(" = false\n"));
       break;
    }
 }
@@ -434,10 +441,10 @@ static void cg_lua_var_decl(CqlState* _Nonnull CS, charbuf *output, sem_t sem_ty
   else {
     // variable groups are global by construction so don't emit "local" for them
     // if we're here this not a variable group
-    bprintf(output, "local ");
+    bprintf(output, FMT("local "));
   }
 
-  bprintf(output, "%s", name);
+  bprintf(output, FMT("%s"), name);
   cg_lua_emit_local_init(CS, output, sem_type);
 }
 
@@ -481,7 +488,7 @@ static void cg_lua_scratch_var(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_t
     Invariant(ast && ast->parent && ast->parent->left);
     EXTRACT_NAME_AST(name_ast, ast->parent->left);
     EXTRACT_STRING(name, name_ast);
-    bprintf(var, "%s", name);
+    bprintf(var, FMT("%s"), name);
   }
   else {
     // Generate a scratch variable name of the correct type.  We don't generate
@@ -508,31 +515,31 @@ static void cg_lua_scratch_var(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_t
 
     switch (core_type) {
       case SEM_TYPE_INTEGER:
-        bprintf(var, "%s_int_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_int_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->ints;
         break;
       case SEM_TYPE_BLOB:
-        bprintf(var, "%s_blob_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_blob_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->blobs;
         break;
       case SEM_TYPE_OBJECT:
-        bprintf(var, "%s_object_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_object_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->objects;
         break;
       case SEM_TYPE_TEXT:
-        bprintf(var, "%s_text_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_text_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->strings;
         break;
       case SEM_TYPE_LONG_INTEGER:
-        bprintf(var, "%s_int64_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_int64_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->longs;
         break;
       case SEM_TYPE_REAL:
-        bprintf(var, "%s_double_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_double_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->reals;
         break;
       case SEM_TYPE_BOOL:
-        bprintf(var, "%s_bool_%d", prefix, CS->cg_lua.stack_level);
+        bprintf(var, FMT("%s_bool_%d"), prefix, CS->cg_lua.stack_level);
         usedmask = pmask->bools;
         break;
     }
@@ -549,20 +556,20 @@ static void cg_lua_scratch_var(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_t
 
   // If the value expression is desired, generate them here.
   if (value) {
-    bprintf(value, "%s", var->ptr);
+    bprintf(value, FMT("%s"), var->ptr);
   }
 }
 
 // Set nullable output type to null.
 static void cg_lua_set_null(CqlState* _Nonnull CS, charbuf *output, CSTR name, sem_t sem_type) {
-  bprintf(output, "%s = nil\n", name);
+  bprintf(output, FMT("%s = nil\n"), name);
 }
 
 // Once we've done any type conversions for the basic types we can do pretty simple assignments
 // The nullable non-reference types typically need of the helper macros unless it's an exact-type copy
 // operation.  This function is used by cg_lua_store near the finish line.
 static void cg_lua_copy(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
-  bprintf(output, "%s = %s\n", var, value);
+  bprintf(output, FMT("%s = %s\n"), var, value);
 }
 
 // This is most general store function.  Given the type of the destination and the type of the source
@@ -577,7 +584,7 @@ static void cg_lua_store(CqlState* _Nonnull CS, charbuf *output, CSTR var, sem_t
   }
 
   CHARBUF_OPEN(result);
-  bprintf(&result, "%s", value);
+  bprintf(&result, FMT("%s"), value);
 
   // Normalize floats and bools for storage
   if (is_real(sem_type_var) && !is_real(sem_type_expr)) {
@@ -661,7 +668,7 @@ static void cg_lua_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf
   }
 
   if (sem_type_result == SEM_TYPE_NULL) {
-    bprintf(value, "nil");
+    bprintf(value, FMT("nil"));
     return;
   }
 
@@ -673,17 +680,17 @@ static void cg_lua_binary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf
   cg_lua_to_num(CS, sem_type_right, &r_value);
 
   if (!strcmp(l_value.ptr, "nil") || !strcmp(r_value.ptr, "nil")) {
-    bprintf(value, "nil");
+    bprintf(value, FMT("nil"));
   }
   else if (force_call || is_nullable(sem_type_left) || is_nullable(sem_type_right)) {
-    bprintf(value, "cql_%s(%s, %s)", op_name, l_value.ptr, r_value.ptr);
+    bprintf(value, FMT("cql_%s(%s, %s)"), op_name, l_value.ptr, r_value.ptr);
   }
   else {
     if (lua_needs_paren(ast, pri_new, pri)) {
-      bprintf(value, "(%s %s %s)", l_value.ptr, op, r_value.ptr);
+      bprintf(value, FMT("(%s %s %s)"), l_value.ptr, op, r_value.ptr);
     }
     else {
-      bprintf(value, "%s %s %s", l_value.ptr, op, r_value.ptr);
+      bprintf(value, FMT("%s %s %s"), l_value.ptr, op, r_value.ptr);
     }
   }
 
@@ -719,16 +726,16 @@ static void cg_lua_is_or_is_not(CqlState* _Nonnull CS, ast_node *ast, CSTR op, c
   cg_lua_to_num(CS, sem_type_right, &r_value);
 
   if (!strcmp(op, "~=") && core_type_of(sem_type_right) == SEM_TYPE_BLOB) {
-    bprintf(value, "cql_blob_is_ne(%s, %s)", l_value.ptr, r_value.ptr);
+    bprintf(value, FMT("cql_blob_is_ne(%s, %s)"), l_value.ptr, r_value.ptr);
   }
   else if (!strcmp(op, "==") && core_type_of(sem_type_right) == SEM_TYPE_BLOB) {
-    bprintf(value, "cql_blob_is_eq(%s, %s)", l_value.ptr, r_value.ptr);
+    bprintf(value, FMT("cql_blob_is_eq(%s, %s)"), l_value.ptr, r_value.ptr);
   }
   else if (lua_needs_paren(ast, pri_new, pri)) {
-    bprintf(value, "(%s %s %s)", l_value.ptr, op, r_value.ptr);
+    bprintf(value, FMT("(%s %s %s)"), l_value.ptr, op, r_value.ptr);
   }
   else {
-    bprintf(value, "%s %s %s", l_value.ptr, op, r_value.ptr);
+    bprintf(value, FMT("%s %s %s"), l_value.ptr, op, r_value.ptr);
   }
 
   CG_LUA_POP_EVAL(r);
@@ -751,13 +758,13 @@ static void cg_lua_expr_is_false(CqlState* _Nonnull CS, ast_node *ast, CSTR op, 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
-    bprintf(value, "cql_is_false(%s)", expr_value.ptr);
+    bprintf(value, FMT("cql_is_false(%s)"), expr_value.ptr);
   }
   else if (is_bool(sem_type_is_expr)) {
-    bprintf(value, "not(%s)", expr_value.ptr);
+    bprintf(value, FMT("not(%s)"), expr_value.ptr);
   }
   else {
-    bprintf(value, "(%s == 0)", expr_value.ptr);
+    bprintf(value, FMT("(%s == 0)"), expr_value.ptr);
   }
 
   CG_LUA_POP_EVAL(expr);
@@ -780,13 +787,13 @@ static void cg_lua_expr_is_not_false(CqlState* _Nonnull CS, ast_node *ast, CSTR 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
-    bprintf(value, "cql_is_not_false(%s)", expr_value.ptr);
+    bprintf(value, FMT("cql_is_not_false(%s)"), expr_value.ptr);
   }
   else if (is_bool(sem_type_is_expr)) {
-    bprintf(value, "%s", expr_value.ptr);
+    bprintf(value, FMT("%s"), expr_value.ptr);
   }
   else {
-    bprintf(value, "(%s ~= 0)", expr_value.ptr);
+    bprintf(value, FMT("(%s ~= 0)"), expr_value.ptr);
   }
 
   CG_LUA_POP_EVAL(expr);
@@ -807,13 +814,13 @@ static void cg_lua_expr_is_true(CqlState* _Nonnull CS, ast_node *ast, CSTR op, c
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
-    bprintf(value, "cql_is_true(%s)", expr_value.ptr);
+    bprintf(value, FMT("cql_is_true(%s)"), expr_value.ptr);
   }
   else if (is_bool(sem_type_is_expr)) {
-    bprintf(value, "%s", expr_value.ptr);
+    bprintf(value, FMT("%s"), expr_value.ptr);
   }
   else {
-    bprintf(value, "(%s ~= 0)", expr_value.ptr);
+    bprintf(value, FMT("(%s ~= 0)"), expr_value.ptr);
   }
 
   CG_LUA_POP_EVAL(expr);
@@ -836,13 +843,13 @@ static void cg_lua_expr_is_not_true(CqlState* _Nonnull CS, ast_node *ast, CSTR o
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
   if (is_nullable(sem_type_is_expr)) {
-    bprintf(value, "cql_is_not_true(%s)", expr_value.ptr);
+    bprintf(value, FMT("cql_is_not_true(%s)"), expr_value.ptr);
   }
   else if (is_bool(sem_type_is_expr)) {
-    bprintf(value, "not(%s)", expr_value.ptr);
+    bprintf(value, FMT("not(%s)"), expr_value.ptr);
   }
   else {
-    bprintf(value, "(%s == 0)", expr_value.ptr);
+    bprintf(value, FMT("(%s == 0)"), expr_value.ptr);
   }
 
   CG_LUA_POP_EVAL(expr);
@@ -864,7 +871,7 @@ static void cg_lua_expr_and_or(CqlState* _Nonnull CS, ast_node *ast, CSTR str, c
   sem_t sem_type_right = r->sem->sem_type;
 
   if (is_ast_null(l) && is_ast_null(r)) {
-    bprintf(value, "nil");
+    bprintf(value, FMT("nil"));
     return;
   }
 
@@ -878,26 +885,26 @@ static void cg_lua_expr_and_or(CqlState* _Nonnull CS, ast_node *ast, CSTR str, c
 
   if (!is_nullable(sem_type_result) && right_eval.used == 1) {
     if (lua_needs_paren(ast, pri_new, pri)) {
-      bprintf(value, "(");
+      bprintf(value, FMT("("));
     }
     cg_lua_to_bool(CS, sem_type_left, &l_value);
     cg_lua_to_bool(CS, sem_type_right, &r_value);
 
-    bprintf(value, "%s %s %s", l_value.ptr, str, r_value.ptr);
+    bprintf(value, FMT("%s %s %s"), l_value.ptr, str, r_value.ptr);
 
     if (lua_needs_paren(ast, pri_new, pri)) {
-      bprintf(value, ")");
+      bprintf(value, FMT(")"));
     }
   }
   else {
     if (right_eval.used > 1) {
       // multi-line version
-      bprintf(value, "cql_shortcircuit_%s(%s,\nfunction()\n%s\nreturn %s\nend\n)",
+      bprintf(value, FMT("cql_shortcircuit_%s(%s,\nfunction()\n%s\nreturn %s\nend\n)"),
         str, l_value.ptr, right_eval.ptr, r_value.ptr);
     }
     else {
       // one line version
-      bprintf(value, "cql_shortcircuit_%s(%s, function() return %s end)",
+      bprintf(value, FMT("cql_shortcircuit_%s(%s, function() return %s end)"),
         str, l_value.ptr, r_value.ptr);
     }
   }
@@ -926,7 +933,7 @@ static void cg_lua_unary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf 
 
     if (num_type == NUM_LONG && !strcmp("9223372036854775808", lit)) {
       // emit MIN_LONG in a way that the LUA compiler can accept
-      bprintf(value, "(-9223372036854775807 - 1)");
+      bprintf(value, FMT("(-9223372036854775807 - 1)"));
       return;
     }
   }
@@ -943,20 +950,20 @@ static void cg_lua_unary(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf 
   }
 
   if (lua_needs_paren(ast, pri_new, pri)) {
-    bprintf(&result, "(%s%s)", op, expr_value.ptr);
+    bprintf(&result, FMT("(%s%s)"), op, expr_value.ptr);
   }
   else {
     // We always add a space to avoid creating "--" or "++"
     // expr_value might be -1 or -x or some such.  This way we're
     // always safe at the cost of a space.
-    bprintf(&result, "%s %s", op, expr_value.ptr);
+    bprintf(&result, FMT("%s %s"), op, expr_value.ptr);
   }
 
   if (is_not_nullable(sem_type_expr)) {
-    bprintf(value, "%s", result.ptr);
+    bprintf(value, FMT("%s"), result.ptr);
   }
   else {
-    bprintf(value, "cql_unary_%s(%s)", ast->type, expr_value.ptr);
+    bprintf(value, FMT("cql_unary_%s(%s)"), ast->type, expr_value.ptr);
   }
 
   CG_LUA_POP_EVAL(expr);
@@ -975,7 +982,7 @@ static void cg_lua_func_sign(CqlState* _Nonnull CS, ast_node *call_ast, charbuf 
   // sign ( expr )
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
-  bprintf(value, "cql_unary_sign(%s)", expr_value.ptr);
+  bprintf(value, FMT("cql_unary_sign(%s)"), expr_value.ptr);
   CG_LUA_POP_EVAL(expr);
 }
 
@@ -991,7 +998,7 @@ static void cg_lua_func_abs(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *
   // abs ( expr )
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
-  bprintf(value, "cql_unary_abs(%s)", expr_value.ptr);
+  bprintf(value, FMT("cql_unary_abs(%s)"), expr_value.ptr);
   CG_LUA_POP_EVAL(expr);
 }
 
@@ -1023,10 +1030,10 @@ static void cg_lua_in_or_not_in_expr_list(CqlState* _Nonnull CS, ast_node *head,
     cg_lua_to_num(CS, sem_type_expr, &in_expr_value);
 
     if (core_type_of(sem_type_expr) == SEM_TYPE_BLOB) {
-      bprintf(CS->cg_main_output, "if cql_blob_eq(%s, %s) then break end\n", expr, in_expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("if cql_blob_eq(%s, %s) then break end\n"), expr, in_expr_value.ptr);
     }
     else {
-      bprintf(CS->cg_main_output, "if %s == %s then break end\n", expr, in_expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("if %s == %s then break end\n"), expr, in_expr_value.ptr);
     }
 
     CG_LUA_POP_EVAL(in_expr);
@@ -1081,7 +1088,7 @@ static void cg_lua_expr_in_pred_or_not_in(CqlState* _Nonnull CS,
   sem_t sem_type_expr = expr->sem->sem_type;
 
   if (is_null_type(sem_type_expr)) {
-    bprintf(value, "nil");
+    bprintf(value, FMT("nil"));
     return;
   }
 
@@ -1091,7 +1098,7 @@ static void cg_lua_expr_in_pred_or_not_in(CqlState* _Nonnull CS,
   // "result = 1" would kill something like  r := x in (r, b);
   CG_LUA_SETUP_RESULT_VAR(NULL, sem_type_result);
 
-  bprintf(CS->cg_main_output, "repeat\n");
+  bprintf(CS->cg_main_output, FMT("repeat\n"));
 
   CG_PUSH_MAIN_INDENT2(do);
 
@@ -1106,11 +1113,11 @@ static void cg_lua_expr_in_pred_or_not_in(CqlState* _Nonnull CS,
 
   // If the expression is null the result is null
   if (is_nullable(sem_type_expr)) {
-    bprintf(CS->cg_main_output, "if %s == nil then\n", temp_value.ptr);
+    bprintf(CS->cg_main_output, FMT("if %s == nil then\n"), temp_value.ptr);
     bprintf(CS->cg_main_output, "  ");
     cg_lua_set_null(CS, CS->cg_main_output, result_var.ptr, sem_type_result);
-    bprintf(CS->cg_main_output, "  break\n");
-    bprintf(CS->cg_main_output, "end\n");
+    bprintf(CS->cg_main_output, FMT("  break\n"));
+    bprintf(CS->cg_main_output, FMT("end\n"));
   }
 
   // Now generate the list
@@ -1121,7 +1128,7 @@ static void cg_lua_expr_in_pred_or_not_in(CqlState* _Nonnull CS,
   CG_POP_MAIN_INDENT(do);
   CG_LUA_CLEANUP_RESULT_VAR();
 
-  bprintf(CS->cg_main_output, "until true\n");
+  bprintf(CS->cg_main_output, FMT("until true\n"));
 }
 
 // This helper method emits the alternatives for the case.  If there was an
@@ -1145,11 +1152,11 @@ static void cg_lua_case_list(CqlState* _Nonnull CS, ast_node *head, CSTR expr, C
     CG_LUA_PUSH_EVAL(case_expr, LUA_EXPR_PRI_EQ_NE);
 
     if (expr) {
-      bprintf(CS->cg_main_output, "if %s == %s then\n", expr, case_expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("if %s == %s then\n"), expr, case_expr_value.ptr);
     }
     else {
       cg_lua_to_bool(CS, sem_type_case_expr, &case_expr_value);
-      bprintf(CS->cg_main_output, "if %s then\n", case_expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("if %s then\n"), case_expr_value.ptr);
     }
     CG_LUA_POP_EVAL(case_expr);
 
@@ -1160,11 +1167,11 @@ static void cg_lua_case_list(CqlState* _Nonnull CS, ast_node *head, CSTR expr, C
     CG_LUA_PUSH_EVAL(then_expr, LUA_EXPR_PRI_ROOT);
 
     cg_lua_store(CS, CS->cg_main_output, result, sem_type_result, sem_type_then_expr, then_expr_value.ptr);
-    bprintf(CS->cg_main_output, "break\n");
+    bprintf(CS->cg_main_output, FMT("break\n"));
 
     CG_LUA_POP_EVAL(then_expr);
     CG_POP_MAIN_INDENT(then);
-    bprintf(CS->cg_main_output, "end\n");
+    bprintf(CS->cg_main_output, FMT("end\n"));
 
     // This 'then' clause stored its result, temporaries no longer needed
     // This is just like the result variable case
@@ -1222,7 +1229,7 @@ static void cg_lua_expr_case(CqlState* _Nonnull CS, ast_node *case_expr, CSTR st
   // The answer will be stored in this scratch variable, any type is possible
   CG_LUA_SETUP_RESULT_VAR(case_expr, sem_type_result);
 
-  bprintf(CS->cg_main_output, "repeat\n");
+  bprintf(CS->cg_main_output, FMT("repeat\n"));
 
   CG_PUSH_MAIN_INDENT2(do);
 
@@ -1247,8 +1254,8 @@ static void cg_lua_expr_case(CqlState* _Nonnull CS, ast_node *case_expr, CSTR st
     // either the user provides it or we do (to use null as the default).
     if (is_nullable(sem_type_expr)) {
       else_label_number = ++CS->cg_lua.case_statement_count;
-      bprintf(CS->cg_main_output, "if %s == nil then ", temp_value.ptr);
-      bprintf(CS->cg_main_output, "goto case_else_%d end\n", else_label_number);
+      bprintf(CS->cg_main_output, FMT("if %s == nil then "), temp_value.ptr);
+      bprintf(CS->cg_main_output, FMT("goto case_else_%d end\n"), else_label_number);
     }
 
     cg_lua_case_list(CS, case_list, temp_value.ptr, result_var.ptr, sem_type_result);
@@ -1262,7 +1269,7 @@ static void cg_lua_expr_case(CqlState* _Nonnull CS, ast_node *case_expr, CSTR st
   }
 
   if (else_label_number >= 0) {
-    bprintf(CS->cg_main_output, "::case_else_%d::\n", else_label_number);
+    bprintf(CS->cg_main_output, FMT("::case_else_%d::\n"), else_label_number);
   }
 
   // If there is an else clause, spit out the result for that now.
@@ -1285,7 +1292,7 @@ static void cg_lua_expr_case(CqlState* _Nonnull CS, ast_node *case_expr, CSTR st
   CG_POP_MAIN_INDENT(do);
   CG_LUA_CLEANUP_RESULT_VAR();
 
-  bprintf(CS->cg_main_output, "until true\n");
+  bprintf(CS->cg_main_output, FMT("until true\n"));
 }
 
 // we have built-in support for numeric casts only, the SQL string cast operations are highly
@@ -1306,20 +1313,20 @@ static void cg_lua_expr_cast(CqlState* _Nonnull CS, ast_node *cast_expr, CSTR st
   if (core_type_expr == core_type_result) {
     // no-op cast, just pass through -- we have to add parens because they were
     // implicit in the call syntax of cast -- so this is the safe/easy thing to do
-    bprintf(value, "(%s)", expr_value.ptr);
+    bprintf(value, FMT("(%s)"), expr_value.ptr);
   }
   else switch (core_type_result) {
     case SEM_TYPE_INTEGER:
     case SEM_TYPE_LONG_INTEGER:
-      bprintf(value, "cql_to_integer(%s)", expr_value.ptr);
+      bprintf(value, FMT("cql_to_integer(%s)"), expr_value.ptr);
       break;
 
     case SEM_TYPE_REAL:
-      bprintf(value, "cql_to_float(%s)", expr_value.ptr);
+      bprintf(value, FMT("cql_to_float(%s)"), expr_value.ptr);
       break;
 
     case SEM_TYPE_BOOL:
-      bprintf(value, "cql_to_bool(%s)", expr_value.ptr);
+      bprintf(value, FMT("cql_to_bool(%s)"), expr_value.ptr);
       break;
   }
 
@@ -1337,7 +1344,7 @@ static void cg_lua_expr_type_check(CqlState* _Nonnull CS, ast_node *type_check_e
 
   // type checking of the expression already happened during semantic analysis.
   // It's safe to just output it
-  bprintf(value, "%s", expr_value.ptr);
+  bprintf(value, FMT("%s"), expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 }
@@ -1384,7 +1391,7 @@ static void cg_lua_expr_between_rewrite(CqlState* _Nonnull CS,
   sem_t sem_type_var = expr->sem->sem_type;
 
   if (is_ast_null(expr)) {
-    bprintf(value, "nil");
+    bprintf(value, FMT("nil"));
     return;
   }
 
@@ -1421,7 +1428,7 @@ static void cg_lua_id(CqlState* _Nonnull CS, ast_node *expr, charbuf *value) {
 
   // map the logical @rc variable to the correct saved version
   if (!strcmp(name, "@rc")) {
-    bprintf(value, "%s", CS->cg_lua.rcthrown_current);
+    bprintf(value, FMT("%s"), CS->cg_lua.rcthrown_current);
     CS->cg_lua.rcthrown_used = true;
     return;
   }
@@ -1437,7 +1444,7 @@ static void cg_lua_id(CqlState* _Nonnull CS, ast_node *expr, charbuf *value) {
        for (int32_t i = 1; i < index; i++) {
          bputc(value, name[i]);
        }
-       bprintf(value, "._has_row_");
+       bprintf(value, FMT("._has_row_"));
        return;
      }
   }
@@ -1452,7 +1459,7 @@ static void cg_lua_id(CqlState* _Nonnull CS, ast_node *expr, charbuf *value) {
     }
   }
 
-  bprintf(value, "%s", name);
+  bprintf(value, FMT("%s"), name);
 }
 
 // Recall that coalesce returns the first non-null arg from the list of arguments.
@@ -1485,7 +1492,7 @@ static void cg_lua_func_coalesce(CqlState* _Nonnull CS, ast_node *call_ast, char
   // the answer will be stored in this scratch variable
   CG_LUA_SETUP_RESULT_VAR(call_ast, sem_type_result);
 
-  bprintf(CS->cg_main_output, "repeat\n");
+  bprintf(CS->cg_main_output, FMT("repeat\n"));
   CG_PUSH_MAIN_INDENT2(do);
   for (ast_node *ast = arg_list; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -1496,20 +1503,20 @@ static void cg_lua_func_coalesce(CqlState* _Nonnull CS, ast_node *call_ast, char
 
     // Generate the test for all but the last choice.
     if (ast->right) {
-      bprintf(CS->cg_main_output, "if %s ~= nil then\n  ", expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("if %s ~= nil then\n  "), expr_value.ptr);
     }
 
     cg_lua_store(CS, CS->cg_main_output, result_var.ptr, sem_type_result, sem_type_expr, expr_value.ptr);
 
     if (ast->right) {
-      bprintf(CS->cg_main_output, "  break\n");
-      bprintf(CS->cg_main_output, "end\n");
+      bprintf(CS->cg_main_output, FMT("  break\n"));
+      bprintf(CS->cg_main_output, FMT("end\n"));
     }
 
     CG_LUA_POP_EVAL(expr);
   }
   CG_POP_MAIN_INDENT(do);
-  bprintf(CS->cg_main_output, "until true\n");
+  bprintf(CS->cg_main_output, FMT("until true\n"));
   CG_LUA_CLEANUP_RESULT_VAR();
 }
 
@@ -1581,7 +1588,7 @@ static void cg_lua_func_attest_notnull(CqlState* _Nonnull CS, ast_node *call_ast
 
   switch (variant) {
     case LUA_ATTEST_NOTNULL_VARIANT_CRASH:
-      bprintf(CS->cg_main_output, "cql_invariant(%s ~= nil)\n", expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("cql_invariant(%s ~= nil)\n"), expr_value.ptr);
       break;
 
     case LUA_ATTEST_NOTNULL_VARIANT_INFERRED:
@@ -1590,16 +1597,16 @@ static void cg_lua_func_attest_notnull(CqlState* _Nonnull CS, ast_node *call_ast
       break;
 
     case LUA_ATTEST_NOTNULL_VARIANT_THROW:
-      bprintf(CS->cg_main_output, "if %s == nil then\n", expr_value.ptr);
-      bprintf(CS->cg_main_output, "  _rc_ = CQL_ERROR\n");
-      bprintf(CS->cg_main_output, "  cql_error_trace(_rc_, _db_)\n");
-      bprintf(CS->cg_main_output, "  goto %s\n", CS->cg_lua.error_target);
-      bprintf(CS->cg_main_output, "end\n");
+      bprintf(CS->cg_main_output, FMT("if %s == nil then\n"), expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("  _rc_ = CQL_ERROR\n"));
+      bprintf(CS->cg_main_output, FMT("  cql_error_trace(_rc_, _db_)\n"));
+      bprintf(CS->cg_main_output, FMT("  goto %s\n"), CS->cg_lua.error_target);
+      bprintf(CS->cg_main_output, FMT("end\n"));
       CS->cg_lua.error_target_used = true;
       break;
   }
 
-  bprintf(value, "%s", expr_value.ptr);
+  bprintf(value, FMT("%s"), expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 }
@@ -1638,12 +1645,12 @@ static void cg_lua_func_cql_compressed(CqlState* _Nonnull CS, ast_node *call_ast
 
 // There's a helper for this method, just call it.  Super easy.
 static void cg_lua_func_changes(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
-  bprintf(value, "cql_changes(_db_)");
+  bprintf(value, FMT("cql_changes(_db_)"));
 }
 
 // There's a helper for this method, just call it.  Super easy.
 static void cg_lua_func_last_insert_rowid(CqlState* _Nonnull CS, ast_node *ast, charbuf *value) {
-  bprintf(value, "cql_last_insert_rowid(_db_)");
+  bprintf(value, FMT("cql_last_insert_rowid(_db_)"));
 }
 
 // Printf also has a helper, we just call it.  There are other helpers to emit
@@ -1657,7 +1664,7 @@ static void cg_lua_func_printf(CqlState* _Nonnull CS, ast_node *call_ast, charbu
 
   CG_LUA_SETUP_RESULT_VAR(call_ast, SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
   CHARBUF_OPEN(inv);
-  bprintf(&inv, "%s = cql_printf", result_var.ptr);
+  bprintf(&inv, FMT("%s = cql_printf"), result_var.ptr);
   cg_lua_call_named_external(CS, inv.ptr, arg_list);
   CHARBUF_CLOSE(inv);
   CG_LUA_CLEANUP_RESULT_VAR();
@@ -1676,7 +1683,7 @@ static void cg_lua_func_cql_get_blob_size(CqlState* _Nonnull CS, ast_node *ast, 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
   // store cql_get_blob_size call in temp. e.g: cql_get_blob_size(expr_value)
-  bprintf(value, "cql_get_blob_size(%s)", expr_value.ptr);
+  bprintf(value, FMT("cql_get_blob_size(%s)"), expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 }
@@ -1710,10 +1717,10 @@ static void cg_lua_expr_num(CqlState* _Nonnull CS, ast_node *expr, CSTR op, char
   // a numeric literal
   if (num_type == NUM_BOOL) {
     // in LUA, the codegen for bools has to be "true" "false" because 0 is not falsey
-    bprintf(value, "%s", strcmp(lit, "0") ? "true" : "false");
+    bprintf(value, FMT("%s"), strcmp(lit, "0") ? "true" : "false");
   }
   else {
-    bprintf(value, "%s", lit);
+    bprintf(value, FMT("%s"), lit);
   }
 }
 
@@ -1742,7 +1749,7 @@ static void cg_lua_expr_dot(CqlState* _Nonnull CS, ast_node *expr, CSTR op, char
 static void cg_lua_expr_null(CqlState* _Nonnull CS, ast_node *expr, CSTR op, charbuf *value, int32_t pri, int32_t pri_new) {
   Contract(is_ast_null(expr));
   // null literal
-  bprintf(value, "nil");
+  bprintf(value, FMT("nil"));
 }
 
 // This is the main entry point for codegen of an expression.  It dispatches
@@ -1782,17 +1789,17 @@ static void cg_lua_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR op, ch
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
 
   // exactly one column is allowed, already checked in semantic analysis, fetch it
-  bprintf(CS->cg_main_output, "_rc_ = cql_step(%s)\n", temp_stmt.ptr);
+  bprintf(CS->cg_main_output, FMT("_rc_ = cql_step(%s)\n"), temp_stmt.ptr);
   cg_lua_error_on_rc_notequal(CS, "CQL_ROW");
   cg_lua_get_column(CS, sem_type_result, temp_stmt.ptr, 0, result_var.ptr, CS->cg_main_output);
 
   // if statement index 0 then we're not re-using this statement in a loop
   if (stmt_index == 0) {
-    bprintf(CS->cg_main_output, "cql_finalize_stmt(%s)\n", temp_stmt.ptr);
-    bprintf(CS->cg_main_output, "%s = nil\n", temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(%s)\n"), temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("%s = nil\n"), temp_stmt.ptr);
   }
   else {
-    bprintf(CS->cg_main_output, "cql_reset_stmt(%s)\n", temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("cql_reset_stmt(%s)\n"), temp_stmt.ptr);
   }
 
   CHARBUF_CLOSE(temp_stmt);
@@ -1826,9 +1833,9 @@ static int32_t cg_lua_expr_select_frag(CqlState* _Nonnull CS, ast_node *ast, cha
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
 
   // exactly one column is allowed, already checked in semantic analysis, fetch it
-  bprintf(CS->cg_main_output, "_rc_ = cql_step(%s)\n", temp_stmt.ptr);
+  bprintf(CS->cg_main_output, FMT("_rc_ = cql_step(%s)\n"), temp_stmt.ptr);
   cg_lua_error_on_expr(CS, "_rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE");
-  bprintf(CS->cg_main_output, "if _rc_ == CQL_ROW then\n");
+  bprintf(CS->cg_main_output, FMT("if _rc_ == CQL_ROW then\n"));
   cg_lua_get_column(CS, sem_type_result, temp_stmt.ptr, 0, result_var.ptr, CS->cg_main_output);
 
   CHARBUF_CLOSE(temp_stmt);
@@ -1873,28 +1880,28 @@ static void cg_lua_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, 
   // we need to store the result of the select in our output variable
   // note that these are known to be compatible (already verified) but they might not
   // be the exact same type, hence the copy.  In this case we're definitely using the value.
-  bprintf(CS->cg_main_output, "  ");
+  bprintf(CS->cg_main_output, FMT("  "));
   cg_lua_store(CS, CS->cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_value.ptr);
 
-  bprintf(CS->cg_main_output, "else\n  ");
+  bprintf(CS->cg_main_output, FMT("else\n  "));
 
   // if no row found, then evaluate and use the default
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ASSIGN);
   cg_lua_store(CS, CS->cg_main_output, result_var.ptr, sem_type_result, sem_type_expr, expr_value.ptr);
   CG_LUA_POP_EVAL(expr);
 
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
 
   CHARBUF_OPEN(temp_stmt);
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
 
   // if statement index 0 then we're not re-using this statement in a loop
   if (stmt_index == 0) {
-    bprintf(CS->cg_main_output, "cql_finalize_stmt(%s)\n", temp_stmt.ptr);
-    bprintf(CS->cg_main_output, "%s = nil\n", temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(%s)\n"), temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("%s = nil\n"), temp_stmt.ptr);
   }
   else {
-    bprintf(CS->cg_main_output, "cql_reset_stmt(%s)\n", temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("cql_reset_stmt(%s)\n"), temp_stmt.ptr);
   }
 
   CHARBUF_CLOSE(temp_stmt);
@@ -1933,31 +1940,31 @@ static void cg_lua_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_nod
 
   // we're inside of the "if _rc_ == CQL_ROW then" case
   // in this variation we have to first see if the result is null before we use it
-  bprintf(CS->cg_main_output, "end\n");
-  bprintf(CS->cg_main_output, "if _rc_ == CQL_DONE or %s == nil then\n  ", select_value.ptr);
+  bprintf(CS->cg_main_output, FMT("end\n"));
+  bprintf(CS->cg_main_output, FMT("if _rc_ == CQL_DONE or %s == nil then\n  "), select_value.ptr);
 
   // now row or null result, evaluate the default
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ASSIGN);
   cg_lua_store(CS, CS->cg_main_output, result_var.ptr, sem_type_result, sem_type_expr, expr_value.ptr);
   CG_LUA_POP_EVAL(expr);
 
-  bprintf(CS->cg_main_output, "else\n  ");
+  bprintf(CS->cg_main_output, FMT("else\n  "));
   // ok to use the value we fetched, go ahead an copy it to its final destination
   // note this may change the type but only in a compatible way
   cg_lua_store(CS, CS->cg_main_output, result_var.ptr, sem_type_result, sem_type_select, select_value.ptr);
-  bprintf(CS->cg_main_output, "end\n");
-  bprintf(CS->cg_main_output, "_rc_ = CQL_OK\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
+  bprintf(CS->cg_main_output, FMT("_rc_ = CQL_OK\n"));
 
   CHARBUF_OPEN(temp_stmt);
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
 
   // if statement index 0 then we're not re-using this statement in a loop
   if (stmt_index == 0) {
-    bprintf(CS->cg_main_output, "cql_finalize_stmt(%s)\n", temp_stmt.ptr);
-    bprintf(CS->cg_main_output, "%s = nil\n", temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(%s)\n"), temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("%s = nil\n"), temp_stmt.ptr);
   }
   else {
-    bprintf(CS->cg_main_output, "cql_reset_stmt(%s)\n", temp_stmt.ptr);
+    bprintf(CS->cg_main_output, FMT("cql_reset_stmt(%s)\n"), temp_stmt.ptr);
   }
 
   CHARBUF_CLOSE(temp_stmt);
@@ -1992,7 +1999,7 @@ static void cg_lua_cond_action(CqlState* _Nonnull CS, ast_node *ast) {
 
   cg_lua_to_bool(CS, sem_type_expr, &expr_value);
 
-  bprintf(CS->cg_main_output, "if %s then\n", expr_value.ptr);
+  bprintf(CS->cg_main_output, FMT("if %s then\n"), expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 
@@ -2009,7 +2016,7 @@ static void cg_lua_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_node *e
     EXTRACT(cond_action, ast->left);
 
     // ELSE IF [cond_action]
-    bprintf(CS->cg_main_output, "else\n");
+    bprintf(CS->cg_main_output, FMT("else\n"));
       CG_PUSH_MAIN_INDENT2(else);
       cg_lua_cond_action(CS, cond_action);
       cg_lua_elseif_list(CS, ast->right, elsenode);
@@ -2019,11 +2026,11 @@ static void cg_lua_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_node *e
     Contract(is_ast_else(elsenode));
     // ELSE [stmt_list]
     EXTRACT(stmt_list, elsenode->left);
-    bprintf(CS->cg_main_output, "else\n");
+    bprintf(CS->cg_main_output, FMT("else\n"));
     cg_lua_stmt_list(CS, stmt_list);
   }
 
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
 }
 
 // This evaluates an expression and discards the result
@@ -2037,7 +2044,7 @@ static void cg_lua_expr_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   CG_LUA_PUSH_EVAL(expr, C_EXPR_PRI_ROOT);
 
-  bprintf(CS->cg_main_output, "__cql_ignored__ = %s\n__cql_ignored__ = nil\n", expr_value.ptr);
+  bprintf(CS->cg_main_output, FMT("__cql_ignored__ = %s\n__cql_ignored__ = nil\n"), expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 }
@@ -2129,16 +2136,16 @@ static void cg_lua_params(CqlState* _Nonnull CS, ast_node *ast, charbuf *decls, 
     sem_t sem_type  = param->sem->sem_type;
     if (is_in_parameter(sem_type)) {
       if (decls->used > 1) {
-        bprintf(decls, ", ");
+        bprintf(decls, FMT(", "));
       }
-      bprintf(decls, "%s", param->sem->name);
+      bprintf(decls, FMT("%s"), param->sem->name);
     }
 
     if (is_out_parameter(sem_type)) {
       if (returns->used > 1) {
-        bprintf(returns, ", ");
+        bprintf(returns, FMT(", "));
       }
-      bprintf(returns, "%s", param->sem->name);
+      bprintf(returns, FMT("%s"), param->sem->name);
     }
 
     ast = ast->right;
@@ -2184,7 +2191,7 @@ static void cg_lua_params_init(CqlState* _Nonnull CS, ast_node *ast, charbuf *bo
 // Emit the return code variables for the procedure
 // if the procedure uses throw then it needs the saved RC as well so we can re-throw it
 static void cg_lua_emit_rc_vars(CqlState* _Nonnull CS, charbuf *output) {
-  bprintf(output, "  local _rc_ = CQL_OK\n");
+  bprintf(output, FMT("  local _rc_ = CQL_OK\n"));
 }
 
 // For LUA the contract rules are simple:
@@ -2215,13 +2222,13 @@ static void cg_lua_emit_contracts(CqlState* _Nonnull CS, ast_node *ast, charbuf 
     bool_t notnull = is_not_nullable(sem_type);
 
     if (notnull) {
-      bprintf(b, "  cql_contract_argument_notnull(%s, %d)\n", name, position);
+      bprintf(b, FMT("  cql_contract_argument_notnull(%s, %d)\n"), name, position);
       did_emit_contract = true;
     }
   }
 
   if (did_emit_contract) {
-    bprintf(b, "\n");
+    bprintf(b, FMT("\n"));
   }
 }
 
@@ -2238,7 +2245,7 @@ static void cg_lua_emit_fetch_results_prototype(CqlState* _Nonnull CS,
 
   // optional db reference
   if (dml_proc) {
-    bprintf(&args, "_db_");
+    bprintf(&args, FMT("_db_"));
   }
 
   // args to forward
@@ -2246,7 +2253,7 @@ static void cg_lua_emit_fetch_results_prototype(CqlState* _Nonnull CS,
     cg_lua_params(CS, params, &args, &returns);
   }
 
-  bprintf(decl, "function %s(%s)\n", fetch_results_sym.ptr, args.ptr);
+  bprintf(decl, FMT("function %s(%s)\n"), fetch_results_sym.ptr, args.ptr);
 
   CHARBUF_CLOSE(returns);
   CHARBUF_CLOSE(args);
@@ -2297,14 +2304,14 @@ static void cg_lua_emit_proc_prototype(CqlState* _Nonnull CS, ast_node *ast, cha
   }
 
   if (dml_proc) {
-    bprintf(proc_decl, "%s(_db_", proc_sym.ptr);
+    bprintf(proc_decl, FMT("%s(_db_"), proc_sym.ptr);
     if (args.used > 1) {
-      bprintf(proc_decl, ", ");
-      bprintf(proc_decl, "%s", args.ptr);
+      bprintf(proc_decl, FMT(", "));
+      bprintf(proc_decl, FMT("%s"), args.ptr);
     }
   }
   else {
-    bprintf(proc_decl, "%s(%s", proc_sym.ptr, args.ptr);
+    bprintf(proc_decl, FMT("%s(%s"), proc_sym.ptr, args.ptr);
   }
 
   CHARBUF_CLOSE(returns);
@@ -2390,7 +2397,7 @@ static void cg_lua_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   init_encode_info(CS, misc_attrs, &CS->sem.use_encode, &CS->sem.encode_context_column, CS->sem.encode_columns);
 
-  bprintf(CS->cg_declarations_output, "\n");
+  bprintf(CS->cg_declarations_output, FMT("\n"));
 
   // if you're doing out_union then the row fetcher is all there is
   CSTR suffix = out_union_proc ? "_fetch_results" : "";
@@ -2427,84 +2434,84 @@ static void cg_lua_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   CS->cg_lua.temp_statement_emitted = saved_temp_emitted;
   CS->cg_lua.seed_declared = saved_lua_seed_declared;
 
-  bprintf(CS->cg_declarations_output, "%s", proc_fwd_ref.ptr);
-  bprintf(CS->cg_declarations_output, "function %s)\n", proc_decl.ptr);
-  bprintf(CS->cg_declarations_output, "%s", proc_contracts.ptr);
+  bprintf(CS->cg_declarations_output, FMT("%s"), proc_fwd_ref.ptr);
+  bprintf(CS->cg_declarations_output, FMT("function %s)\n"), proc_decl.ptr);
+  bprintf(CS->cg_declarations_output, FMT("%s"), proc_contracts.ptr);
 
   if (dml_proc) {
     cg_lua_emit_rc_vars(CS, CS->cg_declarations_output);
     if (result_set_proc) {
-      bprintf(CS->cg_declarations_output, "  local _result_stmt = nil\n");
+      bprintf(CS->cg_declarations_output, FMT("  local _result_stmt = nil\n"));
     }
   }
 
   if (out_stmt_proc) {
-    bprintf(CS->cg_declarations_output, "  local _result_ = nil\n");
+    bprintf(CS->cg_declarations_output, FMT("  local _result_ = nil\n"));
   }
 
   if (calls_out_union) {
-    bprintf(CS->cg_declarations_output, "  local _result_set_ = {}\n");
+    bprintf(CS->cg_declarations_output, FMT("  local _result_set_ = {}\n"));
   }
   else if (out_union_proc) {
-    bprintf(CS->cg_declarations_output, "  local _rows_ = {}\n");
+    bprintf(CS->cg_declarations_output, FMT("  local _rows_ = {}\n"));
   }
 
   bindent(CS, CS->cg_declarations_output, &proc_locals, 2);
   if (proc_locals.used > 1) {
-    bprintf(CS->cg_declarations_output, "\n");
+    bprintf(CS->cg_declarations_output, FMT("\n"));
   }
 
-  bprintf(CS->cg_declarations_output, "%s", proc_body.ptr);
+  bprintf(CS->cg_declarations_output, FMT("%s"), proc_body.ptr);
 
   if (dml_proc) {
-    bprintf(CS->cg_declarations_output, "  _rc_ = CQL_OK\n");
+    bprintf(CS->cg_declarations_output, FMT("  _rc_ = CQL_OK\n"));
   }
 
   if (CS->cg_lua.error_target_used || CS->cg_lua.return_used) {
-    bprintf(CS->cg_declarations_output, "\n::%s::", CS->cg_lua.error_target);
+    bprintf(CS->cg_declarations_output, FMT("\n::%s::"), CS->cg_lua.error_target);
   }
 
-  bprintf(CS->cg_declarations_output, "\n");
+  bprintf(CS->cg_declarations_output, FMT("\n"));
 
   if (proc_cleanup.used > 1) {
-    bprintf(CS->cg_declarations_output, "%s", proc_cleanup.ptr);
+    bprintf(CS->cg_declarations_output, FMT("%s"), proc_cleanup.ptr);
   }
 
   if (result_set_proc) {
     // Because of control flow it's possible that we never actually ran a select statement
     // even if there were no errors.  Or maybe we caught the error.  In any case if we
     // are not producing an error then we have to produce an empty result set to go with it.
-    bprintf(CS->cg_declarations_output, "  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end\n");
+    bprintf(CS->cg_declarations_output, FMT("  if _rc_ == CQL_OK and _result_stmt == nil then _rc_, _result_stmt = cql_no_rows_stmt(_db_) end\n"));
   }
 
   CHARBUF_OPEN(returns);
 
   if (dml_proc) {
-    bprintf(&returns, "_rc_");
+    bprintf(&returns, FMT("_rc_"));
   }
 
   if (result_set_proc) {
-    bprintf(&returns, ", _result_stmt");
+    bprintf(&returns, FMT(", _result_stmt"));
   }
 
   if (out_stmt_proc) {
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "_result_");
+    bprintf(&returns, FMT("_result_"));
   }
 
   if (calls_out_union) {
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "_result_set_");
+    bprintf(&returns, FMT("_result_set_"));
   }
   else if (out_union_proc) {
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "_rows_");
+    bprintf(&returns, FMT("_rows_"));
   }
 
   ast_node *item = params;
@@ -2512,18 +2519,18 @@ static void cg_lua_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     EXTRACT_ANY_NOTNULL(param, item->left);
     if (is_out_parameter(param->sem->sem_type)) {
       if (returns.used > 1)  {
-        bprintf(&returns, ", ");
+        bprintf(&returns, FMT(", "));
       }
-      bprintf(&returns, "%s", param->sem->name);
+      bprintf(&returns, FMT("%s"), param->sem->name);
     }
     item = item->right;
   }
 
   if (returns.used > 1)  {
-    bprintf(CS->cg_declarations_output, "  return %s\n", returns.ptr);
+    bprintf(CS->cg_declarations_output, FMT("  return %s\n"), returns.ptr);
   }
 
-  bprintf(CS->cg_declarations_output, "end\n");
+  bprintf(CS->cg_declarations_output, FMT("end\n"));
 
   CHARBUF_CLOSE(returns);
   CHARBUF_CLOSE(proc_decl);
@@ -2654,9 +2661,9 @@ static bool_t cg_lua_table_rename(CqlState* _Nonnull CS, ast_node *ast, void *co
 // is to be stored in the local variable "var"
 static void cg_lua_get_column(CqlState* _Nonnull CS, sem_t sem_type, CSTR cursor, int32_t index, CSTR var, charbuf *output) {
   if (core_type_of(sem_type) == SEM_TYPE_BOOL) {
-    bprintf(output, "  %s = cql_to_bool(cql_get_value(%s, %d))\n", var, cursor, index);
+    bprintf(output, FMT("  %s = cql_to_bool(cql_get_value(%s, %d))\n"), var, cursor, index);
   } else {
-    bprintf(output, "  %s = cql_get_value(%s, %d)\n", var, cursor, index);
+    bprintf(output, FMT("  %s = cql_get_value(%s, %d)\n"), var, cursor, index);
   }
 }
 
@@ -2670,9 +2677,9 @@ static void lua_ensure_temp_statement(CqlState* _Nonnull CS, int32_t stmt_index)
   CHARBUF_OPEN(temp_stmt);
   CG_TEMP_STMT_NAME(stmt_index, &temp_stmt);
 
-  bprintf(CS->cg_declarations_output, "local %s = nil\n", temp_stmt.ptr);
-  bprintf(CS->cg_cleanup_output, "  cql_finalize_stmt(%s)\n", temp_stmt.ptr);
-  bprintf(CS->cg_cleanup_output, "  %s = nil\n", temp_stmt.ptr);
+  bprintf(CS->cg_declarations_output, FMT("local %s = nil\n"), temp_stmt.ptr);
+  bprintf(CS->cg_cleanup_output, FMT("  cql_finalize_stmt(%s)\n"), temp_stmt.ptr);
+  bprintf(CS->cg_cleanup_output, FMT("  %s = nil\n"), temp_stmt.ptr);
 
   if (stmt_index == 0) {
     CS->cg_lua.temp_statement_emitted = true;
@@ -2696,7 +2703,7 @@ static void cg_lua_flush_variable_predicates(CqlState* _Nonnull CS) {
 
   while (CS->cg_lua.prev_variable_count < CS->cg_lua.cur_variable_count) {
     if (CS->cg_lua.cur_fragment_predicate == 0 || CS->cg_lua.cur_fragment_predicate + 1 == CS->cg_lua.max_fragment_predicate) {
-      bprintf(CS->cg_main_output, "_vpreds_%d[%d] = true -- pred %d known to be true\n",
+      bprintf(CS->cg_main_output, FMT("_vpreds_%d[%d] = true -- pred %d known to be true\n"),
       CS->cg_lua.cur_bound_statement,
       CS->cg_lua.prev_variable_count++,
       CS->cg_lua.cur_fragment_predicate);
@@ -2706,7 +2713,7 @@ static void cg_lua_flush_variable_predicates(CqlState* _Nonnull CS) {
       // for that context which was set in an earlier block.
       // TODO: I think we can prove that it's always true in the code block we are in
       // so this could be = 1 and hence is the same as the above.
-      bprintf(CS->cg_main_output, "_vpreds_%d[%d] = _preds_%d[%d]\n",
+      bprintf(CS->cg_main_output, FMT("_vpreds_%d[%d] = _preds_%d[%d]\n"),
         CS->cg_lua.cur_bound_statement,
         CS->cg_lua.prev_variable_count++,
         CS->cg_lua.cur_bound_statement,
@@ -2733,14 +2740,14 @@ static void cg_lua_fragment_copy_pred(CqlState* _Nonnull CS) {
   }
 
   if (CS->cg_lua.cur_fragment_predicate == 0) {
-    bprintf(CS->cg_main_output, "_preds_%d[%d] = true\n",
+    bprintf(CS->cg_main_output, FMT("_preds_%d[%d] = true\n"),
       CS->cg_lua.cur_bound_statement,
       CS->cg_lua.max_fragment_predicate++);
   }
   else {
     // TODO: I think we can prove that it's always true in the code block we are in
     // so this could be = true and hence is the same as the above.
-    bprintf(CS->cg_main_output, "_preds_%d[%d] = _preds_%d[%d]\n",
+    bprintf(CS->cg_main_output, FMT("_preds_%d[%d] = _preds_%d[%d]\n"),
       CS->cg_lua.cur_bound_statement,
       CS->cg_lua.max_fragment_predicate++,
       CS->cg_lua.cur_bound_statement,
@@ -2775,7 +2782,7 @@ static void cg_lua_fragment_stmt(CqlState* _Nonnull CS, ast_node *stmt, charbuf 
 static void cg_lua_fragment_setpred(CqlState* _Nonnull CS) {
   CS->cg_lua.cur_fragment_predicate = CS->cg_lua.max_fragment_predicate;
   if (CS->cg_lua.has_conditional_fragments) {
-    bprintf(CS->cg_main_output, "_preds_%d[%d] = true\n",
+    bprintf(CS->cg_main_output, FMT("_preds_%d[%d] = true\n"),
       CS->cg_lua.cur_bound_statement,
       CS->cg_lua.max_fragment_predicate++);
   }
@@ -2792,7 +2799,7 @@ static void cg_lua_fragment_cond_action(CqlState* _Nonnull CS, ast_node *ast, ch
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
-  bprintf(CS->cg_main_output, "if %s then\n", expr_value.ptr);
+  bprintf(CS->cg_main_output, FMT("if %s then\n"), expr_value.ptr);
 
   CG_LUA_POP_EVAL(expr);
 
@@ -2819,19 +2826,19 @@ static void cg_lua_fragment_elseif_list(CqlState* _Nonnull CS, ast_node *ast, as
     EXTRACT(cond_action, ast->left);
 
     // ELSE IF [cond_action]
-    bprintf(CS->cg_main_output, "else\n");
+    bprintf(CS->cg_main_output, FMT("else\n"));
       CG_PUSH_MAIN_INDENT2(else);
       cg_lua_fragment_cond_action(CS, cond_action, buffer);
       cg_lua_fragment_elseif_list(CS, ast->right, elsenode, buffer);
       CG_POP_MAIN_INDENT(else);
-    bprintf(CS->cg_main_output, "end\n");
+    bprintf(CS->cg_main_output, FMT("end\n"));
   }
   else if (elsenode) {
     Contract(is_ast_else(elsenode));
     // ELSE [stmt_list]
     EXTRACT(stmt_list, elsenode->left);
 
-    bprintf(CS->cg_main_output, "else\n");
+    bprintf(CS->cg_main_output, FMT("else\n"));
       CG_PUSH_MAIN_INDENT2(else);
 
       int32_t cur_fragment_predicate_saved = CS->cg_lua.cur_fragment_predicate;
@@ -2842,7 +2849,7 @@ static void cg_lua_fragment_elseif_list(CqlState* _Nonnull CS, ast_node *ast, as
 
       CS->cg_lua.cur_fragment_predicate = cur_fragment_predicate_saved;
       CG_POP_MAIN_INDENT(else);
-    bprintf(CS->cg_main_output, "end\n");
+    bprintf(CS->cg_main_output, FMT("end\n"));
   }
 }
 
@@ -3091,7 +3098,7 @@ static bool_t cg_lua_call_in_cte(CqlState* _Nonnull CS, ast_node *cte_body, void
     // when generating shared fragments as a subquery.
     info->callbacks->minify_aliases = false;
 
-    bprintf(&wrapper, "(");
+    bprintf(&wrapper, FMT("("));
     cg_lua_emit_one_frag(CS, &wrapper);
   } else {
     // Use the original global setting
@@ -3113,7 +3120,7 @@ static bool_t cg_lua_call_in_cte(CqlState* _Nonnull CS, ast_node *cte_body, void
   }
 
   if (is_nested_select) {
-    bprintf(&wrapper, ")");
+    bprintf(&wrapper, FMT(")"));
     cg_lua_emit_one_frag(CS, &wrapper);
   }
 
@@ -3240,9 +3247,9 @@ static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name,
   cg_lua_classify_fragments(CS, stmt);
 
   if (CS->cg_lua.has_conditional_fragments) {
-    bprintf(CS->cg_main_output, "_preds_%d = {}\n", CS->cg_lua.cur_bound_statement);
+    bprintf(CS->cg_main_output, FMT("_preds_%d = {}\n"), CS->cg_lua.cur_bound_statement);
     if (CS->cg_lua.has_variables) {
-      bprintf(CS->cg_main_output, "_vpreds_%d = {}\n", CS->cg_lua.cur_bound_statement);
+      bprintf(CS->cg_main_output, FMT("_vpreds_%d = {}\n"), CS->cg_lua.cur_bound_statement);
     }
   }
 
@@ -3301,13 +3308,13 @@ static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name,
     CSTR suffix = CS->cg_lua.has_shared_fragments ? "_var" : "";
 
     if (!has_prepare_stmt) {
-      bprintf(CS->cg_main_output, "_rc_ = cql_exec%s(_db_,\n  ", suffix);
+      bprintf(CS->cg_main_output, FMT("_rc_ = cql_exec%s(_db_,\n  "), suffix);
     }
     else {
       if (reusing_statement) {
-        bprintf(CS->cg_main_output, "if %s_stmt == nil then\n  ", stmt_name);
+        bprintf(CS->cg_main_output, FMT("if %s_stmt == nil then\n  "), stmt_name);
       }
-      bprintf(CS->cg_main_output, "_rc_, %s_stmt = cql_prepare%s(_db_, \n  ", stmt_name, suffix);
+      bprintf(CS->cg_main_output, FMT("_rc_, %s_stmt = cql_prepare%s(_db_, \n  "), stmt_name, suffix);
     }
 
     if (!CS->cg_lua.has_shared_fragments) {
@@ -3318,36 +3325,36 @@ static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name,
 
       // declare the predicate variables if needed
       if (CS->cg_lua.has_conditional_fragments) {
-        bprintf(CS->cg_main_output, "%d, _preds_%d,\n", scount, CS->cg_lua.cur_bound_statement);
-        bprintf(CS->cg_declarations_output, "local _preds_%d  -- %d possible fragments\n", CS->cg_lua.cur_bound_statement, scount);
+        bprintf(CS->cg_main_output, FMT("%d, _preds_%d,\n"), scount, CS->cg_lua.cur_bound_statement);
+        bprintf(CS->cg_declarations_output, FMT("local _preds_%d  -- %d possible fragments\n"), CS->cg_lua.cur_bound_statement, scount);
         if (CS->cg_lua.has_variables) {
-          bprintf(CS->cg_declarations_output, "local _vpreds_%d -- %d possible bindings\n", CS->cg_lua.cur_bound_statement, CS->cg_lua.cur_variable_count);
+          bprintf(CS->cg_declarations_output, FMT("local _vpreds_%d -- %d possible bindings\n"), CS->cg_lua.cur_bound_statement, CS->cg_lua.cur_variable_count);
         }
       }
       else {
-        bprintf(CS->cg_main_output, "%d, nil,\n", scount);
+        bprintf(CS->cg_main_output, FMT("%d, nil,\n"), scount);
       }
 
-      bprintf(CS->cg_main_output, "  {\n");
+      bprintf(CS->cg_main_output, FMT("  {\n"));
       CSTR *strs = (CSTR *)(CS->cg_lua.shared_fragment_strings.ptr);
       for (size_t i = 0; i < scount; i++) {
-        bprintf(CS->cg_main_output, "  ");
+        bprintf(CS->cg_main_output, FMT("  "));
         cg_pretty_quote_plaintext(CS, strs[i], CS->cg_main_output, PRETTY_QUOTE_C);
         if (i + 1 < scount) {
-          bprintf(CS->cg_main_output, ",\n");
+          bprintf(CS->cg_main_output, FMT(",\n"));
         }
         else {
-          bprintf(CS->cg_main_output, "\n");
+          bprintf(CS->cg_main_output, FMT("\n"));
         }
       }
-      bprintf(CS->cg_main_output, "  }\n");
+      bprintf(CS->cg_main_output, FMT("  }\n"));
     }
-    bprintf(CS->cg_main_output, ")\n");
+    bprintf(CS->cg_main_output, FMT(")\n"));
   }
   cg_lua_error_on_not_sqlite_ok(CS);
 
   if (reusing_statement) {
-    bprintf(CS->cg_main_output, "end\n  ");
+    bprintf(CS->cg_main_output, FMT("end\n  "));
   }
 
   CHARBUF_CLOSE(temp_stmt);
@@ -3368,11 +3375,11 @@ static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name,
     bputc(&typestring, '"');
 
     if (CS->cg_lua.has_conditional_fragments) {
-      bprintf(CS->cg_main_output, "_rc_ = cql_multibind_var(_db_, %s_stmt, %d, _vpreds_%d, %s, ",
+      bprintf(CS->cg_main_output, FMT("_rc_ = cql_multibind_var(_db_, %s_stmt, %d, _vpreds_%d, %s, "),
         stmt_name, count, CS->cg_lua.cur_bound_statement, typestring.ptr);
     }
     else {
-      bprintf(CS->cg_main_output, "_rc_ = cql_multibind(_db_, %s_stmt, %s, ",
+      bprintf(CS->cg_main_output, FMT("_rc_ = cql_multibind(_db_, %s_stmt, %s, "),
         stmt_name, typestring.ptr);
     }
 
@@ -3383,24 +3390,24 @@ static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name,
     for (list_item *item = vars; item; item = item->next)  {
       Contract(item->ast->sem->name);
       if (item != vars) {
-        bprintf(CS->cg_main_output, ", ");
+        bprintf(CS->cg_main_output, FMT(", "));
       }
-      bprintf(CS->cg_main_output, "%s", item->ast->sem->name);
+      bprintf(CS->cg_main_output, FMT("%s"), item->ast->sem->name);
     }
 
-    bprintf(CS->cg_main_output, ")\n");
+    bprintf(CS->cg_main_output, FMT(")\n"));
     cg_lua_error_on_not_sqlite_ok(CS);
   }
 
   if (exec_only && vars) {
-    bprintf(CS->cg_main_output, "_rc_ = cql_step(%s_stmt)\n", stmt_name);
+    bprintf(CS->cg_main_output, FMT("_rc_ = cql_step(%s_stmt)\n"), stmt_name);
     cg_lua_error_on_rc_notequal(CS, "CQL_DONE");
     if (reusing_statement) {
-      bprintf(CS->cg_main_output, "cql_reset_stmt(%s_stmt)\n", stmt_name);
+      bprintf(CS->cg_main_output, FMT("cql_reset_stmt(%s_stmt)\n"), stmt_name);
     }
     else {
-      bprintf(CS->cg_main_output, "cql_finalize_stmt(%s_stmt)\n", stmt_name);
-      bprintf(CS->cg_main_output, "%s_stmt = nil\n", stmt_name);
+      bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(%s_stmt)\n"), stmt_name);
+      bprintf(CS->cg_main_output, FMT("%s_stmt = nil\n"), stmt_name);
     }
   }
 
@@ -3412,19 +3419,19 @@ static int32_t cg_lua_bound_sql_statement(CqlState* _Nonnull CS, CSTR stmt_name,
 static void cg_lua_emit_field_names(CqlState* _Nonnull CS, charbuf *output, sem_struct *sptr) {
   Contract(sptr);
 
-  bprintf(output, "{ ");
+  bprintf(output, FMT("{ "));
     for (uint32_t i = 0; i < sptr->count; i++) {
     if (i > 0) {
-      bprintf(output, ", ");
+      bprintf(output, FMT(", "));
     }
     if (strcmp(sptr->names[i], "_anon")) {
-      bprintf(output, "\"%s\"", sptr->names[i]);
+      bprintf(output, FMT("\"%s\""), sptr->names[i]);
     }
     else {
-      bprintf(output, "\"_anon%d\"", i);
+      bprintf(output, FMT("\"_anon%d\""), i);
     }
   }
-  bprintf(output, " }");
+  bprintf(output, FMT(" }"));
 }
 
 // copied here for easy reference
@@ -3490,13 +3497,13 @@ static void cg_lua_declare_auto_cursor(CqlState* _Nonnull CS, CSTR cursor_name, 
   }
   
   // this should really zero the cursor
-  bprintf(CS->cg_declarations_output, "%s%s = { _has_row_ = false }\n", local, cursor_name);
-  bprintf(CS->cg_declarations_output, "%s%s_fields_ = ", local, cursor_name);
+  bprintf(CS->cg_declarations_output, FMT("%s%s = { _has_row_ = false }\n"), local, cursor_name);
+  bprintf(CS->cg_declarations_output, FMT("%s%s_fields_ = "), local, cursor_name);
   cg_lua_emit_field_names(CS, CS->cg_declarations_output, sptr);
-  bprintf(CS->cg_declarations_output, "\n");
-  bprintf(CS->cg_declarations_output, "%s%s_types_ = ", local, cursor_name);
+  bprintf(CS->cg_declarations_output, FMT("\n"));
+  bprintf(CS->cg_declarations_output, FMT("%s%s_types_ = "), local, cursor_name);
   cg_lua_emit_field_types(CS->cg_declarations_output, sptr);
-  bprintf(CS->cg_declarations_output, "\n");
+  bprintf(CS->cg_declarations_output, FMT("\n"));
 }
 
 // Declaring a cursor causes us to do the following:
@@ -3548,32 +3555,32 @@ static void cg_lua_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   Invariant(!is_unboxing || is_boxed);
 
   if (out_union_processing) {
-    bprintf(CS->cg_declarations_output, "local %s_result_set_ = nil\n", cursor_name);
-    bprintf(CS->cg_declarations_output, "local %s_row_num_ = 0\n", cursor_name);
-    bprintf(CS->cg_declarations_output, "local %s_row_count_ = 0\n", cursor_name);
+    bprintf(CS->cg_declarations_output, FMT("local %s_result_set_ = nil\n"), cursor_name);
+    bprintf(CS->cg_declarations_output, FMT("local %s_row_num_ = 0\n"), cursor_name);
+    bprintf(CS->cg_declarations_output, FMT("local %s_row_count_ = 0\n"), cursor_name);
 
     if (is_for_expr) {
       EXTRACT_ANY_NOTNULL(expr, ast->right);
       CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
-      bprintf(CS->cg_main_output, "%s_result_set_ = %s\n", cursor_name, expr_value.ptr);
-      bprintf(CS->cg_main_output, "%s_row_num_ = 0\n", cursor_name);
-      bprintf(CS->cg_main_output, "%s_row_count_ = #(%s_result_set_)\n", cursor_name, cursor_name);
+      bprintf(CS->cg_main_output, FMT("%s_result_set_ = %s\n"), cursor_name, expr_value.ptr);
+      bprintf(CS->cg_main_output, FMT("%s_row_num_ = 0\n"), cursor_name);
+      bprintf(CS->cg_main_output, FMT("%s_row_count_ = #(%s_result_set_)\n"), cursor_name, cursor_name);
 
       CG_LUA_POP_EVAL(expr);
     }
   }
   else {
-    bprintf(CS->cg_declarations_output, "local %s_stmt = nil\n", cursor_name);
+    bprintf(CS->cg_declarations_output, FMT("local %s_stmt = nil\n"), cursor_name);
 
     if (!is_boxed) {
       // easy case, no boxing, just finalize on exit.
-      bprintf(CS->cg_cleanup_output, "  cql_finalize_stmt(%s_stmt)\n", cursor_name);
-      bprintf(CS->cg_cleanup_output, "  %s_stmt = nil\n", cursor_name);
+      bprintf(CS->cg_cleanup_output, FMT("  cql_finalize_stmt(%s_stmt)\n"), cursor_name);
+      bprintf(CS->cg_cleanup_output, FMT("  %s_stmt = nil\n"), cursor_name);
 
       if (CS->cg_lua.in_loop) {
         // tricky case, the call might iterate so we have to clean up the cursor before we do the call
-        bprintf(CS->cg_main_output, "cql_finalize_stmt(%s_stmt)\n", cursor_name);
+        bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(%s_stmt)\n"), cursor_name);
       }
     }
   }
@@ -3587,7 +3594,7 @@ static void cg_lua_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
     if (is_boxed) {
       // The next prepare will finalize the statement, we don't want to do that
       // if the cursor is being handled by boxes. The box downcount will take care of it
-      bprintf(CS->cg_main_output, "%s_stmt = nil\n", cursor_name);
+      bprintf(CS->cg_main_output, FMT("%s_stmt = nil\n"), cursor_name);
     }
     cg_lua_bound_sql_statement(CS, cursor_name, select_stmt, CG_PREPARE|CG_MINIFY_ALIASES);
   }
@@ -3598,7 +3605,7 @@ static void cg_lua_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
     EXTRACT_ANY_NOTNULL(expr, ast->right);
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
-    bprintf(CS->cg_main_output, "%s_stmt = %s\n", cursor_name, expr_value.ptr);
+    bprintf(CS->cg_main_output, FMT("%s_stmt = %s\n"), cursor_name, expr_value.ptr);
 
     CG_LUA_POP_EVAL(expr);
   }
@@ -3610,7 +3617,7 @@ static void cg_lua_declare_cursor(CqlState* _Nonnull CS, ast_node *ast) {
     if (is_boxed) {
       // The next prepare will finalize the statement, we don't want to do that
       // if the cursor is being handled by boxes. The box downcount will take care of it
-      bprintf(CS->cg_main_output, "%s_stmt = nil\n", cursor_name);
+      bprintf(CS->cg_main_output, FMT("%s_stmt = nil\n"), cursor_name);
     }
 
     EXTRACT_NOTNULL(call_stmt, ast->right);
@@ -3639,7 +3646,7 @@ static void cg_lua_set_from_cursor(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_STRING(var_name, variable);
 
   // in LUA the statement is already an object, we just store it
-  bprintf(CS->cg_main_output, "%s = %s_stmt\n", var_name, cursor_name);
+  bprintf(CS->cg_main_output, FMT("%s = %s_stmt\n"), var_name, cursor_name);
 }
 
 static void cg_lua_declare_cursor_like(CqlState* _Nonnull CS, ast_node *name_ast) {
@@ -3710,7 +3717,7 @@ static void cg_lua_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   ast_node *value = insert_list;
 
-  bprintf(CS->cg_main_output, "%s._has_row_ = true\n", cursor_name);
+  bprintf(CS->cg_main_output, FMT("%s._has_row_ = true\n"), cursor_name);
 
   for (ast_node *item = name_list ; item; item = item->right, value = value->right) {
     EXTRACT_ANY_NOTNULL(expr, value->left);
@@ -3719,7 +3726,7 @@ static void cg_lua_fetch_values_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s.%s", cursor_name, var);
+    bprintf(&temp, FMT("%s.%s"), cursor_name, var);
     cg_lua_store(CS, CS->cg_main_output, temp.ptr, col->sem->sem_type, expr->sem->sem_type, expr_value.ptr);
     CHARBUF_CLOSE(temp);
     CG_LUA_POP_EVAL(expr);
@@ -3737,7 +3744,7 @@ static void cg_lua_fetch_cursor_from_blob_stmt(CqlState* _Nonnull CS, ast_node *
   CG_LUA_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
 
   bprintf(CS->cg_main_output,
-    "_rc_, %s = cql_deserialize_from_blob(%s)\n", cursor_name, blob_value.ptr);
+    FMT("_rc_, %s = cql_deserialize_from_blob(%s)\n"), cursor_name, blob_value.ptr);
   cg_lua_error_on_not_sqlite_ok(CS);
 
   CG_LUA_POP_EVAL(blob);
@@ -3751,7 +3758,7 @@ static void cg_lua_set_blob_from_cursor_stmt(CqlState* _Nonnull CS, ast_node *as
   CSTR cursor_name = ast->right->sem->name;
 
   bprintf(CS->cg_main_output,
-    "_rc_, %s = cql_serialize_to_blob(%s);\n", blob_name, cursor_name);
+    FMT("_rc_, %s = cql_serialize_to_blob(%s);\n"), blob_name, cursor_name);
   cg_lua_error_on_not_sqlite_ok(CS);
 }
 
@@ -3777,13 +3784,13 @@ static void cg_lua_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   bool_t uses_out_union = !!(ast->sem->sem_type & SEM_TYPE_USES_OUT_UNION);
 
   if (uses_out_union) {
-    bprintf(CS->cg_main_output, "%s_row_num_ = %s_row_num_ + 1\n", cursor_name, cursor_name);
-    bprintf(CS->cg_main_output, "if %s_row_num_ <= %s_row_count_ then\n", cursor_name, cursor_name);
-    bprintf(CS->cg_main_output, "  %s = %s_result_set_[%s_row_num_]\n", cursor_name, cursor_name, cursor_name);
-    bprintf(CS->cg_main_output, "else\n");
+    bprintf(CS->cg_main_output, FMT("%s_row_num_ = %s_row_num_ + 1\n"), cursor_name, cursor_name);
+    bprintf(CS->cg_main_output, FMT("if %s_row_num_ <= %s_row_count_ then\n"), cursor_name, cursor_name);
+    bprintf(CS->cg_main_output, FMT("  %s = %s_result_set_[%s_row_num_]\n"), cursor_name, cursor_name, cursor_name);
+    bprintf(CS->cg_main_output, FMT("else\n"));
     // this should really zero the cursor
-    bprintf(CS->cg_main_output, "  %s = { _has_row_ = false }\n", cursor_name);
-    bprintf(CS->cg_main_output, "end\n");
+    bprintf(CS->cg_main_output, FMT("  %s = { _has_row_ = false }\n"), cursor_name);
+    bprintf(CS->cg_main_output, FMT("end\n"));
   }
 
   // if there is a row, then we need to read the row into the variables
@@ -3794,10 +3801,10 @@ static void cg_lua_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   if (uses_out_union) {
   }
   else {
-    bprintf(CS->cg_main_output, "-- step and fetch\n");
-    bprintf(CS->cg_main_output, "_rc_ = cql_multifetch(%s_stmt, %s, %s_types_, %s_fields_",
+    bprintf(CS->cg_main_output, FMT("-- step and fetch\n"));
+    bprintf(CS->cg_main_output, FMT("_rc_ = cql_multifetch(%s_stmt, %s, %s_types_, %s_fields_"),
       cursor_name, cursor_name, cursor_name, cursor_name);
-    bprintf(CS->cg_main_output, ")\n");
+    bprintf(CS->cg_main_output, FMT(")\n"));
     cg_lua_error_on_expr(CS, "_rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE");
   }
 
@@ -3808,14 +3815,14 @@ static void cg_lua_fetch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     for (ast_node *item = name_list; item; item = item->right, i++) {
       EXTRACT_NAME_AST(name_ast, item->left);
       EXTRACT_STRING(var, name_ast);
-      bprintf(CS->cg_main_output, "%s = %s.", var, cursor_name);
+      bprintf(CS->cg_main_output, FMT("%s = %s."), var, cursor_name);
       if (strcmp(sptr->names[i], "_anon")) {
-        bprintf(CS->cg_main_output, "%s", sptr->names[i]);
+        bprintf(CS->cg_main_output, FMT("%s"), sptr->names[i]);
       }
       else {
-        bprintf(CS->cg_main_output, "_anon%d", i);
+        bprintf(CS->cg_main_output, FMT("_anon%d"), i);
       }
-      bprintf(CS->cg_main_output, "\n");
+      bprintf(CS->cg_main_output, FMT("\n"));
     }
   }
 }
@@ -3844,7 +3851,7 @@ static void cg_lua_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
   EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
 
-  bprintf(CS->cg_main_output, "if %s._has_row_ then\n", name);
+  bprintf(CS->cg_main_output, FMT("if %s._has_row_ then\n"), name);
 
   CG_PUSH_MAIN_INDENT2(stores);
 
@@ -3857,7 +3864,7 @@ static void cg_lua_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
     CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
     CHARBUF_OPEN(temp);
-    bprintf(&temp, "%s.%s", name, name_ast->sem->name);
+    bprintf(&temp, FMT("%s.%s"), name, name_ast->sem->name);
     cg_lua_store(CS, CS->cg_main_output, temp.ptr, name_ast->sem->sem_type, expr->sem->sem_type, expr_value.ptr);
     CHARBUF_CLOSE(temp);
     CG_LUA_POP_EVAL(expr);
@@ -3865,7 +3872,7 @@ static void cg_lua_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   CG_POP_MAIN_INDENT(stores);
 
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
 }
 
 // Here we just emit the various values for an IF expression that is part of
@@ -3876,7 +3883,7 @@ static void cg_lua_update_cursor_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 static void cg_lua_switch_expr_list(CqlState* _Nonnull CS, ast_node *ast, sem_t sem_type_switch_expr, CSTR val) {
   Contract(is_ast_expr_list(ast));
 
-  bprintf(CS->cg_main_output, "if ");
+  bprintf(CS->cg_main_output, FMT("if "));
 
   while (ast) {
     Contract(is_ast_expr_list(ast));
@@ -3886,17 +3893,17 @@ static void cg_lua_switch_expr_list(CqlState* _Nonnull CS, ast_node *ast, sem_t 
     eval(CS, expr, &result);
     Invariant(result.sem_type != SEM_TYPE_ERROR); // already checked
 
-    bprintf(CS->cg_main_output, "%s == ", val);
+    bprintf(CS->cg_main_output, FMT("%s == "), val);
 
     eval_format_number(CS, &result, EVAL_FORMAT_FOR_LUA, CS->cg_main_output);
 
     if (ast->right) {
-      bprintf(CS->cg_main_output, " or ");
+      bprintf(CS->cg_main_output, FMT(" or "));
     }
 
     ast = ast->right;
   }
-  bprintf(CS->cg_main_output, " then\n");
+  bprintf(CS->cg_main_output, FMT(" then\n"));
 }
 
 // Switch actually generates pretty easily because of the constraints that were
@@ -3923,7 +3930,7 @@ static void cg_lua_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   cg_lua_copy(CS, CS->cg_main_output, val.ptr, sem_type_expr, expr_value.ptr);
   CG_LUA_POP_EVAL(expr);
 
-  bprintf(CS->cg_main_output, "repeat\n");
+  bprintf(CS->cg_main_output, FMT("repeat\n"));
 
   CG_PUSH_MAIN_INDENT2(cases);
 
@@ -3946,7 +3953,7 @@ static void cg_lua_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     // in which case we have to emit it with just break...
     if (stmt_list || has_default) {
       if (!first_case) {
-        bprintf(CS->cg_main_output, "\n");  // break between statement lists
+        bprintf(CS->cg_main_output, FMT("\n"));  // break between statement lists
       }
       first_case = false;
 
@@ -3956,7 +3963,7 @@ static void cg_lua_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
         cg_lua_switch_expr_list(CS, expr_list, expr->sem->sem_type, val.ptr);
       }
       else {
-        bprintf(CS->cg_main_output, "-- default\n");
+        bprintf(CS->cg_main_output, FMT("-- default\n"));
       }
 
       if (stmt_list) {
@@ -3964,15 +3971,15 @@ static void cg_lua_switch_stmt(CqlState* _Nonnull CS, ast_node *ast) {
       }
 
       if (connector->left) {
-        bprintf(CS->cg_main_output, "  break\n");
-        bprintf(CS->cg_main_output, "end\n");
+        bprintf(CS->cg_main_output, FMT("  break\n"));
+        bprintf(CS->cg_main_output, FMT("end\n"));
       }
     }
     switch_case = switch_case->right;
   }
 
   CG_POP_MAIN_INDENT(cases);
-  bprintf(CS->cg_main_output, "until true\n");
+  bprintf(CS->cg_main_output, FMT("until true\n"));
 
   CG_LUA_POP_TEMP(val);
 }
@@ -4008,8 +4015,8 @@ static void cg_lua_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // WHILE [expr] BEGIN [stmt_list] END
 
-  bprintf(CS->cg_main_output, "while true\n");
-  bprintf(CS->cg_main_output, "do\n");
+  bprintf(CS->cg_main_output, FMT("while true\n"));
+  bprintf(CS->cg_main_output, FMT("do\n"));
 
   CG_LUA_PUSH_EVAL(expr, LUA_EXPR_PRI_ROOT);
 
@@ -4017,7 +4024,7 @@ static void cg_lua_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // so we correctly break out of the while if the expression's value is nil
   cg_lua_to_bool(CS, sem_type, &expr_value);
   CG_PUSH_MAIN_INDENT2(loop);
-  bprintf(CS->cg_main_output, "if not(%s) then break end\n", expr_value.ptr);
+  bprintf(CS->cg_main_output, FMT("if not(%s) then break end\n"), expr_value.ptr);
   CG_POP_MAIN_INDENT(loop);
 
   bool_t loop_saved = CS->cg_lua.in_loop;
@@ -4028,10 +4035,10 @@ static void cg_lua_while_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   cg_lua_stmt_list(CS, stmt_list);
 
   if (CS->cg_lua.continue_label_needed) {
-    bprintf(CS->cg_main_output, "::continue%d::\n", CS->cg_lua.continue_label_number);
+    bprintf(CS->cg_main_output, FMT("::continue%d::\n"), CS->cg_lua.continue_label_number);
   }
 
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
 
   CS->cg_lua.in_loop = loop_saved;
   CS->cg_lua.continue_label_needed = lua_continue_label_needed_saved;
@@ -4058,12 +4065,12 @@ static void cg_lua_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // LOOP [fetch_stmt] BEGIN [stmt_list] END
 
-  bprintf(CS->cg_main_output, "while true\ndo\n");
+  bprintf(CS->cg_main_output, FMT("while true\ndo\n"));
   CG_PUSH_MAIN_INDENT2(loop);
 
   cg_lua_fetch_stmt(CS, fetch_stmt);
 
-  bprintf(CS->cg_main_output, "if not %s._has_row_ then break end\n", cursor_name);
+  bprintf(CS->cg_main_output, FMT("if not %s._has_row_ then break end\n"), cursor_name);
 
   bool_t loop_saved = CS->cg_lua.in_loop;
   CS->cg_lua.in_loop = true;
@@ -4079,10 +4086,10 @@ static void cg_lua_loop_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   cg_lua_stmt_list(CS, stmt_list);
 
   if (CS->cg_lua.continue_label_needed) {
-    bprintf(CS->cg_main_output, "::continue%d::\n", CS->cg_lua.continue_label_number);
+    bprintf(CS->cg_main_output, FMT("::continue%d::\n"), CS->cg_lua.continue_label_number);
   }
 
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
 
   CS->cg_lua.in_loop = loop_saved;
   CS->cg_lua.continue_label_needed = lua_continue_label_needed_saved;
@@ -4094,7 +4101,7 @@ static void cg_lua_continue_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_continue_stmt(ast));
 
   // CONTINUE
-  bprintf(CS->cg_main_output, "goto continue%d\n", CS->cg_lua.continue_label_number);
+  bprintf(CS->cg_main_output, FMT("goto continue%d\n"), CS->cg_lua.continue_label_number);
   CS->cg_lua.continue_label_needed = true;
 }
 
@@ -4103,7 +4110,7 @@ static void cg_lua_leave_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_leave_stmt(ast));
 
   // LEAVE
-  bprintf(CS->cg_main_output, "break\n");
+  bprintf(CS->cg_main_output, FMT("break\n"));
 }
 
 // We go to the main cleanup label and exit the current procedure
@@ -4113,9 +4120,9 @@ static void cg_lua_return_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // RETURN
   bool_t dml_proc = is_dml_proc(CS->sem.current_proc->sem->sem_type);
   if (dml_proc) {
-    bprintf(CS->cg_main_output, "_rc_ = CQL_OK -- clean up any CQL_ROW value or other non-error\n");
+    bprintf(CS->cg_main_output, FMT("_rc_ = CQL_OK -- clean up any CQL_ROW value or other non-error\n"));
   }
-  bprintf(CS->cg_main_output, "goto %s -- return\n", CQL_CLEANUP_DEFAULT_LABEL);
+  bprintf(CS->cg_main_output, FMT("goto %s -- return\n"), CQL_CLEANUP_DEFAULT_LABEL);
   CS->cg_lua.return_used = true;
 }
 
@@ -4164,11 +4171,11 @@ static void cg_lua_close_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   sem_t sem_type = cursor_ast->sem->sem_type;
 
   if (!(sem_type & SEM_TYPE_VALUE_CURSOR)) {
-    bprintf(CS->cg_main_output, "cql_finalize_stmt(%s_stmt)\n", name);
-    bprintf(CS->cg_main_output, "%s_stmt = nil\n", name);
+    bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(%s_stmt)\n"), name);
+    bprintf(CS->cg_main_output, FMT("%s_stmt = nil\n"), name);
   }
   // this should really zero the cursor
-  bprintf(CS->cg_main_output, "%s = { _has_row_ = false }\n", name);
+  bprintf(CS->cg_main_output, FMT("%s = { _has_row_ = false }\n"), name);
 }
 
 // The OUT statement copies the current value of a cursor into an implicit
@@ -4184,7 +4191,7 @@ static void cg_lua_out_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // OUT [cursor_name]
 
-  bprintf(CS->cg_main_output, "_result_ = cql_clone_row(%s)\n", cursor_name);
+  bprintf(CS->cg_main_output, FMT("_result_ = cql_clone_row(%s)\n"), cursor_name);
 }
 
 static void cg_lua_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
@@ -4195,9 +4202,9 @@ static void cg_lua_out_union_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 
   // OUT UNION [cursor_name]
 
-  bprintf(CS->cg_main_output, "if %s._has_row_ then\n", cursor_name);
-  bprintf(CS->cg_main_output, "  table.insert(_rows_, cql_clone_row(%s))\n", cursor_name);
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("if %s._has_row_ then\n"), cursor_name);
+  bprintf(CS->cg_main_output, FMT("  table.insert(_rows_, cql_clone_row(%s))\n"), cursor_name);
+  bprintf(CS->cg_main_output, FMT("end\n"));
 }
 
 // emit the string literal into the otuput if the current runtime matches
@@ -4244,11 +4251,11 @@ static void cg_lua_call_named_external(CqlState* _Nonnull CS, CSTR name, ast_nod
   // case we need to restore the temp stack after we are done with the args.
   int32_t lua_stack_level_saved = CS->cg_lua.stack_level;
 
-  bprintf(&invocation, "%s(", name);
+  bprintf(&invocation, FMT("%s("), name);
   cg_lua_emit_external_arglist(CS, arg_list, &invocation);
-  bprintf(&invocation, ")\n");
+  bprintf(&invocation, FMT(")\n"));
 
-  bprintf(CS->cg_main_output, "%s", invocation.ptr);
+  bprintf(CS->cg_main_output, FMT("%s"), invocation.ptr);
 
   CS->cg_lua.stack_level = lua_stack_level_saved;  // put the scratch stack back
 
@@ -4265,11 +4272,11 @@ static void cg_lua_emit_external_arglist(CqlState* _Nonnull CS, ast_node *arg_li
     EXTRACT_ANY(arg, item->left);
 
     CG_LUA_PUSH_EVAL(arg, LUA_EXPR_PRI_ROOT);
-    bprintf(invocation, "%s", arg_value.ptr);
+    bprintf(invocation, FMT("%s"), arg_value.ptr);
     CG_LUA_POP_EVAL(arg);
 
     if (item->right) {
-      bprintf(invocation, ", ");
+      bprintf(invocation, FMT(", "));
     }
   }
 }
@@ -4287,20 +4294,20 @@ static void cg_lua_emit_one_arg(CqlState* _Nonnull CS, ast_node *arg, sem_t sem_
 
   if (is_out_parameter(sem_type_param)) {
     if (returns->used > 1) {
-      bprintf(returns, ", ");
+      bprintf(returns, FMT(", "));
     }
-    bprintf(returns, "%s", arg->sem->name);
+    bprintf(returns, FMT("%s"), arg->sem->name);
   }
 
   if (is_in_parameter(sem_type_param)) {
     // either way arg_value is now correct
     if (invocation->used > 1) {
-      bprintf(invocation, ", ");
+      bprintf(invocation, FMT(", "));
     }
 
     if (is_cursor_formal(sem_type_param)) {
       // cursor formal expands to three actual arguments
-      bprintf(invocation, "%s, %s_types_, %s_fields_", arg->sem->name, arg->sem->name, arg->sem->name);
+      bprintf(invocation, FMT("%s, %s_types_, %s_fields_"), arg->sem->name, arg->sem->name, arg->sem->name);
     }
     else if (is_bool(sem_type_param) && !is_bool(sem_type_arg)) {
        cg_lua_emit_to_bool(CS, invocation, arg_value.ptr);
@@ -4309,7 +4316,7 @@ static void cg_lua_emit_one_arg(CqlState* _Nonnull CS, ast_node *arg, sem_t sem_
        cg_lua_emit_to_num(CS, invocation, arg_value.ptr);
     }
     else {
-      bprintf(invocation, "%s", arg_value.ptr);
+      bprintf(invocation, FMT("%s"), arg_value.ptr);
     }
   }
 
@@ -4367,14 +4374,14 @@ static void cg_lua_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *valu
 
   if (dml_proc) {
     // at least one arg for the out arg so add _db_ with comma
-    bprintf(&args, "_db_");
-    bprintf(&returns, "_rc_");
+    bprintf(&args, FMT("_db_"));
+    bprintf(&returns, FMT("_rc_"));
   }
 
   if (returns.used > 1) {
-    bprintf(&returns, ", ");
+    bprintf(&returns, FMT(", "));
   }
-  bprintf(&returns, "%s", result_var.ptr);
+  bprintf(&returns, FMT("%s"), result_var.ptr);
 
   if (unchecked_func) {
     Invariant(!params); // no params for unchecked, so no out params
@@ -4397,7 +4404,7 @@ static void cg_lua_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *valu
   // otherwise we can just copy the data since the variable is for sure
   // an exact match for the call return by construction.
 
-  bprintf(CS->cg_main_output, "%s = %s(%s)\n", returns.ptr, func_sym.ptr, args.ptr);
+  bprintf(CS->cg_main_output, FMT("%s = %s(%s)\n"), returns.ptr, func_sym.ptr, args.ptr);
 
   if (proc_as_func && dml_proc) {
     // cascade the failure
@@ -4537,8 +4544,8 @@ static void cg_lua_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, C
   CHARBUF_OPEN(returns);
 
   if (dml_proc) {
-    bprintf(&returns, "_rc_");
-    bprintf(&args, "_db_");
+    bprintf(&returns, FMT("_rc_"));
+    bprintf(&args, FMT("_db_"));
   }
 
   if (out_union_proc && !cursor_name) {
@@ -4548,42 +4555,42 @@ static void cg_lua_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, C
     // we have to release it in case this call is in a loop or if this
     // call is repeated in some other way
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "_result_set_");
+    bprintf(&returns, FMT("_result_set_"));
   }
   else if (out_union_proc) {
     // this is case 3a above.
     Invariant(cursor_name); // either specified or the default _result_ variable
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "%s_result_set_", cursor_name);
+    bprintf(&returns, FMT("%s_result_set_"), cursor_name);
   }
   else if (result_set_proc && !cursor_name) {
     // This is case 1b above, prop the result as our output.  As with case
     // 3b above we have to pre-release _result_stmt_ because of repetition.
-    bprintf(CS->cg_main_output, "cql_finalize_stmt(_result_stmt)\n");
-    bprintf(CS->cg_main_output, "_result_stmt = nil\n");
+    bprintf(CS->cg_main_output, FMT("cql_finalize_stmt(_result_stmt)\n"));
+    bprintf(CS->cg_main_output, FMT("_result_stmt = nil\n"));
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "_result_stmt");
+    bprintf(&returns, FMT("_result_stmt"));
   }
   else if (result_set_proc) {
     // this is case 1a above
     Invariant(cursor_name); // either specified or the default _result_ variable
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "%s_stmt", cursor_name);
+    bprintf(&returns, FMT("%s_stmt"), cursor_name);
   }
   else if (out_stmt_proc) {
     Invariant(cursor_name);
     if (returns.used > 1) {
-      bprintf(&returns, ", ");
+      bprintf(&returns, FMT(", "));
     }
-    bprintf(&returns, "%s", cursor_name);
+    bprintf(&returns, FMT("%s"), cursor_name);
   }
 
   // we don't need to manage the stack, we're always called at the top level
@@ -4596,9 +4603,9 @@ static void cg_lua_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, C
   // For a fetch results proc we have to add the out argument here.
 
   if (returns.used > 1) {
-    bprintf(CS->cg_main_output, "%s = ", returns.ptr);
+    bprintf(CS->cg_main_output, FMT("%s = "), returns.ptr);
   }
-  bprintf(CS->cg_main_output, "%s(%s)\n", proc_sym.ptr, args.ptr);
+  bprintf(CS->cg_main_output, FMT("%s(%s)\n"), proc_sym.ptr, args.ptr);
 
   if (dml_proc) {
     // if there is an error code, check it, and cascade the failure
@@ -4608,8 +4615,8 @@ static void cg_lua_call_stmt_with_cursor(CqlState* _Nonnull CS, ast_node *ast, C
   if (out_union_proc && cursor_name) {
     // note lua indexes are 1 based
     // case 3a, capturing the cursor, we set the row index to 0 (it will be pre-incremented)
-    bprintf(CS->cg_main_output, "%s_row_num_ = 0\n", cursor_name);
-    bprintf(CS->cg_main_output, "%s_row_count_ = #(%s_result_set_)\n", cursor_name, cursor_name);
+    bprintf(CS->cg_main_output, FMT("%s_row_num_ = 0\n"), cursor_name);
+    bprintf(CS->cg_main_output, FMT("%s_row_count_ = #(%s_result_set_)\n"), cursor_name, cursor_name);
   }
 
   CHARBUF_CLOSE(returns);
@@ -4725,8 +4732,8 @@ static void cg_lua_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, as
 
   // We need unique labels for this block
   ++CS->cg_lua.catch_block_count;
-  bprintf(&catch_start, "catch_start_%d", CS->cg_lua.catch_block_count);
-  bprintf(&catch_end, "catch_end_%d", CS->cg_lua.catch_block_count);
+  bprintf(&catch_start, FMT("catch_start_%d"), CS->cg_lua.catch_block_count);
+  bprintf(&catch_end, FMT("catch_end_%d"), CS->cg_lua.catch_block_count);
 
   // Divert the error target.
   CSTR saved_lua_error_target = CS->cg_lua.error_target;
@@ -4735,7 +4742,7 @@ static void cg_lua_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, as
   CS->cg_lua.error_target_used = false;
 
   // Emit the try code.
-  bprintf(CS->cg_main_output, "-- try\n\n");
+  bprintf(CS->cg_main_output, FMT("-- try\n\n"));
 
   cg_lua_stmt_list(CS, try_list);
 
@@ -4744,11 +4751,11 @@ static void cg_lua_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, as
   }
 
   // If we get to the end, skip the catch block.
-  bprintf(CS->cg_main_output, "  goto %s\n\n", catch_end.ptr);
+  bprintf(CS->cg_main_output, FMT("  goto %s\n\n"), catch_end.ptr);
 
   // Emit the catch code, with labels at the start and the end.
   if (CS->cg_lua.error_target_used) {
-    bprintf(CS->cg_main_output, "::%s:: ", catch_start.ptr);
+    bprintf(CS->cg_main_output, FMT("::%s:: "), catch_start.ptr);
   }
 
   // Restore the error target, the catch block runs with the old error target
@@ -4756,12 +4763,12 @@ static void cg_lua_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, as
   CS->cg_lua.error_target_used = saved_lua_error_target_used;
   CSTR lua_rcthrown_saved = CS->cg_lua.rcthrown_current;
 
-  bprintf(CS->cg_main_output, "\n");
-  bprintf(CS->cg_main_output, "do\n");
+  bprintf(CS->cg_main_output, FMT("\n"));
+  bprintf(CS->cg_main_output, FMT("do\n"));
 
   CHARBUF_OPEN(rcthrown);
 
-  bprintf(&rcthrown, "_rc_thrown_%d", ++CS->cg_lua.rcthrown_index);
+  bprintf(&rcthrown, FMT("_rc_thrown_%d"), ++CS->cg_lua.rcthrown_index);
   CS->cg_lua.rcthrown_current = rcthrown.ptr;
   bool_t lua_rcthrown_used_saved = CS->cg_lua.rcthrown_used;
   CS->cg_lua.rcthrown_used = false;
@@ -4775,18 +4782,18 @@ static void cg_lua_trycatch_helper(CqlState* _Nonnull CS, ast_node *try_list, as
     CS->cg_main_output = main_saved;
 
     if (CS->cg_lua.rcthrown_used) {
-      bprintf(CS->cg_main_output, "  local %s = _rc_\n", rcthrown.ptr);
+      bprintf(CS->cg_main_output, FMT("  local %s = _rc_\n"), rcthrown.ptr);
     }
 
-    bprintf(CS->cg_main_output, "%s", catch_block.ptr);
+    bprintf(CS->cg_main_output, FMT("%s"), catch_block.ptr);
 
   CHARBUF_CLOSE(catch_block);
 
   CS->cg_lua.rcthrown_current = lua_rcthrown_saved;
   CS->cg_lua.rcthrown_used = lua_rcthrown_used_saved;
-  bprintf(CS->cg_main_output, "end\n");
+  bprintf(CS->cg_main_output, FMT("end\n"));
 
-  bprintf(CS->cg_main_output, "\n::%s::\n", catch_end.ptr);
+  bprintf(CS->cg_main_output, FMT("\n::%s::\n"), catch_end.ptr);
 
   CHARBUF_CLOSE(rcthrown);
   CHARBUF_CLOSE(catch_end);
@@ -4830,9 +4837,9 @@ static void cg_lua_proc_savepoint_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 static void cg_lua_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   Contract(is_ast_throw_stmt(ast));
 
-  bprintf(CS->cg_main_output, "_rc_ = cql_best_error(%s)\n", CS->cg_lua.rcthrown_current);
-  bprintf(CS->cg_main_output, "cql_error_trace(_rc_, _db_)\n");
-  bprintf(CS->cg_main_output, "goto %s\n", CS->cg_lua.error_target);
+  bprintf(CS->cg_main_output, FMT("_rc_ = cql_best_error(%s)\n"), CS->cg_lua.rcthrown_current);
+  bprintf(CS->cg_main_output, FMT("cql_error_trace(_rc_, _db_)\n"));
+  bprintf(CS->cg_main_output, FMT("goto %s\n"), CS->cg_lua.error_target);
   CS->cg_lua.error_target_used = true;
   CS->cg_lua.rcthrown_used = true;
 }
@@ -4843,7 +4850,7 @@ static void cg_lua_throw_stmt(CqlState* _Nonnull CS, ast_node *ast) {
 // just so that we get the test directives.
 static void cg_lua_declare_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   if (CS->options.test) {
-    bprintf(CS->cg_main_output, "-- declare group emits no lua\n");
+    bprintf(CS->cg_main_output, FMT("-- declare group emits no lua\n"));
   }
 }
 
@@ -4859,7 +4866,7 @@ static void cg_lua_emit_group_stmt(CqlState* _Nonnull CS, ast_node *ast) {
   // Note we have to do this only because this only generates declarations so the
   // normal logic for emitting these doesn't kick in.
   if (CS->options.test) {
-    bprintf(CS->cg_declarations_output, "\n-- The statement ending at line %d\n", ast->lineno);
+    bprintf(CS->cg_declarations_output, FMT("\n-- The statement ending at line %d\n"), ast->lineno);
   }
 
   Contract(!CS->cg_lua.in_var_group_emit);
@@ -4892,14 +4899,14 @@ static void cg_lua_emit_one_enum(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_ANY(name_ast, typed_name->left);
   EXTRACT_STRING(name, name_ast);
 
-  bprintf(CS->cg_main_output, "cql_emit_constants(\"enum\", \"%s\", {\n", name);
+  bprintf(CS->cg_main_output, FMT("cql_emit_constants(\"enum\", \"%s\", {\n"), name);
 
   while (enum_values) {
     EXTRACT_NOTNULL(enum_value, enum_values->left);
     EXTRACT_NAME_AST(enum_name_ast, enum_value->left);
     EXTRACT_STRING(enum_name, enum_name_ast);
 
-    bprintf(CS->cg_main_output, "  %s = ", enum_name);
+    bprintf(CS->cg_main_output, FMT("  %s = "), enum_name);
     eval_format_number(CS, enum_name_ast->sem->value, EVAL_FORMAT_FOR_LUA, CS->cg_main_output);
 
     if (enum_values->right) {
@@ -4911,7 +4918,7 @@ static void cg_lua_emit_one_enum(CqlState* _Nonnull CS, ast_node *ast) {
     enum_values = enum_values->right;
   }
 
-  bprintf(CS->cg_main_output, "})\n");
+  bprintf(CS->cg_main_output, FMT("})\n"));
 }
 
 // We emit the enums into the current file so that Lua code can
@@ -4955,14 +4962,14 @@ static void cg_lua_emit_one_const_group(CqlState* _Nonnull CS, ast_node *ast) {
   EXTRACT_NOTNULL(const_values, ast->right);
   EXTRACT_STRING(name, name_ast);
 
-  bprintf(CS->cg_main_output, "cql_emit_constants(\"const\", \"%s\", {\n", name);
+  bprintf(CS->cg_main_output, FMT("cql_emit_constants(\"const\", \"%s\", {\n"), name);
 
   while (const_values) {
     EXTRACT_NOTNULL(const_value, const_values->left);
     EXTRACT_NAME_AST(const_name_ast, const_value->left);
     EXTRACT_STRING(const_name, const_name_ast);
 
-    bprintf(CS->cg_main_output, "  %s = ", const_name);
+    bprintf(CS->cg_main_output, FMT("  %s = "), const_name);
 
     if (is_numeric(const_value->sem->sem_type)) {
       eval_format_number(CS, const_value->sem->value, EVAL_FORMAT_FOR_LUA, CS->cg_main_output);
@@ -4973,7 +4980,7 @@ static void cg_lua_emit_one_const_group(CqlState* _Nonnull CS, ast_node *ast) {
 
       EXTRACT_STRING(literal, const_value->right);
       cg_lua_requote_literal(CS, literal, &quoted);
-      bprintf(CS->cg_main_output, "%s", quoted.ptr);
+      bprintf(CS->cg_main_output, FMT("%s"), quoted.ptr);
 
       CHARBUF_CLOSE(quoted);
     }
@@ -4987,7 +4994,7 @@ static void cg_lua_emit_one_const_group(CqlState* _Nonnull CS, ast_node *ast) {
     const_values = const_values->right;
   }
 
-  bprintf(CS->cg_main_output, "})\n");
+  bprintf(CS->cg_main_output, FMT("})\n"));
 }
 
 // emit the declared constants into the output stream using cql_emit_constants
@@ -5091,7 +5098,7 @@ static void cg_lua_one_stmt(CqlState* _Nonnull CS, ast_node *stmt, ast_node *mis
 
     // put a line marker in the header file in case we want a test suite that verifies that
     if (CS->options.test) {
-      bprintf(CS->cg_header_output, "\n-- The statement ending at line %d\n", stmt->lineno);
+      bprintf(CS->cg_header_output, FMT("\n-- The statement ending at line %d\n"), stmt->lineno);
     }
 
     // emit comments for most statements: we do not want to require the global proc block
@@ -5099,32 +5106,32 @@ static void cg_lua_one_stmt(CqlState* _Nonnull CS, ast_node *stmt, ast_node *mis
     if (!skip_comment) {
       if (CS->options.test) {
         if (!CS->options.compress) {
-          bprintf(out, "\n-- The statement ending at line %d\n", stmt->lineno);
+          bprintf(out, FMT("\n-- The statement ending at line %d\n"), stmt->lineno);
         }
       } else {
         if (!CS->options.compress) {
-          bprintf(CS->cg_declarations_output, "\n-- Generated from %s:%d\n", stmt->filename, stmt->lineno);
+          bprintf(CS->cg_declarations_output, FMT("\n-- Generated from %s:%d\n"), stmt->filename, stmt->lineno);
         }
       }
       if (!CS->options.compress) {
         // emit source comment
-        bprintf(out, "\n--[[\n");
+        bprintf(out, FMT("\n--[[\n"));
         CS->gen_stmt_level = 1;
         gen_set_output_buffer(CS, out);
         if (misc_attrs) {
           gen_misc_attrs(CS, misc_attrs);
         }
         gen_one_stmt(CS, stmt);
-        bprintf(out, ";\n--]]\n");
+        bprintf(out, FMT(";\n--]]\n"));
       }
     }
   }
 
   // and finally write what we saved
-  bprintf(CS->cg_main_output, "%s", tmp_main.ptr);
-  bprintf(CS->cg_header_output, "%s", tmp_header.ptr);
-  bprintf(CS->cg_scratch_vars_output, "%s", tmp_scratch.ptr);
-  bprintf(CS->cg_declarations_output, "%s", tmp_declarations.ptr);
+  bprintf(CS->cg_main_output, FMT("%s"), tmp_main.ptr);
+  bprintf(CS->cg_header_output, FMT("%s"), tmp_header.ptr);
+  bprintf(CS->cg_scratch_vars_output, FMT("%s"), tmp_scratch.ptr);
+  bprintf(CS->cg_declarations_output, FMT("%s"), tmp_declarations.ptr);
 
   CHARBUF_CLOSE(tmp_scratch);
   CHARBUF_CLOSE(tmp_main);
@@ -5238,53 +5245,53 @@ static void cg_lua_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
     // Emit foo_fetch_results, it has the same signature as foo only with a result set
     // instead of a statement.
 
-    bprintf(d, "\n");
+    bprintf(d, FMT("\n"));
     cg_lua_emit_fetch_results_prototype(CS, dml_proc, params, name, d);
 
-    bprintf(d, "  local result_set = nil\n");
+    bprintf(d, FMT("  local result_set = nil\n"));
 
     CHARBUF_OPEN(args);
     CHARBUF_OPEN(returns);
 
     // optional db arg and return code
     if (dml_proc) {
-      bprintf(d, "  local _rc_\n");
-      bprintf(&args, "_db_");
-      bprintf(&returns, "_rc_, _result_");
+      bprintf(d, FMT("  local _rc_\n"));
+      bprintf(&args, FMT("_db_"));
+      bprintf(&returns, FMT("_rc_, _result_"));
     }
     else {
-      bprintf(&returns, "_result_");
+      bprintf(&returns, FMT("_result_"));
     }
 
     if (params) {
       cg_lua_params(CS, params, &args, &returns);
     }
 
-    bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
-    bprintf(d, "  ");
+    bprintf(d, FMT("  %s = %s(%s)\n"), returns.ptr, proc_sym.ptr, args.ptr);
+    bprintf(d, FMT("  "));
     if (dml_proc) {
       cg_lua_error_on_not_sqlite_ok(CS);
     }
 
-    bprintf(d, "result_set = { _result_ }\n");
+    bprintf(d, FMT("result_set = { _result_ }\n"));
 
     bclear(&args);
     bclear(&returns);
 
     if (dml_proc) {
-      bprintf(&returns, "_rc_, result_set");
+      bprintf(&returns, FMT("_rc_, result_set"));
     }
     else {
-      bprintf(&returns, "result_set");
+      bprintf(&returns, FMT("result_set"));
     }
 
     if (params) {
       cg_lua_params(CS, params, &args, &returns);
     }
 
-    bprintf(d, "\n::cql_cleanup::\n");
-    bprintf(d, "  return %s\n", returns.ptr);
-    bprintf(d, "end\n\n");
+    bprintf(d, FMT("\n::cql_cleanup::\n"));
+    bprintf(d, FMT("  return %s\n"), returns.ptr);
+    bprintf(d, FMT("end\n\n"));
 
     CHARBUF_CLOSE(returns);
     CHARBUF_CLOSE(args);
@@ -5294,46 +5301,46 @@ static void cg_lua_proc_result_set(CqlState* _Nonnull CS, ast_node *ast) {
       // instead of a statement.
       Invariant(dml_proc);
 
-      bprintf(d, "\n");
+      bprintf(d, FMT("\n"));
       cg_lua_emit_fetch_results_prototype(CS, dml_proc, params, name, d);
 
-      bprintf(d, "  local result_set = nil\n");
-      bprintf(d, "  local _rc_\n");
+      bprintf(d, FMT("  local result_set = nil\n"));
+      bprintf(d, FMT("  local _rc_\n"));
 
       CHARBUF_OPEN(args);
       CHARBUF_OPEN(returns);
 
       // fixed db arg and return code
-      bprintf(&args, "_db_");
-      bprintf(&returns, "_rc_, stmt");
+      bprintf(&args, FMT("_db_"));
+      bprintf(&returns, FMT("_rc_, stmt"));
 
       if (params) {
         cg_lua_params(CS, params, &args, &returns);
       }
 
-      bprintf(d, "  %s = %s(%s)\n", returns.ptr, proc_sym.ptr, args.ptr);
-      bprintf(d, "  ");
+      bprintf(d, FMT("  %s = %s(%s)\n"), returns.ptr, proc_sym.ptr, args.ptr);
+      bprintf(d, FMT("  "));
       cg_lua_error_on_not_sqlite_ok(CS);
 
-      bprintf(d, "  _rc_, result_set = cql_fetch_all_rows(stmt, ");
+      bprintf(d, FMT("  _rc_, result_set = cql_fetch_all_rows(stmt, "));
       cg_lua_emit_field_types(d, ast->sem->sptr);
-      bprintf(d, ", ");
+      bprintf(d, FMT(", "));
       cg_lua_emit_field_names(CS, d, ast->sem->sptr);
-      bprintf(d, ")\n");
+      bprintf(d, FMT(")\n"));
 
       bclear(&args);
       bclear(&returns);
 
-      bprintf(&returns, "_rc_, result_set");
+      bprintf(&returns, FMT("_rc_, result_set"));
       if (params) {
         cg_lua_params(CS, params, &args, &returns);
       }
 
-      bprintf(d, "\n::cql_cleanup::\n");
-      bprintf(d, "  cql_finalize_stmt(stmt)\n");
-      bprintf(d, "  stmt = nil\n");
-      bprintf(d, "  return %s\n", returns.ptr);
-      bprintf(d, "end\n\n");
+      bprintf(d, FMT("\n::cql_cleanup::\n"));
+      bprintf(d, FMT("  cql_finalize_stmt(stmt)\n"));
+      bprintf(d, FMT("  stmt = nil\n"));
+      bprintf(d, FMT("  return %s\n"), returns.ptr);
+      bprintf(d, FMT("end\n\n"));
 
       CHARBUF_CLOSE(returns);
       CHARBUF_CLOSE(args);
@@ -5379,15 +5386,15 @@ cql_noexport void cg_lua_main(CqlState* _Nonnull CS, ast_node *head) {
   CHARBUF_OPEN(body_file);
   CHARBUF_OPEN(indent);
 
-  bprintf(&body_file, "%s", CS->rt->source_prefix);
-  bprintf(&body_file, "%s", CS->rt->source_wrapper_begin);
+  bprintf(&body_file, FMT("%s"), CS->rt->source_prefix);
+  bprintf(&body_file, FMT("%s"), CS->rt->source_wrapper_begin);
   bprintf(&body_file, CS->rt->cqlrt_template, CS->options.cqlrt ? CS->options.cqlrt : CS->rt->cqlrt);
 
   cg_lua_stmt_list(CS, head);
 
-  bprintf(&body_file, "%s", CS->cg_fwd_ref_output->ptr);
-  bprintf(&body_file, "%s", CS->cg_constants_output->ptr);
-  bprintf(&body_file, "%s", CS->cg_declarations_output->ptr);
+  bprintf(&body_file, FMT("%s"), CS->cg_fwd_ref_output->ptr);
+  bprintf(&body_file, FMT("%s"), CS->cg_constants_output->ptr);
+  bprintf(&body_file, FMT("%s"), CS->cg_declarations_output->ptr);
 
   // main function after constants and decls (if needed)
 
@@ -5397,21 +5404,21 @@ cql_noexport void cg_lua_main(CqlState* _Nonnull CS, ast_node *head) {
     exit_on_no_global_proc(CS);
 
     bindent(CS, &indent, CS->cg_scratch_vars_output, 2);
-    bprintf(&body_file, "\nfunction %s(_db_)\n", CS->global_proc_name);
+    bprintf(&body_file, FMT("\nfunction %s(_db_)\n"), CS->global_proc_name);
     cg_lua_emit_rc_vars(CS, &body_file);
 
-    bprintf(&body_file, "%s", indent.ptr);
-    bprintf(&body_file, "%s", CS->cg_main_output->ptr);
-    bprintf(&body_file, "\n");
+    bprintf(&body_file, FMT("%s"), indent.ptr);
+    bprintf(&body_file, FMT("%s"), CS->cg_main_output->ptr);
+    bprintf(&body_file, FMT("\n"));
     if (CS->cg_lua.error_target_used) {
-      bprintf(&body_file, "::%s::\n", CS->cg_lua.error_target);
+      bprintf(&body_file, FMT("::%s::\n"), CS->cg_lua.error_target);
     }
-    bprintf(&body_file, "%s", CS->cg_cleanup_output->ptr);
-    bprintf(&body_file, "  return _rc_\n");
-    bprintf(&body_file, "end\n");
+    bprintf(&body_file, FMT("%s"), CS->cg_cleanup_output->ptr);
+    bprintf(&body_file, FMT("  return _rc_\n"));
+    bprintf(&body_file, FMT("end\n"));
   }
 
-  bprintf(&body_file, "%s", CS->rt->source_wrapper_end);
+  bprintf(&body_file, FMT("%s"), CS->rt->source_wrapper_end);
 
 
   CHARBUF_CLOSE(indent);

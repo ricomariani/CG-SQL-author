@@ -1,7 +1,7 @@
 
 #include "out/cg_test_c_globals.h"
 
-#ifndef _MSC_VER
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
@@ -98,4 +98,6 @@ cql_dynamic_cursor serialized_cursor_dyn = {
   .cursor_refs_count = 1,
   .cursor_refs_offset = serialized_cursor_refs_offset,
 };
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif

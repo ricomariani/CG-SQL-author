@@ -1,7 +1,7 @@
 
 #include "out/cg_test_c.h"
 
-#ifndef _MSC_VER
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunknown-warning-option"
 #pragma clang diagnostic ignored "-Wbitwise-op-parentheses"
@@ -20278,4 +20278,6 @@ cql_cleanup:
 }
 
 #undef _PROC_
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif

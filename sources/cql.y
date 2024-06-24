@@ -104,6 +104,7 @@ YY_DECL;
 #endif
 
 cql_noexport void cql_setup_for_builtins(CqlState* _Nonnull CS, yyscan_t scanner);
+cql_noexport void cql_finish_for_builtins(CqlState* _Nonnull CS, yyscan_t scanner);
 cql_noexport void cql_cleanup_open_includes(CqlState* _Nonnull CS, yyscan_t scanner);
 
 
@@ -3105,6 +3106,7 @@ int cql_main(int argc, char **argv) {
   rt_cleanup(CS);
   parse_cleanup(CS);
   cql_cleanup_open_includes(CS, CS->scanner);
+  cql_finish_for_builtins(CS, CS->scanner);
   cql_cleanup_defines(CS);
 
 #ifdef CQL_AMALGAM

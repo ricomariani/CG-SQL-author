@@ -710,6 +710,14 @@ cql_noexport void cql_setup_for_builtins(CqlState* _Nonnull CS, yyscan_t scanner
   CS->cql_builtins_processing = true;
 }
 
+cql_noexport void cql_finish_for_builtins(CqlState* _Nonnull CS, yyscan_t scanner) {
+  if (CS->cql_delete_main_buffer) {
+     yy_delete_buffer(CS->cql_main_buffer, scanner);
+     CS->cql_delete_main_buffer = false;
+  }
+  CS->cql_builtins_processing = false;
+}
+
 static void cql_finish_stream(CqlState* _Nonnull CS, yyscan_t scanner) {
   // when we read the end of the temporary buffer we switch to the main buffer
   CS->cql_builtins_processing = false;

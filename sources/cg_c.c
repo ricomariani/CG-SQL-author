@@ -8541,16 +8541,16 @@ cql_noexport void cg_c_main(CqlState* _Nonnull CS, ast_node *head) {
   }
 
   bprintf(&body_file, FMT("%s"), CS->rt->source_wrapper_begin);
-  bprintf(&body_file, FMT("#ifndef _MSC_VER\n"));
-  bprintf(&body_file, "#pragma clang diagnostic push\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunknown-warning-option\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wbitwise-op-parentheses\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wshift-op-parentheses\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-not-parentheses\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wlogical-op-parentheses\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunused-but-set-variable\"\n");
-  bprintf(&body_file, "#pragma clang diagnostic ignored \"-Wunused-function\"\n");
+  bprintf(&body_file, FMT("#ifdef __clang__\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic push\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wunknown-warning-option\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wbitwise-op-parentheses\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wshift-op-parentheses\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wlogical-not-parentheses\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wlogical-op-parentheses\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wliteral-conversion\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wunused-but-set-variable\"\n"));
+  bprintf(&body_file, FMT("#pragma clang diagnostic ignored \"-Wunused-function\"\n"));
   bprintf(&body_file, FMT("#endif\n"));
 
   bprintf(&body_file, FMT("%s"), CS->cg_fwd_ref_output->ptr);
@@ -8586,7 +8586,9 @@ cql_noexport void cg_c_main(CqlState* _Nonnull CS, ast_node *head) {
     bprintf(&body_file, FMT("\n#undef _PROC_\n"));
   }
 
+  bprintf(&body_file, FMT("#ifdef __clang__\n"));
   bprintf(&body_file, FMT("#pragma clang diagnostic pop\n"));
+  bprintf(&body_file, FMT("#endif\n"));
   bprintf(&body_file, FMT("%s"), CS->rt->source_wrapper_end);
 
   bprintf(&header_file, FMT("%s"), CS->rt->header_prefix);

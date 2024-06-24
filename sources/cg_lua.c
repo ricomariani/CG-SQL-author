@@ -7,6 +7,13 @@
 
 // Perform codegen of the various nodes to "LUA".
 
+#undef FMT
+#ifdef FMT_DEBUG
+#define FMT(x) "(_l%d_)" x, __LINE__
+#else
+#define FMT(x) x
+#endif
+
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_CG_LUA)
 
 // stubs to avoid link errors.
@@ -31,14 +38,6 @@ cql_noexport void cg_lua_cleanup(CS) {}
 #include "cql.y.h"
 #include "cql.lex.h"
 #include "cql_state.h"
-
-#undef FMT
-#ifdef FMT_DEBUG
-#define FMT(x) "(_l%d_)" x, __LINE__
-#else
-#define FMT(x) x
-#endif
-
 // relevant LUA binding order
 #define LUA_EXPR_PRI_ROOT -999
 #define LUA_EXPR_PRI_ASSIGN 0

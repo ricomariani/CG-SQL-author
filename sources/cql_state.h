@@ -14,11 +14,11 @@
 
 //From ast.c
 typedef struct ast_macro_state_t {
-  CSTR name;
-  CSTR file;
+  CSTR _Nonnull name;
+  CSTR _Nonnull file;
   int32_t line;
-  struct ast_macro_state_t *parent;
-  symtab *args;
+  struct ast_macro_state_t *_Nullable parent;
+  symtab *_Nullable args;
 } ast_macro_state_t;
 
 //From sem.c
@@ -77,10 +77,10 @@ int32_t stmt_nesting_level;
 //From ast.c
 char *_Nullable current_file;
 bool_t macro_expansion_errors;
-minipool *ast_pool;
-minipool *str_pool;
-/*static*/ symtab *macro_table;
-/*static*/ symtab *macro_arg_table;
+minipool *_Nullable ast_pool;
+minipool *_Nullable str_pool;
+/*static*/ symtab *_Nullable macro_table;
+/*static*/ symtab *_Nullable macro_arg_table;
 /*static*/ ast_macro_state_t macro_state;
 // for indenting, it just holds spaces.
 /*static*/ char padbuffer[4096];
@@ -89,45 +89,45 @@ minipool *str_pool;
 
 //From charbuf.c
 int32_t charbuf_open_count;
-pending_charbuf *__charbufs_in_flight;
+pending_charbuf *_Nullable __charbufs_in_flight;
 
 //From cql.y
-const char *global_proc_name;
+const char *_Nullable global_proc_name;
 /*static*/ jmp_buf cql_for_exit;
 /*static*/ int32_t cql_exit_code;
 // Set to true upon a call to `yyerror`.
 /*static*/ bool_t parse_error_occurred;
-/*static*/ CSTR table_comment_saved;
-/*static*/ symtab *defines;
+/*static*/ CSTR _Nullable table_comment_saved;
+/*static*/ symtab *_Nullable defines;
 /*static*/ uint64_t next_id; // = 0;
 cmd_options options;
-const rtdata *rt;
+const rtdata *_Nullable rt;
 
-yyscan_t scanner;
+yyscan_t _Nullable scanner;
 
 //From cg_objc.c
 // Whether a text column in the result set of a proc is encoded
 /*static*/ bool_t is_string_column_encoded;
 
 //From gg_stats.c
-/*static*/ CSTR cg_stats_current_proc;
-/*static*/ symtab *stats_table;
-/*static*/ charbuf *stats_output;
-/*static*/ symtab *stats_stoplist;
+/*static*/ CSTR _Nullable cg_stats_current_proc;
+/*static*/ symtab *_Nullable stats_table;
+/*static*/ charbuf *_Nullable stats_output;
+/*static*/ symtab *_Nullable stats_stoplist;
 
 //From eval.c
 // This is the symbol table with the ast dispatch when we get to an ast node
 // we look it up here and call the appropriate function whose name matches the ast
 // node type.
-/*static*/ symtab *evals;
+/*static*/ symtab *_Nullable evals;
 
 //From minipool.c
 /*static*/ lazy_free *_Nullable lazy_frees;
 
 //From cg_schema.c
-/*static*/ symtab *full_drop_funcs;
+/*static*/ symtab *_Nullable full_drop_funcs;
 // Set to keep track of which functions we have emitted group_drops functions for
-/*static*/ symtab *group_drop_funcs;
+/*static*/ symtab *_Nullable group_drop_funcs;
 /*static*/ int32_t max_group_ordinal; // = 0;
 
 //From rewrite.c
@@ -137,11 +137,11 @@ yyscan_t scanner;
 /*static*/ bool cql_builtins_processing; //= false;
 /*static*/ bool cql_delete_main_buffer; // = false;
 /*static*/ int cql_include_index; // = 0;
-/*static*/ symtab *processed_files;
-/*static*/ CSTR last_doc_comment; // = NULL;
-/*static YY_BUFFER_STATE*/void* cql_main_buffer;
-/*static cql_ifdef_state_t **/void *cql_ifdef_state;
-/*static cql_include_state*/void *cql_includes; //[MAX_INCLUDES];
+/*static*/ symtab *_Nullable processed_files;
+/*static*/ CSTR _Nullable last_doc_comment; // = NULL;
+/*static YY_BUFFER_STATE*/void* _Nullable cql_main_buffer;
+/*static cql_ifdef_state_t **/void *_Nullable cql_ifdef_state;
+/*static cql_include_state*/void *_Nullable cql_includes; //[MAX_INCLUDES];
 
 //From cqlrt.c
 //int32_t cql_outstanding_refs; // = 0;
@@ -150,51 +150,51 @@ yyscan_t scanner;
 /*static*/ bool_t found_shared_fragment;
 // These are the main output buffers for the various forms of statements we support
 // we build these up as we encounter them, redirecting the local 'output' to one of these
-/*static*/ charbuf *queries;
-/*static*/ charbuf *deletes;
-/*static*/ charbuf *inserts;
-/*static*/ charbuf *updates;
-/*static*/ charbuf *general;
-/*static*/ charbuf *general_inserts;
+/*static*/ charbuf *_Nullable queries;
+/*static*/ charbuf *_Nullable deletes;
+/*static*/ charbuf *_Nullable inserts;
+/*static*/ charbuf *_Nullable updates;
+/*static*/ charbuf *_Nullable general;
+/*static*/ charbuf *_Nullable general_inserts;
 
 // We use this to track every table we've ever seen and we remember what stored procedures use it
-/*static*/ symtab *tables_to_procs;
+/*static*/ symtab *_Nullable tables_to_procs;
 
 //From cg_query_plan.c
-/*static*/ charbuf *schema_stmts;
-/*static*/ charbuf *backed_tables;
-/*static*/ charbuf *query_plans;
-/*static*/ CSTR current_procedure_name;
-/*static*/ charbuf *current_ok_table_scan;
-/*static*/ symtab *virtual_tables;
+/*static*/ charbuf *_Nullable schema_stmts;
+/*static*/ charbuf *_Nullable backed_tables;
+/*static*/ charbuf *_Nullable query_plans;
+/*static*/ CSTR _Nullable current_procedure_name;
+/*static*/ charbuf *_Nullable current_ok_table_scan;
+/*static*/ symtab *_Nullable virtual_tables;
 
 // Count sql statement found in ast
 /*static*/ uint32_t sql_stmt_count; // = 0;
 
-/*static gen_sql_callbacks **/void *cg_qp_callbacks;// = NULL;
+/*static gen_sql_callbacks **/void *_Nullable cg_qp_callbacks;// = NULL;
 
 //From gen_sql.c
 int32_t gen_stmt_level;
 // the current primary output buffer for the closure of declares
-/*static*/ charbuf *closure_output;
+/*static*/ charbuf *_Nullable closure_output;
 
 // The declares we have already emitted, if NULL we are emitting
 // everything every time -- useful for --test output but otherwise
 // just redundant at best.  Note cycles are not possible.
 // even with no checking because declares form a partial order.
-/*static*/ symtab *closure_emitted;
+/*static*/ symtab *_Nullable closure_emitted;
 
-/*static*/ symtab *gen_stmts;
-/*static*/ symtab *gen_exprs;
-/*static*/ charbuf *gen_output;
-/*static gen_sql_callbacks**/void *gen_callbacks; // = NULL;
-/*static*/ symtab *used_alias_syms; // = NULL;
+/*static*/ symtab *_Nullable gen_stmts;
+/*static*/ symtab *_Nullable gen_exprs;
+/*static*/ charbuf *_Nullable gen_output;
+/*static gen_sql_callbacks**/void *_Nullable gen_callbacks; // = NULL;
+/*static*/ symtab *_Nullable used_alias_syms; // = NULL;
 /*static*/ int32_t gen_indent; // = 0;
 /*static*/ int32_t pending_indent; // = 0;
 
 //From flow.c
-/*static flow_context**/void *current_context;
-/*static flow_context**/void *top_jump_context;
+/*static flow_context**/void *_Nullable current_context;
+/*static flow_context**/void *_Nullable top_jump_context;
 
 //From cg_c.c
 struct {
@@ -203,14 +203,14 @@ struct {
 
 /*static*/ int32_t case_statement_count;
 /*static*/ int32_t catch_block_count;
-/*static cg_scratch_masks*/void *current_masks;
+/*static cg_scratch_masks*/void *_Nullable current_masks;
 /*static*/ bool_t in_loop;
 /*static*/ int32_t cur_bound_statement;
-/*static*/ int32_t cur_fragment_predicate;
+/*static*/ uint32_t cur_fragment_predicate;
 /*static*/ int32_t cur_variable_count;
-/*static*/ symtab *emitted_proc_decls;
+/*static*/ symtab *_Nullable emitted_proc_decls;
 /*static*/ bool_t error_target_used;
-/*static*/ charbuf *exports_output;
+/*static*/ charbuf *_Nullable exports_output;
 /*static*/ bool_t has_conditional_fragments;
 /*static*/ bool_t has_shared_fragments;
 /*static*/ bool_t has_variables;
@@ -221,21 +221,21 @@ struct {
 /*static*/ uint32_t max_fragment_predicate;
 /*static*/ int32_t piece_last_offset;
 /*static*/ int32_t prev_variable_count;
-/*static*/ symtab *proc_arg_aliases;
-/*static*/ symtab *proc_cte_aliases;
+/*static*/ symtab *_Nullable proc_arg_aliases;
+/*static*/ symtab *_Nullable proc_cte_aliases;
 /*static*/ int32_t proc_cte_index;
 /*static*/ int32_t rcthrown_index;
 /*static*/ bool_t rcthrown_used;
 /*static*/ bool_t return_used;
 /*static*/ bool_t seed_declared;
 /*static*/ int32_t stack_level;
-/*static*/ symtab *string_literals;
+/*static*/ symtab *_Nullable string_literals;
 /*static*/ int32_t string_literals_count;
 /*static*/ int32_t temp_cstr_count;
 /*static*/ bool_t temp_statement_emitted;
-/*static*/ symtab *text_pieces;
-/*static*/ CSTR error_target; // = CQL_CLEANUP_DEFAULT_LABEL;
-/*static*/ CSTR rcthrown_current; // = CQL_RCTHROWN_DEFAULT;
+/*static*/ symtab *_Nullable text_pieces;
+/*static*/ CSTR _Nullable error_target; // = CQL_CLEANUP_DEFAULT_LABEL;
+/*static*/ CSTR _Nullable rcthrown_current; // = CQL_RCTHROWN_DEFAULT;
 /*static*/ bytebuf shared_fragment_strings; // = {NULL, 0, 0};
 
 } cg_c;
@@ -245,16 +245,16 @@ struct {
 // We count the statements to make an easy label
 /*static*/ int32_t case_statement_count; // = 0;
 
-/*static cg_lua_scratch_masks**/void *current_masks;
+/*static cg_lua_scratch_masks**/void *_Nullable current_masks;
 /*static*/ int32_t catch_block_count;
 /*static*/ bool_t continue_label_needed;
 /*static*/ int32_t continue_label_next;
 /*static*/ int32_t continue_label_number;
 /*static*/ int32_t cur_bound_statement;
-/*static*/ int32_t cur_fragment_predicate;
+/*static*/ uint32_t cur_fragment_predicate;
 /*static*/ int32_t cur_variable_count;
 /*static*/ bool_t error_target_used;
-/*static*/ charbuf *exports_output;
+/*static*/ charbuf *_Nullable exports_output;
 /*static*/ bool_t has_conditional_fragments;
 /*static*/ bool_t has_shared_fragments;
 /*static*/ bool_t has_variables;
@@ -263,7 +263,7 @@ struct {
 /*static*/ bool_t in_proc;
 /*static*/ bool_t in_var_group_emit;
 /*static*/ uint32_t max_fragment_predicate;
-/*static*/ symtab *named_temporaries;
+/*static*/ symtab *_Nullable named_temporaries;
 /*static*/ int32_t prepared_statement_index;
 /*static*/ int32_t prev_variable_count;
 /*static*/ int32_t rcthrown_index;
@@ -273,125 +273,125 @@ struct {
 /*static*/ int32_t stack_level;
 /*static*/ int32_t temp_cstr_count;
 /*static*/ bool_t temp_statement_emitted;
-/*static*/ symtab *proc_arg_aliases;
-/*static*/ symtab *proc_cte_aliases;
+/*static*/ symtab *_Nullable proc_arg_aliases;
+/*static*/ symtab *_Nullable proc_cte_aliases;
 /*static*/ int32_t proc_cte_index;
-/*static*/ CSTR error_target; // = CQL_CLEANUP_DEFAULT_LABEL;
-/*static*/ CSTR rcthrown_current; // = CQL_LUA_RCTHROWN_DEFAULT;
+/*static*/ CSTR _Nullable error_target; // = CQL_CLEANUP_DEFAULT_LABEL;
+/*static*/ CSTR _Nullable rcthrown_current; // = CQL_LUA_RCTHROWN_DEFAULT;
 /*static*/ bytebuf shared_fragment_strings; // = {NULL, 0, 0};
 
 } cg_lua;
 
 struct {
 
-symtab *ad_hoc_recreate_actions;
-struct list_item *all_ad_hoc_list;
-struct list_item *all_constant_groups_list;
-struct list_item *all_enums_list;
-struct list_item *all_functions_list;
-struct list_item *all_indices_list;
-struct list_item *all_regions_list;
-struct list_item *all_select_functions_list;
-struct list_item *all_subscriptions_list;
-struct list_item *all_tables_list;
-struct list_item *all_triggers_list;
-struct list_item *all_views_list;
-cte_state *cte_cur;
-ast_node *current_proc;
-ast_node *current_upsert_table_ast;
-symtab *encode_columns;
-CSTR encode_context_column;
-charbuf *error_capture;
-symtab *excluded_regions;
+symtab *_Nullable ad_hoc_recreate_actions;
+struct list_item *_Nullable all_ad_hoc_list;
+struct list_item *_Nullable all_constant_groups_list;
+struct list_item *_Nullable all_enums_list;
+struct list_item *_Nullable all_functions_list;
+struct list_item *_Nullable all_indices_list;
+struct list_item *_Nullable all_regions_list;
+struct list_item *_Nullable all_select_functions_list;
+struct list_item *_Nullable all_subscriptions_list;
+struct list_item *_Nullable all_tables_list;
+struct list_item *_Nullable all_triggers_list;
+struct list_item *_Nullable all_views_list;
+cte_state *_Nullable cte_cur;
+ast_node *_Nullable current_proc;
+ast_node *_Nullable current_upsert_table_ast;
+symtab *_Nullable encode_columns;
+CSTR _Nullable encode_context_column;
+charbuf *_Nullable error_capture;
+symtab *_Nullable excluded_regions;
 sem_t global_proc_flags;
 bool_t in_upsert;
 bool_t in_upsert_rewrite;
-symtab *included_regions;
+symtab *_Nullable included_regions;
 bool_t keep_table_name_in_aliases;
-bytebuf *recreate_annotations;
-symtab *recreate_group_deps;
-symtab *ref_sources_for_target_table;
-symtab *ref_targets_for_source_table;
-bytebuf *schema_annotations;
-symtab *schema_regions;
+bytebuf *_Nullable recreate_annotations;
+symtab *_Nullable recreate_group_deps;
+symtab *_Nullable ref_sources_for_target_table;
+symtab *_Nullable ref_targets_for_source_table;
+bytebuf *_Nullable schema_annotations;
+symtab *_Nullable schema_regions;
 bool_t use_encode;
 
 // As we walk sql expressions we note the ast nodes that hold table names that
 // are backed tables so that we can swap them out later
-/*static*/ list_item *backed_tables_list;
+/*static*/ list_item *_Nullable backed_tables_list;
 /*static*/ bool_t in_backing_rewrite;
 
-/*static*/ bytebuf *deployable_validations;
+/*static*/ bytebuf *_Nullable deployable_validations;
 
-/*static*/ bytebuf *unitary_locals;
+/*static*/ bytebuf *_Nullable unitary_locals;
 
 // for making unique names of between temporaries
 /*static*/ int32_t between_count;
 // These are the various symbol tables we need, they are stored super dumbly.
-/*static*/ symtab *interfaces;
-/*static*/ symtab *procs;
-/*static*/ symtab *unchecked_procs;
-/*static*/ symtab *proc_arg_info;
-/*static*/ symtab *triggers;
-/*static*/ symtab *upgrade_procs;
-/*static*/ symtab *ad_hoc_migrates;
-/*static*/ symtab *builtin_funcs;
-/*static*/ symtab *builtin_special_funcs;
-/*static*/ symtab *funcs;
-/*static*/ symtab *unchecked_funcs;
-/*static*/ symtab *exprs;
-/*static*/ symtab *tables;
-/*static*/ symtab *table_default_values;
-/*static*/ symtab *indices;
-/*static*/ symtab *globals;
-/*static*/ symtab *locals;
-/*static*/ symtab *enums;
-/*static*/ symtab *constant_groups;
-/*static*/ symtab *variable_groups;
-/*static*/ symtab *constants;
-/*static*/ symtab *current_variables;
-/*static*/ symtab *savepoints;
-/*static*/ symtab *table_items;  // assorted things that go into a table
-/*static*/ symtab *builtin_aggregated_funcs;
-/*static*/ symtab *arg_bundles;
-/*static*/ symtab *global_types;
-/*static*/ symtab *local_types;
-/*static*/ symtab *misc_attributes;
+/*static*/ symtab *_Nullable interfaces;
+/*static*/ symtab *_Nullable procs;
+/*static*/ symtab *_Nullable unchecked_procs;
+/*static*/ symtab *_Nullable proc_arg_info;
+/*static*/ symtab *_Nullable triggers;
+/*static*/ symtab *_Nullable upgrade_procs;
+/*static*/ symtab *_Nullable ad_hoc_migrates;
+/*static*/ symtab *_Nullable builtin_funcs;
+/*static*/ symtab *_Nullable builtin_special_funcs;
+/*static*/ symtab *_Nullable funcs;
+/*static*/ symtab *_Nullable unchecked_funcs;
+/*static*/ symtab *_Nullable exprs;
+/*static*/ symtab *_Nullable tables;
+/*static*/ symtab *_Nullable table_default_values;
+/*static*/ symtab *_Nullable indices;
+/*static*/ symtab *_Nullable globals;
+/*static*/ symtab *_Nullable locals;
+/*static*/ symtab *_Nullable enums;
+/*static*/ symtab *_Nullable constant_groups;
+/*static*/ symtab *_Nullable variable_groups;
+/*static*/ symtab *_Nullable constants;
+/*static*/ symtab *_Nullable current_variables;
+/*static*/ symtab *_Nullable savepoints;
+/*static*/ symtab *_Nullable table_items;  // assorted things that go into a table
+/*static*/ symtab *_Nullable builtin_aggregated_funcs;
+/*static*/ symtab *_Nullable arg_bundles;
+/*static*/ symtab *_Nullable global_types;
+/*static*/ symtab *_Nullable local_types;
+/*static*/ symtab *_Nullable misc_attributes;
 
 // These are the symbol tables with the ast dispatch when we get to an ast node
 // we look it up here and call the appropriate function whose name matches the ast
 // node type.
 
-/*static*/ symtab *non_sql_stmts;
-/*static*/ symtab *sql_stmts;
+/*static*/ symtab *_Nullable non_sql_stmts;
+/*static*/ symtab *_Nullable sql_stmts;
 
 // Note: initialized statics are moot because in amalgam mode the code
 // will not be reloaded... you have to re-initialize all statics in the cleanup function
 
 // We have to do extra checks against tables that transitioned from the @recreate plan
 // to the strongly managed plan
-/*static*/ list_item *all_prev_recreate_tables;
+/*static*/ list_item *_Nullable all_prev_recreate_tables;
 
 // When validating against the previous schema all newly @create columns must
 // have a schema version >= the max in the previous schema.
-/*static*/ list_item *created_columns;
+/*static*/ list_item *_Nullable created_columns;
 /*static*/ int32_t max_previous_schema_version;
 
-/*static*/ CSTR annotation_target;
-/*static*/ ast_node *current_explain_stmt;
+/*static*/ CSTR _Nullable annotation_target;
+/*static*/ ast_node *_Nullable current_explain_stmt;
 /*static*/ uint32_t current_expr_context;
-/*static sem_joinscope**/void *current_joinscope;
+/*static sem_joinscope**/void *_Nullable current_joinscope;
 /*static*/ loop_analysis_state current_loop_analysis_state; // = LOOP_ANALYSIS_STATE_NONE;
 /*static*/ bool_t current_proc_contains_try_is_proc_body;
-/*static*/ CSTR current_region;
-/*static*/ symtab *current_region_image;
-/*static*/ ast_node *current_table_ast;
-/*static*/ CSTR current_table_name;
+/*static*/ CSTR _Nullable current_region;
+/*static*/ symtab *_Nullable current_region_image;
+/*static*/ ast_node *_Nullable current_table_ast;
+/*static*/ CSTR _Nullable current_table_name;
 /*static*/ sem_t encode_context_type;
 /*static*/ enforcement_options enforcement;
-/*static struct enforcement_stack_record**/void *enforcement_stack;
+/*static struct enforcement_stack_record**/void *_Nullable enforcement_stack;
 /*static*/ bool_t found_subscription_error;
-/*static global_notnull_improvement_item**/void *global_notnull_improvements;
+/*static global_notnull_improvement_item**/void *_Nullable global_notnull_improvements;
 /*static*/ bool_t has_dml;
 ///*static*/ const uintptr_t id_out_tag_bit;
 /*static*/ bool_t in_proc_savepoint;
@@ -402,17 +402,17 @@ bool_t use_encode;
 /*static*/ bool_t in_trigger_when_expr;
 /*static*/ bool_t is_analyzing_notnull_rewrite;
 /*static*/ int32_t loop_depth;
-/*static*/ sem_join *monitor_jptr;
-/*static*/ symtab *monitor_symtab;
-/*static*/ symtab *new_enums;
-/*static*/ symtab *new_regions;
-/*static*/ list_item *next_subscription;
-/*static pending_table_validation**/void *pending_table_validations_head;
+/*static*/ sem_join *_Nullable monitor_jptr;
+/*static*/ symtab *_Nullable monitor_symtab;
+/*static*/ symtab *_Nullable new_enums;
+/*static*/ symtab *_Nullable new_regions;
+/*static*/ list_item *_Nullable next_subscription;
+/*static pending_table_validation**/void *_Nullable pending_table_validations_head;
 /*static*/ int32_t recreates;
 /*static*/ bool_t schema_upgrade_script;
 /*static*/ int32_t schema_upgrade_version;
 /*static*/ int32_t select_level;
-/*static*/ sem_node *sem_ok;
+/*static*/ sem_node *_Nullable sem_ok;
 /*static*/ int32_t sem_stmt_level;
 /*static*/ bool_t validating_previous_schema;
 
@@ -420,31 +420,31 @@ bool_t use_encode;
 
 //From cg_test_helpers.c
 struct {
-/*static*/ charbuf *cg_th_output;
-/*static*/ charbuf *cg_th_decls;
-/*static*/ charbuf* cg_th_procs;
+/*static*/ charbuf *_Nullable cg_th_output;
+/*static*/ charbuf *_Nullable cg_th_decls;
+/*static*/ charbuf * _Nullable cg_th_procs;
 
 // dummy_test utility variable used to emit statements.
-/*static*/ charbuf *gen_create_triggers;
-/*static*/ charbuf *gen_drop_triggers;
+/*static*/ charbuf *_Nullable gen_create_triggers;
+/*static*/ charbuf *_Nullable gen_drop_triggers;
 
 // All triggers per tables. This is used as part of dummy_test to help look up
 // all the triggers to emit
-/*static*/ symtab *all_tables_with_triggers;
+/*static*/ symtab *_Nullable all_tables_with_triggers;
 
 // All indexes per tables. This is used as part of dummy_test to help look up
 // all the indexes to emit
-/*static*/ symtab *all_tables_with_indexes;
+/*static*/ symtab *_Nullable all_tables_with_indexes;
 
 // We use this table to track which proc declarations we've already emitted
-/*static*/ symtab *test_helper_decls_emitted;
+/*static*/ symtab *_Nullable test_helper_decls_emitted;
 
 // Record the autotest attribute processed. This is used to figure out if there
 // will be code gen to write to the output file
 /*static*/ int32_t helper_flags; // = 0;
 
 // hold all the table name, column name and column values provided by dummy_test node
-/*static*/ symtab *dummy_test_infos; // = NULL;
+/*static*/ symtab *_Nullable dummy_test_infos; // = NULL;
 
 } th;
 

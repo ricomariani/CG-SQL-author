@@ -18,7 +18,7 @@ cql_noexport void gen_cleanup(CqlState* _Nonnull CS);
 cql_noexport void gen_printf(CqlState* _Nonnull CS, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 cql_noexport void gen_set_output_buffer(CqlState* _Nonnull CS, struct charbuf *_Nonnull buffer);
 
-typedef void (*_Nonnull gen_func)(CqlState *CS, ast_node *_Nonnull ast);
+typedef void (*_Nonnull gen_func)(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 
 cql_noexport CSTR _Nonnull gen_type_hash(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 cql_noexport CSTR _Nonnull get_field_hash(CqlState* _Nonnull CS, CSTR _Nonnull cname, sem_t sem_type);
@@ -49,7 +49,7 @@ cql_noexport void gen_to_stdout(CqlState* _Nonnull CS, ast_node *_Nullable ast, 
 // signature for a callback, you get your context plus the ast
 // if you return true then the normal output is suppressed
 // in any case the output you provide is emitted
-typedef bool_t (*_Nullable gen_sql_callback)(CqlState *CS, struct ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull output);
+typedef bool_t (*_Nullable gen_sql_callback)(CqlState* _Nonnull CS, struct ast_node *_Nonnull ast, void *_Nullable context, charbuf *_Nonnull output);
 
 // These modes control the overall style of the output
 enum gen_sql_mode {
@@ -182,7 +182,7 @@ cql_noexport void init_gen_sql_callbacks(gen_sql_callbacks *_Nullable callbacks)
 
 cql_noexport void gen_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_func fn, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_col_def_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
-cql_noexport void gen_statement_with_callbacks(CqlState *CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
+cql_noexport void gen_statement_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_statement_and_attributes_with_callbacks(CqlState* _Nonnull CS, ast_node *_Nonnull ast, gen_sql_callbacks *_Nullable _callbacks);
 cql_noexport void gen_any_text_arg(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 

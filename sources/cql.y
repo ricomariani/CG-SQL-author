@@ -39,13 +39,13 @@
 
 %define parse.error verbose
 %define api.pure full
-%param {CqlState *CS}
-%param {yyscan_t scanner}
+%param {CqlState *_Nonnull CS}
+%param {yyscan_t _Nonnull scanner}
 
 %union {
-  struct ast_node *aval;
+  struct ast_node *_Nonnull aval;
   int ival;
-  char *sval;
+  char *_Nonnull sval;
 }
 
 %code requires {
@@ -53,7 +53,7 @@
 }
 
 %code provides {
-#define YY_DECL int yylex(YYSTYPE *yylval_param, CqlState* _Nonnull CS, yyscan_t yyscanner)
+#define YY_DECL int yylex(YYSTYPE *_Nonnull yylval_param, CqlState* _Nonnull CS, yyscan_t _Nonnull yyscanner)
 YY_DECL;
 }
 
@@ -110,7 +110,7 @@ cql_noexport void cql_cleanup_open_includes(CqlState* _Nonnull CS, yyscan_t scan
 static void parse_cmd(CqlState* _Nonnull CS, int argc, char **argv);
 static void print_dot(CqlState* _Nonnull CS, struct ast_node* node);
 static ast_node *file_literal(CqlState* _Nonnull CS, ast_node *);
-static void cql_exit_on_parse_errors();
+static void cql_exit_on_parse_errors(CqlState* _Nonnull CS);
 static void parse_cleanup(CqlState* _Nonnull CS);
 static void cql_usage();
 static ast_node *make_statement_node(CqlState* _Nonnull CS, ast_node *misc_attrs, ast_node *any_stmt);
@@ -186,6 +186,11 @@ static void cql_reset_globals(CqlState *CS);
 #endif
 
 #define AST_STR(node) (((str_ast_node *)node)->value)
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
 
 %}
 
@@ -2770,6 +2775,11 @@ void yyerror(CqlState* _Nonnull CS, yyscan_t scanner, const char *format, ...) {
 }
 
 //static uint64_t next_id = 0;
+#if ULONG_MAX != ULLONG_MAX
+#define LONGX_FMT "%llx"
+#else
+#define LONGX_FMT "%lx"
+#endif
 
 static void print_dot(CqlState* _Nonnull CS, struct ast_node *node) {
   assert(node);
@@ -2793,12 +2803,12 @@ static void print_dot(CqlState* _Nonnull CS, struct ast_node *node) {
   bool_t primitive = true;
 
   if (is_ast_num(node)) {
-    cql_output(CS, "\n    %s%lx [label = \"%s\" shape=plaintext]", node->type, id, ((struct num_ast_node*)node)->value);
+    cql_output(CS, "\n    %s" LONGX_FMT " [label = \"%s\" shape=plaintext]", node->type, id, ((struct num_ast_node*)node)->value);
   } else if (is_ast_str(node)) {
     EXTRACT_STRING(str, node);
     if (is_id(node)) {
       // unescaped name, clean to emit
-      cql_output(CS, "\n    %s%lx [label = \"%s\" shape=plaintext]", node->type, id, str);
+      cql_output(CS, "\n    %s" LONGX_FMT " [label = \"%s\" shape=plaintext]", node->type, id, str);
     } else {
       // we have to do this dance to from the encoded in SQL format string literal
       // to an escaped in C-style literal.  The dot output for \n should be the characters
@@ -2812,13 +2822,13 @@ static void print_dot(CqlState* _Nonnull CS, struct ast_node *node) {
       cg_encode_c_string_literal(CS, plaintext.ptr, &encoding);
       cg_encode_c_string_literal(CS, encoding.ptr, &double_encoding);
       // ready to use!
-      cql_output(CS, "\n    %s%lx [label = %s shape=plaintext]", node->type, id, double_encoding.ptr);
+      cql_output(CS, "\n    %s" LONGX_FMT " [label = %s shape=plaintext]", node->type, id, double_encoding.ptr);
       CHARBUF_CLOSE(double_encoding);
       CHARBUF_CLOSE(encoding);
       CHARBUF_CLOSE(plaintext);
     }
   } else {
-    cql_output(CS, "\n    %s%lx [label = \"%s\" shape=plaintext]", node->type, id, node->type);
+    cql_output(CS, "\n    %s" LONGX_FMT " [label = \"%s\" shape=plaintext]", node->type, id, node->type);
     primitive = false;
   }
 
@@ -2831,19 +2841,19 @@ static void print_dot(CqlState* _Nonnull CS, struct ast_node *node) {
   }
 
   if (ast_has_left(node)) {
-    cql_output(CS, "\n    %s%lx -> %s%lx;", node->type, id, node->left->type, CS->next_id);
+    cql_output(CS, "\n    %s" LONGX_FMT " -> %s" LONGX_FMT ";", node->type, id, node->left->type, CS->next_id);
     print_dot(CS, node->left);
   } else {
-    cql_output(CS, "\n    _%lx [label = \"%s\" shape=plaintext]", id, ground_symbol);
-    cql_output(CS, "\n    %s%lx -> _%lx;", node->type, id, id);
+    cql_output(CS, "\n    _" LONGX_FMT " [label = \"%s\" shape=plaintext]", id, ground_symbol);
+    cql_output(CS, "\n    %s" LONGX_FMT " -> _" LONGX_FMT ";", node->type, id, id);
   }
 
   if (ast_has_right(node)) {
-    cql_output(CS, "\n %s%lx -> %s%lx;", node->type, id, node->right->type, CS->next_id);
+    cql_output(CS, "\n %s" LONGX_FMT " -> %s" LONGX_FMT ";", node->type, id, node->right->type, CS->next_id);
     print_dot(CS, node->right);
   } else {
-    cql_output(CS, "\n    _%lx [label = \"%s\" shape=plaintext]", id, ground_symbol);
-    cql_output(CS, "\n    %s%lx -> _%lx;", node->type, id, id);
+    cql_output(CS, "\n    _" LONGX_FMT " [label = \"%s\" shape=plaintext]", id, ground_symbol);
+    cql_output(CS, "\n    %s" LONGX_FMT " -> _" LONGX_FMT ";", node->type, id, id);
   }
 }
 
@@ -3001,7 +3011,7 @@ static void parse_cmd(CqlState *CS, int argc, char **argv) {
   #define cql_main main
 #endif
 
-cql_noexport const CSTR cql_builtin_text() {
+cql_noexport const CSTR _Nonnull cql_builtin_text() {
   return
     "@@begin_include@@"
     "@attribute(cql:builtin)"
@@ -3549,3 +3559,7 @@ cql_noexport bool_t cql_is_defined(CqlState *CS, CSTR name) {
   symtab_entry *entry = symtab_find(CS->defines, name);
   return entry && entry->val;
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif

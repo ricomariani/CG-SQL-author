@@ -12,7 +12,7 @@
 
 typedef struct charbuf
 {
-  char *ptr;      // pointer to stored data, if any
+  char *_Nullable ptr;      // pointer to stored data, if any
   uint32_t used;  // bytes used in current buffer
   uint32_t max;   // max bytes in current buffer
 
@@ -21,23 +21,23 @@ typedef struct charbuf
 } charbuf;
 
 typedef struct pending_charbuf {
-  charbuf *buf;
-  struct pending_charbuf *prev;
+  charbuf *_Nonnull buf;
+  struct pending_charbuf *_Nullable prev;
 } pending_charbuf;
 
 //cql_data_decl( int32_t CS->charbuf_open_count );
 //cql_data_decl( pending_charbuf *CS->__charbufs_in_flight );
 
-cql_noexport void bopen(CqlState* _Nonnull CS, charbuf* b);
-cql_noexport void bclose(CqlState* _Nonnull CS, charbuf *b);
-cql_noexport void bclear(charbuf *b);
+cql_noexport void bopen(CqlState* _Nonnull CS, charbuf* _Nonnull b);
+cql_noexport void bclose(CqlState* _Nonnull CS, charbuf* _Nonnull b);
+cql_noexport void bclear(charbuf* _Nonnull b);
 cql_noexport void release_open_charbufs(CqlState* _Nonnull CS);
-cql_noexport void vbprintf(charbuf *b, const char *format, va_list args);
-cql_noexport void bprintf(charbuf *b, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
-cql_noexport CSTR dup_printf(CqlState* _Nonnull CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
-cql_noexport void bputc(charbuf *b, char c);
-cql_noexport void bindent(CqlState* _Nonnull CS, charbuf *output, charbuf *input, int32_t indent);
-cql_noexport bool_t breadline(charbuf *output, CSTR *data);
+cql_noexport void vbprintf(charbuf *_Nonnull b, const char *_Nonnull format, va_list args);
+cql_noexport void bprintf(charbuf *_Nonnull b, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport CSTR _Nonnull dup_printf(CqlState* _Nonnull CS, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport void bputc(charbuf *_Nonnull b, char c);
+cql_noexport void bindent(CqlState* _Nonnull CS, charbuf *_Nonnull output, charbuf *_Nonnull input, int32_t indent);
+cql_noexport bool_t breadline(charbuf *_Nonnull output, CSTR _Nonnull*_Nonnull data);
 
 #define CHARBUF_OPEN(x) \
   int32_t __saved_charbuf_count##x = CS->charbuf_open_count; \

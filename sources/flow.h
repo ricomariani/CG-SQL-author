@@ -59,11 +59,11 @@
 
 // Sets `flag` on `*type`. This must not be called if the flag is already set or
 // if a flow context is not in effect.
-cql_noexport void flow_set_flag_for_type(CqlState* _Nonnull CS, sem_t flag, sem_t *type);
+cql_noexport void flow_set_flag_for_type(CqlState* _Nonnull CS, sem_t flag, sem_t *_Nonnull type);
 
 // Un-sets `flag` on `*type`. This must not be called unless the flag is already
 // set or if a flow context is not in effect.
-cql_noexport void flow_unset_flag_for_type(CqlState* _Nonnull CS, sem_t flag, sem_t *type);
+cql_noexport void flow_unset_flag_for_type(CqlState* _Nonnull CS, sem_t flag, sem_t *_Nonnull type);
 
 // Indicates that the current branch group context will (or does) contain a
 // catch-all branch or otherwise covers all possible cases. This must only be

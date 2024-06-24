@@ -61,7 +61,7 @@ static bool_t symtab_add_LuaFuncInt(CqlState* _Nonnull CS, symtab *_Nonnull syms
     return symtab_add(CS, syms, sym_new, val_new);
 }
 
-static bool_t symtab_add_lua_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_lua_expr_dispatch _Nullable *val_new)
+static bool_t symtab_add_lua_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_lua_expr_dispatch *_Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -2802,7 +2802,7 @@ static void cg_lua_fragment_cond_action(CqlState* _Nonnull CS, ast_node *ast, ch
 
   CG_LUA_POP_EVAL(expr);
 
-  int32_t cur_fragment_predicate_saved = CS->cg_lua.cur_fragment_predicate;
+  uint32_t cur_fragment_predicate_saved = CS->cg_lua.cur_fragment_predicate;
 
   CG_PUSH_MAIN_INDENT2(ifbody);
   cg_lua_fragment_setpred(CS);
@@ -2840,7 +2840,7 @@ static void cg_lua_fragment_elseif_list(CqlState* _Nonnull CS, ast_node *ast, as
     bprintf(CS->cg_main_output, FMT("else\n"));
       CG_PUSH_MAIN_INDENT2(else);
 
-      int32_t cur_fragment_predicate_saved = CS->cg_lua.cur_fragment_predicate;
+      uint32_t cur_fragment_predicate_saved = CS->cg_lua.cur_fragment_predicate;
       cg_lua_fragment_setpred(CS);
 
       // this is the next string fragment

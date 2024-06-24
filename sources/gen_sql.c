@@ -5400,7 +5400,7 @@ cql_noexport void gen_one_stmt_and_misc_attrs(CqlState* _Nonnull CS, ast_node *s
 // so the name doesn't otherwise conflict in the amalgam
 #undef output
 
-static bool_t symtab_add_sql_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, gen_expr_dispatch _Nullable *val_new)
+static bool_t symtab_add_sql_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, gen_expr_dispatch *_Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }

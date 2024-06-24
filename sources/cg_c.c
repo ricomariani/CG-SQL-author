@@ -4741,7 +4741,7 @@ static void cg_fragment_cond_action(CqlState* _Nonnull CS, ast_node *ast, charbu
 
   CG_POP_EVAL(expr);
 
-  int32_t cur_fragment_predicate_saved = CS->cg_c.cur_fragment_predicate;
+  uint32_t cur_fragment_predicate_saved = CS->cg_c.cur_fragment_predicate;
 
   CG_PUSH_MAIN_INDENT(ifbody, 2);
   cg_fragment_setpred(CS);
@@ -4781,7 +4781,7 @@ static void cg_fragment_elseif_list(CqlState* _Nonnull CS, ast_node *ast, ast_no
     bprintf(CS->cg_main_output, FMT("else {\n"));
       CG_PUSH_MAIN_INDENT(else, 2);
 
-      int32_t cur_fragment_predicate_saved = CS->cg_c.cur_fragment_predicate;
+      uint32_t cur_fragment_predicate_saved = CS->cg_c.cur_fragment_predicate;
       cg_fragment_setpred(CS);
 
       // this is the next string fragment

@@ -191,7 +191,7 @@ static inline bool_t symtab_add_GenOneStmt(CqlState* _Nonnull CS, symtab *_Nonnu
     return symtab_add(CS, syms, sym_new, val_new);
 }
 
-typedef void (*cg_func_type)(CqlState* _Nonnull CS, ast_node *call_ast, charbuf *is_null, charbuf *value);
+typedef void (*_Nullable cg_func_type)(CqlState* _Nonnull CS, ast_node *_Nonnull call_ast, charbuf *_Nonnull is_null, charbuf *_Nonnull value);
 static inline bool_t symtab_add_CgFuncType(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_func_type _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
@@ -220,7 +220,7 @@ typedef struct cg_expr_dispatch {
   int32_t pri_new;
 } cg_expr_dispatch;
 
-static inline bool_t symtab_add_CgExprDispatch(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_expr_dispatch _Nullable *val_new)
+static inline bool_t symtab_add_CgExprDispatch(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, cg_expr_dispatch *_Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }

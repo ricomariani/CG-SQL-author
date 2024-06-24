@@ -2570,7 +2570,7 @@ typedef struct {
   charbuf *out;
 } json_dispatch;
 
-static bool_t symtab_add_json_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, json_dispatch _Nullable *val_new)
+static bool_t symtab_add_json_expr_dispatch_func(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, json_dispatch *_Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }

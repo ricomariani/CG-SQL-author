@@ -9,5 +9,5 @@
 
 #include "cql.h"
 
-cql_noexport void cg_c_main(CqlState* _Nonnull CS, struct ast_node *root);
+cql_noexport void cg_c_main(CqlState* _Nonnull CS, struct ast_node *_Nonnull root);
 cql_noexport void cg_c_cleanup(CqlState* _Nonnull CS);

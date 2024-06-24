@@ -43,7 +43,7 @@ extern const size_t sizeof_printf_iterator;
 // Initializes a `printf_iterator` with an optional `format_strlit` (used for
 // reporting errors) and a decoded format string (i.e., the format string absent
 // any surrounding quotes). This must be called before `printf_iterator_next`.
-cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *format_strlit, CSTR format_string);
+cql_noexport void printf_iterator_init(printf_iterator *_Nonnull iterator, ast_node *_Nullable format_strlit, CSTR _Nonnull format_string);
 
 // Attempts to parse the next substitution in the format string returning one
 // of the following:
@@ -61,6 +61,6 @@ cql_noexport void printf_iterator_init(printf_iterator *iterator, ast_node *form
 //
 // In the lattermost two cases, parsing is finished and `printf_iterator_next`
 // must not be called again.
-cql_noexport sem_t printf_iterator_next(CqlState* _Nonnull CS, printf_iterator *iterator);
+cql_noexport sem_t printf_iterator_next(CqlState* _Nonnull CS, printf_iterator *_Nonnull iterator);
 
 #endif

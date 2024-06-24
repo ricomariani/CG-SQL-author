@@ -142,12 +142,12 @@ typedef struct deployable_validation {
 // Define the signature of the callback registered in MISC_ATTRS_INT(...) to validate attributes
 // on any statement.
 typedef void (*sem_misc_attribute_callback)(
-    CqlState *CS,
+    CqlState *_Nonnull CS,
     CSTR misc_attr_prefix,
     CSTR misc_attr_name,
-    ast_node *ast_misc_attr_values,
-    ast_node *misc_attrs,
-    ast_node *any_stmt);
+    ast_node *_Nonnull ast_misc_attr_values,
+    ast_node *_Nonnull misc_attrs,
+    ast_node *_Nonnull any_stmt);
 
 //static bytebuf *deployable_validations;
 
@@ -175,21 +175,21 @@ typedef enum {
 // If a function has been registered via `FUNC_INIT`, its associated analysis
 // function must conform to the type `sem_func`. When called, its argument list
 // will have already been analyzed and verified to be free of errors.
-typedef void sem_func(CqlState *CS, ast_node *ast, uint32_t arg_count);
+typedef void sem_func(CqlState *_Nonnull CS, ast_node *_Nonnull ast, uint32_t arg_count);
 
 // If a function has been registered via `SPECIAL_FUNC_INIT`, its associated
 // analysis function must conform to the type `sem_special_func`. When called,
 // it must do analysis of its own arguments as appropriate. It must also set
 // `*is_aggregate` to true if it should be treated as an aggregate function by
 // `sem_expr_call`; it will not be considered an aggregate function otherwise.
-typedef void sem_special_func(CqlState *CS, ast_node *ast, uint32_t arg_count, bool_t *is_aggregate);
+typedef void sem_special_func(CqlState *_Nonnull CS, ast_node *_Nonnull ast, uint32_t arg_count, bool_t *_Nullable is_aggregate);
 
 // forward references for mutual recursion cases
-static void sem_expr_invalid_op(CqlState* _Nonnull CS, ast_node *ast, CSTR op);
-static void sem_stmt_list(CqlState* _Nonnull CS, ast_node *ast);
-static void sem_stmt_list_in_current_flow_context(CqlState* _Nonnull CS, ast_node *ast);
-static void sem_stmt_list_within_loop(CqlState* _Nonnull CS, ast_node *stmt_list, ast_node *true_expr);
-static void sem_select_rewrite_backing(CqlState* _Nonnull CS, ast_node *node);
+static void sem_expr_invalid_op(CqlState* _Nonnull CS, ast_node *_Nonnull ast, CSTR _Nonnull op);
+static void sem_stmt_list(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+static void sem_stmt_list_in_current_flow_context(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
+static void sem_stmt_list_within_loop(CqlState* _Nonnull CS, ast_node *_Nonnull stmt_list, ast_node *_Nonnull true_expr);
+static void sem_select_rewrite_backing(CqlState* _Nonnull CS, ast_node *_Nonnull node);
 static void sem_select_core_list(CqlState* _Nonnull CS, ast_node *ast);
 static void sem_query_parts(CqlState* _Nonnull CS, ast_node *node);
 static void sem_table_function(CqlState* _Nonnull CS, ast_node *node);
@@ -19294,7 +19294,7 @@ error:
 
 // Helper function to validate that ok_table_scan attribution is semantically correctly.
 // ok_table_scan value can only be a table name and should be used in a create proc statement
-static void sem_validate_ok_table_scan_value(CqlState* _Nonnull CS, ast_node *misc_attrs, ast_node *ast_misc_attr_value) {
+static void sem_validate_ok_table_scan_value(CqlState* _Nonnull CS, ast_node *_Nonnull misc_attrs, ast_node *_Nonnull ast_misc_attr_value) {
   if (!is_ast_str(ast_misc_attr_value)) {
     report_error(CS, ast_misc_attr_value, "CQL0325: ok_table_scan attribute must be a name", NULL);
     record_error(CS, ast_misc_attr_value);
@@ -25112,14 +25112,14 @@ static inline bool_t symtab_add_SemSpecialFuncInit(CqlState* _Nonnull CS, symtab
 #define SPECIAL_FUNC_INIT(x) symtab_add_SemSpecialFuncInit(CS, CS->sem.builtin_special_funcs, #x, sem_special_func_ ## x)
 
 #undef AGGR_FUNC_INIT
-static inline bool_t symtab_add_SemBuiltinAggregatedFuncs(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_func _Nullable val_new)
+static inline bool_t symtab_add_SemBuiltinAggregatedFuncs(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_func * _Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
 #define AGGR_FUNC_INIT(x) symtab_add_SemBuiltinAggregatedFuncs(CS, CS->sem.builtin_aggregated_funcs, #x, sem_aggr_func_ ## x)
 
 #undef EXPR_INIT
-static inline bool_t symtab_add_SemExprDispatch(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_expr_dispatch _Nullable *val_new)
+static inline bool_t symtab_add_SemExprDispatch(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_expr_dispatch  *_Nullable val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }
@@ -25128,7 +25128,7 @@ static inline bool_t symtab_add_SemExprDispatch(CqlState* _Nonnull CS, symtab *_
   symtab_add_SemExprDispatch(CS, CS->sem.exprs, k_ast_ ## x, &expr_disp_ ## x);
 
 #undef MISC_ATTR_INIT
-static inline bool_t symtab_add_SemMiscAttributes(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_misc_attribute_callback _Nullable val_new)
+static inline bool_t symtab_add_SemMiscAttributes(CqlState* _Nonnull CS, symtab *_Nonnull syms, const char *_Nonnull sym_new, sem_misc_attribute_callback val_new)
 {
     return symtab_add(CS, syms, sym_new, val_new);
 }

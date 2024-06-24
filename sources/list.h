@@ -13,9 +13,9 @@
 // you automatically at the end of a CQL run.
 // @see minipool
 typedef struct list_item {
-  struct ast_node *ast;
-  struct list_item *next;
+  struct ast_node *_Nonnull ast;
+  struct list_item *_Nullable next;
 } list_item;
 
-cql_noexport void add_item_to_list(CqlState* _Nonnull CS, list_item **head, struct ast_node *ast);
-cql_noexport void reverse_list(list_item **head);
+cql_noexport void add_item_to_list(CqlState* _Nonnull CS, list_item *_Nonnull*_Nonnull head, struct ast_node *_Nonnull ast);
+cql_noexport void reverse_list(list_item *_Nonnull*_Nonnull head);

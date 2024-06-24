@@ -16,4 +16,4 @@
 // statistics about its AST shape on a per-proc basis in CSV form.
 // This output help you to understand the nature of your procs
 
-cql_noexport void cg_stats_main(CqlState* _Nonnull CS, struct ast_node *root);
+cql_noexport void cg_stats_main(CqlState* _Nonnull CS, struct ast_node *_Nonnull root);

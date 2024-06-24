@@ -191,7 +191,7 @@ typedef struct {
   int32_t type;
 } macro_info;
 
-typedef void (*AstGenOneStmt)(CqlState*, ast_node*);
+typedef void (*AstGenOneStmt)(CqlState* _Nonnull CS, ast_node* _Nonnull ast);
 
 cql_noexport CSTR _Nullable install_macro_args(CqlState* _Nonnull CS, ast_node *_Nonnull ast);
 cql_noexport void new_macro_formals(CqlState* _Nonnull CS);
@@ -561,7 +561,7 @@ cql_noexport bool_t is_table_backed(CqlState* _Nonnull CS, ast_node *_Nonnull as
 
 // Callback whenever a misc_attr node is found in find_misc_attrs().
 typedef void (*find_ast_misc_attr_callback)(
-  CqlState *CS,
+  CqlState* _Nonnull CS,
   CSTR _Nullable misc_attr_prefix,
   CSTR _Nonnull misc_attr_name,
   ast_node *_Nullable ast_misc_attr_value_list,
@@ -621,18 +621,18 @@ AST_DATA_DEFN( const CSTR _Nonnull k_ast_blob = "blb" );
 
 #define AST(x) \
   AST_DECL_CHECK(x) \
-  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l, ast_node *_Nullable r); \
-  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l, ast_node *_Nullable r) { return new_ast(CS, k_ast_ ## x, l, r); })
+  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *_Nonnull CS, ast_node *_Nullable l, ast_node *_Nullable r); \
+  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *_Nonnull CS, ast_node *_Nullable l, ast_node *_Nullable r) { return new_ast(CS, k_ast_ ## x, l, r); })
 
 #define AST1(x) \
   AST_DECL_CHECK(x) \
-  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l); \
-  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS, ast_node *_Nullable l) { return new_ast(CS, k_ast_ ## x, l, NULL); })
+  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *_Nonnull CS, ast_node *_Nullable l); \
+  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *_Nonnull CS, ast_node *_Nullable l) { return new_ast(CS, k_ast_ ## x, l, NULL); })
 
 #define AST0(x) \
   AST_DECL_CHECK(x) \
-  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS); \
-  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *CS) { return new_ast(CS, k_ast_ ## x, NULL, NULL); })
+  AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *_Nonnull CS); \
+  AST_DEF(AST_VIS ast_node *_Nonnull new_ast_ ## x(CqlState *_Nonnull CS) { return new_ast(CS, k_ast_ ## x, NULL, NULL); })
 
 #ifdef __clang__
 

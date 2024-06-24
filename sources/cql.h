@@ -74,7 +74,7 @@ CqlState* _Nullable cql_new_state();
 void cql_free_state(CqlState* _Nonnull CS);
 
 // patternlint-disable-next-line prefer-sized-ints-in-msys
-int main(int argc, char **argv);
+int main(int argc, char *_Nonnull*_Nonnull argv);
 
 // we need this for some callbacks
 struct charbuf;
@@ -93,22 +93,22 @@ typedef struct cmd_options {
   bool_t run_unit_tests;
   bool_t nolines;
   bool_t schema_exclusive;
-  char *rt;
-  char **file_names;
+  char * _Nullable rt;
+  char *_Nullable*_Nullable file_names;
   uint32_t file_names_count;
-  char **include_paths;
+  char *_Nullable*_Nullable include_paths;
   uint32_t include_paths_count;
-  char **defines;
+  char *_Nullable*_Nullable defines;
   uint32_t defines_count;
-  char **include_regions;
+  char *_Nullable*_Nullable include_regions;
   uint32_t include_regions_count;
-  char **exclude_regions;
+  char *_Nullable*_Nullable exclude_regions;
   uint32_t exclude_regions_count;
   int32_t min_schema_version;
-  char *c_include_path;
-  char *objc_c_include_path;
-  char *c_include_namespace;
-  char *cqlrt;
+  char *_Nullable c_include_path;
+  char *_Nullable objc_c_include_path;
+  char *_Nullable c_include_namespace;
+  char *_Nullable cqlrt;
   bool_t dev;                           // option use to activate features in development or dev features
 } cmd_options;
 
@@ -139,13 +139,13 @@ typedef struct ast_node *ast_ptr;
 
 typedef struct rtdata {
   // the command line name of this result type
-  const char *name;
+  const char *_Nonnull name;
 
   // the id prefix to add
-  const char *id_prefix;
+  const char *_Nonnull id_prefix;
 
   // The main code generator function that will be executed.
-  void (*code_generator)(CqlState* _Nonnull CS, ast_ptr root);
+  void (*_Nonnull code_generator)(CqlState* _Nonnull CS, ast_ptr _Nonnull root);
 
   // The number of file names required by the rt. Use -1 for a variable number
   // of file names that will be verified by the code generator itself based on
@@ -153,31 +153,31 @@ typedef struct rtdata {
   int32_t required_file_names_count;
 
   // A string to add before any header contents (include copyright, autogen comments, runtime include, etc).
-  const char *header_prefix;
+  const char *_Nullable header_prefix;
 
   // The default "cqlrt.h" for this code type
-  const char *cqlrt;
+  const char *_Nullable cqlrt;
 
   // the formatting string into which the filename above is placed
-  const char *cqlrt_template;
+  const char *_Nullable cqlrt_template;
 
   // A begin string to wrap the contents of the header file.
-  const char *header_wrapper_begin;
+  const char *_Nullable header_wrapper_begin;
 
   // A end string to wrap the contents of the header file.
-  const char *header_wrapper_end;
+  const char *_Nullable header_wrapper_end;
 
   // A string to add before any source contents (include copyright, autogen comments, etc).
-  const char *source_prefix;
+  const char *_Nullable source_prefix;
 
   // A begin string to wrap the contents of the source file.
-  const char *source_wrapper_begin;
+  const char *_Nullable source_wrapper_begin;
 
   // A end string to wrap the contents of the source file.
-  const char *source_wrapper_end;
+  const char *_Nullable source_wrapper_end;
 
   // A string to add before any import file contents (include copyright, autgen comments, etc).
-  const char *exports_prefix;
+  const char *_Nullable exports_prefix;
 
   // The case to use for symbols.
   cg_symbol_case symbol_case;
@@ -186,88 +186,88 @@ typedef struct rtdata {
   bool_t generate_equality_macros;
 
   // Called for each proc name that is processed.
-  void (*register_proc_name)(const char *proc_name);
+  void (*_Nonnull register_proc_name)(const char *_Nonnull proc_name);
 
   // Predicate function to determine whether to implicitly generate the copy function for a result set.
   // The cql:generate_copy attribute overrides the value, if specified.
-  bool_t (*proc_should_generate_copy)(const char *proc_name);
+  bool_t (*_Nonnull proc_should_generate_copy)(const char *_Nonnull proc_name);
 
   // Provides a chance to add some extra definitions to the result set type, specify if extra stuff needed.
-  void (*result_set_type_decl_extra)(struct charbuf *output, CSTR sym, CSTR ref);
+  void (*_Nullable result_set_type_decl_extra)(struct charbuf *_Nonnull output, CSTR _Nonnull sym, CSTR _Nonnull ref);
 
   // Prefix for public symbol.
-  const char *symbol_prefix;
+  const char *_Nullable symbol_prefix;
 
   // Prefix for private implementation symbol.
-  const char *impl_symbol_prefix;
+  const char *_Nullable impl_symbol_prefix;
 
   // Visibility attribute for generated functions.
-  const char *symbol_visibility;
+  const char *_Nullable symbol_visibility;
 
   // Assertion macro for API contract violations.
-  const char *cql_contract;
+  const char *_Nullable cql_contract;
 
   // Logging database error;
-  const char *cql_log_database_error;
+  const char *_Nullable cql_log_database_error;
 
   // The type for a boolean value.
-  const char *cql_bool;
+  const char *_Nullable cql_bool;
 
   // The type for a 32-bit integer value.
-  const char *cql_int32;
+  const char *_Nullable cql_int32;
 
   // The type for a 64-bit integer value.
-  const char *cql_int64;
+  const char *_Nullable cql_int64;
 
   // The type for a double value.
-  const char *cql_double;
+  const char *_Nullable cql_double;
 
   // The type for a sqlite3 result code.
-  const char *cql_code;
+  const char *_Nullable cql_code;
 
   // The type for an object ref.
-  const char *cql_object_ref;
+  const char *_Nullable cql_object_ref;
 
   // Adds a reference count to the object.
   // @param obj The  object to be retained.
   // void cql_object_retain(cql_object_ref _Nullable obj);
-  const char *cql_object_retain;
+  const char *_Nullable cql_object_retain;
 
   // Subtracts a reference count from the object.  When it reaches 0, the object SHOULD be freed.
   // @param str The object to be released.
   // void cql_object_release(cql_object_ref _Nullable obj);
-  const char *cql_object_release;
+  const char *_Nullable cql_object_release;
 
   // The type for a blob ref.
-  const char *cql_blob_ref;
+  const char *_Nullable cql_blob_ref;
 
   // Get size of a blob ref.
-  const char *cql_get_blob_size;
+  const char *_Nullable cql_get_blob_size;
 
   // Adds a reference count to the blob.
   // @param blob The blob to be retained.
   // void cql_blob_retain(cql_blob_ref _Nullable blob);
-  const char *cql_blob_retain;
+  const char *_Nullable cql_blob_retain;
 
   // Subtracts a reference count from the blob.  When it reaches 0, the blob SHOULD be freed.
   // @param str The blob to be released.
   // void cql_blob_release(cql_blob_ref _Nullable blob);
-  const char *cql_blob_release;
+  const char *_Nullable cql_blob_release;
 
   // The type for a string object.
-  const char *cql_string_ref;
+  const char *_Nullable cql_string_ref;
 
   // Construct a new string object.
   // @param cstr The C string to be stored.
   // @return A string object of the type defined by cql_string_ref.
   // cql_string_ref cql_string_ref_new(const char *cstr);
-  const char *cql_string_ref_new;
+  const char *_Nullable cql_string_ref_new;
 
   // The encode type for a string object.
-  const char *cql_string_ref_encode;
+  const char *_Nullable cql_string_ref_encode;
 
   // The include library for the encode type for a string object.
-  const char *cql_string_ref_encode_include;
+  const char *_Nullable cql_string_ref_encode_include;
 
   // Declare a static const string literal object. This must be a global object
   // and will be executed in the global context.
@@ -276,7 +276,7 @@ typedef struct rtdata {
   // @param name The name of the object.
   // @param text The text to be stored in the object.
   // cql_string_literal(cql_string_ref name, const char *text);
-  const char *cql_string_literal;
+  const char *_Nullable cql_string_literal;
 
   // Declare a const string that holds the name of a stored procedure. This must
   // be a global object and will be executed in the global context.
@@ -285,27 +285,27 @@ typedef struct rtdata {
   // @param name The name of the object.
   // @param proc_name The procedure name to be stored in the object.
   // cql_string_literal(cql_string_ref name, const char *proc_name);
-  const char *cql_string_proc_name;
+  const char *_Nullable cql_string_proc_name;
 
   // Adds a reference count to the string object.
   // @param str The string object to be retained.
   // void cql_string_retain(cql_string_ref _Nullable str);
-  const char *cql_string_retain;
+  const char *_Nullable cql_string_retain;
 
   // Subtracts a reference count from the string object.  When it reaches 0, the string SHOULD be freed.
   // @param str The string object to be released.
   // void cql_string_release(cql_string_ref _Nullable str);
-  const char *cql_string_release;
+  const char *_Nullable cql_string_release;
 
   // Creates a hash code for the string object.
   // @param str The string object to be hashed.
   // cql_hash_code cql_string_hash(cql_string_ref _Nullable str);
-  const char *cql_string_hash;
+  const char *_Nullable cql_string_hash;
 
   // Creates a hash code for the blob object.
   // @param blob The blob object to be hashed.
   // cql_hash_code cql_blob_hash(cql_string_ref _Nullable str);
-  const char *cql_blob_hash;
+  const char *_Nullable cql_blob_hash;
 
   // Checks if two blob objects are equal.
   // NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
@@ -313,14 +313,14 @@ typedef struct rtdata {
   // @param str2 The second blob to compare.
   // @return cql_true if they are equal, otherwise cql_false.
   // cql_bool cql_blob_equal(cql_blob_ref _Nullable bl1, cql_blob_ref _Nullable bl2);
-  const char *cql_blob_equal;
+  const char *_Nullable cql_blob_equal;
 
   // Compares two string objects.
   // @param str1 The first string to compare.
   // @param str2 The second string to compare.
   // @return < 0 if str1 is less than str2, > 0 if str2 is less than str1, = 0 if str1 is equal to str2.
   // int cql_string_compare(cql_string_ref str1, cql_string_ref str2);
-  const char *cql_string_compare;
+  const char *_Nullable cql_string_compare;
 
   // Checks if two string objects are equal.
   // NOTE: If both objects are NULL, they are equal; if only 1 is NULL, they are not equal.
@@ -328,7 +328,7 @@ typedef struct rtdata {
   // @param str2 The second string to compare.
   // @return cql_true if they are equal, otherwise cql_false.
   // cql_bool cql_string_equal(cql_string_ref _Nullable str1, cql_string_ref _Nullable str2);
-  const char *cql_string_equal;
+  const char *_Nullable cql_string_equal;
 
   // Compares two string objects with SQL LIKE semantics.
   // NOTE: If either object is NULL, the result should be 1.
@@ -336,24 +336,24 @@ typedef struct rtdata {
   // @param str2 The second string to compare.
   // @return 0 if the str1 is LIKE str2, else != 0.
   // int cql_string_like(cql_string_ref str1, cql_string_ref str2);
-  const char *cql_string_like;
+  const char *_Nullable cql_string_like;
 
   // Declare and allocate a C string from a string object.
   // NOTE: This MUST be implemented as a macro, as it both declares and assigns the value.
   // @param cstr The C string var to be declared and assigned.
   // @param str The string object that contains the string value.
   // cql_alloc_cstr(const char *cstr, cql_string_ref str);
-  const char *cql_alloc_cstr;
+  const char *_Nullable cql_alloc_cstr;
 
   // Free a C string that was allocated by cql_alloc_cstr
   // @param cstr The C string to be freed.
   // @param str The string object that the C string was allocated from.
   // cql_free_cstr(const char *cstr, cql_string_ref str);
-  const char *cql_free_cstr;
+  const char *_Nullable cql_free_cstr;
 
   // The type for a generic cql result set.
   // NOTE: Result sets are cast to this type before being passed to the cql_result_set_get_count/_data functions.
-  const char *cql_result_set_ref;
+  const char *_Nullable cql_result_set_ref;
 
   // Construct a new result set object.
   // @param data The data to be stored in the result set.
@@ -368,7 +368,7 @@ typedef struct rtdata {
   //     void (*_Nonnull teardown)(cql_result_set_ref _Nonnull result_set),
   //     uint8_t *_Nonnull dataTypes,
   //     cql_result_set_meta_struct meta);
-  const char *cql_result_set_ref_new;
+  const char *_Nullable cql_result_set_ref_new;
 
   // The name of the struct for all of the metadata passed to cql_result_set_ref_new.  The struct must have the
   // following fields, by name.  Any additional fields may be added for internal support of the runtime.
@@ -393,41 +393,41 @@ typedef struct rtdata {
   //                    cql_int32 col)
   //   getIsNull:   Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col)
   //   getIsEncoded: Boolean (*_Nullable)(cql_result_set_ref _Nonnull result_set, cql_int32 col)
-  const char *cql_result_set_meta_struct;
+  const char *_Nullable cql_result_set_meta_struct;
 
   // The name of the method that will give the metadata struct back as provided to the construction above
-  const char *cql_result_set_get_meta;
+  const char *_Nullable cql_result_set_get_meta;
 
   // Adds a reference count to the result_set object.
   // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
   // @param result_set The result set object to be retained.
   // void cql_result_set_retain(** _Nullable result_set);
-  const char *cql_result_set_retain;
+  const char *_Nullable cql_result_set_retain;
 
   // Subtracts a reference count from the result_set object.  When it reaches 0, the result_set SHOULD be freed.
   // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
   // @param result_set The result set object to be released.
   // void cql_result_set_release(** _Nullable result_set);
-  const char *cql_result_set_release;
+  const char *_Nullable cql_result_set_release;
 
   // Accounts for a transfer of ownership of the result_set object by decrementing its reference count.
   // @param result_set The result set object whose reference count should be decremented.
   // void cql_result_set_note_ownership_transferred(** _Nullable result_set);
-  const char *cql_result_set_note_ownership_transferred;
+  const char *_Nullable cql_result_set_note_ownership_transferred;
 
   // Get the count of the query data.
   // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
   // @param result_set The cql result set object.
   // @return The count that was previous stored on the result set.
   // cql_int32 cql_result_set_get_count(** result_set);
-  const char *cql_result_set_get_count;
+  const char *_Nullable cql_result_set_get_count;
 
   // Retrieve the storage of the query data.
   // NOTE: This MUST be implemented as a macro, as it takes a result set as a param, which has an undefined type.
   // @param result_set The cql result_set object.
   // @return The data that was previous stored on the result set.
   // void *cql_result_set_get_data(** result_set)
-  const char *cql_result_set_get_data;
+  const char *_Nullable cql_result_set_get_data;
 
   // Generic bool value getter on base result set object.
   // NOTE: This function should call through to the
@@ -437,7 +437,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The bool value.
   // cql_bool cql_result_set_get_bool(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_bool;
+  const char *_Nullable cql_result_set_get_bool;
 
   // Generic double value getter on base result set object.
   // NOTE: This function should call through to the
@@ -447,7 +447,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The double value.
   // cql_double cql_result_set_get_double(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_double;
+  const char *_Nullable cql_result_set_get_double;
 
   // Generic int32 value getter on base result set object.
   // NOTE: This function should call through to the
@@ -457,7 +457,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The int32 value.
   // cql_int32 cql_result_set_get_int32(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_int32;
+  const char *_Nullable cql_result_set_get_int32;
 
   // Generic int64 value getter on base result set object.
   // NOTE: This function should call through to the
@@ -467,7 +467,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The int64 value.ali
   // cql_int64 cql_result_set_get_int64(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_int64;
+  const char *_Nullable cql_result_set_get_int64;
 
   // Generic string value getter on base result set object.
   // NOTE: This function should call through to the
@@ -477,7 +477,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The string value.
   // cql_string_ref _Nullable cql_result_set_get_string(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_string;
+  const char *_Nullable cql_result_set_get_string;
 
   // Generic object value getter on base result set object.
   // NOTE: This function should call through to the
@@ -487,7 +487,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The object value.
   // cql_object_ref _Nullable cql_result_set_get_object(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_object;
+  const char *_Nullable cql_result_set_get_object;
 
   // Generic blob value getter on base result set object.
   // NOTE: This function should call through to the
@@ -497,7 +497,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return The string value.
   // cql_blob_ref _Nullable cql_result_set_get_blob(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_blob;
+  const char *_Nullable cql_result_set_get_blob;
 
   // Generic is_null value getter on base result set object.
   // NOTE: This function should call through to the
@@ -507,7 +507,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return cql_true if the value is null, otherwise cql_false.
   // cql_bool cql_result_set_get_is_null(cql_result_set_ref result_set, int32_t row, int32_t col)
-  const char *cql_result_set_get_is_null;
+  const char *_Nullable cql_result_set_get_is_null;
 
   // Generic is_encoded value getter on base result set object.
   // NOTE: This function should call through to the
@@ -516,7 +516,7 @@ typedef struct rtdata {
   // @param col The column to fetch the value for.
   // @return cql_true if the value is sensitive, otherwise cql_false.
   // cql_bool cql_result_set_get_is_encoded(cql_result_set_ref result_set, int32_t col)
-  const char *cql_result_set_get_is_encoded;
+  const char *_Nullable cql_result_set_get_is_encoded;
 
   // Generic bool value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -524,7 +524,7 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new boolean value to be set.
   // void cql_result_set_set_bool(cql_result_set_ref result_set, int32_t row, int32_t col, cql_bool new_value)
-  const char *cql_result_set_set_bool;
+  const char *_Nullable cql_result_set_set_bool;
 
   // Generic double value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -532,7 +532,7 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new boolean value to be set.
   // void cql_result_set_set_double(cql_result_set_ref result_set, int32_t row, int32_t col, double new_value)
-  const char *cql_result_set_set_double;
+  const char *_Nullable cql_result_set_set_double;
 
   // Generic cql_int32 value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -540,7 +540,7 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new cql_int32 value to be set.
   // void cql_result_set_set_int32(cql_result_set_ref result_set, int32_t row, int32_t col, cql_int32 new_value)
-  const char *cql_result_set_set_int32;
+  const char *_Nullable cql_result_set_set_int32;
 
   // Generic int64 value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -548,7 +548,7 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new int64 value to be set.
   // void cql_result_set_set_int64(cql_result_set_ref result_set, int32_t row, int32_t col, cql_int64 new_value)
-  const char *cql_result_set_set_int64;
+  const char *_Nullable cql_result_set_set_int64;
 
   // Generic string value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -556,7 +556,7 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new string value to be set.
   // void cql_result_set_set_string(cql_result_set_ref result_set, int32_t row, int32_t col, cql_string new_value)
-  const char *cql_result_set_set_string;
+  const char *_Nullable cql_result_set_set_string;
 
   // Generic object value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -564,7 +564,7 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new object value to be set.
   // void cql_result_set_set_object(cql_result_set_ref result_set, int32_t row, int32_t col, cql_object new_value)
-  const char *cql_result_set_set_object;
+  const char *_Nullable cql_result_set_set_object;
 
   // Generic blob value setter on base result set object.
   // @param result_set The cql result_set object.
@@ -572,46 +572,46 @@ typedef struct rtdata {
   // @param col The column to set the value for.
   // @param new_value the new blob value to be set.
   // void cql_result_set_set_blob(cql_result_set_ref result_set, int32_t row, int32_t col, cql_blob new_value)
-  const char *cql_result_set_set_blob;
+  const char *_Nullable cql_result_set_set_blob;
 
   // The target type for NULL object value.
-  const char *cql_target_null;
+  const char *_Nullable cql_target_null;
 
-  void (*cql_post_common_init)(void);
+  void (*_Nullable cql_post_common_init)(void);
 } rtdata;
 
-cql_data_decl( rtdata *rt );
+//cql_data_decl( rtdata *CS->rt );
 
 cql_noexport void cql_cleanup_and_exit(CqlState* _Nonnull CS, int32_t code);
 
 // output to "stderr"
-cql_noexport void cql_error(CqlState* _Nonnull CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport void cql_error(CqlState* _Nonnull CS, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 
 // output to "stdout"
-cql_noexport void cql_output(CqlState* _Nonnull CS, const char *format, ...) __attribute__ (( format( printf, 2, 3 ) ));
+cql_noexport void cql_output(CqlState* _Nonnull CS, const char *_Nonnull format, ...) __attribute__ (( format( printf, 2, 3 ) ));
 
 // Creates a file in write mode. Aborts if there's any error.
-cql_export FILE *cql_open_file_for_write(CqlState *CS, CSTR file_name);
+cql_export FILE *_Nullable cql_open_file_for_write(CqlState *_Nonnull CS, CSTR _Nonnull file_name);
 
 // Create file, write the data to it, and close the file
-cql_export void cql_write_file(CqlState *CS, const char *file_name, const char *data);
+cql_export void cql_write_file(CqlState *_Nonnull CS, const char *_Nonnull file_name, const char *_Nonnull data);
 
-cql_noexport void line_directive(CqlState* _Nonnull CS, const char *directive);
+cql_noexport void line_directive(CqlState* _Nonnull CS, const char *_Nonnull directive);
 
-cql_export void cql_emit_error(CqlState* _Nonnull CS, const char *err);
+cql_export void cql_emit_error(CqlState* _Nonnull CS, const char *_Nonnull err);
 
-cql_export void cql_emit_output(const char *out);
+cql_export void cql_emit_output(const char *_Nonnull out);
 
 //cql_data_decl( char *CS->current_file );
 
-cql_noexport CSTR get_last_doc_comment(CqlState* _Nonnull CS);
+cql_noexport CSTR _Nullable get_last_doc_comment(CqlState* _Nonnull CS);
 
-cql_noexport CSTR cql_builtin_text();
+cql_noexport const CSTR _Nonnull cql_builtin_text();
 
-cql_noexport int32_t macro_type_from_str(CSTR type);
+cql_noexport int32_t macro_type_from_str(CSTR _Nonnull type);
 
-cql_noexport bool_t macro_arg_valid(CqlState* _Nonnull CS, int32_t type, struct ast_node *ast);
+cql_noexport bool_t macro_arg_valid(CqlState* _Nonnull CS, int32_t type, struct ast_node *_Nonnull ast);
 
 cql_noexport void cql_reset_open_includes(CqlState* _Nonnull CS);
 
-cql_noexport bool_t cql_is_defined(CqlState* _Nonnull CS, CSTR name);
+cql_noexport bool_t cql_is_defined(CqlState* _Nonnull CS, CSTR _Nonnull name);

@@ -20,4 +20,4 @@
 //   - the list of algorithm used in the target sql statement
 //   - the sequence of execution of the plan for the target sql statement
 
-cql_noexport void cg_query_plan_main(CqlState* _Nonnull CS, struct ast_node *root);
+cql_noexport void cg_query_plan_main(CqlState* _Nonnull CS, struct ast_node *_Nonnull root);

@@ -35,7 +35,7 @@ split_text(tok) AS (
         FROM splitter
         WHERE rest != ''
   )
-  SELECT tok from splitter where tok != ''
+  SELECT tok from splitter where tok != '';
 )
 ```
 
@@ -76,7 +76,7 @@ BEGIN
         FROM tokens
         WHERE rest != ''
   )
-  SELECT tok from splitter where tok != ''
+  SELECT tok from splitter where tok != '';
 END;
 ```
 

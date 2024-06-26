@@ -278,7 +278,7 @@ declare procedure printf no check;
 create procedure upsert_foo(id_ integer, t_ text)
 begin
   try
-    insert into foo(id, t) values(id_, t_)
+    insert into foo(id, t) values(id_, t_);
   catch
     try
       update foo set t = t_ where id = id_;   

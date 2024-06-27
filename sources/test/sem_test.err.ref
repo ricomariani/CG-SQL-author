@@ -792,6 +792,10 @@ UPDATE bar
   SET id = 7
   WHERE rate > old.b AND rate < new.b;
 
+UPDATE bar
+  SET id = 8
+  WHERE rowid = old.rowid OR rowid = new.rowid;
+
 INSERT INTO bar(id, name, rate)
   VALUES(7, 'goo', 17L);
 END
@@ -1705,4 +1709,6 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already
 test/sem_test.sql:XXXX:1: error: in num : CQL0502: Cannot re-assign value to constant variable 'cant_change'
 test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
 test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
 semantic errors present; no code gen.

@@ -6204,7 +6204,7 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
   CSTR col = NULL;
   CSTR kind = NULL;
 
-  if (!(current_joinscope && current_joinscope->jptr)) {
+  if (!current_joinscope) {
     return SEM_RESOLVE_CONTINUE;
   }
 
@@ -6214,25 +6214,45 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
   }
 
   sem_join *jptr = current_joinscope->jptr;
-  if (scope == NULL && jptr->count == 1) {
+  if (scope == NULL && jptr && jptr->count == 1) {
     // if only one table then that's the rowid
     col = name;
     sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
   }
   else if (scope != NULL) {
-    // more than one table but the name is scoped, still have a chance
-    for (uint32_t i = 0; i < jptr->count; i++) {
-      if (!Strcasecmp(scope, jptr->names[i])) {
-        col = name;
-        kind = NULL;
-        sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+    // We walk the chain of scopes until we find a stop frame or else we run out
+    // this allows nested joins to see their parent scopes.
+    for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
+      jptr = jscp->jptr;
 
-        // Insert table alias name override if enabled.
-        if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
-          Invariant(is_ast_dot(ast));
-          insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
+      // an empty jptr has no names, skip it
+      if (!jptr) {
+        continue;
+      }
+
+      // stop if we find the sentinel
+      if (jptr == &join_block) {
+        break;
+      }
+
+      // more than one table but the name is scoped, still have a chance
+      for (uint32_t i = 0; i < jptr->count; i++) {
+        if (!Strcasecmp(scope, jptr->names[i])) {
+          col = name;
+          kind = NULL;
+          sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+
+          // Insert table alias name override if enabled.
+          if (keep_table_name_in_aliases && !in_trigger && !in_trigger_when_expr && ast && scope) {
+            Invariant(is_ast_dot(ast));
+            insert_table_alias_string_overide(ast->left, jptr->tables[i]->struct_name);
+          }
+
+          break;
         }
+      }
 
+      if (col) {
         break;
       }
     }

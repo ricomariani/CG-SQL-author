@@ -8796,6 +8796,7 @@ create trigger trigger3
   when old.b > 1 and new.b < 3
 begin
   update bar set id = 7 where rate > old.b and rate < new.b;
+  update bar set id = 8 where rowid = old.rowid or rowid = new.rowid;
   insert into bar values (7, 'goo', 17L);
 end;
 
@@ -8811,6 +8812,7 @@ create trigger trigger3
   when old.b > 1 and new.b < 3
 begin
   update bar set id = 7 where rate > old.b and rate < new.b;
+  update bar set id = 8 where rowid = old.rowid or rowid = new.rowid;
   insert into bar values (7, 'goo', 17L);
 end;
 
@@ -24411,3 +24413,15 @@ end;
 -- + {name a_col}: a_col: integer notnull
 -- - error:
 select 1 a_col order by a_col;
+
+-- TEST: empty join scope looking for rowid (this will fail)
+-- + {select_stmt}: err
+-- * error: % name not found 'foo.rowid'
+-- +1 error:
+select 1 a_col order by foo.rowid;
+
+-- TEST: blocked access to tables
+-- + {select_stmt}: err
+-- * error: % name not found 'foo.rowid'
+-- +1 error:
+select * from foo limit foo.rowid;

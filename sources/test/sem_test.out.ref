@@ -32734,6 +32734,9 @@ BEGIN
   UPDATE bar
     SET id = 7
     WHERE rate > old.b AND rate < new.b;
+  UPDATE bar
+    SET id = 8
+    WHERE rowid = old.rowid OR rowid = new.rowid;
   INSERT INTO bar(id, name, rate)
     VALUES(7, 'goo', 17L);
 END;
@@ -32787,6 +32790,28 @@ END;
                   |       |       | {name new}
                   |       |       | {name b}
                   |       | {update_orderby}
+                  | {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {update_set}
+                  |   | {update_list}: ok
+                  |   | | {update_entry}: id: integer notnull
+                  |   |   | {name id}: id: integer notnull
+                  |   |   | {int 8}: integer notnull
+                  |   | {update_from}
+                  |     | {update_where}
+                  |       | {opt_where}: bool notnull
+                  |       | | {or}: bool notnull
+                  |       |   | {eq}: bool notnull
+                  |       |   | | {name rowid}: rowid: longint notnull
+                  |       |   | | {dot}: rowid: longint notnull
+                  |       |   |   | {name old}
+                  |       |   |   | {name rowid}
+                  |       |   | {eq}: bool notnull
+                  |       |     | {name rowid}: rowid: longint notnull
+                  |       |     | {dot}: rowid: longint notnull
+                  |       |       | {name new}
+                  |       |       | {name rowid}
+                  |       | {update_orderby}
                   | {insert_stmt}: ok
                     | {insert_normal}
                     | {name_columns_values}
@@ -32823,6 +32848,9 @@ BEGIN
   UPDATE bar
     SET id = 7
     WHERE rate > old.b AND rate < new.b;
+  UPDATE bar
+    SET id = 8
+    WHERE rowid = old.rowid OR rowid = new.rowid;
   INSERT INTO bar(id, name, rate)
     VALUES(7, 'goo', 17L);
 END;
@@ -32876,6 +32904,28 @@ END;
                   |       |       | {name new}
                   |       |       | {name b}
                   |       | {update_orderby}
+                  | {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {update_set}
+                  |   | {update_list}: ok
+                  |   | | {update_entry}: id: integer notnull
+                  |   |   | {name id}: id: integer notnull
+                  |   |   | {int 8}: integer notnull
+                  |   | {update_from}
+                  |     | {update_where}
+                  |       | {opt_where}: bool notnull
+                  |       | | {or}: bool notnull
+                  |       |   | {eq}: bool notnull
+                  |       |   | | {name rowid}: rowid: longint notnull
+                  |       |   | | {dot}: rowid: longint notnull
+                  |       |   |   | {name old}
+                  |       |   |   | {name rowid}
+                  |       |   | {eq}: bool notnull
+                  |       |     | {name rowid}: rowid: longint notnull
+                  |       |     | {dot}: rowid: longint notnull
+                  |       |       | {name new}
+                  |       |       | {name rowid}
+                  |       | {update_orderby}
                   | {insert_stmt}: ok
                     | {insert_normal}
                     | {name_columns_values}
@@ -32919,6 +32969,10 @@ BEGIN
 UPDATE bar
   SET id = 7
   WHERE rate > old.b AND rate < new.b;
+
+UPDATE bar
+  SET id = 8
+  WHERE rowid = old.rowid OR rowid = new.rowid;
 
 INSERT INTO bar(id, name, rate)
   VALUES(7, 'goo', 17L);
@@ -90992,5 +91046,64 @@ SELECT 1 AS a_col
     |   | {orderby_item}
     |     | {name a_col}: a_col: integer notnull
     | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 AS a_col
+  ORDER BY foo.rowid;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: select: { a_col: integer notnull }
+  | | {select_core}: select: { a_col: integer notnull }
+  |   | {select_expr_list_con}: select: { a_col: integer notnull }
+  |     | {select_expr_list}: select: { a_col: integer notnull }
+  |     | | {select_expr}: a_col: integer notnull
+  |     |   | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name a_col}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}: err
+    | {opt_orderby}: err
+    | | {orderby_list}: err
+    |   | {orderby_item}
+    |     | {dot}: err
+    |       | {name foo}
+    |       | {name rowid}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+  LIMIT foo.rowid;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}: err
+    | {select_limit}
+      | {opt_limit}: err
+      | | {dot}: err
+      |   | {name foo}
+      |   | {name rowid}
       | {select_offset}
 

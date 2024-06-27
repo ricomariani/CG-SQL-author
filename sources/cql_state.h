@@ -383,6 +383,7 @@ bool_t use_encode;
 /*static sem_joinscope**/void *_Nullable current_joinscope;
 /*static*/ loop_analysis_state current_loop_analysis_state; // = LOOP_ANALYSIS_STATE_NONE;
 /*static*/ bool_t current_proc_contains_try_is_proc_body;
+sem_join join_block;
 /*static*/ CSTR _Nullable current_region;
 /*static*/ symtab *_Nullable current_region_image;
 /*static*/ ast_node *_Nullable current_table_ast;

@@ -447,19 +447,19 @@ insert into T1 values (1, "foo", 3.14);
 set r := (select r from T1 where id = 1);  --> r = 3.14
 
 -- The (select ...) form requires the result to have at least one row.
--- You can use IF NOTHING forms to handle other cases such as:
+-- You can use IF NOTHING THEN forms to handle other cases such as:
 set r := (select r from T1
           where id = 2
-          if nothing -1);  --> r = -1
+          if nothing then -1);  --> r = -1
 
 -- If the SELECT statement might return a null result you can handle that as well
 set r := (select r from T1
           where id = 2
-          if nothing or null -1);  --> r = -1
+          if nothing or null then -1);  --> r = -1
 
--- With no IF NOTHING clause, lack of a row will cause the SELECT expression to throw
--- an exception.  IF NOTHING THROW merely makes this explicit.
-set r := (select r from T1 where id = 2 if nothing throw);  --> will throw
+-- With no IF NOTHING THEN clause, lack of a row will cause the SELECT expression to throw
+-- an exception.  IF NOTHING THEN THROW merely makes this explicit.
+set r := (select r from T1 where id = 2 if nothing then throw);  --> will throw
 
 /**********************************************************
  * 6. Procedures, Results, Exceptions
@@ -477,7 +477,7 @@ begin
   set y := x + y;  -- any computation you like
 
   -- bizarre way to compute an id but this is just an illustration
-  set z := (select r from T1 where id = x if nothing or null -1);
+  set z := (select r from T1 where id = x if nothing or null then -1);
 end;
 
 -- Procedures like "hello" (above) have a void signature -- they return nothing

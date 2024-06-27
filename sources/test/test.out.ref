@@ -1901,13 +1901,13 @@ CREATE TABLE foo(
 @ENFORCE_POP;
 
 SET x := ( SELECT x
-  FROM y IF NOTHING 3 );
+  FROM y IF NOTHING THEN 3 );
 
 SET x := ( SELECT x
-  FROM y IF NOTHING OR NULL 3 );
+  FROM y IF NOTHING OR NULL THEN 3 );
 
 SET x := ( SELECT x
-  FROM y IF NOTHING THROW );
+  FROM y IF NOTHING THEN THROW );
 
 LET z := 1 + 2;
 
@@ -2352,3 +2352,10 @@ END;
 IF x THEN
   LET u := 5;
 END;
+
+WITH
+  foo (*) AS (
+    SELECT 1 AS x, '2' AS y
+  )
+SELECT *
+  FROM foo;

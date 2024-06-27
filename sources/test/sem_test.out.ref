@@ -32734,6 +32734,9 @@ BEGIN
   UPDATE bar
     SET id = 7
     WHERE rate > old.b AND rate < new.b;
+  UPDATE bar
+    SET id = 8
+    WHERE rowid = old.rowid OR rowid = new.rowid;
   INSERT INTO bar(id, name, rate)
     VALUES(7, 'goo', 17L);
 END;
@@ -32787,6 +32790,28 @@ END;
                   |       |       | {name new}
                   |       |       | {name b}
                   |       | {update_orderby}
+                  | {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {update_set}
+                  |   | {update_list}: ok
+                  |   | | {update_entry}: id: integer notnull
+                  |   |   | {name id}: id: integer notnull
+                  |   |   | {int 8}: integer notnull
+                  |   | {update_from}
+                  |     | {update_where}
+                  |       | {opt_where}: bool notnull
+                  |       | | {or}: bool notnull
+                  |       |   | {eq}: bool notnull
+                  |       |   | | {name rowid}: rowid: longint notnull
+                  |       |   | | {dot}: rowid: longint notnull
+                  |       |   |   | {name old}
+                  |       |   |   | {name rowid}
+                  |       |   | {eq}: bool notnull
+                  |       |     | {name rowid}: rowid: longint notnull
+                  |       |     | {dot}: rowid: longint notnull
+                  |       |       | {name new}
+                  |       |       | {name rowid}
+                  |       | {update_orderby}
                   | {insert_stmt}: ok
                     | {insert_normal}
                     | {name_columns_values}
@@ -32823,6 +32848,9 @@ BEGIN
   UPDATE bar
     SET id = 7
     WHERE rate > old.b AND rate < new.b;
+  UPDATE bar
+    SET id = 8
+    WHERE rowid = old.rowid OR rowid = new.rowid;
   INSERT INTO bar(id, name, rate)
     VALUES(7, 'goo', 17L);
 END;
@@ -32876,6 +32904,28 @@ END;
                   |       |       | {name new}
                   |       |       | {name b}
                   |       | {update_orderby}
+                  | {update_stmt}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {name bar}: bar: { id: integer notnull, name: text, rate: longint }
+                  | | {update_set}
+                  |   | {update_list}: ok
+                  |   | | {update_entry}: id: integer notnull
+                  |   |   | {name id}: id: integer notnull
+                  |   |   | {int 8}: integer notnull
+                  |   | {update_from}
+                  |     | {update_where}
+                  |       | {opt_where}: bool notnull
+                  |       | | {or}: bool notnull
+                  |       |   | {eq}: bool notnull
+                  |       |   | | {name rowid}: rowid: longint notnull
+                  |       |   | | {dot}: rowid: longint notnull
+                  |       |   |   | {name old}
+                  |       |   |   | {name rowid}
+                  |       |   | {eq}: bool notnull
+                  |       |     | {name rowid}: rowid: longint notnull
+                  |       |     | {dot}: rowid: longint notnull
+                  |       |       | {name new}
+                  |       |       | {name rowid}
+                  |       | {update_orderby}
                   | {insert_stmt}: ok
                     | {insert_normal}
                     | {name_columns_values}
@@ -32919,6 +32969,10 @@ BEGIN
 UPDATE bar
   SET id = 7
   WHERE rate > old.b AND rate < new.b;
+
+UPDATE bar
+  SET id = 8
+  WHERE rowid = old.rowid OR rowid = new.rowid;
 
 INSERT INTO bar(id, name, rate)
   VALUES(7, 'goo', 17L);
@@ -59782,7 +59836,7 @@ The statement ending at line XXXX
 SET price_d := ( SELECT id
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59838,7 +59892,7 @@ SELECT ( SELECT 1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING -1 );
+SET price_d := ( SELECT 1 IF NOTHING THEN -1 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59862,7 +59916,7 @@ SET price_d := ( SELECT 1 IF NOTHING -1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
+SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN -1 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59886,9 +59940,9 @@ SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING OR NULL NULL );
+SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN NULL );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59911,7 +59965,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SE
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING OR NULL ( SELECT NULL OR 1 ) );
+SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN ( SELECT NULL OR 1 ) );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59949,10 +60003,10 @@ SET price_d := ( SELECT 1 IF NOTHING OR NULL ( SELECT NULL OR 1 ) );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING ( SELECT id
+SET price_d := ( SELECT 1 IF NOTHING THEN ( SELECT id
   FROM foo ) );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59991,7 +60045,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
+SET price_d := ( SELECT 1 IF NOTHING THEN ( SELECT 1 ) );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60028,7 +60082,7 @@ SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
 The statement ending at line XXXX
 
 SET price_d := ( SELECT id
-  FROM foo IF NOTHING THROW );
+  FROM foo IF NOTHING THEN THROW );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60288,7 +60342,7 @@ SET val_max := ( SELECT max(1, 2, 3)
   FROM foo
   WHERE 0 );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name val_max}: val_max: integer variable
@@ -60327,7 +60381,7 @@ SET val_min := ( SELECT min(1, 2, 3)
   FROM foo
   WHERE 0 );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name val_min}: val_min: integer variable
@@ -60367,7 +60421,7 @@ SET val_min := ( SELECT min(1)
   WHERE 0
   GROUP BY id );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name val_min}: val_min: integer variable
@@ -60407,7 +60461,7 @@ SET val_sum := ( SELECT sum(1)
   WHERE 0
   GROUP BY id );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name val_sum}: val_sum: integer variable
@@ -60446,7 +60500,7 @@ SET val_avg := ( SELECT avg(id) AS col
   FROM foo
   LIMIT 1 - 1 );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name val_avg}: val_avg: real variable was_set
@@ -60488,7 +60542,7 @@ BEGIN
     LIMIT lim );
 END;
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {create_proc_stmt}: err
   | {name val_avg_proc}: err
@@ -60574,7 +60628,7 @@ SET val_avg := ( SELECT avg(id) AS col
   LIMIT 2 + 4 * 10
   OFFSET 1 );
 
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 
   {assign}: err
   | {name val_avg}: val_avg: real variable was_set
@@ -60620,7 +60674,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING 2.0 );
+SET price_d := ( SELECT 1 IF NOTHING THEN 2.0 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60643,7 +60697,7 @@ SET price_d := ( SELECT 1 IF NOTHING 2.0 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 3.0 IF NOTHING 4 );
+SET price_d := ( SELECT 3.0 IF NOTHING THEN 4 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60666,7 +60720,7 @@ SET price_d := ( SELECT 3.0 IF NOTHING 4 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 3.0 IF NOTHING price_e );
+SET price_d := ( SELECT 3.0 IF NOTHING THEN price_e );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 
@@ -60691,7 +60745,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0070: expression
 
 The statement ending at line XXXX
 
-SET my_real := ( SELECT price_d IF NOTHING price_e );
+SET my_real := ( SELECT price_d IF NOTHING THEN price_e );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 
@@ -60716,9 +60770,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT "x" IF NOTHING OR NULL price_e );
+SET price_d := ( SELECT "x" IF NOTHING OR NULL THEN price_e );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: incompatible types in expression 'IF NOTHING OR NULL'
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: incompatible types in expression 'IF NOTHING OR NULL THEN'
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60741,9 +60795,9 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: in
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT "x" IF NOTHING OR NULL obj_var );
+SET price_d := ( SELECT "x" IF NOTHING OR NULL THEN obj_var );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0003: right operand cannot be an object in 'IF NOTHING OR NULL'
+test/sem_test.sql:XXXX:1: error: in str : CQL0003: right operand cannot be an object in 'IF NOTHING OR NULL THEN'
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60776,7 +60830,7 @@ DECLARE real_nn REAL!;
 
 The statement ending at line XXXX
 
-SET real_nn := ( SELECT my_real IF NOTHING OR NULL 1.0 );
+SET real_nn := ( SELECT my_real IF NOTHING OR NULL THEN 1.0 );
 
   {assign}: real_nn: real notnull variable was_set
   | {name real_nn}: real_nn: real notnull variable was_set
@@ -60799,7 +60853,7 @@ SET real_nn := ( SELECT my_real IF NOTHING OR NULL 1.0 );
 
 The statement ending at line XXXX
 
-SET real_nn := ( SELECT my_real IF NOTHING 1.0 );
+SET real_nn := ( SELECT my_real IF NOTHING THEN 1.0 );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0013: cannot assign/copy possibly null expression to not null target 'real_nn'
 
@@ -60824,7 +60878,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0013: cannot ass
 
 The statement ending at line XXXX
 
-SET real_nn := ( SELECT NOT 'x' IF NOTHING 1.0 );
+SET real_nn := ( SELECT NOT 'x' IF NOTHING THEN 1.0 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -60850,9 +60904,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-SELECT ( SELECT 0 IF NOTHING -1 );
+SELECT ( SELECT 0 IF NOTHING THEN -1 );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -60887,9 +60941,9 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ..
 
 The statement ending at line XXXX
 
-DELETE FROM foo WHERE id = ( SELECT 33 IF NOTHING 0 );
+DELETE FROM foo WHERE id = ( SELECT 33 IF NOTHING THEN 0 );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
 
   {delete_stmt}: err
   | {name foo}: foo: { id: integer notnull primary_key autoinc }
@@ -90967,4 +91021,89 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to con
         | {name fetch_cursor}: fetch_cursor: select: { _anon: integer notnull, _anon: text notnull, _anon: null } variable dml_proc fetch_into
         | {name_list}
           | {name cant_change}: cant_change: integer notnull variable was_set constant
+
+The statement ending at line XXXX
+
+SELECT 1 AS a_col
+  ORDER BY a_col;
+
+  {select_stmt}: select: { a_col: integer notnull }
+  | {select_core_list}: select: { a_col: integer notnull }
+  | | {select_core}: select: { a_col: integer notnull }
+  |   | {select_expr_list_con}: select: { a_col: integer notnull }
+  |     | {select_expr_list}: select: { a_col: integer notnull }
+  |     | | {select_expr}: a_col: integer notnull
+  |     |   | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name a_col}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {opt_orderby}: ok
+    | | {orderby_list}: ok
+    |   | {orderby_item}
+    |     | {name a_col}: a_col: integer notnull
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 AS a_col
+  ORDER BY foo.rowid;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: select: { a_col: integer notnull }
+  | | {select_core}: select: { a_col: integer notnull }
+  |   | {select_expr_list_con}: select: { a_col: integer notnull }
+  |     | {select_expr_list}: select: { a_col: integer notnull }
+  |     | | {select_expr}: a_col: integer notnull
+  |     |   | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name a_col}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}: err
+    | {opt_orderby}: err
+    | | {orderby_list}: err
+    |   | {orderby_item}
+    |     | {dot}: err
+    |       | {name foo}
+    |       | {name rowid}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT *
+  FROM foo
+  LIMIT foo.rowid;
+
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
+
+  {select_stmt}: err
+  | {select_core_list}: select: { id: integer notnull }
+  | | {select_core}: select: { id: integer notnull }
+  |   | {select_expr_list_con}: select: { id: integer notnull }
+  |     | {select_expr_list}: select: { id: integer notnull }
+  |     | | {star}: select: { id: integer notnull }
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}: err
+    | {select_limit}
+      | {opt_limit}: err
+      | | {dot}: err
+      |   | {name foo}
+      |   | {name rowid}
+      | {select_offset}
 

@@ -114,7 +114,7 @@ begin
     select data like ("%" || pattern || "%")
       from test_results
       where rowid = last_rowid
-      if nothing false);
+      if nothing then false);
 end;
 
 
@@ -141,7 +141,7 @@ begin
     where line < test_output_line
     order by line desc
     limit 1
-    if nothing 0);
+    if nothing then 0);
 end;
 
 -- dump all of the input lines starting from line1 up to but not including line2

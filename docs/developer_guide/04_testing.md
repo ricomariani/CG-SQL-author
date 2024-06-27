@@ -653,7 +653,7 @@ The printing happens, then this simple validation:
   let recreate_sql := (
     select sql from sqlite_master
     where name = 'test_this_table_will_become_create'
-    if nothing null);
+    if nothing then null);
 
 ...
  switch version

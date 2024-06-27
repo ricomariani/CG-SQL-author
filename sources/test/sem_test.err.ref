@@ -792,6 +792,10 @@ UPDATE bar
   SET id = 7
   WHERE rate > old.b AND rate < new.b;
 
+UPDATE bar
+  SET id = 8
+  WHERE rowid = old.rowid OR rowid = new.rowid;
+
 INSERT INTO bar(id, name, rate)
   VALUES(7, 'goo', 17L);
 END
@@ -1299,24 +1303,24 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_hidden : CQL0362: HIDDEN column at
 test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation requires that some ON UPDATE option be selected for every foreign key
 test/sem_test.sql:XXXX:1: error: in enforce_pop_stmt : CQL0365: @enforce_pop used but there is nothing to pop
 test/sem_test.sql:XXXX:1: error: in begin_trans_stmt : CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
+test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: incompatible types in expression 'IF NOTHING OR NULL'
-test/sem_test.sql:XXXX:1: error: in str : CQL0003: right operand cannot be an object in 'IF NOTHING OR NULL'
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: incompatible types in expression 'IF NOTHING OR NULL THEN'
+test/sem_test.sql:XXXX:1: error: in str : CQL0003: right operand cannot be an object in 'IF NOTHING OR NULL THEN'
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0013: cannot assign/copy possibly null expression to not null target 'real_nn'
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0370: due to a memory leak bug in old SQLite versions, the select part of an insert must not have a top level join or compound operator. Use WITH and a CTE, or a nested select to work around this.
 test/sem_test.sql:XXXX:1: error: in join_target : CQL0371: table valued function used in a left/right/cross context; this would hit a SQLite bug.  Wrap it in a CTE instead.
@@ -1705,4 +1709,6 @@ test/sem_test.sql:XXXX:1: error: in col_def : CQL0148: added column must already
 test/sem_test.sql:XXXX:1: error: in num : CQL0502: Cannot re-assign value to constant variable 'cant_change'
 test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
 test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to constant variable 'cant_change'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
+test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
 semantic errors present; no code gen.

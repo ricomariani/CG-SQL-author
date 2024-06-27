@@ -289,7 +289,7 @@ special in that it has no storage class. `NULL` is neither a numeric nor a strin
 itself but rather mutates into whatever it is first combined with. For instance,
 `NULL + 1` results in a nullable integer. Because `NULL` has no primitive type,
 in some cases where type knowledge is required, you might have to use the
-`CAST()` function to cast `NULL` to a specific type, such as `CAST(NULL as TEXT)`. 
+`CAST()` function to cast `NULL` to a specific type, such as `CAST(NULL as TEXT)`.
 This construct guarantees type consistency in cases like `SELECT` from
 different sources combined with `UNION ALL`.
 
@@ -916,7 +916,7 @@ BEGIN
 END;
 
 -- `x` has type `INT`, but we know it can't be `NULL`
-let x := call square_if_odd(3);
+let x := square_if_odd(3);
 
 -- `y` has type `INT NOT NULL`
 let y := ifnull_crash(x);
@@ -1178,8 +1178,8 @@ flexibility in an expression. You can think of it as an enhanced version of the
 C `?:` operator.
 
 ```sql
-set x := 'y';
-select case x
+let x := 'y';
+let y := case x
   when 'y' then 1
   when 'z' then 2
   else 3
@@ -1197,9 +1197,9 @@ If that's not general enough, there is an alternate form:
 
 
 ```sql
-set y := 'yy';
-set z := 'z';
-select case
+let y := 'yy';
+let z := 'z';
+let x := case
   when y = 'y' then 1
   when z = 'z' then 2
   else 3
@@ -1247,14 +1247,14 @@ situation should have been handled. This is an easy mistake to make, so to avoid
 it, CQL also supports these more tolerant forms:
 
 ```sql
-set x_ := (select x from somewhere where id = 1 if nothing -1);
+set x_ := (select x from somewhere where id = 1 if nothing then -1);
 ```
 
 And even more generally, if the schema allows for null values and those are not
 desired:
 
 ```sql
-set x_ := (select x from somewhere where id = 1 if nothing or null -1);
+set x_ := (select x from somewhere where id = 1 if nothing or null then -1);
 ```
 
 Both of these are much safer to use, as only genuine errors (e.g., the table was
@@ -1269,11 +1269,11 @@ set x_ := (select ifnull(x, -1) from somewhere where id = 1);
 Would not avoid the `SQLITE_DONE` error code because "no rows returned" is not at
 all the same as "null value returned."
 
-The `if nothing or null` form above is equivalent to the following, but it is
+The `if nothing or null then` form above is equivalent to the following, but it is
 more economical and probably clearer:
 
 ```sql
-set x_ := (select ifnull(x, -1) from somewhere where id = 1 if nothing -1);
+set x_ := (select ifnull(x, -1) from somewhere where id = 1 if nothing then -1);
 ```
 
 To compute the type of the overall expression, the rules are almost the same as
@@ -1285,13 +1285,13 @@ normal binary operators. In particular:
 * Object types are not allowed (SQLite cannot return an object).
 * In `(select ...)`, the result type is not null if and only if the select
   result type is not null (see select statement, many cases).
-* In `(select ... if nothing)`, the result type is not null if and only if both
+* In `(select ... if nothing then)`, the result type is not null if and only if both
   the select result and the default expression types are not null (normal binary
   rules).
-* In `(select ... if nothing or null)`, the result type is not null if and only
+* In `(select ... if nothing or null then)`, the result type is not null if and only
   if the default expression type is not null.
 
-Finally, the form `(select ... if nothing throw)` is allowed; this form is
+Finally, the form `(select ... if nothing then throw)` is allowed; this form is
 exactly the same as normal `(select ...)`, but it makes explicit that the error
 control flow will happen if there is no row. Consequently, this form is allowed
 even if `@enforce_strict select if nothing` is in force.

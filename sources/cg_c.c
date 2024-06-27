@@ -380,7 +380,7 @@ static void cg_error_on_expr(CqlState* _Nonnull CS, CSTR expr) {
   CS->cg_c.error_target_used = true;
 }
 
-// Generate an error if the return code is not the required value 
+// Generate an error if the return code is not the required value
 // (helper for common case)
 static void cg_error_on_rc_notequal(CqlState* _Nonnull CS, CSTR required) {
   CHARBUF_OPEN(tmp);
@@ -2868,7 +2868,7 @@ static void cg_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbu
   CG_CLEANUP_RESULT_VAR();
 }
 
-// "Select ... if nothing throw" is exactly the same codegen as regular select. The throwing
+// "Select ... if nothing then throw" is exactly the same codegen as regular select. The throwing
 // that is done by default is simply made explcit.  The normal codegen already does
 // the "throw" (i.e. goto the current error target).
 static void cg_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast, CSTR op, charbuf *is_null, charbuf *value, int32_t pri, int32_t pri_new) {
@@ -2878,7 +2878,7 @@ static void cg_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *ast
 }
 
 // This helper does the evaluation of the select statement portion of the
-// (SELECT ... IF NOTHING ...) forms.  Importantly the result type of the select
+// (SELECT ... IF NOTHING THEN ...) forms.  Importantly the result type of the select
 // might not exactly match the result type of expression because the default
 // value could be of a different type and it might cause the overall expression
 // to be not null.  So here we have to fetch just the select statement part into
@@ -2922,7 +2922,7 @@ static void cg_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  // SELECT [select_opts] [select_expr_list_con] IF NOTHING expr
+  // SELECT [select_opts] [select_expr_list_con] IF NOTHING THEN expr
 
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
@@ -2935,7 +2935,7 @@ static void cg_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR
   CHARBUF_OPEN(select_value);
 
   // The select statement might have a different result type than overall.
-  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real.
+  // e.g. (select an_int from somewhere if nothing then 2.5), the overall result is real.
   int32_t stmt_index = cg_expr_select_frag(CS, select_stmt, &select_is_null, &select_value);
 
   // We're inside of the "if (__rc__ == SQLITE_ROW) {" case. We need to store the
@@ -2976,7 +2976,7 @@ static void cg_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_node *a
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  // SELECT [select_opts] [select_expr_list_con] IF NOTHING expr
+  // SELECT [select_opts] [select_expr_list_con] IF NOTHING THEN expr
 
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
@@ -2988,7 +2988,7 @@ static void cg_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_node *a
   CHARBUF_OPEN(select_value);
 
   // the select statement might have a different result type than overall
-  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
+  // e.g. (select an_int from somewhere if nothing then 2.5), the overall result is real
   int32_t stmt_index = cg_expr_select_frag(CS, select_stmt, &select_is_null, &select_value);
 
   // we're inside of the "if (__rc__ == SQLITE_ROW) {" case
@@ -3253,7 +3253,7 @@ static void cg_param_init(CqlState* _Nonnull CS, ast_node *ast, charbuf *body) {
   // aren't because we donm't release 'x' becaues it's borrowed.  To fix this
   // instead we generate effectively:
   //
-  // proc foo(_in__x text) begin let x := _in__x;  x := 'foo'; end; 
+  // proc foo(_in__x text) begin let x := _in__x;  x := 'foo'; end;
   //
   // That pattern works as usual and of course _in__x is not mutated so it
   // doesn't have to be released.  FWIW: Lua codegen doesn't have this problem
@@ -4045,7 +4045,7 @@ static void cg_create_proc_stmt(CqlState* _Nonnull CS, ast_node *ast) {
     // Your cqlrt can define cql_error_report to be whatever it wants. Maybe
     // something that calls a logging function if _rc_ is not zero.  Maybe it
     // reports if it's the last thing on the error stack otherwise it just
-    // appends a new thing.  Any kind of tracing can be constructed like this 
+    // appends a new thing.  Any kind of tracing can be constructed like this
     // it is entirely up to your cqlrt. The default version expands to nothing.
     bprintf(CS->cg_declarations_output, FMT("  cql_error_report();\n"));
     empty_statement_needed = false;
@@ -4583,12 +4583,12 @@ cql_noexport uint32_t cg_statement_pieces(CqlState* _Nonnull CS, CSTR in, charbu
 
     if (cur_state == 0) {
       // use the space/newline
-      cur++;  
+      cur++;
       // put ourselves into the correct state, here we let _ start an alpha-ish sttate after a break
-      ch = *cur; 
+      ch = *cur;
       if ((ch >= 'a' && ch <= 'z') || (ch >= '@' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_') {
         // back to run of alpha
-        cur_state = 1;  
+        cur_state = 1;
       }
       // note cur has been advanced now and it might be null (!)
     }
@@ -6797,32 +6797,32 @@ static void cg_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null,
       bprintf(&invocation, FMT("%s("), func_sym.ptr);
       need_comma = false;
     }
-  
+
     if (result_set_return) {
       // capture the result var
       if (need_comma) {
         bprintf(&invocation, FMT(", "));
       }
-  
+
       // the out arg is clobbered by the called function, we have to release it first
       bprintf(CS->cg_main_output, FMT("cql_object_release(%s);\n"), result_var.ptr);
       bprintf(CS->cg_main_output, FMT("%s = NULL;\n"), result_var.ptr);
       bprintf(&invocation, FMT("(%s *)&%s"), result_ref.ptr, result_var.ptr);
       need_comma = true;
     }
-  
+
     proc_params_info info = {
       .output = &invocation,
       .params = params,
       .arg_list = arg_list,
       .need_comma = need_comma
     };
-  
+
     // emit provided args, the param specs are needed for possible type conversions
     cg_emit_proc_params(CS, &info);
     need_comma = info.need_comma;
     params = info.params;
-  
+
     if (params && !info.arg_list) {
       // The only way this happens is when calling a stored proc like a function
       // using the last arg as the return type.
@@ -6832,18 +6832,18 @@ static void cg_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null,
       sem_t param_type = param->sem->sem_type;
       Invariant(is_out_parameter(param_type));
       Invariant(!is_in_parameter(param_type));
-  
+
       // the result variable is not an in/out arg, it's just a regular local
       // it's otherwise the same as the paramater by consruction
       sem_t arg_type = param_type & sem_not(SEM_TYPE_OUT_PARAMETER|SEM_TYPE_IN_PARAMETER);
-  
+
       cg_release_out_arg_before_call(CS, arg_type, param_type, result_var.ptr);
       if (need_comma) {
         bprintf(&invocation, FMT(", "));
       }
       bprintf(&invocation, FMT("&%s"), result_var.ptr);
     }
-  
+
     bprintf(&invocation, FMT(")"));
   }
 
@@ -6869,7 +6869,7 @@ static void cg_user_func(CqlState* _Nonnull CS, ast_node *ast, charbuf *is_null,
   else {
     cg_copy(CS, CS->cg_main_output, result_var.ptr, func_stmt->sem->sem_type, invocation.ptr);
   }
- 
+
   // if any cleanup pending, safe to emit now (this is on the unchecked arm)
   bprintf(CS->cg_main_output, FMT("%s"), cleanup.ptr);
 

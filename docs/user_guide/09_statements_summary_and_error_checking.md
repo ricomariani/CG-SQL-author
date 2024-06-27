@@ -41,7 +41,7 @@ Verifications:
 * compound selects (e.g. with UNION) are type-consistent in all the fragments
 * the projection of a select has unique column labels if they are used
 
-####  Details of `SELECT *` 
+####  Details of `SELECT *`
 
 `SELECT *` is special in that it creates its own result type by assembling
 all the columns of the result of the `FROM` clause.  CQL rewrites these
@@ -129,9 +129,9 @@ Like most other top level select statements, in a view the select must
 have these two additional properties:
 
   * every column must have a name (implied or otherwise)
-  * no column may be of type `NULL` 
+  * no column may be of type `NULL`
      * any NULL literal converted to some type exact type with a CAST.
-     * i.e. `create view foo as select NULL n` is not valid     
+     * i.e. `create view foo as select NULL n` is not valid
 
 #### The `CREATE TRIGGER` Statement
 
@@ -849,7 +849,7 @@ Switch to strict mode for the indicated item.  The choices and their meanings ar
   * `IS TRUE`` indicates that `IS TRUE` `IS FALSE` `IS NOT TRUE` `IS NOT FALSE` may not be used (*)
   * `JOIN` indicates only ANSI style joins may be used, and "from A,B" is rejected
   * `PROCEDURE` indicates no calls to undeclared procedures (like loose printf calls)
-  * `SELECT IF NOTHING` indicates `(select ...)` expressions must include an `IF NOTHING` clause if they have a `FROM` part
+  * `SELECT IF NOTHING` indicates `(select ...)` expressions must include an `IF NOTHING THEN` clause if they have a `FROM` part
   * `SIGN FUNCTION` indicates that the `sign` function may not be used (*)
   * `TABLE FUNCTION` indicates table valued functions cannot be used on left/right joins (avoiding a SQLite bug)
   * `TRANSACTION` indicates no transactions may be started, committed, or aborted

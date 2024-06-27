@@ -1291,9 +1291,9 @@ basic_expr:
   | window_func_inv  { $basic_expr = $window_func_inv; }
   | raise_expr  { $basic_expr = $raise_expr; }
   | '(' select_stmt ')'  { $basic_expr = $select_stmt; }
-  | '(' select_stmt IF NOTHING expr ')'  { $basic_expr = new_ast_select_if_nothing_expr(CS, $select_stmt, $expr); }
-  | '(' select_stmt IF NOTHING OR NULL_ expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr(CS, $select_stmt, $expr); }
-  | '(' select_stmt IF NOTHING THROW')'  { $basic_expr = new_ast_select_if_nothing_throw_expr(CS, $select_stmt); }
+  | '(' select_stmt IF NOTHING THEN expr ')'  { $basic_expr = new_ast_select_if_nothing_expr(CS, $select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING OR NULL_ THEN expr ')'  { $basic_expr = new_ast_select_if_nothing_or_null_expr(CS, $select_stmt, $expr); }
+  | '(' select_stmt IF NOTHING THEN THROW')'  { $basic_expr = new_ast_select_if_nothing_throw_expr(CS, $select_stmt); }
   | EXISTS '(' select_stmt ')'  { $basic_expr = new_ast_exists_expr(CS, $select_stmt); }
   | CASE expr[cond] case_list END  { $basic_expr = new_ast_case_expr(CS, $cond, new_ast_connector(CS, $case_list, NULL)); }
   | CASE expr[cond1] case_list ELSE expr[cond2] END  { $basic_expr = new_ast_case_expr(CS, $cond1, new_ast_connector(CS, $case_list, $cond2));}
@@ -1432,6 +1432,7 @@ cte_tables[result]:
 cte_decl:
   name '(' name_list ')'  { $cte_decl = new_ast_cte_decl(CS, $name, $name_list); }
   | name '(' '*' ')'  { $cte_decl = new_ast_cte_decl(CS, $name, new_ast_star(CS)); }
+  | name  { $cte_decl = new_ast_cte_decl(CS, $name, new_ast_star(CS)); }
   ;
 
 shared_cte:

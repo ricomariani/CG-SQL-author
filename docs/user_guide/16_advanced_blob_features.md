@@ -140,7 +140,7 @@ from a blob so we can read the data values. To do this use this form:
 
 ```sql
 -- get the blob from somewhere (b will be of type blob<news_info>)
-let b := (select news_info from info where id = id_ if nothing null);
+let b := (select news_info from info where id = id_ if nothing then null);
 
 -- create a suitable cursor with the same shape
 declare c cursor like b;

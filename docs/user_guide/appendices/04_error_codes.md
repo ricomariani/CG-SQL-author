@@ -2950,7 +2950,7 @@ In the indicated type declaration, the indicated attribute was specified twice. 
 ### CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 
 `@enforce_strict select if nothing` has been enabled.  This means that select expressions must include
-`if nothing throw` (the old default) `if nothing [value]` or `if nothing or null [value]`.  This options exists
+`if nothing then throw` (the old default) `if nothing then [value]` or `if nothing or null then [value]`.  This options exists
 because commonly the case where a row does not exist is not handled correctly when `(select ...)` is used
 without the `if nothing` options.
 
@@ -2962,7 +2962,7 @@ If your select expression uses a [built-in aggregate function](https://www.sqlit
 
 ----
 
-### CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
+### CQL0369: (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
 
 This form allows for error control of (select...) expressions.  But SQLite does not
 understand the form at all, so it can only appear at the top level of expressions where
@@ -2971,15 +2971,15 @@ CQL can strip it out. Here are some examples:
 good:
 
 ```sql
-  set x := (select foo from bar where baz if nothing 0);
-  if (select foo from bar where baz if nothing 1) then ... end if;
+  set x := (select foo from bar where baz if nothing then 0);
+  if (select foo from bar where baz if nothing then 1) then ... end if;
 ```
 
 bad:
 
 ```sql
-  select foo from bar where (select something from somewhere if nothing null);
-  delete from foo where (select something from somewhere if nothing 1);
+  select foo from bar where (select something from somewhere if nothing then null);
+  delete from foo where (select something from somewhere if nothing then 1);
 ```
 
 Basically if you are already in a SQL context, the form isn't usable because SQLite
@@ -3057,18 +3057,18 @@ select * from foo left join (select * from some_tvf(1));
 
 ----
 
-### CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead.
+### CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead.
 
-It is always the case that `SELECT ... IF NOTHING OR NULL NULL` is equivalent to `SELECT ... IF NOTHING NULL`. As such, do not do this:
+It is always the case that `SELECT ... IF NOTHING OR NULL THEN NULL` is equivalent to `SELECT ... IF NOTHING THEN NULL`. As such, do not do this:
 
 ```sql
-select foo from bar where baz if nothing or null null
+select foo from bar where baz if nothing or null then null
 ```
 
 Do this instead:
 
 ```sql
-select foo from bar where baz if nothing null
+select foo from bar where baz if nothing then null
 ```
 
 ----

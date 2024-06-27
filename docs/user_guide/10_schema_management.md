@@ -436,7 +436,7 @@ CREATE PROCEDURE test_cql_get_facet_version(_facet TEXT NOT NULL,
 BEGIN
   TRY
     SET _version := (SELECT version FROM test_cql_schema_facets
-                       WHERE facet = _facet LIMIT 1 IF NOTHING -1);
+                       WHERE facet = _facet LIMIT 1 IF NOTHING THEN -1);
   CATCH
     SET _version := -1;
   END;

@@ -512,11 +512,15 @@ typedef struct sem_joinscope {
 // See `sem_find_ast_misc_attr_trycatch_is_proc_body_callback` for context.
 //static bool_t current_proc_contains_try_is_proc_body;
 
+// sentinel for blocking the join chain
+//sem_join join_block;
+
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
   sem_joinscope blocker;\
   blocker.parent = current_joinscope_rv; \
   blocker.jptr = NULL; \
+  blocker.jptr = &CS->sem.join_block; \
   current_joinscope_lv = &blocker;
 
 // Push the current join onto the joinscope, this is for nested selects for instance.
@@ -6107,8 +6111,19 @@ static sem_resolve sem_try_resolve_column(CqlState* _Nonnull CS, ast_node *ast, 
 
   // We walk the chain of scopes until we find a stop frame or else we run out
   // this allows nested joins to see their parent scopes.
-  for (sem_joinscope *jscp = current_joinscope_rv; jscp && jscp->jptr; jscp = jscp->parent) {
+  for (sem_joinscope *jscp = current_joinscope_lv; jscp; jscp = jscp->parent) {
     sem_join *jptr = jscp->jptr;
+
+    // an empty jptr has no names, skip it
+    if (!jptr) {
+      continue;
+    }
+
+    // stop if we find the sentinel
+    if (jptr == &CS->sem.join_block) {
+      break;
+    }
+
     bool_t found_in_this_joinscope = false;
     for (uint32_t i = 0; i < jptr->count; i++) {
       if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
@@ -6134,7 +6149,7 @@ static sem_resolve sem_try_resolve_column(CqlState* _Nonnull CS, ast_node *ast, 
                   "CQL0435: must use qualified form to avoid ambiguity with alias",
                   name);
               } else {
-                // An aliases is being referred to directly. Since we can only
+                // An alias is being referred to directly. Since we can only
                 // have `SEM_TYPE_ALIAS` when analyzing one of the
                 // below-mentioned clauses (for which referencing an alias is
                 // not allowed), we have an error.
@@ -6202,7 +6217,7 @@ static sem_resolve sem_try_resolve_rowid(CqlState* _Nonnull CS, ast_node *ast, C
   CSTR col = NULL;
   CSTR kind = NULL;
 
-  if (!(current_joinscope_lv && current_joinscope_rv->jptr)) {
+  if (!current_joinscope_lv) {
     return SEM_RESOLVE_CONTINUE;
   }
 
@@ -6212,26 +6227,46 @@ static sem_resolve sem_try_resolve_rowid(CqlState* _Nonnull CS, ast_node *ast, C
   }
 
   sem_join *jptr = current_joinscope_rv->jptr;
-  if (scope == NULL && jptr->count == 1) {
+  if (scope == NULL && jptr && jptr->count == 1) {
     // if only one table then that's the rowid
     col = name;
     sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
   }
   else if (scope != NULL) {
-    // more than one table but the name is scoped, still have a chance
-    for (uint32_t i = 0; i < jptr->count; i++) {
-      if (!Strcasecmp(scope, jptr->names[i])) {
-        col = name;
-        kind = NULL;
-        sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+    // We walk the chain of scopes until we find a stop frame or else we run out
+    // this allows nested joins to see their parent scopes.
+    for (sem_joinscope *jscp = current_joinscope_lv; jscp; jscp = jscp->parent) {
+      jptr = jscp->jptr;
 
-        // Insert table alias name override if enabled.
-        if (CS->sem.keep_table_name_in_aliases && !CS->sem.in_trigger && !CS->sem.in_trigger_when_expr && ast && scope) {
-          Invariant(is_ast_dot(ast));
-          insert_table_alias_string_overide(CS, ast->left, jptr->tables[i]->struct_name);
-        }
+      // an empty jptr has no names, skip it
+      if (!jptr) {
+        continue;
+      }
 
+      // stop if we find the sentinel
+      if (jptr == &CS->sem.join_block) {
         break;
+      }
+
+      // more than one table but the name is scoped, still have a chance
+      for (uint32_t i = 0; i < jptr->count; i++) {
+        if (!Strcasecmp(scope, jptr->names[i])) {
+          col = name;
+          kind = NULL;
+          sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
+
+          // Insert table alias name override if enabled.
+          if (CS->sem.keep_table_name_in_aliases && !CS->sem.in_trigger && !CS->sem.in_trigger_when_expr && ast && scope) {
+            Invariant(is_ast_dot(ast));
+            insert_table_alias_string_overide(CS, ast->left, jptr->tables[i]->struct_name);
+          }
+
+          break;
+         }
+      }
+
+      if (col) {
+          break;
       }
     }
   }
@@ -11160,7 +11195,7 @@ static void sem_select_from(CqlState* _Nonnull CS, ast_node *ast) {
     return;
   }
 
-  // It's ok to have not any query_parts. If none, then it's just "okß
+  // It's ok to have not any query_parts. If none, then it's just "ok"
   // e.g. select 1 where 0;
   record_ok(CS, ast);
 }
@@ -23777,7 +23812,7 @@ static void sem_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
      is_ast_select_if_nothing_or_null_expr(parent);
 
   if (in_select_if_nothing && CS->sem.current_expr_context != SEM_EXPR_CONTEXT_NONE) {
-    report_error(CS, parent, "CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML", NULL);
+    report_error(CS, parent, "CQL0369: (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML", NULL);
     record_error(CS, ast);
     return;
   }
@@ -23797,7 +23832,7 @@ static void sem_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
   // For purposes of testing "strict if nothing", a select on the left side of the if nothing
   // operator is in an if nothing context  but the right side is not in an if nothing context.
   //  e.g.
-  // in (select foo from bar if nothing (select baz)) the (select baz) is not in an
+  // in (select foo from bar if nothing then (select baz)) the (select baz) is not in an
   // if nothing context and hence would generate an error if "strict if nothing" is on.
   // Inside of SQL is ok in all cases
   // Trivial selects (e.g. (select <expr>)) are always ok
@@ -23809,7 +23844,7 @@ static void sem_expr_select(CqlState* _Nonnull CS, ast_node *ast, CSTR cstr) {
     !sem_select_expr_must_return_a_row(CS, ast);
 
   if (invalid_select) {
-    report_error(CS, ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'", NULL);
+    report_error(CS, ast, "CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing then'", NULL);
     record_error(CS, ast);
     return;
   }
@@ -23871,13 +23906,13 @@ static void sem_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node *as
   ast->sem = select_expr->sem;
 }
 
-// Despite the unusual nature of SELECT .. IF NOTHING ... the net semantic rules
+// Despite the unusual nature of SELECT .. IF NOTHING THEN ... the net semantic rules
 // are basically exactly the same as any normal binary operator.
 //   * types must be compatible
 //   * the net type is the promoted type of left and right
 //   * nullable or sensitive if either is nullable or sensitive
 //   * type kind must be compatible
-//   * special case SELECT ... IF NOTHING OR NULL ... is not null if the right are is not null
+//   * special case SELECT ... IF NOTHING OR NULL THEN ... is not null if the right are is not null
 static void sem_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CSTR op) {
   // same rules for both forms
   Contract(is_ast_select_if_nothing_expr(ast) || is_ast_select_if_nothing_or_null_expr(ast));
@@ -23906,7 +23941,7 @@ static void sem_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, CST
   if (is_ast_select_if_nothing_or_null_expr(ast)) {
     if (is_nullable(ast->right->sem->sem_type)) {
       if (is_ast_null(ast->right)) {
-        report_error(CS, ast, "CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead", NULL);
+        report_error(CS, ast, "CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead", NULL);
         record_error(CS, ast);
         return;
       }
@@ -25406,9 +25441,9 @@ cql_noexport void sem_main(CqlState* _Nonnull CS, ast_node *ast) {
   EXPR_INIT(and, sem_binary_logical, "AND");
   EXPR_INIT(or, sem_binary_logical, "OR");
   EXPR_INIT(select_stmt, sem_expr_select, "SELECT");
-  EXPR_INIT(select_if_nothing_throw_expr, sem_expr_select_if_nothing_throw, "IF NOTHING THROW");
-  EXPR_INIT(select_if_nothing_expr, sem_expr_select_if_nothing, "IF NOTHING");
-  EXPR_INIT(select_if_nothing_or_null_expr, sem_expr_select_if_nothing, "IF NOTHING OR NULL");
+  EXPR_INIT(select_if_nothing_throw_expr, sem_expr_select_if_nothing_throw, "IF NOTHING THEN THROW");
+  EXPR_INIT(select_if_nothing_expr, sem_expr_select_if_nothing, "IF NOTHING THEN");
+  EXPR_INIT(select_if_nothing_or_null_expr, sem_expr_select_if_nothing, "IF NOTHING OR NULL THEN");
   EXPR_INIT(with_select_stmt, sem_expr_select, "WITH...SELECT");
   EXPR_INIT(is, sem_binary_is_or_is_not, "IS");
   EXPR_INIT(is_not, sem_binary_is_or_is_not, "IS NOT");

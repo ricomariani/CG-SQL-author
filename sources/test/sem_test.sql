@@ -8796,6 +8796,7 @@ create trigger trigger3
   when old.b > 1 and new.b < 3
 begin
   update bar set id = 7 where rate > old.b and rate < new.b;
+  update bar set id = 8 where rowid = old.rowid or rowid = new.rowid;
   insert into bar values (7, 'goo', 17L);
 end;
 
@@ -8811,6 +8812,7 @@ create trigger trigger3
   when old.b > 1 and new.b < 3
 begin
   update bar set id = 7 where rate > old.b and rate < new.b;
+  update bar set id = 8 where rowid = old.rowid or rowid = new.rowid;
   insert into bar values (7, 'goo', 17L);
 end;
 
@@ -16287,7 +16289,7 @@ begin transaction;
 -- TEST: normal select is disallowed
 -- + {assign}: err
 -- + {select_stmt}: err
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 -- +1 error:
 set price_d := (select id from foo);
 
@@ -16300,39 +16302,39 @@ select (select 1);
 
 -- TEST: select if nothing is allowed
 -- - error:
-set price_d := (select 1 if nothing -1);
+set price_d := (select 1 if nothing then -1);
 
 -- TEST: select if nothing or null is allowed
 -- - error:
-set price_d := (select 1 if nothing or null -1);
+set price_d := (select 1 if nothing or null then -1);
 
 -- TEST: select nothing or null null is redundant
 -- + {assign}: err
 -- + {select_if_nothing_or_null_expr}: err
--- * error: % SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+-- * error: % SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 -- +1 error:
-set price_d := (select 1 if nothing or null null);
+set price_d := (select 1 if nothing or null then null);
 
 -- TEST: select nothing or null some_nullable is okay
 -- + {select_if_nothing_or_null_expr}: integer
 -- - error:
-set price_d := (select 1 if nothing or null (select null or 1));
+set price_d := (select 1 if nothing or null then (select null or 1));
 
 -- TEST: nested select is not allowed either
 -- + {assign}: err
 -- + {select_stmt}: err
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 -- +1 error:
-set price_d := (select 1 if nothing (select id from foo));
+set price_d := (select 1 if nothing then (select id from foo));
 
 -- TEST: nested select is ok if it has no from clause
 -- - error:
-set price_d := (select 1 if nothing (select 1));
+set price_d := (select 1 if nothing then (select 1));
 
 -- TEST: explicit if nothing throw is ok
 -- + {select_if_nothing_throw_expr}: id: integer notnull
 -- - error:
-set price_d := (select id from foo if nothing throw);
+set price_d := (select id from foo if nothing then throw);
 
 --- TEST: IF NOTHING requirement not enforced for built-in aggregate function - count
 -- - error:
@@ -16363,27 +16365,27 @@ let val_max := (select max(1) from foo where 0);
 let val_min := (select min(1) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for multi-argument scalar function max
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 set val_max := (select max(1, 2, 3) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for multi-argument scalar function min
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 set val_min := (select min(1, 2, 3) from foo where 0);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - min
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 set val_min := (select min(1) from foo where 0 group by id);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when GROUP BY is used - sum
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 set val_sum := (select sum(1) from foo where 0 group by id);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a LIMIT less than one is used (and expression within LIMIT is evaluated)
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 set val_avg := (select avg(id) col from foo limit 1 - 1);
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when a  LIMIT using a variable (and expression within LIMIT is evaluated)
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 proc val_avg_proc(lim integer)
 begin
   let val_avg := (select avg(id) col from foo limit lim);
@@ -16394,7 +16396,7 @@ end;
 set val_avg := (select avg(id) col from foo limit (2 + 4 * 10));
 
 --- TEST: IF NOTHING requirement is enforced for built-in aggregate functions when OFFSET is used
--- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
+-- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing then'
 set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
 
 -- TEST: normal if nothing
@@ -16408,7 +16410,7 @@ set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
 -- + {select_stmt}: _anon: integer notnull
 -- + {dbl 2.0}: real notnull
 -- - error:
-set price_d := (select 1 if nothing 2.0);
+set price_d := (select 1 if nothing then 2.0);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: price_d: real<dollars> variable
@@ -16416,7 +16418,7 @@ set price_d := (select 1 if nothing 2.0);
 -- + {select_stmt}: _anon: real notnull
 -- + {int 4}: integer notnull
 -- - error:
-set price_d := (select 3.0 if nothing 4);
+set price_d := (select 3.0 if nothing then 4);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
@@ -16425,7 +16427,7 @@ set price_d := (select 3.0 if nothing 4);
 -- + {name price_e}: price_e: real<euros> variable
 -- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
-set price_d := (select 3.0 if nothing price_e);
+set price_d := (select 3.0 if nothing then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
@@ -16434,25 +16436,25 @@ set price_d := (select 3.0 if nothing price_e);
 -- + {name price_e}: err
 -- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
-set my_real := (select price_d if nothing price_e);
+set my_real := (select price_d if nothing then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
 -- + {select_if_nothing_or_null_expr}: err
 -- + {select_stmt}: _anon: text notnull
 -- + {name price_e}: price_e: real<euros> variable
--- * error: % incompatible types in expression 'IF NOTHING OR NULL'
+-- * error: % incompatible types in expression 'IF NOTHING OR NULL THEN'
 -- +1 error:
-set price_d := (select "x" if nothing or null price_e);
+set price_d := (select "x" if nothing or null then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
 -- + {select_if_nothing_or_null_expr}: err
 -- + {select_stmt}: _anon: text notnull
 -- + {name obj_var}: obj_var: object variable
--- * error: % right operand cannot be an object in 'IF NOTHING OR NULL'
+-- * error: % right operand cannot be an object in 'IF NOTHING OR NULL THEN'
 -- +1 error:
-set price_d := (select "x" if nothing or null obj_var);
+set price_d := (select "x" if nothing or null then obj_var);
 
 -- - error:
 declare real_nn real!;
@@ -16463,32 +16465,32 @@ declare real_nn real!;
 -- + {select_stmt}: my_real: real variable
 -- + {dbl 1.0}: real notnull
 -- - error:
-set real_nn := (select my_real if nothing or null 1.0);
+set real_nn := (select my_real if nothing or null then 1.0);
 
 -- TEST: if nothing does NOT get not null result if only right side is not null
 -- + {assign}: err
 -- * error: % cannot assign/copy possibly null expression to not null target 'real_nn'
 -- +1 error:
-set real_nn := (select my_real if nothing 1.0);
+set real_nn := (select my_real if nothing then 1.0);
 
 -- TEST: error inside the operator should prop out
 -- + {assign}: err
 -- + {select_if_nothing_expr}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
-set real_nn := (select not 'x' if nothing 1.0);
+set real_nn := (select not 'x' if nothing then 1.0);
 
 -- TEST: error inside of any other DML
 -- + {select_stmt}: err
--- * error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
+-- * error: % (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
-select (select 0 if nothing -1);
+select (select 0 if nothing then -1);
 
 -- TEST: error inside of any other DML
 -- + {delete_stmt}: err
--- * error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
+-- * error: % (SELECT ... IF NOTHING THEN) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
-delete from foo where id = (select 33 if nothing 0);
+delete from foo where id = (select 33 if nothing then 0);
 
 -- TEST: nested select with count will be not null because count must return a row
 -- + {select_stmt}: select: { _anon: integer notnull }
@@ -23247,7 +23249,7 @@ proc test_update_from_insert_list(like update_stmt_table(id, name))
 begin
   cursor cur like update_stmt_table(a, b, c);
   fetch cur from values("a", "b", "c");
-  
+
   update update_stmt_table
     set (like update_stmt_table(-id)) = (locals.name, from cur, 1, 2, 3)
     where id = locals.id
@@ -24404,3 +24406,22 @@ begin
   cursor my_cursor for select 1 as one;
   fetch fetch_cursor into cant_change;
 end;
+
+-- TEST: empty join scope is not a block for the select list
+-- + {select_stmt}: select: { a_col: integer notnull }
+-- + {orderby_item}
+-- + {name a_col}: a_col: integer notnull
+-- - error:
+select 1 a_col order by a_col;
+
+-- TEST: empty join scope looking for rowid (this will fail)
+-- + {select_stmt}: err
+-- * error: % name not found 'foo.rowid'
+-- +1 error:
+select 1 a_col order by foo.rowid;
+
+-- TEST: blocked access to tables
+-- + {select_stmt}: err
+-- * error: % name not found 'foo.rowid'
+-- +1 error:
+select * from foo limit foo.rowid;

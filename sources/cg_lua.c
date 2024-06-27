@@ -399,7 +399,7 @@ static void cg_lua_emit_local_init(CqlState* _Nonnull CS, charbuf *output, sem_t
     case SEM_TYPE_TEXT:
     case SEM_TYPE_BLOB:
     case SEM_TYPE_OBJECT:
-      // no init needed     
+      // no init needed
       bprintf(output, FMT("\n"));
       break;
 
@@ -1815,7 +1815,7 @@ static void cg_lua_expr_select_if_nothing_throw(CqlState* _Nonnull CS, ast_node 
 }
 
 // This helper does the evaluation of the select statement portion of the
-// (SELECT ... IF NOTHING ...) forms.  Importantly the result type of the
+// (SELECT ... IF NOTHING THEN ...) forms.  Importantly the result type of the
 // select might not exactly match the result type of expression because
 // the default value could be of a different type and it might cause the
 // overall expression to be not null.  So here we have to fetch just the
@@ -1860,7 +1860,7 @@ static void cg_lua_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, 
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  // SELECT [select_opts] [select_expr_list_con] IF NOTHING expr
+  // SELECT [select_opts] [select_expr_list_con] IF NOTHING THEN expr
 
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
@@ -1872,7 +1872,7 @@ static void cg_lua_expr_select_if_nothing(CqlState* _Nonnull CS, ast_node *ast, 
   CHARBUF_OPEN(select_value);
 
   // the select statement might have a different result type than overall
-  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
+  // e.g. (select an_int from somewhere if nothing then 2.5), the overall result is real
   int32_t stmt_index = cg_lua_expr_select_frag(CS, select_stmt, &select_value);
 
   // we're inside of the "if __rc__ == CQL_ROW then" case
@@ -1923,7 +1923,7 @@ static void cg_lua_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_nod
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   EXTRACT_ANY_NOTNULL(expr, ast->right);
 
-  // SELECT [select_opts] [select_expr_list_con] IF NOTHING expr
+  // SELECT [select_opts] [select_expr_list_con] IF NOTHING THEN expr
 
   sem_t sem_type_result = ast->sem->sem_type;
   sem_t sem_type_expr = expr->sem->sem_type;
@@ -1934,7 +1934,7 @@ static void cg_lua_expr_select_if_nothing_or_null(CqlState* _Nonnull CS, ast_nod
   CHARBUF_OPEN(select_value);
 
   // the select statement might have a different result type than overall
-  // e.g. (select an_int from somewhere if nothing 2.5), the overall result is real
+  // e.g. (select an_int from somewhere if nothing then 2.5), the overall result is real
   int32_t stmt_index = cg_lua_expr_select_frag(CS, select_stmt, &select_value);
 
   // we're inside of the "if _rc_ == CQL_ROW then" case
@@ -3494,7 +3494,7 @@ static void cg_lua_declare_auto_cursor(CqlState* _Nonnull CS, CSTR cursor_name, 
   if (CS->cg_lua.in_var_group_emit) {
     local = "";
   }
-  
+
   // this should really zero the cursor
   bprintf(CS->cg_declarations_output, FMT("%s%s = { _has_row_ = false }\n"), local, cursor_name);
   bprintf(CS->cg_declarations_output, FMT("%s%s_fields_ = "), local, cursor_name);
@@ -5370,7 +5370,7 @@ cql_noexport void cg_lua_main(CqlState* _Nonnull CS, ast_node *head) {
   CS->cg_lua.shared_fragment_strings.ptr = NULL;
   CS->cg_lua.shared_fragment_strings.max = 0;
   CS->cg_lua.shared_fragment_strings.used = 0;
-  
+
   cql_exit_on_semantic_errors(CS, head);
   exit_on_validating_schema(CS);
 

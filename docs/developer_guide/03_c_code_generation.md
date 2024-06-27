@@ -1546,7 +1546,7 @@ cql_cleanup:
 * `cql_multibind` : just one integer bound this time
 * `sqlite3_step` : as before, we're stepping once, this time we want the data
 * `if (_rc_ != SQLITE_ROW)` new error check and goto cleanup if no row
-  * this is the same as the `IF NOTHING THROW` variant of construct, that's the default
+  * this is the same as the `IF NOTHING THEN THROW` variant of construct, that's the default
 * `cql_column_string_ref` : reads one string from `_temp_stmt`
 * `cql_finalize_stmt` : as before
 * `cql_set_string_ref(&*t_, _tmp_text_0)` : copy the temporary string to the out arg
@@ -1562,7 +1562,7 @@ BEGIN
   SET t_ := ( SELECT t
     FROM foo
     WHERE id = id_
-    IF NOTHING '');
+    IF NOTHING THEN '');
 END;
 ```
 
@@ -1585,7 +1585,7 @@ ends up looking like this:
 * `SQLITE_DONE` : leads to the no row case which sets `_tmp_text_0` to the empty string
   * `cql_string_literal(_literal_1_p, "");` is included as a data declaration
 
-There is also the `IF NOTHING OR NULL` variant which is left as an exercise to the reader.
+There is also the `IF NOTHING OR NULL THEN` variant which is left as an exercise to the reader.
 You can find all the flavors in `cg_c.c` in the this function:
 
 ```c

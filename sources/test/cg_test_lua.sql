@@ -1682,7 +1682,7 @@ end;
 -- +  DELETE FROM bar WHERE name = ' '' \n '' \';
 -- +  DELETE FROM bar WHERE name <> "'";
 -- +  DELETE FROM bar WHERE name >= '\';
--- 
+--
 -- escaped for sql
 -- + "DELETE FROM bar WHERE name LIKE '\n\n'"
 -- + "DELETE FROM bar WHERE name = ' '' \\n '' \\'"
@@ -3671,15 +3671,15 @@ insert into virtual_with_hidden(vx, vy) values(1,2);
 -- +  else
 -- +    i0_nullable = - 1
 -- +  end
-set i0_nullable := (select type from bar if nothing -1);
+set i0_nullable := (select type from bar if nothing then -1);
 
--- TEST: normal code gen for if nothing throw
+-- TEST: normal code gen for if nothing then throw
 -- +  if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- +  _rc_ = cql_step(_temp_stmt)
 -- +  if _rc_ ~= CQL_ROW then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
 -- +  _tmp_n_int_0 = cql_get_value(_temp_stmt, 0)
 -- +  i0_nullable = _tmp_n_int_0
-set i0_nullable := (select type from bar if nothing throw);
+set i0_nullable := (select type from bar if nothing then throw);
 
 -- TEST: get row from bar if no row or null -1
 -- + if _rc_ == CQL_ROW then
@@ -3690,7 +3690,7 @@ set i0_nullable := (select type from bar if nothing throw);
 -- + else
 -- +   i2 = _tmp_n_int_1
 -- + end
-set i2 := (select type from bar if nothing or null -1);
+set i2 := (select type from bar if nothing or null then -1);
 
 -- TEST: get row from the bar table or else ""
 -- + if _rc_ == CQL_ROW then
@@ -3699,7 +3699,7 @@ set i2 := (select type from bar if nothing or null -1);
 -- + else
 -- +   t0_nullable = ""
 -- + end
-set t0_nullable := (select name from bar if nothing "");
+set t0_nullable := (select name from bar if nothing then "");
 
 -- TEST: get row from the bar table or else "garbonzo"
 -- + _rc_ = cql_step(_temp_stmt)
@@ -3712,7 +3712,7 @@ set t0_nullable := (select name from bar if nothing "");
 -- + else
 -- +   t2 = _tmp_n_text_1
 -- + end
-set t2 := (select name from bar if nothing or null "garbonzo");
+set t2 := (select name from bar if nothing or null then "garbonzo");
 
 -- TEST: verify private exports and binding
 -- private doesn't mean anything in lua
@@ -5169,25 +5169,25 @@ begin
    end;
 end;
 
--- TEST: in_loop variation of select expression if nothing case
+-- TEST: in_loop variation of select expression if nothing then case
 -- +1 cql_reset_stmt(_temp1_stmt)
 -- +1 cql_finalize_stmt(_temp1_stmt)
 proc select_if_nothing_in_loop()
 begin
    while 1
    begin
-     let z := (select 1 z if nothing 1);
+     let z := (select 1 z if nothing then 1);
    end;
 end;
 
--- TEST: in_loop variation of select expression if nothing or null case
+-- TEST: in_loop variation of select expression if nothing or null then case
 -- +1 cql_reset_stmt(_temp1_stmt)
 -- +1 cql_finalize_stmt(_temp1_stmt)
 proc select_if_nothing_or_null_in_loop()
 begin
    while 1
    begin
-     let z := (select 1 z if nothing or null 1);
+     let z := (select 1 z if nothing or null then 1);
    end;
 end;
 

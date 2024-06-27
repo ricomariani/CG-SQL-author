@@ -6,14 +6,14 @@
  */
 
 -- note to readers
--- 
+--
 -- This file contains test cases for the parser only
 -- as such there are many things here that can be parsed legally
 -- but are semantically invalid or meaningless.
--- 
+--
 -- The purpose of these test cases is to exercise all the legal
 -- parse paths only so don't worry about that business.
--- 
+--
 -- You cannot expect correct output if you also add the --sem flag to cql
 -- it will start to whine about all the mistakes.
 
@@ -1449,11 +1449,11 @@ create table foo(
 
 @enforce_pop;
 
-set x := (select x from y if nothing 3);
+set x := (select x from y if nothing then 3);
 
-set x := (select x from y if nothing or null 3);
+set x := (select x from y if nothing or null then 3);
 
-set x := (select x from y if nothing throw);
+set x := (select x from y if nothing then throw);
 
 let z := 1 + 2;
 
@@ -1800,12 +1800,16 @@ where some_table.id = locals.id and some_table.id = baz.id
 order by some_table.id
 limit 1;
 
-try 
+try
   let x := 5;
 catch
   x := 7;
 end;
 
-if x then 
+if x then
   let u := 5;
 end;
+
+-- this is the same as with foo(*) etc.  i.e. use the column names of the select
+with foo as (select 1 x, '2' y)
+ select * from foo;

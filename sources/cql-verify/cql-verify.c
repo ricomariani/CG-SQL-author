@@ -317,7 +317,7 @@ PROC find_same (pattern TEXT!, OUT found INT!)
 BEGIN
   SET found := ( SELECT data LIKE "%" || pattern || "%"
     FROM test_results
-    WHERE rowid = last_rowid IF NOTHING FALSE );
+    WHERE rowid = last_rowid IF NOTHING THEN FALSE );
 END;
 */
 
@@ -408,7 +408,7 @@ BEGIN
     FROM test_results
     WHERE line < test_output_line
     ORDER BY line DESC
-    LIMIT 1 IF NOTHING 0 );
+    LIMIT 1 IF NOTHING THEN 0 );
 END;
 */
 

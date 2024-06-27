@@ -916,7 +916,7 @@ BEGIN
 END;
 
 -- `x` has type `INT`, but we know it can't be `NULL`
-let x := call square_if_odd(3);
+let x := square_if_odd(3);
 
 -- `y` has type `INT NOT NULL`
 let y := ifnull_crash(x);
@@ -1178,8 +1178,8 @@ flexibility in an expression. You can think of it as an enhanced version of the
 C `?:` operator.
 
 ```sql
-set x := 'y';
-select case x
+let x := 'y';
+let y := case x
   when 'y' then 1
   when 'z' then 2
   else 3
@@ -1197,9 +1197,9 @@ If that's not general enough, there is an alternate form:
 
 
 ```sql
-set y := 'yy';
-set z := 'z';
-select case
+let y := 'yy';
+let z := 'z';
+let x := case
   when y = 'y' then 1
   when z = 'z' then 2
   else 3

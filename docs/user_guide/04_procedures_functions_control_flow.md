@@ -294,7 +294,7 @@ Once again, let's go over this section by section:
 
 ```sql
   try
-    insert into foo(id, t) values(id_, t_)
+    insert into foo(id, t) values(id_, t_);
   catch
 ```
 

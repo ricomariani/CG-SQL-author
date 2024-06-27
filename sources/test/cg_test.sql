@@ -3750,7 +3750,7 @@ set i0_nullable := (select type from bar if nothing -1);
 
 -- TEST: normal code gen for if nothing throw
 -- + SET i0_nullable := ( SELECT type
--- + FROM bar IF NOTHING THROW );
+-- + FROM bar IF NOTHING THEN THROW );
 -- + _rc_ = cql_prepare(_db_, &_temp_stmt,
 -- +   "SELECT type "
 -- +     "FROM bar");

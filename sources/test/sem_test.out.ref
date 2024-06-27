@@ -59838,7 +59838,7 @@ SELECT ( SELECT 1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING -1 );
+SET price_d := ( SELECT 1 IF NOTHING THEN -1 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59862,7 +59862,7 @@ SET price_d := ( SELECT 1 IF NOTHING -1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
+SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN -1 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59886,7 +59886,7 @@ SET price_d := ( SELECT 1 IF NOTHING OR NULL -1 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING OR NULL NULL );
+SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN NULL );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
 
@@ -59911,7 +59911,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SE
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING OR NULL ( SELECT NULL OR 1 ) );
+SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN ( SELECT NULL OR 1 ) );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -59949,7 +59949,7 @@ SET price_d := ( SELECT 1 IF NOTHING OR NULL ( SELECT NULL OR 1 ) );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING ( SELECT id
+SET price_d := ( SELECT 1 IF NOTHING THEN ( SELECT id
   FROM foo ) );
 
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
@@ -59991,7 +59991,7 @@ test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if noth
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
+SET price_d := ( SELECT 1 IF NOTHING THEN ( SELECT 1 ) );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60028,7 +60028,7 @@ SET price_d := ( SELECT 1 IF NOTHING ( SELECT 1 ) );
 The statement ending at line XXXX
 
 SET price_d := ( SELECT id
-  FROM foo IF NOTHING THROW );
+  FROM foo IF NOTHING THEN THROW );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60620,7 +60620,7 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 1 IF NOTHING 2.0 );
+SET price_d := ( SELECT 1 IF NOTHING THEN 2.0 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60643,7 +60643,7 @@ SET price_d := ( SELECT 1 IF NOTHING 2.0 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 3.0 IF NOTHING 4 );
+SET price_d := ( SELECT 3.0 IF NOTHING THEN 4 );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
@@ -60666,7 +60666,7 @@ SET price_d := ( SELECT 3.0 IF NOTHING 4 );
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT 3.0 IF NOTHING price_e );
+SET price_d := ( SELECT 3.0 IF NOTHING THEN price_e );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 
@@ -60691,7 +60691,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0070: expression
 
 The statement ending at line XXXX
 
-SET my_real := ( SELECT price_d IF NOTHING price_e );
+SET my_real := ( SELECT price_d IF NOTHING THEN price_e );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 
@@ -60716,7 +60716,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0070: expressions of different kind
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT "x" IF NOTHING OR NULL price_e );
+SET price_d := ( SELECT "x" IF NOTHING OR NULL THEN price_e );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: incompatible types in expression 'IF NOTHING OR NULL'
 
@@ -60741,7 +60741,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0009: in
 
 The statement ending at line XXXX
 
-SET price_d := ( SELECT "x" IF NOTHING OR NULL obj_var );
+SET price_d := ( SELECT "x" IF NOTHING OR NULL THEN obj_var );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0003: right operand cannot be an object in 'IF NOTHING OR NULL'
 
@@ -60776,7 +60776,7 @@ DECLARE real_nn REAL!;
 
 The statement ending at line XXXX
 
-SET real_nn := ( SELECT my_real IF NOTHING OR NULL 1.0 );
+SET real_nn := ( SELECT my_real IF NOTHING OR NULL THEN 1.0 );
 
   {assign}: real_nn: real notnull variable was_set
   | {name real_nn}: real_nn: real notnull variable was_set
@@ -60799,7 +60799,7 @@ SET real_nn := ( SELECT my_real IF NOTHING OR NULL 1.0 );
 
 The statement ending at line XXXX
 
-SET real_nn := ( SELECT my_real IF NOTHING 1.0 );
+SET real_nn := ( SELECT my_real IF NOTHING THEN 1.0 );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0013: cannot assign/copy possibly null expression to not null target 'real_nn'
 
@@ -60824,7 +60824,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0013: cannot ass
 
 The statement ending at line XXXX
 
-SET real_nn := ( SELECT NOT 'x' IF NOTHING 1.0 );
+SET real_nn := ( SELECT NOT 'x' IF NOTHING THEN 1.0 );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 
@@ -60850,7 +60850,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
 
 The statement ending at line XXXX
 
-SELECT ( SELECT 0 IF NOTHING -1 );
+SELECT ( SELECT 0 IF NOTHING THEN -1 );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 
@@ -60887,7 +60887,7 @@ test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ..
 
 The statement ending at line XXXX
 
-DELETE FROM foo WHERE id = ( SELECT 33 IF NOTHING 0 );
+DELETE FROM foo WHERE id = ( SELECT 33 IF NOTHING THEN 0 );
 
 test/sem_test.sql:XXXX:1: error: in select_if_nothing_expr : CQL0369: (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 

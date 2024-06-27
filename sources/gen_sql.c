@@ -2146,7 +2146,7 @@ static void gen_expr_select_if_nothing_throw(ast_node *ast, CSTR op, int32_t pri
   EXTRACT_ANY_NOTNULL(select_stmt, ast->left);
   gen_printf("( ");
   gen_select_stmt(select_stmt);
-  gen_printf(" IF NOTHING THROW )");
+  gen_printf(" IF NOTHING THEN THROW )");
 }
 
 static void gen_expr_select_if_nothing(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -5567,9 +5567,9 @@ cql_noexport void gen_init() {
   EXPR_INIT(between_rewrite, gen_expr_between_rewrite, "BETWEEN", EXPR_PRI_BETWEEN);
   EXPR_INIT(or, gen_binary, "OR", EXPR_PRI_OR);
   EXPR_INIT(select_stmt, gen_expr_select, "SELECT", EXPR_PRI_ROOT);
-  EXPR_INIT(select_if_nothing_throw_expr, gen_expr_select_if_nothing_throw, "IF NOTHING THROW", EXPR_PRI_ROOT);
-  EXPR_INIT(select_if_nothing_expr, gen_expr_select_if_nothing, "IF NOTHING", EXPR_PRI_ROOT);
-  EXPR_INIT(select_if_nothing_or_null_expr, gen_expr_select_if_nothing, "IF NOTHING OR NULL", EXPR_PRI_ROOT);
+  EXPR_INIT(select_if_nothing_throw_expr, gen_expr_select_if_nothing_throw, "IF NOTHING THEN THROW", EXPR_PRI_ROOT);
+  EXPR_INIT(select_if_nothing_expr, gen_expr_select_if_nothing, "IF NOTHING THEN", EXPR_PRI_ROOT);
+  EXPR_INIT(select_if_nothing_or_null_expr, gen_expr_select_if_nothing, "IF NOTHING OR NULL THEN", EXPR_PRI_ROOT);
   EXPR_INIT(with_select_stmt, gen_expr_select, "WITH...SELECT", EXPR_PRI_ROOT);
   EXPR_INIT(is, gen_binary, "IS", EXPR_PRI_EQUALITY);
   EXPR_INIT(is_not, gen_binary, "IS NOT", EXPR_PRI_EQUALITY);

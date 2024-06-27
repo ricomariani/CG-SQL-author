@@ -8632,7 +8632,7 @@ PROC select_if_nothing_in_loop ()
 BEGIN
   WHILE 1
   BEGIN
-    LET z := ( SELECT 1 AS z IF NOTHING 1 );
+    LET z := ( SELECT 1 AS z IF NOTHING THEN 1 );
   END;
 END;
 --]]
@@ -8676,7 +8676,7 @@ PROC select_if_nothing_or_null_in_loop ()
 BEGIN
   WHILE 1
   BEGIN
-    LET z := ( SELECT 1 AS z IF NOTHING OR NULL 1 );
+    LET z := ( SELECT 1 AS z IF NOTHING OR NULL THEN 1 );
   END;
 END;
 --]]
@@ -10680,7 +10680,7 @@ function cql_startup(_db_)
 
   --[[
   SET i0_nullable := ( SELECT type
-    FROM bar IF NOTHING -1 );
+    FROM bar IF NOTHING THEN -1 );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT type FROM bar")
@@ -10700,7 +10700,7 @@ function cql_startup(_db_)
 
   --[[
   SET i0_nullable := ( SELECT type
-    FROM bar IF NOTHING THROW );
+    FROM bar IF NOTHING THEN THROW );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT type FROM bar")
@@ -10716,7 +10716,7 @@ function cql_startup(_db_)
 
   --[[
   SET i2 := ( SELECT type
-    FROM bar IF NOTHING OR NULL -1 );
+    FROM bar IF NOTHING OR NULL THEN -1 );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT type FROM bar")
@@ -10739,7 +10739,7 @@ function cql_startup(_db_)
 
   --[[
   SET t0_nullable := ( SELECT name
-    FROM bar IF NOTHING "" );
+    FROM bar IF NOTHING THEN "" );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT name FROM bar")
@@ -10759,7 +10759,7 @@ function cql_startup(_db_)
 
   --[[
   SET t2 := ( SELECT name
-    FROM bar IF NOTHING OR NULL "garbonzo" );
+    FROM bar IF NOTHING OR NULL THEN "garbonzo" );
   --]]
   _rc_, _temp_stmt = cql_prepare(_db_, 
     "SELECT name FROM bar")

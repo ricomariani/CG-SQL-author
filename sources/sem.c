@@ -503,11 +503,14 @@ static loop_analysis_state current_loop_analysis_state = LOOP_ANALYSIS_STATE_NON
 // See `sem_find_ast_misc_attr_trycatch_is_proc_body_callback` for context.
 static bool_t current_proc_contains_try_is_proc_body;
 
+// sentinel for blocking the join chain
+sem_join join_block;
+
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \
   sem_joinscope blocker;\
   blocker.parent = current_joinscope; \
-  blocker.jptr = NULL; \
+  blocker.jptr = &join_block; \
   current_joinscope = &blocker;
 
 // Push the current join onto the joinscope, this is for nested selects for instance.
@@ -6095,8 +6098,19 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
 
   // We walk the chain of scopes until we find a stop frame or else we run out
   // this allows nested joins to see their parent scopes.
-  for (sem_joinscope *jscp = current_joinscope; jscp && jscp->jptr; jscp = jscp->parent) {
+  for (sem_joinscope *jscp = current_joinscope; jscp; jscp = jscp->parent) {
     sem_join *jptr = jscp->jptr;
+
+    // an empty jptr has no names, skip it
+    if (!jptr) {
+      continue;
+    }
+
+    // stop if we find the sentinel
+    if (jptr == &join_block) {
+      break;
+    }
+
     bool_t found_in_this_joinscope = false;
     for (uint32_t i = 0; i < jptr->count; i++) {
       if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
@@ -6122,7 +6136,7 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
                   "CQL0435: must use qualified form to avoid ambiguity with alias",
                   name);
               } else {
-                // An aliases is being referred to directly. Since we can only
+                // An alias is being referred to directly. Since we can only
                 // have `SEM_TYPE_ALIAS` when analyzing one of the
                 // below-mentioned clauses (for which referencing an alias is
                 // not allowed), we have an error.
@@ -11148,7 +11162,7 @@ static void sem_select_from(ast_node *ast) {
     return;
   }
 
-  // It's ok to have not any query_parts. If none, then it's just "okß
+  // It's ok to have not any query_parts. If none, then it's just "ok"
   // e.g. select 1 where 0;
   record_ok(ast);
 }

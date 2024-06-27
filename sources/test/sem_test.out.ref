@@ -90968,3 +90968,29 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0502: Cannot re-assign value to con
         | {name_list}
           | {name cant_change}: cant_change: integer notnull variable was_set constant
 
+The statement ending at line XXXX
+
+SELECT 1 AS a_col
+  ORDER BY a_col;
+
+  {select_stmt}: select: { a_col: integer notnull }
+  | {select_core_list}: select: { a_col: integer notnull }
+  | | {select_core}: select: { a_col: integer notnull }
+  |   | {select_expr_list_con}: select: { a_col: integer notnull }
+  |     | {select_expr_list}: select: { a_col: integer notnull }
+  |     | | {select_expr}: a_col: integer notnull
+  |     |   | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name a_col}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {opt_orderby}: ok
+    | | {orderby_list}: ok
+    |   | {orderby_item}
+    |     | {name a_col}: a_col: integer notnull
+    | {select_limit}
+      | {select_offset}
+

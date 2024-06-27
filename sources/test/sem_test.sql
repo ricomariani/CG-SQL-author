@@ -24404,3 +24404,10 @@ begin
   cursor my_cursor for select 1 as one;
   fetch fetch_cursor into cant_change;
 end;
+
+-- TEST: empty join scope is not a block for the select list
+-- + {select_stmt}: select: { a_col: integer notnull }
+-- + {orderby_item}
+-- + {name a_col}: a_col: integer notnull
+-- - error:
+select 1 a_col order by a_col;

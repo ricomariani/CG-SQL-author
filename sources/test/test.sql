@@ -1809,3 +1809,7 @@ end;
 if x then 
   let u := 5;
 end;
+
+-- this is the same as with foo(*) etc.  i.e. use the column names of the select
+with foo as (select 1 x, '2' y)
+ select * from foo;

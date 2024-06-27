@@ -2352,3 +2352,10 @@ END;
 IF x THEN
   LET u := 5;
 END;
+
+WITH
+  foo (*) AS (
+    SELECT 1 AS x, '2' AS y
+  )
+SELECT *
+  FROM foo;

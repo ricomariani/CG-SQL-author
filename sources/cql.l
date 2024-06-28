@@ -218,13 +218,14 @@ static bool_t cql_already_processed_file(CSTR str) {
 
 stop [^A-Z_0-9]
 sp [ \t]+
+nl \r\n?|\n\r?
 hex [0-9A-F]
 d [0-9]
 
 id [_A-Z][A-Z0-9_]*
-qid `(``|[^`\n])*`
-cstrlit \"(\\.|[^\\"\n])*\"
-strlit '(''|[^']|\n)*'
+qid `(``|[^`\n\r])*`
+cstrlit \"(\\.|[^\\"\n\r])*\"
+strlit '(''|[^']|\n\r)*'
 reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 
 %%
@@ -306,15 +307,15 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 
 <skipping>"/*"                   { BEGIN(skipping_c_comment); }
 <skipping_c_comment>.
-<skipping_c_comment>[\n]
+<skipping_c_comment>{nl}
 <skipping_c_comment>"*/"         { BEGIN(skipping); }
 
-<skipping>--.*\n
+<skipping>--.*{nl}
 <skipping>{qid}
 <skipping>{strlit}
 <skipping>{cstrlit}
 <skipping>.
-<skipping>[\n]
+<skipping>{nl}
 
 @INCLUDE                         {
                                    BEGIN(at_inc);
@@ -635,7 +636,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                    return result;
                                  }
 
-[ \t\n]                          ;
+[ \t\n\r]                        ;
 \-\-.*                           ;
 
 .                                { yyerror("Unexpected %s\n", yytext); }

@@ -18,7 +18,7 @@ public class MyCode {
     var outargs = SampleInterop.OutArgThing("_input", 5, 2);
     Expect(outargs.get_y() == 3, "in out argument not incremented");
     Expect(outargs.get_z() == 7, "sum not computed");
-    Expect(outargs.get_t().Equals("prefix__input"), "string not assigned");
+    Expect((outargs.get_t() ?? "null").Equals("prefix__input"), "string not assigned");
 
     // Test passing of all not nullable primitive types
     SampleInterop.CheckBoolean(true, true);
@@ -111,7 +111,7 @@ public class MyCode {
 
     for (int i = 0; i < count; i++) {
       byte[] bytes = data.get_bytes(i);
-      String s = bytes.ToString();
+      String? s = bytes.ToString();
       Console.WriteLine(
               "Row {0}: name:{1} blob:{2} age:{3} thing:{4} key1:{5} key2:{6}({7})",
               i,

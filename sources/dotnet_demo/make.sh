@@ -58,13 +58,14 @@ popd >/dev/null
 
 echo "compiling native code"
 pushd $O >/dev/null
-${CC} -c SampleInterop.c
-# ${CC} -c Sample.c
-echo ${CC} -o cql_interop.dll -shared cql_dotnet.c $R/cqlrt.c ${SQLITE_LINK}
+
 ${CC} -o cql_interop.dll -shared $S/cql_dotnet.c $R/cqlrt.c ${SQLITE_LINK}
-mv cql_interop.dll ..
+${CC} -o sample_interop.dll -shared Sample.c SampleInterop.c $R/cqlrt.c ${SQLITE_LINK}
+
+mkdir -p ../bin/Debug/net8.0
+mv cql_interop.dll ../bin/Debug/net8.0
+mv sample_interop.dll ../bin/Debug/net8.0
 
 popd >/dev/null
-mv cql_interop.dll bin/Debug/net8.0
 
 dotnet run -f net8.0

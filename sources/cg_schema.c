@@ -237,14 +237,14 @@ static void cg_schema_helpers(charbuf *decls) {
 
   // Note this procedure has to handle the case where the table doesn't exist yet for retro-version validation
   // (this happens in test code so it's validated)
-  // We still use the IF NOTHING -1 pattern so that it doesn't produce spurious errors when there is no row, that's not an error.
+  // We still use the IF NOTHING THEN -1 pattern so that it doesn't produce spurious errors when there is no row, that's not an error.
 
   bprintf(decls, "-- helper proc for getting the schema version of a facet\n");
 
   bprintf(decls, "PROC %s_cql_get_facet_version(_facet TEXT NOT NULL, out _version LONG INTEGER NOT NULL)\n", global_proc_name);
   bprintf(decls, "BEGIN\n");
   bprintf(decls, "  TRY\n");
-  bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING -1);\n", global_proc_name);
+  bprintf(decls, "    SET _version := (SELECT version FROM %s_cql_schema_facets WHERE facet = _facet LIMIT 1 IF NOTHING THEN -1);\n", global_proc_name);
   bprintf(decls, "  CATCH\n");
   bprintf(decls, "    SET _version := -1;\n"); // this is here to handle the case where the table doesn't exist
   bprintf(decls, "  END;\n");

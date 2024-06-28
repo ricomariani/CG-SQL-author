@@ -3795,25 +3795,25 @@ BEGIN
     t text);
 
   declare t1 text;
-  t1 := (select t from tdata if nothing "nothing");
+  t1 := (select t from tdata if nothing then "nothing");
   EXPECT!(t1 == "nothing");
 
   declare `value one` integer;
-  set `value one` := (select v from tdata if nothing -1);
+  set `value one` := (select v from tdata if nothing then -1);
   EXPECT!(`value one` == -1);
 
   insert into tdata values(1, 2, null);
-  t1 := (select t from tdata if nothing "nothing");
+  t1 := (select t from tdata if nothing then "nothing");
   EXPECT!(t1 is null);
 
-  set `value one` := (select v from tdata if nothing -1);
+  set `value one` := (select v from tdata if nothing then -1);
   EXPECT!(`value one` == 2);
 
-  t1 := (select t from tdata if nothing or null "still nothing");
+  t1 := (select t from tdata if nothing or null then "still nothing");
   EXPECT!(t1 == "still nothing");
 
   insert into tdata values(2, null, "x");
-  set `value one` := (select v from tdata where id == 2 if nothing or null -1);
+  set `value one` := (select v from tdata where id == 2 if nothing or null then -1);
   EXPECT!(`value one` == -1);
 
 END);
@@ -3878,13 +3878,13 @@ end;
 proc select_if_nothing(id_ int!)
 begin
   declare bar text;
-  bar := (select foo from simple_rc_table where id == id_ if nothing "bar");
+  bar := (select foo from simple_rc_table where id == id_ if nothing then "bar");
 end;
 
 proc select_if_nothing_throw(id_ int!)
 begin
   declare bar text;
-  bar := (select foo from simple_rc_table where id == id_ if nothing throw);
+  bar := (select foo from simple_rc_table where id == id_ if nothing then throw);
 end;
 
 TEST!(rc_simple_select,

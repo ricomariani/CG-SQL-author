@@ -1449,6 +1449,12 @@ create table foo(
 
 @enforce_pop;
 
+set x := (select x from y if nothing then 3);
+
+set x := (select x from y if nothing or null then 3);
+
+set x := (select x from y if nothing then throw);
+
 set x := (select x from y if nothing 3);
 
 set x := (select x from y if nothing or null 3);

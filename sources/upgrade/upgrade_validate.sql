@@ -32,7 +32,7 @@ begin
   let present := (
     select sql from sqlite_master
     where name = name_
-    if nothing null);
+    if nothing then null);
 
   switch version_
   when 0,2,4 then
@@ -134,7 +134,7 @@ begin
   let recreate_sql := (
     select sql from sqlite_master
     where name = 'test_this_table_will_become_create'
-    if nothing null);
+    if nothing then null);
 
   switch version
   when 0 then

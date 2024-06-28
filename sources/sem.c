@@ -504,7 +504,7 @@ static loop_analysis_state current_loop_analysis_state = LOOP_ANALYSIS_STATE_NON
 static bool_t current_proc_contains_try_is_proc_body;
 
 // sentinel for blocking the join chain
-sem_join join_block;
+static sem_join join_block;
 
 // Push a context that stops us from searching further up.
 #define PUSH_JOIN_BLOCK() \

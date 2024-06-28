@@ -218,20 +218,20 @@ cql_noexport symtab_entry *symtab_copy_sorted_payload(symtab *syms, int (*compar
   return sorted;
 }
 
-// first special case teardown 
+// first special case teardown
 //  * a symbol table with payload of symbol tables
 static void symtab_teardown(void *val) {
   symtab_delete(val);
 }
 
-// second special case teardown 
+// second special case teardown
 //  * a symbol table with payload of bytebuffers
 static void bytebuf_teardown(void *val) {
   bytebuf_close((bytebuf*)val);
   free(val);
 }
 
-// third special case teardown 
+// third special case teardown
 //  * a symbol table with payload of character buffers
 static void charbuf_teardown(void *val) {
   bclose((charbuf*)val);

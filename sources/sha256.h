@@ -39,10 +39,10 @@ typedef uint8_t SHA256_BYTE;   // 8-bit byte
 typedef uint32_t SHA256_WORD;   // 32-bit word (portable type)
 
 typedef struct {
-	SHA256_BYTE data[64];
-	SHA256_WORD datalen;
-	uint64_t bitlen;
-	SHA256_WORD state[8];
+  SHA256_BYTE data[64];
+  SHA256_WORD datalen;
+  uint64_t bitlen;
+  SHA256_WORD state[8];
 } SHA256_CTX;
 
 /*********************** FUNCTION DECLARATIONS **********************/

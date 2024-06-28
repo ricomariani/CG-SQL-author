@@ -3519,7 +3519,7 @@ static void gen_update_list(ast_node *ast) {
     for (ast_node *item = ast; item; item = item->right) {
       Contract(is_ast_update_list(item));
       EXTRACT_NOTNULL(update_entry, item->left);
-  
+
       gen_update_entry(update_entry);
       if (item->right) {
         gen_printf(",\n");

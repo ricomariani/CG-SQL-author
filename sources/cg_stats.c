@@ -61,7 +61,7 @@ static void cg_stats_accumulate(ast_node *node) {
 // following format: "procedure_name","node_type",count. The CSV chunk is
 // appended to the stats_output charbuf.  The rows are sorted by node type.
 // The stats are accumulated in a symtab where the key is the type of the node
-// and the value is the count of that type of node. 
+// and the value is the count of that type of node.
 static void cg_stats_create_proc_stmt(ast_node *ast) {
   Contract(is_ast_create_proc_stmt(ast));
   EXTRACT_STRING(name, ast->left);

@@ -2478,11 +2478,11 @@ cql_noexport void rewrite_shared_fragment_from_backed_table(ast_node *_Nonnull b
   backed_expr_list_info info = {
     .backed_table = backed_table,
     .key = sptr_backing->names[!is_key_first], // if the order is kv then the key is column 0, else 1
-    .sem_type_key = sptr_backing->semtypes[!is_key_first], 
+    .sem_type_key = sptr_backing->semtypes[!is_key_first],
     .val = sptr_backing->names[is_key_first], // if the order is kv then the key is column 0, else 1
     .sem_type_val = sptr_backing->semtypes[is_key_first],  // if the order is kv then the value is colume 1, else 0
   };
-  
+
   ast_node *select_expr_list = rewrite_backed_expr_list(&info, 0);
 
   ast_node *select_stmt =
@@ -3004,9 +3004,9 @@ static ast_node *rewrite_blob_update(
 
   update_rewrite_info info = {
    .backing_key = sptr_backing->names[!is_key_first], // if the order is kv then the key is column 0, else 1
-   .sem_type_key = sptr_backing->semtypes[!is_key_first], 
-   .backing_val = sptr_backing->names[is_key_first],  
-   .sem_type_val = sptr_backing->semtypes[is_key_first], 
+   .sem_type_key = sptr_backing->semtypes[!is_key_first],
+   .backing_val = sptr_backing->names[is_key_first],
+   .sem_type_val = sptr_backing->semtypes[is_key_first],
    .for_key = for_key,
    .backed_table = backed_table,
   };
@@ -3232,8 +3232,8 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
 
   CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
   CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
-  sem_t sem_type_key = sptr_backing->semtypes[!is_key_first]; 
-  sem_t sem_type_val = sptr_backing->semtypes[is_key_first]; 
+  sem_t sem_type_key = sptr_backing->semtypes[!is_key_first];
+  sem_t sem_type_val = sptr_backing->semtypes[is_key_first];
 
   ast_node *new_name_columns_values = new_ast_name_columns_values(
     new_ast_str(backing_table_name),
@@ -3691,7 +3691,7 @@ cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast
   if (!arg_list) {
     return true;
   }
-     
+
   // verify ast_star is a leaf, it mixes with nothing
   // then replace it with "FROM LOCALS LIKE proc_name"
   if (is_ast_star(arg_list->left)) {
@@ -3709,7 +3709,7 @@ cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast
     ast_node *call_expr = new_ast_from_shape(new_ast_str("LOCALS"), shape_def);
     ast_set_left(arg_list, call_expr);
     AST_REWRITE_INFO_RESET();
-  }        
+  }
 
   return true;
 }
@@ -3795,7 +3795,7 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull n
   // discard const, this is ok as the string has not yet escaped into the world...
   // we need to remove any internal space
   rewrite_replace_space_if_needed((char *)new_name);
- 
+
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
 
   ast_node *new_arg_list = new_ast_arg_list(array, arg_list);
@@ -3831,7 +3831,7 @@ cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull
 cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_name) {
   Contract(is_ast_dot(dot));
   EXTRACT_ANY_NOTNULL(expr, dot->left);
-  
+
   bool_t add_arg = !strncmp("get_from_", new_name, 9) || !strncmp("set_in_", new_name, 7);
 
   AST_REWRITE_INFO_SET(dot->lineno, dot->filename);
@@ -3853,7 +3853,7 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_
   ast_set_right(dot, new_call->right);
 
   AST_REWRITE_INFO_RESET();
-  
+
 }
 
 cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_Nonnull columns_values) {

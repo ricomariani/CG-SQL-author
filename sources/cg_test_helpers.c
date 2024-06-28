@@ -508,7 +508,7 @@ static void cg_dummy_test_populate(charbuf *gen_insert_tables, ast_node *table_a
 
             bprintf(&values, "%s%s", comma, str_val.ptr);
             bprintf(&names, "%s", comma);
-            
+
             int32_t icol = sem_column_index(sptr, column_name);
             Invariant(icol >= 0);
             cg_emit_sptr_index(&names, sptr, (uint32_t)icol);

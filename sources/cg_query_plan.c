@@ -943,14 +943,14 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
 
   bprintf(&output_buf, "declare proc cql_create_udf_stub(name TEXT!) using transaction;\n\n");
 
-  bprintf(&output_buf, 
+  bprintf(&output_buf,
     "proc trivial_object()\n"
     "begin\n"
     "  select 1 x;\n"
     "end;\n\n"
   );
 
-  bprintf(&output_buf, 
+  bprintf(&output_buf,
     "proc trivial_blob(out result blob not null)\n"
     "begin\n"
     "  set result := (select x'41');\n"
@@ -985,7 +985,7 @@ cql_noexport void cg_query_plan_main(ast_node *head) {
   bprintf(&output_buf, "    CALL printf(\"failed populating no_table_scan table\\n\");\n");
   bprintf(&output_buf, "    THROW;\n");
   bprintf(&output_buf, "  END;\n");
-  
+
   for (uint32_t i = 1; i <= sql_stmt_count; i++) {
     bprintf(&output_buf, "  TRY\n");
     bprintf(&output_buf, "    CALL populate_query_plan_%d();\n", i);

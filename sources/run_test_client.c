@@ -1859,7 +1859,7 @@ cql_code test_cql_parent_child(sqlite3 *db) {
 
      // note that the shape of the result set from the Parent/Child will be
      // slightly different than the shape of child if you call it directly
-     // because the partitioning logic will add the columns `has_row`, 
+     // because the partitioning logic will add the columns `has_row`,
      // `refs_count` and `refs_offset`.  But this is supposed to be no problem.
      // We verify the accessors work in this case with the code below
 

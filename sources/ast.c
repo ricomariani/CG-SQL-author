@@ -1414,7 +1414,7 @@ static void replace_node(ast_node *old, ast_node *new) {
 // The final right pointer (stmt_list[4] in this case) must
 // point to stmt_list[2] to continue the chain.  The first left node
 // of the body must become the first left node of the existing parent.
-// 
+//
 // This (which never actually fully exists)
 //
 // stmt_list[1]  <--- "parent" arg points here
@@ -1459,7 +1459,7 @@ static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
 
   // OK we have something that is like a list node already and
   // it is located where an item should be.  We just need to
-  // unwrap it. 
+  // unwrap it.
 
   // insert the new item into the list
   ast_set_left(parent, new->left);
@@ -1562,7 +1562,7 @@ static int32_t get_macro_line() {
 // can do with @ID is this.   The "bar" in "foo.bar" is NOT an
 // expression, it's only a name.  Therefore an EXPR macro cannot
 // be used there.  i.e.  foo.bar! doesn't work.  BUT foo.@ID(bar!)
-// can work. Currently it has to be @ID(@TEXT(bar!)) but this 
+// can work. Currently it has to be @ID(@TEXT(bar!)) but this
 // will soon change.  @ID could assume the @TEXT if there is not
 // one there.  @ID *is* a valid name so it can go in places
 // expr! could not go.
@@ -1614,7 +1614,7 @@ static void expand_at_text(ast_node *ast) {
   cg_encode_string_literal(tmp.ptr, &quote);
   ast_node *new = new_ast_str(Strdup(quote.ptr));
   str_ast_node *sast = (str_ast_node *)new;
-  sast->str_type = STRING_TYPE_C;  
+  sast->str_type = STRING_TYPE_C;
   replace_node(ast, new);
   CHARBUF_CLOSE(quote);
   CHARBUF_CLOSE(tmp);

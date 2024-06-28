@@ -4153,7 +4153,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
   cql_alloc_cstr(c_str, str);
 
   if (strlen(c_str) == 0) goto cleanup;
-  
+
   const char *lineStart = c_str;
   // skip leading whitespace
   while (lineStart[0] == ' ') {
@@ -4422,7 +4422,7 @@ static uint64_t cql_read_big_endian_u64(const uint8_t *_Nonnull b) {
 typedef struct cql_blob_header {
   int32_t magic;
   int32_t column_count;
-  int64_t record_type;  
+  int64_t record_type;
 } cql_blob_header;
 
 static void cql_read_blob_header(const uint8_t *_Nonnull blob, cql_blob_header *_Nonnull header, uint32_t original_bytes) {
@@ -5135,8 +5135,8 @@ typedef struct cql_val_blob_shape {
 // so zero is used.  In that case you simply adjust the total size and variable size
 // when it's known.
 static void cql_compute_val_blob_shape(
-  cql_val_blob_shape *_Nonnull shape, 
-  int64_t column_count, 
+  cql_val_blob_shape *_Nonnull shape,
+  int64_t column_count,
   int64_t variable_size) {
 
   shape->header_size = sizeof(cql_blob_header);
@@ -5621,7 +5621,7 @@ void bupdateval(sqlite3_context *_Nonnull context, int32_t argc, sqlite3_value *
       }
     }
     else {
-      // The provided value is null, so we're deleting this column. 
+      // The provided value is null, so we're deleting this column.
       // There will be one less column in the result.
       col_adjustment--;
     }

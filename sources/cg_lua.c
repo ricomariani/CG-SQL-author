@@ -376,7 +376,7 @@ static void cg_lua_emit_local_init(charbuf *output, sem_t sem_type)
     case SEM_TYPE_TEXT:
     case SEM_TYPE_BLOB:
     case SEM_TYPE_OBJECT:
-      // no init needed     
+      // no init needed
       bprintf(output, "\n");
       break;
 
@@ -3471,7 +3471,7 @@ static void cg_lua_declare_auto_cursor(CSTR cursor_name, sem_struct *sptr) {
   if (lua_in_var_group_emit) {
     local = "";
   }
-  
+
   // this should really zero the cursor
   bprintf(cg_declarations_output, "%s%s = { _has_row_ = false }\n", local, cursor_name);
   bprintf(cg_declarations_output, "%s%s_fields_ = ", local, cursor_name);
@@ -4799,9 +4799,9 @@ static void cg_lua_proc_savepoint_stmt(ast_node *ast) {
     ast_node *try_extra_stmts = new_ast_stmt_list(release1, NULL);
     ast_node *throw_stmt = new_ast_throw_stmt();
     ast_node *catch_stmts =
-		new_ast_stmt_list(rollback,
-                new_ast_stmt_list(release2,
-                new_ast_stmt_list(throw_stmt, NULL)));
+      new_ast_stmt_list(rollback,
+      new_ast_stmt_list(release2,
+      new_ast_stmt_list(throw_stmt, NULL)));
     AST_REWRITE_INFO_RESET();
     cg_lua_bound_sql_statement(NULL, savepoint, CG_EXEC);
     cg_lua_trycatch_helper(stmt_list, try_extra_stmts, catch_stmts);

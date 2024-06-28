@@ -1247,14 +1247,14 @@ situation should have been handled. This is an easy mistake to make, so to avoid
 it, CQL also supports these more tolerant forms:
 
 ```sql
-set x_ := (select x from somewhere where id = 1 if nothing -1);
+set x_ := (select x from somewhere where id = 1 if nothing then -1);
 ```
 
 And even more generally, if the schema allows for null values and those are not
 desired:
 
 ```sql
-set x_ := (select x from somewhere where id = 1 if nothing or null -1);
+set x_ := (select x from somewhere where id = 1 if nothing or null then -1);
 ```
 
 Both of these are much safer to use, as only genuine errors (e.g., the table was
@@ -1273,7 +1273,7 @@ The `if nothing or null` form above is equivalent to the following, but it is
 more economical and probably clearer:
 
 ```sql
-set x_ := (select ifnull(x, -1) from somewhere where id = 1 if nothing -1);
+set x_ := (select ifnull(x, -1) from somewhere where id = 1 if nothing then -1);
 ```
 
 To compute the type of the overall expression, the rules are almost the same as
@@ -1291,7 +1291,7 @@ normal binary operators. In particular:
 * In `(select ... if nothing or null)`, the result type is not null if and only
   if the default expression type is not null.
 
-Finally, the form `(select ... if nothing throw)` is allowed; this form is
+Finally, the form `(select ... if nothing then throw)` is allowed; this form is
 exactly the same as normal `(select ...)`, but it makes explicit that the error
 control flow will happen if there is no row. Consequently, this form is allowed
 even if `@enforce_strict select if nothing` is in force.

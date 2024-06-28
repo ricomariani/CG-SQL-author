@@ -59942,7 +59942,7 @@ The statement ending at line XXXX
 
 SET price_d := ( SELECT 1 IF NOTHING OR NULL THEN NULL );
 
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 
   {assign}: err
   | {name price_d}: price_d: real<dollars> variable was_set

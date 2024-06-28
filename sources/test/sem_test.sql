@@ -16281,7 +16281,7 @@ begin transaction;
 -- - error:
 begin transaction;
 
--- TEST: strict if nothing
+-- TEST: strict if nothing then
 -- + {enforce_strict_stmt}: ok
 -- - error:
 @enforce_strict select if nothing;
@@ -16294,47 +16294,47 @@ begin transaction;
 set price_d := (select id from foo);
 
 
--- TEST: nested select in SQL (e.g. correlated subquery) is ok even in strict select if nothing mode
+-- TEST: nested select in SQL (e.g. correlated subquery) is ok even in strict select if nothing then mode
 -- + SELECT ( SELECT 1 );
 -- + {select_stmt}: select: { _anon: integer notnull }
 -- - error:
 select (select 1);
 
--- TEST: select if nothing is allowed
+-- TEST: select if nothing then is allowed
 -- - error:
-set price_d := (select 1 if nothing -1);
+set price_d := (select 1 if nothing then -1);
 
--- TEST: select if nothing or null is allowed
+-- TEST: select if nothing or null then is allowed
 -- - error:
-set price_d := (select 1 if nothing or null -1);
+set price_d := (select 1 if nothing or null then -1);
 
 -- TEST: select nothing or null null is redundant
 -- + {assign}: err
 -- + {select_if_nothing_or_null_expr}: err
--- * error: % SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+-- * error: % SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 -- +1 error:
-set price_d := (select 1 if nothing or null null);
+set price_d := (select 1 if nothing or null then null);
 
 -- TEST: select nothing or null some_nullable is okay
 -- + {select_if_nothing_or_null_expr}: integer
 -- - error:
-set price_d := (select 1 if nothing or null (select null or 1));
+set price_d := (select 1 if nothing or null then (select null or 1));
 
 -- TEST: nested select is not allowed either
 -- + {assign}: err
 -- + {select_stmt}: err
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 -- +1 error:
-set price_d := (select 1 if nothing (select id from foo));
+set price_d := (select 1 if nothing then (select id from foo));
 
 -- TEST: nested select is ok if it has no from clause
 -- - error:
-set price_d := (select 1 if nothing (select 1));
+set price_d := (select 1 if nothing then (select 1));
 
--- TEST: explicit if nothing throw is ok
+-- TEST: explicit if nothing then throw is ok
 -- + {select_if_nothing_throw_expr}: id: integer notnull
 -- - error:
-set price_d := (select id from foo if nothing throw);
+set price_d := (select id from foo if nothing then throw);
 
 --- TEST: IF NOTHING requirement not enforced for built-in aggregate function - count
 -- - error:
@@ -16399,7 +16399,7 @@ set val_avg := (select avg(id) col from foo limit (2 + 4 * 10));
 -- * error: % strict select if nothing requires that all (select ...) expressions include 'if nothing'
 set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
 
--- TEST: normal if nothing
+-- TEST: normal if nothing then
 -- + {enforce_normal_stmt}: ok
 -- - error:
 @enforce_normal select if nothing;
@@ -16410,7 +16410,7 @@ set val_avg := (select avg(id) col from foo limit (2 + 4 * 10) offset 1);
 -- + {select_stmt}: _anon: integer notnull
 -- + {dbl 2.0}: real notnull
 -- - error:
-set price_d := (select 1 if nothing 2.0);
+set price_d := (select 1 if nothing then 2.0);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: price_d: real<dollars> variable
@@ -16418,7 +16418,7 @@ set price_d := (select 1 if nothing 2.0);
 -- + {select_stmt}: _anon: real notnull
 -- + {int 4}: integer notnull
 -- - error:
-set price_d := (select 3.0 if nothing 4);
+set price_d := (select 3.0 if nothing then 4);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
@@ -16427,7 +16427,7 @@ set price_d := (select 3.0 if nothing 4);
 -- + {name price_e}: price_e: real<euros> variable
 -- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
-set price_d := (select 3.0 if nothing price_e);
+set price_d := (select 3.0 if nothing then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
@@ -16436,7 +16436,7 @@ set price_d := (select 3.0 if nothing price_e);
 -- + {name price_e}: err
 -- * error: % expressions of different kinds can't be mixed: 'dollars' vs. 'euros'
 -- +1 error:
-set my_real := (select price_d if nothing price_e);
+set my_real := (select price_d if nothing then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
@@ -16445,7 +16445,7 @@ set my_real := (select price_d if nothing price_e);
 -- + {name price_e}: price_e: real<euros> variable
 -- * error: % incompatible types in expression 'IF NOTHING OR NULL'
 -- +1 error:
-set price_d := (select "x" if nothing or null price_e);
+set price_d := (select "x" if nothing or null then price_e);
 
 -- TEST: simple select with else (upgrade from the left)
 -- + {assign}: err
@@ -16454,43 +16454,43 @@ set price_d := (select "x" if nothing or null price_e);
 -- + {name obj_var}: obj_var: object variable
 -- * error: % right operand cannot be an object in 'IF NOTHING OR NULL'
 -- +1 error:
-set price_d := (select "x" if nothing or null obj_var);
+set price_d := (select "x" if nothing or null then obj_var);
 
 -- - error:
 declare real_nn real!;
 
--- TEST: if nothing or null gets not null result if right side is not null
+-- TEST: if nothing or null then gets not null result if right side is not null
 -- +  {assign}: real_nn: real notnull variable
 -- + {select_if_nothing_or_null_expr}: real notnull
 -- + {select_stmt}: my_real: real variable
 -- + {dbl 1.0}: real notnull
 -- - error:
-set real_nn := (select my_real if nothing or null 1.0);
+set real_nn := (select my_real if nothing or null then 1.0);
 
--- TEST: if nothing does NOT get not null result if only right side is not null
+-- TEST: if nothing then does NOT get not null result if only right side is not null
 -- + {assign}: err
 -- * error: % cannot assign/copy possibly null expression to not null target 'real_nn'
 -- +1 error:
-set real_nn := (select my_real if nothing 1.0);
+set real_nn := (select my_real if nothing then 1.0);
 
 -- TEST: error inside the operator should prop out
 -- + {assign}: err
 -- + {select_if_nothing_expr}: err
 -- * error: % string operand not allowed in 'NOT'
 -- +1 error:
-set real_nn := (select not 'x' if nothing 1.0);
+set real_nn := (select not 'x' if nothing then 1.0);
 
 -- TEST: error inside of any other DML
 -- + {select_stmt}: err
 -- * error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
-select (select 0 if nothing -1);
+select (select 0 if nothing then -1);
 
 -- TEST: error inside of any other DML
 -- + {delete_stmt}: err
 -- * error: % (SELECT ... IF NOTHING) construct is for use in top level expressions, not inside of other DML
 -- +1 error:
-delete from foo where id = (select 33 if nothing 0);
+delete from foo where id = (select 33 if nothing then 0);
 
 -- TEST: nested select with count will be not null because count must return a row
 -- + {select_stmt}: select: { _anon: integer notnull }

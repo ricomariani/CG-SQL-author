@@ -1304,7 +1304,7 @@ test/sem_test.sql:XXXX:1: error: in col_attrs_fk : CQL0237: strict FK validation
 test/sem_test.sql:XXXX:1: error: in enforce_pop_stmt : CQL0365: @enforce_pop used but there is nothing to pop
 test/sem_test.sql:XXXX:1: error: in begin_trans_stmt : CQL0366: transaction operations disallowed while STRICT TRANSACTION enforcement is on.
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
-test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead
+test/sem_test.sql:XXXX:1: error: in select_if_nothing_or_null_expr : CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'
 test/sem_test.sql:XXXX:1: error: in select_stmt : CQL0368: strict select if nothing requires that all (select ...) expressions include 'if nothing'

@@ -23921,7 +23921,7 @@ static void sem_expr_select_if_nothing(ast_node *ast, CSTR op) {
   if (is_ast_select_if_nothing_or_null_expr(ast)) {
     if (is_nullable(ast->right->sem->sem_type)) {
       if (is_ast_null(ast->right)) {
-        report_error(ast, "CQL0372: SELECT ... IF NOTHING OR NULL NULL is redundant; use SELECT ... IF NOTHING NULL instead", NULL);
+        report_error(ast, "CQL0372: SELECT ... IF NOTHING OR NULL THEN NULL is redundant; use SELECT ... IF NOTHING THEN NULL instead", NULL);
         record_error(ast);
         return;
       }

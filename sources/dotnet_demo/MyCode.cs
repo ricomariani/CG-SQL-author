@@ -16,9 +16,9 @@ public class MyCode {
     long db = CQLDb.get();
 
     var outargs = SampleInterop.OutArgThing("_input", 5, 2);
-    Expect(outargs.get_y() == 3, "in out argument not incremented");
-    Expect(outargs.get_z() == 7, "sum not computed");
-    Expect((outargs.get_t() ?? "null").Equals("prefix__input"), "string not assigned");
+    Expect(outargs.y == 3, "in out argument not incremented");
+    Expect(outargs.z == 7, "sum not computed");
+    Expect((outargs.t ?? "null").Equals("prefix__input"), "string not assigned");
 
     // Test passing of all not nullable primitive types
     SampleInterop.CheckBoolean(true, true);
@@ -43,49 +43,49 @@ public class MyCode {
     SampleInterop.CheckText(null, null);
 
     // Finally creatge some test blobs and test them
-    var b1 = SampleInterop.CreateBlobFromText(db, "a blob from text").get_test_blob();
-    var b2 = SampleInterop.CreateBlobFromText(db, "a blob from text").get_test_blob();
+    var b1 = SampleInterop.CreateBlobFromText(db, "a blob from text").test_blob;
+    var b2 = SampleInterop.CreateBlobFromText(db, "a blob from text").test_blob;
     SampleInterop.CheckBlob(b1, b2);
     SampleInterop.CheckBlob(null, null);
 
-    Expect(true == SampleInterop.OutBoolean(true).get_test(), "mismatched out bool");
-    Expect(123 == SampleInterop.OutInteger(123).get_test(), "mismatched out int");
-    Expect(456L == SampleInterop.OutLong(456L).get_test(), "mismatched out long");
-    Expect(8.5 == SampleInterop.OutReal(8.5).get_test(), "mismatched out real");
-    Expect(false == SampleInterop.OutNullableBoolean(false).get_test(), "mismatched nullable out bool");
-    Expect(1234 == SampleInterop.OutNullableInteger(1234).get_test(), "mismatched nullable out int");
-    Expect(4567L == SampleInterop.OutNullableLong(4567L).get_test(), "mismatched nullable out long");
-    Expect(8.25 == SampleInterop.OutNullableReal(8.25).get_test(), "mismatched nullable out real");
-    Expect(SampleInterop.OutNullableBoolean(null).get_test() == null, "mismatched null out bool");
-    Expect(SampleInterop.OutNullableInteger(null).get_test() == null, "mismatched null out int");
-    Expect(SampleInterop.OutNullableLong(null).get_test() == null, "mismatched null out long");
-    Expect(SampleInterop.OutNullableReal(null).get_test() == null, "mismatched null out real");
+    Expect(true == SampleInterop.OutBoolean(true).test, "mismatched out bool");
+    Expect(123 == SampleInterop.OutInteger(123).test, "mismatched out int");
+    Expect(456L == SampleInterop.OutLong(456L).test, "mismatched out long");
+    Expect(8.5 == SampleInterop.OutReal(8.5).test, "mismatched out real");
+    Expect(false == SampleInterop.OutNullableBoolean(false).test, "mismatched nullable out bool");
+    Expect(1234 == SampleInterop.OutNullableInteger(1234).test, "mismatched nullable out int");
+    Expect(4567L == SampleInterop.OutNullableLong(4567L).test, "mismatched nullable out long");
+    Expect(8.25 == SampleInterop.OutNullableReal(8.25).test, "mismatched nullable out real");
+    Expect(SampleInterop.OutNullableBoolean(null).test == null, "mismatched null out bool");
+    Expect(SampleInterop.OutNullableInteger(null).test == null, "mismatched null out int");
+    Expect(SampleInterop.OutNullableLong(null).test == null, "mismatched null out long");
+    Expect(SampleInterop.OutNullableReal(null).test == null, "mismatched null out real");
 
-    Expect(true == SampleInterop.InOutBoolean(false).get_test(), "mismatched inout bool");
-    Expect(124 == SampleInterop.InOutInteger(123).get_test(), "mismatched inout int");
-    Expect(457L == SampleInterop.InOutLong(456L).get_test(), "mismatched inout long");
-    Expect(9.5 == SampleInterop.InOutReal(8.5).get_test(), "mismatched inout real");
-    Expect(true == SampleInterop.InOutNullableBoolean(false).get_test(), "mismatched nullable inout bool");
-    Expect(1235 == SampleInterop.InOutNullableInteger(1234).get_test(), "mismatched nullable inout int");
-    Expect(4568L == SampleInterop.InOutNullableLong(4567L).get_test(), "mismatched nullable inout long");
-    Expect(9.25 == SampleInterop.InOutNullableReal(8.25).get_test(), "mismatched nullable inout real");
-    Expect(SampleInterop.InOutNullableBoolean(null).get_test() == null, "mismatched null inout bool");
-    Expect(SampleInterop.InOutNullableInteger(null).get_test() == null, "mismatched null inout int");
-    Expect(SampleInterop.InOutNullableLong(null).get_test() == null, "mismatched null inout long");
-    Expect(SampleInterop.InOutNullableReal(null).get_test() == null, "mismatched null inout real");
+    Expect(true == SampleInterop.InOutBoolean(false).test, "mismatched inout bool");
+    Expect(124 == SampleInterop.InOutInteger(123).test, "mismatched inout int");
+    Expect(457L == SampleInterop.InOutLong(456L).test, "mismatched inout long");
+    Expect(9.5 == SampleInterop.InOutReal(8.5).test, "mismatched inout real");
+    Expect(true == SampleInterop.InOutNullableBoolean(false).test, "mismatched nullable inout bool");
+    Expect(1235 == SampleInterop.InOutNullableInteger(1234).test, "mismatched nullable inout int");
+    Expect(4568L == SampleInterop.InOutNullableLong(4567L).test, "mismatched nullable inout long");
+    Expect(9.25 == SampleInterop.InOutNullableReal(8.25).test, "mismatched nullable inout real");
+    Expect(SampleInterop.InOutNullableBoolean(null).test == null, "mismatched null inout bool");
+    Expect(SampleInterop.InOutNullableInteger(null).test == null, "mismatched null inout int");
+    Expect(SampleInterop.InOutNullableLong(null).test == null, "mismatched null inout long");
+    Expect(SampleInterop.InOutNullableReal(null).test == null, "mismatched null inout real");
 
     // try a recursive procedure
     var fib = SampleInterop.Fib(10);
-    Expect(55 == fib.get_result(), "Fibnacci value did not compute correctly");
+    Expect(55 == fib.result, "Fibnacci value did not compute correctly");
 
     var outS = SampleInterop.OutStatement(314);
     var outSResult = outS.get_result_set();
-    Expect(1 == outSResult.getCount(), "expected row count is 1");
+    Expect(1 == outSResult.Count, "expected row count is 1");
     Expect(314 == outSResult.get_x(), "value not echoed with OutStatement");
 
     var outU = SampleInterop.OutUnionStatement(300);
     var outUResult = outU.get_result_set();
-    Expect(2 == outUResult.getCount(), "expected row count is 2");
+    Expect(2 == outUResult.Count, "expected row count is 2");
     Expect(301 == outUResult.get_x(0), "value+1 not echoed with OutUnionStatement");
     Expect(302 == outUResult.get_x(1), "value+2 not echoed with OutUnionStatement");
 
@@ -104,7 +104,7 @@ public class MyCode {
   }
 
   public static void dumpResults(SampleInterop.CSharpDemoViewModel data) {
-    int count = data.getCount();
+    int count = data.Count;
     Console.WriteLine("dumping result set: count = {0}", count);
 
     Expect(count == 5, "count == 5");
@@ -128,7 +128,7 @@ public class MyCode {
       // this could be done automatically in the helper, it just isn't yet
       // var child = data.get_my_child_result(i) should do the job
       var child = new SampleInterop.ChildViewModel(data.get_my_child_result(i));
-      for (int j = 0; j < child.getCount(); j++) {
+      for (int j = 0; j < child.Count; j++) {
 	var irow = child.get_irow(j);
 	var t = child.get_t(j);
 

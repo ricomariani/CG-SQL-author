@@ -733,8 +733,10 @@ def emit_proc_csharp_return_type(proc):
             if getter == "ChildResultSet":
                 type = "CQLResultSet"
 
-            print(f"    public {type} get_{c_name}() {{")
-            print(f"      return mResultSet.get{nullable}{getter}(0, {col});")
+            print(f"    public {type} {c_name} {{")
+            print("      get {")
+            print(f"        return mResultSet.get{nullable}{getter}(0, {col});")
+            print("      }")
             print("    }\n")
 
             col += 1
@@ -753,8 +755,10 @@ def emit_proc_csharp_return_type(proc):
         print("    }\n")
         col += 1
 
-    print("    public int getCount() {")
-    print(f"      return 1;")
+    print("    public int Count {")
+    print("       get {")
+    print("        return 1;")
+    print("       }")
     print("    }\n")
     print("    override protected bool hasIdentityColumns() {")
     print(f"      return false;")
@@ -886,9 +890,11 @@ def emit_proc_csharp_projection(proc, attributes):
         print(f"      return {identityResult};")
         print("    }\n")
 
-        print("    public int getCount() {")
-        print(f"      return mResultSet.getCount();")
-        print("    }")
+        print("    public int Count {")
+        print("       get {")
+        print(f"        return mResultSet.getCount();")
+        print("       }")
+        print("    }\n")
         print("  }\n")
 
 

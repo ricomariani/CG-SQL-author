@@ -7,3 +7,4 @@
 S=$(cd $(dirname "$0"); pwd)
 rm -rf $S/bin
 rm -rf $S/obj
+rm -rf $S/out

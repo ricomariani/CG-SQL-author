@@ -111,7 +111,7 @@ public class MyCode {
 
     for (int i = 0; i < count; i++) {
       byte[] bytes = data.get_bytes(i);
-      String? s = bytes.ToString();
+      String? s = System.Text.Encoding.UTF8.GetString(bytes);
       Console.WriteLine(
               "Row {0}: name:{1} blob:{2} age:{3} thing:{4} key1:{5} key2:{6}({7})",
               i,

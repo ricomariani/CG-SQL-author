@@ -51,7 +51,7 @@ pushd $O >/dev/null
 ${CQL} --in Sample.sql --cg Sample.h Sample.c
 ${CQL} --in Sample.sql --rt json_schema --cg Sample.json
 
-echo "generating interop class and the C code for it"
+echo "generating C# interop class and the C code for it"
 ../cqlcs.py Sample.json --class SampleInterop >SampleInterop.cs
 ../cqlcs.py Sample.json --emit_c --class SampleInterop --cql_header Sample.h >SampleInterop.c
 popd >/dev/null

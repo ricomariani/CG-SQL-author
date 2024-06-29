@@ -742,16 +742,20 @@ def emit_proc_csharp_return_type(proc):
             col += 1
 
     if usesDatabase:
-        print(f"    public int get_result_code() {{")
-        print(f"      return mResultSet.getInteger(0, {col});")
+        print(f"    public int result_code {{")
+        print(f"      get {{")
+        print(f"        return mResultSet.getInteger(0, {col});")
+        print(f"      }}")
         print("    }\n")
         col += 1
 
     if projection:
-        print(f"    public {p_name}ViewModel get_result_set() {{")
+        print(f"    public {p_name}ViewModel result_set {{")
+        print(f"      get {{")
         print(
-            f"      return new {p_name}ViewModel(new CQLResultSet(mResultSet.getLong(0, {col})));"
+            f"        return new {p_name}ViewModel(new CQLResultSet(mResultSet.getLong(0, {col})));"
         )
+        print(f"      }}")
         print("    }\n")
         col += 1
 

@@ -79,12 +79,12 @@ public class MyCode {
     Expect(55 == fib.result, "Fibnacci value did not compute correctly");
 
     var outS = SampleInterop.OutStatement(314);
-    var outSResult = outS.get_result_set();
+    var outSResult = outS.result_set;
     Expect(1 == outSResult.Count, "expected row count is 1");
     Expect(314 == outSResult.get_x(), "value not echoed with OutStatement");
 
     var outU = SampleInterop.OutUnionStatement(300);
-    var outUResult = outU.get_result_set();
+    var outUResult = outU.result_set;
     Expect(2 == outUResult.Count, "expected row count is 2");
     Expect(301 == outUResult.get_x(0), "value+1 not echoed with OutUnionStatement");
     Expect(302 == outUResult.get_x(1), "value+2 not echoed with OutUnionStatement");
@@ -92,9 +92,9 @@ public class MyCode {
     // get call result code and rowset
     var results = SampleInterop.CSharpDemo(db);
 
-    Expect(results.get_result_code() == 0, "rc == SQLITE_OK");
+    Expect(results.result_code == 0, "rc == SQLITE_OK");
 
-    var data = results.get_result_set();
+    var data = results.result_set;
 
     // use the results
     dumpResults(data);

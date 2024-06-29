@@ -77,6 +77,15 @@ nullable_types["object"] = "object?"
 nullable_types["blob"] = "byte[]?"
 nullable_types["text"] = "string?"
 
+split_types = {}
+split_types["bool"] = True
+split_types["integer"] = True
+split_types["long"] = True
+split_types["real"] = True
+split_types["object"] = False
+split_types["blob"] = False
+split_types["text"] = False
+
 # Interop types for not null cql types
 dotnet_notnull_types = {}
 dotnet_notnull_types["bool"] = "cql_bool"
@@ -89,10 +98,10 @@ dotnet_notnull_types["text"] = "const char *"
 
 # Interop types for nullable cql types
 dotnet_nullable_types = {}
-dotnet_nullable_types["bool"] = "nullable_bool"
-dotnet_nullable_types["integer"] = "nullable_int"
-dotnet_nullable_types["long"] = "nullable_long"
-dotnet_nullable_types["real"] = "nullable_real"
+dotnet_nullable_types["bool"] = "split"
+dotnet_nullable_types["integer"] = "split"
+dotnet_nullable_types["long"] = "split"
+dotnet_nullable_types["real"] = "split"
 dotnet_nullable_types["object"] = "void *"
 dotnet_nullable_types["blob"] = "const void *"
 dotnet_nullable_types["text"] = "const char *"
@@ -302,23 +311,13 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
 
-    # Now thinking about the C# code we will emit.  If there are any fields we
-    # will emit a helper function that fetches the results and creates the
-    # appropriate model object automatically.  If there is no result type (a
-    # void proc) then we don't need a helper, we can call the Interop wrapper
-    # directly.  If a helper was generated then the Interop entry point
-    # gets a Interop suffix as the helper is the main entry point.  If there is no
-    # helper then the Interop entry point is the main entry point and it gets no
-    # suffix.  The suffix is used to avoid name collisions in the Interop code.
-    suffix = "" if field_count == 0 else "_"
-
     # Now we emit the Interop entry point for the procedure.
     # The names are canonical based on the package and class name
     # that defined the entry point.  We expect these arguments to
     # have the same value when we generate the C as when we generated
     # the C#.
     print(f"{return_type} ", end="")
-    print(f"{class_name}_{p_name}{suffix}(")
+    print(f"{class_name}_{p_name}(")
 
     needsComma = False
     # if we use the database then we need the db argument, because database
@@ -339,14 +338,21 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
         # for in or inout arguments we use the nullable or not nullable type as appropriate
         binding = arg["binding"] if "binding" in arg else "in"
         if binding == "inout" or binding == "in":
-            type = dotnet_notnull_types[
+            xtype = dotnet_notnull_types[
                 type] if isNotNull else dotnet_nullable_types[type]
 
             comma = ""
             if needsComma:
                 comma = ",\n"
 
-            print(f"{comma}  {type} {a_name}", end="")
+            if not isNotNull and split_types[arg["type"]]:
+              xtype = dotnet_notnull_types[type]
+              print(f"{comma}  bool {a_name}_has_value,")
+              print(f"  {xtype} {a_name}_value", end="")
+            else:
+              print(f"{comma}  {xtype} {a_name}", end="")
+
+
             needsComma = True
 
     print(")")
@@ -448,6 +454,9 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
         kind = arg["kind"] if "kind" in arg else ""
         call += f" /*{binding}*/ "
 
+        print(f"// a_type = {a_type}");
+        print(f"// isNotNull = {isNotNull}");
+
         # for inout we will by passing either in input argument or the
         # converted temporary by reference.  We will also be copying the
         # result back to the output row.  This starts the inout-ness
@@ -462,11 +471,6 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             c_type = c_notnull_types[
                 a_type] if isNotNull else c_nullable_types[a_type]
             call += f"&row->{a_name}"
-        elif isNotNull and binding == "inout" and a_type == "long":
-            # this special case is needed because cql_int64 is not the same as cql_int64
-            # which is usually a long long.  This copy solves the problem
-            preamble += f"  row->{a_name} = (cql_int64){a_name};\n"
-            call += f"row->{a_name}"
         elif isNotNull and not isRef:
             # Not null and not reference type means we can pass the argument
             # directly.  We never need to unbox it because it's passed as
@@ -508,7 +512,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # For "inout" arguments we copy out the value from the temporary
             # after the call into the row object.
             preamble += f"  cql_nullable_bool n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}.hasValue, {a_name}.value);\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}_has_value, {a_name}_value);\n"
             cleanup += f"  row->{a_name} = n_{a_name};" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "integer":
@@ -517,7 +521,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # For "inout" arguments we copy out the value from the temporary
             # after the call into the row object.
             preamble += f"  cql_nullable_int32 n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}.hasValue, {a_name}.value);\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}_has_value, {a_name}_value);\n"
             cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "long":
@@ -526,7 +530,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # "inout" arguments we copy out the value from the temporary after
             # the call into the row object.
             preamble += f"  cql_nullable_int64 n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}.hasValue, {a_name}.value);\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}_has_value, {a_name}_value);\n"
             cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         elif a_type == "real":
@@ -535,7 +539,7 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
             # cql_nullable_double.  For "inout" arguments we copy out the value
             # from the temporary after the call into the row object.
             preamble += f"  cql_nullable_double n_{a_name};\n"
-            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}.hasValue, {a_name}.value);\n"
+            preamble += f"  cql_set_nullable(n_{a_name}, !{a_name}_has_value, {a_name}_value);\n"
             cleanup += f"  row->{a_name} = n_{a_name};\n" if inout else ""
             call += f"n_{a_name}"
         else:
@@ -764,6 +768,7 @@ def emit_proc_csharp_interop(proc, attributes):
     # if usesDatabase is missing it's a query type and they all use the db
     usesDatabase = proc["usesDatabase"] if "usesDatabase" in proc else True
     projection = "projection" in proc
+    class_name = cmd_args["class_name"]
 
     emit_proc_csharp_return_type(proc)
 
@@ -771,12 +776,15 @@ def emit_proc_csharp_interop(proc, attributes):
 
     commaNeeded = False
     params = ""
-    param_names = ""
+    c_params = ""
+    call_args = ""
+    needs_wrapper = False
 
     # if usesDatabase then we need the db argument, in c# it goes in __db
     if usesDatabase:
         params += "long __db"
-        param_names += "__db"
+        c_params += "long __db"
+        call_args += "__db"
         commaNeeded = True
 
     # Now we walk the arguments and emit the C# types for all of the
@@ -796,14 +804,24 @@ def emit_proc_csharp_interop(proc, attributes):
 
         # Add in and inout arguments to the method signature
         if binding == "inout" or binding == "in":
-            type = notnull_types[type] if isNotNull else nullable_types[type]
+            xtype = notnull_types[type] if isNotNull else nullable_types[type]
 
             if commaNeeded:
                 params += ", "
-                param_names += ", "
+                c_params += ", "
+                call_args += ", "
 
-            params += f"{type} {a_name}"
-            param_names += a_name
+            if not isNotNull and split_types[type]:
+              call_args += f"{a_name}.HasValue, {a_name}.GetValueOrDefault()"
+              params += f"{xtype} {a_name}"
+              xtype = notnull_types[type]
+              c_params += f"bool {a_name}_has_value, {xtype} {a_name}_value"
+              needs_wrapper = True
+            else:
+              call_args += a_name
+              c_params += f"{xtype} {a_name}"
+              params += f"{xtype} {a_name}"
+
             commaNeeded = True
 
         # For the out args, all we need to know at this point is
@@ -821,28 +839,31 @@ def emit_proc_csharp_interop(proc, attributes):
     needs_return_type = usesDatabase or outArgs or projection
 
     print(f"  // procedure entry point {p_name}")
-    suffix = ""
     return_type = "void"
 
     # If we need a result type, we emit the Interop entry point as a helper
     # that maps the returned long to the result type.  This makes things
     # as easy as possible for the caller.
     if needs_return_type:
-        suffix = "_"
         return_type = "long"
         print(f"  public static {p_name}ReturnType {p_name}({params}) {{")
         print(
-            f"     return new {p_name}ReturnType(new CQLResultSet({p_name}_({param_names})));"
+            f"     return new {p_name}ReturnType(new CQLResultSet({class_name}_{p_name}({call_args})));"
         )
+        print("  }\n")
+    else:
+        print(f"  public static {return_type} {p_name}({params}) {{")
+        if return_type != "void" :
+          print(f"     return {class_name}_{p_name}({call_args});")
+        else:
+          print(f"     {class_name}_{p_name}({call_args});")
         print("  }\n")
 
     # Now we emit the declaration for Interop entry point itself.  This is a simple wrapper
-    # to the C code that does the actual work.  If we emitted a result set
-    # helper with the "good" name, then this helper gets a Interop suffix.
-    dll_base = cmd_args["class_name"]
-    print(f"  [DllImport(@\"{dll_base}.dll\")]")
+    # to the C code that does the actual work.  
+    print(f"  [DllImport(@\"cql_interop.dll\")]")
     print(
-        f"  public static extern {return_type} {p_name}{suffix}({params});\n")
+        f"  public static extern {return_type} {class_name}_{p_name}({c_params});\n")
 
 
 def emit_proc_csharp_projection(proc, attributes):

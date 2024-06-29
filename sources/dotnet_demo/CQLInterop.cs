@@ -147,7 +147,7 @@ public sealed class CQLResultSet {
 
     // Copy the unmanaged blob to the managed byte array
     Marshal.Copy(ptr, blob, 0, size);
-    freeBlob(ptr);
+    CQLResultSet.freeBlob(ptr);
     return blob;
   }
 

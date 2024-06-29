@@ -59,12 +59,10 @@ popd >/dev/null
 echo "compiling native code"
 pushd $O >/dev/null
 
-${CC} -o cql_interop.dll -shared $S/cql_dotnet.c $R/cqlrt.c ${SQLITE_LINK}
-${CC} -o sample_interop.dll -shared Sample.c SampleInterop.c $R/cqlrt.c ${SQLITE_LINK}
+${CC} -o cql_interop.dll -shared $S/cql_interop.c $R/cqlrt.c Sample.c SampleInterop.c ${SQLITE_LINK}
 
 mkdir -p ../bin/Debug/net8.0
 mv cql_interop.dll ../bin/Debug/net8.0
-mv sample_interop.dll ../bin/Debug/net8.0
 
 popd >/dev/null
 

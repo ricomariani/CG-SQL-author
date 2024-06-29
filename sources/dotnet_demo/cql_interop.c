@@ -61,7 +61,7 @@ double getDouble(cql_int64 rs, cql_int32 row, cql_int32 col) {
   return cql_result_set_get_double_col(ref, row, col);
 }
 
-void* getBlob(cql_int64 rs, cql_int32 row, cql_int32 col, cql_int32 *size_out) {
+void *getBlob(cql_int64 rs, cql_int32 row, cql_int32 col, cql_int32 *size_out) {
   cql_result_set_ref ref = (cql_result_set_ref)(rs);
 
   cql_blob_ref blob = cql_result_set_get_blob_col(ref, row, col);
@@ -71,6 +71,10 @@ void* getBlob(cql_int64 rs, cql_int32 row, cql_int32 col, cql_int32 *size_out) {
   memcpy(ret, bytes, size);
   *size_out = (cql_int32)size;
   return ret;
+}
+
+void freeBlob(void *blob) {
+  free(blob);
 }
 
 cql_int64 copyChildResultSet(cql_int64 rs, cql_int32 row, cql_int32 col) {

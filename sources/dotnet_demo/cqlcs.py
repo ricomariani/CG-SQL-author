@@ -346,12 +346,11 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
                 comma = ",\n"
 
             if not isNotNull and split_types[arg["type"]]:
-              xtype = dotnet_notnull_types[type]
-              print(f"{comma}  bool {a_name}_has_value,")
-              print(f"  {xtype} {a_name}_value", end="")
+                xtype = dotnet_notnull_types[type]
+                print(f"{comma}  bool {a_name}_has_value,")
+                print(f"  {xtype} {a_name}_value", end="")
             else:
-              print(f"{comma}  {xtype} {a_name}", end="")
-
+                print(f"{comma}  {xtype} {a_name}", end="")
 
             needsComma = True
 
@@ -453,9 +452,6 @@ def emit_proc_c_func_body(proc, meta_results, attributes):
         inout = (binding == "inout")
         kind = arg["kind"] if "kind" in arg else ""
         call += f" /*{binding}*/ "
-
-        print(f"// a_type = {a_type}");
-        print(f"// isNotNull = {isNotNull}");
 
         # for inout we will by passing either in input argument or the
         # converted temporary by reference.  We will also be copying the
@@ -735,7 +731,8 @@ def emit_proc_csharp_return_type(proc):
 
             print(f"    public {type} {c_name} {{")
             print("      get {")
-            print(f"        return mResultSet.get{nullable}{getter}(0, {col});")
+            print(
+                f"        return mResultSet.get{nullable}{getter}(0, {col});")
             print("      }")
             print("    }\n")
 
@@ -820,15 +817,15 @@ def emit_proc_csharp_interop(proc, attributes):
                 call_args += ", "
 
             if not isNotNull and split_types[type]:
-              call_args += f"{a_name}.HasValue, {a_name}.GetValueOrDefault()"
-              params += f"{xtype} {a_name}"
-              xtype = notnull_types[type]
-              c_params += f"bool {a_name}_has_value, {xtype} {a_name}_value"
-              needs_wrapper = True
+                call_args += f"{a_name}.HasValue, {a_name}.GetValueOrDefault()"
+                params += f"{xtype} {a_name}"
+                xtype = notnull_types[type]
+                c_params += f"bool {a_name}_has_value, {xtype} {a_name}_value"
+                needs_wrapper = True
             else:
-              call_args += a_name
-              c_params += f"{xtype} {a_name}"
-              params += f"{xtype} {a_name}"
+                call_args += a_name
+                c_params += f"{xtype} {a_name}"
+                params += f"{xtype} {a_name}"
 
             commaNeeded = True
 
@@ -861,17 +858,18 @@ def emit_proc_csharp_interop(proc, attributes):
         print("  }\n")
     else:
         print(f"  public static {return_type} {p_name}({params}) {{")
-        if return_type != "void" :
-          print(f"     return {class_name}_{p_name}({call_args});")
+        if return_type != "void":
+            print(f"     return {class_name}_{p_name}({call_args});")
         else:
-          print(f"     {class_name}_{p_name}({call_args});")
+            print(f"     {class_name}_{p_name}({call_args});")
         print("  }\n")
 
     # Now we emit the declaration for Interop entry point itself.  This is a simple wrapper
-    # to the C code that does the actual work.  
+    # to the C code that does the actual work.
     print(f"  [DllImport(@\"cql_interop.dll\")]")
     print(
-        f"  public static extern {return_type} {class_name}_{p_name}({c_params});\n")
+        f"  public static extern {return_type} {class_name}_{p_name}({c_params});\n"
+    )
 
 
 def emit_proc_csharp_projection(proc, attributes):
@@ -928,6 +926,7 @@ def emit_proc_section(section, s_name):
                 emit_proc_csharp_projection(proc, attributes)
                 emit_proc_csharp_interop(proc, attributes)
 
+
 def emit_basetypes(data):
     print("typedef struct nullable_bool {")
     print("  unsigned int hasValue;")
@@ -945,6 +944,7 @@ def emit_basetypes(data):
     print("  unsigned int hasValue;")
     print("  double value;")
     print("} nullable_real;")
+
 
 # These are all of the procedure sources
 def emit_procs(data):

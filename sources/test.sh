@@ -206,7 +206,6 @@ basic_test() {
 
 	echo running "$T/test.sql" "with CRLF line endings"
 	sed -e "s/$/\\r/" <$T/test.sql >$O/test.sql
-	echo ${CQL} --include_paths "$T" --echo --dev --in "$O/test.sql" ">$O/test.out2"
 	if ! ${CQL} --include_paths "$T" --echo --dev --in "$O/test.sql" >"$O/test.out2"; then
 		echo "Echo CRLF version does not parse correctly"
 		failed

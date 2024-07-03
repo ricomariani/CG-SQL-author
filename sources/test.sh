@@ -204,6 +204,18 @@ basic_test() {
 	mv "$O/test.out2" "$O/test.out"
 	on_diff_exit test.out
 
+	echo running "$T/test.sql" "with CRLF line endings"
+	sed -e "s/$/\\r/" <$T/test.sql >$O/test.sql
+	echo ${CQL} --include_paths "$T" --echo --dev --in "$O/test.sql" ">$O/test.out2"
+	if ! ${CQL} --include_paths "$T" --echo --dev --in "$O/test.sql" >"$O/test.out2"; then
+		echo "Echo CRLF version does not parse correctly"
+		failed
+	fi
+
+	echo "  computing diffs CRFL parsing (empty if none)"
+	mv "$O/test.out2" "$O/test.out"
+	on_diff_exit test.out
+
 	echo running "$T/test.sql" "with macro expansion"
 	if ! ${CQL} --echo --dev --include_paths "$T" --in "$T/test.sql" --exp >"$O/test_exp.out"; then
 		echo basic parsing with expansion test failed

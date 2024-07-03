@@ -635,7 +635,7 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
                                    return result;
                                  }
 
-[ \t\n]                          ;
+[ \t\r\n]                        ;
 \-\-.*                           ;
 
 .                                { yyerror("Unexpected %s\n", yytext); }

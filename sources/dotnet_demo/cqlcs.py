@@ -659,8 +659,9 @@ def emit_result_set_projection(proc, attributes):
         if (isSensitive and vaulted_columns is not None
                 and (vault_all or c_name in vaulted_columns)):
             isEncoded = True
+
             # use custom encoded string type for encoded strings
-            if c_type == "String":
+            if c_type == "string":
                 c_type = "CQLEncodedString"
                 getter = "Encoded" + getter
 

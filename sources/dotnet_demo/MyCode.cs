@@ -113,16 +113,16 @@ public class MyCode {
       byte[] bytes = data.get_bytes(i);
       String? s = System.Text.Encoding.UTF8.GetString(bytes);
       Console.WriteLine(
-         "Row {0}: name:{1} blob:{2} age:{3} thing:{4} key1:{5} key2:{6}({7})",
-         i,
-         data.get_name(i),
-         s,
-         data.get_age(i),
-         data.get_age_IsEncoded() ? "encoded" : "clear",
-         data.get_thing(i),
-         data.get_key1(i),
-         data.get_key2(i),
-         data.get_key2_IsEncoded() ? "encoded" : "clear"
+         "Row {0}: name:{1} blob:{2} age:{3}({4}) thing:{5} key1:{6} key2:{7}({8})",
+         i, // 0
+         data.get_name(i), // 1
+         s, // 2
+         data.get_age(i), // 3
+         data.get_age_IsEncoded() ? "encoded" : "clear", // 4
+         data.get_thing(i), // 5
+         data.get_key1(i), // 6
+         data.get_key2(i), // 7
+         data.get_key2_IsEncoded() ? "encoded" : "clear" // 8
      );
 
       // this could be done automatically in the helper, it just isn't yet

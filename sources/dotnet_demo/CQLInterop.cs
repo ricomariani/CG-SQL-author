@@ -56,9 +56,10 @@ public class CQLEncodedString {
 
   public CQLEncodedString(String value) {
     mValue = value;
+    Console.WriteLine("Encoded String  {0}", value);
   }
 
-  public String toString() {
+  public override String ToString() {
     return "[secret]";
   }
 }
@@ -129,10 +130,7 @@ public sealed class CQLResultSet {
     return getString(result_set_ref, row, column);
   }
 
-  public CQLEncodedString? getEncodedString(int row, int column) {
-    if (isNull(row, column)) {
-      return null;
-    }
+  public CQLEncodedString getEncodedString(int row, int column) {
     return new CQLEncodedString(getString(row, column));
   }
 

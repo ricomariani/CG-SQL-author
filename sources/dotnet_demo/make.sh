@@ -20,11 +20,9 @@ if [ "$(uname)" == "Linux" ];
 then
   # linux path variation and -fPIC for .so output
   CC="${CC} -I $O -I $R -fPIC"
-  SUFFIX=dll
 else
   # assuming clang elsewhere (e.g. Mac)
   CC="${CC} -I $O -I $R"
-  SUFFIX=dll
 fi
 
 if [ "${SQLITE_PATH}" != "" ] ;
@@ -41,23 +39,17 @@ echo "building cql"
 (cd $O/../.. ; make)
 CQL=$R/out/cql
 
-echo "making directories"
-
-mkdir -p $O/sample
-
 echo "generating stored procs C and JSON"
-cp Sample.sql $O
 pushd $O >/dev/null
-${CQL} --in Sample.sql --cg Sample.h Sample.c
-${CQL} --in Sample.sql --rt json_schema --cg Sample.json
+
+${CQL} --in ../Sample.sql --cg Sample.h Sample.c
+${CQL} --in ../Sample.sql --rt json_schema --cg Sample.json
 
 echo "generating C# interop class and the C code for it"
 ../cqlcs.py Sample.json --class SampleInterop >SampleInterop.cs
 ../cqlcs.py Sample.json --emit_c --class SampleInterop --cql_header Sample.h >SampleInterop.c
-popd >/dev/null
 
 echo "compiling native code"
-pushd $O >/dev/null
 
 ${CC} -o cql_interop.dll -shared $S/cql_interop.c $R/cqlrt.c Sample.c SampleInterop.c ${SQLITE_LINK}
 

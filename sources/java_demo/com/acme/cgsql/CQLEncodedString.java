@@ -33,4 +33,6 @@ public class CQLEncodedString {
   public String toString() {
     return "[secret]";
   }
+
+  // you add your methods for dealing with encoded strings here
 }

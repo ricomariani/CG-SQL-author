@@ -61,6 +61,8 @@ public class CQLEncodedString {
   public override String ToString() {
     return "[secret]";
   }
+
+  // you add your methods for dealing with encoded strings here
 }
 
 /**

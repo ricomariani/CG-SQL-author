@@ -56,7 +56,6 @@ public class CQLEncodedString {
 
   public CQLEncodedString(String value) {
     mValue = value;
-    Console.WriteLine("Encoded String  {0}", value);
   }
 
   public override String ToString() {

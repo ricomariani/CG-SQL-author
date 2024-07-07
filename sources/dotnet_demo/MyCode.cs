@@ -113,7 +113,7 @@ public class MyCode {
       byte[] bytes = data.get_bytes(i);
       String? s = System.Text.Encoding.UTF8.GetString(bytes);
       Console.WriteLine(
-         "Row {0}: name:{1} blob:{2} age:{3}({4}) thing:{5} key1:{6} key2:{7}({8})",
+         "Row {0}: name:{1} blob:{2} age:{3}({4}) thing:{5:F6} key1:{6} key2:{7}({8})",
          i, // 0
          data.get_name(i), // 1
          s, // 2

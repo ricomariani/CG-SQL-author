@@ -14,6 +14,7 @@ declare start_refs integer not null;
 declare end_refs integer not null;
 declare proc printf no check;
 declare proc exit no check;
+declare select function sqlite_version() text not null;
 
 @MACRO(stmt_list) EXPECT!(pred! expr)
 begin
@@ -193,6 +194,11 @@ call make_schema();
 call _cql_init_extensions();
 
 BEGIN_SUITE!();
+
+TEST!(vers,
+BEGIN
+  call printf("SQLite Verison: %s\n", (select sqlite_version()));
+END);
 
 TEST!(arithmetic,
 BEGIN

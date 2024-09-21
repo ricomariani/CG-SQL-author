@@ -215,7 +215,7 @@ static void cql_reset_globals(void);
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
-%left CONCAT
+%left CONCAT JEX1 JEX2 ':'
 %left COLLATE
 %right UMINUS '~'
 
@@ -1331,6 +1331,8 @@ math_expr[result]:
   | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
   | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
   | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
+  | math_expr[lhs] JEX1 math_expr[rhs]  { $result = new_ast_jex1($lhs, $rhs); }
+  | math_expr[lhs] JEX2 ':' data_type_any ':' math_expr[rhs] { $result = new_ast_jex2($lhs, new_ast_jex2($data_type_any,$rhs)); }
   | math_expr[lhs] COLLATE name { $result = new_ast_collate($lhs, $name); }
   ;
 

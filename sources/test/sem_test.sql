@@ -24425,3 +24425,58 @@ select 1 a_col order by foo.rowid;
 -- * error: % name not found 'foo.rowid'
 -- +1 error:
 select * from foo limit foo.rowid;
+
+-- TEST: basic extraction operator
+-- + {jex1}: text
+-- - error:
+select '{ "x" : 1}' -> '$.x' as X;
+
+-- TEST: basic extraction operator: non SQL context
+-- + {jex1}: err
+-- * error: % operator may only appear in the context of a SQL statement '->'
+'{ "x" : 1}' -> '$.x';
+
+-- TEST: basic extraction operator: invalid expression
+-- + {jex1}: err
+-- * error: % string operand not allowed in 'NOT'
+(not 'x') -> '$.x';
+
+-- TEST: basic extraction operator, invalid right type
+-- + {jex1}: err
+-- * error: % right operand must be a string '->'
+select '{ "x" : 1}' -> 1 as X;
+
+-- TEST: basic extraction operator, invalid left type
+-- + {jex1}: err
+-- * error: % left operand must be json text or json blob
+select 1 -> '$.x' as X;
+
+-- TEST: extended extraction operator
+-- + {jex2}: int
+-- - error:
+select '{ "x" : 1}' ->> :int: '$.x' as X;
+
+-- TEST: extended extraction operator: non SQL context
+-- + {jex2}: err
+-- * error: % operator may only appear in the context of a SQL statement '->>'
+'{ "x" : 1}' ->> :int: '$.x';
+
+-- TEST: extended extraction operator: invalid expression
+-- + {jex2}: err
+-- * error: % string operand not allowed in 'NOT'
+(not 'x') ->> :int: '$.x';
+
+-- TEST: extended extraction operator: invalid type
+-- + {jex2}: err
+-- * error: % unknown type 'not_a_type_int'
+select 'x' ->> :not_a_type_int: '$.x' as X;
+
+-- TEST: extended extraction operator, invalid right type
+-- + {jex2}: err
+-- * error: % right operand must be a string '->>'
+select '{ "x" : 1}' ->> :int: 1 as X;
+
+-- TEST: extended extraction operator, invalid left type
+-- + {jex2}: err
+-- * error: % left operand must be json text or json blob
+select 1 ->> :int: '$.x' as X;

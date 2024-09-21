@@ -950,6 +950,31 @@ static void gen_concat(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   if (pri_new < pri) gen_printf(")");
 }
 
+static void gen_jex1(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_jex1(ast));
+
+  if (pri_new < pri) gen_printf("(");
+  gen_expr(ast->left, pri_new);
+  gen_printf(" %s ", op);
+  gen_expr(ast->right, pri_new);
+  if (pri_new < pri) gen_printf(")");
+}
+
+static void gen_jex2(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
+  Contract(is_ast_jex2(ast));
+
+  if (pri_new < pri) gen_printf("(");
+  gen_expr(ast->left, pri_new);
+  gen_printf(" %s ", op);
+  if (!for_sqlite()) {
+    gen_printf(":");
+    gen_data_type(ast->right->left);
+    gen_printf(": ");
+  }
+  gen_expr(ast->right->right, pri_new);
+  if (pri_new < pri) gen_printf(")");
+}
+
 static void gen_arg_expr(ast_node *ast) {
   if (is_ast_star(ast)) {
     gen_printf("*");
@@ -5592,6 +5617,8 @@ cql_noexport void gen_init() {
   EXPR_INIT(cast_expr, gen_expr_cast, "CAST", EXPR_PRI_ROOT);
   EXPR_INIT(type_check_expr, gen_expr_type_check, "TYPE_CHECK", EXPR_PRI_ROOT);
   EXPR_INIT(concat, gen_concat, "||", EXPR_PRI_CONCAT);
+  EXPR_INIT(jex1, gen_jex1, "->", EXPR_PRI_CONCAT);
+  EXPR_INIT(jex2, gen_jex2, "->>", EXPR_PRI_CONCAT);
   EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(reverse_apply_typed, gen_binary_no_spaces, "::", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(reverse_apply_poly, gen_binary_no_spaces, ":::", EXPR_PRI_REVERSE_APPLY);

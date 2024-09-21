@@ -574,6 +574,8 @@ WINDOW                           { return WINDOW; }
 WITH                             { return WITH; }
 WITHOUT                          { return WITHOUT; }
 
+"->"                             { return JEX1; }
+"->>"                            { return JEX2; }
 "!="                             { return NE_; }
 "%="                             { return MOD_EQ; }
 "&="                             { return AND_EQ; }

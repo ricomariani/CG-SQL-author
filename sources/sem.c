@@ -4921,6 +4921,98 @@ static void sem_collate(ast_node *ast, CSTR op) {
 }
 
 // Validates string/number compatible left and right and the result type should always be string
+static void sem_jex1(ast_node *ast, CSTR op) {
+  Contract(is_ast_jex1(ast));
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right);
+
+  // [ast->left] -> [ast->right];
+  sem_expr(left);
+  sem_expr(right);
+
+  if (is_error(left) || is_error(right)) {
+    record_error(ast);
+    return;
+  }
+
+  if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
+    report_error(ast, "CQL0044: operator may only appear in the context of a SQL statement", op);
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type_left = left->sem->sem_type;
+  sem_t sem_type_right = right->sem->sem_type;
+  sem_t combined_flags = combine_flags(left->sem->sem_type, right->sem->sem_type);
+
+  if (!is_text(sem_type_right)) {
+    report_error(right, "CQL0243: right operand must be a string", op);
+    record_error(ast);
+    return;
+  }
+
+  if (!is_blob(sem_type_left) && !is_text(sem_type_left)) {
+    report_error(left, "CQL0243: left operand must be json text or json blob", op);
+    record_error(ast);
+    return;
+  }
+
+  // the result is always nullable and may be sensitive
+  // -> always returns TEXT per the spec See https://sqlite.org/json1.html $4.9
+  ast->sem = new_sem(SEM_TYPE_TEXT | sensitive_flag(sem_type_left));
+}
+
+// Validates string/number compatible left and right and the result type should always be string
+static void sem_jex2(ast_node *ast, CSTR op) {
+  Contract(is_ast_jex2(ast));
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(data_type, ast->right->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right->right);
+
+  // [ast->left] -> [ast->right];
+  sem_expr(left);
+  sem_expr(right);
+
+  if (is_error(left) || is_error(right)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_data_type_column(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
+
+
+  if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
+    report_error(ast, "CQL0044: operator may only appear in the context of a SQL statement", op);
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type_left = left->sem->sem_type;
+  sem_t sem_type_right = right->sem->sem_type;
+  sem_t combined_flags = combine_flags(left->sem->sem_type, right->sem->sem_type);
+
+  if (!is_text(sem_type_right)) {
+    report_error(right, "CQL0243: right operand must be a string", op);
+    record_error(ast);
+    return;
+  }
+
+  if (!is_blob(sem_type_left) && !is_text(sem_type_left)) {
+    report_error(left, "CQL0243: left operand must be json text or json blob", op);
+    record_error(ast);
+    return;
+  }
+
+  // the result is always nullable and may be sensitive
+  // the core type must be provided
+  ast->sem = new_sem( core_type_of(data_type->sem->sem_type) | sensitive_flag(sem_type_left));
+}
+
+// Validates string/number compatible left and right and the result type should always be string
 static void sem_concat(ast_node *ast, CSTR op) {
   Contract(is_ast_concat(ast));
   EXTRACT_ANY_NOTNULL(left, ast->left);
@@ -25418,6 +25510,8 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(type_check_expr, sem_expr_type_check, "TYPE_CHECK");
   EXPR_INIT(case_expr, sem_expr_case, "CASE");
   EXPR_INIT(concat, sem_concat, "||");
+  EXPR_INIT(jex1, sem_jex1, "->");
+  EXPR_INIT(jex2, sem_jex2, "->>");
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
   EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
   EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");

@@ -91107,3 +91107,232 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'foo.rowid'
       |   | {name rowid}
       | {select_offset}
 
+The statement ending at line XXXX
+
+SELECT '{ "x" : 1}' -> '$.x' AS X;
+
+  {select_stmt}: select: { X: text }
+  | {select_core_list}: select: { X: text }
+  | | {select_core}: select: { X: text }
+  |   | {select_expr_list_con}: select: { X: text }
+  |     | {select_expr_list}: select: { X: text }
+  |     | | {select_expr}: X: text
+  |     |   | {jex1}: text
+  |     |   | | {strlit '{ "x" : 1}'}: text notnull
+  |     |   | | {strlit '$.x'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+'{ "x" : 1}' -> '$.x';
+
+test/sem_test.sql:XXXX:1: error: in jex1 : CQL0044: operator may only appear in the context of a SQL statement '->'
+
+  {expr_stmt}: err
+  | {jex1}: err
+    | {strlit '{ "x" : 1}'}: text notnull
+    | {strlit '$.x'}: text notnull
+
+The statement ending at line XXXX
+
+(NOT 'x') -> '$.x';
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {expr_stmt}: err
+  | {jex1}: err
+    | {not}: err
+    | | {strlit 'x'}: text notnull
+    | {strlit '$.x'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT '{ "x" : 1}' -> 1 AS X;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0243: right operand must be a string '->'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {jex1}: err
+  |     |   | | {strlit '{ "x" : 1}'}: text notnull
+  |     |   | | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 -> '$.x' AS X;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0243: left operand must be json text or json blob '->'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {jex1}: err
+  |     |   | | {int 1}: integer notnull
+  |     |   | | {strlit '$.x'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT '{ "x" : 1}' ->> :INT: '$.x' AS X;
+
+  {select_stmt}: select: { X: integer }
+  | {select_core_list}: select: { X: integer }
+  | | {select_core}: select: { X: integer }
+  |   | {select_expr_list_con}: select: { X: integer }
+  |     | {select_expr_list}: select: { X: integer }
+  |     | | {select_expr}: X: integer
+  |     |   | {jex2}: integer
+  |     |   | | {strlit '{ "x" : 1}'}: text notnull
+  |     |   | | {jex2}
+  |     |   |   | {type_int}: integer
+  |     |   |   | {strlit '$.x'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+'{ "x" : 1}' ->> :INT: '$.x';
+
+test/sem_test.sql:XXXX:1: error: in jex2 : CQL0044: operator may only appear in the context of a SQL statement '->>'
+
+  {expr_stmt}: err
+  | {jex2}: err
+    | {strlit '{ "x" : 1}'}: text notnull
+    | {jex2}
+      | {type_int}: integer
+      | {strlit '$.x'}: text notnull
+
+The statement ending at line XXXX
+
+(NOT 'x') ->> :INT: '$.x';
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {expr_stmt}: err
+  | {jex2}: err
+    | {not}: err
+    | | {strlit 'x'}: text notnull
+    | {jex2}
+      | {type_int}
+      | {strlit '$.x'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT 'x' ->> :not_a_type_int: '$.x' AS X;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0360: unknown type 'not_a_type_int'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {jex2}: err
+  |     |   | | {strlit 'x'}: text notnull
+  |     |   | | {jex2}
+  |     |   |   | {name not_a_type_int}: err
+  |     |   |   | {strlit '$.x'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT '{ "x" : 1}' ->> :INT: 1 AS X;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0243: right operand must be a string '->>'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {jex2}: err
+  |     |   | | {strlit '{ "x" : 1}'}: text notnull
+  |     |   | | {jex2}
+  |     |   |   | {type_int}: integer
+  |     |   |   | {int 1}: integer notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT 1 ->> :INT: '$.x' AS X;
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0243: left operand must be json text or json blob '->>'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {jex2}: err
+  |     |   | | {int 1}: integer notnull
+  |     |   | | {jex2}
+  |     |   |   | {type_int}: integer
+  |     |   |   | {strlit '$.x'}: text notnull
+  |     |   | {opt_as_alias}
+  |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

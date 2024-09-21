@@ -2758,11 +2758,11 @@ void yyerror(const char *format, ...) {
   cql_exit_code = 2;
 }
 
-static uint64_t next_id = 0;
+static int next_id = 0;
 
 static void print_dot(struct ast_node *node) {
   assert(node);
-  uint64_t id = next_id++;
+  int id = next_id++;
 
   // we used to hard code the UTF8 for u23DA but that seems to not render consistently
   // so I switched to the codepoint 2307 "earth ground" which doesn't look as nice
@@ -2782,12 +2782,12 @@ static void print_dot(struct ast_node *node) {
   bool_t primitive = true;
 
   if (is_ast_num(node)) {
-    cql_output("\n    %s%lx [label = \"%s\" shape=plaintext]", node->type, id, ((struct num_ast_node*)node)->value);
+    cql_output("\n    %s%u [label = \"%s\" shape=plaintext]", node->type, id, ((struct num_ast_node*)node)->value);
   } else if (is_ast_str(node)) {
     EXTRACT_STRING(str, node);
     if (is_id(node)) {
       // unescaped name, clean to emit
-      cql_output("\n    %s%lx [label = \"%s\" shape=plaintext]", node->type, id, str);
+      cql_output("\n    %s%u [label = \"%s\" shape=plaintext]", node->type, id, str);
     } else {
       // we have to do this dance to from the encoded in SQL format string literal
       // to an escaped in C-style literal.  The dot output for \n should be the characters
@@ -2801,13 +2801,13 @@ static void print_dot(struct ast_node *node) {
       cg_encode_c_string_literal(plaintext.ptr, &encoding);
       cg_encode_c_string_literal(encoding.ptr, &double_encoding);
       // ready to use!
-      cql_output("\n    %s%lx [label = %s shape=plaintext]", node->type, id, double_encoding.ptr);
+      cql_output("\n    %s%u [label = %s shape=plaintext]", node->type, id, double_encoding.ptr);
       CHARBUF_CLOSE(double_encoding);
       CHARBUF_CLOSE(encoding);
       CHARBUF_CLOSE(plaintext);
     }
   } else {
-    cql_output("\n    %s%lx [label = \"%s\" shape=plaintext]", node->type, id, node->type);
+    cql_output("\n    %s%u [label = \"%s\" shape=plaintext]", node->type, id, node->type);
     primitive = false;
   }
 
@@ -2820,19 +2820,19 @@ static void print_dot(struct ast_node *node) {
   }
 
   if (ast_has_left(node)) {
-    cql_output("\n    %s%lx -> %s%lx;", node->type, id, node->left->type, next_id);
+    cql_output("\n    %s%u -> %s%u;", node->type, id, node->left->type, next_id);
     print_dot(node->left);
   } else {
-    cql_output("\n    _%lx [label = \"%s\" shape=plaintext]", id, ground_symbol);
-    cql_output("\n    %s%lx -> _%lx;", node->type, id, id);
+    cql_output("\n    _%u [label = \"%s\" shape=plaintext]", id, ground_symbol);
+    cql_output("\n    %s%u -> _%u;", node->type, id, id);
   }
 
   if (ast_has_right(node)) {
-    cql_output("\n %s%lx -> %s%lx;", node->type, id, node->right->type, next_id);
+    cql_output("\n %s%u -> %s%u;", node->type, id, node->right->type, next_id);
     print_dot(node->right);
   } else {
-    cql_output("\n    _%lx [label = \"%s\" shape=plaintext]", id, ground_symbol);
-    cql_output("\n    %s%lx -> _%lx;", node->type, id, id);
+    cql_output("\n    _%u [label = \"%s\" shape=plaintext]", id, ground_symbol);
+    cql_output("\n    %s%u -> _%u;", node->type, id, id);
   }
 }
 

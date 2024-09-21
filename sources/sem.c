@@ -4943,7 +4943,6 @@ static void sem_jex1(ast_node *ast, CSTR op) {
 
   sem_t sem_type_left = left->sem->sem_type;
   sem_t sem_type_right = right->sem->sem_type;
-  sem_t combined_flags = combine_flags(left->sem->sem_type, right->sem->sem_type);
 
   if (!is_text(sem_type_right)) {
     report_error(right, "CQL0243: right operand must be a string", op);
@@ -4993,7 +4992,6 @@ static void sem_jex2(ast_node *ast, CSTR op) {
 
   sem_t sem_type_left = left->sem->sem_type;
   sem_t sem_type_right = right->sem->sem_type;
-  sem_t combined_flags = combine_flags(left->sem->sem_type, right->sem->sem_type);
 
   if (!is_text(sem_type_right)) {
     report_error(right, "CQL0243: right operand must be a string", op);

@@ -4945,13 +4945,13 @@ static void sem_jex1(ast_node *ast, CSTR op) {
   sem_t sem_type_right = right->sem->sem_type;
 
   if (!is_text(sem_type_right)) {
-    report_error(right, "CQL0243: right operand must be a string", op);
+    report_error(right, "CQL0504: right operand must be json text path", op);
     record_error(ast);
     return;
   }
 
   if (!is_blob(sem_type_left) && !is_text(sem_type_left)) {
-    report_error(left, "CQL0243: left operand must be json text or json blob", op);
+    report_error(left, "CQL0503: left operand must be json text or json blob", op);
     record_error(ast);
     return;
   }
@@ -4994,13 +4994,13 @@ static void sem_jex2(ast_node *ast, CSTR op) {
   sem_t sem_type_right = right->sem->sem_type;
 
   if (!is_text(sem_type_right)) {
-    report_error(right, "CQL0243: right operand must be a string", op);
+    report_error(right, "CQL0504: right operand must be json text path", op);
     record_error(ast);
     return;
   }
 
   if (!is_blob(sem_type_left) && !is_text(sem_type_left)) {
-    report_error(left, "CQL0243: left operand must be json text or json blob", op);
+    report_error(left, "CQL0503: left operand must be json text or json blob", op);
     record_error(ast);
     return;
   }
@@ -8461,6 +8461,80 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
 // ltrim has the same semantics as trim
 static void sem_func_ltrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
+}
+
+static void sem_func_json(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // trim can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // one args
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
+    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
+    record_error(ast);
+    return;
+  }
+
+  // type text, not null if arg1 is not null
+  sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
+
+  // add sensitivity if either is sensitive
+  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+
+  // preserve the string kind of the main arg, otherwise no kind checks needed for json
+  ast->sem->kind = arg1->sem->kind;
+}
+
+static void sem_func_jsonb(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // trim can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // one args
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
+    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
+    record_error(ast);
+    return;
+  }
+
+  // type text, not null if arg1 is not null
+  sem_t sem_type = SEM_TYPE_BLOB | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
+
+  // add sensitivity if either is sensitive
+  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
+
+  name_ast->sem = ast->sem = new_sem(sem_type);
+
+  // preserve the string kind of the main arg, otherwise no kind checks needed for json
+  ast->sem->kind = arg1->sem->kind;
 }
 
 // rtrim has the same semantics as trim
@@ -25431,6 +25505,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(random);
   FUNC_INIT(likely);
   FUNC_INIT(cql_compressed);
+  FUNC_INIT(json);
+  FUNC_INIT(jsonb);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

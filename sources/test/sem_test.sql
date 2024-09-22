@@ -24443,7 +24443,7 @@ select '{ "x" : 1}' -> '$.x' as X;
 
 -- TEST: basic extraction operator, invalid right type
 -- + {jex1}: err
--- * error: % right operand must be a string '->'
+-- * error: % right operand must be json text path '->'
 select '{ "x" : 1}' -> 1 as X;
 
 -- TEST: basic extraction operator, invalid left type
@@ -24473,10 +24473,52 @@ select 'x' ->> :not_a_type_int: '$.x' as X;
 
 -- TEST: extended extraction operator, invalid right type
 -- + {jex2}: err
--- * error: % right operand must be a string '->>'
+-- * error: % right operand must be json text path '->>'
 select '{ "x" : 1}' ->> :int: 1 as X;
 
 -- TEST: extended extraction operator, invalid left type
 -- + {jex2}: err
 -- * error: % left operand must be json text or json blob
 select 1 ->> :int: '$.x' as X;
+
+-- TEST: json normalization basic case
+-- + {call}: text notnull
+-- + {name json}: text notnull
+-- - error:
+select json('[1]');
+
+-- TEST: json wrong number of args
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json'
+select json();
+
+-- TEST json function in non SQL-context
+-- + {call}: err
+-- * error: % function may not appear in this context 'json'
+a_string := json('[1]');
+
+-- TEST json function in non SQL-context
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'json'
+select json(1);
+
+-- TEST: jsonb normalization basic case
+-- + {call}: blob notnull
+-- + {name jsonb}: blob notnull
+-- - error:
+select jsonb('[1]');
+
+-- TEST: jsonb wrong number of args
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb'
+select jsonb();
+
+-- TEST json function in non SQL-context
+-- + {call}: err
+-- * error: % function may not appear in this context 'jsonb'
+blob_var := jsonb('[1]');
+
+-- TEST json function in non SQL-context
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'jsonb'
+select jsonb(1);

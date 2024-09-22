@@ -91157,7 +91157,7 @@ The statement ending at line XXXX
 
 SELECT '{ "x" : 1}' -> 1 AS X;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0243: right operand must be a string '->'
+test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json text path '->'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91182,7 +91182,7 @@ The statement ending at line XXXX
 
 SELECT 1 -> '$.x' AS X;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0243: left operand must be json text or json blob '->'
+test/sem_test.sql:XXXX:1: error: in num : CQL0503: left operand must be json text or json blob '->'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91286,7 +91286,7 @@ The statement ending at line XXXX
 
 SELECT '{ "x" : 1}' ->> :INT: 1 AS X;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0243: right operand must be a string '->>'
+test/sem_test.sql:XXXX:1: error: in num : CQL0504: right operand must be json text path '->>'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91313,7 +91313,7 @@ The statement ending at line XXXX
 
 SELECT 1 ->> :INT: '$.x' AS X;
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0243: left operand must be json text or json blob '->>'
+test/sem_test.sql:XXXX:1: error: in num : CQL0503: left operand must be json text or json blob '->>'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91328,6 +91328,184 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0243: left operand must be json tex
   |     |   |   | {strlit '$.x'}: text notnull
   |     |   | {opt_as_alias}
   |     |     | {name X}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json('[1]');
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '[1]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := json('[1]');
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable was_set
+  | {call}: err
+    | {name json}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit '[1]'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT json(1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT jsonb('[1]');
+
+  {select_stmt}: select: { _anon: blob notnull }
+  | {select_core_list}: select: { _anon: blob notnull }
+  | | {select_core}: select: { _anon: blob notnull }
+  |   | {select_expr_list_con}: select: { _anon: blob notnull }
+  |     | {select_expr_list}: select: { _anon: blob notnull }
+  |     | | {select_expr}: blob notnull
+  |     |   | {call}: blob notnull
+  |     |     | {name jsonb}: blob notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '[1]'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT jsonb();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name jsonb}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET blob_var := jsonb('[1]');
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'jsonb'
+
+  {assign}: err
+  | {name blob_var}: blob_var: blob variable was_set
+  | {call}: err
+    | {name jsonb}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit '[1]'}: text notnull
+
+The statement ending at line XXXX
+
+SELECT jsonb(1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'jsonb'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name jsonb}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}

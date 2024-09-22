@@ -4664,9 +4664,25 @@ In a `CASE` statement each `WHEN` expression must not be a constant NULL. For ex
 When the case expression `color` evaluates to NULL, it does not match with an expression that evaluates to NULL.
 Consequently, the CASE statement will default to the ELSE clause, provided it is defined.
 
+-----
+
 ### CQL0502: Cannot re-assign value to constant variable.
 
 When you declare variables with the `const` syntax, they cannot be re-assigned a new value
 (e.g. with a `set` statement, are being passed to an out argument).
 
 Declare these variables with a `let` statement instead if you would like to mutate them.
+
+----
+
+### CQL0503: [argument/operand] must be json text or json blob 'context'
+
+The indicated argument or operand is expected to be JSON in the form of either text or a blob.
+will indicate which argument number or operand that is incorrect.
+
+----
+
+### CQL0504: [argument/operand] must be json text path 'context'
+
+The indicated argument or operand is expected to be a json path in text form. The error
+will indicate which argument number or operand that is incorrect.

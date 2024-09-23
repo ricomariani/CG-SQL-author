@@ -24522,3 +24522,28 @@ blob_var := jsonb('[1]');
 -- + {call}: err
 -- * error: % argument 1 must be json text or json blob 'jsonb'
 select jsonb(1);
+
+-- TEST json function for JSON array creation
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name json_array}: text
+-- - error:
+select json_array(1,2);
+
+-- TEST: json function outside of SQL
+-- + {call}: err
+-- * error: % function may not appear in this context 'json_array'
+a_string := json_array();
+
+-- TEST: no blobs allowed
+-- + {call}: err
+-- * error: % argument 2 must not be a blob or object 'json_array'
+select json_array(1, blob_var, 3);
+
+-- TEST json function for JSON array creation
+-- + {select_stmt}: select: { _anon: blob }
+-- + {call}: blob
+-- + {name jsonb_array}: blob
+-- - error:
+select jsonb_array(1,2);
+

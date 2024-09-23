@@ -91514,3 +91514,98 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+SELECT json_array(1, 2);
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name json_array}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := json_array();
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json_array'
+
+  {assign}: err
+  | {name a_string}: a_string: text variable was_set
+  | {call}: err
+    | {name json_array}
+    | {call_arg_list}
+      | {call_filter_clause}
+
+The statement ending at line XXXX
+
+SELECT json_array(1, blob_var, 3);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 2 must not be a blob or object 'json_array'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_array}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {name blob_var}: blob_var: blob variable was_set
+  |     |           | {arg_list}
+  |     |             | {int 3}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT jsonb_array(1, 2);
+
+  {select_stmt}: select: { _anon: blob }
+  | {select_core_list}: select: { _anon: blob }
+  | | {select_core}: select: { _anon: blob }
+  |   | {select_expr_list_con}: select: { _anon: blob }
+  |     | {select_expr_list}: select: { _anon: blob }
+  |     | | {select_expr}: blob
+  |     |   | {call}: blob
+  |     |     | {name jsonb_array}: blob
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

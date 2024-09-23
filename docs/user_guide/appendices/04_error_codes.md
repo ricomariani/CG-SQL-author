@@ -4686,3 +4686,10 @@ will indicate which argument number or operand that is incorrect.
 
 The indicated argument or operand is expected to be a json path in text form. The error
 will indicate which argument number or operand that is incorrect.
+
+----
+
+### CQL0505: [argument] must not be a blob or object 'context'
+
+Many json oriented functions cannot accept blob or object arguments.  The indicated argument
+is a blob.  The context indicates the function.

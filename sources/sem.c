@@ -8537,6 +8537,48 @@ static void sem_func_jsonb(ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg1->sem->kind;
 }
 
+static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json_array can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // No argument can be a blob
+  int arg_number = 1;
+  for (ast_node *node = arg_list; node; node = node->right) {
+    sem_t sem_type = first_arg(node)->sem->sem_type;
+
+    if (is_blob(sem_type) || is_object(sem_type)) {
+      CSTR msg = dup_printf("CQL0505: argument %d must not be a blob or object", arg_number);
+      report_error(ast, msg, name);
+      record_error(ast);
+      return;
+    }
+
+    // add sensitivity if any is sensitive
+    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
+
+    arg_number++;
+  }
+
+  // kind is not preserved, there is normally more than one
+  name_ast->sem = ast->sem = new_sem(sem_type_result);
+}
+
+static void sem_func_json_array(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_array_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_jsonb_array(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_array_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
 // rtrim has the same semantics as trim
 static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
@@ -25507,6 +25549,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_compressed);
   FUNC_INIT(json);
   FUNC_INIT(jsonb);
+  FUNC_INIT(json_array);
+  FUNC_INIT(jsonb_array);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

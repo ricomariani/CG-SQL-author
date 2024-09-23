@@ -24603,3 +24603,35 @@ select json_error_position(1);
 -- + {call}: err
 -- * error: % function may not appear in this context 'json_error_position'
 an_int := json_error_position('x');
+
+-- TEST json function for JSON array creation
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name json_extract}: text
+-- - error:
+select json_extract('{"x":0}', '$.x');
+
+-- TEST: json function outside of SQL
+-- + {call}: err
+-- * error: % function may not appear in this context 'json_extract'
+a_string := json_extract('{"x":0}', '$.x');
+
+-- TEST: only json types allowed
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'json_extract'
+select json_extract(1, '1');
+
+-- TEST: only text paths allowed
+-- + {call}: err
+-- * error: % argument 2 must be json text path 'json_extract'
+select json_extract('[]', 1);
+
+-- TEST json function for JSON extraction wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_extract'
+select json_extract();
+
+-- TEST json function for JSON extraction wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb_extract'
+select jsonb_extract();

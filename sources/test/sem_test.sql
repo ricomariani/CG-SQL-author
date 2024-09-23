@@ -24636,6 +24636,16 @@ select json_extract();
 -- * error: % function got incorrect number of arguments 'jsonb_extract'
 select jsonb_extract();
 
+-- TEST json function for JSON extraction wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_remove'
+select json_remove();
+
+-- TEST json function for JSON extraction wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb_remove'
+select jsonb_remove();
+
 -- TEST json function for JSON insert
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {call}: text notnull

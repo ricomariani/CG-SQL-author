@@ -8770,27 +8770,43 @@ static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t se
 }
 
 static void sem_func_json_insert(ast_node *ast, uint32_t arg_count) {
+  // insert, set, replace all have the same rules
   sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_TEXT);
 }
 
 static void sem_func_json_replace(ast_node *ast, uint32_t arg_count) {
+  // insert, set, replace all have the same rules
   sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_TEXT);
 }
 
 static void sem_func_json_set(ast_node *ast, uint32_t arg_count) {
+  // insert, set, replace all have the same rules
   sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_TEXT);
 }
 
 static void sem_func_jsonb_insert(ast_node *ast, uint32_t arg_count) {
+  // insert, set, replace all have the same rules
   sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
 static void sem_func_jsonb_replace(ast_node *ast, uint32_t arg_count) {
+  // insert, set, replace all have the same rules
   sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
 static void sem_func_jsonb_set(ast_node *ast, uint32_t arg_count) {
+  // insert, set, replace all have the same rules
   sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
+static void sem_func_json_remove(ast_node *ast, uint32_t arg_count) {
+  // same rules as extract
+  sem_func_json_extract_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_jsonb_remove(ast_node *ast, uint32_t arg_count) {
+  // same rules as extract
+  sem_func_json_extract_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
 // rtrim has the same semantics as trim
@@ -25775,6 +25791,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(jsonb_insert);
   FUNC_INIT(jsonb_replace);
   FUNC_INIT(jsonb_set);
+  FUNC_INIT(json_remove);
+  FUNC_INIT(jsonb_remove);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

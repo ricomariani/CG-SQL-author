@@ -24581,3 +24581,25 @@ select json_array_length(1);
 -- + {call}: err
 -- * error: % argument 2 must be json text path 'json_array_length'
 select json_array_length('x', 1);
+
+-- TEST json function for JSON error_position with 1 args
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- + {call}: integer notnull
+-- + {name json_error_position}: integer notnull
+-- - error:
+select json_error_position('');
+
+-- TEST json function for JSON error_position with too many args
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_error_position'
+select json_error_position('', '');
+
+-- TEST json function for JSON error_position with wrong arg type
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'json_error_position'
+select json_error_position(1);
+
+-- TEST: json function outside of SQL
+-- + {call}: err
+-- * error: % function may not appear in this context 'json_error_position'
+an_int := json_error_position('x');

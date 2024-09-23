@@ -535,15 +535,15 @@ static void cg_generate_schema_by_mode(charbuf *output, int32_t mode) {
     // they appear in the previous section and the normal section so on previous validation
     // runs the same declaration will be duplicated.  That's ok, we're tolerant to that now.
     for (list_item *item = all_select_functions_list; item; item = item->next) {
-      ast_node *ast = item->ast;
-      Contract(is_ast_declare_select_func_stmt(ast));
+      EXTRACT_ANY_NOTNULL(ast, item->ast);
+      Contract(ast && is_select_func(ast));
       gen_set_output_buffer(output);
       gen_statement_and_attributes_with_callbacks(ast, use_callbacks);
       bprintf(output, ";\n\n");
     }
 
     for (list_item *item = all_regions_list; item; item = item->next) {
-      ast_node *ast = item->ast;
+      EXTRACT_ANY_NOTNULL(ast, item->ast);
       Contract(is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast));
       gen_set_output_buffer(output);
       gen_statement_with_callbacks(ast, use_callbacks);

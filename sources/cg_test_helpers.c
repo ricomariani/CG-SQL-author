@@ -805,8 +805,10 @@ static void cg_test_helpers_dummy_test(ast_node *stmt) {
   bprintf(&gen_declare_funcs, "\n");
   for (list_item *item = all_functions_list; item; item = item->next) {
     EXTRACT_ANY_NOTNULL(any_func, item->ast);
-    Contract(is_ast_declare_func_stmt(any_func) || is_ast_declare_select_func_stmt(any_func));
-    if (is_ast_declare_select_func_stmt(any_func)) {
+    bool_t select_func = is_select_func(any_func);
+    bool_t non_select_func = is_non_select_func(any_func);
+    Contract(select_func || non_select_func);
+    if (select_func) {
       EXTRACT_MISC_ATTRS(any_func, misc_attrs);
       bool_t deterministic = misc_attrs && !!find_named_attr(misc_attrs, "deterministic");
       if (deterministic) {

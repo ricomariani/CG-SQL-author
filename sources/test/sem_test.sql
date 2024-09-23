@@ -24604,7 +24604,7 @@ select json_error_position(1);
 -- * error: % function may not appear in this context 'json_error_position'
 an_int := json_error_position('x');
 
--- TEST json function for JSON array creation
+-- TEST json function for JSON extraction
 -- + {select_stmt}: select: { _anon: text }
 -- + {call}: text
 -- + {name json_extract}: text
@@ -24635,3 +24635,67 @@ select json_extract();
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'jsonb_extract'
 select jsonb_extract();
+
+-- TEST json function for JSON insert
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name json_insert}: text notnull
+-- - error:
+select json_insert('{"x":0}', '$.x', 1, '$.y', 2);
+
+-- TEST json function for JSON insert nullable value
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name json_insert}: text
+-- - error:
+select json_insert(nullable('{"x":0}'), '$.x', 1, '$.y', 2);
+
+-- TEST: json function outside of SQL
+-- + {call}: err
+-- * error: % function may not appear in this context 'json_insert'
+a_string := json_insert('{"x":0}', '$.x', 2);
+
+-- TEST: only json types allowed
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'json_insert'
+select json_insert(1, '$.x', 2);
+
+-- TEST: no blob types allowed
+-- + {call}: err
+-- * error: % argument 3 must not be a blob or object 'json_insert'
+select json_insert('{"x":0}', '$.x', blob_var);
+
+-- TEST: only text paths allowed
+-- + {call}: err
+-- * error: % argument 2 must be json text path 'json_insert'
+select json_insert('[]', 1, 1);
+
+-- TEST json function for JSON insert wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_insert'
+select json_insert();
+
+-- TEST json function for JSON insert wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb_insert'
+select jsonb_insert();
+
+-- TEST json function for JSON replace wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_replace'
+select json_replace();
+
+-- TEST json function for JSON insert wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb_replace'
+select jsonb_replace();
+
+-- TEST json function for JSON replace wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_set'
+select json_set();
+
+-- TEST json function for JSON insert wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb_set'
+select jsonb_set();

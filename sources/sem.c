@@ -8711,6 +8711,88 @@ static void sem_func_jsonb_extract(ast_node *ast, uint32_t arg_count) {
   sem_func_json_extract_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
+static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json_array can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  if (arg_count < 3) {
+    sem_validate_arg_count(ast, arg_count, 3);
+    return;
+  }
+
+  // No argument can be a blob
+  int arg_number = 1;
+  for (ast_node *node = arg_list; node; node = node->right) {
+    sem_t sem_type = first_arg(node)->sem->sem_type;
+
+    CSTR msg = NULL;
+    if (arg_number == 1) {
+      if (!is_blob(sem_type) && !is_text(sem_type)) {
+        msg = dup_printf("CQL0503: argument %d must be json text or json blob", arg_number);
+      }
+
+      // if the primary arg is not null then so is the result
+      sem_type_result |= (sem_type & SEM_TYPE_NOTNULL);
+    }
+    else if (arg_number % 2 == 0) {
+      if (!is_text(sem_type)) {
+        msg = dup_printf("CQL0504: argument %d must be json text path", arg_number);
+      }
+    }
+    else {
+      if (is_blob(sem_type) || is_object(sem_type)) {
+        msg = dup_printf("CQL0505: argument %d must not be a blob or object", arg_number);
+      }
+    }
+
+    if (msg) {
+        report_error(ast, msg, name);
+        record_error(ast);
+        return;
+    }
+
+    // add sensitivity if any is sensitive
+    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
+
+    arg_number++;
+  }
+
+  // kind is not preserved, there is normally more than one
+  name_ast->sem = ast->sem = new_sem(sem_type_result);
+}
+
+static void sem_func_json_insert(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_json_replace(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_json_set(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_jsonb_insert(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
+static void sem_func_jsonb_replace(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
+static void sem_func_jsonb_set(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_mod_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
 // rtrim has the same semantics as trim
 static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
@@ -25687,6 +25769,12 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(json_error_position);
   FUNC_INIT(json_extract);
   FUNC_INIT(jsonb_extract);
+  FUNC_INIT(json_insert);
+  FUNC_INIT(json_replace);
+  FUNC_INIT(json_set);
+  FUNC_INIT(jsonb_insert);
+  FUNC_INIT(jsonb_replace);
+  FUNC_INIT(jsonb_set);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

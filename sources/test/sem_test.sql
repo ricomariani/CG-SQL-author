@@ -24547,3 +24547,37 @@ select json_array(1, blob_var, 3);
 -- - error:
 select jsonb_array(1,2);
 
+-- TEST json function for JSON array_length
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- + {call}: integer notnull
+-- + {name json_array_length}: integer notnull
+-- - error:
+select json_array_length('');
+
+-- TEST json function for JSON array_length with 2 args
+-- + {select_stmt}: select: { _anon: integer }
+-- + {call}: integer
+-- - {call}: integer notnull
+-- + {name json_array_length}: integer
+-- - error:
+select json_array_length('', '$.x');
+
+-- TEST json function for JSON array_length with too many args
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_array_length'
+select json_array_length('', '$.x', '');
+
+-- TEST: json function outside of SQL
+-- + {call}: err
+-- * error: % function may not appear in this context 'json_array_length'
+an_int := json_array_length('x');
+
+-- TEST json function for JSON array_length with wrong arg type
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'json_array_length'
+select json_array_length(1);
+
+-- TEST json function for JSON array_length with wrong arg type
+-- + {call}: err
+-- * error: % argument 2 must be json text path 'json_array_length'
+select json_array_length('x', 1);

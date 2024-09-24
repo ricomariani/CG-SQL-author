@@ -8837,6 +8837,61 @@ static void sem_func_jsonb_object(ast_node *ast, uint32_t arg_count) {
   sem_func_json_object_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
+// helper for json_patch() and jsonb_patch()
+static void sem_func_json_patch_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  // exactly two arguments both json
+  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+    return;
+  }
+
+  sem_t nullable = SEM_TYPE_NOTNULL;
+
+  // No argument can be a blob
+  int arg_number = 1;
+  for (ast_node *node = arg_list; node; node = node->right) {
+    sem_t sem_type = first_arg(node)->sem->sem_type;
+
+    CSTR msg = NULL;
+    if (!is_blob(sem_type) && !is_text(sem_type)) {
+      msg = dup_printf("CQL0503: argument %d must be json text or json blob", arg_number);
+    }
+
+    if (msg) {
+        report_error(ast, msg, name);
+        record_error(ast);
+        return;
+    }
+
+    // keep not null only if everything is not null
+    nullable &= sem_type;
+
+    // add sensitivity if any is sensitive
+    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
+
+    arg_number++;
+  }
+
+  // kind is not preserved, there is normally more than one
+  name_ast->sem = ast->sem = new_sem(sem_type_result | nullable);
+}
+
+static void sem_func_json_patch(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_patch_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_jsonb_patch(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_patch_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
 
 // rtrim has the same semantics as trim
 static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
@@ -25837,6 +25892,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(jsonb_remove);
   FUNC_REWRITE_INIT(json_object);
   FUNC_REWRITE_INIT(jsonb_object);
+  FUNC_REWRITE_INIT(json_patch);
+  FUNC_REWRITE_INIT(jsonb_patch);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

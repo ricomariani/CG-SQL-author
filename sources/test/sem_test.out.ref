@@ -92673,3 +92673,174 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+SELECT json_patch('{ "name" : "John" }', '{ "age" : 22 }');
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json_patch}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '{ "name" : "John" }'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit '{ "age" : 22 }'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_patch(nullable('{ "name" : "John" }'), '{ "age" : 22 }');
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name json_patch}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {call}: text
+  |     |         | | {name nullable}: text
+  |     |         | | {call_arg_list}
+  |     |         |   | {call_filter_clause}
+  |     |         |   | {arg_list}: ok
+  |     |         |     | {strlit '{ "name" : "John" }'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit '{ "age" : 22 }'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET a_string := ( SELECT json_patch('{ "name" : "John" }', '{ "age" : 22 }') IF NOTHING THEN THROW );
+
+  {assign}: a_string: text variable was_set
+  | {name a_string}: a_string: text variable was_set
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name json_patch}: text notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '{ "name" : "John" }'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit '{ "age" : 22 }'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_patch(1, blob_var);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_patch'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_patch}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {call}: blob_var: blob notnull variable was_set
+  |     |             | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
+  |     |             | {call_arg_list}
+  |     |               | {call_filter_clause}
+  |     |               | {arg_list}: ok
+  |     |                 | {name blob_var}: blob_var: blob inferred_notnull variable was_set
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_patch(1);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_patch'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_patch}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT jsonb_patch(1);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_patch'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name jsonb_patch}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

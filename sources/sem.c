@@ -8508,6 +8508,11 @@ static void sem_func_jsonb(ast_node *ast, uint32_t arg_count) {
   sem_func_json_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
+static void sem_func_json_pretty(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+
 // helper for json_array() and jsonb_array()
 static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
@@ -8549,7 +8554,7 @@ static void sem_func_jsonb_array(ast_node *ast, uint32_t arg_count) {
   sem_func_json_array_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
-static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
+static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
@@ -8565,8 +8570,6 @@ static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
   }
 
   ast_node *arg1 = first_arg(arg_list);
-
-  sem_t sem_type_result = SEM_TYPE_INTEGER;
 
   if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
     report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
@@ -8589,6 +8592,14 @@ static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
 
   // kind is not preserved
   name_ast->sem = ast->sem = new_sem(sem_type_result);
+}
+
+static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_item_path_helper(ast, arg_count, SEM_TYPE_INTEGER);
+}
+
+static void sem_func_json_type(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_item_path_helper(ast, arg_count, SEM_TYPE_TEXT);
 }
 
 static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
@@ -25894,6 +25905,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(jsonb_object);
   FUNC_REWRITE_INIT(json_patch);
   FUNC_REWRITE_INIT(jsonb_patch);
+  FUNC_REWRITE_INIT(json_pretty);
+  FUNC_REWRITE_INIT(json_type);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

@@ -24791,3 +24791,23 @@ select json_patch(1);
 -- * error: % function got incorrect number of arguments 'jsonb_patch'
 select jsonb_patch(1);
 
+-- TEST: json normalization basic case with pretty
+-- + {call}: text notnull
+-- + {name json_pretty}: text notnull
+-- - error:
+select json_pretty('[1]');
+
+-- TEST json function for JSON array_length
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name json_type}: text notnull
+-- - error:
+select json_type('[]');
+
+-- TEST json function for JSON array_length with 2 args
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- - {call}: text notnull
+-- + {name json_type}: text
+-- - error:
+select json_type('[]', '$.x');

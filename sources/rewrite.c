@@ -3886,4 +3886,60 @@ cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_
 
     return new_update_list_head->right;
 }
+
+void rewrite_as_select_expr(ast_node *ast) {
+    AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+    Contract(is_ast_call(ast));
+
+    // mutate the root
+    ast->type = k_ast_select_if_nothing_throw_expr;
+
+    ast_node *new_call = new_ast_call(ast->left, ast->right);
+
+    ast_set_left(
+      ast,
+      new_ast_select_stmt(
+        new_ast_select_core_list(
+          new_ast_select_core(
+            NULL,
+            new_ast_select_expr_list_con(
+              new_ast_select_expr_list(
+                new_ast_select_expr(new_call, NULL),
+                NULL
+              ),
+              new_ast_select_from_etc(
+                NULL,
+                new_ast_select_where(
+                  NULL,
+                  new_ast_select_groupby(
+                    NULL,
+                    new_ast_select_having(NULL, NULL)
+                  )
+                )
+              )
+            )
+          ),
+          NULL
+        ),
+        new_ast_select_orderby(
+          NULL,
+          new_ast_select_limit(
+            NULL,
+            new_ast_select_offset(NULL, NULL)
+          )
+        )
+      )
+    );
+    ast_set_right(ast, NULL);
+
+    // for debugging, dump the generated ast without trying to validate it at all
+    // print_root_ast(ast->parent);
+    // for debugging dump the tree
+    // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+
+    AST_REWRITE_INFO_RESET();
+}
+
+
 #endif

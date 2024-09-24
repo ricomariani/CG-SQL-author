@@ -91386,18 +91386,30 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-SET a_string := json('[1]');
+SET a_string := ( SELECT json('[1]') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json'
-
-  {assign}: err
+  {assign}: a_string: text variable was_set
   | {name a_string}: a_string: text variable was_set
-  | {call}: err
-    | {name json}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {strlit '[1]'}: text notnull
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name json}: text notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '[1]'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -91475,18 +91487,30 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-SET blob_var := jsonb('[1]');
+SET blob_var := ( SELECT jsonb('[1]') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'jsonb'
-
-  {assign}: err
+  {assign}: blob_var: blob variable was_set
   | {name blob_var}: blob_var: blob variable was_set
-  | {call}: err
-    | {name jsonb}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {strlit '[1]'}: text notnull
+  | {select_if_nothing_throw_expr}: _anon: blob notnull
+    | {select_stmt}: _anon: blob notnull
+      | {select_core_list}: select: { _anon: blob notnull }
+      | | {select_core}: select: { _anon: blob notnull }
+      |   | {select_expr_list_con}: select: { _anon: blob notnull }
+      |     | {select_expr_list}: select: { _anon: blob notnull }
+      |     | | {select_expr}: blob notnull
+      |     |   | {call}: blob notnull
+      |     |     | {name jsonb}: blob notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '[1]'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -91542,16 +91566,28 @@ SELECT json_array(1, 2);
 
 The statement ending at line XXXX
 
-SET a_string := json_array();
+SET a_string := ( SELECT json_array() IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json_array'
-
-  {assign}: err
+  {assign}: a_string: text variable was_set
   | {name a_string}: a_string: text variable was_set
-  | {call}: err
-    | {name json_array}
-    | {call_arg_list}
-      | {call_filter_clause}
+  | {select_if_nothing_throw_expr}: _anon: text
+    | {select_stmt}: _anon: text
+      | {select_core_list}: select: { _anon: text }
+      | | {select_core}: select: { _anon: text }
+      |   | {select_expr_list_con}: select: { _anon: text }
+      |     | {select_expr_list}: select: { _anon: text }
+      |     | | {select_expr}: text
+      |     |   | {call}: text
+      |     |     | {name json_array}: text
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -91572,7 +91608,12 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 2 must not be a blo
   |     |       | {arg_list}: ok
   |     |         | {int 1}: integer notnull
   |     |         | {arg_list}
-  |     |           | {name blob_var}: blob_var: blob variable was_set
+  |     |           | {call}: blob_var: blob notnull variable was_set
+  |     |           | | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
+  |     |           | | {call_arg_list}
+  |     |           |   | {call_filter_clause}
+  |     |           |   | {arg_list}: ok
+  |     |           |     | {name blob_var}: blob_var: blob inferred_notnull variable was_set
   |     |           | {arg_list}
   |     |             | {int 3}: integer notnull
   |     | {select_from_etc}: ok
@@ -91691,18 +91732,30 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-SET an_int := json_array_length('x');
+SET an_int := ( SELECT json_array_length('x') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json_array_length'
-
-  {assign}: err
+  {assign}: an_int: integer variable was_set
   | {name an_int}: an_int: integer variable was_set
-  | {call}: err
-    | {name json_array_length}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {strlit 'x'}: text notnull
+  | {select_if_nothing_throw_expr}: _anon: integer notnull
+    | {select_stmt}: _anon: integer notnull
+      | {select_core_list}: select: { _anon: integer notnull }
+      | | {select_core}: select: { _anon: integer notnull }
+      |   | {select_expr_list_con}: select: { _anon: integer notnull }
+      |     | {select_expr_list}: select: { _anon: integer notnull }
+      |     | | {select_expr}: integer notnull
+      |     |   | {call}: integer notnull
+      |     |     | {name json_array_length}: integer notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -91838,18 +91891,30 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text
 
 The statement ending at line XXXX
 
-SET an_int := json_error_position('x');
+SET an_int := ( SELECT json_error_position('x') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json_error_position'
-
-  {assign}: err
+  {assign}: an_int: integer variable was_set
   | {name an_int}: an_int: integer variable was_set
-  | {call}: err
-    | {name json_error_position}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {strlit 'x'}: text notnull
+  | {select_if_nothing_throw_expr}: _anon: integer notnull
+    | {select_stmt}: _anon: integer notnull
+      | {select_core_list}: select: { _anon: integer notnull }
+      | | {select_core}: select: { _anon: integer notnull }
+      |   | {select_expr_list_con}: select: { _anon: integer notnull }
+      |     | {select_expr_list}: select: { _anon: integer notnull }
+      |     | | {select_expr}: integer notnull
+      |     |   | {call}: integer notnull
+      |     |     | {name json_error_position}: integer notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -91879,20 +91944,32 @@ SELECT json_extract('{"x":0}', '$.x');
 
 The statement ending at line XXXX
 
-SET a_string := json_extract('{"x":0}', '$.x');
+SET a_string := ( SELECT json_extract('{"x":0}', '$.x') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json_extract'
-
-  {assign}: err
+  {assign}: a_string: text variable was_set
   | {name a_string}: a_string: text variable was_set
-  | {call}: err
-    | {name json_extract}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {strlit '{"x":0}'}: text notnull
-        | {arg_list}
-          | {strlit '$.x'}: text notnull
+  | {select_if_nothing_throw_expr}: _anon: text
+    | {select_stmt}: _anon: text
+      | {select_core_list}: select: { _anon: text }
+      | | {select_core}: select: { _anon: text }
+      |   | {select_expr_list_con}: select: { _anon: text }
+      |     | {select_expr_list}: select: { _anon: text }
+      |     | | {select_expr}: text
+      |     |   | {call}: text
+      |     |     | {name json_extract}: text
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '{"x":0}'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit '$.x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -92117,22 +92194,34 @@ SELECT json_insert(nullable('{"x":0}'), '$.x', 1, '$.y', 2);
 
 The statement ending at line XXXX
 
-SET a_string := json_insert('{"x":0}', '$.x', 2);
+SET a_string := ( SELECT json_insert('{"x":0}', '$.x', 2) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'json_insert'
-
-  {assign}: err
+  {assign}: a_string: text variable was_set
   | {name a_string}: a_string: text variable was_set
-  | {call}: err
-    | {name json_insert}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {strlit '{"x":0}'}: text notnull
-        | {arg_list}
-          | {strlit '$.x'}: text notnull
-          | {arg_list}
-            | {int 2}: integer notnull
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name json_insert}: text notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '{"x":0}'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit '$.x'}: text notnull
+      |     |           | {arg_list}
+      |     |             | {int 2}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 
 The statement ending at line XXXX
 
@@ -92185,7 +92274,12 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 3 must not be a blo
   |     |         | {arg_list}
   |     |           | {strlit '$.x'}: text notnull
   |     |           | {arg_list}
-  |     |             | {name blob_var}: blob_var: blob variable was_set
+  |     |             | {call}: blob_var: blob notnull variable was_set
+  |     |               | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
+  |     |               | {call_arg_list}
+  |     |                 | {call_filter_clause}
+  |     |                 | {arg_list}: ok
+  |     |                   | {name blob_var}: blob_var: blob inferred_notnull variable was_set
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}

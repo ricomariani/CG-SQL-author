@@ -570,6 +570,7 @@ static symtab *upgrade_procs;
 static symtab *ad_hoc_migrates;
 static symtab *builtin_funcs;
 static symtab *builtin_special_funcs;
+static symtab *builtin_sql_rewrites;
 static symtab *funcs;
 static symtab *unchecked_funcs;
 static symtab *exprs;
@@ -8463,17 +8464,15 @@ static void sem_func_ltrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
 }
 
-static void sem_func_json(ast_node *ast, uint32_t arg_count) {
+static void sem_func_json_helper(ast_node *ast, uint32_t arg_count, sem_t result_type) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // json can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // one args
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
@@ -8489,7 +8488,7 @@ static void sem_func_json(ast_node *ast, uint32_t arg_count) {
   }
 
   // type text, not null if arg1 is not null
-  sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
+  sem_t sem_type = result_type | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
 
   // add sensitivity if either is sensitive
   sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
@@ -8500,41 +8499,12 @@ static void sem_func_json(ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg1->sem->kind;
 }
 
+static void sem_func_json(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
 static void sem_func_jsonb(ast_node *ast, uint32_t arg_count) {
-  Contract(is_ast_call(ast));
-  EXTRACT_NAME_AST(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
-
-  // jsonb can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
-
-  // one args
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return;
-  }
-
-  ast_node *arg1 = first_arg(arg_list);
-
-  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
-    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
-    record_error(ast);
-    return;
-  }
-
-  // type text, not null if arg1 is not null
-  sem_t sem_type = SEM_TYPE_BLOB | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
-
-  // add sensitivity if either is sensitive
-  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
-
-  name_ast->sem = ast->sem = new_sem(sem_type);
-
-  // preserve the string kind of the main arg, otherwise no kind checks needed for json
-  ast->sem->kind = arg1->sem->kind;
+  sem_func_json_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
 static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
@@ -8544,10 +8514,8 @@ static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t 
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // json_array can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // No argument can be a blob
   int arg_number = 1;
@@ -8586,10 +8554,8 @@ static void sem_func_json_array_length(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // json_array_length can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (arg_count != 1 && arg_count != 2) {
     sem_validate_arg_count(ast, arg_count, 2);
@@ -8630,10 +8596,8 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // json_array_length can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
@@ -8660,10 +8624,8 @@ static void sem_func_json_extract_helper(ast_node *ast, uint32_t arg_count, sem_
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // json_array can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (arg_count < 2) {
     sem_validate_arg_count(ast, arg_count, 2);
@@ -8718,10 +8680,8 @@ static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t se
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // json_array can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (arg_count < 3) {
     sem_validate_arg_count(ast, arg_count, 3);
@@ -10488,6 +10448,13 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
     if (entry) {
       call_aggr_or_user_def_func = 1;
     }
+  }
+  if (entry) {
+     if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE) && symtab_find(builtin_sql_rewrites, name)) {
+       rewrite_as_select_expr(ast);
+       sem_expr(ast);
+       return;
+     }
   }
   if (entry) {
     sem_arg_list(arg_list, IS_NOT_COUNT);
@@ -25542,6 +25509,10 @@ cql_noexport void exit_on_validating_schema() {
 #undef FUNC_INIT
 #define FUNC_INIT(x) symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x)
 
+#undef FUNC_REWRITE_INIT
+#define FUNC_REWRITE_INIT(x) { symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x); \
+	                       symtab_add(builtin_sql_rewrites, #x, (void *)1);  }
+
 // A special function is one whose arguments require special treatment during
 // semantic analysis, for whatever reason. The procedure that does the analysis
 // (of type `sem_special_func`) must therefore be sure to analyze its argument
@@ -25575,6 +25546,7 @@ cql_noexport void sem_main(ast_node *ast) {
   exprs = symtab_new();
   builtin_funcs = symtab_new();
   builtin_special_funcs = symtab_new();
+  builtin_sql_rewrites = symtab_new();
   funcs = symtab_new();
   interfaces = symtab_new();
   unchecked_funcs = symtab_new();
@@ -25777,22 +25749,23 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(random);
   FUNC_INIT(likely);
   FUNC_INIT(cql_compressed);
-  FUNC_INIT(json);
-  FUNC_INIT(jsonb);
-  FUNC_INIT(json_array);
-  FUNC_INIT(jsonb_array);
-  FUNC_INIT(json_array_length);
-  FUNC_INIT(json_error_position);
-  FUNC_INIT(json_extract);
-  FUNC_INIT(jsonb_extract);
-  FUNC_INIT(json_insert);
-  FUNC_INIT(json_replace);
-  FUNC_INIT(json_set);
-  FUNC_INIT(jsonb_insert);
-  FUNC_INIT(jsonb_replace);
-  FUNC_INIT(jsonb_set);
-  FUNC_INIT(json_remove);
-  FUNC_INIT(jsonb_remove);
+
+  FUNC_REWRITE_INIT(json);
+  FUNC_REWRITE_INIT(jsonb);
+  FUNC_REWRITE_INIT(json_array);
+  FUNC_REWRITE_INIT(jsonb_array);
+  FUNC_REWRITE_INIT(json_array_length);
+  FUNC_REWRITE_INIT(json_error_position);
+  FUNC_REWRITE_INIT(json_extract);
+  FUNC_REWRITE_INIT(jsonb_extract);
+  FUNC_REWRITE_INIT(json_insert);
+  FUNC_REWRITE_INIT(json_replace);
+  FUNC_REWRITE_INIT(json_set);
+  FUNC_REWRITE_INIT(jsonb_insert);
+  FUNC_REWRITE_INIT(jsonb_replace);
+  FUNC_REWRITE_INIT(jsonb_set);
+  FUNC_REWRITE_INIT(json_remove);
+  FUNC_REWRITE_INIT(jsonb_remove);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);
@@ -25969,6 +25942,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(ref_targets_for_source_table);
   SYMTAB_CLEANUP(builtin_funcs);
   SYMTAB_CLEANUP(builtin_special_funcs)
+  SYMTAB_CLEANUP(builtin_sql_rewrites)
   SYMTAB_CLEANUP(current_region_image);
   SYMTAB_CLEANUP(exprs);
   SYMTAB_CLEANUP(funcs);

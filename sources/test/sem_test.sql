@@ -24493,8 +24493,9 @@ select json('[1]');
 select json();
 
 -- TEST json function in non SQL-context
--- + {call}: err
--- * error: % function may not appear in this context 'json'
+-- verify rewrite
+-- + SET a_string := ( SELECT json('[1]') IF NOTHING THEN THROW );
+-- - error:
 a_string := json('[1]');
 
 -- TEST json function in non SQL-context
@@ -24514,8 +24515,9 @@ select jsonb('[1]');
 select jsonb();
 
 -- TEST json function in non SQL-context
--- + {call}: err
--- * error: % function may not appear in this context 'jsonb'
+-- verify rewrite
+-- + SET blob_var := ( SELECT jsonb('[1]') IF NOTHING THEN THROW );
+-- - error:
 blob_var := jsonb('[1]');
 
 -- TEST json function in non SQL-context
@@ -24531,8 +24533,9 @@ select jsonb(1);
 select json_array(1,2);
 
 -- TEST: json function outside of SQL
--- + {call}: err
--- * error: % function may not appear in this context 'json_array'
+-- verify rewrite
+-- + SET a_string := ( SELECT json_array() IF NOTHING THEN THROW );
+-- - error:
 a_string := json_array();
 
 -- TEST: no blobs allowed
@@ -24568,8 +24571,9 @@ select json_array_length('', '$.x');
 select json_array_length('', '$.x', '');
 
 -- TEST: json function outside of SQL
--- + {call}: err
--- * error: % function may not appear in this context 'json_array_length'
+-- verify rewrite
+-- + SET an_int := ( SELECT json_array_length('x') IF NOTHING THEN THROW );
+-- - error:
 an_int := json_array_length('x');
 
 -- TEST json function for JSON array_length with wrong arg type
@@ -24600,8 +24604,8 @@ select json_error_position('', '');
 select json_error_position(1);
 
 -- TEST: json function outside of SQL
--- + {call}: err
--- * error: % function may not appear in this context 'json_error_position'
+-- + SET an_int := ( SELECT json_error_position('x') IF NOTHING THEN THROW );
+-- - error:
 an_int := json_error_position('x');
 
 -- TEST json function for JSON extraction
@@ -24612,8 +24616,9 @@ an_int := json_error_position('x');
 select json_extract('{"x":0}', '$.x');
 
 -- TEST: json function outside of SQL
--- + {call}: err
--- * error: % function may not appear in this context 'json_extract'
+-- verify rewrite
+-- + SET a_string := ( SELECT json_extract('{"x":0}', '$.x') IF NOTHING THEN THROW );
+-- - error:
 a_string := json_extract('{"x":0}', '$.x');
 
 -- TEST: only json types allowed
@@ -24661,8 +24666,9 @@ select json_insert('{"x":0}', '$.x', 1, '$.y', 2);
 select json_insert(nullable('{"x":0}'), '$.x', 1, '$.y', 2);
 
 -- TEST: json function outside of SQL
--- + {call}: err
--- * error: % function may not appear in this context 'json_insert'
+-- verify rewrite
+-- + SET a_string := ( SELECT json_insert('{"x":0}', '$.x', 2) IF NOTHING THEN THROW );
+-- - error:
 a_string := json_insert('{"x":0}', '$.x', 2);
 
 -- TEST: only json types allowed

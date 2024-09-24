@@ -308,6 +308,8 @@ CONCAT                                { put_quoted("||"); }
 DIV_EQ                                { put_quoted("/="); }
 EQEQ                                  { put_quoted("=="); }
 GE                                    { put_quoted(">="); }
+JEX1                                  { put_quoted("->"); }
+JEX2                                  { put_quoted("->>"); }
 LE                                    { put_quoted("<="); }
 LS                                    { put_quoted("<<"); }
 LS_EQ                                 { put_quoted("<<="); }

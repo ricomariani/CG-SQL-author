@@ -24715,3 +24715,44 @@ select json_set();
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'jsonb_set'
 select jsonb_set();
+
+-- TEST json function for JSON object
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name json_object}: text notnull
+-- - error:
+select json_object('x', 1, 'y', 2);
+
+-- TEST json function for JSON object nullable value
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name json_object}: text
+-- - error:
+select json_object(nullable('x'), 1, 'y', 2);
+
+-- TEST: json function outside of SQL
+-- verify rewrite
+-- + SET a_string := ( SELECT json_object('x', 1, 'y', 2) IF NOTHING THEN THROW );
+-- - error:
+a_string := json_object('x', 1, 'y', 2);
+
+-- TEST: no blob types allowed
+-- + {call}: err
+-- * error: % argument 2 must not be a blob or object 'json_object'
+select json_object('x', blob_var);
+
+-- TEST: only text paths allowed
+-- + {call}: err
+-- * error: % argument 1 must be json text identifier 'json_object'
+select json_object(1, 1);
+
+-- TEST json function for JSON insert wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_object'
+select json_object(1);
+
+-- TEST json function for JSON insert wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'jsonb_object'
+select jsonb_object(1);
+

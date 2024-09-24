@@ -8464,6 +8464,7 @@ static void sem_func_ltrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
 }
 
+// helper for json() and jsonb()
 static void sem_func_json_helper(ast_node *ast, uint32_t arg_count, sem_t result_type) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -8507,6 +8508,7 @@ static void sem_func_jsonb(ast_node *ast, uint32_t arg_count) {
   sem_func_json_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
+// helper for json_array() and jsonb_array()
 static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -8617,6 +8619,7 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(sem_type_result);
 }
 
+// helper for json_extract() jsonb_extract() as well as json_remove() and jsonb_remove()
 static void sem_func_json_extract_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -8628,7 +8631,7 @@ static void sem_func_json_extract_helper(ast_node *ast, uint32_t arg_count, sem_
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (arg_count < 2) {
-    sem_validate_arg_count(ast, arg_count, 2);
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;
   }
 
@@ -8673,6 +8676,7 @@ static void sem_func_jsonb_extract(ast_node *ast, uint32_t arg_count) {
   sem_func_json_extract_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
+// helper for json_insert(), json_set(), json_replace() and jsonb_ of the same
 static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -8683,8 +8687,9 @@ static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t se
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (arg_count < 3) {
-    sem_validate_arg_count(ast, arg_count, 3);
+  // any even number of args is wrong including zero
+  if (arg_count % 2 == 0) {
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;
   }
 
@@ -8768,6 +8773,70 @@ static void sem_func_jsonb_remove(ast_node *ast, uint32_t arg_count) {
   // same rules as extract
   sem_func_json_extract_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
+
+// helper for json_object() and jsonb_object()
+static void sem_func_json_object_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  // any odd number of args is wrong including zero
+  if (arg_count % 2 == 1) {
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+    return;
+  }
+
+  sem_t nullable = SEM_TYPE_NOTNULL;
+
+  // No argument can be a blob
+  int arg_number = 1;
+  for (ast_node *node = arg_list; node; node = node->right) {
+    sem_t sem_type = first_arg(node)->sem->sem_type;
+
+    CSTR msg = NULL;
+    if (arg_number % 2) {
+      if (!is_text(sem_type)) {
+        msg = dup_printf("CQL0504: argument %d must be json text identifier", arg_number);
+      }
+    }
+    else {
+      if (is_blob(sem_type) || is_object(sem_type)) {
+        msg = dup_printf("CQL0505: argument %d must not be a blob or object", arg_number);
+      }
+    }
+
+    if (msg) {
+        report_error(ast, msg, name);
+        record_error(ast);
+        return;
+    }
+
+    // keep not null only if everything is not null
+    nullable &= sem_type;
+
+    // add sensitivity if any is sensitive
+    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
+
+    arg_number++;
+  }
+
+  // kind is not preserved, there is normally more than one
+  name_ast->sem = ast->sem = new_sem(sem_type_result | nullable);
+}
+
+static void sem_func_json_object(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_object_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_func_jsonb_object(ast_node *ast, uint32_t arg_count) {
+  sem_func_json_object_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
 
 // rtrim has the same semantics as trim
 static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
@@ -25511,7 +25580,7 @@ cql_noexport void exit_on_validating_schema() {
 
 #undef FUNC_REWRITE_INIT
 #define FUNC_REWRITE_INIT(x) { symtab_add(builtin_funcs, #x, (void *)sem_func_ ## x); \
-	                       symtab_add(builtin_sql_rewrites, #x, (void *)1);  }
+                               symtab_add(builtin_sql_rewrites, #x, (void *)1);  }
 
 // A special function is one whose arguments require special treatment during
 // semantic analysis, for whatever reason. The procedure that does the analysis
@@ -25766,6 +25835,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(jsonb_set);
   FUNC_REWRITE_INIT(json_remove);
   FUNC_REWRITE_INIT(jsonb_remove);
+  FUNC_REWRITE_INIT(json_object);
+  FUNC_REWRITE_INIT(jsonb_object);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

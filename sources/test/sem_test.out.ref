@@ -93188,3 +93188,219 @@ SET a_string := ( SELECT json_quote(1) IF NOTHING THEN THROW );
         | {select_limit}
           | {select_offset}
 
+The statement ending at line XXXX
+
+SELECT json_group_array(foo.id)
+  FROM foo;
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json_group_array}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {dot}: id: integer notnull
+  |     |           | {name foo}
+  |     |           | {name id}
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_group_array()
+  FROM foo;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_group_array'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_group_array}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_group_array();
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'json_group_array'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_group_array}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT jsonb_group_array();
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'jsonb_group_array'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name jsonb_group_array}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_group_object(foo.id, foo.id)
+  FROM foo;
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json_group_object}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {dot}: id: integer notnull
+  |     |         | | {name foo}
+  |     |         | | {name id}
+  |     |         | {arg_list}
+  |     |           | {dot}: id: integer notnull
+  |     |             | {name foo}
+  |     |             | {name id}
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_group_object()
+  FROM foo;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_group_object'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_group_object}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: TABLE { foo: foo }
+  |       | {table_or_subquery_list}: TABLE { foo: foo }
+  |       | | {table_or_subquery}: TABLE { foo: foo }
+  |       |   | {name foo}: TABLE { foo: foo }
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_group_object();
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'json_group_object'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_group_object}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT jsonb_group_object();
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'jsonb_group_object'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name jsonb_group_object}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+

@@ -8971,6 +8971,75 @@ static void sem_func_json_quote(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(sem_type);
 }
 
+static void sem_aggr_func_json_group_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_aggregate_context(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
+  sem_t sensitive = arg1->sem->sem_type & SEM_TYPE_SENSITIVE;
+
+  // kind is not preserved
+  name_ast->sem = ast->sem = new_sem(sem_type_result | notnull | sensitive);
+}
+
+static void sem_aggr_func_json_group_array(ast_node *ast, uint32_t arg_count) {
+  sem_aggr_func_json_group_array_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_aggr_func_jsonb_group_array(ast_node *ast, uint32_t arg_count) {
+  sem_aggr_func_json_group_array_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
+static void sem_aggr_func_json_group_object_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_aggregate_context(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
+  sem_t sensitive = arg1->sem->sem_type & SEM_TYPE_SENSITIVE;
+
+  ast_node *arg2 = second_arg(arg_list);
+
+  notnull &= arg2->sem->sem_type & SEM_TYPE_NOTNULL;
+  sensitive |= arg2->sem->sem_type & SEM_TYPE_SENSITIVE;
+
+  // kind is not preserved
+  name_ast->sem = ast->sem = new_sem(sem_type_result | notnull | sensitive);
+}
+
+static void sem_aggr_func_json_group_object(ast_node *ast, uint32_t arg_count) {
+  sem_aggr_func_json_group_object_helper(ast, arg_count, SEM_TYPE_TEXT);
+}
+
+static void sem_aggr_func_jsonb_group_object(ast_node *ast, uint32_t arg_count) {
+  sem_aggr_func_json_group_object_helper(ast, arg_count, SEM_TYPE_BLOB);
+}
+
 // rtrim has the same semantics as trim
 static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
@@ -25910,6 +25979,10 @@ cql_noexport void sem_main(ast_node *ast) {
   AGGR_FUNC_INIT(total);
   AGGR_FUNC_INIT(avg);
   AGGR_FUNC_INIT(group_concat);
+  AGGR_FUNC_INIT(json_group_array);
+  AGGR_FUNC_INIT(jsonb_group_array);
+  AGGR_FUNC_INIT(json_group_object);
+  AGGR_FUNC_INIT(jsonb_group_object);
 
   FUNC_INIT(ifnull);
   FUNC_INIT(nullif);

@@ -24869,3 +24869,44 @@ select json_quote();
 -- - error:
 a_string := json_quote(1);
 
+-- TEST json_group_array
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {name json_group_array}: text notnull
+-- - error:
+select json_group_array(foo.id) from foo;
+
+-- TEST json_group_array with wrong args
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_group_array'
+select json_group_array() from foo;
+
+-- TEST json_group_array in non aggregate context
+-- + {call}: err
+-- * error: % aggregates only make sense if there is a FROM clause 'json_group_array'
+select json_group_array();
+
+-- TEST jsonb_group_array in non aggregate context
+-- + {call}: err
+-- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_array'
+select jsonb_group_array();
+
+-- TEST json_group_object
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {name json_group_object}: text notnull
+-- - error:
+select json_group_object(foo.id, foo.id) from foo;
+
+-- TEST json_group_object with wrong args
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_group_object'
+select json_group_object() from foo;
+
+-- TEST json_group_object in non aggregate context
+-- + {call}: err
+-- * error: % aggregates only make sense if there is a FROM clause 'json_group_object'
+select json_group_object();
+
+-- TEST jsonb_group_object in non aggregate context
+-- + {call}: err
+-- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_object'
+select jsonb_group_object();

@@ -8148,7 +8148,7 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
 
   // if no args then fail the arg count test...
   if (arg_count == 0) {
-    sem_validate_arg_count(ast, arg_count, 1);
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;
   }
 
@@ -8226,13 +8226,13 @@ static void sem_func_round(ast_node *ast, uint32_t arg_count) {
 
   // if no args then fail the arg count test...
   if (arg_count == 0) {
-    sem_validate_arg_count(ast, arg_count, 1);
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;
   }
 
   // if too many args
   if (arg_count > 2) {
-    sem_validate_arg_count(ast, arg_count, 2);
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;
   }
 
@@ -8251,7 +8251,7 @@ static void sem_func_round(ast_node *ast, uint32_t arg_count) {
   if (arg_count == 2) {
     ast_node *arg2 = second_arg(arg_list);
     if (!is_numeric_expr(arg2)) {
-      report_error(name_ast, "CQL0082: second argument must be numeric", name);
+      report_error(name_ast, "CQL0082: argument 2 must be numeric", name);
       record_error(ast);
       return;
     }
@@ -8299,7 +8299,7 @@ static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
 
   if (!is_numeric_expr(arg) || is_ast_null(arg)) {
-    report_error(name_ast, "CQL0082: argument must be numeric", name);
+    report_error(name_ast, "CQL0082: argument 1 must be numeric", name);
     record_error(ast);
     return;
   }
@@ -8565,7 +8565,7 @@ static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, se
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (arg_count != 1 && arg_count != 2) {
-    sem_validate_arg_count(ast, arg_count, 2);
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
     return;
   }
 
@@ -8903,6 +8903,46 @@ static void sem_func_jsonb_patch(ast_node *ast, uint32_t arg_count) {
   sem_func_json_patch_helper(ast, arg_count, SEM_TYPE_BLOB);
 }
 
+static void sem_func_json_valid(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  if (arg_count != 1 && arg_count != 2) {
+    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
+    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
+    record_error(ast);
+    return;
+  }
+
+  sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
+
+  if (arg_count == 2) {
+    ast_node *arg2 = second_arg(arg_list);
+
+    if (!is_numeric_expr(arg2)) {
+      report_error(name_ast, "CQL0082: argument 2 must be numeric", name);
+      record_error(ast);
+      return;
+    }
+
+    notnull &= arg2->sem->sem_type & SEM_TYPE_NOTNULL;
+  }
+
+  // kind is not preserved
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_BOOL | notnull);
+}
 
 // rtrim has the same semantics as trim
 static void sem_func_rtrim(ast_node *ast, uint32_t arg_count) {
@@ -8993,7 +9033,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
 
   if (!is_numeric_expr(arg)) {
-    report_error(name_ast, "CQL0082: argument must be numeric", name);
+    report_error(name_ast, "CQL0082: argument 1 must be numeric", name);
     record_error(ast);
     return;
   }
@@ -9031,7 +9071,7 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
 
   if (!is_numeric_expr(arg)) {
-    report_error(name_ast, "CQL0082: argument must be numeric", name);
+    report_error(name_ast, "CQL0082: argument 1 must be numeric", name);
     record_error(ast);
     return;
   }
@@ -9331,7 +9371,7 @@ static void sem_validate_sum_or_total(ast_node *ast, uint32_t arg_count) {
 
   // you can sum any numeric
   if (!is_numeric_expr(arg) || is_ast_null(arg)) {
-    report_error(name_ast, "CQL0083: argument must be numeric", name);
+    report_error(name_ast, "CQL0083: argument 1 must be numeric", name);
     record_error(ast);
     return;
   }
@@ -9427,7 +9467,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
 
   // the first index can be any numeric
   if (!is_numeric_expr(arg2) || is_ast_null(arg2)) {
-    report_error(name_ast, "CQL0083: argument must be numeric", name);
+    report_error(name_ast, "CQL0083: argument 2 must be numeric", name);
     record_error(ast);
     return;
   }
@@ -9449,7 +9489,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   // the second index can be any numeric (if it exists)
   if (arg3) {
     if (!is_numeric_expr(arg3) || is_ast_null(arg3)) {
-      report_error(name_ast, "CQL0083: argument must be numeric", name);
+      report_error(name_ast, "CQL0083: argument 3 must be numeric", name);
       record_error(ast);
       return;
     }
@@ -25907,6 +25947,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(jsonb_patch);
   FUNC_REWRITE_INIT(json_pretty);
   FUNC_REWRITE_INIT(json_type);
+  FUNC_REWRITE_INIT(json_valid);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

@@ -3139,7 +3139,7 @@ set X := (select sign(1,2));
 -- TEST: argument in sign is not numeric
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument must be numeric 'sign'
+-- * error: % argument 1 must be numeric 'sign'
 -- +1 error:
 set X := (select sign('x'));
 
@@ -3182,7 +3182,7 @@ set X := (select round(1,2,3));
 -- TEST: round second arg not numeric
 -- + {assign}: err
 -- + {call}: err
--- * error: % second argument must be numeric 'round'
+-- * error: % argument 2 must be numeric 'round'
 -- +1 error:
 set X := (select round(1.5,'x'));
 
@@ -3239,14 +3239,14 @@ set X := (select avg(1,2) from foo);
 -- TEST: bogus string type in average
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument must be numeric 'avg'
+-- * error: % argument 1 must be numeric 'avg'
 -- +1 error:
 set X := (select avg('foo') from foo);
 
 -- TEST: bogus null literal in average
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument must be numeric 'avg'
+-- * error: % argument 1 must be numeric 'avg'
 -- +1 error:
 set X := (select avg(null) from foo);
 
@@ -3919,7 +3919,7 @@ set X := (select sum(1,2) from foo);
 set X := (select id from foo limit sum(1));
 
 -- TEST: sum used with text
--- * error: % argument must be numeric 'sum'
+-- * error: % argument 1 must be numeric 'sum'
 -- + {assign}: err
 -- + {call}: err
 set X := (select sum('x') from foo);
@@ -11273,7 +11273,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument must be numeric 'substr'
+-- * error: % argument 2 must be numeric 'substr'
 -- +1 error:
 proc substr_test_arg2string()
 begin
@@ -11284,7 +11284,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument must be numeric 'substr'
+-- * error: % argument 3 must be numeric 'substr'
 -- +1 error:
 proc substr_test_arg3string()
 begin
@@ -12855,7 +12855,7 @@ select abs() from bar;
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name abs}
--- * error: % argument must be numeric 'abs'
+-- * error: % argument 1 must be numeric 'abs'
 -- +1 error:
 select abs('Horty');
 
@@ -24797,7 +24797,7 @@ select jsonb_patch(1);
 -- - error:
 select json_pretty('[1]');
 
--- TEST json function for JSON array_length
+-- TEST json function for JSON json_type
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {call}: text notnull
 -- + {name json_type}: text notnull
@@ -24811,3 +24811,37 @@ select json_type('[]');
 -- + {name json_type}: text
 -- - error:
 select json_type('[]', '$.x');
+
+-- TEST json function for json_valid()
+-- + {select_stmt}: select: { _anon: bool notnull }
+-- + {call}: bool notnull
+-- + {name json_valid}: bool notnull
+-- - error:
+select json_valid('{ "name" : "John" }', 6);
+
+-- TEST json function for json_valid()
+-- + {select_stmt}: select: { _anon: bool }
+-- + {call}: bool
+-- + {name json_valid}: bool
+-- - error:
+select json_valid('{ "name" : "John" }', nullable(6));
+
+-- TEST json_valid wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_valid'
+select json_valid();
+
+-- TEST json_valid invalid arg 1
+-- + {call}: err
+-- * error: % argument 1 must be json text or json blob 'json_valid'
+select json_valid(1, 1);
+
+-- TEST json_valid invalid arg 2
+-- + {call}: err
+-- * error: % argument 2 must be numeric 'json_valid'
+select json_valid('[]', '2');
+
+-- TEST: json function outside of SQL
+-- + SET bb := ( SELECT json_valid('[]', 6) IF NOTHING THEN THROW );
+-- - error:
+bb := json_valid('[]', 6);

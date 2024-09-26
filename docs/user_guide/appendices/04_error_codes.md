@@ -659,9 +659,10 @@ Doesn't make any sense.
 
 -----
 
-### CQL0082: argument must be numeric
+### CQL0082: argument [number] must be numeric 'function'
 
-The argument of function must be numeric.
+
+The indicated argument of the named function must be numeric.
 
 -----
 

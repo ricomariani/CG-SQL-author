@@ -10313,7 +10313,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT sign('x') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument must be numeric 'sign'
+test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'sign'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10506,7 +10506,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT round(1.5, 'x') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: second argument must be numeric 'round'
+test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 2 must be numeric 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10823,7 +10823,7 @@ The statement ending at line XXXX
 SET X := ( SELECT avg('foo')
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument must be numeric 'avg'
+test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'avg'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10855,7 +10855,7 @@ The statement ending at line XXXX
 SET X := ( SELECT avg(NULL)
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument must be numeric 'avg'
+test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'avg'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -13598,7 +13598,7 @@ The statement ending at line XXXX
 SET X := ( SELECT sum('x')
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument must be numeric 'sum'
+test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 1 must be numeric 'sum'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -42535,7 +42535,7 @@ BEGIN
   SELECT substr('x', '1', 2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument must be numeric 'substr'
+test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 2 must be numeric 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_arg2string}: err
@@ -42572,7 +42572,7 @@ BEGIN
   SELECT substr('x', 1, '2');
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument must be numeric 'substr'
+test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 3 must be numeric 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_arg3string}: err
@@ -48132,7 +48132,7 @@ The statement ending at line XXXX
 
 SELECT abs('Horty');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument must be numeric 'abs'
+test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'abs'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92917,4 +92917,170 @@ SELECT json_type('[]', '$.x');
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_valid('{ "name" : "John" }', 6);
+
+  {select_stmt}: select: { _anon: bool notnull }
+  | {select_core_list}: select: { _anon: bool notnull }
+  | | {select_core}: select: { _anon: bool notnull }
+  |   | {select_expr_list_con}: select: { _anon: bool notnull }
+  |     | {select_expr_list}: select: { _anon: bool notnull }
+  |     | | {select_expr}: bool notnull
+  |     |   | {call}: bool notnull
+  |     |     | {name json_valid}: bool notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '{ "name" : "John" }'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 6}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_valid('{ "name" : "John" }', nullable(6));
+
+  {select_stmt}: select: { _anon: bool }
+  | {select_core_list}: select: { _anon: bool }
+  | | {select_core}: select: { _anon: bool }
+  |   | {select_expr_list_con}: select: { _anon: bool }
+  |     | {select_expr_list}: select: { _anon: bool }
+  |     | | {select_expr}: bool
+  |     |   | {call}: bool
+  |     |     | {name json_valid}: bool
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '{ "name" : "John" }'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {call}: integer
+  |     |             | {name nullable}: integer
+  |     |             | {call_arg_list}
+  |     |               | {call_filter_clause}
+  |     |               | {arg_list}: ok
+  |     |                 | {int 6}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_valid();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_valid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_valid}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_valid(1, 1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_valid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_valid}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: integer notnull
+  |     |         | {arg_list}
+  |     |           | {int 1}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_valid('[]', '2');
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 2 must be numeric 'json_valid'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_valid}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '[]'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit '2'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SET bb := ( SELECT json_valid('[]', 6) IF NOTHING THEN THROW );
+
+  {assign}: bb: bool variable was_set
+  | {name bb}: bb: bool variable was_set
+  | {select_if_nothing_throw_expr}: _anon: bool notnull
+    | {select_stmt}: _anon: bool notnull
+      | {select_core_list}: select: { _anon: bool notnull }
+      | | {select_core}: select: { _anon: bool notnull }
+      |   | {select_expr_list_con}: select: { _anon: bool notnull }
+      |     | {select_expr_list}: select: { _anon: bool notnull }
+      |     | | {select_expr}: bool notnull
+      |     |   | {call}: bool notnull
+      |     |     | {name json_valid}: bool notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '[]'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {int 6}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 

@@ -1755,4 +1755,5 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_valid'
 test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_valid'
 test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 2 must be numeric 'json_valid'
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_quote'
 semantic errors present; no code gen.

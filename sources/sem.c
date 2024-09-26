@@ -8475,7 +8475,7 @@ static void sem_func_json_helper(ast_node *ast, uint32_t arg_count, sem_t result
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  // one args
+  // one arg
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
   }
@@ -8942,6 +8942,33 @@ static void sem_func_json_valid(ast_node *ast, uint32_t arg_count) {
 
   // kind is not preserved
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_BOOL | notnull);
+}
+
+static void sem_func_json_quote(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // json functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  // one arg
+  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+
+  // type text, not null if arg1 is not null
+  sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
+
+  // add sensitivity if either is sensitive
+  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
+
+  // kind is not preserved
+  name_ast->sem = ast->sem = new_sem(sem_type);
 }
 
 // rtrim has the same semantics as trim
@@ -25948,6 +25975,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(json_pretty);
   FUNC_REWRITE_INIT(json_type);
   FUNC_REWRITE_INIT(json_valid);
+  FUNC_REWRITE_INIT(json_quote);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

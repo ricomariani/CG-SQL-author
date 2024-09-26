@@ -24845,3 +24845,27 @@ select json_valid('[]', '2');
 -- + SET bb := ( SELECT json_valid('[]', 6) IF NOTHING THEN THROW );
 -- - error:
 bb := json_valid('[]', 6);
+
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name json_quote}: text notnull
+-- - error:
+select json_quote(1);
+
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name json_quote}: text
+-- - error:
+select json_quote(nullable(1));
+
+-- TEST json_quote wrong arg count
+-- + {call}: err
+-- * error: % function got incorrect number of arguments 'json_quote'
+select json_quote();
+
+-- TEST json_quote wrong arg count
+-- verify rewrite
+-- + SET a_string := ( SELECT json_quote(1) IF NOTHING THEN THROW );
+-- - error:
+a_string := json_quote(1);
+

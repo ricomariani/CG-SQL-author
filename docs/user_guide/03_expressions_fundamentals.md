@@ -57,10 +57,10 @@ INEQUALITY:     <  <=  >  >=
 BINARY:         << >> & |
 ADDITION:       + -
 MULTIPLICATION: * / %
-CONCAT:         ||
+CONCAT:         || -> ->>
 COLLATE:        COLLATE
 UNARY:          ~  -
-SPECIAL:        x[] x:y x.y f(y) CAST, CASE
+SPECIAL:        x[] x:y x::y x:::y x :type: x.y f(y) CAST, CASE
 ```
 
 The above rules are **not** the same as C's operator precedence rules! Instead,
@@ -315,7 +315,7 @@ they will be preprocessed into normal literals.
 The use of `__FILE__` can give surprising results in the presence of build
 systems; hence, the existence of `@FILE(...)`.
 
-Use of the C-pre-processor is deprecated.
+Use of the C-pre-processor is _deprecated_.
 
 ### Const and Enumerations
 
@@ -1720,6 +1720,75 @@ cql_cleanup:
   cql_object_release(x);
 }
 ```
+
+### Pipeline Function Notation
+
+Function calls can be made using a pipeline notation to chain function results together
+in a way that is clearer.  The general syntax is:
+
+```sql
+   expr : func(...args...)
+```
+
+Which is exactly equivalent to
+
+```sql
+   func(expr, ...args...)
+```
+
+There are three forms of this notation which can be used to select the function name that is desired.
+The function name can include the type of the left operand to create some useful polymorphism.
+
+In general, the forms use `:`, `::`, or `:::` to indicate "more" polymorphism as in the example below:
+
+```sql
+declare x real<joules>;
+
+-- These are the functions that you might call with pipeline notation
+
+declare function foo(x real) real;
+declare function foo_real(x real) real;
+declare function foo_real_joules(x real) real;
+
+-- This is the same as foo(x), the simplest form
+-- If you have this you probably shouldn't also have foo_real() or foo_real_joules()
+let u := x:foo();
+
+-- This is the same as foo_real(x) i.e. the invoked name is func name plus arg type
+-- If you have this you probably shouldn't also have foo() or foo_real_joules()
+let v := x::foo();
+
+-- This is the same as foo_real_joules(x) i.e. the invoked name is func name plus arg type and kind
+-- If you have this you probably shouldn't also have a defintion for foo() or foo_real()
+let z := x:::foo();
+```
+
+Note that in each case `foo` could have included its additional arguments which are placed normally.
+
+
+
+Cast operations also have a pipeline notation:
+
+```sql
+-- This is the same as let i := cast(foo(x) as int);
+let i := x :foo() :int: ;
+```
+
+These operations are particularly useful when working with json data.  For instance:
+
+```sql
+select foo.json : extract('x') :int: :ifnull(0) as X from foo;
+```
+
+This is much easier to read than the equivalent:
+
+```sql
+select ifnull(cast(extract(foo.json 'x') as int), 0) as X from foo;
+```
+
+In all the cases the expression is rewritten into the normal form so SQLite will never see
+the pipeline form.  No special SQLite support is needed.
+
 
 ### Properties and Arrays
 

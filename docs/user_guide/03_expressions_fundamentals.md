@@ -297,6 +297,9 @@ different sources combined with `UNION ALL`.
 > before going to SQLite as the cast is uninteresting except for the type
 > information, which SQLite doesn't need/use anyway.
 
+> NOTE: The trailing cast notation is often helpful for economy here, e.g.
+> `NULL :TEXT:` is a lot shorter than `CAST(TEXT AS NULL)` and is identical.
+
 #### Boolean Literals
 
 The boolean literals `TRUE` and `FALSE` (case insensitive) may be used freely.
@@ -1162,6 +1165,45 @@ unsigned numeric types, so it's always signed arithmetic that is performed.
 > EXCEPTION: The `%` operator doesn't make sense on real values, so real values
 > produce an error.
 
+#### Concatenation `||`
+
+This operator is only valid in a SQL context, it concatenates the text
+representation of its left and right arguments into text.  The arguments
+can be of any type.
+
+#### JSON Operators `->` and `->>`
+
+The JSON extraction operator `->` accepts a JSON text value or JSON blob value
+as its left argument and a valid JSON path as its right argument.  The indicated
+path is extracted and the result is a new, smaller, piece of JSON text.
+
+The extended extraction operator `->>` will return the selected item as a value
+rather than as JSON.  The SQLite documentation can be helpful here:
+
+> Both the `->` and `->>` operators select the same subcomponent of the JSON to
+> their left. The difference is that `->` always returns a JSON representation of
+> that subcomponent and the `->>` operator always returns an SQL representation of
+> that subcomponent.
+
+Importantly, the resulting type of the `->>` operator cannot be known at compile
+time because it will depend on the path value which could be, and often is, a
+non-constant expression. Dynamic typing is not a concept available in CQL, as a
+consequence, in CQL, you must declare the extraction type when using the `->>`
+operator with syntax:
+
+```
+  json_arg ->> :type_spec: path_arg
+```
+
+The type_spec can be any valid type like `int`, `int<foo>`, or a type alias. All
+the normal type expressions are valid.
+
+> NOTE: this form is not a CAST operation, it's a declaration. The type of the
+> expression will be _assumed_ to be the indicated type. SQLite will not see the
+> `:type:` notation when the expression is evaluated.  If a cast is desired
+> simply write one as usual, the trailing cast syntax can be specially convenient
+> when working with JSON.
+
 #### Unary operators `-`, `~`
 
 Unary negation (`-`) and bitwise invert (`~`) are the strongest binding
@@ -1170,6 +1212,30 @@ operators.
 * The `~` operator only works on integer types (not text, not real).
 * The usual promotion rules otherwise apply.
 * If the operand is `NULL`, the result is `NULL`.
+
+### CAST Expressions
+
+The `CAST` expression can be written in two ways, the standard form:
+
+```sql
+  CAST( expr AS type)
+```
+
+And equivalently using pipeline notation
+
+```sql
+  expr :type:
+```
+
+The trailing `:type:` notation has very strong binding,  As shown in
+the order of operations table, it is even stronger than the unary `~`
+operator. It is indended to be used in function pipelines in combination
+with other `:` pipeline operations rather than as part of arithmetic
+and so forth, hence parenthesis are required when using it in other contexts.
+
+The `:type:` form is immediatley converted to the standard `CAST` form
+and so SQLite will never see this alternate notation.  This form is purely
+syntatic sugar.
 
 ### CASE Expressions
 

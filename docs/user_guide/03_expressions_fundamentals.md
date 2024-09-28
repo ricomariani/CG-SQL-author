@@ -289,7 +289,7 @@ special in that it has no storage class. `NULL` is neither a numeric nor a strin
 itself but rather mutates into whatever it is first combined with. For instance,
 `NULL + 1` results in a nullable integer. Because `NULL` has no primitive type,
 in some cases where type knowledge is required, you might have to use the
-`CAST()` function to cast `NULL` to a specific type, such as `CAST(NULL as TEXT)`. 
+`CAST()` function to cast `NULL` to a specific type, such as `CAST(NULL as TEXT)`.
 This construct guarantees type consistency in cases like `SELECT` from
 different sources combined with `UNION ALL`.
 
@@ -1765,7 +1765,24 @@ let z := x:::foo();
 
 Note that in each case `foo` could have included its additional arguments which are placed normally.
 
+The `::` and `:::` versions of the postfix call will include the type of the left argument.  This
+refers to the simple name of the core type only.  Nullability and sensitivity are ignored.
 
+| core type    | suffix |
+|:-------------|-------:|
+| NULL         | null   |
+| BOOL         | bool   |
+| INTEGER      | int    |
+| LONG INTEGER | long   |
+| REAL         | real   |
+| TEXT         | text   |
+| BLOB         | blob   |
+| OBJECT       | object |
+| STRUCT       | cursor |
+
+The `:::` operator adds the type kind if there is one.  Hence names like `foo_real_joules` in the example.
+
+#### Pipeline Cast Operations
 
 Cast operations also have a pipeline notation:
 

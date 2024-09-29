@@ -183,7 +183,7 @@ declare select function table_valued_function no check (t text, i int);
 
 ### Notes on Builtin Functions
 
-Some of the SQLite builtin functions are hard-coded;  these are the
+Some of the SQLite builtin functions are hard-coded; these are the
 functions that have semantics that are not readily captured with a
 simple prototype.  Other SQLite functions can be declared with `declare
 select function ...` and then used.
@@ -236,6 +236,73 @@ CQL's hard-coded builtin list includes:
  * first_value
  * last_value
  * nth_value
+
+*JSON Functions*
+
+ * json
+ * jsonb
+ * json_array
+ * jsonb_array
+ * json_array_length
+ * json_error_position
+ * json_extract
+ * jsonb_extract
+ * json_insert
+ * json_replace
+ * json_set
+ * jsonb_insert
+ * jsonb_replace
+ * jsonb_set
+ * json_remove
+ * jsonb_remove
+ * json_object
+ * jsonb_object
+ * json_patch
+ * jsonb_patch
+ * json_pretty
+ * json_type
+ * json_valid
+ * json_quote
+
+`json_extract` and `jsonb_extract` are peculiar because they do not always return the same type.
+Since CQL has to assume something it assumes that `json_extract` will return `TEXT` and `jsonb_extract`
+will return a `BLOB`.  Importantly, CQL does not add any casting operations into the SQL unless
+they are explicitly added which means in some sense SQLite does not "know" that CQL has made a
+bad assumption, or any assumption.  In many cases, even most cases, a specific type is expected,
+this is a great time to use the pipeline cast notation to "force" the conversion. 
+
+```sql
+  select json_extract('{ "x" : 0 }', '$.x') :int: as X;
+```
+
+This is exactly the same as
+
+```sql
+  select CAST(json_extract('{ "x" : 0 }', '$.x') as int) as X;
+```
+
+*JSON Aggregations*
+
+ * json_group_array
+ * jsonb_group_array
+ * json_group_object
+ * jsonb_group_object
+
+*JSON Table Functions*
+
+The two table functions are readily declared if they are needed like so:
+
+```sql
+DECLARE SELECT FUNC json_each NO CHECK
+   (key BLOB, value BLOB, type TEXT, atom BLOB, id INT, parent INT, fullkey TEXT, path TEXT);
+
+DECLARE SELECT FUNC json_tree NO CHECK
+   (key BLOB, value BLOB, type TEXT, atom BLOB, id INT, parent INT, fullkey TEXT, path TEXT);
+```
+
+> NOTE: key, value, and atom can be any type and will require a cast operation similar to
+> `json_extract`, see the notes above.
+
 
 Special Functions
  * nullable

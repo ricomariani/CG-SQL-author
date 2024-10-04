@@ -10826,7 +10826,31 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
       hard_fail = is_error(ast->left);
     }
     if (!hard_fail) {
-      rewrite_reverse_apply(ast, op);
+      if (ast->right && is_ast_arg_list(ast->right)) {
+        EXTRACT_ANY_NOTNULL(arg, ast->left);
+        EXTRACT_ANY(arg_list, ast->right);
+
+        if (!arg->sem->kind || !arg->sem->kind[0]) {
+          report_error(arg, "left argument must have a type kind", NULL);
+          return true;
+        }
+
+        if (arg_list) {
+          sem_arg_list(arg_list, IS_NOT_COUNT);
+          if (is_error(arg_list)) {
+            record_error(ast);
+            return true;
+          }
+        }
+
+        // no function name form  x:(args)
+        rewrite_reverse_apply_polymorphic(ast);
+      }
+      else {
+        // function name form  x:foo(args)
+        rewrite_reverse_apply(ast, op);
+      }
+
       if (analyze) {
         sem_expr_call(ast, op);
         hard_fail = is_error(ast);

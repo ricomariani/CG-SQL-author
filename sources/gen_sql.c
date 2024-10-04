@@ -75,6 +75,7 @@ static void gen_select_expr_macro_ref(ast_node *ast);
 static void gen_select_expr_macro_arg_ref(ast_node *ast);
 static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
 static void gen_select_expr(ast_node *ast);
+static void gen_arg_list(ast_node *ast);
 
 static int32_t gen_indent = 0;
 static int32_t pending_indent = 0;
@@ -874,7 +875,14 @@ static void gen_binary_no_spaces(ast_node *ast, CSTR op, int32_t pri, int32_t pr
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf("%s", op);
-  gen_expr(ast->right, pri_new + 1);
+  if (is_ast_arg_list(ast->right)) {
+    gen_printf("(");
+    gen_arg_list(ast->right);
+    gen_printf(")");
+  }
+  else {
+    gen_expr(ast->right, pri_new + 1);
+  }
   if (pri_new < pri) gen_printf(")");
 }
 

@@ -1848,6 +1848,48 @@ refers to the simple name of the core type only.  Nullability and sensitivity ar
 
 The `:::` operator adds the type kind if there is one.  Hence names like `foo_real_joules` in the example.
 
+#### Pipeline Overloads
+
+The additional syntax
+
+```sql
+expr:(arg1, arg2, ...)
+```
+
+results in a similar rewrite however:
+
+  * the left argument (here `expr`) must have a type kind (e.g. `object<container>`)
+  * the rewritten function name is the type and kind of the left argument plus the types of all the arguments (if any)
+
+for instance, with these declarations:
+
+```sql
+declare function new_builder() create object<list_builder>;
+declare function object_list_builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+declare function object_list_builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+declare function object_list_builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+declare function to_list_object_list_builder(arg1 object<list_builder>) create object<list>;
+```
+You could write:
+
+```sql
+let list := new_builder():(5):(7.0):(1,2):::to_list();
+```
+
+This expands to the much less readable:
+
+```sql
+LET list :=
+  to_list_object_list_builder(
+    object_list_builder_int_int(
+      object_list_builder_real(
+        object_list_builder_int(
+          new_builder(), 5), 7.0), 1, 2));
+```
+You can use this form to build helper functions that assemble text, arrays, JSON and many other uses.
+Anywhere the "fluent" coding pattern is helpful this syntax gives you a very flexible pattern.  In
+the end it's just rewritten function calls.
+
 #### Pipeline Cast Operations
 
 Cast operations also have a pipeline notation:

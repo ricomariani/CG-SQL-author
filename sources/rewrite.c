@@ -1057,6 +1057,56 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
   head->type = new_call->type;
 }
 
+// Walk through the ast and grab the arg list as well as the function name.
+// Create a new call node using these two and the argument passed in
+// prior to the ':' symbol.
+cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
+  Contract(is_ast_reverse_apply_poly_args(head));
+  EXTRACT_ANY_NOTNULL(argument, head->left);
+  EXTRACT(arg_list, head->right);
+
+  AST_REWRITE_INFO_SET(head->lineno, head->filename);
+
+  // This is the ::: case where we use type and kind
+  sem_t sem_type = core_type_of(argument->sem->sem_type);
+
+  CHARBUF_OPEN(new_name);
+
+  Contract(argument->sem);
+  Contract(argument->sem->kind);
+
+  bprintf(&new_name, "%s_%s", rewrite_type_suffix(sem_type), argument->sem->kind);
+
+  ast_node *item = arg_list;
+  while (item) {
+    EXTRACT_ANY_NOTNULL(arg, item->left);
+
+    bprintf(&new_name, "_%s", rewrite_type_suffix(arg->sem->sem_type));
+    item = item->right;
+  }
+
+  // we need to remove any internal space
+  rewrite_replace_space_if_needed(new_name.ptr);
+
+  // further changes would be invalid, the string has escaped into the tree
+  ast_node *function_name = new_ast_str(Strdup(new_name.ptr));
+
+  CHARBUF_CLOSE(new_name);
+
+  ast_node *new_arg_list =
+    new_ast_call_arg_list(
+      new_ast_call_filter_clause(NULL, NULL),
+      new_ast_arg_list(argument, arg_list)
+    );
+  ast_node *new_call = new_ast_call(function_name, new_arg_list);
+
+  AST_REWRITE_INFO_RESET();
+
+  ast_set_right(head, new_call->right);
+  ast_set_left(head, new_call->left);
+  head->type = new_call->type;
+}
+
 // Walk the param list looking for any of the "like T" forms
 // if any is found, replace that parameter with the table/shape columns
 cql_noexport void rewrite_params(ast_node *head, bytebuf *args_info) {

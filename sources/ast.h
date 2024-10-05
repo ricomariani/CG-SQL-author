@@ -831,6 +831,7 @@ AST(region_spec);
 AST(reverse_apply)
 AST(reverse_apply_poly)
 AST(reverse_apply_typed)
+AST(reverse_apply_poly_args)
 AST(rs_eq)
 AST(rshift)
 AST(query_parts_macro_arg_ref)

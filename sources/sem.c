@@ -10826,7 +10826,32 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
       hard_fail = is_error(ast->left);
     }
     if (!hard_fail) {
-      rewrite_reverse_apply(ast, op);
+      if (is_ast_reverse_apply_poly_args(ast)) {
+        EXTRACT_ANY_NOTNULL(arg, ast->left);
+        EXTRACT_ANY(arg_list, ast->right);
+
+        if (!arg->sem->kind || !arg->sem->kind[0]) {
+          report_error(arg, "CQL0506: left argument must have a type kind", NULL);
+          record_error(ast);
+          return true;
+        }
+
+        if (arg_list) {
+          sem_arg_list(arg_list, IS_NOT_COUNT);
+          if (is_error(arg_list)) {
+            record_error(ast);
+            return true;
+          }
+        }
+
+        // no function name form  x:(args)
+        rewrite_reverse_apply_polymorphic(ast);
+      }
+      else {
+        // function name form  x:foo(args)
+        rewrite_reverse_apply(ast, op);
+      }
+
       if (analyze) {
         sem_expr_call(ast, op);
         hard_fail = is_error(ast);
@@ -10839,7 +10864,7 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
 
 // Validates the right arg of ':', '::' and then rewrites the ast node
 static void sem_reverse_apply(ast_node *ast, CSTR op) {
-  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast));
+  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast) || is_ast_reverse_apply_poly_args(ast));
   bool_t failed = sem_reverse_apply_if_needed(ast, SEM_REVERSE_APPLY_ANALYZE_CALL);
   if (failed) {
     // error already reported if any
@@ -26131,6 +26156,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
   EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
   EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
+  EXPR_INIT(reverse_apply_poly_args, sem_reverse_apply, ":");
   EXPR_INIT(expr_assign, sem_expr_invalid_op, ":=");
   EXPR_INIT(add_eq, sem_expr_invalid_op, "+=");
   EXPR_INIT(sub_eq, sem_expr_invalid_op, "-=");

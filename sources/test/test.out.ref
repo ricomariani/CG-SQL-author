@@ -2372,3 +2372,5 @@ SELECT *
 '{ "x" : 1}' -> '$.x';
 
 '{ "x" : 1}' ->> :INT: '$.x';
+
+LET list := new_builder():(5):(7.0):(1, 2):::to_list();

@@ -24910,3 +24910,25 @@ select json_group_object();
 -- + {call}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_object'
 select jsonb_group_object();
+
+declare function new_builder() create object<list_builder>;
+declare function object_list_builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+declare function object_list_builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+declare function object_list_builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+declare function to_list_object_list_builder(arg1 object<list_builder>) create object<list>;
+
+-- TEST: multiple rewrites based on the builder pattern above
+-- verify rewrite only
+-- + LET list_result := to_list_object_list_builder(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
+let list_result := new_builder():(5):(7.0):(1,2):::to_list();
+
+-- TEST: no kind specified in the left arg
+-- + reverse_apply_poly_args}: err
+-- * error: % left argument must have a type kind
+let r := 1:();
+
+-- TEST: poly args with invalid arg list
+-- + reverse_apply_poly_args}: err
+-- + {arg_list}: err
+-- * error: % string operand not allowed in 'NOT'
+let r := new_builder():(not 'x');

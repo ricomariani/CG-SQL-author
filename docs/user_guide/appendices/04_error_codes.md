@@ -4694,3 +4694,31 @@ will indicate which argument number or operand that is incorrect.
 
 Many json oriented functions cannot accept blob or object arguments.  The indicated argument
 is a blob.  The context indicates the function.
+
+----
+
+### CQL0506: left argument must have a type kind
+
+When using the pipeline syntax with no function name e.g.
+
+```sql
+foo:(1):(2):(3);
+```
+
+The left argument of the pipeline, `foo` in this example, must have a type "kind" because the
+pipeline uses the "kind" to generate the name of the function it will call.
+
+```sql
+var foo object<builder>;
+foo := new_builder();
+let u := foo:(1);
+
+-- becomes
+
+let u := object_builder_int(foo, 1);
+```
+
+Without the:(2):(3); `builder` the name isn't unique enough to be useful.
+
+Note that if object_builder_int returns the first argument (`foo`) then it can be chained as in
+the first example `foo:(1):(2):(3)`.

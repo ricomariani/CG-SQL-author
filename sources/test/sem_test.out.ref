@@ -93404,3 +93404,170 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense i
     | {select_limit}
       | {select_offset}
 
+The statement ending at line XXXX
+
+DECLARE FUNC new_builder () CREATE OBJECT<list_builder>;
+
+  {declare_func_stmt}: object<list_builder> create_func
+  | {name new_builder}: object<list_builder> create_func
+  | {func_params_return}
+    | {create_data_type}: object<list_builder> create_func
+      | {type_object}: object<list_builder>
+        | {name list_builder}
+
+The statement ending at line XXXX
+
+DECLARE FUNC object_list_builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJECT<list_builder>;
+
+  {declare_func_stmt}: object<list_builder>
+  | {name object_list_builder_int}: object<list_builder>
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: object<list_builder> variable in
+    | | | {param_detail}: arg1: object<list_builder> variable in
+    | |   | {name arg1}: arg1: object<list_builder> variable in
+    | |   | {type_object}: object<list_builder>
+    | |     | {name list_builder}
+    | | {params}
+    |   | {param}: arg2: integer notnull variable in
+    |     | {param_detail}: arg2: integer notnull variable in
+    |       | {name arg2}: arg2: integer notnull variable in
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {type_object}: object<list_builder>
+      | {name list_builder}
+
+The statement ending at line XXXX
+
+DECLARE FUNC object_list_builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, arg3 INT!) OBJECT<list_builder>;
+
+  {declare_func_stmt}: object<list_builder>
+  | {name object_list_builder_int_int}: object<list_builder>
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: object<list_builder> variable in
+    | | | {param_detail}: arg1: object<list_builder> variable in
+    | |   | {name arg1}: arg1: object<list_builder> variable in
+    | |   | {type_object}: object<list_builder>
+    | |     | {name list_builder}
+    | | {params}
+    |   | {param}: arg2: integer notnull variable in
+    |   | | {param_detail}: arg2: integer notnull variable in
+    |   |   | {name arg2}: arg2: integer notnull variable in
+    |   |   | {notnull}: integer notnull
+    |   |     | {type_int}: integer
+    |   | {params}
+    |     | {param}: arg3: integer notnull variable in
+    |       | {param_detail}: arg3: integer notnull variable in
+    |         | {name arg3}: arg3: integer notnull variable in
+    |         | {notnull}: integer notnull
+    |           | {type_int}: integer
+    | {type_object}: object<list_builder>
+      | {name list_builder}
+
+The statement ending at line XXXX
+
+DECLARE FUNC object_list_builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OBJECT<list_builder>;
+
+  {declare_func_stmt}: object<list_builder>
+  | {name object_list_builder_real}: object<list_builder>
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: object<list_builder> variable in
+    | | | {param_detail}: arg1: object<list_builder> variable in
+    | |   | {name arg1}: arg1: object<list_builder> variable in
+    | |   | {type_object}: object<list_builder>
+    | |     | {name list_builder}
+    | | {params}
+    |   | {param}: arg2: real notnull variable in
+    |     | {param_detail}: arg2: real notnull variable in
+    |       | {name arg2}: arg2: real notnull variable in
+    |       | {notnull}: real notnull
+    |         | {type_real}: real
+    | {type_object}: object<list_builder>
+      | {name list_builder}
+
+The statement ending at line XXXX
+
+DECLARE FUNC to_list_object_list_builder (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
+
+  {declare_func_stmt}: object<list> create_func
+  | {name to_list_object_list_builder}: object<list> create_func
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: arg1: object<list_builder> variable in
+    |   | {param_detail}: arg1: object<list_builder> variable in
+    |     | {name arg1}: arg1: object<list_builder> variable in
+    |     | {type_object}: object<list_builder>
+    |       | {name list_builder}
+    | {create_data_type}: object<list> create_func
+      | {type_object}: object<list>
+        | {name list}
+
+The statement ending at line XXXX
+
+LET list_result := to_list_object_list_builder(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
+
+  {let_stmt}: list_result: object<list> variable
+  | {name list_result}: list_result: object<list> variable
+  | {call}: object<list> create_func
+    | {name to_list_object_list_builder}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {call}: object<list_builder>
+          | {name object_list_builder_int_int}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {call}: object<list_builder>
+              | | {name object_list_builder_real}
+              | | {call_arg_list}
+              |   | {call_filter_clause}
+              |   | {arg_list}: ok
+              |     | {call}: object<list_builder>
+              |     | | {name object_list_builder_int}
+              |     | | {call_arg_list}
+              |     |   | {call_filter_clause}
+              |     |   | {arg_list}: ok
+              |     |     | {call}: object<list_builder> create_func
+              |     |     | | {name new_builder}
+              |     |     | | {call_arg_list}
+              |     |     |   | {call_filter_clause}
+              |     |     | {arg_list}: ok
+              |     |       | {int 5}: integer notnull
+              |     | {arg_list}: ok
+              |       | {dbl 7.0}: real notnull
+              | {arg_list}: ok
+                | {int 1}: integer notnull
+                | {arg_list}
+                  | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+LET r := 1:();
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0506: left argument must have a type kind
+
+  {let_stmt}: err
+  | {name r}
+  | {reverse_apply_poly_args}: err
+    | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+LET r := new_builder():(NOT 'x');
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {let_stmt}: err
+  | {name r}
+  | {reverse_apply_poly_args}: err
+    | {call}: object<list_builder> create_func
+    | | {name new_builder}
+    | | {call_arg_list}
+    |   | {call_filter_clause}
+    | {arg_list}: err
+      | {not}: err
+        | {strlit 'x'}: text notnull
+

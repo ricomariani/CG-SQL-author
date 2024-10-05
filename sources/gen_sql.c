@@ -875,7 +875,7 @@ static void gen_binary_no_spaces(ast_node *ast, CSTR op, int32_t pri, int32_t pr
   if (pri_new < pri) gen_printf("(");
   gen_expr(ast->left, pri_new);
   gen_printf("%s", op);
-  if (is_ast_arg_list(ast->right)) {
+  if (is_ast_reverse_apply_poly_args(ast)) {
     gen_printf("(");
     gen_arg_list(ast->right);
     gen_printf(")");
@@ -5630,6 +5630,7 @@ cql_noexport void gen_init() {
   EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(reverse_apply_typed, gen_binary_no_spaces, "::", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(reverse_apply_poly, gen_binary_no_spaces, ":::", EXPR_PRI_REVERSE_APPLY);
+  EXPR_INIT(reverse_apply_poly_args, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
 }
 
 cql_export void gen_cleanup() {

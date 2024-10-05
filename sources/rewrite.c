@@ -1061,7 +1061,7 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
 // Create a new call node using these two and the argument passed in
 // prior to the ':' symbol.
 cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
-  Contract(is_ast_reverse_apply(head));
+  Contract(is_ast_reverse_apply_poly_args(head));
   EXTRACT_ANY_NOTNULL(argument, head->left);
   EXTRACT(arg_list, head->right);
 
@@ -1072,12 +1072,10 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
 
   CHARBUF_OPEN(new_name);
 
-  if (!argument->sem->kind || !argument->sem->kind[0]) {
-    bprintf(&new_name, "%s", rewrite_type_suffix(sem_type));
-  }
-  else {
-    bprintf(&new_name, "%s_%s", rewrite_type_suffix(sem_type), argument->sem->kind);
-  }
+  Contract(argument->sem);
+  Contract(argument->sem->kind);
+
+  bprintf(&new_name, "%s_%s", rewrite_type_suffix(sem_type), argument->sem->kind);
 
   ast_node *item = arg_list;
   while (item) {

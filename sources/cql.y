@@ -1252,7 +1252,7 @@ call:
   | basic_expr ':' ':' simple_call { $call = new_ast_reverse_apply_typed($basic_expr, $simple_call); }
   | basic_expr ':' ':' ':' simple_call { $call = new_ast_reverse_apply_poly($basic_expr, $simple_call); }
   | basic_expr ':' data_type_any ':' { $call = new_ast_cast_expr($basic_expr, $data_type_any); }
-  | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply($basic_expr, $arg_list); }
+  | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   ;
 
 basic_expr:

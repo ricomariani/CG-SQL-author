@@ -25,8 +25,8 @@ end;
 proc get_from_int_task_id(task_id integer! , field text! , out value text!)
 begin
   -- we have to do this to make sure we don't get a warning for uninitialized variables
-  let names := ifnull_throw(_names);
-  let notes := ifnull_throw(_notes);
+  let names := _names:ifnull_throw();
+  let notes := _notes:ifnull_throw();
 
   value := ifnull(
   case
@@ -39,8 +39,8 @@ end;
 proc set_in_int_task_id(task_id integer not null, field text not null, value text not null)
 begin
   -- we have to do this to make sure we don't get a warning for uninitialized variables
-  let names := ifnull_throw(_names);
-  let notes := ifnull_throw(_notes);
+  let names := _names:ifnull_throw();
+  let notes := _notes:ifnull_throw();
 
   if task_id < 0 or task_id >= names.count return;
 

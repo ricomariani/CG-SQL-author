@@ -10,7 +10,10 @@ begin
     "hi there"::dump();
   end if;
 
+  -- standard casting syntax)
   ERROR!(cast("1.23" as real), "-- not safe to emulate SQLite");
-  EXAMPLE!( (select cast("100"||1.23 as real)) );
+
+  -- Alternate casting syntax
+  EXAMPLE!( (select ("100"||1.23) :real: ));
   _!("Hello");
 end;

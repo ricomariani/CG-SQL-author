@@ -48,6 +48,11 @@ begin
   printf("%20s -> %s (%s)\n", @TEXT(x!), x!::fmt(), note!);
 end;
 
+@macro(expr) fmt!(x! expr)
+begin
+  x!:::fmt()
+end;
+
 proc dump_examples()
 begin
   declare _null bool;
@@ -96,15 +101,16 @@ begin
   let l := 32L;
   let r := 3.14;
   let t := "foo";
+
   -- this is only needed if null values are a possibility
   -- otherwise the format string would work by itself
-  -- ::fmt converts the data to a string even if it's null
+  -- fmt! converts the data to a string even if it's null
   -- the normal runtime can't do that
-  printf("bool:%s int:%s long:%s real:%s text:%s\n", b::fmt(), i::fmt(), l::fmt(), r::fmt(), t::fmt());
+  printf("bool:%s int:%s long:%s real:%s text:%s\n", b:fmt!, i:fmt!, l:fmt!, r:fmt!, t:fmt!);
 
   -- fmt_bool handles null too
   set b := null;
-  printf("bool:%s\n", b::fmt());
+  printf("bool:%s\n", b:fmt!);
 
   -- using type kind to further specify which formatter
   declare energy real<joules>;
@@ -112,7 +118,7 @@ begin
   declare weight real<pounds>;
   set weight := 203;
 
-  printf("arg1: %s arg2: %s\n", energy:::fmt(), weight:::fmt());
+  printf("arg1: %s arg2: %s\n", energy:fmt!, weight:fmt!);
 
   dump_examples();
 end;

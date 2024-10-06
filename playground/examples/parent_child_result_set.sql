@@ -87,16 +87,17 @@ end;
 [[private]]
 proc print_two_selects_method()
 begin
-  call printf("compute nested result via two selects\n");
-  call printf("  this has the fewest sql queries and does an in-memory join\n");
+  printf("compute nested result via two selects\n");
+  printf("  this has the fewest sql queries and does an in-memory join\n");
+  
   declare C cursor for call parent_child_join('foo');
   loop fetch C
   begin
-    call printf("id: %d, u:%s, v:%s\n", C.id, C.u, C.v);
+    printf("id: %d, u:%s, v:%s\n", C.id, C.u, C.v);
     declare D cursor for C.child1;
     loop fetch D
     begin
-      call printf("    id:%d seq:%d    a:%d b:%d\n", D.id, D.seq, D.a, D.b);
+      printf("    id:%d seq:%d    a:%d b:%d\n", D.id, D.seq, D.a, D.b);
     end;
   end;
 end;
@@ -104,26 +105,25 @@ end;
 [[private]]
 proc print_iteration_method()
 begin
-  call printf("\ncompute nested result via iteration\n");
-  call printf("  this can be better if the number of rows is small or the join is expensive\n");
+  printf("\ncompute nested result via iteration\n");
+  printf("  this can be better if the number of rows is small or the join is expensive\n");
 
   declare C cursor for call parent_child_iter('foo');
   loop fetch C
   begin
-    call printf("id: %d, u:%s, v:%s\n", C.id, C.u, C.v);
+    printf("id: %d, u:%s, v:%s\n", C.id, C.u, C.v);
     declare D cursor for C.ch1;
     loop fetch D
     begin
-      call printf("    id:%d seq:%d    a:%d b:%d\n", D.id, D.seq, D.a, D.b);
+      printf("    id:%d seq:%d    a:%d b:%d\n", D.id, D.seq, D.a, D.b);
     end;
   end;
 end;
 
 proc entrypoint()
 begin
-  call create_tables();
-  call insert_data();
-
-  call print_two_selects_method();
-  call print_iteration_method();
+  create_tables();
+  insert_data();
+  print_two_selects_method();
+  print_iteration_method();
 end;

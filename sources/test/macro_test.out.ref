@@ -113,14 +113,14 @@ foo'}
 
 The statement ending at line XXXX
 
-@MACRO(EXPR) expr_macro1!(x! EXPR, z! EXPR)
+@MACRO(EXPR) expr_macro_def_test!(x! EXPR, z! EXPR)
 BEGIN
   x! + z!
 END;
 
   {expr_macro_def}
   | {macro_name_formals}
-  | | {name expr_macro1}
+  | | {name expr_macro_def_test}
   | | {macro_formals}
   |   | {macro_formal}
   |   | | {name x}
@@ -137,7 +137,7 @@ END;
 
 The statement ending at line XXXX
 
-@MACRO(STMT_LIST) stmt_macro1!(x! EXPR, y! STMT_LIST)
+@MACRO(STMT_LIST) stmt_macro_def_test!(x! EXPR, y! STMT_LIST)
 BEGIN
   IF x! THEN
     y!;
@@ -146,7 +146,7 @@ END;
 
   {stmt_list_macro_def}
   | {macro_name_formals}
-  | | {name stmt_macro1}
+  | | {name stmt_macro_def_test}
   | | {macro_formals}
   |   | {macro_formal}
   |   | | {name x}
@@ -1787,4 +1787,46 @@ LET x := "( SELECT 1 + 5 )";
   {let_stmt}
   | {name x}
   | {strlit '( SELECT 1 + 5 )'}
+
+The statement ending at line XXXX
+
+LET y := 5 + 5 + 1;
+
+  {let_stmt}
+  | {name y}
+  | {add}
+    | {add}
+    | | {int 5}
+    | | {int 5}
+    | {int 1}
+
+The statement ending at line XXXX
+
+LET z := 6 + 6 + 1;
+
+  {let_stmt}
+  | {name z}
+  | {add}
+    | {add}
+    | | {int 6}
+    | | {int 6}
+    | {int 1}
+
+The statement ending at line XXXX
+
+LET w := 7 * (11 + 5 + (11 + 5) + 1);
+
+  {let_stmt}
+  | {name w}
+  | {mul}
+    | {int 7}
+    | {add}
+      | {add}
+      | | {add}
+      | | | {int 11}
+      | | | {int 5}
+      | | {add}
+      |   | {int 11}
+      |   | {int 5}
+      | {int 1}
 

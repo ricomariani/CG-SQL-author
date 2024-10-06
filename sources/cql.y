@@ -476,6 +476,14 @@ expr_macro_ref:
   | EXPR_MACRO '(' opt_macro_args ')' {
     YY_ERROR_ON_MACRO_ARG($EXPR_MACRO);
     $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
+  | basic_expr ':' EXPR_MACRO '(' opt_macro_args ')' {
+      ast_node *macro_arg = new_ast_expr_macro_arg($basic_expr);
+      ast_node *macro_args = new_ast_macro_args(macro_arg, $opt_macro_args);
+      $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), macro_args); }
+  | basic_expr ':' EXPR_MACRO {
+      ast_node *macro_arg = new_ast_expr_macro_arg($basic_expr);
+      ast_node *macro_args = new_ast_macro_args(macro_arg, NULL);
+      $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), macro_args); }
   ;
 
 query_parts_macro_ref:

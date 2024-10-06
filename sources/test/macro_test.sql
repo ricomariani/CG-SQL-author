@@ -61,19 +61,19 @@ end;
 let zzz := @TEXT("begin\n", assert!(7), "\nfoo");
 
 -- TEST: expression macro
--- + @MACRO(EXPR) expr_macro1!(x! EXPR, z! EXPR)
+-- + @MACRO(EXPR) expr_macro_def_test!(x! EXPR, z! EXPR)
 -- + x! + z!
-@macro (expr) expr_macro1!(x! expr, z! expr)
+@macro (expr) expr_macro_def_test!(x! expr, z! expr)
 begin
   x! + z!
 end;
 
 -- TEST: statment macro
--- + @MACRO(STMT_LIST) stmt_macro1!(x! EXPR, y! STMT_LIST)
+-- + @MACRO(STMT_LIST) stmt_macro_def_test!(x! EXPR, y! STMT_LIST)
 -- + IF x! THEN
 -- +   y!;
 -- + END;
-@macro(stmt_list) stmt_macro1!(x! expr, y! stmt_list)
+@macro(stmt_list) stmt_macro_def_test!(x! expr, y! stmt_list)
 begin
   if x! then y!; end if;
 end;
@@ -89,7 +89,7 @@ var x_int int!;
 -- + END;
 create proc foo()
 begin
-  stmt_macro1!(1, begin call printf("hi\n"); end);
+  stmt_macro_def_test!(1, begin call printf("hi\n"); end);
 end;
 
 create table first_table(
@@ -485,3 +485,15 @@ end;
 --
 -- + LET x := "( SELECT 1 + 5 )";
 let x := @TEXT(a_selection!());
+
+-- TEST: expression macro in pipeline
+-- + LET y := 5 + 5 + 1;
+let y := 5:macro1!;
+
+-- TEST: pipeline macro with no args
+-- + LET z := 6 + 6 + 1;
+let z := 6:macro1!();
+
+-- TEST: pipeline macro with args
+-- + LET w := 7 * (11 + 5 + (11 + 5) + 1);
+let w := 7:macro2!(11);

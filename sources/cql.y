@@ -219,7 +219,7 @@ static void cql_reset_globals(void);
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
-%left CONCAT JEX1 JEX2 ':' '~'
+%left CONCAT JEX1 JEX2 ':' '.' '[' '~'
 %left COLLATE
 %right UMINUS
 
@@ -1298,6 +1298,9 @@ basic_expr:
   | CAST '(' expr[sexp] AS data_type_any ')'  { $basic_expr = new_ast_cast_expr($sexp, $data_type_any); }
   | TYPE_CHECK '(' expr[sexp] AS data_type_with_options[type] ')' { $basic_expr = new_ast_type_check_expr($sexp, $type); }
   | basic_expr[array] '[' arg_list ']' { $$ = new_ast_array($array, $arg_list); }
+  | basic_expr[lhs] '~' data_type_any '~' { $$ = new_ast_cast_expr($lhs, $data_type_any); }
+  | basic_expr[lhs] JEX1 basic_expr[rhs]  { $$ = new_ast_jex1($lhs, $rhs); }
+  | basic_expr[lhs] JEX2 '~' data_type_any '~' basic_expr[rhs] { $$ = new_ast_jex2($lhs, new_ast_jex2($data_type_any,$rhs)); }
   ;
 
 math_expr[result]:
@@ -1346,10 +1349,7 @@ math_expr[result]:
   | math_expr[lhs] IS_NOT math_expr[rhs]  { $result = new_ast_is_not($lhs, $rhs); }
   | math_expr[lhs] IS math_expr[rhs]  { $result = new_ast_is($lhs, $rhs); }
   | math_expr[lhs] CONCAT math_expr[rhs]  { $result = new_ast_concat($lhs, $rhs); }
-  | math_expr[lhs] JEX1 math_expr[rhs]  { $result = new_ast_jex1($lhs, $rhs); }
-  | math_expr[lhs] JEX2 '~' data_type_any '~' math_expr[rhs] { $result = new_ast_jex2($lhs, new_ast_jex2($data_type_any,$rhs)); }
   | math_expr[lhs] COLLATE name { $result = new_ast_collate($lhs, $name); }
-  | math_expr[lhs] '~' data_type_any '~' { $result = new_ast_cast_expr($lhs, $data_type_any); }
   ;
 
 expr[result]:

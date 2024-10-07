@@ -2379,9 +2379,9 @@ LET list := new_builder():(5):(7.0):(1, 2):::to_list();
 
 ~1 + 2;
 
-CAST(5 IS NULL AS INT);
+CAST(5 AS INT);
 
-CAST(x + y IS NULL AS INT);
+x + CAST(y AS INT);
 
 x:y();
 

@@ -1831,9 +1831,9 @@ let list := new_builder():(5):(7.0):(1,2):::to_list();
 
 ~1+2;
 
-5 isnull ~int~;
+5 ~int~;
 
-x + y isnull ~int~;
+x + y ~int~;
 
 x:y;
 

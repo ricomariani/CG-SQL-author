@@ -1192,7 +1192,7 @@ consequence, in CQL, you must declare the extraction type when using the `->>`
 operator with syntax:
 
 ```
-  json_arg ->> :type_spec: path_arg
+  json_arg ->> ~type_spec~ path_arg
 ```
 
 The type_spec can be any valid type like `int`, `int<foo>`, or a type alias. All
@@ -1200,7 +1200,7 @@ the normal type expressions are valid.
 
 > NOTE: this form is not a CAST operation, it's a declaration. The type of the
 > expression will be _assumed_ to be the indicated type. SQLite will not see the
-> `:type:` notation when the expression is evaluated.  If a cast is desired
+> `~type~` notation when the expression is evaluated.  If a cast is desired
 > simply write one as usual, the trailing cast syntax can be specially convenient
 > when working with JSON.
 
@@ -1224,16 +1224,16 @@ The `CAST` expression can be written in two ways, the standard form:
 And equivalently using pipeline notation
 
 ```sql
-  expr :type:
+  expr ~type~
 ```
 
-The trailing `:type:` notation has very strong binding,  As shown in
+The trailing `~type~` notation has very strong binding,  As shown in
 the order of operations table, it is even stronger than the unary `~`
 operator. It is indended to be used in function pipelines in combination
-with other `:` pipeline operations rather than as part of arithmetic
-and so forth, hence parenthesis are required when using it in other contexts.
+with other pipeline operations (the `:`: family) rather than as part of arithmetic
+and so forth, hence it has a fairly strong binding (equal to `:`).
 
-The `:type:` form is immediatley converted to the standard `CAST` form
+The `~type~` form is immediatley converted to the standard `CAST` form
 and so SQLite will never see this alternate notation.  This form is purely
 syntatic sugar.
 

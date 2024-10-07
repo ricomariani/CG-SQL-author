@@ -434,3 +434,36 @@ Since @id(...) can go anywhere an identifier can go, it is totally
 suitable for use for type names but also for procedure names, table
 names, any identifer.  As mentioned above `@id` will generate an
 error if the expression does not make a legal normal identifier.
+
+### Pipeline syntax for Expression Macros
+
+The pipeline syntax `expr:macro_name!(args...)` can be used instead of `macro_name!(expr, args)`.
+This allows macros to appear in expressions written in the fluent style.  Note that
+`args` may be empty in which case the form can be written `expr:macro_name!()` or the even
+shorter `expr:macro_name!` both of which become `macro_name!(expr)`
+
+```sql
+printf("%s", x:fmt!);
+```
+
+>NOTE: It is not possible to use the `::` or `:::` operators with the macro above because the
+type of the expression is not known at the time the macro is expanded.  However, there is
+no reason why `fmt!` above could not itself use `::` or `:::` within its body which generally
+gives you the result you want.  For intance:
+
+```sql
+@macro(expr) fmt!(x! expr)
+begin
+  x!:::fmt();
+end;
+```
+
+Can be used like so:  `expr::fmt!`
+
+This will use:
+
+  * a formatter specific to type and kind of `expr`
+  * a formatter specific to type of `expr`
+  * a generic formatter
+
+Without having to use `:::` in all the places.

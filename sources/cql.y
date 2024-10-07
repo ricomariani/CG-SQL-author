@@ -1349,7 +1349,7 @@ math_expr[result]:
   | math_expr[lhs] JEX1 math_expr[rhs]  { $result = new_ast_jex1($lhs, $rhs); }
   | math_expr[lhs] JEX2 '~' data_type_any '~' math_expr[rhs] { $result = new_ast_jex2($lhs, new_ast_jex2($data_type_any,$rhs)); }
   | math_expr[lhs] COLLATE name { $result = new_ast_collate($lhs, $name); }
-  | math_expr[lhs] '~' data_type_any '~' %prec NOT { $result = new_ast_cast_expr($lhs, $data_type_any); }
+  | math_expr[lhs] '~' data_type_any '~' { $result = new_ast_cast_expr($lhs, $data_type_any); }
   ;
 
 expr[result]:

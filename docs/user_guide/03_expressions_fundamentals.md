@@ -57,7 +57,7 @@ INEQUALITY:     <  <=  >  >=
 BINARY:         << >> & |
 ADDITION:       + -
 MULTIPLICATION: * / %
-CONCAT:         || -> ->>
+CONCAT:         || -> ->> ~type~
 COLLATE:        COLLATE
 UNARY:          ~  -
 SPECIAL:        x[] x:y x::y x:::y x :type: x.y f(y) CAST, CASE
@@ -1896,13 +1896,13 @@ Cast operations also have a pipeline notation:
 
 ```sql
 -- This is the same as let i := cast(foo(x) as int);
-let i := x :foo() :int: ;
+let i := x :foo() ~int~ ;
 ```
 
 These operations are particularly useful when working with json data.  For instance:
 
 ```sql
-select foo.json : extract('x') :int: :ifnull(0) as X from foo;
+select foo.json : extract('x') ~int~ :ifnull(0) as X from foo;
 ```
 
 This is much easier to read than the equivalent:
@@ -1913,6 +1913,8 @@ select ifnull(cast(extract(foo.json 'x') as int), 0) as X from foo;
 
 In all the cases the expression is rewritten into the normal form so SQLite will never see
 the pipeline form.  No special SQLite support is needed.
+
+This form of the `~` operator has the same binding strength as the `:` and `->` operators.
 
 
 ### Properties and Arrays

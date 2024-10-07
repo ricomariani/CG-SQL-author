@@ -93571,3 +93571,60 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in
       | {not}: err
         | {strlit 'x'}: text notnull
 
+The statement ending at line XXXX
+
+1 * CAST(2 AS REAL);
+
+  {expr_stmt}: real notnull
+  | {mul}: real notnull
+    | {int 1}: integer notnull
+    | {cast_expr}: real notnull
+      | {int 2}: integer notnull
+      | {type_real}: real
+
+The statement ending at line XXXX
+
+~1 + 2;
+
+  {expr_stmt}: integer notnull
+  | {add}: integer notnull
+    | {tilde}: integer notnull
+    | | {int 1}: integer notnull
+    | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+SELECT CAST('x' -> 'y' AS INT) AS U;
+
+  {select_stmt}: select: { U: integer }
+  | {select_core_list}: select: { U: integer }
+  | | {select_core}: select: { U: integer }
+  |   | {select_expr_list_con}: select: { U: integer }
+  |     | {select_expr_list}: select: { U: integer }
+  |     | | {select_expr}: U: integer
+  |     |   | {cast_expr}: integer
+  |     |   | | {jex1}: text
+  |     |   | | | {strlit 'x'}: text notnull
+  |     |   | | | {strlit 'y'}: text notnull
+  |     |   | | {type_int}: integer
+  |     |   | {opt_as_alias}
+  |     |     | {name U}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+1 IS CAST(3 AS INT);
+
+  {expr_stmt}: bool notnull
+  | {is}: bool notnull
+    | {int 1}: integer notnull
+    | {cast_expr}: integer notnull
+      | {int 3}: integer notnull
+      | {type_int}: integer
+

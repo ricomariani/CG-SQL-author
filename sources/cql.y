@@ -87,6 +87,7 @@ static void cql_usage();
 static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt);
 static ast_node *make_coldef_node(ast_node *col_def_tye_attrs, ast_node *misc_attrs);
 static ast_node *reduce_str_chain(ast_node *str_chain);
+static ast_node *new_simple_call_from_name(ast_node *name);
 
 // Set to true upon a call to `yyerror`.
 static bool_t parse_error_occurred;
@@ -204,6 +205,9 @@ static void cql_reset_globals(void);
 // you can match the language with those but the precedence of NOT is wrong
 // so order of operations will be subtlely off.  There are now tests for this.
 
+// Since ~ is used for type casting it has to be declared in its binary operator
+// location.The normal ~foo operator gets %prec UMINUS like the others.
+
 %left UNION_ALL UNION INTERSECT EXCEPT
 %right ASSIGN ADD_EQ SUB_EQ MUL_EQ DIV_EQ MOD_EQ OR_EQ AND_EQ LS_EQ RS_EQ
 %left OR
@@ -211,13 +215,13 @@ static void cql_reset_globals(void);
 %left NOT
 %left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
 %left ISNULL NOTNULL
-%left '<' '>' GE LE
+%left '<' '>' GE LE 
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
-%left CONCAT JEX1 JEX2 ':'
+%left CONCAT JEX1 JEX2 ':' '~'
 %left COLLATE
-%right UMINUS '~'
+%right UMINUS
 
 /* from the SQLite grammar  for comparison
 
@@ -1259,7 +1263,9 @@ call:
   | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
   | basic_expr ':' ':' simple_call { $call = new_ast_reverse_apply_typed($basic_expr, $simple_call); }
   | basic_expr ':' ':' ':' simple_call { $call = new_ast_reverse_apply_poly($basic_expr, $simple_call); }
-  | basic_expr ':' data_type_any ':' { $call = new_ast_cast_expr($basic_expr, $data_type_any); }
+  | basic_expr ':' name { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
+  | basic_expr ':' ':' name { $call = new_ast_reverse_apply_typed($basic_expr, new_simple_call_from_name($name)); }
+  | basic_expr ':' ':' ':' name { $call = new_ast_reverse_apply_poly($basic_expr, new_simple_call_from_name($name)); }
   | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   ;
 
@@ -1311,9 +1317,9 @@ math_expr[result]:
   | math_expr[lhs] NOTNULL  { $result = new_ast_is_not($lhs, new_ast_null()); }
   | math_expr[lhs] IS_TRUE  { $result = new_ast_is_true($lhs); }
   | math_expr[lhs] IS_FALSE  { $result = new_ast_is_false($lhs); }
-  | '-' math_expr[rhs] %prec UMINUS  { $result = new_ast_uminus($rhs); }
-  | '+' math_expr[rhs] %prec UMINUS  { $result = $rhs; }
-  | '~' math_expr[rhs]  { $result = new_ast_tilde($rhs); }
+  | '-' math_expr[rhs] %prec UMINUS { $result = new_ast_uminus($rhs); }
+  | '+' math_expr[rhs] %prec UMINUS { $result = $rhs; }
+  | '~' math_expr[rhs] %prec UMINUS { $result = new_ast_tilde($rhs); }
   | NOT math_expr[rhs]  { $result = new_ast_not($rhs); }
   | math_expr[lhs] '=' math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
   | math_expr[lhs] EQEQ math_expr[rhs]  { $result = new_ast_eq($lhs, $rhs); }
@@ -1343,6 +1349,7 @@ math_expr[result]:
   | math_expr[lhs] JEX1 math_expr[rhs]  { $result = new_ast_jex1($lhs, $rhs); }
   | math_expr[lhs] JEX2 ':' data_type_any ':' math_expr[rhs] { $result = new_ast_jex2($lhs, new_ast_jex2($data_type_any,$rhs)); }
   | math_expr[lhs] COLLATE name { $result = new_ast_collate($lhs, $name); }
+  | math_expr[lhs] '~' data_type_any '~' %prec NOT { $result = new_ast_cast_expr($lhs, $data_type_any); }
   ;
 
 expr[result]:
@@ -3538,4 +3545,10 @@ cql_noexport bool_t cql_is_defined(CSTR name) {
   Contract(defines);
   symtab_entry *entry = symtab_find(defines, name);
   return entry && entry->val;
+}
+
+static ast_node *new_simple_call_from_name(ast_node *name) {
+  ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, NULL);
+  ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, NULL);
+  return new_ast_call(name, call_arg_list);
 }

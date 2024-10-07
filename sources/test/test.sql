@@ -1521,10 +1521,10 @@ create table foo(id int primary key on conflict fail autoincrement);
 create table foo(id int not null on conflict fail);
 
 -- this makes sure that +/-/etc can have expr on both sides not just math expr
-select 1:REAL: + 1;
-select 1:REAL: - 1;
-select 1:REAL: * 1;
-select 1:REAL: / 1;
+select 1 ~REAL~ + 1;
+select 1 ~REAL~ - 1;
+select 1 ~REAL~ * 1;
+select 1 ~REAL~ / 1;
 
 ---
 select 0 between 0 and 3 between 2 and 3; --  0
@@ -1826,3 +1826,17 @@ with foo as (select 1 x, '2' y)
 
 -- polymorphic function call syntax
 let list := new_builder():(5):(7.0):(1,2):::to_list();
+
+1+2 ~real~;
+
+~1+2;
+
+5 isnull ~int~;
+
+x + y isnull ~int~;
+
+x:y;
+
+x::y;
+
+x:::y;

@@ -2374,3 +2374,17 @@ SELECT *
 '{ "x" : 1}' ->> :INT: '$.x';
 
 LET list := new_builder():(5):(7.0):(1, 2):::to_list();
+
+1 + CAST(2 AS REAL);
+
+~1 + 2;
+
+CAST(5 IS NULL AS INT);
+
+CAST(x + y IS NULL AS INT);
+
+x:y();
+
+x::y();
+
+x:::y();

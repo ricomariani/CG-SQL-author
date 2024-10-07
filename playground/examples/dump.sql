@@ -14,6 +14,6 @@ begin
   ERROR!(cast("1.23" as real), "-- not safe to emulate SQLite");
 
   -- Alternate casting syntax
-  EXAMPLE!( (select ("100"||1.23) :real: ));
+  EXAMPLE!( (select ("100"||1.23) ~real~ ));
   _!("Hello");
 end;

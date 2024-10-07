@@ -24932,3 +24932,24 @@ let r := 1:();
 -- + {arg_list}: err
 -- * error: % string operand not allowed in 'NOT'
 let r := new_builder():(not 'x');
+
+-- TEST order of operations binary ~
+-- verify rewrite, stronger than *
+-- + 1 * CAST(2 AS REAL);
+1 * 2 ~real~;
+
+-- TEST: order of operations unary ~ -- still high
+-- verify rewrite
+-- + ~1 + 2;
+~1+2;
+
+-- TEST: order of oprations equal to '->'
+-- verify rewrite
+-- ~ type ~ is weaker than <
+-- + SELECT CAST('x' -> 'y' AS INT) AS U;
+select 'x' -> 'y' ~int~ as U;
+
+-- TEST: order of oprations same as isnull
+-- verify rewrite (stronger than IS etc.)
+-- + 1 IS CAST(3 AS INT);
+1 IS 3 ~int~;

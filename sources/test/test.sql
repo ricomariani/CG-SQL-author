@@ -1822,7 +1822,7 @@ with foo as (select 1 x, '2' y)
 
 -- JSON extraction operators
 '{ "x" : 1}' -> '$.x';
-'{ "x" : 1}' ->> :int: '$.x';
+'{ "x" : 1}' ->> ~int~ '$.x';
 
 -- polymorphic function call syntax
 let list := new_builder():(5):(7.0):(1,2):::to_list();

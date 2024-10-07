@@ -975,9 +975,9 @@ static void gen_jex2(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   gen_expr(ast->left, pri_new);
   gen_printf(" %s ", op);
   if (!for_sqlite()) {
-    gen_printf(":");
+    gen_printf("~");
     gen_data_type(ast->right->left);
-    gen_printf(": ");
+    gen_printf("~ ");
   }
   gen_expr(ast->right->right, pri_new);
   if (pri_new < pri) gen_printf(")");

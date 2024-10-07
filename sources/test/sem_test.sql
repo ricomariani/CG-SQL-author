@@ -24454,32 +24454,32 @@ select 1 -> '$.x' as X;
 -- TEST: extended extraction operator
 -- + {jex2}: int
 -- - error:
-select '{ "x" : 1}' ->> :int: '$.x' as X;
+select '{ "x" : 1}' ->> ~int~ '$.x' as X;
 
 -- TEST: extended extraction operator: non SQL context
 -- + {jex2}: err
 -- * error: % operator may only appear in the context of a SQL statement '->>'
-'{ "x" : 1}' ->> :int: '$.x';
+'{ "x" : 1}' ->> ~int~ '$.x';
 
 -- TEST: extended extraction operator: invalid expression
 -- + {jex2}: err
 -- * error: % string operand not allowed in 'NOT'
-(not 'x') ->> :int: '$.x';
+(not 'x') ->> ~int~ '$.x';
 
 -- TEST: extended extraction operator: invalid type
 -- + {jex2}: err
--- * error: % unknown type 'not_a_type_int'
-select 'x' ->> :not_a_type_int: '$.x' as X;
+-- * error: % unknown type 'not_a_type'
+select 'x' ->> ~not_a_type~ '$.x' as X;
 
 -- TEST: extended extraction operator, invalid right type
 -- + {jex2}: err
 -- * error: % right operand must be json text path '->>'
-select '{ "x" : 1}' ->> :int: 1 as X;
+select '{ "x" : 1}' ->> ~int~ 1 as X;
 
 -- TEST: extended extraction operator, invalid left type
 -- + {jex2}: err
 -- * error: % left operand must be json text or json blob
-select 1 ->> :int: '$.x' as X;
+select 1 ->> ~int~ '$.x' as X;
 
 -- TEST: json normalization basic case
 -- + {call}: text notnull

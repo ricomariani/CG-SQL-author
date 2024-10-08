@@ -5832,6 +5832,7 @@ typedef struct {
 static void cql_boxed_value_finalize(void *_Nonnull data) {
   cql_boxed_value *_Nonnull self = data;
   cql_release(*(cql_type_ref *)(&self->obj));
+  free(data);
 }
 
 // create the facets storage using the hashtable

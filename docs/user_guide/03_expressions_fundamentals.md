@@ -57,10 +57,10 @@ INEQUALITY:     <  <=  >  >=
 BINARY:         << >> & |
 ADDITION:       + -
 MULTIPLICATION: * / %
-CONCAT:         || -> ->> ~type~
+CONCAT:         || -> ->>
 COLLATE:        COLLATE
 UNARY:          ~  -
-SPECIAL:        x[] x:y x::y x:::y x :type: x.y f(y) CAST, CASE
+SPECIAL:        x[] x:y x::y x:::y x.y f(y) CAST CASE ~type~
 ```
 
 The above rules are **not** the same as C's operator precedence rules! Instead,
@@ -1230,7 +1230,7 @@ And equivalently using pipeline notation
 The trailing `~type~` notation has very strong binding,  As shown in
 the order of operations table, it is even stronger than the unary `~`
 operator. It is indended to be used in function pipelines in combination
-with other pipeline operations (the `:`: family) rather than as part of arithmetic
+with other pipeline operations (the `:` family) rather than as part of arithmetic
 and so forth, hence it has a fairly strong binding (equal to `:`).
 
 The `~type~` form is immediatley converted to the standard `CAST` form
@@ -1914,8 +1914,7 @@ select ifnull(cast(extract(foo.json 'x') as int), 0) as X from foo;
 In all the cases the expression is rewritten into the normal form so SQLite will never see
 the pipeline form.  No special SQLite support is needed.
 
-This form of the `~` operator has the same binding strength as the `:` and `->` operators.
-
+This form of the `~` operator has the same binding strength as the `:` operator family.
 
 ### Properties and Arrays
 

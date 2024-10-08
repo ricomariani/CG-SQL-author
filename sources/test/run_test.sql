@@ -6552,6 +6552,14 @@ BEGIN
   EXPECT!(b_object:cql_unbox_real IS NULL);
 END);
 
+TEST!(object_dictionary,
+BEGIN
+  let d := cql_object_dictionary_create();
+  cql_object_dictionary_add(d, "foo", 101:box!);
+  let v := cql_object_dictionary_find(d, "foo"):ifnull_throw:cql_unbox_int;
+  EXPECT!(v == 101);
+END);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

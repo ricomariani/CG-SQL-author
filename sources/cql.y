@@ -3024,6 +3024,14 @@ cql_noexport CSTR cql_builtin_text() {
     "DECLARE FUNC cql_string_dictionary_add(dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!;"
     "@attribute(cql:builtin)"
     "DECLARE FUNC cql_string_dictionary_find(dict OBJECT<string_dictionary>!, key TEXT) TEXT;"
+
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_object_dictionary_create() CREATE OBJECT<object_dictionary>!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_object_dictionary_add(dict OBJECT<object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_object_dictionary_find(dict OBJECT<object_dictionary>!, key TEXT) OBJECT;"
+
     "@attribute(cql:builtin)"
     "DECLARE FUNC cql_cursor_format(C CURSOR) CREATE TEXT!;"
 

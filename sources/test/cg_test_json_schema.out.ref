@@ -5532,6 +5532,100 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<object_dictionary>!
+
+    {
+      "name" : "cql_object_dictionary_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "object_dictionary",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_object_dictionary_add (dict OBJECT<object_dictionary>!, key TEXT!, value OBJECT!) BOOL!
+
+    {
+      "name" : "cql_object_dictionary_add",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "object_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value",
+          "type" : "object",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_object_dictionary_find (dict OBJECT<object_dictionary>!, key TEXT) OBJECT
+
+    {
+      "name" : "cql_object_dictionary_find",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "object_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
     DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!
 
     {

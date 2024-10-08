@@ -2714,13 +2714,13 @@ static cql_hashtab_entry *_Nullable cql_hashtab_find(
 static void cql_no_op_retain_release(void *_Nullable context, cql_int64 data) {
 }
 
-static void cql_key_retain_str(void *_Nullable context, cql_int64 key) {
+static void cql_key_retain(void *_Nullable context, cql_int64 key) {
   if (key) {
     cql_retain((cql_type_ref)(key));
   }
 }
 
-static void cql_key_release_str(void *_Nullable context, cql_int64 key) {
+static void cql_key_release(void *_Nullable context, cql_int64 key) {
   if (key) {
     cql_release((cql_type_ref)(key));
   }
@@ -2746,9 +2746,9 @@ cql_object_ref _Nonnull cql_facets_create(void) {
   cql_hashtab * self = cql_hashtab_new(
     cql_key_str_hash,
     cql_key_str_eq,
-    cql_key_retain_str,
+    cql_key_retain,
     cql_no_op_retain_release,
-    cql_key_release_str,
+    cql_key_release,
     cql_no_op_retain_release,
     NULL
   );
@@ -3823,10 +3823,10 @@ cql_object_ref _Nonnull cql_string_dictionary_create() {
   cql_hashtab *self = cql_hashtab_new(
       cql_key_str_hash,
       cql_key_str_eq,
-      cql_key_retain_str,
-      cql_key_retain_str,
-      cql_key_release_str,
-      cql_key_release_str,
+      cql_key_retain,
+      cql_key_retain,
+      cql_key_release,
+      cql_key_release,
       NULL
     );
 
@@ -3876,6 +3876,32 @@ cql_string_ref _Nullable cql_string_dictionary_find(
   cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
   return entry ? (cql_string_ref)entry->val : NULL;
+}
+
+// This makes a simple object dictionary with retained strings
+cql_object_ref _Nonnull cql_object_dictionary_create() {
+  // it's the same as a string dictionary internally as it's just object refs
+  return cql_string_dictionary_create();
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_object_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_object_ref _Nonnull val)
+{
+  // again we can cheat... the guts are the same and the value is only retained
+  // this could change some day but for now we live for free
+  return cql_string_dictionary_add(dict, key, (cql_string_ref)val);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the result
+cql_object_ref _Nullable cql_object_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  // and again, the lookup only borrows the value so we can re-use string dictionary for free.
+  return (cql_object_ref)cql_string_dictionary_find(dict, key);
 }
 
 // We have to release all the strings in the buffer then release the buffer memory
@@ -5954,7 +5980,7 @@ cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box) {
     return result;
 }
 
-cql_object_ref _Nonnull cql_box_text(cql_object_ref _Nullable data) {
+cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (!data) {
@@ -5962,22 +5988,22 @@ cql_object_ref _Nonnull cql_box_text(cql_object_ref _Nullable data) {
     }
     else {
       self->type = CQL_DATA_TYPE_STRING;
-      cql_set_object_ref(&self->obj, data);
+      cql_set_object_ref(&self->obj, (cql_object_ref)data);
     }
     return box;
 }
 
-cql_object_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box) {
+cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box) {
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_STRING) {
-       return self->obj;
+       return (cql_string_ref)self->obj;
     }
     else {
        return NULL;
     }
 }
 
-cql_object_ref _Nonnull cql_box_blob(cql_object_ref _Nullable data) {
+cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (!data) {
@@ -5985,15 +6011,15 @@ cql_object_ref _Nonnull cql_box_blob(cql_object_ref _Nullable data) {
     }
     else {
       self->type = CQL_DATA_TYPE_BLOB;
-      cql_set_object_ref(&self->obj, data);
+      cql_set_object_ref(&self->obj, (cql_object_ref)data);
     }
     return box;
 }
 
-cql_object_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box) {
+cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box) {
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_BLOB) {
-       return self->obj;
+       return (cql_blob_ref)self->obj;
     }
     else {
        return NULL;

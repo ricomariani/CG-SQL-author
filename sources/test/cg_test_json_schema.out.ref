@@ -5559,6 +5559,398 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_int",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "integer",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_int (box OBJECT<box>!) INT
+
+    {
+      "name" : "cql_unbox_int",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_real",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "real",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_real (box OBJECT<box>!) REAL
+
+    {
+      "name" : "cql_unbox_real",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "real",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_bool",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "bool",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_bool (box OBJECT<box>!) BOOL
+
+    {
+      "name" : "cql_unbox_bool",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_long",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "long",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_long (box OBJECT<box>!) LONG
+
+    {
+      "name" : "cql_unbox_long",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "long",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_text",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_text (box OBJECT<box>!) TEXT
+
+    {
+      "name" : "cql_unbox_text",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_blob",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "blob",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_blob (box OBJECT<box>!) BLOB
+
+    {
+      "name" : "cql_unbox_blob",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<box>!
+
+    {
+      "name" : "cql_box_object",
+      "args" : [
+        {
+          "name" : "x",
+          "type" : "object",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "box",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_unbox_object (box OBJECT<box>!) OBJECT
+
+    {
+      "name" : "cql_unbox_object",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
     DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!
 
     {

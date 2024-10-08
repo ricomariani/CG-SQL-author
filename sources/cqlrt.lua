@@ -999,3 +999,60 @@ end
 function cql_throw(db, rc)
    return rc;
 end;
+
+function cql_box_int(x)
+  return {['int'] = x}
+end
+
+function cql_box_long(x)
+  return {['long'] = x}
+end
+
+function cql_box_real(x)
+  return {['real'] = x}
+end
+
+function cql_box_bool(x)
+  return {['bool'] = x}
+end
+
+function cql_box_text(x)
+  return {['text'] = x}
+end
+
+function cql_box_blob(x)
+  return {['blob'] = x}
+end
+
+function cql_box_object(x)
+  return {['object'] = x}
+end
+
+function cql_unbox_int(x)
+  return x['int']
+end
+
+function cql_unbox_long(x)
+  return x['long']
+end
+
+function cql_unbox_real(x)
+  return x['real']
+end
+
+function cql_unbox_bool(x)
+  return x['bool']
+end
+
+function cql_unbox_text(x)
+  return x['text']
+end
+
+function cql_unbox_blob(x)
+  return x['blob']
+end
+
+function cql_unbox_object(x)
+  return x['object']
+end
+

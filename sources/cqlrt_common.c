@@ -5824,7 +5824,7 @@ cql_code cql_throw(sqlite3 *_Nonnull db, int code)
 
 typedef struct {
    cql_int64 scalar;
-   cql_object_ref obj;
+   cql_object_ref _Nullable obj;
    cql_int32 type;
 } cql_boxed_value;
 
@@ -5841,7 +5841,7 @@ static cql_object_ref _Nonnull cql_boxed_value_create(void) {
   return _cql_generic_object_create(self, cql_boxed_value_finalize);
 }
 
-cql_object_ref _Nonnull box_int(cql_nullable_int32 data) {
+cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (data.is_null) {
@@ -5854,7 +5854,7 @@ cql_object_ref _Nonnull box_int(cql_nullable_int32 data) {
     return box;
 }
 
-cql_nullable_int32 _Nonnull unbox_int(cql_object_ref _Nonnull box) {
+cql_nullable_int32 cql_unbox_int(cql_object_ref _Nonnull box) {
     cql_nullable_int32 result;
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_INT32) {
@@ -5869,7 +5869,7 @@ cql_nullable_int32 _Nonnull unbox_int(cql_object_ref _Nonnull box) {
     return result;
 }
 
-cql_object_ref _Nonnull box_real(cql_nullable_double data) {
+cql_object_ref _Nonnull cql_box_real(cql_nullable_double data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (data.is_null) {
@@ -5882,8 +5882,8 @@ cql_object_ref _Nonnull box_real(cql_nullable_double data) {
     return box;
 }
 
-cql_nullable_int32 _Nonnull unbox_real(cql_object_ref _Nonnull box) {
-    cql_nullable_int32 result;
+cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box) {
+    cql_nullable_double result;
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_DOUBLE) {
        result.is_null = false;
@@ -5897,7 +5897,7 @@ cql_nullable_int32 _Nonnull unbox_real(cql_object_ref _Nonnull box) {
     return result;
 }
 
-cql_object_ref _Nonnull box_bool(cql_nullable_bool data) {
+cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (data.is_null) {
@@ -5910,7 +5910,7 @@ cql_object_ref _Nonnull box_bool(cql_nullable_bool data) {
     return box;
 }
 
-cql_nullable_bool _Nonnull unbox_bool(cql_object_ref _Nonnull box) {
+cql_nullable_bool cql_unbox_bool(cql_object_ref _Nonnull box) {
     cql_nullable_bool result;
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_BOOL) {
@@ -5925,7 +5925,7 @@ cql_nullable_bool _Nonnull unbox_bool(cql_object_ref _Nonnull box) {
     return result;
 }
 
-cql_object_ref _Nonnull box_long(cql_nullable_int64 data) {
+cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (data.is_null) {
@@ -5938,7 +5938,7 @@ cql_object_ref _Nonnull box_long(cql_nullable_int64 data) {
     return box;
 }
 
-cql_nullable_int64 _Nonnull unbox_long(cql_object_ref _Nonnull box) {
+cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box) {
     cql_nullable_int64 result;
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_INT64) {
@@ -5951,4 +5951,73 @@ cql_nullable_int64 _Nonnull unbox_long(cql_object_ref _Nonnull box) {
     }
 
     return result;
+}
+
+cql_object_ref _Nonnull cql_box_text(cql_object_ref _Nullable data) {
+    cql_object_ref _Nonnull box = cql_boxed_value_create();
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (!data) {
+      self->type = 0;
+    }
+    else {
+      self->type = CQL_DATA_TYPE_STRING;
+      cql_set_object_ref(&self->obj, data);
+    }
+    return box;
+}
+
+cql_object_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box) {
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (self->type == CQL_DATA_TYPE_STRING) {
+       return self->obj;
+    }
+    else {
+       return NULL;
+    }
+}
+
+cql_object_ref _Nonnull cql_box_blob(cql_object_ref _Nullable data) {
+    cql_object_ref _Nonnull box = cql_boxed_value_create();
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (!data) {
+      self->type = 0;
+    }
+    else {
+      self->type = CQL_DATA_TYPE_BLOB;
+      cql_set_object_ref(&self->obj, data);
+    }
+    return box;
+}
+
+cql_object_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box) {
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (self->type == CQL_DATA_TYPE_BLOB) {
+       return self->obj;
+    }
+    else {
+       return NULL;
+    }
+}
+
+cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data) {
+    cql_object_ref _Nonnull box = cql_boxed_value_create();
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (!data) {
+      self->type = 0;
+    }
+    else {
+      self->type = CQL_DATA_TYPE_OBJECT;
+      cql_set_object_ref(&self->obj, data);
+    }
+    return box;
+}
+
+cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box) {
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (self->type == CQL_DATA_TYPE_OBJECT) {
+       return self->obj;
+    }
+    else {
+       return NULL;
+    }
 }

@@ -6498,6 +6498,60 @@ BEGIN
   EXPECT!(a_global == 22);
 END);
 
+@MACRO(expr) box!(x! expr)
+begin
+  x!::cql_box
+end;
+
+@MACRO(stmt_list) box_test!(x! expr, t! expr)
+begin
+  -- make nullable variable and hold the given value to test
+  var @ID(val_, t!) @ID(t!);
+  @ID(val_, t!) := x!;
+
+  -- now box and unbox
+  let @ID(b_, t!) := @ID(val_, t!):@ID('cql_box_', t!);
+  let @ID(v_, t!) := @ID(b_, t!):@ID('cql_unbox_', t!);
+  EXPECT!(@ID(v_, t!) == @ID(val_, t!));
+
+  -- test null value
+  @ID(val_, t!) := NULL;
+
+  -- now box and unbox
+  set @ID(b_, t!) := @ID(val_, t!):@ID('cql_box_', t!);
+  set @ID(v_, t!) := @ID(b_, t!):@ID('cql_unbox_', t!);
+  EXPECT!(@ID(v_, t!) IS NULL);
+end;
+
+TEST!(boxing,
+BEGIN
+  let bl := (select 'a blob' ~blob~);
+
+  box_test!(5, 'int');
+  box_test!(7.5, 'real');
+  box_test!(true, 'bool');
+  box_test!(1000L, 'long');
+  box_test!('abcde', 'text');
+  box_test!(bl, 'blob');
+  box_test!(b_int, 'object');
+
+  b_bool := true:box!;
+  b_int := 5:box!;
+  b_long := 5:box!;
+  b_real := 5:box!;
+  b_text := '5':box!;
+  b_blob := bl:box!;
+  b_object := b_int:box!;
+
+  EXPECT!(b_int:cql_unbox_long IS NULL);
+  EXPECT!(b_bool:cql_unbox_long IS NULL);
+  EXPECT!(b_real:cql_unbox_long IS NULL);
+  EXPECT!(b_long:cql_unbox_real IS NULL);
+  EXPECT!(b_text:cql_unbox_real IS NULL);
+  EXPECT!(b_blob:cql_unbox_real IS NULL);
+  EXPECT!(b_object:cql_unbox_real IS NULL);
+END);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

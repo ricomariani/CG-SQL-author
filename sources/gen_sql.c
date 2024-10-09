@@ -4777,6 +4777,20 @@ static void gen_close_stmt(ast_node *ast) {
   gen_printf("CLOSE %s", name);
 }
 
+static void gen_op_stmt(ast_node *ast) {
+  Contract(is_ast_op_stmt(ast));
+  EXTRACT_ANY_NOTNULL(data_type, ast->left);
+  EXTRACT_ANY_NOTNULL(v1, ast->right);
+  EXTRACT_ANY_NOTNULL(v2, v1->right);
+  EXTRACT_STRING(op, v1->left);
+  EXTRACT_STRING(func, v2->left);
+  EXTRACT_STRING(targ, v2->right);
+
+  gen_printf("@OP ");
+  gen_data_type(data_type);
+  gen_printf(" : %s %s AS %s", op, func, targ);
+}
+
 static void gen_out_stmt(ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -5501,6 +5515,7 @@ cql_noexport void gen_init() {
   STMT_INIT(loop_stmt);
   STMT_INIT(stmt_list_macro_def);
   STMT_INIT(expr_macro_def);
+  STMT_INIT(op_stmt);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_parent_child_stmt);
   STMT_INIT(out_union_stmt);

@@ -2388,3 +2388,9 @@ x:y();
 x::y();
 
 x:::y();
+
+@OP OBJECT<foo> : get bar AS foo_get_bar;
+
+@OP OBJECT<foo> : get bar AS foo_get_bar;
+
+@OP OBJECT<foo> : call zoo AS foo_zoo;

@@ -576,6 +576,7 @@ static symtab *unchecked_funcs;
 static symtab *exprs;
 static symtab *tables;
 static symtab *table_default_values;
+static symtab *ops;
 static symtab *indices;
 static symtab *globals;
 static symtab *locals;
@@ -23537,6 +23538,46 @@ static void sem_close_stmt(ast_node *ast) {
   ast->sem = cursor->sem;
 }
 
+static void sem_op_stmt(ast_node *ast) {
+  Contract(is_ast_op_stmt(ast));
+  EXTRACT_ANY_NOTNULL(data_type, ast->left);
+  EXTRACT_ANY_NOTNULL(v1, ast->right);
+  EXTRACT_ANY_NOTNULL(v2, v1->right);
+  EXTRACT_STRING(op, v1->left);
+  EXTRACT_STRING(func, v2->left);
+  EXTRACT_STRING(targ, v2->right);
+
+  sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type = data_type->sem->sem_type;
+  CSTR kind = data_type->sem->kind;
+
+  CSTR key;
+  if (kind) {
+    key = dup_printf("%s:%s:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+  }
+  else {
+    key = dup_printf("%s:%s:%s", rewrite_type_suffix(sem_type), op, func);
+  }
+
+
+  symtab_entry *entry = symtab_find(ops, key);
+  if (entry) {
+    printf("%s -set-> %s\n", key, targ);
+    entry->val = (void*)targ;
+  }
+  else {
+    printf("%s -add-> %s\n", key, targ);
+    symtab_add(ops, key, (void*)targ);
+  }
+
+  record_ok(ast);
+}
+
 // For out [cursor], we first validate that the name is a cursor
 // then we set the output type of the procedure we're in accordingly
 static void sem_out_any(ast_node *ast) {
@@ -25839,6 +25880,7 @@ cql_noexport void sem_main(ast_node *ast) {
 
   AST_REWRITE_INFO_START();
 
+  ops = symtab_new();
   exprs = symtab_new();
   builtin_funcs = symtab_new();
   builtin_special_funcs = symtab_new();
@@ -25922,6 +25964,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_named_type);
+  STMT_INIT(op_stmt);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_stmt);
   STMT_INIT(out_union_parent_child_stmt);
@@ -26266,6 +26309,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(new_regions);
   SYMTAB_CLEANUP(new_enums);
   SYMTAB_CLEANUP(non_sql_stmts);
+  SYMTAB_CLEANUP(ops);
   SYMTAB_CLEANUP(procs);
   SYMTAB_CLEANUP(unchecked_procs);
   SYMTAB_CLEANUP(interfaces);

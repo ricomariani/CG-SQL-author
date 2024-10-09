@@ -8654,6 +8654,7 @@ cql_noexport void cg_c_init(void) {
   NO_OP_STMT_INIT(declare_select_func_no_check_stmt);
   NO_OP_STMT_INIT(declare_select_func_stmt);
   NO_OP_STMT_INIT(declare_interface_stmt);
+  NO_OP_STMT_INIT(op_stmt);
   NO_OP_STMT_INIT(keep_table_name_in_aliases_stmt);
 
   COMMON_STMT_INIT(blob_get_key_type_stmt);

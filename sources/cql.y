@@ -271,7 +271,7 @@ static void cql_reset_globals(void);
 %token NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT
 %token AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
-%token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
+%token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION AT_OP
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
@@ -327,7 +327,7 @@ static void cql_reset_globals(void);
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
-%type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
+%type <aval> macro_def_stmt opt_macro_args macro_args macro_arg op_stmt
 %type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref
 %type <aval> top_level_stmts include_stmts include_section
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
@@ -658,6 +658,7 @@ any_stmt:
   | let_stmt
   | loop_stmt
   | macro_def_stmt
+  | op_stmt
   | out_stmt
   | out_union_stmt
   | out_union_parent_child_stmt
@@ -2678,6 +2679,13 @@ select_expr_macro_def:
     EXTRACT_STRING(name, $name);
     bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+  ;
+
+op_stmt: AT_OP data_type_any ':' name[op] name[func] AS name[targ] {
+    $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+  | AT_OP data_type_any ':' CALL name[func] AS name[targ] {
+    ast_node *op = new_ast_str("call"); 
+    $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals(op, new_ast_op_vals($func, $targ))); }
   ;
 
 macro_def_stmt:

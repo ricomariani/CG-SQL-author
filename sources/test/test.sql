@@ -1840,3 +1840,8 @@ x:y;
 x::y;
 
 x:::y;
+
+-- operator forms
+@OP object<foo> : get bar as foo_get_bar;
+@OP object<foo> : get bar as foo_get_bar;
+@OP object<foo> : call zoo as foo_zoo;

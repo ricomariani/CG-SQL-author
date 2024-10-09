@@ -283,7 +283,7 @@ static void cql_reset_globals(void);
 %type <ival> frame_type frame_exclude join_type
 %type <ival> opt_vtab_flags
 
-%type <aval> col_key_list col_key_def col_def sql_name
+%type <aval> col_key_list col_key_def col_def sql_name loose_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
@@ -1081,6 +1081,13 @@ name:
   | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
   ;
 
+loose_name:
+  name { $$ = $name; }
+  | CALL { $$ = new_ast_str("call"); }
+  | SET { $$ = new_ast_str("set"); }
+  | ALL { $$ = new_ast_str("all"); }
+  ;
+
 opt_sql_name:
   /* nil */  { $opt_sql_name = NULL; }
   | sql_name  { $opt_sql_name = $sql_name; }
@@ -1262,11 +1269,7 @@ simple_call:
 call:
   simple_call { $call = $simple_call; }
   | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
-  | basic_expr ':' ':' simple_call { $call = new_ast_reverse_apply_typed($basic_expr, $simple_call); }
-  | basic_expr ':' ':' ':' simple_call { $call = new_ast_reverse_apply_poly($basic_expr, $simple_call); }
   | basic_expr ':' name { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
-  | basic_expr ':' ':' name { $call = new_ast_reverse_apply_typed($basic_expr, new_simple_call_from_name($name)); }
-  | basic_expr ':' ':' ':' name { $call = new_ast_reverse_apply_poly($basic_expr, new_simple_call_from_name($name)); }
   | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   ;
 
@@ -2681,11 +2684,8 @@ select_expr_macro_def:
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
 
-op_stmt: AT_OP data_type_any ':' name[op] name[func] AS name[targ] {
+op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name[func] AS loose_name[targ] {
     $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
-  | AT_OP data_type_any ':' CALL name[func] AS name[targ] {
-    ast_node *op = new_ast_str("call"); 
-    $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals(op, new_ast_op_vals($func, $targ))); }
   ;
 
 macro_def_stmt:

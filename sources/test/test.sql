@@ -1762,9 +1762,9 @@ not 'x'[5] IS "not 'x'[5]";
 a*b[5] IS "a*b[5]";
 ~x[5] IS "~x[5]";
 (~x)[5] IS "(~x)[5]";
-~foo::bar(x) IS "~foo::bar(x)";
-~a.b::bar(x) IS "~a.b::bar(x)";
-~(a.b)::bar(x) IS "~a.b::bar(x) (a.b) parens removed";
+~foo:bar(x) IS "~foo:bar(x)";
+~a.b:bar(x) IS "~a.b:bar(x)";
+~(a.b):bar(x) IS "~a.b:bar(x) (a.b) parens removed";
 (x+y).q IS "(x+y).q";
 x+y.q IS "x+y.q";
 x+(y.q) IS "x+y.q";
@@ -1785,7 +1785,7 @@ foo(x).q;
 
 foo(q).r;
 (~q).r;
-foo::bar().baz;
+foo:bar().baz;
 
 column := 1;
 
@@ -1825,7 +1825,7 @@ with foo as (select 1 x, '2' y)
 '{ "x" : 1}' ->> ~int~ '$.x';
 
 -- polymorphic function call syntax
-let list := new_builder():(5):(7.0):(1,2):::to_list();
+let list := new_builder():(5):(7.0):(1,2):to_list();
 
 1+2 ~real~;
 
@@ -1836,10 +1836,6 @@ let list := new_builder():(5):(7.0):(1,2):::to_list();
 x + y ~int~;
 
 x:y;
-
-x::y;
-
-x:::y;
 
 -- operator forms
 @OP object<foo> : get bar as foo_get_bar;

@@ -7075,7 +7075,7 @@ CURSOR my_cursor FOR
   SELECT 1 AS one, 2 AS two;
 
   {declare_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc
-  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage serialize fetch_into
+  | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage fetch_into
   | {select_stmt}: select: { one: integer notnull, two: integer notnull }
     | {select_core_list}: select: { one: integer notnull, two: integer notnull }
     | | {select_core}: select: { one: integer notnull, two: integer notnull }
@@ -87972,21 +87972,6 @@ test/sem_test.sql:XXXX:1: error: in type_object : CQL0091: object<T SET> has a T
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_null (x BOOL) INT!;
-
-  {declare_func_stmt}: integer notnull
-  | {name rev_apply_null}: integer notnull
-  | {func_params_return}
-    | {params}: ok
-    | | {param}: x: bool variable in
-    |   | {param_detail}: x: bool variable in
-    |     | {name x}: x: bool variable in
-    |     | {type_bool}: bool
-    | {notnull}: integer notnull
-      | {type_int}: integer
-
-The statement ending at line XXXX
-
 DECLARE FUNC rev_apply_bool (x BOOL) INT!;
 
   {declare_func_stmt}: integer notnull
@@ -88092,31 +88077,87 @@ DECLARE FUNC rev_apply_object (x OBJECT) INT!;
 
 The statement ending at line XXXX
 
-DECLARE FUNC rev_apply_cursor (x CURSOR) INT!;
+@OP BOOL : call rev_apply AS rev_apply_bool;
 
-  {declare_func_stmt}: integer notnull
-  | {name rev_apply_cursor}: integer notnull
-  | {func_params_return}
-    | {params}: ok
-    | | {param}: x: cursor variable in
-    |   | {param_detail}: x: cursor variable in
-    |     | {name x}: x: cursor variable in
-    |     | {type_cursor}: cursor
-    | {notnull}: integer notnull
-      | {type_int}: integer
+  {op_stmt}: ok
+  | {type_bool}: bool
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_bool}
 
 The statement ending at line XXXX
 
-SET int_result := rev_apply_null(NULL);
+@OP INT : call rev_apply AS rev_apply_int;
 
-  {assign}: int_result: integer variable was_set
-  | {name int_result}: int_result: integer variable was_set
-  | {call}: integer notnull
-    | {name rev_apply_null}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {null}: null
+  {op_stmt}: ok
+  | {type_int}: integer
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_int}
+
+The statement ending at line XXXX
+
+@OP LONG : call rev_apply AS rev_apply_long;
+
+  {op_stmt}: ok
+  | {type_long}: longint
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_long}
+
+The statement ending at line XXXX
+
+@OP REAL : call rev_apply AS rev_apply_real;
+
+  {op_stmt}: ok
+  | {type_real}: real
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_real}
+
+The statement ending at line XXXX
+
+@OP TEXT : call rev_apply AS rev_apply_text;
+
+  {op_stmt}: ok
+  | {type_text}: text
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_text}
+
+The statement ending at line XXXX
+
+@OP BLOB : call rev_apply AS rev_apply_blob;
+
+  {op_stmt}: ok
+  | {type_blob}: blob
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_blob}
+
+The statement ending at line XXXX
+
+@OP OBJECT : call rev_apply AS rev_apply_object;
+
+  {op_stmt}: ok
+  | {type_object}: object
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name rev_apply}
+      | {name rev_apply_object}
 
 The statement ending at line XXXX
 
@@ -88218,26 +88259,13 @@ FETCH my_cursor;
 
 The statement ending at line XXXX
 
-SET int_result := rev_apply_cursor(my_cursor);
-
-  {assign}: int_result: integer variable was_set
-  | {name int_result}: int_result: integer variable was_set
-  | {call}: integer notnull
-    | {name rev_apply_cursor}
-    | {call_arg_list}
-      | {call_filter_clause}
-      | {arg_list}: ok
-        | {name my_cursor}: my_cursor: select: { one: integer notnull, two: integer notnull } variable dml_proc shape_storage fetch_into
-
-The statement ending at line XXXX
-
-SET int_result := invalid_id_bogus::rev_apply();
+SET int_result := invalid_id_bogus:rev_apply();
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0069: name not found 'invalid_id_bogus'
 
   {assign}: err
   | {name int_result}: int_result: integer variable was_set
-  | {reverse_apply_typed}: err
+  | {reverse_apply}: err
     | {name invalid_id_bogus}: err
     | {call}
       | {name rev_apply}
@@ -88275,6 +88303,19 @@ DECLARE FUNC some_polymorphic_function_real_pounds (x REAL<pounds>, y REAL) INT!
     |       | {type_real}: real
     | {notnull}: integer notnull
       | {type_int}: integer
+
+The statement ending at line XXXX
+
+@OP REAL<pounds> : call myfunc AS some_polymorphic_function_real_pounds;
+
+  {op_stmt}: ok
+  | {type_real}: real<pounds>
+  | | {name pounds}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name myfunc}
+      | {name some_polymorphic_function_real_pounds}
 
 The statement ending at line XXXX
 
@@ -88326,10 +88367,10 @@ END;
 
 The statement ending at line XXXX
 
-DECLARE FUNC count_object_get_result_SET (result OBJECT) INT!;
+DECLARE FUNC get_result_set_count (result OBJECT) INT!;
 
   {declare_func_stmt}: integer notnull
-  | {name count_object_get_result_SET}: integer notnull
+  | {name get_result_set_count}: integer notnull
   | {func_params_return}
     | {params}: ok
     | | {param}: result: object variable in
@@ -88341,12 +88382,25 @@ DECLARE FUNC count_object_get_result_SET (result OBJECT) INT!;
 
 The statement ending at line XXXX
 
-LET poly_result_2 := count_object_get_result_SET(get_result());
+@OP OBJECT<get_result SET> : call count AS get_result_set_count;
+
+  {op_stmt}: ok
+  | {type_object}: object<get_result SET>
+  | | {name get_result SET}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name count}
+      | {name get_result_set_count}
+
+The statement ending at line XXXX
+
+LET poly_result_2 := get_result_set_count(get_result());
 
   {let_stmt}: poly_result_2: integer notnull variable
   | {name poly_result_2}: poly_result_2: integer notnull variable
   | {call}: integer notnull
-    | {name count_object_get_result_SET}
+    | {name get_result_set_count}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -88492,6 +88546,18 @@ END;
           | {strlit ' %d'}: text notnull
           | {arg_list}
             | {name x}: x: integer variable in
+
+The statement ending at line XXXX
+
+@OP INT : call dump AS dump_int;
+
+  {op_stmt}: ok
+  | {type_int}: integer
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name dump}
+      | {name dump_int}
 
 The statement ending at line XXXX
 
@@ -88738,6 +88804,32 @@ DECLARE FUNC set_in_object_foo (array OBJECT<foo>, index TEXT, value TEXT) TEXT!
 
 The statement ending at line XXXX
 
+@OP OBJECT<foo> : array get AS get_from_object_foo;
+
+  {op_stmt}: ok
+  | {type_object}: object<foo>
+  | | {name foo}
+  | {op_vals}
+    | {name array}
+    | {op_vals}
+      | {name get}
+      | {name get_from_object_foo}
+
+The statement ending at line XXXX
+
+@OP OBJECT<foo> : array set AS set_in_object_foo;
+
+  {op_stmt}: ok
+  | {type_object}: object<foo>
+  | | {name foo}
+  | {op_vals}
+    | {name array}
+    | {op_vals}
+      | {name set}
+      | {name set_in_object_foo}
+
+The statement ending at line XXXX
+
 PROC array_test ()
 BEGIN
   DECLARE x OBJECT<foo>;
@@ -88860,6 +88952,32 @@ DECLARE FUNC get_from_object_dot_two NO CHECK INT;
 
 The statement ending at line XXXX
 
+@OP OBJECT<dot_one> : get id AS get_object_dot_one_id;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_one>
+  | | {name dot_one}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name id}
+      | {name get_object_dot_one_id}
+
+The statement ending at line XXXX
+
+@OP OBJECT<dot_two> : get all AS get_from_object_dot_two;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_two>
+  | | {name dot_two}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name all}
+      | {name get_from_object_dot_two}
+
+The statement ending at line XXXX
+
 PROC dot_test ()
 BEGIN
   DECLARE q OBJECT<dot_one>;
@@ -88974,14 +89092,27 @@ DECLARE FUNC make_dot_one () CREATE OBJECT<dot_one>;
 
 The statement ending at line XXXX
 
+@OP OBJECT<dot_one> : get id AS get_object_dot_one_id;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_one>
+  | | {name dot_one}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name id}
+      | {name get_object_dot_one_id}
+
+The statement ending at line XXXX
+
 PROC dot_fail_no_missing_helper_computed ()
 BEGIN
   DECLARE q OBJECT;
   LET u := get_object_dot_one_id(make_dot_one());
-  LET v := make_dot_one().id2;
+  LET v := object:dot_one:get:id2(make_dot_one());
 END;
 
-test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object:dot_one:get:id2'
 
   {create_proc_stmt}: err
   | {name dot_fail_no_missing_helper_computed}: err
@@ -89004,12 +89135,15 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0069: name not found 'id2'
       |           | {call_filter_clause}
       | {let_stmt}: err
         | {name v}
-        | {dot}: err
-          | {call}: object<dot_one> create_func
-          | | {name make_dot_one}
-          | | {call_arg_list}
-          |   | {call_filter_clause}
-          | {name id2}
+        | {call}: err
+          | {name object:dot_one:get:id2}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {call}: object<dot_one> create_func
+                | {name make_dot_one}
+                | {call_arg_list}
+                  | {call_filter_clause}
 
 The statement ending at line XXXX
 
@@ -89097,6 +89231,71 @@ DECLARE storage OBJECT<dot_storage>;
   | | {name storage}: storage: object<dot_storage> variable
   | {type_object}: object<dot_storage>
     | {name dot_storage}
+
+The statement ending at line XXXX
+
+@OP OBJECT<dot_storage> : array get AS get_from_object_dot_storage;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_storage>
+  | | {name dot_storage}
+  | {op_vals}
+    | {name array}
+    | {op_vals}
+      | {name get}
+      | {name get_from_object_dot_storage}
+
+The statement ending at line XXXX
+
+@OP OBJECT<dot_storage> : array set AS set_in_object_dot_storage;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_storage>
+  | | {name dot_storage}
+  | {op_vals}
+    | {name array}
+    | {op_vals}
+      | {name set}
+      | {name set_in_object_dot_storage}
+
+The statement ending at line XXXX
+
+@OP OBJECT<dot_storage> : get id AS get_object_dot_storage_id;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_storage>
+  | | {name dot_storage}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name id}
+      | {name get_object_dot_storage_id}
+
+The statement ending at line XXXX
+
+@OP OBJECT<dot_storage> : get all AS get_from_object_dot_storage;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_storage>
+  | | {name dot_storage}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name all}
+      | {name get_from_object_dot_storage}
+
+The statement ending at line XXXX
+
+@OP OBJECT<dot_storage> : set all AS set_in_object_dot_storage;
+
+  {op_stmt}: ok
+  | {type_object}: object<dot_storage>
+  | | {name dot_storage}
+  | {op_vals}
+    | {name set}
+    | {op_vals}
+      | {name all}
+      | {name set_in_object_dot_storage}
 
 The statement ending at line XXXX
 
@@ -89481,11 +89680,11 @@ DECLARE PROC get_object_event_invitees (event_ OBJECT<event>, OUT value OBJECT<e
 
 The statement ending at line XXXX
 
-DECLARE PROC get_from_object_event_invitees (invitees OBJECT<event_invitees>, field TEXT!, OUT value TEXT!);
+DECLARE PROC event_invitees_get (invitees OBJECT<event_invitees>, field TEXT!, OUT value TEXT!);
 
   {declare_proc_stmt}: ok
   | {proc_name_type}
-  | | {name get_from_object_event_invitees}: ok
+  | | {name event_invitees_get}: ok
   | | {int 0}
   | {proc_params_stmts}
     | {params}: ok
@@ -89510,11 +89709,37 @@ DECLARE PROC get_from_object_event_invitees (invitees OBJECT<event_invitees>, fi
 
 The statement ending at line XXXX
 
+@OP OBJECT<event> : get invitees AS get_object_event_invitees;
+
+  {op_stmt}: ok
+  | {type_object}: object<event>
+  | | {name event}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name invitees}
+      | {name get_object_event_invitees}
+
+The statement ending at line XXXX
+
+@OP OBJECT<event_invitees> : get all AS event_invitees_get;
+
+  {op_stmt}: ok
+  | {type_object}: object<event_invitees>
+  | | {name event_invitees}
+  | {op_vals}
+    | {name get}
+    | {op_vals}
+      | {name all}
+      | {name event_invitees_get}
+
+The statement ending at line XXXX
+
 PROC proc_as_func_preserves_kind ()
 BEGIN
   LET event := create_event();
   LET x := get_object_event_invitees(event);
-  LET y := get_from_object_event_invitees(get_object_event_invitees(event), 'firstName');
+  LET y := event_invitees_get(get_object_event_invitees(event), 'firstName');
 END;
 
   {create_proc_stmt}: ok
@@ -89538,7 +89763,7 @@ END;
       | {let_stmt}: y: text notnull variable
         | {name y}: y: text notnull variable
         | {call}: text notnull
-          | {name get_from_object_event_invitees}
+          | {name event_invitees_get}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -93489,10 +93714,10 @@ DECLARE FUNC object_list_builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OB
 
 The statement ending at line XXXX
 
-DECLARE FUNC to_list_object_list_builder (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
+DECLARE FUNC object_list_builder_to_list (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
 
   {declare_func_stmt}: object<list> create_func
-  | {name to_list_object_list_builder}: object<list> create_func
+  | {name object_list_builder_to_list}: object<list> create_func
   | {func_params_return}
     | {params}: ok
     | | {param}: arg1: object<list_builder> variable in
@@ -93506,12 +93731,25 @@ DECLARE FUNC to_list_object_list_builder (arg1 OBJECT<list_builder>) CREATE OBJE
 
 The statement ending at line XXXX
 
-LET list_result := to_list_object_list_builder(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
+@OP OBJECT<list_builder> : call to_list AS object_list_builder_to_list;
+
+  {op_stmt}: ok
+  | {type_object}: object<list_builder>
+  | | {name list_builder}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name to_list}
+      | {name object_list_builder_to_list}
+
+The statement ending at line XXXX
+
+LET list_result := object_list_builder_to_list(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
 
   {let_stmt}: list_result: object<list> variable
   | {name list_result}: list_result: object<list> variable
   | {call}: object<list> create_func
-    | {name to_list_object_list_builder}
+    | {name object_list_builder_to_list}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok

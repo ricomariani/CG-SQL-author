@@ -197,7 +197,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
 static void sem_resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
 static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
-static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2);
+static void sem_validate_dot_transform(ast_node *ast, CSTR op);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
 static void sem_with_select_stmt(ast_node *ast);
 static void sem_upsert_stmt(ast_node *ast);
@@ -1052,6 +1052,15 @@ static bool_t add_func(ast_node *ast, CSTR name) {
 ast_node *find_func(CSTR name) {
   symtab_entry *entry = symtab_find(funcs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+CSTR find_op(CSTR op_key) {
+  symtab_entry *entry = symtab_find(ops, op_key);
+  CSTR result = NULL;
+  if (entry && entry->val && ((CSTR)entry->val)[0]) {
+    result = (CSTR)entry->val;
+  }
+  return result;
 }
 
 static bool_t add_unchecked_func(ast_node *ast, CSTR name) {
@@ -10663,7 +10672,7 @@ static void sem_validate_array_transform(ast_node *ast,  CSTR op) {
 
 // If the array transform is legal then set it up
 static void sem_expr_array(ast_node *ast,  CSTR op) {
-  sem_validate_array_transform(ast, op);
+  sem_validate_array_transform(ast, "get");
   if (!is_error(ast)) {
     sem_expr(ast);
   }
@@ -10850,7 +10859,7 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
       }
       else {
         // function name form  x:foo(args)
-        rewrite_reverse_apply(ast, op);
+        rewrite_reverse_apply(ast);
       }
 
       if (analyze) {
@@ -10863,9 +10872,9 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
   return hard_fail;
 }
 
-// Validates the right arg of ':', '::' and then rewrites the ast node
+// Validates the right arg of ':', and then rewrites the ast node
 static void sem_reverse_apply(ast_node *ast, CSTR op) {
-  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast) || is_ast_reverse_apply_poly_args(ast));
+  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_poly_args(ast));
   bool_t failed = sem_reverse_apply_if_needed(ast, SEM_REVERSE_APPLY_ANALYZE_CALL);
   if (failed) {
     // error already reported if any
@@ -16508,11 +16517,11 @@ static void sem_expr_stmt(ast_node *ast) {
      bool_t rewritten_assignment = false;
 
      if (is_ast_array(left)) {
-       sem_validate_array_transform(left, "set_in");
+       sem_validate_array_transform(left, "set");
        rewritten_assignment = true;
      }
      else if (is_ast_dot(left)) {
-       sem_validate_dot_transform(left, "set", "set_in");
+       sem_validate_dot_transform(left, "set");
        rewritten_assignment = true;
      }
 
@@ -23567,11 +23576,9 @@ static void sem_op_stmt(ast_node *ast) {
 
   symtab_entry *entry = symtab_find(ops, key);
   if (entry) {
-    printf("%s -set-> %s\n", key, targ);
     entry->val = (void*)targ;
   }
   else {
-    printf("%s -add-> %s\n", key, targ);
     symtab_add(ops, key, (void*)targ);
   }
 
@@ -24242,7 +24249,7 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
-static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2) {
+static void sem_validate_dot_transform(ast_node *ast, CSTR op) {
   Contract(is_ast_dot(ast));
   Contract(is_id(ast->right));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -24261,19 +24268,8 @@ static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2
     return;
   }
 
-  CHARBUF_OPEN(sym);
-  bool_t found = try_find_possible_dot_overload(&sym, expr, name, choice1, choice2);
-  if (found) {
-    CSTR new_name = Strdup(sym.ptr);
-    rewrite_dot_as_call(ast, new_name);
-    record_ok(ast);
-  }
-  else {
-    EXTRACT_STRING(dot_name, ast->right);
-    report_error(ast, "CQL0069: name not found", dot_name);
-    record_error(ast);
-  }
-  CHARBUF_CLOSE(sym);
+  rewrite_dot_as_call(ast, op);
+  record_ok(ast);
 }
 
 // Expression type for scoped name.
@@ -24298,7 +24294,7 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
     }
   }
 
-  sem_validate_dot_transform(ast, "get", "get_from");
+  sem_validate_dot_transform(ast, "get");
   if (!is_error(ast)) {
     sem_expr(ast);
   }
@@ -26197,8 +26193,6 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(jex1, sem_jex1, "->");
   EXPR_INIT(jex2, sem_jex2, "->>");
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
-  EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
-  EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
   EXPR_INIT(reverse_apply_poly_args, sem_reverse_apply, ":");
   EXPR_INIT(expr_assign, sem_expr_invalid_op, ":=");
   EXPR_INIT(add_eq, sem_expr_invalid_op, "+=");

@@ -4,10 +4,10 @@
 
 proc entrypoint()
 begin
-  1::dump();
+  1:dump();
   DUMP!(1+1);
-  if 2::dump() then
-    "hi there"::dump();
+  if 2:dump() then
+    "hi there":dump();
   end if;
 
   -- standard casting syntax)

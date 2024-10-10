@@ -4782,13 +4782,15 @@ static void gen_op_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(data_type, ast->left);
   EXTRACT_ANY_NOTNULL(v1, ast->right);
   EXTRACT_ANY_NOTNULL(v2, v1->right);
-  EXTRACT_STRING(op, v1->left);
-  EXTRACT_STRING(func, v2->left);
-  EXTRACT_STRING(targ, v2->right);
 
   gen_printf("@OP ");
   gen_data_type(data_type);
-  gen_printf(" : %s %s AS %s", op, func, targ);
+  gen_printf(" : ");
+  gen_name(v1->left);
+  gen_printf(" ");
+  gen_name(v2->left);
+  gen_printf(" AS ");
+  gen_name(v2->right);
 }
 
 static void gen_out_stmt(ast_node *ast) {

@@ -5655,14 +5655,14 @@ BEGIN
     while j < i
     begin
       -- set to bogus original value
-      let added := cql_string_dictionary_add(dict, printf("%d", j), "0");
+      let added := dict:add(printf("%d", j), "0");
       EXPECT!(added);
 
-      let bogus_val := cql_string_dictionary_find(dict, printf("%d", j));
+      let bogus_val := dict:find(printf("%d", j));
       EXPECT!(bogus_val == "0");
 
       -- replace
-      added := cql_string_dictionary_add(dict, printf("%d", j), printf("%d", j*100));
+      added := dict:add(printf("%d", j), printf("%d", j*100));
       EXPECT!(NOT added);
       j := j + 2;
     end;
@@ -5670,7 +5670,7 @@ BEGIN
     j := 0;
     while j < i
     begin
-      let result := cql_string_dictionary_find(dict, printf("%d", j));
+      let result := dict:find(printf("%d", j));
       EXPECT!(case when j % 2 then result IS NULL else result == printf("%d", j*100) end);
       j += 1;
     end;
@@ -5679,7 +5679,7 @@ BEGIN
   end;
 
   -- test null lookup, always fails
-  EXPECT!(cql_string_dictionary_find(dict, NULL) IS NULL);
+  EXPECT!(dict:find(NULL) IS NULL);
 
 END);
 
@@ -6550,8 +6550,8 @@ END);
 TEST!(object_dictionary,
 BEGIN
   let d := cql_object_dictionary_create();
-  cql_object_dictionary_add(d, "foo", 101:box);
-  let v := cql_object_dictionary_find(d, "foo"):ifnull_throw:to_int;
+  d:add("foo", 101:box);
+  let v := d:find("foo"):ifnull_throw:to_int;
   EXPECT!(v == 101);
 END);
 

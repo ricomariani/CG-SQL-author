@@ -438,7 +438,7 @@ CREATE TEMP TABLE test_cql_schema_facets_saved(
 );
 
 -- holds all the table definitions out of sqlite_master
-DECLARE test_tables_dict_ OBJECT<string_dictionary>;
+DECLARE test_tables_dict_ OBJECT<cql_string_dictionary>;
 
 -- helper proc for creating the dictionary of table defs from sqlite_master
 @attribute(cql:private)

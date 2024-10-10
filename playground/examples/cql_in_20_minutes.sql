@@ -52,7 +52,7 @@ begin
   _!("### Use true and false for bools, nullable bool is possible\n");
   EXAMPLE_NOTE!(true,  "-- how to true");
   EXAMPLE_NOTE!(false, "-- how to false");
-  EXAMPLE_NOTE!(null,  "-- null means \"unknown\" in CQL like SQLite");
+  -- EXAMPLE_NOTE!(null,  "-- null means \"unknown\" in CQL like SQLite");
   _!("");
 
 
@@ -372,11 +372,11 @@ begin
 
   _!("### Use of Array and Property Syntax\n");
   _!("let list := create_cql_string_list()");
-  let list := create_cql_string_list();
+  let list := cql_string_list_create();
   EXAMPLE!(0 == list.count);
 
-  printf("%20s\n", 'list:::add("hello"):::add("goodbye")');
-  list:::add("hello"):::add("goodbye");
+  printf("%20s\n", 'list:add("hello"):add("goodbye")');
+  list:add("hello"):add("goodbye");
 
   EXAMPLE!(2 == list.count);
   EXAMPLE!("hello" == list[0]);

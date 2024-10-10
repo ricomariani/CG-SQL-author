@@ -257,7 +257,7 @@ static void cg_schema_helpers(charbuf *decls) {
   bprintf(decls, ");\n\n");
 
   bprintf(decls, "-- holds all the table definitions out of sqlite_master\n");
-  bprintf(decls, "DECLARE %s_tables_dict_ OBJECT<string_dictionary>;\n\n", global_proc_name);
+  bprintf(decls, "DECLARE %s_tables_dict_ OBJECT<cql_string_dictionary>;\n\n", global_proc_name);
 
   bprintf(decls, "-- helper proc for creating the dictionary of table defs from sqlite_master\n");
   bprintf(decls, "@attribute(cql:private)\n");

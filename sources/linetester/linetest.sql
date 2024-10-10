@@ -32,6 +32,18 @@ declare function starts_with_text(haystack text!, needle text!) bool!;
 declare function index_of_text(haystack text!, needle text!) int!;
 declare function contains_at_text(haystack text!, needle text!, `offset` int!) bool!;
 
+@op object<file>: call readline as readline_object_file;
+@op text: call atoi_at as atoi_at_text;
+@op text: call len as len_text;
+@op text: call octet as octet_text;
+@op text: call after as after_text;
+@op text: call starts_with as starts_with_text;
+@op text: call index_of as index_of_text;
+@op text: call contains_at as contains_at_text;
+@op text: call str_mid as str_mid;
+@op text: call str_right as str_right;
+@op text: call str_leftg as str_left;
+
 var proc_count int!;
 var compares int!;
 var errors int!;
@@ -151,10 +163,10 @@ begin
   let prefix3 := '#line ';
   let prefix4 := '# ';
 
-  let prefix1_len := prefix1::len();
-  let prefix2_len := prefix2::len();
-  let prefix3_len := prefix3::len();
-  let prefix4_len := prefix4::len();
+  let prefix1_len := prefix1:len();
+  let prefix2_len := prefix2:len();
+  let prefix3_len := prefix3:len();
+  let prefix4_len := prefix4:len();
 
   let input_file := cql_fopen(input_name, "r");
   if input_file is null then
@@ -170,20 +182,20 @@ begin
 
   while true
   begin
-    let data := input_file:::readline();
+    let data := input_file:readline();
     if data is null leave;
 
     physical_line += 1;
 
-    if data::starts_with(prefix1) then
+    if data:starts_with(prefix1) then
       -- we keep the name quotes and all, it doesn't matter
       -- as long as it's unique
-      procname := data::after(prefix1_len);
+      procname := data:after(prefix1_len);
       base_at_next_line := true;
       line := 0;
     end if;
 
-    if data::starts_with(prefix2) then
+    if data:starts_with(prefix2) then
       procname := NULL;
       line := 0;
       line_base := 0;
@@ -191,18 +203,18 @@ begin
 
     let line_start := -1;
 
-    let p3 := data::index_of(prefix3);
+    let p3 := data:index_of(prefix3);
     if p3 >= 0 then
       line_start := p3 + prefix3_len;
     end if;
 
-    let p4 := data::index_of(prefix4);
+    let p4 := data:index_of(prefix4);
     if p4 >= 0 then
       line_start := p4 + prefix4_len;
     end if;
     
     if line_start >= 0 then
-      line := data::atoi_at(line_start);
+      line := data:atoi_at(line_start);
       if (base_at_next_line) then
         line_base := line - 1;
         base_at_next_line := false;

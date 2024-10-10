@@ -17,12 +17,18 @@ begin
      end;
   end;
 
+  @op @ID(t!) : call format as @ID("format_", t!);
+  @op @ID(t!) : call get_type as @ID("get_type_", t!);
+
   -- this generates a procedure called (e.g.) dump_bool prints the type and value
   proc @ID("dump_", t!)(value @ID(t!), out result @ID(t!))
   begin
     set result := value;
-    call printf("%-7s %s\n", value::get_type(), value::format());
+    call printf("%-7s %s\n", value:get_type, value:format);
   end;
+
+  @op @ID(t!) : call dump as @ID("dump_", t!);
+
 end;
 
 dumper_procs!("bool", case when value then "TRUE" else "FALSE" end);
@@ -33,34 +39,22 @@ dumper_procs!("text", value);
 dumper_procs!("object", "[Object]");
 dumper_procs!("blob", "[Blob]");
 
--- null is different than the others because there is no declarable type null.
--- so value is of type "integer"
-proc get_type_null(value integer, out result text not null)
-begin
-  set result := "(null)";
-end;
-
-proc format_null(value integer, out result text not null)
-begin
- set result := "NULL";
-end;
-
 proc dump_null(value integer, out result integer)
 begin
   set result := value;
-  call printf("%-7s %s\n", value::get_type(), value::format());
+  call printf("%-7s %s\n", value:get_type(), value:format());
 end;
 
 @macro(stmt_list) DUMP!(x! expr)
 begin
   printf("Dumping: `%s`:\n", @TEXT(x!));
-  x!::dump();
+  x!:dump();
   printf("\n");
 end;
 
 @macro(stmt_list) EXAMPLE_NOTE!(x! expr, note! expr)
 begin
-  call printf("%25s --> %-7s%-20.20s %s\n", @TEXT(x!), x!::get_type(), x!::format(), note!);
+  call printf("%25s --> %-7s%-20.20s %s\n", @TEXT(x!), x!:get_type, x!:format, note!);
 end;
 
 @macro(stmt_list) EXAMPLE!(x! expr)

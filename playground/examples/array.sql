@@ -10,19 +10,19 @@ begin
   -- but it makes a fine sample showing how you could do things
   -- with atypical objects.  Imagine what you could do with
   -- native callbacks and an HWND
-  _names := create_cql_string_list();
-  _notes := create_cql_string_list();
+  _names := cql_string_list_create();
+  _notes := cql_string_list_create();
 
   let i := 0;
   while i <= 3
   begin
-    _names:::add(printf("T%d", i));
-    _notes:::add(printf("notes for %d", i));
+    _names:add(printf("T%d", i));
+    _notes:add(printf("notes for %d", i));
     i += 1;
   end;
 end;
 
-proc get_from_int_task_id(task_id integer! , field text! , out value text!)
+proc task_get_at(task_id integer! , field text! , out value text!)
 begin
   -- we have to do this to make sure we don't get a warning for uninitialized variables
   let names := _names:ifnull_throw();
@@ -36,7 +36,7 @@ begin
   end, "unknown");
 end;
 
-proc set_in_int_task_id(task_id integer not null, field text not null, value text not null)
+proc task_set_at(task_id integer not null, field text not null, value text not null)
 begin
   -- we have to do this to make sure we don't get a warning for uninitialized variables
   let names := _names:ifnull_throw();
@@ -50,6 +50,11 @@ begin
      notes[task_id] := value;
   end if;
 end;
+
+@op int<task_id> : array get as task_get_at;
+@op int<task_id> : array set as task_set_at;
+@op int<task_id> : get all as  task_get_at;
+@op int<task_id> : set all as  task_set_at;
 
 proc entrypoint()
 begin

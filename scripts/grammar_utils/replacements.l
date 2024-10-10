@@ -78,6 +78,7 @@ AT_LINE                               { put_quoted("@LINE"); }
 AT_MACRO                              { put_quoted("@MACRO"); }
 AT_MACRO_FILE                         { put_quoted("@MACRO_FILE"); }
 AT_MACRO_LINE                         { put_quoted("@MACRO_LINE"); }
+AT_OP                                 { put_quoted("@OP"); }
 AT_PREVIOUS_SCHEMA                    { put_quoted("@PREVIOUS_SCHEMA"); }
 AT_PROC                               { put_quoted("@PROC"); }
 AT_RC                                 { put_quoted("@RC"); }

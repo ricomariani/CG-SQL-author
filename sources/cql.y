@@ -271,7 +271,7 @@ static void cql_reset_globals(void);
 %token NOT_DEFERRABLE DEFERRABLE IMMEDIATE EXCLUSIVE RESTRICT ACTION INITIALLY NO
 %token BEFORE AFTER INSTEAD OF FOR_EACH_ROW EXISTS RAISE FAIL ABORT
 %token AT_ENFORCE_STRICT AT_ENFORCE_NORMAL AT_ENFORCE_RESET AT_ENFORCE_PUSH AT_ENFORCE_POP
-%token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION
+%token AT_BEGIN_SCHEMA_REGION AT_END_SCHEMA_REGION AT_OP
 %token AT_DECLARE_SCHEMA_REGION AT_DECLARE_DEPLOYABLE_REGION AT_SCHEMA_AD_HOC_MIGRATION PRIVATE
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
@@ -283,7 +283,7 @@ static void cql_reset_globals(void);
 %type <ival> frame_type frame_exclude join_type
 %type <ival> opt_vtab_flags
 
-%type <aval> col_key_list col_key_def col_def sql_name
+%type <aval> col_key_list col_key_def col_def sql_name loose_name
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
@@ -327,7 +327,7 @@ static void cql_reset_globals(void);
 /* proc stuff */
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
-%type <aval> macro_def_stmt opt_macro_args macro_args macro_arg
+%type <aval> macro_def_stmt opt_macro_args macro_args macro_arg op_stmt
 %type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref
 %type <aval> top_level_stmts include_stmts include_section
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
@@ -658,6 +658,7 @@ any_stmt:
   | let_stmt
   | loop_stmt
   | macro_def_stmt
+  | op_stmt
   | out_stmt
   | out_union_stmt
   | out_union_parent_child_stmt
@@ -1080,6 +1081,13 @@ name:
   | AT_ID '(' text_args ')' { $name = new_ast_at_id($text_args); }
   ;
 
+loose_name:
+  name { $$ = $name; }
+  | CALL { $$ = new_ast_str("call"); }
+  | SET { $$ = new_ast_str("set"); }
+  | ALL { $$ = new_ast_str("all"); }
+  ;
+
 opt_sql_name:
   /* nil */  { $opt_sql_name = NULL; }
   | sql_name  { $opt_sql_name = $sql_name; }
@@ -1261,11 +1269,7 @@ simple_call:
 call:
   simple_call { $call = $simple_call; }
   | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
-  | basic_expr ':' ':' simple_call { $call = new_ast_reverse_apply_typed($basic_expr, $simple_call); }
-  | basic_expr ':' ':' ':' simple_call { $call = new_ast_reverse_apply_poly($basic_expr, $simple_call); }
   | basic_expr ':' name { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
-  | basic_expr ':' ':' name { $call = new_ast_reverse_apply_typed($basic_expr, new_simple_call_from_name($name)); }
-  | basic_expr ':' ':' ':' name { $call = new_ast_reverse_apply_poly($basic_expr, new_simple_call_from_name($name)); }
   | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   ;
 
@@ -2680,6 +2684,10 @@ select_expr_macro_def:
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
 
+op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name[func] AS loose_name[targ] {
+    $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+  ;
+
 macro_def_stmt:
   expr_macro_def BEGIN_ expr END {
      $macro_def_stmt = $expr_macro_def;
@@ -3019,63 +3027,111 @@ cql_noexport CSTR cql_builtin_text() {
     "DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE OBJECT!;"
 
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_string_dictionary_create() CREATE OBJECT<string_dictionary>!;"
+    "DECLARE FUNC cql_string_dictionary_create() CREATE OBJECT<cql_string_dictionary>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_string_dictionary_add(dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!;"
+    "DECLARE FUNC cql_string_dictionary_add(dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_string_dictionary_find(dict OBJECT<string_dictionary>!, key TEXT) TEXT;"
+    "DECLARE FUNC cql_string_dictionary_find(dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT;"
 
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_object_dictionary_create() CREATE OBJECT<object_dictionary>!;"
+    "@op object<cql_string_dictionary> : call add as cql_string_dictionary_add;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_object_dictionary_add(dict OBJECT<object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;"
+    "@op object<cql_string_dictionary> : call find as cql_string_dictionary_find;"
+
     "@attribute(cql:builtin)"
-    "DECLARE FUNC cql_object_dictionary_find(dict OBJECT<object_dictionary>!, key TEXT) OBJECT;"
+    "DECLARE FUNC cql_object_dictionary_create() CREATE OBJECT<cql_object_dictionary>!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_object_dictionary_add(dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNC cql_object_dictionary_find(dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT;"
+
+    "@attribute(cql:builtin)"
+    "@op object<cql_object_dictionary> : call add as cql_object_dictionary_add;"
+    "@attribute(cql:builtin)"
+    "@op object<cql_object_dictionary> : call find as cql_object_dictionary_find;"
 
     "@attribute(cql:builtin)"
     "DECLARE FUNC cql_cursor_format(C CURSOR) CREATE TEXT!;"
 
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_int(x int) create object<box>!;"
+    "DECLARE FUNCTION cql_box_int(x int) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_int(box object<box>!) int;"
+    "DECLARE FUNCTION cql_unbox_int(box object<cql_box>!) int;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_real(x real) create object<box>!;"
+    "DECLARE FUNCTION cql_box_real(x real) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_real(box object<box>!) real;"
+    "DECLARE FUNCTION cql_unbox_real(box object<cql_box>!) real;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_bool(x bool) create object<box>!;"
+    "DECLARE FUNCTION cql_box_bool(x bool) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_bool(box object<box>!) bool;"
+    "DECLARE FUNCTION cql_unbox_bool(box object<cql_box>!) bool;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_long(x long) create object<box>!;"
+    "DECLARE FUNCTION cql_box_long(x long) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_long(box object<box>!) long;"
+    "DECLARE FUNCTION cql_unbox_long(box object<cql_box>!) long;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_text(x text) create object<box>!;"
+    "DECLARE FUNCTION cql_box_text(x text) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_text(box object<box>!) text;"
+    "DECLARE FUNCTION cql_unbox_text(box object<cql_box>!) text;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_blob(x blob) create object<box>!;"
+    "DECLARE FUNCTION cql_box_blob(x blob) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_blob(box object<box>!) blob;"
+    "DECLARE FUNCTION cql_unbox_blob(box object<cql_box>!) blob;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_box_object(x object) create object<box>!;"
+    "DECLARE FUNCTION cql_box_object(x object) create object<cql_box>!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNCTION cql_unbox_object(box object<box>!) object;"
+    "DECLARE FUNCTION cql_unbox_object(box object<cql_box>!) object;"
+
+    "@attribute(cql:builtin)"
+    "@op bool : call box as cql_box_bool;"
+    "@attribute(cql:builtin)"
+    "@op int : call box as cql_box_int;"
+    "@attribute(cql:builtin)"
+    "@op long : call box as cql_box_long;"
+    "@attribute(cql:builtin)"
+    "@op real : call box as cql_box_real;"
+    "@attribute(cql:builtin)"
+    "@op text : call box as cql_box_text;"
+    "@attribute(cql:builtin)"
+    "@op blob : call box as cql_box_blob;"
+    "@attribute(cql:builtin)"
+    "@op object : call box as cql_box_object;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_bool as cql_unbox_bool;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_int as cql_unbox_int;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_long as cql_unbox_long;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_real as cql_unbox_real;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_text as cql_unbox_text;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_blob as cql_unbox_blob;"
+    "@attribute(cql:builtin)"
+    "@op object : call to_object as cql_unbox_object;"
 
     "@attribute(cql:builtin)"
     "TYPE cql_string_list OBJECT<cql_string_list>;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC create_cql_string_list() CREATE cql_string_list!;"
+    "DECLARE FUNC cql_string_list_create() CREATE cql_string_list!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC set_in_object_cql_string_list(list cql_string_list!, index_ INT!, value_ TEXT!) cql_string_list!;"
+    "DECLARE FUNC cql_string_list_set_at(list cql_string_list!, index_ INT!, value_ TEXT!) cql_string_list!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC get_from_object_cql_string_list(list cql_string_list!, index_ INT!) TEXT;"
+    "DECLARE FUNC cql_string_list_get_at(list cql_string_list!, index_ INT!) TEXT;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC get_object_cql_string_list_count(list cql_string_list!) INT!;"
+    "DECLARE FUNC cql_string_list_count(list cql_string_list!) INT!;"
     "@attribute(cql:builtin)"
-    "DECLARE FUNC add_object_cql_string_list(list cql_string_list!, string TEXT!) cql_string_list!;"
+    "DECLARE FUNC cql_string_list_add(list cql_string_list!, string TEXT!) cql_string_list!;"
+
+    "@attribute(cql:builtin)"
+    "@op cql_string_list : array set as cql_string_list_set_at;"
+    "@attribute(cql:builtin)"
+    "@op cql_string_list : array get as cql_string_list_get_at;"
+    "@attribute(cql:builtin)"
+    "@op cql_string_list : call add as cql_string_list_add;"
+    "@attribute(cql:builtin)"
+    "@op cql_string_list : get count as cql_string_list_count;"
 
     "@attribute(cql:builtin)"
     "DECLARE PROC cql_throw(code int!) using transaction;"

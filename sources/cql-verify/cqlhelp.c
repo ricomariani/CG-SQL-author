@@ -57,11 +57,11 @@ cql_string_ref after_text(cql_string_ref text, cql_int32 index) {
 }
 
 cql_object_ref create_arglist(int argc, char **argv) {
-  cql_object_ref arglist = create_cql_string_list();
+  cql_object_ref arglist = cql_string_list_create();
 
   for (int i = 0; i < argc; i++) {
     cql_string_ref str_ref = cql_string_ref_new(argv[i]);
-    add_object_cql_string_list(arglist, str_ref);
+    cql_string_list_add(arglist, str_ref);
     // ownership transfered to the list
     cql_string_release(str_ref);
   }

@@ -4777,6 +4777,22 @@ static void gen_close_stmt(ast_node *ast) {
   gen_printf("CLOSE %s", name);
 }
 
+static void gen_op_stmt(ast_node *ast) {
+  Contract(is_ast_op_stmt(ast));
+  EXTRACT_ANY_NOTNULL(data_type, ast->left);
+  EXTRACT_ANY_NOTNULL(v1, ast->right);
+  EXTRACT_ANY_NOTNULL(v2, v1->right);
+
+  gen_printf("@OP ");
+  gen_data_type(data_type);
+  gen_printf(" : ");
+  gen_name(v1->left);
+  gen_printf(" ");
+  gen_name(v2->left);
+  gen_printf(" AS ");
+  gen_name(v2->right);
+}
+
 static void gen_out_stmt(ast_node *ast) {
   Contract(is_ast_out_stmt(ast));
   EXTRACT_STRING(name, ast->left);
@@ -5501,6 +5517,7 @@ cql_noexport void gen_init() {
   STMT_INIT(loop_stmt);
   STMT_INIT(stmt_list_macro_def);
   STMT_INIT(expr_macro_def);
+  STMT_INIT(op_stmt);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_parent_child_stmt);
   STMT_INIT(out_union_stmt);
@@ -5628,8 +5645,6 @@ cql_noexport void gen_init() {
   EXPR_INIT(jex1, gen_jex1, "->", EXPR_PRI_CONCAT);
   EXPR_INIT(jex2, gen_jex2, "->>", EXPR_PRI_CONCAT);
   EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
-  EXPR_INIT(reverse_apply_typed, gen_binary_no_spaces, "::", EXPR_PRI_REVERSE_APPLY);
-  EXPR_INIT(reverse_apply_poly, gen_binary_no_spaces, ":::", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(reverse_apply_poly_args, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
 }
 

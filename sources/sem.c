@@ -197,7 +197,7 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name);
 static void sem_resolve_cursor_field(ast_node *expr, ast_node *cursor, CSTR field, sem_t **type_ptr);
 static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail);
 static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts);
-static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2);
+static void sem_validate_dot_transform(ast_node *ast, CSTR op);
 static void sem_expr_select(ast_node *ast, CSTR cstr);
 static void sem_with_select_stmt(ast_node *ast);
 static void sem_upsert_stmt(ast_node *ast);
@@ -576,6 +576,7 @@ static symtab *unchecked_funcs;
 static symtab *exprs;
 static symtab *tables;
 static symtab *table_default_values;
+static symtab *ops;
 static symtab *indices;
 static symtab *globals;
 static symtab *locals;
@@ -1051,6 +1052,15 @@ static bool_t add_func(ast_node *ast, CSTR name) {
 ast_node *find_func(CSTR name) {
   symtab_entry *entry = symtab_find(funcs, name);
   return entry ? (ast_node*)(entry->val) : NULL;
+}
+
+CSTR find_op(CSTR op_key) {
+  symtab_entry *entry = symtab_find(ops, op_key);
+  CSTR result = NULL;
+  if (entry && entry->val && ((CSTR)entry->val)[0]) {
+    result = (CSTR)entry->val;
+  }
+  return result;
 }
 
 static bool_t add_unchecked_func(ast_node *ast, CSTR name) {
@@ -6029,11 +6039,7 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
   return SEM_RESOLVE_STOP;
 }
 
-static bool_t find_any_callable(CSTR name) {
-  return find_proc(name) || find_unchecked_proc(name) || find_func(name) || find_unchecked_func(name);
-}
-
-static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name, CSTR choice1, CSTR choice2) {
+static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name) {
   Contract(sym);
   Contract(expr);
   Contract(name);
@@ -6046,19 +6052,14 @@ static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR 
     return false;
   }
 
-  bprintf(sym, "%s_%s_%s_%s", choice1, rewrite_type_suffix(sem_type), kind, name);
-  if (find_any_callable(sym->ptr)) {
+  bprintf(sym, "%s<%s>:get:%s", rewrite_type_suffix(sem_type), kind, name);
+  if (find_op(sym->ptr)) {
     return true;
   }
 
   bclear(sym);
-  bprintf(sym, "%s_%s_%s", choice2, rewrite_type_suffix(sem_type), kind);
-  if (find_any_callable(sym->ptr)) {
-    return true;
-  }
-
-  bclear(sym);
-  return false;
+  bprintf(sym, "%s<%s>:get:all", rewrite_type_suffix(sem_type), kind);
+  return !!find_op(sym->ptr);
 }
 
 static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
@@ -6077,7 +6078,7 @@ static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR sc
 
   CHARBUF_OPEN(sym);
 
-  bool_t found = try_find_possible_dot_overload(&sym, var, name, "get", "get_from");
+  bool_t found = try_find_possible_dot_overload(&sym, var, name);
   if (found) {
     *type_ptr = &var->sem->sem_type;
     if (ast) {
@@ -10662,7 +10663,7 @@ static void sem_validate_array_transform(ast_node *ast,  CSTR op) {
 
 // If the array transform is legal then set it up
 static void sem_expr_array(ast_node *ast,  CSTR op) {
-  sem_validate_array_transform(ast, op);
+  sem_validate_array_transform(ast, "get");
   if (!is_error(ast)) {
     sem_expr(ast);
   }
@@ -10849,7 +10850,7 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
       }
       else {
         // function name form  x:foo(args)
-        rewrite_reverse_apply(ast, op);
+        rewrite_reverse_apply(ast);
       }
 
       if (analyze) {
@@ -10862,9 +10863,9 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
   return hard_fail;
 }
 
-// Validates the right arg of ':', '::' and then rewrites the ast node
+// Validates the right arg of ':', and then rewrites the ast node
 static void sem_reverse_apply(ast_node *ast, CSTR op) {
-  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_typed(ast) || is_ast_reverse_apply_poly(ast) || is_ast_reverse_apply_poly_args(ast));
+  Contract(is_ast_reverse_apply(ast) || is_ast_reverse_apply_poly_args(ast));
   bool_t failed = sem_reverse_apply_if_needed(ast, SEM_REVERSE_APPLY_ANALYZE_CALL);
   if (failed) {
     // error already reported if any
@@ -16507,11 +16508,11 @@ static void sem_expr_stmt(ast_node *ast) {
      bool_t rewritten_assignment = false;
 
      if (is_ast_array(left)) {
-       sem_validate_array_transform(left, "set_in");
+       sem_validate_array_transform(left, "set");
        rewritten_assignment = true;
      }
      else if (is_ast_dot(left)) {
-       sem_validate_dot_transform(left, "set", "set_in");
+       sem_validate_dot_transform(left, "set");
        rewritten_assignment = true;
      }
 
@@ -21906,11 +21907,7 @@ static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail) {
     return false;
   }
 
-  if (!is_cursor(ast->sem->sem_type)) {
-    return false;
-  }
-
-  return true;
+  return is_cursor(ast->sem->sem_type);
 }
 
 // Information about switch cases, and the origin of the constants
@@ -23537,6 +23534,44 @@ static void sem_close_stmt(ast_node *ast) {
   ast->sem = cursor->sem;
 }
 
+static void sem_op_stmt(ast_node *ast) {
+  Contract(is_ast_op_stmt(ast));
+  EXTRACT_ANY_NOTNULL(data_type, ast->left);
+  EXTRACT_ANY_NOTNULL(v1, ast->right);
+  EXTRACT_ANY_NOTNULL(v2, v1->right);
+  EXTRACT_STRING(op, v1->left);
+  EXTRACT_STRING(func, v2->left);
+  EXTRACT_STRING(targ, v2->right);
+
+  sem_data_type_var(data_type);
+  if (is_error(data_type)) {
+    record_error(ast);
+    return;
+  }
+
+  sem_t sem_type = data_type->sem->sem_type;
+  CSTR kind = data_type->sem->kind;
+
+  CSTR key;
+  if (kind) {
+    key = dup_printf("%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+  }
+  else {
+    key = dup_printf("%s:%s:%s", rewrite_type_suffix(sem_type), op, func);
+  }
+
+
+  symtab_entry *entry = symtab_find(ops, key);
+  if (entry) {
+    entry->val = (void*)targ;
+  }
+  else {
+    symtab_add(ops, key, (void*)targ);
+  }
+
+  record_ok(ast);
+}
+
 // For out [cursor], we first validate that the name is a cursor
 // then we set the output type of the procedure we're in accordingly
 static void sem_out_any(ast_node *ast) {
@@ -24201,7 +24236,7 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
-static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2) {
+static void sem_validate_dot_transform(ast_node *ast, CSTR op) {
   Contract(is_ast_dot(ast));
   Contract(is_id(ast->right));
   EXTRACT_ANY_NOTNULL(expr, ast->left);
@@ -24220,19 +24255,8 @@ static void sem_validate_dot_transform(ast_node *ast, CSTR choice1, CSTR choice2
     return;
   }
 
-  CHARBUF_OPEN(sym);
-  bool_t found = try_find_possible_dot_overload(&sym, expr, name, choice1, choice2);
-  if (found) {
-    CSTR new_name = Strdup(sym.ptr);
-    rewrite_dot_as_call(ast, new_name);
-    record_ok(ast);
-  }
-  else {
-    EXTRACT_STRING(dot_name, ast->right);
-    report_error(ast, "CQL0069: name not found", dot_name);
-    record_error(ast);
-  }
-  CHARBUF_CLOSE(sym);
+  rewrite_dot_as_call(ast, op);
+  record_ok(ast);
 }
 
 // Expression type for scoped name.
@@ -24257,7 +24281,7 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
     }
   }
 
-  sem_validate_dot_transform(ast, "get", "get_from");
+  sem_validate_dot_transform(ast, "get");
   if (!is_error(ast)) {
     sem_expr(ast);
   }
@@ -25839,6 +25863,7 @@ cql_noexport void sem_main(ast_node *ast) {
 
   AST_REWRITE_INFO_START();
 
+  ops = symtab_new();
   exprs = symtab_new();
   builtin_funcs = symtab_new();
   builtin_special_funcs = symtab_new();
@@ -25922,6 +25947,7 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(declare_value_cursor);
   STMT_INIT(declare_cursor);
   STMT_INIT(declare_named_type);
+  STMT_INIT(op_stmt);
   STMT_INIT(out_stmt);
   STMT_INIT(out_union_stmt);
   STMT_INIT(out_union_parent_child_stmt);
@@ -26154,8 +26180,6 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(jex1, sem_jex1, "->");
   EXPR_INIT(jex2, sem_jex2, "->>");
   EXPR_INIT(reverse_apply, sem_reverse_apply, ":");
-  EXPR_INIT(reverse_apply_typed, sem_reverse_apply, "::");
-  EXPR_INIT(reverse_apply_poly, sem_reverse_apply, ":::");
   EXPR_INIT(reverse_apply_poly_args, sem_reverse_apply, ":");
   EXPR_INIT(expr_assign, sem_expr_invalid_op, ":=");
   EXPR_INIT(add_eq, sem_expr_invalid_op, "+=");
@@ -26266,6 +26290,7 @@ cql_noexport void sem_cleanup() {
   SYMTAB_CLEANUP(new_regions);
   SYMTAB_CLEANUP(new_enums);
   SYMTAB_CLEANUP(non_sql_stmts);
+  SYMTAB_CLEANUP(ops);
   SYMTAB_CLEANUP(procs);
   SYMTAB_CLEANUP(unchecked_procs);
   SYMTAB_CLEANUP(interfaces);

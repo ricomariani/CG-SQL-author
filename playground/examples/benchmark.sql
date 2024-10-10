@@ -39,14 +39,16 @@ BEGIN
   out union C;
 END;
 
-CREATE PROC decode_object_encoded_user(encoded_user object<encoded_user>)
+CREATE PROC decode_encoded_user(encoded_user object<encoded_user>)
 BEGIN
   cursor C for call User(1, "Bob", gender_type.male, 1990);
   fetch C;
   out union C;
 END;
 
-CREATE PROC user_and_themselves(user_boxed object<decode_object_encoded_user set>)
+@op object<encoded_user> : call decode as decode_encoded_user;
+
+CREATE PROC user_and_themselves(user_boxed object<decode_encoded_user set>)
 BEGIN
   cursor C for user_boxed;
   fetch C;
@@ -64,15 +66,15 @@ END;
 @macro(stmt_list) bench!(name! expr, s! stmt_list)
 begin
   i := 0;
-  timer:::start();
+  timer:start();
   while i <= number_of_iterations
   begin
     s!;
     i += 1;
   end;
-  timer:::stop();
+  timer:stop();
   printf("Timings for calling %s:\n", name!);
-  timer:::print();
+  timer:print();
   printf("\n\n");
 end;
 
@@ -104,7 +106,7 @@ BEGIN
 
 
   declare encoded_user OBJECT<encoded_user>;
-  let user_boxed := encoded_user:::decode();
+  let user_boxed := encoded_user:decode();
 
   bench!("calling user_and_themselves",
   begin

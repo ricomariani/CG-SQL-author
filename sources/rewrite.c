@@ -969,7 +969,7 @@ cleanup:
 cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
    CSTR result = "";
     switch (core_type_of(sem_type)) {
-     case SEM_TYPE_NULL: result = "null"; break;
+     // case SEM_TYPE_NULL: result = "null"; break;
      case SEM_TYPE_BOOL: result = "bool"; break;
      case SEM_TYPE_INTEGER:  result = "int"; break;
      case SEM_TYPE_LONG_INTEGER: result = "long"; break;
@@ -977,36 +977,18 @@ cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
      case SEM_TYPE_TEXT:  result = "text"; break;
      case SEM_TYPE_BLOB:  result = "blob"; break;
      case SEM_TYPE_OBJECT: result = "object"; break;
-     case SEM_TYPE_STRUCT: result = "cursor"; break;
+     // case SEM_TYPE_STRUCT: result = "cursor"; break;
   };
   // Only the above are possible
   Contract(result[0]);
   return result;
 }
 
-// This bit is necessary because builtin types like result sets are of type
-// foo object<proc_name set> *with* the space.  We can't have a space in a function name
-// so we clobber it into an underscore.  Only builtin types can have an embedded space
-// and that type has to flow.  User declared types only are allowed identifiers.
-// The two types are object<foo SET> and object<foo CURSOR>.  There are no cases with
-// more than one space.  We verify all this below
-static void rewrite_replace_space_if_needed(char *new_name) {
-  char *space = strchr(new_name, ' ');
-  if (space) {
-    // this is our buffer we just allocated, we can hammer it
-    *(char *)(space) = '_';
-
-    // There are no others, this is invariant!
-    Contract(!strchr(new_name, ' '));
-  }
-}
-
 // Walk through the ast and grab the arg list as well as the function name.
 // Create a new call node using these two and the argument passed in
 // prior to the ':' symbol.
-cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
-  Contract(is_ast_reverse_apply(head) || is_ast_reverse_apply_typed(head) || is_ast_reverse_apply_poly(head));
-  Contract(op[0] == ':');  // this : or :: or :::
+cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
+  Contract(is_ast_reverse_apply(head));
   EXTRACT_ANY_NOTNULL(argument, head->left);
   EXTRACT_NOTNULL(call, head->right);
   EXTRACT_ANY_NOTNULL(function_name, call->left);
@@ -1016,32 +998,29 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head, CSTR op) {
 
   AST_REWRITE_INFO_SET(head->lineno, head->filename);
 
-  if (!op[1]) {
-     // function_name is already good, don't need to do anything else
-  }
-  else if (!op[2] || !argument->sem->kind || !argument->sem->kind[0]) {
-     // This is the :: case or else the object has no type kind
-     Contract(op[1] == ':');
-     EXTRACT_STRING(name, function_name);
-     sem_t sem_type = argument->sem->sem_type;
-     function_name = new_ast_str(dup_printf("%s_%s", name, rewrite_type_suffix(sem_type)));
-  }
-  else {
-     Contract(op[2] == ':');
-     Contract(!op[3]);
-     // This is the ::: case where we use type and kind
-     EXTRACT_STRING(name, function_name);
-     sem_t sem_type = core_type_of(argument->sem->sem_type);
+  EXTRACT_STRING(func, function_name);
 
-     CSTR new_name = dup_printf("%s_%s_%s", name, rewrite_type_suffix(sem_type), argument->sem->kind);
+  sem_t sem_type = argument->sem->sem_type;
+  CSTR kind = argument->sem->kind;
+  CSTR new_name = NULL;
 
-     // discard const, this is ok as the string has not yet escaped into the world...
-     // we need to remove any internal space
-     rewrite_replace_space_if_needed((char *)new_name);
-
-     // further changes would be invalid, the string has escaped into the tree
-     function_name = new_ast_str(new_name);
+  CSTR key;
+  if (kind) {
+    key = dup_printf("%s<%s>:call:%s", rewrite_type_suffix(sem_type), kind, func);
+    new_name = find_op(key);
   }
+
+  if (!new_name) {
+    key = dup_printf("%s:call:%s", rewrite_type_suffix(sem_type), func);
+    new_name = find_op(key);
+  }
+
+  if (!new_name) {
+    new_name = func;
+  }
+
+  // further changes would be invalid, the string has escaped into the tree
+  function_name = new_ast_str(new_name);
 
   ast_node *new_arg_list =
     new_ast_call_arg_list(
@@ -1084,9 +1063,6 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
     bprintf(&new_name, "_%s", rewrite_type_suffix(arg->sem->sem_type));
     item = item->right;
   }
-
-  // we need to remove any internal space
-  rewrite_replace_space_if_needed(new_name.ptr);
 
   // further changes would be invalid, the string has escaped into the tree
   ast_node *function_name = new_ast_str(Strdup(new_name.ptr));
@@ -3832,24 +3808,24 @@ cql_noexport void rewrite_op_equals_assignment_if_needed(ast_node *_Nonnull expr
 // This helper does the job of rewriting the array into a function call.,
 // In the set case a second rewrite moves the assigned into the end of
 // the arg list.
-cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull new_name) {
+cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull op) {
   Contract(is_ast_array(expr));
   EXTRACT_ANY_NOTNULL(array, expr->left);
   EXTRACT_NOTNULL(arg_list, expr->right);
   sem_t sem_type = array->sem->sem_type;
   CSTR kind = array->sem->kind;
-  Contract(kind);
 
-  CSTR function_name = dup_printf("%s_%s_%s", new_name, rewrite_type_suffix(sem_type), kind);
+  CSTR key = dup_printf("%s<%s>:array:%s", rewrite_type_suffix(sem_type), kind, op);
+  CSTR new_name = find_op(key);
 
-  // discard const, this is ok as the string has not yet escaped into the world...
-  // we need to remove any internal space
-  rewrite_replace_space_if_needed((char *)new_name);
+  if (!new_name) {
+    new_name = key; // this is for sure going to be an error
+  }
 
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
 
   ast_node *new_arg_list = new_ast_arg_list(array, arg_list);
-  ast_node *name_ast = new_ast_str(function_name);
+  ast_node *name_ast = new_ast_str(new_name);
   ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), new_arg_list);
   ast_node *new_call = new_ast_call(name_ast, call_arg_list);
 
@@ -3878,11 +3854,28 @@ cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull
   AST_REWRITE_INFO_RESET();
 }
 
-cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_name) {
+cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull op) {
   Contract(is_ast_dot(dot));
   EXTRACT_ANY_NOTNULL(expr, dot->left);
+  EXTRACT_STRING(func, dot->right);
 
-  bool_t add_arg = !strncmp("get_from_", new_name, 9) || !strncmp("set_in_", new_name, 7);
+  sem_t sem_type = expr->sem->sem_type;
+  CSTR kind = expr->sem->kind;
+
+  CSTR key = dup_printf("%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+  CSTR new_name = find_op(key);
+  bool_t add_arg = false;
+
+  if (!new_name) {
+    CSTR key2 = dup_printf("%s<%s>:%s:all", rewrite_type_suffix(sem_type), kind, op);
+    printf("%s\n", key2);
+    new_name = find_op(key2);
+    add_arg = !!new_name;
+  }
+
+  if (!new_name) {
+    new_name = key; // this is for sure going to be an error
+  }
 
   AST_REWRITE_INFO_SET(dot->lineno, dot->filename);
 
@@ -3903,7 +3896,6 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_
   ast_set_right(dot, new_call->right);
 
   AST_REWRITE_INFO_RESET();
-
 }
 
 cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_Nonnull columns_values) {

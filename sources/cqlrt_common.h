@@ -431,11 +431,11 @@ CQL_EXPORT cql_object_ref _Nullable cql_object_dictionary_find(
   cql_string_ref _Nullable key);
 
 // String list helpers
-CQL_EXPORT cql_object_ref _Nonnull create_cql_string_list(void);
-CQL_EXPORT cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
-CQL_EXPORT int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list);
-CQL_EXPORT cql_string_ref _Nonnull get_from_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index);
-CQL_EXPORT cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value);
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+CQL_EXPORT int32_t cql_string_list_count(cql_object_ref _Nonnull list);
+CQL_EXPORT cql_string_ref _Nonnull cql_string_list_get_at(cql_object_ref _Nonnull list, int32_t index);
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value);
 
 // For internal use by the schema upgrader only, subject to change and generally uninteresting because
 // of its unusual matching rules.

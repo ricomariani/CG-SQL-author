@@ -86,7 +86,7 @@ DECLARE FUNC cql_extract_partition (p OBJECT<partitioning>!, key CURSOR) CREATE 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary>!;
+DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -94,18 +94,18 @@ DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<string_dictionary> notnull create_func
-    | {name cql_string_dictionary_create}: object<string_dictionary> notnull create_func
+  | {declare_func_stmt}: object<cql_string_dictionary> notnull create_func
+    | {name cql_string_dictionary_create}: object<cql_string_dictionary> notnull create_func
     | {func_params_return}
-      | {create_data_type}: object<string_dictionary> notnull create_func
-        | {notnull}: object<string_dictionary> notnull
-          | {type_object}: object<string_dictionary>
-            | {name string_dictionary}
+      | {create_data_type}: object<cql_string_dictionary> notnull create_func
+        | {notnull}: object<cql_string_dictionary> notnull
+          | {type_object}: object<cql_string_dictionary>
+            | {name cql_string_dictionary}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
+DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -117,12 +117,12 @@ DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEX
     | {name cql_string_dictionary_add}: bool notnull
     | {func_params_return}
       | {params}: ok
-      | | {param}: dict: object<string_dictionary> notnull variable in
-      | | | {param_detail}: dict: object<string_dictionary> notnull variable in
-      | |   | {name dict}: dict: object<string_dictionary> notnull variable in
-      | |   | {notnull}: object<string_dictionary> notnull
-      | |     | {type_object}: object<string_dictionary>
-      | |       | {name string_dictionary}
+      | | {param}: dict: object<cql_string_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_string_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_string_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_string_dictionary> notnull
+      | |     | {type_object}: object<cql_string_dictionary>
+      | |       | {name cql_string_dictionary}
       | | {params}
       |   | {param}: key: text notnull variable in
       |   | | {param_detail}: key: text notnull variable in
@@ -141,7 +141,7 @@ DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TEXT) TEXT;
+DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -153,12 +153,12 @@ DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TE
     | {name cql_string_dictionary_find}: text
     | {func_params_return}
       | {params}: ok
-      | | {param}: dict: object<string_dictionary> notnull variable in
-      | | | {param_detail}: dict: object<string_dictionary> notnull variable in
-      | |   | {name dict}: dict: object<string_dictionary> notnull variable in
-      | |   | {notnull}: object<string_dictionary> notnull
-      | |     | {type_object}: object<string_dictionary>
-      | |       | {name string_dictionary}
+      | | {param}: dict: object<cql_string_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_string_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_string_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_string_dictionary> notnull
+      | |     | {type_object}: object<cql_string_dictionary>
+      | |       | {name cql_string_dictionary}
       | | {params}
       |   | {param}: key: text variable in
       |     | {param_detail}: key: text variable in
@@ -169,7 +169,7 @@ DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TE
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<object_dictionary>!;
+@OP OBJECT<cql_string_dictionary> : call add AS cql_string_dictionary_add;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -177,18 +177,58 @@ DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<object_dictionary>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<object_dictionary> notnull create_func
-    | {name cql_object_dictionary_create}: object<object_dictionary> notnull create_func
-    | {func_params_return}
-      | {create_data_type}: object<object_dictionary> notnull create_func
-        | {notnull}: object<object_dictionary> notnull
-          | {type_object}: object<object_dictionary>
-            | {name object_dictionary}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_dictionary>
+    | | {name cql_string_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_string_dictionary_add}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_object_dictionary_add (dict OBJECT<object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;
+@OP OBJECT<cql_string_dictionary> : call find AS cql_string_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_dictionary>
+    | | {name cql_string_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name find}
+        | {name cql_string_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_object_dictionary> notnull create_func
+    | {name cql_object_dictionary_create}: object<cql_object_dictionary> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_object_dictionary> notnull create_func
+        | {notnull}: object<cql_object_dictionary> notnull
+          | {type_object}: object<cql_object_dictionary>
+            | {name cql_object_dictionary}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -200,12 +240,12 @@ DECLARE FUNC cql_object_dictionary_add (dict OBJECT<object_dictionary>!, key TEX
     | {name cql_object_dictionary_add}: bool notnull
     | {func_params_return}
       | {params}: ok
-      | | {param}: dict: object<object_dictionary> notnull variable in
-      | | | {param_detail}: dict: object<object_dictionary> notnull variable in
-      | |   | {name dict}: dict: object<object_dictionary> notnull variable in
-      | |   | {notnull}: object<object_dictionary> notnull
-      | |     | {type_object}: object<object_dictionary>
-      | |       | {name object_dictionary}
+      | | {param}: dict: object<cql_object_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_object_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_object_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_object_dictionary> notnull
+      | |     | {type_object}: object<cql_object_dictionary>
+      | |       | {name cql_object_dictionary}
       | | {params}
       |   | {param}: key: text notnull variable in
       |   | | {param_detail}: key: text notnull variable in
@@ -224,7 +264,7 @@ DECLARE FUNC cql_object_dictionary_add (dict OBJECT<object_dictionary>!, key TEX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_object_dictionary_find (dict OBJECT<object_dictionary>!, key TEXT) OBJECT;
+DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -236,18 +276,58 @@ DECLARE FUNC cql_object_dictionary_find (dict OBJECT<object_dictionary>!, key TE
     | {name cql_object_dictionary_find}: object
     | {func_params_return}
       | {params}: ok
-      | | {param}: dict: object<object_dictionary> notnull variable in
-      | | | {param_detail}: dict: object<object_dictionary> notnull variable in
-      | |   | {name dict}: dict: object<object_dictionary> notnull variable in
-      | |   | {notnull}: object<object_dictionary> notnull
-      | |     | {type_object}: object<object_dictionary>
-      | |       | {name object_dictionary}
+      | | {param}: dict: object<cql_object_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_object_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_object_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_object_dictionary> notnull
+      | |     | {type_object}: object<cql_object_dictionary>
+      | |       | {name cql_object_dictionary}
       | | {params}
       |   | {param}: key: text variable in
       |     | {param_detail}: key: text variable in
       |       | {name key}: key: text variable in
       |       | {type_text}: text
       | {type_object}: object
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_object_dictionary> : call add AS cql_object_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_object_dictionary>
+    | | {name cql_object_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_object_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_object_dictionary> : call find AS cql_object_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_object_dictionary>
+    | | {name cql_object_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name find}
+        | {name cql_object_dictionary_find}
 
 The statement ending at line XXXX
 
@@ -275,7 +355,7 @@ DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -283,23 +363,23 @@ DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_int}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_int}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: integer variable in
       |   | {param_detail}: x: integer variable in
       |     | {name x}: x: integer variable in
       |     | {type_int}: integer
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_int (box OBJECT<box>!) INT;
+DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>!) INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -311,18 +391,18 @@ DECLARE FUNC cql_unbox_int (box OBJECT<box>!) INT;
     | {name cql_unbox_int}: integer
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_int}: integer
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -330,23 +410,23 @@ DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_real}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_real}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: real variable in
       |   | {param_detail}: x: real variable in
       |     | {name x}: x: real variable in
       |     | {type_real}: real
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_real (box OBJECT<box>!) REAL;
+DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>!) REAL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -358,18 +438,18 @@ DECLARE FUNC cql_unbox_real (box OBJECT<box>!) REAL;
     | {name cql_unbox_real}: real
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_real}: real
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -377,23 +457,23 @@ DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_bool}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_bool}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: bool variable in
       |   | {param_detail}: x: bool variable in
       |     | {name x}: x: bool variable in
       |     | {type_bool}: bool
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_bool (box OBJECT<box>!) BOOL;
+DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>!) BOOL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -405,18 +485,18 @@ DECLARE FUNC cql_unbox_bool (box OBJECT<box>!) BOOL;
     | {name cql_unbox_bool}: bool
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_bool}: bool
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -424,23 +504,23 @@ DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_long}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_long}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: longint variable in
       |   | {param_detail}: x: longint variable in
       |     | {name x}: x: longint variable in
       |     | {type_long}: longint
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_long (box OBJECT<box>!) LONG;
+DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>!) LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -452,18 +532,18 @@ DECLARE FUNC cql_unbox_long (box OBJECT<box>!) LONG;
     | {name cql_unbox_long}: longint
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_long}: longint
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -471,23 +551,23 @@ DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_text}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_text}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: text variable in
       |   | {param_detail}: x: text variable in
       |     | {name x}: x: text variable in
       |     | {type_text}: text
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_text (box OBJECT<box>!) TEXT;
+DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -499,18 +579,18 @@ DECLARE FUNC cql_unbox_text (box OBJECT<box>!) TEXT;
     | {name cql_unbox_text}: text
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_text}: text
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -518,23 +598,23 @@ DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_blob}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_blob}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: blob variable in
       |   | {param_detail}: x: blob variable in
       |     | {name x}: x: blob variable in
       |     | {type_blob}: blob
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_blob (box OBJECT<box>!) BLOB;
+DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>!) BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -546,18 +626,18 @@ DECLARE FUNC cql_unbox_blob (box OBJECT<box>!) BLOB;
     | {name cql_unbox_blob}: blob
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_blob}: blob
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<box>!;
+DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -565,23 +645,23 @@ DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<box>!;
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_func_stmt}: object<box> notnull create_func
-    | {name cql_box_object}: object<box> notnull create_func
+  | {declare_func_stmt}: object<cql_box> notnull create_func
+    | {name cql_box_object}: object<cql_box> notnull create_func
     | {func_params_return}
       | {params}: ok
       | | {param}: x: object variable in
       |   | {param_detail}: x: object variable in
       |     | {name x}: x: object variable in
       |     | {type_object}: object
-      | {create_data_type}: object<box> notnull create_func
-        | {notnull}: object<box> notnull
-          | {type_object}: object<box>
-            | {name box}
+      | {create_data_type}: object<cql_box> notnull create_func
+        | {notnull}: object<cql_box> notnull
+          | {type_object}: object<cql_box>
+            | {name cql_box}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_object (box OBJECT<box>!) OBJECT;
+DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>!) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -593,13 +673,279 @@ DECLARE FUNC cql_unbox_object (box OBJECT<box>!) OBJECT;
     | {name cql_unbox_object}: object
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<box> notnull variable in
-      |   | {param_detail}: box: object<box> notnull variable in
-      |     | {name box}: box: object<box> notnull variable in
-      |     | {notnull}: object<box> notnull
-      |       | {type_object}: object<box>
-      |         | {name box}
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
       | {type_object}: object
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP BOOL : call box AS cql_box_bool;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_bool}: bool
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_bool}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP INT : call box AS cql_box_int;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_int}: integer
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_int}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP LONG : call box AS cql_box_long;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_long}: longint
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_long}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP REAL : call box AS cql_box_real;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_real}: real
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_real}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP TEXT : call box AS cql_box_text;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_text}: text
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_text}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP BLOB : call box AS cql_box_blob;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_blob}: blob
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call box AS cql_box_object;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name box}
+        | {name cql_box_object}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_bool AS cql_unbox_bool;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_bool}
+        | {name cql_unbox_bool}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_int AS cql_unbox_int;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_int}
+        | {name cql_unbox_int}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_long AS cql_unbox_long;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_long}
+        | {name cql_unbox_long}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_real AS cql_unbox_real;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_real}
+        | {name cql_unbox_real}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_text AS cql_unbox_text;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_text}
+        | {name cql_unbox_text}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_blob AS cql_unbox_blob;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_blob}
+        | {name cql_unbox_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT : call to_object AS cql_unbox_object;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_object}
+        | {name cql_unbox_object}
 
 The statement ending at line XXXX
 
@@ -620,7 +966,7 @@ TYPE cql_string_list OBJECT<cql_string_list>;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
+DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -629,7 +975,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}: object<cql_string_list> notnull create_func
-    | {name create_cql_string_list}: object<cql_string_list> notnull create_func
+    | {name cql_string_list_create}: object<cql_string_list> notnull create_func
     | {func_params_return}
       | {create_data_type}: object<cql_string_list> notnull create_func
         | {notnull}: object<cql_string_list> notnull
@@ -639,7 +985,7 @@ DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
+DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -648,7 +994,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}: object<cql_string_list> notnull
-    | {name set_in_object_cql_string_list}: object<cql_string_list> notnull
+    | {name cql_string_list_set_at}: object<cql_string_list> notnull
     | {func_params_return}
       | {params}: ok
       | | {param}: list: object<cql_string_list> notnull variable in
@@ -676,7 +1022,7 @@ DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
+DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -685,7 +1031,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, ind
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}: text
-    | {name get_from_object_cql_string_list}: text
+    | {name cql_string_list_get_at}: text
     | {func_params_return}
       | {params}: ok
       | | {param}: list: object<cql_string_list> notnull variable in
@@ -705,7 +1051,7 @@ DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, ind
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
+DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -714,7 +1060,7 @@ DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) IN
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}: integer notnull
-    | {name get_object_cql_string_list_count}: integer notnull
+    | {name cql_string_list_count}: integer notnull
     | {func_params_return}
       | {params}: ok
       | | {param}: list: object<cql_string_list> notnull variable in
@@ -729,7 +1075,7 @@ DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) IN
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
+DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -738,7 +1084,7 @@ DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string T
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}: object<cql_string_list> notnull
-    | {name add_object_cql_string_list}: object<cql_string_list> notnull
+    | {name cql_string_list_add}: object<cql_string_list> notnull
     | {func_params_return}
       | {params}: ok
       | | {param}: list: object<cql_string_list> notnull variable in
@@ -756,6 +1102,86 @@ DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string T
       | {notnull}: object<cql_string_list> notnull
         | {type_object}: object<cql_string_list>
           | {name cql_string_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_string_list> : array set AS cql_string_list_set_at;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_list>
+    | | {name cql_string_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_string_list_set_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_string_list> : array get AS cql_string_list_get_at;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_list>
+    | | {name cql_string_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_string_list_get_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_string_list> : call add AS cql_string_list_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_list>
+    | | {name cql_string_list}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_string_list_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_string_list> : get count AS cql_string_list_count;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_list>
+    | | {name cql_string_list}
+    | {op_vals}
+      | {name get}
+      | {op_vals}
+        | {name count}
+        | {name cql_string_list_count}
 
 The statement ending at line XXXX
 

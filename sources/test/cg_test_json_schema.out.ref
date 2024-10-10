@@ -5438,7 +5438,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<string_dictionary>!
+    DECLARE FUNC cql_string_dictionary_create () CREATE OBJECT<cql_string_dictionary>!
 
     {
       "name" : "cql_string_dictionary_create",
@@ -5452,7 +5452,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "string_dictionary",
+        "kind" : "cql_string_dictionary",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5461,7 +5461,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_string_dictionary_add (dict OBJECT<string_dictionary>!, key TEXT!, value TEXT!) BOOL!
+    DECLARE FUNC cql_string_dictionary_add (dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!
 
     {
       "name" : "cql_string_dictionary_add",
@@ -5469,7 +5469,7 @@
         {
           "name" : "dict",
           "type" : "object",
-          "kind" : "string_dictionary",
+          "kind" : "cql_string_dictionary",
           "isNotNull" : 1
         },
         {
@@ -5499,7 +5499,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_string_dictionary_find (dict OBJECT<string_dictionary>!, key TEXT) TEXT
+    DECLARE FUNC cql_string_dictionary_find (dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT
 
     {
       "name" : "cql_string_dictionary_find",
@@ -5507,7 +5507,7 @@
         {
           "name" : "dict",
           "type" : "object",
-          "kind" : "string_dictionary",
+          "kind" : "cql_string_dictionary",
           "isNotNull" : 1
         },
         {
@@ -5532,7 +5532,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<object_dictionary>!
+    DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!
 
     {
       "name" : "cql_object_dictionary_create",
@@ -5546,7 +5546,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "object_dictionary",
+        "kind" : "cql_object_dictionary",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5555,7 +5555,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_object_dictionary_add (dict OBJECT<object_dictionary>!, key TEXT!, value OBJECT!) BOOL!
+    DECLARE FUNC cql_object_dictionary_add (dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!
 
     {
       "name" : "cql_object_dictionary_add",
@@ -5563,7 +5563,7 @@
         {
           "name" : "dict",
           "type" : "object",
-          "kind" : "object_dictionary",
+          "kind" : "cql_object_dictionary",
           "isNotNull" : 1
         },
         {
@@ -5593,7 +5593,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_object_dictionary_find (dict OBJECT<object_dictionary>!, key TEXT) OBJECT
+    DECLARE FUNC cql_object_dictionary_find (dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT
 
     {
       "name" : "cql_object_dictionary_find",
@@ -5601,7 +5601,7 @@
         {
           "name" : "dict",
           "type" : "object",
-          "kind" : "object_dictionary",
+          "kind" : "cql_object_dictionary",
           "isNotNull" : 1
         },
         {
@@ -5653,7 +5653,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_int",
@@ -5672,7 +5672,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5681,7 +5681,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_int (box OBJECT<box>!) INT
+    DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>!) INT
 
     {
       "name" : "cql_unbox_int",
@@ -5689,7 +5689,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -5709,7 +5709,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_real",
@@ -5728,7 +5728,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5737,7 +5737,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_real (box OBJECT<box>!) REAL
+    DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>!) REAL
 
     {
       "name" : "cql_unbox_real",
@@ -5745,7 +5745,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -5765,7 +5765,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_bool",
@@ -5784,7 +5784,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5793,7 +5793,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_bool (box OBJECT<box>!) BOOL
+    DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>!) BOOL
 
     {
       "name" : "cql_unbox_bool",
@@ -5801,7 +5801,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -5821,7 +5821,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_long",
@@ -5840,7 +5840,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5849,7 +5849,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_long (box OBJECT<box>!) LONG
+    DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>!) LONG
 
     {
       "name" : "cql_unbox_long",
@@ -5857,7 +5857,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -5877,7 +5877,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_text",
@@ -5896,7 +5896,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5905,7 +5905,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_text (box OBJECT<box>!) TEXT
+    DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>!) TEXT
 
     {
       "name" : "cql_unbox_text",
@@ -5913,7 +5913,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -5933,7 +5933,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_blob",
@@ -5952,7 +5952,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -5961,7 +5961,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_blob (box OBJECT<box>!) BLOB
+    DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>!) BLOB
 
     {
       "name" : "cql_unbox_blob",
@@ -5969,7 +5969,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -5989,7 +5989,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<box>!
+    DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!
 
     {
       "name" : "cql_box_object",
@@ -6008,7 +6008,7 @@
       ],
       "returnType" : {
         "type" : "object",
-        "kind" : "box",
+        "kind" : "cql_box",
         "isNotNull" : 1
       },
       "createsObject" : 1
@@ -6017,7 +6017,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_object (box OBJECT<box>!) OBJECT
+    DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>!) OBJECT
 
     {
       "name" : "cql_unbox_object",
@@ -6025,7 +6025,7 @@
         {
           "name" : "box",
           "type" : "object",
-          "kind" : "box",
+          "kind" : "cql_box",
           "isNotNull" : 1
         }
       ],
@@ -6045,10 +6045,10 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC create_cql_string_list () CREATE OBJECT<cql_string_list>!
+    DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!
 
     {
-      "name" : "create_cql_string_list",
+      "name" : "cql_string_list_create",
       "args" : [
       ],
       "attributes" : [
@@ -6068,10 +6068,10 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC set_in_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!
+    DECLARE FUNC cql_string_list_set_at (list OBJECT<cql_string_list>!, index_ INT!, value_ TEXT!) OBJECT<cql_string_list>!
 
     {
-      "name" : "set_in_object_cql_string_list",
+      "name" : "cql_string_list_set_at",
       "args" : [
         {
           "name" : "list",
@@ -6107,10 +6107,10 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC get_from_object_cql_string_list (list OBJECT<cql_string_list>!, index_ INT!) TEXT
+    DECLARE FUNC cql_string_list_get_at (list OBJECT<cql_string_list>!, index_ INT!) TEXT
 
     {
-      "name" : "get_from_object_cql_string_list",
+      "name" : "cql_string_list_get_at",
       "args" : [
         {
           "name" : "list",
@@ -6140,10 +6140,10 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC get_object_cql_string_list_count (list OBJECT<cql_string_list>!) INT!
+    DECLARE FUNC cql_string_list_count (list OBJECT<cql_string_list>!) INT!
 
     {
-      "name" : "get_object_cql_string_list_count",
+      "name" : "cql_string_list_count",
       "args" : [
         {
           "name" : "list",
@@ -6168,10 +6168,10 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC add_object_cql_string_list (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!
+    DECLARE FUNC cql_string_list_add (list OBJECT<cql_string_list>!, string TEXT!) OBJECT<cql_string_list>!
 
     {
-      "name" : "add_object_cql_string_list",
+      "name" : "cql_string_list_add",
       "args" : [
         {
           "name" : "list",

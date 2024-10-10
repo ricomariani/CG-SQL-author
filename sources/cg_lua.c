@@ -5446,6 +5446,7 @@ cql_noexport void cg_lua_init(void) {
   LUA_NO_OP_STMT_INIT(declare_func_no_check_stmt);
   LUA_NO_OP_STMT_INIT(declare_proc_stmt);
   LUA_NO_OP_STMT_INIT(keep_table_name_in_aliases_stmt);
+  LUA_NO_OP_STMT_INIT(op_stmt);
 
   LUA_STD_DML_STMT_INIT(begin_trans_stmt);
   LUA_STD_DML_STMT_INIT(commit_trans_stmt);

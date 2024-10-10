@@ -2299,11 +2299,11 @@ a * b[5] IS "a*b[5]";
 
 (~x)[5] IS "(~x)[5]";
 
-~foo::bar(x) IS "~foo::bar(x)";
+~foo:bar(x) IS "~foo:bar(x)";
 
-~a.b::bar(x) IS "~a.b::bar(x)";
+~a.b:bar(x) IS "~a.b:bar(x)";
 
-~a.b::bar(x) IS "~a.b::bar(x) (a.b) parens removed";
+~a.b:bar(x) IS "~a.b:bar(x) (a.b) parens removed";
 
 (x + y).q IS "(x+y).q";
 
@@ -2331,7 +2331,7 @@ foo(q).r;
 
 (~q).r;
 
-foo::bar().baz;
+foo:bar().baz;
 
 column := 1;
 
@@ -2373,7 +2373,7 @@ SELECT *
 
 '{ "x" : 1}' ->> ~INT~ '$.x';
 
-LET list := new_builder():(5):(7.0):(1, 2):::to_list();
+LET list := new_builder():(5):(7.0):(1, 2):to_list();
 
 1 + CAST(2 AS REAL);
 
@@ -2385,6 +2385,8 @@ x + CAST(y AS INT);
 
 x:y();
 
-x::y();
+@OP OBJECT<foo> : get bar AS foo_get_bar;
 
-x:::y();
+@OP OBJECT<foo> : get bar AS foo_get_bar;
+
+@OP OBJECT<foo> : call zoo AS foo_zoo;

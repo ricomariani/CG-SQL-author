@@ -23441,7 +23441,6 @@ begin
   declare x object<invalid_child_proc_2 set>;
 end;
 
-declare function rev_apply_null(x bool) int!;
 declare function rev_apply_bool(x bool) int!;
 declare function rev_apply_int(x int) int!;
 declare function rev_apply_long(x long) int!;
@@ -23449,64 +23448,66 @@ declare function rev_apply_real(x real) int!;
 declare function rev_apply_text(x text) int!;
 declare function rev_apply_blob(x blob) int!;
 declare function rev_apply_object(x object) int!;
-declare function rev_apply_cursor(x cursor) int!;
+-- declare function rev_apply_cursor(x cursor) int!;
 
--- TEST: use the reverse apply with :: to get polymorphism
--- validate rewrite only
--- + SET int_result := rev_apply_null(NULL);
--- - error:
-set int_result := null::rev_apply();
+@op bool : call rev_apply as rev_apply_bool;
+@op int : call rev_apply as rev_apply_int;
+@op long : call rev_apply as rev_apply_long;
+@op real : call rev_apply as rev_apply_real;
+@op text : call rev_apply as rev_apply_text;
+@op blob : call rev_apply as rev_apply_blob;
+@op object : call rev_apply as rev_apply_object;
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_bool(true);
 -- - error:
-set int_result := true::rev_apply();
+set int_result := true:rev_apply();
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_int(5);
 -- - error:
-set int_result := 5::rev_apply();
+set int_result := 5:rev_apply();
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_long(5L);
 -- - error:
-set int_result := 5L::rev_apply();
+set int_result := 5L:rev_apply();
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_real(3.5);
 -- - error:
-set int_result := 3.5::rev_apply();
+set int_result := 3.5:rev_apply();
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_text("foo");
 -- - error:
-set int_result := "foo"::rev_apply();
+set int_result := "foo":rev_apply();
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_blob(blob_var);
 -- - error:
-set int_result := blob_var::rev_apply();
+set int_result := blob_var:rev_apply();
 
--- TEST: use the reverse apply with :: to get polymorphism
+-- TEST: use the reverse apply with : to get polymorphism
 -- validate rewrite only
 -- + SET int_result := rev_apply_object(obj_var);
 -- - error:
-set int_result := obj_var::rev_apply();
+set int_result := obj_var:rev_apply();
 
 -- make the cursor valid to use (this never runs so it's fine)
 fetch my_cursor;
 
--- TEST: use the reverse apply with :: to get polymorphism
--- validate rewrite only
--- + SET int_result := rev_apply_cursor(my_cursor);
--- - error:
-set int_result := my_cursor::rev_apply();
+-- -- TEST: use the reverse apply with : to get polymorphism
+-- -- validate rewrite only
+-- -- + SET int_result := rev_apply_cursor(my_cursor);
+-- -- - error:
+-- set int_result := my_cursor:rev_apply();
 
 -- TEST: path of invalid identifier has a slightly different error route
 -- * error: % name not found 'invalid_id_bogus'
@@ -23514,15 +23515,16 @@ set int_result := my_cursor::rev_apply();
 -- + {name invalid_id_bogus}: err
 -- ONE error not TWO!
 -- +1 error:
-set int_result := invalid_id_bogus::rev_apply();
+set int_result := invalid_id_bogus:rev_apply();
 
 declare lbs real<pounds> not null;
 
 declare function some_polymorphic_function_real_pounds(x real<pounds>, y real) int!;
+@op real<pounds> : call myfunc as some_polymorphic_function_real_pounds;
 
 -- TEST: using the type kind we append "real_pounds" not just "real"
 -- + LET poly_result_1 := some_polymorphic_function_real_pounds(lbs, 1);
-let poly_result_1 := lbs:::some_polymorphic_function(1);
+let poly_result_1 := lbs:myfunc(1);
 
 proc get_result()
 begin
@@ -23534,13 +23536,14 @@ end;
 -- so we have to use a generic object to capture the argument.
 -- this is of dubious usefulness.  But again these internal types
 -- are not intended to be used in this way anyway.
-declare function count_object_get_result_SET(result object) int!;
+declare function get_result_set_count(result object) int!;
+@op object<get_result SET> : call count as get_result_set_count;
 
--- TEST: this is a not very clever use of ::: but it showcases space issue
+-- TEST: this is a not very clever use of : but it showcases space issue
 -- note that we added an underscore so we get _SET
--- + LET poly_result_2 := count_object_get_result_SET(get_result());
+-- + LET poly_result_2 := get_result_set_count(get_result());
 -- - error:
-let poly_result_2 := get_result():::count();
+let poly_result_2 := get_result():count();
 
 -- some things we will use in the tests
 declare function expr_func_a(x integer) integer;
@@ -23601,6 +23604,8 @@ begin
   printf(" %d", x);
 end;
 
+@op int : call dump as dump_int;
+
 -- TEST: this dump call is NOT rewritten to a proc call
 -- it can't be because it uses the proc as func pattern
 -- + dump_int(1);
@@ -23610,7 +23615,7 @@ proc main()
 begin
   let x := 2;
   declare result integer;
-  1::dump();
+  1:dump();
   dump_int(*);
 end;
 
@@ -23694,6 +23699,9 @@ op_assign >>= 11;
 declare function get_from_object_foo(array object<foo>, index text) text not null;
 declare function set_in_object_foo( array object<foo>, index text, value text) text not null;
 
+@op object<foo> : array get as get_from_object_foo;
+@op object<foo> : array set as set_in_object_foo;
+
 -- TEST: emulate array behavior with function rewrites
 -- we just have to verify the rewrites
 -- + LET z := get_from_object_foo(x, 'index');
@@ -23736,6 +23744,9 @@ end;
 declare function get_object_dot_one_id(x object<dot_one>) integer;
 declare function get_from_object_dot_two no check integer;
 
+@op object<dot_one> : get id as get_object_dot_one_id;
+@op object<dot_two> : get all as get_from_object_dot_two;
+
 -- TEST: rewrite dot operations (not set case)
 -- +  LET z := get_object_dot_one_id(q);
 -- +  SET z := get_from_object_dot_two(u, 'id');
@@ -23774,12 +23785,13 @@ begin
 end;
 
 declare function make_dot_one() create object<dot_one>;
+@op object<dot_one> : get id as get_object_dot_one_id;
 
 -- TEST: try to use a . op but no helper functions (computed version)
 -- one successful rewrite
 -- + LET u := get_object_dot_one_id(make_dot_one());
--- + {dot}: err
--- * error: % name not found 'id2'
+-- + {call}: err
+-- * error: % function not yet implemented 'object<dot_one>:get:id2'
 -- +1 error:
 proc dot_fail_no_missing_helper_computed()
 begin
@@ -23788,7 +23800,6 @@ begin
   let u := make_dot_one().id;
   let v := make_dot_one().id2;
 end;
-
 
 -- TEST: bogus attempt -- no kind
 -- + {expr_stmt}: err
@@ -23811,6 +23822,11 @@ declare function get_object_dot_storage_id(self object<dot_storage>) integer;
 declare function get_from_object_dot_storage no check integer;
 
 declare storage object<dot_storage>;
+@op object<dot_storage> : array get as get_from_object_dot_storage;
+@op object<dot_storage> : array set as set_in_object_dot_storage;
+@op object<dot_storage> : get id as get_object_dot_storage_id;
+@op object<dot_storage> : get all as get_from_object_dot_storage;
+@op object<dot_storage> : set all as set_in_object_dot_storage;
 
 -- TEST: array case (control for set case)
 -- + CALL set_in_object_dot_storage(storage, 'id2', get_from_object_dot_storage(storage, 'id') + get_from_object_dot_storage(storage, 'id2'));
@@ -23878,7 +23894,10 @@ end;
 
 declare function create_event() create object<event> not null;
 declare proc get_object_event_invitees(event_ object<event>, out value object<event_invitees> not null);
-declare proc get_from_object_event_invitees(invitees object<event_invitees>, field text not null, out value text not null);
+declare proc event_invitees_get(invitees object<event_invitees>, field text not null, out value text not null);
+
+@op object<event> : get invitees as get_object_event_invitees; 
+@op object<event_invitees> : get all as event_invitees_get;
 
 -- TEST: when calling proc as func the kind of the out parameter should be preserved
 -- it didn't used to be which caused the get chain below to break
@@ -23891,7 +23910,7 @@ declare proc get_from_object_event_invitees(invitees object<event_invitees>, fie
 proc proc_as_func_preserves_kind()
 BEGIN
   let event := create_event();
-  let x := get_object_event_invitees(event);
+  let x := event.invitees;
   let y := event.invitees.firstName;
 END;
 
@@ -24915,12 +24934,14 @@ declare function new_builder() create object<list_builder>;
 declare function object_list_builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
 declare function object_list_builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
 declare function object_list_builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
-declare function to_list_object_list_builder(arg1 object<list_builder>) create object<list>;
+declare function object_list_builder_to_list(arg1 object<list_builder>) create object<list>;
+
+@op object<list_builder> : call to_list as object_list_builder_to_list;
 
 -- TEST: multiple rewrites based on the builder pattern above
 -- verify rewrite only
--- + LET list_result := to_list_object_list_builder(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
-let list_result := new_builder():(5):(7.0):(1,2):::to_list();
+-- + LET list_result := object_list_builder_to_list(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
+let list_result := new_builder():(5):(7.0):(1,2):to_list();
 
 -- TEST: no kind specified in the left arg
 -- + reverse_apply_poly_args}: err
@@ -24953,3 +24974,13 @@ select 'x' -> 'y' ~int~ as U;
 -- verify rewrite (stronger than IS etc.)
 -- + 1 IS CAST(3 AS INT);
 1 IS 3 ~int~;
+
+-- TEST: bogus type in op statement
+-- + {op_stmt}: err
+-- * error: % must be a cursor, proc, table, or view 'not_a_proc_at_all'
+@op object<not_a_proc_at_all set> : call foo as foofoo;
+
+-- TEST use array access where none is defined
+-- + {call}: err
+-- * error: % function not yet implemented 'object<list>:array:get'
+let uu  := list_result[5];

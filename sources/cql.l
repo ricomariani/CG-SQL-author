@@ -364,6 +364,7 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 @MACRO_FILE                      { return AT_MACRO_FILE; }
 @MACRO_LINE                      { return AT_MACRO_LINE; }
 @MACRO                           { return AT_MACRO; }
+@OP                              { return AT_OP; }
 @PREVIOUS_SCHEMA                 { return AT_PREVIOUS_SCHEMA; }
 @PROC                            { return AT_PROC; }
 @RC                              { return AT_RC; }

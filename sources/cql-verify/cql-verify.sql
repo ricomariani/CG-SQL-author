@@ -35,6 +35,18 @@ declare function str_mid(self text!, `offset` int!, `len` int!) create text;
 declare function str_right(self text!, `len` int!) create text;
 declare function str_left(self text!, `len` int!) create text;
 
+@op object<file>: call readline as readline_object_file;
+@op text: call atoi_at as atoi_at_text;
+@op text: call len as len_text;
+@op text: call octet as octet_text;
+@op text: call after as after_text;
+@op text: call starts_with as starts_with_text;
+@op text: call index_of as index_of_text;
+@op text: call contains_at as contains_at_text;
+@op text: call str_mid as str_mid;
+@op text: call str_right as str_right;
+@op text: call str_leftg as str_left;
+
 var sql_name text;
 var result_name text;
 var attempts int!;
@@ -249,10 +261,10 @@ proc match_multiline(buffer text!, out result bool!)
 begin
   result := false;
 
-  if buffer::len() < 7 return;
-  if not buffer::starts_with("-- +") return;
-  let digit := buffer::octet(4);
-  let space := buffer::octet(5);
+  if buffer:len() < 7 return;
+  if not buffer:starts_with("-- +") return;
+  let digit := buffer:octet(4);
+  let space := buffer:octet(5);
   if space != 32 return;
   if digit < 48 or digit > 48+9 return;
 
@@ -269,7 +281,7 @@ begin
   var pattern text;
 
   -- the comments encode the matches, early out if that fails
-  if not buffer::starts_with("-- ") then
+  if not buffer:starts_with("-- ") then
     -- lines can be out of order or re-visited
     -- we don't want a segment of rows that is later in the file
     -- to prevent later matching.  This can happen with
@@ -280,35 +292,35 @@ begin
 
   -- the standard test prefix it just counts tests, this doesn't mean anything
   -- but it's a useful statistic
-  if buffer::starts_with("-- TEST:") then
+  if buffer:starts_with("-- TEST:") then
     tests += 1;
   end if;
 
-  if buffer::starts_with("-- - ") then
+  if buffer:starts_with("-- - ") then
     -- found -- - foo
     -- negation, none expected
-    pattern := buffer::after(5);
+    pattern := buffer:after(5);
     expected := 0;
-  else if buffer::starts_with("-- * ") then
+  else if buffer:starts_with("-- * ") then
     -- -- * foo
     -- at least one is expected, any number will do, any buffer order
-    pattern := buffer::after(5);
+    pattern := buffer:after(5);
     expected := 1;
-  else if buffer::starts_with("-- + ") then
+  else if buffer:starts_with("-- + ") then
     -- -- + foo
     -- at least one is expected, matches have to be in order!
-    pattern := buffer::after(5);
+    pattern := buffer:after(5);
     expected := -1;
-  else if buffer::starts_with("-- = ") then
+  else if buffer:starts_with("-- = ") then
     -- -- + foo
     -- at least one is expected, matches have to be in order!
-    pattern := buffer::after(5);
+    pattern := buffer:after(5);
     expected := -2;
   else if match_multiline(buffer) then
     -- -- +7 foo
     -- an exact match (single digit matches)
-    pattern := buffer::after(6);
-    expected := buffer::octet(4) - 48;
+    pattern := buffer:after(6);
+    expected := buffer:octet(4) - 48;
   else
     -- any other line is just a normal comment, ignore it
     return;
@@ -385,20 +397,20 @@ begin
 
   let key_string := "The statement ending at line ";
 
-  let len := key_string::len();
+  let len := key_string:len();
 
   while true
   begin
-    let data := result_file:::readline();
+    let data := result_file:readline();
     if data is null leave;
 
     -- lines in the output that start with the key_string demark
     -- output that corresponds to the given input line
 
-    let loc := data::index_of(key_string);
+    let loc := data:index_of(key_string);
 
     if loc >= 0 then
-      line := data::atoi_at(loc + len);
+      line := data:atoi_at(loc + len);
     end if;
 
     -- add the indicated text to the database indexed by the line it was on
@@ -423,7 +435,7 @@ begin
 
   while true
   begin
-    let data := sql_file:::readline();
+    let data := sql_file:readline();
     if data is null leave;
 
     insert into test_input values (line, data);

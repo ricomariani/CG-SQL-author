@@ -6039,11 +6039,7 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
   return SEM_RESOLVE_STOP;
 }
 
-static bool_t find_any_callable(CSTR name) {
-  return find_proc(name) || find_unchecked_proc(name) || find_func(name) || find_unchecked_func(name);
-}
-
-static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name, CSTR choice1, CSTR choice2) {
+static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR name) {
   Contract(sym);
   Contract(expr);
   Contract(name);
@@ -6056,19 +6052,14 @@ static bool_t try_find_possible_dot_overload(charbuf *sym, ast_node *expr, CSTR 
     return false;
   }
 
-  bprintf(sym, "%s_%s_%s_%s", choice1, rewrite_type_suffix(sem_type), kind, name);
-  if (find_any_callable(sym->ptr)) {
+  bprintf(sym, "%s<%s>:get:%s", rewrite_type_suffix(sem_type), kind, name);
+  if (find_op(sym->ptr)) {
     return true;
   }
 
   bclear(sym);
-  bprintf(sym, "%s_%s_%s", choice2, rewrite_type_suffix(sem_type), kind);
-  if (find_any_callable(sym->ptr)) {
-    return true;
-  }
-
-  bclear(sym);
-  return false;
+  bprintf(sym, "%s<%s>:get:all", rewrite_type_suffix(sem_type), kind);
+  return !!find_op(sym->ptr);
 }
 
 static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR scope, sem_t **type_ptr) {
@@ -6087,7 +6078,7 @@ static sem_resolve sem_try_resolve_dot_rewrite(ast_node *ast, CSTR name, CSTR sc
 
   CHARBUF_OPEN(sym);
 
-  bool_t found = try_find_possible_dot_overload(&sym, var, name, "get", "get_from");
+  bool_t found = try_find_possible_dot_overload(&sym, var, name);
   if (found) {
     *type_ptr = &var->sem->sem_type;
     if (ast) {
@@ -21916,11 +21907,7 @@ static bool_t sem_try_as_cursor(ast_node *ast, bool_t *hard_fail) {
     return false;
   }
 
-  if (!is_cursor(ast->sem->sem_type)) {
-    return false;
-  }
-
-  return true;
+  return is_cursor(ast->sem->sem_type);
 }
 
 // Information about switch cases, and the origin of the constants
@@ -23567,7 +23554,7 @@ static void sem_op_stmt(ast_node *ast) {
 
   CSTR key;
   if (kind) {
-    key = dup_printf("%s:%s:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+    key = dup_printf("%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
   }
   else {
     key = dup_printf("%s:%s:%s", rewrite_type_suffix(sem_type), op, func);

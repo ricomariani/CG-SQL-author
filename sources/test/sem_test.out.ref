@@ -1,3 +1,10 @@
+object<dot_two>:get:all
+object<dot_two>:get:all
+object<dot_one>:get:all
+object<dot_storage>:set:all
+object<dot_storage>:set:all
+object<dot_storage>:get:all
+object<event_invitees>:get:all
 {stmt_list}: err
 
 The statement ending at line XXXX
@@ -89109,10 +89116,10 @@ PROC dot_fail_no_missing_helper_computed ()
 BEGIN
   DECLARE q OBJECT;
   LET u := get_object_dot_one_id(make_dot_one());
-  LET v := object:dot_one:get:id2(make_dot_one());
+  LET v := object<dot_one>:get:id2(make_dot_one());
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object:dot_one:get:id2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<dot_one>:get:id2'
 
   {create_proc_stmt}: err
   | {name dot_fail_no_missing_helper_computed}: err
@@ -89136,7 +89143,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 
       | {let_stmt}: err
         | {name v}
         | {call}: err
-          | {name object:dot_one:get:id2}
+          | {name object<dot_one>:get:id2}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
@@ -93865,4 +93872,36 @@ The statement ending at line XXXX
     | {cast_expr}: integer notnull
       | {int 3}: integer notnull
       | {type_int}: integer
+
+The statement ending at line XXXX
+
+@OP OBJECT<not_a_proc_at_all SET> : call foo AS foofoo;
+
+test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_proc_at_all'
+
+  {op_stmt}: err
+  | {type_object}: err
+  | | {name not_a_proc_at_all SET}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name foo}
+      | {name foofoo}
+
+The statement ending at line XXXX
+
+LET uu := object<list>:array:get(list_result, 5);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<list>:array:get'
+
+  {let_stmt}: err
+  | {name uu}
+  | {call}: err
+    | {name object<list>:array:get}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name list_result}: list_result: object<list> variable
+        | {arg_list}
+          | {int 5}
 

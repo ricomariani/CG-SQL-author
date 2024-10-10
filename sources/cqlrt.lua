@@ -770,25 +770,25 @@ cql_object_dictionary_create = cql_string_dictionary_create
 cql_object_dictionary_add = cql_string_dictionary_add
 cql_object_dictionary_find = cql_string_dictionary_find
 
-function create_cql_string_list()
+function cql_string_list_create()
   return {}
 end
 
-function get_object_cql_string_list_count(list)
+function cql_string_list_count(list)
   return #list
 end
 
-function add_object_cql_string_list(list, str)
+function cql_string_list_add(list, str)
   table.insert(list, str)
   return list
 end
 
-function get_from_object_cql_string_list(list, i)
+function cql_string_list_get_at(list, i)
   -- one based index
   return list[i+1]
 end
 
-function set_in_object_cql_string_list(list, i, val)
+function cql_string_list_set_at(list, i, val)
   -- one based index
   list[i+1] = val
   return list

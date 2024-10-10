@@ -969,7 +969,7 @@ cleanup:
 cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
    CSTR result = "";
     switch (core_type_of(sem_type)) {
-     case SEM_TYPE_NULL: result = "null"; break;
+     // case SEM_TYPE_NULL: result = "null"; break;
      case SEM_TYPE_BOOL: result = "bool"; break;
      case SEM_TYPE_INTEGER:  result = "int"; break;
      case SEM_TYPE_LONG_INTEGER: result = "long"; break;
@@ -977,28 +977,11 @@ cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
      case SEM_TYPE_TEXT:  result = "text"; break;
      case SEM_TYPE_BLOB:  result = "blob"; break;
      case SEM_TYPE_OBJECT: result = "object"; break;
-     case SEM_TYPE_STRUCT: result = "cursor"; break;
+     // case SEM_TYPE_STRUCT: result = "cursor"; break;
   };
   // Only the above are possible
   Contract(result[0]);
   return result;
-}
-
-// This bit is necessary because builtin types like result sets are of type
-// foo object<proc_name set> *with* the space.  We can't have a space in a function name
-// so we clobber it into an underscore.  Only builtin types can have an embedded space
-// and that type has to flow.  User declared types only are allowed identifiers.
-// The two types are object<foo SET> and object<foo CURSOR>.  There are no cases with
-// more than one space.  We verify all this below
-static void rewrite_replace_space_if_needed(char *new_name) {
-  char *space = strchr(new_name, ' ');
-  if (space) {
-    // this is our buffer we just allocated, we can hammer it
-    *(char *)(space) = '_';
-
-    // There are no others, this is invariant!
-    Contract(!strchr(new_name, ' '));
-  }
 }
 
 // Walk through the ast and grab the arg list as well as the function name.
@@ -1023,7 +1006,7 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
 
   CSTR key;
   if (kind) {
-    key = dup_printf("%s:%s:call:%s", rewrite_type_suffix(sem_type), kind, func);
+    key = dup_printf("%s<%s>:call:%s", rewrite_type_suffix(sem_type), kind, func);
     new_name = find_op(key);
   }
 
@@ -1080,9 +1063,6 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
     bprintf(&new_name, "_%s", rewrite_type_suffix(arg->sem->sem_type));
     item = item->right;
   }
-
-  // we need to remove any internal space
-  rewrite_replace_space_if_needed(new_name.ptr);
 
   // further changes would be invalid, the string has escaped into the tree
   ast_node *function_name = new_ast_str(Strdup(new_name.ptr));
@@ -3835,16 +3815,11 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull o
   sem_t sem_type = array->sem->sem_type;
   CSTR kind = array->sem->kind;
 
-  CSTR key1 = dup_printf("%s:%s:array:%s", rewrite_type_suffix(sem_type), kind, op);
-  CSTR new_name = find_op(key1);
+  CSTR key = dup_printf("%s<%s>:array:%s", rewrite_type_suffix(sem_type), kind, op);
+  CSTR new_name = find_op(key);
 
   if (!new_name) {
-    CSTR key2 = dup_printf("%s:array:%s", rewrite_type_suffix(sem_type), op);
-    new_name = find_op(key2);
-  }
-
-  if (!new_name) {
-    new_name = key1; // this is for sure going to be an error
+    new_name = key; // this is for sure going to be an error
   }
 
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
@@ -3886,14 +3861,14 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull op) 
 
   sem_t sem_type = expr->sem->sem_type;
   CSTR kind = expr->sem->kind;
-  CSTR new_name = NULL;
 
-  CSTR key = dup_printf("%s:%s:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
-  new_name = find_op(key);
+  CSTR key = dup_printf("%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+  CSTR new_name = find_op(key);
   bool_t add_arg = false;
 
   if (!new_name) {
-    CSTR key2 = dup_printf("%s:%s:%s:all", rewrite_type_suffix(sem_type), kind, op);
+    CSTR key2 = dup_printf("%s<%s>:%s:all", rewrite_type_suffix(sem_type), kind, op);
+    printf("%s\n", key2);
     new_name = find_op(key2);
     add_arg = !!new_name;
   }

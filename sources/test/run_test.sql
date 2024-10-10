@@ -5717,20 +5717,20 @@ END);
 
 TEST!(cql_string_list,
 BEGIN
-  let list := create_cql_string_list();
-  EXPECT!(0 == get_object_cql_string_list_count(list));
-  add_object_cql_string_list(list, "hello");
-  add_object_cql_string_list(list, "goodbye");
-  EXPECT!(2 == get_object_cql_string_list_count(list));
-  EXPECT!("hello" == get_from_object_cql_string_list(list, 0));
-  EXPECT!("goodbye" == get_from_object_cql_string_list(list, 1));
+  let list := cql_string_list_create();
+  EXPECT!(0 == cql_string_list_count(list));
+  cql_string_list_add(list, "hello");
+  cql_string_list_add(list, "goodbye");
+  EXPECT!(2 == cql_string_list_count(list));
+  EXPECT!("hello" == cql_string_list_get_at(list, 0));
+  EXPECT!("goodbye" == cql_string_list_get_at(list, 1));
 END);
 
 TEST!(cql_string_list_as_array,
 BEGIN
-  let list := create_cql_string_list();
+  let list := cql_string_list_create();
   EXPECT!(0 == list.count);
-  list:::add("hello"):::add("goodbye");
+  list:add("hello"):add("goodbye");
   EXPECT!(2 == list.count);
   EXPECT!("hello" == list[0]);
   EXPECT!("goodbye" == list[1]);
@@ -6498,11 +6498,6 @@ BEGIN
   EXPECT!(a_global == 22);
 END);
 
-@MACRO(expr) box!(x! expr)
-begin
-  x!::cql_box
-end;
-
 @MACRO(stmt_list) box_test!(x! expr, t! expr)
 begin
   -- make nullable variable and hold the given value to test
@@ -6510,16 +6505,16 @@ begin
   @ID(val_, t!) := x!;
 
   -- now box and unbox
-  let @ID(b_, t!) := @ID(val_, t!):@ID('cql_box_', t!);
-  let @ID(v_, t!) := @ID(b_, t!):@ID('cql_unbox_', t!);
+  let @ID(b_, t!) := @ID(val_, t!):box;
+  let @ID(v_, t!) := @ID(b_, t!):@ID('to_', t!);
   EXPECT!(@ID(v_, t!) == @ID(val_, t!));
 
   -- test null value
   @ID(val_, t!) := NULL;
 
   -- now box and unbox
-  set @ID(b_, t!) := @ID(val_, t!):@ID('cql_box_', t!);
-  set @ID(v_, t!) := @ID(b_, t!):@ID('cql_unbox_', t!);
+  set @ID(b_, t!) := @ID(val_, t!):box;
+  set @ID(v_, t!) := @ID(b_, t!):@ID('to_', t!);
   EXPECT!(@ID(v_, t!) IS NULL);
 end;
 
@@ -6535,13 +6530,13 @@ BEGIN
   box_test!(bl, 'blob');
   box_test!(b_int, 'object');
 
-  b_bool := true:box!;
-  b_int := 5:box!;
-  b_long := 5:box!;
-  b_real := 5:box!;
-  b_text := '5':box!;
-  b_blob := bl:box!;
-  b_object := b_int:box!;
+  b_bool := true:box;
+  b_int := 5:box;
+  b_long := 5:box;
+  b_real := 5:box;
+  b_text := '5':box;
+  b_blob := bl:box;
+  b_object := b_int:box;
 
   EXPECT!(b_int:cql_unbox_long IS NULL);
   EXPECT!(b_bool:cql_unbox_long IS NULL);
@@ -6555,8 +6550,8 @@ END);
 TEST!(object_dictionary,
 BEGIN
   let d := cql_object_dictionary_create();
-  cql_object_dictionary_add(d, "foo", 101:box!);
-  let v := cql_object_dictionary_find(d, "foo"):ifnull_throw:cql_unbox_int;
+  cql_object_dictionary_add(d, "foo", 101:box);
+  let v := cql_object_dictionary_find(d, "foo"):ifnull_throw:to_int;
   EXPECT!(v == 101);
 END);
 

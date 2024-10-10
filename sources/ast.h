@@ -831,8 +831,6 @@ AST(regexp)
 AST(region_list);
 AST(region_spec);
 AST(reverse_apply)
-AST(reverse_apply_poly)
-AST(reverse_apply_typed)
 AST(reverse_apply_poly_args)
 AST(rs_eq)
 AST(rshift)

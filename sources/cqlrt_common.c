@@ -3918,14 +3918,14 @@ static void cql_string_list_finalize(void *_Nonnull data) {
 }
 
 // Creates the string list storage using a byte buffer
-cql_object_ref _Nonnull create_cql_string_list(void) {
+cql_object_ref _Nonnull cql_string_list_create(void) {
   cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
   cql_bytebuf_open(self);
   return _cql_generic_object_create(self, cql_string_list_finalize);
 }
 
 // Adds a string to the given string list and retains it.
-cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string) {
+cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string) {
   cql_contract(list);
   cql_contract(string);
 
@@ -3936,7 +3936,7 @@ cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list,
 }
 
 // Returns the number of elements in the given string list
-int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list) {
+int32_t cql_string_list_count(cql_object_ref _Nonnull list) {
   cql_contract(list);
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
@@ -3944,7 +3944,7 @@ int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list) {
 }
 
 // Returns the nth string from the string list with no extra retain (get semantics)
-cql_string_ref _Nonnull get_from_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index) {
+cql_string_ref _Nonnull cql_string_list_get_at(cql_object_ref _Nonnull list, int32_t index) {
   cql_contract(list);
   cql_string_ref result = NULL;
 
@@ -3958,7 +3958,7 @@ cql_string_ref _Nonnull get_from_object_cql_string_list(cql_object_ref _Nonnull 
 }
 
 // Edits the string item in place
-cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value) {
+cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value) {
   cql_contract(list);
   cql_contract(value);
 
@@ -4175,7 +4175,7 @@ cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_N
 // is not found inside string literals.
 static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_string_ref _Nonnull str, char* _Nonnull parse_word)
 {
-  cql_object_ref list = create_cql_string_list();
+  cql_object_ref list = cql_string_list_create();
   cql_alloc_cstr(c_str, str);
 
   if (strlen(c_str) == 0) goto cleanup;
@@ -4220,7 +4220,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
         temp[bytes] = '\0';
         currLine = cql_string_ref_new(temp);
         free(temp);
-        add_object_cql_string_list(list, currLine);
+        cql_string_list_add(list, currLine);
         cql_string_release(currLine);
         lineStart = p;
       }
@@ -4235,7 +4235,7 @@ static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_str
   temp[bytes] = '\0';
   currLine = cql_string_ref_new(temp);
   free(temp);
-  add_object_cql_string_list(list, currLine);
+  cql_string_list_add(list, currLine);
   cql_string_release(currLine);
 
 cleanup:
@@ -4325,16 +4325,16 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
   cql_code rc = SQLITE_OK;
   // Execute all delete table drops
   // Note deleteList provides table drops in create order, so we must execute them in reverse.
-  for (cql_int32 i = get_object_cql_string_list_count(deleteList) ; --i >= 0; ) {
-    cql_string_ref delete = get_from_object_cql_string_list(deleteList, i);
+  for (cql_int32 i = cql_string_list_count(deleteList) ; --i >= 0; ) {
+    cql_string_ref delete = cql_string_list_get_at(deleteList, i);
     rc = cql_exec_internal(db, delete);
     if (rc != SQLITE_OK) goto cleanup;
   }
   // Execute all table drops based on the list of creates given by the CQL
   // upgrader backwards.
   // Intuitively, need to drop the tables with the most dependencies first.
-  for (cql_int32 i = get_object_cql_string_list_count(tableList) ; --i >= 0; ) {
-    cql_string_ref tableCreate = get_from_object_cql_string_list(tableList, i);
+  for (cql_int32 i = cql_string_list_count(tableList) ; --i >= 0; ) {
+    cql_string_ref tableCreate = cql_string_list_get_at(tableList, i);
     char *table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
 
     cql_bytebuf drop;
@@ -4349,15 +4349,15 @@ cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnul
   }
 
   // Execute all table creates in the order provided
-  for (cql_int32 i = 0; i < get_object_cql_string_list_count(tableList); i++) {
-    cql_string_ref tableCreate = get_from_object_cql_string_list(tableList, i);
+  for (cql_int32 i = 0; i < cql_string_list_count(tableList); i++) {
+    cql_string_ref tableCreate = cql_string_list_get_at(tableList, i);
     rc = cql_exec_internal(db, tableCreate);
     if (rc != SQLITE_OK) goto cleanup;
     char* table_name = _cql_create_table_name_from_table_creation_statement(tableCreate);
     // Indices are already deleted with the table drops
     // We need to recreate indices alongside the tables incase future table creates refer to the index
-    for (cql_int32 j = 0; j < get_object_cql_string_list_count(indexList); j++) {
-      cql_string_ref indexCreate = get_from_object_cql_string_list(indexList, j);
+    for (cql_int32 j = 0; j < cql_string_list_count(indexList); j++) {
+      cql_string_ref indexCreate = cql_string_list_get_at(indexList, j);
       char* index_table_name = _cql_create_table_name_from_index_creation_statement(indexCreate);
       if (!strcmp(table_name, index_table_name)) {
         free(index_table_name);

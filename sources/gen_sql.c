@@ -5643,8 +5643,6 @@ cql_noexport void gen_init() {
   EXPR_INIT(jex1, gen_jex1, "->", EXPR_PRI_CONCAT);
   EXPR_INIT(jex2, gen_jex2, "->>", EXPR_PRI_CONCAT);
   EXPR_INIT(reverse_apply, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
-  EXPR_INIT(reverse_apply_typed, gen_binary_no_spaces, "::", EXPR_PRI_REVERSE_APPLY);
-  EXPR_INIT(reverse_apply_poly, gen_binary_no_spaces, ":::", EXPR_PRI_REVERSE_APPLY);
   EXPR_INIT(reverse_apply_poly_args, gen_binary_no_spaces, ":", EXPR_PRI_REVERSE_APPLY);
 }
 

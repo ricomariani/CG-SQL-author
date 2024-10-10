@@ -23791,7 +23791,7 @@ declare function make_dot_one() create object<dot_one>;
 -- one successful rewrite
 -- + LET u := get_object_dot_one_id(make_dot_one());
 -- + {call}: err
--- * error: % function not yet implemented 'object:dot_one:get:id2'
+-- * error: % function not yet implemented 'object<dot_one>:get:id2'
 -- +1 error:
 proc dot_fail_no_missing_helper_computed()
 begin
@@ -24974,3 +24974,13 @@ select 'x' -> 'y' ~int~ as U;
 -- verify rewrite (stronger than IS etc.)
 -- + 1 IS CAST(3 AS INT);
 1 IS 3 ~int~;
+
+-- TEST: bogus type in op statement
+-- + {op_stmt}: err
+-- * error: % must be a cursor, proc, table, or view 'not_a_proc_at_all'
+@op object<not_a_proc_at_all set> : call foo as foofoo;
+
+-- TEST use array access where none is defined
+-- + {call}: err
+-- * error: % function not yet implemented 'object<list>:array:get'
+let uu  := list_result[5];

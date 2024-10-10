@@ -36,11 +36,11 @@ extern cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable x);
 extern cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box);
 extern cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable x);
 extern cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box);
-extern cql_object_ref _Nonnull create_cql_string_list(void);
-extern cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_, cql_string_ref _Nonnull value_);
-extern cql_string_ref _Nullable get_from_object_cql_string_list(cql_object_ref _Nonnull list, cql_int32 index_);
-extern cql_int32 get_object_cql_string_list_count(cql_object_ref _Nonnull list);
-extern cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_object_ref _Nonnull cql_string_list_create(void);
+extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_string_ref _Nonnull value_);
+extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
 

@@ -1004,20 +1004,24 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
   CSTR kind = argument->sem->kind;
   CSTR new_name = NULL;
 
-  CSTR key;
+  CHARBUF_OPEN(key);
+
   if (kind) {
-    key = dup_printf("%s<%s>:call:%s", rewrite_type_suffix(sem_type), kind, func);
-    new_name = find_op(key);
+    bprintf(&key, "%s<%s>:call:%s", rewrite_type_suffix(sem_type), kind, func);
+    new_name = find_op(key.ptr);
   }
 
   if (!new_name) {
-    key = dup_printf("%s:call:%s", rewrite_type_suffix(sem_type), func);
-    new_name = find_op(key);
+    bclear(&key);
+    bprintf(&key, "%s:call:%s", rewrite_type_suffix(sem_type), func);
+    new_name = find_op(key.ptr);
   }
 
   if (!new_name) {
     new_name = func;
   }
+
+  CHARBUF_CLOSE(key);
 
   // further changes would be invalid, the string has escaped into the tree
   function_name = new_ast_str(new_name);
@@ -3815,12 +3819,16 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull o
   sem_t sem_type = array->sem->sem_type;
   CSTR kind = array->sem->kind;
 
-  CSTR key = dup_printf("%s<%s>:array:%s", rewrite_type_suffix(sem_type), kind, op);
-  CSTR new_name = find_op(key);
+  CHARBUF_OPEN(tmp);
+  bprintf(&tmp, "%s<%s>:array:%s", rewrite_type_suffix(sem_type), kind, op);
+  CSTR new_name = find_op(tmp.ptr);
 
   if (!new_name) {
-    new_name = key; // this is for sure going to be an error
+    new_name = Strdup(tmp.ptr); // this is for sure going to be an error
   }
+
+  CHARBUF_CLOSE(tmp);
+
 
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
 
@@ -3854,28 +3862,97 @@ cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull
   AST_REWRITE_INFO_RESET();
 }
 
+cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
+  EXTRACT_ANY_NOTNULL(left, ast->left);
+  EXTRACT_ANY_NOTNULL(right, ast->right);
+
+  sem_t sem_type_left = left->sem->sem_type;
+  CSTR kind_left = left->sem->kind;
+  // sem_t sem_type_right = right->sem->sem_type;
+  // CSTR kind_right = right->sem->kind;
+
+  if (!kind_left) {
+    return false;
+  }
+
+  CHARBUF_OPEN(key);
+
+  bprintf(&key, "%s<%s>:%s:", rewrite_type_suffix(sem_type_left), kind_left, op);
+  uint32_t used = key.used;
+  
+  CSTR new_name = NULL;
+
+/* This is pending extensions to @op
+  if (kind_right) {
+     bprintf(&key, "%s<%s>", rewrite_type_suffix(sem_type_right), kind_right);
+     new_name = find_op(key.ptr);
+  }
+
+  if (!new_name) {
+     key.used = used;
+     key.ptr[used] = 0;
+     bprintf(&key, "%s", rewrite_type_suffix(sem_type_right));
+     new_name = find_op(key.ptr);
+  }
+*/
+
+  if (!new_name) {
+     key.used = used;
+     key.ptr[used] = 0;
+     bprintf(&key, "all");
+     new_name = find_op(key.ptr);
+  }
+
+  CHARBUF_CLOSE(key);
+
+  if (!new_name) {
+    return false;
+  }
+
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+
+  ast_node *new_arg_list = new_ast_arg_list(left, new_ast_arg_list(right, NULL));
+  ast_node *function_name = new_ast_str(new_name);
+  ast_node *call_arg_list = new_ast_call_arg_list(new_ast_call_filter_clause(NULL, NULL), new_arg_list);
+  ast_node *new_call = new_ast_call(function_name, call_arg_list);
+
+  ast->type = new_call->type;
+  ast_set_left(ast, new_call->left);
+  ast_set_right(ast, new_call->right);
+
+  AST_REWRITE_INFO_RESET();
+
+  return true;
+}
+
+// rewrites the dot operator foo.bar as a function, the operation is either get or set
 cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull op) {
   Contract(is_ast_dot(dot));
   EXTRACT_ANY_NOTNULL(expr, dot->left);
   EXTRACT_STRING(func, dot->right);
 
+  CHARBUF_OPEN(k1);
+  CHARBUF_OPEN(k2);
+
   sem_t sem_type = expr->sem->sem_type;
   CSTR kind = expr->sem->kind;
 
-  CSTR key = dup_printf("%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
-  CSTR new_name = find_op(key);
+  bprintf(&k1, "%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+  CSTR new_name = find_op(k1.ptr);
   bool_t add_arg = false;
 
   if (!new_name) {
-    CSTR key2 = dup_printf("%s<%s>:%s:all", rewrite_type_suffix(sem_type), kind, op);
-    printf("%s\n", key2);
-    new_name = find_op(key2);
+    bprintf(&k2, "%s<%s>:%s:all", rewrite_type_suffix(sem_type), kind, op);
+    new_name = find_op(k2.ptr);
     add_arg = !!new_name;
   }
 
   if (!new_name) {
-    new_name = key; // this is for sure going to be an error
+    new_name = Strdup(k1.ptr); // this is for sure going to be an error
   }
+
+  CHARBUF_CLOSE(k2);
+  CHARBUF_CLOSE(k1);
 
   AST_REWRITE_INFO_SET(dot->lineno, dot->filename);
 

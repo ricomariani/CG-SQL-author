@@ -1,10 +1,3 @@
-object<dot_two>:get:all
-object<dot_two>:get:all
-object<dot_one>:get:all
-object<dot_storage>:set:all
-object<dot_storage>:set:all
-object<dot_storage>:get:all
-object<event_invitees>:get:all
 {stmt_list}: err
 
 The statement ending at line XXXX
@@ -93904,4 +93897,94 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 
         | {name list_result}: list_result: object<list> variable
         | {arg_list}
           | {int 5}
+
+The statement ending at line XXXX
+
+DECLARE FUNC do_arrow (x INT, y INT) INT;
+
+  {declare_func_stmt}: integer
+  | {name do_arrow}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: integer variable in
+    |     | {param_detail}: y: integer variable in
+    |       | {name y}: y: integer variable in
+    |       | {type_int}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+@OP INT<foo> : arrow all AS do_arrow;
+
+  {op_stmt}: ok
+  | {type_int}: integer<foo>
+  | | {name foo}
+  | {op_vals}
+    | {name arrow}
+    | {op_vals}
+      | {name all}
+      | {name do_arrow}
+
+The statement ending at line XXXX
+
+DECLARE my_foo INT<foo>;
+
+  {declare_vars_type}: integer<foo>
+  | {name_list}: my_foo: integer<foo> variable
+  | | {name my_foo}: my_foo: integer<foo> variable
+  | {type_int}: integer<foo>
+    | {name foo}
+
+The statement ending at line XXXX
+
+LET arrow_result := do_arrow(my_foo, 2);
+
+  {let_stmt}: arrow_result: integer variable
+  | {name arrow_result}: arrow_result: integer variable
+  | {call}: integer
+    | {name do_arrow}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name my_foo}: my_foo: integer<foo> variable
+        | {arg_list}
+          | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE my_bar TEXT<bar>;
+
+  {declare_vars_type}: text<bar>
+  | {name_list}: my_bar: text<bar> variable
+  | | {name my_bar}: my_bar: text<bar> variable
+  | {type_text}: text<bar>
+    | {name bar}
+
+The statement ending at line XXXX
+
+LET arrow_result_2 := ( SELECT my_bar -> 'x' );
+
+  {let_stmt}: arrow_result_2: text variable
+  | {name arrow_result_2}: arrow_result_2: text variable
+  | {select_stmt}: _anon: text
+    | {select_core_list}: select: { _anon: text }
+    | | {select_core}: select: { _anon: text }
+    |   | {select_expr_list_con}: select: { _anon: text }
+    |     | {select_expr_list}: select: { _anon: text }
+    |     | | {select_expr}: text
+    |     |   | {jex1}: text
+    |     |     | {name my_bar}: my_bar: text<bar> variable
+    |     |     | {strlit 'x'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
 

@@ -24984,3 +24984,20 @@ select 'x' -> 'y' ~int~ as U;
 -- + {call}: err
 -- * error: % function not yet implemented 'object<list>:array:get'
 let uu  := list_result[5];
+
+declare function do_arrow(x integer, y integer) integer;
+
+@op int<foo> : arrow all as do_arrow;
+var my_foo int<foo>;
+
+-- TEST: override the -> operator for int<foo>
+-- verify rewrite
+-- + LET arrow_result := do_arrow(my_foo, 2);
+let arrow_result := my_foo -> 2;
+
+var my_bar text<bar>;
+
+-- TEST: rewrite doesn't happen
+-- verify rewrite (lack of rewrite actually)
+-- + LET arrow_result_2 := ( SELECT my_bar -> 'x' );
+let arrow_result_2 := (select my_bar -> 'x');

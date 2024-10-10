@@ -4946,6 +4946,11 @@ static void sem_jex1(ast_node *ast, CSTR op) {
     return;
   }
 
+  if (try_rewrite_op_as_call(ast, "arrow")) {
+    sem_expr(ast);
+    return;
+  }
+
   if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
     report_error(ast, "CQL0044: operator may only appear in the context of a SQL statement", op);
     record_error(ast);

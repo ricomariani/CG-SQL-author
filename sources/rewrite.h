@@ -62,4 +62,5 @@ cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type);
 cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull new_name);
 cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_Nonnull columns_values);
 cql_noexport void rewrite_as_select_expr(ast_node *_Nonnull ast);
+cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR _Nonnull op);
 #endif

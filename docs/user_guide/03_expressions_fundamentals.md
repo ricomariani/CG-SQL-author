@@ -1802,53 +1802,56 @@ Which is exactly equivalent to
    func(expr, ...args...)
 ```
 
-There are three forms of this notation which can be used to select the function name that is desired.
-The function name can include the type of the left operand to create some useful polymorphism.
+This can be generalized with the `@op` statement, which in general might change the function
+name to something more specific.  For instance.
 
-In general, the forms use `:`, `::`, or `:::` to indicate "more" polymorphism as in the example below:
+```sql
+@op real : call foo as foo_real;
+@op real<joules> : call foo as foo_real_joules;
+```
+
+Now has more specific mappings
 
 ```sql
 declare x real<joules>;
 
 -- These are the functions that you might call with pipeline notation
 
-declare function foo(x real) real;
+declare function foo(x text) real;
 declare function foo_real(x real) real;
 declare function foo_real_joules(x real) real;
-
--- This is the same as foo(x), the simplest form
--- If you have this you probably shouldn't also have foo_real() or foo_real_joules()
-let u := x:foo();
-
--- This is the same as foo_real(x) i.e. the invoked name is func name plus arg type
--- If you have this you probably shouldn't also have foo() or foo_real_joules()
-let v := x::foo();
-
--- This is the same as foo_real_joules(x) i.e. the invoked name is func name plus arg type and kind
--- If you have this you probably shouldn't also have a defintion for foo() or foo_real()
-let z := x:::foo();
 ```
 
-Note that in each case `foo` could have included its additional arguments which are placed normally.
+The mappings and declarations are both required now allow this:
 
-The `::` and `:::` versions of the postfix call will include the type of the left argument.  This
-refers to the simple name of the core type only.  Nullability and sensitivity are ignored.
+```sql
+"test":foo()  -->  foo("test")
 
-| core type    | suffix |
-|:-------------|-------:|
-| NULL         | null   |
-| BOOL         | bool   |
-| INTEGER      | int    |
-| LONG INTEGER | long   |
-| REAL         | real   |
-| TEXT         | text   |
-| BLOB         | blob   |
-| OBJECT       | object |
-| STRUCT       | cursor |
+5.0:foo()     --> foo_real(5.0)
 
-The `:::` operator adds the type kind if there is one.  Hence names like `foo_real_joules` in the example.
+x:foo()       --> foo_real_joules(x)
+```
 
-#### Pipeline Overloads
+Note that in each case `foo` could have included additional arguments which are placed normally.
+
+```
+x:foo(1,2)    --> foo_real_joules(x, 1, 2) (this function is not declared)
+```
+
+If there are no additional arguments the `()` can be elided.  This is a good way to end a pipeline.
+
+```sql
+x:dump        --> dump(x)
+```
+
+The old `::` and `:::` operators are no longer supported.  The combination of naming conventions
+proved impossible to remember.  With `@op` you can decide how to resolve the naming yourself.
+
+#### Pipeline Polymorphic Overloads
+
+>NOTE: The naming convention below will soon be replaced with a prefix of your choice using `@op`
+>the standard `object_list_builder` prefix will be user defined like the other cases.  This will
+>happen soon and is a breaking change.
 
 The additional syntax
 
@@ -1870,6 +1873,7 @@ declare function object_list_builder_int_int(arg1 object<list_builder>, arg2 int
 declare function object_list_builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
 declare function to_list_object_list_builder(arg1 object<list_builder>) create object<list>;
 ```
+
 You could write:
 
 ```sql
@@ -1916,6 +1920,50 @@ the pipeline form.  No special SQLite support is needed.
 
 This form of the `~` operator has the same binding strength as the `:` operator family.
 
+### Pipeline arrow : the `->` operator
+
+The `@op` form allows the definition of many possible overload combos.  For instance the `->`
+is now mappable to a function call of your choice, this is very useful in pipeline forms.
+
+For instance:
+
+```sql
+@op text<xml> : arrow text<xml_path> as extract_xml_path;
+```
+
+Allows this mapping
+
+```sql
+  xml -> path   --->   extract_xml_path(xml, path)
+```
+
+Both the left and right types and be partially specified
+
+```
+@op text<xml> : arrow text as extract_xml_path;
+@op text : arrow all as printf;
+@op text : arrow text as concat_text;
+
+-- These are not all compatible with each other they are just examples
+   xml -> path     -->   extract_xml_path(xml, path)
+   "%d\n" -> 5     -->   printf("%d\n", 5)
+   "foo" -> "bar"  -->   concat_text("foo", "bar")
+```
+
+The type forms for `arrow` should use types in their simplest form, like so:
+
+
+| core type    | short name |
+|:-------------|-----------:|
+| BOOL         | bool       |
+| INTEGER      | int        |
+| LONG INTEGER | long       |
+| REAL         | real       |
+| TEXT         | text       |
+| BLOB         | blob       |
+| OBJECT       | object     |
+
+
 ### Properties and Arrays
 
 CQL offers structured types in the form of cursors, but applications often need
@@ -1943,15 +1991,21 @@ function create_container() create object<container>;
 
 Now `cont.x` *might* mean field access in a cursor or table access in a `select`
 expression. So, when it is seen, `cont.x` will be resolved in the usual ways. If
-these fail then CQL will look for a function or procedure called
-`set_object_container_x` to do setting and `get_object_container_x` to do
-getting.
+these fail then CQL will look for a suitable mapping using the `@op` directive,
+like so:
+
+```
+@op object<container> : get x as container_get_x;
+@op object<container> : set x as container_set_x;
+```
+
+`container_set_x` to do setting and `container_get_x` to do getting.
 
 Like these maybe:
 
 ```sql
-declare function get_object_container_x(self object<container> not null) int not null;
-declare proc set_object_container_x(self object<container> not null, value int not null);
+declare function container_get_x(self object<container> not null) int not null;
+declare proc container_set_x(self object<container> not null, value int not null);
 ```
 
 With those in place `cont.x := cont.x + 1` will be converted into this:
@@ -1963,6 +2017,7 @@ CALL set_object_container_x(cont, get_object_container_x(cont) + 1);
 Importantly with this pattern you can control exactly which properties are
 available.  Missing properties will always give errors.  For instance `cont.y := 1;`
 results in `name not found 'y'`.
+
 This example uses `object` as the base type but it can be any type. For
 instance, if you have a type `integer<handle>` that identifies some storage
 based on the handle value, you can use the property pattern on this. CQL does
@@ -1981,46 +2036,61 @@ That is where the property name can be anything. If instead of the property
 specific functions above, we had created these more general functions:
 
 ```sql
-declare function get_from_object_container(self object<container>! , field text!) int!;
-declare proc set_in_object_container(self object<container>!, field text!, value int!);
+declare function container_get(self object<container>! , field text!) int!;
+declare proc container_set(self object<container>!, field text!, value int!);
 ```
 
 These functions have the desired property name as a parameter (`field`) and so
 they can work with any field.
 
+```sql
+@op object<container> : get all as container_get;
+@op object<container> : set all as container_set;
+```
+
 With these in place, `cont.y` is no longer an error. We get these transforms:
 
-
 ```sql
-CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1);
-CALL set_in_object_container(cont, 'y', 1);
+cont.x += 1;
+cont.y += 1;
+-- specific functions for 'x'
+CALL container_set_x(cont, container_get_x(cont) + 1);
+
+-- generic functions for 'y'
+CALL container_set(cont, 'y', container_get(cont, 'y') + 1);
 ```
 
 Nearly the same, but more generic. This is great if the properties are
 open-ended. Perhaps for a dictionary or something representing JSON. Anything
 like that.
 
-In fact, the property doesn't have to be a compile-time constant. If you use the
-array syntax:
-
-```sql
-cont['x'] := cont['x'] + 1;
-```
-
-You get exactly the same transform.
-
-```sql
-CALL set_in_object_container(cont, 'x', get_from_object_container(cont, 'x') + 1);
-```
+In fact, the property doesn't have to be a compile-time constant. Let's look
+at array syntax next.
 
 #### Using Arrays in CQL
 
 Array access is just like the open-ended property form with two differences:
 
-* the type of the index can be anything you want it to be, not just text
+* the type of the index can be anything you want it to be, not just a property name
 * there can be as many indices as you like
 
-For instance:
+```sql
+cont['x'] += 1;
+```
+
+You get exactly the same transform if you set up the array mapping:
+
+```sql
+@op object<container> : array get container_get;
+@op object<container> : array set container_set;
+
+To yield:
+
+CALL container_set(cont, 'x', container_get(cont, 'x') + 1);
+```
+
+The index type is not contrained so you can make several mappings with different
+signatures.  For instance:
 
 ```sql
 cont[1,2] := cont[3,4] + cont[5,6];
@@ -2029,17 +2099,17 @@ cont[1,2] := cont[3,4] + cont[5,6];
 Could be supported by these functions:
 
 ```sql
-declare function get_from_object_container(self object<container>!, i int!, j int!) int!;
+declare function cont_get_ij(self object<container>!, i int!, j int!) int!;
+declare proc cont_set_ij(self object<container>!, i int!, j int!, value int!);
 
-declare proc set_in_object_container(self object<container>!, i int!, j int!, value int!);
+@op object<container> : array get as cont_get_ij;
+@op object<container> : array set as cont_set_ij;
 ```
 
 This results in:
 
 ```sql
-CALL set_in_object_container(cont, 1, 2,
-  get_from_object_container(cont, 3, 4) +
-  get_from_object_container(cont, 5, 6));
+CALL cont_set_ij(cont, 1, 2, cont_get_ij(cont, 3, 4) + cont_get_ij(cont, 5, 6));
 ```
 
 This is a very simple transform that allows for the creation of any array-like
@@ -2051,9 +2121,9 @@ In addition to the function pattern shown above, you can use the "proc as func"
 form to get values, like so:
 
 ```sql
-create proc get_from_object_container(self object<container>!, field text!, out value int!)
+create proc container(self object<container>!, field text!, out value int!)
 begin
-  value := something;
+  value := something_using_container_and_field;
 end;
 ```
 
@@ -2095,7 +2165,7 @@ becomes:
 ```
 
 So likewise, if your array or property getters are `no check`, then `cont.x := 1;`
-becomes `set_in_object_container(cont, "x", 1)`. Importantly, the C string
+becomes maybe `container_set(cont, "x", 1)`. Importantly, the C string
 literal `"x"` will fold across any number of uses in your whole program, so
 there will only be one copy of the literal. This gives great economy for the
 flexible type case and it is actually why `no check` _functions_ were added to the

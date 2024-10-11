@@ -3868,8 +3868,7 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
 
   sem_t sem_type_left = left->sem->sem_type;
   CSTR kind_left = left->sem->kind;
-  // sem_t sem_type_right = right->sem->sem_type;
-  // CSTR kind_right = right->sem->kind;
+  sem_t sem_type_right = right->sem->sem_type;
 
   if (!kind_left) {
     return false;
@@ -3883,10 +3882,12 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
   CSTR new_name = NULL;
 
 /* This is pending extensions to @op
+  CSTR kind_right = right->sem->kind;
   if (kind_right) {
      bprintf(&key, "%s<%s>", rewrite_type_suffix(sem_type_right), kind_right);
      new_name = find_op(key.ptr);
   }
+*/
 
   if (!new_name) {
      key.used = used;
@@ -3894,7 +3895,6 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
      bprintf(&key, "%s", rewrite_type_suffix(sem_type_right));
      new_name = find_op(key.ptr);
   }
-*/
 
   if (!new_name) {
      key.used = used;

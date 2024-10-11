@@ -93919,6 +93919,25 @@ DECLARE FUNC do_arrow (x INT, y INT) INT;
 
 The statement ending at line XXXX
 
+DECLARE FUNC do_text_arrow (x INT, y TEXT) INT;
+
+  {declare_func_stmt}: integer
+  | {name do_text_arrow}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: text variable in
+    |     | {param_detail}: y: text variable in
+    |       | {name y}: y: text variable in
+    |       | {type_text}: text
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
 @OP INT<foo> : arrow all AS do_arrow;
 
   {op_stmt}: ok
@@ -93929,6 +93948,19 @@ The statement ending at line XXXX
     | {op_vals}
       | {name all}
       | {name do_arrow}
+
+The statement ending at line XXXX
+
+@OP INT<foo> : arrow text AS do_text_arrow;
+
+  {op_stmt}: ok
+  | {type_int}: integer<foo>
+  | | {name foo}
+  | {op_vals}
+    | {name arrow}
+    | {op_vals}
+      | {name text}
+      | {name do_text_arrow}
 
 The statement ending at line XXXX
 
@@ -93944,8 +93976,8 @@ The statement ending at line XXXX
 
 LET arrow_result := do_arrow(my_foo, 2);
 
-  {let_stmt}: arrow_result: integer variable
-  | {name arrow_result}: arrow_result: integer variable
+  {let_stmt}: arrow_result: integer variable was_set
+  | {name arrow_result}: arrow_result: integer variable was_set
   | {call}: integer
     | {name do_arrow}
     | {call_arg_list}
@@ -93954,6 +93986,21 @@ LET arrow_result := do_arrow(my_foo, 2);
         | {name my_foo}: my_foo: integer<foo> variable
         | {arg_list}
           | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+SET arrow_result := do_text_arrow(my_foo, '2');
+
+  {assign}: arrow_result: integer variable was_set
+  | {name arrow_result}: arrow_result: integer variable was_set
+  | {call}: integer
+    | {name do_text_arrow}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name my_foo}: my_foo: integer<foo> variable
+        | {arg_list}
+          | {strlit '2'}: text notnull
 
 The statement ending at line XXXX
 

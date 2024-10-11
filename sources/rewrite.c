@@ -1047,18 +1047,28 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   Contract(is_ast_reverse_apply_poly_args(head));
   EXTRACT_ANY_NOTNULL(argument, head->left);
   EXTRACT(arg_list, head->right);
-
-  AST_REWRITE_INFO_SET(head->lineno, head->filename);
-
-  // This is the ::: case where we use type and kind
-  sem_t sem_type = core_type_of(argument->sem->sem_type);
-
-  CHARBUF_OPEN(new_name);
-
   Contract(argument->sem);
   Contract(argument->sem->kind);
 
-  bprintf(&new_name, "%s_%s", rewrite_type_suffix(sem_type), argument->sem->kind);
+  sem_t sem_type = argument->sem->sem_type;
+  CSTR kind = argument->sem->kind;
+
+  CHARBUF_OPEN(key);
+
+  bprintf(&key, "%s<%s>:functor:all", rewrite_type_suffix(sem_type), kind);
+  CSTR base_name = find_op(key.ptr);
+
+  if (!base_name) {
+     base_name = Strdup(key.ptr);
+  }
+
+  CHARBUF_CLOSE(key);
+
+  AST_REWRITE_INFO_SET(head->lineno, head->filename);
+
+  CHARBUF_OPEN(new_name);
+
+  bprintf(&new_name, "%s", base_name);
 
   ast_node *item = arg_list;
   while (item) {

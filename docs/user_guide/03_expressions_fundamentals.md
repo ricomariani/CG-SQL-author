@@ -1849,50 +1849,70 @@ proved impossible to remember.  With `@op` you can decide how to resolve the nam
 
 #### Pipeline Polymorphic Overloads
 
->NOTE: The naming convention below will soon be replaced with a prefix of your choice using `@op`
->the standard `object_list_builder` prefix will be user defined like the other cases.  This will
->happen soon and is a breaking change.
+This is a functor like form and it can be enabled using `@op` like the other cases.  For instance
 
-The additional syntax
+```sql
+@op object<list_builder> : functor all as list_builder_add;
+```
+
+The invocation syntax is like the `:` operator but with no function name, so it looks kind of like
+the left argument has become a functor (something you can call like a function). In reality the
+call is converted using the base name in the `@op` directive and the base types of the arguments.
 
 ```sql
 expr:(arg1, arg2, ...)
 ```
 
-results in a similar rewrite however:
+To enable:
 
   * the left argument (here `expr`) must have a type kind (e.g. `object<container>`)
-  * the rewritten function name is the type and kind of the left argument plus the types of all the arguments (if any)
+  * the type kind must match an `@op` directive specifying `functor` and `all`
+  * the rewritten function name is the `@op` name plus the types of all the arguments (if any)
 
 for instance, with these declarations:
 
 ```sql
 declare function new_builder() create object<list_builder>;
-declare function object_list_builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
-declare function object_list_builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
-declare function object_list_builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
-declare function to_list_object_list_builder(arg1 object<list_builder>) create object<list>;
+declare function list_builder_add_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+declare function list_builder_add_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+declare function list_builder_add_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+declare function list_builder_to_list(arg1 object<list_builder>) create object<list>;
+
+@op object<list_builder> : functor all as list_builder_add;
+@op object<list_builder> : call to_list as list_builder_to_list;
 ```
 
 You could write:
 
 ```sql
-let list := new_builder():(5):(7.0):(1,2):::to_list();
+let list := new_builder():(5):(7.0):(1,2):to_list();
 ```
 
 This expands to the much less readable:
 
 ```sql
 LET list :=
-  to_list_object_list_builder(
-    object_list_builder_int_int(
-      object_list_builder_real(
-        object_list_builder_int(
+  list_builder_to_list(
+   list_builder_add_int_int(
+      list_builder_add_real(
+        list_builder_add_int(
           new_builder(), 5), 7.0), 1, 2));
 ```
 You can use this form to build helper functions that assemble text, arrays, JSON and many other uses.
 Anywhere the "fluent" coding pattern is helpful this syntax gives you a very flexible pattern.  In
 the end it's just rewritten function calls.
+
+The appended type names look like this:
+
+| core type    | short name |
+|:-------------|-----------:|
+| BOOL         | bool       |
+| INTEGER      | int        |
+| LONG INTEGER | long       |
+| REAL         | real       |
+| TEXT         | text       |
+| BLOB         | blob       |
+| OBJECT       | object     |
 
 #### Pipeline Cast Operations
 
@@ -1906,13 +1926,13 @@ let i := x :foo() ~int~ ;
 These operations are particularly useful when working with json data.  For instance:
 
 ```sql
-select foo.json : extract('x') ~int~ :ifnull(0) as X from foo;
+select foo.json : json_extract('x') ~int~ :ifnull(0) as X from foo;
 ```
 
 This is much easier to read than the equivalent:
 
 ```sql
-select ifnull(cast(extract(foo.json 'x') as int), 0) as X from foo;
+select ifnull(cast(json_extract(foo.json 'x') as int), 0) as X from foo;
 ```
 
 In all the cases the expression is rewritten into the normal form so SQLite will never see
@@ -1952,7 +1972,6 @@ Both the left and right types and be partially specified
 
 The type forms for `arrow` should use types in their simplest form, like so:
 
-
 | core type    | short name |
 |:-------------|-----------:|
 | BOOL         | bool       |
@@ -1962,6 +1981,8 @@ The type forms for `arrow` should use types in their simplest form, like so:
 | TEXT         | text       |
 | BLOB         | blob       |
 | OBJECT       | object     |
+
+These are the same forms that are used when adding argument types for the polymorpic pipeline form.
 
 
 ### Properties and Arrays

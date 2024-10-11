@@ -24931,17 +24931,23 @@ select json_group_object();
 select jsonb_group_object();
 
 declare function new_builder() create object<list_builder>;
-declare function object_list_builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
-declare function object_list_builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
-declare function object_list_builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
-declare function object_list_builder_to_list(arg1 object<list_builder>) create object<list>;
+declare function builder_int(arg1 object<list_builder>, arg2 int!) object<list_builder>;
+declare function builder_int_int(arg1 object<list_builder>, arg2 int!, arg3 int!) object<list_builder>;
+declare function builder_real(arg1 object<list_builder>, arg2 real!) object<list_builder>;
+declare function builder_to_list(arg1 object<list_builder>) create object<list>;
 
-@op object<list_builder> : call to_list as object_list_builder_to_list;
+@op object<list_builder> : call to_list as builder_to_list;
+@op object<list_builder> : functor all as builder;
 
 -- TEST: multiple rewrites based on the builder pattern above
 -- verify rewrite only
--- + LET list_result := object_list_builder_to_list(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
-let list_result := new_builder():(5):(7.0):(1,2):to_list();
+-- + LET list_result := builder_to_list(builder_int_int(builder_real(builder_int(new_builder(), 5), 7.0), 1, 2));
+let list_result := new_builder():(5):(7.0):(1,2):to_list;
+
+var wrong_object object<wrong>;
+-- TEST: we do not rewrite if the object type is incorrect
+-- +  function not yet implemented 'object<wrong>:functor:all_int'
+set list_result := wrong_object:(5);
 
 -- TEST: no kind specified in the left arg
 -- + reverse_apply_poly_args}: err

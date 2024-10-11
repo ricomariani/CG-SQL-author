@@ -93642,10 +93642,10 @@ DECLARE FUNC new_builder () CREATE OBJECT<list_builder>;
 
 The statement ending at line XXXX
 
-DECLARE FUNC object_list_builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJECT<list_builder>;
+DECLARE FUNC builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder>
-  | {name object_list_builder_int}: object<list_builder>
+  | {name builder_int}: object<list_builder>
   | {func_params_return}
     | {params}: ok
     | | {param}: arg1: object<list_builder> variable in
@@ -93664,10 +93664,10 @@ DECLARE FUNC object_list_builder_int (arg1 OBJECT<list_builder>, arg2 INT!) OBJE
 
 The statement ending at line XXXX
 
-DECLARE FUNC object_list_builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, arg3 INT!) OBJECT<list_builder>;
+DECLARE FUNC builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, arg3 INT!) OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder>
-  | {name object_list_builder_int_int}: object<list_builder>
+  | {name builder_int_int}: object<list_builder>
   | {func_params_return}
     | {params}: ok
     | | {param}: arg1: object<list_builder> variable in
@@ -93692,10 +93692,10 @@ DECLARE FUNC object_list_builder_int_int (arg1 OBJECT<list_builder>, arg2 INT!, 
 
 The statement ending at line XXXX
 
-DECLARE FUNC object_list_builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OBJECT<list_builder>;
+DECLARE FUNC builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OBJECT<list_builder>;
 
   {declare_func_stmt}: object<list_builder>
-  | {name object_list_builder_real}: object<list_builder>
+  | {name builder_real}: object<list_builder>
   | {func_params_return}
     | {params}: ok
     | | {param}: arg1: object<list_builder> variable in
@@ -93714,10 +93714,10 @@ DECLARE FUNC object_list_builder_real (arg1 OBJECT<list_builder>, arg2 REAL!) OB
 
 The statement ending at line XXXX
 
-DECLARE FUNC object_list_builder_to_list (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
+DECLARE FUNC builder_to_list (arg1 OBJECT<list_builder>) CREATE OBJECT<list>;
 
   {declare_func_stmt}: object<list> create_func
-  | {name object_list_builder_to_list}: object<list> create_func
+  | {name builder_to_list}: object<list> create_func
   | {func_params_return}
     | {params}: ok
     | | {param}: arg1: object<list_builder> variable in
@@ -93731,7 +93731,7 @@ DECLARE FUNC object_list_builder_to_list (arg1 OBJECT<list_builder>) CREATE OBJE
 
 The statement ending at line XXXX
 
-@OP OBJECT<list_builder> : call to_list AS object_list_builder_to_list;
+@OP OBJECT<list_builder> : call to_list AS builder_to_list;
 
   {op_stmt}: ok
   | {type_object}: object<list_builder>
@@ -93740,31 +93740,44 @@ The statement ending at line XXXX
     | {name call}
     | {op_vals}
       | {name to_list}
-      | {name object_list_builder_to_list}
+      | {name builder_to_list}
 
 The statement ending at line XXXX
 
-LET list_result := object_list_builder_to_list(object_list_builder_int_int(object_list_builder_real(object_list_builder_int(new_builder(), 5), 7.0), 1, 2));
+@OP OBJECT<list_builder> : functor all AS builder;
+
+  {op_stmt}: ok
+  | {type_object}: object<list_builder>
+  | | {name list_builder}
+  | {op_vals}
+    | {name functor}
+    | {op_vals}
+      | {name all}
+      | {name builder}
+
+The statement ending at line XXXX
+
+LET list_result := builder_to_list(builder_int_int(builder_real(builder_int(new_builder(), 5), 7.0), 1, 2));
 
   {let_stmt}: list_result: object<list> variable
   | {name list_result}: list_result: object<list> variable
   | {call}: object<list> create_func
-    | {name object_list_builder_to_list}
+    | {name builder_to_list}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
         | {call}: object<list_builder>
-          | {name object_list_builder_int_int}
+          | {name builder_int_int}
           | {call_arg_list}
             | {call_filter_clause}
             | {arg_list}: ok
               | {call}: object<list_builder>
-              | | {name object_list_builder_real}
+              | | {name builder_real}
               | | {call_arg_list}
               |   | {call_filter_clause}
               |   | {arg_list}: ok
               |     | {call}: object<list_builder>
-              |     | | {name object_list_builder_int}
+              |     | | {name builder_int}
               |     | | {call_arg_list}
               |     |   | {call_filter_clause}
               |     |   | {arg_list}: ok
@@ -93780,6 +93793,33 @@ LET list_result := object_list_builder_to_list(object_list_builder_int_int(objec
                 | {int 1}: integer notnull
                 | {arg_list}
                   | {int 2}: integer notnull
+
+The statement ending at line XXXX
+
+DECLARE wrong_object OBJECT<wrong>;
+
+  {declare_vars_type}: object<wrong>
+  | {name_list}: wrong_object: object<wrong> variable
+  | | {name wrong_object}: wrong_object: object<wrong> variable
+  | {type_object}: object<wrong>
+    | {name wrong}
+
+The statement ending at line XXXX
+
+SET list_result := object<wrong>:functor:all_int(wrong_object, 5);
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<wrong>:functor:all_int'
+
+  {assign}: err
+  | {name list_result}: list_result: object<list> variable
+  | {call}: err
+    | {name object<wrong>:functor:all_int}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name wrong_object}: wrong_object: object<wrong> variable
+        | {arg_list}: ok
+          | {int 5}: integer notnull
 
 The statement ending at line XXXX
 

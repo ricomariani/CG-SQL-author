@@ -1762,6 +1762,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense i
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_group_object'
 test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'json_group_object'
 test/sem_test.sql:XXXX:1: error: in call : CQL0081: aggregates only make sense if there is a FROM clause 'jsonb_group_object'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<wrong>:functor:all_int'
 test/sem_test.sql:XXXX:1: error: in num : CQL0506: left argument must have a type kind
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_proc_at_all'

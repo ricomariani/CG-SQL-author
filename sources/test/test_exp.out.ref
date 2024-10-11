@@ -2408,3 +2408,17 @@ x:y();
 @OP OBJECT<foo> : get bar AS foo_get_bar;
 
 @OP OBJECT<foo> : call zoo AS foo_zoo;
+
+@OP INT<foo> : arrow bool<foo> AS do_int_foo_arrow;
+
+@OP INT<foo> : arrow int<foo> AS do_int_foo_arrow;
+
+@OP INT<foo> : arrow long<foo> AS do_int_foo_arrow;
+
+@OP INT<foo> : arrow real<foo> AS do_int_foo_arrow;
+
+@OP INT<foo> : arrow text<foo> AS do_int_foo_arrow;
+
+@OP INT<foo> : arrow blob<foo> AS do_int_foo_arrow;
+
+@OP INT<foo> : arrow object<foo> AS do_int_foo_arrow;

@@ -3881,13 +3881,11 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
   
   CSTR new_name = NULL;
 
-/* This is pending extensions to @op
   CSTR kind_right = right->sem->kind;
   if (kind_right) {
      bprintf(&key, "%s<%s>", rewrite_type_suffix(sem_type_right), kind_right);
      new_name = find_op(key.ptr);
   }
-*/
 
   if (!new_name) {
      key.used = used;

@@ -283,7 +283,7 @@ static void cql_reset_globals(void);
 %type <ival> frame_type frame_exclude join_type
 %type <ival> opt_vtab_flags
 
-%type <aval> col_key_list col_key_def col_def sql_name loose_name
+%type <aval> col_key_list col_key_def col_def sql_name loose_name loose_name_or_type
 %type <aval> version_attrs opt_version_attrs version_attrs_opt_recreate opt_delete_version_attr opt_delete_plain_attr
 %type <aval> misc_attr_key cql_attr_key misc_attr misc_attrs misc_attr_value misc_attr_value_list
 %type <aval> col_attrs str_literal num_literal any_literal const_expr str_chain str_leaf
@@ -1086,7 +1086,22 @@ loose_name:
   | CALL { $$ = new_ast_str("call"); }
   | SET { $$ = new_ast_str("set"); }
   | ALL { $$ = new_ast_str("all"); }
+  | BOOL_ { $$ = new_ast_str("bool"); }
+  | INT_ { $$ = new_ast_str("int"); }
+  | LONG_ { $$ = new_ast_str("long"); }
+  | REAL { $$ = new_ast_str("real"); }
+  | BLOB { $$ = new_ast_str("blob"); }
+  | OBJECT { $$ = new_ast_str("object"); }
   ;
+
+loose_name_or_type[r]:
+  loose_name[l] { $$ = $l; }
+  | loose_name[l1] '<' loose_name[l2] '>' {
+     EXTRACT_STRING(n1, $l1);
+     EXTRACT_STRING(n2, $l2);
+     $$ = new_ast_str(dup_printf("%s<%s>", n1, n2)); }
+  ;
+  
 
 opt_sql_name:
   /* nil */  { $opt_sql_name = NULL; }
@@ -2684,7 +2699,7 @@ select_expr_macro_def:
     YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
   ;
 
-op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name[func] AS loose_name[targ] {
+op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
     $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   ;
 

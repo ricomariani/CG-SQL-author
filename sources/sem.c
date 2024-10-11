@@ -23565,7 +23565,6 @@ static void sem_op_stmt(ast_node *ast) {
     key = dup_printf("%s:%s:%s", rewrite_type_suffix(sem_type), op, func);
   }
 
-
   symtab_entry *entry = symtab_find(ops, key);
   if (entry) {
     entry->val = (void*)targ;

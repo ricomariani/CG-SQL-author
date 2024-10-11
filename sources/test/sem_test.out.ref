@@ -93938,6 +93938,25 @@ DECLARE FUNC do_text_arrow (x INT, y TEXT) INT;
 
 The statement ending at line XXXX
 
+DECLARE FUNC do_int_foo_arrow (x INT, y INT) INT;
+
+  {declare_func_stmt}: integer
+  | {name do_int_foo_arrow}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: integer variable in
+    | | | {param_detail}: x: integer variable in
+    | |   | {name x}: x: integer variable in
+    | |   | {type_int}: integer
+    | | {params}
+    |   | {param}: y: integer variable in
+    |     | {param_detail}: y: integer variable in
+    |       | {name y}: y: integer variable in
+    |       | {type_int}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
 @OP INT<foo> : arrow all AS do_arrow;
 
   {op_stmt}: ok
@@ -93961,6 +93980,19 @@ The statement ending at line XXXX
     | {op_vals}
       | {name text}
       | {name do_text_arrow}
+
+The statement ending at line XXXX
+
+@OP INT<foo> : arrow int<foo> AS do_int_foo_arrow;
+
+  {op_stmt}: ok
+  | {type_int}: integer<foo>
+  | | {name foo}
+  | {op_vals}
+    | {name arrow}
+    | {op_vals}
+      | {name int<foo>}
+      | {name do_int_foo_arrow}
 
 The statement ending at line XXXX
 
@@ -94001,6 +94033,21 @@ SET arrow_result := do_text_arrow(my_foo, '2');
         | {name my_foo}: my_foo: integer<foo> variable
         | {arg_list}
           | {strlit '2'}: text notnull
+
+The statement ending at line XXXX
+
+SET arrow_result := do_int_foo_arrow(my_foo, my_foo);
+
+  {assign}: arrow_result: integer variable was_set
+  | {name arrow_result}: arrow_result: integer variable was_set
+  | {call}: integer
+    | {name do_int_foo_arrow}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name my_foo}: my_foo: integer<foo> variable
+        | {arg_list}
+          | {name my_foo}: my_foo: integer<foo> variable
 
 The statement ending at line XXXX
 

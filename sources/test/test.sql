@@ -1841,3 +1841,11 @@ x:y;
 @OP object<foo> : get bar as foo_get_bar;
 @OP object<foo> : get bar as foo_get_bar;
 @OP object<foo> : call zoo as foo_zoo;
+
+@op int<foo> : arrow bool<foo> as do_int_foo_arrow;
+@op int<foo> : arrow int<foo> as do_int_foo_arrow;
+@op int<foo> : arrow long<foo> as do_int_foo_arrow;
+@op int<foo> : arrow real<foo> as do_int_foo_arrow;
+@op int<foo> : arrow text<foo> as do_int_foo_arrow;
+@op int<foo> : arrow blob<foo> as do_int_foo_arrow;
+@op int<foo> : arrow object<foo> as do_int_foo_arrow;

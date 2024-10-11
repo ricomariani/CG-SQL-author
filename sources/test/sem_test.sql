@@ -24987,9 +24987,11 @@ let uu  := list_result[5];
 
 declare function do_arrow(x integer, y integer) integer;
 declare function do_text_arrow(x integer, y text) integer;
+declare function do_int_foo_arrow(x integer, y integer) integer;
 
 @op int<foo> : arrow all as do_arrow;
 @op int<foo> : arrow text as do_text_arrow;
+@op int<foo> : arrow int<foo> as do_int_foo_arrow;
 var my_foo int<foo>;
 
 -- TEST: override the -> operator for int<foo>
@@ -25002,10 +25004,14 @@ let arrow_result := my_foo -> 2;
 -- + SET arrow_result := do_text_arrow(my_foo, '2');
 set arrow_result := my_foo -> '2';
 
+-- TEST: override the -> operator for int<foo> and arg int<foo>
+-- verify rewrite
+-- + SET arrow_result := do_int_foo_arrow(my_foo, my_foo);
+set arrow_result := my_foo -> my_foo;
+
 var my_bar text<bar>;
 
 -- TEST: rewrite doesn't happen
 -- verify rewrite (lack of rewrite actually)
 -- + LET arrow_result_2 := ( SELECT my_bar -> 'x' );
 let arrow_result_2 := (select my_bar -> 'x');
-

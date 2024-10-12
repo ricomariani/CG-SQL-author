@@ -269,10 +269,10 @@ Since CQL has to assume something it assumes that `json_extract` will return `TE
 will return a `BLOB`.  Importantly, CQL does not add any casting operations into the SQL unless
 they are explicitly added which means in some sense SQLite does not "know" that CQL has made a
 bad assumption, or any assumption.  In many cases, even most cases, a specific type is expected,
-this is a great time to use the pipeline cast notation to "force" the conversion. 
+this is a great time to use the pipeline cast notation to "force" the conversion.
 
 ```sql
-  select json_extract('{ "x" : 0 }', '$.x') :int: as X;
+  select json_extract('{ "x" : 0 }', '$.x') ~int~ as X;
 ```
 
 This is exactly the same as
@@ -325,3 +325,82 @@ consequences of changing the storage class of its operand.
 integer to SQLite. This is a way of giving object pointers to SQLite
 UDFs. Not all versions of Sqlite support binding object variables,
 so passing memory addresses is the best we can do on all versions.
+
+### Operators That Become Functions
+
+As we saw in [Chapter 3](./expressions_fundamentals.md) certain operators become
+function calls after transformation.  In particular the `:`, `[]`, `.`, and `->`
+operators can be mapped into functions.  To enable this transform you declare
+the function you want to invoke normally and then you provide an `@op` directive
+that redirects the operator to the function.  There are examples in the section
+on [Pipeline Notation](./03_expressions_fundamentals/#pipeline-function-notation).
+
+Here we will review the various forms so that all the `@op` patterns are easily
+visible together:
+
+|#|`@op` directive|expression|replacement|
+|-|---------------|---------|-------|
+|1|no declaration required | `expr:func(...)` |  `func(expr, ...)` |
+|2|`@op T : call func as your_func;` | `expr:func(...)` | `your_func(expr, ...)`|
+|3|`@op T<kind> : call func as func_kind;` | `expr:func(...)` | `func_kind(expr, ...)`|
+|4|`@op T<kind> : get foo as get_foo;` | `expr.foo` | `get_foo(expr)`|
+|5|`@op T<kind> : set foo as set_foo;` | `expr.foo := x` | `set_foo(expr, x)`|
+|6|`@op T<kind> : get all as getter;` | `expr.foo` | `getter(expr, 'foo')`|
+|7|`@op T<kind> : set all as setter;` | `expr.foo := x` | `setter(expr, 'foo', x)`|
+|8|`@op T<kind> : array get as a_get;` | `expr[x,y]` | `a_get(expr, x, y')`|
+|9|`@op T<kind> : array set as a_set;` | `expr[x,y] := z` | `a_set(expr, x, y, z)`|
+|10|`@op T<kind> : functor all as f;` | `expr:(1, 2.0)` | `f_int_real(expr, 1, 2.0)`|
+|11|`@op T<kind> : arrow all as arr1;` | `left->right` | `arr1(left, right)`|
+|12|`@op T1<kind> : arrow T2 as arr2;` | `left->right` | `arr2(left, right)`|
+|13|`@op T1<kind> : arrow T2<kind> as arr3;` | `left->right` | `arr3(left, right)`|
+
+Now let's briefly go over each of these forms.  In all cases the transform is only applied if `expr` is of type `T`.  No type conversion is applied at this point, however only the base type must match so the transformation will be applied regardless of the nullability or sensitivity of `expr`.  If `expr` is of a suitable type the transform is applied and the call is then checked for errors as usual.  Based on the type of replacement function an implicit conversion might then be required.  Note that the types of any additional arguments are not considered when deciding to do the transform but they can cause errors after the transform has been applied. After the transform replacement expression, including all arguments, are type checked as usual and errors could result from arguments not being compatible with the transform.  This is no different than if you had written `func(expr1, expr2, etc..)` with some of the arguments being not appropriate for `func`.
+
+1. With no declaration `expr:func()` is always replaced with `func(expr)`.  If there are no arguments `expr:func` may be used for brevity it is no different than `expr:func()`.
+
+2. Here a call pipelined call to `func` with `expr` matching `T` becomes a normal call to `your_func`.
+
+3. This form is a special case of (2).  CQL first looks for a match with the "kind", if there is one that is used preferrably. There are examples in [Pipeline Notation](./03_expressions_fundamentals/#pipeline-function-notation).  This lets you have a generic conversion and more specific conversions if needed.  e.g. you might have formatting for any `int` but you have special formatting for `int<task_id>`.
+
+4. This form defines a specific property getter.  Only types with a kind can have such getters so declaring a transform with a `T` that has no kind is useless and likely will produce errors at some point. The getter is type checked as usual after the replacement.
+
+5. This form defines a specific property setter.  Only types with a kind can have such setters so declaring a transform with a `T` that has no kind is useless and likely will produce errors at some point. The setter is type checked as usual after the replacement.
+
+6. This form declares a generic "getter", the property being fetched becomes a string argument.  This is useful if you have a bag of propreties of the same type and a generic "get" function.  Note that specific properties are consulted first (i.e. rule 4).
+
+7. This form declares a generic "setter", the property being set becomes a string argument.  This is useful if you have a bag of propreties of the same type and a generic "set" function. Note that specific properties are consulted first (i.e. rule 5).
+
+8. This form defines a transform for array-like read semantics.  A matching array operation is turned into a function call and all the array indices become function arguments.  Only the type of the expression being indexed is considered when deciding to do the transform. As usual, the replacement is checked and errors could result if the function is not suitable.
+
+9. This form defines a transform for array-like write semantics.  A matching array operation is turned into a function call and all the array indices become function arguments, including the value to set. Only the type of the expression being indexed is considered when deciding to do the transform. As usual, the replacement is checked and errors could result if the function is not suitable.
+
+10. This form allows for a "functor-like" syntax where there is no function name provided.  The name in the `@op` directive becomes the base name of the replacement function.  The base type names of all the arguments (but not `expr`) are included in the replacement.  As always the type of `expr` must match the directive.  The replacement could generate errors if a function is missing (e.g. you have no `f_int_real` variant) or if the arguments are not type compatible (e.g. if the signature or the `f_int_real` variant isn't actually `int` and `real`).
+
+11. The replacement system is flexible enough to allow arbitary operators to be replaced.  At this point only `->` is supported and it is specified by "arrow".  The replacement happens if the left argument is exactly `T`.  In this form the right argumentcan be any thing.  The result of the replacement is type checked as usual.
+
+12. This is just like (11) except that the type of the right argument has been partially specified, it must have the indicated base type T2, such as `int`, `real`, etc.  If this form matches the replacement takes precedence over (11). The result of the replacement is type checked as usual.
+
+13. This is just like (12) except that the type and kind of the right argument has been specified, it must have the indicated base type T2 and the indicated kind.  If this form matches the replacement takes precedence over (12).  The result of the replacement is type checked as usual.
+
+Other operators may be added in the future, they would follow the patterns for rules 11, 12, and 13 with only the "arrow" keyword varying.  You could imagine "add", "sub", "mult" etc. for other operators.
+
+#### Example Transforms
+
+These are discussed in greater detail in the [Pipeline Notation](./03_expressions_fundamentals/#pipeline-function-notation) section.  However, by way of motivational examples here are some possible transforms in table form.
+
+
+|Original|Replacement|
+|-|-|
+|`"test":foo()`  | `foo("test")`|
+|`5.0:foo()`     | `foo_real(5.0)`|
+|`joules:foo()`  | `foo_real_joules(joules)`|
+|`x:dump`        | `dump(x)` |
+|`new_builder():(5):(7):to_list` | `tolist(add_int(add_int(b(), 5), 7))` |
+|`x:ifnull(0)`   | `ifnull(x, 0)` |
+|`x:nullable`    | `nullable(x)` |
+|`x:n`           | `nullable(x)` |
+|`xml -> path`   | `extract_xml_path(xml, path)` |
+|`cont.y += 1`   | `set_y(cont, get_y(cont) + 1)` |
+|`cont.z += 1`   | `set(cont, "z", get(cont, "z") + 1)` |
+|`a[u,v] += 1`   | `set_uv(a, u, v, get_uv(a, u, v) + 1)` |
+```

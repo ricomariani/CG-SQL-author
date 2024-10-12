@@ -1957,19 +1957,6 @@ Allows this mapping
   xml -> path   --->   extract_xml_path(xml, path)
 ```
 
-Both the left and right types and be partially specified
-
-```
-@op text<xml> : arrow text as extract_xml_path;
-@op text : arrow all as printf;
-@op text : arrow text as concat_text;
-
--- These are not all compatible with each other they are just examples
-   xml -> path     -->   extract_xml_path(xml, path)
-   "%d\n" -> 5     -->   printf("%d\n", 5)
-   "foo" -> "bar"  -->   concat_text("foo", "bar")
-```
-
 The type forms for `arrow` should use types in their simplest form, like so:
 
 | core type    | short name |
@@ -1983,7 +1970,6 @@ The type forms for `arrow` should use types in their simplest form, like so:
 | OBJECT       | object     |
 
 These are the same forms that are used when adding argument types for the polymorpic pipeline form.
-
 
 ### Properties and Arrays
 

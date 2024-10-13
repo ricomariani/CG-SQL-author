@@ -115,7 +115,7 @@ static void qp_emit_constant_one(bool_t native_context, sem_t sem_type, charbuf 
     gen_printf("1L");
   }
   else if (is_real(sem_type)) {
-    bprintf(output, "1.0");
+    gen_printf("1.0");
   }
   else if (is_numeric(sem_type)) {
     gen_printf("1");

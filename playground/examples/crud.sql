@@ -18,16 +18,19 @@ begin
   );
 end;
 
+[[private]]
 proc ins(like mixed)
 begin
   insert into mixed from arguments;
 end;
 
-proc up(id_ int!, rate_ real!)
+proc update_mixed(id_ int!, rate_ real!)
 begin
-  update mixed set rate = rate_ WHERE id = id_;
+  update mixed set rate = rate_ where id = id_;
 end;
 
+[[identity=(id, code)]]
+[[generate_copy]]
 proc get_mixed (lim int!)
 begin
   select * from mixed order by id limit lim;
@@ -63,8 +66,8 @@ begin
   printf("\nupdating mixed values 3 and 4\n\n");
 
   -- using pipeline form
-  3:up(999.99);
-  4:up(199.99);
+  3:update_mixed(999.99);
+  4:update_mixed(199.99);
 
   print_mixed();
 end;

@@ -5,62 +5,66 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-DECLARE PROC printf NO CHECK;
+declare proc printf no check;
 
-CREATE PROC make_mixed ()
-BEGIN
-  CREATE TABLE mixed(
-    id INTEGER NOT NULL,
-    name TEXT,
-    code LONG_INT,
-    flag BOOL,
-    rate REAL
-  );
-END;
-
-CREATE PROC load_mixed ()
-BEGIN
-  DELETE FROM mixed;
-  INSERT INTO mixed VALUES(1, 'a name', 12, 1, 5.0);
-  INSERT INTO mixed VALUES(2, 'some name', 14, 3, 7.0);
-  INSERT INTO mixed VALUES(3, 'yet another name', 15, 3, 17.4);
-  INSERT INTO mixed VALUES(4, 'some name', 19, 4, 9.1);
-  INSERT INTO mixed VALUES(5, 'what name', 21, 8, 12.3);
-END;
-
-CREATE PROC update_mixed (id_ INTEGER NOT NULL, rate_ REAL NOT NULL)
-BEGIN
-  UPDATE mixed
-  SET rate = rate_
-    WHERE id = id_;
-END;
-
-@ATTRIBUTE(cql:identity=(id, code))
-@ATTRIBUTE(cql:generate_copy)
-CREATE PROC get_mixed (lim INTEGER NOT NULL)
-BEGIN
-  SELECT *
-    FROM mixed
-  ORDER BY id
-  LIMIT lim;
-END;
-
-create proc print_mixed()
+proc make_mixed ()
 begin
-  declare C cursor for call get_mixed(50);
+  create table mixed(
+    id int!,
+    name text,
+    code long,
+    flag bool,
+    rate real
+  );
+end;
+
+proc ins(like mixed)
+begin
+  insert into mixed from arguments;
+end;
+
+proc up(id_ int!, rate_ real!)
+begin
+  update mixed set rate = rate_ WHERE id = id_;
+end;
+
+proc get_mixed (lim int!)
+begin
+  select * from mixed order by id limit lim;
+end;
+
+proc load_mixed ()
+begin
+  delete from mixed;
+
+  -- using pipeline form
+  1:ins('a name', 12, 1, 5.0);
+  2:ins('some name', 14, 3, 7.0);
+  3:ins('yet another name', 15, 3, 17.4);
+  4:ins('some name', 19, 4, 9.1);
+  5:ins('what name', 21, 8, 12.3);
+end;
+
+proc print_mixed()
+begin
+  cursor C for call get_mixed(50);
   loop fetch C
   begin
-     call printf("%d %s %lld %d %f\n", C.id, C.name, C.code, C.flag, C.rate);
+    printf("%d %-20s %10lld %3d %10.2f\n", C.id, C.name, C.code, C.flag, C.rate);
   end;
 end;
 
 create proc entrypoint()
 begin
-  call make_mixed();
-  call load_mixed();
-  call print_mixed();
-  call printf("\nupdating mixed values 3 and 4\n");
-  call update_mixed(3, 999.99);
-  call update_mixed(4, 199.99);
-  call print_mixed();
+  make_mixed();
+  load_mixed();
+  print_mixed();
+
+  printf("\nupdating mixed values 3 and 4\n\n");
+
+  -- using pipeline form
+  3:up(999.99);
+  4:up(199.99);
+
+  print_mixed();
 end;

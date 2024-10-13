@@ -5116,6 +5116,19 @@ static void sem_binary_math(ast_node *ast, CSTR op) {
 // For all math operations, we combine the types and yield the type that
 // holds both using the helper.  If any text, that's an error.
 static void sem_binary_integer_math(ast_node *ast, CSTR op) {
+  sem_t core_type_left, core_type_right, combined_flags;
+  if (!sem_binary_prep(ast, &core_type_left, &core_type_right, &combined_flags)) {
+    return;
+  }
+
+  CSTR remap = NULL;
+  if (!strcmp(op, ">>")) remap = "rshift";
+  if (!strcmp(op, "<<")) remap = "lshift";
+  if (remap && try_rewrite_op_as_call(ast, remap)) {
+    sem_expr(ast);
+    return;
+  }
+
   sem_binary_math(ast, op);
   sem_reject_real(ast, op);
 }
@@ -26128,7 +26141,7 @@ cql_noexport void sem_main(ast_node *ast) {
   EXPR_INIT(dot, sem_expr_dot, "DOT");
   EXPR_INIT(const, sem_expr_const, "CONST");
   EXPR_INIT(lshift, sem_binary_integer_math, "<<");
-  EXPR_INIT(rshift, sem_binary_integer_math, "<<");
+  EXPR_INIT(rshift, sem_binary_integer_math, ">>");
   EXPR_INIT(bin_and, sem_binary_integer_math, "&");
   EXPR_INIT(bin_or, sem_binary_integer_math, "|");
   EXPR_INIT(collate, sem_collate, "COLLATE");

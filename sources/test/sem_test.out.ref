@@ -61650,8 +61650,8 @@ The statement ending at line XXXX
 
 LET int_var := 1;
 
-  {let_stmt}: int_var: integer notnull variable
-  | {name int_var}: int_var: integer notnull variable
+  {let_stmt}: int_var: integer notnull variable was_set
+  | {name int_var}: int_var: integer notnull variable was_set
   | {int 1}: integer notnull
 
 The statement ending at line XXXX
@@ -94121,4 +94121,113 @@ LET arrow_result_2 := ( SELECT my_bar -> 'x' );
     | {select_orderby}
       | {select_limit}
         | {select_offset}
+
+The statement ending at line XXXX
+
+@OP OBJECT<storage> : lshift int AS write_int;
+
+  {op_stmt}: ok
+  | {type_object}: object<storage>
+  | | {name storage}
+  | {op_vals}
+    | {name lshift}
+    | {op_vals}
+      | {name int}
+      | {name write_int}
+
+The statement ending at line XXXX
+
+DECLARE FUNC write_int (store OBJECT<storage>, val INT!) OBJECT<storage>;
+
+  {declare_func_stmt}: object<storage>
+  | {name write_int}: object<storage>
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: store: object<storage> variable in
+    | | | {param_detail}: store: object<storage> variable in
+    | |   | {name store}: store: object<storage> variable in
+    | |   | {type_object}: object<storage>
+    | |     | {name storage}
+    | | {params}
+    |   | {param}: val: integer notnull variable in
+    |     | {param_detail}: val: integer notnull variable in
+    |       | {name val}: val: integer notnull variable in
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {type_object}: object<storage>
+      | {name storage}
+
+The statement ending at line XXXX
+
+@OP OBJECT<storage> : rshift int AS read_int;
+
+  {op_stmt}: ok
+  | {type_object}: object<storage>
+  | | {name storage}
+  | {op_vals}
+    | {name rshift}
+    | {op_vals}
+      | {name int}
+      | {name read_int}
+
+The statement ending at line XXXX
+
+DECLARE FUNC read_int (store OBJECT<storage>, OUT val INT!) OBJECT<storage>;
+
+  {declare_func_stmt}: object<storage>
+  | {name read_int}: object<storage>
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: store: object<storage> variable in
+    | | | {param_detail}: store: object<storage> variable in
+    | |   | {name store}: store: object<storage> variable in
+    | |   | {type_object}: object<storage>
+    | |     | {name storage}
+    | | {params}
+    |   | {param}: val: integer notnull variable out
+    |     | {out}
+    |     | {param_detail}: val: integer notnull variable out
+    |       | {name val}: val: integer notnull variable out
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {type_object}: object<storage>
+      | {name storage}
+
+The statement ending at line XXXX
+
+DECLARE store OBJECT<storage>;
+
+  {declare_vars_type}: object<storage>
+  | {name_list}: store: object<storage> variable
+  | | {name store}: store: object<storage> variable
+  | {type_object}: object<storage>
+    | {name storage}
+
+The statement ending at line XXXX
+
+write_int(store, 5);
+
+  {expr_stmt}: object<storage>
+  | {call}: object<storage>
+    | {name write_int}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name store}: store: object<storage> variable
+        | {arg_list}
+          | {int 5}: integer notnull
+
+The statement ending at line XXXX
+
+read_int(store, int_var);
+
+  {expr_stmt}: object<storage>
+  | {call}: object<storage>
+    | {name read_int}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name store}: store: object<storage> variable
+        | {arg_list}
+          | {name int_var}: int_var: integer notnull variable
 

@@ -25021,3 +25021,23 @@ var my_bar text<bar>;
 -- verify rewrite (lack of rewrite actually)
 -- + LET arrow_result_2 := ( SELECT my_bar -> 'x' );
 let arrow_result_2 := (select my_bar -> 'x');
+
+@op object<storage> : lshift int as write_int;
+declare function write_int(store object<storage>, val int!) object<storage>;
+
+@op object<storage> : rshift int as read_int;
+declare function read_int(store object<storage>, out val int!) object<storage>;
+
+var store object<storage>;
+
+-- TEST: try << overload to "store"
+-- verify rewrite
+-- + write_int(store, 5);
+-- - error:
+store << 5;
+
+-- TEST: try >> overlaod to "read"
+-- verify rewrite
+-- + read_int(store, int_var);
+-- - error:
+store >> int_var;

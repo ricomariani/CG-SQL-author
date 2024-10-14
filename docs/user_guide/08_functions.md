@@ -382,6 +382,8 @@ Now let's briefly go over each of these forms.  In all cases the transform is on
 
 13. This is just like (12) except that the type and kind of the right argument has been specified, it must have the indicated base type T2 and the indicated kind.  If this form matches the replacement takes precedence over (12).  The result of the replacement is type checked as usual.
 
+In addition to "arrow" the identifiers "lshift", "rshift" and "concat" maybe used to similarly remap `<<`, `>>`, and `||` respectively.  The same rules otherwise apply.  Note that the fact that these operators have different binding strengths can be very useful in building fluent-style pipelines.
+
 Other operators may be added in the future, they would follow the patterns for rules 11, 12, and 13 with only the "arrow" keyword varying.  You could imagine "add", "sub", "mult" etc. for other operators.
 
 #### Example Transforms

@@ -1940,12 +1940,10 @@ the pipeline form.  No special SQLite support is needed.
 
 This form of the `~` operator has the same binding strength as the `:` operator family.
 
-### Pipeline arrow : the `->` operator
+### Other operators useful in construction: `->` `<<` `>>` `||`
 
 The `@op` form allows the definition of many possible overload combos.  For instance the `->`
 is now mappable to a function call of your choice, this is very useful in pipeline forms.
-
-For instance:
 
 ```sql
 @op text<xml> : arrow text<xml_path> as extract_xml_path;
@@ -1970,6 +1968,9 @@ The type forms for `arrow` should use types in their simplest form, like so:
 | OBJECT       | object     |
 
 These are the same forms that are used when adding argument types for the polymorpic pipeline form.
+
+`@op` can be used with `lshift` `rshift` and `concat` to remap the `<<`, `>>`, and `||` operators
+respectively.
 
 ### Properties and Arrays
 

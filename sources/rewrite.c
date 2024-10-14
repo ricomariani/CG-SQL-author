@@ -560,6 +560,9 @@ cql_noexport CSTR process_proclit(ast_node *ast, CSTR name) {
   return name;
 }
 
+// generates an AST node for a data_type_any based on the semantic type
+// we need this any time we need to make a tree for a semantic type out
+// of thin air.
 cql_noexport ast_node *rewrite_gen_data_type(sem_t sem_type, CSTR kind) {
   ast_node *ast = NULL;
   ast_node *kind_ast = kind ? new_ast_str(kind) : NULL;
@@ -965,7 +968,8 @@ cleanup:
   symtab_delete(used_names);
 }
 
-// These are the :: suffixes for types
+// These are the canonical short names for types.  They are used in the @op
+// directive and in  places where a type name becomes part of a function name.
 cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
    CSTR result = "";
     switch (core_type_of(sem_type)) {
@@ -1042,7 +1046,10 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
 
 // Walk through the ast and grab the arg list as well as the function name.
 // Create a new call node using these two and the argument passed in
-// prior to the ':' symbol.
+// prior to the ':' symbol.  This is the "overloaded" version of the function
+// where the target name is appended with the types of the arguments.  So
+// for instance if the function name is "foo" and the arguments are "int, text"
+// the new name will be "foo_int_text".
 cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   Contract(is_ast_reverse_apply_poly_args(head));
   EXTRACT_ANY_NOTNULL(argument, head->left);
@@ -1053,23 +1060,25 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   sem_t sem_type = argument->sem->sem_type;
   CSTR kind = argument->sem->kind;
 
+  CHARBUF_OPEN(new_name);
   CHARBUF_OPEN(key);
 
   bprintf(&key, "%s<%s>:functor:all", rewrite_type_suffix(sem_type), kind);
   CSTR base_name = find_op(key.ptr);
 
   if (!base_name) {
-     base_name = Strdup(key.ptr);
+    // This has no hope of working.... the key name makes for a good error message
+    // so that's what we use.  This isn't even a valid identifier.
+    bprintf(&new_name, "%s", key.ptr);
+  }
+  else {
+    bprintf(&new_name, "%s", base_name);
   }
 
   CHARBUF_CLOSE(key);
 
   AST_REWRITE_INFO_SET(head->lineno, head->filename);
-
-  CHARBUF_OPEN(new_name);
-
-  bprintf(&new_name, "%s", base_name);
-
+ 
   ast_node *item = arg_list;
   while (item) {
     EXTRACT_ANY_NOTNULL(arg, item->left);
@@ -1078,11 +1087,12 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
     item = item->right;
   }
 
-  // further changes would be invalid, the string has escaped into the tree
+  // we're set to go, we just need a durable string for the ast node
   ast_node *function_name = new_ast_str(Strdup(new_name.ptr));
 
   CHARBUF_CLOSE(new_name);
 
+  // set up the function call AST
   ast_node *new_arg_list =
     new_ast_call_arg_list(
       new_ast_call_filter_clause(NULL, NULL),
@@ -1137,6 +1147,8 @@ cleanup:
   symtab_delete(param_names);
 }
 
+// This gives the normal printf formatting string for the indicated semantic type
+// This is used to generate the format string for the printf calls in cql_cursor_diff
 static CSTR coretype_format(sem_t sem_type) {
   CSTR result = NULL;
   switch (core_type_of(sem_type)) {
@@ -1152,9 +1164,9 @@ static CSTR coretype_format(sem_t sem_type) {
 }
 
 // Generate arg_list nodes and formatting values for a printf(...) ast
-static ast_node *rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR col_name, sem_t type) {
+static ast_node *rewrite_gen_arg_list(charbuf *format_buf, CSTR cursor_name, CSTR col_name, sem_t type) {
   // left to arg_list node
-  ast_node *dot = new_ast_dot(new_ast_str(cusor_name), new_ast_str(col_name));
+  ast_node *dot = new_ast_dot(new_ast_str(cursor_name), new_ast_str(col_name));
   // If the argument is blob type we need to print just its size therefore we rewrite
   // ast to call cql_get_blob_size(<blob>) which return the size of the argument
   if (is_blob(type)) {
@@ -1172,8 +1184,8 @@ static ast_node *rewrite_gen_arg_list(charbuf* format_buf, CSTR cusor_name, CSTR
 // Generate printf(...) function node. This is used by
 // rewrite_gen_cursor_printf() to generate the rewrite for cql_cursor_format
 // function.
-// e.g: cusor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
-// e.g: cusor_name = C, dot_name = x, type = blob PRINTF("length %d blob", cql_get_blob_size(C.x));
+// e.g: cursor_name = C, dot_name = x, type = text PRINTF("%s", C.x);
+// e.g: cursor_name = C, dot_name = x, type = blob PRINTF("length %d blob", cql_get_blob_size(C.x));
 static ast_node *rewrite_gen_printf_call(CSTR format, ast_node *arg_list) {
   CSTR copy_format = dup_printf("'%s'", format);
   // right to call_arg_list node
@@ -1969,7 +1981,11 @@ static ast_node *shape_exprs_from_name_list(ast_node *ast) {
 }
 
 // This creates the statements for each child partition creation
-static ast_node *rewrite_child_partition_creation(ast_node *child_results, int32_t cursor_num, ast_node *tail) {
+static ast_node *rewrite_child_partition_creation(
+  ast_node *child_results, 
+  int32_t cursor_num, 
+  ast_node *tail)
+{
   if (!child_results) {
     return tail;
   }
@@ -3872,6 +3888,9 @@ cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull
   AST_REWRITE_INFO_RESET();
 }
 
+// rewrites the indicated binary operator as a function call if a mapping exists
+// op can be "arrow", "lshift", "rshift", "concat" at this point.  More are
+// likely to be added.
 cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
   EXTRACT_ANY_NOTNULL(left, ast->left);
   EXTRACT_ANY_NOTNULL(right, ast->right);
@@ -3887,7 +3906,7 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
   CHARBUF_OPEN(key);
 
   bprintf(&key, "%s<%s>:%s:", rewrite_type_suffix(sem_type_left), kind_left, op);
-  uint32_t used = key.used;
+  uint32_t used = key.used;  // so we can truncate back to here later
   
   CSTR new_name = NULL;
 

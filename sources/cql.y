@@ -3096,6 +3096,8 @@ cql_noexport CSTR cql_builtin_text() {
     "DECLARE FUNCTION cql_box_object(x object) create object<cql_box>!;"
     "@attribute(cql:builtin)"
     "DECLARE FUNCTION cql_unbox_object(box object<cql_box>!) object;"
+    "@attribute(cql:builtin)"
+    "DECLARE FUNCTION cql_box_get_type(box object<cql_box>!) int!;"
 
     "@attribute(cql:builtin)"
     "@op bool : call box as cql_box_bool;"
@@ -3169,6 +3171,20 @@ cql_noexport CSTR cql_builtin_text() {
     "TYPE @ID('blob') blob;"
     "@attribute(cql:builtin)"
     "TYPE @ID('long_int') long;"
+    "@attribute(cql:builtin)"
+    "declare const group cql_data_types("
+    "  CQL_DATA_TYPE_NULL      = 0,"
+    "  CQL_DATA_TYPE_INT32     = 1,"
+    "  CQL_DATA_TYPE_INT64     = 2,"
+    "  CQL_DATA_TYPE_DOUBLE    = 3,"
+    "  CQL_DATA_TYPE_BOOL      = 4,"
+    "  CQL_DATA_TYPE_STRING    = 5,"
+    "  CQL_DATA_TYPE_BLOB      = 6,"
+    "  CQL_DATA_TYPE_OBJECT    = 7,"
+    "  CQL_DATA_TYPE_CORE      = 0x3f,"
+    "  CQL_DATA_TYPE_ENCODED   = 0x40,"
+    "  CQL_DATA_TYPE_NOT_NULL  = 0x80"
+    ");"
     "@@end_include@@"
     ;
 }
@@ -3660,3 +3676,4 @@ static ast_node *new_simple_call_from_name(ast_node *name) {
   ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, NULL);
   return new_ast_call(name, call_arg_list);
 }
+

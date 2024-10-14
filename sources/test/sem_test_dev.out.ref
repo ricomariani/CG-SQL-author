@@ -684,6 +684,30 @@ DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>!) OBJECT;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_box_get_type}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: box: object<cql_box> notnull variable in
+      |   | {param_detail}: box: object<cql_box> notnull variable in
+      |     | {name box}: box: object<cql_box> notnull variable in
+      |     | {notnull}: object<cql_box> notnull
+      |       | {type_object}: object<cql_box>
+      |         | {name cql_box}
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 @OP BOOL : call box AS cql_box_bool;
 
   {stmt_and_attr}: ok
@@ -1340,6 +1364,76 @@ TYPE long_int LONG;
   | {declare_named_type}: longint
     | {name long_int}: longint
     | {type_long}: longint
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE CONST GROUP cql_data_types (
+  CQL_DATA_TYPE_NULL = 0,
+  CQL_DATA_TYPE_INT32 = 1,
+  CQL_DATA_TYPE_INT64 = 2,
+  CQL_DATA_TYPE_DOUBLE = 3,
+  CQL_DATA_TYPE_BOOL = 4,
+  CQL_DATA_TYPE_STRING = 5,
+  CQL_DATA_TYPE_BLOB = 6,
+  CQL_DATA_TYPE_OBJECT = 7,
+  CQL_DATA_TYPE_CORE = 0x3f,
+  CQL_DATA_TYPE_ENCODED = 0x40,
+  CQL_DATA_TYPE_NOT_NULL = 0x80
+);
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_const_stmt}: ok
+    | {name cql_data_types}
+    | {const_values}
+      | {const_value}: integer = 0 notnull
+      | | {name CQL_DATA_TYPE_NULL}: integer = 0 notnull
+      | | {int 0}: integer = 0 notnull
+      | {const_values}
+        | {const_value}: integer = 1 notnull
+        | | {name CQL_DATA_TYPE_INT32}: integer = 1 notnull
+        | | {int 1}: integer = 1 notnull
+        | {const_values}
+          | {const_value}: integer = 2 notnull
+          | | {name CQL_DATA_TYPE_INT64}: integer = 2 notnull
+          | | {int 2}: integer = 2 notnull
+          | {const_values}
+            | {const_value}: integer = 3 notnull
+            | | {name CQL_DATA_TYPE_DOUBLE}: integer = 3 notnull
+            | | {int 3}: integer = 3 notnull
+            | {const_values}
+              | {const_value}: integer = 4 notnull
+              | | {name CQL_DATA_TYPE_BOOL}: integer = 4 notnull
+              | | {int 4}: integer = 4 notnull
+              | {const_values}
+                | {const_value}: integer = 5 notnull
+                | | {name CQL_DATA_TYPE_STRING}: integer = 5 notnull
+                | | {int 5}: integer = 5 notnull
+                | {const_values}
+                  | {const_value}: integer = 6 notnull
+                  | | {name CQL_DATA_TYPE_BLOB}: integer = 6 notnull
+                  | | {int 6}: integer = 6 notnull
+                  | {const_values}
+                    | {const_value}: integer = 7 notnull
+                    | | {name CQL_DATA_TYPE_OBJECT}: integer = 7 notnull
+                    | | {int 7}: integer = 7 notnull
+                    | {const_values}
+                      | {const_value}: integer = 63 notnull
+                      | | {name CQL_DATA_TYPE_CORE}: integer = 63 notnull
+                      | | {int 0x3f}: integer = 63 notnull
+                      | {const_values}
+                        | {const_value}: integer = 64 notnull
+                        | | {name CQL_DATA_TYPE_ENCODED}: integer = 64 notnull
+                        | | {int 0x40}: integer = 64 notnull
+                        | {const_values}
+                          | {const_value}: integer = 128 notnull
+                            | {name CQL_DATA_TYPE_NOT_NULL}: integer = 128 notnull
+                            | {int 0x80}: integer = 128 notnull
 
 The statement ending at line XXXX
 

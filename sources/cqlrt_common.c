@@ -5861,6 +5861,11 @@ static void cql_boxed_value_finalize(void *_Nonnull data) {
   free(data);
 }
 
+// get the type of the thing in the box
+int32_t cql_box_get_type(cql_object_ref _Nonnull box) {
+  cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+  return self->type;
+}
 // create the facets storage using the hashtable
 static cql_object_ref _Nonnull cql_boxed_value_create(void) {
   cql_boxed_value * self = malloc(sizeof(cql_boxed_value));

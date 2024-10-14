@@ -36,6 +36,7 @@ extern cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable x);
 extern cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box);
 extern cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable x);
 extern cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box);
+extern cql_int32 cql_box_get_type(cql_object_ref _Nonnull box);
 extern cql_object_ref _Nonnull cql_string_list_create(void);
 extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_string_ref _Nonnull value_);
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);

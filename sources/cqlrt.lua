@@ -20,20 +20,33 @@ CQL_ERROR = sqlite3.ERROR
 CQL_DONE = sqlite3.DONE
 CQL_ROW = sqlite3.ROW
 
-CQL_DATATYPE_BOOL_NOTNULL = string.byte("F", 1)
-CQL_DATATYPE_INT_NOTNULL = string.byte("I", 1)
-CQL_DATATYPE_LONG_NOTNULL = string.byte("L", 1)
-CQL_DATATYPE_DOUBLE_NOTNULL = string.byte("D", 1)
-CQL_DATATYPE_STRING_NOTNULL = string.byte("S", 1)
-CQL_DATATYPE_BLOB_NOTNULL = string.byte("B", 1)
-CQL_DATATYPE_OBJECT_NOTNULL = string.byte("O", 1)
-CQL_DATATYPE_BOOL = string.byte("f", 1)
-CQL_DATATYPE_INT = string.byte("i", 1)
-CQL_DATATYPE_LONG = string.byte("l", 1)
-CQL_DATATYPE_DOUBLE = string.byte("d", 1)
-CQL_DATATYPE_STRING = string.byte("s", 1)
-CQL_DATATYPE_BLOB = string.byte("b", 1)
-CQL_DATATYPE_OBJECT = string.byte("o", 1)
+CQL_ENCODED_TYPE_BOOL_NOTNULL = string.byte("F", 1)
+CQL_ENCODED_TYPE_INT_NOTNULL = string.byte("I", 1)
+CQL_ENCODED_TYPE_LONG_NOTNULL = string.byte("L", 1)
+CQL_ENCODED_TYPE_DOUBLE_NOTNULL = string.byte("D", 1)
+CQL_ENCODED_TYPE_STRING_NOTNULL = string.byte("S", 1)
+CQL_ENCODED_TYPE_BLOB_NOTNULL = string.byte("B", 1)
+CQL_ENCODED_TYPE_OBJECT_NOTNULL = string.byte("O", 1)
+CQL_ENCODED_TYPE_BOOL = string.byte("f", 1)
+CQL_ENCODED_TYPE_INT = string.byte("i", 1)
+CQL_ENCODED_TYPE_LONG = string.byte("l", 1)
+CQL_ENCODED_TYPE_DOUBLE = string.byte("d", 1)
+CQL_ENCODED_TYPE_STRING = string.byte("s", 1)
+CQL_ENCODED_TYPE_BLOB = string.byte("b", 1)
+CQL_ENCODED_TYPE_OBJECT = string.byte("o", 1)
+
+-- stored box data types that align with the semnatic types
+CQL_DATA_TYPE_NULL = 0
+CQL_DATA_TYPE_INT32 = 1
+CQL_DATA_TYPE_INT64 = 2
+CQL_DATA_TYPE_DOUBLE = 3
+CQL_DATA_TYPE_BOOL = 4
+CQL_DATA_TYPE_STRING = 5
+CQL_DATA_TYPE_BLOB = 6
+CQL_DATA_TYPE_OBJECT = 7
+CQL_DATA_TYPE_CORE = 63
+CQL_DATA_TYPE_ENCODED = 64
+CQL_DATA_TYPE_NOT_NULL = 128
 
 CQL_BLOB_TYPE_BOOL   = 0  -- always big endian format in the blob
 CQL_BLOB_TYPE_INT32  = 1  -- always big endian format in the blob
@@ -482,9 +495,9 @@ end
 function cql_bind_one(stmt, bind_index, value, code)
   if value == nil then
     rc = stmt:bind(bind_index, nil)
-  elseif code == CQL_DATATYPE_OBJECT or code == CQL_DATATYPE_OBJECT_NOTNULL then
+  elseif code == CQL_ENCODED_TYPE_OBJECT or code == CQL_ENCODED_TYPE_OBJECT_NOTNULL then
     rc = stmt:bind(bind_index, cql_set_aux_value_for_stmt(stmt, value))
-  elseif code == CQL_DATATYPE_BLOB or code == CQL_DATATYPE_BLOB_NOTNULL then
+  elseif code == CQL_ENCODED_TYPE_BLOB or code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
     rc = stmt:bind_blob(bind_index, value)
   else
     rc = stmt:bind(bind_index, value)
@@ -564,13 +577,13 @@ function cql_empty_cursor(result, types, columns)
   do
       byte = string.byte(types, i)
       data = nil;
-      if byte == CQL_DATATYPE_BOOL_NOTNULL then
+      if byte == CQL_ENCODED_TYPE_BOOL_NOTNULL then
         data = false
-      elseif byte == CQL_DATATYPE_INT_NOTNULL then
+      elseif byte == CQL_ENCODED_TYPE_INT_NOTNULL then
         data = 0
-      elseif byte == CQL_DATATYPE_LONG_NOTNULL then
+      elseif byte == CQL_ENCODED_TYPE_LONG_NOTNULL then
         data = 0
-      elseif byte == CQL_DATATYPE_DOUBLE_NOTNULL then
+      elseif byte == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
         data = 0.0
       end
       result[columns[i]] = data
@@ -589,9 +602,9 @@ function cql_multifetch(stmt, result, types, columns)
       local data = stmt:get_value(i-1)
       local code = string.byte(types, i, i)
 
-      if code == CQL_DATATYPE_DOUBLE or code == CQL_DATATYPE_DOUBLE_NOTNULL then
+      if code == CQL_ENCODED_TYPE_DOUBLE or code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
         data = cql_to_float(data)
-      elseif code == CQL_DATATYPE_BOOL or code == CQL_DATATYPE_BOOL_NOTNULL then
+      elseif code == CQL_ENCODED_TYPE_BOOL or code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
         data = cql_to_bool(data)
       end
 
@@ -835,7 +848,7 @@ function cql_cursor_format(C, types, fields)
     if value == nil then
       result = result.."null"
     else
-      if code == CQL_DATATYPE_BLOB_NOTNULL or code == CQL_DATATYPE_BLOB then
+      if code == CQL_ENCODED_TYPE_BLOB_NOTNULL or code == CQL_ENCODED_TYPE_BLOB then
         result = result.."length "..tostring(#value).." blob"
       else
         result = result..tostring(value)
@@ -1006,58 +1019,65 @@ function cql_throw(db, rc)
 end;
 
 function cql_box_int(x)
-  return {['int'] = x}
+  return {[CQL_DATA_TYPE_INT32] = x}
 end
 
 function cql_box_long(x)
-  return {['long'] = x}
+  return {[CQL_DATA_TYPE_INT64] = x}
 end
 
 function cql_box_real(x)
-  return {['real'] = x}
+  return {[CQL_DATA_TYPE_DOUBLE] = x}
 end
 
 function cql_box_bool(x)
-  return {['bool'] = x}
+  return {[CQL_DATA_TYPE_BOOL] = x}
 end
 
 function cql_box_text(x)
-  return {['text'] = x}
+  return {[CQL_DATA_TYPE_STRING] = x}
 end
 
 function cql_box_blob(x)
-  return {['blob'] = x}
+  return {[CQL_DATA_TYPE_BLOB] = x}
 end
 
 function cql_box_object(x)
-  return {['object'] = x}
+  return {[CQL_DATA_TYPE_OBJECT] = x}
+end
+
+function cql_box_get_type(x)
+  for k,v in pairs(x) do
+    return k
+  end
+
+  return CQL_DATA_TYPE_NULL
 end
 
 function cql_unbox_int(x)
-  return x['int']
+  return x[CQL_DATA_TYPE_INT32]
 end
 
 function cql_unbox_long(x)
-  return x['long']
+  return x[CQL_DATA_TYPE_INT64]
 end
 
 function cql_unbox_real(x)
-  return x['real']
+  return x[CQL_DATA_TYPE_DOUBLE]
 end
 
 function cql_unbox_bool(x)
-  return x['bool']
+  return x[CQL_DATA_TYPE_BOOL]
 end
 
 function cql_unbox_text(x)
-  return x['text']
+  return x[CQL_DATA_TYPE_STRING]
 end
 
 function cql_unbox_blob(x)
-  return x['blob']
+  return x[CQL_DATA_TYPE_BLOB]
 end
 
 function cql_unbox_object(x)
-  return x['object']
+  return x[CQL_DATA_TYPE_OBJECT]
 end
-

@@ -6498,53 +6498,59 @@ BEGIN
   EXPECT!(a_global == 22);
 END);
 
-@MACRO(stmt_list) box_test!(x! expr, t! expr)
+@MACRO(stmt_list) box_test!(x! expr, t! expr, tval! expr)
 begin
   -- make nullable variable and hold the given value to test
   var @ID(val_, t!) @ID(t!);
   @ID(val_, t!) := x!;
 
   -- now box and unbox
-  let @ID(b_, t!) := @ID(val_, t!):box;
-  let @ID(v_, t!) := @ID(b_, t!):@ID('to_', t!);
-  EXPECT!(@ID(v_, t!) == @ID(val_, t!));
+  let @ID(box_, t!) := @ID(val_, t!):box;
+  let @ID(unboxed_, t!) := @ID(box_, t!):@ID('to_', t!);
+  EXPECT!(@ID(unboxed_, t!) == @ID(val_, t!));
+  EXPECT!(@ID(box_, t!):cql_box_get_type = tval!);
 
   -- test null value
   @ID(val_, t!) := NULL;
 
   -- now box and unbox
-  set @ID(b_, t!) := @ID(val_, t!):box;
-  set @ID(v_, t!) := @ID(b_, t!):@ID('to_', t!);
-  EXPECT!(@ID(v_, t!) IS NULL);
+  set @ID(box_, t!) := @ID(val_, t!):box;
+  set @ID(unboxed_, t!) := @ID(box_, t!):@ID('to_', t!);
+  EXPECT!(@ID(unboxed_, t!) IS NULL);
 end;
 
 TEST!(boxing,
 BEGIN
   let bl := (select 'a blob' ~blob~);
 
-  box_test!(5, 'int');
-  box_test!(7.5, 'real');
-  box_test!(true, 'bool');
-  box_test!(1000L, 'long');
-  box_test!('abcde', 'text');
-  box_test!(bl, 'blob');
-  box_test!(b_int, 'object');
+  box_test!(5, 'int', CQL_DATA_TYPE_INT32);
+  box_test!(7.5, 'real', CQL_DATA_TYPE_DOUBLE);
+  box_test!(true, 'bool', CQL_DATA_TYPE_BOOL);
+  box_test!(1000L, 'long', CQL_DATA_TYPE_INT64);
+  box_test!('abcde', 'text', CQL_DATA_TYPE_STRING);
+  box_test!(bl, 'blob', CQL_DATA_TYPE_BLOB);
+  box_test!(box_int, 'object', CQL_DATA_TYPE_OBJECT);
 
-  b_bool := true:box;
-  b_int := 5:box;
-  b_long := 5:box;
-  b_real := 5:box;
-  b_text := '5':box;
-  b_blob := bl:box;
-  b_object := b_int:box;
+  -- now we store the wrong kind of stuff in the boxed object
+  -- all the unboxing operations should fail.
 
-  EXPECT!(b_int:cql_unbox_long IS NULL);
-  EXPECT!(b_bool:cql_unbox_long IS NULL);
-  EXPECT!(b_real:cql_unbox_long IS NULL);
-  EXPECT!(b_long:cql_unbox_real IS NULL);
-  EXPECT!(b_text:cql_unbox_real IS NULL);
-  EXPECT!(b_blob:cql_unbox_real IS NULL);
-  EXPECT!(b_object:cql_unbox_real IS NULL);
+  box_bool := 5:box;
+  box_int := 5.0:box;
+  box_long := 5:box;
+  box_real := 5:box;
+  box_text := 5:box;
+  box_blob := 5:box;
+  box_object := 5:box;
+
+  -- they all have the wrong thing in them
+  EXPECT!(box_int:cql_unbox_int IS NULL);
+  EXPECT!(box_bool:cql_unbox_bool IS NULL);
+  EXPECT!(box_real:cql_unbox_real IS NULL);
+  EXPECT!(box_long:cql_unbox_long IS NULL);
+  EXPECT!(box_text:cql_unbox_text IS NULL);
+  EXPECT!(box_blob:cql_unbox_blob IS NULL);
+  EXPECT!(box_object:cql_unbox_object IS NULL);
+
 END);
 
 TEST!(object_dictionary,

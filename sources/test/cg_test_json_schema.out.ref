@@ -6045,6 +6045,34 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>!) INT!
+
+    {
+      "name" : "cql_box_get_type",
+      "args" : [
+        {
+          "name" : "box",
+          "type" : "object",
+          "kind" : "cql_box",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
     DECLARE FUNC cql_string_list_create () CREATE OBJECT<cql_string_list>!
 
     {
@@ -6729,6 +6757,94 @@
           "kind" : "some_reals",
           "isNotNull" : 1,
           "value" : 1.000000e+00
+        }
+      ]
+    }
+    The statement ending at line XXXX
+
+    DECLARE CONST GROUP cql_data_types (
+      CQL_DATA_TYPE_NULL = 0,
+      CQL_DATA_TYPE_INT32 = 1,
+      CQL_DATA_TYPE_INT64 = 2,
+      CQL_DATA_TYPE_DOUBLE = 3,
+      CQL_DATA_TYPE_BOOL = 4,
+      CQL_DATA_TYPE_STRING = 5,
+      CQL_DATA_TYPE_BLOB = 6,
+      CQL_DATA_TYPE_OBJECT = 7,
+      CQL_DATA_TYPE_CORE = 0x3f,
+      CQL_DATA_TYPE_ENCODED = 0x40,
+      CQL_DATA_TYPE_NOT_NULL = 0x80
+    )
+
+    ,
+    {
+      "name" : "cql_data_types",
+      "values" : [
+        {
+          "name" : "CQL_DATA_TYPE_NULL",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 0
+        },
+        {
+          "name" : "CQL_DATA_TYPE_INT32",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 1
+        },
+        {
+          "name" : "CQL_DATA_TYPE_INT64",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 2
+        },
+        {
+          "name" : "CQL_DATA_TYPE_DOUBLE",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 3
+        },
+        {
+          "name" : "CQL_DATA_TYPE_BOOL",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 4
+        },
+        {
+          "name" : "CQL_DATA_TYPE_STRING",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 5
+        },
+        {
+          "name" : "CQL_DATA_TYPE_BLOB",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 6
+        },
+        {
+          "name" : "CQL_DATA_TYPE_OBJECT",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 7
+        },
+        {
+          "name" : "CQL_DATA_TYPE_CORE",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 63
+        },
+        {
+          "name" : "CQL_DATA_TYPE_ENCODED",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 64
+        },
+        {
+          "name" : "CQL_DATA_TYPE_NOT_NULL",
+          "type" : "integer",
+          "isNotNull" : 1,
+          "value" : 128
         }
       ]
     }

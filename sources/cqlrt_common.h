@@ -461,6 +461,7 @@ cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data);
 cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box);
 cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data);
 cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box);
+int32_t cql_box_get_type(cql_object_ref _Nonnull box);
 
 // String literals can be stored in a compressed format using the --compress option
 // and the cql_compressed primitive.  This helper function gives us a normal string

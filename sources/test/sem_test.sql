@@ -3263,7 +3263,7 @@ set X := (select X*10 as v where 1);
 set X_not_null := (select 1 where 0);
 
 -- TEST: bogus function
--- * error: % function not yet implemented 'some_unknown_function'
+-- * error: % function not builtin and not declared 'some_unknown_function'
 -- +1 error:
 -- {select_stmt}: err
 set X := (select some_unknown_function(null));
@@ -23791,7 +23791,7 @@ declare function make_dot_one() create object<dot_one>;
 -- one successful rewrite
 -- + LET u := get_object_dot_one_id(make_dot_one());
 -- + {call}: err
--- * error: % function not yet implemented 'object<dot_one>:get:id2'
+-- * error: % function not builtin and not declared 'object<dot_one>:get:id2'
 -- +1 error:
 proc dot_fail_no_missing_helper_computed()
 begin
@@ -24946,7 +24946,7 @@ let list_result := new_builder():(5):(7.0):(1,2):to_list;
 
 var wrong_object object<wrong>;
 -- TEST: we do not rewrite if the object type is incorrect
--- +  function not yet implemented 'object<wrong>:functor:all_int'
+-- +  function not builtin and not declared 'object<wrong>:functor:all_int'
 set list_result := wrong_object:(5);
 
 -- TEST: no kind specified in the left arg
@@ -24988,7 +24988,7 @@ select 'x' -> 'y' ~int~ as U;
 
 -- TEST use array access where none is defined
 -- + {call}: err
--- * error: % function not yet implemented 'object<list>:array:get'
+-- * error: % function not builtin and not declared 'object<list>:array:get'
 let uu  := list_result[5];
 
 declare function do_arrow(x integer, y integer) integer;

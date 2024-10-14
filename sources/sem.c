@@ -10807,7 +10807,7 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
     return;
   }
 
-  report_error(name_ast, "CQL0094: function not yet implemented", name);
+  report_error(name_ast, "CQL0094: function not builtin and not declared", name);
   record_error(ast);
   return;
 

@@ -1027,7 +1027,8 @@ cql_noexport void rewrite_reverse_apply(ast_node *_Nonnull head) {
 
   CHARBUF_CLOSE(key);
 
-  // further changes would be invalid, the string has escaped into the tree
+  // new name is durable for the ast node -- in all cases either already in a symbol
+  // table or it's an AST string.
   function_name = new_ast_str(new_name);
 
   ast_node *new_arg_list =
@@ -1389,7 +1390,7 @@ cql_noexport void rewrite_data_type_if_needed(ast_node *ast) {
 
     // * The cast_expr node doesn't need attributes, it only casts to the
     //   target type.  When casting, both nullability and sensitivity are
-    //   perserved. So in that case we remove the extra attributes.  They
+    //   preserved. So in that case we remove the extra attributes.  They
     //   are not expected/required in the rewrite.
     //
     // * Columns are a little different; nullability and sensitivity are

@@ -10938,7 +10938,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT some_unknown_function(NULL) );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'some_unknown_function'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not builtin and not declared 'some_unknown_function'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -89112,7 +89112,7 @@ BEGIN
   LET v := object<dot_one>:get:id2(make_dot_one());
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<dot_one>:get:id2'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not builtin and not declared 'object<dot_one>:get:id2'
 
   {create_proc_stmt}: err
   | {name dot_fail_no_missing_helper_computed}: err
@@ -93808,7 +93808,7 @@ The statement ending at line XXXX
 
 SET list_result := object<wrong>:functor:all_int(wrong_object, 5);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<wrong>:functor:all_int'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not builtin and not declared 'object<wrong>:functor:all_int'
 
   {assign}: err
   | {name list_result}: list_result: object<list> variable
@@ -93925,7 +93925,7 @@ The statement ending at line XXXX
 
 LET uu := object<list>:array:get(list_result, 5);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not yet implemented 'object<list>:array:get'
+test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not builtin and not declared 'object<list>:array:get'
 
   {let_stmt}: err
   | {name uu}

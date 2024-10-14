@@ -25041,3 +25041,12 @@ store << 5;
 -- + read_int(store, int_var);
 -- - error:
 store >> int_var;
+
+@op object<foo> : concat int as concat_func;
+declare function concat_func(store object<foo>, x int!) object<foo>;
+
+-- TEST: try || overload to concat_func
+-- verify rewrite
+-- + LET concat_result := concat_func(foo_obj, 5);
+-- - error
+let concat_result := foo_obj || 5;

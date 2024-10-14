@@ -94231,3 +94231,53 @@ read_int(store, int_var);
         | {arg_list}
           | {name int_var}: int_var: integer notnull variable
 
+The statement ending at line XXXX
+
+@OP OBJECT<foo> : concat int AS concat_func;
+
+  {op_stmt}: ok
+  | {type_object}: object<foo>
+  | | {name foo}
+  | {op_vals}
+    | {name concat}
+    | {op_vals}
+      | {name int}
+      | {name concat_func}
+
+The statement ending at line XXXX
+
+DECLARE FUNC concat_func (store OBJECT<foo>, x INT!) OBJECT<foo>;
+
+  {declare_func_stmt}: object<foo>
+  | {name concat_func}: object<foo>
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: store: object<foo> variable in
+    | | | {param_detail}: store: object<foo> variable in
+    | |   | {name store}: store: object<foo> variable in
+    | |   | {type_object}: object<foo>
+    | |     | {name foo}
+    | | {params}
+    |   | {param}: x: integer notnull variable in
+    |     | {param_detail}: x: integer notnull variable in
+    |       | {name x}: x: integer notnull variable in
+    |       | {notnull}: integer notnull
+    |         | {type_int}: integer
+    | {type_object}: object<foo>
+      | {name foo}
+
+The statement ending at line XXXX
+
+LET concat_result := concat_func(foo_obj, 5);
+
+  {let_stmt}: concat_result: object<foo> variable
+  | {name concat_result}: concat_result: object<foo> variable
+  | {call}: object<foo>
+    | {name concat_func}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name foo_obj}: foo_obj: object<Foo> variable was_set
+        | {arg_list}
+          | {int 5}: integer notnull
+

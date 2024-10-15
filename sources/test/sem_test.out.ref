@@ -94281,3 +94281,15 @@ LET concat_result := concat_func(foo_obj, 5);
         | {arg_list}
           | {int 5}: integer notnull
 
+The statement ending at line XXXX
+
+@OP CURSOR : call foo AS cursor_foo;
+
+  {op_stmt}: ok
+  | {name CURSOR}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name foo}
+      | {name cursor_foo}
+

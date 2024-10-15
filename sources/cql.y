@@ -2701,6 +2701,8 @@ select_expr_macro_def:
 
 op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
     $op_stmt = new_ast_op_stmt($data_type_any, new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+op_stmt: AT_OP CURSOR ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
+    $op_stmt = new_ast_op_stmt(new_ast_str("CURSOR"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   ;
 
 macro_def_stmt:

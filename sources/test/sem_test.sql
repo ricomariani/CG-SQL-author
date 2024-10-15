@@ -25050,3 +25050,11 @@ declare function concat_func(store object<foo>, x int!) object<foo>;
 -- + LET concat_result := concat_func(foo_obj, 5);
 -- - error
 let concat_result := foo_obj || 5;
+
+-- TEST:  use CURSOR instead of a normal type
+-- verify echo
+-- + @OP cursor : call foo AS cursor_foo;
+-- + {op_stmt}: ok
+-- + {name CURSOR}
+-- - error:
+@op cursor : call foo as cursor_foo;

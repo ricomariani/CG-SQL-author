@@ -23566,23 +23566,29 @@ static void sem_op_stmt(ast_node *ast) {
   EXTRACT_STRING(func, v2->left);
   EXTRACT_STRING(targ, v2->right);
 
-  sem_data_type_var(data_type);
-  if (is_error(data_type)) {
-    record_error(ast);
-    return;
-  }
-
-  sem_t sem_type = data_type->sem->sem_type;
-  CSTR kind = data_type->sem->kind;
-
-  CSTR key;
-  if (kind) {
-    key = dup_printf("%s<%s>:%s:%s", rewrite_type_suffix(sem_type), kind, op, func);
+  CSTR key = NULL;
+  if (is_ast_str(data_type) && !Strcasecmp("CURSOR", ((str_ast_node *)data_type)->value)) {
+    key = dup_printf("cursor:%s:%s", op, func);
   }
   else {
-    key = dup_printf("%s:%s:%s", rewrite_type_suffix(sem_type), op, func);
+    sem_data_type_var(data_type);
+    if (is_error(data_type)) {
+      record_error(ast);
+      return;
+    }
+    sem_t sem_type = data_type->sem->sem_type;
+    CSTR kind = data_type->sem->kind;
+    CSTR type_string = rewrite_type_suffix(sem_type);
+
+    if (kind) {
+      key = dup_printf("%s<%s>:%s:%s", type_string, kind, op, func);
+    }
+    else {
+      key = dup_printf("%s:%s:%s", type_string, op, func);
+    }
   }
 
+  Invariant(key);
   symtab_entry *entry = symtab_find(ops, key);
   if (entry) {
     entry->val = (void*)targ;

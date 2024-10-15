@@ -981,7 +981,7 @@ cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
      case SEM_TYPE_TEXT:  result = "text"; break;
      case SEM_TYPE_BLOB:  result = "blob"; break;
      case SEM_TYPE_OBJECT: result = "object"; break;
-     // case SEM_TYPE_STRUCT: result = "cursor"; break;
+     case SEM_TYPE_STRUCT: result = "cursor"; break;
   };
   // Only the above are possible
   Contract(result[0]);
@@ -1056,7 +1056,6 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   EXTRACT_ANY_NOTNULL(argument, head->left);
   EXTRACT(arg_list, head->right);
   Contract(argument->sem);
-  Contract(argument->sem->kind);
 
   sem_t sem_type = argument->sem->sem_type;
   CSTR kind = argument->sem->kind;
@@ -1064,7 +1063,13 @@ cql_noexport void rewrite_reverse_apply_polymorphic(ast_node *_Nonnull head) {
   CHARBUF_OPEN(new_name);
   CHARBUF_OPEN(key);
 
-  bprintf(&key, "%s<%s>:functor:all", rewrite_type_suffix(sem_type), kind);
+  if (!kind) {
+    bprintf(&key, "%s:functor:all", rewrite_type_suffix(sem_type));
+  }
+  else {
+    bprintf(&key, "%s<%s>:functor:all", rewrite_type_suffix(sem_type), kind);
+  }
+  
   CSTR base_name = find_op(key.ptr);
 
   if (!base_name) {

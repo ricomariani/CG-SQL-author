@@ -94293,3 +94293,148 @@ The statement ending at line XXXX
       | {name foo}
       | {name cursor_foo}
 
+The statement ending at line XXXX
+
+DECLARE FUNC cursor_foo (x CURSOR) INT;
+
+  {declare_func_stmt}: integer
+  | {name cursor_foo}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: cursor variable in
+    |   | {param_detail}: x: cursor variable in
+    |     | {name x}: x: cursor variable in
+    |     | {type_cursor}: cursor
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC cursor_bar (x CURSOR) INT;
+
+  {declare_func_stmt}: integer
+  | {name cursor_bar}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: cursor variable in
+    |   | {param_detail}: x: cursor variable in
+    |     | {name x}: x: cursor variable in
+    |     | {type_cursor}: cursor
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+DECLARE FUNC cursor_foo_poly_int (x CURSOR, y INT) INT;
+
+  {declare_func_stmt}: integer
+  | {name cursor_foo_poly_int}: integer
+  | {func_params_return}
+    | {params}: ok
+    | | {param}: x: cursor variable in
+    | | | {param_detail}: x: cursor variable in
+    | |   | {name x}: x: cursor variable in
+    | |   | {type_cursor}: cursor
+    | | {params}
+    |   | {param}: y: integer variable in
+    |     | {param_detail}: y: integer variable in
+    |       | {name y}: y: integer variable in
+    |       | {type_int}: integer
+    | {type_int}: integer
+
+The statement ending at line XXXX
+
+CURSOR CPipe FOR
+  SELECT 1 AS x, 2 AS y;
+
+  {declare_cursor}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc
+  | {name CPipe}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc shape_storage serialize
+  | {select_stmt}: select: { x: integer notnull, y: integer notnull }
+    | {select_core_list}: select: { x: integer notnull, y: integer notnull }
+    | | {select_core}: select: { x: integer notnull, y: integer notnull }
+    |   | {select_expr_list_con}: select: { x: integer notnull, y: integer notnull }
+    |     | {select_expr_list}: select: { x: integer notnull, y: integer notnull }
+    |     | | {select_expr}: x: integer notnull
+    |     | | | {int 1}: integer notnull
+    |     | | | {opt_as_alias}
+    |     | |   | {name x}
+    |     | | {select_expr_list}
+    |     |   | {select_expr}: y: integer notnull
+    |     |     | {int 2}: integer notnull
+    |     |     | {opt_as_alias}
+    |     |       | {name y}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+FETCH CPipe;
+
+  {fetch_stmt}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc shape_storage
+  | {name CPipe}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+cursor_foo(CPipe);
+
+  {expr_stmt}: integer
+  | {call}: integer
+    | {name cursor_foo}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name CPipe}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+@OP CURSOR : call bar AS cursor_bar;
+
+  {op_stmt}: ok
+  | {name CURSOR}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name bar}
+      | {name cursor_bar}
+
+The statement ending at line XXXX
+
+cursor_bar(CPipe);
+
+  {expr_stmt}: integer
+  | {call}: integer
+    | {name cursor_bar}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name CPipe}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc shape_storage serialize
+
+The statement ending at line XXXX
+
+@OP CURSOR : functor all AS cursor_foo_poly;
+
+  {op_stmt}: ok
+  | {name CURSOR}
+  | {op_vals}
+    | {name functor}
+    | {op_vals}
+      | {name all}
+      | {name cursor_foo_poly}
+
+The statement ending at line XXXX
+
+cursor_foo_poly_int(CPipe, 1);
+
+  {expr_stmt}: integer
+  | {call}: integer
+    | {name cursor_foo_poly_int}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {name CPipe}: CPipe: select: { x: integer notnull, y: integer notnull } variable dml_proc shape_storage serialize
+        | {arg_list}: ok
+          | {int 1}: integer notnull
+

@@ -25058,3 +25058,29 @@ let concat_result := foo_obj || 5;
 -- + {name CURSOR}
 -- - error:
 @op cursor : call foo as cursor_foo;
+
+declare function cursor_foo(x CURSOR) int;
+declare function cursor_bar(x CURSOR) int;
+declare function cursor_foo_poly_int(x CURSOR, y int) int;
+
+cursor CPipe for select 1 x, 2 y;
+fetch CPipe;
+
+-- TEST: use function notation with no declaration
+-- verify rewrite
+-- + cursor_foo(CPipe);
+CPipe:foo;
+
+@op cursor : call bar as cursor_bar;
+
+-- TEST: use function method on a cursor
+-- verify rewerite
+-- + cursor_bar(CPipe);
+CPipe:bar;
+
+@op cursor : functor all as cursor_foo_poly;
+
+-- TEST: use function method on a cursor with arg overloading
+-- verify rewerite
+-- + cursor_foo_poly_int(CPipe, 1);
+CPipe:(1);

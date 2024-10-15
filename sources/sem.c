@@ -10854,7 +10854,9 @@ static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze) {
         EXTRACT_ANY_NOTNULL(arg, ast->left);
         EXTRACT_ANY(arg_list, ast->right);
 
-        if (!arg->sem->kind || !arg->sem->kind[0]) {
+        // we attempt thee replacement if the left is a cursor type or has a kind
+        // struct types don't have a kind
+        if (!is_struct(arg->sem->sem_type) && (!arg->sem->kind || !arg->sem->kind[0])) {
           report_error(arg, "CQL0506: left argument must have a type kind", NULL);
           record_error(ast);
           return true;

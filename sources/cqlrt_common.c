@@ -4150,6 +4150,26 @@ cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_curso
   return result;
 }
 
+// type of the indicated field
+int32_t cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  int32_t type = -1;
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint8_t *types = dyn_cursor->cursor_data_types;
+    type = (int32_t)types[i];
+  }
+
+  return type;
+}
+
+// total number of fields in the cursor
+int32_t cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  return (int32_t)offsets[0];  // the first index is the count of fields
+}
+
 // To keep the contract as simple as possible we encode everything we
 // need into the fragment array.  Including the size of the output
 // and fragment terminator.  See above.  This also makes the code

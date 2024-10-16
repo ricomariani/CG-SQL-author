@@ -48,6 +48,23 @@ CQL_DATA_TYPE_CORE = 63
 CQL_DATA_TYPE_ENCODED = 64
 CQL_DATA_TYPE_NOT_NULL = 128
 
+cql_data_type_decode = {
+  [CQL_ENCODED_TYPE_BOOL_NOTNULL] = CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_INT_NOTNULL] = CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_LONG_NOTNULL] = CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_DOUBLE_NOTNULL] = CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_STRING_NOTNULL] = CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_BLOB_NOTNULL] = CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_OBJECT_NOTNULL] = CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL,
+  [CQL_ENCODED_TYPE_BOOL] = CQL_DATA_TYPE_BOOL,
+  [CQL_ENCODED_TYPE_INT] = CQL_DATA_TYPE_INT32,
+  [CQL_ENCODED_TYPE_LONG] = CQL_DATA_TYPE_INT64,
+  [CQL_ENCODED_TYPE_DOUBLE] = CQL_DATA_TYPE_DOUBLE,
+  [CQL_ENCODED_TYPE_STRING] = CQL_DATA_TYPE_STRING,
+  [CQL_ENCODED_TYPE_BLOB] = CQL_DATA_TYPE_BLOB,
+  [CQL_ENCODED_TYPE_OBJECT] = CQL_DATA_TYPE_OBJECT
+}
+
 CQL_BLOB_TYPE_BOOL   = 0  -- always big endian format in the blob
 CQL_BLOB_TYPE_INT32  = 1  -- always big endian format in the blob
 CQL_BLOB_TYPE_INT64  = 2  -- always big endian format in the blob
@@ -835,6 +852,19 @@ end
 
 function cql_last_insert_rowid(db)
   return db:last_insert_rowid()
+end
+
+function cql_cursor_column_count(C, types, fields)
+  return #fields
+end
+
+function cql_cursor_column_type(C, types, fields, i)
+  local code = string.byte(types, i, i)
+  local type = -1
+  if i >= 0 and i < #fields then
+    type = cql_data_type_decode[code]
+  end
+  return type
 end
 
 function cql_cursor_format(C, types, fields)

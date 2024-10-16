@@ -39,10 +39,23 @@ dumper_procs!("text", value);
 dumper_procs!("object", "[Object]");
 dumper_procs!("blob", "[Blob]");
 
-proc dump_null(value integer, out result integer)
+@op NULL : call dump as dump_null;
+@op NULL : call format as format_null;
+@op NULL : call get_type as get_type_null;
+
+proc format_null(value int, out result text!) 
 begin
-  set result := value;
-  call printf("%-7s %s\n", value:get_type(), value:format());
+  result := "NULL";
+end;
+
+proc get_type_null(value int, out result text!) 
+begin
+  result := '("null")';
+end;
+
+proc dump_null(value int)
+begin
+  call printf("%-7s %s\n", null:get_type(), null:format());
 end;
 
 @macro(stmt_list) DUMP!(x! expr)

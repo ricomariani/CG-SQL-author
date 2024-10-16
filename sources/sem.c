@@ -23569,15 +23569,24 @@ static void sem_op_stmt(ast_node *ast) {
   EXTRACT_STRING(targ, v2->right);
 
   CSTR key = NULL;
-  if (is_ast_str(data_type) && !Strcasecmp("CURSOR", ((str_ast_node *)data_type)->value)) {
-    key = dup_printf("cursor:%s:%s", op, func);
+  if (is_ast_str(data_type)) {
+    EXTRACT_STRING(special, data_type);
+
+    if (!Strcasecmp("cursor", special)) {
+      key = dup_printf("cursor:%s:%s", op, func);
+    }
+    else if (!Strcasecmp("null", special)) {
+      key = dup_printf("null:%s:%s", op, func);
+    }
   }
-  else {
+
+  if (!key) {
     sem_data_type_var(data_type);
     if (is_error(data_type)) {
       record_error(ast);
       return;
     }
+
     sem_t sem_type = data_type->sem->sem_type;
     CSTR kind = data_type->sem->kind;
     CSTR type_string = rewrite_type_suffix(sem_type);

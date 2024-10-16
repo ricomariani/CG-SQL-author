@@ -973,7 +973,7 @@ cleanup:
 cql_noexport CSTR _Nonnull rewrite_type_suffix(sem_t sem_type) {
    CSTR result = "";
     switch (core_type_of(sem_type)) {
-     // case SEM_TYPE_NULL: result = "null"; break;
+     case SEM_TYPE_NULL: result = "null"; break;
      case SEM_TYPE_BOOL: result = "bool"; break;
      case SEM_TYPE_INTEGER:  result = "int"; break;
      case SEM_TYPE_LONG_INTEGER: result = "long"; break;

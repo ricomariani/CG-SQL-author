@@ -94438,3 +94438,39 @@ cursor_foo_poly_int(CPipe, 1);
         | {arg_list}: ok
           | {int 1}: integer notnull
 
+The statement ending at line XXXX
+
+@OP NULL : call dump AS dump_null;
+
+  {op_stmt}: ok
+  | {name NULL}
+  | {op_vals}
+    | {name call}
+    | {op_vals}
+      | {name dump}
+      | {name dump_null}
+
+The statement ending at line XXXX
+
+DECLARE PROC dump_null (x INT);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name dump_null}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: integer variable in
+        | {param_detail}: x: integer variable in
+          | {name x}: x: integer variable in
+          | {type_int}: integer
+
+The statement ending at line XXXX
+
+CALL dump_null(NULL);
+
+  {call_stmt}: ok
+  | {name dump_null}: ok
+  | {arg_list}: ok
+    | {null}: null
+

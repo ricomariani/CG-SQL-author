@@ -4,9 +4,10 @@
 
 proc entrypoint()
 begin
+  null:dump;
   1:dump();
   DUMP!(1+1);
-  if 2:dump() then
+  if 2.0:dump() then
     "hi there":dump();
   end if;
 

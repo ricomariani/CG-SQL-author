@@ -52,7 +52,7 @@ begin
   _!("### Use true and false for bools, nullable bool is possible\n");
   EXAMPLE_NOTE!(true,  "-- how to true");
   EXAMPLE_NOTE!(false, "-- how to false");
-  -- EXAMPLE_NOTE!(null,  "-- null means \"unknown\" in CQL like SQLite");
+  EXAMPLE_NOTE!(null,  "-- null means \"unknown\" in CQL like SQLite");
   _!("");
 
 

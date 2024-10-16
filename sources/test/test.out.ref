@@ -2404,3 +2404,5 @@ x:y();
 @OP INT<foo> : arrow blob<foo> AS do_int_foo_arrow;
 
 @OP INT<foo> : arrow object<foo> AS do_int_foo_arrow;
+
+@OP NULL : call foo AS foo_foo;

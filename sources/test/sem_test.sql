@@ -25084,3 +25084,12 @@ CPipe:bar;
 -- verify rewerite
 -- + cursor_foo_poly_int(CPipe, 1);
 CPipe:(1);
+
+@op null: call dump as dump_null;
+declare proc dump_null(x integer);
+
+-- TEST: rwwrite call on null
+-- verify rewrite
+-- + dump_null(NULL);
+-- -error:
+null:dump();

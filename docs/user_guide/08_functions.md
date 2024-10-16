@@ -353,6 +353,8 @@ visible together:
 |11|`@op T<kind> : arrow all as arr1;` | `left->right` | `arr1(left, right)`|
 |12|`@op T1<kind> : arrow T2 as arr2;` | `left->right` | `arr2(left, right)`|
 |13|`@op T1<kind> : arrow T2<kind> as arr3;` | `left->right` | `arr3(left, right)`|
+|14|`@op cursor : call foo as foo_bar;` | `C:foo(...)` | `foo_bar(C, ...)`|
+|15|`@op null : call foo as foo_null;' | `null:foo(...)` | `foo_null(null, ...)`|
 
 Now let's briefly go over each of these forms.  In all cases the transform is only applied if `expr` is of type `T`.  No type conversion is applied at this point, however only the base type must match so the transformation will be applied regardless of the nullability or sensitivity of `expr`.  If `expr` is of a suitable type the transform is applied and the call is then checked for errors as usual.  Based on the type of replacement function an implicit conversion might then be required.  Note that the types of any additional arguments are not considered when deciding to do the transform but they can cause errors after the transform has been applied. After the transform replacement expression, including all arguments, are type checked as usual and errors could result from arguments not being compatible with the transform.  This is no different than if you had written `func(expr1, expr2, etc..)` with some of the arguments being not appropriate for `func`.
 
@@ -381,6 +383,10 @@ Now let's briefly go over each of these forms.  In all cases the transform is on
 12. This is just like (11) except that the type of the right argument has been partially specified, it must have the indicated base type T2, such as `int`, `real`, etc.  If this form matches the replacement takes precedence over (11). The result of the replacement is type checked as usual.
 
 13. This is just like (12) except that the type and kind of the right argument has been specified, it must have the indicated base type T2 and the indicated kind.  If this form matches the replacement takes precedence over (12).  The result of the replacement is type checked as usual.
+
+14. This form allows you to create pipeline functions on cursor types.  The replacement function will be declared with a dynamic cursor as the first argument. The result of the replacement is type checked as usual.
+
+15. This form allows you to create pipeline functions on the null literal.  The replacement function will get null as its first argument and this can be accepted by any nullable type. This form is of limited use as it only is triggered by null literals and these are only likely to appear in a pipeline in the context of a macro. The result of the replacement is type checked as usual.
 
 In addition to "arrow" the identifiers "lshift", "rshift" and "concat" maybe used to similarly remap `<<`, `>>`, and `||` respectively.  The same rules otherwise apply.  Note that the fact that these operators have different binding strengths can be very useful in building fluent-style pipelines.
 

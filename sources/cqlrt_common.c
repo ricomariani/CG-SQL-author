@@ -4150,6 +4150,196 @@ cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_curso
   return result;
 }
 
+// type of the indicated field
+int32_t cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  int32_t type = -1;
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint8_t *types = dyn_cursor->cursor_data_types;
+    type = (int32_t)types[i];
+    type &= CQL_DATA_TYPE_CORE|CQL_DATA_TYPE_NOT_NULL;
+  }
+  return type;
+}
+
+cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_nullable_bool result;
+  result.value = 0;
+  result.is_null = true;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_BOOL:
+        result = *(cql_nullable_bool *)(cursor + offset);
+        break;
+
+      case CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL:
+        result.value = *(cql_bool *)(cursor + offset);
+        result.is_null = false;
+        break;
+    }
+  }
+  return result;
+}
+cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_nullable_int32 result;
+  result.value = 0;
+  result.is_null = true;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_INT32:
+        result = *(cql_nullable_int32 *)(cursor + offset);
+        break;
+
+      case CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL:
+        result.value = *(cql_int32 *)(cursor + offset);
+        result.is_null = false;
+        break;
+    }
+  }
+  return result;
+}
+
+cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_nullable_int64 result;
+  result.value = 0;
+  result.is_null = true;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_INT64:
+        result = *(cql_nullable_int64 *)(cursor + offset);
+        break;
+
+      case CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL:
+        result.value = *(cql_int64 *)(cursor + offset);
+        result.is_null = false;
+        break;
+    }
+  }
+  return result;
+}
+
+cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_nullable_double result;
+  result.value = 0;
+  result.is_null = true;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_DOUBLE:
+        result = *(cql_nullable_double *)(cursor + offset);
+        break;
+
+      case CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL:
+        result.value = *(cql_double *)(cursor + offset);
+        result.is_null = false;
+        break;
+    }
+  }
+  return result;
+}
+
+cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_string_ref result = NULL;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_STRING:
+      case CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL:
+        result = *(cql_string_ref *)(cursor + offset);
+        break;
+    }
+  }
+  return result;
+}
+
+cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_blob_ref result = NULL;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_BLOB:
+      case CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL:
+        result = *(cql_blob_ref *)(cursor + offset);
+        break;
+    }
+  }
+  return result;
+}
+
+cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
+  cql_object_ref result = NULL;
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  uint8_t *types = dyn_cursor->cursor_data_types;
+  uint8_t *cursor = dyn_cursor->cursor_data;  // we will be using char offsets
+  uint16_t count = offsets[0];  // the first index is the count of fields
+
+  if (i >= 0 && i < count) {
+    uint16_t offset = offsets[i+1];
+    uint8_t type = types[i];
+
+    switch (types[i])  {
+      case CQL_DATA_TYPE_OBJECT:
+      case CQL_DATA_TYPE_OBJECT | CQL_DATA_TYPE_NOT_NULL:
+        result = *(cql_object_ref *)(cursor + offset);
+        break;
+    }
+  }
+  return result;
+}
+
+// total number of fields in the cursor
+int32_t cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
+  uint16_t *offsets = dyn_cursor->cursor_col_offsets;
+  return (int32_t)offsets[0];  // the first index is the count of fields
+}
+
 // To keep the contract as simple as possible we encode everything we
 // need into the fragment array.  Including the size of the output
 // and fragment terminator.  See above.  This also makes the code

@@ -42,6 +42,15 @@ extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull li
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull C);
+extern cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
 extern cql_nullable_int32 side_effect1(void);

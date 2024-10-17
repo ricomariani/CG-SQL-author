@@ -6229,6 +6229,289 @@
 
     The statement ending at line XXXX
 
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!
+
+    {
+      "name" : "cql_cursor_column_count",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!
+
+    {
+      "name" : "cql_cursor_column_type",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_bool (C CURSOR, icol INT!) BOOL
+
+    {
+      "name" : "cql_cursor_get_bool",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_int (C CURSOR, icol INT!) INT
+
+    {
+      "name" : "cql_cursor_get_int",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_long (C CURSOR, icol INT!) LONG
+
+    {
+      "name" : "cql_cursor_get_long",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "long",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_real (C CURSOR, icol INT!) REAL
+
+    {
+      "name" : "cql_cursor_get_real",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "real",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_text (C CURSOR, icol INT!) TEXT
+
+    {
+      "name" : "cql_cursor_get_text",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "text",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_blob (C CURSOR, icol INT!) BLOB
+
+    {
+      "name" : "cql_cursor_get_blob",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT
+
+    {
+      "name" : "cql_cursor_get_object",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "icol",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
     @ATTRIBUTE(foo=bar)
     DECLARE FUNC decl_func_take_all_types_func (t BOOL, i INT, l LONG, r REAL, bl BLOB, str TEXT, obj OBJECT, t_nn BOOL!, i_nn INT!, l_nn LONG!, r_nn REAL!, bl_nn BLOB!, str_nn TEXT!, obj_nn OBJECT!) BOOL
 

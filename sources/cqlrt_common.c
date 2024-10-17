@@ -181,7 +181,10 @@ cql_code cql_exec_var(sqlite3 *_Nonnull db, cql_int32 count, const char *_Nullab
 // only intended to be used in the context of schema maintenance or other cases where
 // there are highly compressible patterns (like DROP TRIGGER %s for 1000s of triggers).
 // All we do is convert the incoming string reference into a C string and then exec it.
-CQL_WARN_UNUSED cql_code cql_exec_internal(sqlite3 *_Nonnull db, cql_string_ref _Nonnull str_ref) {
+CQL_WARN_UNUSED cql_code cql_exec_internal(
+  sqlite3 *_Nonnull db,
+  cql_string_ref _Nonnull str_ref)
+{
   cql_alloc_cstr(temp, str_ref);
   cql_code rc = cql_sqlite3_exec(db, temp);
   cql_free_cstr(temp, str_ref);
@@ -197,7 +200,10 @@ char *_Nonnull cql_address_of_col(
 // The variable byte encoding is little endian, you stop when you reach
 // a byte that does not have the high bit set.  This is good enough for 2^28 bits
 // in four bytes which is more than enough for sql strings...
-static const char *_Nonnull cql_decode(const char *_Nonnull data, int32_t *_Nonnull result) {
+static const char *_Nonnull cql_decode(
+  const char *_Nonnull data,
+  int32_t *_Nonnull result)
+{
   int32_t out = 0;
   int32_t byte;
   int32_t offset = 0;
@@ -482,7 +488,10 @@ jmp_buf *_Nullable cql_contract_argument_notnull_tripwire_jmp_buf;
 // Wraps calls to `cql_tripwire` to allow us to longjmp, if required. This is
 // called for both the argument itself and, in the case of an INOUT NOT NULL
 // reference type argument, what the argument points to as well.
-static void cql_contract_argument_notnull_tripwire(void *_Nullable ptr, cql_uint32 position) {
+static void cql_contract_argument_notnull_tripwire(
+  void *_Nullable ptr,
+  cql_uint32 position)
+{
 #ifdef CQL_RUN_TEST
   if (cql_contract_argument_notnull_tripwire_jmp_buf && !ptr) {
     longjmp(*cql_contract_argument_notnull_tripwire_jmp_buf, position);
@@ -626,7 +635,11 @@ void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed) {
 }
 
 // simple helper to append into a byte buffer
-void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes) {
+void cql_bytebuf_append(
+  cql_bytebuf *_Nonnull buffer,
+  const void *_Nonnull data,
+  int32_t bytes)
+{
   void *pv = cql_bytebuf_alloc(buffer, bytes);
   memcpy(pv, data, bytes);
 }
@@ -635,7 +648,11 @@ void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data,
 // which we allocate using cql_bytebuf_alloc and then we write the formatted string.  Note that
 // it's normal to call this many times or in mixed ways so the null terminator is not desired.
 // The buffer gets the text of the string only.  Use cql_bytebuf_append_null to null terminate.
-static void cql_vbprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, va_list *_Nonnull args) {
+static void cql_vbprintf(
+  cql_bytebuf *_Nonnull buffer,
+  const char *_Nonnull format,
+  va_list *_Nonnull args)
+{
   va_list pass1, pass2;
   va_copy(pass1, *args);
   va_copy(pass2, *args);
@@ -658,11 +675,14 @@ static void cql_vbprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull form
 // This allows you to write into a bytebuf using a format string and varargs
 // All the work is delegated really, vsnprinf ultimately does everything but
 // first we need to call the function that does the size computation.
-void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...) {
- va_list args;
- va_start(args, format);
- cql_vbprintf(buffer, format, &args);
- va_end(args);
+void cql_bprintf(
+  cql_bytebuf *_Nonnull buffer,
+  const char *_Nonnull format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  cql_vbprintf(buffer, format, &args);
+  va_end(args);
 }
 
 // After using cql_bprintf it's pretty normal to need to add a null terminator
@@ -675,7 +695,10 @@ void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer) {
 
 // If there is no row available we can use this helper to ensure that
 // the output data is put into a known state.
-static void cql_multinull(cql_int32 count, va_list *_Nonnull args) {
+static void cql_multinull(
+  cql_int32 count,
+  va_list *_Nonnull args)
+{
   for (cql_int32 column = 0; column < count; column++) {
     cql_int32 type = va_arg(*args, cql_int32);
     cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
@@ -768,15 +791,15 @@ static void cql_multinull(cql_int32 count, va_list *_Nonnull args) {
 // proc creating result_set should decode explicitely sensitive column value
 // to get the real value.
 static void cql_fetch_field(
-    cql_int32 type,
-    cql_int32 column,
-    sqlite3 *_Nonnull db,
-    sqlite3_stmt *_Nullable stmt,
-    char *_Nonnull field,
-    cql_bool enable_encoding,
-    cql_int32 encode_context_type,
-    char *_Nullable encode_context_field,
-    cql_object_ref _Nullable encoder)
+  cql_int32 type,
+  cql_int32 column,
+  sqlite3 *_Nonnull db,
+  sqlite3_stmt *_Nullable stmt,
+  char *_Nonnull field,
+  cql_bool enable_encoding,
+  cql_int32 encode_context_type,
+  char *_Nullable encode_context_field,
+  cql_object_ref _Nullable encoder)
 {
   bool is_encoded = (type & CQL_DATA_TYPE_ENCODED) && enable_encoding;
   cql_int32 core_data_type_and_not_null = type & ~CQL_DATA_TYPE_ENCODED;
@@ -894,7 +917,10 @@ static void cql_fetch_field(
 // generated code cost to just the offsets and types.  This version does
 // the fetch based on the "fetch info" which includes, among other things
 // an array of types and an array of offsets.
-void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
+void cql_multifetch_meta(
+  char *_Nonnull data,
+  cql_fetch_info *_Nonnull info)
+{
   cql_contract(info->stmt);
   cql_contract(info->db);
   sqlite3_stmt *stmt = info->stmt;
@@ -933,15 +959,16 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
     // need to encode those values because it's the result_set output of the proc.
     // Because of that we set enable_encoding = TRUE. The value true means if the
     // field has the CQL_DATA_TYPE_ENCODED bit then encode otherwise don't
-    cql_fetch_field(type,
-                    column,
-                    db,
-                    stmt,
-                    field,
-                    true /* enable_encoding */,
-                    encode_context_type,
-                    encode_context_field,
-                    info->encoder);
+    cql_fetch_field(
+      type,
+      column,
+      db,
+      stmt,
+      field,
+      true /* enable_encoding */,
+      encode_context_type,
+      encode_context_field,
+      info->encoder);
   }
 }
 
@@ -950,7 +977,11 @@ void cql_multifetch_meta(char *_Nonnull data, cql_fetch_info *_Nonnull info) {
 // generated code cost to just the offsets and types.  This version does the
 // fetching using varargs with types and addresses.  This is the most flexible
 // as it allows writing into local variables and out parameters.
-void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, ...) {
+void cql_multifetch(
+  cql_code rc,
+  sqlite3_stmt *_Nullable stmt,
+  cql_int32 count, ...)
+{
   va_list args;
   va_start(args, count);
 
@@ -970,15 +1001,16 @@ void cql_multifetch(cql_code rc, sqlite3_stmt *_Nullable stmt, cql_int32 count, 
     // don't need to encode it because it's not a result_set output of the proc.
     // Because of that we set enable_encoding = FALSE. The value false means
     // do not encode even if the field has the CQL_DATA_TYPE_ENCODED bit.
-    cql_fetch_field(type,
-                    column,
-                    db,
-                    stmt,
-                    field,
-                    false /* enable_encoding */,
-                    -1 /* encode_context_type */,
-                    NULL /* encode_context_field */,
-                    NULL /* encoder */);
+    cql_fetch_field(
+      type,
+      column,
+      db,
+      stmt,
+      field,
+      false /* enable_encoding */,
+      -1 /* encode_context_type */,
+      NULL /* encode_context_field */,
+      NULL /* encoder */);
   }
 
   va_end(args);
@@ -1190,7 +1222,9 @@ void cql_copyoutrow(
 
 // This is just the helper to ignore the indicated arg
 // because the predicates array tell us it is to be skipped
-static void cql_skip_arg(cql_int32 type, va_list *_Nonnull args)
+static void cql_skip_arg(
+  cql_int32 type,
+  va_list *_Nonnull args)
 {
   cql_int32 core_data_type = CQL_CORE_DATA_TYPE_OF(type);
 
@@ -1470,7 +1504,8 @@ void cql_result_set_teardown(cql_result_set_ref _Nonnull result_set) {
 // Record the desired user-teardown function
 void cql_result_set_set_custom_teardown(
   cql_result_set_ref _Nonnull result_set,
-  void(*_Nonnull custom_teardown)(cql_result_set_ref _Nonnull result_set)) {
+  void(*_Nonnull custom_teardown)(cql_result_set_ref _Nonnull result_set))
+{
   cql_result_set_meta *meta = cql_result_set_get_meta(result_set);
   meta->custom_teardown = custom_teardown;
 }
@@ -1520,7 +1555,10 @@ static cql_hash_code cql_hash_buffer(
 // * these values are available in the metadata
 // This single function can hash any row of any result set, thereby saving a lot
 // of code generation.
-cql_hash_code cql_row_hash(cql_result_set_ref _Nonnull result_set, cql_int32 row) {
+cql_hash_code cql_row_hash(
+  cql_result_set_ref _Nonnull result_set,
+  cql_int32 row)
+{
   int32_t count = cql_result_set_get_count(result_set);
   cql_contract(row < count);
 
@@ -1792,7 +1830,8 @@ char *_Nonnull cql_address_of_col(
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
 cql_int32 cql_result_set_get_int32_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row, cql_int32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_INT32;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1905,7 +1944,8 @@ void cql_result_set_set_double_col(
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
 cql_bool cql_result_set_get_bool_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row, cql_int32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_BOOL;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -1942,7 +1982,8 @@ void cql_result_set_set_bool_col(
 // has to report which kind of datum it is.  All the error checking is in cql_address_of_col.
 cql_string_ref _Nullable cql_result_set_get_string_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row, cql_int32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   cql_int32 data_type = CQL_DATA_TYPE_STRING;
   char *data = cql_address_of_col(result_set, row, col, &data_type);
@@ -2023,7 +2064,8 @@ void cql_result_set_set_blob_col(
 // If the data type is nullable then we read the is_null value out of the row
 cql_bool cql_result_set_get_is_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row, cql_int32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   // Check to make sure the requested row is a valid row
   // See cql_address_of_col for reasons why this might fail.
@@ -2086,7 +2128,8 @@ cql_bool cql_result_set_get_is_null_col(
 // This is the helper method that sets a nullable column to null
 void cql_result_set_set_to_null_col(
   cql_result_set_ref _Nonnull result_set,
-  cql_int32 row, cql_int32 col)
+  cql_int32 row,
+  cql_int32 col)
 {
   // Check to make sure the requested row is a valid row
   // See cql_address_of_col for reasons why this might fail.
@@ -2820,7 +2863,11 @@ typedef struct cql_input_buf {
   uint32_t remaining;
 } cql_input_buf;
 
-static bool cql_input_read(cql_input_buf *_Nonnull buf, void *_Nonnull dest, uint32_t bytes) {
+static bool cql_input_read(
+  cql_input_buf *_Nonnull buf,
+  void *_Nonnull dest,
+  uint32_t bytes)
+{
   if (bytes > buf->remaining) {
     return false;
   }
@@ -2960,7 +3007,9 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the cursor.  By the time this is called many checks have been made
 // about the suitability of this cursor for serialization (e.g. no OBJECT fields).
 // As a consequence we get a nice simple strategy that is flexible.
-cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull blob, cql_dynamic_cursor *_Nonnull dyn_cursor)
+cql_code cql_serialize_to_blob(
+  cql_blob_ref _Nullable *_Nonnull blob,
+  cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
   if (!*dyn_cursor->cursor_has_row) {
     return SQLITE_ERROR;
@@ -3143,8 +3192,7 @@ cql_code cql_serialize_to_blob(cql_blob_ref _Nullable *_Nonnull blob, cql_dynami
 // are normalized to "isnull = 1" and "value = 0" so the whole thing can
 // be hashed with impunity even when it is in the null state.  With not
 // much work this assumption could be removed if needed at a later time.
-cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor)
-{
+cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor) {
   if (!*dyn_cursor->cursor_has_row) {
     return 0;
   }
@@ -3161,7 +3209,9 @@ cql_int64 cql_cursor_hash(cql_dynamic_cursor *_Nonnull dyn_cursor)
 // are normalized to "isnull = 1" and "value = 0" so the whole thing can
 // be hashed with impunity even when it is in the null state.  With not
 // much work this assumption could be removed if needed at a later time.
-cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *_Nonnull c2)
+cql_bool cql_cursors_equal(
+  cql_dynamic_cursor *_Nonnull c1,
+  cql_dynamic_cursor *_Nonnull c2)
 {
   // first check metadata for equivalence, and both must have a row, or not have a row
 
@@ -3188,7 +3238,8 @@ cql_bool cql_cursors_equal(cql_dynamic_cursor *_Nonnull c1, cql_dynamic_cursor *
 }
 
 // release the references in a cursor using the types and offsets info
-static void cql_clear_references_before_deserialization(cql_dynamic_cursor *_Nonnull dyn_cursor)
+static void cql_clear_references_before_deserialization(
+  cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
   // this is just a normal release of ref columns from the dyn cursor structure
   cql_release_offsets(dyn_cursor->cursor_data, dyn_cursor->cursor_refs_count, dyn_cursor->cursor_refs_offset);
@@ -3199,7 +3250,9 @@ static void cql_clear_references_before_deserialization(cql_dynamic_cursor *_Non
      goto error; \
    }
 
-cql_code cql_deserialize_from_blob(cql_blob_ref _Nullable b, cql_dynamic_cursor *_Nonnull dyn_cursor)
+cql_code cql_deserialize_from_blob(
+  cql_blob_ref _Nullable b,
+  cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
   cql_bool *has_row = dyn_cursor->cursor_has_row;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4123,6 +4176,8 @@ static void cql_format_one_cursor_column(cql_bytebuf *_Nonnull b, cql_dynamic_cu
 // where things might be different between runtimes. Making this invariant
 // would be pretty costly.  I'm not even sure sqlite printf is invariant
 // between systems on that score.
+//
+// this is also available as <some_cursor>:format
 cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor)
 {
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4151,6 +4206,7 @@ cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_curso
 }
 
 // type of the indicated field
+// this is also available as <some_cursor>:type(i)
 int32_t cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
   int32_t type = -1;
@@ -4164,6 +4220,8 @@ int32_t cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t 
   return type;
 }
 
+// extract a boolean from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_bool(i)
 cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_nullable_bool result;
   result.value = 0;
@@ -4190,6 +4248,9 @@ cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull dyn_cursor, i
   }
   return result;
 }
+
+// extract an int32 from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_int(i)
 cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_nullable_int32 result;
   result.value = 0;
@@ -4217,6 +4278,8 @@ cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull dyn_cursor, i
   return result;
 }
 
+// extract an int64 from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_long(i)
 cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_nullable_int64 result;
   result.value = 0;
@@ -4244,6 +4307,8 @@ cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull dyn_cursor, 
   return result;
 }
 
+// extract a double from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_real(i)
 cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_nullable_double result;
   result.value = 0;
@@ -4271,6 +4336,8 @@ cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull dyn_cursor,
   return result;
 }
 
+// extract a string from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_text(i)
 cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_string_ref result = NULL;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4292,6 +4359,8 @@ cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull dyn_cu
   return result;
 }
 
+// extract a blob from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_blob(i)
 cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_blob_ref result = NULL;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4313,6 +4382,8 @@ cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull dyn_curs
   return result;
 }
 
+// extract an object from the indicated field number of the cursor if there is one
+// this is also available as <some_cursor>:to_object(i)
 cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t i) {
   cql_object_ref result = NULL;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;
@@ -4344,7 +4415,9 @@ int32_t cql_cursor_column_count(cql_dynamic_cursor *_Nonnull dyn_cursor) {
 // need into the fragment array.  Including the size of the output
 // and fragment terminator.  See above.  This also makes the code
 // gen as simple as possible.
-cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_Nonnull frags)
+cql_string_ref _Nonnull cql_uncompress(
+  const char *_Nonnull base,
+  const char *_Nonnull frags)
 {
   // we never try to encode the empty string
   cql_contract(frags[0]);
@@ -4363,7 +4436,9 @@ cql_string_ref _Nonnull cql_uncompress(const char *_Nonnull base, const char *_N
 // after receiving a concatenated string from the CQL upgrader.
 // We need some parsing logic with quotes to make sure the parseWord
 // is not found inside string literals.
-static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(cql_string_ref _Nonnull str, char* _Nonnull parse_word)
+static cql_object_ref _Nonnull _cql_create_upgrader_input_statement_list(
+  cql_string_ref _Nonnull str,
+  char* _Nonnull parse_word)
 {
   cql_object_ref list = cql_string_list_create();
   cql_alloc_cstr(c_str, str);
@@ -4435,17 +4510,18 @@ cleanup:
 
 // This function assumes the input follows CQL railroad syntax and contains
 // characters uptil atleast the first "(" if it exists
-static char* _Nonnull _cql_create_table_name_from_table_creation_statement(cql_string_ref _Nonnull create)
+static char* _Nonnull _cql_create_table_name_from_table_creation_statement(
+  cql_string_ref _Nonnull create)
 {
-  char *p;
-  // https://cgsql.dev/program-diagram#create_virtual_table_stmt
   // table name always preceeds "USING "
   cql_alloc_cstr(c_create, create);
 
   // These cannot go into recreate groups so this case can't happen
   cql_bool virtual_table = !strncmp("CREATE VIRTUAL TABLE ", c_create, sizeof("CREATE VIRTUAL TABLE ") - 1);
   cql_contract(!virtual_table);
-  p = strchr(c_create, '(');
+  char *p = strchr(c_create, '(');
+  cql_contract(p);
+  cql_contract(p > c_create);
 
   // backspace spaces (if they exist) between table name preceeding pattern. We don't
   // want extra spaces in our table names.
@@ -4476,11 +4552,11 @@ static char* _Nonnull _cql_create_table_name_from_table_creation_statement(cql_s
 
 // This function is passed in an index creation statement generated from the CQL upgrader.
 // We need this helper to be able to map indices to tables.
-static char *_Nonnull _cql_create_table_name_from_index_creation_statement(cql_string_ref _Nonnull index_create)
+static char *_Nonnull _cql_create_table_name_from_index_creation_statement(
+  cql_string_ref _Nonnull index_create)
 {
   // table name follows "ON " in the create_index_stmt pattern
   // table name is followed by an open paren
-  // https://cgsql.dev/program-diagram#create_index_stmt
   cql_alloc_cstr(c_index_create, index_create);
   const char *lineStart = strstr(c_index_create, "ON ") + strlen("ON ");
   const char *q = strchr(lineStart, '('); // add space logic
@@ -4504,7 +4580,12 @@ static char *_Nonnull _cql_create_table_name_from_index_creation_statement(cql_s
 //
 // We currently always do recreate here (no rebuild). We just drop our tables, and recreate the
 // tables and any indices that might have been dropped.
-cql_code cql_rebuild_recreate_group(sqlite3 *_Nonnull db, cql_string_ref _Nonnull tables, cql_string_ref _Nonnull indices, cql_string_ref _Nonnull deletes, cql_bool *_Nonnull result)
+cql_code cql_rebuild_recreate_group(
+  sqlite3 *_Nonnull db,
+  cql_string_ref _Nonnull tables,
+  cql_string_ref _Nonnull indices,
+  cql_string_ref _Nonnull deletes,
+  cql_bool *_Nonnull result)
 {
   *result = false; // result holds false because we default to recreate (no rebuild)
   // process parseWord separated strings into lists
@@ -4569,13 +4650,18 @@ cleanup:
 }
 
 // this is not normally called but we need something here for linkage
-static void _stub_udf_callback(sqlite3_context *_Nullable context, int argc, sqlite3_value *_Nullable *_Nullable argv)
+static void _stub_udf_callback(
+  sqlite3_context *_Nullable context,
+  int argc,
+  sqlite3_value *_Nullable *_Nullable argv)
 {
 }
 
 // set up a do nothing UDF, this is used to stub out UDFs in the query plan generated code
 // the function is not normally called
-cql_code cql_create_udf_stub(sqlite3 *_Nonnull db, cql_string_ref _Nonnull name)
+cql_code cql_create_udf_stub(
+  sqlite3 *_Nonnull db,
+  cql_string_ref _Nonnull name)
 {
   cql_alloc_cstr(temp, name);
 

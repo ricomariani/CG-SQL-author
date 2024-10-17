@@ -1210,6 +1210,94 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_cursor_column_count}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: C: cursor variable in
+      |   | {param_detail}: C: cursor variable in
+      |     | {name C}: C: cursor variable in
+      |     | {type_cursor}: cursor
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_cursor_column_type (C CURSOR, icol INT!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_cursor_column_type}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: C: cursor variable in
+      | | | {param_detail}: C: cursor variable in
+      | |   | {name C}: C: cursor variable in
+      | |   | {type_cursor}: cursor
+      | | {params}
+      |   | {param}: icol: integer notnull variable in
+      |     | {param_detail}: icol: integer notnull variable in
+      |       | {name icol}: icol: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP CURSOR : call count AS cql_cursor_column_count;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name count}
+        | {name cql_cursor_column_count}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP CURSOR : call type AS cql_cursor_column_type;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name type}
+        | {name cql_cursor_column_type}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 
   {stmt_and_attr}: ok

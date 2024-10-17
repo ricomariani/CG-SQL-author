@@ -4159,8 +4159,8 @@ int32_t cql_cursor_column_type(cql_dynamic_cursor *_Nonnull dyn_cursor, int32_t 
   if (i >= 0 && i < count) {
     uint8_t *types = dyn_cursor->cursor_data_types;
     type = (int32_t)types[i];
+    type &= CQL_DATA_TYPE_CORE|CQL_DATA_TYPE_NOT_NULL;
   }
-
   return type;
 }
 

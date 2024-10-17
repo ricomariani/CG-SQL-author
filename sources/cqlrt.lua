@@ -859,9 +859,10 @@ function cql_cursor_column_count(C, types, fields)
 end
 
 function cql_cursor_column_type(C, types, fields, i)
-  local code = string.byte(types, i, i)
   local type = -1
   if i >= 0 and i < #fields then
+    i = i + 1
+    local code = string.byte(types, i, i)
     type = cql_data_type_decode[code]
   end
   return type

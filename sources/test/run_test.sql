@@ -6561,6 +6561,17 @@ BEGIN
   EXPECT!(v == 101);
 END);
 
+TEST!(cursor_accessors,
+BEGIN
+  cursor C for select 1 x, 2.0:nullable y;
+  fetch C;
+  EXPECT!(2 == C:count);
+  EXPECT!(CQL_DATA_TYPE_DOUBLE == C:type(1));
+  EXPECT!((CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL) == C:type(0));
+  EXPECT!(-1 == C:type(-1));
+  EXPECT!(-1 == C:type(5));
+END);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

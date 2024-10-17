@@ -868,6 +868,47 @@ function cql_cursor_column_type(C, types, fields, i)
   return type
 end
 
+function cql_cursor_get_any(C, types, fields, i, reqd)
+  if i >= 0 and i < #fields then
+    i = i + 1
+    local code = string.byte(types, i, i)
+    local type = cql_data_type_decode[code] & CQL_DATA_TYPE_CORE 
+    if type == reqd then
+      return C[fields[i]]
+    end
+  end
+
+  return null
+end;
+
+function cql_cursor_get_bool(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_BOOL)
+end
+
+function cql_cursor_get_int(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_INT32)
+end
+
+function cql_cursor_get_long(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_INT64)
+end
+
+function cql_cursor_get_real(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_DOUBLE)
+end
+
+function cql_cursor_get_text(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_STRING)
+end
+
+function cql_cursor_get_blob(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_BLOB)
+end
+
+function cql_cursor_get_object(C, types, fields, i)
+  return cql_cursor_get_any(C, types, fields, i, CQL_DATA_TYPE_OBJECT)
+end
+
 function cql_cursor_format(C, types, fields)
   local result = ""
   for i = 1, #fields

@@ -6561,15 +6561,59 @@ BEGIN
   EXPECT!(v == 101);
 END);
 
-TEST!(cursor_accessors,
+TEST!(cursor_accessors_notnull,
 BEGIN
-  cursor C for select 1 x, 2.0:nullable y;
+  cursor C for select true a, 1 b, 2L c, 3.0 d, "foo" e, "bar" ~blob~ f;
   fetch C;
-  EXPECT!(2 == C:count);
-  EXPECT!(CQL_DATA_TYPE_DOUBLE == C:type(1));
-  EXPECT!((CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL) == C:type(0));
+  EXPECT!(6 == C:count);
+  EXPECT!(CQL_DATA_TYPE_BOOL | CQL_DATA_TYPE_NOT_NULL == C:type(0));
+  EXPECT!(CQL_DATA_TYPE_INT32 | CQL_DATA_TYPE_NOT_NULL == C:type(1));
+  EXPECT!(CQL_DATA_TYPE_INT64 | CQL_DATA_TYPE_NOT_NULL == C:type(2));
+  EXPECT!(CQL_DATA_TYPE_DOUBLE | CQL_DATA_TYPE_NOT_NULL == C:type(3));
+  EXPECT!(CQL_DATA_TYPE_STRING | CQL_DATA_TYPE_NOT_NULL == C:type(4));
+  EXPECT!(CQL_DATA_TYPE_BLOB | CQL_DATA_TYPE_NOT_NULL == C:type(5));
+
   EXPECT!(-1 == C:type(-1));
-  EXPECT!(-1 == C:type(5));
+  EXPECT!(-1 == C:type(C:count));
+  EXPECT!(true == C:to_bool(0));
+  EXPECT!(1 == C:to_int(1));
+  EXPECT!(2L == C:to_long(2));
+  EXPECT!(3.0 == C:to_real(3));
+  EXPECT!("foo" == C:to_text(4));
+  EXPECT!(C:to_blob(5) IS NOT NULL);
+END);
+
+TEST!(cursor_accessors_nullable,
+BEGIN
+  cursor C for select true:nullable a, 1:nullable b,
+         2L:nullable c, 3.0:nullable d, "foo":nullable e, "bar" ~blob~:nullable f;
+  fetch C;
+
+  EXPECT!(6 == C:count);
+  EXPECT!(CQL_DATA_TYPE_BOOL == C:type(0));
+  EXPECT!(CQL_DATA_TYPE_INT32 == C:type(1));
+  EXPECT!(CQL_DATA_TYPE_INT64 == C:type(2));
+  EXPECT!(CQL_DATA_TYPE_DOUBLE == C:type(3));
+  EXPECT!(CQL_DATA_TYPE_STRING == C:type(4));
+  EXPECT!(CQL_DATA_TYPE_BLOB == C:type(5));
+
+  EXPECT!(true == C:to_bool(0));
+  EXPECT!(1 == C:to_int(1));
+  EXPECT!(2L == C:to_long(2));
+  EXPECT!(3.0 == C:to_real(3));
+  EXPECT!("foo" == C:to_text(4));
+  EXPECT!(C:to_blob(5) IS NOT NULL);
+END);
+
+
+TEST!(cursor_accessors_object,
+BEGIN
+  let v := 1:box;
+  cursor C like (obj object<cql_box>);
+  fetch C from values(v);
+  EXPECT!(C:to_object(0) IS NOT NULL);
+  EXPECT!(C:to_object(-1) IS NULL);
+  EXPECT!(C:to_object(1) IS NULL);
 END);
 
 END_SUITE();

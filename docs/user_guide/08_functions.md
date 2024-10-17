@@ -303,8 +303,19 @@ DECLARE SELECT FUNC json_tree NO CHECK
 > NOTE: key, value, and atom can be any type and will require a cast operation similar to
 > `json_extract`, see the notes above.
 
+*Dyanmic Cursor Functions*
 
-Special Functions
+These functions all work with an unspecified cursor format.  These accept a so-called
+*dynamic* cursor.
+
+* `cql_cursor_format` returns a string with the names and values of every field in the cursor, useful for debugging
+* `cql_cursor_column_count` return the number of columns in the cursor
+* `cql_cursor_column_type` returns the type of the column using `CQL_DATA_TYPE_*` constants
+* `cql_cursor_get_*` returns a column of the indicated type at the indicated index, the type can be bool, int, long, real, text, blob, or object
+
+Pipeline syntax is availabe for these, you can use `C:format`, `C:count`, `C:type(i)`, `C:to_bool(i)`, `C:to_int(i)` etc.
+
+*Special Functions*
  * nullable
  * sensitive
  * ptr

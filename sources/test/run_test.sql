@@ -5744,12 +5744,12 @@ BEGIN
   -- load all nulls
   fetch C() from values ();
 
-  LET s1 := cql_cursor_format(C);
+  LET s1 := C:format;
   EXPECT!(s1 = "a_bool:null|an_int:null|a_long:null|a_real:null|a_string:null|a_blob:null");
 
   -- nullable values not null
   fetch C(a_blob, a_real) from values ((select cast('xyzzy' as blob)), 3.5) @dummy_seed(1) @dummy_nullables;
-  LET s2 := cql_cursor_format(C);
+  LET s2 := C:format;
   EXPECT!(s2 = "a_bool:true|an_int:1|a_long:1|a_real:3.5|a_string:a_string_1|a_blob:length 5 blob");
 
   declare D cursor like (a_bool bool!, an_int int!, a_long long!, a_real real!, a_string text!, a_blob blob!);

@@ -1449,6 +1449,25 @@ DECLARE FUNC cql_cursor_get_object (C CURSOR, icol INT!) OBJECT;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+@OP CURSOR : call format AS cql_cursor_format;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name format}
+        | {name cql_cursor_format}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 @OP CURSOR : call count AS cql_cursor_column_count;
 
   {stmt_and_attr}: ok

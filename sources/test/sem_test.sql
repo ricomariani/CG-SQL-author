@@ -13977,7 +13977,7 @@ proc print_call_cql_cursor_format()
 begin
   cursor c1 for select TRUE a, 1 b, 99L c, 'x' d, nullable(1.1) e, cast('y' as blob) f;
   fetch c1;
-  set a_string := cql_cursor_format(c1);
+  set a_string := c1:format;
 end;
 
 -- TEST: call cql_cursor_format in select context
@@ -13990,7 +13990,7 @@ proc select_cql_cursor_format()
 begin
   cursor c1 for select 1 as a;
   fetch c1;
-  select cql_cursor_format(c1) as p;
+  select c1:format as p;
 end;
 
 -- TEST: call cql_cursor_format on a not auto cursor

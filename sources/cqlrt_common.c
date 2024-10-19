@@ -6332,6 +6332,11 @@ cql_code cql_throw(sqlite3 *_Nonnull db, int code)
    return code;
 }
 
+// A boxed value can hold any scalar type in the space
+// of an int64 or else an object reference.  The type
+// comes from the type field which is one of the CQL_DATA_TYPE_*
+// values.  The object reference is retained if it is not null.
+// The scalar value is meaninful only for non-reference types.
 typedef struct {
    cql_int64 scalar;
    cql_object_ref _Nullable obj;
@@ -6357,62 +6362,9 @@ static cql_object_ref _Nonnull cql_boxed_value_create(void) {
   return _cql_generic_object_create(self, cql_boxed_value_finalize);
 }
 
-cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data) {
-    cql_object_ref _Nonnull box = cql_boxed_value_create();
-    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
-    if (data.is_null) {
-      self->type = 0;
-    }
-    else {
-      self->type = CQL_DATA_TYPE_INT32;
-      *(cql_int32 *)(&self->scalar) = data.value;
-    }
-    return box;
-}
-
-cql_nullable_int32 cql_unbox_int(cql_object_ref _Nonnull box) {
-    cql_nullable_int32 result;
-    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
-    if (self->type == CQL_DATA_TYPE_INT32) {
-       result.is_null = false;
-       result.value = *(cql_int32 *)(&self->scalar);
-    }
-    else {
-       result.is_null = true;
-       result.value = 0;
-    }
-
-    return result;
-}
-
-cql_object_ref _Nonnull cql_box_real(cql_nullable_double data) {
-    cql_object_ref _Nonnull box = cql_boxed_value_create();
-    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
-    if (data.is_null) {
-      self->type = 0;
-    }
-    else {
-      self->type = CQL_DATA_TYPE_DOUBLE;
-      *(cql_double *)(&self->scalar) = data.value;
-    }
-    return box;
-}
-
-cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box) {
-    cql_nullable_double result;
-    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
-    if (self->type == CQL_DATA_TYPE_DOUBLE) {
-       result.is_null = false;
-       result.value = *(cql_double *)(&self->scalar);
-    }
-    else {
-       result.is_null = true;
-       result.value = 0;
-    }
-
-    return result;
-}
-
+// Box a bool, note that even null can be boxed and return a not null box
+// that contains null.
+// This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6426,6 +6378,9 @@ cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data) {
     return box;
 }
 
+// Extract a bool from a box, if the box is null or the type is wrong
+// the result will be null.
+// This is also available as object<cql_box>:to_bool
 cql_nullable_bool cql_unbox_bool(cql_object_ref _Nonnull box) {
     cql_nullable_bool result;
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6441,6 +6396,43 @@ cql_nullable_bool cql_unbox_bool(cql_object_ref _Nonnull box) {
     return result;
 }
 
+// Box an integer, note that even null can be boxed and return a not null box
+// that contains null.
+// This is also available as <expr>:box
+cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data) {
+    cql_object_ref _Nonnull box = cql_boxed_value_create();
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (data.is_null) {
+      self->type = 0;
+    }
+    else {
+      self->type = CQL_DATA_TYPE_INT32;
+      *(cql_int32 *)(&self->scalar) = data.value;
+    }
+    return box;
+}
+
+// Extract an integer from a box, if the box is null or the type is wrong
+// the result will be null.
+// This is also available as object<cql_box>:to_int
+cql_nullable_int32 cql_unbox_int(cql_object_ref _Nonnull box) {
+    cql_nullable_int32 result;
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (self->type == CQL_DATA_TYPE_INT32) {
+       result.is_null = false;
+       result.value = *(cql_int32 *)(&self->scalar);
+    }
+    else {
+       result.is_null = true;
+       result.value = 0;
+    }
+
+    return result;
+}
+
+// Box a long, note that even null can be boxed and return a not null box
+// that contains null.
+// This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6454,6 +6446,9 @@ cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data) {
     return box;
 }
 
+// Unbox a long from a box, if the box is null or the type is wrong
+// the result will be null.
+// This is also available as object<cql_box>:to_long
 cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box) {
     cql_nullable_int64 result;
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6469,6 +6464,44 @@ cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box) {
     return result;
 }
 
+// Box a double, note that even null can be boxed and return a not null box
+// that contains null.
+// This is also available as <expr>:box
+cql_object_ref _Nonnull cql_box_real(cql_nullable_double data) {
+    cql_object_ref _Nonnull box = cql_boxed_value_create();
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (data.is_null) {
+      self->type = 0;
+    }
+    else {
+      self->type = CQL_DATA_TYPE_DOUBLE;
+      *(cql_double *)(&self->scalar) = data.value;
+    }
+    return box;
+}
+
+// Extract a double from a box, if the box is null or the type is wrong
+// the result will be null.
+// This is also available as object<cql_box>:to_real
+cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box) {
+    cql_nullable_double result;
+    cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
+    if (self->type == CQL_DATA_TYPE_DOUBLE) {
+       result.is_null = false;
+       result.value = *(cql_double *)(&self->scalar);
+    }
+    else {
+       result.is_null = true;
+       result.value = 0;
+    }
+
+    return result;
+}
+
+
+// Box a string, note that even null can be boxed and return a not null box
+// that contains null. 
+// This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6482,6 +6515,9 @@ cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data) {
     return box;
 }
 
+// Extract a string from a box or else return null if the type is wrong
+// or if the box is null, or contains null.
+// This is also available as object<cql_box>:to_text
 cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box) {
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_STRING) {
@@ -6492,6 +6528,9 @@ cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box) {
     }
 }
 
+// Box a blob, note that even null can be boxed and return a not null box
+// that contains null.
+// This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6505,6 +6544,9 @@ cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data) {
     return box;
 }
 
+// Extract a blob from a box or else return null if the type is wrong
+// or if the box is null, or contains null.
+// This is also available as object<cql_box>:to_blob
 cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box) {
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_BLOB) {
@@ -6514,7 +6556,9 @@ cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box) {
        return NULL;
     }
 }
-
+// Box an object, note that even null can be boxed and return a not null box
+// that contains null.
+// This is also available as <expr>:box
 cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data) {
     cql_object_ref _Nonnull box = cql_boxed_value_create();
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
@@ -6528,6 +6572,9 @@ cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data) {
     return box;
 }
 
+// Extract an object from a box or else return null if the type is wrong
+// or if the box is null, or contains null.
+// This is also available as object<cql_box>:to_object
 cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box) {
     cql_boxed_value *_Nonnull self = _cql_generic_object_get_data(box);
     if (self->type == CQL_DATA_TYPE_OBJECT) {

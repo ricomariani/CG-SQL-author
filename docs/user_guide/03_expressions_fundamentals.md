@@ -1906,6 +1906,7 @@ The appended type names look like this:
 
 | core type    | short name |
 |:-------------|-----------:|
+| NULL +       | null       |
 | BOOL         | bool       |
 | INTEGER      | int        |
 | LONG INTEGER | long       |
@@ -1913,6 +1914,11 @@ The appended type names look like this:
 | TEXT         | text       |
 | BLOB         | blob       |
 | OBJECT       | object     |
+| CURSOR ++    | cursor     |
+
++ _the null type applies only to the null literal, other instances are typed such as a nullable int that is null_ 
+
+++ _the CURSOR type applies to functions with a CURSOR argument, these are the so called dynamic-cursor arguments_
 
 #### Pipeline Cast Operations
 

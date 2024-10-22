@@ -290,7 +290,7 @@ static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
 static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
-static void sem_parse_arg_pattern(CSTR _Nonnull pattern, uint16_t _Nonnull data[ARG_COUNT]);
+static void sem_parse_arg_pattern(CSTR _Nonnull pattern, uint16_t data[ARG_COUNT]);
 static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Nonnull ast_call, uint32_t arg_count);
 
 // create a new id node either qid or normal based on the bool
@@ -8599,18 +8599,11 @@ static void sem_func_json_helper(ast_node *ast, uint32_t arg_count, sem_t result
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  // one arg
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
     return;
   }
 
   ast_node *arg1 = first_arg(arg_list);
-
-  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
-    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
-    record_error(ast);
-    return;
-  }
 
   // type text, not null if arg1 is not null
   sem_t sem_type = result_type | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
@@ -8636,7 +8629,6 @@ static void sem_func_json_pretty(ast_node *ast, uint32_t arg_count) {
   sem_func_json_helper(ast, arg_count, SEM_TYPE_TEXT);
 }
 
-
 // helper for json_array() and jsonb_array()
 static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
@@ -8648,22 +8640,16 @@ static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t 
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
+  if (!sem_validate_arg_pattern("[filrt,*]", ast, arg_count)) {
+    return;
+  }
+
   // No argument can be a blob
-  int arg_number = 1;
   for (ast_node *node = arg_list; node; node = node->right) {
     sem_t sem_type = first_arg(node)->sem->sem_type;
 
-    if (is_blob(sem_type) || is_object(sem_type)) {
-      CSTR msg = dup_printf("CQL0505: argument %d must not be a blob or object", arg_number);
-      report_error(ast, msg, name);
-      record_error(ast);
-      return;
-    }
-
     // add sensitivity if any is sensitive
     sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-
-    arg_number++;
   }
 
   // kind is not preserved, there is normally more than one
@@ -26439,7 +26425,7 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
       return false;
     }
 
-    uint16_t arg_mask = 1 << core_type_of(arg->sem->sem_type);
+    uint16_t arg_mask = (uint16_t)(1 << core_type_of(arg->sem->sem_type));
 
     if (types[iarg] & SEM_TYPE_MASK_REP) {
        iarg--;

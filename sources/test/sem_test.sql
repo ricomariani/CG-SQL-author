@@ -24536,7 +24536,7 @@ select json('[1]');
 
 -- TEST: json wrong number of args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json'
+-- * error: % too few arguments in function 'json'
 select json();
 
 -- TEST json function in non SQL-context
@@ -24547,7 +24547,7 @@ a_string := json('[1]');
 
 -- TEST json function in non SQL-context
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json'
 select json(1);
 
 -- TEST: jsonb normalization basic case
@@ -24558,7 +24558,7 @@ select jsonb('[1]');
 
 -- TEST: jsonb wrong number of args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb'
+-- * error: % too few arguments in function 'jsonb'
 select jsonb();
 
 -- TEST json function in non SQL-context
@@ -24569,7 +24569,7 @@ blob_var := jsonb('[1]');
 
 -- TEST json function in non SQL-context
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'jsonb'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb'
 select jsonb(1);
 
 -- TEST json function for JSON array creation
@@ -24579,6 +24579,13 @@ select jsonb(1);
 -- - error:
 select json_array(1,2);
 
+-- TEST json function for JSON array creation empty args
+-- + {select_stmt}: select: { _anon: text }
+-- + {call}: text
+-- + {name json_array}: text
+-- - error:
+select json_array();
+
 -- TEST: json function outside of SQL
 -- verify rewrite
 -- + SET a_string := ( SELECT json_array() IF NOTHING THEN THROW );
@@ -24587,7 +24594,7 @@ a_string := json_array();
 
 -- TEST: no blobs allowed
 -- + {call}: err
--- * error: % argument 2 must not be a blob or object 'json_array'
+-- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
 select json_array(1, blob_var, 3);
 
 -- TEST json function for JSON array creation

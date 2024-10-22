@@ -91726,7 +91726,7 @@ The statement ending at line XXXX
 
 SELECT json();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91735,7 +91735,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json}: err
+  |     |     | {name json}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -91777,7 +91777,7 @@ The statement ending at line XXXX
 
 SELECT json(1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91827,7 +91827,7 @@ The statement ending at line XXXX
 
 SELECT jsonb();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'jsonb'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91836,7 +91836,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb}: err
+  |     |     | {name jsonb}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -91878,7 +91878,7 @@ The statement ending at line XXXX
 
 SELECT jsonb(1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'jsonb'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91928,6 +91928,28 @@ SELECT json_array(1, 2);
 
 The statement ending at line XXXX
 
+SELECT json_array();
+
+  {select_stmt}: select: { _anon: text }
+  | {select_core_list}: select: { _anon: text }
+  | | {select_core}: select: { _anon: text }
+  |   | {select_expr_list_con}: select: { _anon: text }
+  |     | {select_expr_list}: select: { _anon: text }
+  |     | | {select_expr}: text
+  |     |   | {call}: text
+  |     |     | {name json_array}: text
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SET a_string := ( SELECT json_array() IF NOTHING THEN THROW );
 
   {assign}: a_string: text variable was_set
@@ -91955,7 +91977,7 @@ The statement ending at line XXXX
 
 SELECT json_array(1, blob_var, 3);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 2 must not be a blob or object 'json_array'
+test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
 
   {select_stmt}: err
   | {select_core_list}: err

@@ -8553,6 +8553,81 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg1->sem->kind;
 }
 
+static void sem_func_matcher(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  bool is_like = !Strcasecmp("like", name);
+
+  if (is_like && arg_count == 3) {
+    // do nothing, ok to go
+  }
+  else if (!sem_validate_arg_count(ast, arg_count, 2)) {
+    // all other cases demand 2 args
+    return;
+  }
+
+  ast_node *arg1 = first_arg(arg_list);
+  ast_node *arg2 = second_arg(arg_list);
+  ast_node *arg3 = arg_count == 3 ? third_arg(arg_list) : NULL;
+
+  sem_t notnull = SEM_TYPE_NOTNULL;
+
+  if (!is_text(arg1->sem->sem_type)) {
+    report_error(name_ast, "CQL0086: first argument must be a string in function", name);
+    record_error(ast);
+    return;
+  }
+
+  if (!is_text(arg2->sem->sem_type)) {
+    report_error(name_ast, "CQL0086: second argument must be a string in function", name);
+    record_error(ast);
+    return;
+  }
+
+  if (arg3 && !is_text(arg3->sem->sem_type)) {
+    report_error(name_ast, "CQL0086: third argument must be a string in function", name);
+    record_error(ast);
+    return;
+  }
+
+  // type text, not null
+  sem_t sem_type = (SEM_TYPE_BOOL | SEM_TYPE_NOTNULL);
+
+  // stay not null if both are not null
+  notnull &= (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
+  notnull &= (arg2->sem->sem_type & SEM_TYPE_NOTNULL);
+
+  // add sensitivity if either is sensitive
+  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
+  sem_type |= (arg2->sem->sem_type & SEM_TYPE_SENSITIVE);
+
+  if (arg3) {
+    // same treatment for arg3 if it is present
+    notnull &= (arg3->sem->sem_type & SEM_TYPE_NOTNULL);
+    sem_type |= (arg3->sem->sem_type & SEM_TYPE_SENSITIVE);
+  }
+
+  // sensitive if any are sensitive and not null if all are not null
+  name_ast->sem = ast->sem = new_sem(sem_type | notnull);
+
+  // preserve the string kind of the main arg, otherwise no kind checks needed for trim
+  ast->sem->kind = arg1->sem->kind;
+}
+
+static void sem_func_like(ast_node *ast, uint32_t arg_count) {
+  sem_func_matcher(ast, arg_count);
+}
+
+static void sem_func_glob(ast_node *ast, uint32_t arg_count) {
+  sem_func_matcher(ast, arg_count);
+}
+
 // ltrim has the same semantics as trim
 static void sem_func_ltrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
@@ -9699,6 +9774,10 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg1->sem->kind;
 }
 
+static void sem_func_substring(ast_node *ast, uint32_t arg_count) {
+  sem_func_substr(ast, arg_count);
+}
+
 // Validates SQLite's replace(input, find, replace_with) function.
 static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
@@ -10000,7 +10079,7 @@ static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
   if (arg_count == 2) {
     sem_t sem_type_2 = second_arg(arg_list)->sem->sem_type;
     if (!is_text(sem_type_2)) {
-      report_error(ast, "CQL0084: second argument must be a string in function", name);
+      report_error(ast, "CQL0086: second argument must be a string in function", name);
       record_error(ast);
       return;
     }
@@ -26174,6 +26253,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(nullable);
   FUNC_INIT(sensitive);
   FUNC_INIT(substr);
+  FUNC_INIT(substring);
   FUNC_INIT(replace);
   FUNC_INIT(row_number);
   FUNC_INIT(rank);
@@ -26217,6 +26297,8 @@ cql_noexport void sem_main(ast_node *ast) {
 
   FUNC_REWRITE_INIT(concat);
   FUNC_REWRITE_INIT(concat_ws);
+  FUNC_REWRITE_INIT(glob);
+  FUNC_REWRITE_INIT(like);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

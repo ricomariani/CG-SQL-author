@@ -672,9 +672,7 @@ The argument of SUM must be numeric.
 
 -----
 
-### CQL0084: second argument must be a string in function 'group_concat'
-
-The second argument of group_concat is the separator, it must be a string.  The first argument will be converted to a string.
+### CQL0084 available for re-use
 
 -----
 
@@ -684,9 +682,10 @@ The `strftime` function does complex data formatting.  All the arguments are str
 
 -----
 
-### CQL0086: first argument must be a string in function 'function'
+### CQL0086: 'position' argument must be a string in function 'function'
 
-The first argument of the function is the formatting string.  The other arguments are variable and many complex conversions will apply.
+The indicated argument of the function must be a string, such as the formatting string in `printf`.  This error
+could refer the first, second, third, etc. argument
 
 -----
 

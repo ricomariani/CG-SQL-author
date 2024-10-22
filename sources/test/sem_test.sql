@@ -11188,11 +11188,11 @@ set a_string := substr('x', 1, 2);
 
 -- TEST: simple success -- substr not nullable string
 -- + {create_proc_stmt}: substr_test_notnull: { t: text notnull } dml_proc
--- + {name substr}: text notnull
+-- + {name substring}: text notnull
 -- - error:
 proc substr_test_notnull(t text not null)
 begin
-  select substr(t, 1, 2) as t ;
+  select substring(t, 1, 2) as t ;
 end;
 
 -- TEST: simple success -- substr not nullable string one arg
@@ -25165,3 +25165,48 @@ set concat_func_result2 := concat_ws(' ', 2, NULL, 4);
 -- + {assign}: err
 -- * error: % NULL literal is useless in function 'concat'
 set concat_func_result2 := concat(' ', 2, NULL, 4);
+
+-- TEST: like full form with escape string
+-- + {name like}: bool notnull
+-- - error:
+let like_func := like('a', 'b', 'c');
+
+-- TEST: glob full form with escape string
+-- + {name glob}: bool notnull
+-- - error:
+let glob_func := glob('a', 'b');
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % first argument must be a string in function 'like'
+set like_func := like(0, 'b', 'c');
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % second argument must be a string in function 'like'
+set like_func := like('a', 0, 'c');
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % third argument must be a string in function 'like'
+set like_func := like('a', 'b', 0);
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % first argument must be a string in function 'glob'
+set glob_func := glob(0, 'b');
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % second argument must be a string in function 'glob'
+set glob_func := glob('a', 0);
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % function got incorrect number of arguments 'like'
+set like_func := like();
+
+-- TEST bogus arg in matcher
+-- + {assign}: err
+-- * error: % function got incorrect number of arguments 'glob'
+set glob_func := glob();

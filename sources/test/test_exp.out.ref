@@ -2424,3 +2424,7 @@ x:y();
 @OP INT<foo> : arrow object<foo> AS do_int_foo_arrow;
 
 @OP NULL : call foo AS foo_foo;
+
+x:glob('x');
+
+x:like('x', 'y');

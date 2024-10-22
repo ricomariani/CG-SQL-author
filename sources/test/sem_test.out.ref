@@ -13823,7 +13823,7 @@ SELECT id, group_concat(name, 0)
   FROM bar
   GROUP BY id;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0084: second argument must be a string in function 'group_concat'
+test/sem_test.sql:XXXX:1: error: in call : CQL0086: second argument must be a string in function 'group_concat'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42136,7 +42136,7 @@ The statement ending at line XXXX
 
 PROC substr_test_notnull (t TEXT!)
 BEGIN
-  SELECT substr(t, 1, 2) AS t;
+  SELECT substring(t, 1, 2) AS t;
 END;
 
   {create_proc_stmt}: substr_test_notnull: { t: text notnull } dml_proc
@@ -42156,7 +42156,7 @@ END;
         |     | {select_expr_list}: select: { t: text notnull }
         |     | | {select_expr}: t: text notnull
         |     |   | {call}: text notnull
-        |     |   | | {name substr}: text notnull
+        |     |   | | {name substring}: text notnull
         |     |   | | {call_arg_list}
         |     |   |   | {call_filter_clause}
         |     |   |   | {arg_list}: ok
@@ -94857,6 +94857,281 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
       |     |             | {null}: err
       |     |             | {arg_list}
       |     |               | {int 4}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+LET like_func := ( SELECT like('a', 'b', 'c') IF NOTHING THEN THROW );
+
+  {let_stmt}: like_func: bool notnull variable
+  | {name like_func}: like_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: _anon: bool notnull
+    | {select_stmt}: _anon: bool notnull
+      | {select_core_list}: select: { _anon: bool notnull }
+      | | {select_core}: select: { _anon: bool notnull }
+      |   | {select_expr_list_con}: select: { _anon: bool notnull }
+      |     | {select_expr_list}: select: { _anon: bool notnull }
+      |     | | {select_expr}: bool notnull
+      |     |   | {call}: bool notnull
+      |     |     | {name like}: bool notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'a'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit 'b'}: text notnull
+      |     |           | {arg_list}
+      |     |             | {strlit 'c'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+LET glob_func := ( SELECT glob('a', 'b') IF NOTHING THEN THROW );
+
+  {let_stmt}: glob_func: bool notnull variable
+  | {name glob_func}: glob_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: _anon: bool notnull
+    | {select_stmt}: _anon: bool notnull
+      | {select_core_list}: select: { _anon: bool notnull }
+      | | {select_core}: select: { _anon: bool notnull }
+      |   | {select_expr_list_con}: select: { _anon: bool notnull }
+      |     | {select_expr_list}: select: { _anon: bool notnull }
+      |     | | {select_expr}: bool notnull
+      |     |   | {call}: bool notnull
+      |     |     | {name glob}: bool notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'a'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit 'b'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET like_func := ( SELECT like(0, 'b', 'c') IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0086: first argument must be a string in function 'like'
+
+  {assign}: err
+  | {name like_func}: like_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name like}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 0}: integer notnull
+      |     |         | {arg_list}
+      |     |           | {strlit 'b'}: text notnull
+      |     |           | {arg_list}
+      |     |             | {strlit 'c'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET like_func := ( SELECT like('a', 0, 'c') IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0086: second argument must be a string in function 'like'
+
+  {assign}: err
+  | {name like_func}: like_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name like}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'a'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {int 0}: integer notnull
+      |     |           | {arg_list}
+      |     |             | {strlit 'c'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET like_func := ( SELECT like('a', 'b', 0) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0086: third argument must be a string in function 'like'
+
+  {assign}: err
+  | {name like_func}: like_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name like}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'a'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit 'b'}: text notnull
+      |     |           | {arg_list}
+      |     |             | {int 0}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET glob_func := ( SELECT glob(0, 'b') IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0086: first argument must be a string in function 'glob'
+
+  {assign}: err
+  | {name glob_func}: glob_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name glob}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 0}: integer notnull
+      |     |         | {arg_list}
+      |     |           | {strlit 'b'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET glob_func := ( SELECT glob('a', 0) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0086: second argument must be a string in function 'glob'
+
+  {assign}: err
+  | {name glob_func}: glob_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name glob}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'a'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {int 0}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET like_func := ( SELECT like() IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'like'
+
+  {assign}: err
+  | {name like_func}: like_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name like}: err
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET glob_func := ( SELECT glob() IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'glob'
+
+  {assign}: err
+  | {name glob_func}: glob_func: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name glob}: err
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
       |     | {select_from_etc}: ok
       |       | {select_where}
       |         | {select_groupby}

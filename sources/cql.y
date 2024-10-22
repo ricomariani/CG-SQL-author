@@ -1279,6 +1279,16 @@ simple_call:
       struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
       $simple_call = new_ast_call($name, call_arg_list); }
+  | GLOB '(' opt_distinct arg_list ')' opt_filter_clause  {
+      ast_node *name = new_ast_str("glob");
+      struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
+      struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
+      $simple_call = new_ast_call(name, call_arg_list); }
+  | LIKE '(' opt_distinct arg_list ')' opt_filter_clause  {
+      ast_node *name = new_ast_str("like");
+      struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
+      struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
+      $simple_call = new_ast_call(name, call_arg_list); }
   ;
 
 call:

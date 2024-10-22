@@ -1850,3 +1850,6 @@ x:y;
 @op int<foo> : arrow blob<foo> as do_int_foo_arrow;
 @op int<foo> : arrow object<foo> as do_int_foo_arrow;
 @op null : call foo as foo_foo;
+
+x:glob('x');
+x:like('x', 'y');

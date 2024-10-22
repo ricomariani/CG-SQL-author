@@ -53258,12 +53258,12 @@ The statement ending at line XXXX
 
 SET an_long := cql_get_blob_size(blob_var, 0);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'cql_get_blob_size'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'cql_get_blob_size'
 
   {assign}: err
   | {name an_long}: an_long: longint variable was_set
   | {call}: err
-    | {name cql_get_blob_size}: err
+    | {name cql_get_blob_size}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -53275,7 +53275,7 @@ The statement ending at line XXXX
 
 SET an_long := cql_get_blob_size(an_int);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0345: argument must be of type blob 'cql_get_blob_size'
+test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 1 has an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
 
   {assign}: err
   | {name an_long}: an_long: longint variable was_set

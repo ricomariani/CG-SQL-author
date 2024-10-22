@@ -14170,8 +14170,7 @@ set an_long := cql_get_blob_size(blob_var);
 
 -- TEST: test cql_get_blob_size with too many arguments
 -- + {assign}: err
--- + {name cql_get_blob_size}: err
--- * error: % function got incorrect number of arguments 'cql_get_blob_size'
+-- * error: % too many arguments in function 'cql_get_blob_size'
 -- +1 error:
 set an_long := cql_get_blob_size(blob_var, 0);
 
@@ -14179,7 +14178,7 @@ set an_long := cql_get_blob_size(blob_var, 0);
 -- + {assign}: err
 -- + {call}: err
 -- + {name cql_get_blob_size}
--- * error: % argument must be of type blob 'cql_get_blob_size'
+-- * error: % argument 1 has an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
 -- +1 error:
 set an_long := cql_get_blob_size(an_int);
 

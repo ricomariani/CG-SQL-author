@@ -8452,17 +8452,12 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // only one argument
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  // only one argument and it's a blob
+  if (!sem_validate_arg_pattern("b", ast, arg_count)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-  if (!is_blob(arg->sem->sem_type)) {
-    report_error(ast, "CQL0345: argument must be of type blob", name);
-    record_error(ast);
-    return;
-  }
 
   // integer type
   sem_t sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;

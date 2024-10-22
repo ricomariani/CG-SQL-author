@@ -2753,9 +2753,7 @@ The most likely cause is that the function call in question is vestigial and you
 
 -----
 
-### CQL0345: arguments must be of type blob 'function_name'
-
-The indicated function accepts only a single argument of type blob.
+### CQL0345 available for re-use
 
 -----
 

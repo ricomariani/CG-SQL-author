@@ -115,37 +115,37 @@ public class MyJava {
       byte[] bytes = data.get_bytes(i);
       String s = new String(bytes, StandardCharsets.UTF_8);
       System.out.println(
-          String.format(
-              "Row %d: name:%s blob:%s age:%-7d(%s) thing:%f key1:%s key2:%s(%s)",
-              i,
-              data.get_name(i),
-              s,
-              data.get_age(i),
-              data.get_age_IsEncoded() ? "encoded" : "clear",
-              data.get_thing(i),
-              data.get_key1(i),
-              data.get_key2(i),
-              data.get_key2_IsEncoded() ? "encoded" : "clear"
-         )
-     );
+        String.format(
+          "Row %d: name:%s blob:%s age:%-7d(%s) thing:%f key1:%s key2:%s(%s)",
+          i,
+          data.get_name(i),
+          s,
+          data.get_age(i),
+          data.get_age_IsEncoded() ? "encoded" : "clear",
+          data.get_thing(i),
+          data.get_key1(i),
+          data.get_key2(i),
+          data.get_key2_IsEncoded() ? "encoded" : "clear"
+        )
+      );
 
       // this could be done automatically in the helper, it just isn't yet
       // var child = data.get_my_child_result(i) should do the job
       var child = new SampleJNI.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.getCount(); j++) {
-	var irow = child.get_irow(j);
-	var t = child.get_t(j);
+        var irow = child.get_irow(j);
+        var t = child.get_t(j);
 
         System.out.println(String.format("    Child Row %d: irow:%d t:%s", j, irow, t));
-	Expect(j + 1 == irow, "index should correspond to value");
+        Expect(j + 1 == irow, "index should correspond to value");
 
-	var formatted = String.format("'%s'", irow);
-	Expect(formatted.equals(t), "invalid format transform through the CQL");
+        var formatted = String.format("'%s'", irow);
+        Expect(formatted.equals(t), "invalid format transform through the CQL");
       }
     }
   }
 
   public static void Expect(boolean b, String str) throws Exception {
-     if (!b) throw new Exception(str);
+    if (!b) throw new Exception(str);
   }
 }

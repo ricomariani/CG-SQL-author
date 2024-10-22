@@ -24621,7 +24621,7 @@ select json_array_length('', '$.x');
 
 -- TEST json function for JSON array_length with too many args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_array_length'
+-- * error: % too many arguments in function 'json_array_length'
 select json_array_length('', '$.x', '');
 
 -- TEST: json function outside of SQL
@@ -24632,12 +24632,12 @@ an_int := json_array_length('x');
 
 -- TEST json function for JSON array_length with wrong arg type
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json_array_length'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
 select json_array_length(1);
 
 -- TEST json function for JSON array_length with wrong arg type
 -- + {call}: err
--- * error: % argument 2 must be json text path 'json_array_length'
+-- * error: % argument 2 has an invalid type; valid types are: 'text' in 'json_array_length'
 select json_array_length('x', 1);
 
 -- TEST json function for JSON error_position with 1 args

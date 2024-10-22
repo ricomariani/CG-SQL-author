@@ -8667,36 +8667,15 @@ static void sem_func_jsonb_array(ast_node *ast, uint32_t arg_count) {
 static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
 
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (arg_count != 1 && arg_count != 2) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+  if (!sem_validate_arg_pattern("tb,[t]", ast, arg_count)) {
     return;
   }
 
-  ast_node *arg1 = first_arg(arg_list);
-
-  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
-    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
-    record_error(ast);
-    return;
-  }
-
-  if (arg_count == 2) {
-    ast_node *arg2 = second_arg(arg_list);
-    sem_t sem_type_2 = arg2->sem->sem_type;
-    if (!is_text(sem_type_2)) {
-      report_error(arg2, "CQL0504: argument 2 must be json text path", name);
-      record_error(ast);
-      return;
-    }
-  }
-  else {
+  if (arg_count == 1) {
     sem_type_result |= SEM_TYPE_NOTNULL;
   }
 

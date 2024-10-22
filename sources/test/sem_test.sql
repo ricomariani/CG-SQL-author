@@ -13918,13 +13918,13 @@ set a_string := (select rtrim("x", "y"));
 
 -- TEST: trim failure: no args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'trim'
+-- * error: % too few arguments in function 'trim'
 -- +1 error:
 set a_string := (select trim());
 
 -- TEST: trim failure: three args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'trim'
+-- * error: % too many arguments in function 'trim'
 -- +1 error:
 set a_string := (select trim('x','y','z'));
 
@@ -14027,7 +14027,7 @@ set ll := 1.0;
 
 -- TEST: length failure: no args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'length'
+-- * error: % too few arguments in function 'length'
 -- +1 error:
 set an_int := (select length());
 
@@ -25143,12 +25143,12 @@ let concat_func_result2 := concat_ws(a_string, 1, 2, "x");
 
 -- TEST: concat_ws with too few args
 -- + {assign}: err
--- * error: % function got incorrect number of arguments 'concat_ws'
+-- * error: % too few arguments in function 'concat_ws'
 set concat_func_result2 := concat_ws(a_string);
 
 -- TEST: concat_ws with too few args
 -- + {assign}: err
--- * error: % function got incorrect number of arguments 'concat'
+-- * error: % too few arguments in function 'concat'
 set concat_func_result2 := concat();
 
 -- TEST: concat with too few args
@@ -25203,10 +25203,10 @@ set glob_func := glob('a', 0);
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % function got incorrect number of arguments 'like'
+-- * error: % too few arguments in function 'like'
 set like_func := like();
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % function got incorrect number of arguments 'glob'
+-- * error: % too few arguments in function 'glob'
 set glob_func := glob();

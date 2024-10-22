@@ -26464,7 +26464,8 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
 
     if (types[iarg] == 0 || types[iarg] == SEM_TYPE_MASK_OPT) {
       // too many args
-      sem_validate_arg_count(ast_call, arg_count, arg_count + 1);
+      report_error(ast_call, "CQL0079: too many arguments in function", name);
+      record_error(ast_call);
       return false;
     }
 
@@ -26503,7 +26504,9 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
 
   // if there are more arguments and they are not optional then too few
   if (types[iarg] != 0 && !(types[iarg] & SEM_TYPE_MASK_OPT)) {
-    sem_validate_arg_count(ast_call, arg_count, arg_count + 1);
+    // too few args
+    report_error(ast_call, "CQL0079: too few arguments in function", name);
+    record_error(ast_call);
     return false;
   }
 

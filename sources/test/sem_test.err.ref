@@ -1120,8 +1120,8 @@ only in 1st: y text notnull
 only in 2nd: z integer notnull
 only in 2nd: v text notnull
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'trim'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'trim'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'trim'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'trim'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'trim'
@@ -1130,7 +1130,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0067: cursor was not used with 'fet
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'LONG' in 1L
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'length'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'length'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'length'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'length'
 test/sem_test.sql:XXXX:1: error: in str : CQL0346: expression must be of type object<T cursor> where T is a valid shape name 'box'
@@ -1771,8 +1771,8 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0506: left argument must have a typ
 test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 test/sem_test.sql:XXXX:1: error: in like : CQL0202: must be a cursor, proc, table, or view 'not_a_proc_at_all'
 test/sem_test.sql:XXXX:1: error: in str : CQL0094: function not builtin and not declared 'object<list>:array:get'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'concat_ws'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'concat'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'concat_ws'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'concat'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'concat_ws'
 test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'concat_ws'
 test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'concat'
@@ -1781,6 +1781,6 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 3 has an invalid type; valid types are: 'text' in 'like'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'glob'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'glob'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'like'
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'glob'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'like'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'glob'
 semantic errors present; no code gen.

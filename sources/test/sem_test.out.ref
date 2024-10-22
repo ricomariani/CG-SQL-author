@@ -52333,7 +52333,7 @@ The statement ending at line XXXX
 
 SET a_string := ( SELECT trim() );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'trim'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -52344,7 +52344,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name trim}: err
+    |     |     | {name trim}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     | {select_from_etc}: ok
@@ -52359,7 +52359,7 @@ The statement ending at line XXXX
 
 SET a_string := ( SELECT trim('x', 'y', 'z') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'trim'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -52370,7 +52370,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name trim}: err
+    |     |     | {name trim}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -52752,7 +52752,7 @@ The statement ending at line XXXX
 
 SET an_int := ( SELECT length() );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'length'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'length'
 
   {assign}: err
   | {name an_int}: an_int: integer variable was_set
@@ -52763,7 +52763,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name length}: err
+    |     |     | {name length}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     | {select_from_etc}: ok
@@ -94712,7 +94712,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat_ws(a_string) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'concat_ws'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'concat_ws'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94724,7 +94724,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
       |     | {select_expr_list}: err
       |     | | {select_expr}: err
       |     |   | {call}: err
-      |     |     | {name concat_ws}: err
+      |     |     | {name concat_ws}
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     |       | {arg_list}: ok
@@ -94741,7 +94741,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat() IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'concat'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'concat'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94753,7 +94753,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
       |     | {select_expr_list}: err
       |     | | {select_expr}: err
       |     |   | {call}: err
-      |     |     | {name concat}: err
+      |     |     | {name concat}
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     | {select_from_etc}: ok
@@ -95090,7 +95090,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like() IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'like'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -95102,7 +95102,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
       |     | {select_expr_list}: err
       |     | | {select_expr}: err
       |     |   | {call}: err
-      |     |     | {name like}: err
+      |     |     | {name like}
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     | {select_from_etc}: ok
@@ -95117,7 +95117,7 @@ The statement ending at line XXXX
 
 SET glob_func := ( SELECT glob() IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'glob'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'glob'
 
   {assign}: err
   | {name glob_func}: glob_func: bool notnull variable
@@ -95129,7 +95129,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
       |     | {select_expr_list}: err
       |     | | {select_expr}: err
       |     |   | {call}: err
-      |     |     | {name glob}: err
+      |     |     | {name glob}
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     | {select_from_etc}: ok

@@ -10435,7 +10435,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT round() );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'round'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10446,7 +10446,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name round}: err
+    |     |     | {name round}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     | {select_from_etc}: ok
@@ -10472,9 +10472,9 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
 
 The statement ending at line XXXX
 
-SET X := ( SELECT round(1, 2, 3) );
+SET X := ( SELECT round(1.0, 2, 3) );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'round'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10485,11 +10485,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name round}: err
+    |     |     | {name round}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
+    |     |         | {dbl 1.0}: real notnull
     |     |         | {arg_list}
     |     |           | {int 2}: integer notnull
     |     |           | {arg_list}
@@ -10506,7 +10506,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT round(1.5, 'x') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 2 must be numeric 'round'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10536,7 +10536,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT round(1, 2) );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0087: first argument must be of type real 'round'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'real' in 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10758,7 +10758,7 @@ The statement ending at line XXXX
 
 SET ll := ( SELECT round(1.0, 2.0) );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0001: operands must be an integer type, not real 'ROUND argument 2'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 
   {assign}: err
   | {name ll}: ll: longint notnull variable was_set
@@ -10775,7 +10775,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0001: operands must be an integer t
     |     |       | {arg_list}: ok
     |     |         | {dbl 1.0}: real notnull
     |     |         | {arg_list}
-    |     |           | {dbl 2.0}: err
+    |     |           | {dbl 2.0}: real notnull
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}

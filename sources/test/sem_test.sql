@@ -3161,7 +3161,7 @@ let ssnl := (select sign(sensitive(nullable(1))));
 -- TEST: bogus number of arguments in round
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'round'
+-- * error: % too few arguments in function 'round'
 -- +1 error:
 set X := (select round());
 
@@ -3175,21 +3175,21 @@ set X := round();
 -- TEST: bogus number of arguments in round
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'round'
+-- * error: % too many arguments in function 'round'
 -- +1 error:
-set X := (select round(1,2,3));
+set X := (select round(1.0,2,3));
 
 -- TEST: round second arg not numeric
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 2 must be numeric 'round'
+-- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- +1 error:
-set X := (select round(1.5,'x'));
+set X := (select round(1.5, 'x'));
 
 -- TEST: round must get a real arg in position 1
 -- + {assign}: err
 -- + {call}: err
--- * error: % first argument must be of type real 'round'
+-- * error: % argument 1 has an invalid type; valid types are: 'real' in 'round'
 -- +1 error:
 set X := (select round(1,2));
 
@@ -3225,7 +3225,7 @@ let SNR := (select round(nullable(1.0), sensitive(1)));
 
 -- TEST: The precision must be a numeric type but not real
 -- + {assign}: err
--- * error: % operands must be an integer type, not real 'ROUND argument 2'
+-- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- +1 error:
 set ll := (select round(1.0, 2.0));
 

@@ -8336,42 +8336,17 @@ static void sem_func_round(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // if no args then fail the arg count test...
-  if (arg_count == 0) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
-    return;
-  }
-
-  // if too many args
-  if (arg_count > 2) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+  // round ( value, [digits] )
+  if (!sem_validate_arg_pattern("r,[fil]", ast, arg_count)) {
     return;
   }
 
   sem_node *sem = first_arg(arg_list)->sem;
   sem_t sem_type = sem->sem_type;
-  sem_t core_type = core_type_of(sem_type);
-
-  if (core_type != SEM_TYPE_REAL) {
-    report_error(ast, "CQL0087: first argument must be of type real", name);
-    record_error(ast);
-    return;
-  }
-
   sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
 
   if (arg_count == 2) {
     ast_node *arg2 = second_arg(arg_list);
-    if (!is_numeric_expr(arg2)) {
-      report_error(name_ast, "CQL0082: argument 2 must be numeric", name);
-      record_error(ast);
-      return;
-    }
-    sem_reject_real(arg2, "ROUND argument 2");
-    if (is_error(arg2)) {
-      record_error(ast);
-      return;
-    }
     combined_flags = combine_flags(sem_type, arg2->sem->sem_type);
     name_ast->sem = ast->sem = new_sem(SEM_TYPE_REAL | combined_flags);
   }

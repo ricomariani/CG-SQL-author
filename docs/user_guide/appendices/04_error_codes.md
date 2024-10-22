@@ -691,9 +691,7 @@ could refer the first, second, third, etc. argument
 
 -----
 
-### CQL0087: first argument must be of type real 'function'
-
-The first argument of the function (e.g. round) should be of type 'real'.
+### CQL0087 available for re-use
 
 -----
 

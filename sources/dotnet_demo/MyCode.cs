@@ -129,14 +129,14 @@ public class MyCode {
       // var child = data.get_my_child_result(i) should do the job
       var child = new SampleInterop.ChildViewModel(data.get_my_child_result(i));
       for (int j = 0; j < child.Count; j++) {
-	var irow = child.get_irow(j);
-	var t = child.get_t(j);
+        var irow = child.get_irow(j);
+        var t = child.get_t(j);
 
         Console.WriteLine("    Child Row {0}: irow:{1} t:{2}", j, irow, t);
-	Expect(j + 1 == irow, "index should correspond to value");
+        Expect(j + 1 == irow, "index should correspond to value");
 
-	var formatted = String.Format("'{0}'", irow);
-	Expect(formatted.Equals(t), "invalid format transform through the CQL");
+        var formatted = String.Format("'{0}'", irow);
+        Expect(formatted.Equals(t), "invalid format transform through the CQL");
       }
     }
   }

@@ -52,6 +52,37 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 #define CQL_FROM_RECREATE "cql:from_recreate"
 #define CQL_MODULE_WARN "cql:module_must_not_be_deleted_see_docs_for_CQL0392"
 
+#define SEM_EXPR_CONTEXT_NONE           0x0001
+#define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
+#define SEM_EXPR_CONTEXT_WHERE          0x0004
+#define SEM_EXPR_CONTEXT_ON             0x0008
+#define SEM_EXPR_CONTEXT_HAVING         0x0010
+#define SEM_EXPR_CONTEXT_ORDER_BY       0x0020
+#define SEM_EXPR_CONTEXT_GROUP_BY       0x0040
+#define SEM_EXPR_CONTEXT_LIMIT          0x0080
+#define SEM_EXPR_CONTEXT_OFFSET         0x0100
+#define SEM_EXPR_CONTEXT_UDF            0x0200
+#define SEM_EXPR_CONTEXT_WINDOW         0x0400
+#define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800
+#define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
+#define SEM_EXPR_CONTEXT_FLAGS          0x1FFF // all the flag bits
+
+#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
+#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
+
+// These let us form bit masks of acceptable types
+#define SEM_TYPE_MASK_NULL (1 << SEM_TYPE_NULL)          // code n
+#define SEM_TYPE_MASK_BOOL (1 << SEM_TYPE_BOOL)          // code f (flag)
+#define SEM_TYPE_MASK_INT  (1 << SEM_TYPE_INTEGER)       // code i
+#define SEM_TYPE_MASK_LONG (1 << SEM_TYPE_LONG_INTEGER)  // code l
+#define SEM_TYPE_MASK_REAL (1 << SEM_TYPE_REAL)          // code r
+#define SEM_TYPE_MASK_TEXT (1 << SEM_TYPE_TEXT)          // code t
+#define SEM_TYPE_MASK_BLOB (1 << SEM_TYPE_BLOB)          // code b
+#define SEM_TYPE_MASK_OBJ  (1 << SEM_TYPE_OBJECT)        // code o
+#define SEM_TYPE_MASK_OPT  (SEM_TYPE_MASK_OBJ << 1)      // []
+#define SEM_TYPE_MASK_REP  (SEM_TYPE_MASK_OBJ << 2)      // code *
+#define ARG_COUNT 8
+
 // As we walk sql expressions we note the ast nodes that hold table names that
 // are backed tables so that we can swap them out later
 static list_item *backed_tables_list;
@@ -259,6 +290,8 @@ static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
 static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
+static void sem_parse_arg_pattern(CSTR _Nonnull pattern, uint16_t _Nonnull data[ARG_COUNT]);
+static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Nonnull ast_call, uint32_t arg_count);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -7501,17 +7534,6 @@ static void sem_func_concat_helper(ast_node *call_ast, uint32_t arg_count, bool_
   // concat functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(call_ast));
 
-  // concat ( X, [arg_list] )
-  // concat_ws ( SEP, X, [arg_list] )
-
-  int32_t reqd_args = 1 + !!is_concat_ws;
-
-  if (arg_count < reqd_args) {
-    report_error(name_ast, "CQL0074: too few arguments provided", name);
-    record_error(call_ast);
-    return;
-  }
-
   sem_t sem_type_result = SEM_TYPE_TEXT | SEM_TYPE_NOTNULL;
 
   int32_t iarg = 0;
@@ -7519,27 +7541,13 @@ static void sem_func_concat_helper(ast_node *call_ast, uint32_t arg_count, bool_
   for (ast_node *ast = arg_list; ast; ast = ast->right, iarg++) {
     ast_node *expr = ast->left;
 
-    if (is_ast_null(expr)) {
-      report_error(expr, "CQL0076: NULL literal is useless in function", name);
-      record_error(expr);
-      record_error(call_ast);
-      return;
-    }
-
     // arg list already already analyzed for us by sem_expr_call
     // sem_expr(expr);
     Invariant(expr->sem);
 
     if (iarg == 0 && is_concat_ws) {
-
-      if (!is_text(expr->sem->sem_type)) {
-        report_error(expr, "CQL0086: first argument must be a string in function", name);
-        record_error(expr);
-        record_error(call_ast);
-        return;
-      }
-
       // maybe strip notnull, the rest of the bits match for sure
+      // concatw_ws can return null if the first arg is null
       sem_type_result &= expr->sem->sem_type;
     }
 
@@ -7551,10 +7559,20 @@ static void sem_func_concat_helper(ast_node *call_ast, uint32_t arg_count, bool_
 }
 
 static void sem_func_concat(ast_node *ast, uint32_t arg_count) {
+  // concat ( X, [arg_list] )
+  if (!sem_validate_arg_pattern("filrtb,[filrtb,*]", ast, arg_count)) {
+    return;
+  }
+
   return sem_func_concat_helper(ast, arg_count, false);
 }
 
 static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
+  // concat_ws ( SEP, X, [arg_list] )
+  if (!sem_validate_arg_pattern("t,filrtb,[filrtb,*]", ast, arg_count)) {
+    return;
+  }
+
   return sem_func_concat_helper(ast, arg_count, true);
 }
 
@@ -8492,17 +8510,11 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // one arg
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-  if (!is_text(arg->sem->sem_type) && !is_blob(arg->sem->sem_type)) {
-    report_error(ast, "CQL0085: all arguments must be strings", name);
-    record_error(ast);
-    return;
-  }
 
   // integer type
   sem_t sem_type = SEM_TYPE_INTEGER;
@@ -8526,19 +8538,12 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // one or two args
-  if (arg_count != 1 && !sem_validate_arg_count(ast, arg_count, 2)) {
+  if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
     return;
   }
 
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = arg_count == 1 ? NULL : second_arg(arg_list);
-
-  if (!is_text(arg1->sem->sem_type) || (arg2 && !is_text(arg2->sem->sem_type))) {
-    report_error(ast, "CQL0085: all arguments must be strings", name);
-    record_error(ast);
-    return;
-  }
 
   // type text, not null if arg1 is not null
   sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
@@ -8562,39 +8567,11 @@ static void sem_func_matcher(ast_node *ast, uint32_t arg_count) {
 
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  bool is_like = !Strcasecmp("like", name);
-
-  if (is_like && arg_count == 3) {
-    // do nothing, ok to go
-  }
-  else if (!sem_validate_arg_count(ast, arg_count, 2)) {
-    // all other cases demand 2 args
-    return;
-  }
-
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
   ast_node *arg3 = arg_count == 3 ? third_arg(arg_list) : NULL;
 
   sem_t notnull = SEM_TYPE_NOTNULL;
-
-  if (!is_text(arg1->sem->sem_type)) {
-    report_error(name_ast, "CQL0086: first argument must be a string in function", name);
-    record_error(ast);
-    return;
-  }
-
-  if (!is_text(arg2->sem->sem_type)) {
-    report_error(name_ast, "CQL0086: second argument must be a string in function", name);
-    record_error(ast);
-    return;
-  }
-
-  if (arg3 && !is_text(arg3->sem->sem_type)) {
-    report_error(name_ast, "CQL0086: third argument must be a string in function", name);
-    record_error(ast);
-    return;
-  }
 
   // type text, not null
   sem_t sem_type = (SEM_TYPE_BOOL | SEM_TYPE_NOTNULL);
@@ -8621,10 +8598,18 @@ static void sem_func_matcher(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_like(ast_node *ast, uint32_t arg_count) {
+  if (!sem_validate_arg_pattern("t,t,[t]", ast, arg_count)) {
+    return;
+  }
+
   sem_func_matcher(ast, arg_count);
 }
 
 static void sem_func_glob(ast_node *ast, uint32_t arg_count) {
+  if (!sem_validate_arg_pattern("t,t", ast, arg_count)) {
+    return;
+  }
+
   sem_func_matcher(ast, arg_count);
 }
 
@@ -26459,6 +26444,116 @@ cql_noexport void sem_main(ast_node *ast) {
 
   // in case later passes need the regions resolved
   sem_setup_region_filters();
+}
+
+static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uint32_t arg_count) {
+  Contract(is_ast_call(ast_call));
+  EXTRACT_NAME_AST(name_ast, ast_call->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast_call->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  uint16_t types[ARG_COUNT];
+  sem_parse_arg_pattern(type_string, types);  
+  
+  uint16_t iarg = 0;
+  uint16_t inum = 1;
+  for (ast_node *ast = arg_list; ast; ast = ast->right, iarg++, inum++) {
+    Contract(is_ast_arg_list(arg_list));
+    EXTRACT_ANY_NOTNULL(arg, ast->left);
+
+    if (types[iarg] == 0 || types[iarg] == SEM_TYPE_MASK_OPT) {
+      // too many args
+      sem_validate_arg_count(ast_call, arg_count, arg_count + 1);
+      return false;
+    }
+
+    uint16_t arg_mask = 1 << core_type_of(arg->sem->sem_type);
+
+    if (types[iarg] & SEM_TYPE_MASK_REP) {
+       iarg--;
+    }
+
+    uint16_t reqd_mask = types[iarg];
+    if (!(reqd_mask & arg_mask)) {
+
+      if (arg_mask & SEM_TYPE_MASK_NULL) {
+        report_error(arg, "CQL0076: NULL literal is useless in function", name);
+        record_error(ast_call);
+      }
+      else {
+        CHARBUF_OPEN(msg);
+        bprintf(&msg, "CQL0084: argument %d has an invalid type; valid types are: ", inum);
+        if (reqd_mask & SEM_TYPE_MASK_BOOL) bprintf(&msg, "'bool' ");
+        if (reqd_mask & SEM_TYPE_MASK_INT) bprintf(&msg, "'integer' ");
+        if (reqd_mask & SEM_TYPE_MASK_LONG) bprintf(&msg, "'long' ");
+        if (reqd_mask & SEM_TYPE_MASK_REAL) bprintf(&msg, "'real' ");
+        if (reqd_mask & SEM_TYPE_MASK_TEXT) bprintf(&msg, "'text' ");
+        if (reqd_mask & SEM_TYPE_MASK_BLOB) bprintf(&msg, "'blob' ");
+        if (reqd_mask & SEM_TYPE_MASK_OBJ) bprintf(&msg, "'object' ");
+        bprintf(&msg, "in");
+
+        report_error(arg, Strdup(msg.ptr), name);
+        record_error(ast_call);
+        CHARBUF_CLOSE(msg);
+      }
+      return false;
+    }
+  }
+
+  // if there are more arguments and they are not optional then too few
+  if (types[iarg] != 0 && !(types[iarg] & SEM_TYPE_MASK_OPT)) {
+    sem_validate_arg_count(ast_call, arg_count, arg_count + 1);
+    return false;
+  }
+
+  return true;
+}
+
+static void sem_parse_arg_pattern(CSTR pattern, uint16_t data[ARG_COUNT]) {
+   int item = 0;
+   memset(data, 0, ARG_COUNT*sizeof(uint16_t));
+
+   for ( ;*pattern; pattern++) {
+      bool_t handled = false;
+      switch (*pattern) {
+      case 'n': data[item] |= SEM_TYPE_MASK_NULL; handled = true; break;
+      case 'f': data[item] |= SEM_TYPE_MASK_BOOL; handled = true; break;
+      case 'i': data[item] |= SEM_TYPE_MASK_INT;  handled = true; break;
+      case 'l': data[item] |= SEM_TYPE_MASK_LONG; handled = true; break;
+      case 'r': data[item] |= SEM_TYPE_MASK_REAL; handled = true; break;
+      case 't': data[item] |= SEM_TYPE_MASK_TEXT; handled = true; break;
+      case 'b': data[item] |= SEM_TYPE_MASK_BLOB; handled = true; break;
+      case 'o': data[item] |= SEM_TYPE_MASK_OBJ;  handled = true; break;
+      case '[': 
+        for (int i = item; i < ARG_COUNT; i++) {
+          Contract(data[i] == 0);
+          data[i] = SEM_TYPE_MASK_OPT;
+        }
+        handled = true;
+        break;
+
+      case ']':
+        handled = true;
+        break;
+
+      case '*':
+        Contract(data[item] == SEM_TYPE_MASK_OPT);
+        Contract(pattern[1] == ']');
+        Contract(pattern[2] == '\0');
+        data[item] |= SEM_TYPE_MASK_REP;
+        handled = true;
+        break;
+      
+      case ',':
+        item++;
+        Contract(item <= 7);
+        handled = true;
+        break;
+      }
+
+      Contract(handled);
+   }
 }
 
 // This method frees all the global state of the semantic analyzer

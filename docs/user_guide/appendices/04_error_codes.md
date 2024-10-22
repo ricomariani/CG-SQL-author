@@ -672,7 +672,9 @@ The argument of SUM must be numeric.
 
 -----
 
-### CQL0084 available for re-use
+### CQL0084: argument [n] has an invalid type; valid types are: 'type1' 'type2' in 'function'
+
+The argument at the named position is requried to be one of the named types in the named function.
 
 -----
 

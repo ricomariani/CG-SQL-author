@@ -52357,7 +52357,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
-SET a_string := ( SELECT trim(1, 2, 3) );
+SET a_string := ( SELECT trim('x', 'y', 'z') );
 
 test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'trim'
 
@@ -52374,11 +52374,11 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
+    |     |         | {strlit 'x'}: text notnull
     |     |         | {arg_list}
-    |     |           | {int 2}: integer notnull
+    |     |           | {strlit 'y'}: text notnull
     |     |           | {arg_list}
-    |     |             | {int 3}: integer notnull
+    |     |             | {strlit 'z'}: text notnull
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -52391,7 +52391,7 @@ The statement ending at line XXXX
 
 SET a_string := ( SELECT trim(1, "x") );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'trim'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'trim'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -52421,7 +52421,7 @@ The statement ending at line XXXX
 
 SET a_string := ( SELECT trim("x", 1) );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'trim'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'trim'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -52778,7 +52778,7 @@ The statement ending at line XXXX
 
 SET an_int := ( SELECT length(1) );
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'length'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'length'
 
   {assign}: err
   | {name an_int}: an_int: integer variable was_set
@@ -94712,7 +94712,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat_ws(a_string) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'concat_ws'
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'concat_ws'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94724,7 +94724,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'c
       |     | {select_expr_list}: err
       |     | | {select_expr}: err
       |     |   | {call}: err
-      |     |     | {name concat_ws}
+      |     |     | {name concat_ws}: err
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     |       | {arg_list}: ok
@@ -94741,7 +94741,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat() IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'concat'
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'concat'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94753,7 +94753,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'c
       |     | {select_expr_list}: err
       |     | | {select_expr}: err
       |     |   | {call}: err
-      |     |     | {name concat}
+      |     |     | {name concat}: err
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     | {select_from_etc}: ok
@@ -94768,7 +94768,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat_ws(7, 'x') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0086: first argument must be a string in function 'concat_ws'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'concat_ws'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94784,7 +94784,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0086: first argument must be a stri
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     |       | {arg_list}: ok
-      |     |         | {int 7}: err
+      |     |         | {int 7}: integer notnull
       |     |         | {arg_list}
       |     |           | {strlit 'x'}: text notnull
       |     | {select_from_etc}: ok
@@ -94819,7 +94819,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
       |     |         | {arg_list}
       |     |           | {int 2}: integer notnull
       |     |           | {arg_list}
-      |     |             | {null}: err
+      |     |             | {null}: null
       |     |             | {arg_list}
       |     |               | {int 4}: integer notnull
       |     | {select_from_etc}: ok
@@ -94854,7 +94854,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
       |     |         | {arg_list}
       |     |           | {int 2}: integer notnull
       |     |           | {arg_list}
-      |     |             | {null}: err
+      |     |             | {null}: null
       |     |             | {arg_list}
       |     |               | {int 4}: integer notnull
       |     | {select_from_etc}: ok
@@ -94929,7 +94929,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like(0, 'b', 'c') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0086: first argument must be a string in function 'like'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -94962,7 +94962,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like('a', 0, 'c') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0086: second argument must be a string in function 'like'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -94995,7 +94995,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like('a', 'b', 0) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0086: third argument must be a string in function 'like'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 3 has an invalid type; valid types are: 'text' in 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -95028,7 +95028,7 @@ The statement ending at line XXXX
 
 SET glob_func := ( SELECT glob(0, 'b') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0086: first argument must be a string in function 'glob'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'glob'
 
   {assign}: err
   | {name glob_func}: glob_func: bool notnull variable
@@ -95059,7 +95059,7 @@ The statement ending at line XXXX
 
 SET glob_func := ( SELECT glob('a', 0) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0086: second argument must be a string in function 'glob'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'glob'
 
   {assign}: err
   | {name glob_func}: glob_func: bool notnull variable

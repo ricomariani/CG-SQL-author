@@ -13926,17 +13926,17 @@ set a_string := (select trim());
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'trim'
 -- +1 error:
-set a_string := (select trim(1,2,3));
+set a_string := (select trim('x','y','z'));
 
 -- TEST: trim failure: arg 1 is not a string
 -- + {call}: err
--- * error: % all arguments must be strings 'trim'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' in 'trim'
 -- +1 error:
 set a_string := (select trim(1,"x"));
 
 -- TEST: trim failure: arg 2 is not a string
 -- + {call}: err
--- * error: % all arguments must be strings 'trim'
+-- * error: % argument 2 has an invalid type; valid types are: 'text' in 'trim'
 -- +1 error:
 set a_string := (select trim("x", 1));
 
@@ -14033,7 +14033,7 @@ set an_int := (select length());
 
 -- TEST: length failure: arg is not a string
 -- + {call}: err
--- * error: % all arguments must be strings 'length'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'length'
 -- +1 error:
 set an_int := (select length(1));
 
@@ -25143,17 +25143,17 @@ let concat_func_result2 := concat_ws(a_string, 1, 2, "x");
 
 -- TEST: concat_ws with too few args
 -- + {assign}: err
--- * error: % too few arguments provided 'concat_ws'
+-- * error: % function got incorrect number of arguments 'concat_ws'
 set concat_func_result2 := concat_ws(a_string);
 
 -- TEST: concat_ws with too few args
 -- + {assign}: err
--- * error: % too few arguments provided 'concat'
+-- * error: % function got incorrect number of arguments 'concat'
 set concat_func_result2 := concat();
 
 -- TEST: concat with too few args
 -- + {assign}: err
--- * error: % first argument must be a string in function 'concat_ws'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' in 'concat_ws'
 set concat_func_result2 := concat_ws(7, 'x');
 
 -- TEST: concat with NULL arg
@@ -25178,27 +25178,27 @@ let glob_func := glob('a', 'b');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % first argument must be a string in function 'like'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' in 'like'
 set like_func := like(0, 'b', 'c');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % second argument must be a string in function 'like'
+-- * error: % argument 2 has an invalid type; valid types are: 'text' in 'like'
 set like_func := like('a', 0, 'c');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % third argument must be a string in function 'like'
+-- * error: % argument 3 has an invalid type; valid types are: 'text' in 'like'
 set like_func := like('a', 'b', 0);
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % first argument must be a string in function 'glob'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' in 'glob'
 set glob_func := glob(0, 'b');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % second argument must be a string in function 'glob'
+-- * error: % argument 2 has an invalid type; valid types are: 'text' in 'glob'
 set glob_func := glob('a', 0);
 
 -- TEST bogus arg in matcher

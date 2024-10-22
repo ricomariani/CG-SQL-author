@@ -19603,17 +19603,35 @@ SET fal := ( not 'x') is false;
 -- +1 error:
 select printf();
 
+-- TEST: format must be called with at least one argument
+-- + {select_expr}: err
+-- * error: % function got incorrect number of arguments 'format'
+-- +1 error:
+select format();
+
 -- TEST: printf requires a string literal for its first argument
 -- + {select_expr}: err
 -- * error: % first argument must be a string literal 'printf'
 -- +1 error:
 select printf(a_string);
 
+-- TEST: format requires a string literal for its first argument
+-- + {select_expr}: err
+-- * error: % first argument must be a string literal 'format'
+-- +1 error:
+select format(a_string);
+
 -- TEST: printf disallows excess arguments
 -- + {select_expr}: err
 -- * error: % more arguments provided than expected by format string 'printf'
 -- +1 error:
 select printf("%d %f", 0, 0.0, "str");
+
+-- TEST: format disallows excess arguments
+-- + {select_expr}: err
+-- * error: % more arguments provided than expected by format string 'format'
+-- +1 error:
+select format("%d %f", 0, 0.0, "str");
 
 -- TEST: printf disallows insufficient arguments
 -- + {select_expr}: err
@@ -19631,11 +19649,22 @@ select printf('Hello!\n');
 -- - error:
 select printf("Hello %% there %%!\n");
 
+-- TEST: format understands '%%' requires no arguments
+-- + {select_expr}: text notnull
+-- - error:
+select format("Hello %% there %%!\n");
+
 -- TEST: printf disallows arguments of the wrong type
 -- + {select_expr}: err
 -- * error: % incompatible types in expression 'printf'
 -- +1 error:
 select printf("%s %s", "hello", 42);
+
+-- TEST: format disallows arguments of the wrong type
+-- + {select_expr}: err
+-- * error: % incompatible types in expression 'format'
+-- +1 error:
+select format("%s %s", "hello", 42);
 
 -- TEST: printf disallows loss of precision
 -- + {select_expr}: err
@@ -25093,3 +25122,46 @@ declare proc dump_null(x integer);
 -- + dump_null(NULL);
 -- -error:
 null:dump();
+
+-- TEST: concat various things
+-- + LET concat_func_result := ( SELECT concat(1, 2, "x") IF NOTHING THEN THROW );
+-- + {let_stmt}: concat_func_result: text notnull variable was_set
+-- - error:
+let concat_func_result := concat(1, 2, "x");
+
+-- TEST: concat various things with separator
+-- + SET concat_func_result := ( SELECT concat_ws(' ', 1, 2, "x") IF NOTHING THEN THROW );
+-- + {assign}: concat_func_result: text notnull variable was_set
+-- - error:
+set concat_func_result := concat_ws(' ', 1, 2, "x");
+
+-- TEST: concat various things with separator, maybe null
+-- + LET concat_func_result2 := ( SELECT concat_ws(a_string, 1, 2, "x") IF NOTHING THEN THROW );
+-- + {let_stmt}: concat_func_result2: text variable
+-- - error:
+let concat_func_result2 := concat_ws(a_string, 1, 2, "x");
+
+-- TEST: concat_ws with too few args
+-- + {assign}: err
+-- * error: % too few arguments provided 'concat_ws'
+set concat_func_result2 := concat_ws(a_string);
+
+-- TEST: concat_ws with too few args
+-- + {assign}: err
+-- * error: % too few arguments provided 'concat'
+set concat_func_result2 := concat();
+
+-- TEST: concat with too few args
+-- + {assign}: err
+-- * error: % first argument must be a string in function 'concat_ws'
+set concat_func_result2 := concat_ws(7, 'x');
+
+-- TEST: concat with NULL arg
+-- + {assign}: err
+-- * error: % NULL literal is useless in function 'concat_ws'
+set concat_func_result2 := concat_ws(' ', 2, NULL, 4);
+
+-- TEST: concat with NULL arg
+-- + {assign}: err
+-- * error: % NULL literal is useless in function 'concat'
+set concat_func_result2 := concat(' ', 2, NULL, 4);

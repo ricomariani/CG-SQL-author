@@ -71903,6 +71903,30 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
 
 The statement ending at line XXXX
 
+SELECT format();
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'format'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name format}: err
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT printf(a_string);
 
 test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a string literal 'printf'
@@ -71929,6 +71953,32 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a str
 
 The statement ending at line XXXX
 
+SELECT format(a_string);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0421: first argument must be a string literal 'format'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name format}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {name a_string}: a_string: text variable was_set
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT printf("%d %f", 0, 0.0, "str");
 
 test/sem_test.sql:XXXX:1: error: in arg_list : CQL0422: more arguments provided than expected by format string 'printf'
@@ -71941,6 +71991,38 @@ test/sem_test.sql:XXXX:1: error: in arg_list : CQL0422: more arguments provided 
   |     | | {select_expr}: err
   |     |   | {call}: err
   |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%d %f'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {int 0}: integer notnull
+  |     |           | {arg_list}
+  |     |             | {dbl 0.0}: real notnull
+  |     |             | {arg_list}
+  |     |               | {strlit 'str'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT format("%d %f", 0, 0.0, "str");
+
+test/sem_test.sql:XXXX:1: error: in arg_list : CQL0422: more arguments provided than expected by format string 'format'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name format}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -72040,6 +72122,31 @@ SELECT printf("Hello %% there %%!\n");
 
 The statement ending at line XXXX
 
+SELECT format("Hello %% there %%!\n");
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name format}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'Hello %% there %%!
+'}: text notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT printf("%s %s", "hello", 42);
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'printf'
@@ -72052,6 +72159,36 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in express
   |     | | {select_expr}: err
   |     |   | {call}: err
   |     |     | {name printf}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit '%s %s'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {strlit 'hello'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {int 42}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT format("%s %s", "hello", 42);
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0009: incompatible types in expression 'format'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name format}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -94473,4 +94610,258 @@ CALL dump_null(NULL);
   | {name dump_null}: ok
   | {arg_list}: ok
     | {null}: null
+
+The statement ending at line XXXX
+
+LET concat_func_result := ( SELECT concat(1, 2, "x") IF NOTHING THEN THROW );
+
+  {let_stmt}: concat_func_result: text notnull variable was_set
+  | {name concat_func_result}: concat_func_result: text notnull variable was_set
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name concat}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 1}: integer notnull
+      |     |         | {arg_list}
+      |     |           | {int 2}: integer notnull
+      |     |           | {arg_list}
+      |     |             | {strlit 'x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET concat_func_result := ( SELECT concat_ws(' ', 1, 2, "x") IF NOTHING THEN THROW );
+
+  {assign}: concat_func_result: text notnull variable was_set
+  | {name concat_func_result}: concat_func_result: text notnull variable was_set
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name concat_ws}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit ' '}: text notnull
+      |     |         | {arg_list}
+      |     |           | {int 1}: integer notnull
+      |     |           | {arg_list}
+      |     |             | {int 2}: integer notnull
+      |     |             | {arg_list}
+      |     |               | {strlit 'x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+LET concat_func_result2 := ( SELECT concat_ws(a_string, 1, 2, "x") IF NOTHING THEN THROW );
+
+  {let_stmt}: concat_func_result2: text variable
+  | {name concat_func_result2}: concat_func_result2: text variable
+  | {select_if_nothing_throw_expr}: _anon: text
+    | {select_stmt}: _anon: text
+      | {select_core_list}: select: { _anon: text }
+      | | {select_core}: select: { _anon: text }
+      |   | {select_expr_list_con}: select: { _anon: text }
+      |     | {select_expr_list}: select: { _anon: text }
+      |     | | {select_expr}: text
+      |     |   | {call}: text
+      |     |     | {name concat_ws}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {name a_string}: a_string: text variable was_set
+      |     |         | {arg_list}
+      |     |           | {int 1}: integer notnull
+      |     |           | {arg_list}
+      |     |             | {int 2}: integer notnull
+      |     |             | {arg_list}
+      |     |               | {strlit 'x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET concat_func_result2 := ( SELECT concat_ws(a_string) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'concat_ws'
+
+  {assign}: err
+  | {name concat_func_result2}: concat_func_result2: text variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name concat_ws}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {name a_string}: a_string: text variable was_set
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET concat_func_result2 := ( SELECT concat() IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0074: too few arguments provided 'concat'
+
+  {assign}: err
+  | {name concat_func_result2}: concat_func_result2: text variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name concat}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET concat_func_result2 := ( SELECT concat_ws(7, 'x') IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0086: first argument must be a string in function 'concat_ws'
+
+  {assign}: err
+  | {name concat_func_result2}: concat_func_result2: text variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name concat_ws}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 7}: err
+      |     |         | {arg_list}
+      |     |           | {strlit 'x'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET concat_func_result2 := ( SELECT concat_ws(' ', 2, NULL, 4) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'concat_ws'
+
+  {assign}: err
+  | {name concat_func_result2}: concat_func_result2: text variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name concat_ws}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit ' '}: text notnull
+      |     |         | {arg_list}
+      |     |           | {int 2}: integer notnull
+      |     |           | {arg_list}
+      |     |             | {null}: err
+      |     |             | {arg_list}
+      |     |               | {int 4}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET concat_func_result2 := ( SELECT concat(' ', 2, NULL, 4) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'concat'
+
+  {assign}: err
+  | {name concat_func_result2}: concat_func_result2: text variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name concat}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit ' '}: text notnull
+      |     |         | {arg_list}
+      |     |           | {int 2}: integer notnull
+      |     |           | {arg_list}
+      |     |             | {null}: err
+      |     |             | {arg_list}
+      |     |               | {int 4}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
 

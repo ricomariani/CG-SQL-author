@@ -270,7 +270,6 @@ cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
   }
 }
 
-
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
 static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze);
@@ -632,6 +631,37 @@ typedef struct binding_info {
   CSTR proc_calling;
   charbuf *err;
 } binding_info;
+
+// This helper method checks the given name against the current context
+static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts) {
+  if (CURRENT_EXPR_CONTEXT_IS(valid_contexts)) {
+    return true;
+  }
+
+  report_error(ast, "CQL0080: function may not appear in this context", name);
+  record_error(ast);
+  return false;
+}
+
+// This helper method checks the function against the mask of its valid contexts.
+static bool_t sem_validate_function_context(ast_node *ast, uint32_t valid_contexts) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left)
+  EXTRACT_STRING(name, name_ast);
+
+  return sem_validate_context(ast, name, valid_contexts);
+}
+
+// validate the node appear inside SQL statement
+static bool_t sem_validate_appear_inside_sql_stmt(ast_node *ast) {
+  return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE));
+}
+
+// validate the node appear inside SQL statement
+static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
+  return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_CONSTRAINT));
+}
+
 
 // If a foreign key in a table is self-referencing (i.e. T references T)
 // then we have to defer the validation until we're done with the table and
@@ -7457,6 +7487,77 @@ static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
   ast->sem = expr->sem;
 }
 
+// Coalesce requires type compatibility between all of its arguments.  The result
+// is a not null type if we find a not null item in the list.  There should be
+// nothing after that item.  Note that ifnull and coalesce are really the same thing
+// except ifnull must have exactly two arguments.
+static void sem_func_concat_helper(ast_node *call_ast, uint32_t arg_count, bool_t is_concat_ws) {
+  Contract(is_ast_call(call_ast));
+  EXTRACT_NAME_AST(name_ast, call_ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, call_ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // concat functions can only appear inside of SQL, they are rewritten if elsewhere
+  Contract(sem_validate_appear_inside_sql_stmt(call_ast));
+
+  // concat ( X, [arg_list] )
+  // concat_ws ( SEP, X, [arg_list] )
+
+  int32_t reqd_args = 1 + !!is_concat_ws;
+
+  if (arg_count < reqd_args) {
+    report_error(name_ast, "CQL0074: too few arguments provided", name);
+    record_error(call_ast);
+    return;
+  }
+
+  sem_t sem_type_result = SEM_TYPE_TEXT | SEM_TYPE_NOTNULL;
+
+  int32_t iarg = 0;
+
+  for (ast_node *ast = arg_list; ast; ast = ast->right, iarg++) {
+    ast_node *expr = ast->left;
+
+    if (is_ast_null(expr)) {
+      report_error(expr, "CQL0076: NULL literal is useless in function", name);
+      record_error(expr);
+      record_error(call_ast);
+      return;
+    }
+
+    // arg list already already analyzed for us by sem_expr_call
+    // sem_expr(expr);
+    Invariant(expr->sem);
+
+    if (iarg == 0 && is_concat_ws) {
+
+      if (!is_text(expr->sem->sem_type)) {
+        report_error(expr, "CQL0086: first argument must be a string in function", name);
+        record_error(expr);
+        record_error(call_ast);
+        return;
+      }
+
+      // maybe strip notnull, the rest of the bits match for sure
+      sem_type_result &= expr->sem->sem_type;
+    }
+
+    sem_type_result |= sensitive_flag(expr->sem->sem_type);
+  }
+
+  call_ast->sem = new_sem(sem_type_result);
+  call_ast->sem->kind = NULL;
+}
+
+static void sem_func_concat(ast_node *ast, uint32_t arg_count) {
+  return sem_func_concat_helper(ast, arg_count, false);
+}
+
+static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
+  return sem_func_concat_helper(ast, arg_count, true);
+}
+
 
 // Coalesce requires type compatibility between all of its arguments.  The result
 // is a not null type if we find a not null item in the list.  There should be
@@ -7663,27 +7764,6 @@ static bool_t sem_validate_arg_count(ast_node *ast, uint32_t count, uint32_t exp
 
   return true;
 }
-
-// This helper method checks the given name against the current context
-static bool_t sem_validate_context(ast_node *ast, CSTR name, uint32_t valid_contexts) {
-  if (CURRENT_EXPR_CONTEXT_IS(valid_contexts)) {
-    return true;
-  }
-
-  report_error(ast, "CQL0080: function may not appear in this context", name);
-  record_error(ast);
-  return false;
-}
-
-// This helper method checks the function against the mask of its valid contexts.
-static bool_t sem_validate_function_context(ast_node *ast, uint32_t valid_contexts) {
-  Contract(is_ast_call(ast));
-  EXTRACT_NAME_AST(name_ast, ast->left)
-  EXTRACT_STRING(name, name_ast);
-
-  return sem_validate_context(ast, name, valid_contexts);
-}
-
 // This is a helper method that tells us if the EXISTS function can be used
 // in the current expression context.  Exists cannot be used in GROUP BY
 // for instance.  Nor does it make sense in a loose expression outside of
@@ -7756,16 +7836,6 @@ static bool_t sem_validate_aggregate_context(ast_node *ast) {
   }
 
   return true;
-}
-
-// validate the node appear inside SQL statement
-static bool_t sem_validate_appear_inside_sql_stmt(ast_node *ast) {
-  return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE));
-}
-
-// validate the node appear inside SQL statement
-static bool_t sem_validate_sql_not_constraint(ast_node *ast) {
-  return sem_validate_function_context(ast, u32_not(SEM_EXPR_CONTEXT_NONE | SEM_EXPR_CONTEXT_CONSTRAINT));
 }
 
 // cql_blob_get_type(blob) -- this will ultimately expand into
@@ -10340,6 +10410,10 @@ static void sem_func_printf(ast_node *ast, uint32_t arg_count) {
       is_rewriting = false;
     }
   }
+}
+
+static void sem_func_format(ast_node *ast, uint32_t arg_count) {
+  return sem_func_printf(ast, arg_count);
 }
 
 // Compute the semantic type of each argument, this is minimally necessary
@@ -26089,6 +26163,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(changes);
   FUNC_INIT(printf);
+  FUNC_INIT(format);
   FUNC_INIT(strftime);
   FUNC_INIT(date);
   FUNC_INIT(time);
@@ -26140,10 +26215,14 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(json_valid);
   FUNC_REWRITE_INIT(json_quote);
 
+  FUNC_REWRITE_INIT(concat);
+  FUNC_REWRITE_INIT(concat_ws);
+
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);
   FUNC_INIT(rtrim);
   FUNC_INIT(length);
+
 
   FUNC_INIT(cql_get_blob_size);
 

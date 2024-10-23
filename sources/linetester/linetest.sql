@@ -40,9 +40,9 @@ declare function contains_at_text(haystack text!, needle text!, `offset` int!) b
 @op text: call starts_with as starts_with_text;
 @op text: call index_of as index_of_text;
 @op text: call contains_at as contains_at_text;
-@op text: call str_mid as str_mid;
-@op text: call str_right as str_right;
-@op text: call str_leftg as str_left;
+@op text: call mid as str_mid;
+@op text: call right as str_right;
+@op text: call left as str_left;
 
 var proc_count int!;
 var compares int!;
@@ -82,18 +82,18 @@ begin
   declare C cursor for select * from linedata where procname = procname_ and source = source_;
   loop fetch C
   begin
-    call printf("%5d %s\n", C.line, C.data);
+    printf("%5d %s\n", C.line, C.data);
   end;
 end;
 
 [[private]]
 proc dump(procname text not null)
 begin
-  call printf("%s: difference encountered\n", procname);
-  call printf("<<<< EXPECTED\n");
-  call dump_proc_records("exp", procname);
-  call printf(">>>> ACTUAL\n");
-  call dump_proc_records("act", procname);
+  printf("%s: difference encountered\n", procname);
+  printf("<<<< EXPECTED\n");
+  dump_proc_records("exp", procname);
+  printf(">>>> ACTUAL\n");
+  dump_proc_records("act", procname);
 end;
 
 [[private]]
@@ -122,12 +122,12 @@ begin
       set compares := compares + 1;
       if (actual.line != expected.line or
           actual.data != expected.data) then
-          call dump(p.procname);
-          call printf("\nFirst difference:\n");
-          call printf("expected: %5d %s\n", expected.line, expected.data);
-          call printf("  actual: %5d %s\n", actual.line, actual.data);
-          call printf("\nDifferences at:\n line %d in expected\n line %d in actual", expected.physical_line, actual.physical_line);
-          call printf("\n");
+          dump(p.procname);
+          printf("\nFirst difference:\n");
+          printf("expected: %5d %s\n", expected.line, expected.data);
+          printf("  actual: %5d %s\n", actual.line, actual.data);
+          printf("\nDifferences at:\n line %d in expected\n line %d in actual", expected.physical_line, actual.physical_line);
+          printf("\n");
           errors += 1;
           leave;
       end if;
@@ -135,20 +135,20 @@ begin
       fetch expected;
     end;
 
-    if (actual != expected) then
-      if (not actual) then
-          call dump(p.procname);
-          call printf("\nRan out of lines in actual:\n");
-          call printf("\nDifferences at:\n line %d in expected\n", expected.physical_line);
-          call printf("\n");
+    if actual != expected then
+      if not actual then
+          p.procname:dump;
+          printf("\nRan out of lines in actual:\n");
+          printf("\nDifferences at:\n line %d in expected\n", expected.physical_line);
+          printf("\n");
           errors += 1;
       end if;
 
-      if (not expected) then
-          call dump(p.procname);
-          call printf("\nRan out of lines in expected:\n");
-          call printf("\nDifferences at:\n line %d in actual\n", actual.physical_line);
-          call printf("\n");
+      if not expected then
+          p.procname:dump;
+          printf("\nRan out of lines in expected:\n");
+          printf("\nDifferences at:\n line %d in actual\n", actual.physical_line);
+          printf("\n");
           errors += 1;
       end if;
     end if;
@@ -163,10 +163,10 @@ begin
   let prefix3 := '#line ';
   let prefix4 := '# ';
 
-  let prefix1_len := prefix1:len();
-  let prefix2_len := prefix2:len();
-  let prefix3_len := prefix3:len();
-  let prefix4_len := prefix4:len();
+  let prefix1_len := prefix1:len;
+  let prefix2_len := prefix2:len;
+  let prefix3_len := prefix3:len;
+  let prefix4_len := prefix4:len;
 
   let input_file := cql_fopen(input_name, "r");
   if input_file is null then
@@ -215,7 +215,7 @@ begin
     
     if line_start >= 0 then
       line := data:atoi_at(line_start);
-      if (base_at_next_line) then
+      if base_at_next_line then
         line_base := line - 1;
         base_at_next_line := false;
       end if;
@@ -248,8 +248,8 @@ end;
 -- main entry point
 proc linetest_main(args cql_string_list!)
 begin
-  call setup();
-  call parse_args(args);
+  setup();
+  parse_args(args);
 
   if expected_name is null return;
   read_file(expected_name, "exp");

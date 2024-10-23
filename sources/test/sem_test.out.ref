@@ -95652,3 +95652,96 @@ SET quote_str := ifnull_throw(( SELECT quote(nullable("123")) IF NOTHING THEN TH
               | {select_limit}
                 | {select_offset}
 
+The statement ending at line XXXX
+
+LET zero_blob := ( SELECT zeroblob(1) );
+
+  {let_stmt}: zero_blob: blob notnull variable
+  | {name zero_blob}: zero_blob: blob notnull variable
+  | {select_stmt}: _anon: blob notnull
+    | {select_core_list}: select: { _anon: blob notnull }
+    | | {select_core}: select: { _anon: blob notnull }
+    |   | {select_expr_list_con}: select: { _anon: blob notnull }
+    |     | {select_expr_list}: select: { _anon: blob notnull }
+    |     | | {select_expr}: blob notnull
+    |     |   | {call}: blob notnull
+    |     |     | {name zeroblob}: blob notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET zero_blob := zeroblob(1);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'zeroblob'
+
+  {assign}: err
+  | {name zero_blob}: zero_blob: blob notnull variable
+  | {call}: err
+    | {name zeroblob}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {int 1}: integer notnull
+
+The statement ending at line XXXX
+
+SET zero_blob := ( SELECT zeroblob() );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'zeroblob'
+
+  {assign}: err
+  | {name zero_blob}: zero_blob: blob notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name zeroblob}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET random_blob := ( SELECT randomblob(1) );
+
+  {let_stmt}: random_blob: blob notnull variable
+  | {name random_blob}: random_blob: blob notnull variable
+  | {select_stmt}: _anon: blob notnull
+    | {select_core_list}: select: { _anon: blob notnull }
+    | | {select_core}: select: { _anon: blob notnull }
+    |   | {select_expr_list_con}: select: { _anon: blob notnull }
+    |     | {select_expr_list}: select: { _anon: blob notnull }
+    |     | | {select_expr}: blob notnull
+    |     |   | {call}: blob notnull
+    |     |     | {name randomblob}: blob notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+

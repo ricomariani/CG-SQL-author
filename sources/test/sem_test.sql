@@ -25380,3 +25380,25 @@ set quote_str := quote();
 -- + {select_if_nothing_throw_expr}: _anon: text
 -- - error:
 set quote_str := quote(nullable("123")):ifnull_throw;
+
+-- TEST: zero blob success
+-- + {let_stmt}: zero_blob: blob notnull variable
+-- - error:
+let zero_blob := (select zeroblob(1));
+
+-- TEST: zero blob wrong context
+-- + {assign}: err
+-- * error: % function may not appear in this context 'zeroblob'
+-- +1 error:
+set zero_blob := zeroblob(1);
+
+-- TEST: zero blob invalid args
+-- + {assign}: err
+-- * error: % too few arguments in function 'zeroblob'
+-- +1 error:
+set zero_blob := (select zeroblob());
+
+-- TEST: random blob success
+-- + {let_stmt}: random_blob: blob notnull variable
+-- - error:
+let random_blob := (select randomblob(1));

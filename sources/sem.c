@@ -9054,6 +9054,30 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
+static void sem_func_randomblob(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // one numeric arg
+  if (!sem_validate_arg_pattern("bilr", ast, arg_count)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | SEM_TYPE_NOTNULL);
+}
+
+static void sem_func_zeroblob(ast_node *ast, uint32_t arg_count) {
+  return sem_func_randomblob(ast, arg_count);
+}
+
 static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -25968,6 +25992,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(percent_rank);
   FUNC_INIT(printf);
   FUNC_INIT(random);
+  FUNC_INIT(randomblob);
   FUNC_INIT(rank);
   FUNC_INIT(replace);
   FUNC_INIT(round);
@@ -25984,6 +26009,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(total_changes);
   FUNC_INIT(trim);
   FUNC_INIT(upper);
+  FUNC_INIT(zeroblob);
 
   FUNC_REWRITE_INIT(json);
   FUNC_REWRITE_INIT(json_array);

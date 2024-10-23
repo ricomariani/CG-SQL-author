@@ -12844,16 +12844,16 @@ select char() from bar;
 set a_string := char(1);
 
 -- TEST: test abs with sensitive value
--- + {select_stmt}: select: { info: integer sensitive }
--- + {call}: info: integer sensitive
--- + {name abs}: info: integer sensitive
+-- + {select_stmt}: select: { _anon: integer sensitive }
+-- + {call}: integer sensitive
+-- + {name abs}: integer sensitive
 -- + {name info}: info: integer sensitive
 -- - error:
 select abs(info) from with_sensitive;
 
 -- TEST: abs should preserve kind
 -- + {assign}: price_d: real<dollars> variable
--- + {call}: price_d: real<dollars> variable
+-- + {call}: real<dollars>
 -- - error:
 set price_d := (select abs(price_d));
 

@@ -8923,18 +8923,8 @@ static void sem_aggr_func_json_group_object_helper(ast_node *ast, uint32_t arg_c
     return;
   }
 
-  ast_node *arg1 = first_arg(arg_list);
-
-  sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
-  sem_t sensitive = arg1->sem->sem_type & SEM_TYPE_SENSITIVE;
-
-  ast_node *arg2 = second_arg(arg_list);
-
-  notnull &= arg2->sem->sem_type & SEM_TYPE_NOTNULL;
-  sensitive |= arg2->sem->sem_type & SEM_TYPE_SENSITIVE;
-
   // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type_result | notnull | sensitive);
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
 }
 
 static void sem_aggr_func_json_group_object(ast_node *ast, uint32_t arg_count) {
@@ -9004,15 +8994,9 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  ast_node *arg1 = first_arg(arg_list);
-  ast_node *arg2 = second_arg(arg_list);
-
   // instr() is integer type, sensitivity, nullability preserved;
-  sem_t combine = combine_flags(arg1->sem->sem_type, arg2->sem->sem_type);
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | combine);
-
-  // ast->sem->name is not set here because e.g. instr(x) is not named "x"
   // the kind of instr is generic, the integer returned has no kind even if the strings do
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
 static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
@@ -9027,8 +9011,6 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  ast_node *arg = first_arg(arg_list);
-
   if (enforcement.strict_sign_function) {
     if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
       report_error(
@@ -9041,11 +9023,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
     }
   }
 
-  sem_t sem_type = arg->sem->sem_type;
-
-  sem_t combined_flags = not_nullable_flag(sem_type) | sensitive_flag(sem_type);
-
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | combined_flags);
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
 static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
@@ -9062,9 +9040,7 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
 
   // abs() will be the same type as arg, sensitivity, nullability preserved;
-  name_ast->sem = ast->sem = arg->sem;
-
-  // ast->sem->name is not set here because e.g. abs(x) is not named "x"
+  name_ast->sem = ast->sem = new_sem_std(arg->sem->sem_type, arg_list);
 
   // preserve the kind of the arg
   ast->sem->kind = arg->sem->kind;
@@ -9086,19 +9062,12 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  sem_t sensitive = 0;
-  ast_node *arg;
-  do {
-    arg = first_arg(arg_list);
-    sem_t sem_type = arg->sem->sem_type;
-    sensitive |= sensitive_flag(sem_type);
-  } while ((arg_list = arg_list->right));
-
   // char() will always return a string, sensitivity param is preserved.
   // char return null if params doesn't have a character representation
   // of the unicode code point values of integers table
   // e.g: select char(1) -> NULL; select char(67); -> "C"
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | sensitive);
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
+  copy_nullability(ast, 0);
 
   // ast->sem->name is not set here because e.g. char(x) is not named "x"
   // the result has no 'kind'
@@ -9305,11 +9274,8 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
 
   // upper() will be the same type as arg, sensitivity, nullability, and kind preserved;
-  ast->sem = arg->sem;
-  sem_add_flags(ast, 0);    // no flags added this is a clone
-  name_ast->sem = ast->sem;
-
-  ast->sem->name = NULL;    // applying upper/lower loses the name, SQlite doesn't recognize lower(foo) as foo
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
+  ast->sem->kind = arg->sem->kind;
 }
 
 // lower has the same rules as upper
@@ -9415,7 +9381,6 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
 
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
-  ast_node *arg3 = (arg_count == 3) ? third_arg(arg_list) : NULL;
 
   // We try to evaluate arg2 as a constant, if we can do so and if we get zero
   // then the user has made a mistake.  The indices are 1 based.
@@ -9433,12 +9398,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
 
   // The result is nonnull if all arguments are nonnull, and sensitive if any
   // arguments are sensitive.
-  sem_t flags = combine_flags(arg1->sem->sem_type, arg2->sem->sem_type);
-  if (arg3) {
-    flags = combine_flags(flags, arg3->sem->sem_type);
-  }
-
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | flags);
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
   // applying substr loses the name, SQLite doesn't recognize substr(foo, ..) as foo
 
   // preserve the string 'kind' even though it's a substring (that seems the most sensible)
@@ -9467,23 +9427,14 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  ast_node *input = first_arg(arg_list);
-  sem_t input_type = input->sem->sem_type;
-
-  ast_node *find = second_arg(arg_list);
-  sem_t find_type = find->sem->sem_type;
-
-  ast_node *replace_with = third_arg(arg_list);
-  sem_t replace_with_type = replace_with->sem->sem_type;
+  ast_node *arg1 = first_arg(arg_list);
 
   // The result is nonnull if all arguments are nonnull, and sensitive if any
   // arguments are sensitive.
-  sem_t flags = combine_flags(input_type, combine_flags(find_type, replace_with_type));
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
 
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | flags);
-
-  // The result has the same kind as the input argument.
-  ast->sem->kind = input->sem->kind;
+  // The result has the same kind as arg1
+  ast->sem->kind = arg1->sem->kind;
 }
 
 // generic function to do basic validation for builtin window functions.
@@ -9756,15 +9707,16 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
 
   // strftime can appear reasonably in most places, notably not as a LIMIT or
   // OFFSET; also not supported without a context
-  if (!sem_validate_function_context(ast,
-                                     SEM_EXPR_CONTEXT_SELECT_LIST |
-                                     SEM_EXPR_CONTEXT_ON |
-                                     SEM_EXPR_CONTEXT_HAVING |
-                                     SEM_EXPR_CONTEXT_WHERE |
-                                     SEM_EXPR_CONTEXT_GROUP_BY |
-                                     SEM_EXPR_CONTEXT_ORDER_BY |
-                                     SEM_EXPR_CONTEXT_CONSTRAINT |
-                                     SEM_EXPR_CONTEXT_UDF)) {
+  if (!sem_validate_function_context(
+        ast,
+        SEM_EXPR_CONTEXT_SELECT_LIST |
+        SEM_EXPR_CONTEXT_ON |
+        SEM_EXPR_CONTEXT_HAVING |
+        SEM_EXPR_CONTEXT_WHERE |
+        SEM_EXPR_CONTEXT_GROUP_BY |
+        SEM_EXPR_CONTEXT_ORDER_BY |
+        SEM_EXPR_CONTEXT_CONSTRAINT |
+        SEM_EXPR_CONTEXT_UDF)) {
     return;
   }
 
@@ -9981,8 +9933,7 @@ static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
   ast_node *arg = first_arg(arg_list);
 
   // the function return type matches the argument type
-  ast->sem = arg->sem;
-  name_ast->sem = ast->sem;
+  name_ast->sem = ast->sem = new_sem_std(arg->sem->sem_type, arg_list);
 }
 
 // The changes function is used to get the integer number of rows changed

@@ -48051,14 +48051,14 @@ The statement ending at line XXXX
 SELECT abs(info)
   FROM with_sensitive;
 
-  {select_stmt}: select: { info: integer sensitive }
-  | {select_core_list}: select: { info: integer sensitive }
-  | | {select_core}: select: { info: integer sensitive }
-  |   | {select_expr_list_con}: select: { info: integer sensitive }
-  |     | {select_expr_list}: select: { info: integer sensitive }
-  |     | | {select_expr}: info: integer sensitive
-  |     |   | {call}: info: integer sensitive
-  |     |     | {name abs}: info: integer sensitive
+  {select_stmt}: select: { _anon: integer sensitive }
+  | {select_core_list}: select: { _anon: integer sensitive }
+  | | {select_core}: select: { _anon: integer sensitive }
+  |   | {select_expr_list_con}: select: { _anon: integer sensitive }
+  |     | {select_expr_list}: select: { _anon: integer sensitive }
+  |     | | {select_expr}: integer sensitive
+  |     |   | {call}: integer sensitive
+  |     |     | {name abs}: integer sensitive
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -48080,14 +48080,14 @@ SET price_d := ( SELECT abs(price_d) );
 
   {assign}: price_d: real<dollars> variable was_set
   | {name price_d}: price_d: real<dollars> variable was_set
-  | {select_stmt}: price_d: real<dollars> variable was_set
-    | {select_core_list}: select: { price_d: real<dollars> variable was_set }
-    | | {select_core}: select: { price_d: real<dollars> variable was_set }
-    |   | {select_expr_list_con}: select: { price_d: real<dollars> variable was_set }
-    |     | {select_expr_list}: select: { price_d: real<dollars> variable was_set }
-    |     | | {select_expr}: price_d: real<dollars> variable was_set
-    |     |   | {call}: price_d: real<dollars> variable was_set
-    |     |     | {name abs}: price_d: real<dollars> variable was_set
+  | {select_stmt}: _anon: real<dollars>
+    | {select_core_list}: select: { _anon: real<dollars> }
+    | | {select_core}: select: { _anon: real<dollars> }
+    |   | {select_expr_list_con}: select: { _anon: real<dollars> }
+    |     | {select_expr_list}: select: { _anon: real<dollars> }
+    |     | | {select_expr}: real<dollars>
+    |     |   | {call}: real<dollars>
+    |     |     | {name abs}: real<dollars>
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -52229,14 +52229,14 @@ SET kind_string := ( SELECT upper(kind_string) );
 
   {assign}: kind_string: text<surname> variable was_set
   | {name kind_string}: kind_string: text<surname> variable was_set
-  | {select_stmt}: _anon: text<surname> variable was_set
-    | {select_core_list}: select: { _anon: text<surname> variable was_set }
-    | | {select_core}: select: { _anon: text<surname> variable was_set }
-    |   | {select_expr_list_con}: select: { _anon: text<surname> variable was_set }
-    |     | {select_expr_list}: select: { _anon: text<surname> variable was_set }
-    |     | | {select_expr}: text<surname> variable was_set
-    |     |   | {call}: text<surname> variable was_set
-    |     |     | {name upper}: text<surname> variable was_set
+  | {select_stmt}: _anon: text<surname>
+    | {select_core_list}: select: { _anon: text<surname> }
+    | | {select_core}: select: { _anon: text<surname> }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> }
+    |     | {select_expr_list}: select: { _anon: text<surname> }
+    |     | | {select_expr}: text<surname>
+    |     |   | {call}: text<surname>
+    |     |     | {name upper}: text<surname>
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -52255,14 +52255,14 @@ SET kind_string := ( SELECT lower(kind_string) );
 
   {assign}: kind_string: text<surname> variable was_set
   | {name kind_string}: kind_string: text<surname> variable was_set
-  | {select_stmt}: _anon: text<surname> variable was_set
-    | {select_core_list}: select: { _anon: text<surname> variable was_set }
-    | | {select_core}: select: { _anon: text<surname> variable was_set }
-    |   | {select_expr_list_con}: select: { _anon: text<surname> variable was_set }
-    |     | {select_expr_list}: select: { _anon: text<surname> variable was_set }
-    |     | | {select_expr}: text<surname> variable was_set
-    |     |   | {call}: text<surname> variable was_set
-    |     |     | {name lower}: text<surname> variable was_set
+  | {select_stmt}: _anon: text<surname>
+    | {select_core_list}: select: { _anon: text<surname> }
+    | | {select_core}: select: { _anon: text<surname> }
+    |   | {select_expr_list_con}: select: { _anon: text<surname> }
+    |     | {select_expr_list}: select: { _anon: text<surname> }
+    |     | | {select_expr}: text<surname>
+    |     |   | {call}: text<surname>
+    |     |     | {name lower}: text<surname>
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok

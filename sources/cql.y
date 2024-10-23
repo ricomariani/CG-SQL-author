@@ -1085,17 +1085,19 @@ loose_name:
   name { $$ = $name; }
   | CALL { $$ = new_ast_str("call"); }
   | SET { $$ = new_ast_str("set"); }
-  | ALL { $$ = new_ast_str("all"); }
   | BOOL_ { $$ = new_ast_str("bool"); }
   | INT_ { $$ = new_ast_str("int"); }
   | LONG_ { $$ = new_ast_str("long"); }
   | REAL { $$ = new_ast_str("real"); }
   | BLOB { $$ = new_ast_str("blob"); }
   | OBJECT { $$ = new_ast_str("object"); }
+  | RIGHT { $$ = new_ast_str("right"); }
+  | LEFT { $$ = new_ast_str("left"); }
   ;
 
 loose_name_or_type[r]:
   loose_name[l] { $$ = $l; }
+  | ALL { $$ = new_ast_str("all"); }
   | loose_name[l1] '<' loose_name[l2] '>' {
      EXTRACT_STRING(n1, $l1);
      EXTRACT_STRING(n2, $l2);
@@ -1274,7 +1276,7 @@ opt_distinct: /*empty*/ { $opt_distinct = NULL; }
   ;
 
 simple_call:
-  name '(' opt_distinct arg_list ')' opt_filter_clause  {
+  loose_name[name] '(' opt_distinct arg_list ')' opt_filter_clause  {
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       struct ast_node *call_filter_clause = new_ast_call_filter_clause($opt_distinct, $opt_filter_clause);
       struct ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, $arg_list);
@@ -1294,7 +1296,7 @@ simple_call:
 call:
   simple_call { $call = $simple_call; }
   | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
-  | basic_expr ':' name { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
+  | basic_expr ':' loose_name[name] { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
   | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   ;
 

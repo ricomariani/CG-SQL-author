@@ -43,9 +43,9 @@ declare function str_left(self text!, `len` int!) create text;
 @op text: call starts_with as starts_with_text;
 @op text: call index_of as index_of_text;
 @op text: call contains_at as contains_at_text;
-@op text: call str_mid as str_mid;
-@op text: call str_right as str_right;
-@op text: call str_leftg as str_left;
+@op text: call mid as str_mid;
+@op text: call right as str_right;
+@op text: call left as str_left;
 
 var sql_name text;
 var result_name text;
@@ -328,19 +328,19 @@ begin
 
   attempts += 1;
 
-  let pat := ifnull_throw(pattern);
+  let pat := pattern:ifnull_throw;
 
   let test_output_line := find_test_output_line(expectation_line);
 
   if expected == -1 then
-    found := find_next(pat, test_output_line);
+    found := pat:find_next(test_output_line);
     if found == 1 return;
   else if expected == -2 then
-    found := find_same(pat);
+    found := pat:find_same;
     if found == 1 return;
   else
     -- search among all the matching lines
-    found := find_count(pat, test_output_line);
+    found := pat:find_count(test_output_line);
     if expected == found return;
   end if;
 
@@ -358,7 +358,7 @@ end;
 proc do_match(buffer text!, expectation_line int!)
 begin
   try
-     match_actual(buffer, expectation_line);
+     buffer:match_actual(expectation_line);
   catch
     printf("unexpected sqlite error\n");
     throw;
@@ -394,9 +394,7 @@ begin
   end if;
 
   let line := 0;
-
   let key_string := "The statement ending at line ";
-
   let len := key_string:len();
 
   while true
@@ -463,8 +461,8 @@ begin
   end if;
 
   -- store the test and output file names
-  set sql_name := ifnull_throw(args[1]);
-  set result_name := ifnull_throw(args[2]);
+  set sql_name := args[1]:ifnull_throw;
+  set result_name := args[2]:ifnull_throw;
 end;
 
 -- main entry point

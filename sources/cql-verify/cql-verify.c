@@ -42,11 +42,21 @@ extern cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable x);
 extern cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box);
 extern cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable x);
 extern cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box);
+extern cql_int32 cql_box_get_type(cql_object_ref _Nonnull box);
 extern cql_object_ref _Nonnull cql_string_list_create(void);
 extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_string_ref _Nonnull value_);
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull C);
+extern cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_int32 cql_cursor_get_int(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_int64 cql_cursor_get_long(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_nullable_double cql_cursor_get_real(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_string_ref _Nullable cql_cursor_get_text(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
+extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
 extern cql_object_ref _Nullable cql_fopen(cql_string_ref _Nonnull name, cql_string_ref _Nonnull mode);
@@ -1113,7 +1123,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:419
+// Generated from cql-verify.sql:417
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1207,7 +1217,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:444
+// Generated from cql-verify.sql:442
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1287,7 +1297,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:451
+// Generated from cql-verify.sql:449
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1315,7 +1325,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:468
+// Generated from cql-verify.sql:466
 
 /*
 @ATTRIBUTE(cql:private)
@@ -1371,7 +1381,7 @@ cql_cleanup:
 }
 #undef _PROC_
 
-// Generated from cql-verify.sql:480
+// Generated from cql-verify.sql:478
 
 /*
 PROC dbhelp_main (args OBJECT<cql_string_list>!)

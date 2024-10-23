@@ -71,17 +71,17 @@ extern CQL_WARN_UNUSED cql_code match_actual(sqlite3 *_Nonnull _db_, cql_string_
 // Generated from cql-verify.sql:381
 // static CQL_WARN_UNUSED cql_code process(sqlite3 *_Nonnull _db_);
 
-// Generated from cql-verify.sql:419
+// Generated from cql-verify.sql:417
 // static CQL_WARN_UNUSED cql_code read_test_results(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull result_name);
 
-// Generated from cql-verify.sql:444
+// Generated from cql-verify.sql:442
 // static CQL_WARN_UNUSED cql_code read_test_file(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull sql_name);
 
-// Generated from cql-verify.sql:451
+// Generated from cql-verify.sql:449
 // static CQL_WARN_UNUSED cql_code load_data(sqlite3 *_Nonnull _db_, cql_string_ref _Nonnull sql_name, cql_string_ref _Nonnull result_name);
 
-// Generated from cql-verify.sql:468
+// Generated from cql-verify.sql:466
 // static CQL_WARN_UNUSED cql_code parse_args(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args);
 
-// Generated from cql-verify.sql:480
+// Generated from cql-verify.sql:478
 extern CQL_WARN_UNUSED cql_code dbhelp_main(sqlite3 *_Nonnull _db_, cql_object_ref _Nonnull args);

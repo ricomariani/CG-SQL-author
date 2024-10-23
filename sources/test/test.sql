@@ -1853,3 +1853,5 @@ x:y;
 
 x:glob('x');
 x:like('x', 'y');
+x:right('x', 'y');
+x:left('x', 'y');

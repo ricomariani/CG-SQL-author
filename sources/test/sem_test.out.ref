@@ -95535,3 +95535,94 @@ SET unhex_blob := ifnull_throw(( SELECT unhex(nullable("1234")) IF NOTHING THEN 
               | {select_limit}
                 | {select_offset}
 
+The statement ending at line XXXX
+
+LET quote_str := ( SELECT quote("123") IF NOTHING THEN THROW );
+
+  {let_stmt}: quote_str: text notnull variable was_set
+  | {name quote_str}: quote_str: text notnull variable was_set
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name quote}: text notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '123'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET quote_str := ( SELECT quote() IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'quote'
+
+  {assign}: err
+  | {name quote_str}: quote_str: text notnull variable was_set
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name quote}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET quote_str := ifnull_throw(( SELECT quote(nullable("123")) IF NOTHING THEN THROW ));
+
+  {assign}: quote_str: text notnull variable was_set
+  | {name quote_str}: quote_str: text notnull variable was_set
+  | {call}: _anon: text notnull
+    | {name ifnull_throw}: _anon: text notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {select_if_nothing_throw_expr}: _anon: text
+          | {select_stmt}: _anon: text
+            | {select_core_list}: select: { _anon: text }
+            | | {select_core}: select: { _anon: text }
+            |   | {select_expr_list_con}: select: { _anon: text }
+            |     | {select_expr_list}: select: { _anon: text }
+            |     | | {select_expr}: text
+            |     |   | {call}: text
+            |     |     | {name quote}: text
+            |     |     | {call_arg_list}
+            |     |       | {call_filter_clause}
+            |     |       | {arg_list}: ok
+            |     |         | {call}: text
+            |     |           | {name nullable}: text
+            |     |           | {call_arg_list}
+            |     |             | {call_filter_clause}
+            |     |             | {arg_list}: ok
+            |     |               | {strlit '123'}: text notnull
+            |     | {select_from_etc}: ok
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+

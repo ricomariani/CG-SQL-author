@@ -25356,3 +25356,21 @@ set unhex_blob := unhex(1);
 -- + {select_if_nothing_throw_expr}: _anon: blob
 -- - error:
 set unhex_blob := unhex(nullable("1234")):ifnull_throw;
+
+-- TEST: normal call to quote
+-- + LET quote_str := ( SELECT quote("123") IF NOTHING THEN THROW );
+-- + {let_stmt}: quote_str: text notnull variable was_set
+-- - error:
+let quote_str := quote("123");
+
+-- TEST: quote call with bad arg
+-- * error: % too few arguments in function 'quote'
+-- +1 error:
+set quote_str := quote();
+
+-- TEST: quote call with nullable arg
+-- this forces use to validate the nullable transitions
+-- + SET quote_str := ifnull_throw(( SELECT quote(nullable("123")) IF NOTHING THEN THROW ));
+-- + {select_if_nothing_throw_expr}: _anon: text
+-- - error:
+set quote_str := quote(nullable("123")):ifnull_throw;

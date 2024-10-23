@@ -1789,4 +1789,5 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in functi
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sqlite_source_id'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'hex'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'unhex'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'quote'
 semantic errors present; no code gen.

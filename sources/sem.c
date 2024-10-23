@@ -309,6 +309,11 @@ static void copy_nullability(ast_node *ast, sem_t nullable) {
   ast->sem->sem_type |= (nullable & SEM_TYPE_NOTNULL);
 }
 
+static void copy_sensitivity(ast_node *ast, sem_t sensitive) {
+  ast->sem->sem_type &= sem_not(SEM_TYPE_SENSITIVE);
+  ast->sem->sem_type |= (sensitive & SEM_TYPE_SENSITIVE);
+}
+
 #define SEM_REVERSE_APPLY_ANALYZE_CALL 1
 #define SEM_REVERSE_APPLY_REWRITE_ONLY 0
 static bool_t sem_reverse_apply_if_needed(ast_node *ast, bool_t analyze);
@@ -8615,10 +8620,8 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  sem_t sem_type_result = SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL;
-
-  // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
+  // kind is not preserved, there is normally more than one
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
 }
 
 // helper for json_extract() jsonb_extract() as well as json_remove() and jsonb_remove()
@@ -8636,15 +8639,10 @@ static void sem_func_json_extract_helper(ast_node *ast, uint32_t arg_count, sem_
     return;
   }
 
-  for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = node->left->sem->sem_type;
-
-    // add sensitivity if any is sensitive
-    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-  }
-
-  // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
+  // kind is not preserved
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
+  // nullable result
+  copy_nullability(ast, 0);
 }
 
 static void sem_func_json_extract(ast_node *ast, uint32_t arg_count) {
@@ -8790,9 +8788,9 @@ static void sem_func_json_object_helper(ast_node *ast, uint32_t arg_count, sem_t
     }
 
     if (msg) {
-        report_error(ast, msg, name);
-        record_error(ast);
-        return;
+      report_error(ast, msg, name);
+      record_error(ast);
+      return;
     }
 
     // keep not null only if everything is not null
@@ -8832,20 +8830,8 @@ static void sem_func_json_patch_helper(ast_node *ast, uint32_t arg_count, sem_t 
     return;
   }
 
-  sem_t nullable = SEM_TYPE_NOTNULL;
-
-  for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = node->left->sem->sem_type;
-
-    // keep not null only if everything is not null
-    nullable &= sem_type;
-
-    // add sensitivity if any is sensitive
-    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-  }
-
   // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(sem_type_result | nullable);
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
 }
 
 static void sem_func_json_patch(ast_node *ast, uint32_t arg_count) {
@@ -8871,17 +8857,9 @@ static void sem_func_json_valid(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  ast_node *arg1 = first_arg(arg_list);
-
-  sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
-
-  if (arg_count == 2) {
-    ast_node *arg2 = second_arg(arg_list);
-    notnull &= arg2->sem->sem_type & SEM_TYPE_NOTNULL;
-  }
-
-  // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(SEM_TYPE_BOOL | notnull);
+  // kind and sensitivity is not preserved
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_BOOL, arg_list);
+  copy_sensitivity(ast, 0);
 }
 
 static void sem_func_json_quote(ast_node *ast, uint32_t arg_count) {
@@ -8899,16 +8877,8 @@ static void sem_func_json_quote(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  ast_node *arg1 = first_arg(arg_list);
-
-  // type text, not null if arg1 is not null
-  sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
-
-  // add sensitivity if either is sensitive
-  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
-
   // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type);
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
 }
 
 static void sem_aggr_func_json_group_array_helper(ast_node *ast, uint32_t arg_count, sem_t sem_type_result) {
@@ -8926,13 +8896,8 @@ static void sem_aggr_func_json_group_array_helper(ast_node *ast, uint32_t arg_co
     return;
   }
 
-  ast_node *arg1 = first_arg(arg_list);
-
-  sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
-  sem_t sensitive = arg1->sem->sem_type & SEM_TYPE_SENSITIVE;
-
   // kind is not preserved
-  name_ast->sem = ast->sem = new_sem(sem_type_result | notnull | sensitive);
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
 }
 
 static void sem_aggr_func_json_group_array(ast_node *ast, uint32_t arg_count) {

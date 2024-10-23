@@ -8416,6 +8416,7 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
+  // long integer result, always not null
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_LONG_INTEGER, arg_list);
   copy_nullability(ast, SEM_TYPE_NOTNULL);
 }
@@ -8436,16 +8437,8 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  ast_node *arg = first_arg(arg_list);
-
-  // integer type
-  sem_t sem_type = SEM_TYPE_INTEGER;
-  // add sensitivity if argument is sensitive
-  sem_type |= sensitive_flag(arg->sem->sem_type);
-  // add nullability if argument is nullable
-  sem_type |= not_nullable_flag(arg->sem->sem_type);
-
-  name_ast->sem = ast->sem = new_sem(sem_type);
+  // integer result
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
 static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
@@ -8465,16 +8458,12 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   }
 
   ast_node *arg1 = first_arg(arg_list);
-  ast_node *arg2 = arg_count == 1 ? NULL : second_arg(arg_list);
+
+  // integer result
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
 
   // type text, not null if arg1 is not null
-  sem_t sem_type = SEM_TYPE_TEXT | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
-
-  // add sensitivity if either is sensitive
-  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
-  sem_type |= arg2 ? (arg2->sem->sem_type & SEM_TYPE_SENSITIVE) : 0;
-
-  name_ast->sem = ast->sem = new_sem(sem_type);
+  copy_nullability(ast, arg1->sem->sem_type);
 
   // preserve the string kind of the main arg, otherwise no kind checks needed for trim
   ast->sem->kind = arg1->sem->kind;
@@ -8490,30 +8479,9 @@ static void sem_func_matcher(ast_node *ast, uint32_t arg_count) {
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   ast_node *arg1 = first_arg(arg_list);
-  ast_node *arg2 = second_arg(arg_list);
-  ast_node *arg3 = arg_count == 3 ? third_arg(arg_list) : NULL;
-
-  sem_t notnull = SEM_TYPE_NOTNULL;
-
-  // type text, not null
-  sem_t sem_type = (SEM_TYPE_BOOL | SEM_TYPE_NOTNULL);
-
-  // stay not null if both are not null
-  notnull &= (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
-  notnull &= (arg2->sem->sem_type & SEM_TYPE_NOTNULL);
-
-  // add sensitivity if either is sensitive
-  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
-  sem_type |= (arg2->sem->sem_type & SEM_TYPE_SENSITIVE);
-
-  if (arg3) {
-    // same treatment for arg3 if it is present
-    notnull &= (arg3->sem->sem_type & SEM_TYPE_NOTNULL);
-    sem_type |= (arg3->sem->sem_type & SEM_TYPE_SENSITIVE);
-  }
 
   // sensitive if any are sensitive and not null if all are not null
-  name_ast->sem = ast->sem = new_sem(sem_type | notnull);
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_BOOL, arg_list);
 
   // preserve the string kind of the main arg, otherwise no kind checks needed for trim
   ast->sem->kind = arg1->sem->kind;
@@ -8557,13 +8525,8 @@ static void sem_func_json_helper(ast_node *ast, uint32_t arg_count, sem_t result
 
   ast_node *arg1 = first_arg(arg_list);
 
-  // type text, not null if arg1 is not null
-  sem_t sem_type = result_type | (arg1->sem->sem_type & SEM_TYPE_NOTNULL);
-
-  // add sensitivity if either is sensitive
-  sem_type |= (arg1->sem->sem_type & SEM_TYPE_SENSITIVE);
-
-  name_ast->sem = ast->sem = new_sem(sem_type);
+  // sensitivity and nullability come from the one argument
+  name_ast->sem = ast->sem = new_sem_std(result_type, arg_list);
 
   // preserve the string kind of the main arg, otherwise no kind checks needed for json
   ast->sem->kind = arg1->sem->kind;
@@ -8596,16 +8559,11 @@ static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t 
     return;
   }
 
-  // No argument can be a blob
-  for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = first_arg(node)->sem->sem_type;
-
-    // add sensitivity if any is sensitive
-    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-  }
-
   // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
+
+  // result is nullable, arguments might be badly formed
+  copy_nullability(ast, 0);
 }
 
 static void sem_func_json_array(ast_node *ast, uint32_t arg_count) {

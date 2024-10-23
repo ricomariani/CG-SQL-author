@@ -6266,7 +6266,7 @@ set not_null_object := ifnull_crash(not_null_object);
 
 -- TEST: convert to not null -- fails can't do this to 'null'
 -- + {call}: err
--- * error: % NULL literal is useless in function 'ifnull_crash'
+-- * error: % argument 1 is a NULL literal; useless in 'ifnull_crash'
 -- +1 error:
 set not_null_object := ifnull_crash(null);
 
@@ -12827,7 +12827,6 @@ select char(id, info) as c from with_sensitive;
 -- TEST: test char with incompatible param type
 -- + {select_stmt}: err
 -- + {call}: err
--- + {name name}: name: text
 -- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 -- +1 error:
 select char(name) from bar;
@@ -12876,7 +12875,7 @@ select abs('Horty');
 
 -- TEST: test abs with null param
 -- + {call}: err
--- * error: % NULL literal is useless in function 'abs'
+-- * error: % argument 1 is a NULL literal; useless in 'abs'
 -- +1 error:
 select abs(null);
 
@@ -25219,13 +25218,13 @@ set concat_func_result2 := concat_ws(7, 'x');
 
 -- TEST: concat with NULL arg
 -- + {assign}: err
--- * error: % NULL literal is useless in function 'concat_ws'
+-- * error: % argument 3 is a NULL literal; useless in 'concat_ws'
 -- +1 error:
 set concat_func_result2 := concat_ws(' ', 2, NULL, 4);
 
 -- TEST: concat with NULL arg
 -- + {assign}: err
--- * error: % NULL literal is useless in function 'concat'
+-- * error: % argument 3 is a NULL literal; useless in 'concat'
 -- +1 error:
 set concat_func_result2 := concat(' ', 2, NULL, 4);
 

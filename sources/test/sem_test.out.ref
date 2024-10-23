@@ -10328,7 +10328,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid typ
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {strlit 'x'}: text notnull
+    |     |         | {strlit 'x'}: err
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -10523,7 +10523,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 has an invalid typ
     |     |       | {arg_list}: ok
     |     |         | {dbl 1.5}: real notnull
     |     |         | {arg_list}
-    |     |           | {strlit 'x'}: text notnull
+    |     |           | {strlit 'x'}: err
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -10551,7 +10551,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
+    |     |         | {int 1}: err
     |     |         | {arg_list}
     |     |           | {int 2}: integer notnull
     |     | {select_from_etc}: ok
@@ -10775,7 +10775,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
     |     |       | {arg_list}: ok
     |     |         | {dbl 1.0}: real notnull
     |     |         | {arg_list}
-    |     |           | {dbl 2.0}: real notnull
+    |     |           | {dbl 2.0}: err
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -24026,7 +24026,7 @@ The statement ending at line XXXX
 
 SET not_null_object := ifnull_crash(NULL);
 
-test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'ifnull_crash'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal; useless in 'ifnull_crash'
 
   {assign}: err
   | {name not_null_object}: not_null_object: object notnull variable init_required was_set
@@ -24035,7 +24035,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
-        | {null}: null
+        | {null}: err
 
 The statement ending at line XXXX
 
@@ -47991,7 +47991,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {name name}: name: text
+  |     |         | {name name}: err
   |     | {select_from_etc}: TABLE { bar: bar }
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -48145,7 +48145,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {strlit 'Horty'}: text notnull
+  |     |         | {strlit 'Horty'}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -48158,7 +48158,7 @@ The statement ending at line XXXX
 
 SELECT abs(NULL);
 
-test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'abs'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal; useless in 'abs'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48171,7 +48171,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {null}: null
+  |     |         | {null}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -48294,7 +48294,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     |         | {arg_list}
   |     |           | {strlit 'a'}: text notnull
   |     | {select_from_etc}: ok
@@ -52408,7 +52408,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
+    |     |         | {int 1}: err
     |     |         | {arg_list}
     |     |           | {strlit 'x'}: text notnull
     |     | {select_from_etc}: ok
@@ -52440,7 +52440,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
     |     |       | {arg_list}: ok
     |     |         | {strlit 'x'}: text notnull
     |     |         | {arg_list}
-    |     |           | {int 1}: integer notnull
+    |     |           | {int 1}: err
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -52795,7 +52795,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {int 1}: integer notnull
+    |     |         | {int 1}: err
     |     | {select_from_etc}: ok
     |       | {select_where}
     |         | {select_groupby}
@@ -53286,7 +53286,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 1 has an invalid ty
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
-        | {call}: an_int: integer notnull variable was_set
+        | {call}: err
           | {name cql_inferred_notnull}: an_int: integer notnull variable was_set
           | {call_arg_list}
             | {call_filter_clause}
@@ -91792,7 +91792,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -91893,7 +91893,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -91994,7 +91994,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 2 has an invalid ty
   |     |       | {arg_list}: ok
   |     |         | {int 1}: integer notnull
   |     |         | {arg_list}
-  |     |           | {call}: blob_var: blob notnull variable was_set
+  |     |           | {call}: err
   |     |           | | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
   |     |           | | {call_arg_list}
   |     |           |   | {call_filter_clause}
@@ -92160,7 +92160,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -92188,7 +92188,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
   |     |       | {arg_list}: ok
   |     |         | {strlit 'x'}: text notnull
   |     |         | {arg_list}
-  |     |           | {int 1}: integer notnull
+  |     |           | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -92266,7 +92266,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -92374,7 +92374,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     |         | {arg_list}
   |     |           | {strlit '1'}: text notnull
   |     | {select_from_etc}: ok
@@ -92404,7 +92404,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
   |     |       | {arg_list}: ok
   |     |         | {strlit '[]'}: text notnull
   |     |         | {arg_list}
-  |     |           | {int 1}: integer notnull
+  |     |           | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -93162,7 +93162,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     |         | {arg_list}
   |     |           | {call}: blob_var: blob notnull variable was_set
   |     |             | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
@@ -93195,7 +93195,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -93221,7 +93221,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -93402,7 +93402,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {int 1}: err
   |     |         | {arg_list}
   |     |           | {int 1}: integer notnull
   |     | {select_from_etc}: ok
@@ -93432,7 +93432,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 has an invalid typ
   |     |       | {arg_list}: ok
   |     |         | {strlit '[]'}: text notnull
   |     |         | {arg_list}
-  |     |           | {strlit '2'}: text notnull
+  |     |           | {strlit '2'}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -94808,7 +94808,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     |       | {arg_list}: ok
-      |     |         | {int 7}: integer notnull
+      |     |         | {int 7}: err
       |     |         | {arg_list}
       |     |           | {strlit 'x'}: text notnull
       |     | {select_from_etc}: ok
@@ -94823,7 +94823,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat_ws(' ', 2, NULL, 4) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'concat_ws'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 3 is a NULL literal; useless in 'concat_ws'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94843,7 +94843,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
       |     |         | {arg_list}
       |     |           | {int 2}: integer notnull
       |     |           | {arg_list}
-      |     |             | {null}: null
+      |     |             | {null}: err
       |     |             | {arg_list}
       |     |               | {int 4}: integer notnull
       |     | {select_from_etc}: ok
@@ -94858,7 +94858,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat(' ', 2, NULL, 4) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'concat'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 3 is a NULL literal; useless in 'concat'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94878,7 +94878,7 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in f
       |     |         | {arg_list}
       |     |           | {int 2}: integer notnull
       |     |           | {arg_list}
-      |     |             | {null}: null
+      |     |             | {null}: err
       |     |             | {arg_list}
       |     |               | {int 4}: integer notnull
       |     | {select_from_etc}: ok
@@ -94969,7 +94969,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     |       | {arg_list}: ok
-      |     |         | {int 0}: integer notnull
+      |     |         | {int 0}: err
       |     |         | {arg_list}
       |     |           | {strlit 'b'}: text notnull
       |     |           | {arg_list}
@@ -95004,7 +95004,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
       |     |       | {arg_list}: ok
       |     |         | {strlit 'a'}: text notnull
       |     |         | {arg_list}
-      |     |           | {int 0}: integer notnull
+      |     |           | {int 0}: err
       |     |           | {arg_list}
       |     |             | {strlit 'c'}: text notnull
       |     | {select_from_etc}: ok
@@ -95039,7 +95039,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 3 has an invalid typ
       |     |         | {arg_list}
       |     |           | {strlit 'b'}: text notnull
       |     |           | {arg_list}
-      |     |             | {int 0}: integer notnull
+      |     |             | {int 0}: err
       |     | {select_from_etc}: ok
       |       | {select_where}
       |         | {select_groupby}
@@ -95068,7 +95068,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
       |     |     | {call_arg_list}
       |     |       | {call_filter_clause}
       |     |       | {arg_list}: ok
-      |     |         | {int 0}: integer notnull
+      |     |         | {int 0}: err
       |     |         | {arg_list}
       |     |           | {strlit 'b'}: text notnull
       |     | {select_from_etc}: ok
@@ -95101,7 +95101,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid typ
       |     |       | {arg_list}: ok
       |     |         | {strlit 'a'}: text notnull
       |     |         | {arg_list}
-      |     |           | {int 0}: integer notnull
+      |     |           | {int 0}: err
       |     | {select_from_etc}: ok
       |       | {select_where}
       |         | {select_groupby}

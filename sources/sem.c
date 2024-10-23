@@ -26333,12 +26333,14 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
     uint16_t reqd_mask = types[iarg];
     if (!(reqd_mask & arg_mask)) {
 
+      CHARBUF_OPEN(msg);
       if (arg_mask & SEM_TYPE_MASK_NULL) {
-        report_error(arg, "CQL0076: NULL literal is useless in function", name);
+        bprintf(&msg, "CQL0076: argument %d is a NULL literal; useless in", inum);
+        report_error(arg, Strdup(msg.ptr), name);
+        record_error(arg);
         record_error(ast_call);
       }
       else {
-        CHARBUF_OPEN(msg);
         bprintf(&msg, "CQL0084: argument %d has an invalid type; valid types are: ", inum);
         if (reqd_mask & SEM_TYPE_MASK_BOOL) bprintf(&msg, "'bool' ");
         if (reqd_mask & SEM_TYPE_MASK_INT)  bprintf(&msg, "'integer' ");
@@ -26350,9 +26352,10 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
         bprintf(&msg, "in");
 
         report_error(arg, Strdup(msg.ptr), name);
+        record_error(arg);
         record_error(ast_call);
-        CHARBUF_CLOSE(msg);
       }
+      CHARBUF_CLOSE(msg);
       return false;
     }
   }

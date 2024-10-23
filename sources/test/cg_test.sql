@@ -4480,12 +4480,6 @@ LET abs_val_long := abs(-2L);
 -- + abs_val_real = fabs(_tmp_double_2);
 LET abs_val_real := abs(-2.0);
 
--- TEST: codegen for absolute value bool
--- + _tmp_bool_% = 1;
--- + abs_val_bool = !!_tmp_bool_%;
-LET abs_val_bool := abs(true);
-
-
 -- Used in the following test.
 proc ltor_proc_int_not_null(a int!, b int!, out c int!) begin end;
 proc ltor_proc_int(a int, b int, out c int) begin end;

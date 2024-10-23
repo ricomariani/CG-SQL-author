@@ -7278,7 +7278,6 @@ local abs_val_int = 0
 local abs_val_nullable
 local abs_val_long = 0
 local abs_val_real = 0.0
-local abs_val_bool = false
 
 -- The statement ending at line XXXX
 
@@ -11002,13 +11001,6 @@ function cql_startup(_db_)
   LET abs_val_real := abs(-2.0);
   --]]
   abs_val_real = cql_unary_abs(- 2.0)
-
-  -- The statement ending at line XXXX
-
-  --[[
-  LET abs_val_bool := abs(TRUE);
-  --]]
-  abs_val_bool = cql_unary_abs(true)
 
   -- The statement ending at line XXXX
 

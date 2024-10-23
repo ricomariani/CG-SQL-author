@@ -1817,6 +1817,9 @@ static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   // Copy the expression, we can't evaluate it more than once, so stow it.
   cg_store_same_type(cg_main_output, temp.ptr, sem_type_result, expr_is_null.ptr, expr_value.ptr);
 
+  // this is ruled out by semanttic analysis
+  Invariant(core_type_result != SEM_TYPE_BOOL);
+
   switch (core_type_result) {
     case SEM_TYPE_INTEGER:
       bprintf(&abs_value, "abs(%s)", temp_value.ptr);
@@ -1828,10 +1831,6 @@ static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
 
     case SEM_TYPE_REAL:
       bprintf(&abs_value, "fabs(%s)", temp_value.ptr);
-      break;
-
-    case SEM_TYPE_BOOL:
-      bprintf(&abs_value, "!!%s", temp_value.ptr);
       break;
   }
 

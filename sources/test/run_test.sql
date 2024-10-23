@@ -475,20 +475,16 @@ BEGIN
   t := -4;
   EXPECT_SQL_TOO!(abs(t) = -t);
   EXPECT_SQL_TOO!(abs(-t) = -t);
-  EXPECT_SQL_TOO!(abs(TRUE) = TRUE);
-  EXPECT_SQL_TOO!(abs(FALSE) = FALSE);
 
   EXPECT!(sign(5) = 1);
   EXPECT!(sign(0.1) = 1);
   EXPECT!(sign(7L) = 1);
-  EXPECT!(sign(TRUE) = 1);
   EXPECT!(sign(-5) = -1);
   EXPECT!(sign(-0.1) = -1);
   EXPECT!(sign(-7L) = -1);
   EXPECT!(sign(0) = 0);
   EXPECT!(sign(0.0) = 0);
   EXPECT!(sign(0L) = 0);
-  EXPECT!(sign(FALSE) = 0);
 END);
 
 -- verify that out parameter is set in proc call

@@ -9150,7 +9150,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   // one numeric arg
-  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("ilr", ast, arg_count)) {
     return;
   }
 
@@ -9182,7 +9182,7 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("ilr", ast, arg_count)) {
     return;
   }
 
@@ -26341,7 +26341,10 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
         record_error(ast_call);
       }
       else {
-        bprintf(&msg, "CQL0084: argument %d has an invalid type; valid types are: ", inum);
+        bprintf(&msg, "CQL0084: argument %d '", inum);
+        get_sem_core(arg->sem->sem_type, &msg);
+        bprintf(&msg, "' is an invalid type; valid types are: ");
+
         if (reqd_mask & SEM_TYPE_MASK_BOOL) bprintf(&msg, "'bool' ");
         if (reqd_mask & SEM_TYPE_MASK_INT)  bprintf(&msg, "'integer' ");
         if (reqd_mask & SEM_TYPE_MASK_LONG) bprintf(&msg, "'long' ");

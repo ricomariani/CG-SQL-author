@@ -4381,10 +4381,6 @@ LET abs_val_long := abs(-2L);
 -- + abs_val_real = cql_unary_abs(- 2.0)
 LET abs_val_real := abs(-2.0);
 
--- TEST: codegen for absolute value bool
--- + abs_val_bool = cql_unary_abs(true)
-LET abs_val_bool := abs(true);
-
 -- Used in the following test.
 proc ltor_proc_int_not_null(a int not null, b int not null, out c int not null) begin end;
 proc ltor_proc_int(a int, b int, out c int) begin end;

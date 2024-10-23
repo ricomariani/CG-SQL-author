@@ -3154,7 +3154,7 @@ set X := (select sign(1,2));
 -- TEST: argument in sign is not numeric
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'sign'
+-- * error: % argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'sign'
 -- +1 error:
 set X := (select sign('x'));
 
@@ -3197,14 +3197,14 @@ set X := (select round(1.0,2,3));
 -- TEST: round second arg not numeric
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
+-- * error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- +1 error:
 set X := (select round(1.5, 'x'));
 
 -- TEST: round must get a real arg in position 1
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'real' in 'round'
+-- * error: % CQL0084: argument 1 'integer' is an invalid type; valid types are: 'real' in 'round'
 -- +1 error:
 set X := (select round(1,2));
 
@@ -3240,7 +3240,7 @@ let SNR := (select round(nullable(1.0), sensitive(1)));
 
 -- TEST: The precision must be a numeric type but not real
 -- + {assign}: err
--- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
+-- * error: % argument 2 'real' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 -- +1 error:
 set ll := (select round(1.0, 2.0));
 
@@ -12827,7 +12827,7 @@ select char(id, info) as c from with_sensitive;
 -- TEST: test char with incompatible param type
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
+-- * error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 -- +1 error:
 select char(name) from bar;
 
@@ -12869,7 +12869,7 @@ select abs() from bar;
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name abs}
--- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'abs'
+-- * error: % argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'abs'
 -- +1 error:
 select abs('Horty');
 
@@ -12910,7 +12910,7 @@ select instr('a', 'a');
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name instr}
--- * error: % argument 1 has an invalid type; valid types are: 'text' in 'instr'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'instr'
 -- +1 error:
 select instr(1, 'a');
 
@@ -13943,13 +13943,13 @@ set a_string := (select trim('x','y','z'));
 
 -- TEST: trim failure: arg 1 is not a string
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' in 'trim'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'trim'
 -- +1 error:
 set a_string := (select trim(1,"x"));
 
 -- TEST: trim failure: arg 2 is not a string
 -- + {call}: err
--- * error: % argument 2 has an invalid type; valid types are: 'text' in 'trim'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'trim'
 -- +1 error:
 set a_string := (select trim("x", 1));
 
@@ -14046,7 +14046,7 @@ set an_int := (select length());
 
 -- TEST: length failure: arg is not a string
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'length'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'
 -- +1 error:
 set an_int := (select length(1));
 
@@ -14191,7 +14191,7 @@ set an_long := cql_get_blob_size(blob_var, 0);
 -- + {assign}: err
 -- + {call}: err
 -- + {name cql_get_blob_size}
--- * error: % argument 1 has an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
 -- +1 error:
 set an_long := cql_get_blob_size(an_int);
 
@@ -24560,7 +24560,7 @@ a_string := json('[1]');
 
 -- TEST json function in non SQL-context
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json'
 select json(1);
 
 -- TEST: jsonb normalization basic case
@@ -24582,7 +24582,7 @@ blob_var := jsonb('[1]');
 
 -- TEST json function in non SQL-context
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb'
 select jsonb(1);
 
 -- TEST json function for JSON array creation
@@ -24607,7 +24607,7 @@ a_string := json_array();
 
 -- TEST: no blobs allowed
 -- + {call}: err
--- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
+-- * error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
 select json_array(1, blob_var, 3);
 
 -- TEST json function for JSON array creation
@@ -24645,12 +24645,12 @@ an_int := json_array_length('x');
 
 -- TEST json function for JSON array_length with wrong arg type
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
 select json_array_length(1);
 
 -- TEST json function for JSON array_length with wrong arg type
 -- + {call}: err
--- * error: % argument 2 has an invalid type; valid types are: 'text' in 'json_array_length'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_array_length'
 select json_array_length('x', 1);
 
 -- TEST json function for JSON error_position with 1 args
@@ -24668,7 +24668,7 @@ select json_error_position('', '');
 
 -- TEST json function for JSON error_position with wrong arg type
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
 -- +1 error:
 select json_error_position(1);
 
@@ -24692,13 +24692,13 @@ a_string := json_extract('{"x":0}', '$.x');
 
 -- TEST: only json types allowed
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_extract'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_extract'
 -- +1 error:
 select json_extract(1, '1');
 
 -- TEST: only text paths allowed
 -- + {call}: err
--- * error: % argument 2 has an invalid type; valid types are: 'text' in 'json_extract'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_extract'
 -- +1 error:
 select json_extract('[]', 1);
 
@@ -24866,19 +24866,19 @@ a_string := json_patch('{ "name" : "John" }', '{ "age" : 22 }');
 
 -- TEST: no blob types allowed
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 -- +1 error:
 select json_patch(1, blob_var);
 
 -- TEST json function for JSON patch wrong arg count
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
+-- * error: % too few arguments in function 'json_patch'
 -- +1 error:
-select json_patch(1);
+select json_patch('x');
 
 -- TEST json function for JSON patch wrong arg count
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
 -- +1 error:
 select jsonb_patch(1);
 
@@ -24925,13 +24925,13 @@ select json_valid();
 
 -- TEST json_valid invalid arg 1
 -- + {call}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_valid'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_valid'
 -- +1 error:
 select json_valid(1, 1);
 
 -- TEST json_valid invalid arg 2
 -- + {call}: err
--- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
+-- * error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
 -- +1 error:
 select json_valid('[]', '2');
 
@@ -25212,7 +25212,7 @@ set concat_func_result2 := concat();
 
 -- TEST: concat with too few args
 -- + {assign}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' in 'concat_ws'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'concat_ws'
 -- +1 error:
 set concat_func_result2 := concat_ws(7, 'x');
 
@@ -25240,30 +25240,31 @@ let glob_func := glob('a', 'b');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' in 'like'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- +1 error:
 set like_func := like(0, 'b', 'c');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % argument 2 has an invalid type; valid types are: 'text' in 'like'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'like'
+-- +1 error:
 set like_func := like('a', 0, 'c');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % argument 3 has an invalid type; valid types are: 'text' in 'like'
+-- * error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'like'
 -- +1 error:
 set like_func := like('a', 'b', 0);
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % argument 1 has an invalid type; valid types are: 'text' in 'glob'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'glob'
 -- +1 error:
 set glob_func := glob(0, 'b');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
--- * error: % argument 2 has an invalid type; valid types are: 'text' in 'glob'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'glob'
 -- +1 error:
 set glob_func := glob('a', 0);
 

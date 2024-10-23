@@ -10313,7 +10313,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT sign('x') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'sign'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'sign'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10506,7 +10506,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT round(1.5, 'x') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10536,7 +10536,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT round(1, 2) );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'real' in 'round'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'real' in 'round'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10758,7 +10758,7 @@ The statement ending at line XXXX
 
 SET ll := ( SELECT round(1.0, 2.0) );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'real' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'round'
 
   {assign}: err
   | {name ll}: ll: longint notnull variable was_set
@@ -47978,7 +47978,7 @@ The statement ending at line XXXX
 SELECT char(name)
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48132,7 +48132,7 @@ The statement ending at line XXXX
 
 SELECT abs('Horty');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'abs'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'text' is an invalid type; valid types are: 'integer' 'long' 'real' in 'abs'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48281,7 +48281,7 @@ The statement ending at line XXXX
 
 SELECT instr(1, 'a');
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'instr'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'instr'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -52393,7 +52393,7 @@ The statement ending at line XXXX
 
 SET a_string := ( SELECT trim(1, "x") );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'trim'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'trim'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -52423,7 +52423,7 @@ The statement ending at line XXXX
 
 SET a_string := ( SELECT trim("x", 1) );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'trim'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'trim'
 
   {assign}: err
   | {name a_string}: a_string: text variable was_set
@@ -52780,7 +52780,7 @@ The statement ending at line XXXX
 
 SET an_int := ( SELECT length(1) );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'length'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'
 
   {assign}: err
   | {name an_int}: an_int: integer variable was_set
@@ -53277,7 +53277,7 @@ The statement ending at line XXXX
 
 SET an_long := cql_get_blob_size(an_int);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 1 has an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
+test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'blob' in 'cql_get_blob_size'
 
   {assign}: err
   | {name an_long}: an_long: longint variable was_set
@@ -91779,7 +91779,7 @@ The statement ending at line XXXX
 
 SELECT json(1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91880,7 +91880,7 @@ The statement ending at line XXXX
 
 SELECT jsonb(1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -91979,7 +91979,7 @@ The statement ending at line XXXX
 
 SELECT json_array(1, blob_var, 3);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
+test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_array'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92147,7 +92147,7 @@ The statement ending at line XXXX
 
 SELECT json_array_length(1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_array_length'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92173,7 +92173,7 @@ The statement ending at line XXXX
 
 SELECT json_array_length('x', 1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'json_array_length'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_array_length'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92253,7 +92253,7 @@ The statement ending at line XXXX
 
 SELECT json_error_position(1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92361,7 +92361,7 @@ The statement ending at line XXXX
 
 SELECT json_extract(1, '1');
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_extract'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_extract'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92389,7 +92389,7 @@ The statement ending at line XXXX
 
 SELECT json_extract('[]', 1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'json_extract'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_extract'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93149,7 +93149,7 @@ The statement ending at line XXXX
 
 SELECT json_patch(1, blob_var);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93180,9 +93180,9 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
 
 The statement ending at line XXXX
 
-SELECT json_patch(1);
+SELECT json_patch('x');
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_patch'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93195,7 +93195,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid typ
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: err
+  |     |         | {strlit 'x'}: text notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -93208,7 +93208,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_patch(1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93389,7 +93389,7 @@ The statement ending at line XXXX
 
 SELECT json_valid(1, 1);
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_valid'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_valid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93417,7 +93417,7 @@ The statement ending at line XXXX
 
 SELECT json_valid('[]', '2');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -94792,7 +94792,7 @@ The statement ending at line XXXX
 
 SET concat_func_result2 := ( SELECT concat_ws(7, 'x') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'concat_ws'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'concat_ws'
 
   {assign}: err
   | {name concat_func_result2}: concat_func_result2: text variable
@@ -94953,7 +94953,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like(0, 'b', 'c') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'like'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -94986,7 +94986,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like('a', 0, 'c') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'like'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -95019,7 +95019,7 @@ The statement ending at line XXXX
 
 SET like_func := ( SELECT like('a', 'b', 0) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 3 has an invalid type; valid types are: 'text' in 'like'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 3 'integer' is an invalid type; valid types are: 'text' in 'like'
 
   {assign}: err
   | {name like_func}: like_func: bool notnull variable
@@ -95052,7 +95052,7 @@ The statement ending at line XXXX
 
 SET glob_func := ( SELECT glob(0, 'b') IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'glob'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'glob'
 
   {assign}: err
   | {name glob_func}: glob_func: bool notnull variable
@@ -95083,7 +95083,7 @@ The statement ending at line XXXX
 
 SET glob_func := ( SELECT glob('a', 0) IF NOTHING THEN THROW );
 
-test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'glob'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'glob'
 
   {assign}: err
   | {name glob_func}: glob_func: bool notnull variable

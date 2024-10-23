@@ -10257,7 +10257,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT sign() );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'sign'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'sign'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10268,7 +10268,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name sign}: err
+    |     |     | {name sign}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     | {select_from_etc}: ok
@@ -10283,7 +10283,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT sign(1, 2) );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'sign'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sign'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10294,7 +10294,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name sign}: err
+    |     |     | {name sign}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -10313,7 +10313,7 @@ The statement ending at line XXXX
 
 SET X := ( SELECT sign('x') );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'sign'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'sign'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -16380,7 +16380,7 @@ The statement ending at line XXXX
 
 SELECT nullable(1, 2);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'nullable'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'nullable'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -16389,7 +16389,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name nullable}: err
+  |     |     | {name nullable}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -24026,7 +24026,7 @@ The statement ending at line XXXX
 
 SET not_null_object := ifnull_crash(NULL);
 
-test/sem_test.sql:XXXX:1: error: in null : CQL0344: argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'ifnull_crash'
 
   {assign}: err
   | {name not_null_object}: not_null_object: object notnull variable init_required was_set
@@ -24041,12 +24041,12 @@ The statement ending at line XXXX
 
 SET not_null_object := ifnull_crash(1, 7);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'ifnull_crash'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'ifnull_crash'
 
   {assign}: err
   | {name not_null_object}: not_null_object: object notnull variable init_required was_set
   | {call}: err
-    | {name ifnull_crash}: err
+    | {name ifnull_crash}
     | {call_arg_list}
       | {call_filter_clause}
       | {arg_list}: ok
@@ -47978,7 +47978,7 @@ The statement ending at line XXXX
 SELECT char(name)
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0317: char function arguments must be integer 'char'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48008,7 +48008,7 @@ The statement ending at line XXXX
 SELECT char()
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'char'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'char'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48017,7 +48017,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name char}: err
+  |     |     | {name char}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: TABLE { bar: bar }
@@ -48105,7 +48105,7 @@ The statement ending at line XXXX
 SELECT abs()
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'abs'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'abs'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48114,7 +48114,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name abs}: err
+  |     |     | {name abs}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: TABLE { bar: bar }
@@ -48132,7 +48132,7 @@ The statement ending at line XXXX
 
 SELECT abs('Horty');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'abs'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'abs'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48158,14 +48158,16 @@ The statement ending at line XXXX
 
 SELECT abs(NULL);
 
-  {select_stmt}: select: { _anon: null }
-  | {select_core_list}: select: { _anon: null }
-  | | {select_core}: select: { _anon: null }
-  |   | {select_expr_list_con}: select: { _anon: null }
-  |     | {select_expr_list}: select: { _anon: null }
-  |     | | {select_expr}: null
-  |     |   | {call}: null
-  |     |     | {name abs}: null
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: NULL literal is useless in function 'abs'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name abs}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -48197,7 +48199,7 @@ The statement ending at line XXXX
 
 SELECT instr();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'instr'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'instr'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -48206,7 +48208,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name instr}: err
+  |     |     | {name instr}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -48279,7 +48281,7 @@ The statement ending at line XXXX
 
 SELECT instr(1, 'a');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'instr'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' in 'instr'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92223,7 +92225,7 @@ The statement ending at line XXXX
 
 SELECT json_error_position('', '');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_error_position'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'json_error_position'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92232,7 +92234,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_error_position}: err
+  |     |     | {name json_error_position}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -92251,7 +92253,7 @@ The statement ending at line XXXX
 
 SELECT json_error_position(1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_error_position'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92359,7 +92361,7 @@ The statement ending at line XXXX
 
 SELECT json_extract(1, '1');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_extract'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_extract'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92387,7 +92389,7 @@ The statement ending at line XXXX
 
 SELECT json_extract('[]', 1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0504: argument 2 must be json text path 'json_extract'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 has an invalid type; valid types are: 'text' in 'json_extract'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92415,7 +92417,7 @@ The statement ending at line XXXX
 
 SELECT json_extract();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_extract'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_extract'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92424,7 +92426,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_extract}: err
+  |     |     | {name json_extract}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92439,7 +92441,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_extract();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_extract'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'jsonb_extract'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92448,7 +92450,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_extract}: err
+  |     |     | {name jsonb_extract}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92463,7 +92465,7 @@ The statement ending at line XXXX
 
 SELECT json_remove();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_remove'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_remove'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92472,7 +92474,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_remove}: err
+  |     |     | {name json_remove}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92487,7 +92489,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_remove();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_remove'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'jsonb_remove'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92496,7 +92498,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_remove}: err
+  |     |     | {name jsonb_remove}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -93147,7 +93149,7 @@ The statement ending at line XXXX
 
 SELECT json_patch(1, blob_var);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_patch'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93180,7 +93182,7 @@ The statement ending at line XXXX
 
 SELECT json_patch(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_patch'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93189,7 +93191,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_patch}: err
+  |     |     | {name json_patch}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -93206,7 +93208,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_patch(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_patch'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93215,7 +93217,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_patch}: err
+  |     |     | {name jsonb_patch}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -93363,7 +93365,7 @@ The statement ending at line XXXX
 
 SELECT json_valid();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_valid'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_valid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93372,7 +93374,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_valid}: err
+  |     |     | {name json_valid}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -93387,7 +93389,7 @@ The statement ending at line XXXX
 
 SELECT json_valid(1, 1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_valid'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_valid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93415,7 +93417,7 @@ The statement ending at line XXXX
 
 SELECT json_valid('[]', '2');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 2 must be numeric 'json_valid'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93525,7 +93527,7 @@ The statement ending at line XXXX
 
 SELECT json_quote();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_quote'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_quote'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93534,7 +93536,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_quote}: err
+  |     |     | {name json_quote}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -93607,7 +93609,7 @@ The statement ending at line XXXX
 SELECT json_group_array()
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_group_array'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_group_array'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93616,7 +93618,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_group_array}: err
+  |     |     | {name json_group_array}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: TABLE { foo: foo }
@@ -93717,7 +93719,7 @@ The statement ending at line XXXX
 SELECT json_group_object()
   FROM foo;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_group_object'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_group_object'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93726,7 +93728,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_group_object}: err
+  |     |     | {name json_group_object}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: TABLE { foo: foo }

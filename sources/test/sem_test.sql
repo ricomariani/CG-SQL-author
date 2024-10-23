@@ -65,6 +65,7 @@ create table foo(
 -- TEST: duplicate column names, creates error will be ignored
 -- * error: % duplicate column name 'id'
 -- + {create_table_stmt}: err
+-- +1 error:
 create table baz(
   id integer,
   id integer
@@ -110,14 +111,17 @@ select name from foo, bar;
 -- TEST: duplicate table alias in the join, error
 -- * error: % duplicate table name in join 'T1'
 -- + {select_stmt}: err
+-- +1 error:
 select name from foo T1, bar T1, bar T1;
 
 -- TEST: ambiguous id in foo and bar
 -- * error: % identifier is ambiguous 'id'
+-- +1 error:
 select id from foo, bar;
 
 -- TEST: column not present
 -- * error: % name not found 'not_found'
+-- +1 error:
 select not_found from foo, bar;
 
 -- TEST: simple string select, string literals
@@ -128,6 +132,7 @@ select 'foo';
 -- TEST: string add not valid, further adding 3 does not create new errors
 -- * error: % left operand cannot be a string in '+'
 -- + {select_stmt}: err
+-- +1 error:
 select 'foo' + 'bar' + 3;
 
 -- TEST: correct like expression
@@ -145,16 +150,19 @@ select 'foo' not like 'baz';
 -- TEST: 1 is not a string
 -- + {select_stmt}: err
 -- * error: % left operand must be a string in 'LIKE'
+-- +1 error:
 select 1 like 'baz';
 
 -- TEST: 1 is not a string in a "NOT LIKE" expr
 -- + {select_stmt}: err
 -- * error: % left operand must be a string in 'NOT LIKE'
+-- +1 error:
 select 1 not like 'baz';
 
 -- TEST: 2 is not a string
 -- + {select_stmt}: err
 -- * error: % right operand must be a string in 'LIKE'
+-- +1 error:
 select 'foo' like 2;
 
 -- TEST: correct concat strings
@@ -194,11 +202,13 @@ select 3 + 4;
 -- TEST: invalid addition of string to id
 -- + {select_stmt}: err
 -- * error: % right operand cannot be a string in '+'
+-- +1 error:
 select T1.id + 'foo' from foo T1;
 
 -- TEST: invalid addition of id to string
 -- {select_stmt}: err
 -- * error: % left operand cannot be a string in '+'
+-- +1 error:
 select 'foo' + T1.id from foo T1;
 
 -- TEST: boolean is flexible with numerics
@@ -231,6 +241,7 @@ select (1 == 2) + 1;
 -- TEST: can't do a logical AND with a string
 -- + {select_stmt}: err
 -- * error: % left operand cannot be a string in 'AND'
+-- +1 error:
 select 'foo' and 1;
 
 -- TEST: error prop handled correctly after invalid boolean
@@ -245,11 +256,13 @@ select 1 and 'foo' or 1;
 -- TEST: can't compare string and number
 -- + {lt}: err
 -- * error: % incompatible types in expression '<'
+-- +1 error:
 select 'foo' < 1;
 
 -- TEST: can't compare string and number
 -- + {gt}: err
 -- * error: % incompatible types in expression '>'
+-- +1 error:
 select 1 > 'foo';
 
 -- TEST: string comparison is ok
@@ -287,6 +300,7 @@ select - 'x';
 -- TEST: can't do NOT on strings
 -- + {not}: err
 -- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 select NOT 'x';
 
 -- TEST: real is ok as a boolean, it's truthy
@@ -374,6 +388,7 @@ SET real_result4 := 1:simple_func3():simple_func2(2,3);
 -- TEST: failure when the wrong number of arguments for a function are provided
 -- + {call}: err
 -- * error: in call : CQL0212: too few arguments provided to procedure 'simple_func2'
+-- +1 error:
 SET real_result4 := 1:simple_func2(2);
 
 -- TEST: unary is null or is not null does not double report errors
@@ -3125,21 +3140,21 @@ set X := (select max() from foo);
 -- TEST: bogus number of arguments in sign
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'sign'
+-- * error: % too few arguments in function 'sign'
 -- +1 error:
 set X := (select sign());
 
 -- TEST: bogus number of arguments in sign
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'sign'
+-- * error: % too many arguments in function 'sign'
 -- +1 error:
 set X := (select sign(1,2));
 
 -- TEST: argument in sign is not numeric
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 must be numeric 'sign'
+-- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'sign'
 -- +1 error:
 set X := (select sign('x'));
 
@@ -4565,7 +4580,7 @@ select nullable(price_e);
 set price_d := (select nullable(price_e));
 
 -- TEST: use nullable in a select with wrong args
--- * error: % function got incorrect number of arguments 'nullable'
+-- * error: % too many arguments in function 'nullable'
 -- +1 error:
 select nullable(1, 2);
 
@@ -6251,13 +6266,13 @@ set not_null_object := ifnull_crash(not_null_object);
 
 -- TEST: convert to not null -- fails can't do this to 'null'
 -- + {call}: err
--- * error: % argument must be a nullable type (but not constant NULL) in 'ifnull_crash'
+-- * error: % NULL literal is useless in function 'ifnull_crash'
 -- +1 error:
 set not_null_object := ifnull_crash(null);
 
 -- TEST: convert to not null -- fails wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'ifnull_crash'
+-- * error: % too many arguments in function 'ifnull_crash'
 -- +1 error:
 set not_null_object := ifnull_crash(1, 7);
 
@@ -12813,14 +12828,14 @@ select char(id, info) as c from with_sensitive;
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name name}: name: text
--- * error: % char function arguments must be integer 'char'
+-- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' in 'char'
 -- +1 error:
 select char(name) from bar;
 
 -- TEST: test char with incompatible param count
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'char'
+-- * error: % too few arguments in function 'char'
 -- +1 error:
 select char() from bar;
 
@@ -12847,7 +12862,7 @@ set price_d := (select abs(price_d));
 -- TEST: test abs with incompatible param count
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'abs'
+-- * error: % too few arguments in function 'abs'
 -- +1 error:
 select abs() from bar;
 
@@ -12855,15 +12870,14 @@ select abs() from bar;
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name abs}
--- * error: % argument 1 must be numeric 'abs'
+-- * error: % argument 1 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'abs'
 -- +1 error:
 select abs('Horty');
 
 -- TEST: test abs with null param
--- + {select_stmt}: select: { _anon: null }
--- + {call}: null
--- + {name abs}: null
--- - error:
+-- + {call}: err
+-- * error: % NULL literal is useless in function 'abs'
+-- +1 error:
 select abs(null);
 
 -- TEST: instr may not appear outside of a SQL statement
@@ -12875,7 +12889,7 @@ set an_int := instr(1);
 -- TEST: test instr with incompatible param count
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'instr'
+-- * error: % too few arguments in function 'instr'
 -- +1 error:
 select instr();
 
@@ -12897,7 +12911,7 @@ select instr('a', 'a');
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name instr}
--- * error: % all arguments must be strings 'instr'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' in 'instr'
 -- +1 error:
 select instr(1, 'a');
 
@@ -24649,12 +24663,14 @@ select json_error_position('');
 
 -- TEST json function for JSON error_position with too many args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_error_position'
+-- * error: % too many arguments in function 'json_error_position'
+-- +1 error:
 select json_error_position('', '');
 
 -- TEST json function for JSON error_position with wrong arg type
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json_error_position'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_error_position'
+-- +1 error:
 select json_error_position(1);
 
 -- TEST: json function outside of SQL
@@ -24677,32 +24693,38 @@ a_string := json_extract('{"x":0}', '$.x');
 
 -- TEST: only json types allowed
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json_extract'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_extract'
+-- +1 error:
 select json_extract(1, '1');
 
 -- TEST: only text paths allowed
 -- + {call}: err
--- * error: % argument 2 must be json text path 'json_extract'
+-- * error: % argument 2 has an invalid type; valid types are: 'text' in 'json_extract'
+-- +1 error:
 select json_extract('[]', 1);
 
 -- TEST json function for JSON extraction wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_extract'
+-- * error: % too few arguments in function 'json_extract'
+-- +1 error:
 select json_extract();
 
 -- TEST json function for JSON extraction wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_extract'
+-- * error: % too few arguments in function 'jsonb_extract'
+-- +1 error:
 select jsonb_extract();
 
 -- TEST json function for JSON extraction wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_remove'
+-- * error: % too few arguments in function 'json_remove'
+-- +1 error:
 select json_remove();
 
 -- TEST json function for JSON extraction wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_remove'
+-- * error: % too few arguments in function 'jsonb_remove'
+-- +1 error:
 select jsonb_remove();
 
 -- TEST json function for JSON insert
@@ -24728,46 +24750,55 @@ a_string := json_insert('{"x":0}', '$.x', 2);
 -- TEST: only json types allowed
 -- + {call}: err
 -- * error: % argument 1 must be json text or json blob 'json_insert'
+-- +1 error:
 select json_insert(1, '$.x', 2);
 
 -- TEST: no blob types allowed
 -- + {call}: err
 -- * error: % argument 3 must not be a blob or object 'json_insert'
+-- +1 error:
 select json_insert('{"x":0}', '$.x', blob_var);
 
 -- TEST: only text paths allowed
 -- + {call}: err
 -- * error: % argument 2 must be json text path 'json_insert'
+-- +1 error:
 select json_insert('[]', 1, 1);
 
 -- TEST json function for JSON insert wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'json_insert'
+-- +1 error:
 select json_insert();
 
 -- TEST json function for JSON insert wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'jsonb_insert'
+-- +1 error:
 select jsonb_insert();
 
 -- TEST json function for JSON replace wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'json_replace'
+-- +1 error:
 select json_replace();
 
 -- TEST json function for JSON insert wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'jsonb_replace'
+-- +1 error:
 select jsonb_replace();
 
 -- TEST json function for JSON set wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'json_set'
+-- +1 error:
 select json_set();
 
 -- TEST json function for JSON sst wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'jsonb_set'
+-- +1 error:
 select jsonb_set();
 
 -- TEST json function for JSON object
@@ -24793,21 +24824,25 @@ a_string := json_object('x', 1, 'y', 2);
 -- TEST: no blob types allowed
 -- + {call}: err
 -- * error: % argument 2 must not be a blob or object 'json_object'
+-- +1 error:
 select json_object('x', blob_var);
 
 -- TEST: only text paths allowed
 -- + {call}: err
 -- * error: % argument 1 must be json text identifier 'json_object'
+-- +1 error:
 select json_object(1, 1);
 
 -- TEST json function for JSON object wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'json_object'
+-- +1 error:
 select json_object(1);
 
 -- TEST json function for JSON object wrong arg count
 -- + {call}: err
 -- * error: % function got incorrect number of arguments 'jsonb_object'
+-- +1 error:
 select jsonb_object(1);
 
 -- TEST json function for JSON object
@@ -24832,17 +24867,20 @@ a_string := json_patch('{ "name" : "John" }', '{ "age" : 22 }');
 
 -- TEST: no blob types allowed
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json_patch'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
+-- +1 error:
 select json_patch(1, blob_var);
 
 -- TEST json function for JSON patch wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_patch'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_patch'
+-- +1 error:
 select json_patch(1);
 
 -- TEST json function for JSON patch wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_patch'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'jsonb_patch'
+-- +1 error:
 select jsonb_patch(1);
 
 -- TEST: json normalization basic case with pretty
@@ -24882,17 +24920,20 @@ select json_valid('{ "name" : "John" }', nullable(6));
 
 -- TEST json_valid wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_valid'
+-- * error: % too few arguments in function 'json_valid'
+-- +1 error:
 select json_valid();
 
 -- TEST json_valid invalid arg 1
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json_valid'
+-- * error: % argument 1 has an invalid type; valid types are: 'text' 'blob' in 'json_valid'
+-- +1 error:
 select json_valid(1, 1);
 
 -- TEST json_valid invalid arg 2
 -- + {call}: err
--- * error: % argument 2 must be numeric 'json_valid'
+-- * error: % argument 2 has an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'json_valid'
+-- +1 error:
 select json_valid('[]', '2');
 
 -- TEST: json function outside of SQL
@@ -24914,7 +24955,8 @@ select json_quote(nullable(1));
 
 -- TEST json_quote wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_quote'
+-- * error: % too few arguments in function 'json_quote'
+-- +1 error:
 select json_quote();
 
 -- TEST json_quote wrong arg count
@@ -24931,17 +24973,20 @@ select json_group_array(foo.id) from foo;
 
 -- TEST json_group_array with wrong args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_group_array'
+-- * error: % too few arguments in function 'json_group_array'
+-- +1 error:
 select json_group_array() from foo;
 
 -- TEST json_group_array in non aggregate context
 -- + {call}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'json_group_array'
+-- +1 error:
 select json_group_array();
 
 -- TEST jsonb_group_array in non aggregate context
 -- + {call}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_array'
+-- +1 error:
 select jsonb_group_array();
 
 -- TEST json_group_object
@@ -24952,17 +24997,20 @@ select json_group_object(foo.id, foo.id) from foo;
 
 -- TEST json_group_object with wrong args
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_group_object'
+-- * error: % too few arguments in function 'json_group_object'
+-- +1 error:
 select json_group_object() from foo;
 
 -- TEST json_group_object in non aggregate context
 -- + {call}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'json_group_object'
+-- +1 error:
 select json_group_object();
 
 -- TEST jsonb_group_object in non aggregate context
 -- + {call}: err
 -- * error: % aggregates only make sense if there is a FROM clause 'jsonb_group_object'
+-- +1 error:
 select jsonb_group_object();
 
 declare function new_builder() create object<list_builder>;
@@ -24987,12 +25035,14 @@ set list_result := wrong_object:(5);
 -- TEST: no kind specified in the left arg
 -- + reverse_apply_poly_args}: err
 -- * error: % left argument must have a type kind
+-- +1 error:
 let r := 1:();
 
 -- TEST: poly args with invalid arg list
 -- + reverse_apply_poly_args}: err
 -- + {arg_list}: err
 -- * error: % string operand not allowed in 'NOT'
+-- +1 error:
 let r := new_builder():(not 'x');
 
 -- TEST order of operations binary ~
@@ -25019,11 +25069,13 @@ select 'x' -> 'y' ~int~ as U;
 -- TEST: bogus type in op statement
 -- + {op_stmt}: err
 -- * error: % must be a cursor, proc, table, or view 'not_a_proc_at_all'
+-- +1 error:
 @op object<not_a_proc_at_all set> : call foo as foofoo;
 
 -- TEST use array access where none is defined
 -- + {call}: err
 -- * error: % function not builtin and not declared 'object<list>:array:get'
+-- +1 error:
 let uu  := list_result[5];
 
 declare function do_arrow(x integer, y integer) integer;
@@ -25150,26 +25202,31 @@ let concat_func_result2 := concat_ws(a_string, 1, 2, "x");
 -- TEST: concat_ws with too few args
 -- + {assign}: err
 -- * error: % too few arguments in function 'concat_ws'
+-- +1 error:
 set concat_func_result2 := concat_ws(a_string);
 
 -- TEST: concat_ws with too few args
 -- + {assign}: err
 -- * error: % too few arguments in function 'concat'
+-- +1 error:
 set concat_func_result2 := concat();
 
 -- TEST: concat with too few args
 -- + {assign}: err
 -- * error: % argument 1 has an invalid type; valid types are: 'text' in 'concat_ws'
+-- +1 error:
 set concat_func_result2 := concat_ws(7, 'x');
 
 -- TEST: concat with NULL arg
 -- + {assign}: err
 -- * error: % NULL literal is useless in function 'concat_ws'
+-- +1 error:
 set concat_func_result2 := concat_ws(' ', 2, NULL, 4);
 
 -- TEST: concat with NULL arg
 -- + {assign}: err
 -- * error: % NULL literal is useless in function 'concat'
+-- +1 error:
 set concat_func_result2 := concat(' ', 2, NULL, 4);
 
 -- TEST: like full form with escape string
@@ -25185,6 +25242,7 @@ let glob_func := glob('a', 'b');
 -- TEST bogus arg in matcher
 -- + {assign}: err
 -- * error: % argument 1 has an invalid type; valid types are: 'text' in 'like'
+-- +1 error:
 set like_func := like(0, 'b', 'c');
 
 -- TEST bogus arg in matcher
@@ -25195,24 +25253,29 @@ set like_func := like('a', 0, 'c');
 -- TEST bogus arg in matcher
 -- + {assign}: err
 -- * error: % argument 3 has an invalid type; valid types are: 'text' in 'like'
+-- +1 error:
 set like_func := like('a', 'b', 0);
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
 -- * error: % argument 1 has an invalid type; valid types are: 'text' in 'glob'
+-- +1 error:
 set glob_func := glob(0, 'b');
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
 -- * error: % argument 2 has an invalid type; valid types are: 'text' in 'glob'
+-- +1 error:
 set glob_func := glob('a', 0);
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
 -- * error: % too few arguments in function 'like'
+-- +1 error:
 set like_func := like();
 
 -- TEST bogus arg in matcher
 -- + {assign}: err
 -- * error: % too few arguments in function 'glob'
+-- +1 error:
 set glob_func := glob();

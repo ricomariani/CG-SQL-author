@@ -6739,8 +6739,6 @@ extern cql_double abs_val_real;
 extern cql_bool abs_val_bool;
 
 // The statement ending at line XXXX
-
-// The statement ending at line XXXX
 extern void ltor_proc_int_not_null(cql_int32 a, cql_int32 b, cql_int32 *_Nonnull c);
 
 // The statement ending at line XXXX

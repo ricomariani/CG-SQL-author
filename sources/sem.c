@@ -8701,19 +8701,11 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
     return;
   }
-
-  ast_node *arg1 = first_arg(arg_list);
 
   sem_t sem_type_result = SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL;
-
-  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
-    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
-    record_error(ast);
-    return;
-  }
 
   // kind is not preserved
   name_ast->sem = ast->sem = new_sem(sem_type_result);
@@ -8730,38 +8722,17 @@ static void sem_func_json_extract_helper(ast_node *ast, uint32_t arg_count, sem_
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (arg_count < 2) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+  if (!sem_validate_arg_pattern("tb,t,[t,*]", ast, arg_count)) {
     return;
   }
 
-  // No argument can be a blob
-  int arg_number = 1;
   for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = first_arg(node)->sem->sem_type;
+    sem_t sem_type = node->left->sem->sem_type;
 
     CSTR msg = NULL;
-    if (arg_number == 1) {
-      if (!is_blob(sem_type) && !is_text(sem_type)) {
-        msg = dup_printf("CQL0503: argument %d must be json text or json blob", arg_number);
-      }
-    }
-    else {
-      if (!is_text(sem_type)) {
-        msg = dup_printf("CQL0504: argument %d must be json text path", arg_number);
-      }
-    }
-
-    if (msg) {
-        report_error(ast, msg, name);
-        record_error(ast);
-        return;
-    }
 
     // add sensitivity if any is sensitive
     sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-
-    arg_number++;
   }
 
   // kind is not preserved, there is normally more than one
@@ -8949,35 +8920,20 @@ static void sem_func_json_patch_helper(ast_node *ast, uint32_t arg_count, sem_t 
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // exactly two arguments both json
-  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+  if (!sem_validate_arg_pattern("tb,tb", ast, arg_count)) {
     return;
   }
 
   sem_t nullable = SEM_TYPE_NOTNULL;
 
-  // No argument can be a blob
-  int arg_number = 1;
   for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = first_arg(node)->sem->sem_type;
-
-    CSTR msg = NULL;
-    if (!is_blob(sem_type) && !is_text(sem_type)) {
-      msg = dup_printf("CQL0503: argument %d must be json text or json blob", arg_number);
-    }
-
-    if (msg) {
-        report_error(ast, msg, name);
-        record_error(ast);
-        return;
-    }
+    sem_t sem_type = node->left->sem->sem_type;
 
     // keep not null only if everything is not null
     nullable &= sem_type;
 
     // add sensitivity if any is sensitive
     sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-
-    arg_number++;
   }
 
   // kind is not preserved, there is normally more than one
@@ -9002,30 +8958,17 @@ static void sem_func_json_valid(ast_node *ast, uint32_t arg_count) {
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (arg_count != 1 && arg_count != 2) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+  // exactly two arguments first json, second numeric
+  if (!sem_validate_arg_pattern("tb,[filr]", ast, arg_count)) {
     return;
   }
 
   ast_node *arg1 = first_arg(arg_list);
 
-  if (!is_text(arg1->sem->sem_type) && !is_blob(arg1->sem->sem_type)) {
-    report_error(ast, "CQL0503: argument 1 must be json text or json blob", name);
-    record_error(ast);
-    return;
-  }
-
   sem_t notnull = arg1->sem->sem_type & SEM_TYPE_NOTNULL;
 
   if (arg_count == 2) {
     ast_node *arg2 = second_arg(arg_list);
-
-    if (!is_numeric_expr(arg2)) {
-      report_error(name_ast, "CQL0082: argument 2 must be numeric", name);
-      record_error(ast);
-      return;
-    }
-
     notnull &= arg2->sem->sem_type & SEM_TYPE_NOTNULL;
   }
 
@@ -9043,8 +8986,8 @@ static void sem_func_json_quote(ast_node *ast, uint32_t arg_count) {
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  // one arg
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  // exactly two arguments first json, second numeric
+  if (!sem_validate_arg_pattern("nfilrt", ast, arg_count)) {
     return;
   }
 
@@ -9071,7 +9014,7 @@ static void sem_aggr_func_json_group_array_helper(ast_node *ast, uint32_t arg_co
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("nfilrtb", ast, arg_count)) {
     return;
   }
 
@@ -9103,7 +9046,7 @@ static void sem_aggr_func_json_group_object_helper(ast_node *ast, uint32_t arg_c
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+  if (!sem_validate_arg_pattern("nfilrtb,nfilrtb", ast, arg_count)) {
     return;
   }
 
@@ -9183,18 +9126,13 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 2)) {
+  // two text arguments
+  if (!sem_validate_arg_pattern("t,t", ast, arg_count)) {
     return;
   }
 
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);
-
-  if (!is_text(arg1->sem->sem_type) || !is_text(arg2->sem->sem_type)) {
-    report_error(ast, "CQL0085: all arguments must be strings", name);
-    record_error(ast);
-    return;
-  }
 
   // instr() is integer type, sensitivity, nullability preserved;
   sem_t combine = combine_flags(arg1->sem->sem_type, arg2->sem->sem_type);
@@ -9211,17 +9149,12 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  // one numeric arg
+  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-
-  if (!is_numeric_expr(arg)) {
-    report_error(name_ast, "CQL0082: argument 1 must be numeric", name);
-    record_error(ast);
-    return;
-  }
 
   if (enforcement.strict_sign_function) {
     if (CURRENT_EXPR_CONTEXT_IS_NOT(SEM_EXPR_CONTEXT_NONE)) {
@@ -9249,17 +9182,11 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-
-  if (!is_numeric_expr(arg)) {
-    report_error(name_ast, "CQL0082: argument 1 must be numeric", name);
-    record_error(ast);
-    return;
-  }
 
   // abs() will be the same type as arg, sensitivity, nullability preserved;
   name_ast->sem = ast->sem = arg->sem;
@@ -9282,22 +9209,15 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (arg_count == 0) {
-    sem_validate_arg_count(ast, arg_count, 1);
+  if (!sem_validate_arg_pattern("fil,[fil,*]", ast, arg_count)) {
     return;
   }
 
-  sem_t sensitive = SEM_TYPE_NULL;
+  sem_t sensitive = 0;
   ast_node *arg;
   do {
     arg = first_arg(arg_list);
     sem_t sem_type = arg->sem->sem_type;
-
-    if (!is_any_int(sem_type)) {
-      report_error(ast, "CQL0317: char function arguments must be integer", name);
-      record_error(ast);
-      return;
-    }
     sensitive |= sensitive_flag(sem_type);
   } while ((arg_list = arg_list->right));
 
@@ -9340,7 +9260,7 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count, uint32_t 
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("filrtbo", ast, arg_count)) {
     return;
   }
 
@@ -10174,7 +10094,7 @@ static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("filrtbo", ast, arg_count)) {
     return;
   }
 
@@ -26421,12 +26341,12 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
         CHARBUF_OPEN(msg);
         bprintf(&msg, "CQL0084: argument %d has an invalid type; valid types are: ", inum);
         if (reqd_mask & SEM_TYPE_MASK_BOOL) bprintf(&msg, "'bool' ");
-        if (reqd_mask & SEM_TYPE_MASK_INT) bprintf(&msg, "'integer' ");
+        if (reqd_mask & SEM_TYPE_MASK_INT)  bprintf(&msg, "'integer' ");
         if (reqd_mask & SEM_TYPE_MASK_LONG) bprintf(&msg, "'long' ");
         if (reqd_mask & SEM_TYPE_MASK_REAL) bprintf(&msg, "'real' ");
         if (reqd_mask & SEM_TYPE_MASK_TEXT) bprintf(&msg, "'text' ");
         if (reqd_mask & SEM_TYPE_MASK_BLOB) bprintf(&msg, "'blob' ");
-        if (reqd_mask & SEM_TYPE_MASK_OBJ) bprintf(&msg, "'object' ");
+        if (reqd_mask & SEM_TYPE_MASK_OBJ)  bprintf(&msg, "'object' ");
         bprintf(&msg, "in");
 
         report_error(arg, Strdup(msg.ptr), name);

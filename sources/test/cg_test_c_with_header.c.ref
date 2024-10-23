@@ -20232,13 +20232,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   // The statement ending at line XXXX
 
   /*
-  SET abs_val_nullable := abs(NULL);
-  */
-  cql_set_null(abs_val_nullable);
-
-  // The statement ending at line XXXX
-
-  /*
   SET b2 := ( SELECT likely(1) );
   */
   _rc_ = cql_prepare(_db_, &_temp_stmt,

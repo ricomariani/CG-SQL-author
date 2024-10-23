@@ -4485,10 +4485,6 @@ LET abs_val_real := abs(-2.0);
 -- + abs_val_bool = !!_tmp_bool_%;
 LET abs_val_bool := abs(true);
 
--- TEST: codegen for absolute value of null
--- + cql_set_null(abs_val_nullable);
-SET abs_val_nullable := abs(null);
-
 
 -- Used in the following test.
 proc ltor_proc_int_not_null(a int!, b int!, out c int!) begin end;

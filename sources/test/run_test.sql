@@ -477,7 +477,6 @@ BEGIN
   EXPECT_SQL_TOO!(abs(-t) = -t);
   EXPECT_SQL_TOO!(abs(TRUE) = TRUE);
   EXPECT_SQL_TOO!(abs(FALSE) = FALSE);
-  EXPECT_SQL_TOO!(abs(NULL) IS NULL);
 
   EXPECT!(sign(5) = 1);
   EXPECT!(sign(0.1) = 1);

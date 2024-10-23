@@ -2563,9 +2563,7 @@ INSERT statement with DEFAULT VALUES can not be used in a upsert statement.  Thi
 
 -----
 
-### CQL0317: char function arguments must be integer
-
-All parameters of the built-In scalar CQL functions `char(...)` must be of type integer.
+### CQL0317 available for re-use
 
 -----
 

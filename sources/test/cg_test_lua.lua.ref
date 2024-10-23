@@ -11013,13 +11013,6 @@ function cql_startup(_db_)
   -- The statement ending at line XXXX
 
   --[[
-  SET abs_val_nullable := abs(NULL);
-  --]]
-  abs_val_nullable = cql_unary_abs(nil)
-
-  -- The statement ending at line XXXX
-
-  --[[
   @EMIT_CONSTANTS some_constants;
   --]]
   cql_emit_constants("const", "some_constants", {

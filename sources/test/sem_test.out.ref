@@ -52778,6 +52778,32 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in functio
 
 The statement ending at line XXXX
 
+SET an_int := ( SELECT octet_length() );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'octet_length'
+
+  {assign}: err
+  | {name an_int}: an_int: integer variable was_set
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name octet_length}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
 SET an_int := ( SELECT length(1) );
 
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'

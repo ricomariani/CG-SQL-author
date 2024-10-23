@@ -1132,6 +1132,7 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'L
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
 test/sem_test.sql:XXXX:1: error: in num : CQL0242: lossy conversion from type 'REAL' in 1.0
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'length'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'octet_length'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'length'
 test/sem_test.sql:XXXX:1: error: in str : CQL0346: expression must be of type object<T cursor> where T is a valid shape name 'box'

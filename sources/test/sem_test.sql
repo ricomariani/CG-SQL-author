@@ -14043,6 +14043,12 @@ set ll := 1.0;
 -- +1 error:
 set an_int := (select length());
 
+-- TEST: length failure: no args
+-- + {call}: err
+-- * error: % too few arguments in function 'octet_length'
+-- +1 error:
+set an_int := (select octet_length());
+
 -- TEST: length failure: arg is not a string
 -- + {call}: err
 -- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'length'

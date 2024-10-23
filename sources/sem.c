@@ -8446,6 +8446,10 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
+static void sem_func_octet_length(ast_node *ast, uint32_t arg_count) {
+  sem_func_length(ast, arg_count);
+}
+
 static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -8530,6 +8534,8 @@ static void sem_func_hex(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
   if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
     return;
   }
@@ -8544,6 +8550,8 @@ static void sem_func_unhex(ast_node *ast, uint32_t arg_count) {
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
+
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
     return;
@@ -25932,6 +25940,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(cql_compressed);
   FUNC_INIT(cql_cursor_diff_col);
   FUNC_INIT(cql_cursor_diff_val);
+  FUNC_INIT(cql_get_blob_size);
   FUNC_INIT(cume_dist);
   FUNC_INIT(date);
   FUNC_INIT(datetime);
@@ -25947,12 +25956,15 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(last_value);
   FUNC_INIT(lead);
+  FUNC_INIT(length);
   FUNC_INIT(likely);
   FUNC_INIT(lower);
+  FUNC_INIT(ltrim);
   FUNC_INIT(nth_value);
   FUNC_INIT(ntile);
   FUNC_INIT(nullable);
   FUNC_INIT(nullif);
+  FUNC_INIT(octet_length);
   FUNC_INIT(percent_rank);
   FUNC_INIT(printf);
   FUNC_INIT(random);
@@ -25960,57 +25972,51 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(replace);
   FUNC_INIT(round);
   FUNC_INIT(row_number);
+  FUNC_INIT(rtrim);
   FUNC_INIT(sensitive);
   FUNC_INIT(sign);
-  FUNC_INIT(strftime);
-  FUNC_INIT(sqlite_version);
   FUNC_INIT(sqlite_source_id);
+  FUNC_INIT(sqlite_version);
+  FUNC_INIT(strftime);
   FUNC_INIT(substr);
   FUNC_INIT(substring);
   FUNC_INIT(time);
   FUNC_INIT(total_changes);
+  FUNC_INIT(trim);
   FUNC_INIT(upper);
 
   FUNC_REWRITE_INIT(json);
-  FUNC_REWRITE_INIT(jsonb);
   FUNC_REWRITE_INIT(json_array);
-  FUNC_REWRITE_INIT(jsonb_array);
   FUNC_REWRITE_INIT(json_array_length);
   FUNC_REWRITE_INIT(json_error_position);
   FUNC_REWRITE_INIT(json_extract);
-  FUNC_REWRITE_INIT(jsonb_extract);
   FUNC_REWRITE_INIT(json_insert);
+  FUNC_REWRITE_INIT(json_object);
+  FUNC_REWRITE_INIT(json_patch);
+  FUNC_REWRITE_INIT(json_pretty);
+  FUNC_REWRITE_INIT(json_quote);
+  FUNC_REWRITE_INIT(json_remove);
   FUNC_REWRITE_INIT(json_replace);
   FUNC_REWRITE_INIT(json_set);
-  FUNC_REWRITE_INIT(jsonb_insert);
-  FUNC_REWRITE_INIT(jsonb_replace);
-  FUNC_REWRITE_INIT(jsonb_set);
-  FUNC_REWRITE_INIT(json_remove);
-  FUNC_REWRITE_INIT(jsonb_remove);
-  FUNC_REWRITE_INIT(json_object);
-  FUNC_REWRITE_INIT(jsonb_object);
-  FUNC_REWRITE_INIT(json_patch);
-  FUNC_REWRITE_INIT(jsonb_patch);
-  FUNC_REWRITE_INIT(json_pretty);
   FUNC_REWRITE_INIT(json_type);
   FUNC_REWRITE_INIT(json_valid);
-  FUNC_REWRITE_INIT(json_quote);
+  FUNC_REWRITE_INIT(jsonb);
+  FUNC_REWRITE_INIT(jsonb_array);
+  FUNC_REWRITE_INIT(jsonb_extract);
+  FUNC_REWRITE_INIT(jsonb_insert);
+  FUNC_REWRITE_INIT(jsonb_object);
+  FUNC_REWRITE_INIT(jsonb_patch);
+  FUNC_REWRITE_INIT(jsonb_remove);
+  FUNC_REWRITE_INIT(jsonb_replace);
+  FUNC_REWRITE_INIT(jsonb_set);
 
   FUNC_REWRITE_INIT(concat);
   FUNC_REWRITE_INIT(concat_ws);
   FUNC_REWRITE_INIT(glob);
-  FUNC_REWRITE_INIT(like);
   FUNC_REWRITE_INIT(hex);
-  FUNC_REWRITE_INIT(unhex);
+  FUNC_REWRITE_INIT(like);
   FUNC_REWRITE_INIT(quote);
-
-  FUNC_INIT(trim);
-  FUNC_INIT(ltrim);
-  FUNC_INIT(rtrim);
-  FUNC_INIT(length);
-
-
-  FUNC_INIT(cql_get_blob_size);
+  FUNC_REWRITE_INIT(unhex);
 
   SPECIAL_FUNC_INIT(count);
   SPECIAL_FUNC_INIT(iif);

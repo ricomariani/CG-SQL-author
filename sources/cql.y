@@ -2110,14 +2110,14 @@ declare_select_func_stmt[result]:
   ;
 
 declare_func_stmt:
-  DECLARE function name '(' func_params ')' data_type_with_options  {
+  DECLARE function loose_name[name] '(' func_params ')' data_type_with_options  {
       $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, $data_type_with_options)); }
-  | DECLARE function name '(' func_params ')' CREATE data_type_with_options  {
+  | DECLARE function loose_name[name] '(' func_params ')' CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
       $declare_func_stmt = new_ast_declare_func_stmt($name, new_ast_func_params_return($func_params, create_data_type)); }
-  | DECLARE function name NO CHECK data_type_with_options  {
+  | DECLARE function loose_name[name] NO CHECK data_type_with_options  {
       $declare_func_stmt = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, $data_type_with_options)); }
-  | DECLARE function name NO CHECK CREATE data_type_with_options  {
+  | DECLARE function loose_name[name] NO CHECK CREATE data_type_with_options  {
       ast_node *create_data_type = new_ast_create_data_type($data_type_with_options);
       $declare_func_stmt = new_ast_declare_func_no_check_stmt($name, new_ast_func_params_return(NULL, create_data_type)); }
   ;
@@ -2126,29 +2126,30 @@ procedure: PROC | PROCEDURE
   ;
 
 declare_proc_no_check_stmt:
-  DECLARE procedure name NO CHECK { $declare_proc_no_check_stmt = new_ast_declare_proc_no_check_stmt($name); }
+  DECLARE procedure loose_name[name] NO CHECK {
+    $declare_proc_no_check_stmt = new_ast_declare_proc_no_check_stmt($name); }
   ;
 
 declare_proc_stmt:
-  DECLARE procedure name '(' params ')'  {
+  DECLARE procedure loose_name[name] '(' params ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_BASIC));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
-  | DECLARE procedure name '(' params ')' '(' typed_names ')'  {
+  | DECLARE procedure loose_name[name] '(' params ')' '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure name '(' params ')' USING TRANSACTION  {
+  | DECLARE procedure loose_name[name] '(' params ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
-  | DECLARE procedure name '(' params ')' OUT '(' typed_names ')'  {
+  | DECLARE procedure loose_name[name] '(' params ')' OUT '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure name '(' params ')' OUT '(' typed_names ')' USING TRANSACTION  {
+  | DECLARE procedure loose_name[name] '(' params ')' OUT '(' typed_names ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure name '(' params ')' OUT UNION '(' typed_names ')'  {
+  | DECLARE procedure loose_name[name] '(' params ')' OUT UNION '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure name '(' params ')' OUT UNION '(' typed_names ')' USING TRANSACTION  {
+  | DECLARE procedure loose_name[name] '(' params ')' OUT UNION '(' typed_names ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   ;
@@ -2161,9 +2162,9 @@ declare_interface_stmt:
   ;
 
 create_proc_stmt:
-  CREATE procedure name '(' params ')' BEGIN_ opt_stmt_list END  {
+  CREATE procedure loose_name[name] '(' params ')' BEGIN_ opt_stmt_list END  {
     $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
-  | procedure name '(' params ')' BEGIN_ opt_stmt_list END  {
+  | procedure loose_name[name] '(' params ')' BEGIN_ opt_stmt_list END  {
     $create_proc_stmt = new_ast_create_proc_stmt($name, new_ast_proc_params_stmts($params, $opt_stmt_list)); }
   ;
 
@@ -2244,7 +2245,7 @@ declare_vars_stmt:
   | declare_value_cursor { $declare_vars_stmt = $declare_value_cursor; }
   ;
 
-call_stmt: CALL name '(' arg_list ')'  {
+call_stmt: CALL loose_name[name] '(' arg_list ')'  {
       YY_ERROR_ON_CQL_INFERRED_NOTNULL($name);
       $call_stmt = new_ast_call_stmt($name, $arg_list); }
   ;

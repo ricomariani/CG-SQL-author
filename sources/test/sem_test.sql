@@ -3132,7 +3132,7 @@ set X := (select count(1,2) from foo);
 -- TEST: bogus number of arguments in max
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'max'
+-- * error: % too few arguments in function 'max'
 -- +1 error:
 set X := (select max() from foo);
 
@@ -10718,7 +10718,7 @@ select group_concat('not-null') gc from foo;
 -- TEST: min/max (same code) only accept numerics and strings
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
--- * error: % argument must be a string or numeric in 'min'
+-- * error: % argument 1 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'min'
 -- +1 error:
 proc min_gets_blob(a_blob blob)
 begin
@@ -10756,13 +10756,13 @@ select min(1, 'x');
 
 -- TEST: try to do a min with non-numeric arguments (first position) (non aggregate form)
 -- + {select_stmt}: err
--- * error: % argument must be a string or numeric in 'min'
+-- * error: % argument 1 is a NULL literal; useless in 'min'
 -- +1 error:
 select min(NULL, 'x');
 
 -- TEST: try to do a min with non-numeric arguments (not first position) (non aggregate form)
 -- + {select_stmt}: err
--- * error: % argument must be a string or numeric in 'min'
+-- * error: % argument 2 is a NULL literal; useless in 'min'
 -- +1 error:
 select min('x', NULL, 'y');
 

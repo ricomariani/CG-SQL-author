@@ -10228,7 +10228,7 @@ The statement ending at line XXXX
 SET X := ( SELECT max()
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'max'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'max'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10239,7 +10239,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name max}: err
+    |     |     | {name max}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     | {select_from_etc}: TABLE { foo: foo }
@@ -40276,7 +40276,7 @@ BEGIN
     FROM foo;
 END;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0257: argument must be a string or numeric in 'min'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'min'
 
   {create_proc_stmt}: err
   | {name min_gets_blob}: err
@@ -40298,7 +40298,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0257: argument must be a string or
         |     |     | {call_arg_list}
         |     |       | {call_filter_clause}
         |     |       | {arg_list}: ok
-        |     |         | {name a_blob}: a_blob: blob variable in
+        |     |         | {name a_blob}: err
         |     | {select_from_etc}: TABLE { foo: foo }
         |       | {table_or_subquery_list}: TABLE { foo: foo }
         |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -40460,7 +40460,7 @@ The statement ending at line XXXX
 
 SELECT min(NULL, 'x');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0257: argument must be a string or numeric in 'min'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal; useless in 'min'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -40473,7 +40473,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0257: argument must be a string or
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {null}: null
+  |     |         | {null}: err
   |     |         | {arg_list}
   |     |           | {strlit 'x'}: text notnull
   |     | {select_from_etc}: ok
@@ -40488,7 +40488,7 @@ The statement ending at line XXXX
 
 SELECT min('x', NULL, 'y');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0257: argument must be a string or numeric in 'min'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 2 is a NULL literal; useless in 'min'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -40503,7 +40503,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0257: argument must be a string or
   |     |       | {arg_list}: ok
   |     |         | {strlit 'x'}: text notnull
   |     |         | {arg_list}
-  |     |           | {null}: null
+  |     |           | {null}: err
   |     |           | {arg_list}
   |     |             | {strlit 'y'}: text notnull
   |     | {select_from_etc}: ok

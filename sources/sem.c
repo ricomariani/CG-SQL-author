@@ -8426,6 +8426,26 @@ static void sem_func_cql_get_blob_size(ast_node *ast, uint32_t arg_count) {
   copy_nullability(ast, SEM_TYPE_NOTNULL);
 }
 
+static void sem_func_unicode(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // unicode can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+    return;
+  }
+
+  // integer result
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
+}
+
 static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -10013,6 +10033,11 @@ static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
 
   // the function return type matches the argument type
   name_ast->sem = ast->sem = new_sem_std(arg->sem->sem_type, arg_list);
+}
+
+// same rules as "likely"
+static void sem_func_unlikely(ast_node *ast, uint32_t arg_count) {
+   sem_func_likely(ast, arg_count);
 }
 
 // The changes function is used to get the integer number of rows changed
@@ -26008,6 +26033,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(time);
   FUNC_INIT(total_changes);
   FUNC_INIT(trim);
+  FUNC_INIT(unicode);
+  FUNC_INIT(unlikely);
   FUNC_INIT(upper);
   FUNC_INIT(zeroblob);
 

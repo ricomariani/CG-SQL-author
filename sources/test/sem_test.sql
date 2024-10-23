@@ -14067,12 +14067,36 @@ set an_int := length("x");
 -- - error:
 set _sens := (select length(name) from with_sensitive);
 
+-- TEST: unicode failure: no args
+-- + {call}: err
+-- * error: % too few arguments in function 'unicode'
+-- +1 error:
+set an_int := (select unicode());
+
+-- TEST: unicode failure: arg is not a string
+-- + {call}: err
+-- * error: % 'integer' is an invalid type; valid types are: 'text' in 'unicode'
+-- +1 error:
+set an_int := (select unicode(1));
+
+-- TEST: unicode failure: not in a SQL context
+-- + {call}: err
+-- * error: % function may not appear in this context 'unicode'
+-- +1 error:
+set an_int := unicode("x");
+
 -- TEST: length must preserve nullability
 -- + {assign}: an_int: integer variable
 -- + {select_stmt}: _anon: integer notnull
 -- + {call}: integer notnull
 -- - error:
 set an_int := (select length("x"));
+
+-- TEST: unicode must preserve sensitivity
+-- + {call}: integer sensitive
+-- + {name unicode}: integer sensitive
+-- - error:
+set _sens := (select unicode(name) from with_sensitive);
 
 -- TEST: box a cursor (success path)
 -- + {name C}: C: select: { id: integer notnull, name: text, rate: longint } variable dml_proc
@@ -15070,6 +15094,12 @@ select likely(true);
 -- + {name likely}: integer notnull
 -- - error:
 select likely(42);
+
+-- TEST: the return type of unlikely is the type of its argument
+-- + {select_stmt}: select: { _anon: integer notnull }
+-- + {name unlikely}: integer notnull
+-- - error:
+select unlikely(42);
 
 -- TEST: likely fails with incorrect number of arguments
 -- + {select_stmt}: err

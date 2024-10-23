@@ -25432,3 +25432,20 @@ set zero_blob := (select zeroblob());
 -- + {let_stmt}: random_blob: blob notnull variable
 -- - error:
 let random_blob := (select randomblob(1));
+
+-- TEST: typeof normal usage
+-- + {let_stmt}: type_string: text notnull variable
+-- - error:
+let type_string := (select typeof('foo'));
+
+-- TEST: typeof error usage
+-- + {assign}: err
+-- * error: % argument 1 is a NULL literal; useless in 'typeof'
+-- +1 error:
+set type_string := (select typeof(null));
+
+-- TEST: typeof error usage
+-- + {assign}: err
+-- * error: % function may not appear in this context 'typeof'
+-- +1 error:
+set type_string := typeof(null);

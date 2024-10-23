@@ -8446,6 +8446,26 @@ static void sem_func_unicode(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
+static void sem_func_typeof(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // unicode can only appear inside of SQL
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+    return;
+  }
+
+  // text result
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+}
+
 static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -26033,6 +26053,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(time);
   FUNC_INIT(total_changes);
   FUNC_INIT(trim);
+  FUNC_INIT(typeof);
   FUNC_INIT(unicode);
   FUNC_INIT(unlikely);
   FUNC_INIT(upper);

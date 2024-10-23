@@ -25314,3 +25314,45 @@ let sql_src := (select sqlite_source_id());
 -- * error: % too many arguments in function 'sqlite_source_id'
 -- +1 error:
 set sql_src := (select sqlite_source_id(1));
+
+-- TEST: normal call to hex
+-- + LET hex_str := ( SELECT hex("123") IF NOTHING THEN THROW );
+-- + {let_stmt}: hex_str: text notnull variable was_set
+-- - error:
+let hex_str := hex("123");
+
+-- TEST: hex call with bad arg
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'hex'
+-- +1 error:
+set hex_str := hex(1);
+
+-- TEST: hex call with nullable arg
+-- this forces use to validate the nullable transitions
+-- + SET hex_str := ifnull_throw(( SELECT hex(nullable("123")) IF NOTHING THEN THROW ));
+-- + {select_if_nothing_throw_expr}: _anon: text
+-- - error:
+set hex_str := hex(nullable("123")):ifnull_throw;
+
+-- TEST: normal call to unhex
+-- + LET unhex_blob := ( SELECT unhex("1234") IF NOTHING THEN THROW );
+-- + {let_stmt}: unhex_blob: blob notnull variable was_set
+-- - error:
+let unhex_blob := unhex("1234");
+
+-- TEST: normal call to unhex
+-- + SET unhex_blob := ( SELECT unhex("1234-56", "-") IF NOTHING THEN THROW );
+-- + {assign}: unhex_blob: blob notnull variable was_set
+-- - error:
+set unhex_blob := unhex("1234-56", "-");
+
+-- TEST: unhex call with bad arg
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'unhex'
+-- +1 error:
+set unhex_blob := unhex(1);
+
+-- TEST: unhex call with nullable arg
+-- this forces use to validate the nullable transitions
+-- + SET unhex_blob := ifnull_throw(( SELECT unhex(nullable("1234")) IF NOTHING THEN THROW ));
+-- + {select_if_nothing_throw_expr}: _anon: blob
+-- - error:
+set unhex_blob := unhex(nullable("1234")):ifnull_throw;

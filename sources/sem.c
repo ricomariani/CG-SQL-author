@@ -8508,6 +8508,38 @@ static void sem_func_glob(ast_node *ast, uint32_t arg_count) {
   sem_func_matcher(ast, arg_count);
 }
 
+static void sem_func_hex(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
+    return;
+  }
+
+  // standard sensitivity and nullability
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
+}
+
+static void sem_func_unhex(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
+    return;
+  }
+
+  // only arg1 contributes to sensitivity and nullability
+  ast_node *arg = first_arg(arg_list);
+  sem_t flags = arg->sem->sem_type & (SEM_TYPE_NOTNULL | SEM_TYPE_SENSITIVE);
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_BLOB | flags);
+}
+
 // ltrim has the same semantics as trim
 static void sem_func_ltrim(ast_node *ast, uint32_t arg_count) {
   sem_func_trim(ast, arg_count);
@@ -25953,6 +25985,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(concat_ws);
   FUNC_REWRITE_INIT(glob);
   FUNC_REWRITE_INIT(like);
+  FUNC_REWRITE_INIT(hex);
+  FUNC_REWRITE_INIT(unhex);
 
   FUNC_INIT(trim);
   FUNC_INIT(ltrim);

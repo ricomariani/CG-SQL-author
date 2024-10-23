@@ -95320,3 +95320,218 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in functi
       | {select_limit}
         | {select_offset}
 
+The statement ending at line XXXX
+
+LET hex_str := ( SELECT hex("123") IF NOTHING THEN THROW );
+
+  {let_stmt}: hex_str: text notnull variable was_set
+  | {name hex_str}: hex_str: text notnull variable was_set
+  | {select_if_nothing_throw_expr}: _anon: text notnull
+    | {select_stmt}: _anon: text notnull
+      | {select_core_list}: select: { _anon: text notnull }
+      | | {select_core}: select: { _anon: text notnull }
+      |   | {select_expr_list_con}: select: { _anon: text notnull }
+      |     | {select_expr_list}: select: { _anon: text notnull }
+      |     | | {select_expr}: text notnull
+      |     |   | {call}: text notnull
+      |     |     | {name hex}: text notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '123'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET hex_str := ( SELECT hex(1) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'hex'
+
+  {assign}: err
+  | {name hex_str}: hex_str: text notnull variable was_set
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name hex}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 1}: err
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET hex_str := ifnull_throw(( SELECT hex(nullable("123")) IF NOTHING THEN THROW ));
+
+  {assign}: hex_str: text notnull variable was_set
+  | {name hex_str}: hex_str: text notnull variable was_set
+  | {call}: _anon: text notnull
+    | {name ifnull_throw}: _anon: text notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {select_if_nothing_throw_expr}: _anon: text
+          | {select_stmt}: _anon: text
+            | {select_core_list}: select: { _anon: text }
+            | | {select_core}: select: { _anon: text }
+            |   | {select_expr_list_con}: select: { _anon: text }
+            |     | {select_expr_list}: select: { _anon: text }
+            |     | | {select_expr}: text
+            |     |   | {call}: text
+            |     |     | {name hex}: text
+            |     |     | {call_arg_list}
+            |     |       | {call_filter_clause}
+            |     |       | {arg_list}: ok
+            |     |         | {call}: text
+            |     |           | {name nullable}: text
+            |     |           | {call_arg_list}
+            |     |             | {call_filter_clause}
+            |     |             | {arg_list}: ok
+            |     |               | {strlit '123'}: text notnull
+            |     | {select_from_etc}: ok
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+
+The statement ending at line XXXX
+
+LET unhex_blob := ( SELECT unhex("1234") IF NOTHING THEN THROW );
+
+  {let_stmt}: unhex_blob: blob notnull variable was_set
+  | {name unhex_blob}: unhex_blob: blob notnull variable was_set
+  | {select_if_nothing_throw_expr}: _anon: blob notnull
+    | {select_stmt}: _anon: blob notnull
+      | {select_core_list}: select: { _anon: blob notnull }
+      | | {select_core}: select: { _anon: blob notnull }
+      |   | {select_expr_list_con}: select: { _anon: blob notnull }
+      |     | {select_expr_list}: select: { _anon: blob notnull }
+      |     | | {select_expr}: blob notnull
+      |     |   | {call}: blob notnull
+      |     |     | {name unhex}: blob notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '1234'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET unhex_blob := ( SELECT unhex("1234-56", "-") IF NOTHING THEN THROW );
+
+  {assign}: unhex_blob: blob notnull variable was_set
+  | {name unhex_blob}: unhex_blob: blob notnull variable was_set
+  | {select_if_nothing_throw_expr}: _anon: blob notnull
+    | {select_stmt}: _anon: blob notnull
+      | {select_core_list}: select: { _anon: blob notnull }
+      | | {select_core}: select: { _anon: blob notnull }
+      |   | {select_expr_list_con}: select: { _anon: blob notnull }
+      |     | {select_expr_list}: select: { _anon: blob notnull }
+      |     | | {select_expr}: blob notnull
+      |     |   | {call}: blob notnull
+      |     |     | {name unhex}: blob notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit '1234-56'}: text notnull
+      |     |         | {arg_list}
+      |     |           | {strlit '-'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET unhex_blob := ( SELECT unhex(1) IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'unhex'
+
+  {assign}: err
+  | {name unhex_blob}: unhex_blob: blob notnull variable was_set
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name unhex}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 1}: err
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET unhex_blob := ifnull_throw(( SELECT unhex(nullable("1234")) IF NOTHING THEN THROW ));
+
+  {assign}: unhex_blob: blob notnull variable was_set
+  | {name unhex_blob}: unhex_blob: blob notnull variable was_set
+  | {call}: _anon: blob notnull
+    | {name ifnull_throw}: _anon: blob notnull
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {select_if_nothing_throw_expr}: _anon: blob
+          | {select_stmt}: _anon: blob
+            | {select_core_list}: select: { _anon: blob }
+            | | {select_core}: select: { _anon: blob }
+            |   | {select_expr_list_con}: select: { _anon: blob }
+            |     | {select_expr_list}: select: { _anon: blob }
+            |     | | {select_expr}: blob
+            |     |   | {call}: blob
+            |     |     | {name unhex}: blob
+            |     |     | {call_arg_list}
+            |     |       | {call_filter_clause}
+            |     |       | {arg_list}: ok
+            |     |         | {call}: text
+            |     |           | {name nullable}: text
+            |     |           | {call_arg_list}
+            |     |             | {call_filter_clause}
+            |     |             | {arg_list}: ok
+            |     |               | {strlit '1234'}: text notnull
+            |     | {select_from_etc}: ok
+            |       | {select_where}
+            |         | {select_groupby}
+            |           | {select_having}
+            | {select_orderby}
+              | {select_limit}
+                | {select_offset}
+

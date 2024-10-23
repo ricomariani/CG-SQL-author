@@ -156,7 +156,7 @@ This usually means a column is missing in the REFERENCES part of the declaration
 
 -----
 
-CQL0024: no longer in use
+### CQL0024 available for re-use
 
 -----
 
@@ -659,20 +659,17 @@ Doesn't make any sense.
 
 -----
 
-### CQL0082: argument [number] must be numeric 'function'
-
-
-The indicated argument of the named function must be numeric.
+### CQL0082 available for re-use
 
 -----
 
-### CQL0083: argument must be numeric 'SUM'
-
-The argument of SUM must be numeric.
+### CQL0083 available for re-use
 
 -----
 
-### CQL0084 available for re-use
+### CQL0084: argument [n] has an invalid type; valid types are: 'type1' 'type2' in 'function'
+
+The argument at the named position is requried to be one of the named types in the named function.
 
 -----
 
@@ -682,16 +679,14 @@ The `strftime` function does complex data formatting.  All the arguments are str
 
 -----
 
-### CQL0086: 'position' argument must be a string in function 'function'
+### CQL0086 available for re-use
 
 The indicated argument of the function must be a string, such as the formatting string in `printf`.  This error
 could refer the first, second, third, etc. argument
 
 -----
 
-### CQL0087: first argument must be of type real 'function'
-
-The first argument of the function (e.g. round) should be of type 'real'.
+### CQL0087 available for re-use
 
 -----
 
@@ -1541,7 +1536,7 @@ It's the declaration that's failing here, not the call.
 
 -----
 
-CQL0204  Unused.
+### CQL0204 available for re-use
 
 -----
 
@@ -2025,7 +2020,7 @@ Either there is a typo in the name or the declaration is missing, or both...
 
 -----
 
-### CQL0251 Unused
+### CQL0251 available for re-use
 
 -----
 
@@ -2035,7 +2030,7 @@ An @PROC literal was used outside of any procedure.  It cannot be resolved if it
 
 -----
 
-### CQL0253 Unused
+### CQL0253 available for re-use
 
 -----
 
@@ -2045,11 +2040,11 @@ When authoring a schema migration script (a stored proc named in an `@create` or
 
 -----
 
-### CQL0255 Unused
+### CQL0255 available for re-use
 
 -----
 
-### CQL0256 Unused
+### CQL0256 available for re-use
 
 -----
 
@@ -2060,15 +2055,15 @@ are not allowed in this context.
 
 -----
 
-### CQL0258 Unused
+### CQL0258 available for re-us
 
 -----
 
-### CQL0259 Unused
+### CQL0259 available for re-use
 
 -----
 
-### CQL0260 Unused
+### CQL0260 available for re-use
 
 -----
 
@@ -2121,23 +2116,23 @@ Usually there are constraints on the join also in the WHERE clause but there don
 
 -----
 
-### CQL0264 Unused
+### CQL0264 available for re-use
 
 -----
 
-### CQL0265 Unused
+### CQL0265 available for re-use
 
 -----
 
-### CQL0266 Unused
+### CQL0266 available for re-use
 
 -----
 
-### CQL0267 Unused
+### CQL0267 available for re-use
 
 -----
 
-### CQL0268 Unused
+### CQL0268 available for re-use
 
 -----
 
@@ -2353,11 +2348,11 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-### CQL0287 Unused
+### CQL0287 available for re-use
 
 -----
 
-### CQL0288 Unused
+### CQL0288 available for re-use
 
 -----
 
@@ -2367,7 +2362,7 @@ going to 110% on the reactor... possible, but not recommended.
 
 -----
 
-### CQL0290 Unused
+### CQL0290 available for re-use
 
 -----
 
@@ -2563,21 +2558,19 @@ INSERT statement with DEFAULT VALUES can not be used in a upsert statement.  Thi
 
 -----
 
-### CQL0317: char function arguments must be integer
-
-All parameters of the built-In scalar CQL functions `char(...)` must be of type integer.
+### CQL0317 available for re-use
 
 -----
 
-### CQL0318 Unused
+### CQL0318 available for re-use
 
 -----
 
-### CQL0319 Unused
+### CQL0319 available for re-use
 
 -----
 
-### CQL0320 Unused
+### CQL0320 available for re-use
 
 -----
 
@@ -2589,7 +2582,7 @@ The reason for this is that both these types of objects are attached to a table 
 
 -----
 
-### CQL0322 Unused
+### CQL0322 available for re-use
 
 -----
 
@@ -2674,19 +2667,19 @@ the indicated tables. This marking doesn't make sense on other kinds of statemen
 
 -----
 
-### CQL0330 Unused
+### CQL0330 available for re-use
 
 -----
 
-### CQL0331 Unused
+### CQL0331 available for re-use
 
 -----
 
-### CQL0332 Unused
+### CQL0332 available for re-use
 
 -----
 
-### CQL0333 Unused
+### CQL0333 available for re-use
 
 -----
 
@@ -2753,9 +2746,7 @@ The most likely cause is that the function call in question is vestigial and you
 
 -----
 
-### CQL0345: arguments must be of type blob 'function_name'
-
-The indicated function accepts only a single argument of type blob.
+### CQL0345 available for re-use
 
 -----
 
@@ -3089,11 +3080,11 @@ There is no need to write a select expression that always evaluates to NULL. Sim
 
 ----
 
-CQL 0375  Unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0375 available for re-use
 
 ----
 
-CQL 0376  Unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0376 available for re-use
 
 ----
 
@@ -3421,7 +3412,7 @@ the result when using 0 as the second argument is not well defined.  If you want
 
 ----
 
-CQL 0407  Unused, this was added to prevent merge conflicts at the end on literally every checkin
+CQL 0407 available for re-use
 
 ----
 
@@ -3450,7 +3441,7 @@ anyway): One should simply always initialize the variable.
 
 ----
 
-CQL 0410  Unused, this was added to prevent merge conflicts at the end on literally every checkin
+### CQL0410 available for re-use
 
 ----
 

@@ -1804,11 +1804,8 @@ static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
   sem_t sem_type_result = call_ast->sem->sem_type;
   sem_t core_type_result = core_type_of(sem_type_result);
 
-  if (core_type_result == SEM_TYPE_NULL) {
-    bprintf(value, "0");
-    bprintf(is_null, "1");
-    return;
-  }
+  // null literal is an error
+  Invariant(core_type_result != SEM_TYPE_NULL);
 
   CHARBUF_OPEN(abs_value);
   CG_SETUP_RESULT_VAR(call_ast, sem_type_result);
@@ -1819,6 +1816,9 @@ static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
 
   // Copy the expression, we can't evaluate it more than once, so stow it.
   cg_store_same_type(cg_main_output, temp.ptr, sem_type_result, expr_is_null.ptr, expr_value.ptr);
+
+  // this is ruled out by semanttic analysis
+  Invariant(core_type_result != SEM_TYPE_BOOL);
 
   switch (core_type_result) {
     case SEM_TYPE_INTEGER:
@@ -1831,10 +1831,6 @@ static void cg_func_abs(ast_node *call_ast, charbuf *is_null, charbuf *value) {
 
     case SEM_TYPE_REAL:
       bprintf(&abs_value, "fabs(%s)", temp_value.ptr);
-      break;
-
-    case SEM_TYPE_BOOL:
-      bprintf(&abs_value, "!!%s", temp_value.ptr);
       break;
   }
 

@@ -13300,7 +13300,6 @@ cql_int32 abs_val_int = 0;
 cql_nullable_int32 abs_val_nullable = { .is_null = 1 };
 cql_int64 abs_val_long = 0;
 cql_double abs_val_real = 0;
-cql_bool abs_val_bool = 0;
 
 // The statement ending at line XXXX
 
@@ -17784,7 +17783,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_string_ref _tmp_n_text_1 = NULL;
   cql_int64 _tmp_int64_2 = 0;
   cql_double _tmp_double_2 = 0;
-  cql_bool _tmp_bool_1 = 0;
   cql_int32 _tmp_int_0 = 0;
 
   // The statement ending at line XXXX
@@ -20220,21 +20218,6 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   */
   _tmp_double_2 = - 2.0;
   abs_val_real = fabs(_tmp_double_2);
-
-  // The statement ending at line XXXX
-
-  /*
-  LET abs_val_bool := abs(TRUE);
-  */
-  _tmp_bool_1 = 1;
-  abs_val_bool = !!_tmp_bool_1;
-
-  // The statement ending at line XXXX
-
-  /*
-  SET abs_val_nullable := abs(NULL);
-  */
-  cql_set_null(abs_val_nullable);
 
   // The statement ending at line XXXX
 

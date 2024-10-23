@@ -194,24 +194,6 @@ typedef struct schema_annotation {
 #define SEM_TYPE_CONSTANT     _64(0x2000000000000) // set for variables marked immutable and cannot be reassigned
 #define SEM_TYPE_FLAGS        _64(0x3FFFFFFFFFF00) // all the flag bits we have so far
 
-#define SEM_EXPR_CONTEXT_NONE           0x0001
-#define SEM_EXPR_CONTEXT_SELECT_LIST    0x0002
-#define SEM_EXPR_CONTEXT_WHERE          0x0004
-#define SEM_EXPR_CONTEXT_ON             0x0008
-#define SEM_EXPR_CONTEXT_HAVING         0x0010
-#define SEM_EXPR_CONTEXT_ORDER_BY       0x0020
-#define SEM_EXPR_CONTEXT_GROUP_BY       0x0040
-#define SEM_EXPR_CONTEXT_LIMIT          0x0080
-#define SEM_EXPR_CONTEXT_OFFSET         0x0100
-#define SEM_EXPR_CONTEXT_UDF            0x0200
-#define SEM_EXPR_CONTEXT_WINDOW         0x0400
-#define SEM_EXPR_CONTEXT_WINDOW_FILTER  0x0800
-#define SEM_EXPR_CONTEXT_CONSTRAINT     0x1000
-#define SEM_EXPR_CONTEXT_FLAGS          0x1FFF // all the flag bits
-
-#define CURRENT_EXPR_CONTEXT_IS(x)  (!!(current_expr_context & (x)))
-#define CURRENT_EXPR_CONTEXT_IS_NOT(x)  (!(current_expr_context & (x)))
-
 cql_noexport sem_t core_type_of(sem_t sem_type);
 cql_noexport sem_t sensitive_flag(sem_t sem_type);
 cql_noexport CSTR coretype_string(sem_t sem_type);

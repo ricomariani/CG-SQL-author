@@ -7871,7 +7871,7 @@ static void sem_special_func_cql_blob_get_type(ast_node *ast, uint32_t arg_count
   if (!sem_validate_appear_inside_sql_stmt(ast)) {
     return;
   }
-
+  
   if (!sem_validate_arg_count(ast, arg_count, 1)) {
     return;
   }
@@ -8258,6 +8258,8 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
+  // rico
+
   // if no args then fail the arg count test...
   if (arg_count == 0) {
     sem_validate_arg_count(ast, arg_count, arg_count + 1);
@@ -8379,17 +8381,11 @@ static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
 
   // Note: avg does not have a multi-arg form like min/max, only
   // the single arg form is legal in Sqlite
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-
-  if (!is_numeric_expr(arg) || is_ast_null(arg)) {
-    report_error(name_ast, "CQL0082: argument 1 must be numeric", name);
-    record_error(ast);
-    return;
-  }
 
   // avg will be real, sensitivity preserved, nullability NOT preserved
   // because all aggregates can return NULL if there are zero rows
@@ -9425,16 +9421,11 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
     return;
   }
 
   ast_node *arg = first_arg(arg_list);
-  if (!is_text(arg->sem->sem_type)) {
-    report_error(name_ast, "CQL0086: first argument must be a string in function", name);
-    record_error(ast);
-    return;
-  }
 
   // upper() will be the same type as arg, sensitivity, nullability, and kind preserved;
   ast->sem = arg->sem;
@@ -9459,25 +9450,12 @@ static void sem_func_coalesce(ast_node *ast, uint32_t arg_count) {
 // in SQLite, so there's no "non-aggregate" case like min/max.
 static void sem_validate_sum_or_total(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
-  EXTRACT_NAME_AST(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
 
   if (!sem_validate_aggregate_context(ast)) {
     return;
   }
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
-    return;
-  }
-
-  ast_node *arg = first_arg(arg_list);
-
-  // you can sum any numeric
-  if (!is_numeric_expr(arg) || is_ast_null(arg)) {
-    report_error(name_ast, "CQL0083: argument 1 must be numeric", name);
-    record_error(ast);
+  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
     return;
   }
 
@@ -9549,9 +9527,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // two or three args allowed, otherwise fail the test
-  if (arg_count < 2 || arg_count > 3) {
-    sem_validate_arg_count(ast, arg_count, 2);
+  if (!sem_validate_arg_pattern("t,filr,[filr]", ast, arg_count)) {
     return;
   }
 
@@ -9564,20 +9540,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   ast_node *arg2 = second_arg(arg_list);
   ast_node *arg3 = (arg_count == 3) ? third_arg(arg_list) : NULL;
 
-  if (!is_text(arg1->sem->sem_type)) {
-    report_error(ast, "CQL0086: first argument must be a string in function", name);
-    record_error(ast);
-    return;
-  }
-
-  // the first index can be any numeric
-  if (!is_numeric_expr(arg2) || is_ast_null(arg2)) {
-    report_error(name_ast, "CQL0083: argument 2 must be numeric", name);
-    record_error(ast);
-    return;
-  }
-
-  // We try to evaluate arg 2 as a constant, if we can do so and if we get zero
+  // We try to evaluate arg2 as a constant, if we can do so and if we get zero
   // then the user has made a mistake.  The indices are 1 based.
   eval_node result = EVAL_NIL;
   eval(arg2, &result);
@@ -9586,15 +9549,6 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
     if (result.int64_value == 0) {
       report_error(arg2, "CQL0406: substr uses 1 based indices, the 2nd argument of substr may not be zero", NULL);
       record_error(arg2);
-      record_error(ast);
-      return;
-    }
-  }
-
-  // the second index can be any numeric (if it exists)
-  if (arg3) {
-    if (!is_numeric_expr(arg3) || is_ast_null(arg3)) {
-      report_error(name_ast, "CQL0083: argument 3 must be numeric", name);
       record_error(ast);
       return;
     }
@@ -9627,7 +9581,7 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   // All three arguments must be provided.
-  if (!sem_validate_arg_count(ast, arg_count, 3)) {
+  if (!sem_validate_arg_pattern("t,t,t", ast, arg_count)) {
     return;
   }
 
@@ -9644,13 +9598,6 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
 
   ast_node *replace_with = third_arg(arg_list);
   sem_t replace_with_type = replace_with->sem->sem_type;
-
-  // All arguments must be strings.
-  if (!is_text(input_type) || !is_text(find_type) || !is_text(replace_with_type)) {
-    report_error(ast, "CQL0085: all arguments must be strings", name);
-    record_error(ast);
-    return;
-  }
 
   // The result is nonnull if all arguments are nonnull, and sensitive if any
   // arguments are sensitive.
@@ -9898,8 +9845,7 @@ static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (arg_count == 0 || arg_count > 2) {
-    sem_validate_arg_count(ast, arg_count, 2);
+  if (!sem_validate_arg_pattern("filrtb,[t]", ast, arg_count)) {
     return;
   }
 
@@ -9915,15 +9861,6 @@ static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
   ast_node *arg1 = first_arg(arg_list);
   sem_t sem_type = arg1->sem->sem_type;
   sem_t combined_flags = sensitive_flag(sem_type);
-
-  if (arg_count == 2) {
-    sem_t sem_type_2 = second_arg(arg_list)->sem->sem_type;
-    if (!is_text(sem_type_2)) {
-      report_error(ast, "CQL0086: second argument must be a string in function", name);
-      record_error(ast);
-      return;
-    }
-  }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | combined_flags);
 
@@ -9970,7 +9907,7 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
     }
   }
 
-  // Handling the very special case of strftime('now') as returning not null
+  // Handling the very special case of strftime('%s', 'now') as returning not null
   // this is super common.  This is just a format, and the known safe format.
   if (arg_count == 2 && has_format) {
     ast_node *first = first_arg(arg_list);

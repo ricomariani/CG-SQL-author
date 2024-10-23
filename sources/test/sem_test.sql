@@ -3098,8 +3098,7 @@ select total(id) t from foo;
 
 -- TEST: try sum functions with too many param
 -- + {select_stmt}: err
--- + {name total}: err
--- * error: % function got incorrect number of arguments 'total'
+-- * error: % too many arguments in function 'total'
 -- +1 error:
 select total(id, rate) from bar;
 
@@ -3247,21 +3246,21 @@ set ll := (select round(1.0, 2.0));
 -- TEST: bogus number of arguments in average
 -- + {assign}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'avg'
+-- * error: % too many arguments in function 'avg'
 -- +1 error:
 set X := (select avg(1,2) from foo);
 
 -- TEST: bogus string type in average
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 must be numeric 'avg'
+-- * error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'avg'
 -- +1 error:
 set X := (select avg('foo') from foo);
 
 -- TEST: bogus null literal in average
 -- + {assign}: err
 -- + {call}: err
--- * error: % argument 1 must be numeric 'avg'
+-- * error: % argument 1 is a NULL literal; useless in 'avg'
 -- +1 error:
 set X := (select avg(null) from foo);
 
@@ -3922,7 +3921,7 @@ select 1 from (select 1) limit printf('%s %d', 'x', 5) == 'x';
 update foo set id = 1, id = 3 where id = 2;
 
 -- TEST: bogus number of arguments in sum
--- * error: % function got incorrect number of arguments 'sum'
+-- * error: % too many arguments in function 'sum'
 -- + {assign}: err
 -- + {call}: err
 set X := (select sum(1,2) from foo);
@@ -3934,7 +3933,7 @@ set X := (select sum(1,2) from foo);
 set X := (select id from foo limit sum(1));
 
 -- TEST: sum used with text
--- * error: % argument 1 must be numeric 'sum'
+-- * error: % argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'sum'
 -- + {assign}: err
 -- + {call}: err
 set X := (select sum('x') from foo);
@@ -3966,19 +3965,19 @@ select id, group_concat(name) grp from bar group by id;
 select id, group_concat(name, 'x') grp from bar group by id;
 
 -- TEST: group_concat with bogus second arg
--- * error: % second argument must be a string in function 'group_concat'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'group_concat'
 -- +1 error:
 -- + {select_stmt}: err
 select id, group_concat(name, 0) from bar group by id;
 
 -- TEST: group_concat with zero args
--- * error: % function got incorrect number of arguments 'group_concat'
+-- * error: % too few arguments in function 'group_concat'
 -- +1 error:
 -- + {select_stmt}: err
 select id, group_concat() from bar group by id;
 
 -- TEST: group_concat with three args
--- * error: % function got incorrect number of arguments 'group_concat'
+-- * error: % too many arguments in function 'group_concat'
 -- +1 error:
 -- + {select_stmt}: err
 select id, group_concat('x', 'y', 'z') from bar group by id;
@@ -11277,7 +11276,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % first argument must be a string in function 'substr'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'substr'
 -- +1 error:
 proc substr_test_notstring()
 begin
@@ -11288,7 +11287,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 2 must be numeric 'substr'
+-- * error: % argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 -- +1 error:
 proc substr_test_arg2string()
 begin
@@ -11299,7 +11298,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % argument 3 must be numeric 'substr'
+-- * error: % argument 3 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 -- +1 error:
 proc substr_test_arg3string()
 begin
@@ -11310,7 +11309,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'substr'
+-- * error: % too few arguments in function 'substr'
 -- +1 error:
 proc substr_test_toofew()
 begin
@@ -11321,7 +11320,7 @@ end;
 -- + {create_proc_stmt}: err
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'substr'
+-- * error: % too many arguments in function 'substr'
 -- +1 error:
 proc substr_test_toomany()
 begin
@@ -11331,14 +11330,14 @@ end;
 -- TEST: The replace function requires exactly three arguments, not two.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'replace'
+-- * error: % too few arguments in function 'replace'
 -- +1 error:
 select replace('a', 'b');
 
 -- TEST: The replace function requires exactly three arguments, not four.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'replace'
+-- * error: % too many arguments in function 'replace'
 -- +1 error:
 select replace('a', 'b', 'c', 'd');
 
@@ -11351,21 +11350,21 @@ let dummy := replace('a', 'b', 'c');
 -- TEST: The first argument to replace must be a string.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % all arguments must be strings 'replace'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace(0, 'b', 'c');
 
 -- TEST: The second argument to replace must be a string.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % all arguments must be strings 'replace'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace('a', 0, 'c');
 
 -- TEST: The third argument to replace must be a string.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % all arguments must be strings 'replace'
+-- * error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
 select replace('a', 'b', 0);
 
@@ -11404,21 +11403,21 @@ select replace('a', 'b', nullable('c'));
 -- TEST: The first argument to replace must not be the literal NULL.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % all arguments must be strings 'replace'
+-- * error: % argument 1 'real' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
-select replace(null, 'b', 'c');
+select replace(2.0, 'b', 'c');
 
 -- TEST: The second argument to replace must not be the literal NULL.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % all arguments must be strings 'replace'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 -- +1 error:
-select replace('a', null, 'c');
+select replace('a', 1, 'c');
 
 -- TEST: The third argument to replace must not be the literal NULL.
 -- + {select_stmt}: err
 -- + {call}: err
--- * error: % all arguments must be strings 'replace'
+-- * error: % argument 3 is a NULL literal; useless in 'replace'
 -- +1 error:
 select replace('a', 'b', null);
 
@@ -12797,7 +12796,7 @@ select upper(name) from with_sensitive;
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name upper}
--- * error: % first argument must be a string in function 'upper'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'upper'
 -- +1 error:
 select upper(id) from bar;
 
@@ -12805,7 +12804,7 @@ select upper(id) from bar;
 -- + {select_stmt}: err
 -- + {call}: err
 -- + {name upper}
--- * error: % function got incorrect number of arguments 'upper'
+-- * error: % too many arguments in function 'upper'
 -- +1 error:
 select upper(name, 1) from bar;
 

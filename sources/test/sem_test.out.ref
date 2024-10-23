@@ -10072,7 +10072,7 @@ The statement ending at line XXXX
 SELECT total(id, rate)
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'total'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'total'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -10081,7 +10081,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name total}: err
+  |     |     | {name total}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -10789,7 +10789,7 @@ The statement ending at line XXXX
 SET X := ( SELECT avg(1, 2)
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'avg'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'avg'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10800,7 +10800,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name avg}: err
+    |     |     | {name avg}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -10823,7 +10823,7 @@ The statement ending at line XXXX
 SET X := ( SELECT avg('foo')
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'avg'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'avg'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10838,7 +10838,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'a
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {strlit 'foo'}: text notnull
+    |     |         | {strlit 'foo'}: err
     |     | {select_from_etc}: TABLE { foo: foo }
     |       | {table_or_subquery_list}: TABLE { foo: foo }
     |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -10855,7 +10855,7 @@ The statement ending at line XXXX
 SET X := ( SELECT avg(NULL)
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'avg'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal; useless in 'avg'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -10870,7 +10870,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0082: argument 1 must be numeric 'a
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {null}: null
+    |     |         | {null}: err
     |     | {select_from_etc}: TABLE { foo: foo }
     |       | {table_or_subquery_list}: TABLE { foo: foo }
     |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -13529,7 +13529,7 @@ The statement ending at line XXXX
 SET X := ( SELECT sum(1, 2)
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'sum'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sum'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -13540,7 +13540,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
     |     | {select_expr_list}: err
     |     | | {select_expr}: err
     |     |   | {call}: err
-    |     |     | {name sum}: err
+    |     |     | {name sum}
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
@@ -13598,7 +13598,7 @@ The statement ending at line XXXX
 SET X := ( SELECT sum('x')
   FROM foo );
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 1 must be numeric 'sum'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'sum'
 
   {assign}: err
   | {name X}: X: integer variable was_set
@@ -13613,7 +13613,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 1 must be numeric 's
     |     |     | {call_arg_list}
     |     |       | {call_filter_clause}
     |     |       | {arg_list}: ok
-    |     |         | {strlit 'x'}: text notnull
+    |     |         | {strlit 'x'}: err
     |     | {select_from_etc}: TABLE { foo: foo }
     |       | {table_or_subquery_list}: TABLE { foo: foo }
     |       | | {table_or_subquery}: TABLE { foo: foo }
@@ -13823,7 +13823,7 @@ SELECT id, group_concat(name, 0)
   FROM bar
   GROUP BY id;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0086: second argument must be a string in function 'group_concat'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'group_concat'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13841,7 +13841,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0086: second argument must be a st
   |     |         | {arg_list}: ok
   |     |           | {name name}: name: text
   |     |           | {arg_list}
-  |     |             | {int 0}: integer notnull
+  |     |             | {int 0}: err
   |     | {select_from_etc}: TABLE { bar: bar }
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -13863,7 +13863,7 @@ SELECT id, group_concat()
   FROM bar
   GROUP BY id;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'group_concat'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'group_concat'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13875,7 +13875,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | | {select_expr_list}
   |     |   | {select_expr}: err
   |     |     | {call}: err
-  |     |       | {name group_concat}: err
+  |     |       | {name group_concat}
   |     |       | {call_arg_list}
   |     |         | {call_filter_clause}
   |     | {select_from_etc}: TABLE { bar: bar }
@@ -13899,7 +13899,7 @@ SELECT id, group_concat('x', 'y', 'z')
   FROM bar
   GROUP BY id;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'group_concat'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'group_concat'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13911,7 +13911,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | | {select_expr_list}
   |     |   | {select_expr}: err
   |     |     | {call}: err
-  |     |       | {name group_concat}: err
+  |     |       | {name group_concat}
   |     |       | {call_arg_list}
   |     |         | {call_filter_clause}
   |     |         | {arg_list}: ok
@@ -42498,7 +42498,7 @@ BEGIN
   SELECT substr(3, 1, 2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0086: first argument must be a string in function 'substr'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_notstring}: err
@@ -42515,7 +42515,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0086: first argument must be a str
         |     |     | {call_arg_list}
         |     |       | {call_filter_clause}
         |     |       | {arg_list}: ok
-        |     |         | {int 3}: integer notnull
+        |     |         | {int 3}: err
         |     |         | {arg_list}
         |     |           | {int 1}: integer notnull
         |     |           | {arg_list}
@@ -42535,7 +42535,7 @@ BEGIN
   SELECT substr('x', '1', 2);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 2 must be numeric 'substr'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 2 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_arg2string}: err
@@ -42554,7 +42554,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 2 must be numeric 's
         |     |       | {arg_list}: ok
         |     |         | {strlit 'x'}: text notnull
         |     |         | {arg_list}
-        |     |           | {strlit '1'}: text notnull
+        |     |           | {strlit '1'}: err
         |     |           | {arg_list}
         |     |             | {int 2}: integer notnull
         |     | {select_from_etc}: ok
@@ -42572,7 +42572,7 @@ BEGIN
   SELECT substr('x', 1, '2');
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 3 must be numeric 'substr'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 3 'text' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' in 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_arg3string}: err
@@ -42593,7 +42593,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0083: argument 3 must be numeric 's
         |     |         | {arg_list}
         |     |           | {int 1}: integer notnull
         |     |           | {arg_list}
-        |     |             | {strlit '2'}: text notnull
+        |     |             | {strlit '2'}: err
         |     | {select_from_etc}: ok
         |       | {select_where}
         |         | {select_groupby}
@@ -42609,7 +42609,7 @@ BEGIN
   SELECT substr('x');
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'substr'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_toofew}: err
@@ -42622,7 +42622,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
         |     | {select_expr_list}: err
         |     | | {select_expr}: err
         |     |   | {call}: err
-        |     |     | {name substr}: err
+        |     |     | {name substr}
         |     |     | {call_arg_list}
         |     |       | {call_filter_clause}
         |     |       | {arg_list}: ok
@@ -42642,7 +42642,7 @@ BEGIN
   SELECT substr('x', 1, 2, 4);
 END;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'substr'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'substr'
 
   {create_proc_stmt}: err
   | {name substr_test_toomany}: err
@@ -42655,7 +42655,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
         |     | {select_expr_list}: err
         |     | | {select_expr}: err
         |     |   | {call}: err
-        |     |     | {name substr}: err
+        |     |     | {name substr}
         |     |     | {call_arg_list}
         |     |       | {call_filter_clause}
         |     |       | {arg_list}: ok
@@ -42678,7 +42678,7 @@ The statement ending at line XXXX
 
 SELECT replace('a', 'b');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'replace'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42687,7 +42687,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name replace}: err
+  |     |     | {name replace}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -42706,7 +42706,7 @@ The statement ending at line XXXX
 
 SELECT replace('a', 'b', 'c', 'd');
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'replace'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42715,7 +42715,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name replace}: err
+  |     |     | {name replace}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -42757,7 +42757,7 @@ The statement ending at line XXXX
 
 SELECT replace(0, 'b', 'c');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42770,7 +42770,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 0}: integer notnull
+  |     |         | {int 0}: err
   |     |         | {arg_list}
   |     |           | {strlit 'b'}: text notnull
   |     |           | {arg_list}
@@ -42787,7 +42787,7 @@ The statement ending at line XXXX
 
 SELECT replace('a', 0, 'c');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42802,7 +42802,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
   |     |       | {arg_list}: ok
   |     |         | {strlit 'a'}: text notnull
   |     |         | {arg_list}
-  |     |           | {int 0}: integer notnull
+  |     |           | {int 0}: err
   |     |           | {arg_list}
   |     |             | {strlit 'c'}: text notnull
   |     | {select_from_etc}: ok
@@ -42817,7 +42817,7 @@ The statement ending at line XXXX
 
 SELECT replace('a', 'b', 0);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 3 'integer' is an invalid type; valid types are: 'text' in 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42834,7 +42834,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
   |     |         | {arg_list}
   |     |           | {strlit 'b'}: text notnull
   |     |           | {arg_list}
-  |     |             | {int 0}: integer notnull
+  |     |             | {int 0}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -42972,9 +42972,9 @@ SELECT replace('a', 'b', nullable('c'));
 
 The statement ending at line XXXX
 
-SELECT replace(NULL, 'b', 'c');
+SELECT replace(2.0, 'b', 'c');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'real' is an invalid type; valid types are: 'text' in 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -42987,7 +42987,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {null}: null
+  |     |         | {dbl 2.0}: err
   |     |         | {arg_list}
   |     |           | {strlit 'b'}: text notnull
   |     |           | {arg_list}
@@ -43002,9 +43002,9 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
 
 The statement ending at line XXXX
 
-SELECT replace('a', NULL, 'c');
+SELECT replace('a', 1, 'c');
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -43019,7 +43019,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
   |     |       | {arg_list}: ok
   |     |         | {strlit 'a'}: text notnull
   |     |         | {arg_list}
-  |     |           | {null}: null
+  |     |           | {int 1}: err
   |     |           | {arg_list}
   |     |             | {strlit 'c'}: text notnull
   |     | {select_from_etc}: ok
@@ -43034,7 +43034,7 @@ The statement ending at line XXXX
 
 SELECT replace('a', 'b', NULL);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be strings 'replace'
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 3 is a NULL literal; useless in 'replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -43051,7 +43051,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0085: all arguments must be string
   |     |         | {arg_list}
   |     |           | {strlit 'b'}: text notnull
   |     |           | {arg_list}
-  |     |             | {null}: null
+  |     |             | {null}: err
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -47869,7 +47869,7 @@ The statement ending at line XXXX
 SELECT upper(id)
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0086: first argument must be a string in function 'upper'
+test/sem_test.sql:XXXX:1: error: in str : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' in 'upper'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -47882,7 +47882,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0086: first argument must be a stri
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {name id}: id: integer notnull
+  |     |         | {name id}: err
   |     | {select_from_etc}: TABLE { bar: bar }
   |       | {table_or_subquery_list}: TABLE { bar: bar }
   |       | | {table_or_subquery}: TABLE { bar: bar }
@@ -47899,7 +47899,7 @@ The statement ending at line XXXX
 SELECT upper(name, 1)
   FROM bar;
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'upper'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'upper'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -47908,7 +47908,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name upper}: err
+  |     |     | {name upper}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok

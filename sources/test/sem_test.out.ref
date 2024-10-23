@@ -13232,7 +13232,7 @@ The statement ending at line XXXX
 
 SELECT last_insert_rowid(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'last_insert_rowid'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'last_insert_rowid'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13241,7 +13241,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name last_insert_rowid}: err
+  |     |     | {name last_insert_rowid}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -13331,7 +13331,7 @@ The statement ending at line XXXX
 
 SELECT changes(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'changes'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'changes'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -13340,7 +13340,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name changes}: err
+  |     |     | {name changes}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -95163,4 +95163,160 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in functio
       | {select_orderby}
         | {select_limit}
           | {select_offset}
+
+The statement ending at line XXXX
+
+LET sql_vers := ( SELECT sqlite_version() );
+
+  {let_stmt}: sql_vers: text notnull variable
+  | {name sql_vers}: sql_vers: text notnull variable
+  | {select_stmt}: _anon: text notnull
+    | {select_core_list}: select: { _anon: text notnull }
+    | | {select_core}: select: { _anon: text notnull }
+    |   | {select_expr_list_con}: select: { _anon: text notnull }
+    |     | {select_expr_list}: select: { _anon: text notnull }
+    |     | | {select_expr}: text notnull
+    |     |   | {call}: text notnull
+    |     |     | {name sqlite_version}: text notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET sql_vers := ( SELECT sqlite_version(1) );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sqlite_version'
+
+  {assign}: err
+  | {name sql_vers}: sql_vers: text notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name sqlite_version}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET t_changes := ( SELECT total_changes() );
+
+  {let_stmt}: t_changes: longint notnull variable
+  | {name t_changes}: t_changes: longint notnull variable
+  | {select_stmt}: _anon: longint notnull
+    | {select_core_list}: select: { _anon: longint notnull }
+    | | {select_core}: select: { _anon: longint notnull }
+    |   | {select_expr_list_con}: select: { _anon: longint notnull }
+    |     | {select_expr_list}: select: { _anon: longint notnull }
+    |     | | {select_expr}: longint notnull
+    |     |   | {call}: longint notnull
+    |     |     | {name total_changes}: longint notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET t_changes := ( SELECT total_changes(1) );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'total_changes'
+
+  {assign}: err
+  | {name t_changes}: t_changes: longint notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name total_changes}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+LET sql_src := ( SELECT sqlite_source_id() );
+
+  {let_stmt}: sql_src: text notnull variable
+  | {name sql_src}: sql_src: text notnull variable
+  | {select_stmt}: _anon: text notnull
+    | {select_core_list}: select: { _anon: text notnull }
+    | | {select_core}: select: { _anon: text notnull }
+    |   | {select_expr_list_con}: select: { _anon: text notnull }
+    |     | {select_expr_list}: select: { _anon: text notnull }
+    |     | | {select_expr}: text notnull
+    |     |   | {call}: text notnull
+    |     |     | {name sqlite_source_id}: text notnull
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET sql_src := ( SELECT sqlite_source_id(1) );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sqlite_source_id'
+
+  {assign}: err
+  | {name sql_src}: sql_src: text notnull variable
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name sqlite_source_id}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {int 1}: integer notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
 

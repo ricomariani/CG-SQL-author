@@ -9876,10 +9876,10 @@ static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
 // and only require a database connection. They are fair game in most places and since they take
 // no args, not a lot can go wrong.
 static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count) {
-  has_dml = 1;
+  has_dml = true;
 
-  if (!sem_validate_arg_count(ast, arg_count, 0)) {
-    return 1;
+  if (!sem_validate_arg_pattern("", ast, arg_count)) {
+    return false;
   }
 
   // DB functions can appear reasonably in most places, but not for grouping or limiting
@@ -9891,10 +9891,10 @@ static bool sem_validate_db_func_with_no_args(ast_node *ast, uint32_t arg_count)
           SEM_EXPR_CONTEXT_HAVING |
           SEM_EXPR_CONTEXT_UDF |
           SEM_EXPR_CONTEXT_NONE)) {
-            return 1;
+            return false;
   }
 
-  return 0;
+  return true;
 }
 
 // The random function gives you a random long_int
@@ -9942,19 +9942,65 @@ static void sem_func_changes(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
-  if (sem_validate_db_func_with_no_args(ast, arg_count)) {
+  if (!sem_validate_db_func_with_no_args(ast, arg_count)) {
     return;
   }
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_INTEGER | SEM_TYPE_NOTNULL);
 }
 
+// The total_changes() function returns the number of row changes caused by
+// INSERT, UPDATE or DELETE statements since the current database connection was
+// opened. This function is a wrapper around the sqlite3_total_changes64() C/C++
+// interface.
+static void sem_func_total_changes(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+
+  if (!sem_validate_db_func_with_no_args(ast, arg_count)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
+}
+
+// The sqlite_source_id() function returns a string that identifies the specific
+// version of the source code that was used to build the SQLite library. The
+// string returned by sqlite_source_id() is the date and time that the source
+// code was checked in followed by the SHA3-256 hash for that check-in. This
+// function is an SQL wrapper around the sqlite3_sourceid() C interface
+static void sem_func_sqlite_source_id(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+
+  if (!sem_validate_db_func_with_no_args(ast, arg_count)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+}
+
+// The sqlite_version() function returns the version string for the SQLite
+// library that is running. This function is an SQL wrapper around the
+// sqlite3_libversion() C-interface
+static void sem_func_sqlite_version(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+
+  if (!sem_validate_db_func_with_no_args(ast, arg_count)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
+}
+
+
 // The last_insert_rowid function is used to get the rowid of the most recently inserted row with a rowid.
 static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
 
-  if (sem_validate_db_func_with_no_args(ast, arg_count)) {
+  if (!sem_validate_db_func_with_no_args(ast, arg_count)) {
     return;
   }
 
@@ -25832,48 +25878,51 @@ cql_noexport void sem_main(ast_node *ast) {
   AGGR_FUNC_INIT(json_group_object);
   AGGR_FUNC_INIT(jsonb_group_object);
 
-  FUNC_INIT(ifnull);
-  FUNC_INIT(nullif);
-  FUNC_INIT(upper);
-  FUNC_INIT(lower);
+  FUNC_INIT(abs);
+  FUNC_INIT(changes);
+  FUNC_INIT(char);
+  FUNC_INIT(coalesce);
+  FUNC_INIT(cql_compressed);
   FUNC_INIT(cql_cursor_diff_col);
   FUNC_INIT(cql_cursor_diff_val);
-  FUNC_INIT(char);
-  FUNC_INIT(sign);
-  FUNC_INIT(abs);
-  FUNC_INIT(round);
-  FUNC_INIT(instr);
-  FUNC_INIT(coalesce);
-  FUNC_INIT(last_insert_rowid);
-  FUNC_INIT(changes);
-  FUNC_INIT(printf);
-  FUNC_INIT(format);
-  FUNC_INIT(strftime);
+  FUNC_INIT(cume_dist);
   FUNC_INIT(date);
-  FUNC_INIT(time);
   FUNC_INIT(datetime);
-  FUNC_INIT(julianday);
+  FUNC_INIT(dense_rank);
+  FUNC_INIT(first_value);
+  FUNC_INIT(format);
+  FUNC_INIT(ifnull);
   FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull_throw);
+  FUNC_INIT(instr);
+  FUNC_INIT(julianday);
+  FUNC_INIT(lag);
+  FUNC_INIT(last_insert_rowid);
+  FUNC_INIT(last_value);
+  FUNC_INIT(lead);
+  FUNC_INIT(likely);
+  FUNC_INIT(lower);
+  FUNC_INIT(nth_value);
+  FUNC_INIT(ntile);
   FUNC_INIT(nullable);
+  FUNC_INIT(nullif);
+  FUNC_INIT(percent_rank);
+  FUNC_INIT(printf);
+  FUNC_INIT(random);
+  FUNC_INIT(rank);
+  FUNC_INIT(replace);
+  FUNC_INIT(round);
+  FUNC_INIT(row_number);
   FUNC_INIT(sensitive);
+  FUNC_INIT(sign);
+  FUNC_INIT(strftime);
+  FUNC_INIT(sqlite_version);
+  FUNC_INIT(sqlite_source_id);
   FUNC_INIT(substr);
   FUNC_INIT(substring);
-  FUNC_INIT(replace);
-  FUNC_INIT(row_number);
-  FUNC_INIT(rank);
-  FUNC_INIT(dense_rank);
-  FUNC_INIT(percent_rank);
-  FUNC_INIT(cume_dist);
-  FUNC_INIT(ntile);
-  FUNC_INIT(lag);
-  FUNC_INIT(lead);
-  FUNC_INIT(first_value);
-  FUNC_INIT(last_value);
-  FUNC_INIT(nth_value);
-  FUNC_INIT(random);
-  FUNC_INIT(likely);
-  FUNC_INIT(cql_compressed);
+  FUNC_INIT(time);
+  FUNC_INIT(total_changes);
+  FUNC_INIT(upper);
 
   FUNC_REWRITE_INIT(json);
   FUNC_REWRITE_INIT(jsonb);

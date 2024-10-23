@@ -3841,8 +3841,8 @@ select last_insert_rowid();
 
 -- TEST: last_insert_row doesn't take args
 -- + {select_stmt}: err
--- + {name last_insert_rowid}: err
--- * error: % function got incorrect number of arguments 'last_insert_rowid'
+-- + {call}: err
+-- * error: % too many arguments in function 'last_insert_rowid'
 -- +1 error:
 select last_insert_rowid(1);
 
@@ -3872,8 +3872,8 @@ select changes();
 
 -- TEST: changes doesn't take args
 -- + {select_stmt}: err
--- + {name changes}: err
--- * error: % function got incorrect number of arguments 'changes'
+-- + {call}: err
+-- * error: % too many arguments in function 'changes'
 -- +1 error:
 select changes(1);
 
@@ -25278,3 +25278,39 @@ set like_func := like();
 -- * error: % too few arguments in function 'glob'
 -- +1 error:
 set glob_func := glob();
+
+-- TEST: sqlite version normal call
+-- + LET sql_vers := ( SELECT sqlite_version() );
+-- + {let_stmt}: sql_vers: text notnull variable
+-- - error:
+let sql_vers := (select sqlite_version());
+
+-- TEST: sqlite version normal call
+-- + {call}: err
+-- * error: % too many arguments in function 'sqlite_version'
+-- +1 error:
+set sql_vers := (select sqlite_version(1));
+
+-- TEST: sqlite version normal call
+-- + LET t_changes := ( SELECT total_changes() );
+-- + {let_stmt}: t_changes: longint notnull variable
+-- - error:
+let t_changes := (select total_changes());
+
+-- TEST: sqlite version normal call
+-- + {call}: err
+-- * error: % too many arguments in function 'total_changes'
+-- +1 error:
+set t_changes := (select total_changes(1));
+
+-- TEST: sqlite version normal call
+-- + LET sql_src := ( SELECT sqlite_source_id() );
+-- + {let_stmt}: sql_src: text notnull variable
+-- - error:
+let sql_src := (select sqlite_source_id());
+
+-- TEST: sqlite version normal call
+-- +{call}: err
+-- * error: % too many arguments in function 'sqlite_source_id'
+-- +1 error:
+set sql_src := (select sqlite_source_id(1));

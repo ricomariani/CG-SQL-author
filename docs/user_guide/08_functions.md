@@ -202,26 +202,63 @@ CQL's hard-coded builtin list includes:
 
 *Scalar Functions*
 
- * ifnull
- * nullif
- * upper
- * char
- * abs
- * instr
- * coalesce
- * last_insert_rowid
- * printf
- * strftime
- * date
- * time
- * datetime
- * julianday
- * substr
- * replace
- * round
- * trim
- * ltrim
- * rtrim
+* abs
+* changes
+* char
+* coalesce
+* concat
+* concat_ws
+* format
+* glob
+* hex
+* ifnull
+* iif
+* instr
+* last_insert_rowid
+* length
+* like
+* like
+* likelihood
+* likely
+* load_extension
+* load_extension
+* lower
+* ltrim
+* ltrim
+* max
+* min
+* nullif
+* octet_length
+* printf
+* quote
+* random
+* randomblob
+* replace
+* round
+* round
+* rtrim
+* rtrim
+* sign
+* soundex
+* sqlite_compileoption_get
+* sqlite_compileoption_used
+* sqlite_offset
+* sqlite_source_id
+* sqlite_version
+* substr
+* substr
+* substring
+* substring
+* total_changes
+* trim
+* trim
+* typeof
+* unhex
+* unhex
+* unicode
+* unlikely
+* upper
+* zeroblob
 
 *Window Functions*
 
@@ -302,6 +339,31 @@ DECLARE SELECT FUNC json_tree NO CHECK
 
 > NOTE: key, value, and atom can be any type and will require a cast operation similar to
 > `json_extract`, see the notes above.
+
+*Boxing and Unboxing*
+
+These can be used to create an `object<cql_box>` from the various primitives.  This can
+then be stored generically in something that holds objects. The unbox methods can be used
+to extract the original value.
+
+* cql_box_blob
+* cql_box_bool
+* cql_box_get_type
+* cql_box_int
+* cql_box_long
+* cql_box_object
+* cql_box_real
+* cql_box_text
+* cql_unbox_blob
+* cql_unbox_bool
+* cql_unbox_int
+* cql_unbox_long
+* cql_unbox_object
+* cql_unbox_real
+* cql_unbox_text
+
+These functions have pipeline aliases  `:box`, `:type` and `:to_int`,
+`:to_bool`,  etc.
 
 *Dyanmic Cursor Functions*
 

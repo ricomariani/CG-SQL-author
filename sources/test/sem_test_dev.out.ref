@@ -841,7 +841,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_bool AS cql_unbox_bool;
+@OP OBJECT<cql_box> : call to_bool AS cql_unbox_bool;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -850,7 +850,8 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
@@ -860,7 +861,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_int AS cql_unbox_int;
+@OP OBJECT<cql_box> : call to_int AS cql_unbox_int;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -869,7 +870,8 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
@@ -879,7 +881,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_long AS cql_unbox_long;
+@OP OBJECT<cql_box> : call to_long AS cql_unbox_long;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -888,7 +890,8 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
@@ -898,7 +901,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_real AS cql_unbox_real;
+@OP OBJECT<cql_box> : call to_real AS cql_unbox_real;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -907,7 +910,8 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
@@ -917,7 +921,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_text AS cql_unbox_text;
+@OP OBJECT<cql_box> : call to_text AS cql_unbox_text;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -926,7 +930,8 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
@@ -936,7 +941,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_blob AS cql_unbox_blob;
+@OP OBJECT<cql_box> : call to_blob AS cql_unbox_blob;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -945,7 +950,8 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
@@ -955,7 +961,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP OBJECT : call to_object AS cql_unbox_object;
+@OP OBJECT<cql_box> : call to_object AS cql_unbox_object;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -964,12 +970,33 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {op_stmt}: ok
-    | {type_object}: object
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
     | {op_vals}
       | {name call}
       | {op_vals}
         | {name to_object}
         | {name cql_unbox_object}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_box> : call type AS cql_box_get_type;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_box>
+    | | {name cql_box}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name type}
+        | {name cql_box_get_type}
 
 The statement ending at line XXXX
 

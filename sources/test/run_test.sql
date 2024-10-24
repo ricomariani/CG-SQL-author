@@ -6551,7 +6551,7 @@ TEST!(object_dictionary,
 BEGIN
   let d := cql_object_dictionary_create();
   d:add("foo", 101:box);
-  let v := d:find("foo"):ifnull_throw:to_int;
+  let v := d:find("foo")~object<cql_box>~:ifnull_throw:to_int;
   EXPECT!(v == 101);
 END);
 

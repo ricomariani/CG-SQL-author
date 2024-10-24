@@ -7444,13 +7444,18 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
 
   // We allow conversion between numeric types without going to SQLite, the text conversions
   // are crazy complex and basically impossible to clone so you have to do (select cast(...))
-  // for those.
+  // for those. A no-op cast to change kind is ok too.
 
-  if (!is_numeric(data_type->sem->sem_type) || !is_numeric(expr->sem->sem_type)) {
-    if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
-      report_error(ast, "CQL0073: CAST may only appear in the context of SQL statement", NULL);
-      record_error(ast);
-      return;
+  sem_t sem1 = data_type->sem->sem_type;
+  sem_t sem2 = expr->sem->sem_type;
+
+  if (core_type_of(sem1) != core_type_of(sem2)) {
+    if (!is_numeric(sem1) || !is_numeric(sem2)) {
+      if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {
+        report_error(ast, "CQL0073: CAST may only appear in the context of SQL statement", NULL);
+        record_error(ast);
+        return;
+      }
     }
   }
 

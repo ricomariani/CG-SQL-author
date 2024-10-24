@@ -2227,30 +2227,34 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
       bool_norm = "!!";
       type_text = rt->cql_bool;
       break;
-  }
 
-  Invariant(type_text);  // all other types forbidden by semantic analysis
+    default:
+      // all other types forbidden by semantic analysis
+      Invariant(core_type_expr == core_type_result);
+      break;
+  }
 
   CG_RESERVE_RESULT_VAR(cast_expr, sem_type_result);
   CG_PUSH_EVAL(expr, pri_new);
   CHARBUF_OPEN(result);
-
-  bprintf(&result, "((%s)%s(%s))", type_text, bool_norm, expr_value.ptr);
 
   if (core_type_expr == core_type_result) {
     // no-op cast, just pass through
     bprintf(is_null, "%s", expr_is_null.ptr);
     bprintf(value, "%s", expr_value.ptr);
   }
-  else if (is_not_nullable(sem_type_result)) {
-    // simple cast, use the result with no temporary
-    bprintf(value, "%s", result.ptr);
-    bprintf(is_null, "0");
-  }
-  else {
-    // nullable form, make a result variable and store
-    CG_USE_RESULT_VAR();
-    cg_set_nullable(cg_main_output, result_var.ptr, expr_is_null.ptr, result.ptr);
+  else  {
+    bprintf(&result, "((%s)%s(%s))", type_text, bool_norm, expr_value.ptr);
+    if (is_not_nullable(sem_type_result)) {
+      // simple cast, use the result with no temporary
+      bprintf(value, "%s", result.ptr);
+      bprintf(is_null, "0");
+    }
+    else {
+      // nullable form, make a result variable and store
+      CG_USE_RESULT_VAR();
+      cg_set_nullable(cg_main_output, result_var.ptr, expr_is_null.ptr, result.ptr);
+    }
   }
 
   CHARBUF_CLOSE(result);

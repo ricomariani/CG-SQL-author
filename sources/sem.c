@@ -8565,6 +8565,23 @@ static void sem_func_quote(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
 }
 
+static void sem_func_soundex(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+    return;
+  }
+
+  name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_TEXT, arg_list);
+  copy_nullability(ast, SEM_TYPE_NOTNULL);
+}
+
 static void sem_func_hex(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
@@ -26014,6 +26031,10 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(upper);
   FUNC_INIT(zeroblob);
 
+  FUNC_REWRITE_INIT(concat);
+  FUNC_REWRITE_INIT(concat_ws);
+  FUNC_REWRITE_INIT(glob);
+  FUNC_REWRITE_INIT(hex);
   FUNC_REWRITE_INIT(json);
   FUNC_REWRITE_INIT(json_array);
   FUNC_REWRITE_INIT(json_array_length);
@@ -26038,13 +26059,9 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(jsonb_remove);
   FUNC_REWRITE_INIT(jsonb_replace);
   FUNC_REWRITE_INIT(jsonb_set);
-
-  FUNC_REWRITE_INIT(concat);
-  FUNC_REWRITE_INIT(concat_ws);
-  FUNC_REWRITE_INIT(glob);
-  FUNC_REWRITE_INIT(hex);
   FUNC_REWRITE_INIT(like);
   FUNC_REWRITE_INIT(quote);
+  FUNC_REWRITE_INIT(soundex);
   FUNC_REWRITE_INIT(unhex);
 
   SPECIAL_FUNC_INIT(count);

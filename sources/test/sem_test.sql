@@ -25402,7 +25402,18 @@ set hex_str := hex(1);
 -- + SET hex_str := ifnull_throw(( SELECT hex(nullable("123")) IF NOTHING THEN THROW ));
 -- + {select_if_nothing_throw_expr}: _anon: text
 -- - error:
-set hex_str := hex(nullable("123")):ifnull_throw;
+set hex_str := "123":nullable:hex:ifnull_throw;
+
+-- TEST: normal call to soundex
+-- + LET soundex_str := ( SELECT soundex(nullable("123")) IF NOTHING THEN THROW );
+-- + {let_stmt}: soundex_str: text notnull variable
+-- - error:
+let soundex_str := "123":nullable:soundex;
+
+-- TEST: soundex call with bad arg
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'soundex'
+-- +1 error:
+set soundex_str := soundex(1);
 
 -- TEST: normal call to unhex
 -- + LET unhex_blob := ( SELECT unhex("1234") IF NOTHING THEN THROW );
@@ -25426,7 +25437,7 @@ set unhex_blob := unhex(1);
 -- + SET unhex_blob := ifnull_throw(( SELECT unhex(nullable("1234")) IF NOTHING THEN THROW ));
 -- + {select_if_nothing_throw_expr}: _anon: blob
 -- - error:
-set unhex_blob := unhex(nullable("1234")):ifnull_throw;
+set unhex_blob := "1234":nullable:unhex:ifnull_throw;
 
 -- TEST: normal call to quote
 -- + LET quote_str := ( SELECT quote("123") IF NOTHING THEN THROW );
@@ -25444,7 +25455,7 @@ set quote_str := quote();
 -- + SET quote_str := ifnull_throw(( SELECT quote(nullable("123")) IF NOTHING THEN THROW ));
 -- + {select_if_nothing_throw_expr}: _anon: text
 -- - error:
-set quote_str := quote(nullable("123")):ifnull_throw;
+set quote_str := "123":nullable:quote:ifnull_throw;
 
 -- TEST: zero blob success
 -- + {let_stmt}: zero_blob: blob notnull variable

@@ -15083,6 +15083,24 @@ select random(5);
 -- - error:
 select random();
 
+-- TEST: sqlite_offset takes exactly one argument successfully
+-- + {select_stmt}: select: { _anon: longint }
+-- + {name sqlite_offset}: longint
+-- - error:
+select sqlite_offset(true);
+
+-- TEST: sqlite_offset is only allowed in SQL
+-- + {call}: err
+-- * error: % function may not appear in this context 'sqlite_offset'
+-- +1 error:
+sqlite_offset(1);
+
+-- TEST: sqlite_offset doesn't work on NULL
+-- + {call}: err
+-- * error: % argument 1 is a NULL literal; useless in 'sqlite_offset'
+-- +1 error:
+select sqlite_offset(null);
+
 -- TEST: likely takes exactly one argument successfully
 -- + {select_stmt}: select: { _anon: bool notnull }
 -- + {name likely}: bool notnull

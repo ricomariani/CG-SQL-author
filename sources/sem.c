@@ -10038,6 +10038,30 @@ static void sem_func_likelihood(ast_node *ast, uint32_t arg_count) {
   ast->sem->kind = arg->sem->kind;
 }
 
+// sqlite_offset returns the offset of the expression. Kind of like
+// &foo in its storage. If foo is not a thing that has an "lvalue"
+// you get null.  e.g. foo+1
+static void sem_func_sqlite_offset(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left)
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // no object, no null literal
+  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+    return;
+  }
+
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // long nullable return type
+  // expressions that are not columns in a table return null
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER);
+}
+
 // The likely function is a no-op function used for query optimizations.
 // It tells the query planner that the given (one) argument is probably a boolean value of `true`.
 static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
@@ -26052,6 +26076,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(rtrim);
   FUNC_INIT(sensitive);
   FUNC_INIT(sign);
+  FUNC_INIT(sqlite_offset);
   FUNC_INIT(sqlite_source_id);
   FUNC_INIT(sqlite_version);
   FUNC_INIT(strftime);

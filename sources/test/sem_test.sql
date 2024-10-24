@@ -25537,3 +25537,27 @@ set type_string := (select typeof(null));
 -- * error: % function may not appear in this context 'typeof'
 -- +1 error:
 set type_string := typeof(null);
+
+-- TEST: try to  load extension, good args
+-- + {let_stmt}: loaded: bool variable was_set
+-- + {call}: bool
+-- - error:
+let loaded := (select load_extension('foo', 'bar'));
+
+-- TEST: try to  load extension, good args
+-- + {assign}: loaded: bool variable was_set
+-- + {call}: bool
+-- - error:
+set loaded := (select load_extension('foo'));
+
+-- TEST: try to  load extension, nno args
+-- + {call}: err
+-- * error: % too few arguments in function 'load_extension'
+-- +1 error:
+set loaded := (select load_extension());
+
+-- TEST: try to  load extension, wrong context
+-- + {call}: err
+-- * error: % function may not appear in this context 'load_extension'
+-- +1 error:
+set loaded := load_extension('foo');

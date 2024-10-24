@@ -96318,3 +96318,98 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
       | {arg_list}: ok
         | {null}: null
 
+The statement ending at line XXXX
+
+LET loaded := ( SELECT load_extension('foo', 'bar') );
+
+  {let_stmt}: loaded: bool variable was_set
+  | {name loaded}: loaded: bool variable was_set
+  | {select_stmt}: _anon: bool
+    | {select_core_list}: select: { _anon: bool }
+    | | {select_core}: select: { _anon: bool }
+    |   | {select_expr_list_con}: select: { _anon: bool }
+    |     | {select_expr_list}: select: { _anon: bool }
+    |     | | {select_expr}: bool
+    |     |   | {call}: bool
+    |     |     | {name load_extension}: bool
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'foo'}: text notnull
+    |     |         | {arg_list}
+    |     |           | {strlit 'bar'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET loaded := ( SELECT load_extension('foo') );
+
+  {assign}: loaded: bool variable was_set
+  | {name loaded}: loaded: bool variable was_set
+  | {select_stmt}: _anon: bool
+    | {select_core_list}: select: { _anon: bool }
+    | | {select_core}: select: { _anon: bool }
+    |   | {select_expr_list_con}: select: { _anon: bool }
+    |     | {select_expr_list}: select: { _anon: bool }
+    |     | | {select_expr}: bool
+    |     |   | {call}: bool
+    |     |     | {name load_extension}: bool
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     |       | {arg_list}: ok
+    |     |         | {strlit 'foo'}: text notnull
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET loaded := ( SELECT load_extension() );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'load_extension'
+
+  {assign}: err
+  | {name loaded}: loaded: bool variable was_set
+  | {select_stmt}: err
+    | {select_core_list}: err
+    | | {select_core}: err
+    |   | {select_expr_list_con}: err
+    |     | {select_expr_list}: err
+    |     | | {select_expr}: err
+    |     |   | {call}: err
+    |     |     | {name load_extension}
+    |     |     | {call_arg_list}
+    |     |       | {call_filter_clause}
+    |     | {select_from_etc}: ok
+    |       | {select_where}
+    |         | {select_groupby}
+    |           | {select_having}
+    | {select_orderby}
+      | {select_limit}
+        | {select_offset}
+
+The statement ending at line XXXX
+
+SET loaded := load_extension('foo');
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'load_extension'
+
+  {assign}: err
+  | {name loaded}: loaded: bool variable was_set
+  | {call}: err
+    | {name load_extension}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'foo'}: text notnull
+

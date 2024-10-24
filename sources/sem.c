@@ -10044,9 +10044,6 @@ static void sem_func_likelihood(ast_node *ast, uint32_t arg_count) {
 static void sem_func_sqlite_offset(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
-  EXTRACT_STRING(name, name_ast);
-  EXTRACT_NOTNULL(call_arg_list, ast->right);
-  EXTRACT(arg_list, call_arg_list->right);
 
   // no object, no null literal
   if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
@@ -10060,6 +10057,27 @@ static void sem_func_sqlite_offset(ast_node *ast, uint32_t arg_count) {
   // long nullable return type
   // expressions that are not columns in a table return null
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER);
+}
+
+// loads the named extension using the given entry point if provided
+static void sem_func_load_extension(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left)
+
+  // no object, no null literal
+  if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
+    return;
+  }
+
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  // this function actually always returns null but there is
+  // no good way to encode that.  SEM_TYPE_NULL means the
+  // NULL literal. So arbitarily we use a nullable bool.
+  // The bool will always be null.
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_BOOL);
 }
 
 // The likely function is a no-op function used for query optimizations.
@@ -26058,6 +26076,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(length);
   FUNC_INIT(likelihood);
   FUNC_INIT(likely);
+  FUNC_INIT(load_extension);
   FUNC_INIT(lower);
   FUNC_INIT(ltrim);
   FUNC_INIT(nth_value);

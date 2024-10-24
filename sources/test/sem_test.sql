@@ -3179,12 +3179,11 @@ let ssnl := (select sign(sensitive(nullable(1))));
 -- +1 error:
 set X := (select round());
 
--- TEST: round outside of normal context
--- + {assign}: err
--- + {call}: err
--- * error: % function may not appear in this context 'round'
--- +1 error:
-set X := round();
+-- TEST: round rewritten to SQL context
+-- + SET X := CAST(( SELECT round(1.3) IF NOTHING THEN THROW ) AS INT);
+-- + {assign}: X: integer variable was_set
+-- - error:
+set X := round(1.3) ~int~;
 
 -- TEST: bogus number of arguments in round
 -- + {assign}: err
@@ -3277,18 +3276,19 @@ set X := (select X*10 as v where 1);
 set X_not_null := (select 1 where 0);
 
 -- TEST: bogus function
+-- {select_stmt}: err
 -- * error: % function not builtin and not declared 'some_unknown_function'
 -- +1 error:
--- {select_stmt}: err
 set X := (select some_unknown_function(null));
 
+var loop_var int;
+
 -- TEST: simple while statement
--- - error:
 -- + {while_stmt}: ok
--- + {name X}: X: integer variable
-while X
+-- + {name loop_var}: loop_var: integer variable
+-- - error:
+while loop_var
 begin
-  select 1;
 end;
 
 -- TEST: not numeric while
@@ -3297,7 +3297,6 @@ end;
 -- +1 error:
 while 'X'
 begin
-  select 1;
 end;
 
 -- TEST: error in while block should be propagated up
@@ -4007,161 +4006,160 @@ select strftime('%YYYY-%mm-%DDT%HH:%MM:%SS.SSS', 'now', '+1 month');
 select strftime('%W', 'now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: strftime with non-string modifier
--- +1 error:
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 3 'integer' is an invalid type; valid types are: 'text' in 'strftime'
+-- +1 error:
 select strftime('%s', 'now', 3);
 
 -- TEST: strftime with bogus format
--- * error: % all arguments must be strings 'strftime'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'strftime'
+-- +1 error:
 select strftime(42, 'now');
 
 -- TEST: strftime with bogus timestring
--- * error: % all arguments must be strings 'strftime'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'strftime'
+-- +1 error:
 select strftime('%s', 42);
 
--- TEST: strftime is not ok in a loose expression
--- * error: % function may not appear in this context 'strftime'
--- +1 error:
--- + {assign}: err
--- + {name strftime}
+-- TEST: strftime is rewritten to SQL context
+-- + SET a_string := ( SELECT strftime('%s', 'now') IF NOTHING THEN THROW );
+-- + {assign}: a_string: text variable was_set
+-- - error:
 set a_string := strftime('%s', 'now');
 
 -- TEST: strftime without enough arguments
--- * error: % function got incorrect number of arguments 'strftime'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % too few arguments in function 'strftime'
+-- +1 error:
 select strftime('now');
 
 -- TEST: date basic correct case
--- - error:
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {name date}: text notnull
+-- - error:
 select date('now');
 
 -- TEST: date with a modifier
--- - error:
 -- + {select_stmt}: select: { _anon: text }
 -- + {name date}: text
+-- - error:
 select date('now', '+1 month');
 
 -- TEST: date with multiple modifiers
--- - error:
 -- + {select_stmt}: select: { _anon: text }
 -- + {name date}: text
+-- - error:
 select date('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: date with non-string modifier
--- +1 error:
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'date'
+-- +1 error:
 select date('now', 3);
 
 -- TEST: date with bogus timestring
--- * error: % all arguments must be strings 'date'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'date'
+-- +1 error:
 select date(42);
 
--- TEST: date is not ok in a loose expression
--- * error: % function may not appear in this context 'date'
--- +1 error:
--- + {assign}: err
--- + {name date}
+-- TEST: date is rewritten to SQL context
+-- + SET a_string := ( SELECT date('now') IF NOTHING THEN THROW );
+-- + {assign}: a_string: text variable was_set
+-- - error:
 set a_string := date('now');
 
 -- TEST: date without enough arguments
--- * error: % function got incorrect number of arguments 'date'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % too few arguments in function 'date'
+-- +1 error:
 select date();
 
 -- TEST: time basic correct case
--- - error:
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {name time}: text notnull
+-- - error:
 select time('now');
 
 -- TEST: time with a modifier
--- - error:
 -- + {select_stmt}: select: { _anon: text }
 -- + {name time}: text
+-- - error:
 select time('now', '+1 month');
 
 -- TEST: time with multiple modifiers
--- - error:
 -- + {select_stmt}: select: { _anon: text }
 -- + {name time}: text
+-- - error:
 select time('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: time with non-string modifier
--- +1 error:
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'time'
+-- +1 error:
 select time('now', 3);
 
 -- TEST: time with bogus timestring
--- * error: % all arguments must be strings 'time'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'time'
+-- +1 error:
 select time(42);
 
--- TEST: time is not ok in a loose expression
--- * error: % function may not appear in this context 'time'
--- +1 error:
--- + {assign}: err
--- + {name time}
+-- TEST: time is rewritten to sql context
+-- + SET a_string := ( SELECT time('now') IF NOTHING THEN THROW );
+-- + {assign}: a_string: text variable was_set
+-- + {call}: text notnull
+-- - error:
 set a_string := time('now');
 
 -- TEST: time without enough arguments
--- * error: % function got incorrect number of arguments 'time'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % too few arguments in function 'time'
+-- +1 error:
 select time();
 
 -- TEST: datetime basic correct case
--- - error:
 -- + {select_stmt}: select: { _anon: text notnull }
 -- + {name datetime}: text notnull
+-- - error:
 select datetime('now');
 
 -- TEST: datetime with a modifier
--- - error:
 -- + {select_stmt}: select: { _anon: text }
 -- + {name datetime}: text
+-- - error:
 select datetime('now', '+1 month');
 
 -- TEST: datetime with multiple modifiers
--- - error:
 -- + {select_stmt}: select: { _anon: text }
 -- + {name datetime}: text
+-- - error:
 select datetime('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: datetime with non-string modifier
--- +1 error:
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'datetime'
+-- +1 error:
 select datetime('now', 3);
 
 -- TEST: datetime with bogus timestring
--- * error: % all arguments must be strings 'datetime'
--- +1 error:
 -- + {select_stmt}: err
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'datetime'
+-- +1 error:
 select datetime(42);
 
--- TEST: datetime is not ok in a loose expression
--- * error: % function may not appear in this context 'datetime'
--- +1 error:
--- + {assign}: err
--- + {name datetime}
+-- TEST: datetime is rewritten to sql context
+-- + SET a_string := ( SELECT datetime('now') IF NOTHING THEN THROW );
+-- + {assign}: a_string: text variable was_set
+-- + {call}: text notnull
+-- + {name datetime}: text notnull
+-- - error:
 set a_string := datetime('now');
 
 -- TEST: datetime without enough arguments
--- * error: % function got incorrect number of arguments 'datetime'
+-- * error: % too few arguments in function 'datetime'
 -- +1 error:
 -- + {select_stmt}: err
 select datetime();
@@ -4185,26 +4183,25 @@ select julianday('now', '+1 month');
 select julianday('now', '+1 month', 'start of month', '-3 minutes', 'weekday 4');
 
 -- TEST: julianday with non-string modifier
--- +1 error:
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'julianday'
 -- +1 error:
 -- + {select_stmt}: err
 select julianday('now', 3);
 
 -- TEST: julianday with bogus timestring
--- * error: % all arguments must be strings 'julianday'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' in 'julianday'
 -- +1 error:
 -- + {select_stmt}: err
 select julianday(42);
 
--- TEST: julianday is not ok in a loose expression
--- * error: % function may not appear in this context 'julianday'
--- +1 error:
--- + {assign}: err
--- + {name julianday}
-set a_string := julianday('now');
+-- TEST: julianday is rewritten to SQL context
+-- + LET dummy_julian_day := ( SELECT julianday('now') IF NOTHING THEN THROW );
+-- + {let_stmt}: dummy_julian_day: real notnull variable
+-- - error:
+let dummy_julian_day := julianday('now');
 
 -- TEST: julianday without enough arguments
--- * error: % function got incorrect number of arguments 'julianday'
+-- * error: % too few arguments in function 'julianday'
 -- +1 error:
 -- + {select_stmt}: err
 select julianday();
@@ -11193,12 +11190,12 @@ select id, rank() over () from foo;
 -- * error: % function may not appear in this context 'max'
 set X := max(1,2);
 
--- TEST: substr may not appear outside of a SQL statement
--- (there is no codegen support for this, though it could be added)
--- + {assign}: err
--- + {call}: err
--- * error: % function may not appear in this context 'substr'
-set a_string := substr('x', 1, 2);
+-- TEST: substr is rewritten to the SQL context
+-- + LET substr_dummy := ( SELECT substr('x', 1, 2) IF NOTHING THEN THROW );
+-- + {call}: text notnull
+-- + {name substr}: text notnull
+-- - error:
+let substr_dummy := substr('x', 1, 2);
 
 -- TEST: simple success -- substr not nullable string
 -- + {create_proc_stmt}: substr_test_notnull: { t: text notnull } dml_proc
@@ -11341,11 +11338,12 @@ select replace('a', 'b');
 -- +1 error:
 select replace('a', 'b', 'c', 'd');
 
--- TEST: The replace function can only be used in SQL.
--- + {call}: err
--- * error: % function may not appear in this context 'replace'
--- +1 error:
-let dummy := replace('a', 'b', 'c');
+-- TEST: The replace is rewritten to sql context
+-- + LET replace_dummy := ( SELECT replace('a', 'b', 'c') IF NOTHING THEN THROW );
+-- + {let_stmt}: replace_dummy: text notnull variable
+-- + {call}: text notnull
+-- - error:
+let replace_dummy := replace('a', 'b', 'c');
 
 -- TEST: The first argument to replace must be a string.
 -- + {select_stmt}: err
@@ -12808,10 +12806,10 @@ select upper(id) from bar;
 -- +1 error:
 select upper(name, 1) from bar;
 
--- TEST: upper may not appear outside of a SQL statement
--- + {assign}: err
--- + {call}: err
--- * error: % function may not appear in this context 'upper'
+-- TEST: upper rewritten to sql context
+-- + SET a_string := ( SELECT upper('x') IF NOTHING THEN THROW );
+-- + {call}: text notnull
+-- - error:
 set a_string := upper('x');
 
 -- TEST: test char with sensitive value
@@ -12837,10 +12835,10 @@ select char(name) from bar;
 -- +1 error:
 select char() from bar;
 
--- TEST: char may not appear outside of a SQL statement
--- + {assign}: err
--- + {call}: err
--- * error: % function may not appear in this context 'char'
+-- TEST: char rewritten to sql context
+-- + SET a_string := ( SELECT char(1) IF NOTHING THEN THROW );
+-- + {assign}: a_string: text variable was_set
+-- - error:
 set a_string := char(1);
 
 -- TEST: test abs with sensitive value
@@ -12878,11 +12876,12 @@ select abs('Horty');
 -- +1 error:
 select abs(null);
 
--- TEST: instr may not appear outside of a SQL statement
--- + {assign}: err
--- + {call}: err
--- +1 error: % function may not appear in this context 'instr'
-set an_int := instr(1);
+-- TEST: instr rewritten to sql context
+-- + SET an_int := ( SELECT instr("x", "y") IF NOTHING THEN THROW );
+-- + {assign}: an_int: integer variable was_set
+-- + {call}: integer notnull
+-- - error:
+set an_int := instr("x", "y");
 
 -- TEST: test instr with incompatible param count
 -- + {select_stmt}: err
@@ -13952,11 +13951,11 @@ set a_string := (select trim(1,"x"));
 -- +1 error:
 set a_string := (select trim("x", 1));
 
--- TEST: trim failure: not in a SQL context
--- + {call}: err
--- * error: % function may not appear in this context 'trim'
--- +1 error:
-set a_string := trim("x", 1);
+-- TEST: trim rewritten to SQL context
+-- + SET a_string := ( SELECT trim("x", "y") IF NOTHING THEN THROW );
+-- + {call}: text notnull
+-- - error:
+set a_string := trim("x", "y");
 
 -- TEST: trim must preserve sensitivity
 -- + {call}: text sensitive
@@ -14055,10 +14054,10 @@ set an_int := (select octet_length());
 -- +1 error:
 set an_int := (select length(1));
 
--- TEST: length failure: not in a SQL context
--- + {call}: err
--- * error: % function may not appear in this context 'length'
--- +1 error:
+-- TEST: length rewritten to SQL
+-- + SET an_int := ( SELECT length("x") IF NOTHING THEN THROW );
+-- + {assign}: an_int: integer variable was_set
+-- - error:
 set an_int := length("x");
 
 -- TEST: length must preserve sensitivity
@@ -14079,10 +14078,10 @@ set an_int := (select unicode());
 -- +1 error:
 set an_int := (select unicode(1));
 
--- TEST: unicode failure: not in a SQL context
--- + {call}: err
--- * error: % function may not appear in this context 'unicode'
--- +1 error:
+-- TEST: unicode rewritten
+-- + SET an_int := ( SELECT unicode("x") IF NOTHING THEN THROW );
+-- + {assign}: an_int: integer variable was_set
+-- - error
 set an_int := unicode("x");
 
 -- TEST: length must preserve nullability
@@ -20026,7 +20025,7 @@ end;
 -- + {call}: err
 -- * error: % procedure without trailing OUT parameter used as function 'proc_inout_text'
 -- +1 error:
-let dummy := proc_inout_text();
+let dummy_proc_inout_text := proc_inout_text();
 
 -- TEST: okay if used via a call statement
 -- + {call_stmt}: ok
@@ -20044,7 +20043,7 @@ end;
 -- + {call}: err
 -- * error: % procedure with INOUT parameter used as function 'proc_inout_text_out_text'
 -- +1 error:
-let dummy := proc_inout_text_out_text(a_string);
+let dummy_inout_text := proc_inout_text_out_text(a_string);
 
 -- TEST: okay if used via a call statement
 -- + {call_stmt}: ok
@@ -20063,7 +20062,7 @@ end;
 -- + {call}: err
 -- * error: % procedure with non-trailing OUT parameter used as function 'proc_out_text_out_text'
 -- +1 error:
-let dummy := proc_out_text_out_text(a_string);
+let dummy_proc_out := proc_out_text_out_text(a_string);
 
 -- TEST: okay if used via a call statement
 -- + {call_stmt}: ok
@@ -25504,10 +25503,10 @@ set quote_str := "123":nullable:quote:ifnull_throw;
 -- - error:
 let zero_blob := (select zeroblob(1));
 
--- TEST: zero blob wrong context
--- + {assign}: err
--- * error: % function may not appear in this context 'zeroblob'
--- +1 error:
+-- TEST: zero blob rewritten to sql context
+-- + SET zero_blob := ( SELECT zeroblob(1) IF NOTHING THEN THROW );
+-- + {assign}: zero_blob: blob notnull variable was_set
+-- - error:
 set zero_blob := zeroblob(1);
 
 -- TEST: zero blob invalid args

@@ -1460,11 +1460,22 @@ END);
 
 TEST!(strftime,
 BEGIN
-  EXPECT!((select strftime("%s", "1970-01-01T00:00:03")) == "3"); -- sql strftime ok
-  EXPECT!((select strftime(null, "1970-01-01T00:00:03")) is null); -- strftime null format ok
-  EXPECT!((select strftime("%s", null)) is null); -- strftime null timestring ok
-  EXPECT!((select strftime("%s", "1970-01-01T00:00:03", "+1 day")) == "86403"); -- strftime null timestring ok
-  EXPECT!((select strftime("%W", "now", "+1 month", "start of month", "-3 minutes", "weekday 4")) is not null); -- strftime with multiple modifiers on now ok
+  var _null text;
+
+  -- sql strftime ok
+  EXPECT!((select strftime("%s", "1970-01-01T00:00:03")) == "3");
+
+ -- strftime null format ok
+  EXPECT!((select strftime(_null, "1970-01-01T00:00:03")) is null);
+
+  -- strftime null timestring ok
+  EXPECT!((select strftime("%s", _null)) is null);
+
+ -- strftime null timestring ok
+  EXPECT!((select strftime("%s", "1970-01-01T00:00:03", "+1 day")) == "86403");
+
+ -- strftime with multiple modifiers on now ok
+  EXPECT!((select strftime("%W", "now", "+1 month", "start of month", "-3 minutes", "weekday 4")) is not null);
 END);
 
 TEST!(cast_expr,

@@ -8313,10 +8313,8 @@ static void sem_func_round(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // round can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // round rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // round ( value, [digits] )
   if (!sem_validate_arg_pattern("r,[fil]", ast, arg_count)) {
@@ -8436,10 +8434,8 @@ static void sem_func_unicode(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // unicode can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // unicode rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_pattern("t", ast, arg_count)) {
     return;
@@ -8476,10 +8472,8 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // length can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // length rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
     return;
@@ -8536,10 +8530,8 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // trim can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // trim rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
     return;
@@ -9066,10 +9058,8 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // instr can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // instr rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // two text arguments
   if (!sem_validate_arg_pattern("t,t", ast, arg_count)) {
@@ -9088,10 +9078,8 @@ static void sem_func_randomblob(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // one numeric arg
   if (!sem_validate_arg_pattern("bilr", ast, arg_count)) {
@@ -9159,10 +9147,8 @@ static void sem_func_char(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // char can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // char rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_pattern("fil,[fil,*]", ast, arg_count)) {
     return;
@@ -9368,10 +9354,8 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // upper can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // upper is rewritten to only appear in sql
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   if (!sem_validate_arg_pattern("t", ast, arg_count)) {
     return;
@@ -9476,12 +9460,10 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("t,filr,[filr]", ast, arg_count)) {
-    return;
-  }
+  // substr is rewritten to only appear inside of SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  // substr can only appear inside of SQL
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+  if (!sem_validate_arg_pattern("t,filr,[filr]", ast, arg_count)) {
     return;
   }
 
@@ -9528,10 +9510,8 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  // The replace function can only appear in SQL.
-  if (!sem_validate_appear_inside_sql_stmt(ast)) {
-    return;
-  }
+  // The replace function is rewritten to only appear in SQL.
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   ast_node *arg1 = first_arg(arg_list);
 
@@ -9813,33 +9793,14 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
 
   // strftime can appear reasonably in most places, notably not as a LIMIT or
   // OFFSET; also not supported without a context
-  if (!sem_validate_function_context(
-        ast,
-        SEM_EXPR_CONTEXT_SELECT_LIST |
-        SEM_EXPR_CONTEXT_ON |
-        SEM_EXPR_CONTEXT_HAVING |
-        SEM_EXPR_CONTEXT_WHERE |
-        SEM_EXPR_CONTEXT_GROUP_BY |
-        SEM_EXPR_CONTEXT_ORDER_BY |
-        SEM_EXPR_CONTEXT_CONSTRAINT |
-        SEM_EXPR_CONTEXT_UDF)) {
+
+  // these are all rewritten to sql context
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  CSTR arg_pattern = has_format ? "t,t,[t,*]" : "t,[t,*]";
+
+  if (!sem_validate_arg_pattern(arg_pattern, ast, arg_count)) {
     return;
-  }
-
-  uint32_t min_arg_count = (uint32_t)(1 + has_format);
-
-  if (arg_count < min_arg_count) {
-    sem_validate_arg_count(ast, arg_count, min_arg_count);
-    return;
-  }
-
-  // All arguments must be strings
-  for (ast_node *node = arg_list; node; node = node->right) {
-    if (!is_string_compat(first_arg(node)->sem->sem_type)) {
-      report_error(ast, "CQL0085: all arguments must be strings", name);
-      record_error(ast);
-      return;
-    }
   }
 
   // Handling the very special case of strftime('%s', 'now') as returning not null
@@ -9862,7 +9823,7 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
   }
 
   // the common special case of just a time string and it's the 'now' literal
-  if (has_format == 0 && arg_count == 1) {
+  if (arg_count == 1 && !has_format) {
     ast_node *first = first_arg(arg_list);
     if (is_ast_str(first)) {
       EXTRACT_STRING(arg1, first);
@@ -9882,24 +9843,27 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
   name_ast->sem = ast->sem = new_sem(sem_type);
 }
 
+#define HAS_FORMAT true
+#define NO_FORMAT false
+
 static void sem_func_strftime(ast_node *ast, uint32_t arg_count) {
-  sem_strftime(ast, arg_count, 1, SEM_TYPE_TEXT);
+  sem_strftime(ast, arg_count, HAS_FORMAT, SEM_TYPE_TEXT);
 }
 
 static void sem_func_date(ast_node *ast, uint32_t arg_count) {
-  sem_strftime(ast, arg_count, 0, SEM_TYPE_TEXT);
+  sem_strftime(ast, arg_count, NO_FORMAT, SEM_TYPE_TEXT);
 }
 
 static void sem_func_time(ast_node *ast, uint32_t arg_count) {
-  sem_strftime(ast, arg_count, 0, SEM_TYPE_TEXT);
+  sem_strftime(ast, arg_count, NO_FORMAT, SEM_TYPE_TEXT);
 }
 
 static void sem_func_datetime(ast_node *ast, uint32_t arg_count) {
-  sem_strftime(ast, arg_count, 0, SEM_TYPE_TEXT);
+  sem_strftime(ast, arg_count, NO_FORMAT, SEM_TYPE_TEXT);
 }
 
 static void sem_func_julianday(ast_node *ast, uint32_t arg_count) {
-  sem_strftime(ast, arg_count, 0, SEM_TYPE_REAL);
+  sem_strftime(ast, arg_count, NO_FORMAT, SEM_TYPE_REAL);
 }
 
 // The "ptr" function is used to get the memory address of an object at runtime
@@ -26057,68 +26021,47 @@ cql_noexport void sem_main(ast_node *ast) {
 
   FUNC_INIT(abs);
   FUNC_INIT(changes);
-  FUNC_INIT(char);
   FUNC_INIT(coalesce);
   FUNC_INIT(cql_compressed);
   FUNC_INIT(cql_cursor_diff_col);
   FUNC_INIT(cql_cursor_diff_val);
   FUNC_INIT(cql_get_blob_size);
   FUNC_INIT(cume_dist);
-  FUNC_INIT(date);
-  FUNC_INIT(datetime);
   FUNC_INIT(dense_rank);
   FUNC_INIT(first_value);
   FUNC_INIT(format);
   FUNC_INIT(ifnull);
   FUNC_INIT(ifnull_crash);
   FUNC_INIT(ifnull_throw);
-  FUNC_INIT(instr);
-  FUNC_INIT(julianday);
   FUNC_INIT(lag);
   FUNC_INIT(last_insert_rowid);
   FUNC_INIT(last_value);
   FUNC_INIT(lead);
-  FUNC_INIT(length);
   FUNC_INIT(likelihood);
   FUNC_INIT(likely);
   FUNC_INIT(load_extension);
-  FUNC_INIT(lower);
-  FUNC_INIT(ltrim);
   FUNC_INIT(nth_value);
   FUNC_INIT(ntile);
   FUNC_INIT(nullable);
   FUNC_INIT(nullif);
-  FUNC_INIT(octet_length);
   FUNC_INIT(percent_rank);
   FUNC_INIT(printf);
-  FUNC_INIT(random);
-  FUNC_INIT(randomblob);
   FUNC_INIT(rank);
-  FUNC_INIT(replace);
-  FUNC_INIT(round);
   FUNC_INIT(row_number);
-  FUNC_INIT(rtrim);
   FUNC_INIT(sensitive);
   FUNC_INIT(sign);
   FUNC_INIT(sqlite_offset);
-  FUNC_INIT(sqlite_source_id);
-  FUNC_INIT(sqlite_version);
-  FUNC_INIT(strftime);
-  FUNC_INIT(substr);
-  FUNC_INIT(substring);
-  FUNC_INIT(time);
-  FUNC_INIT(total_changes);
-  FUNC_INIT(trim);
   FUNC_INIT(typeof);
-  FUNC_INIT(unicode);
   FUNC_INIT(unlikely);
-  FUNC_INIT(upper);
-  FUNC_INIT(zeroblob);
 
+  FUNC_REWRITE_INIT(char);
   FUNC_REWRITE_INIT(concat);
   FUNC_REWRITE_INIT(concat_ws);
+  FUNC_REWRITE_INIT(date);
+  FUNC_REWRITE_INIT(datetime);
   FUNC_REWRITE_INIT(glob);
   FUNC_REWRITE_INIT(hex);
+  FUNC_REWRITE_INIT(instr);
   FUNC_REWRITE_INIT(json);
   FUNC_REWRITE_INIT(json_array);
   FUNC_REWRITE_INIT(json_array_length);
@@ -26143,12 +26086,33 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(jsonb_remove);
   FUNC_REWRITE_INIT(jsonb_replace);
   FUNC_REWRITE_INIT(jsonb_set);
+  FUNC_REWRITE_INIT(julianday);
+  FUNC_REWRITE_INIT(length);
   FUNC_REWRITE_INIT(like);
+  FUNC_REWRITE_INIT(lower);
+  FUNC_REWRITE_INIT(ltrim);
+  FUNC_REWRITE_INIT(octet_length);
   FUNC_REWRITE_INIT(quote);
+  FUNC_REWRITE_INIT(random);
+  FUNC_REWRITE_INIT(randomblob);
+  FUNC_REWRITE_INIT(replace);
+  FUNC_REWRITE_INIT(round);
+  FUNC_REWRITE_INIT(rtrim);
   FUNC_REWRITE_INIT(soundex);
   FUNC_REWRITE_INIT(sqlite_compileoption_get);
   FUNC_REWRITE_INIT(sqlite_compileoption_used);
+  FUNC_REWRITE_INIT(sqlite_source_id);
+  FUNC_REWRITE_INIT(sqlite_version);
+  FUNC_REWRITE_INIT(strftime);
+  FUNC_REWRITE_INIT(substr);
+  FUNC_REWRITE_INIT(substring);
+  FUNC_REWRITE_INIT(time);
+  FUNC_REWRITE_INIT(total_changes);
+  FUNC_REWRITE_INIT(trim);
   FUNC_REWRITE_INIT(unhex);
+  FUNC_REWRITE_INIT(unicode);
+  FUNC_REWRITE_INIT(upper);
+  FUNC_REWRITE_INIT(zeroblob);
 
   SPECIAL_FUNC_INIT(count);
   SPECIAL_FUNC_INIT(iif);

@@ -673,16 +673,11 @@ The argument at the named position is requried to be one of the named types in t
 
 -----
 
-### CQL0085: all arguments must be strings 'strftime'
-
-The `strftime` function does complex data formatting.  All the arguments are strings.  See the sqlite documentation for more details on the options (there are many).
+### CQL0085 available for re-use
 
 -----
 
 ### CQL0086 available for re-use
-
-The indicated argument of the function must be a string, such as the formatting string in `printf`.  This error
-could refer the first, second, third, etc. argument
 
 -----
 

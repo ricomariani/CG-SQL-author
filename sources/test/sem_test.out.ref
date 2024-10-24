@@ -93029,16 +93029,38 @@ SELECT json_object('x', 1, 'y', 2);
 
 The statement ending at line XXXX
 
+SELECT json_object();
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json_object}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
 SELECT json_object(nullable('x'), 1, 'y', 2);
 
-  {select_stmt}: select: { _anon: text }
-  | {select_core_list}: select: { _anon: text }
-  | | {select_core}: select: { _anon: text }
-  |   | {select_expr_list_con}: select: { _anon: text }
-  |     | {select_expr_list}: select: { _anon: text }
-  |     | | {select_expr}: text
-  |     |   | {call}: text
-  |     |     | {name json_object}: text
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json_object}: text notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -93099,7 +93121,7 @@ The statement ending at line XXXX
 
 SELECT json_object('x', blob_var);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 2 must not be a blob or object 'json_object'
+test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_object'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93114,7 +93136,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 2 must not be a blo
   |     |       | {arg_list}: ok
   |     |         | {strlit 'x'}: text notnull
   |     |         | {arg_list}
-  |     |           | {call}: blob_var: blob notnull variable was_set
+  |     |           | {call}: err
   |     |             | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
   |     |             | {call_arg_list}
   |     |               | {call_filter_clause}
@@ -93130,24 +93152,22 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 2 must not be a blo
 
 The statement ending at line XXXX
 
-SELECT json_object(1, 1);
+SELECT json_object('1', NULL);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0504: argument 1 must be json text identifier 'json_object'
-
-  {select_stmt}: err
-  | {select_core_list}: err
-  | | {select_core}: err
-  |   | {select_expr_list_con}: err
-  |     | {select_expr_list}: err
-  |     | | {select_expr}: err
-  |     |   | {call}: err
-  |     |     | {name json_object}
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name json_object}: text notnull
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
-  |     |         | {int 1}: integer notnull
+  |     |         | {strlit '1'}: text notnull
   |     |         | {arg_list}
-  |     |           | {int 1}: integer notnull
+  |     |           | {null}: null
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -93160,7 +93180,7 @@ The statement ending at line XXXX
 
 SELECT json_object(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_object'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: starting at argument 1, arguments must come in groups of 2 in 'json_object'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93169,7 +93189,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_object}: err
+  |     |     | {name json_object}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok
@@ -93186,7 +93206,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_object(1);
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_object'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: starting at argument 1, arguments must come in groups of 2 in 'jsonb_object'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -93195,7 +93215,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_object}: err
+  |     |     | {name jsonb_object}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     |       | {arg_list}: ok

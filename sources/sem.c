@@ -81,7 +81,6 @@ cql_noexport void print_sem_type(struct sem_node *sem) {}
 #define SEM_TYPE_MASK_OBJ  (1 << SEM_TYPE_OBJECT)        // code o
 #define SEM_TYPE_MASK_OPT  (SEM_TYPE_MASK_OBJ << 1)      // []
 #define SEM_TYPE_MASK_REP  (SEM_TYPE_MASK_OBJ << 2)      // code *
-#define ARG_COUNT 8
 
 // As we walk sql expressions we note the ast nodes that hold table names that
 // are backed tables so that we can swap them out later
@@ -290,7 +289,6 @@ static void sem_assign(ast_node *ast);
 static void insert_table_alias_string_overide(ast_node *_Nonnull ast, CSTR _Nonnull table_name);
 static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *right, sem_t *core_type_left, sem_t *core_type_right, sem_t *combined_flags);
 static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
-static void sem_parse_arg_pattern(CSTR _Nonnull pattern, uint16_t data[ARG_COUNT]);
 static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Nonnull ast_call, uint32_t arg_count);
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
 
@@ -8857,48 +8855,13 @@ static void sem_func_json_object_helper(ast_node *ast, uint32_t arg_count, sem_t
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  // any odd number of args is wrong including zero
-  if (arg_count % 2 == 1) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+  if (!sem_validate_arg_pattern("[t,nfilrt,*]", ast, arg_count)) {
     return;
   }
 
-  sem_t nullable = SEM_TYPE_NOTNULL;
-
-  // No argument can be a blob
-  int arg_number = 1;
-  for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = first_arg(node)->sem->sem_type;
-
-    CSTR msg = NULL;
-    if (arg_number % 2) {
-      if (!is_text(sem_type)) {
-        msg = dup_printf("CQL0504: argument %d must be json text identifier", arg_number);
-      }
-    }
-    else {
-      if (is_blob(sem_type) || is_object(sem_type)) {
-        msg = dup_printf("CQL0505: argument %d must not be a blob or object", arg_number);
-      }
-    }
-
-    if (msg) {
-      report_error(ast, msg, name);
-      record_error(ast);
-      return;
-    }
-
-    // keep not null only if everything is not null
-    nullable &= sem_type;
-
-    // add sensitivity if any is sensitive
-    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-
-    arg_number++;
-  }
-
   // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(sem_type_result | nullable);
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
+  copy_nullability(ast, SEM_TYPE_NOTNULL);
 }
 
 static void sem_func_json_object(ast_node *ast, uint32_t arg_count) {
@@ -26259,6 +26222,16 @@ static sem_node *new_sem_std(sem_t sem_type, ast_node *arg_list) {
   return new_sem(sem_type | sensitive | notnull);
 }
 
+#define ARG_COUNT 8
+
+typedef struct arg_pattern {
+  uint16_t data[ARG_COUNT];
+  int16_t repeat_start;
+  int16_t repeat_period;
+} arg_pattern;
+
+static void sem_parse_arg_pattern(CSTR _Nonnull input, arg_pattern *_Nonnull out);
+
 static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uint32_t arg_count) {
   Contract(is_ast_call(ast_call));
   EXTRACT_NAME_AST(name_ast, ast_call->left);
@@ -26266,8 +26239,21 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
   EXTRACT_NOTNULL(call_arg_list, ast_call->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  uint16_t types[ARG_COUNT];
-  sem_parse_arg_pattern(type_string, types);  
+  arg_pattern pat;
+  sem_parse_arg_pattern(type_string, &pat);  
+  uint16_t *types = pat.data;
+
+  if (pat.repeat_period && arg_count >= pat.repeat_start) { 
+    if ((((int16_t)arg_count - pat.repeat_start) % pat.repeat_period) != 0) {
+      CHARBUF_OPEN(msg);
+      bprintf(&msg, "CQL0079: starting at argument %d, arguments must come in groups of %d in",
+        pat.repeat_start + 1, pat.repeat_period);  // one based argument numbers
+      report_error(ast_call, Strdup(msg.ptr), name);
+      record_error(ast_call);
+      CHARBUF_CLOSE(msg);
+      return false;
+    }
+  }
   
   uint16_t iarg = 0;
   uint16_t inum = 1;
@@ -26285,7 +26271,7 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
     uint16_t arg_mask = (uint16_t)(1 << core_type_of(arg->sem->sem_type));
 
     if (types[iarg] & SEM_TYPE_MASK_REP) {
-       iarg--;
+       iarg -= pat.repeat_period;
     }
 
     uint16_t reqd_mask = types[iarg];
@@ -26332,9 +26318,14 @@ static bool_t sem_validate_arg_pattern(CSTR type_string, ast_node *ast_call, uin
   return true;
 }
 
-static void sem_parse_arg_pattern(CSTR pattern, uint16_t data[ARG_COUNT]) {
-   int item = 0;
-   memset(data, 0, ARG_COUNT*sizeof(uint16_t));
+static void sem_parse_arg_pattern(CSTR input, arg_pattern *out) {
+   Contract(out);
+   int16_t item = 0;
+   memset(out, 0, sizeof(*out));
+   uint16_t *data = out->data;
+   int16_t last_optional = -1;
+
+   CSTR pattern = input;
 
    for ( ;*pattern; pattern++) {
       bool_t handled = false;
@@ -26353,17 +26344,25 @@ static void sem_parse_arg_pattern(CSTR pattern, uint16_t data[ARG_COUNT]) {
           data[i] = SEM_TYPE_MASK_OPT;
         }
         handled = true;
+        last_optional = item;
         break;
 
       case ']':
+        Contract(pattern[1] == ',' || pattern[1] == '\0');
+        Contract(last_optional >= 0);
+        last_optional = -1;
         handled = true;
         break;
 
       case '*':
+        Contract(last_optional >= 0);
+        Contract(item > last_optional);
         Contract(data[item] == SEM_TYPE_MASK_OPT);
         Contract(pattern[1] == ']');
         Contract(pattern[2] == '\0');
         data[item] |= SEM_TYPE_MASK_REP;
+        out->repeat_start = last_optional;
+        out->repeat_period = item - last_optional;
         handled = true;
         break;
       

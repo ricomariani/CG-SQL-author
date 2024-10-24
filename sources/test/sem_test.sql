@@ -24842,8 +24842,15 @@ select jsonb_set();
 -- - error:
 select json_object('x', 1, 'y', 2);
 
+-- TEST json function for JSON object, no args
+-- + {select_stmt}: select: { _anon: text notnull }
+-- + {call}: text notnull
+-- + {name json_object}: text notnull
+-- - error:
+select json_object();
+
 -- TEST json function for JSON object nullable value
--- + {select_stmt}: select: { _anon: text }
+-- + {select_stmt}: select: { _anon: text notnull }
 -- + {call}: text
 -- + {name json_object}: text
 -- - error:
@@ -24857,25 +24864,24 @@ a_string := json_object('x', 1, 'y', 2);
 
 -- TEST: no blob types allowed
 -- + {call}: err
--- * error: % argument 2 must not be a blob or object 'json_object'
+-- * error: % argument 2 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_object'
 -- +1 error:
 select json_object('x', blob_var);
 
 -- TEST: only text paths allowed
--- + {call}: err
--- * error: % argument 1 must be json text identifier 'json_object'
--- +1 error:
-select json_object(1, 1);
+-- + {name json_object}: text notnull
+-- - error:
+select json_object('1', null);
 
 -- TEST json function for JSON object wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_object'
+-- * error: % starting at argument 1, arguments must come in groups of 2 in 'json_object'
 -- +1 error:
 select json_object(1);
 
 -- TEST json function for JSON object wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_object'
+-- * error: % starting at argument 1, arguments must come in groups of 2 in 'jsonb_object'
 -- +1 error:
 select jsonb_object(1);
 

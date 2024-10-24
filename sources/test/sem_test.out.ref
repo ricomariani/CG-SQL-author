@@ -56628,7 +56628,7 @@ The statement ending at line XXXX
 
 SELECT likely();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'likely'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'likely'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -56637,7 +56637,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name likely}: err
+  |     |     | {name likely}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -56647,6 +56647,102 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   | {select_orderby}
     | {select_limit}
       | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT likely(NULL);
+
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal; useless in 'likely'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name likely}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {null}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT likelihood('x', 0.2);
+
+  {select_stmt}: select: { _anon: text notnull }
+  | {select_core_list}: select: { _anon: text notnull }
+  | | {select_core}: select: { _anon: text notnull }
+  |   | {select_expr_list_con}: select: { _anon: text notnull }
+  |     | {select_expr_list}: select: { _anon: text notnull }
+  |     | | {select_expr}: text notnull
+  |     |   | {call}: text notnull
+  |     |     | {name likelihood}: text notnull
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'x'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {dbl 0.2}: real notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT likelihood('x', NULL);
+
+test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 2 is a NULL literal; useless in 'likelihood'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name likelihood}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {strlit 'x'}: text notnull
+  |     |         | {arg_list}
+  |     |           | {null}: err
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+likelihood('x', 1.2);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'likelihood'
+
+  {expr_stmt}: err
+  | {call}: err
+    | {name likelihood}
+    | {call_arg_list}
+      | {call_filter_clause}
+      | {arg_list}: ok
+        | {strlit 'x'}: text notnull
+        | {arg_list}
+          | {dbl 1.2}: real notnull
 
 The statement ending at line XXXX
 

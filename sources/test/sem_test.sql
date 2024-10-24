@@ -15103,9 +15103,32 @@ select unlikely(42);
 
 -- TEST: likely fails with incorrect number of arguments
 -- + {select_stmt}: err
--- * error: % function got incorrect number of arguments 'likely'
+-- * error: % too few arguments in function 'likely'
 -- +1 error:
 select likely();
+
+-- TEST: likely fails with null arg
+-- + {select_stmt}: err
+-- * error: % argument 1 is a NULL literal; useless in 'likely'
+-- +1 error:
+select likely(null);
+
+-- TEST: normal use of likelihood
+-- + {select_stmt}: select: { _anon: text notnull }
+-- - error:
+select likelihood('x', 0.2);
+
+-- TEST: likelihood bogus second arg
+-- + {select_stmt}: err
+-- * error: % argument 2 is a NULL literal; useless in 'likelihood'
+-- +1 error:
+select likelihood('x', NULL);
+
+-- TEST: invalid context
+-- + {expr_stmt}: err
+-- * error: % function may not appear in this context 'likelihood'
+-- +1 error:
+likelihood('x', 1.2);
 
 -- TEST: likely fails when used outside a SQL statement
 -- + {let_stmt}: err

@@ -9961,16 +9961,16 @@ static void sem_func_random(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL);
 }
 
-// The likely function is a no-op function used for query optimizations.
-// It tells the query planner that the given (one) argument is probably a boolean value of `true`.
-static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
+// The likelihood function is a no-op function used for query optimizations.
+// It tells the query planner how probable this expression is
+static void sem_func_likelihood(ast_node *ast, uint32_t arg_count) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left)
   EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_count(ast, arg_count, 1)) {
+  if (!sem_validate_arg_pattern("filrtb,r", ast, arg_count)) {
     return;
   }
 
@@ -9982,6 +9982,31 @@ static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
 
   // the function return type matches the argument type
   name_ast->sem = ast->sem = new_sem_std(arg->sem->sem_type, arg_list);
+  ast->sem->kind = arg->sem->kind;
+}
+
+// The likely function is a no-op function used for query optimizations.
+// It tells the query planner that the given (one) argument is probably a boolean value of `true`.
+static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left)
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+    return;
+  }
+
+  if (!sem_validate_appear_inside_sql_stmt(ast)) {
+    return;
+  }
+
+  ast_node *arg = first_arg(arg_list);
+
+  // the function return type matches the argument type
+  name_ast->sem = ast->sem = new_sem_std(arg->sem->sem_type, arg_list);
+  ast->sem->kind = arg->sem->kind;
 }
 
 // same rules as "likely"
@@ -25955,6 +25980,7 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_INIT(last_value);
   FUNC_INIT(lead);
   FUNC_INIT(length);
+  FUNC_INIT(likelihood);
   FUNC_INIT(likely);
   FUNC_INIT(lower);
   FUNC_INIT(ltrim);

@@ -8758,50 +8758,16 @@ static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t se
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // any even number of args is wrong including zero
-  if (arg_count % 2 == 0) {
-    sem_validate_arg_count(ast, arg_count, arg_count + 1);
+  if (!sem_validate_arg_pattern("tb,[t,nfilrt,*]", ast, arg_count)) {
     return;
   }
 
-  // No argument can be a blob
-  int arg_number = 1;
-  for (ast_node *node = arg_list; node; node = node->right) {
-    sem_t sem_type = first_arg(node)->sem->sem_type;
-
-    CSTR msg = NULL;
-    if (arg_number == 1) {
-      if (!is_blob(sem_type) && !is_text(sem_type)) {
-        msg = dup_printf("CQL0503: argument %d must be json text or json blob", arg_number);
-      }
-
-      // if the primary arg is not null then so is the result
-      sem_type_result |= (sem_type & SEM_TYPE_NOTNULL);
-    }
-    else if (arg_number % 2 == 0) {
-      if (!is_text(sem_type)) {
-        msg = dup_printf("CQL0504: argument %d must be json text path", arg_number);
-      }
-    }
-    else {
-      if (is_blob(sem_type) || is_object(sem_type)) {
-        msg = dup_printf("CQL0505: argument %d must not be a blob or object", arg_number);
-      }
-    }
-
-    if (msg) {
-        report_error(ast, msg, name);
-        record_error(ast);
-        return;
-    }
-
-    // add sensitivity if any is sensitive
-    sem_type_result |= (sem_type & SEM_TYPE_SENSITIVE);
-
-    arg_number++;
-  }
-
   // kind is not preserved, there is normally more than one
-  name_ast->sem = ast->sem = new_sem(sem_type_result);
+  name_ast->sem = ast->sem = new_sem_std(sem_type_result, arg_list);
+
+  // nullability comes from the first arg, sensitivity as usual
+  ast_node *arg = first_arg(arg_list);
+  copy_nullability(ast, arg->sem->sem_type);
 }
 
 static void sem_func_json_insert(ast_node *ast, uint32_t arg_count) {

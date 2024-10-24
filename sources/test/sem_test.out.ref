@@ -92762,7 +92762,37 @@ The statement ending at line XXXX
 
 SELECT json_insert(1, '$.x', 2);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text or json blob 'json_insert'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_insert'
+
+  {select_stmt}: err
+  | {select_core_list}: err
+  | | {select_core}: err
+  |   | {select_expr_list_con}: err
+  |     | {select_expr_list}: err
+  |     | | {select_expr}: err
+  |     |   | {call}: err
+  |     |     | {name json_insert}
+  |     |     | {call_arg_list}
+  |     |       | {call_filter_clause}
+  |     |       | {arg_list}: ok
+  |     |         | {int 1}: err
+  |     |         | {arg_list}
+  |     |           | {strlit '$.x'}: text notnull
+  |     |           | {arg_list}
+  |     |             | {int 2}: integer notnull
+  |     | {select_from_etc}: ok
+  |       | {select_where}
+  |         | {select_groupby}
+  |           | {select_having}
+  | {select_orderby}
+    | {select_limit}
+      | {select_offset}
+
+The statement ending at line XXXX
+
+SELECT json_insert(1, '$.x', 2, 3);
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: starting at argument 2, arguments must come in groups of 2 in 'json_insert'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92780,6 +92810,8 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0503: argument 1 must be json text
   |     |           | {strlit '$.x'}: text notnull
   |     |           | {arg_list}
   |     |             | {int 2}: integer notnull
+  |     |             | {arg_list}
+  |     |               | {int 3}: integer notnull
   |     | {select_from_etc}: ok
   |       | {select_where}
   |         | {select_groupby}
@@ -92792,7 +92824,7 @@ The statement ending at line XXXX
 
 SELECT json_insert('{"x":0}', '$.x', blob_var);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 3 must not be a blob or object 'json_insert'
+test/sem_test.sql:XXXX:1: error: in call : CQL0084: argument 3 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_insert'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92809,7 +92841,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0505: argument 3 must not be a blo
   |     |         | {arg_list}
   |     |           | {strlit '$.x'}: text notnull
   |     |           | {arg_list}
-  |     |             | {call}: blob_var: blob notnull variable was_set
+  |     |             | {call}: err
   |     |               | {name cql_inferred_notnull}: blob_var: blob notnull variable was_set
   |     |               | {call_arg_list}
   |     |                 | {call_filter_clause}
@@ -92827,7 +92859,7 @@ The statement ending at line XXXX
 
 SELECT json_insert('[]', 1, 1);
 
-test/sem_test.sql:XXXX:1: error: in call : CQL0504: argument 2 must be json text path 'json_insert'
+test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_insert'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92842,7 +92874,7 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0504: argument 2 must be json text
   |     |       | {arg_list}: ok
   |     |         | {strlit '[]'}: text notnull
   |     |         | {arg_list}
-  |     |           | {int 1}: integer notnull
+  |     |           | {int 1}: err
   |     |           | {arg_list}
   |     |             | {int 1}: integer notnull
   |     | {select_from_etc}: ok
@@ -92857,7 +92889,7 @@ The statement ending at line XXXX
 
 SELECT json_insert();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_insert'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_insert'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92866,7 +92898,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_insert}: err
+  |     |     | {name json_insert}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92881,7 +92913,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_insert();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_insert'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'jsonb_insert'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92890,7 +92922,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_insert}: err
+  |     |     | {name jsonb_insert}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92905,7 +92937,7 @@ The statement ending at line XXXX
 
 SELECT json_replace();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_replace'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92914,7 +92946,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_replace}: err
+  |     |     | {name json_replace}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92929,7 +92961,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_replace();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_replace'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'jsonb_replace'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92938,7 +92970,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_replace}: err
+  |     |     | {name jsonb_replace}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92953,7 +92985,7 @@ The statement ending at line XXXX
 
 SELECT json_set();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'json_set'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'json_set'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92962,7 +92994,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name json_set}: err
+  |     |     | {name json_set}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok
@@ -92977,7 +93009,7 @@ The statement ending at line XXXX
 
 SELECT jsonb_set();
 
-test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number of arguments 'jsonb_set'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'jsonb_set'
 
   {select_stmt}: err
   | {select_core_list}: err
@@ -92986,7 +93018,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0079: function got incorrect number
   |     | {select_expr_list}: err
   |     | | {select_expr}: err
   |     |   | {call}: err
-  |     |     | {name jsonb_set}: err
+  |     |     | {name jsonb_set}
   |     |     | {call_arg_list}
   |     |       | {call_filter_clause}
   |     | {select_from_etc}: ok

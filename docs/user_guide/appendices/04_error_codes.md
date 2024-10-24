@@ -4680,10 +4680,7 @@ will indicate which argument number or operand that is incorrect.
 
 ----
 
-### CQL0505: [argument] must not be a blob or object 'context'
-
-Many json oriented functions cannot accept blob or object arguments.  The indicated argument
-is a blob.  The context indicates the function.
+### CQL0505 available for re-use
 
 ----
 

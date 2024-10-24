@@ -24783,55 +24783,61 @@ a_string := json_insert('{"x":0}', '$.x', 2);
 
 -- TEST: only json types allowed
 -- + {call}: err
--- * error: % argument 1 must be json text or json blob 'json_insert'
+-- * error: % argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'json_insert'
 -- +1 error:
 select json_insert(1, '$.x', 2);
 
+-- TEST: only json types allowed
+-- + {call}: err
+-- * error: % starting at argument 2, arguments must come in groups of 2 in 'json_insert'
+-- +1 error:
+select json_insert(1, '$.x', 2, 3);
+
 -- TEST: no blob types allowed
 -- + {call}: err
--- * error: % argument 3 must not be a blob or object 'json_insert'
+-- * error: % argument 3 'blob' is an invalid type; valid types are: 'bool' 'integer' 'long' 'real' 'text' in 'json_insert'
 -- +1 error:
 select json_insert('{"x":0}', '$.x', blob_var);
 
 -- TEST: only text paths allowed
 -- + {call}: err
--- * error: % argument 2 must be json text path 'json_insert'
+-- * error: % argument 2 'integer' is an invalid type; valid types are: 'text' in 'json_insert'
 -- +1 error:
 select json_insert('[]', 1, 1);
 
 -- TEST json function for JSON insert wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_insert'
+-- * error: % too few arguments in function 'json_insert'
 -- +1 error:
 select json_insert();
 
 -- TEST json function for JSON insert wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_insert'
+-- * error: % too few arguments in function 'jsonb_insert'
 -- +1 error:
 select jsonb_insert();
 
 -- TEST json function for JSON replace wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_replace'
+-- * error: % too few arguments in function 'json_replace'
 -- +1 error:
 select json_replace();
 
 -- TEST json function for JSON insert wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_replace'
+-- * error: % too few arguments in function 'jsonb_replace'
 -- +1 error:
 select jsonb_replace();
 
 -- TEST json function for JSON set wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'json_set'
+-- * error: % too few arguments in function 'json_set'
 -- +1 error:
 select json_set();
 
 -- TEST json function for JSON sst wrong arg count
 -- + {call}: err
--- * error: % function got incorrect number of arguments 'jsonb_set'
+-- * error: % too few arguments in function 'jsonb_set'
 -- +1 error:
 select jsonb_set();
 

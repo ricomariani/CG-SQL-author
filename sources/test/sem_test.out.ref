@@ -95515,6 +95515,114 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in functi
 
 The statement ending at line XXXX
 
+LET sql_option := ( SELECT sqlite_compileoption_get(1) IF NOTHING THEN THROW );
+
+  {let_stmt}: sql_option: text variable
+  | {name sql_option}: sql_option: text variable
+  | {select_if_nothing_throw_expr}: _anon: text
+    | {select_stmt}: _anon: text
+      | {select_core_list}: select: { _anon: text }
+      | | {select_core}: select: { _anon: text }
+      |   | {select_expr_list_con}: select: { _anon: text }
+      |     | {select_expr_list}: select: { _anon: text }
+      |     | | {select_expr}: text
+      |     |   | {call}: text
+      |     |     | {name sqlite_compileoption_get}: text
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {int 1}: integer notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET sql_option := ( SELECT sqlite_compileoption_get() IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'sqlite_compileoption_get'
+
+  {assign}: err
+  | {name sql_option}: sql_option: text variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name sqlite_compileoption_get}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+LET sql_bool_option := ( SELECT sqlite_compileoption_used("foo") IF NOTHING THEN THROW );
+
+  {let_stmt}: sql_bool_option: bool notnull variable
+  | {name sql_bool_option}: sql_bool_option: bool notnull variable
+  | {select_if_nothing_throw_expr}: _anon: bool notnull
+    | {select_stmt}: _anon: bool notnull
+      | {select_core_list}: select: { _anon: bool notnull }
+      | | {select_core}: select: { _anon: bool notnull }
+      |   | {select_expr_list_con}: select: { _anon: bool notnull }
+      |     | {select_expr_list}: select: { _anon: bool notnull }
+      |     | | {select_expr}: bool notnull
+      |     |   | {call}: bool notnull
+      |     |     | {name sqlite_compileoption_used}: bool notnull
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     |       | {arg_list}: ok
+      |     |         | {strlit 'foo'}: text notnull
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
+SET sql_bool_option := ( SELECT sqlite_compileoption_used() IF NOTHING THEN THROW );
+
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'sqlite_compileoption_used'
+
+  {assign}: err
+  | {name sql_bool_option}: sql_bool_option: bool notnull variable
+  | {select_if_nothing_throw_expr}: err
+    | {select_stmt}: err
+      | {select_core_list}: err
+      | | {select_core}: err
+      |   | {select_expr_list_con}: err
+      |     | {select_expr_list}: err
+      |     | | {select_expr}: err
+      |     |   | {call}: err
+      |     |     | {name sqlite_compileoption_used}
+      |     |     | {call_arg_list}
+      |     |       | {call_filter_clause}
+      |     | {select_from_etc}: ok
+      |       | {select_where}
+      |         | {select_groupby}
+      |           | {select_having}
+      | {select_orderby}
+        | {select_limit}
+          | {select_offset}
+
+The statement ending at line XXXX
+
 LET t_changes := ( SELECT total_changes() );
 
   {let_stmt}: t_changes: longint notnull variable

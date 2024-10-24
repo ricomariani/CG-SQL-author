@@ -25362,6 +25362,30 @@ let sql_vers := (select sqlite_version());
 -- +1 error:
 set sql_vers := (select sqlite_version(1));
 
+-- TEST: sqlite compile option normal call
+-- + LET sql_option := ( SELECT sqlite_compileoption_get(1) IF NOTHING THEN THROW );
+-- + let_stmt}: sql_option: text variable
+-- - error:
+let sql_option := sqlite_compileoption_get(1);
+
+-- TEST: sqlite compile option no args
+-- + {assign}: err
+-- * error: % too few arguments in function 'sqlite_compileoption_get'
+-- +1 error:
+set sql_option := sqlite_compileoption_get();
+
+-- TEST: sqlite compile option used normal call
+-- + LET sql_bool_option := ( SELECT sqlite_compileoption_used("foo") IF NOTHING THEN THROW );
+-- + {let_stmt}: sql_bool_option: bool notnull variable
+-- - error:
+let sql_bool_option := "foo":sqlite_compileoption_used;
+
+-- TEST: sqlite compile option used no args
+-- + {assign}: err
+-- * error: % too few arguments in function 'sqlite_compileoption_used'
+-- +1 error:
+set sql_bool_option := sqlite_compileoption_used();
+
 -- TEST: sqlite version normal call
 -- + LET t_changes := ( SELECT total_changes() );
 -- + {let_stmt}: t_changes: longint notnull variable

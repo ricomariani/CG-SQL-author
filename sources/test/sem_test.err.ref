@@ -1792,6 +1792,8 @@ test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 2 'integer' is an in
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'like'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'glob'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sqlite_version'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'sqlite_compileoption_get'
+test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'sqlite_compileoption_used'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'total_changes'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too many arguments in function 'sqlite_source_id'
 test/sem_test.sql:XXXX:1: error: in num : CQL0084: argument 1 'integer' is an invalid type; valid types are: 'text' 'blob' in 'hex'

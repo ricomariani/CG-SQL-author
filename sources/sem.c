@@ -8484,6 +8484,42 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   name_ast->sem = ast->sem = new_sem_std(SEM_TYPE_INTEGER, arg_list);
 }
 
+static void sem_func_sqlite_compileoption_used(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // rewritten to be always in SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+    return;
+  }
+
+  // bool notnull result
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_BOOL|SEM_TYPE_NOTNULL);
+}
+
+static void sem_func_sqlite_compileoption_get(ast_node *ast, uint32_t arg_count) {
+  Contract(is_ast_call(ast));
+  EXTRACT_NAME_AST(name_ast, ast->left);
+  EXTRACT_STRING(name, name_ast);
+  EXTRACT_NOTNULL(call_arg_list, ast->right);
+  EXTRACT(arg_list, call_arg_list->right);
+
+  // rewritten to be always in SQL
+  Contract(sem_validate_appear_inside_sql_stmt(ast));
+
+  if (!sem_validate_arg_pattern("i", ast, arg_count)) {
+    return;
+  }
+
+  // text nullable result (index too high -> null)
+  name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT);
+}
+
 static void sem_func_octet_length(ast_node *ast, uint32_t arg_count) {
   sem_func_length(ast, arg_count);
 }
@@ -10088,7 +10124,6 @@ static void sem_func_sqlite_version(ast_node *ast, uint32_t arg_count) {
 
   name_ast->sem = ast->sem = new_sem(SEM_TYPE_TEXT | SEM_TYPE_NOTNULL);
 }
-
 
 // The last_insert_rowid function is used to get the rowid of the most recently inserted row with a rowid.
 static void sem_func_last_insert_rowid(ast_node *ast, uint32_t arg_count) {
@@ -26062,6 +26097,8 @@ cql_noexport void sem_main(ast_node *ast) {
   FUNC_REWRITE_INIT(like);
   FUNC_REWRITE_INIT(quote);
   FUNC_REWRITE_INIT(soundex);
+  FUNC_REWRITE_INIT(sqlite_compileoption_get);
+  FUNC_REWRITE_INIT(sqlite_compileoption_used);
   FUNC_REWRITE_INIT(unhex);
 
   SPECIAL_FUNC_INIT(count);

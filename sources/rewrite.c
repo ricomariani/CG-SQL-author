@@ -1170,7 +1170,12 @@ static CSTR coretype_format(sem_t sem_type) {
 }
 
 // Generate arg_list nodes and formatting values for a printf(...) ast
-static ast_node *rewrite_gen_arg_list(charbuf *format_buf, CSTR cursor_name, CSTR col_name, sem_t type) {
+static ast_node *rewrite_gen_arg_list(
+  charbuf *format_buf,
+  CSTR cursor_name,
+  CSTR col_name,
+  sem_t type)
+{
   // left to arg_list node
   ast_node *dot = new_ast_dot(new_ast_str(cursor_name), new_ast_str(col_name));
   // If the argument is blob type we need to print just its size therefore we rewrite
@@ -2908,8 +2913,8 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
     }
 
     // if this column is present (in the values case some can be missing) then
-    // add it to the end of the existing list.  Note we made a fake node at the head
-    // so we never have to deal with tail is null.
+    // add it to the end of the existing list.  Note we made a fake node at the
+    // head so we never have to deal with tail is null.
 
     if (new_item) {
       ast_set_right(tail, new_item);
@@ -2926,10 +2931,13 @@ static ast_node *rewrite_create_blob_args(create_blob_args_info *info) {
   return root->right;
 }
 
-// This walks the name list and generates either the key create call or the value create call
-// This is the fixed part of the call.
-static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast_node *name_list) {
-
+// This walks the name list and generates either the key create call or the
+// value create call. This is the fixed part of the call.
+static ast_node *rewrite_blob_create(
+  bool_t for_key,
+  ast_node *backed_table,
+  ast_node *name_list)
+{
   // set up state for the recursion, (note it will clean the symbol table)
   create_blob_args_info info = {
     .for_key = for_key,
@@ -2951,8 +2959,14 @@ static ast_node *rewrite_blob_create(bool_t for_key, ast_node *backed_table, ast
   );
 }
 
-// create the wrapper for a cql_blob_get call for the given blob, backed table name and column name
-static ast_node *cql_blob_get_call (CSTR blob_field, sem_t sem_type_blob, CSTR backed_table, CSTR col) {
+// create the wrapper for a cql_blob_get call for the given blob, backed table
+// name and column name
+static ast_node *cql_blob_get_call (
+  CSTR blob_field,
+  sem_t sem_type_blob,
+  CSTR backed_table,
+  CSTR col)
+{
   // this is just cql_blob_get(blob_field, backed_table.col)
   return new_ast_call(
     new_ast_str("cql_blob_get"),
@@ -2984,13 +2998,17 @@ typedef struct update_rewrite_info {
 } update_rewrite_info;
 
 // if we found any references to backed columns extract from the blob
-static void rewrite_blob_column_references(update_rewrite_info *info, ast_node *ast) {
+static void rewrite_blob_column_references(
+  update_rewrite_info *info,
+  ast_node *ast)
+{
   // the name nodes have all we need in the semantic payload
   if (is_ast_str(ast) || is_ast_dot(ast)) {
     if (ast->sem && ast->sem->backed_table) {
-       // we know the name but to get the PK info we need to get to the semantic type of the column
-       // pk info doesn't flow through the normal exression tree. No problem, we'll just look
-       // up the name in the backed table and get the type from there.
+       // we know the name but to get the PK info we need to get to the semantic
+       // type of the column pk info doesn't flow through the normal exression
+       // tree. No problem, we'll just look up the name in the backed table and
+       // get the type from there.
        sem_struct *sptr_backed = info->backed_table->sem->sptr;
        Invariant(ast->sem);
        Invariant(ast->sem->name);
@@ -3018,12 +3036,16 @@ static void rewrite_blob_column_references(update_rewrite_info *info, ast_node *
   }
 }
 
-// This walks the update list and generates either the args for the key or the args for the value
-// the values come from the assignment in the update entry list
-static ast_node *rewrite_update_blob_args(update_rewrite_info *info, ast_node *update_list) {
+// This walks the update list and generates either the args for the key or the
+// args for the value the values come from the assignment in the update entry list
+static ast_node *rewrite_update_blob_args(
+  update_rewrite_info *info,
+  ast_node *update_list)
+{
   if (!update_list) {
     return NULL;
   }
+
   Contract(is_ast_update_list(update_list));
 
   EXTRACT_NOTNULL(update_entry, update_list->left);
@@ -3060,7 +3082,6 @@ static ast_node *rewrite_blob_update(
   ast_node *backed_table,
   ast_node *update_list)
 {
-
   sem_t sem_type = sptr_backing->semtypes[0];
   bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
 
@@ -3073,7 +3094,8 @@ static ast_node *rewrite_blob_update(
    .backed_table = backed_table,
   };
 
-  // if there are no args for this blob type then do not make the blob update call at all.
+  // if there are no args for this blob type then do not make the blob update
+  // call at all.
   ast_node *arg_list = rewrite_update_blob_args(&info, update_list);
   if (!arg_list) {
     return NULL;
@@ -3097,9 +3119,12 @@ static ast_node *rewrite_blob_update(
   );
 }
 
-// This helper creates the select list we will need to get the values out
-// from the statement that was the insert list (it could be values or a select statement)
-static ast_node *rewrite_insert_list_as_select_values(ast_node *insert_list) {
+// This helper creates the select list we will need to get the values out from
+// the statement that was the insert list (it could be values or a select
+// statement)
+static ast_node *rewrite_insert_list_as_select_values(
+  ast_node *insert_list)
+{
   return new_ast_select_stmt(
     new_ast_select_core_list(
       new_ast_select_core(
@@ -3194,13 +3219,14 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   EXTRACT(column_spec, columns_values->left);
   EXTRACT_ANY(insert_list, columns_values->right);
 
-  // Most insert types are rewritten into select form including the standard values clause
-  // but the insert forms that came from a cursor, args, or some other shape are still written
-  // using an insert list, these are just vanilla values.  Dummy default and all that sort
-  // of business likewise applies to simple insert lists and all of that processing is done.
-  // If we find an insert list form the first step is to normalize the insert list into a
-  // select...values. We do this so thatwe have just one rewrite path after this point, and
-  // because it's stupid simple
+  // Most insert types are rewritten into select form including the standard
+  // values clause but the insert forms that came from a cursor, args, or some
+  // other shape are still written using an insert list, these are just vanilla
+  // values.  Dummy default and all that sort of business likewise applies to
+  // simple insert lists and all of that processing is done. If we find an
+  // insert list form the first step is to normalize the insert list into a
+  // select...values. We do this so thatwe have just one rewrite path after this
+  // point, and because it's stupid simple
 
   if (is_ast_insert_list(insert_list)) {
     ast_node *select_stmt = rewrite_insert_list_as_select_values(insert_list);
@@ -3209,14 +3235,15 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
     insert_list = select_stmt;
   }
 
-  // Now either the incoming list came in before it was transformed, in which case contract
-  // is broken, or we fixed the one legal case above.  We have an select statement or
-  // a broken caller.
+  // Now either the incoming list came in before it was transformed, in which
+  // case contract is broken, or we fixed the one legal case above.  We have an
+  // select statement or a broken caller.
   Contract(is_select_stmt(insert_list));
 
   EXTRACT_NOTNULL(name_list, column_spec->left);
 
-  // make a CTE table _vals that will hold the selected data using the user-provided name list
+  // make a CTE table _vals that will hold the selected data using the
+  // user-provided name list
   ast_node *cte_table_vals = new_ast_cte_table(
     new_ast_cte_decl(
       new_ast_str("_vals"),
@@ -3229,7 +3256,6 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   ast_node *val_expr = rewrite_blob_create(false, backed_table, name_list);
 
   // now we need expressions for the key and value
-  // this is a stub for now
   ast_node *select_expr_list = new_ast_select_expr_list(
     new_ast_select_expr(key_expr, NULL),
     new_ast_select_expr_list(
@@ -3293,7 +3319,7 @@ cql_noexport void rewrite_insert_statement_for_backed_table(
   bool_t is_key_first = is_primary_key(sem_type) || is_partial_pk(sem_type);
 
   CSTR backing_key = sptr_backing->names[!is_key_first]; // if the order is kv then the key is column 0, else 1
-  CSTR backing_val = sptr_backing->names[is_key_first];  // if the oder is kv then the value is colume 1, else 0
+  CSTR backing_val = sptr_backing->names[is_key_first];  // if the order is kv then the value is colume 1, else 0
   sem_t sem_type_key = sptr_backing->semtypes[!is_key_first];
   sem_t sem_type_val = sptr_backing->semtypes[is_key_first];
 
@@ -3749,7 +3775,10 @@ cql_noexport void rewrite_func_call_as_proc_call(ast_node *_Nonnull ast) {
   ast_set_right(ast, new->right);
 }
 
-cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast_node *_Nonnull proc_name_ast) {
+cql_noexport bool_t rewrite_ast_star_if_needed(
+  ast_node *_Nullable arg_list,
+  ast_node *_Nonnull proc_name_ast)
+{
   if (!arg_list) {
     return true;
   }
@@ -3776,8 +3805,10 @@ cql_noexport bool_t rewrite_ast_star_if_needed(ast_node *_Nullable arg_list, ast
   return true;
 }
 
-
-cql_noexport void rewrite_op_equals_assignment_if_needed(ast_node *_Nonnull expr, CSTR _Nonnull op) {
+cql_noexport void rewrite_op_equals_assignment_if_needed(
+  ast_node *_Nonnull expr,
+  CSTR _Nonnull op)
+{
   Contract(expr);
   Contract(op);
 
@@ -3839,12 +3870,14 @@ cql_noexport void rewrite_op_equals_assignment_if_needed(ast_node *_Nonnull expr
   AST_REWRITE_INFO_RESET();
 }
 
-// Array access foo[a,b] can turn into
-//    get_from_object_kind(foo, a, b) OR set_in_object_kind(foo, a, b)
+// Array access foo[a,b] can turn into a getter or a setter
 // This helper does the job of rewriting the array into a function call.,
-// In the set case a second rewrite moves the assigned into the end of
+// In the set case a second rewrite moves the assigned value into the end of
 // the arg list.
-cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull op) {
+cql_noexport void rewrite_array_as_call(
+  ast_node *_Nonnull expr,
+  CSTR _Nonnull op)
+{
   Contract(is_ast_array(expr));
   EXTRACT_ANY_NOTNULL(array, expr->left);
   EXTRACT_NOTNULL(arg_list, expr->right);
@@ -3860,7 +3893,6 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull o
   }
 
   CHARBUF_CLOSE(tmp);
-
 
   AST_REWRITE_INFO_SET(expr->lineno, expr->filename);
 
@@ -3878,7 +3910,10 @@ cql_noexport void rewrite_array_as_call(ast_node *_Nonnull expr, CSTR _Nonnull o
 
 // Appends the given argument to the end of an existing (not empty)
 // call argument list
-cql_noexport void rewrite_append_arg(ast_node *_Nonnull call, ast_node *_Nonnull arg) {
+cql_noexport void rewrite_append_arg(
+  ast_node *_Nonnull call,
+  ast_node *_Nonnull arg)
+{
   Contract(is_ast_call(call));
   EXTRACT_NOTNULL(call_arg_list, call->right);
   EXTRACT_NOTNULL(arg_list, call_arg_list->right);
@@ -3959,7 +3994,10 @@ cql_noexport bool_t try_rewrite_op_as_call(ast_node *_Nonnull ast, CSTR op) {
 }
 
 // rewrites the dot operator foo.bar as a function, the operation is either get or set
-cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull op) {
+cql_noexport void rewrite_dot_as_call(
+  ast_node *_Nonnull dot,
+  CSTR _Nonnull op)
+{
   Contract(is_ast_dot(dot));
   EXTRACT_ANY_NOTNULL(expr, dot->left);
   EXTRACT_STRING(func, dot->right);
@@ -4008,90 +4046,95 @@ cql_noexport void rewrite_dot_as_call(ast_node *_Nonnull dot, CSTR _Nonnull op) 
   AST_REWRITE_INFO_RESET();
 }
 
-cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(ast_node *_Nonnull columns_values) {
-    EXTRACT_NOTNULL(column_spec, columns_values->left);
-    EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
-    EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
+cql_noexport ast_node *_Nonnull rewrite_column_values_as_update_list(
+  ast_node *_Nonnull columns_values)
+{
+  EXTRACT_NOTNULL(column_spec, columns_values->left);
+  EXTRACT_ANY_NOTNULL(name_list, column_spec->left);
+  EXTRACT_ANY_NOTNULL(insert_list, columns_values->right);
 
-    AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
+  AST_REWRITE_INFO_SET(columns_values->lineno, columns_values->filename);
 
-    ast_node *new_update_list_head = new_ast_update_list(NULL, NULL); // fake list head
-    ast_node *curr_update_list = new_update_list_head;
-    ast_node *name_item = NULL;
-    ast_node *insert_item = NULL;
-    for (
-      name_item = name_list, insert_item = insert_list;
-      name_item && insert_item;
-      name_item = name_item->right, insert_item = insert_item->right
-    ) {
-      EXTRACT_STRING(name, name_item->left);
-      EXTRACT_ANY_NOTNULL(expr, insert_item->left);
-      ast_node *new_update_list = new_ast_update_list(
-        new_ast_update_entry(new_ast_str(name), expr),
-        NULL
-      );
-      ast_set_right(curr_update_list, new_update_list);
-      curr_update_list = curr_update_list->right;
-    }
+  ast_node *new_update_list_head = new_ast_update_list(NULL, NULL); // fake list head
+  ast_node *curr_update_list = new_update_list_head;
+  ast_node *name_item = NULL;
+  ast_node *insert_item = NULL;
+  for (
+    name_item = name_list, insert_item = insert_list;
+    name_item && insert_item;
+    name_item = name_item->right, insert_item = insert_item->right
+  ) {
+    EXTRACT_STRING(name, name_item->left);
+    EXTRACT_ANY_NOTNULL(expr, insert_item->left);
+    ast_node *new_update_list = new_ast_update_list(
+      new_ast_update_entry(new_ast_str(name), expr),
+      NULL
+    );
+    ast_set_right(curr_update_list, new_update_list);
+    curr_update_list = curr_update_list->right;
+  }
 
-    AST_REWRITE_INFO_RESET();
+  AST_REWRITE_INFO_RESET();
 
-    return new_update_list_head->right;
+  return new_update_list_head->right;
 }
 
+// This helper helps us with functions that are only allowed to be
+// called in a SQL context.  It rewrites the function call into
+// a select statement that returns the result of the function call.
+// We use (select ... if nothing throw);
 void rewrite_as_select_expr(ast_node *ast) {
-    AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
+  AST_REWRITE_INFO_SET(ast->lineno, ast->filename);
 
-    Contract(is_ast_call(ast));
+  Contract(is_ast_call(ast));
 
-    // mutate the root
-    ast->type = k_ast_select_if_nothing_throw_expr;
+  // mutate the root
+  ast->type = k_ast_select_if_nothing_throw_expr;
 
-    ast_node *new_call = new_ast_call(ast->left, ast->right);
+  ast_node *new_call = new_ast_call(ast->left, ast->right);
 
-    ast_set_left(
-      ast,
-      new_ast_select_stmt(
-        new_ast_select_core_list(
-          new_ast_select_core(
-            NULL,
-            new_ast_select_expr_list_con(
-              new_ast_select_expr_list(
-                new_ast_select_expr(new_call, NULL),
-                NULL
-              ),
-              new_ast_select_from_etc(
+  ast_set_left(
+    ast,
+    new_ast_select_stmt(
+      new_ast_select_core_list(
+        new_ast_select_core(
+          NULL,
+          new_ast_select_expr_list_con(
+            new_ast_select_expr_list(
+              new_ast_select_expr(new_call, NULL),
+              NULL
+            ),
+            new_ast_select_from_etc(
+              NULL,
+              new_ast_select_where(
                 NULL,
-                new_ast_select_where(
+                new_ast_select_groupby(
                   NULL,
-                  new_ast_select_groupby(
-                    NULL,
-                    new_ast_select_having(NULL, NULL)
-                  )
+                  new_ast_select_having(NULL, NULL)
                 )
               )
             )
-          ),
-          NULL
-        ),
-        new_ast_select_orderby(
-          NULL,
-          new_ast_select_limit(
-            NULL,
-            new_ast_select_offset(NULL, NULL)
           )
+        ),
+        NULL
+      ),
+      new_ast_select_orderby(
+        NULL,
+        new_ast_select_limit(
+          NULL,
+          new_ast_select_offset(NULL, NULL)
         )
       )
-    );
-    ast_set_right(ast, NULL);
+    )
+  );
+  ast_set_right(ast, NULL);
 
-    // for debugging, dump the generated ast without trying to validate it at all
-    // print_root_ast(ast->parent);
-    // for debugging dump the tree
-    // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
+  // for debugging, dump the generated ast without trying to validate it at all
+  // print_root_ast(ast->parent);
+  // for debugging dump the tree
+  // gen_stmt_list_to_stdout(new_ast_stmt_list(ast, NULL));
 
-    AST_REWRITE_INFO_RESET();
+  AST_REWRITE_INFO_RESET();
 }
-
 
 #endif

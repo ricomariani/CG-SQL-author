@@ -23511,6 +23511,16 @@ static void sem_close_stmt(ast_node *ast) {
   ast->sem = cursor->sem;
 }
 
+// `@op` statement is used to declare function transforms for various
+// operations. There are limited errors cases here, mainly the type required for
+// the transform might be an invalid one -- the only way that can happen is if
+// the type is an identifier and the identifer is not a type alias.  All other
+// types are valid by construction. Once we've ruled that out, we can record the
+// type and the operation in the symbol table, the value is the name of the
+// function to use if that shape is encountered.  The function name must be a
+// valid *eventually* at the point of the transform.  The transform can fail
+// even if we apply it.  We won't know until we see the actual call site and
+// operands.  For now we store the mapping.
 static void sem_op_stmt(ast_node *ast) {
   Contract(is_ast_op_stmt(ast));
   EXTRACT_ANY_NOTNULL(data_type, ast->left);
@@ -23520,6 +23530,7 @@ static void sem_op_stmt(ast_node *ast) {
   EXTRACT_STRING(func, v2->left);
   EXTRACT_STRING(targ, v2->right);
 
+  // we check for the special "non-type" identifiers first
   CSTR key = NULL;
   if (is_ast_str(data_type)) {
     EXTRACT_STRING(special, data_type);
@@ -23532,6 +23543,11 @@ static void sem_op_stmt(ast_node *ast) {
     }
   }
 
+  // if it's not one of those then we need to:
+  // 1. check that the type is valid
+  // 2. extract the name of the core type
+  // 3. extract the kind if there is one
+  // 4. build the key
   if (!key) {
     sem_data_type_var(data_type);
     if (is_error(data_type)) {
@@ -23551,6 +23567,9 @@ static void sem_op_stmt(ast_node *ast) {
     }
   }
 
+  // Change or add the entry in the symbol table as required; note that key must
+  // be durable, it isn't explicitly freed it has to come from the ast pool or
+  // another auto-release pool.
   Invariant(key);
   symtab_entry *entry = symtab_find(ops, key);
   if (entry) {
@@ -23607,8 +23626,8 @@ static void sem_out_union_parent_child_stmt(ast_node *ast) {
   Contract(is_ast_out_union_parent_child_stmt(ast));
   rewrite_out_union_parent_child_stmt(ast);
 
-  // analyze the first statement of the rewrite
-  // the rest of the rewrite will proceed normally as we march through the statement list
+  // analyze the first statement of the rewrite; the rest of the rewrite will
+  // proceed normally as we march through the statement list
   sem_one_stmt(ast);
 }
 
@@ -23642,11 +23661,11 @@ static void sem_previous_schema_stmt(ast_node *ast) {
   enforcement.strict_cast = false;  // this is normally on by default, we want no strict in previous schema
 
   // we're entering the previous schema section, the regions will be redeclared.
-  // later we'll want to validate against these;  we have to save the current regions
-  // and begin fresh or there will be bogus duplicate region declaration warnings.
-  // see the processing in sem_declare_schema_region_stmt which shows how regions
-  // are different than other entities.  This "duplicate" business is handled differently
-  // for regions.
+  // later we'll want to validate against these;  we have to save the current
+  // regions and begin fresh or there will be bogus duplicate region declaration
+  // warnings. see the processing in sem_declare_schema_region_stmt which shows
+  // how regions are different than other entities.  This "duplicate" business
+  // is handled differently for regions.
   new_regions = schema_regions;
   new_enums = enums;
 
@@ -23735,10 +23754,12 @@ static void sem_call_stmt(ast_node *ast) {
   }
 }
 
+// the this form declares all the out arguments of a procedure call and calls
+// the procedure.  If the out arguments already exist, they are not re-declared.
+// The resulting call and out arguments might still have errors.
 static void sem_declare_out_call_stmt(ast_node *ast) {
   Contract(is_ast_declare_out_call_stmt(ast));
   EXTRACT_NOTNULL(call_stmt, ast->left);
-
   EXTRACT_NAME_AST(name_ast, call_stmt->left);
   EXTRACT_STRING(name, name_ast);
   EXTRACT(arg_list, call_stmt->right);
@@ -24227,6 +24248,13 @@ static void sem_expr_null(ast_node *ast, CSTR cstr) {
   ast->sem = new_sem(SEM_TYPE_NULL);
 }
 
+// The dot transform is the last chance for a valid expression
+// at this point.  That means we need 1) a valid left side, and
+// 2) a property that has a mapping to a function.  If any of
+// this fails we will mark the expression as an error.
+// The way this is going to work is if the transform is an option
+// we will try it. If there is no mapping the transform will produce
+// an meaningful error when evaluation proceeds.
 static void sem_validate_dot_transform(ast_node *ast, CSTR op) {
   Contract(is_ast_dot(ast));
   Contract(is_id(ast->right));
@@ -24272,8 +24300,12 @@ static void sem_expr_dot(ast_node *ast, CSTR cstr) {
     }
   }
 
+  // If we get here we have to rewrite the dot as a call, it's our last chance
+  // an error at this point means that we can't even attempt the transform.
   sem_validate_dot_transform(ast, "get");
   if (!is_error(ast)) {
+    // If we rewrote it, we need to reanalyze the new expression.
+    // If there was no mapping this will fail.
     sem_expr(ast);
   }
 }

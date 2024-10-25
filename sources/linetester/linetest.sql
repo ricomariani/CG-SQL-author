@@ -55,15 +55,15 @@ var actual_name text;
 proc setup()
 begin
   create table linedata(
-     source text not null,
-     procname text not null,
-     line integer not null,
-     data text not null,
-     physical_line integer not null
+     source text!,
+     procname text!,
+     line int!,
+     data text!,
+     physical_line int!
   );
 
   create table procs(
-     procname text not null primary key);
+     procname text! primary key);
 
   create index __idx__test_lines on linedata (source, procname);
 end;
@@ -77,7 +77,7 @@ begin
 end;
 
 [[private]]
-proc dump_proc_records(source_ text not null, procname_ text not null)
+proc dump_proc_records(source_ text!, procname_ text!)
 begin
   declare C cursor for select * from linedata where procname = procname_ and source = source_;
   loop fetch C
@@ -87,7 +87,7 @@ begin
 end;
 
 [[private]]
-proc dump(procname text not null)
+proc dump(procname text!)
 begin
   printf("%s: difference encountered\n", procname);
   printf("<<<< EXPECTED\n");
@@ -196,7 +196,7 @@ begin
     end if;
 
     if data:starts_with(prefix2) then
-      procname := NULL;
+      procname := null;
       line := 0;
       line_base := 0;
     end if;
@@ -241,8 +241,8 @@ begin
     return;
   end if;
 
-  set expected_name := ifnull_throw(args[1]);
-  set actual_name := ifnull_throw(args[2]);
+  set expected_name := args[1]:ifnull_throw;
+  set actual_name := args[2]:ifnull_throw;
 end;
 
 -- main entry point

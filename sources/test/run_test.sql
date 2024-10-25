@@ -6621,6 +6621,58 @@ BEGIN
   EXPECT!(C:to_object(1) IS NULL);
 END);
 
+TEST!(null_casting,
+BEGIN
+  let f1 := null ~bool~;
+  let i1 := null ~int~;
+  let l1 := null ~long~;
+  let r1 := null ~real~;
+  let t1 := null ~text~;
+  let b1 := null ~blob~;
+  let o1 := null ~object~;
+
+  EXPECT!(f1 is null);
+  EXPECT!(i1 is null);
+  EXPECT!(l1 is null);
+  EXPECT!(r1 is null);
+  EXPECT!(t1 is null);
+  EXPECT!(b1 is null);
+  EXPECT!(o1 is null);
+
+  -- make everything not null again
+  f1 := true;
+  i1 := 1;
+  l1 := 1;
+  r1 := 1;
+  t1 := "dummy";
+  b1 := randomblob(1);
+  o1 := b1:box;
+
+  EXPECT!(f1 :nullable is not null);
+  EXPECT!(i1 :nullable is not null);
+  EXPECT!(l1 :nullable is not null);
+  EXPECT!(r1 :nullable is not null);
+  EXPECT!(t1 :nullable is not null);
+  EXPECT!(b1 :nullable is not null);
+  EXPECT!(o1 :nullable is not null);
+
+  set f1 := null ~bool~;
+  set i1 := null ~int~;
+  set l1 := null ~long~;
+  set r1 := null ~real~;
+  set t1 := null ~text~;
+  set b1 := null ~blob~;
+  set o1 := null ~object~;
+
+  EXPECT!(f1 is null);
+  EXPECT!(i1 is null);
+  EXPECT!(l1 is null);
+  EXPECT!(r1 is null);
+  EXPECT!(t1 is null);
+  EXPECT!(b1 is null);
+  EXPECT!(o1 is null);
+END);
+
 END_SUITE();
 
 -- manually force tracing on by redefining the macros

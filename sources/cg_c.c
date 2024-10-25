@@ -2230,7 +2230,7 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
 
     default:
       // all other types forbidden by semantic analysis
-      Invariant(core_type_expr == core_type_result);
+      Invariant(core_type_expr == SEM_TYPE_NULL || core_type_expr == core_type_result);
       break;
   }
 
@@ -2238,7 +2238,10 @@ static void cg_expr_cast(ast_node *cast_expr, CSTR str, charbuf *is_null, charbu
   CG_PUSH_EVAL(expr, pri_new);
   CHARBUF_OPEN(result);
 
-  if (core_type_expr == core_type_result) {
+  if (core_type_expr == SEM_TYPE_NULL) {
+    bprintf(value, "0");
+    bprintf(is_null, "1");
+  } else if (core_type_expr == core_type_result) {
     // no-op cast, just pass through
     bprintf(is_null, "%s", expr_is_null.ptr);
     bprintf(value, "%s", expr_value.ptr);

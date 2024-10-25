@@ -1286,7 +1286,10 @@ static void cg_lua_expr_cast(ast_node *cast_expr, CSTR str, charbuf *value, int3
 
   CG_LUA_PUSH_EVAL(expr, pri_new);
 
-  if (core_type_expr == core_type_result) {
+  if (core_type_expr == SEM_TYPE_NULL) {
+    bprintf(value, "nil");
+  }
+  else if (core_type_expr == core_type_result) {
     // no-op cast, just pass through -- we have to add parens because they were
     // implicit in the call syntax of cast -- so this is the safe/easy thing to do
     bprintf(value, "(%s)", expr_value.ptr);

@@ -7449,6 +7449,13 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
   sem_t sem1 = data_type->sem->sem_type;
   sem_t sem2 = expr->sem->sem_type;
 
+  // null can be cast to anything to create a nullable of that type
+  if (core_type_of(sem2) == SEM_TYPE_NULL) {
+    ast->sem = new_sem(data_type->sem->sem_type);
+    ast->sem->kind = data_type->sem->kind;
+    return;
+  }
+
   if (core_type_of(sem1) != core_type_of(sem2)) {
     if (!is_numeric(sem1) || !is_numeric(sem2)) {
       if (CURRENT_EXPR_CONTEXT_IS(SEM_EXPR_CONTEXT_NONE)) {

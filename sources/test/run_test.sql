@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-declare tests integer not null;
-declare tests_passed integer not null;
-declare fails integer not null;
-declare expectations integer not null;
-declare function get_outstanding_refs() integer not null;
-declare start_refs integer not null;
-declare end_refs integer not null;
+declare tests int!;
+declare tests_passed int!;
+declare fails int!;
+declare expectations int!;
+declare function get_outstanding_refs() int!;
+declare start_refs int!;
+declare end_refs int!;
 declare proc printf no check;
 declare proc exit no check;
 
@@ -44,7 +44,7 @@ begin
   begin
     try
       tests := tests + 1;
-      declare starting_fails integer not null;
+      declare starting_fails int!;
       starting_fails := fails;
       body!;
     catch
@@ -92,7 +92,7 @@ begin
   call end_suite();
 end;
 
-proc errcheck(passed bool @sensitive, message text, line integer not null)
+proc errcheck(passed bool @sensitive, message text, line int!)
 begin
   expectations := expectations + 1;
   if not coalesce(passed, 0) then
@@ -141,7 +141,7 @@ declare const group blob_types (
 
 declare select function bgetkey_type(b blob) long;
 declare select function bgetval_type(b blob) long;
-declare select function bgetkey(b blob, iarg integer) long;
+declare select function bgetkey(b blob, iarg int) long;
 declare select function bgetval(b blob, iarg long) long;
 declare select function bcreateval no check blob;
 declare select function bcreatekey no check blob;
@@ -161,7 +161,7 @@ declare enum floats real (
   two = 2.0
 );
 
-declare enum longs long_int (
+declare enum longs long (
   one = 1,
   big = 0x100000000,
   neg = -1
@@ -178,15 +178,15 @@ end;
 
 @attribute(cql:backed_by=backing)
 create table backed (
-  id integer primary key,
+  id int primary key,
   `value one` int!,
   `value two` int!
 );
 
 @attribute(cql:backed_by=backing)
 create table backed2 (
-  id integer primary key,
-  `value one` integer
+  id int primary key,
+  `value one` int
 );
 
 call make_schema();
@@ -225,19 +225,19 @@ declare side_effect_0_count int!;
 declare side_effect_1_count int!;
 declare side_effect_null_count int!;
 
-proc side_effect_0(out result integer)
+proc side_effect_0(out result int)
 begin
   result := 0;
   side_effect_0_count := side_effect_0_count + 1;
 end;
 
-proc side_effect_1(out result integer)
+proc side_effect_1(out result int)
 begin
   result := 1;
   side_effect_1_count := side_effect_1_count + 1;
 end;
 
-proc side_effect_null(out result integer)
+proc side_effect_null(out result int)
 begin
   result := null;
   side_effect_null_count := side_effect_null_count + 1;
@@ -525,7 +525,7 @@ END);
 -- test elementary cursor on select with no tables, still round trips through sqlite
 TEST!(cursor_basics,
 BEGIN
-  declare col1 integer;
+  declare col1 int;
   declare col2 real!;
   declare basic_cursor cursor for select 1, 2.5;
   fetch basic_cursor into col1, col2;
@@ -647,10 +647,10 @@ END);
 -- now attempt a mutation
 TEST!(mutate_mixed,
 BEGIN
-  declare new_code long integer;
-  declare code_ long integer;
+  declare new_code long;
+  declare code_ long;
   new_code := 88;
-  declare id_ integer;
+  declare id_ int;
   id_ := 2;  -- either works
 
   call load_mixed();
@@ -844,11 +844,11 @@ END);
 -- binding tests for nullable types
 TEST!(bind_nullables_not_null,
 BEGIN
-  let b := nullable(true);
-  let i := nullable(2);
-  let l := nullable(3L);
-  let r := nullable(4.5);
-  let t := nullable("foo");
+  let b := true:nullable;
+  let i := 2:nullable;
+  let l := 3L:nullable;
+  let r := 4.5:nullable;
+  let t := "foo":nullable;
 
   EXPECT!(b == (select b)); -- binding nullable not null bool
   EXPECT!(i == (select i)); -- binding nullable not null int
@@ -866,8 +866,8 @@ END);
 TEST!(bind_nullables_null,
 BEGIN
   declare b bool;
-  declare i integer;
-  declare l long integer;
+  declare i int;
+  declare l long;
   declare r real;
   declare t text;
 
@@ -1051,7 +1051,7 @@ BEGIN
    EXPECT!(result = 12345);
 END);
 
-proc case_tester1(value int!, out result integer)
+proc case_tester1(value int!, out result int)
 begin
   result := CASE value
     WHEN 1 THEN 100
@@ -1061,7 +1061,7 @@ begin
   END;
 end;
 
-proc case_tester2(value int!, out result integer)
+proc case_tester2(value int!, out result int)
 begin
   result := CASE value
     WHEN 1 THEN 100
@@ -1072,7 +1072,8 @@ end;
 
 TEST!(simple_case_test,
 BEGIN
-  declare result integer;
+  declare result int;
+
   call case_tester1(1, result);
   EXPECT!(result == 100);
   call case_tester1(2, result);
@@ -1134,9 +1135,9 @@ BEGIN
   EXPECT!(not result);
 END);
 
-proc in_tester2(value integer, out result bool)
+proc in_tester2(value int, out result bool)
 begin
-  declare two integer;
+  declare two int;
   two := 2;
   result := value in (1, two, 3);
 end;
@@ -1156,7 +1157,7 @@ BEGIN
   EXPECT!(result is null);
 END);
 
-proc nullables_case_tester(value integer, out result int!)
+proc nullables_case_tester(value int, out result int!)
 begin
   -- this is a very weird way to get a bool
   result := case 1 when value then 1 else 0 end;
@@ -1171,7 +1172,7 @@ BEGIN
   EXPECT!(result == 0);
 END);
 
-proc nullables_case_tester2(value integer, out result int!)
+proc nullables_case_tester2(value int, out result int!)
 begin
   -- this is a very weird way to get a bool
   result := case when value then 1 else 0 end;
@@ -1380,8 +1381,8 @@ BEGIN
 
   declare c1 cursor for select id from vals as T1 where exists (select * from codes as T2 where T1.id == T2.id and T2.code % 1000 == 1);
 
-  declare id_ integer;
-  declare count_ integer;
+  declare id_ int;
+  declare count_ int;
   loop fetch c1 into id_
   begin
     EXPECT!(case id_ when 1 then 1 when 2 then 1 else 0 end);
@@ -1419,8 +1420,7 @@ END);
 
 TEST!(coalesce,
 BEGIN
-  declare i integer;
-  i := null;
+  let i := null ~int~;
   EXPECT_SQL_TOO!(coalesce(i, i, 2) == 2); -- grab the not null last value
   EXPECT_SQL_TOO!(ifnull(i, 2) == 2); -- grab the not null last value
 
@@ -1437,8 +1437,7 @@ END);
 
 TEST!(case_with_null,
 BEGIN
-  declare x integer;
-  x := null;
+  let x := null ~int~;
   x := case x when 0 then 1 else 2 end;
   EXPECT!(x == 2); --null only matches the else
 END);
@@ -1490,7 +1489,7 @@ BEGIN
   let int_val := type_check(1 as int!);
   EXPECT!(int_val == 1);
 
-  let int_cast_val := type_check(cast(1 as integer<foo>) as integer<foo> not null);
+  let int_cast_val := type_check(1 ~int<foo>~ as int<foo> not null);
   EXPECT!(int_cast_val == 1);
 END);
 
@@ -1578,7 +1577,7 @@ cursor C for
   EXPECT!(i == 11); -- 10 results matched, 11th did not match
 END);
 
-proc outint(out int1 integer, out int2 int!)
+proc outint(out int1 int, out int2 int!)
 begin
   declare C1 cursor for select 1;
   fetch C1 into int1;
@@ -1593,13 +1592,13 @@ BEGIN
   EXPECT!(int2 == 2); -- bind output not nullable
 END);
 
-declare function run_test_math(int1 int!, out int2 integer) int!;
+declare function run_test_math(int1 int!, out int2 int) int!;
 declare function string_create() create text;
 declare function string_ref_count(str text) int!;
 
 TEST!(external_functions,
 BEGIN
-  declare int_out integer;
+  declare int_out int;
 
   let int_result := run_test_math(100, int_out);
   EXPECT!(int_out == 500);
@@ -1612,14 +1611,14 @@ END);
 
 TEST!(rev_appl_operator,
 BEGIN
-  declare int_out integer;
+  declare int_out int;
 
   let int_result := 100:run_test_math(int_out);
   EXPECT_SQL_TOO!(int_out == 500);
   EXPECT_SQL_TOO!(int_result == 700);
 
-  declare int_out2 integer;
-  declare int_out3 integer;
+  declare int_out2 int;
+  declare int_out3 int;
   declare int_result2 int!;
 
   -- test left associativity, given that this does not raise any errors, we know this is left associative
@@ -1905,7 +1904,7 @@ END);
 
 TEST!(bind_and_fetch_all_types_nullable,
 BEGIN
-  declare i integer;
+  declare i int;
   declare l long;
   declare r real;
   declare b bool;
@@ -1964,7 +1963,7 @@ END);
 
 TEST!(fetch_all_types_cursor_nullable,
 BEGIN
-  declare i integer;
+  declare i int;
   declare l long;
   declare r real;
   declare b bool;
@@ -2600,7 +2599,7 @@ BEGIN
   EXPECT_SQL_TOO!(x1 + x1 == x3 - x1 <> temp1);
 
   temp1 := nullable(30);
-  declare temp_null integer;
+  declare temp_null int;
   temp_null := NULL;
 
   EXPECT_SQL_TOO!(x1 + x1 IS NULL == x0);
@@ -2781,7 +2780,7 @@ proc load_encoded_table()
 begin
   create table all_types_encoded_table(
     b0 bool @sensitive,
-    i0 integer @sensitive,
+    i0 int @sensitive,
     l0 long @sensitive,
     d0 real @sensitive,
     s0 text @sensitive,
@@ -2796,8 +2795,8 @@ begin
   );
 
   insert into all_types_encoded_table values (
-    FALSE, 0, 0, 0.0, "0", cast("0" as blob),
-    TRUE, 1, 1, 1.1, "1", cast("1" as blob)
+    FALSE, 0, 0, 0.0, "0", "0" ~blob~,
+    TRUE, 1, 1, 1.1, "1", "1" ~blob~
   );
 
   select * from all_types_encoded_table;
@@ -2808,7 +2807,7 @@ proc load_encoded_with_context_table()
 begin
   create table all_types_encoded_with_context_table(
     b0 bool @sensitive,
-    i0 integer @sensitive,
+    i0 int @sensitive,
     l0 long @sensitive,
     d0 real @sensitive,
     s0 text @sensitive,
@@ -2894,7 +2893,7 @@ end;
 @attribute(cql:vault_sensitive=(z, (y)))
 proc out_union_dml_with_encode_context()
 begin
-  create table some_type_encoded_table(x integer, y text @sensitive, z text);
+  create table some_type_encoded_table(x int, y text @sensitive, z text);
   insert into some_type_encoded_table using 66 x, 'abc' y, 'xyz' z;
   declare x cursor for select * from some_type_encoded_table;
   fetch x;
@@ -2944,7 +2943,7 @@ TEST!(encoded_null_values,
 BEGIN
   create table encode_null_table(
       b0 bool @sensitive,
-      i0 integer @sensitive,
+      i0 int @sensitive,
       l0 long @sensitive,
       d0 real @sensitive,
       s0 text @sensitive,
@@ -3011,7 +3010,7 @@ END);
 @attribute(cql:vault_sensitive=(y))
 proc load_some_encoded_field()
 begin
-  create table some_encoded_field_table(x integer, y text @sensitive);
+  create table some_encoded_field_table(x int, y text @sensitive);
   insert into some_encoded_field_table using 66 x, 'bogus' y;
 
   cursor C for select * from some_encoded_field_table;
@@ -3030,7 +3029,7 @@ END);
 @attribute(cql:vault_sensitive=(z, (y)))
 proc load_some_encoded_field_with_encode_context()
 begin
-  create table some_encoded_field_context_table(x integer, y text @sensitive, z text);
+  create table some_encoded_field_context_table(x int, y text @sensitive, z text);
   insert into some_encoded_field_context_table using 66 x, 'bogus' y, 'context' z;
 
   cursor C for select * from some_encoded_field_context_table;
@@ -3052,7 +3051,7 @@ proc load_all_types_table()
 begin
   create table all_types_table(
     b0 bool @sensitive,
-    i0 integer @sensitive,
+    i0 int @sensitive,
     l0 long @sensitive,
     d0 real @sensitive,
     s0 text @sensitive,
@@ -3118,7 +3117,7 @@ end;
 -- Below we will read and verify these results.
 
 -- this table will never exist
-create table dummy_table(id integer);
+create table dummy_table(id int);
 
 proc some_integers(start int!, stop int!)
 begin
@@ -3403,7 +3402,7 @@ BEGIN
   -- force conversion (not null)
   b := cast(7.5 as bool);
   EXPECT!(b == 1);
-  i := cast(1.9 as integer);
+  i := cast(1.9 as int);
   EXPECT!(i == 1);
   l := cast(12.9 as long);
   EXPECT!(l == 12);
@@ -3422,7 +3421,7 @@ BEGIN
   b0 := cast(x as bool);
   EXPECT!(b0 == 1);
   x := 1.9;
-  i0 := cast(x as integer);
+  i0 := cast(x as int);
   EXPECT!(i0 == 1);
   x := 12.9;
   l0 := cast(x as long);
@@ -3453,7 +3452,7 @@ BEGIN
 END);
 
 DECLARE PROCEDURE cql_exec_internal(sql TEXT!) USING TRANSACTION;
-create table xyzzy(id integer, name text, data blob);
+create table xyzzy(id int, name text, data blob);
 
 TEST!(exec_internal,
 BEGIN
@@ -3621,13 +3620,13 @@ BEGIN
   EXPECT!(const(1.0 IS 1.0));
   EXPECT!(const((1==1) is (2==2)));
 
-  EXPECT!(const(cast(3.2 as integer) == 3));
-  EXPECT!(const(cast(3.2 as long_int) == 3L));
+  EXPECT!(const(cast(3.2 as int) == 3));
+  EXPECT!(const(cast(3.2 as long) == 3L));
   EXPECT!(const(cast(3.2 as bool) == 1));
   EXPECT!(const(cast(0.0 as bool) == 0));
   EXPECT!(const(cast(null+0 as bool) is null));
   EXPECT!(const(cast(3L as real) == 3.0));
-  EXPECT!(const(cast(3L as integer) == 3));
+  EXPECT!(const(cast(3L as int) == 3));
   EXPECT!(const(cast(3L as bool) == 1));
   EXPECT!(const(cast(0L as bool) == 0));
 
@@ -3716,32 +3715,32 @@ BEGIN
 
   x := 10000000000;
   EXPECT!(x = 10000000000);
-  EXPECT!(x != const(cast(10000000000L as integer)));
+  EXPECT!(x != const(cast(10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 10000000000L;
   EXPECT!(x = 10000000000L);
-  EXPECT!(x != const(cast(10000000000L as integer)));
+  EXPECT!(x != const(cast(10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 0x1000000000L;
   EXPECT!(x = 0x1000000000L);
-  EXPECT!(x != const(cast(0x10000000000L as integer)));
+  EXPECT!(x != const(cast(0x10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 0x1000000000;
   EXPECT!(x = 0x1000000000L);
-  EXPECT!(x != const(cast(0x10000000000L as integer)));
+  EXPECT!(x != const(cast(0x10000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := const(0x1000000000);
   EXPECT!(x = 0x1000000000L);
-  EXPECT!(x != const(cast(0x1000000000L as integer)));
+  EXPECT!(x != const(cast(0x1000000000L as int)));
   EXPECT!(x > 0x7fffffff);
 
   x := 1000L * 1000 * 1000 * 1000;
   EXPECT!(x = 1000000000000);
-  EXPECT!(x != const(cast(1000000000000 as integer)));
+  EXPECT!(x != const(cast(1000000000000 as int)));
   x := const(1000L * 1000 * 1000 * 1000);
 
   z := 1L;
@@ -3749,37 +3748,37 @@ BEGIN
 
   z := 10000000000;
   EXPECT!(z = 10000000000);
-  EXPECT!(z != const(cast(10000000000L as integer)));
+  EXPECT!(z != const(cast(10000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 10000000000L;
   EXPECT!(z = 10000000000L);
-  EXPECT!(z != const(cast(10000000000L as integer)));
+  EXPECT!(z != const(cast(10000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 0x1000000000L;
   EXPECT!(z = 0x1000000000L);
-  EXPECT!(z != const(cast(0x1000000000L as integer)));
+  EXPECT!(z != const(cast(0x1000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 0x1000000000;
   EXPECT!(z = 0x1000000000L);
-  EXPECT!(z != const(cast(0x1000000000L as integer)));
+  EXPECT!(z != const(cast(0x1000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := const(0x1000000000);
   EXPECT!(z = 0x1000000000L);
-  EXPECT!(z != const(cast(0x1000000000L as integer)));
+  EXPECT!(z != const(cast(0x1000000000L as int)));
   EXPECT!(z > 0x7fffffff);
 
   z := 1000L * 1000 * 1000 * 1000;
   EXPECT!(z = 1000000000000);
-  EXPECT!(z != const(cast(1000000000000 as integer)));
+  EXPECT!(z != const(cast(1000000000000 as int)));
   z := const(1000L * 1000 * 1000 * 1000);
 
 END);
 
-proc no_statement_really(x integer)
+proc no_statement_really(x int)
 begin
   if x then
     select 1 x;
@@ -3789,8 +3788,7 @@ end;
 TEST!(null_statement,
 BEGIN
   cursor C for call no_statement_really(0);
-  declare x integer;
-  x := 0;
+  let x := 0;
   loop fetch C
   begin
     x := x + 1;
@@ -3801,15 +3799,15 @@ END);
 TEST!(if_nothing_forms,
 BEGIN
   create table tdata (
-    id integer,
-    v integer,
+    id int,
+    v int,
     t text);
 
   declare t1 text;
   t1 := (select t from tdata if nothing then "nothing");
   EXPECT!(t1 == "nothing");
 
-  declare `value one` integer;
+  declare `value one` int;
   set `value one` := (select v from tdata if nothing then -1);
   EXPECT!(`value one` == -1);
 
@@ -3880,7 +3878,7 @@ BEGIN
   end;
 END);
 
-create table simple_rc_table(id integer, foo text);
+create table simple_rc_table(id int, foo text);
 proc simple_insert()
 begin
   insert into simple_rc_table(id, foo) values(1, "foo");
@@ -3906,7 +3904,7 @@ END);
 
 TEST!(rc_simple_insert_and_select,
 BEGIN
-  create table simple_rc_table(id integer, foo text);
+  create table simple_rc_table(id int, foo text);
 
   call simple_insert();
   EXPECT!(@rc == 0);
@@ -3966,8 +3964,8 @@ BEGIN
   EXPECT!(e0 = 0); -- SQLITE_OK
   try
     -- force duplicate table error
-    create table foo(id integer primary key);
-    create table foo(id integer primary key);
+    create table foo(id int primary key);
+    create table foo(id int primary key);
   catch
     let e1 := @rc;
     EXPECT!(e1 == 1); -- SQLITE_ERROR
@@ -4041,13 +4039,13 @@ begin
 end;
 
 -- nullable version (not null arg)
-proc fn(x int!, out y integer)
+proc fn(x int!, out y int)
 begin
   y := x;
 end;
 
 -- nullable arg and result version (forces boxing)
-proc fnn(x integer, out y integer)
+proc fnn(x int, out y int)
 begin
   y := x;
 end;
@@ -4073,7 +4071,7 @@ BEGIN
   -- nest the batch so that it doesn't conflict with the macro proc preamble
   IF 1 THEN
     drop table if exists foo;
-    create table goo(id integer);
+    create table goo(id int);
     insert into goo values (1), (2), (3);
   END IF;
   EXPECT!((select sum(id) from goo) == 6);
@@ -4192,12 +4190,12 @@ begin
   select 2 id, 'y' t;
 end;
 
-create table x(id integer, t text);
+create table x(id int, t text);
 
 TEST!(shared_exec,
 BEGIN
   drop table if exists x;
-  create table x(id integer, t text);
+  create table x(id int, t text);
   with
     (call get_values())
   insert into x select * from get_values;
@@ -4216,7 +4214,7 @@ BEGIN
 END);
 
 @attribute(cql:shared_fragment)
-proc conditional_values_base(x_ integer)
+proc conditional_values_base(x_ int)
 begin
   if x_ == 2 then
     select x_ id, 'y' t;
@@ -4348,7 +4346,7 @@ END);
 
 @attribute(cql:shared_fragment)
 proc skip_nullables(
-  a_ integer,
+  a_ int,
   b_ bool,
   c_ long,
   d_ real,
@@ -4446,8 +4444,8 @@ END);
 proc make_xy()
 begin
   create table xy (
-    x integer,
-    y integer
+    x int,
+    y int
   );
 end;
 
@@ -4483,7 +4481,7 @@ END);
 declare proc alltypes_nullable() (
   t bool,
   f bool,
-  i integer,
+  i int,
   l long,
   r real,
   bl blob,
@@ -5055,7 +5053,7 @@ declare proc lotsa_types() (
   l long!,
   b bool!,
   r real!,
-  i0 integer,
+  i0 int,
   l0 long,
   b0 bool,
   r0 real,
@@ -5486,7 +5484,7 @@ proc ch1()
 begin
   let i := 0;
   let base := 500;
-  cursor C like (k1 integer, k2 text, v1 bool, v2 text, v3 real);
+  cursor C like (k1 int, k2 text, v1 bool, v2 text, v3 real);
   declare K cursor like C(k1,k2);
   while i < 10
   begin
@@ -5522,7 +5520,7 @@ begin
   end;
 end;
 
-proc ch1_filter(k1 integer, k2 text)
+proc ch1_filter(k1 int, k2 text)
 begin
   cursor C for call ch1();
   loop fetch C
@@ -5533,7 +5531,7 @@ begin
   end;
 end;
 
-proc ch2_filter(k3 integer, k4 text)
+proc ch2_filter(k3 int, k4 text)
 begin
   cursor C for call ch2();
   loop fetch C
@@ -5548,7 +5546,7 @@ end;
 proc parent()
 begin
   let i := 0;
-  cursor C like (k1 integer, k2 text, k3 integer, k4 text, v1 bool, v2 text, v3 real);
+  cursor C like (k1 int, k2 text, k3 int, k4 text, v1 bool, v2 text, v3 real);
   declare D cursor like C;
   while i < 10
   begin
@@ -6298,8 +6296,8 @@ END);
 
 @attribute(cql:backed_by=backing)
 create table backed_table_with_defaults(
-  pk1 integer default 1000,
-  pk2 integer default 2000,
+  pk1 int default 1000,
+  pk2 int default 2000,
   x int default 3000,
   y int default 4000,
   z text default "foo",
@@ -6383,10 +6381,10 @@ END);
 -- now attempt a mutation
 TEST!(mutate_mixed_backed,
 BEGIN
-  declare new_code long integer;
-  declare code_ long integer;
+  declare new_code long;
+  declare code_ long;
   new_code := 88;
-  declare id_ integer;
+  declare id_ int;
   id_ := 2;  -- either works
 
   call load_mixed_backed();
@@ -6686,7 +6684,7 @@ void run_test_trace_callback(const char *proc, const char *file, int32_t line);
 
 -- this table will never actually be created, only declared
 -- hence it is a good source of db errors
-create table does_not_exist(id integer);
+create table does_not_exist(id int);
 
 proc fails_because_bogus_table()
 begin

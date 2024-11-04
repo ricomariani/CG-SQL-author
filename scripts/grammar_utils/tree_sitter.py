@@ -237,11 +237,9 @@ DELETED_PRODUCTIONS = {
     "`quoted_identifier`"
 }
 
-cql_grammar = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
-ts_grammar = {}
-ts_rule_names = []
-
-TOKEN_GRAMMAR = {}
+input_filename = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
+grammar = {}
+tokens = {}
 
 rule_defs = {}
 sorted_rule_names = []
@@ -250,8 +248,7 @@ rules_name_visited = set()
 
 
 def add_ts_rule(name, ts_rule):
-    ts_grammar[name] = ts_rule
-    ts_rule_names.append(name)
+    grammar[name] = ts_rule
 
 def get_rule_ref(token):
     if token in RULE_RENAMES:
@@ -269,8 +266,8 @@ def get_rule_ref(token):
             if tk in RULE_RENAMES:
                 return "$.{}".format(RULE_RENAMES[tk])
             name = tk.replace("@", "AT_")
-            if name not in TOKEN_GRAMMAR:
-                TOKEN_GRAMMAR[name] = "{}: $ => CI('{}')".format(name, tk.lower())
+            if name not in tokens:
+                tokens[name] = "{}: $ => CI('{}')".format(name, tk.lower())
             return "$.{}".format(name)
         else:
             return token
@@ -305,7 +302,6 @@ def get_sub_sequence(seq):
     name = add_sub_sequence(tokens)
     return get_rule_ref(name)
 
-
 # Process a sequence in a rule.
 # e.g., IS_NOT_TRUE: "is" "not" "true"
 def get_sequence(sequence):
@@ -322,7 +318,7 @@ def get_sequence(sequence):
     return tokens_list
 
 
-with open(cql_grammar) as fp:
+with open(input_filename) as fp:
     for line in RULE_PATTERN.finditer(fp.read()):
         assert line.lastindex == 2
         name = line.group(1).strip()
@@ -389,9 +385,9 @@ for name in sorted_rule_names:
 for r in RULE_RENAMES.values():
   DELETED_PRODUCTIONS.add(r)
 
-grammar = ",\n    ".join(
-    ["{}: {}".format(ts, ts_grammar[ts]) for ts in ts_rule_names if ts not in DELETED_PRODUCTIONS]
-    + list(TOKEN_GRAMMAR.values())
+grammar_text = ",\n    ".join(
+    ["{}: {}".format(ts, grammar[ts]) for ts in grammar.keys() if ts not in DELETED_PRODUCTIONS]
+    + list(tokens.values())
 )
 
 print(
@@ -417,7 +413,7 @@ print(
     "  word: $ => $.ID,\n"
     "  rules: {", end = ""
 )
-print("{}    {}".format(BOOT_RULES, grammar))
+print("{}    {}".format(BOOT_RULES, grammar_text))
 print(
     "  }\n"
     "});\n\n"

@@ -390,39 +390,41 @@ grammar_text = ",\n    ".join(
     + list(tokens.values())
 )
 
-print(
-    "/**\n"
-    " * Copyright (c) Meta Platforms, Inc. and affiliates.\n"
-    " *\n"
-    " * This source code is licensed under the MIT license found in the\n"
-    " * LICENSE file in the root directory of this source tree.\n"
-    " */\n\n"
-)
-print(
-    "const PREC = {\n"
-    "};\n\n"
-    "module.exports = grammar({\n"
-    "  name: 'cql',\n"
-    "  extras: $ => [\n"
-    "     /\\s|\\\\\\r?\\n/,\n"
-    "     $.comment\n"
-    "  ],\n"
-    "  conflicts: $ => [\n"
-    "     [$.fk_options],\n"
-    "  ],\n"
-    "  word: $ => $.ID,\n"
-    "  rules: {", end = ""
-)
+print("""
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+const PREC = {
+};
+
+module.exports = grammar({
+  name: 'cql',
+  extras: $ => [
+     /\\s|\\r?\\n/,
+     $.comment
+  ],
+  conflicts: $ => [
+     [$.fk_options],
+  ],
+  word: $ => $.ID,
+  rules: {""", end="")
+
 print("{}    {}".format(BOOT_RULES, grammar_text))
-print(
-    "  }\n"
-    "});\n\n"
-    "// make string case insensitive\n"
-    "function CI (keyword) {\n"
-    "  return new RegExp(keyword\n"
-    "     .split('')\n"
-    "     .map(letter => `[${letter}${letter.toUpperCase()}]`)\n"
-    "     .join('')\n"
-    "  )\n"
-    "}\n"
-)
+
+print("""
+  }
+});
+
+// make string case insensitive
+function CI (keyword) {
+  return new RegExp(keyword
+     .split('')
+     .map(letter => `[${letter}${letter.toUpperCase()}]`)
+     .join('')
+  )
+}
+""", end = "")

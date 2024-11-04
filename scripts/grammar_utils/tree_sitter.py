@@ -37,7 +37,7 @@
 #   suitable for tree-sitter. These rules are renamed to a more suitable name,
 #   such as `integer-literal` to `INT_LIT`.
 #
-# Boot rules: Some rules are not defined in cql_grammar.txt. The script manually
+# Fixed rules: Some rules are not defined in cql_grammar.txt. The script manually
 #   defines them in the tree-sitter grammar.  This is where the `INT_LIT`,
 #   `LONG_LIT`, `REAL_LIT`, `BLOB_LIT`, `C_STR_LIT`, `STR_LIT`, `ID`, `ID_BANG`,
 #   `QID`, `include_stmt`, `comment`, and so forth appear.
@@ -53,16 +53,41 @@ import datetime
 import re
 
 
+# We emit /* nil */ in the grammar to indicate an empty match.  This signals optional rules.
 NULL_PATTERN = re.compile(r"/\*\s*nil\s*\*/")
-SEQUENCE_PATTERN = re.compile(r"\"[^\"]+\"|'.?'|[\w\-\_@]+")
-WORD_PATTERN = re.compile(r"[\w\-\_@]+")
-STRING_PATTERN = re.compile(r"\"[^\"]+\"")
-RULE_PATTERN = re.compile(r"(.*)\s*::=\s*(.*)")
-CHOICE_PATTERN = re.compile(r"\s+\|\s+")
-SPACE_PATTERN = re.compile(r"\s+")
-QUOTE_WORD_PATTERN = re.compile(r"'[^']+'")
-OPERATOR_PATTERN = re.compile(r"\"[+-=:~/*,<>]+\"")
 
+# The valid items in a non-terminal rules.  Double quoted strings, characters, and names.
+SEQUENCE_PATTERN = re.compile(r"\"[^\"]+\"|'.?'|[\w\-\_@]+")
+
+# A single word pattern including special characters "-", "_", and "@".
+WORD_PATTERN = re.compile(r"[\w\-\_@]+")
+
+# A string pattern.  Note that there are no escapes. We can get away with no
+# escapes because we know that the grammar.txt file never contains them.
+STRING_PATTERN = re.compile(r"\"[^\"]+\"")
+
+# The rule pattern.  This is the rule name followed by the rule definition.
+# The rule definition is a series of choices separated by "|".  The production
+# uses the ::= separator common in W3C grammars.
+RULE_PATTERN = re.compile(r"(.*)\s*::=\s*(.*)")
+
+# This helps us to identify that there is an choice in the rule.
+CHOICE_PATTERN = re.compile(r"\s+\|\s+")
+
+# The space pattern.  This is used to split the a "MULTI WORD" token into its parts.
+SPACE_PATTERN = re.compile(r"\s+")
+
+# Long single quoted string with no escapes. We can get away with no escapes
+# because we know that the grammar.txt file never contains them.
+SINGLE_QUOTE_WORD_PATTERN = re.compile(r"'[^']+'")
+
+# If we find a quoted string of just operator characters that means it's a long
+# operator we shouldn't make a CI(x) production for it.  These are just the
+# characters that could make a "long" operator like "<<", "<<=" or "->>".
+OPERATOR_PATTERN = re.compile(r"\"[!+-=:~/*<>]+\"")
+
+# This is likely to be come every rule that has a choice at the top level.
+# In which case we can just jettison this.
 LINE_BREAK_RULES = [
   "any_literal",
   "any_stmt",
@@ -139,7 +164,7 @@ RULE_RENAMES = {
     "ELSE_IF" : "ELSE_IF" # prevents seq(CI("ELSE"), CI("IF"))
 }
 
-BOOT_RULES = """
+FIXED_RULES = """
     program: $ => optional($.stmt_list),
 
     INT_LIT: $ => choice(/[0-9]+/, /0x[0-9a-fA-F]+/),
@@ -246,7 +271,6 @@ sorted_rule_names = []
 optional_rules = set()
 rules_name_visited = set()
 
-
 def add_ts_rule(name, ts_rule):
     grammar[name] = ts_rule
 
@@ -254,23 +278,41 @@ def get_rule_ref(token):
     if token in RULE_RENAMES:
         return "$.{}".format(RULE_RENAMES[token])
 
-    if QUOTE_WORD_PATTERN.match(token):
+    # Returning the token here turns it into lexeme in the tree-sitter grammar
+    if SINGLE_QUOTE_WORD_PATTERN.match(token):
         return token
 
+    # Returning the token here turns it into lexeme in the tree-sitter grammar
     if OPERATOR_PATTERN.match(token):
         return token
 
+    # This bit exists so that tokens like "@OP" in the grammar are turned into
+    # "AT_OP: $ => CI('@OP')" in the tree-sitter grammar. This takes terminals
+    # in the grammar and turns them into lexemes tree-sitter can use. Recall
+    # that in tree-sitter there is no lexer.
     if STRING_PATTERN.match(token):
+        # We strip the quotes from the token and then see if what is left
+        # looks like a word, this is what the normal terminals look like.
+        # We want those to be case-insensitive.  Anything else can stay
+        # as a literal lexeme.
         tk = token.strip('"')
-        if WORD_PATTERN.match(tk):
-            if tk in RULE_RENAMES:
-                return "$.{}".format(RULE_RENAMES[tk])
-            name = tk.replace("@", "AT_")
-            if name not in tokens:
-                tokens[name] = "{}: $ => CI('{}')".format(name, tk.lower())
-            return "$.{}".format(name)
-        else:
+        if not WORD_PATTERN.match(tk):
             return token
+
+        # The terminal might have a rename.  If so we use that.
+        if tk in RULE_RENAMES:
+            return "$.{}".format(RULE_RENAMES[tk])
+
+        # Add the token if we need it, correct the @ to AT_ for the name.
+        name = tk.replace("@", "AT_")
+        if name not in tokens:
+            tokens[name] = "{}: $ => CI('{}')".format(name, tk.lower())
+
+        # Return a reference to the (possibly new) synthesized token.
+        return "$.{}".format(name)
+
+    # We special case these common references to something more direct
+    # otherwise we would have a ton of optional(opt_stmt_list)
 
     if token == "opt_stmt_list":
         return "optional($.stmt_list)"
@@ -413,7 +455,7 @@ module.exports = grammar({
   word: $ => $.ID,
   rules: {""", end="")
 
-print("{}    {}".format(BOOT_RULES, grammar_text))
+print("{}    {}".format(FIXED_RULES, grammar_text))
 
 print("""
   }

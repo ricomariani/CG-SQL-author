@@ -62,7 +62,7 @@ REPLACEMENT_RULE_NAMES = {
         "C_STR_LIT",
         'C_STR_LIT: $ => /\\"(\\\\.|[^"\\n])*\\"/',
     ],
-    "sql-string-literal": ["STR_LIT", "STR_LIT: $ => /'(\\\\.|''|[^'\\n])*'/"],
+    "sql-string-literal": ["STR_LIT", "STR_LIT: $ => /'(\\\\.|''|[^'])*'/"],
     "ELSE_IF": ["ELSE_IF", "ELSE_IF: $ => /[Ee][Ll][sS][eE][ \\t]*[Ii][Ff][ \\t\\n]/"],
     "ID": ["ID", "ID: $ => /[_A-Za-z][A-Za-z0-9_]*/"],
     "ID!": ["ID_BANG", "ID_BANG: $ => /[_A-Za-z][A-Za-z0-9_]*[!]/"],
@@ -83,11 +83,11 @@ BOOT_RULES = """
 
     expr_macro_ref: $ => prec.left(1,choice(
       seq($.ID_BANG),
-      seq($.ID_BANG, '(', $.opt_macro_args, ')'),
+      seq($.ID_BANG, '(', optional($.opt_macro_args), ')'),
       seq($.basic_expr, ':', $.ID_BANG, '(', optional($.opt_macro_args), ')'),
       seq($.basic_expr, ':', $.ID_BANG))),
 
-    macro_ref: $ => choice(seq($.ID_BANG), seq($.ID_BANG, '(', $.opt_macro_args, ')')),
+    macro_ref: $ => choice(seq($.ID_BANG), seq($.ID_BANG, '(', optional($.opt_macro_args), ')')),
 
     query_parts_macro_ref: $ => prec(1, $.macro_ref),
     cte_tables_macro_ref: $ => prec(2, $.macro_ref),
@@ -95,34 +95,23 @@ BOOT_RULES = """
     select_expr_macro_ref: $ => prec(4, $.macro_ref),
     stmt_list_macro_ref: $ => prec(5, $.macro_ref),
 
-    stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.comment, $.line_directive, $.macro)),
+    AT_IFDEF: $ => CI('@ifdef'),
+    AT_IFNDEF: $ => CI('@ifndef'),
+    AT_ELSE: $ => CI('@else'),
+    AT_ENDIF: $ => CI('@endif'),
+
+    ifdef: $ => seq($.AT_IFDEF, $.ID, $.stmt_list, optional(seq($.AT_ELSE, $.stmt_list)), $.AT_ENDIF),
+    ifndef: $ => seq($.AT_IFNDEF, $.ID, $.stmt_list, optional(seq($.AT_ELSE, $.stmt_list)), $.AT_ENDIF),
+
+    pre_proc: $ => choice($.ifdef, $.ifndef),
+
+    stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.pre_proc, $.comment)),
 """
 
 # These are not part of cql_grammar.txt but are supported in cql grammar. We need to manually
 # define them for tree sitter parser.
 DEFAULT_RULES = [
-    "comment: $ => token(choice(seq('--', /(\\\\(.|\\r?\\n)|[^\\\\\\n])*/), seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/')))",
-    "line_directive: $ => seq(/#(line)?[ \\t]*/, $.INT_LIT, $.C_STR_LIT, /[^\\n]*/, /\\n/)",
-    "macro: $ => choice($.preproc_include, $.preproc_def, $.preproc_function_def, $.preproc_call)",
-    "preproc_def: $ => seq(preprocessor('define'),field('name', $.ID),field('value', optional($.preproc_arg)),'\\n')",
-    "preproc_call: $ => seq(field('directive', $.preproc_directive),field('argument', optional($.preproc_arg)),'\\n')",
-    "...preprocIf('', $ => $.stmt)",
-    "...preprocIf('_in_field_declaration_list', $ => $.field_declaration_list_item)",
-    "field_declaration_list_item: $ => choice($.any_stmt,$.preproc_def,$.preproc_function_def,$.preproc_call,alias($.preproc_if_in_field_declaration_list, $.preproc_if),alias($.preproc_ifdef_in_field_declaration_list, $.preproc_ifdef),)",
-    "preproc_include: $ => seq(preprocessor('include'),field('path', choice($.string_literal,$.system_lib_string,$.ID,alias($.preproc_call_expression, $.call_expression),)),'\\n')",
-    "preproc_function_def: $ => seq(preprocessor('define'),field('name', $.ID),field('parameters', $.preproc_params),field('value', optional($.preproc_arg)),'\\n')",
-    "preproc_directive: $ => /#[ \\t]*[a-zA-Z]\\w*/, preproc_arg: $ => token(prec(-1, repeat1(/.|\\\\\\r?\\n/)))",
-    "preproc_expression: $ => choice($.ID,$.expr)",
-    "call_expression: $ => prec(1, seq(field('function', $.expression),field('arguments', $.argument_list)))",
-    "preproc_call_expression: $ => prec(1, seq(field('function', $.ID),field('arguments', alias($.preproc_argument_list, $.argument_list))))",
-    "preproc_argument_list: $ => seq('(',commaSep($.preproc_expression),')')",
-    "argument_list: $ => seq('(', commaSep($.expression), ')')",
-    "preproc_expression: $ => $.expression",
-    "expression: $ => $.expr",
-    "string_literal: $ => seq(choice('L\"', 'u\"', 'U\"', 'u8\"', '\"'),repeat(choice(token.immediate(prec(1, /[^\\\\\"\\n]+/)),$.escape_sequence)),'\"',)",
-    "escape_sequence: $ => token(prec(1, seq('\\\\',choice(/[^xuU]/,/\d{2,3}/,/x[0-9a-fA-F]{2,}/,/u[0-9a-fA-F]{4}/,/U[0-9a-fA-F]{8}/))))",
-    "system_lib_string: $ => token(seq('<',repeat(choice(/[^>\\n]/, '\\\\>')),'>'))",
-    "preproc_params: $ => seq(token.immediate('('), commaSep(choice($.ID, '...')), ')')",
+    "comment: $ => token(choice(seq('--', /(\\\\(.|\\r?\\n)|[^\\\\\\n])*/), seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/')))"
 ]
 
 # These are problematic rules to the cql tree-sitter grammar. We're just going to replace them wherever they're used with their values.
@@ -366,54 +355,5 @@ print(
     "     .map(letter => `[${letter}${letter.toUpperCase()}]`)\n"
     "     .join('')\n"
     "  )\n"
-    "}\n"
-    "// generic rule for macro directives where the directive\n"
-    "// is going to be case insensitive.\n"
-    "function preprocessor (command) {\n"
-    "  return alias(new RegExp('#[ \\t]*' + command), '#' + command)\n"
-    "}\n\n"
-    "// generic rule making optional commaSep1.\n"
-    "function commaSep (rule) {\n"
-    "  return optional(commaSep1(rule))\n"
-    "}\n\n"
-    '// generic rule for a list of ID separated by ","\n'
-    "function commaSep1 (rule) {\n"
-    "  return seq(rule, repeat(seq(',', rule)))\n"
-    "}\n\n"
-    "function preprocIf (suffix, content) {\n"
-    "  function elseBlock ($) {\n"
-    "    return choice(\n"
-    "      suffix ? alias($['preproc_else' + suffix], $.preproc_else) : $.preproc_else,\n"
-    "      suffix ? alias($['preproc_elif' + suffix], $.preproc_elif) : $.preproc_elif,\n"
-    "    );\n"
-    "  }\n"
-    "  return {\n"
-    "    ['preproc_if' + suffix]: $ => seq(\n"
-    "      preprocessor('if'),\n"
-    "      field('condition', $.preproc_expression),\n"
-    "      '\\n',\n"
-    "      repeat(content($)),\n"
-    "      field('alternative', optional(elseBlock($))),\n"
-    "      preprocessor('endif')\n"
-    "    ),\n"
-    "    ['preproc_ifdef' + suffix]: $ => seq(\n"
-    "      choice(preprocessor('ifdef'), preprocessor('ifndef')),\n"
-    "      field('name', $.ID),\n"
-    "      repeat(content($)),\n"
-    "      field('alternative', optional(elseBlock($))),\n"
-    "      preprocessor('endif')\n"
-    "    ),\n"
-    "    ['preproc_else' + suffix]: $ => seq(\n"
-    "      preprocessor('else'),\n"
-    "      repeat(content($))\n"
-    "    ),\n"
-    "    ['preproc_elif' + suffix]: $ => seq(\n"
-    "      preprocessor('elif'),\n"
-    "      field('condition', $.preproc_expression),\n"
-    "      '\\n',\n"
-    "      repeat(content($)),\n"
-    "      field('alternative', optional(elseBlock($))),\n"
-    "    )\n"
-    "  }\n"
     "}\n"
 )

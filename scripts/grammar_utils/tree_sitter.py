@@ -8,16 +8,43 @@
 # tree_sitter.py:
 # ---------------
 #
-# Generate tree-sitter grammar for the CQL language. It's used by CQL VSCODE extension
-# to provide syntax hightlighting.
+# Generates tree-sitter grammar for the CQL language. This can be used to drive
+# good quality syntax highlighting and code folding in editors that support
+# tree-sitter.  The script reads the cql_grammar.txt file and generates the
+# tree-sitter grammar file. The script also handles the following:
 #
-# CQL parser (xplat/vscode/modules/tree-sitter-cql/*):
-# ----------------------------------------------------
+# Optional rules: If a rule is originally optional, it adds the "optional()"
+#   function to the rule's usages. Tree sitter does not allow rules with empty
+#   sequences.
 #
-# It's a nuclide module that contains the parser for cql language. The parser is backed
-# by the parser generator tool tree-sitter (http://tree-sitter.github.io/tree-sitter/).
-# It generate a tree-sitter binary (tree-sitter-cql.wasm) from grammar.js. The binary is
-# used in the CQL VSCode extension module to parse CQL files.
+# Apply functions: Some rules have conflicts, therefore we need to define the
+#   precedence priority.  The script can wrap the rule in a precedence function
+#   to resolve the conflict.  In fact any kind of wrapping can be applied here.
+#
+# Line breaks: Some rules are big and have multiple choices. The script adds a
+#   line break to the choices to make it more readable.
+#
+# Token grammar: Terminals are automatically detected and added to the grammar.
+# 
+# Inline rules: Some rules are problematic to the cql tree-sitter grammar. The
+#   script replaces them wherever they're used with their values.
+#
+# Deleted productions: These are rules that are present in cql_grammar.txt but
+#   are helpfully defined such as `quoted identifier` and `ELSE_IF`. The script
+#   deletes them from the tree-sitter grammar.
+#
+# Rule renames: Some rules have readable names in cql_grammar.txt but are not
+#   suitable for tree-sitter. These rules are renamed to a more suitable name,
+#   such as `integer-literal` to `INT_LIT`.
+#
+# Boot rules: Some rules are not defined in cql_grammar.txt. The script manually
+#   defines them in the tree-sitter grammar.  This is where the `INT_LIT`,
+#   `LONG_LIT`, `REAL_LIT`, `BLOB_LIT`, `C_STR_LIT`, `STR_LIT`, `ID`, `ID_BANG`,
+#   `QID`, `include_stmt`, `comment`, and so forth appear.
+#
+# Extras: The script adds the `extras` and `conflicts` sections to the
+#   tree-sitter grammar to get whitespace and comments in the right places in
+#   the grammar.
 #
 # #####################################################################################
 
@@ -96,8 +123,9 @@ APPLY_FUNC_LIST = {
     "expr": "prec.left(1, {})",
 }
 
-# these are rules in cql_grammar.txt that are not defined. We need to manually define
-# them for tree sitter parser.
+# These rules have invalid names for tree-sitter. We're going to rename them.
+# We use this mechanism (that a rename is in flight) to also avoid
+# automatic creation of terminal tokens.  Two cases marked below.
 RULE_RENAMES = {
     "integer-literal": "INT_LIT",
     "long-literal": "LONG_LIT",
@@ -108,7 +136,7 @@ RULE_RENAMES = {
     "ID!": "ID_BANG",
     "`quoted_identifier`": "QID",
     "ID": "ID",  # prevents CI("id) rule
-    "ELSE_IF" : "ELSE_IF" # prevents seq(CI("ELSE"),CI("IF"))
+    "ELSE_IF" : "ELSE_IF" # prevents seq(CI("ELSE"), CI("IF"))
 }
 
 BOOT_RULES = """
@@ -120,10 +148,12 @@ BOOT_RULES = """
     BLOB_LIT: $ => /[xX]'([0-9a-fA-F][0-9a-fA-F])*'/,
     C_STR_LIT: $ => /"(\\.|[^"\\n])*"/,
     STR_LIT: $ => /'(\\.|''|[^'])*'/,
-    ELSE_IF: $ => /[Ee][Ll][sS][eE][ \\t]*[Ii][Ff][ \\t\\n]/,
     ID: $ => /[_A-Za-z][A-Za-z0-9_]*/,
     ID_BANG: $ => /[_A-Za-z][A-Za-z0-9_]*[!]/,
     QID: $ => /`(``|[^`\\n])*`/,
+
+    /* no newline between ELSE and IF */
+    ELSE_IF: $ => /[Ee][Ll][sS][eE][ \\t]*[Ii][Ff][ \\t\\n]/,
 
     include_stmt: $ => seq(CI('@include'), $.C_STR_LIT),
 

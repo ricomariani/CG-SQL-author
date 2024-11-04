@@ -298,11 +298,7 @@ with open(cql_grammar) as fp:
         rule_defs[name] = choices
         sorted_rule_names.append(name)
 
-# tree_sitter.py generator is base on cql_grammar.txt which does not contains the rules for
-# comment, line_directive and macro. Therefore I need to add them manually into stmt_list rule.
-rule_defs["stmt_list"] = [["stmt", "';'"], ["comment"], ["line_directive"], ["macro"]]
-
-# Suppress un-neccessary rules
+# Inline where needed to avoid conflicts
 for _, rule in rule_defs.items():
     cpy_rule = []
     for i, seq in enumerate(rule):
@@ -310,7 +306,7 @@ for _, rule in rule_defs.items():
             if type(item) is str and item in INLINE_RULES:
                 rule[i] = seq[0 : max(j - 1, 0)] + rule_defs[item][0] + seq[j + 1 :]
 
-# delete the supressed rules
+# Delete the inline rules
 for name in INLINE_RULES:
     del rule_defs[name]
     rules_name_visited.add(name)

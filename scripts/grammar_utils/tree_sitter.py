@@ -165,14 +165,16 @@ BOOT_RULES = """
     stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.pre_proc, $.comment)),
 """
 
-# These are problematic rules to the cql tree-sitter grammar. We're just going to replace them wherever they're used with their values.
-SUPPRESS_RULES = {
-    # The presence of this node break tree-sitter. It was added to 'create_table_stmt' for the sole perpuse of grabing documentation
+# These are problematic rules to the cql tree-sitter grammar. We're just going
+# to replace them wherever they're used with their values.
+INLINE_RULES = {
+    # The presence of this node break tree-sitter. It was added to
+    # 'create_table_stmt' for the sole purpose of grabbing documentation
     "create_table_prefix_opt_temp",
 }
 
 DELETED_PRODUCTIONS = {
-    # These will get remitted some other kind of way, like in the BOOT section
+    # These will get emitted some other kind of way, like in the BOOT section
     "@INCLUDE_quoted-filename",
     "ELSE_IF"
     "cte_tables_macro_ref",
@@ -254,8 +256,8 @@ def add_sub_sequence(tokens):
     return name
 
 
-# Process a subquence within a sequence. they are a group of words within a string
-# e.g: "ELSE IF"
+# Process a sub-sequence within a sequence. they are a group of words within a
+# string e.g., "IS NOT TRUE"
 def get_sub_sequence(seq):
     tokens = SPACE_PATTERN.split(seq.strip('"'))
     name = add_sub_sequence(tokens)
@@ -263,7 +265,7 @@ def get_sub_sequence(seq):
 
 
 # Process a sequence in a rule.
-# e.g: else_if: "else" "if"
+# e.g., IS_NOT_TRUE: "is" "not" "true"
 def get_sequence(sequence):
     tokens_list = []
     for tk in sequence:
@@ -305,11 +307,11 @@ for _, rule in rule_defs.items():
     cpy_rule = []
     for i, seq in enumerate(rule):
         for j, item in enumerate(seq):
-            if type(item) is str and item in SUPPRESS_RULES:
+            if type(item) is str and item in INLINE_RULES:
                 rule[i] = seq[0 : max(j - 1, 0)] + rule_defs[item][0] + seq[j + 1 :]
 
 # delete the supressed rules
-for name in SUPPRESS_RULES:
+for name in INLINE_RULES:
     del rule_defs[name]
     rules_name_visited.add(name)
 

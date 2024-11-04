@@ -413,7 +413,7 @@ program: top_level_stmts[stmts] {
   ;
 
   top_level_stmts[result]:
-    /*nil */  { $result = NULL; }
+    /* nil */  { $result = NULL; }
     | include_stmts { $result = $include_stmts; }
     | stmt_list { $result = $stmt_list; }
     | include_stmts[s1] stmt_list[s2] {
@@ -452,7 +452,7 @@ include_stmts[result]:
     ;
 
 opt_stmt_list:
-  /*nil*/  { $opt_stmt_list = NULL; }
+  /* nil */  { $opt_stmt_list = NULL; }
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
@@ -1271,7 +1271,8 @@ raise_expr:
   | RAISE '(' FAIL ','  expr ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_FAIL), $expr); }
   ;
 
-opt_distinct: /*empty*/ { $opt_distinct = NULL; }
+opt_distinct:
+  /* nil */ { $opt_distinct = NULL; }
   | DISTINCT { $opt_distinct = new_ast_distinct(); }
   ;
 
@@ -1847,7 +1848,7 @@ table_or_subquery:
   ;
 
 join_type:
-  /*nil */       { $join_type = JOIN_INNER; }
+  /* nil */      { $join_type = JOIN_INNER; }
   | LEFT         { $join_type = JOIN_LEFT; }
   | RIGHT        { $join_type = JOIN_RIGHT; }
   | LEFT OUTER   { $join_type = JOIN_LEFT_OUTER; }
@@ -1901,7 +1902,7 @@ delete_stmt:
   ;
 
 opt_insert_dummy_spec:
-  /*nil*/  { $opt_insert_dummy_spec = NULL; }
+  /* nil */  { $opt_insert_dummy_spec = NULL; }
   | AT_DUMMY_SEED '(' expr ')' dummy_modifier  {
     $opt_insert_dummy_spec = new_ast_insert_dummy_spec($expr, new_ast_option($dummy_modifier)); }
   ;
@@ -2748,7 +2749,7 @@ macro_def_stmt:
   ;
 
 opt_macro_args:
-    /*nil*/  { $opt_macro_args = NULL; }
+   /* nil */  { $opt_macro_args = NULL; }
    | macro_args { $opt_macro_args = $macro_args; }
    ;
 
@@ -2772,7 +2773,7 @@ macro_args[result]:
   ;
 
 opt_macro_formals:
-    /*nil*/  { $opt_macro_formals = NULL; }
+   /* nil */  { $opt_macro_formals = NULL; }
    | macro_formals { $opt_macro_formals = $macro_formals; }
    ;
 

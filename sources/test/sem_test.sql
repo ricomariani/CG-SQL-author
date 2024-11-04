@@ -25549,13 +25549,13 @@ let loaded := (select load_extension('foo', 'bar'));
 -- - error:
 set loaded := (select load_extension('foo'));
 
--- TEST: try to  load extension, nno args
+-- TEST: try to load extension, no args
 -- + {call}: err
 -- * error: % too few arguments in function 'load_extension'
 -- +1 error:
 set loaded := (select load_extension());
 
--- TEST: try to  load extension, wrong context
+-- TEST: try to load extension, wrong context
 -- + {call}: err
 -- * error: % function may not appear in this context 'load_extension'
 -- +1 error:

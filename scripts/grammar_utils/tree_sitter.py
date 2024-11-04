@@ -34,18 +34,15 @@ RULE_PATTERN = re.compile(r"(.*)\s*::=\s*(.*)")
 CHOICE_PATTERN = re.compile(r"\s+\|\s+")
 SPACE_PATTERN = re.compile(r"\s+")
 QUOTE_WORD_PATTERN = re.compile(r"'[^']+'")
-
-PREC_LEFT = "prec.left({})"
-REPEAT_1 = "repeat1({})"
+OPERATOR_PATTERN = re.compile(r"\"[+-=:~/*,<>]+\"")
 
 # Some of the rules have conflicts therefore we need to define the precedent priority.
 APPLY_FUNC_LIST = {
-    "fk_target_options": PREC_LEFT,
-    "math_expr": PREC_LEFT,
-    "expr": PREC_LEFT,
-    "join_target": PREC_LEFT,
-    "elseif_list": PREC_LEFT,
-    "stmt_list": REPEAT_1,
+    "fk_target_options": "prec.left({})",
+    "join_target": "prec.left({})",
+    "elseif_list": "prec.left({})",
+    "cte_decl": "prec.left(1, {})",
+    "loose_name": "prec.left(100, {})",
 }
 
 # these are rules in cql_grammar.txt that are not defined. We need to manually define
@@ -66,8 +63,40 @@ REPLACEMENT_RULE_NAMES = {
         'C_STR_LIT: $ => /\\"(\\\\.|[^"\\n])*\\"/',
     ],
     "sql-string-literal": ["STR_LIT", "STR_LIT: $ => /'(\\\\.|''|[^'\\n])*'/"],
+    "ELSE_IF": ["ELSE_IF", "ELSE_IF: $ => /[Ee][Ll][sS][eE][ \\t]*[Ii][Ff][ \\t\\n]/"],
     "ID": ["ID", "ID: $ => /[_A-Za-z][A-Za-z0-9_]*/"],
+    "ID!": ["ID_BANG", "ID_BANG: $ => /[_A-Za-z][A-Za-z0-9_]*[!]/"],
+    "QID": ["QID", "QID: $ => /`(``|[^`\\n])*`/"],
+    "`quoted_identifier`": [ "QID" , ""]
 }
+
+BOOT_RULES = """
+    program: $ => optional($.stmt_list),
+    include_stmt: $ => seq(CI('@include'), $.C_STR_LIT),
+
+    non_expr_macro_ref: $ => choice(
+      $.stmt_list_macro_ref,
+      $.cte_tables_macro_ref,
+      $.select_core_macro_ref,
+      $.select_expr_macro_ref,
+      $.query_parts_macro_ref),
+
+    expr_macro_ref: $ => prec.left(1,choice(
+      seq($.ID_BANG),
+      seq($.ID_BANG, '(', $.opt_macro_args, ')'),
+      seq($.basic_expr, ':', $.ID_BANG, '(', optional($.opt_macro_args), ')'),
+      seq($.basic_expr, ':', $.ID_BANG))),
+
+    macro_ref: $ => choice(seq($.ID_BANG), seq($.ID_BANG, '(', $.opt_macro_args, ')')),
+
+    query_parts_macro_ref: $ => prec(1, $.macro_ref),
+    cte_tables_macro_ref: $ => prec(2, $.macro_ref),
+    select_core_macro_ref: $ => prec(3, $.macro_ref),
+    select_expr_macro_ref: $ => prec(4, $.macro_ref),
+    stmt_list_macro_ref: $ => prec(5, $.macro_ref),
+
+    stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.comment, $.line_directive, $.macro)),
+"""
 
 # These are not part of cql_grammar.txt but are supported in cql grammar. We need to manually
 # define them for tree sitter parser.
@@ -99,7 +128,27 @@ DEFAULT_RULES = [
 # These are problematic rules to the cql tree-sitter grammar. We're just going to replace them wherever they're used with their values.
 SUPPRESS_RULES = {
     # The presence of this node break tree-sitter. It was added to 'create_table_stmt' for the sole perpuse of grabing documentation
-    "create_table_prefix_opt_temp"
+    "create_table_prefix_opt_temp",
+}
+
+DELETED_PRODUCTIONS = {
+    # These will get remitted some other kind of way, like in the BOOT section
+    "top_level_stmts",
+    "include_section",
+    "include_stmts",
+    "opt_stmt_list",
+    "opt_distinct",
+    "stmt_list",
+    "program",
+    "non_expr_macro_ref",
+    "expr_macro_ref",
+    "stmt_list_macro_ref",
+    "query_parts_macro_ref",
+    "cte_tables_macro_ref",
+    "select_core_macro_ref",
+    "select_expr_macro_ref",
+    "@INCLUDE_quoted-filename",
+    "end_of_included_file"
 }
 
 cql_grammar = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
@@ -115,6 +164,9 @@ rules_name_visited = set()
 
 
 def add_ts_rule(name, ts_rule):
+    if name == "`quoted_identifier`":
+       return
+
     ts_grammar[name] = ts_rule
     ts_rule_names.append(name)
 
@@ -125,6 +177,12 @@ def get_rule_ref(token):
 
     if QUOTE_WORD_PATTERN.match(token):
         return token
+
+    if OPERATOR_PATTERN.match(token):
+        return token
+
+    if token == "`quoted_identifier`":
+        return "$.QID"
 
     if STRING_PATTERN.match(token):
         tk = token.strip('"')
@@ -137,6 +195,12 @@ def get_rule_ref(token):
             return "$.{}".format(name)
         else:
             return token
+
+    if token == "opt_stmt_list":
+        return "optional($.stmt_list)"
+
+    if token == "opt_distinct":
+        return "optional($.DISTINCT)"
 
     return (
         "optional($.{})".format(token)
@@ -237,22 +301,32 @@ for name in sorted_rule_names:
     if len(choices) == 1:
         rule_str = choices[0]
     else:
-        rule_str = "choice({})".format(", ".join(choices))
+        if name == "basic_expr" or name == "math_expr" or name == "expr":
+          rule_str = "choice({})".format(",\n      ".join(choices))
+        else:
+          rule_str = "choice({})".format(", ".join(choices))
 
     if name in APPLY_FUNC_LIST:
         rule_str = APPLY_FUNC_LIST[name].format(rule_str)
     else:
         rule_str = rule_str
-    add_ts_rule(name, "$ => {}".format(rule_str))
+
+    if name == "basic_expr" or name == "math_expr" or name == "expr":
+      add_ts_rule(name, "$ => prec.left(1,\n      {})".format(rule_str.strip()))
+    else:
+      add_ts_rule(name, "$ => {}".format(rule_str))
 
 # redefine the if_stmt rule because if not we're going to have parsing issues with "opt_elseif_list" and "opt_else" rule.
 # I tried to fix it by providing a priority to the conflict but it didn't work.
 ts_grammar[
     "if_stmt"
-] = "$ => seq($.IF, $.expr, $.THEN, optional($.opt_stmt_list), optional(repeat1($.elseif_item)), optional($.opt_else), $.END, $.IF)"
+] = "$ => seq($.IF, $.expr, $.THEN, optional($.stmt_list), optional(repeat1($.elseif_item)), optional($.opt_else), $.END, optional($.IF))"
+
+for r in REPLACEMENT_RULE_NAMES.values():
+  DELETED_PRODUCTIONS.add(r[0])
 
 grammar = ",\n    ".join(
-    ["{}: {}".format(ts, ts_grammar[ts]) for ts in ts_rule_names]
+    ["{}: {}".format(ts, ts_grammar[ts]) for ts in ts_rule_names if ts not in DELETED_PRODUCTIONS]
     + DEFAULT_RULES
     + list(TOKEN_GRAMMAR.values())
     + [r[1] for r in REPLACEMENT_RULE_NAMES.values()]
@@ -279,9 +353,9 @@ print(
     "     [$.fk_options],\n"
     "  ],\n"
     "  word: $ => $.ID,\n"
-    "  rules: {"
+    "  rules: {", end = ""
 )
-print("    {}".format(grammar))
+print("{}    {}".format(BOOT_RULES, grammar))
 print(
     "  }\n"
     "});\n\n"

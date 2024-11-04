@@ -163,6 +163,17 @@ BOOT_RULES = """
     pre_proc: $ => choice($.ifdef, $.ifndef),
 
     stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.pre_proc, $.comment)),
+
+    /* Manually define the if_stmt rule because if not we're going to have parsing
+     * issues with "opt_elseif_list" and "opt_else" rule. Providing a priority
+     * doesn't suffice to resolve the conflict.
+     */
+
+    if_stmt: $ => seq($.IF, $.expr, $.THEN,
+        optional($.stmt_list),
+        optional(repeat1($.elseif_item)),
+        optional($.opt_else),
+        $.END, optional($.IF)),
 """
 
 # These are problematic rules to the cql tree-sitter grammar. We're just going
@@ -180,6 +191,7 @@ DELETED_PRODUCTIONS = {
     "cte_tables_macro_ref",
     "end_of_included_file",
     "expr_macro_ref",
+    "if_stmt",
     "include_section",
     "include_stmts",
     "non_expr_macro_ref",
@@ -343,12 +355,6 @@ for name in sorted_rule_names:
         rule_str = APPLY_FUNC_LIST[name].format(rule_str)
 
     add_ts_rule(name, "$ => {}".format(rule_str))
-
-# redefine the if_stmt rule because if not we're going to have parsing issues with "opt_elseif_list" and "opt_else" rule.
-# I tried to fix it by providing a priority to the conflict but it didn't work.
-ts_grammar[
-    "if_stmt"
-] = "$ => seq($.IF, $.expr, $.THEN, optional($.stmt_list), optional(repeat1($.elseif_item)), optional($.opt_else), $.END, optional($.IF))"
 
 for r in RULE_RENAMES.values():
   DELETED_PRODUCTIONS.add(r)

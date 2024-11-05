@@ -39,7 +39,7 @@
 #
 # Fixed rules: Some rules are not defined in cql_grammar.txt. The script manually
 #   defines them in the tree-sitter grammar.  This is where the `INT_LIT`,
-#   `LONG_LIT`, `REAL_LIT`, `BLOB_LIT`, `C_STR_LIT`, `STR_LIT`, `ID`, `ID_BANG`,
+#   `LONG_LIT`, `REAL_LIT`, `BLOB_LIT`, `C_STR_LIT`, `STR_LIT`, `ID`
 #   `QID`, `include_stmt`, `comment`, and so forth appear.
 #
 # Extras: The script adds the `extras` and `conflicts` sections to the
@@ -108,7 +108,6 @@ RULE_RENAMES = {
     "sql-blob-literal": "$.BLOB_LIT",
     "c-string-literal": "$.C_STR_LIT",
     "sql-string-literal": "$.STR_LIT",
-    "ID!": "$.ID_BANG",
     "`quoted_identifier`": "$.QID",
 
     # prevents CI("id) rule
@@ -116,6 +115,9 @@ RULE_RENAMES = {
 
     # prevents seq(CI("ELSE"), CI("IF"))
     "\"ELSE IF\"" : "$.ELSE_IF",
+
+    # prevents `quoted_identifier` token
+    "\"`quoted identifier`\"" : "$.QID",
 
     # We special case these common references to something more direct
     # otherwise we would have a ton of optional(opt_stmt_list)
@@ -130,7 +132,6 @@ RULE_RENAMES = {
     "opt_name_list" : "optional($.name_list)",
     "opt_sql_name_list" : "optional($.sql_name_list)",
     "opt_expr_list" : "optional($.expr_list)",
-    "opt_select_window" : "optional($.select_window)",
     "opt_as_alias" : "optional($.as_alias)",
     "opt_join_cond" : "optional($.join_cond)",
     "opt_elseif_list" : "optional($.elseif_list)",
@@ -145,10 +146,8 @@ FIXED_RULES = """
     LONG_LIT: $ => choice(/[0-9]+L/, /0x[0-9a-fA-F]+L/),
     REAL_LIT: $ => /([0-9]+\.[0-9]*|\.[0-9]+)((E|e)(\+|\-)?[0-9]+)?/,
     BLOB_LIT: $ => /[xX]'([0-9a-fA-F][0-9a-fA-F])*'/,
-    C_STR_LIT: $ => /"(\\.|[^"\\n])*"/,
-    STR_LIT: $ => /'(\\.|''|[^'])*'/,
-    ID: $ => /[_A-Za-z][A-Za-z0-9_]*/,
-    ID_BANG: $ => /[_A-Za-z][A-Za-z0-9_]*[!]/,
+    C_STR_LIT: $ => /"(\\\\.|[^"\\n])*"/,
+    STR_LIT: $ => /'(\\\\.|''|[^'])*'/,
     QID: $ => /`(``|[^`\\n])*`/,
 
     /* no newline between ELSE and IF */
@@ -168,12 +167,12 @@ FIXED_RULES = """
       $.query_parts_macro_ref),
 
     expr_macro_ref: $ => prec.left(1,choice(
-      seq($.ID_BANG),
-      seq($.ID_BANG, '(', optional($.opt_macro_args), ')'),
-      seq($.basic_expr, ':', $.ID_BANG, '(', optional($.opt_macro_args), ')'),
-      seq($.basic_expr, ':', $.ID_BANG))),
+      seq($.name, '!'),
+      seq($.name, '!', '(', optional($.macro_args), ')'),
+      seq($.basic_expr, ':', $.name, '!', '(', optional($.macro_args), ')'),
+      seq($.basic_expr, ':', $.name, '!'))),
 
-    macro_ref: $ => choice(seq($.ID_BANG), seq($.ID_BANG, '(', optional($.opt_macro_args), ')')),
+    macro_ref: $ => choice(seq($.name, '!'), seq($.name, '!', '(', optional($.macro_args), ')')),
 
     query_parts_macro_ref: $ => prec(1, $.macro_ref),
     cte_tables_macro_ref: $ => prec(2, $.macro_ref),
@@ -217,8 +216,9 @@ DELETED_PRODUCTIONS = {
     # These will get emitted some other kind of way, like in the BOOT section
 
     "@INCLUDE_quoted-filename",
-    "ELSE_IF"
-    "`quoted_identifier`"
+    "ELSE_IF",
+    "ID!",
+    "`quoted_identifier`",
     "cte_tables_macro_ref",
     "end_of_included_file",
     "expr_macro_ref",
@@ -248,7 +248,6 @@ DELETED_PRODUCTIONS = {
     "opt_macro_args",
     "opt_macro_formals",
     "opt_name_list",
-    "opt_select_window",
     "opt_sql_name",
     "opt_sql_name_list",
     "opt_stmt_list",
@@ -352,7 +351,6 @@ def get_sequence(sequence):
 
     return tokens_list
 
-
 with open(input_filename) as fp:
     for line in RULE_PATTERN.finditer(fp.read()):
         assert line.lastindex == 2
@@ -418,11 +416,6 @@ for name in sorted_rule_names:
 for r in RULE_RENAMES.values():
   DELETED_PRODUCTIONS.add(r)
 
-grammar_text = ",\n\n    ".join(
-    ["{}: {}".format(ts, grammar[ts]) for ts in grammar.keys() if ts not in DELETED_PRODUCTIONS]
-    + list(tokens.values())
-)
-
 print("""/**
  *
  * Copyright (c) Meta Platforms, Inc. and affiliates.
@@ -444,11 +437,20 @@ module.exports = grammar({
      [$.fk_options],
   ],
   word: $ => $.ID,
-  rules: {""", end="")
+  rules: {""")
 
-print("{}    {}".format(FIXED_RULES, grammar_text))
+print(FIXED_RULES)
 
-print("""
+for ts in grammar.keys():
+    if ts not in DELETED_PRODUCTIONS:
+        print("    {}: {},\n".format(ts, grammar[ts]))
+
+for ts in tokens.keys():
+    if ts not in DELETED_PRODUCTIONS:
+        print("    {},\n".format(tokens[ts]))
+
+print("""/* This has to go last so that it is less favorable than keywords */
+    ID: $ => /[_A-Za-z][A-Za-z0-9_]*/,
   }
 });
 

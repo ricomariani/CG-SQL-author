@@ -25,7 +25,7 @@
 #   line break to the choices to make it more readable.
 #
 # Token grammar: Terminals are automatically detected and added to the grammar.
-# 
+#
 # Inline rules: Some rules are problematic to the cql tree-sitter grammar. The
 #   script replaces them wherever they're used with their values.
 #
@@ -152,16 +152,40 @@ APPLY_FUNC_LIST = {
 # We use this mechanism (that a rename is in flight) to also avoid
 # automatic creation of terminal tokens.  Two cases marked below.
 RULE_RENAMES = {
-    "integer-literal": "INT_LIT",
-    "long-literal": "LONG_LIT",
-    "real-literal": "REAL_LIT",
-    "sql-blob-literal": "BLOB_LIT",
-    "c-string-literal": "C_STR_LIT",
-    "sql-string-literal": "STR_LIT",
-    "ID!": "ID_BANG",
-    "`quoted_identifier`": "QID",
-    "ID": "ID",  # prevents CI("id) rule
-    "ELSE_IF" : "ELSE_IF" # prevents seq(CI("ELSE"), CI("IF"))
+    "integer-literal": "$.INT_LIT",
+    "long-literal": "$.LONG_LIT",
+    "real-literal": "$.REAL_LIT",
+    "sql-blob-literal": "$.BLOB_LIT",
+    "c-string-literal": "$.C_STR_LIT",
+    "sql-string-literal": "$.STR_LIT",
+    "ID!": "$.ID_BANG",
+    "`quoted_identifier`": "$.QID",
+
+    # prevents CI("id) rule
+    "ID": "$.ID",
+
+    # prevents seq(CI("ELSE"), CI("IF"))
+    "\"ELSE IF\"" : "$.ELSE_IF",
+
+    # We special case these common references to something more direct
+    # otherwise we would have a ton of optional(opt_stmt_list)
+    # We can do these ones because they are direct aliases the 
+    # opt_ rule adds no value.
+    "opt_stmt_list" : "optional($.stmt_list)",
+    "opt_distinct" : "optional($.DISTINCT)",
+    "opt_version_attrs" : "optional($.version_attrs)",
+    "opt_conflict_clause" : "optional($.conflict_clause)",
+    "opt_fk_options" : "optional($.fk_options)",
+    "opt_sql_name" : "optional($.sql_name)",
+    "opt_name_list" : "optional($.name_list)",
+    "opt_sql_name_list" : "optional($.sql_name_list)",
+    "opt_expr_list" : "optional($.expr_list)",
+    "opt_select_window" : "optional($.select_window)",
+    "opt_as_alias" : "optional($.as_alias)",
+    "opt_join_cond" : "optional($.join_cond)",
+    "opt_elseif_list" : "optional($.elseif_list)",
+    "opt_macro_args" : "optional($.macro_args)",
+    "opt_macro_formals" : "optional($.macro_formals)",
 }
 
 FIXED_RULES = """
@@ -241,8 +265,11 @@ INLINE_RULES = {
 
 DELETED_PRODUCTIONS = {
     # These will get emitted some other kind of way, like in the BOOT section
+    # Or they can be suppressed because they are not needed, like the opt_ rules
+    # that are just an alias.
     "@INCLUDE_quoted-filename",
     "ELSE_IF"
+    "`quoted_identifier`"
     "cte_tables_macro_ref",
     "end_of_included_file",
     "expr_macro_ref",
@@ -250,8 +277,21 @@ DELETED_PRODUCTIONS = {
     "include_section",
     "include_stmts",
     "non_expr_macro_ref",
+    "opt_as_alias",
+    "opt_conflict_clause",
     "opt_distinct",
+    "opt_elseif_list",
+    "opt_expr_list",
+    "opt_fk_options",
+    "opt_join_cond",
+    "opt_macro_args",
+    "opt_macro_formals",
+    "opt_name_list",
+    "opt_select_window",
+    "opt_sql_name",
+    "opt_sql_name_list",
     "opt_stmt_list",
+    "opt_version_attrs",
     "program",
     "query_parts_macro_ref",
     "select_core_macro_ref",
@@ -259,7 +299,6 @@ DELETED_PRODUCTIONS = {
     "stmt_list",
     "stmt_list_macro_ref",
     "top_level_stmts",
-    "`quoted_identifier`"
 }
 
 input_filename = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
@@ -276,7 +315,7 @@ def add_ts_rule(name, ts_rule):
 
 def get_rule_ref(token):
     if token in RULE_RENAMES:
-        return "$.{}".format(RULE_RENAMES[token])
+        return RULE_RENAMES[token]
 
     # Returning the token here turns it into lexeme in the tree-sitter grammar
     if SINGLE_QUOTE_WORD_PATTERN.match(token):
@@ -301,7 +340,7 @@ def get_rule_ref(token):
 
         # The terminal might have a rename.  If so we use that.
         if tk in RULE_RENAMES:
-            return "$.{}".format(RULE_RENAMES[tk])
+            return RULE_RENAMES[tk]
 
         # Add the token if we need it, correct the @ to AT_ for the name.
         name = tk.replace("@", "AT_")
@@ -311,21 +350,10 @@ def get_rule_ref(token):
         # Return a reference to the (possibly new) synthesized token.
         return "$.{}".format(name)
 
-    # We special case these common references to something more direct
-    # otherwise we would have a ton of optional(opt_stmt_list)
-
-    if token == "opt_stmt_list":
-        return "optional($.stmt_list)"
-
-    if token == "opt_distinct":
-        return "optional($.DISTINCT)"
-
-    return (
-        "optional($.{})".format(token)
-        if token in optional_rules
-        else "$.{}".format(token)
-    )
-
+    if token in optional_rules:
+        return "optional($.{})".format(token)
+    else:
+        return  "$.{}".format(token)
 
 def add_sub_sequence(tokens):
     name = "_".join(tokens)
@@ -351,12 +379,15 @@ def get_sequence(sequence):
     for tk in sequence:
         tk = tk.strip()
         if len(tk) > 0:
-            if SPACE_PATTERN.search(tk):
+            if tk in RULE_RENAMES:
+                tokens_list.append(get_rule_ref(tk))
+            elif SPACE_PATTERN.search(tk):
                 tokens_list.append(get_sub_sequence(tk))
             elif STRING_PATTERN.match(tk):
                 tokens_list.append(get_rule_ref(tk))
             else:
                 tokens_list.append(get_rule_ref(tk))
+
     return tokens_list
 
 
@@ -407,17 +438,17 @@ for name in sorted_rule_names:
             # used to add the "optional()" function to optional rule's definition.
             continue
         elif size == 1:
+            # A sequence of length 1 does not require a seq() wrapper.
             choices.append(seq[0])
         else:
             choices.append("seq({})".format(", ".join(seq)))
 
     if len(choices) == 1:
         rule_str = choices[0]
+    elif name in LINE_BREAK_RULES:
+        rule_str = "choice({})".format(",\n      ".join(choices))
     else:
-        if name in LINE_BREAK_RULES:
-          rule_str = "choice({})".format(",\n      ".join(choices))
-        else:
-          rule_str = "choice({})".format(", ".join(choices))
+        rule_str = "choice({})".format(", ".join(choices))
 
     if name in APPLY_FUNC_LIST:
         rule_str = APPLY_FUNC_LIST[name].format(rule_str)

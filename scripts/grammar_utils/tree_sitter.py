@@ -215,8 +215,7 @@ INLINE_RULES = {
 
 DELETED_PRODUCTIONS = {
     # These will get emitted some other kind of way, like in the BOOT section
-    # Or they can be suppressed because they are not needed, like the opt_ rules
-    # that are just an alias.
+
     "@INCLUDE_quoted-filename",
     "ELSE_IF"
     "`quoted_identifier`"
@@ -227,6 +226,18 @@ DELETED_PRODUCTIONS = {
     "include_section",
     "include_stmts",
     "non_expr_macro_ref",
+    "program",
+    "query_parts_macro_ref",
+    "select_core_macro_ref",
+    "select_expr_macro_ref",
+    "stmt_list",
+    "stmt_list_macro_ref",
+    "top_level_stmts",
+
+    # These are just aliases for the non-optional rules.  We don't need them.
+    # Since we always emit something like optional($.stmt_list) rather than
+    # $.opt_stmt_list, or even worse optional($.opt_stmt_list).
+
     "opt_as_alias",
     "opt_conflict_clause",
     "opt_distinct",
@@ -242,13 +253,6 @@ DELETED_PRODUCTIONS = {
     "opt_sql_name_list",
     "opt_stmt_list",
     "opt_version_attrs",
-    "program",
-    "query_parts_macro_ref",
-    "select_core_macro_ref",
-    "select_expr_macro_ref",
-    "stmt_list",
-    "stmt_list_macro_ref",
-    "top_level_stmts",
 }
 
 input_filename = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
@@ -300,11 +304,17 @@ def get_rule_ref(token):
         # Return a reference to the (possibly new) synthesized token.
         return "$.{}".format(name)
 
+    # If the token is optional, we add "optional()" to the rule's references.
+    # Tree sitter does not allow rule definitions with empty sequences, so we
+    # need to add the "optional()" function to optional rule's references.
     if token in optional_rules:
         return "optional($.{})".format(token)
     else:
         return  "$.{}".format(token)
 
+# Process a terminal with spaces in it like "IS NOT TRUE" and turn that
+# into a rule that is a sequence of the parts.  This gives us multi-word
+# terminals that are case insensitive.
 def add_sub_sequence(tokens):
     name = "_".join(tokens)
     if name not in rules_name_visited:
@@ -313,7 +323,6 @@ def add_sub_sequence(tokens):
         add_ts_rule(name, ts_rule)
         rules_name_visited.add(name)
     return name
-
 
 # Process a sub-sequence within a sequence. they are a group of words within a
 # string e.g., "IS NOT TRUE"
@@ -330,12 +339,15 @@ def get_sequence(sequence):
         tk = tk.strip()
         if len(tk) > 0:
             if tk in RULE_RENAMES:
+                # for renames we have the answer on a silver platter
                 tokens_list.append(get_rule_ref(tk))
             elif SPACE_PATTERN.search(tk):
+                # if space in the name emit a broken up token
+                # e.g. "IS NOT TRUE" -> IS_NOT_TRUE: "is" "not" "true"
                 tokens_list.append(get_sub_sequence(tk))
-            elif STRING_PATTERN.match(tk):
-                tokens_list.append(get_rule_ref(tk))
             else:
+                # otherwise just emit a normal token reference
+                # this handles string tokens becoming lexemes
                 tokens_list.append(get_rule_ref(tk))
 
     return tokens_list
@@ -440,12 +452,12 @@ print("""
   }
 });
 
-// make string case insensitive
+// The all important "make case-insensitive token" function
+// This is used on virtually every terminal symbol in the grammar.
 function CI (keyword) {
   return new RegExp(keyword
      .split('')
      .map(letter => `[${letter}${letter.toUpperCase()}]`)
      .join('')
   )
-}
-""", end = "")
+}""")

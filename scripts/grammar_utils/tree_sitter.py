@@ -265,6 +265,10 @@ def add_ts_rule(name, ts_rule):
     grammar[name] = ts_rule
 
 
+# This converts a token, terminal or non-terminal, into a reference in the grammar
+# So like "ID" becomes "$.ID" and "integer-literal" becomes "$.INT_LIT".  It has
+# to handle rules with optional references, and it has to handle multi-word tokens.
+# It can even create a new token if it needs to (like "IS NOT TRUE" -> IS_NOT_TRUE).
 def get_rule_ref(token):
     if token in RULE_RENAMES:
         return RULE_RENAMES[token]
@@ -311,18 +315,26 @@ def get_rule_ref(token):
         return "$.{}".format(token)
 
 
-# Process a terminal with spaces in it like "IS NOT TRUE" and turn that
-# into a rule that is a sequence of the parts.  This gives us multi-word
-# terminals that are case insensitive.
+# Tokens has the parts of a terminal with spaces in it like "IS NOT TRUE" so
+# ["IS", "NOT", "TRUE"]. Here we convert those parts into a single token by
+# joining them with "_".  So we get "IS_NOT_TRUE". We then add the token to the
+# grammar and turn it into a rule that is a sequence of the parts.  This gives
+# us multi-word terminals that are case insensitive.
 def add_sub_sequence(tokens):
     name = "_".join(tokens)
     if name not in rules_name_visited:
         values = ["CI('{}')".format(item.lower()) for item in tokens]
         ts_rule = "$ => prec.left(1, seq({}))".format(", ".join(values))
         add_ts_rule(name, ts_rule)
-        rules_name_visited.add(name)
-    return name
 
+        # We do not want to do this particular split again.  Note that
+        # this rule goes directly into the tree-sitter grammar with
+        # add_ts_rule().  We will not need to do rule conversion on the
+        # new combo-terminal we just made.
+        rules_name_visited.add(name)
+
+    # Return the name of the new or existing rule for this multi-word token.
+    return name
 
 # Process a sub-sequence within a sequence. they are a group of words within a
 # string e.g., "IS NOT TRUE"
@@ -331,9 +343,9 @@ def get_sub_sequence(seq):
     name = add_sub_sequence(tokens)
     return get_rule_ref(name)
 
-
 # Process a sequence in a rule.
-# e.g., IS_NOT_TRUE: "is" "not" "true"
+# We process each token in the rule converting it into a reference in the grammar.
+# This is where we rename tokens as needed and split multi-word tokens into parts.
 def get_sequence(sequence):
     tokens_list = []
     for tk in sequence:
@@ -341,6 +353,7 @@ def get_sequence(sequence):
         if len(tk) > 0:
             if tk in RULE_RENAMES:
                 # for renames we have the answer on a silver platter
+                # get_rule_ref will do the actual rename
                 tokens_list.append(get_rule_ref(tk))
             elif SPACE_PATTERN.search(tk):
                 # if space in the name emit a broken up token
@@ -349,87 +362,121 @@ def get_sequence(sequence):
             else:
                 # otherwise just emit a normal token reference
                 # this handles string tokens becoming lexemes
+                # in the case where they are not multi-word
+                # (hence get_sub_sequence is not required)
                 tokens_list.append(get_rule_ref(tk))
 
     return tokens_list
 
+# Read each rule from the grammar text file into the rule_defs dictionary.
+# The rule_defs dictionary is a map of rule names to a list of choices.
+# Each choice is a list of tokens.  The tokens are either terminals or non-terminals.
+def read_rule_defs():
+    with open(input_filename) as fp:
+        for line in RULE_PATTERN.finditer(fp.read()):
+            assert line.lastindex == 2
+            name = line.group(1).strip()
+            rule = line.group(2)
 
-with open(input_filename) as fp:
-    for line in RULE_PATTERN.finditer(fp.read()):
-        assert line.lastindex == 2
-        name = line.group(1).strip()
-        rule = line.group(2)
-        choices = []
-        for choice in CHOICE_PATTERN.split(rule):
-            seq = []
-            if NULL_PATTERN.match(choice):
-                optional_rules.add(name)
-            else:
-                seq = [r.strip() for r in re.findall(SEQUENCE_PATTERN, choice)]
-            if len(seq) > 0:
-                # the rule is not optional
-                choices.append(seq)
-        rule_defs[name] = choices
-        sorted_rule_names.append(name)
+            # We're ready to compute the choices for this rule.  In the grammar
+            # file the choices are separated by "|".  We split the rule into
+            # choices and then split the choices into terminals/non-terminals.
+            choices = []
+            for choice in CHOICE_PATTERN.split(rule):
+                if NULL_PATTERN.match(choice):
+                    seq = []
+                else:
+                    seq = [r.strip() for r in re.findall(SEQUENCE_PATTERN, choice)]
+
+                # if there was a sequence add it to the choices, if this sequence
+                # is empty it means the rule is optional (i.e. it can match nothing).
+                # This could happen with an empty sequence or with the nil pattern.
+                if len(seq) > 0:
+                    choices.append(seq)
+                else:
+                    optional_rules.add(name)
+
+            # We can now store these choices and record the order we found them.
+            rule_defs[name] = choices
+            sorted_rule_names.append(name)
+
+def replace_inline_rule(seq, index, value):
+    return seq[0:max(index - 1, 0)] + value + seq[index + 1:]
 
 # Inline where needed to avoid conflicts
-for _, r in rule_defs.items():
-    for i, seq in enumerate(r):
-        for j, key in enumerate(seq):
-            if type(key) is str and key in INLINE_RULES:
-                r[i] = seq[0:max(j - 1, 0)] + rule_defs[key][0] + seq[j + 1:]
+def apply_inlining():
+    # Enumerate all the rules, visit each choice and each token in the choice.
+    # if the token is a string and it is in the INLINE_RULES, replace it with
+    # the value of the rule.
+    for _, rule in rule_defs.items():
+        for i, choice in enumerate(rule):
+            for j, tok in enumerate(choice):
+                if type(tok) is str and tok in INLINE_RULES:
+                    value = rule_defs[tok][0]
+                    rule[i] = replace_inline_rule(choice, j, value)
 
-# Delete the inline rules
-for name in INLINE_RULES:
-    del rule_defs[name]
-    rules_name_visited.add(name)
+    # Mark the inlined rules as visited so we do not emit them.
+    # All references to this rule are gone now so it is for sure useless.
+    for name in INLINE_RULES:
+        del rule_defs[name]
+        rules_name_visited.add(name)
 
-# Process the rules in the order they were seen in the grammar file.
-# This is what 'sorted' means in this context.
-for name in sorted_rule_names:
+# Here we convert the processed rules into tree-sitter grammar.
+# We process the rules in the order they were seen in the grammar file.
+# This is what 'sorted_rules' means in this context.
+def compute_ts_grammar():
 
-    # the rules may appear more than once in the grammar
-    # they have already been consoldiated so only visit one time
-    if name in rules_name_visited:
-        continue
-
-    rules_name_visited.add(name)
-    choices = []
-
-    # compute the various choices for this rule
-    for rule in rule_defs[name]:
-        seq = get_sequence(rule)
-        size = len(seq)
-        if size == 0:
-            # An empty sequence in the rule indicates that the rule is optional.
-            # We dont need to do anything here, we just move on. later it's
-            # used to add the "optional()" function to optional rule's definition.
+    for name in sorted_rule_names:
+        # the rules may appear more than once in the grammar the choices are already
+        # constructed in the rule_defs so we just need to visit the rule once.
+        if name in rules_name_visited:
             continue
-        elif size == 1:
-            # A sequence of length 1 does not require a seq() wrapper.
-            choices.append(seq[0])
-        else:
-            sequence = "seq({})".format(", ".join(seq))
 
-            # long sequences are broken into lines for readability
-            if len(sequence) > 100:
-                choices.append("seq(\n          {})".format(",\n          ".join(seq)))
+        rules_name_visited.add(name)
+        choices = []
+
+        # compute the various choices for this rule
+        for rule in rule_defs[name]:
+            seq = get_sequence(rule)
+            size = len(seq)
+            if size == 0:
+                # An empty sequence in the rule indicates that the rule is optional.
+                # We dont need to do anything here, we just move on. later it's
+                # used to add the "optional()" function to optional rule's definition.
+                continue
+            elif size == 1:
+                # A sequence of length 1 does not require a seq() wrapper.
+                choices.append(seq[0])
             else:
-                choices.append(sequence)
+                sequence = "seq({})".format(", ".join(seq))
 
-    # If there is only one choice, we don't need to wrap it in a choice() function.
-    if len(choices) == 1:
-        rule_str = choices[0]
-    else:
-        rule_str = "choice(\n      {})".format(",\n      ".join(choices))
+                # long sequences are broken into lines for readability
+                if len(sequence) > 100:
+                    choices.append("seq(\n          {})".format(",\n          ".join(seq)))
+                else:
+                    choices.append(sequence)
 
-    # If the rule has post processing we apply it here.  This is usually
-    # to resolve conflicts in the grammar with the precedence function.
-    if name in APPLY_FUNC_LIST:
-        rule_str = APPLY_FUNC_LIST[name].format(rule_str)
+        # If there is only one choice, we don't need to wrap it in a choice() function.
+        if len(choices) == 1:
+            rule_str = choices[0]
+        else:
+            rule_str = "choice(\n      {})".format(",\n      ".join(choices))
 
-    # Add the rule to the tree-sitter grammar.
-    add_ts_rule(name, "$ => {}".format(rule_str))
+        # If the rule has post processing we apply it here.  This is usually
+        # to resolve conflicts in the grammar with the precedence function.
+        if name in APPLY_FUNC_LIST:
+            rule_str = APPLY_FUNC_LIST[name].format(rule_str)
+
+        # Add the rule to the tree-sitter grammar.
+        add_ts_rule(name, "$ => {}".format(rule_str))
+
+# Read, inline, transform, and emit the tree-sitter grammar.
+
+read_rule_defs()
+apply_inlining()
+compute_ts_grammar()
+
+# We are ready to emit the tree-sitter grammar.
 
 print("""/**
  *

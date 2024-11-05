@@ -212,7 +212,8 @@ INLINE_RULES = {
 }
 
 DELETED_PRODUCTIONS = {
-    # These will get emitted some other kind of way, like in the BOOT section
+    # These will get emitted some other kind of way, like in the FIXED_RULES
+    # section, or the tokens section.
     "@INCLUDE_quoted-filename",
     "ELSE_IF",
     "ID!",
@@ -253,17 +254,16 @@ DELETED_PRODUCTIONS = {
 
 input_filename = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
 grammar = {}
-tokens = {}
+synthesized_tokens = {}
 
 rule_defs = {}
 sorted_rule_names = []
 optional_rules = set()
 rules_name_visited = set()
 
-
+# Store the indicated rule in the result grammar
 def add_ts_rule(name, ts_rule):
     grammar[name] = ts_rule
-
 
 # This converts a token, terminal or non-terminal, into a reference in the grammar
 # So like "ID" becomes "$.ID" and "integer-literal" becomes "$.INT_LIT".  It has
@@ -300,8 +300,8 @@ def get_rule_ref(token):
 
         # Add the token if we need it, correct the @ to AT_ for the name.
         name = tk.replace("@", "AT_")
-        if name not in tokens:
-            tokens[name] = "{}: $ => CI('{}')".format(name, tk.lower())
+        if name not in synthesized_tokens:
+            synthesized_tokens[name] = "{}: $ => CI('{}')".format(name, tk.lower())
 
         # Return a reference to the (possibly new) synthesized token.
         return "$.{}".format(name)
@@ -320,17 +320,15 @@ def get_rule_ref(token):
 # joining them with "_".  So we get "IS_NOT_TRUE". We then add the token to the
 # grammar and turn it into a rule that is a sequence of the parts.  This gives
 # us multi-word terminals that are case insensitive.
-def add_sub_sequence(tokens):
-    name = "_".join(tokens)
+def add_sub_sequence(seq):
+    name = "_".join(seq)
     if name not in rules_name_visited:
-        values = ["CI('{}')".format(item.lower()) for item in tokens]
-        ts_rule = "$ => prec.left(1, seq({}))".format(", ".join(values))
-        add_ts_rule(name, ts_rule)
+        # Formulate the rule for the multi-word token
+        values = ["CI('{}')".format(item.lower()) for item in seq]
+        ts_rule = "{}: $ => prec.left(1, seq({}))".format(name, ", ".join(values))
+        synthesized_tokens[name] = ts_rule
 
-        # We do not want to do this particular split again.  Note that
-        # this rule goes directly into the tree-sitter grammar with
-        # add_ts_rule().  We will not need to do rule conversion on the
-        # new combo-terminal we just made.
+        # We do not want to do this particular split again.
         rules_name_visited.add(name)
 
     # Return the name of the new or existing rule for this multi-word token.
@@ -338,9 +336,9 @@ def add_sub_sequence(tokens):
 
 # Process a sub-sequence within a sequence. they are a group of words within a
 # string e.g., "IS NOT TRUE"
-def get_sub_sequence(seq):
-    tokens = SPACE_PATTERN.split(seq.strip('"'))
-    name = add_sub_sequence(tokens)
+def get_sub_sequence(token):
+    seq = SPACE_PATTERN.split(token.strip('"'))
+    name = add_sub_sequence(seq)
     return get_rule_ref(name)
 
 # Process a sequence in a rule.
@@ -507,9 +505,9 @@ for ts in grammar.keys():
     if ts not in DELETED_PRODUCTIONS:
         print("    {}: {},\n".format(ts, grammar[ts]))
 
-for ts in tokens.keys():
+for ts in synthesized_tokens.keys():
     if ts not in DELETED_PRODUCTIONS:
-        print("    {},\n".format(tokens[ts]))
+        print("    {},\n".format(synthesized_tokens[ts]))
 
 print("""/* This has to go last so that it is less favorable than keywords */
     ID: $ => /[_A-Za-z][A-Za-z0-9_]*/,

@@ -384,13 +384,19 @@ for name in INLINE_RULES:
     del rule_defs[name]
     rules_name_visited.add(name)
 
+# Process the rules in the order they were seen in the grammar file.
+# This is what 'sorted' means in this context.
 for name in sorted_rule_names:
+
+    # the rules may appear more than once in the grammar
+    # they have already been consoldiated so only visit one time
     if name in rules_name_visited:
         continue
 
     rules_name_visited.add(name)
     choices = []
 
+    # compute the various choices for this rule
     for rule in rule_defs[name]:
         seq = get_sequence(rule)
         size = len(seq)
@@ -405,18 +411,19 @@ for name in sorted_rule_names:
         else:
             choices.append("seq({})".format(", ".join(seq)))
 
+    # If there is only one choice, we don't need to wrap it in a choice() function.
     if len(choices) == 1:
         rule_str = choices[0]
     else:
         rule_str = "choice(\n      {})".format(",\n      ".join(choices))
 
+    # If the rule has post processing we apply it here.  This is usually
+    # to resolve conflicts in the grammar with the precedence function.
     if name in APPLY_FUNC_LIST:
         rule_str = APPLY_FUNC_LIST[name].format(rule_str)
 
+    # Add the rule to the tree-sitter grammar.
     add_ts_rule(name, "$ => {}".format(rule_str))
-
-for r in RULE_RENAMES.values():
-    DELETED_PRODUCTIONS.add(r)
 
 print("""/**
  *

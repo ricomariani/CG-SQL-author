@@ -409,7 +409,13 @@ for name in sorted_rule_names:
             # A sequence of length 1 does not require a seq() wrapper.
             choices.append(seq[0])
         else:
-            choices.append("seq({})".format(", ".join(seq)))
+            sequence = "seq({})".format(", ".join(seq))
+
+            # long sequences are broken into lines for readability
+            if len(sequence) > 100:
+                choices.append("seq(\n          {})".format(",\n          ".join(seq)))
+            else:
+                choices.append(sequence)
 
     # If there is only one choice, we don't need to wrap it in a choice() function.
     if len(choices) == 1:

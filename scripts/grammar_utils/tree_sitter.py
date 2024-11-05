@@ -52,7 +52,6 @@ import sys
 import datetime
 import re
 
-
 # We emit /* nil */ in the grammar to indicate an empty match.  This signals optional rules.
 NULL_PATTERN = re.compile(r"/\*\s*nil\s*\*/")
 
@@ -114,29 +113,29 @@ RULE_RENAMES = {
     "ID": "$.ID",
 
     # prevents seq(CI("ELSE"), CI("IF"))
-    "\"ELSE IF\"" : "$.ELSE_IF",
+    "\"ELSE IF\"": "$.ELSE_IF",
 
     # prevents `quoted_identifier` token
-    "\"`quoted identifier`\"" : "$.QID",
+    "\"`quoted identifier`\"": "$.QID",
 
     # We special case these common references to something more direct
     # otherwise we would have a ton of optional(opt_stmt_list)
-    # We can do these ones because they are direct aliases the 
+    # We can do these ones because they are direct aliases the
     # opt_ rule adds no value.
-    "opt_stmt_list" : "optional($.stmt_list)",
-    "opt_distinct" : "optional($.DISTINCT)",
-    "opt_version_attrs" : "optional($.version_attrs)",
-    "opt_conflict_clause" : "optional($.conflict_clause)",
-    "opt_fk_options" : "optional($.fk_options)",
-    "opt_sql_name" : "optional($.sql_name)",
-    "opt_name_list" : "optional($.name_list)",
-    "opt_sql_name_list" : "optional($.sql_name_list)",
-    "opt_expr_list" : "optional($.expr_list)",
-    "opt_as_alias" : "optional($.as_alias)",
-    "opt_join_cond" : "optional($.join_cond)",
-    "opt_elseif_list" : "optional($.elseif_list)",
-    "opt_macro_args" : "optional($.macro_args)",
-    "opt_macro_formals" : "optional($.macro_formals)",
+    "opt_stmt_list": "optional($.stmt_list)",
+    "opt_distinct": "optional($.DISTINCT)",
+    "opt_version_attrs": "optional($.version_attrs)",
+    "opt_conflict_clause": "optional($.conflict_clause)",
+    "opt_fk_options": "optional($.fk_options)",
+    "opt_sql_name": "optional($.sql_name)",
+    "opt_name_list": "optional($.name_list)",
+    "opt_sql_name_list": "optional($.sql_name_list)",
+    "opt_expr_list": "optional($.expr_list)",
+    "opt_as_alias": "optional($.as_alias)",
+    "opt_join_cond": "optional($.join_cond)",
+    "opt_elseif_list": "optional($.elseif_list)",
+    "opt_macro_args": "optional($.macro_args)",
+    "opt_macro_formals": "optional($.macro_formals)",
 }
 
 FIXED_RULES = """
@@ -214,7 +213,6 @@ INLINE_RULES = {
 
 DELETED_PRODUCTIONS = {
     # These will get emitted some other kind of way, like in the BOOT section
-
     "@INCLUDE_quoted-filename",
     "ELSE_IF",
     "ID!",
@@ -237,7 +235,6 @@ DELETED_PRODUCTIONS = {
     # These are just aliases for the non-optional rules.  We don't need them.
     # Since we always emit something like optional($.stmt_list) rather than
     # $.opt_stmt_list, or even worse optional($.opt_stmt_list).
-
     "opt_as_alias",
     "opt_conflict_clause",
     "opt_distinct",
@@ -263,8 +260,10 @@ sorted_rule_names = []
 optional_rules = set()
 rules_name_visited = set()
 
+
 def add_ts_rule(name, ts_rule):
     grammar[name] = ts_rule
+
 
 def get_rule_ref(token):
     if token in RULE_RENAMES:
@@ -309,7 +308,8 @@ def get_rule_ref(token):
     if token in optional_rules:
         return "optional($.{})".format(token)
     else:
-        return  "$.{}".format(token)
+        return "$.{}".format(token)
+
 
 # Process a terminal with spaces in it like "IS NOT TRUE" and turn that
 # into a rule that is a sequence of the parts.  This gives us multi-word
@@ -323,12 +323,14 @@ def add_sub_sequence(tokens):
         rules_name_visited.add(name)
     return name
 
+
 # Process a sub-sequence within a sequence. they are a group of words within a
 # string e.g., "IS NOT TRUE"
 def get_sub_sequence(seq):
     tokens = SPACE_PATTERN.split(seq.strip('"'))
     name = add_sub_sequence(tokens)
     return get_rule_ref(name)
+
 
 # Process a sequence in a rule.
 # e.g., IS_NOT_TRUE: "is" "not" "true"
@@ -351,6 +353,7 @@ def get_sequence(sequence):
 
     return tokens_list
 
+
 with open(input_filename) as fp:
     for line in RULE_PATTERN.finditer(fp.read()):
         assert line.lastindex == 2
@@ -370,12 +373,11 @@ with open(input_filename) as fp:
         sorted_rule_names.append(name)
 
 # Inline where needed to avoid conflicts
-for _, rule in rule_defs.items():
-    cpy_rule = []
-    for i, seq in enumerate(rule):
-        for j, item in enumerate(seq):
-            if type(item) is str and item in INLINE_RULES:
-                rule[i] = seq[0 : max(j - 1, 0)] + rule_defs[item][0] + seq[j + 1 :]
+for _, r in rule_defs.items():
+    for i, seq in enumerate(r):
+        for j, key in enumerate(seq):
+            if type(key) is str and key in INLINE_RULES:
+                r[i] = seq[0:max(j - 1, 0)] + rule_defs[key][0] + seq[j + 1:]
 
 # Delete the inline rules
 for name in INLINE_RULES:
@@ -414,7 +416,7 @@ for name in sorted_rule_names:
     add_ts_rule(name, "$ => {}".format(rule_str))
 
 for r in RULE_RENAMES.values():
-  DELETED_PRODUCTIONS.add(r)
+    DELETED_PRODUCTIONS.add(r)
 
 print("""/**
  *

@@ -86,56 +86,6 @@ SINGLE_QUOTE_WORD_PATTERN = re.compile(r"'[^']+'")
 # characters that could make a "long" operator like "<<", "<<=" or "->>".
 OPERATOR_PATTERN = re.compile(r"\"[!+-=:~/*<>]+\"")
 
-# This is likely to be come every rule that has a choice at the top level.
-# In which case we can just jettison this.
-LINE_BREAK_RULES = [
-  "any_literal",
-  "any_stmt",
-  "basic_expr",
-  "col_attrs",
-  "create_index_stmt",
-  "create_proc_stmt",
-  "create_table_stmt",
-  "create_view_stmt",
-  "create_virtual_table_stmt",
-  "cte_table",
-  "data_type_any",
-  "data_type_numeric",
-  "data_type_with_options",
-  "declare_forward_read_cursor_stmt",
-  "declare_func_stmt",
-  "declare_proc_stmt",
-  "declare_select_func_stmt",
-  "declare_value_cursor",
-  "enforcement_options",
-  "explain_target",
-  "expr",
-  "fetch_values_stmt",
-  "fk_def",
-  "fk_on_options",
-  "from_shape",
-  "insert_stmt",
-  "insert_stmt_type",
-  "math_expr",
-  "misc_attr",
-  "name",
-  "op_stmt",
-  "pk_def",
-  "raise_expr",
-  "rollback_trans_stmt",
-  "schema_ad_hoc_migration_stmt",
-  "select_core",
-  "select_core_list",
-  "simple_call",
-  "table_or_subquery",
-  "trycatch_stmt",
-  "unq_def",
-  "update_cursor_stmt",
-  "update_stmt",
-  "upsert_stmt",
-  "version_attrs_opt_recreate",
-]
-
 # Some of the rules have conflicts therefore we need to define the precedent priority.
 APPLY_FUNC_LIST = {
     "fk_target_options": "prec.left({})",
@@ -445,10 +395,8 @@ for name in sorted_rule_names:
 
     if len(choices) == 1:
         rule_str = choices[0]
-    elif name in LINE_BREAK_RULES:
-        rule_str = "choice({})".format(",\n      ".join(choices))
     else:
-        rule_str = "choice({})".format(", ".join(choices))
+        rule_str = "choice(\n      {})".format(",\n      ".join(choices))
 
     if name in APPLY_FUNC_LIST:
         rule_str = APPLY_FUNC_LIST[name].format(rule_str)
@@ -458,7 +406,7 @@ for name in sorted_rule_names:
 for r in RULE_RENAMES.values():
   DELETED_PRODUCTIONS.add(r)
 
-grammar_text = ",\n    ".join(
+grammar_text = ",\n\n    ".join(
     ["{}: {}".format(ts, grammar[ts]) for ts in grammar.keys() if ts not in DELETED_PRODUCTIONS]
     + list(tokens.values())
 )

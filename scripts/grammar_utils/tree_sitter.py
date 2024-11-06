@@ -374,34 +374,33 @@ def get_sequence(sequence):
 # Read each rule from the grammar text file into the rule_defs dictionary.
 # The rule_defs dictionary is a map of rule names to a list of choices.
 # Each choice is a list of tokens.  The tokens are either terminals or non-terminals.
-def read_rule_defs():
-    with open(input_filename) as fp:
-        for line in RULE_PATTERN.finditer(fp.read()):
-            assert line.lastindex == 2
-            name = line.group(1).strip()
-            rule = line.group(2)
+def read_rule_defs(fp):
+    for line in RULE_PATTERN.finditer(fp.read()):
+        assert line.lastindex == 2
+        name = line.group(1).strip()
+        rule = line.group(2)
 
-            # We're ready to compute the choices for this rule.  In the grammar
-            # file the choices are separated by "|".  We split the rule into
-            # choices and then split the choices into terminals/non-terminals.
-            choices = []
-            for choice in CHOICE_PATTERN.split(rule):
-                if NULL_PATTERN.match(choice):
-                    seq = []
-                else:
-                    seq = [r.strip() for r in re.findall(SEQUENCE_PATTERN, choice)]
+        # We're ready to compute the choices for this rule.  In the grammar
+        # file the choices are separated by "|".  We split the rule into
+        # choices and then split the choices into terminals/non-terminals.
+        choices = []
+        for choice in CHOICE_PATTERN.split(rule):
+            if NULL_PATTERN.match(choice):
+                seq = []
+            else:
+                seq = [r.strip() for r in re.findall(SEQUENCE_PATTERN, choice)]
 
-                # if there was a sequence add it to the choices, if this sequence
-                # is empty it means the rule is optional (i.e. it can match nothing).
-                # This could happen with an empty sequence or with the nil pattern.
-                if len(seq) > 0:
-                    choices.append(seq)
-                else:
-                    optional_rules.add(name)
+            # if there was a sequence add it to the choices, if this sequence
+            # is empty it means the rule is optional (i.e. it can match nothing).
+            # This could happen with an empty sequence or with the nil pattern.
+            if len(seq) > 0:
+                choices.append(seq)
+            else:
+                optional_rules.add(name)
 
-            # We can now store these choices and record the order we found them.
-            rule_defs[name] = choices
-            sorted_rule_names.append(name)
+        # We can now store these choices and record the order we found them.
+        rule_defs[name] = choices
+        sorted_rule_names.append(name)
 
 # Insert the sequence for the inline rule into the sequence we have now.
 # The inline rule is clobbered.  This sequence will be one of the choices
@@ -427,59 +426,67 @@ def apply_inlining():
         del rule_defs[name]
         rules_visited.add(name)
 
+
+def process_one_rule(name):
+    choices = []
+
+    # compute the various choices for this rule
+    for rule in rule_defs[name]:
+        seq = get_sequence(rule)
+        size = len(seq)
+        if size == 0:
+            # An empty sequence in the rule indicates that the rule is optional.
+            # We dont need to do anything here, we just move on. later it's
+            # used to add the "optional()" function to optional rule's definition.
+            continue
+        elif size == 1:
+            # A sequence of length 1 does not require a seq() wrapper.
+            choices.append(seq[0])
+        else:
+            sequence = "seq({})".format(", ".join(seq))
+
+            # long sequences are broken into lines for readability
+            if len(sequence) > 100:
+                choices.append("seq(\n          {})".format(",\n          ".join(seq)))
+            else:
+                choices.append(sequence)
+
+    # If there is only one choice, we don't need to wrap it in a choice() function.
+    if len(choices) == 1:
+        rule_str = choices[0]
+    else:
+        rule_str = "choice(\n      {})".format(",\n      ".join(choices))
+
+    # If the rule has post processing we apply it here.  This is usually
+    # to resolve conflicts in the grammar with the precedence function.
+    if name in APPLY_FUNC_LIST:
+        rule_str = APPLY_FUNC_LIST[name].format(rule_str)
+
+    # Add the rule to the tree-sitter grammar.
+    add_ts_rule(name, "$ => {}".format(rule_str))
+
+
 # Here we convert the processed rules into tree-sitter grammar.
 # We process the rules in the order they were seen in the grammar file.
 # This is what 'sorted_rules' means in this context.
 def compute_ts_grammar():
 
+    # the rules may appear more than once in the grammar the choices are already
+    # constructed in the rule_defs so we just need to visit the rule once.
     for name in sorted_rule_names:
-        # the rules may appear more than once in the grammar the choices are already
-        # constructed in the rule_defs so we just need to visit the rule once.
-        if name in rules_visited:
-            continue
+        if name not in rules_visited:
+            rules_visited.add(name)
+            process_one_rule(name)
 
-        rules_visited.add(name)
-        choices = []
-
-        # compute the various choices for this rule
-        for rule in rule_defs[name]:
-            seq = get_sequence(rule)
-            size = len(seq)
-            if size == 0:
-                # An empty sequence in the rule indicates that the rule is optional.
-                # We dont need to do anything here, we just move on. later it's
-                # used to add the "optional()" function to optional rule's definition.
-                continue
-            elif size == 1:
-                # A sequence of length 1 does not require a seq() wrapper.
-                choices.append(seq[0])
-            else:
-                sequence = "seq({})".format(", ".join(seq))
-
-                # long sequences are broken into lines for readability
-                if len(sequence) > 100:
-                    choices.append("seq(\n          {})".format(",\n          ".join(seq)))
-                else:
-                    choices.append(sequence)
-
-        # If there is only one choice, we don't need to wrap it in a choice() function.
-        if len(choices) == 1:
-            rule_str = choices[0]
-        else:
-            rule_str = "choice(\n      {})".format(",\n      ".join(choices))
-
-        # If the rule has post processing we apply it here.  This is usually
-        # to resolve conflicts in the grammar with the precedence function.
-        if name in APPLY_FUNC_LIST:
-            rule_str = APPLY_FUNC_LIST[name].format(rule_str)
-
-        # Add the rule to the tree-sitter grammar.
-        add_ts_rule(name, "$ => {}".format(rule_str))
+############ MAIN ############
 
 # Read, inline, transform, and emit the tree-sitter grammar.
 
-read_rule_defs()
+with open(input_filename) as fp:
+    read_rule_defs(fp)
+
 apply_inlining()
+
 compute_ts_grammar()
 
 # We are ready to emit the tree-sitter grammar.

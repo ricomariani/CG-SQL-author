@@ -451,20 +451,19 @@ def process_one_rule(name):
             else:
                 choices.append(sequence)
 
-    # If there is only one choice, we don't need to wrap it in a choice() function.
+    # If there is only one choice, we don't need to wrap it in a choice().
     if len(choices) == 1:
         rule_str = choices[0]
     else:
         rule_str = "choice(\n      {})".format(",\n      ".join(choices))
 
-    # If the rule has post processing we apply it here.  This is usually
+    # If the rule has post processing we apply it here. This is usually
     # to resolve conflicts in the grammar with the precedence function.
     if name in APPLY_FUNC_LIST:
         rule_str = APPLY_FUNC_LIST[name].format(rule_str)
 
     # Add the rule to the tree-sitter grammar.
     add_ts_rule(name, "$ => {}".format(rule_str))
-
 
 # Here we convert the processed rules into tree-sitter grammar.
 # We process the rules in the order they were seen in the grammar file.

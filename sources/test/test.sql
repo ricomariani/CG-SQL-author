@@ -533,7 +533,6 @@ select 1 + (3 in (3, 4));
 select 1 and ( 3 in (3,4));
 select 1 and 3 in (3,4);
 
-
 -- alternate inner join syntax
 select x, y from T inner join Y using (a,b,c);
 

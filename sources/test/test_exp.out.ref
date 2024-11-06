@@ -2434,3 +2434,5 @@ x:right('x', 'y');
 x:left('x', 'y');
 
 right('a', 'b');
+
+CALL foo(1, 2);

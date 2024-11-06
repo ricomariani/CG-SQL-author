@@ -1855,3 +1855,5 @@ x:like('x', 'y');
 x:right('x', 'y');
 x:left('x', 'y');
 right('a', 'b');
+
+call @ID("foo")(1,2);

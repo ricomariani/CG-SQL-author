@@ -2028,6 +2028,36 @@ static void cg_lua_expr_stmt(ast_node *ast) {
   CG_LUA_POP_EVAL(expr);
 }
 
+static void cg_lua_ifdef_stmt(ast_node *ast) {
+  Contract(is_ast_ifdef_stmt(ast) || is_ast_ifndef_stmt(ast));
+  EXTRACT_ANY_NOTNULL(evaluation, ast->left);
+  EXTRACT_NOTNULL(pre, ast->right);
+  bool_t is_true = is_ast_is_true(evaluation);
+
+  // We don't want to count these statements as nested, we're still global
+  // If were were global before.
+  stmt_nesting_level--;
+
+  if (is_true) {
+    EXTRACT_NOTNULL(stmt_list, pre->left);
+    cg_lua_stmt_list(stmt_list);
+  }
+  else {
+    EXTRACT(stmt_list, pre->right);
+    if (stmt_list) {
+      cg_lua_stmt_list(stmt_list);
+    }
+  }
+
+  // Put back the statement level
+  stmt_nesting_level++;
+}
+
+static void cg_lua_ifndef_stmt(ast_node *ast) {
+  // the true/false evaluation has already been done and we are is_true if
+  // we take the true branch
+  cg_lua_ifdef_stmt(ast);
+}
 
 // As with the other cases the fact that expressions might require statements
 // complicates the codegen. If there is an else-if (expression) that expression
@@ -5483,6 +5513,8 @@ cql_noexport void cg_lua_init(void) {
 
   LUA_STMT_INIT(expr_stmt);
   LUA_STMT_INIT(if_stmt);
+  LUA_STMT_INIT(ifdef_stmt);
+  LUA_STMT_INIT(ifndef_stmt);
   LUA_STMT_INIT(switch_stmt);
   LUA_STMT_INIT(while_stmt);
   LUA_STMT_INIT(leave_stmt);

@@ -81,6 +81,7 @@ static ast_node *do_ifdef(ast_node *ast);
 static ast_node *do_ifndef(ast_node *ast);
 static void do_endif(void);
 static void do_else(void);
+static bool_t is_processing(void);
 
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
@@ -2678,18 +2679,22 @@ expr_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
 
 stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 query_parts_macro_def:
@@ -2697,9 +2702,11 @@ query_parts_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 cte_tables_macro_def:
@@ -2707,9 +2714,11 @@ cte_tables_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_cte_tables_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 select_core_macro_def:
@@ -2717,9 +2726,11 @@ select_core_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_select_core_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 select_expr_macro_def:
@@ -2727,9 +2738,11 @@ select_expr_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_select_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
@@ -3786,11 +3799,15 @@ static ast_node *new_simple_call_from_name(ast_node *name) {
   return new_ast_call(name, call_arg_list);
 }
 
+static bool_t is_processing() {
+  return !cql_ifdef_state || cql_ifdef_state->processing;
+}
+
 static ast_node *do_ifdef(ast_node *ast) {
   EXTRACT_STRING(name, ast);
   cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
   new_state->prev = cql_ifdef_state;
-  bool_t processing = !cql_ifdef_state || cql_ifdef_state->processing;
+  bool_t processing = is_processing();
   new_state->processing = processing && cql_is_defined(name); 
   new_state->process_else = processing && !new_state->processing;
   ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
@@ -3802,7 +3819,7 @@ static ast_node *do_ifndef(ast_node *ast) {
   EXTRACT_STRING(name, ast);
   cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
   new_state->prev = cql_ifdef_state;
-  bool_t processing = !cql_ifdef_state || cql_ifdef_state->processing;
+  bool_t processing = is_processing();
   new_state->processing = processing && !cql_is_defined(name); 
   new_state->process_else = processing && !new_state->processing;
   ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);

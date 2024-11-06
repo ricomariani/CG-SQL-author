@@ -68,6 +68,20 @@
 static jmp_buf cql_for_exit;
 static int32_t cql_exit_code;
 
+// this is the state we need to pre-process @ifdef and @ifndef
+typedef struct cql_ifdef_state_t {
+  bool_t process_else;
+  bool_t processing;
+  struct cql_ifdef_state_t *prev;
+} cql_ifdef_state_t;
+
+static cql_ifdef_state_t *cql_ifdef_state;
+
+static ast_node *do_ifdef(ast_node *ast);
+static ast_node *do_ifndef(ast_node *ast);
+static void do_endif(void);
+static void do_else(void);
+
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
 #define YYSTACK_USE_ALLOCA 1
@@ -276,6 +290,7 @@ static void cql_reset_globals(void);
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 %left BEGIN_INCLUDE END_INCLUDE
+%token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -350,6 +365,8 @@ static void cql_reset_globals(void);
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape fetch_cursor_from_blob_stmt
 %type <aval> guard_stmt
+%type <aval> ifdef_stmt ifndef_stmt ifdef ifndef
+%type <sval> elsedef endif
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
@@ -585,6 +602,8 @@ stmt_list[result]:
 
 stmt:
   misc_attrs any_stmt ';' { $stmt = make_statement_node($misc_attrs, $any_stmt); }
+  | ifdef_stmt { $stmt = make_statement_node(NULL, $ifdef_stmt); }
+  | ifndef_stmt { $stmt = make_statement_node(NULL, $ifndef_stmt); }
   ;
 
 expr_stmt: expr { $expr_stmt = new_ast_expr_stmt($expr);  }
@@ -2721,6 +2740,32 @@ op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loos
     $op_stmt = new_ast_op_stmt(new_ast_str("NULL"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   ;
 
+ifdef: AT_IFDEF name { $$ = do_ifdef($name); }
+  ;
+
+ifndef: AT_IFNDEF name { $$ = do_ifndef($name); }
+  ;
+
+elsedef: AT_ELSE { $$ = "else"; do_else(); }
+  ;
+
+endif: AT_ENDIF { $$ = "endif"; do_endif(); }
+  ;
+
+ifdef_stmt:
+   ifdef stmt_list[left] elsedef stmt_list[right] endif {
+      $$ = new_ast_ifdef_stmt($ifdef, new_ast_pre($left, $right)); }
+  | ifdef stmt_list[left] endif {
+      $$ = new_ast_ifdef_stmt($ifdef, new_ast_pre($left, NULL)); }
+  ;
+
+ifndef_stmt:
+   ifndef stmt_list[left] elsedef stmt_list[right] endif {
+      $$ = new_ast_ifndef_stmt($ifndef, new_ast_pre($left, $right)); }
+  | ifndef stmt_list[left] endif {
+      $$ = new_ast_ifndef_stmt($ifndef, new_ast_pre($left, NULL)); }
+  ;
+
 macro_def_stmt:
   expr_macro_def BEGIN_ expr END {
      $macro_def_stmt = $expr_macro_def;
@@ -3254,6 +3299,7 @@ int cql_main(int argc, char **argv) {
   cql_exit_code = 0;
   yylineno = 1;
   parse_error_occurred = false;
+  cql_ifdef_state = NULL;
 
   if (!setjmp(cql_for_exit)) {
     parse_cmd(argc, argv);
@@ -3516,6 +3562,8 @@ static void cql_usage() {
     "--cg output1 output2 ...\n"
     "  codegen into the named outputs\n"
     "  any number of output files may be needed for a particular result type, two is common\n"
+    "--defines\n"
+    "  define symbols for use with @ifdef and @ifndef\n"
     "--nolines\n"
     "  suppress the #line directives for lines; useful if you need to debug the C code\n"
     "--global_proc name\n"
@@ -3738,3 +3786,41 @@ static ast_node *new_simple_call_from_name(ast_node *name) {
   return new_ast_call(name, call_arg_list);
 }
 
+static ast_node *do_ifdef(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
+  new_state->prev = cql_ifdef_state;
+  bool_t processing = !cql_ifdef_state || cql_ifdef_state->processing;
+  new_state->processing = processing && cql_is_defined(name); 
+  new_state->process_else = processing && !new_state->processing;
+  ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
+  cql_ifdef_state = new_state;
+  return ast;
+}
+
+static ast_node *do_ifndef(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
+  new_state->prev = cql_ifdef_state;
+  bool_t processing = !cql_ifdef_state || cql_ifdef_state->processing;
+  new_state->processing = processing && !cql_is_defined(name); 
+  new_state->process_else = processing && !new_state->processing;
+  ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
+  cql_ifdef_state = new_state;
+  return ast;
+}
+
+static void do_else() {
+  if (cql_ifdef_state && cql_ifdef_state->process_else) {
+   cql_ifdef_state->processing = true;
+  }
+}
+
+static void do_endif() {
+  if (cql_ifdef_state) {
+    cql_ifdef_state_t *prev = cql_ifdef_state->prev;
+    cql_ifdef_state = prev;
+    // it is not possible to go from processing to not processing
+    // so there is never a transition here
+  }
+}

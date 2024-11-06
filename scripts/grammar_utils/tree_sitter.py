@@ -232,34 +232,39 @@ DELETED_PRODUCTIONS = {
     "stmt_list",
     "stmt_list_macro_ref",
     "top_level_stmts",
-
-    # These are just aliases for the non-optional rules.  We don't need them.
-    # Since we always emit something like optional($.stmt_list) rather than
-    # $.opt_stmt_list, or even worse optional($.opt_stmt_list).
-    "opt_as_alias",
-    "opt_conflict_clause",
-    "opt_distinct",
-    "opt_elseif_list",
-    "opt_expr_list",
-    "opt_fk_options",
-    "opt_join_cond",
-    "opt_macro_args",
-    "opt_macro_formals",
-    "opt_name_list",
-    "opt_sql_name",
-    "opt_sql_name_list",
-    "opt_stmt_list",
-    "opt_version_attrs",
 }
+
+# if we renamed all references to the rule then we can't possibly still
+# need to emit it, it's a orphan for sure. No need to list them all twice
+# so add all those to the DELETED_PRODUCTIONS list.
+for rule in RULE_RENAMES:
+    DELETED_PRODUCTIONS.add(rule)
 
 input_filename = sys.argv[1] if len(sys.argv) > 1 else "cql_grammar.txt"
 grammar = {}
 synthesized_tokens = {}
 
+# The rule_defs dictionary is a map of rule names to a list of choices. Each
+# choice is a list of tokens.  The tokens are either terminals or non-terminals.
+# These are as the rules exist in the grammar file, at least at first. We will
+# transform with renames and inlining and then ignore anything orphaned.
 rule_defs = {}
+
+# The sorted_rule_names list is the order in which the rules were seen in the
+# grammar file. This is important because we want to emit the non-terminals in
+# the order they were seen.
 sorted_rule_names = []
+
+# We need to keep track of the optional rules so we can add the "optional()"
+# to their references.
 optional_rules = set()
-rules_name_visited = set()
+
+# We need to keep track of the rules we have visited so we do not emit them
+# more than once.  This is important because sorted_rule_names might have
+# duplicates and we want to skip visiting of rules we inlined.  We also
+# want to skip rules that we have expanded into new non-terminals like
+# multi-word tokens "IS NOT TRUE" -> IS_NOT_TRUE.
+rules_visited = set()
 
 # Store the indicated rule in the result grammar
 def add_ts_rule(name, ts_rule):
@@ -322,14 +327,14 @@ def get_rule_ref(token):
 # us multi-word terminals that are case insensitive.
 def add_sub_sequence(seq):
     name = "_".join(seq)
-    if name not in rules_name_visited:
+    if name not in rules_visited:
         # Formulate the rule for the multi-word token
         values = ["CI('{}')".format(item.lower()) for item in seq]
         ts_rule = "{}: $ => prec.left(1, seq({}))".format(name, ", ".join(values))
         synthesized_tokens[name] = ts_rule
 
         # We do not want to do this particular split again.
-        rules_name_visited.add(name)
+        rules_visited.add(name)
 
     # Return the name of the new or existing rule for this multi-word token.
     return name
@@ -398,7 +403,10 @@ def read_rule_defs():
             rule_defs[name] = choices
             sorted_rule_names.append(name)
 
-def replace_inline_rule(seq, index, value):
+# Insert the sequence for the inline rule into the sequence we have now.
+# The inline rule is clobbered.  This sequence will be one of the choices
+# in some rule that contains the inline.
+def jam_inline_into_seq(seq, index, value):
     return seq[0:max(index - 1, 0)] + value + seq[index + 1:]
 
 # Inline where needed to avoid conflicts
@@ -411,13 +419,13 @@ def apply_inlining():
             for j, tok in enumerate(choice):
                 if type(tok) is str and tok in INLINE_RULES:
                     value = rule_defs[tok][0]
-                    rule[i] = replace_inline_rule(choice, j, value)
+                    rule[i] = jam_inline_into_seq(choice, j, value)
 
     # Mark the inlined rules as visited so we do not emit them.
     # All references to this rule are gone now so it is for sure useless.
     for name in INLINE_RULES:
         del rule_defs[name]
-        rules_name_visited.add(name)
+        rules_visited.add(name)
 
 # Here we convert the processed rules into tree-sitter grammar.
 # We process the rules in the order they were seen in the grammar file.
@@ -427,10 +435,10 @@ def compute_ts_grammar():
     for name in sorted_rule_names:
         # the rules may appear more than once in the grammar the choices are already
         # constructed in the rule_defs so we just need to visit the rule once.
-        if name in rules_name_visited:
+        if name in rules_visited:
             continue
 
-        rules_name_visited.add(name)
+        rules_visited.add(name)
         choices = []
 
         # compute the various choices for this rule

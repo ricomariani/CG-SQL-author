@@ -29,13 +29,11 @@ end;
 
 proc lua_gated(out gated int!)
 begin
-
   @ifdef __rt__lua
     gated := true;
   @else
     gated := false;
   @endif
-
 end;
 
 @MACRO(stmt_list) TEST_GATED!(x! expr, pred! expr, body! stmt_list)
@@ -128,7 +126,6 @@ end;
 @blob_create_val bcreateval offset;
 @blob_update_key bupdatekey offset;
 @blob_update_val bupdateval offset;
-
 
 declare const group blob_types (
   CQL_BLOB_TYPE_BOOL   = 0,
@@ -817,7 +814,6 @@ BEGIN
   EXPECT_SQL_TOO!(not (null_ is not null));
   EXPECT_SQL_TOO!(not (nullable(x) is null));
   EXPECT_SQL_TOO!(not (y is null));
-
 END);
 
 -- binding tests for not null types
@@ -882,7 +878,6 @@ BEGIN
   EXPECT!((select l) is null); -- binding null long
   EXPECT!((select r) is null); -- binding null real
   EXPECT!((select t) is null); -- binding null text
-
 END);
 
 TEST!(loop_fetch,
@@ -1884,7 +1879,6 @@ BEGIN
   end;
 END);
 
-
 TEST!(bind_and_fetch_all_types,
 BEGIN
   let i := 10;
@@ -2014,7 +2008,6 @@ BEGIN
   -- if the order was otherwise we'd get a different result...
   -- a semantic error actually
   EXPECT!(-1 == (select -CAST(0||1 as INTEGER)));
-
 END);
 
 -- Test precedence of multiply with (* / %) with add (+ -)
@@ -2361,7 +2354,6 @@ BEGIN
   -- This may be fixed in future SQLites, but even if that happens the below will still pass.
   --
   EXPECT_SQL_TOO!(not(false is true < false));
-
 END);
 
 TEST!(between_pri,
@@ -2394,7 +2386,6 @@ BEGIN
   -- nested betweens are actually not ambiguous
   EXPECT_SQL_TOO!(1 == (0 between 1 between 3 and 4 and (3 between 2 and 3)));
   EXPECT_SQL_TOO!(1 == (0 between (1 between 3 and 4) and (3 between 2 and 3)));
-
 END);
 
 -- AND tests with = == != <> IS IS_NOT IN NOT IN
@@ -2772,7 +2763,6 @@ BEGIN
   EXPECT_SQL_TOO!((x1 AND x1 AND x1 OR x0 AND x0) != ((((x1 AND x1) AND x1) OR x0) AND x0));
   EXPECT_SQL_TOO!((x1 OR x1 OR x1 AND x0 AND x1) != ((((x1 OR x1) OR x1) AND x0) AND x1));
   EXPECT_SQL_TOO!((x1 OR x0 OR x0 OR x0 AND x0) != ((((x1 OR x0) OR x0) OR x0) AND x0));
-
 END);
 
 @attribute(cql:vault_sensitive)
@@ -2967,7 +2957,6 @@ BEGIN
   EXPECT!(C.s0 IS null);
   EXPECT!(C.bl0 IS null);
 END);
-
 
 declare proc obj_shape(set_ object) out union (o object);
 declare proc not_null_obj_shape(set_ object!) out union (o object!);
@@ -3181,7 +3170,6 @@ BEGIN
     EXPECT!(C.v * C.v == C.vsq);
     cur := cur + 1;
   end;
-
 END);
 
 TEST!(rowset_reading_language_support,
@@ -3309,7 +3297,6 @@ BEGIN
 
   -- throw happened and we're not gonna leak
   EXPECT!(ok_after_all);
-
 END);
 
 TEST!(boxing_cursors,
@@ -3432,7 +3419,6 @@ BEGIN
   l := 12;
   r0 := cast(l as real);
   EXPECT!(r0 == 12.0);
-
 END);
 
 @enforce_strict cast;
@@ -3702,7 +3688,6 @@ BEGIN
   EXPECT!(const(0x100100100L) == 0x100100100);
   EXPECT!(const(0x100100100) == 0x100100100L);
   EXPECT!(const(0x100100100L) == 0x100100100L);
-
 END);
 
 TEST!(long_literals,
@@ -3775,7 +3760,6 @@ BEGIN
   EXPECT!(z = 1000000000000);
   EXPECT!(z != const(cast(1000000000000 as int)));
   z := const(1000L * 1000 * 1000 * 1000);
-
 END);
 
 proc no_statement_really(x int)
@@ -3824,7 +3808,6 @@ BEGIN
   insert into tdata values(2, null, "x");
   set `value one` := (select v from tdata where id == 2 if nothing or null then -1);
   EXPECT!(`value one` == -1);
-
 END);
 
 proc simple_select()
@@ -4114,7 +4097,6 @@ BEGIN
   FETCH D;
   EXPECT!(NOT D);
 END);
-
 
 @attribute(cql:shared_fragment)
 proc f1(pattern text)
@@ -4438,7 +4420,6 @@ BEGIN
     EXPECT!(C.s1 == C.s2);
     EXPECT!(C.m1 == C.m2);
   end;
-
 END);
 
 proc make_xy()
@@ -4721,9 +4702,7 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
-
 END);
-
 
 TEST_GATED!(blob_serialization_null_cases, lua_gated(),
 BEGIN
@@ -4744,7 +4723,6 @@ BEGIN
   EXPECT!(test_cursor.r is null);
   EXPECT!(test_cursor.bl is null);
   EXPECT!(test_cursor.str is null);
-
 END);
 
 TEST_GATED!(corrupt_blob_deserialization, lua_gated(),
@@ -4787,7 +4765,6 @@ BEGIN
     EXPECT!(caught);
     i += 1;
   end;
-
 END);
 
 TEST_GATED!(bogus_varint, lua_gated(),
@@ -4931,7 +4908,6 @@ BEGIN
   EXPECT!(z == C.v);
   FETCH C;
   EXPECT!(z == C.v);
-
 END);
 
 TEST_GATED!(serialization_tricky_values, lua_gated(),
@@ -5232,7 +5208,6 @@ BEGIN
 
     i += 1;
   end;
-
 END);
 
 declare function cql_cursors_equal(C1 cursor, C2 cursor) bool!;
@@ -5401,7 +5376,6 @@ BEGIN
   declare G cursor like select 1L x, 1L y;
   declare H cursor like select 1 x, 1 y;
   EXPECT!(NOT cql_cursors_equal(G, H));
-
 END);
 
 DECLARE PROC get_rows(result object!) OUT UNION (x INT!, y TEXT!, z BOOL);
@@ -5542,7 +5516,6 @@ begin
   end;
 end;
 
-
 proc parent()
 begin
   let i := 0;
@@ -5643,12 +5616,10 @@ BEGIN
   -- shape compatible, cast away ch1/ch2 vs. ch1_filter/ch2_filter
   -- this verifies that the manually created parent/child result is the same
   call verify_parent_child_results(r);
-
 END);
 
 TEST!(string_dictionary,
 BEGIN
-
   let i := 1;
   while i <= 512
   begin
@@ -5683,7 +5654,6 @@ BEGIN
 
   -- test null lookup, always fails
   EXPECT!(dict:find(NULL) IS NULL);
-
 END);
 
 DECLARE FUNCTION _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL NOT NULL;
@@ -5693,7 +5663,6 @@ DECLARE FUNCTION _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL NOT N
 -- any null arguments yield a false result
 TEST!(cql_contains_column_def,
 BEGIN
-
   -- trivial cases all fail, the "needle" has to be reasonable to even have a chance to match
   EXPECT!(NOT _cql_contains_column_def(null, 'x'));
   EXPECT!(NOT _cql_contains_column_def('x', NULL));
@@ -5710,16 +5679,16 @@ BEGIN
 
   -- column name at the start isn't a match, there has to be a space or paren
   EXPECT!(NOT _cql_contains_column_def("x integer", "x integer"));
-
 END);
 
 -- cql utilities for making a basic string list
 -- this is not a very functional list but schema helpers might need
 -- generic lists of strings so we offer these based on bytebuf
 
-
 TEST!(cql_string_list,
 BEGIN
+  -- this version does not use any of the pipeline shortcuts
+  -- in case there are bugs with that transform this test would pass
   let list := cql_string_list_create();
   EXPECT!(0 == cql_string_list_count(list));
   cql_string_list_add(list, "hello");
@@ -5731,14 +5700,20 @@ END);
 
 TEST!(cql_string_list_as_array,
 BEGIN
+  -- this version uses the better notation which should
+  -- compile into the same code as the above
   let list := cql_string_list_create();
   EXPECT!(0 == list.count);
   list:add("hello"):add("goodbye");
   EXPECT!(2 == list.count);
   EXPECT!("hello" == list[0]);
   EXPECT!("goodbye" == list[1]);
+
+  -- use the setter, too
   list[0] := "salut";
+  EXPECT!(2 == list.count);
   EXPECT!("salut" == list[0]);
+  EXPECT!("goodbye" == list[1]);
 END);
 
 TEST!(cursor_formatting,
@@ -5765,7 +5740,6 @@ END);
 
 TEST!(compressed_strings,
 BEGIN
-
   let x := "hello hello hello hello";
   let y := cql_compressed("hello hello hello hello");
   EXPECT!(x == y);
@@ -5773,7 +5747,6 @@ BEGIN
   let empty1 := "";
   let empty2 := cql_compressed("");
   EXPECT!(empty1 == empty2);
-
 END);
 
 -- external implementation will test the exact value passed
@@ -5789,67 +5762,69 @@ BEGIN
   call take_bool_not_null(0, false);
 END);
 
+@op blob : call key as bgetkey;
+
 TEST!(blob_key_funcs,
 BEGIN
   let b := (select bcreatekey(112233, 1234, CQL_BLOB_TYPE_INT32, 5678, CQL_BLOB_TYPE_INT32));
   EXPECT!(112233 == (select bgetkey_type(b)));
-  EXPECT!(1234 == (select bgetkey(b,0)));
-  EXPECT!(5678 == (select bgetkey(b,1)));
+  EXPECT!(1234 == (select b:key(0)));
+  EXPECT!(5678 == (select b:key(1)));
 
   b := (select bupdatekey(b, 1, 3456));
-  EXPECT!(1234 == (select bgetkey(b,0)));
-  EXPECT!(3456 == (select bgetkey(b,1)));
+  EXPECT!(1234 == (select b:key(0)));
+  EXPECT!(3456 == (select b:key(1)));
 
   b := (select bupdatekey(b, 0, 2345));
-  EXPECT!(2345 == (select bgetkey(b,0)));
-  EXPECT!(3456 == (select bgetkey(b,1)));
+  EXPECT!(2345 == (select b:key(0)));
+  EXPECT!(3456 == (select b:key(1)));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
   -- ad hoc calls to these functions aren't the normal way they are used
   b := (select bcreatekey(112234, 2, CQL_BLOB_TYPE_BOOL, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT!(112234 == (select bgetkey_type(b)));
-  EXPECT!((select bgetkey(b,0) == 1));
-  EXPECT!((select bgetkey(b,1) == 5.5));
+  EXPECT!((select b:key(0) == 1));
+  EXPECT!((select b:key(1) == 5.5));
 
   b := (select bupdatekey(b, 0, 0));
-  EXPECT!((select bgetkey(b,0) == 0));
+  EXPECT!((select b:key(0) == 0));
 
   b := (select bupdatekey(b, 0, 1, 1, 3.25));
-  EXPECT!((select bgetkey(b,0) == 1));
-  EXPECT!((select bgetkey(b,1) == 3.25));
+  EXPECT!((select b:key(0) == 1));
+  EXPECT!((select b:key(1) == 3.25));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
   -- ad hoc calls to these functions aren't the normal way they are used
   b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64));
   EXPECT!(112235 == (select bgetkey_type(b)));
-  EXPECT!((select bgetkey(b,0) == 0x12345678912L));
-  EXPECT!((select bgetkey(b,1) == 0x87654321876L));
+  EXPECT!((select b:key(0) == 0x12345678912L));
+  EXPECT!((select b:key(1) == 0x87654321876L));
 
   b := (select bupdatekey(b, 0, 0xabcdef01234));
-  EXPECT!((select bgetkey(b,0) == 0xabcdef01234));
+  EXPECT!((select b:key(0) == 0xabcdef01234));
 
   -- cheese the return type with casts to work around the fixed type of bgetkey
   b := (select bcreatekey(112236,  x'313233', CQL_BLOB_TYPE_BLOB, 'hello', CQL_BLOB_TYPE_STRING));
   EXPECT!(112236 == (select bgetkey_type(b)));
-  EXPECT!((select cast(bgetkey(b,0) as blob) == x'313233'));
-  EXPECT!((select cast(bgetkey(b,1) as text) == 'hello'));
+  EXPECT!((select b:key(0) ~blob~ == x'313233'));
+  EXPECT!((select b:key(1) ~text~ == 'hello'));
 
   b := (select bupdatekey(b, 0, x'4546474849'));
-  EXPECT!((select cast(bgetkey(b,0) as blob) == x'4546474849'));
+  EXPECT!((select b:key(0) ~blob~ == x'4546474849'));
 
   b := (select bupdatekey(b, 0, x'fe'));
-  EXPECT!((select cast(bgetkey(b,0) as blob) == x'fe'));
+  EXPECT!((select b:key(0) ~blob~ == x'fe'));
 
   b := (select bupdatekey(b, 0, x''));
-  EXPECT!((select cast(bgetkey(b,0) as blob) == x''));
+  EXPECT!((select b:key(0) ~blob~ == x''));
 
   b := (select bupdatekey(b, 1, 'garbonzo'));
-  EXPECT!((select cast(bgetkey(b,1) as text) == 'garbonzo'));
-  EXPECT!((select cast(bgetkey(b,0) as blob) == x''));
+  EXPECT!((select b:key(1) ~text~ == 'garbonzo'));
+  EXPECT!((select b:key(0) ~blob~ == x''));
 
   b := (select bupdatekey(b, 0, x'4546474849', 1, 'h'));
-  EXPECT!((select cast(bgetkey(b,0) as blob) == x'4546474849'));
-  EXPECT!((select cast(bgetkey(b,1) as text) == 'h'));
+  EXPECT!((select b:key(0) ~blob~ == x'4546474849'));
+  EXPECT!((select b:key(1) ~text~ == 'h'));
 END);
 
 TEST!(blob_createkey_func_errors,
@@ -5894,10 +5869,10 @@ BEGIN
   let b := (select bcreatekey(112235, 0x12345678912L, CQL_BLOB_TYPE_INT64, 0x87654321876L, CQL_BLOB_TYPE_INT64));
 
   -- second arg is too big  only (0, 1) are valid
-  EXPECT!((select bgetkey(b, 2) IS NULL));
+  EXPECT!((select b:key(2) IS NULL));
 
   -- second arg is negative
-  EXPECT!((select bgetkey(b, -1) IS NULL));
+  EXPECT!((select b:key(-1) IS NULL));
 
   -- the blob isn't a real encoded blob
   EXPECT!((select bgetkey(x'0000000000000000000000000000', 0) IS NULL));
@@ -5949,6 +5924,8 @@ BEGIN
   EXPECT!((select bupdatekey(b, 0, 0, 0, 0) IS NULL));
 END);
 
+@op blob : call val as bgetval;
+
 TEST!(blob_val_funcs,
 BEGIN
   let k1 := 123412341234;
@@ -5956,81 +5933,81 @@ BEGIN
   let b := (select bcreateval(112233, k1, 1234, CQL_BLOB_TYPE_INT32, k2, 5678, CQL_BLOB_TYPE_INT32));
 
   EXPECT!(112233 == (select bgetval_type(b)));
-  EXPECT!(1234 == (select bgetval(b, k1)));
-  EXPECT!(5678 == (select bgetval(b, k2)));
+  EXPECT!(1234 == (select b:val(k1)));
+  EXPECT!(5678 == (select b:val(k2)));
 
   b := (select bupdateval(b, k2, 3456, CQL_BLOB_TYPE_INT32));
 
   EXPECT!(b is not null);
   EXPECT!((select bgetval_type(b)) == 112233);
-  EXPECT!((select bgetval(b, k1)) is not null);
-  EXPECT!((select bgetval(b, k2)) is not null);
+  EXPECT!((select b:val(k1)) is not null);
+  EXPECT!((select b:val(k2)) is not null);
 
-  EXPECT!(1234 == (select bgetval(b, k1)));
-  EXPECT!(3456 == (select bgetval(b, k2)));
+  EXPECT!(1234 == (select b:val(k1)));
+  EXPECT!(3456 == (select b:val(k2)));
 
   b := (select bupdateval(b, k1, 2345, CQL_BLOB_TYPE_INT32));
-  EXPECT!(2345 == (select bgetval(b, k1)));
-  EXPECT!(3456 == (select bgetval(b, k2)));
+  EXPECT!(2345 == (select b:val(k1)));
+  EXPECT!(3456 == (select b:val(k2)));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetkey here
   -- ad hoc calls to these functions aren't the normal way they are used
   b := (select bcreateval(112234, k1, 2, CQL_BLOB_TYPE_BOOL, k2, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT!(112234 == (select bgetval_type(b)));
-  EXPECT!((select bgetval(b, k1) == 1));
-  EXPECT!((select bgetval(b, k2) == 5.5));
+  EXPECT!((select b:val(k1) == 1));
+  EXPECT!((select b:val(k2) == 5.5));
 
   b := (select bupdateval(b, k1, 0, CQL_BLOB_TYPE_BOOL));
-  EXPECT!((select bgetval(b, k1) == 0));
+  EXPECT!((select b:val(k1) == 0));
 
   b := (select bupdateval(b, k1, 1, CQL_BLOB_TYPE_BOOL, k2, 3.25, CQL_BLOB_TYPE_FLOAT));
-  EXPECT!((select bgetval(b, k1) == 1));
-  EXPECT!((select bgetval(b, k2) == 3.25));
+  EXPECT!((select b:val(k1) == 1));
+  EXPECT!((select b:val(k2) == 3.25));
 
   -- note that CQL thinks that we are going to be returning a integer value from bgetval here
   -- ad hoc calls to these functions aren't the normal way they are used
   b := (select bcreateval(112235, k1, 0x12345678912L, CQL_BLOB_TYPE_INT64, k2, 0x87654321876L, CQL_BLOB_TYPE_INT64));
   EXPECT!(112235 == (select bgetval_type(b)));
-  EXPECT!((select bgetval(b, k1) == 0x12345678912L));
-  EXPECT!((select bgetval(b, k2) == 0x87654321876L));
+  EXPECT!((select b:val(k1) == 0x12345678912L));
+  EXPECT!((select b:val(k2) == 0x87654321876L));
 
   b := (select bupdateval(b, k1, 0xabcdef01234, CQL_BLOB_TYPE_INT64));
-  EXPECT!((select bgetval(b, k1) == 0xabcdef01234));
+  EXPECT!((select b:val(k1) == 0xabcdef01234));
 
   -- cheese the return type with casts to work around the fixed type of bgetval
   b := (select bcreateval(112236,  k1, x'313233', CQL_BLOB_TYPE_BLOB, k2, 'hello', CQL_BLOB_TYPE_STRING));
   EXPECT!(112236 == (select bgetval_type(b)));
-  EXPECT!((select cast(bgetval(b, k1) as blob) == x'313233'));
-  EXPECT!((select cast(bgetval(b, k2) as text) == 'hello'));
+  EXPECT!((select b:val(k1) ~blob~ == x'313233'));
+  EXPECT!((select b:val(k2) ~text~ == 'hello'));
 
   b := (select bupdateval(b, k1, x'4546474849', CQL_BLOB_TYPE_BLOB));
-  EXPECT!((select cast(bgetval(b, k1) as blob) == x'4546474849'));
+  EXPECT!((select b:val(k1) ~blob~ == x'4546474849'));
 
   b := (select bupdateval(b, k1, x'fe', CQL_BLOB_TYPE_BLOB));
-  EXPECT!((select cast(bgetval(b, k1) as blob) == x'fe'));
+  EXPECT!((select b:val(k1) ~blob~ == x'fe'));
 
   b := (select bupdateval(b, k1, x'', CQL_BLOB_TYPE_BLOB));
-  EXPECT!((select cast(bgetval(b, k1) as blob) == x''));
+  EXPECT!((select b:val(k1) ~blob~ == x''));
 
   b := (select bupdateval(b, k2, 'garbonzo', CQL_BLOB_TYPE_STRING));
-  EXPECT!((select cast(bgetval(b, k2) as text) == 'garbonzo'));
-  EXPECT!((select cast(bgetval(b, k1) as blob) == x''));
+  EXPECT!((select b:val(k2) ~text~ == 'garbonzo'));
+  EXPECT!((select b:val(k1) ~blob~ == x''));
 
   b := (select bupdateval(b, k1, x'4546474849', CQL_BLOB_TYPE_BLOB, k2, 'h', CQL_BLOB_TYPE_STRING));
-  EXPECT!((select cast(bgetval(b, k1) as blob) == x'4546474849'));
-  EXPECT!((select cast(bgetval(b, k2) as text) == 'h'));
+  EXPECT!((select b:val(k1) ~blob~ == x'4546474849'));
+  EXPECT!((select b:val(k2) ~text~ == 'h'));
 
   b := (select bcreateval(112234, k1, NULL, CQL_BLOB_TYPE_BOOL, k2, 5.5, CQL_BLOB_TYPE_FLOAT));
   EXPECT!(112234 == (select bgetval_type(b)));
-  EXPECT!((select bgetval(b, k1) IS NULL));  /* missing column */
-  EXPECT!((select bgetval(b, k2) == 5.5));
+  EXPECT!((select b:val(k1) IS NULL));  /* missing column */
+  EXPECT!((select b:val(k2) == 5.5));
 END);
 
 TEST!(blob_createval_func_errors,
 BEGIN
   let k1 := 123412341234;
 
-  -- not enough argsss
+  -- not enough args
   EXPECT!((select bcreateval() IS NULL));
 
   -- args have the wrong parity (it should be triples)
@@ -6077,7 +6054,7 @@ BEGIN
   let b := (select bcreateval(112233, k1, 1234, CQL_BLOB_TYPE_INT32, k2, 5678, CQL_BLOB_TYPE_INT32));
 
   -- second arg is is not a valid key
-  EXPECT!((select bgetval(b, 1111) IS NULL));
+  EXPECT!((select b:val(1111) IS NULL));
 END);
 
 TEST!(blob_updateval_null_cases,
@@ -6100,43 +6077,43 @@ BEGIN
        ));
 
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select cast(bgetval(b, k1) as bool) == false));
-  EXPECT!((select bgetval(b, k2) == 0x12345678912L));
-  EXPECT!((select cast(bgetval(b, k3) as real) == 1.5));
-  EXPECT!((select cast(bgetval(b, k4) as text) == 'abc'));
-  EXPECT!((select cast(bgetval(b, k5) as blob) == x'4546474849'));
-  EXPECT!((select bgetval(b, k6) IS NULL));
+  EXPECT!((select b:val(k1) ~bool~ == false));
+  EXPECT!((select b:val(k2) == 0x12345678912L));
+  EXPECT!((select b:val(k3) ~real~ == 1.5));
+  EXPECT!((select b:val(k4) ~text~ == 'abc'));
+  EXPECT!((select b:val(k5) ~blob~ == x'4546474849'));
+  EXPECT!((select b:val(k6) IS NULL));
 
   -- adding a new field id adds a field...
   b := (select bupdateval(b, k6, 1.1, CQL_BLOB_TYPE_FLOAT));
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select cast(bgetval(b, k6) as real) == 1.1));
-  EXPECT!((select cast(bgetval(b, k1) as bool) == false));
-  EXPECT!((select bgetval(b, k2) == 0x12345678912L));
-  EXPECT!((select cast(bgetval(b, k3) as real) == 1.5));
-  EXPECT!((select cast(bgetval(b, k4) as text) == 'abc'));
-  EXPECT!((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+  EXPECT!((select b:val(k6) ~real~ == 1.1));
+  EXPECT!((select b:val(k1) ~bool~ == false));
+  EXPECT!((select b:val(k2) == 0x12345678912L));
+  EXPECT!((select b:val(k3) ~real~ == 1.5));
+  EXPECT!((select b:val(k4) ~text~ == 'abc'));
+  EXPECT!((select b:val(k5) ~blob~ == x'4546474849'));
 
   -- remove the field k6
   b := (select bupdateval(b, k6, NULL, CQL_BLOB_TYPE_FLOAT));
 
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select bgetval(b, k6) IS NULL));
-  EXPECT!((select cast(bgetval(b, k1) as bool) == false));
-  EXPECT!((select bgetval(b, k2) == 0x12345678912L));
-  EXPECT!((select cast(bgetval(b, k3) as real) == 1.5));
-  EXPECT!((select cast(bgetval(b, k4) as text) == 'abc'));
-  EXPECT!((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+  EXPECT!((select b:val(k6) IS NULL));
+  EXPECT!((select b:val(k1) ~bool~ == false));
+  EXPECT!((select b:val(k2) == 0x12345678912L));
+  EXPECT!((select b:val(k3) ~real~ == 1.5));
+  EXPECT!((select b:val(k4) ~text~ == 'abc'));
+  EXPECT!((select b:val(k5) ~blob~ == x'4546474849'));
 
   -- remove the field k6 again (removing a not present field)
   b := (select bupdateval(b, k6, NULL, CQL_BLOB_TYPE_FLOAT));
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select bgetval(b, k6) IS NULL));
-  EXPECT!((select cast(bgetval(b, k1) as bool) == false));
-  EXPECT!((select bgetval(b, k2) == 0x12345678912L));
-  EXPECT!((select cast(bgetval(b, k3) as real) == 1.5));
-  EXPECT!((select cast(bgetval(b, k4) as text) == 'abc'));
-  EXPECT!((select cast(bgetval(b, k5) as blob) == x'4546474849'));
+  EXPECT!((select b:val(k6) IS NULL));
+  EXPECT!((select b:val(k1) ~bool~ == false));
+  EXPECT!((select b:val(k2) == 0x12345678912L));
+  EXPECT!((select b:val(k3) ~real~ == 1.5));
+  EXPECT!((select b:val(k4) ~text~ == 'abc'));
+  EXPECT!((select b:val(k5) ~blob~ == x'4546474849'));
 
   -- remove several fields
   b := (select bupdateval(
@@ -6149,12 +6126,12 @@ BEGIN
        ));
 
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select bgetval(b, k1) IS NULL));
-  EXPECT!((select bgetval(b, k3) IS NULL));
-  EXPECT!((select bgetval(b, k5) IS NULL));
-  EXPECT!((select bgetval(b, k6) IS NULL));
-  EXPECT!((select bgetval(b, k2) == 0x12345678912L));
-  EXPECT!((select cast(bgetval(b, k4) as text) == 'abc'));
+  EXPECT!((select b:val(k1) IS NULL));
+  EXPECT!((select b:val(k3) IS NULL));
+  EXPECT!((select b:val(k5) IS NULL));
+  EXPECT!((select b:val(k6) IS NULL));
+  EXPECT!((select b:val(k2) == 0x12345678912L));
+  EXPECT!((select b:val(k4) ~text~ == 'abc'));
 
   -- remove all remaining fields
   b := (select bupdateval(
@@ -6165,12 +6142,12 @@ BEGIN
        ));
 
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select bgetval(b, k1) IS NULL));
-  EXPECT!((select bgetval(b, k2) IS NULL));
-  EXPECT!((select bgetval(b, k3) IS NULL));
-  EXPECT!((select bgetval(b, k4) IS NULL));
-  EXPECT!((select bgetval(b, k5) IS NULL));
-  EXPECT!((select bgetval(b, k6) IS NULL));
+  EXPECT!((select b:val(k1) IS NULL));
+  EXPECT!((select b:val(k2) IS NULL));
+  EXPECT!((select b:val(k3) IS NULL));
+  EXPECT!((select b:val(k4) IS NULL));
+  EXPECT!((select b:val(k5) IS NULL));
+  EXPECT!((select b:val(k6) IS NULL));
 
   -- put some fields back
   b := (select bupdateval(
@@ -6180,12 +6157,12 @@ BEGIN
        ));
 
   EXPECT!((select bgetval_type(b) == 112235));
-  EXPECT!((select bgetval(b, k1) IS NULL));
-  EXPECT!((select bgetval(b, k3) IS NULL));
-  EXPECT!((select bgetval(b, k5) IS NULL));
-  EXPECT!((select bgetval(b, k6) IS NULL));
-  EXPECT!((select bgetval(b, k2) == 0x12345678912L));
-  EXPECT!((select cast(bgetval(b, k4) as text) == 'abc'));
+  EXPECT!((select b:val(k1) IS NULL));
+  EXPECT!((select b:val(k3) IS NULL));
+  EXPECT!((select b:val(k5) IS NULL));
+  EXPECT!((select b:val(k6) IS NULL));
+  EXPECT!((select b:val(k2) == 0x12345678912L));
+  EXPECT!((select b:val(k4) ~text~ == 'abc'));
 
   -- the blob isn't a real encoded blob
   EXPECT!((select bgetval(x'0000000000000000000000000000', k1) IS NULL));
@@ -6330,7 +6307,6 @@ BEGIN
   fetch C;
   EXPECT!(NOT C);
 END);
-
 
 -- the backing table was defined above already
 [[backed_by=backing]]
@@ -6553,7 +6529,6 @@ BEGIN
   EXPECT!(box_text:cql_unbox_text IS NULL);
   EXPECT!(box_blob:cql_unbox_blob IS NULL);
   EXPECT!(box_object:cql_unbox_object IS NULL);
-
 END);
 
 TEST!(object_dictionary,
@@ -6607,7 +6582,6 @@ BEGIN
   EXPECT!("foo" == C:to_text(4));
   EXPECT!(C:to_blob(5) IS NOT NULL);
 END);
-
 
 TEST!(cursor_accessors_object,
 BEGIN

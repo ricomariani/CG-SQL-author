@@ -1801,57 +1801,60 @@ static void gen_array(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
 static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
   Contract(is_ast_call(ast));
   EXTRACT_NAME_AST(name_ast, ast->left);
-  EXTRACT_STRING(name, name_ast);
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT_NOTNULL(call_filter_clause, call_arg_list->left);
   EXTRACT(distinct, call_filter_clause->left);
   EXTRACT(opt_filter_clause, call_filter_clause->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  // We never want this to appear. Calls to `cql_inferred_notnull` exist only as
-  // the product of a rewrite rule and should not be visible to users.
-  if (!Strcasecmp("cql_inferred_notnull", name)) {
-    gen_arg_list(arg_list);
-    return;
-  }
+  if (is_ast_str(name_ast)) {
+    EXTRACT_STRING(name, name_ast);
 
-  if (for_sqlite() && cg_blob_mappings) {
-    if (!Strcasecmp("cql_blob_get", name)) {
-      gen_cql_blob_get(ast);
-      return;
-    }
-    else if (!Strcasecmp("cql_blob_get_type", name)) {
-      gen_cql_blob_get_type(ast);
-      return;
-    }
-    else if (!Strcasecmp("cql_blob_create", name)) {
-      gen_cql_blob_create(ast);
-      return;
-    }
-    else if (!Strcasecmp("cql_blob_update", name)) {
-      gen_cql_blob_update(ast);
-      return;
-    }
-  }
-
-  if (for_sqlite()) {
-    // These functions are all no-ops in SQL and must not be emitted if we're
-    // doing codegen: They're only present within queries in source programs for
-    // the purpose of manipulating types.
-
-    if (!Strcasecmp("nullable", name)) {
+    // We never want this to appear. Calls to `cql_inferred_notnull` exist only as
+    // the product of a rewrite rule and should not be visible to users.
+    if (!Strcasecmp("cql_inferred_notnull", name)) {
       gen_arg_list(arg_list);
       return;
     }
 
-    if (!Strcasecmp("ptr", name)) {
-      gen_arg_list(arg_list);
-      return;
+    if (for_sqlite() && cg_blob_mappings) {
+      if (!Strcasecmp("cql_blob_get", name)) {
+        gen_cql_blob_get(ast);
+        return;
+      }
+      else if (!Strcasecmp("cql_blob_get_type", name)) {
+        gen_cql_blob_get_type(ast);
+        return;
+      }
+      else if (!Strcasecmp("cql_blob_create", name)) {
+        gen_cql_blob_create(ast);
+        return;
+      }
+      else if (!Strcasecmp("cql_blob_update", name)) {
+        gen_cql_blob_update(ast);
+        return;
+      }
     }
+
+    if (for_sqlite()) {
+      // These functions are all no-ops in SQL and must not be emitted if we're
+      // doing codegen: They're only present within queries in source programs for
+      // the purpose of manipulating types.
+
+      if (!Strcasecmp("nullable", name)) {
+        gen_arg_list(arg_list);
+        return;
+      }
+
+      if (!Strcasecmp("ptr", name)) {
+        gen_arg_list(arg_list);
+        return;
+      }
 
     if (!Strcasecmp("sensitive", name)) {
-      gen_arg_list(arg_list);
-      return;
+        gen_arg_list(arg_list);
+        return;
+      }
     }
   }
 
@@ -1865,7 +1868,8 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
     }
   }
 
-  gen_printf("%s(", name);
+  gen_name(name_ast);
+  gen_printf("(");
   if (distinct) {
     gen_printf("DISTINCT ");
   }

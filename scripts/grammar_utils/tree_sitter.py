@@ -136,7 +136,7 @@ RULE_RENAMES = {
     "opt_elseif_list": "optional($.elseif_list)",
     "opt_macro_args": "optional($.macro_args)",
     "opt_macro_formals": "optional($.macro_formals)",
-    "if_ending" : "$.END, optional($.IF)",
+    "if_ending": "$.END, optional($.IF)",
 }
 
 FIXED_RULES = """
@@ -205,7 +205,6 @@ DELETED_PRODUCTIONS = {
     "cte_tables_macro_ref",
     "end_of_included_file",
     "expr_macro_ref",
-    # "if_stmt",
     "include_section",
     "include_stmts",
     "non_expr_macro_ref",
@@ -250,9 +249,11 @@ optional_rules = set()
 # multi-word tokens "IS NOT TRUE" -> IS_NOT_TRUE.
 rules_visited = set()
 
+
 # Store the indicated rule in the result grammar
 def add_ts_rule(name, ts_rule):
     grammar[name] = ts_rule
+
 
 # This converts a token, terminal or non-terminal, into a reference in the grammar
 # So like "ID" becomes "$.ID" and "integer-literal" becomes "$.INT_LIT".  It has
@@ -290,7 +291,8 @@ def get_rule_ref(token):
         # Add the token if we need it, correct the @ to AT_ for the name.
         name = tk.replace("@", "AT_")
         if name not in synthesized_tokens:
-            synthesized_tokens[name] = "{}: $ => CI('{}')".format(name, tk.lower())
+            synthesized_tokens[name] = "{}: $ => CI('{}')".format(
+                name, tk.lower())
 
         # Return a reference to the (possibly new) synthesized token.
         return "$.{}".format(name)
@@ -314,7 +316,8 @@ def add_sub_sequence(seq):
     if name not in rules_visited:
         # Formulate the rule for the multi-word token
         values = ["CI('{}')".format(item.lower()) for item in seq]
-        ts_rule = "{}: $ => prec.left(1, seq({}))".format(name, ", ".join(values))
+        ts_rule = "{}: $ => prec.left(1, seq({}))".format(
+            name, ", ".join(values))
         synthesized_tokens[name] = ts_rule
 
         # We do not want to do this particular split again.
@@ -323,12 +326,14 @@ def add_sub_sequence(seq):
     # Return the name of the new or existing rule for this multi-word token.
     return name
 
+
 # Process a sub-sequence within a sequence. they are a group of words within a
 # string e.g., "IS NOT TRUE"
 def get_sub_sequence(token):
     seq = SPACE_PATTERN.split(token.strip('"'))
     name = add_sub_sequence(seq)
     return get_rule_ref(name)
+
 
 # Process a sequence in a rule.
 # We process each token in the rule converting it into a reference in the grammar.
@@ -354,6 +359,7 @@ def get_sequence(sequence):
                 tokens_list.append(get_rule_ref(tk))
 
     return tokens_list
+
 
 # Read each rule from the grammar text file into the rule_defs dictionary.
 # The rule_defs dictionary is a map of rule names to a list of choices.
@@ -397,12 +403,13 @@ def jam_inlines_into_seq(seq):
     result = []
     for j, tok in enumerate(seq):
         if type(tok) is str and tok in INLINE_RULES:
-           value = rule_defs[tok][0]
-           for v in value:
-               result.append(v)
+            value = rule_defs[tok][0]
+            for v in value:
+                result.append(v)
         else:
-           result.append(tok)
+            result.append(tok)
     return result
+
 
 # Inline where needed to avoid conflicts
 def apply_inlining():
@@ -443,7 +450,8 @@ def process_one_rule(name):
 
             # long sequences are broken into lines for readability
             if len(sequence) > 100:
-                choices.append("seq(\n          {})".format(",\n          ".join(seq)))
+                choices.append("seq(\n          {})".format(
+                    ",\n          ".join(seq)))
             else:
                 choices.append(sequence)
 
@@ -461,6 +469,7 @@ def process_one_rule(name):
     # Add the rule to the tree-sitter grammar.
     add_ts_rule(name, "$ => {}".format(rule_str))
 
+
 # Here we convert the processed rules into tree-sitter grammar.
 # We process the rules in the order they were seen in the grammar file.
 # This is what 'sorted_rules' means in this context.
@@ -472,6 +481,7 @@ def compute_ts_grammar():
         if name not in rules_visited:
             rules_visited.add(name)
             process_one_rule(name)
+
 
 ############ MAIN ############
 

@@ -8,6 +8,8 @@ require("cqlrt")
 @ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 --]]
+local lua_runtime_generation = 0
+local lua_runtime_generation_on_else = 0
 
 -- The statement ending at line XXXX
 
@@ -8812,6 +8814,39 @@ function cql_startup(_db_)
   local _tmp_n_int_0
   local _tmp_n_text_1
   local _tmp_int64_0 = 0
+
+  -- The statement ending at line XXXX
+
+  --[[
+  @IFDEF __rt__lua
+    LET lua_runtime_generation := 1;
+  @ENDIF
+  ;
+  --]]
+
+    -- The statement ending at line XXXX
+
+    --[[
+    LET lua_runtime_generation := 1;
+    --]]
+    lua_runtime_generation = 1
+
+  -- The statement ending at line XXXX
+
+  --[[
+  @IFNDEF __rt__lua
+  @ELSE
+    LET lua_runtime_generation_on_else := 1;
+  @ENDIF
+  ;
+  --]]
+
+    -- The statement ending at line XXXX
+
+    --[[
+    LET lua_runtime_generation_on_else := 1;
+    --]]
+    lua_runtime_generation_on_else = 1
 
   -- The statement ending at line XXXX
 

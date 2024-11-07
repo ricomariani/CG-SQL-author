@@ -96586,3 +96586,22 @@ test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in t
       | {arg_list}: ok
         | {strlit 'foo'}: text notnull
 
+The statement ending at line XXXX
+
+@IFNDEF foo
+  LET bogus_assignment_ifndef := NOT 'x';
+@ENDIF
+
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
+
+  {ifndef_stmt}: err
+  | {is_true}
+  | | {name foo}
+  | {pre}
+    | {stmt_list}: err
+      | {let_stmt}: err
+        | {name bogus_assignment_ifndef}
+        | {not}: err
+          | {strlit 'x'}: text notnull
+

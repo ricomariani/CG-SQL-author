@@ -25560,3 +25560,12 @@ set loaded := (select load_extension());
 -- * error: % function may not appear in this context 'load_extension'
 -- +1 error:
 set loaded := load_extension('foo');
+
+-- TEST ifdef with an error in the interior statement list
+-- + {ifndef_stmt}: err
+-- + | {is_true}
+-- * error: % string operand not allowed in 'NOT'
+-- +1 error:
+@ifndef foo
+  let bogus_assignment_ifndef := not 'x';
+@endif

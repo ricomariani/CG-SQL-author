@@ -16620,23 +16620,22 @@ static void sem_ifdef_stmt(ast_node *ast) {
   Contract(is_ast_ifdef_stmt(ast) || is_ast_ifndef_stmt(ast));
   EXTRACT_ANY_NOTNULL(evaluation, ast->left);
   EXTRACT_NOTNULL(pre, ast->right);
-  bool_t is_true = is_ast_is_true(evaluation);
   record_ok(ast);
-  if (is_true) {
-    EXTRACT_NOTNULL(stmt_list, pre->left);
-    sem_stmt_list(stmt_list);
-    if (is_error(stmt_list)) {
-      record_error(ast);
-    }
+
+  ast_node *target;
+  if (is_ast_is_true(evaluation)) {
+    EXTRACT(stmt_list, pre->left);
+    target = stmt_list;
   }
   else {
-    record_ok(pre->left);
     EXTRACT(stmt_list, pre->right);
-    if (stmt_list) {
-      sem_stmt_list(stmt_list);
-      if (is_error(stmt_list)) {
-        record_error(ast);
-      }
+    target = stmt_list;
+  }
+
+  if (target) {
+    sem_stmt_list(target);
+    if (is_error(target)) {
+      record_error(ast);
     }
   }
 }

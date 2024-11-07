@@ -3,7 +3,7 @@
   @ifdef foo
     let nested_foo_defined := 1;
   @else
-    let error_foo_not_defined = 1;
+    let error_foo_not_defined := 1;
   @endif
 @else
   let not_foo_defined := 1;
@@ -52,7 +52,7 @@
   /* @ENDIF doesn't work either */
   let q := "@ELSE doesn't work";
   let r := '@ELSE doesn''t work';
-  let `@ELSE does not work`;
+  let `@ELSE does not work` := 1;
 @else
   goo_not_defined_after_c_comment := 1;
 @endif

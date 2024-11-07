@@ -3093,8 +3093,10 @@ static void cg_ifdef_stmt(ast_node *ast) {
   stmt_nesting_level--;
 
   if (is_true) {
-    EXTRACT_NOTNULL(stmt_list, pre->left);
-    cg_stmt_list(stmt_list);
+    EXTRACT(stmt_list, pre->left);
+    if (stmt_list) {
+      cg_stmt_list(stmt_list);
+    }
   }
   else {
     EXTRACT(stmt_list, pre->right);
@@ -8580,8 +8582,6 @@ cql_noexport void cg_c_main(ast_node *head) {
   bool_t global_proc_needed = cg_main_output->used > 1 || cg_scratch_vars_output->used > 1;
 
   if (global_proc_needed) {
-    printf(">>global>>%s<<global<<\n", cg_main_output->ptr);
-    printf(">>scratch>>%s<<scratch<<\n", cg_scratch_vars_output->ptr);
     exit_on_no_global_proc();
 
     bprintf(&body_file, "#define _PROC_ %s\n", global_proc_name);

@@ -8,6 +8,32 @@
 declare proc printf no check;
 declare proc puts no check;
 
+-- TEST: test rt selection in C
+-- + c_runtime_generation = 1;
+@ifdef __rt__c
+  let c_runtime_generation := 1;
+@endif
+
+-- TEST: test rt non-selection in C
+-- - c_runtime_non_generation = 1;
+@ifndef __rt__c
+  let c_runtime_non_generation := 1;
+@endif
+
+-- TEST: test rt selection in C
+-- - c_runtime_generation_no_else = 1;
+@ifdef __rt__c
+@else
+  let c_runtime_generation_no_else := 1;
+@endif
+
+-- TEST: test rt non-selection in C
+-- + c_runtime_generation_on_else = 1;
+@ifndef __rt__c
+@else
+  let c_runtime_generation_on_else := 1;
+@endif
+
 -- basic test table with an auto inc field
 create table foo(
   id INT PRIMARY KEY AUTOINCREMENT NOT NULL

@@ -2766,16 +2766,16 @@ endif: AT_ENDIF { $$ = "endif"; do_endif(); }
   ;
 
 ifdef_stmt:
-   ifdef stmt_list[left] elsedef stmt_list[right] endif {
+   ifdef opt_stmt_list[left] elsedef opt_stmt_list[right] endif {
       $$ = new_ast_ifdef_stmt($ifdef, new_ast_pre($left, $right)); }
-  | ifdef stmt_list[left] endif {
+  | ifdef opt_stmt_list[left] endif {
       $$ = new_ast_ifdef_stmt($ifdef, new_ast_pre($left, NULL)); }
   ;
 
 ifndef_stmt:
-   ifndef stmt_list[left] elsedef stmt_list[right] endif {
+   ifndef opt_stmt_list[left] elsedef opt_stmt_list[right] endif {
       $$ = new_ast_ifndef_stmt($ifndef, new_ast_pre($left, $right)); }
-  | ifndef stmt_list[left] endif {
+  | ifndef opt_stmt_list[left] endif {
       $$ = new_ast_ifndef_stmt($ifndef, new_ast_pre($left, NULL)); }
   ;
 

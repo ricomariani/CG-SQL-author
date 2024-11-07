@@ -3460,10 +3460,12 @@ static void gen_ifxdef_stmt(ast_node *ast) {
   EXTRACT_ANY_NOTNULL(true_false, ast->left);
   EXTRACT_STRING(id, true_false->left);
   EXTRACT(pre, ast->right);
-  EXTRACT_NAMED_NOTNULL(left, stmt_list, pre->left);
+  EXTRACT_NAMED(left, stmt_list, pre->left);
   EXTRACT_NAMED(right, stmt_list, pre->right);
   gen_printf("%s\n", id);
-  gen_stmt_list(left);
+  if (left) {
+    gen_stmt_list(left);
+  }
   if (right) {
     gen_printf("@ELSE\n");
     gen_stmt_list(right);

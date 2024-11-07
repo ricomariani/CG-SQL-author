@@ -2039,7 +2039,7 @@ static void cg_lua_ifdef_stmt(ast_node *ast) {
   stmt_nesting_level--;
 
   if (is_true) {
-    EXTRACT_NOTNULL(stmt_list, pre->left);
+    EXTRACT(stmt_list, pre->left);
     cg_lua_stmt_list(stmt_list);
   }
   else {

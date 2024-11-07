@@ -27,18 +27,9 @@ begin
   EXPECT!((select pred!));
 end;
 
-proc lua_gated(out gated int!)
+@MACRO(stmt_list) TEST!(name! expr, body! stmt_list)
 begin
-  @ifdef __rt__lua
-    gated := true;
-  @else
-    gated := false;
-  @endif
-end;
-
-@MACRO(stmt_list) TEST_GATED!(x! expr, pred! expr, body! stmt_list)
-begin
-  proc @ID("test_", x!)()
+  proc @ID("test_", name!)()
   begin
     try
       tests := tests + 1;
@@ -46,32 +37,37 @@ begin
       starting_fails := fails;
       body!;
     catch
-      call printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(x!));
+      call printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(name!));
       fails := fails + 1;
       throw;
     end;
     if starting_fails != fails then
-      call printf("%s failed.\n", @TEXT(x!));
+      call printf("%s failed.\n", @TEXT(name!));
     else
       tests_passed := tests_passed + 1;
     end if;
   end;
 
-  if not pred! then
-    start_refs := get_outstanding_refs();
-    call @ID(@TEXT("test_", x!))();
-    end_refs := get_outstanding_refs();
-    if start_refs != end_refs then
-      call printf("Test %s unbalanced refs.", @TEXT(x!));
-      call printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
-      fails := fails + 1;
-    end if;
+  -- this loose goes into the global proc and invokes the test
+  start_refs := get_outstanding_refs();
+  call @ID("test_", name!)();
+  end_refs := get_outstanding_refs();
+  if start_refs != end_refs then
+    call printf("Test %s unbalanced refs.", @TEXT(name!));
+    call printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
+    fails := fails + 1;
   end if;
 end;
 
-@MACRO(stmt_list) TEST!(x! expr, body! stmt_list)
+  -- This test case is suppressed in Lua, this is done
+  -- because the Lua runtime is missing some blob features
+@macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
 begin
-  TEST_GATED!(x!, false, body!);
+  @ifdef __rt__lua
+    call printf("Skipping test %s in Lua\n", @TEXT(name!));
+  @else
+    TEST!(name!, body!);
+  @endif
 end;
 
 @MACRO(stmt_list) BEGIN_SUITE!()
@@ -4511,7 +4507,7 @@ create table storage_one_long(
   x long!
 );
 
-TEST_GATED!(blob_serialization, lua_gated(),
+TEST_C!(blob_serialization,
 BEGIN
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4704,7 +4700,7 @@ BEGIN
   EXPECT!(caught);
 END);
 
-TEST_GATED!(blob_serialization_null_cases, lua_gated(),
+TEST_C!(blob_serialization_null_cases,
 BEGIN
   declare cursor_nulls cursor like storage_nullable;
   fetch cursor_nulls using
@@ -4725,7 +4721,7 @@ BEGIN
   EXPECT!(test_cursor.str is null);
 END);
 
-TEST_GATED!(corrupt_blob_deserialization, lua_gated(),
+TEST_C!(corrupt_blob_deserialization,
 BEGIN
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4767,7 +4763,7 @@ BEGIN
   end;
 END);
 
-TEST_GATED!(bogus_varint, lua_gated(),
+TEST_C!(bogus_varint,
 BEGIN
   let control_blob := (select X'490001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_int>;
@@ -4795,7 +4791,7 @@ BEGIN
   EXPECT!(caught);
 END);
 
-TEST_GATED!(bogus_varlong, lua_gated(),
+TEST_C!(bogus_varlong,
 BEGIN
   let control_blob := (select X'4C0001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_long>;
@@ -4910,7 +4906,7 @@ BEGIN
   EXPECT!(z == C.v);
 END);
 
-TEST_GATED!(serialization_tricky_values, lua_gated(),
+TEST_C!(serialization_tricky_values,
 BEGIN
   call round_trip_int(0);
   call round_trip_int(1);
@@ -4947,7 +4943,7 @@ END);
 declare proc rand_reset();
 declare proc corrupt_blob_with_invalid_shenanigans(b blob!);
 
-TEST_GATED!(clobber_blobs, lua_gated(),
+TEST_C!(clobber_blobs,
 BEGIN
   -- the point of the test is to ensure that we don't segv or get ASAN failures
   -- or leak memory when dealing with broken blobs.  Some of the blobs

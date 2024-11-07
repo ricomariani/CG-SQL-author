@@ -7,9 +7,12 @@
 import sys
 import re
 
+# All of these are actually redundant productions where we need
+# the action in the grammar at the point that we have shifted far
+# enough.  We don't actually want to document this business it
+# just makes the grammar harder to understand so we inline these
+# productions into the rules directly.
 words = [
-    # The presence of this node break tree-sitter. It was added to
-    # 'create_table_stmt' for the sole purpose of grabbing documentation
     "create_table_prefix_opt_temp",
     "ifdef",
     "ifndef",
@@ -18,14 +21,18 @@ words = [
 ]
 
 # Create a regex pattern to match whole words with case sensitivity
-# Search for any match in the text
-any_word_pattern = r'\b(' + '|'.join(re.escape(word) for word in words) + r')\b'
+any_word_pattern = r'\b(' + '|'.join(re.escape(word)
+                                     for word in words) + r')\b'
 
+# this is a pattern for each word individually, we will use these to
+# make replacements once we find any match.
 word_patterns = {}
-rules = {}
 
 for word in words:
-   word_patterns[word] = r'\b' + re.escape(word) + r'\b'
+    word_patterns[word] = r'\b' + re.escape(word) + r'\b'
+
+# this will hold all the lines keyed by rule
+rules = {}
 
 # Read all lines from stdin into a list
 lines = [line.strip() for line in sys.stdin]
@@ -34,36 +41,37 @@ lines = [line.strip() for line in sys.stdin]
 for line in lines:
     # Strip whitespace (including newline) and split on '::='
     parts = line.split("::=", 1)
-    
+
     # Check if there are exactly two parts (left and right)
     if len(parts) != 2:
         continue
 
+    # record the key and value in the rules table
     key, value = parts[0].strip(), parts[1].strip()
     rules[key] = value
 
-
-# now find all the replacements
+# Now find all the replacements, we have to do this in two passes
+# because the replacement values might come after the replacement
+# locations in the grammar.
 
 for line in lines:
     # Strip whitespace (including newline) and split on '::='
     parts = line.split("::=", 1)
-    
+
     # Check if there are exactly two parts (left and right)
     if len(parts) != 2:
         continue
-   
+
+    # same split as before
     key, value = parts[0].strip(), parts[1].strip()
 
     # this is being inlined, we don't want it
     if key in words:
         continue
 
-    if not re.search(any_word_pattern, value):
-        print(line)
-        continue
-
-    for word in words:
-        line = re.sub(word_patterns[word], rules[word], line)
+    # if we found any pattern apply all replacements
+    if re.search(any_word_pattern, value):
+        for word in words:
+            line = re.sub(word_patterns[word], rules[word], line)
 
     print(line)

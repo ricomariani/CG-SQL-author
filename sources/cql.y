@@ -2396,12 +2396,10 @@ child_result:
   | call_stmt USING '(' name_list ')' AS name { $child_result = new_ast_child_result($call_stmt, new_ast_named_result($name, $name_list)); }
   ;
 
+if_ending: END IF | END ;
+
 if_stmt:
-  IF expr THEN opt_stmt_list opt_elseif_list opt_else END IF  {
-    struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
-    struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
-    $if_stmt = new_ast_if_stmt(cond_action, if_alt); }
-  | IF expr THEN opt_stmt_list opt_elseif_list opt_else END {
+  IF expr THEN opt_stmt_list opt_elseif_list opt_else if_ending {
     struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
     struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
     $if_stmt = new_ast_if_stmt(cond_action, if_alt); }

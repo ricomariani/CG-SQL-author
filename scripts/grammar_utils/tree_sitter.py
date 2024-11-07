@@ -136,6 +136,7 @@ RULE_RENAMES = {
     "opt_elseif_list": "optional($.elseif_list)",
     "opt_macro_args": "optional($.macro_args)",
     "opt_macro_formals": "optional($.macro_formals)",
+    "if_ending" : "$.END, optional($.IF)",
 }
 
 FIXED_RULES = """
@@ -180,17 +181,6 @@ FIXED_RULES = """
     stmt_list_macro_ref: $ => prec(5, $.macro_ref),
 
     stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.comment)),
-
-    /* Manually define the if_stmt rule because if not we're going to have parsing
-     * issues with "opt_elseif_list" and "opt_else" rule. Providing a priority
-     * doesn't suffice to resolve the conflict.
-     */
-
-    if_stmt: $ => seq($.IF, $.expr, $.THEN,
-        optional($.stmt_list),
-        optional(repeat1($.elseif_item)),
-        optional($.opt_else),
-        $.END, optional($.IF)),
 """
 
 # These are problematic rules to the cql tree-sitter grammar. We're just going
@@ -215,7 +205,7 @@ DELETED_PRODUCTIONS = {
     "cte_tables_macro_ref",
     "end_of_included_file",
     "expr_macro_ref",
-    "if_stmt",
+    # "if_stmt",
     "include_section",
     "include_stmts",
     "non_expr_macro_ref",

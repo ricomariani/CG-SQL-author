@@ -490,7 +490,10 @@ def compute_ts_grammar():
 with open(input_filename) as fp:
     read_rule_defs(fp)
 
-apply_inlining()
+# The inlinning is done in the raw grammar now so this is not needed
+# Saving this for a little while in case I have to put it back.
+#
+# apply_inlining()
 
 compute_ts_grammar()
 

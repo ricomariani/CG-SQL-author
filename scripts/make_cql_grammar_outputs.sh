@@ -34,6 +34,7 @@ cat $CQL_ROOT_DIR/cql.y \
       -e 's/;$//' \
       -e 's/  */ /g' \
       -e 's/  *$//' \
+  | $SCRIPT_DIR_RELATIVE/grammar_utils/grammar_inline.py \
   > $OUT/cql_grammar.txt
 ls $OUT/cql_grammar.txt
 

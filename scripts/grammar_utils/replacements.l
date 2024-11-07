@@ -61,9 +61,11 @@ AT_DUMMY_DEFAULTS                     { put_quoted("@DUMMY_DEFAULTS"); }
 AT_DUMMY_NULLABLES                    { put_quoted("@DUMMY_NULLABLES"); }
 AT_DUMMY_SEED                         { put_quoted("@DUMMY_SEED"); }
 AT_ECHO                               { put_quoted("@ECHO"); }
+AT_ELSE                               { put_quoted("@ELSE"); }
 AT_EMIT_CONSTANTS                     { put_quoted("@EMIT_CONSTANTS"); }
 AT_EMIT_ENUMS                         { put_quoted("@EMIT_ENUMS"); }
 AT_EMIT_GROUP                         { put_quoted("@EMIT_GROUP"); }
+AT_ENDIF                              { put_quoted("@ENDIF"); }
 AT_END_SCHEMA_REGION                  { put_quoted("@END_SCHEMA_REGION"); }
 AT_ENFORCE_NORMAL                     { put_quoted("@ENFORCE_NORMAL"); }
 AT_ENFORCE_POP                        { put_quoted("@ENFORCE_POP"); }
@@ -73,6 +75,8 @@ AT_ENFORCE_STRICT                     { put_quoted("@ENFORCE_STRICT"); }
 AT_EPONYMOUS                          { put_quoted("@EPONYMOUS"); }
 AT_FILE                               { put_quoted("@FILE"); }
 AT_ID                                 { put_quoted("@ID"); }
+AT_IFDEF                              { put_quoted("@IFDEF"); }
+AT_IFNDEF                             { put_quoted("@IFNDEF"); }
 AT_KEEP_TABLE_NAME_IN_ALIASES         { put_quoted("@KEEP_TABLE_NAME_IN_ALIASES"); }
 AT_LINE                               { put_quoted("@LINE"); }
 AT_MACRO                              { put_quoted("@MACRO"); }

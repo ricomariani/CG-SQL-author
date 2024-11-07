@@ -11,23 +11,28 @@ weight: 18
 
 ### Introduction
 
-Pre-processing features are a recent introduction to the CQL language; previously
-any pre-processing functionality was provided by running the C Pre-Processor
-over the input file before processing. Indeed the practice of using
-`cpp` or `cc -E` is still in many examples.  However it is less than ideal.
+Pre-processing features are a recent introduction to the CQL language;
+previously any pre-processing functionality was provided by running the C
+Pre-Processor over the input file before processing. The practice of using
+`cc -E` or the equivalent was deprecated because:
 
  * It creates an unnatural dependence in the compile chain
- * The lexical rules for CQL and C are not fully compatible so `cc -E` often gives specious warnings
- * It's not possible to create automatic code formatting tools with text based macro replacement
- * Macros are easily abused, creating statement fragments in weird places that are hard to understand
- * The usual problems with text replacement and order of operations means that macro arguments frequently have to be wrapped to avoid non-obvious errors
- * Debugging problems in the macros is very difficult with line information being unhelpful and pre-processed output being nearly unreadable
+ * The lexical rules for CQL and C are not fully compatible so `cc -E` often
+   gives specious warnings
+ * It is not possible to create automatic code formatting tools with text based
+   macro replacement
+ * Macros are easily abused, creating statement fragments in weird places that
+   are hard to understand
+ * The usual problems with text replacement and order of operations means that
+   macro arguments frequently have to be wrapped to avoid non-obvious errors
+ * Debugging problems in the macros is very difficult with line information
+   being unhelpful and pre-processed output being nearly unreadable
 
-To address these problems CQL introduces pre-processing features including
-structured macros. That is, macros that describe the sort of thing they intends
+To address these problems CQL introduced pre-processing features including
+structured macros. That is, macros that describe the sort of thing they intend
 to produce and the kinds of things they consume.  This allows for reasonable
-syntax and type checking and much better error reporting.  This in addition to
-the usual pre-processing features.
+syntax and type checking and much better error reporting.  To this we also
+add `@include` to import code and `@ifdef`/`@ifndef` for conditionals.
 
 ### Conditional Compilation
 
@@ -39,19 +44,31 @@ on the command line.  Additionally, if `--rt foo` is specified then
 >the default is `--rt c` and so `__rt__c` will be
 >defined.  
 
-The syntax is the familiar:
+The syntax for conditional compilation is the familiar:
 
 ```
 @ifdef name
  ... this code will be processed if "name" is defined
 @else
-... this code will be processed if "name" is not defined
+ ... this code will be processed if "name" is not defined
 @endif
 ```
 
-The `@else` is optional and the construct nests as one would expect.  `@ifndef` is also available and simply reverses the sense of the condition.
+The `@else` is optional and the construct nests as one would expect.  `@ifndef`
+is also available and simply reverses the sense of the condition.
 
-This construct can appear anywhere in the token stream.
+In order to avoid "rude" macro patterns with `@ifdef` in the middle of SQL or
+expressions, this construct is itself a _statement_ in the grammar.  In order to
+create conditional expression pieces or other internal pieces you should use one
+of the macro types and define it two or more ways.  These design choices were
+made to avoid the weird token pasting that inevitably results if pre-processing
+is allowed everywhere.  Conditional `cte_tables`, `select_core` and even just
+`expr` are highly flexible and give clear composition in the code with no weird
+syntax.
+
+Note that in CQL even the code that is conditionally compiled out must at least
+_parse_ correctly.  Semantic analysis does not run, and indeed often there would
+be conflicts if it did, but the code must at least be correct enough to parse.
 
 ### Text Includes
 
@@ -61,10 +78,20 @@ Pulling in common headers is also supported.  The syntax is
 @include "any/path/foo.sql"
 ```
 
-In addition to the current directory any paths specified with `--include_paths x y z` will be checked.
+In addition to the current directory any paths specified with `--include_paths x
+y z` will be checked.
 
 
->NOTE: For now, this construct can appear anywhere in the token stream. However, inline uses (like in the middle of an expression) are astonishingly "rude" and limitations that force more sensible locations are likely to appear in the future.  It is recommended that `@include` happen at the statement level. If any expression inclusion is needed a combination of `@include` and macros (see below) is recommended.
+Like the `@ifdef` forms, `@include` can only appear at the statement level, so
+it cannot be used to do exotic token pasting like often happens with `#include`.
+Furthermore, it must appear at the *top* of files, so it's a lot more like the
+import features of other languages than it is like the C pre-Processor token
+stream.  Once normal statements begin further includes are not possible, each
+file, gets an include section and a statements section.  Note that `@ifdef` and
+include _do not_ compose.  Again, `@include` is more like an import.  If you
+need conditionals the included item should conditionally produce declarations
+and possibly macros.  This means that file dependencies are consistent
+regardless of conditionals.
 
 ### Macros
 
@@ -83,11 +110,25 @@ end;
 assert!(foo < bar);
 ```
 
+This example is a macro that produces a statement list (`stmt_list`), so it can
+be used in the places where a statement list can appear.  Every macro definition
+specifies the nature of the thing it produces, which limits the places that it
+can appear. 
+
+The nature of macros means that while you may get an error for using the wrong
+macro type in the wrong location, you cannot get syntax errors due to the
+replacement. Of course semantic errors are still possible, so for instance maybe
+the macro references a table that doesn't exist or maybe the table doesn't have
+certain necessary columns. Such errors are possible, but the macro is sure to
+expand correctly.
+
+Any errors are reported on the lines of the macro not where the macro is used.
+
 ### Types of Macros and Macro Arguments
 
-The example in the introduction is a macro that produces a statement list.
-It can be used anywhere a statement list would be valid.
-The full list of macro types is as follows:
+The example in the introduction is a macro that produces a statement list. It
+can be used anywhere a statement list would be valid. The full list of macro
+types is as follows:
 
 |Type|Notes                                                  |
 |---:|:------------------------------------------------------|
@@ -98,8 +139,9 @@ The full list of macro types is as follows:
 |select_expr|one or more select named expressions            |
 |stmt_list|one more statements                               |
 
-Here are examples that illustrate the various macro types, in
-alphabetical order with examples.
+Here are examples that illustrate the various macro types, in alphabetical order
+with examples.  The names of the macro types are the same as the same structure
+in the grammar so the definition is easy to spot.
 
 *cte_tables*
 
@@ -123,8 +165,8 @@ begin
 end;
 ```
 
-Macro arguments can have the same types as macros themselves
-and expressions are a common choice as we saw in the assert macro.
+Macro arguments can have the same types as macros themselves and expressions are
+a common choice as we saw in the assert macro.
 
 ```sql
 @macro(expr) max!(a! expr, b! expr)
@@ -132,7 +174,7 @@ begin
   case when a! > b! then a! else b! end
 end;
 
-max!(not 3, 1==2);
+max!(not 3, 1=2);
 
 -- this generates
 
@@ -141,11 +183,18 @@ ELSE 1 = 2
 END;
 ```
 
-Notice that order of operations isn't a problem, since the macro drops directly into the
-AST even though `NOT` is lower precedence than `>` the correct expression is generated.
-If the AST is rendered as text like in the above, any necessary parentheses are added.
+Order of operations isn't a problem with CQL macros, no extra parentheses are
+needed for arguments and so forth since the macro drops directly into the syntax
+tree.  This means that in the above even though `NOT` is lower precedence than
+`>`, the correct expression is generated with no extra effort for the coder. If
+the expanded syntax tree is rendered as text with `--echo` and `--exp` like in
+the above, any necessary parentheses are added, but the tree is always the right
+shape for the arguments.
 
 *query_parts*
+
+A query part macro generates "something you could put in a `from` clause". It
+could be the whole `from` clause or it could be one or more of the joined tables.
 
 ```sql
 @macro(query_parts) foo!(x! expr)
@@ -162,14 +211,10 @@ SELECT *
   INNER JOIN bar ON foo.a = bar.a AND foo.x = y;
 ```
 
-Of course semantic errors are still possible, so for instance maybe the tables
-don't exist or they don't have those columns.  But the macro expanion is certain
-to be well formed.
-
 *select_core*
 
 A select core macro generates "something you could union".  It's
-the parts of a select statement that comes before `order by`.  If
+the part of a select statement that comes before `order by`.  If
 you're trying to make a macro that assembles parts of a set of
 results which are then unioned and ordered, this is what you need.
 
@@ -291,28 +336,6 @@ use a function-like syntax to do the job.
 With these forms the type of macro argument is unambiguous and
 can be immediately checked against the macro requirements.
 
-#### Stringification
-
-It's often helpful to render a macro argument as text.  Let's
-generalize our assert macro a little bit to illustrate.
-
-```sql
-@MACRO(STMT_LIST) assert!(exp! expr)
-begin
-  if not exp! then
-    call printf("assertion failed: %s\n", @TEXT(exp!));
-  end if;
-end;
-
-assert!(1 == 1);
-
--- this generates
-
-IF NOT 1 = 1 THEN
-  CALL printf("assertion failed: %s\n", "1 = 1");
-END IF;
-```
-
 #### Meta Variables
 
 |Variable|Notes|
@@ -322,7 +345,6 @@ END IF;
 |`@MACRO_FILE`|The file where macro expansion began|
 
 We can make the assert macro better still:
-
 
 ```sql
 @MACRO(STMT_LIST) assert!(exp! expr)
@@ -349,14 +371,13 @@ would have been much less useful, reporting the line of the `printf`.
 
 You can create new tokens in one of two ways:
 
-  * `@TEXT` will create a string from one or more parts.
-  * `@ID` will make a new identifier from one or more parts
-    * If the parts do not concatenate into a valid identifier an error is generated.
-
+* `@TEXT` will create a string from one or more parts.
+* `@ID` will make a new identifier from one or more parts
+  * If the parts do not concatenate into a valid identifier an error is
+    generated.
 
 This can be used to create very powerful code-helpers.  Consider this code,
-which is very similar to the actual test helpers in the compiler's test
-cases.
+which is very similar to the actual test helpers in the compiler's test cases.
 
 ```sql
 @MACRO(stmt_list) EXPECT!(pred! expr)
@@ -425,45 +446,23 @@ end;
 make_var!(1+5, "real");
 
 --- this generates
-
 DECLARE real_var real;
 SET real_var := 1 + 5;
 ```
 
-Since @id(...) can go anywhere an identifier can go, it is totally
-suitable for use for type names but also for procedure names, table
-names, any identifer.  As mentioned above `@id` will generate an
-error if the expression does not make a legal normal identifier.
+Since `@id(...)` can go anywhere an identifier can go, it is not only suitable
+for use for type names but also for procedure names, table names -- any
+identifer.  As mentioned above `@id` will generate an error if the expression
+does not make a legal normal identifier.
 
 ### Pipeline syntax for Expression Macros
 
-The pipeline syntax `expr:macro_name!(args...)` can be used instead of `macro_name!(expr, args)`.
-This allows macros to appear in expressions written in the fluent style.  Note that
-`args` may be empty in which case the form can be written `expr:macro_name!()` or the even
-shorter `expr:macro_name!` both of which become `macro_name!(expr)`
+The pipeline syntax `expr:macro_name!(args...)` can be used instead of
+`macro_name!(expr, args)`. This allows macros to appear in expressions written
+in the fluent style.  Note that `args` may be empty in which case the form can
+be written `expr:macro_name!()` or the even shorter `expr:macro_name!` both of
+which become `macro_name!(expr)`
 
 ```sql
 printf("%s", x:fmt!);
 ```
-
->NOTE: It is not possible to use the `::` or `:::` operators with the macro above because the
-type of the expression is not known at the time the macro is expanded.  However, there is
-no reason why `fmt!` above could not itself use `::` or `:::` within its body which generally
-gives you the result you want.  For intance:
-
-```sql
-@macro(expr) fmt!(x! expr)
-begin
-  x!:::fmt();
-end;
-```
-
-Can be used like so:  `expr::fmt!`
-
-This will use:
-
-  * a formatter specific to type and kind of `expr`
-  * a formatter specific to type of `expr`
-  * a generic formatter
-
-Without having to use `:::` in all the places.

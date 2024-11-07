@@ -26,9 +26,6 @@
 #
 # Token grammar: Terminals are automatically detected and added to the grammar.
 #
-# Inline rules: Some rules are problematic to the cql tree-sitter grammar. The
-#   script replaces them wherever they're used with their values.
-#
 # Deleted productions: These are rules that are present in cql_grammar.txt but
 #   are helpfully defined such as `quoted identifier` and `ELSE_IF`. The script
 #   deletes them from the tree-sitter grammar.
@@ -242,10 +239,9 @@ sorted_rule_names = []
 # to their references.
 optional_rules = set()
 
-# We need to keep track of the rules we have visited so we do not emit them
-# more than once.  This is important because sorted_rule_names might have
-# duplicates and we want to skip visiting of rules we inlined.  We also
-# want to skip rules that we have expanded into new non-terminals like
+# We need to keep track of the rules we have visited so we do not emit them more
+# than once.  This is important because sorted_rule_names might have duplicates.
+# We also want to skip rules that we have expanded into new non-terminals like
 # multi-word tokens "IS NOT TRUE" -> IS_NOT_TRUE.
 rules_visited = set()
 
@@ -393,43 +389,6 @@ def read_rule_defs(fp):
         sorted_rule_names.append(name)
 
 
-# The indicated sequence has been found to have inlines, we process them
-# all in one go now.  We have to do this because the procedure we follow
-# here builds an entirely result, it's not mutation.  Because of that
-# the search pass will get confused if we mutate as we go.  So once
-# we find a match we do all the changes, swap out the rule and move on.
-def jam_inlines_into_seq(seq):
-    # here we just build the replacement sequence
-    result = []
-    for j, tok in enumerate(seq):
-        if type(tok) is str and tok in INLINE_RULES:
-            value = rule_defs[tok][0]
-            for v in value:
-                result.append(v)
-        else:
-            result.append(tok)
-    return result
-
-
-# Inline where needed to avoid conflicts
-def apply_inlining():
-    # Enumerate all the rules, visit each choice and each token in the choice.
-    # if the token is a string and it is in the INLINE_RULES, replace it with
-    # the value of the rule.
-    for _, rule in rule_defs.items():
-        for i, choice in enumerate(rule):
-            for _, tok in enumerate(choice):
-                if type(tok) is str and tok in INLINE_RULES:
-                    rule[i] = jam_inlines_into_seq(choice)
-                    break
-
-    # Mark the inlined rules as visited so we do not emit them.
-    # All references to this rule are gone now so it is for sure useless.
-    for name in INLINE_RULES:
-        del rule_defs[name]
-        rules_visited.add(name)
-
-
 def process_one_rule(name):
     choices = []
 
@@ -485,15 +444,18 @@ def compute_ts_grammar():
 
 ############ MAIN ############
 
-# Read, inline, transform, and emit the tree-sitter grammar.
+# Read, transform, and emit the tree-sitter grammar.
 
 with open(input_filename) as fp:
     read_rule_defs(fp)
 
-# The inlinning is done in the raw grammar now so this is not needed
-# Saving this for a little while in case I have to put it back.
+# We used to have an inlining pass here, but we don't need it anymore. We do
+# that work when we create the cql_grammar.txt file so that the railroad diagram
+# are also more readable.  In any case the text transform is much simpler than
+# the way we did it with expanded rules so if it becomes needed it would be
+# better to do another inlining pass here before we process the text.
 #
-# apply_inlining()
+# See: grammar_utils/grammar_inline.py for the inlining pass.
 
 compute_ts_grammar()
 

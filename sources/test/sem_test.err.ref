@@ -1793,4 +1793,5 @@ test/sem_test.sql:XXXX:1: error: in null : CQL0076: argument 1 is a NULL literal
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'typeof'
 test/sem_test.sql:XXXX:1: error: in call : CQL0079: too few arguments in function 'load_extension'
 test/sem_test.sql:XXXX:1: error: in call : CQL0080: function may not appear in this context 'load_extension'
+test/sem_test.sql:XXXX:1: error: in str : CQL0047: string operand not allowed in 'NOT'
 semantic errors present; no code gen.

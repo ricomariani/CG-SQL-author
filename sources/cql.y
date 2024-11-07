@@ -68,6 +68,21 @@
 static jmp_buf cql_for_exit;
 static int32_t cql_exit_code;
 
+// this is the state we need to pre-process @ifdef and @ifndef
+typedef struct cql_ifdef_state_t {
+  bool_t process_else;
+  bool_t processing;
+  struct cql_ifdef_state_t *prev;
+} cql_ifdef_state_t;
+
+static cql_ifdef_state_t *cql_ifdef_state;
+
+static ast_node *do_ifdef(ast_node *ast);
+static ast_node *do_ifndef(ast_node *ast);
+static void do_endif(void);
+static void do_else(void);
+static bool_t is_processing(void);
+
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
 #define YYSTACK_USE_ALLOCA 1
@@ -276,6 +291,7 @@ static void cql_reset_globals(void);
 %token AT_KEEP_TABLE_NAME_IN_ALIASES AT_MACRO EXPR STMT_LIST QUERY_PARTS CTE_TABLES SELECT_CORE SELECT_EXPR
 %token SIGN_FUNCTION CURSOR_HAS_ROW AT_UNSUB
 %left BEGIN_INCLUDE END_INCLUDE
+%token AT_IFDEF AT_IFNDEF AT_ELSE AT_ENDIF
 
 /* ddl stuff */
 %type <ival> opt_temp opt_if_not_exists opt_unique opt_no_rowid dummy_modifier compound_operator opt_query_plan
@@ -350,6 +366,8 @@ static void cql_reset_globals(void);
 %type <aval> echo_stmt
 %type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape fetch_cursor_from_blob_stmt
 %type <aval> guard_stmt
+%type <aval> ifdef_stmt ifndef_stmt ifdef ifndef
+%type <sval> elsedef endif
 %type <aval> if_stmt elseif_item elseif_list opt_else opt_elseif_list proc_savepoint_stmt
 %type <aval> leave_stmt return_stmt
 %type <aval> loop_stmt
@@ -585,6 +603,8 @@ stmt_list[result]:
 
 stmt:
   misc_attrs any_stmt ';' { $stmt = make_statement_node($misc_attrs, $any_stmt); }
+  | ifdef_stmt { $stmt = make_statement_node(NULL, $ifdef_stmt); }
+  | ifndef_stmt { $stmt = make_statement_node(NULL, $ifndef_stmt); }
   ;
 
 expr_stmt: expr { $expr_stmt = new_ast_expr_stmt($expr);  }
@@ -2376,12 +2396,10 @@ child_result:
   | call_stmt USING '(' name_list ')' AS name { $child_result = new_ast_child_result($call_stmt, new_ast_named_result($name, $name_list)); }
   ;
 
+if_ending: END IF | END ;
+
 if_stmt:
-  IF expr THEN opt_stmt_list opt_elseif_list opt_else END IF  {
-    struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
-    struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
-    $if_stmt = new_ast_if_stmt(cond_action, if_alt); }
-  | IF expr THEN opt_stmt_list opt_elseif_list opt_else END {
+  IF expr THEN opt_stmt_list opt_elseif_list opt_else if_ending {
     struct ast_node *if_alt = new_ast_if_alt($opt_elseif_list, $opt_else);
     struct ast_node *cond_action = new_ast_cond_action($expr, $opt_stmt_list);
     $if_stmt = new_ast_if_stmt(cond_action, if_alt); }
@@ -2659,18 +2677,22 @@ expr_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
 
 stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 query_parts_macro_def:
@@ -2678,9 +2700,11 @@ query_parts_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 cte_tables_macro_def:
@@ -2688,9 +2712,11 @@ cte_tables_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_cte_tables_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 select_core_macro_def:
@@ -2698,9 +2724,11 @@ select_core_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_select_core_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 select_expr_macro_def:
@@ -2708,9 +2736,11 @@ select_expr_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_select_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name); }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    }}
   ;
 
 op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
@@ -2719,6 +2749,32 @@ op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loos
     $op_stmt = new_ast_op_stmt(new_ast_str("CURSOR"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
   | AT_OP NULL_ ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
     $op_stmt = new_ast_op_stmt(new_ast_str("NULL"), new_ast_op_vals($op, new_ast_op_vals($func, $targ))); }
+  ;
+
+ifdef: AT_IFDEF name { $$ = do_ifdef($name); }
+  ;
+
+ifndef: AT_IFNDEF name { $$ = do_ifndef($name); }
+  ;
+
+elsedef: AT_ELSE { $$ = "else"; do_else(); }
+  ;
+
+endif: AT_ENDIF { $$ = "endif"; do_endif(); }
+  ;
+
+ifdef_stmt:
+   ifdef opt_stmt_list[left] elsedef opt_stmt_list[right] endif {
+      $$ = new_ast_ifdef_stmt($ifdef, new_ast_pre($left, $right)); }
+  | ifdef opt_stmt_list[left] endif {
+      $$ = new_ast_ifdef_stmt($ifdef, new_ast_pre($left, NULL)); }
+  ;
+
+ifndef_stmt:
+   ifndef opt_stmt_list[left] elsedef opt_stmt_list[right] endif {
+      $$ = new_ast_ifndef_stmt($ifndef, new_ast_pre($left, $right)); }
+  | ifndef opt_stmt_list[left] endif {
+      $$ = new_ast_ifndef_stmt($ifndef, new_ast_pre($left, NULL)); }
   ;
 
 macro_def_stmt:
@@ -3254,6 +3310,7 @@ int cql_main(int argc, char **argv) {
   cql_exit_code = 0;
   yylineno = 1;
   parse_error_occurred = false;
+  cql_ifdef_state = NULL;
 
   if (!setjmp(cql_for_exit)) {
     parse_cmd(argc, argv);
@@ -3516,6 +3573,8 @@ static void cql_usage() {
     "--cg output1 output2 ...\n"
     "  codegen into the named outputs\n"
     "  any number of output files may be needed for a particular result type, two is common\n"
+    "--defines\n"
+    "  define symbols for use with @ifdef and @ifndef\n"
     "--nolines\n"
     "  suppress the #line directives for lines; useful if you need to debug the C code\n"
     "--global_proc name\n"
@@ -3738,3 +3797,45 @@ static ast_node *new_simple_call_from_name(ast_node *name) {
   return new_ast_call(name, call_arg_list);
 }
 
+static bool_t is_processing() {
+  return !cql_ifdef_state || cql_ifdef_state->processing;
+}
+
+static ast_node *do_ifdef(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
+  new_state->prev = cql_ifdef_state;
+  bool_t processing = is_processing();
+  new_state->processing = processing && cql_is_defined(name); 
+  new_state->process_else = processing && !new_state->processing;
+  ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
+  cql_ifdef_state = new_state;
+  return ast;
+}
+
+static ast_node *do_ifndef(ast_node *ast) {
+  EXTRACT_STRING(name, ast);
+  cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
+  new_state->prev = cql_ifdef_state;
+  bool_t processing = is_processing();
+  new_state->processing = processing && !cql_is_defined(name); 
+  new_state->process_else = processing && !new_state->processing;
+  ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
+  cql_ifdef_state = new_state;
+  return ast;
+}
+
+static void do_else() {
+  if (cql_ifdef_state && cql_ifdef_state->process_else) {
+   cql_ifdef_state->processing = true;
+  }
+}
+
+static void do_endif() {
+  if (cql_ifdef_state) {
+    cql_ifdef_state_t *prev = cql_ifdef_state->prev;
+    cql_ifdef_state = prev;
+    // it is not possible to go from processing to not processing
+    // so there is never a transition here
+  }
+}

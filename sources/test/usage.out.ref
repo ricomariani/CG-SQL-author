@@ -12,6 +12,8 @@ Usage:
 --cg output1 output2 ...
   codegen into the named outputs
   any number of output files may be needed for a particular result type, two is common
+--defines
+  define symbols for use with @ifdef and @ifndef
 --nolines
   suppress the #line directives for lines; useful if you need to debug the C code
 --global_proc name

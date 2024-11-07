@@ -16616,6 +16616,36 @@ static void sem_expr_stmt(ast_node *ast) {
   ast->sem = expr->sem;
 }
 
+static void sem_ifdef_stmt(ast_node *ast) {
+  Contract(is_ast_ifdef_stmt(ast) || is_ast_ifndef_stmt(ast));
+  EXTRACT_ANY_NOTNULL(evaluation, ast->left);
+  EXTRACT_NOTNULL(pre, ast->right);
+  record_ok(ast);
+
+  ast_node *target;
+  if (is_ast_is_true(evaluation)) {
+    EXTRACT(stmt_list, pre->left);
+    target = stmt_list;
+  }
+  else {
+    EXTRACT(stmt_list, pre->right);
+    target = stmt_list;
+  }
+
+  if (target) {
+    sem_stmt_list(target);
+    if (is_error(target)) {
+      record_error(ast);
+    }
+  }
+}
+
+static void sem_ifndef_stmt(ast_node *ast) {
+  // the true/false evaluation has already been done and we are is_true if
+  // we take the true branch
+  sem_ifdef_stmt(ast);
+}
+
 // The top level if node links the initial cond_action with a possible
 // series of else_if nodes and then the else node.  All that happens
 // at this point is decoding of the if pieces and calling out to the helpers.
@@ -25932,6 +25962,8 @@ cql_noexport void sem_main(ast_node *ast) {
 
   STMT_INIT(expr_stmt);
   STMT_INIT(if_stmt);
+  STMT_INIT(ifdef_stmt);
+  STMT_INIT(ifndef_stmt);
   STMT_INIT(guard_stmt);
   STMT_INIT(while_stmt);
   STMT_INIT(switch_stmt);

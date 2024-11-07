@@ -176,6 +176,20 @@
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
+
+// The statement ending at line XXXX
+extern cql_int32 c_runtime_generation;
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+
+// The statement ending at line XXXX
+extern cql_int32 c_runtime_generation_on_else;
+
+// The statement ending at line XXXX
 extern cql_nullable_int32 i0_nullable;
 
 // The statement ending at line XXXX

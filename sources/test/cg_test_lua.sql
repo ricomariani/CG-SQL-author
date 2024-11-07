@@ -8,6 +8,32 @@
 declare proc printf no check;
 declare proc puts no check;
 
+-- TEST: test rt selection in Lua
+-- + lua_runtime_generation = 1
+@ifdef __rt__lua
+  let lua_runtime_generation := 1;
+@endif
+
+-- TEST: test rt non-selection in Lua
+-- - lua_runtime_non_generation = 1
+@ifndef __rt__lua
+  let lua_runtime_non_generation := 1;
+@endif
+
+-- TEST: test rt selection in Lua
+-- - lua_runtime_generation_no_else = 1
+@ifdef __rt__lua
+@else
+  let lua_runtime_generation_no_else := 1;
+@endif
+
+-- TEST: test rt non-selection in Lua
+-- + lua_runtime_generation_on_else = 1
+@ifndef __rt__lua
+@else
+  let lua_runtime_generation_on_else := 1;
+@endif
+
 -- basic test table with an auto inc field
 create table foo(
   id INT PRIMARY KEY AUTOINCREMENT!
@@ -294,8 +320,8 @@ end if;
 
 
 -- TEST: simple procedure with external call
--- note that in lua even an integer argument could come in as nil because
--- all args are fully flexiblie so that means the contract is not optional
+-- note that in Lua even an integer argument could come in as nil because
+-- all args are fully flexible so that means the contract is not optional
 -- do not remove
 -- + function test(i)
 -- ------------------------------------------
@@ -374,7 +400,7 @@ begin
   set ii := i0_nullable;
 end;
 
--- TEST: long storage (it's all the same in LUA)
+-- TEST: long storage (it's all the same in Lua)
 -- + local longint_var
 declare longint_var long integer;
 
@@ -445,7 +471,7 @@ close exchange_cursor;
 set i2 := (select i2+1);
 
 -- TEST: nested select with nullable
--- in LUA these bind the same
+-- in Lua these bind the same
 -- +  _rc_, _temp_stmt = cql_prepare(_db_,
 -- +    "SELECT ? + 1")
 -- +  _rc_ = cql_multibind(_db_, _temp_stmt, "i", i0_nullable)
@@ -1011,7 +1037,7 @@ set b0_nullable := obj_var not in (obj_var, obj_var);
 -- +  if _tmp_object_% == obj_var2 then break end
 set b2 := obj_var2 not in (obj_var2, obj_var2);
 
--- TEST: proc with object args (boring in LUA)
+-- TEST: proc with object args (boring in Lua)
 -- + function obj_proc()
 -- +   local an_object
 -- +   an_object = nil
@@ -1246,7 +1272,7 @@ begin
   set foo := 'x';
 end;
 
--- TEST: this stuff is easy in lua because out args are return values
+-- TEST: this stuff is easy in Lua because out args are return values
 -- + foo = "x"
 -- + foo = proc_with_out_arg()
 -- + bar = proc_with_out_arg()
@@ -2034,7 +2060,7 @@ set i2 := (select 'x' GLOB 'y');
 -- +  SET i2 := 1 << 2 | 1 << 4 & 1 >> 8;
 -- in Sqlite binary math operators all bind equal and left to right so the above is the same as
 --    SET i2 :=  (((((1 << 2) | 1) << 4) & 1) >> 8);
--- in LUA that changes because << and >> are stronger than | and &
+-- in Lua that changes because << and >> are stronger than | and &
 -- + i2 = ((1 << 2 | 1) << 4 & 1) >> 8
 set i2 := 1 << 2 | 1 << 4 & 1 >> 8;
 
@@ -3258,7 +3284,7 @@ SET x := 1 * 2 * (3 * 4);
 -- + x = 1 * 2 * (3 * 4)
 SET x := (1 * 2) * (3 * 4);
 
--- note that in C & binds tighter than | so parens are required in C
+-- note that in Lua & binds tighter than | so parens are required in Lua
 -- note that in SQL | and & are equal so this expression left associates
 -- + x = (1 | 2) & 3
 SET x := 1 | 2 & 3;
@@ -3715,7 +3741,7 @@ set t0_nullable := (select name from bar if nothing then "");
 set t2 := (select name from bar if nothing or null then "garbonzo");
 
 -- TEST: verify private exports and binding
--- private doesn't mean anything in lua
+-- private doesn't mean anything in Lua
 -- + function private_proc()
 @attribute(cql:private)
 proc private_proc(out x integer)
@@ -3738,7 +3764,7 @@ begin
 end;
 
 -- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
--- note that compiling this code in LUA correctly is part of the test which verifies lots of linkage in addition
+-- note that compiling this code in Lua correctly is part of the test which verifies lots of linkage in addition
 -- to just these strings.
 -- + C_result_set_ = private_out_union_fetch_results()
 proc use_private_out_union()
@@ -3768,7 +3794,7 @@ begin
 end;
 
 -- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
--- note that compiling this code in LUA correctly is part of the test which verifies lots of linkage in addition
+-- note that compiling this code in Lua correctly is part of the test which verifies lots of linkage in addition
 -- to just these strings.
 -- + C_result_set_ = no_getters_out_union_fetch_results()
 proc use_no_getters_out_union()
@@ -3794,7 +3820,7 @@ begin
 end;
 
 -- TEST: use the private out union function in the same translation unit, it should have everything we need to call it
--- note that compiling this code in LUA correctly is part of the test which verifies lots of linkage in addition
+-- note that compiling this code in Lua correctly is part of the test which verifies lots of linkage in addition
 -- to just these strings.
 -- + function use_suppress_results_out_union(_db_)
 -- + C_result_set_ = suppress_results_out_union_fetch_results()
@@ -3820,13 +3846,13 @@ begin
 end;
 
 -- TEST: private proc forward ref results in static prototype
--- this doesn't mean anything in LUA, no result set
+-- this doesn't mean anything in Lua, no result set
 -- + @ATTRIBUTE(cql:private)
 @attribute(cql:private)
 declare proc private_fwd_ref(x integer not null);
 
 -- TEST: ensure out args set to null for ref types
--- nothing to do in LUA
+-- nothing to do in Lua
 -- + local x
 -- + return x
 proc set_out_arg_ref_test(out x text)
@@ -3834,7 +3860,7 @@ begin
 end;
 
 -- TEST: ensure out args set to null for nullable types
--- nothing to do in LUA
+-- nothing to do in Lua
 -- + local x
 -- + return x
 proc set_out_arg_null_test(out x integer)
@@ -3863,7 +3889,7 @@ begin
 end;
 
 -- TEST: construct a lot of variables of various types
--- the decls are all the same in LUA
+-- the decls are all the same in Lua
 -- + r = 1.0
 -- + i = 1
 -- + l = 1
@@ -4226,7 +4252,7 @@ begin
 end;
 
 -- TEST: a loose select statement generates no code (and will produce no errors)
--- the errors are checked when this code is compiled in LUA.  If the code
+-- the errors are checked when this code is compiled in Lua.  If the code
 -- were generated there would be errors because the global proc
 -- doesn't have the statement out arg.  We also verify that
 -- no call to cql_prepare happens hence no select
@@ -4444,8 +4470,8 @@ begin
 end;
 
 -- TEST: ensure that the temporary from calling f1 is not reused in the 3rd call
--- everything is easier in LUA it's a standard pattern...
--- proc as func not null case (same in LUA)
+-- everything is easier in Lua it's a standard pattern...
+-- proc as func not null case (same in Lua)
 -- + _tmp_int_0 = f1()
 -- + _tmp_int_1 = f1()
 -- + _tmp_int_2 = f1()
@@ -4841,7 +4867,7 @@ end;
 
 -- TEST: ensure that the max constants are getting handled correctly
 -- including the special cases to avoid compiler warnings.  Note that
--- this code has to compile correctly in C to pass the test also.  Run
+-- this code has to compile correctly in Lua to pass the test also.  Run
 -- time checks for this are in run_test.sql because this is subtle
 --
 -- + big1 = 0x7fffffffffffffff
@@ -4975,7 +5001,7 @@ begin
 end;
 
 -- TEST: use of in arg at in/out position requires copy (in C)
--- in lua it means nothing... because in ref args are not borrowed
+-- in Lua it means nothing... because in ref args are not borrowed
 -- + x = clobber1(x)
 proc mutated_in_arg1(x text)
 begin
@@ -4983,7 +5009,7 @@ begin
 end;
 
 -- TEST: use of in arg at out position requires copy (in C)
--- in lua it means nothing... because in ref args are not borrowed
+-- in Lua it means nothing... because in ref args are not borrowed
 -- + x = clobber2()
 proc mutated_in_arg2(x text)
 begin
@@ -4991,7 +5017,7 @@ begin
 end;
 
 -- TEST: use of in arg for fetch into requires copy
--- we never have problems with in ref args gettng mutated in LUA
+-- we never have problems with in ref args gettng mutated in Lua
 -- everything is gc'd.  In C output if ref args are borrowed
 -- so if you change them you have to make a copy so you can release
 -- whatever you put there. In lua you do nothing...
@@ -5004,7 +5030,7 @@ begin
 end;
 
 -- TEST: make sure the not null contract works for mutated out variables
--- this is not even a thing in lua codegen because out variables are always local
+-- this is not even a thing in Lua codegen because out variables are always local
 -- + cql_contract_argument_notnull(x, 1)
 -- + x = "xyzzy"
 -- + return x

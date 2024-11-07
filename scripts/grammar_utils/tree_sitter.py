@@ -136,6 +136,7 @@ RULE_RENAMES = {
     "opt_elseif_list": "optional($.elseif_list)",
     "opt_macro_args": "optional($.macro_args)",
     "opt_macro_formals": "optional($.macro_formals)",
+    "if_ending" : "$.END, optional($.IF)",
 }
 
 FIXED_RULES = """
@@ -179,28 +180,7 @@ FIXED_RULES = """
     select_expr_macro_ref: $ => prec(4, $.macro_ref),
     stmt_list_macro_ref: $ => prec(5, $.macro_ref),
 
-    AT_IFDEF: $ => CI('@ifdef'),
-    AT_IFNDEF: $ => CI('@ifndef'),
-    AT_ELSE: $ => CI('@else'),
-    AT_ENDIF: $ => CI('@endif'),
-
-    ifdef: $ => seq($.AT_IFDEF, $.ID, $.stmt_list, optional(seq($.AT_ELSE, $.stmt_list)), $.AT_ENDIF),
-    ifndef: $ => seq($.AT_IFNDEF, $.ID, $.stmt_list, optional(seq($.AT_ELSE, $.stmt_list)), $.AT_ENDIF),
-
-    pre_proc: $ => choice($.ifdef, $.ifndef),
-
-    stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.pre_proc, $.comment)),
-
-    /* Manually define the if_stmt rule because if not we're going to have parsing
-     * issues with "opt_elseif_list" and "opt_else" rule. Providing a priority
-     * doesn't suffice to resolve the conflict.
-     */
-
-    if_stmt: $ => seq($.IF, $.expr, $.THEN,
-        optional($.stmt_list),
-        optional(repeat1($.elseif_item)),
-        optional($.opt_else),
-        $.END, optional($.IF)),
+    stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.comment)),
 """
 
 # These are problematic rules to the cql tree-sitter grammar. We're just going
@@ -209,6 +189,10 @@ INLINE_RULES = {
     # The presence of this node break tree-sitter. It was added to
     # 'create_table_stmt' for the sole purpose of grabbing documentation
     "create_table_prefix_opt_temp",
+    "ifdef",
+    "ifndef",
+    "elsedef",
+    "endif",
 }
 
 DELETED_PRODUCTIONS = {
@@ -221,7 +205,7 @@ DELETED_PRODUCTIONS = {
     "cte_tables_macro_ref",
     "end_of_included_file",
     "expr_macro_ref",
-    "if_stmt",
+    # "if_stmt",
     "include_section",
     "include_stmts",
     "non_expr_macro_ref",
@@ -402,11 +386,23 @@ def read_rule_defs(fp):
         rule_defs[name] = choices
         sorted_rule_names.append(name)
 
-# Insert the sequence for the inline rule into the sequence we have now.
-# The inline rule is clobbered.  This sequence will be one of the choices
-# in some rule that contains the inline.
-def jam_inline_into_seq(seq, index, value):
-    return seq[0:max(index - 1, 0)] + value + seq[index + 1:]
+
+# The indicated sequence has been found to have inlines, we process them
+# all in one go now.  We have to do this because the procedure we follow
+# here builds an entirely result, it's not mutation.  Because of that
+# the search pass will get confused if we mutate as we go.  So once
+# we find a match we do all the changes, swap out the rule and move on.
+def jam_inlines_into_seq(seq):
+    # here we just build the replacement sequence
+    result = []
+    for j, tok in enumerate(seq):
+        if type(tok) is str and tok in INLINE_RULES:
+           value = rule_defs[tok][0]
+           for v in value:
+               result.append(v)
+        else:
+           result.append(tok)
+    return result
 
 # Inline where needed to avoid conflicts
 def apply_inlining():
@@ -415,10 +411,10 @@ def apply_inlining():
     # the value of the rule.
     for _, rule in rule_defs.items():
         for i, choice in enumerate(rule):
-            for j, tok in enumerate(choice):
+            for _, tok in enumerate(choice):
                 if type(tok) is str and tok in INLINE_RULES:
-                    value = rule_defs[tok][0]
-                    rule[i] = jam_inline_into_seq(choice, j, value)
+                    rule[i] = jam_inlines_into_seq(choice)
+                    break
 
     # Mark the inlined rules as visited so we do not emit them.
     # All references to this rule are gone now so it is for sure useless.

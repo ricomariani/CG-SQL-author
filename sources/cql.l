@@ -90,14 +90,6 @@ typedef struct {
 static cql_include_state cql_includes[MAX_INCLUDES];
 static int cql_include_index = 0;
 
-typedef struct cql_ifdef_state_t {
-  bool_t process_else;
-  bool_t processing;
-  struct cql_ifdef_state_t *prev;
-} cql_ifdef_state_t;
-
-static cql_ifdef_state_t *cql_ifdef_state;
-
 static symtab *processed_files;
 
 cql_noexport void cql_reset_open_includes() {
@@ -110,12 +102,6 @@ cql_noexport void cql_reset_open_includes() {
 }
 
 cql_noexport void cql_cleanup_open_includes() {
-  while (cql_ifdef_state) {
-     cql_ifdef_state_t *prev = cql_ifdef_state->prev;
-     free(cql_ifdef_state);
-     cql_ifdef_state = prev;
-  }
-
   for (int32_t i = 0; i < cql_include_index; i++) {
      cql_include_state *inc = &cql_includes[i];
      yy_delete_buffer(inc->buf);
@@ -214,6 +200,9 @@ static bool_t cql_already_processed_file(CSTR str) {
   return !!symtab_find(processed_files, str);
 }
 
+/*
+*/
+
 %}
 
 stop [^A-Z_0-9]
@@ -229,93 +218,6 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
 
 %%
 
-@IFDEF                           { BEGIN(ifdef); }
-<ifdef>{sp}*
-<ifdef>{id}                      { 
-                                   cql_ifdef_state_t *new_state = _new(cql_ifdef_state_t);
-                                   new_state->prev = cql_ifdef_state;
-                                   new_state->processing = cql_is_defined(yytext); 
-                                   new_state->process_else = !new_state->processing;
-                                   cql_ifdef_state = new_state;
-
-                                   if (cql_ifdef_state->processing) {
-                                     BEGIN(INITIAL);
-                                   }
-                                   else {
-                                     BEGIN(skipping);
-                                   }
-                                 }
-
-@IFNDEF                          { BEGIN(ifndef); }
-<ifndef>{sp}*
-<ifndef>{id}                     { 
-                                   cql_ifdef_state_t *new_state = _new(cql_ifdef_state_t);
-                                   new_state->prev = cql_ifdef_state;
-                                   new_state->processing = !cql_is_defined(yytext); 
-                                   new_state->process_else = !new_state->processing;
-                                   cql_ifdef_state = new_state;
-
-                                   if (cql_ifdef_state->processing) {
-                                     BEGIN(INITIAL);
-                                   }
-                                   else {
-                                     BEGIN(skipping);
-                                   }
-                                 }
-
-@ELSE                            {
-                                   if (cql_ifdef_state) {
-                                     cql_ifdef_state->processing = false;
-                                     BEGIN(skipping);
-                                   }
-                                 }
-
-@ENDIF                           {
-                                   if (cql_ifdef_state) {
-                                     cql_ifdef_state_t *prev = cql_ifdef_state->prev;
-                                     free(cql_ifdef_state);
-                                     cql_ifdef_state = prev;
-                                     // it is not possible to go from processing to not processing
-                                     // so there is never a transition here
-                                   }
-                                 }
-
-<skipping>@IFDEF                 {
-                                   cql_ifdef_state_t *new_state = _new(cql_ifdef_state_t);
-                                   new_state->prev = cql_ifdef_state;
-                                   new_state->processing = false;
-                                   new_state->process_else = false;
-                                   cql_ifdef_state = new_state;
-                                 }
-                                   
-<skipping>@ELSE                  {
-                                   if (cql_ifdef_state->process_else) {
-                                     cql_ifdef_state->processing = true;
-                                     BEGIN(INITIAL);
-                                   }
-                                 }
-
-<skipping>@ENDIF                 {
-                                   cql_ifdef_state_t *prev = cql_ifdef_state->prev;
-                                   free(cql_ifdef_state);
-                                   cql_ifdef_state = prev;
-                                   if (!cql_ifdef_state || cql_ifdef_state->processing) {
-                                     BEGIN(INITIAL);
-                                   }
-                                 }
-
-<skipping>"/*"                   { BEGIN(skipping_c_comment); }
-<skipping_c_comment>.
-<skipping_c_comment>[\n]
-<skipping_c_comment>"*/"         { BEGIN(skipping); }
-
-<skipping>--.*\n
-<skipping>{qid}
-<skipping>{strlit}
-<skipping>{cstrlit}
-<skipping>.
-<skipping>[\n]
-
 @INCLUDE                         {
                                    BEGIN(at_inc);
                                    return BEGIN_INCLUDE;
@@ -325,6 +227,11 @@ reallit ({d}+"."{d}*|"."{d}+)(E("+"|"-")?{d}+)?
                                    cql_setup_for_include(yytext);
                                    BEGIN(INITIAL);
                                  }
+
+@IFDEF                           { return AT_IFDEF; }
+@IFNDEF                          { return AT_IFNDEF; }
+@ELSE                            { return AT_ELSE; }
+@ENDIF                           { return AT_ENDIF; }
 
 @@BEGIN_INCLUDE@@                { return BEGIN_INCLUDE; }
 @@END_INCLUDE@@                  { return END_INCLUDE; }

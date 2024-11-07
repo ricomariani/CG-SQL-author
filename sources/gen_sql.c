@@ -140,7 +140,8 @@ cql_noexport void gen_stmt_list_to_stdout(ast_node *ast) {
 
 cql_noexport void gen_one_stmt_to_stdout(ast_node *ast) {
   gen_to_stdout(ast, gen_one_stmt);
-  cql_output(";\n");
+  bool_t prep = is_ast_ifdef_stmt(ast) || is_ast_ifndef_stmt(ast);
+  if (prep) cql_output("\n"); else cql_output(";\n");
 }
 
 cql_noexport void gen_misc_attrs_to_stdout(ast_node *ast) {
@@ -3455,6 +3456,33 @@ static void gen_elseif_list(ast_node *ast) {
   }
 }
 
+static void gen_ifxdef_stmt(ast_node *ast) {
+  EXTRACT_ANY_NOTNULL(true_false, ast->left);
+  EXTRACT_STRING(id, true_false->left);
+  EXTRACT(pre, ast->right);
+  EXTRACT_NAMED(left, stmt_list, pre->left);
+  EXTRACT_NAMED(right, stmt_list, pre->right);
+  gen_printf("%s\n", id);
+  if (left) {
+    gen_stmt_list(left);
+  }
+  if (right) {
+    gen_printf("@ELSE\n");
+    gen_stmt_list(right);
+  }
+  gen_printf("@ENDIF\n");
+}
+
+static void gen_ifdef_stmt(ast_node *ast) {
+  gen_printf("@IFDEF ");
+  gen_ifxdef_stmt(ast);
+}
+
+static void gen_ifndef_stmt(ast_node *ast) {
+  gen_printf("@IFNDEF ");
+  gen_ifxdef_stmt(ast);
+}
+
 static void gen_if_stmt(ast_node *ast) {
   Contract(is_ast_if_stmt(ast));
   EXTRACT_NOTNULL(cond_action, ast->left);
@@ -5410,11 +5438,14 @@ static void gen_stmt_list(ast_node *root) {
     }
     gen_one_stmt(stmt);
 
-    if (gen_stmt_level == 0 && semi->right == NULL) {
+    bool_t prep = is_ast_ifdef_stmt(stmt) || is_ast_ifndef_stmt(stmt);
+
+    if (!prep) {
       gen_printf(";");
     }
-    else {
-      gen_printf(";\n");
+
+    if (gen_stmt_level != 0 || semi->right != NULL) {
+       gen_printf("\n");
     }
   }
 
@@ -5515,6 +5546,8 @@ cql_noexport void gen_init() {
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(guard_stmt);
   STMT_INIT(if_stmt);
+  STMT_INIT(ifdef_stmt);
+  STMT_INIT(ifndef_stmt);
   STMT_INIT(insert_stmt);
   STMT_INIT(leave_stmt);
   STMT_INIT(let_stmt);

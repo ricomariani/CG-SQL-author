@@ -1,15 +1,82 @@
-LET foo_defined := 1;
+@IFDEF foo
+  LET foo_defined := 1;
+  @IFDEF foo
+    LET nested_foo_defined := 1;
+  @ELSE
+    LET error_foo_not_defined := 1;
+  @ENDIF
 
-LET nested_foo_defined := 1;
+@ELSE
+  LET not_foo_defined := 1;
+@ENDIF
 
-LET not_goo_defined := 1;
 
-LET foo_defined_no_else := 1;
+@IFNDEF goo
+  LET not_goo_defined := 1;
+@ELSE
+  LET goo_defined := 1;
+@ENDIF
 
-LET goo_not_defined_no_else := 1;
 
-LET foo_else := 1;
+@IFDEF foo
+  LET foo_defined_no_else := 1;
+@ENDIF
 
-goo_not_defined := 1;
 
-goo_not_defined_after_c_comment := 1;
+@IFDEF goo
+  LET goo_defined_no_else := 1;
+@ENDIF
+
+
+@IFNDEF foo
+  LET foo_not_defined_no_else := 1;
+@ENDIF
+
+
+@IFNDEF goo
+  LET goo_not_defined_no_else := 1;
+@ENDIF
+
+
+@IFNDEF foo
+  LET str := "@ELSE";
+@ELSE
+  LET foo_else := 1;
+@ENDIF
+
+
+@IFNDEF foo
+  LET foo_endif := "@ENDIF";
+@ENDIF
+
+
+@IFDEF goo
+@ELSE
+  goo_not_defined := 1;
+@ENDIF
+
+
+@IFDEF goo
+  LET q := "@ELSE doesn't work";
+  LET r := '@ELSE doesn''t work';
+  LET `@ELSE does not work` := 1;
+@ELSE
+  goo_not_defined_after_c_comment := 1;
+@ENDIF
+
+
+@IFDEF goo
+  LET this_does_not_appear := 1;
+  @IFDEF foo
+    SET this_does_not_appear := 2;
+  @ELSE
+    SET this_does_not_appear := 3;
+  @ENDIF
+
+  @IFDEF foo
+    SET this_does_not_appear := 4;
+  @ENDIF
+
+  SET this_does_not_appear := 5;
+@ENDIF
+

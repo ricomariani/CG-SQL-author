@@ -667,6 +667,8 @@ cql_string_literal(_literal_26_abc_my_proc_check_type, "abc");
 @ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
+cql_int32 c_runtime_generation = 0;
+cql_int32 c_runtime_generation_on_else = 0;
 
 // The statement ending at line XXXX
 
@@ -17784,6 +17786,39 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   cql_int64 _tmp_int64_2 = 0;
   cql_double _tmp_double_2 = 0;
   cql_int32 _tmp_int_0 = 0;
+
+  // The statement ending at line XXXX
+
+  /*
+  @IFDEF __rt__c
+    LET c_runtime_generation := 1;
+  @ENDIF
+  ;
+  */
+
+    // The statement ending at line XXXX
+
+    /*
+    LET c_runtime_generation := 1;
+    */
+    c_runtime_generation = 1;
+
+  // The statement ending at line XXXX
+
+  /*
+  @IFNDEF __rt__c
+  @ELSE
+    LET c_runtime_generation_on_else := 1;
+  @ENDIF
+  ;
+  */
+
+    // The statement ending at line XXXX
+
+    /*
+    LET c_runtime_generation_on_else := 1;
+    */
+    c_runtime_generation_on_else = 1;
 
   // The statement ending at line XXXX
 

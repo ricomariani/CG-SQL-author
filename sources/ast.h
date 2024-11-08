@@ -199,6 +199,7 @@ cql_noexport bool_t set_macro_arg_info(CSTR _Nonnull name, int32_t macro_type, a
 cql_noexport macro_info *_Nullable get_macro_arg_info(CSTR _Nonnull name);
 cql_noexport macro_info *_Nullable get_macro_info(CSTR _Nonnull name);
 cql_noexport void expand_macros(ast_node *_Nonnull root);
+cql_noexport int32_t resolve_macro_name(_Nonnull CSTR name);
 
 // from the lexer
 extern int yylineno;
@@ -264,8 +265,7 @@ cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
 
 cql_noexport bool_t is_any_macro_def(ast_node *_Nonnull ast);
-cql_noexport bool_t is_any_macro_arg_ref(ast_node *_Nonnull ast);
-cql_noexport bool_t is_any_macro_ref(ast_node *_Nonnull ast);
+cql_noexport bool_t is_any_macro_ref(ast_node *_Nullable ast);
 
 cql_noexport bool_t is_select_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_delete_stmt(ast_node *_Nullable ast);
@@ -698,7 +698,6 @@ AST(cte_binding_list)
 AST(cte_decl)
 AST(cte_table)
 AST(cte_tables)
-AST(cte_tables_macro_arg_ref)
 AST(cte_tables_macro_def)
 AST(cte_tables_macro_ref)
 AST(declare_const_stmt)
@@ -736,8 +735,6 @@ AST(eq)
 AST(explain_stmt)
 AST(expr_assign)
 AST(expr_list)
-AST1(expr_macro_arg)
-AST(expr_macro_arg_ref)
 AST(expr_macro_def)
 AST(expr_macro_ref)
 AST(expr_name)
@@ -823,10 +820,12 @@ AST(out_union_parent_child_stmt)
 AST(param)
 AST(param_detail)
 AST(params)
-AST(pre)
 AST(pk_def)
+AST(pre)
 AST(proc_name_type)
 AST(proc_params_stmts)
+AST(query_parts_macro_def)
+AST(query_parts_macro_ref)
 AST(raise);
 AST(range)
 AST(recreate_attr)
@@ -837,21 +836,16 @@ AST(reverse_apply)
 AST(reverse_apply_poly_args)
 AST(rs_eq)
 AST(rshift)
-AST(query_parts_macro_arg_ref)
-AST(query_parts_macro_def)
-AST(query_parts_macro_ref)
 AST(schema_ad_hoc_migration_stmt);
 AST(seed_stub)
 AST(select_core)
 AST(select_core_compound)
 AST(select_core_list)
-AST(select_core_macro_arg_ref)
 AST(select_core_macro_def)
 AST(select_core_macro_ref)
 AST(select_expr)
 AST(select_expr_list)
 AST(select_expr_list_con)
-AST(select_expr_macro_arg_ref)
 AST(select_expr_macro_def)
 AST(select_expr_macro_ref)
 AST(select_from_etc)
@@ -873,7 +867,6 @@ AST(shape_exprs)
 AST(shared_cte)
 AST(stmt_and_attr)
 AST(stmt_list)
-AST(stmt_list_macro_arg_ref);
 AST(stmt_list_macro_def)
 AST(stmt_list_macro_ref);
 AST(str_chain)
@@ -900,6 +893,7 @@ AST(trycatch_stmt)
 AST(type_check_expr)
 AST(typed_name)
 AST(typed_names)
+AST(unknown_macro_ref)
 AST(unq_def)
 AST(update_cursor_stmt)
 AST(update_entry)
@@ -978,6 +972,7 @@ AST1(column_spec);
 AST1(const)
 AST1(create_data_type);
 AST1(cte_tables_macro_arg);
+AST1(cte_tables_macro_arg_ref)
 AST1(declare_out_call_stmt)
 AST1(declare_proc_no_check_stmt)
 AST1(desc)
@@ -988,6 +983,8 @@ AST1(emit_group_stmt)
 AST1(enforce_normal_stmt);
 AST1(enforce_strict_stmt);
 AST1(exists_expr)
+AST1(expr_macro_arg)
+AST1(expr_macro_arg_ref)
 AST1(expr_stmt)
 AST1(groupby_item)
 AST1(is_false)
@@ -1011,16 +1008,20 @@ AST1(out_stmt)
 AST1(out_union_stmt)
 AST1(proc_savepoint_stmt);
 AST1(query_parts_macro_arg);
+AST1(query_parts_macro_arg_ref)
 AST1(release_savepoint_stmt);
 AST1(rollback_trans_stmt);
 AST1(savepoint_stmt);
 AST1(schema_unsub_stmt);
 AST1(schema_upgrade_version_stmt);
 AST1(select_core_macro_arg);
+AST1(select_core_macro_arg_ref)
 AST1(select_expr_macro_arg);
+AST1(select_expr_macro_arg_ref)
 AST1(select_if_nothing_throw_expr)
 AST1(select_opts)
 AST1(stmt_list_macro_arg);
+AST1(stmt_list_macro_arg_ref);
 AST1(table_star)
 AST1(tilde)
 AST1(type_blob)
@@ -1031,6 +1032,7 @@ AST1(type_object)
 AST1(type_real)
 AST1(type_text)
 AST1(uminus)
+AST1(unknown_macro_arg_ref)
 AST1(window_clause)
 AST1(with)
 AST1(with_recursive)

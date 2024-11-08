@@ -33,7 +33,6 @@ char *Strdup(const char *);
 static CSTR last_doc_comment = NULL;
 
 
-cql_noexport int32_t resolve_macro_name(const char *);
 static bool_t cql_already_processed_file(CSTR);
 static void cql_record_processed_file(CSTR);
 
@@ -535,15 +534,6 @@ X'({hex}{hex})*'                 { yylval.sval = Strdup(yytext); return BLOBLIT;
 \{                               { return yytext[0]; }
 \}                               { return yytext[0]; }
 {id}                             { yylval.sval = Strdup(yytext); return ID; }
-{id}!                            { int32_t result = resolve_macro_name(yytext);
-                                   if (result == EOF) {
-                                     REJECT;
-                                   }
-                                   else {
-                                     yylval.sval = Strdup(yytext);
-                                   }
-                                   return result;
-                                 }
 
 [ \t\r\n]                        ;
 \-\-.*                           ;

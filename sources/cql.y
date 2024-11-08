@@ -82,6 +82,8 @@ static ast_node *do_ifndef(ast_node *ast);
 static void do_endif(void);
 static void do_else(void);
 static bool_t is_processing(void);
+static ast_node *macro_ref_node(CSTR name, ast_node *args);
+static ast_node *macro_arg_ref_node(CSTR name);
 
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
@@ -238,7 +240,7 @@ static void cql_reset_globals(void);
 %left NOT
 %left BETWEEN NOT_BETWEEN NE NE_ '=' EQEQ LIKE NOT_LIKE GLOB NOT_GLOB MATCH NOT_MATCH REGEXP NOT_REGEXP IN NOT_IN IS_NOT IS IS_TRUE IS_FALSE IS_NOT_TRUE IS_NOT_FALSE
 %left ISNULL NOTNULL
-%left '<' '>' GE LE 
+%left '<' '>' GE LE
 %left LS RS '&' '|'
 %left '+' '-'
 %left '*' '/' '%'
@@ -352,10 +354,10 @@ static void cql_reset_globals(void);
 %type <aval> create_proc_stmt declare_func_stmt declare_select_func_stmt declare_proc_stmt declare_interface_stmt declare_proc_no_check_stmt declare_out_call_stmt
 %type <aval> arg_expr arg_list arg_exprs inout param params func_params func_param
 %type <aval> macro_def_stmt opt_macro_args macro_args macro_arg op_stmt
-%type <aval> opt_macro_formals macro_formals macro_formal macro_type non_expr_macro_ref
+%type <aval> opt_macro_formals macro_formals macro_formal macro_type
 %type <aval> top_level_stmts include_stmts include_section
 %type <aval> stmt_list_macro_def expr_macro_def query_parts_macro_def cte_tables_macro_def select_core_macro_def select_expr_macro_def
-%type <aval> stmt_list_macro_ref expr_macro_ref query_parts_macro_ref cte_tables_macro_ref select_core_macro_ref select_expr_macro_ref
+%type <aval> macro_ref
 
 
 /* statements */
@@ -482,74 +484,13 @@ opt_stmt_list:
   | stmt_list  { $opt_stmt_list = $stmt_list; }
   ;
 
-non_expr_macro_ref:
-  stmt_list_macro_ref  { $$ = $1; }
-  | cte_tables_macro_ref { $$ = $1; }
-  | select_core_macro_ref { $$ = $1; }
-  | select_expr_macro_ref { $$ = $1; }
-  | query_parts_macro_ref { $$ = $1; }
-  ;
-
-stmt_list_macro_ref:
-  STMT_LIST_MACRO {
-    YY_ERROR_ON_MACRO($STMT_LIST_MACRO);
-    $$ = new_ast_stmt_list_macro_arg_ref(new_ast_str($STMT_LIST_MACRO), NULL); }
-  | STMT_LIST_MACRO '(' opt_macro_args ')' {
-    YY_ERROR_ON_MACRO_ARG($STMT_LIST_MACRO);
-    $$ = new_ast_stmt_list_macro_ref(new_ast_str($STMT_LIST_MACRO), $opt_macro_args); }
-  ;
-
-expr_macro_ref:
-  EXPR_MACRO {
-    YY_ERROR_ON_MACRO($EXPR_MACRO);
-    $$ = new_ast_expr_macro_arg_ref(new_ast_str($EXPR_MACRO), NULL); }
-  | EXPR_MACRO '(' opt_macro_args ')' {
-    YY_ERROR_ON_MACRO_ARG($EXPR_MACRO);
-    $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), $opt_macro_args); }
-  | basic_expr ':' EXPR_MACRO '(' opt_macro_args ')' {
-      ast_node *macro_arg = new_ast_expr_macro_arg($basic_expr);
-      ast_node *macro_args = new_ast_macro_args(macro_arg, $opt_macro_args);
-      $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), macro_args); }
-  | basic_expr ':' EXPR_MACRO {
-      ast_node *macro_arg = new_ast_expr_macro_arg($basic_expr);
-      ast_node *macro_args = new_ast_macro_args(macro_arg, NULL);
-      $$ = new_ast_expr_macro_ref(new_ast_str($EXPR_MACRO), macro_args); }
-  ;
-
-query_parts_macro_ref:
-  QUERY_PARTS_MACRO {
-    YY_ERROR_ON_MACRO($QUERY_PARTS_MACRO);
-    $$ = new_ast_query_parts_macro_arg_ref(new_ast_str($QUERY_PARTS_MACRO), NULL); }
-  | QUERY_PARTS_MACRO '(' opt_macro_args ')' {
-    YY_ERROR_ON_MACRO_ARG($QUERY_PARTS_MACRO);
-    $$ = new_ast_query_parts_macro_ref(new_ast_str($QUERY_PARTS_MACRO), $opt_macro_args); }
-  ;
-
-cte_tables_macro_ref:
-  CTE_TABLES_MACRO {
-    YY_ERROR_ON_MACRO($CTE_TABLES_MACRO);
-    $$ = new_ast_cte_tables_macro_arg_ref(new_ast_str($CTE_TABLES_MACRO), NULL); }
-  | CTE_TABLES_MACRO '(' opt_macro_args ')' {
-    YY_ERROR_ON_MACRO_ARG($CTE_TABLES_MACRO);
-    $$ = new_ast_cte_tables_macro_ref(new_ast_str($CTE_TABLES_MACRO), $opt_macro_args); }
-  ;
-
-select_core_macro_ref:
-  SELECT_CORE_MACRO {
-    YY_ERROR_ON_MACRO($SELECT_CORE_MACRO);
-    $$ = new_ast_select_core_macro_arg_ref(new_ast_str($SELECT_CORE_MACRO), NULL); }
-  | SELECT_CORE_MACRO '(' opt_macro_args ')' {
-    YY_ERROR_ON_MACRO_ARG($SELECT_CORE_MACRO);
-    $$ = new_ast_select_core_macro_ref(new_ast_str($SELECT_CORE_MACRO), $opt_macro_args); }
-  ;
-
-select_expr_macro_ref:
-  SELECT_EXPR_MACRO {
-    YY_ERROR_ON_MACRO($SELECT_EXPR_MACRO);
-    $$ = new_ast_select_expr_macro_arg_ref(new_ast_str($SELECT_EXPR_MACRO), NULL); }
-  | SELECT_EXPR_MACRO '(' opt_macro_args ')' {
-    YY_ERROR_ON_MACRO_ARG($SELECT_EXPR_MACRO);
-    $$ = new_ast_select_expr_macro_ref(new_ast_str($SELECT_EXPR_MACRO), $opt_macro_args); }
+macro_ref:
+  ID '!' {
+     YY_ERROR_ON_MACRO($ID);
+     $$ = macro_arg_ref_node($ID); }
+  | ID '!' '(' opt_macro_args ')' {
+     YY_ERROR_ON_MACRO_ARG($ID);
+     $$ = macro_ref_node($ID, $opt_macro_args); }
   ;
 
 stmt_list[result]:
@@ -574,28 +515,7 @@ stmt_list[result]:
      // set up the tail pointer invariant to use later
      $result->parent = $result;
      }
-  | stmt_list_macro_ref[stmt] ';' {
-     // same cheese as above
-
-     $result = new_ast_stmt_list($stmt, NULL);
-     $result->lineno = $stmt->lineno;
-
-     // set up the tail pointer invariant to use later
-     $result->parent = $result;
-     }
   | stmt_list[slist] stmt {
-     ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
-     new_stmt->lineno = $stmt->lineno;
-
-     // use our tail pointer invariant so we can add at the tail without searching
-     ast_node *tail = $slist->parent;
-     ast_set_right(tail, new_stmt);
-
-     // re-establish the tail invariant per the above
-     $slist->parent = new_stmt;
-     $result = $slist;
-     }
-  | stmt_list[slist] stmt_list_macro_ref[stmt] ';' {
      ast_node *new_stmt = new_ast_stmt_list($stmt, NULL);
      new_stmt->lineno = $stmt->lineno;
 
@@ -1131,7 +1051,7 @@ loose_name_or_type[r]:
      EXTRACT_STRING(n2, $l2);
      $$ = new_ast_str(dup_printf("%s<%s>", n1, n2)); }
   ;
-  
+
 
 opt_sql_name:
   /* nil */  { $opt_sql_name = NULL; }
@@ -1290,7 +1210,7 @@ text_args:
    | text_arg ',' text_args[ta] { $$ = new_ast_text_args($text_arg, $ta); }
    ;
 
-text_arg : expr | non_expr_macro_ref ;
+text_arg : expr ;
 
 raise_expr:
   RAISE '(' IGNORE ')'  { $raise_expr = new_ast_raise(new_ast_option(RAISE_IGNORE), NULL); }
@@ -1332,7 +1252,7 @@ call:
 basic_expr:
   name  { $basic_expr = $name; }
   | QID { $basic_expr = new_ast_qstr_quoted($QID); }
-  | expr_macro_ref { $basic_expr = $expr_macro_ref; }
+  | macro_ref { $basic_expr = $macro_ref; }
   | '*' { $basic_expr = new_ast_star(); }
   | AT_RC { $basic_expr = new_ast_str("@RC"); }
   | basic_expr[lhs] '.' sql_name[rhs] { $$ = new_ast_dot($lhs, $rhs); }
@@ -1516,7 +1436,7 @@ cte_table:
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($select_stmt, NULL)); }
   | cte_decl LIKE sql_name  {
       $cte_table = new_ast_cte_table($cte_decl, new_ast_like($sql_name, NULL)); }
-  | cte_tables_macro_ref[ref] { $cte_table = $ref; }
+  | macro_ref[ref] { $cte_table = $ref; }
   ;
 
 with_prefix:
@@ -1551,10 +1471,6 @@ select_core_list[result]:
   | select_core compound_operator select_core_list[list] {
      ast_node *select_core_compound = new_ast_select_core_compound(new_ast_option($compound_operator), $list);
      $result = new_ast_select_core_list($select_core, select_core_compound); }
-  | select_core_macro_ref { $result = new_ast_select_core_list($select_core_macro_ref, NULL); }
-  | select_core_macro_ref compound_operator select_core_list[list] {
-     ast_node *select_core_compound = new_ast_select_core_compound(new_ast_option($compound_operator), $list);
-     $result = new_ast_select_core_list($select_core_macro_ref, select_core_compound); }
   ;
 
 values[result]:
@@ -1575,6 +1491,7 @@ select_core:
     struct ast_node *select_expr_list_con = new_ast_select_expr_list_con($select_expr_list, select_from_etc);
      $select_core = new_ast_select_core($select_opts, select_expr_list_con);
   }
+  | ROWS '(' macro_ref ')' { $$ = $macro_ref; }
   | VALUES values  {
     $select_core = new_ast_select_core(new_ast_select_values(), $values);
   }
@@ -1820,8 +1737,6 @@ select_opts:
 select_expr_list[result]:
   select_expr  { $result = new_ast_select_expr_list($select_expr, NULL); }
   | select_expr ',' select_expr_list[sel]  { $result = new_ast_select_expr_list($select_expr, $sel); }
-  | select_expr_macro_ref  { $result = new_ast_select_expr_list($select_expr_macro_ref, NULL); }
-  | select_expr_macro_ref ',' select_expr_list[sel]  { $result = new_ast_select_expr_list($select_expr_macro_ref, $sel); }
   ;
 
 select_expr:
@@ -1872,7 +1787,7 @@ table_or_subquery:
   | '(' shared_cte ')' opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($shared_cte, $opt_as_alias); }
   | table_function opt_as_alias  { $table_or_subquery = new_ast_table_or_subquery($table_function, $opt_as_alias); }
   | '(' query_parts ')'  { $table_or_subquery = new_ast_table_or_subquery($query_parts, NULL); }
-  |  query_parts_macro_ref[qp] opt_as_alias { $table_or_subquery = new_ast_table_or_subquery($qp, $opt_as_alias); }
+  |  macro_ref[qp] opt_as_alias { $table_or_subquery = new_ast_table_or_subquery($qp, $opt_as_alias); }
   ;
 
 join_type:
@@ -2820,15 +2735,10 @@ opt_macro_args:
 macro_arg:
  expr[arg] { $macro_arg = new_ast_expr_macro_arg($arg); }
  | BEGIN_ stmt_list[arg] END { $macro_arg = new_ast_stmt_list_macro_arg($arg); }
- |  stmt_list_macro_ref[arg]  { $macro_arg = new_ast_stmt_list_macro_arg(new_ast_stmt_list($arg, NULL)); }
  | FROM '(' query_parts[arg] ')' { $macro_arg = new_ast_query_parts_macro_arg($arg); }
- |  query_parts_macro_ref[arg] { $macro_arg = new_ast_query_parts_macro_arg($arg); }
  | WITH '(' cte_tables[arg] ')' { $macro_arg = new_ast_cte_tables_macro_arg($arg); }
- |  cte_tables_macro_ref[arg] { $macro_arg = new_ast_cte_tables_macro_arg(new_ast_cte_tables($arg, NULL)); }
- | ALL '(' select_core_list[arg] ')' { $macro_arg = new_ast_select_core_macro_arg($arg); }
- |  select_core_macro_ref[arg] { $macro_arg = new_ast_select_core_macro_arg(new_ast_select_core_list($arg, NULL)); }
+ | ROWS '(' select_core_list[arg] ')' { $macro_arg = new_ast_select_core_macro_arg($arg); }
  | SELECT '(' select_expr_list[arg] ')' { $macro_arg = new_ast_select_expr_macro_arg($arg); }
- |  select_expr_macro_ref[arg]  { $macro_arg = new_ast_select_expr_macro_arg(new_ast_select_expr_list($arg, NULL)); }
  ;
 
 macro_args[result]:
@@ -3755,17 +3665,42 @@ cql_noexport int32_t macro_type_from_str(CSTR type) {
   return macro_type;
 }
 
-cql_noexport bool_t macro_arg_valid(int32_t macro_type, ast_node *macro_arg) {
-  bool_t valid = false;
+static ast_node *macro_arg_ref_node(CSTR name) {
+  int32_t macro_type = resolve_macro_name(name);
+  ast_node *id = new_ast_str(name);
   switch (macro_type) {
-    case EXPR_MACRO:         valid = is_ast_expr_macro_arg(macro_arg); break;
-    case STMT_LIST_MACRO:    valid = is_ast_stmt_list_macro_arg(macro_arg); break;
-    case QUERY_PARTS_MACRO:  valid = is_ast_query_parts_macro_arg(macro_arg); break;
-    case CTE_TABLES_MACRO:   valid = is_ast_cte_tables_macro_arg(macro_arg); break;
-    case SELECT_CORE_MACRO:  valid = is_ast_select_core_macro_arg(macro_arg); break;
-    case SELECT_EXPR_MACRO:  valid = is_ast_select_expr_macro_arg(macro_arg); break;
+    case EXPR_MACRO:         return new_ast_expr_macro_arg_ref(id);
+    case STMT_LIST_MACRO:    return new_ast_stmt_list_macro_arg_ref(id);
+    case QUERY_PARTS_MACRO:  return new_ast_query_parts_macro_arg_ref(id);
+    case CTE_TABLES_MACRO:   return new_ast_cte_tables_macro_arg_ref(id);
+    case SELECT_CORE_MACRO:  return new_ast_select_core_macro_arg_ref(id);
+    case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_arg_ref(id);
   }
-  return valid;
+  return new_ast_unknown_macro_ref(id, NULL);
+}
+
+static ast_node *macro_ref_node(CSTR name, ast_node *args) {
+  int32_t macro_type = resolve_macro_name(name);
+  ast_node *id = new_ast_str(name);
+  switch (macro_type) {
+    case EXPR_MACRO:         return new_ast_expr_macro_ref(id, args);
+    case STMT_LIST_MACRO:    return new_ast_stmt_list_macro_ref(id, args);
+    case QUERY_PARTS_MACRO:  return new_ast_query_parts_macro_ref(id, args);
+    case CTE_TABLES_MACRO:   return new_ast_cte_tables_macro_ref(id, args);
+    case SELECT_CORE_MACRO:  return new_ast_select_core_macro_ref(id, args);
+    case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_ref(id, args);
+  }
+  return new_ast_unknown_macro_ref(id, args);
+}
+
+cql_noexport int32_t macro_arg_type(ast_node *macro_arg) {
+  if (is_ast_expr_macro_arg(macro_arg)) return EXPR_MACRO;
+  if (is_ast_stmt_list_macro_arg(macro_arg)) return STMT_LIST_MACRO;
+  if (is_ast_query_parts_macro_arg(macro_arg)) return QUERY_PARTS_MACRO;
+  if (is_ast_cte_tables_macro_arg(macro_arg)) return CTE_TABLES_MACRO;
+  if (is_ast_select_core_macro_arg(macro_arg)) return SELECT_CORE_MACRO;
+  if (is_ast_select_expr_macro_arg(macro_arg)) return SELECT_EXPR_MACRO;
+  return EOF;
 }
 
 static symtab *defines;
@@ -3814,7 +3749,7 @@ static ast_node *do_ifdef(ast_node *ast) {
   cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
   new_state->prev = cql_ifdef_state;
   bool_t processing = is_processing();
-  new_state->processing = processing && cql_is_defined(name); 
+  new_state->processing = processing && cql_is_defined(name);
   new_state->process_else = processing && !new_state->processing;
   ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
   cql_ifdef_state = new_state;
@@ -3826,7 +3761,7 @@ static ast_node *do_ifndef(ast_node *ast) {
   cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
   new_state->prev = cql_ifdef_state;
   bool_t processing = is_processing();
-  new_state->processing = processing && !cql_is_defined(name); 
+  new_state->processing = processing && !cql_is_defined(name);
   new_state->process_else = processing && !new_state->processing;
   ast = new_state->processing ? new_ast_is_true(ast) : new_ast_is_false(ast);
   cql_ifdef_state = new_state;

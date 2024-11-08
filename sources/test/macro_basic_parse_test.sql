@@ -84,11 +84,10 @@ end;
 
 @macro(select_core) selcor2!(x! select_core)
 begin
-   x! union all x!
+   ROWS(x!) union all ROWS(x!)
 end;
 
-selcor2!(all(selcor!(5)));
-
+ROWS(selcor2!(selcor!(5)));
 
 @macro(select_expr) se!(x! select_expr)
 begin
@@ -154,7 +153,7 @@ set z := @LINE;
 let zz := macro3!(from( (select 1 x, 2 y) as T));
 set zz := macro3!(from( T1 join T2 on T1.id = T2.id));
 set zz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
-set zz := macro5!(ALL(select 1 x from foo));
+set zz := macro5!(ROWS(select 1 x from foo));
 set zz := macro6!(1+2);
 set zz := macro7!(select(1 x, 2 y));
 
@@ -174,7 +173,7 @@ begin
   mondo1!(a!, b!, c!, d!, e!, f!);
 end;
 
-mondo2!(1+2, from(x join y), all(select 1 from foo union select 2 from bar), select(20 xx), 
+mondo2!(1+2, from(x join y), rows(select 1 from foo union select 2 from bar), select(20 xx),
   with(f(*) as (select 99 from yy)), begin let qq := 201; end);
 
 -- make sure these are ok to use as identifiers

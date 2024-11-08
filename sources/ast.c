@@ -1270,7 +1270,7 @@ cql_noexport bool_t set_macro_info(CSTR name, int32_t macro_type, ast_node *ast)
   minfo->def = ast;
   minfo->type = macro_type;
 
-  return symtab_add(macro_table, dup_printf("%s!", name), minfo);
+  return symtab_add(macro_table, name, minfo);
 }
 
 // Recover the macro info given the name (if it exists).
@@ -1286,7 +1286,7 @@ cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
-  return symtab_add(macro_arg_table, dup_printf("%s!", name), minfo);
+  return symtab_add(macro_arg_table, name, minfo);
 }
 
 // Recover the macro info given the name (if it exists).
@@ -1339,28 +1339,6 @@ cql_noexport bool_t is_any_macro_def(ast_node *ast) {
          is_ast_select_core_macro_def(ast) ||
          is_ast_select_expr_macro_def(ast) ||
          is_ast_expr_macro_def(ast);
-}
-
-// Like it sounds, any of the macro ref types
-// This is foo!(..) for any foo
-cql_noexport bool_t is_any_macro_arg_ref(ast_node *ast) {
-  return is_ast_stmt_list_macro_arg_ref(ast) ||
-         is_ast_query_parts_macro_arg_ref(ast) ||
-         is_ast_cte_tables_macro_arg_ref(ast) ||
-         is_ast_select_core_macro_arg_ref(ast) ||
-         is_ast_select_expr_macro_arg_ref(ast) ||
-         is_ast_expr_macro_arg_ref(ast);
-}
-
-// Like it sounds, any of the macro argument ref types
-// This is foo! for any foo.
-cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
-  return is_ast_stmt_list_macro_ref(ast) ||
-         is_ast_cte_tables_macro_ref(ast) ||
-         is_ast_query_parts_macro_ref(ast) ||
-         is_ast_select_core_macro_ref(ast) ||
-         is_ast_select_expr_macro_ref(ast) ||
-         is_ast_expr_macro_ref(ast);
 }
 
 // Replaces the new node for the old node in the tree by
@@ -1655,12 +1633,12 @@ static void expand_special_ids(ast_node *ast) {
 //  * recursively expand the macro body
 //  * link in the expanded body into the correct spot with one of the helpers
 static void expand_macro_refs(ast_node *ast) {
-  Contract(is_any_macro_arg_ref(ast) || is_any_macro_ref(ast));
+  Contract(is_any_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
 
   macro_info *minfo = NULL;
 
-  if (is_any_macro_ref(ast)) {
+  if (ast->right) {
     EXTRACT(macro_args, ast->right);
     if (macro_args) {
       // expand the arguments to the macro before using them
@@ -1717,7 +1695,7 @@ static void expand_macro_refs(ast_node *ast) {
       int32_t macro_type = macro_type_from_str(type);
       set_macro_arg_info(formal_name, macro_type, macro_arg);
 
-      if (!macro_arg_valid(macro_type, macro_arg)) {
+      if (macro_arg_type(macro_arg) != macro_type) {
         report_macro_error(macro_arg, "macro type mismatch in argument", formal_name);
         goto cleanup;
       }
@@ -1813,7 +1791,7 @@ tail_recurse:
   }
 
   // expand macros and macro arguments in place
-  if (is_any_macro_arg_ref(node) || is_any_macro_ref(node)) {
+  if (is_any_macro_ref(node)) {
     expand_macro_refs(node);
     return;
   }

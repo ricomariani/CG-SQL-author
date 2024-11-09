@@ -29,7 +29,7 @@
 //    you want to look at it without getting asserts in
 //    the gen_one_statement code path
 //
-#define SUPPRESS_STATEMENT_ECHO
+// #define SUPPRESS_STATEMENT_ECHO
 
 cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
@@ -41,6 +41,7 @@ static symtab *macro_arg_table;
 static symtab *macro_refs;
 static symtab *macro_defs;
 static symtab *macro_arg_refs;
+static symtab *macro_arg_types;
 
 typedef struct macro_state_t {
   CSTR name;
@@ -66,7 +67,8 @@ typedef struct misc_attrs_type {
 #define MACRO_INIT(x) \
   symtab_add(macro_refs, k_ast_ ## x ## _macro_ref, (void*)k_ast_ ## x ## _macro_arg); \
   symtab_add(macro_arg_refs, k_ast_ ## x ## _macro_arg_ref, (void*)k_ast_ ## x ## _macro_arg); \
-  symtab_add(macro_defs, k_ast_ ## x ## _macro_def, (void*)k_ast_ ## x ## _macro_ref )
+  symtab_add(macro_defs, k_ast_ ## x ## _macro_def, (void*)k_ast_ ## x ## _macro_ref ); \
+  symtab_add(macro_arg_types, k_ast_ ## x ## _macro_arg, (void*)k_ast_ ## x ## _macro_arg_ref )
 
 // initialization for the ast and macro expansion pass
 cql_noexport void ast_init() {
@@ -76,6 +78,7 @@ cql_noexport void ast_init() {
   macro_defs = symtab_new();
   macro_refs = symtab_new();
   macro_arg_refs = symtab_new();
+  macro_arg_types = symtab_new();
   delete_macro_formals();
   macro_expansion_errors = false;
 
@@ -99,6 +102,7 @@ cql_noexport void ast_cleanup() {
   SYMTAB_CLEANUP(macro_defs);
   SYMTAB_CLEANUP(macro_refs);
   SYMTAB_CLEANUP(macro_arg_refs);
+  SYMTAB_CLEANUP(macro_arg_types);
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
@@ -1329,6 +1333,10 @@ cql_noexport bool_t is_macro_def(ast_node *ast) {
   return ast && !!symtab_find(macro_defs, ast->type);
 }
 
+cql_noexport bool_t is_macro_arg_type(ast_node *ast) {
+  return ast && !!symtab_find(macro_arg_types, ast->type);
+}
+
 // Look for the name first as an argument and then as a macro body.
 // Note that at this point name will have the ! at the end already.
 cql_noexport int32_t resolve_macro_name(CSTR name) {
@@ -1376,7 +1384,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
 // different sizes so we have to use the more general mechanism.
 // This means we might have to refetch parent->left or right
 // to get the new value of the node.
-static void replace_node(ast_node *old, ast_node *new) {
+static ast_node *replace_node(ast_node *old, ast_node *new) {
   if (old->parent->left == old) {
    ast_set_left(old->parent, new);
   }
@@ -1463,6 +1471,10 @@ static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
     is_ast_select_core_list(new) ||
     is_ast_select_expr_list(new))) {
       return false;
+  }
+
+  if (is_macro_arg_type(parent)) {
+    return false;
   }
 
   // OK we have something that is like a list node already and
@@ -1671,22 +1683,18 @@ static void expand_macro_refs(ast_node *ast) {
 
     minfo = get_macro_info(name);
   }
-  else {
+  else {    
     minfo = get_macro_arg_info(name);
   }
 
   Invariant(minfo);
-
   ast_node *copy = ast_clone_tree(minfo->def);
-
   ast_node *body = NULL;
-  if (is_macro_def(copy)) {
-    // macro defs like x!() have the payload on the right
+
+  if (is_macro_ref(ast)) {
     body = copy->right;
-    copy->left = body;
   }
   else {
-    // macro formals like x! have the payload on the right
     body = copy->left;
   }
 
@@ -1745,8 +1753,14 @@ static void expand_macro_refs(ast_node *ast) {
   // and then slot it in. Otherwise the recursion is n^2 depth!!!
   expand_macros(body);
 
-  // its normal for body to be a different node type
-  body = copy->left;
+  // its normal for body to be a different node type, we refetch
+  // it here because the expansion might have changed it.
+  if (is_macro_ref(ast)) {
+    body = copy->right;
+  }
+  else {
+    body = copy->left;
+  }
 
   // the query parts are already under a table_or_subquery node
   // because of the macro position, if there is a redundant one
@@ -1763,12 +1777,14 @@ static void expand_macro_refs(ast_node *ast) {
 
   if (is_ast_text_args(parent)) {
     replace_node(ast, body);
+    ast = body;
   }
   else if (spliced_macro_into_list(parent, body)) {
     // done
   }
   else  {
     replace_node(ast, body);
+    ast = body;
   }
 
 cleanup:

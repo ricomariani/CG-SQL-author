@@ -535,7 +535,14 @@ stmt:
   | ifndef_stmt { $stmt = make_statement_node(NULL, $ifndef_stmt); }
   ;
 
-expr_stmt: expr { $expr_stmt = new_ast_expr_stmt($expr);  }
+expr_stmt: expr { 
+     if (is_ast_stmt_list_macro_ref($expr) || is_ast_stmt_list_macro_arg_ref($expr)) {
+        $$ = $expr;
+     }
+     else {
+       $expr_stmt = new_ast_expr_stmt($expr);
+     }
+   }
   ;
 
 any_stmt:

@@ -32,3 +32,11 @@ begin
 end;
 
 sel3!();
+
+unknown_macro!();
+
+unknown_arg!;
+
+exp!(not_valid_arg!);
+
+exp!(not_valid_macro!());

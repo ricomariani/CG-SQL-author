@@ -12,3 +12,11 @@ test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type m
  -> 'sel1!' in test/macro_exp_errors.sql:26
  -> 'sel2!' in test/macro_exp_errors.sql:31
  -> 'sel3!' in test/macro_exp_errors.sql:34
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_ref : macro reference is not a valid macro 'unknown_macro'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg_ref : macro reference is not a valid macro 'unknown_arg'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg_ref : macro reference is not a valid macro 'not_valid_arg'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg : macro type mismatch in argument 'e'
+ -> 'exp!' in test/macro_exp_errors.sql:40
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_ref : macro reference is not a valid macro 'not_valid_macro'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg : macro type mismatch in argument 'e'
+ -> 'exp!' in test/macro_exp_errors.sql:42

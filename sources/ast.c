@@ -1687,6 +1687,11 @@ static void expand_macro_refs(ast_node *ast) {
     minfo = get_macro_arg_info(name);
   }
 
+  if (!minfo) {
+    report_macro_error(ast, "macro reference is not a valid macro", name);
+    return;
+  }
+
   Invariant(minfo);
   ast_node *copy = ast_clone_tree(minfo->def);
   ast_node *body = NULL;

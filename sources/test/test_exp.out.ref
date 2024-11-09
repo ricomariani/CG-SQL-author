@@ -2431,3 +2431,18 @@ x:left('x', 'y');
 right('a', 'b');
 
 CALL foo(1, 2);
+
+@IFDEF goo
+  @MACRO(STMT_LIST) c!()
+  BEGIN
+    foo!();
+    boo!;
+  END;
+@ELSE
+  @MACRO(STMT_LIST) c!()
+  BEGIN
+    foo!();
+    boo!;
+  END;
+@ENDIF
+

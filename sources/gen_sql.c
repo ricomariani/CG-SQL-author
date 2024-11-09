@@ -1189,9 +1189,6 @@ cql_noexport void gen_any_text_arg(ast_node *ast) {
   else if (is_ast_select_core_list(ast)) {
     gen_select_core_list(ast);
   }
-  else if (is_ast_select_expr(ast)) {
-    gen_select_expr(ast);
-  }
   else if (is_ast_select_expr_list(ast)) {
     gen_select_expr_list(ast);
   }
@@ -1199,19 +1196,6 @@ cql_noexport void gen_any_text_arg(ast_node *ast) {
     gen_root_expr(ast);
   }
 }
-
-// note that the final expression might end up with parens or not
-// but in this form no parens are needed, the replacement will
-// naturally cause parens around a lower binding macro or macro arg
-// hence we ignore pri and pri new just like for say identifiers
-static void gen_expr_macro_ref(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
-  Contract(is_ast_expr_macro_ref(ast));
-  EXTRACT_STRING(name, ast->left);
-  gen_printf("%s(", name);
-  gen_macro_args(ast->right);
-  gen_printf(")");
-}
-
 
 // this is used to token paste an identifier
 static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) {
@@ -2777,11 +2761,6 @@ static void gen_select_statement_type(ast_node *ast) {
   Contract(is_ast_select_core(ast));
   EXTRACT_ANY(select_opts, ast->left);
 
-  if (is_any_macro_ref(select_opts)) {
-    gen_any_macro_ref(select_opts);
-    return;
-  }
-
   if (select_opts && is_ast_select_values(select_opts)) {
     gen_printf("VALUES");
   } else {
@@ -2821,11 +2800,7 @@ cql_noexport void gen_select_core(ast_node *ast) {
 
     gen_select_statement_type(ast);
   
-    // select_core subtree can be a macro, SELECT or VALUES statement
-    if (is_any_macro_ref(select_core_left)) {
-      gen_any_macro_ref(select_core_left);
-    }
-    else if (is_ast_select_values(select_core_left)) {
+    if (is_ast_select_values(select_core_left)) {
       // VALUES [values]
       EXTRACT(values, ast->right);
       gen_values(values);

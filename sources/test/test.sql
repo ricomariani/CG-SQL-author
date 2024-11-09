@@ -1857,3 +1857,19 @@ x:left('x', 'y');
 right('a', 'b');
 
 call @ID("foo")(1,2);
+
+-- this forces macros on both paths as well as unknown macros
+-- it should still parse
+@ifdef goo
+  @macro(stmt_list) c!()
+  begin
+    foo!();
+    boo!;
+  end;
+@else
+  @macro(stmt_list) c!()
+  begin
+    foo!();
+    boo!;
+  end;
+@endif

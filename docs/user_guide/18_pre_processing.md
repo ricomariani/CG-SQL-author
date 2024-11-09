@@ -70,6 +70,22 @@ Note that in CQL even the code that is conditionally compiled out must at least
 _parse_ correctly.  Semantic analysis does not run, and indeed often there would
 be conflicts if it did, but the code must at least be correct enough to parse.
 
+Conditionally choosing one of several macro implementations for use later in
+the code is a very powerful way to get conditionality throughout your code
+cleanly.  `@ifdef` can only appear inside of statement list (`stmt_list`) macros
+becasue `@ifdef` is a statement so it can't appear in expressions and query
+fragments.   Hence the most powerful pattern is:
+
+```sql
+@ifdef something
+  @macro(...) foo! begin choice1 end;
+@else
+  @macro(...) foo! begin choice2 end;
+@endif
+
+-- foo! is now conditionally defined
+```
+
 ### Text Includes
 
 Pulling in common headers is also supported.  The syntax is
@@ -329,20 +345,86 @@ use a function-like syntax to do the job.
 |cte_tables|with( x(*) as (select 1 x, 2 y))                 |
 |expr|no keyword required  just _foo!(x)_                    |
 |query_parts|from(U join V)                                  |
-|select_core|all(select * from U union all select * from V)  |
+|select_core|rows(select * from U union all select * from V) |
 |select_expr|select(1 x, 2 y)                                |
 |stmt_list|begin statement1; statement2; end                 |
 
 With these forms the type of macro argument is unambiguous and
 can be immediately checked against the macro requirements.
 
+>Note that when using a `select_core` macro or macro argument
+>in source it is necessary to do `ROWS(name!)`.  This is an
+>unfortunate but unavoidable concession to the grammar tools.
+
+>Note that none of the macro args requires qualifications when
+>used in a macro argument context because they can always be
+>type checked later, therefore foo!(a!, b!, c!) always works.
+>The other macro types require their wrappings to have clean
+>grammar.
+
+And example with all of the types:
+
+```sql
+@macro(stmt_list) mondo1!(
+  a! expr,
+  b! query_parts,
+  c! select_core,
+  d! select_expr,
+  e! cte_tables,
+  f! stmt_list)
+begin
+  -- macros can be used without qualification in @ID and @TEXT
+  set zz := @text(a!, b!, c!, d!, e!, f!);
+end;
+
+@macro(stmt_list) mondo2!(
+  a! expr,
+  b! query_parts,
+  c! select_core,
+  d! select_expr,
+  e! cte_tables,
+  f! stmt_list)
+begin
+  -- arguments can be forwarded unambigously
+  mondo1!(a!, b!, c!, d!, e!, f!);
+  if a! then   -- an expression (the most common)
+    f!;        -- a statement list (next most common)
+  else
+    -- these are the parts of a query that you might
+    -- want to macroize
+
+    with e!    -- cte tables
+    select d!  -- select expressions
+    from b!    -- query parts
+    union all
+    rows(c!);  -- select core
+  end if;
+end;
+
+-- and this is how you encode each type
+mondo2!(
+  1+2,
+  from(x join y),
+  rows(select 1 from foo union select 2 from bar),
+  select(20 xx),
+  with(f(*) as (select 99 from yy)),
+  begin let qq := 201; end
+  );
+```
+
 #### Meta Variables
 
 |Variable|Notes|
 |--------|-----|
 |`@LINE` | The current line number |
-|`@MACRO_LINE`|The line number macro expansion began|
+|`@MACRO_LINE`|The line where macro expansion began|
 |`@MACRO_FILE`|The file where macro expansion began|
+
+`@MACRO_LINE` and `@MACRO_FILE` are useful for providing
+error information that refer to the source file that
+used the macro rather than the macro itself. Like in
+an `assert` macro.  `@LINE` is useful to report problems
+in the macro itself, like an invariant.
 
 We can make the assert macro better still:
 

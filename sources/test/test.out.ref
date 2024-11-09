@@ -2428,3 +2428,32 @@ CALL @ID("foo")(1, 2);
   END;
 @ENDIF
 
+
+@MACRO(STMT_LIST) test_big_all!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
+BEGIN
+  IF a! THEN
+    f!;
+  ELSE
+    WITH
+      e!
+    SELECT d!
+      FROM b!
+    UNION ALL
+    ROWS(c!);
+  END;
+END;
+
+test_big_all!(1 + 2, FROM(x
+INNER JOIN y), ROWS(SELECT 1
+  FROM foo
+UNION
+SELECT 2
+  FROM bar), SELECT(20 AS xx), WITH(
+  f (*) AS (
+    SELECT 99
+      FROM yy
+  )
+), 
+BEGIN
+  LET qq := 201;
+END);

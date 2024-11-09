@@ -156,27 +156,6 @@ FIXED_RULES = """
        seq('--', /(\\\\(.|\\r?\\n)|[^\\\\\\n])*/),
        seq('/*', /[^*]*\*+([^/*][^*]*\*+)*/, '/'))),
 
-    non_expr_macro_ref: $ => choice(
-      $.stmt_list_macro_ref,
-      $.cte_tables_macro_ref,
-      $.select_core_macro_ref,
-      $.select_expr_macro_ref,
-      $.query_parts_macro_ref),
-
-    expr_macro_ref: $ => prec.left(1,choice(
-      seq($.name, '!'),
-      seq($.name, '!', '(', optional($.macro_args), ')'),
-      seq($.basic_expr, ':', $.name, '!', '(', optional($.macro_args), ')'),
-      seq($.basic_expr, ':', $.name, '!'))),
-
-    macro_ref: $ => choice(seq($.name, '!'), seq($.name, '!', '(', optional($.macro_args), ')')),
-
-    query_parts_macro_ref: $ => prec(1, $.macro_ref),
-    cte_tables_macro_ref: $ => prec(2, $.macro_ref),
-    select_core_macro_ref: $ => prec(3, $.macro_ref),
-    select_expr_macro_ref: $ => prec(4, $.macro_ref),
-    stmt_list_macro_ref: $ => prec(5, $.macro_ref),
-
     stmt_list: $ => repeat1(choice($.stmt, $.include_stmt, $.comment)),
 """
 
@@ -199,18 +178,11 @@ DELETED_PRODUCTIONS = {
     "ELSE_IF",
     "ID!",
     "`quoted_identifier`",
-    "cte_tables_macro_ref",
     "end_of_included_file",
-    "expr_macro_ref",
     "include_section",
     "include_stmts",
-    "non_expr_macro_ref",
     "program",
-    "query_parts_macro_ref",
-    "select_core_macro_ref",
-    "select_expr_macro_ref",
     "stmt_list",
-    "stmt_list_macro_ref",
     "top_level_stmts",
 }
 

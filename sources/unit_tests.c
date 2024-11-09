@@ -193,6 +193,15 @@ static bool test_sha256_example6() {
   return result;
 }
 
+static bool test_unknown_macro() {
+ ast_node *t = new_ast_unknown_macro_arg(NULL, NULL);
+ if (t->type != k_ast_unknown_macro_arg) return false;
+
+ t = new_ast_unknown_macro_def(NULL, NULL);
+ if (t->type != k_ast_unknown_macro_def) return false;
+ return true;
+}
+
 cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_Strdup__empty_string());
   TEST_ASSERT(test_Strdup__one_character_string());
@@ -225,6 +234,7 @@ cql_noexport void run_unit_tests() {
   TEST_ASSERT(test_sha256_example4());
   TEST_ASSERT(test_sha256_example5());
   TEST_ASSERT(test_sha256_example6());
+  TEST_ASSERT(test_unknown_macro());
 }
 
 #endif

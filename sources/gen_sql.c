@@ -1177,10 +1177,7 @@ static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri
 }
 
 cql_noexport void gen_any_text_arg(ast_node *ast) {
-  if (is_ast_cte_table(ast)) {
-    gen_cte_table(ast);
-  }
-  else if (is_ast_cte_tables(ast)) {
+  if (is_ast_cte_tables(ast)) {
     gen_cte_tables(ast, "");
   }
   else if (is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast)) {
@@ -1188,9 +1185,6 @@ cql_noexport void gen_any_text_arg(ast_node *ast) {
   }
   else if (is_ast_stmt_list(ast)) {
     gen_stmt_list(ast);
-  }
-  else if (is_ast_select_core(ast)) {
-    gen_select_core(ast);
   }
   else if (is_ast_select_core_list(ast)) {
     gen_select_core_list(ast);

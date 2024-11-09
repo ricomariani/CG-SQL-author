@@ -1254,6 +1254,12 @@ call:
   | basic_expr ':' simple_call { $call = new_ast_reverse_apply($basic_expr, $simple_call); }
   | basic_expr ':' loose_name[name] { $call = new_ast_reverse_apply($basic_expr, new_simple_call_from_name($name)); }
   | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
+  | basic_expr ':' ID '!' {
+     YY_ERROR_ON_MACRO_ARG($ID);
+     $$ = macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), NULL)); }
+  | basic_expr ':' ID '!' '(' opt_macro_args ')' {
+     YY_ERROR_ON_MACRO_ARG($ID);
+     $$ = macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), $opt_macro_args)); }
   ;
 
 basic_expr:
@@ -1748,7 +1754,10 @@ select_expr_list[result]:
 
 select_expr:
   expr opt_as_alias  {
-    if (is_ast_table_star($expr) || is_ast_star($expr)) {
+    if (is_ast_select_expr_macro_ref($expr) || is_ast_select_expr_macro_arg_ref($expr)) {
+       $$ = $expr;
+    }
+    else if (is_ast_table_star($expr) || is_ast_star($expr)) {
       YY_ERROR_ON_ALIAS_PRESENT($opt_as_alias);
       $select_expr = $expr;
     }
@@ -2715,9 +2724,6 @@ macro_def_stmt:
   | stmt_list_macro_def BEGIN_ stmt_list END {
      $macro_def_stmt = $stmt_list_macro_def;
      ast_node *stmt_list = $stmt_list;
-     if (is_ast_stmt_list(stmt_list) && is_ast_expr_stmt(stmt_list->left)) {
-        ast_set_left(stmt_list, stmt_list->left->left);
-     }
      ast_set_right($macro_def_stmt, $stmt_list);
      delete_macro_formals(); }
   | query_parts_macro_def BEGIN_ query_parts END {

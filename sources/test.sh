@@ -211,7 +211,7 @@ basic_test() {
 		failed
 	fi
 
-	echo "  computing diffs CRFL parsing (empty if none)"
+	echo "  computing diffs CRLF parsing (empty if none)"
 	mv "$O/test.out2" "$O/test.out"
 	on_diff_exit test.out
 

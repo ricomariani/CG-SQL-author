@@ -32,7 +32,6 @@ void line_directive(const char *);
 char *Strdup(const char *);
 static CSTR last_doc_comment = NULL;
 
-
 static bool_t cql_already_processed_file(CSTR);
 static void cql_record_processed_file(CSTR);
 

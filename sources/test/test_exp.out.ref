@@ -146,9 +146,9 @@ END;
 
 @MACRO(SELECT_CORE) selcor2!(x! SELECT_CORE)
 BEGIN
-  x!
+  ROWS(x!)
   UNION ALL
-  x!
+  ROWS(x!)
 END;
 
 SELECT 5 + 1 AS x
@@ -219,7 +219,7 @@ LET y := 2;
 
 LET z := x * (y + 5 + (y + 5) + 1);
 
-SET z := 151;
+SET z := 150;
 
 LET zz := "(SELECT 1 AS x, 2 AS y) AS T";
 
@@ -233,7 +233,7 @@ SET zz := "1 + 2";
 
 SET zz := "1 AS x, 2 AS y";
 
-LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_basic_parse_test.sql', 161);\nEND;\n\nfoo";
+LET zzz := "begin\nIF NOT 7 THEN\n  CALL printf(\"assert '%s' failed at line %s:%d\\n\", \"7\", 'test/macro_basic_parse_test.sql', 160);\nEND;\n\nfoo";
 
 SET x := 5;
 
@@ -250,12 +250,7 @@ END;
 
 @MACRO(STMT_LIST) mondo2!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
 BEGIN
-  mondo1!(a!, FROM(b!), ALL(c!), SELECT(d!), WITH(
-    e!
-  ), 
-  BEGIN
-    f!;
-  END);
+  mondo1!(a!, b!, c!, d!, e!, f!);
 END;
 
 SET zz := "1 + 2x\nINNER JOIN ySELECT 1\n  FROM foo\nUNION\nSELECT 2\n  FROM bar20 AS xxf (*) AS (\n  SELECT 99\n    FROM yy\n)\nLET qq := 201;\n";

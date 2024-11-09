@@ -5404,6 +5404,11 @@ static void gen_stmt_list(ast_node *root) {
 }
 
 cql_noexport void gen_one_stmt(ast_node *stmt)  {
+  if (is_any_macro_ref(stmt)) {
+    gen_any_macro_ref(stmt);
+    return;
+  }
+
   symtab_entry *entry = symtab_find(gen_stmts, stmt->type);
 
   // These are all the statements there are, we have to find it in this table

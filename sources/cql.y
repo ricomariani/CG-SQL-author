@@ -2707,6 +2707,10 @@ macro_def_stmt:
      delete_macro_formals(); }
   | stmt_list_macro_def BEGIN_ stmt_list END {
      $macro_def_stmt = $stmt_list_macro_def;
+     ast_node *stmt_list = $stmt_list;
+     if (is_ast_stmt_list(stmt_list) && is_ast_expr_stmt(stmt_list->left)) {
+        ast_set_left(stmt_list, stmt_list->left->left);
+     }
      ast_set_right($macro_def_stmt, $stmt_list);
      delete_macro_formals(); }
   | query_parts_macro_def BEGIN_ query_parts END {

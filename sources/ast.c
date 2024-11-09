@@ -1820,6 +1820,22 @@ tail_recurse:
     // so we can attribute the AST better
     node->lineno = macro_state.line;
   }
+
+  if (is_ast_ifdef_stmt(node) || is_ast_ifndef_stmt(node)) {
+    EXTRACT_ANY_NOTNULL(evaluation, node->left);
+    EXTRACT_NOTNULL(pre, node->right);
+
+    if (is_ast_is_true(evaluation)) {
+       node = pre->left;
+    }
+    else {
+       node = pre->right;
+    }
+    if (node)
+      goto tail_recurse;
+    return;
+  }
+
   // do not recurse into macro definitions
   if (is_macro_def(node)) {
     return;

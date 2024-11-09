@@ -144,25 +144,17 @@ void yyrestart(FILE *);
 
 // if macro arg found that's an error, it should be a macro
 #define YY_ERROR_ON_MACRO_ARG(x) \
-  if (get_macro_arg_info(x)) yyerror("expected a defined macro not a macro formal.");
+  if (get_macro_arg_info(x) && !get_macro_info(x)) yyerror("expected a defined macro not a macro formal.");
 
 // if macro arg not found that's an error, it shouldn't be a macro, it should be an arg
 #define YY_ERROR_ON_MACRO(x) \
-  if (!get_macro_arg_info(x)) yyerror("expected a defined macro formal not a macro.");
+  if (!get_macro_arg_info(x) && get_macro_info(x)) yyerror("expected a defined macro formal not a macro.");
 
 #define YY_ERROR_ON_FAILED_ADD_MACRO(success, name) \
   if (!success) { yyerror(dup_printf("macro already exists '%s'.", name)); }
 
 #define YY_ERROR_ON_FAILED_MACRO_ARG(name) \
   if (name) { yyerror(dup_printf("macro argument already exists '%s'.", name)); }
-
-#define YY_ERROR_ON_CONDITIONAL_MACRO(name) \
- if (cql_ifdef_state) { \
-   yyerror( \
-     dup_printf( \
-       "macro '%s!' is inside an @if[n]def; Put the @if[n]def inside the macro instead.", \
-       name)); \
- }
 
 // We insert calls to `cql_inferred_notnull` as part of a rewrite so we expect
 // to see it during semantic analysis, but it cannot be allowed to appear in a
@@ -2616,22 +2608,22 @@ expr_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    YY_ERROR_ON_CONDITIONAL_MACRO(name);
-    bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
-    }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, EXPR_MACRO, $expr_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    } }
 
 stmt_list_macro_def:
   AT_MACRO '(' STMT_LIST ')' name '!' '(' opt_macro_formals ')' {
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_stmt_list_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    YY_ERROR_ON_CONDITIONAL_MACRO(name);
-    bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
-    }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, STMT_LIST_MACRO, $stmt_list_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    } }
   ;
 
 query_parts_macro_def:
@@ -2639,11 +2631,11 @@ query_parts_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_query_parts_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    YY_ERROR_ON_CONDITIONAL_MACRO(name);
-    bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
-    }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, QUERY_PARTS_MACRO, $query_parts_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    } }
   ;
 
 cte_tables_macro_def:
@@ -2651,11 +2643,11 @@ cte_tables_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_cte_tables_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    YY_ERROR_ON_CONDITIONAL_MACRO(name);
-    bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
-    }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, CTE_TABLES_MACRO, $cte_tables_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    } }
   ;
 
 select_core_macro_def:
@@ -2663,11 +2655,11 @@ select_core_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_select_core_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    YY_ERROR_ON_CONDITIONAL_MACRO(name);
-    bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
-    }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, SELECT_CORE_MACRO, $select_core_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    } }
   ;
 
 select_expr_macro_def:
@@ -2675,11 +2667,11 @@ select_expr_macro_def:
     CSTR bad_name = install_macro_args($opt_macro_formals);
     YY_ERROR_ON_FAILED_MACRO_ARG(bad_name);
     $$ = new_ast_select_expr_macro_def(new_ast_macro_name_formals($name, $opt_macro_formals), NULL);
-    EXTRACT_STRING(name, $name);
-    YY_ERROR_ON_CONDITIONAL_MACRO(name);
-    bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
-    YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
-    }
+    if (is_processing()) {
+      EXTRACT_STRING(name, $name);
+      bool_t success = set_macro_info(name, SELECT_EXPR_MACRO, $select_expr_macro_def);
+      YY_ERROR_ON_FAILED_ADD_MACRO(success, name);
+    } }
   ;
 
 op_stmt: AT_OP data_type_any ':' loose_name[op] loose_name_or_type[func] AS loose_name[targ] {
@@ -3693,7 +3685,7 @@ static ast_node *macro_arg_ref_node(CSTR name) {
     case SELECT_CORE_MACRO:  return new_ast_select_core_macro_arg_ref(id);
     case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_arg_ref(id);
   }
-  return new_ast_unknown_macro_ref(id, NULL);
+  return new_ast_unknown_macro_arg_ref(id);
 }
 
 static ast_node *macro_ref_node(CSTR name, ast_node *args) {
@@ -3786,9 +3778,7 @@ static ast_node *do_ifndef(ast_node *ast) {
 }
 
 static void do_else() {
-  if (cql_ifdef_state && cql_ifdef_state->process_else) {
-   cql_ifdef_state->processing = true;
-  }
+  cql_ifdef_state->processing = cql_ifdef_state && cql_ifdef_state->process_else;
 }
 
 static void do_endif() {

@@ -80,7 +80,7 @@ END;
       | {cond_action}
       | | {not}
       | | | {expr_macro_arg_ref}
-      | |   | {name e!}
+      | |   | {name e}
       | | {stmt_list}
       |   | {call_stmt}
       |     | {name printf}
@@ -91,7 +91,7 @@ END;
       |         | {macro_text}
       |         | | {text_args}
       |         |   | {expr_macro_arg_ref}
-      |         |     | {name e!}
+      |         |     | {name e}
       |         | {arg_list}
       |           | {name @MACRO_FILE}
       |           | {arg_list}
@@ -131,9 +131,9 @@ END;
   |       | {name EXPR}
   | {add}
     | {expr_macro_arg_ref}
-    | | {name x!}
+    | | {name x}
     | {expr_macro_arg_ref}
-      | {name z!}
+      | {name z}
 
 The statement ending at line XXXX
 
@@ -159,10 +159,10 @@ END;
     | {if_stmt}
       | {cond_action}
       | | {expr_macro_arg_ref}
-      | | | {name x!}
+      | | | {name x}
       | | {stmt_list}
       |   | {stmt_list_macro_arg_ref}
-      |     | {name y!}
+      |     | {name y}
       | {if_alt}
 
 The statement ending at line XXXX
@@ -397,12 +397,12 @@ END;
       |     | {select_expr_list}
       |     | | {select_expr}
       |     |   | {expr_macro_arg_ref}
-      |     |     | {name e!}
+      |     |     | {name e}
       |     | {select_from_etc}
       |       | {table_or_subquery_list}
       |       | | {table_or_subquery}
       |       |   | {query_parts_macro_arg_ref}
-      |       |   | | {name q!}
+      |       |   | | {name q}
       |       |   | {opt_as_alias}
       |       |     | {name Q}
       |       | {select_where}
@@ -1046,7 +1046,7 @@ END;
       | {with}
       | | {cte_tables}
       |   | {cte_tables_macro_arg_ref}
-      |     | {name u!}
+      |     | {name u}
       | {select_stmt}
         | {select_core_list}
         | | {select_core}
@@ -1141,7 +1141,7 @@ END;
     |   | | {select_expr}
     |   |   | {add}
     |   |   | | {expr_macro_arg_ref}
-    |   |   | | | {name x!}
+    |   |   | | | {name x}
     |   |   | | {int 1}
     |   |   | {opt_as_alias}
     |   |     | {name x}
@@ -1158,7 +1158,7 @@ END;
             | | {select_expr}
             |   | {add}
             |   | | {expr_macro_arg_ref}
-            |   | | | {name x!}
+            |   | | | {name x}
             |   | | {int 2}
             |   | {opt_as_alias}
             |     | {name x}
@@ -1171,9 +1171,9 @@ The statement ending at line XXXX
 
 @MACRO(SELECT_CORE) selcor2!(x! SELECT_CORE, y! SELECT_CORE)
 BEGIN
-  x!
+  ROWS(x!)
   UNION ALL
-  y!
+  ROWS(y!)
 END;
 
   {select_core_macro_def}
@@ -1189,12 +1189,12 @@ END;
   |       | {name SELECT_CORE}
   | {select_core_list}
     | {select_core_macro_arg_ref}
-    | | {name x!}
+    | | {name x}
     | {select_core_compound}
       | {int 2}
       | {select_core_list}
         | {select_core_macro_arg_ref}
-          | {name y!}
+          | {name y}
 
 The statement ending at line XXXX
 
@@ -1289,10 +1289,10 @@ END;
   |     | {name SELECT_EXPR}
   | {select_expr_list}
     | {select_expr_macro_arg_ref}
-    | | {name x!}
+    | | {name x}
     | {select_expr_list}
       | {select_expr_macro_arg_ref}
-        | {name x!}
+        | {name x}
 
 The statement ending at line XXXX
 
@@ -1310,12 +1310,12 @@ END;
   |     | {name SELECT_EXPR}
   | {select_expr_list}
     | {select_expr_macro_ref}
-      | {name se!}
+      | {name se}
       | {macro_args}
         | {select_expr_macro_arg}
           | {select_expr_list}
             | {select_expr_macro_arg_ref}
-              | {name x!}
+              | {name x}
 
 The statement ending at line XXXX
 
@@ -1364,9 +1364,9 @@ END;
   | {add}
     | {add}
     | | {expr_macro_arg_ref}
-    | | | {name u!}
+    | | | {name u}
     | | {expr_macro_arg_ref}
-    |   | {name u!}
+    |   | {name u}
     | {int 1}
 
 The statement ending at line XXXX
@@ -1389,14 +1389,14 @@ END;
   |       | {name EXPR}
   | {mul}
     | {expr_macro_arg_ref}
-    | | {name u!}
+    | | {name u}
     | {expr_macro_ref}
-      | {name macro1!}
+      | {name macro1}
       | {macro_args}
         | {expr_macro_arg}
           | {add}
             | {expr_macro_arg_ref}
-            | | {name v!}
+            | | {name v}
             | {int 5}
 
 The statement ending at line XXXX
@@ -1416,7 +1416,7 @@ END;
   | {macro_text}
     | {text_args}
       | {query_parts_macro_arg_ref}
-        | {name q!}
+        | {name q}
 
 The statement ending at line XXXX
 
@@ -1435,7 +1435,7 @@ END;
   | {macro_text}
     | {text_args}
       | {cte_tables_macro_arg_ref}
-        | {name q!}
+        | {name q}
 
 The statement ending at line XXXX
 
@@ -1454,7 +1454,7 @@ END;
   | {macro_text}
     | {text_args}
       | {select_core_macro_arg_ref}
-        | {name q!}
+        | {name q}
 
 The statement ending at line XXXX
 
@@ -1473,7 +1473,7 @@ END;
   | {macro_text}
     | {text_args}
       | {expr_macro_arg_ref}
-        | {name q!}
+        | {name q}
 
 The statement ending at line XXXX
 
@@ -1492,7 +1492,7 @@ END;
   | {macro_text}
     | {text_args}
       | {select_expr_macro_arg_ref}
-        | {name q!}
+        | {name q}
 
 The statement ending at line XXXX
 
@@ -1637,43 +1637,38 @@ END;
       | {macro_text}
         | {text_args}
           | {expr_macro_arg_ref}
-          | | {name a!}
+          | | {name a}
           | {text_args}
             | {strlit '___'}
             | {text_args}
               | {query_parts_macro_arg_ref}
-              | | {name b!}
+              | | {name b}
               | {text_args}
                 | {strlit '___'}
                 | {text_args}
                   | {select_core_macro_arg_ref}
-                  | | {name c!}
+                  | | {name c}
                   | {text_args}
                     | {strlit '___'}
                     | {text_args}
                       | {select_expr_macro_arg_ref}
-                      | | {name d!}
+                      | | {name d}
                       | {text_args}
                         | {strlit '___'}
                         | {text_args}
                           | {cte_tables_macro_arg_ref}
-                          | | {name e!}
+                          | | {name e}
                           | {text_args}
                             | {strlit '___'}
                             | {text_args}
                               | {stmt_list_macro_arg_ref}
-                                | {name f!}
+                                | {name f}
 
 The statement ending at line XXXX
 
 @MACRO(STMT_LIST) mondo2!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
 BEGIN
-  mondo1!(a!, FROM(b!), ALL(c!), SELECT(d!), WITH(
-    e!
-  ), 
-  BEGIN
-    f!;
-  END);
+  mondo1!(a!, b!, c!, d!, e!, f!);
 END;
 
   {stmt_list_macro_def}
@@ -1705,35 +1700,31 @@ END;
   |               | {name STMT_LIST}
   | {stmt_list}
     | {stmt_list_macro_ref}
-      | {name mondo1!}
+      | {name mondo1}
       | {macro_args}
         | {expr_macro_arg}
         | | {expr_macro_arg_ref}
-        |   | {name a!}
+        |   | {name a}
         | {macro_args}
           | {query_parts_macro_arg}
           | | {query_parts_macro_arg_ref}
-          |   | {name b!}
+          |   | {name b}
           | {macro_args}
             | {select_core_macro_arg}
-            | | {select_core_list}
-            |   | {select_core_macro_arg_ref}
-            |     | {name c!}
+            | | {select_core_macro_arg_ref}
+            |   | {name c}
             | {macro_args}
               | {select_expr_macro_arg}
-              | | {select_expr_list}
-              |   | {select_expr_macro_arg_ref}
-              |     | {name d!}
+              | | {select_expr_macro_arg_ref}
+              |   | {name d}
               | {macro_args}
                 | {cte_tables_macro_arg}
-                | | {cte_tables}
-                |   | {cte_tables_macro_arg_ref}
-                |     | {name e!}
+                | | {cte_tables_macro_arg_ref}
+                |   | {name e}
                 | {macro_args}
                   | {stmt_list_macro_arg}
-                    | {stmt_list}
-                      | {stmt_list_macro_arg_ref}
-                        | {name f!}
+                    | {stmt_list_macro_arg_ref}
+                      | {name f}
 
 The statement ending at line XXXX
 

@@ -59,16 +59,22 @@ begin
   end if;
 end;
 
+@ifdef __rt__lua
   -- This test case is suppressed in Lua, this is done
   -- because the Lua runtime is missing some blob features
-@macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
-begin
-  @ifdef __rt__lua
+  @macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
+  begin
     call printf("Skipping test %s in Lua\n", @TEXT(name!));
-  @else
+  end;
+
+@else
+
+  @macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
+  begin
     TEST!(name!, body!);
-  @endif
-end;
+  end;
+
+@endif
 
 @MACRO(stmt_list) BEGIN_SUITE!()
 begin

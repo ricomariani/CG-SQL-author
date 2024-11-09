@@ -286,7 +286,7 @@ end;
 -- + END;
 @macro(select_core) selcor2!(x! select_core, y! select_core)
 begin
-   x! union all y!
+   ROWS(x!) union all ROWS(y!)
 end;
 
 -- TEST: use macro that consumes select core list
@@ -297,7 +297,7 @@ end;
 -- + SELECT 50 + 1 AS x
 -- + UNION ALL
 -- + SELECT 50 + 2 AS x;
-selcor2!(all(selcor!(5)), selcor!(50));
+ROWS(selcor2!(selcor!(5), selcor!(50)));
 
 
 -- TEST: a select expression with args
@@ -415,7 +415,7 @@ set zz := macro4!(WITH( x(*) as (select 1 x, 2 y) ));
 
 -- TEST: select core list as text
 -- + SET zz := "SELECT 1 AS x\n  FROM foo";
-set zz := macro5!(ALL(select 1 x from foo));
+set zz := macro5!(ROWS(select 1 x from foo));
 
 -- TEST: expression as text
 -- + SET zz := "1 + 2";
@@ -446,12 +446,7 @@ end;
 -- TEST: macro with all the arg types and forwarded with the simple syntax
 -- + @MACRO(STMT_LIST) mondo2!(a! EXPR, b! QUERY_PARTS, c! SELECT_CORE, d! SELECT_EXPR, e! CTE_TABLES, f! STMT_LIST)
 -- + BEGIN
--- +  mondo1!(a!, FROM(b!), ALL(c!), SELECT(d!), WITH(
--- +    e!
--- +  ),
--- +  BEGIN
--- +    f!;
--- +  END);
+-- +   mondo1!(a!, b!, c!, d!, e!, f!);
 -- + END;
 @macro(stmt_list) mondo2!(a! expr, b! query_parts, c! select_core, d! select_expr, e! cte_tables, f! stmt_list)
 begin
@@ -463,7 +458,7 @@ end;
 mondo2!(
   1+2,
   from(x join y),
-  all(select 1 from foo union select 2 from bar), 
+  rows(select 1 from foo union select 2 from bar), 
   select(20 first_table), 
   with(f(*) as (select 99 from second_table)), 
   begin let qq := 201; end

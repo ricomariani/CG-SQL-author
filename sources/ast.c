@@ -28,7 +28,8 @@
 //    this is helpful if the ast is temporarily broken and
 //    you want to look at it without getting asserts in
 //    the gen_one_statement code path
-// #define SUPPRESS_STATEMENT_ECHO
+//
+#define SUPPRESS_STATEMENT_ECHO
 
 cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
@@ -37,6 +38,9 @@ cql_data_defn( bool_t macro_expansion_errors );
 
 static symtab *macro_table;
 static symtab *macro_arg_table;
+static symtab *macro_refs;
+static symtab *macro_defs;
+static symtab *macro_arg_refs;
 
 typedef struct macro_state_t {
   CSTR name;
@@ -58,13 +62,30 @@ typedef struct misc_attrs_type {
   uint32_t count;
 } misc_attrs_type;
 
+#undef MACRO_INIT
+#define MACRO_INIT(x) \
+  symtab_add(macro_refs, k_ast_ ## x ## _macro_ref, (void*)k_ast_ ## x ## _macro_arg); \
+  symtab_add(macro_arg_refs, k_ast_ ## x ## _macro_arg_ref, (void*)k_ast_ ## x ## _macro_arg); \
+  symtab_add(macro_defs, k_ast_ ## x ## _macro_def, (void*)k_ast_ ## x ## _macro_ref )
+
 // initialization for the ast and macro expansion pass
 cql_noexport void ast_init() {
   minipool_open(&ast_pool);
   minipool_open(&str_pool);
   macro_table = symtab_new();
+  macro_defs = symtab_new();
+  macro_refs = symtab_new();
+  macro_arg_refs = symtab_new();
   delete_macro_formals();
   macro_expansion_errors = false;
+
+  MACRO_INIT(expr);
+  MACRO_INIT(stmt_list);
+  MACRO_INIT(query_parts);
+  MACRO_INIT(cte_tables);
+  MACRO_INIT(select_core);
+  MACRO_INIT(select_expr);
+  MACRO_INIT(unknown);
 
   macro_state.line = -1;
   macro_state.file = "<Unknown>";
@@ -74,10 +95,10 @@ cql_noexport void ast_init() {
 
 cql_noexport void ast_cleanup() {
   delete_macro_formals();
-  if (macro_table) {
-    symtab_delete(macro_table);
-  }
-  macro_table = NULL;
+  SYMTAB_CLEANUP(macro_table);
+  SYMTAB_CLEANUP(macro_defs);
+  SYMTAB_CLEANUP(macro_refs);
+  SYMTAB_CLEANUP(macro_arg_refs);
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
@@ -1251,10 +1272,7 @@ cql_noexport void new_macro_formals() {
 
 // The macro body has ended, clean the symbol table
 cql_noexport void delete_macro_formals() {
-  if (macro_arg_table) {
-    symtab_delete(macro_arg_table);
-    macro_arg_table = NULL;
-  }
+  SYMTAB_CLEANUP(macro_arg_table);
 }
 
 // A new macro definition has appeared we need to record:
@@ -1295,6 +1313,22 @@ cql_noexport macro_info *get_macro_arg_info(CSTR name) {
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
+cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
+  return is_macro_ref(ast) || is_macro_arg_ref(ast);
+}
+
+cql_noexport bool_t is_macro_ref(ast_node *ast) {
+  return ast && !!symtab_find(macro_refs, ast->type);
+}
+
+cql_noexport bool_t is_macro_arg_ref(ast_node *ast) {
+  return ast && !!symtab_find(macro_arg_refs, ast->type);
+}
+
+cql_noexport bool_t is_macro_def(ast_node *ast) {
+  return ast && !!symtab_find(macro_defs, ast->type);
+}
+
 // Look for the name first as an argument and then as a macro body.
 // Note that at this point name will have the ! at the end already.
 cql_noexport int32_t resolve_macro_name(CSTR name) {
@@ -1329,16 +1363,6 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   }
 
   return NULL;
-}
-
-// Like it sounds, any of the macro definition types.
-cql_noexport bool_t is_any_macro_def(ast_node *ast) {
-  return is_ast_stmt_list_macro_def(ast) ||
-         is_ast_query_parts_macro_def(ast) ||
-         is_ast_cte_tables_macro_def(ast) ||
-         is_ast_select_core_macro_def(ast) ||
-         is_ast_select_expr_macro_def(ast) ||
-         is_ast_expr_macro_def(ast);
 }
 
 // Replaces the new node for the old node in the tree by
@@ -1638,7 +1662,7 @@ static void expand_macro_refs(ast_node *ast) {
 
   macro_info *minfo = NULL;
 
-  if (ast->right) {
+  if (is_macro_ref(ast)) {
     EXTRACT(macro_args, ast->right);
     if (macro_args) {
       // expand the arguments to the macro before using them
@@ -1656,7 +1680,7 @@ static void expand_macro_refs(ast_node *ast) {
   ast_node *copy = ast_clone_tree(minfo->def);
 
   ast_node *body = NULL;
-  if (is_any_macro_def(copy)) {
+  if (is_macro_def(copy)) {
     // macro defs like x!() have the payload on the right
     body = copy->right;
     copy->left = body;
@@ -1668,7 +1692,7 @@ static void expand_macro_refs(ast_node *ast) {
 
   macro_state_t macro_state_saved = macro_state;
 
-  if (is_any_macro_ref(ast)) {
+  if (is_macro_ref(ast)) {
     // It's a macro reference, we need to set up the argument values
     // We'll save the current macro args and replace them with the
     // new after validation.  The type and number must be correct.
@@ -1755,6 +1779,19 @@ cleanup:
   macro_arg_table = macro_state.args;
 }
 
+cql_noexport ast_node *new_macro_arg_node(ast_node *arg) {
+   CSTR type = arg->type;
+   CSTR node_type = k_ast_expr_macro_arg;
+   symtab_entry *entry = symtab_find(macro_refs, type);
+   if (!entry) {
+     entry = symtab_find(macro_arg_refs, type);
+   }
+   if (entry) {
+     node_type = (CSTR)entry->val;
+   }
+   return new_ast(node_type, arg, NULL);
+}
+
 // This is the main recursive workhorse.  It expands macros
 // and macro related constructs in place.  Later passes do not
 // see macros except for the macro definition nodes.  Which could
@@ -1768,7 +1805,7 @@ tail_recurse:
     node->lineno = macro_state.line;
   }
   // do not recurse into macro definitions
-  if (is_any_macro_def(node)) {
+  if (is_macro_def(node)) {
     return;
   }
 

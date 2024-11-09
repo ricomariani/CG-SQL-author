@@ -200,6 +200,7 @@ cql_noexport macro_info *_Nullable get_macro_arg_info(CSTR _Nonnull name);
 cql_noexport macro_info *_Nullable get_macro_info(CSTR _Nonnull name);
 cql_noexport void expand_macros(ast_node *_Nonnull root);
 cql_noexport int32_t resolve_macro_name(_Nonnull CSTR name);
+cql_noexport ast_node *new_macro_arg_node(ast_node *_Nonnull arg);
 
 // from the lexer
 extern int yylineno;
@@ -264,8 +265,10 @@ cql_noexport bool_t is_ast_str(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_num(ast_node *_Nullable node);
 cql_noexport bool_t is_ast_blob(ast_node *_Nullable node);
 
-cql_noexport bool_t is_any_macro_def(ast_node *_Nonnull ast);
 cql_noexport bool_t is_any_macro_ref(ast_node *_Nullable ast);
+cql_noexport bool_t is_macro_def(ast_node *_Nonnull ast);
+cql_noexport bool_t is_macro_ref(ast_node *_Nullable ast);
+cql_noexport bool_t is_macro_arg_ref(ast_node *_Nullable ast);
 
 cql_noexport bool_t is_select_stmt(ast_node *_Nullable ast);
 cql_noexport bool_t is_delete_stmt(ast_node *_Nullable ast);
@@ -893,7 +896,9 @@ AST(trycatch_stmt)
 AST(type_check_expr)
 AST(typed_name)
 AST(typed_names)
+AST(unknown_macro_arg)
 AST(unknown_macro_ref)
+AST(unknown_macro_def)
 AST(unq_def)
 AST(update_cursor_stmt)
 AST(update_entry)
@@ -1040,4 +1045,3 @@ AST1(with_recursive)
 #ifndef _MSC_VER
 #pragma clang diagnostic pop
 #endif
-

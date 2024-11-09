@@ -2733,7 +2733,7 @@ opt_macro_args:
    ;
 
 macro_arg:
- expr[arg] { $macro_arg = new_ast_expr_macro_arg($arg); }
+ expr[arg] { $macro_arg = new_macro_arg_node($arg); }
  | BEGIN_ stmt_list[arg] END { $macro_arg = new_ast_stmt_list_macro_arg($arg); }
  | FROM '(' query_parts[arg] ')' { $macro_arg = new_ast_query_parts_macro_arg($arg); }
  | WITH '(' cte_tables[arg] ')' { $macro_arg = new_ast_cte_tables_macro_arg($arg); }

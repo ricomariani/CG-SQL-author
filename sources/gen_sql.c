@@ -70,16 +70,13 @@ static void gen_conflict_clause(ast_node *ast);
 static void gen_call_stmt(ast_node *ast);
 static void gen_shared_cte(ast_node *ast);
 static bool_t gen_found_set_kind(ast_node *ast, void *context, charbuf *buffer);
+static void gen_cte_table(ast_node *ast);
 static void gen_cte_tables(ast_node *ast, CSTR prefix);
 static void gen_select_expr_list(ast_node *ast);
 static void gen_expr_at_id(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new);
 static void gen_select_expr(ast_node *ast);
 static void gen_arg_list(ast_node *ast);
 static void gen_any_macro_ref(ast_node *ast);
-
-cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
-  return ast && !!symtab_find(gen_macros, ast->type);
-}
 
 static int32_t gen_indent = 0;
 static int32_t pending_indent = 0;
@@ -1116,7 +1113,7 @@ static void gen_expr_blob(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 static void gen_macro_args(ast_node *ast) {
   for ( ; ast; ast = ast->right) {
     EXTRACT_ANY_NOTNULL(arg, ast->left);
-    if (is_any_macro_ref(arg)) {
+    if (is_any_macro_ref(arg->left)) {
       gen_any_macro_ref(arg->left);
     }
     else if (is_ast_expr_macro_arg(arg)) {
@@ -1180,7 +1177,10 @@ static void gen_expr_macro_text(ast_node *ast, CSTR op, int32_t pri, int32_t pri
 }
 
 cql_noexport void gen_any_text_arg(ast_node *ast) {
-  if (is_ast_cte_tables(ast)) {
+  if (is_ast_cte_table(ast)) {
+    gen_cte_table(ast);
+  }
+  else if (is_ast_cte_tables(ast)) {
     gen_cte_tables(ast, "");
   }
   else if (is_ast_table_or_subquery_list(ast) || is_ast_join_clause(ast)) {
@@ -1189,8 +1189,14 @@ cql_noexport void gen_any_text_arg(ast_node *ast) {
   else if (is_ast_stmt_list(ast)) {
     gen_stmt_list(ast);
   }
+  else if (is_ast_select_core(ast)) {
+    gen_select_core(ast);
+  }
   else if (is_ast_select_core_list(ast)) {
     gen_select_core_list(ast);
+  }
+  else if (is_ast_select_expr(ast)) {
+    gen_select_expr(ast);
   }
   else if (is_ast_select_expr_list(ast)) {
     gen_select_expr_list(ast);
@@ -5427,21 +5433,21 @@ cql_noexport void gen_one_stmt_and_misc_attrs(ast_node *stmt)  {
 
 #undef MACRO_INIT
 #define MACRO_INIT(x) \
-  symtab_add(gen_macros, k_ast_ ## x ## _ref, (void *)gen_macro_ref); \
-  symtab_add(gen_macros, k_ast_ ## x ## _arg_ref, (void *)gen_macro_arg_ref)
+  symtab_add(gen_macros, k_ast_ ## x ## _macro_ref, (void *)gen_macro_ref); \
+  symtab_add(gen_macros, k_ast_ ## x ## _macro_arg_ref, (void *)gen_macro_arg_ref); \
 
 cql_noexport void gen_init() {
   gen_stmts = symtab_new();
   gen_exprs = symtab_new();
   gen_macros = symtab_new();
 
-  MACRO_INIT(expr_macro);
-  MACRO_INIT(stmt_list_macro);
-  MACRO_INIT(query_parts_macro);
-  MACRO_INIT(cte_tables_macro);
-  MACRO_INIT(select_core_macro);
-  MACRO_INIT(select_expr_macro);
-  MACRO_INIT(unknown_macro);
+  MACRO_INIT(expr);
+  MACRO_INIT(stmt_list);
+  MACRO_INIT(query_parts);
+  MACRO_INIT(cte_tables);
+  MACRO_INIT(select_core);
+  MACRO_INIT(select_expr);
+  MACRO_INIT(unknown);
 
   STMT_INIT(alter_table_add_column_stmt);
   STMT_INIT(assign);

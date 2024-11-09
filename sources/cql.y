@@ -2715,7 +2715,6 @@ macro_def_stmt:
      delete_macro_formals(); }
   | stmt_list_macro_def BEGIN_ stmt_list END {
      $macro_def_stmt = $stmt_list_macro_def;
-     ast_node *stmt_list = $stmt_list;
      ast_set_right($macro_def_stmt, $stmt_list);
      delete_macro_formals(); }
   | query_parts_macro_def BEGIN_ query_parts END {

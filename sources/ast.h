@@ -200,7 +200,7 @@ cql_noexport macro_info *_Nullable get_macro_arg_info(CSTR _Nonnull name);
 cql_noexport macro_info *_Nullable get_macro_info(CSTR _Nonnull name);
 cql_noexport void expand_macros(ast_node *_Nonnull root);
 cql_noexport int32_t resolve_macro_name(_Nonnull CSTR name);
-cql_noexport ast_node *new_macro_arg_node(ast_node *_Nonnull arg);
+cql_noexport ast_node *_Nonnull new_macro_arg_node(ast_node *_Nonnull arg);
 
 // from the lexer
 extern int yylineno;

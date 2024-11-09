@@ -1,10 +1,6 @@
-%option noyywrap nodefault yylineno case-insensitive never-interactive
+%option noyywrap yylineno case-insensitive never-interactive
 
 %x at_inc
-%x skipping
-%x skipping_c_comment
-%x ifdef
-%x ifndef
 
 %{
 

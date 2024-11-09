@@ -1384,7 +1384,7 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
 // different sizes so we have to use the more general mechanism.
 // This means we might have to refetch parent->left or right
 // to get the new value of the node.
-static ast_node *replace_node(ast_node *old, ast_node *new) {
+static void replace_node(ast_node *old, ast_node *new) {
   if (old->parent->left == old) {
    ast_set_left(old->parent, new);
   }

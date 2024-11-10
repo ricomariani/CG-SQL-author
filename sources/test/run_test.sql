@@ -23,8 +23,12 @@ end;
 -- use this for both normal eval and SQLite eval
 @MACRO(stmt_list) EXPECT_SQL_TOO!(pred! expr)
 begin
-  EXPECT!(pred!);
-  EXPECT!((select pred!));
+  -- this tests the pipeline syntax for statement list macros
+  -- there's no reason to write it this way other than
+  -- because it's an interesting test. This could obbviously
+  -- be EXPECT!(pred!) etc.
+  pred!:EXPECT!;
+  (select pred!):EXPECT!;
 end;
 
 @MACRO(stmt_list) TEST!(name! expr, body! stmt_list)
@@ -37,12 +41,12 @@ begin
       starting_fails := fails;
       body!;
     catch
-      call printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(name!));
+      printf("%s had an unexpected CQL exception (usually a db error)\n", @TEXT(name!));
       fails := fails + 1;
       throw;
     end;
     if starting_fails != fails then
-      call printf("%s failed.\n", @TEXT(name!));
+      printf("%s failed.\n", @TEXT(name!));
     else
       tests_passed := tests_passed + 1;
     end if;
@@ -53,8 +57,8 @@ begin
   call @ID("test_", name!)();
   end_refs := get_outstanding_refs();
   if start_refs != end_refs then
-    call printf("Test %s unbalanced refs.", @TEXT(name!));
-    call printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
+    printf("Test %s unbalanced refs.", @TEXT(name!));
+    printf("  Starting refs %d, ending refs %d.\n", start_refs, end_refs);
     fails := fails + 1;
   end if;
 end;
@@ -64,7 +68,7 @@ end;
   -- because the Lua runtime is missing some blob features
   @macro(stmt_list) TEST_C!(name! expr, body! stmt_list)
   begin
-    call printf("Skipping test %s in Lua\n", @TEXT(name!));
+    printf("Skipping test %s in Lua\n", @TEXT(name!));
   end;
 
 @else
@@ -96,14 +100,14 @@ proc errcheck(passed bool @sensitive, message text, line int!)
 begin
   expectations := expectations + 1;
   if not coalesce(passed, 0) then
-    call printf("test: %s: FAIL on line %d\n", message, line);
+    printf("test: %s: FAIL on line %d\n", message, line);
     fails := fails + 1;
   end if;
 end;
 
 proc end_suite()
 begin
-  call printf("%d tests executed. %d passed, %d failed.  %d expectations failed of %d.\n",
+  printf("%d tests executed. %d passed, %d failed.  %d expectations failed of %d.\n",
     tests, tests_passed, tests - tests_passed, fails, expectations);
   call exit(fails);
 end;
@@ -195,7 +199,7 @@ BEGIN_SUITE!();
 
 TEST!(vers,
 BEGIN
-  call printf("SQLite Verison: %s\n", (select sqlite_version()));
+  printf("SQLite Verison: %s\n", (select sqlite_version()));
 END);
 
 TEST!(arithmetic,
@@ -224,22 +228,25 @@ declare side_effect_0_count int!;
 declare side_effect_1_count int!;
 declare side_effect_null_count int!;
 
+-- for sure returns 0 and counts the number of times it was called
 proc side_effect_0(out result int)
 begin
   result := 0;
-  side_effect_0_count := side_effect_0_count + 1;
+  side_effect_0_count += 1;
 end;
 
+-- for sure returns 1 and counts the number of times it was called
 proc side_effect_1(out result int)
 begin
   result := 1;
-  side_effect_1_count := side_effect_1_count + 1;
+  side_effect_1_count += 1;
 end;
 
+-- for sure returns null and counts the number of times it was called
 proc side_effect_null(out result int)
 begin
   result := null;
-  side_effect_null_count := side_effect_null_count + 1;
+  side_effect_null_count += 1;
 end;
 
 proc reset_counts()
@@ -264,115 +271,131 @@ BEGIN
   EXPECT_SQL_TOO!(NOT 1 + 2 = 0);
   EXPECT_SQL_TOO!((NOT 1) + 2 = 2);
 
+  -- the purpose of all this business is to ensure that the
+  -- expressions that are evaluated are the ones that are
+  -- supposed to be.  We do this by putting functions with
+  -- side-effects into the and/or expressions and then
+  -- verifying that they were called the right number of
+  -- times.  We have to do this for null and true/false
+  -- with both "and" and "or".  Given the number of times
+  -- this code was broken in the project, these tests
+  -- are considered indespensible.
+
   EXPECT!((side_effect_0() and side_effect_0()) == 0);
   EXPECT!(side_effect_0_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_0() and side_effect_1()) == 0);
   EXPECT!(side_effect_0_count == 1);
   EXPECT!(side_effect_1_count == 0);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_0() and side_effect_null()) == 0);
   EXPECT!(side_effect_0_count == 1);
   EXPECT!(side_effect_null_count == 0);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_1() and side_effect_0()) == 0);
   EXPECT!(side_effect_0_count == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_1() and side_effect_1()) == 1);
   EXPECT!(side_effect_1_count == 2);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_1() and side_effect_null()) is null);
   EXPECT!(side_effect_1_count == 1);
   EXPECT!(side_effect_null_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_null() and side_effect_0()) == 0);
   EXPECT!(side_effect_null_count == 1);
   EXPECT!(side_effect_0_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_null() and side_effect_1()) is null);
   EXPECT!(side_effect_null_count == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_null() and side_effect_null()) is null);
   EXPECT!(side_effect_null_count == 2);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_0() or side_effect_0()) == 0);
   EXPECT!(side_effect_0_count == 2);
   EXPECT!(side_effect_1_count == 0);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_0() or side_effect_1()) == 1);
   EXPECT!(side_effect_0_count == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_0() or side_effect_null()) is null);
   EXPECT!(side_effect_0_count == 1);
   EXPECT!(side_effect_null_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_1() or side_effect_0()) == 1);
   EXPECT!(side_effect_0_count == 0);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_1() or side_effect_1()) == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_1() or side_effect_null()) == 1);
   EXPECT!(side_effect_null_count == 0);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_null() or side_effect_0()) is null);
   EXPECT!(side_effect_0_count == 1);
   EXPECT!(side_effect_null_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_null() or side_effect_1()) == 1);
   EXPECT!(side_effect_null_count == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
   EXPECT!((side_effect_null() or side_effect_null()) is null);
   EXPECT!(side_effect_null_count == 2);
-  call reset_counts();
+  reset_counts();
 
   -- even though this looks like all non nulls we do not eval side_effect_1
-  -- we can't use the simple && form because there is statement output
-  -- requred to evaluate the coalesce.
+  -- we can't use the simple && form of code-gen because there is statement
+  -- output requred to evaluate the coalesce.
 
   EXPECT!((0 and coalesce(side_effect_1(), 1)) == 0);
   EXPECT!(side_effect_1_count == 0);
-  call reset_counts();
+  reset_counts();
+
+  -- no short circuit this time
 
   EXPECT!((1 and coalesce(side_effect_1(), 1)) == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
+
+  -- short circuit "or"
 
   EXPECT!((1 or coalesce(side_effect_1(), 1)) == 1);
   EXPECT!(side_effect_1_count == 0);
-  call reset_counts();
+  reset_counts();
+
+  -- no short circuit "or"
 
   EXPECT!((0 or coalesce(side_effect_1(), 1)) == 1);
   EXPECT!(side_effect_1_count == 1);
-  call reset_counts();
+  reset_counts();
 
-  -- this is the same as NOT (0 < 0) rather than (NOT 0) < 0
-  -- do not move NOT around or you will break stuff
-  -- I have broken this many times now do not change this expectation
-  -- it will save your life.
+  -- This is the same as NOT (0 < 0) rather than (NOT 0) < 0
+  -- do not move NOT around in the codegen or you will break stuff
+  -- I have broken this many times now. Do not change this expectation
+  -- it will save your life...
   EXPECT_SQL_TOO!(NOT 0 < 0);
 END);
 

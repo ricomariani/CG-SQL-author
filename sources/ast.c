@@ -1702,6 +1702,14 @@ static void expand_macro_refs(ast_node *ast) {
         return;
       }
     }
+    else if (is_ast_query_parts_macro_ref(ast) || is_ast_query_parts_macro_arg_ref(ast)) {
+      // new_ast_update_from [could work here but not supported in grammar yet]
+      // new_ast_table_or_subquery
+      if (!is_ast_table_or_subquery(parent)) {
+        report_macro_error(ast, "query_parts macro or argument used where it is not allowed", name);
+        return;
+      }
+    }
   }
 
   macro_info *minfo = NULL;

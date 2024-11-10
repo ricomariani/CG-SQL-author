@@ -28,3 +28,5 @@ test/macro_exp_errors.sql:XXXX:1: error: in cte_tables_macro_arg_ref : cte_table
  -> 'all_slots4!' in test/macro_exp_errors.sql:118
 test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg_ref : select_expr macro or argument used where it is not allowed 'd'
  -> 'all_slots5!' in test/macro_exp_errors.sql:137
+test/macro_exp_errors.sql:XXXX:1: error: in query_parts_macro_arg_ref : query_parts macro or argument used where it is not allowed 'b'
+ -> 'all_slots6!' in test/macro_exp_errors.sql:156

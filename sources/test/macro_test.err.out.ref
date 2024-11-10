@@ -1,32 +1,34 @@
-test/macro_exp_errors.sql:XXXX:1: error: in macro_formal : not enough arguments to macro 'exp'
+test/macro_exp_errors.sql:XXXX:1: error: in macro_formal : not enough arguments to macro (expr) 'exp'
  -> 'exp!' in test/macro_exp_errors.sql:6
-test/macro_exp_errors.sql:XXXX:1: error: in expr_macro_arg : too many arguments to macro 'exp'
+test/macro_exp_errors.sql:XXXX:1: error: in expr_macro_arg : too many arguments to macro (expr) 'exp'
  -> 'exp!' in test/macro_exp_errors.sql:7
-test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type mismatch in argument 'e'
+test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type mismatch in argument (expr) 'e'
  -> 'exp!' in test/macro_exp_errors.sql:11
-test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier 'foo bar'
-test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier ' foo'
-test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier ''
-test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type mismatch in argument 'e'
+test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier (unknown) 'foo bar'
+test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier (unknown) ' foo'
+test/macro_exp_errors.sql:XXXX:1: error: in at_id : @ID expansion is not a valid identifier (unknown) ''
+test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg : macro type mismatch in argument (expr) 'e'
  -> 'exp!' in test/macro_exp_errors.sql:21
  -> 'sel1!' in test/macro_exp_errors.sql:26
  -> 'sel2!' in test/macro_exp_errors.sql:31
  -> 'sel3!' in test/macro_exp_errors.sql:34
-test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_ref : macro reference is not a valid macro 'unknown_macro'
-test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg_ref : macro reference is not a valid macro 'unknown_arg'
-test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg_ref : macro reference is not a valid macro 'not_valid_arg'
-test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg : macro type mismatch in argument 'e'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_ref : macro reference is not a valid macro (unknown) 'unknown_macro'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg_ref : macro reference is not a valid macro (unknown) 'unknown_arg'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg_ref : macro reference is not a valid macro (unknown) 'not_valid_arg'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg : macro type mismatch in argument (expr) 'e'
  -> 'exp!' in test/macro_exp_errors.sql:40
-test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_ref : macro reference is not a valid macro 'not_valid_macro'
-test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg : macro type mismatch in argument 'e'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_ref : macro reference is not a valid macro (unknown) 'not_valid_macro'
+test/macro_exp_errors.sql:XXXX:1: error: in unknown_macro_arg : macro type mismatch in argument (expr) 'e'
  -> 'exp!' in test/macro_exp_errors.sql:42
-test/macro_exp_errors.sql:XXXX:1: error: in select_core_macro_arg_ref : select_core macro or argument used where it is not allowed 'c'
+test/macro_exp_errors.sql:XXXX:1: error: in select_core_macro_arg_ref : macro or argument used where it is not allowed (select_core) 'c'
  -> 'all_slots2!' in test/macro_exp_errors.sql:80
-test/macro_exp_errors.sql:XXXX:1: error: in stmt_list_macro_arg_ref : stmt_list macro or argument used where it is not allowed 'f'
+test/macro_exp_errors.sql:XXXX:1: error: in stmt_list_macro_arg_ref : macro or argument used where it is not allowed (stmt_list) 'f'
  -> 'all_slots3!' in test/macro_exp_errors.sql:99
-test/macro_exp_errors.sql:XXXX:1: error: in cte_tables_macro_arg_ref : cte_tables macro or argument used where it is not allowed 'e'
+test/macro_exp_errors.sql:XXXX:1: error: in cte_tables_macro_arg_ref : macro or argument used where it is not allowed (cte_tables) 'e'
  -> 'all_slots4!' in test/macro_exp_errors.sql:118
-test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg_ref : select_expr macro or argument used where it is not allowed 'd'
+test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg_ref : macro or argument used where it is not allowed (select_expr) 'd'
  -> 'all_slots5!' in test/macro_exp_errors.sql:137
-test/macro_exp_errors.sql:XXXX:1: error: in query_parts_macro_arg_ref : query_parts macro or argument used where it is not allowed 'b'
+test/macro_exp_errors.sql:XXXX:1: error: in query_parts_macro_arg_ref : macro or argument used where it is not allowed (query_parts) 'b'
  -> 'all_slots6!' in test/macro_exp_errors.sql:156
+test/macro_exp_errors.sql:XXXX:1: error: in expr_macro_arg_ref : macro or argument used where it is not allowed (expr) 'a'
+ -> 'all_slots7!' in test/macro_exp_errors.sql:175

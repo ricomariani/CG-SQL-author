@@ -82,8 +82,6 @@ static ast_node *do_ifndef(ast_node *ast);
 static void do_endif(void);
 static void do_else(void);
 static bool_t is_processing(void);
-static ast_node *macro_ref_node(CSTR name, ast_node *args);
-static ast_node *macro_arg_ref_node(CSTR name);
 
 // The stack needed is modest (32k) and this prevents leaks in error cases because
 // it's just a stack alloc.
@@ -479,10 +477,10 @@ opt_stmt_list:
 macro_ref:
   ID '!' {
      YY_ERROR_ON_MACRO($ID);
-     $$ = macro_arg_ref_node($ID); }
+     $$ = new_macro_arg_ref_node($ID); }
   | ID '!' '(' opt_macro_args ')' {
      YY_ERROR_ON_MACRO_ARG($ID);
-     $$ = macro_ref_node($ID, $opt_macro_args); }
+     $$ = new_macro_ref_node($ID, $opt_macro_args); }
   ;
 
 stmt_list[result]:
@@ -1248,10 +1246,10 @@ call:
   | basic_expr ':' '(' arg_list ')' { $call = new_ast_reverse_apply_poly_args($basic_expr, $arg_list); }
   | basic_expr ':' ID '!' {
      YY_ERROR_ON_MACRO_ARG($ID);
-     $$ = macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), NULL)); }
+     $$ = new_macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), NULL)); }
   | basic_expr ':' ID '!' '(' opt_macro_args ')' {
      YY_ERROR_ON_MACRO_ARG($ID);
-     $$ = macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), $opt_macro_args)); }
+     $$ = new_macro_ref_node($ID, new_ast_macro_args(new_ast_expr_macro_arg($basic_expr), $opt_macro_args)); }
   ;
 
 basic_expr:
@@ -3654,68 +3652,6 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   return lit;
 }
 
-cql_noexport int32_t macro_type_from_str(CSTR type) {
-  int32_t macro_type = EOF;
-  if (!strcmp("EXPR", type)) {
-    macro_type = EXPR_MACRO;
-  }
-  else if (!strcmp("STMT_LIST", type)) {
-    macro_type = STMT_LIST_MACRO;
-  }
-  else if (!strcmp("QUERY_PARTS", type)) {
-    macro_type = QUERY_PARTS_MACRO;
-  }
-  else if (!strcmp("CTE_TABLES", type)) {
-    macro_type = CTE_TABLES_MACRO;
-  }
-  else if (!strcmp("SELECT_CORE", type)) {
-    macro_type = SELECT_CORE_MACRO;
-  }
-  else if (!strcmp("SELECT_EXPR", type)) {
-    macro_type = SELECT_EXPR_MACRO;
-  }
-  Contract(macro_type != EOF);
-  return macro_type;
-}
-
-static ast_node *macro_arg_ref_node(CSTR name) {
-  int32_t macro_type = resolve_macro_name(name);
-  ast_node *id = new_ast_str(name);
-  switch (macro_type) {
-    case EXPR_MACRO:         return new_ast_expr_macro_arg_ref(id);
-    case STMT_LIST_MACRO:    return new_ast_stmt_list_macro_arg_ref(id);
-    case QUERY_PARTS_MACRO:  return new_ast_query_parts_macro_arg_ref(id);
-    case CTE_TABLES_MACRO:   return new_ast_cte_tables_macro_arg_ref(id);
-    case SELECT_CORE_MACRO:  return new_ast_select_core_macro_arg_ref(id);
-    case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_arg_ref(id);
-  }
-  return new_ast_unknown_macro_arg_ref(id);
-}
-
-static ast_node *macro_ref_node(CSTR name, ast_node *args) {
-  int32_t macro_type = resolve_macro_name(name);
-  ast_node *id = new_ast_str(name);
-  switch (macro_type) {
-    case EXPR_MACRO:         return new_ast_expr_macro_ref(id, args);
-    case STMT_LIST_MACRO:    return new_ast_stmt_list_macro_ref(id, args);
-    case QUERY_PARTS_MACRO:  return new_ast_query_parts_macro_ref(id, args);
-    case CTE_TABLES_MACRO:   return new_ast_cte_tables_macro_ref(id, args);
-    case SELECT_CORE_MACRO:  return new_ast_select_core_macro_ref(id, args);
-    case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_ref(id, args);
-  }
-  return new_ast_unknown_macro_ref(id, args);
-}
-
-cql_noexport int32_t macro_arg_type(ast_node *macro_arg) {
-  if (is_ast_expr_macro_arg(macro_arg)) return EXPR_MACRO;
-  if (is_ast_stmt_list_macro_arg(macro_arg)) return STMT_LIST_MACRO;
-  if (is_ast_query_parts_macro_arg(macro_arg)) return QUERY_PARTS_MACRO;
-  if (is_ast_cte_tables_macro_arg(macro_arg)) return CTE_TABLES_MACRO;
-  if (is_ast_select_core_macro_arg(macro_arg)) return SELECT_CORE_MACRO;
-  if (is_ast_select_expr_macro_arg(macro_arg)) return SELECT_EXPR_MACRO;
-  return EOF;
-}
-
 static symtab *defines;
 
 static void cql_setup_defines() {
@@ -3792,4 +3728,78 @@ static void do_endif() {
     // it is not possible to go from processing to not processing
     // so there is never a transition here
   }
+}
+cql_noexport ast_node *new_macro_ref_node(CSTR name, ast_node *args) {
+  int32_t macro_type = resolve_macro_name(name);
+  ast_node *id = new_ast_str(name);
+  switch (macro_type) {
+    case EXPR_MACRO:         return new_ast_expr_macro_ref(id, args);
+    case STMT_LIST_MACRO:    return new_ast_stmt_list_macro_ref(id, args);
+    case QUERY_PARTS_MACRO:  return new_ast_query_parts_macro_ref(id, args);
+    case CTE_TABLES_MACRO:   return new_ast_cte_tables_macro_ref(id, args);
+    case SELECT_CORE_MACRO:  return new_ast_select_core_macro_ref(id, args);
+    case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_ref(id, args);
+  }
+  return new_ast_unknown_macro_ref(id, args);
+}
+
+cql_noexport ast_node *new_macro_arg_ref_node(CSTR name) {
+  int32_t macro_type = resolve_macro_name(name);
+  ast_node *id = new_ast_str(name);
+  switch (macro_type) {
+    case EXPR_MACRO:         return new_ast_expr_macro_arg_ref(id);
+    case STMT_LIST_MACRO:    return new_ast_stmt_list_macro_arg_ref(id);
+    case QUERY_PARTS_MACRO:  return new_ast_query_parts_macro_arg_ref(id);
+    case CTE_TABLES_MACRO:   return new_ast_cte_tables_macro_arg_ref(id);
+    case SELECT_CORE_MACRO:  return new_ast_select_core_macro_arg_ref(id);
+    case SELECT_EXPR_MACRO:  return new_ast_select_expr_macro_arg_ref(id);
+  }
+  return new_ast_unknown_macro_arg_ref(id);
+}
+
+cql_noexport CSTR macro_type_from_name(CSTR name) {
+  int32_t macro_type = resolve_macro_name(name);
+  switch (macro_type) {
+    case EXPR_MACRO:         return "expr";
+    case STMT_LIST_MACRO:    return "stmt_list";
+    case QUERY_PARTS_MACRO:  return "query_parts";
+    case CTE_TABLES_MACRO:   return "cte_tables";
+    case SELECT_CORE_MACRO:  return "select_core";
+    case SELECT_EXPR_MACRO:  return "select_expr";
+  }
+  return "unknown";
+}
+
+cql_noexport int32_t macro_arg_type(ast_node *macro_arg) {
+  if (is_ast_expr_macro_arg(macro_arg)) return EXPR_MACRO;
+  if (is_ast_stmt_list_macro_arg(macro_arg)) return STMT_LIST_MACRO;
+  if (is_ast_query_parts_macro_arg(macro_arg)) return QUERY_PARTS_MACRO;
+  if (is_ast_cte_tables_macro_arg(macro_arg)) return CTE_TABLES_MACRO;
+  if (is_ast_select_core_macro_arg(macro_arg)) return SELECT_CORE_MACRO;
+  if (is_ast_select_expr_macro_arg(macro_arg)) return SELECT_EXPR_MACRO;
+  return EOF;
+}
+
+cql_noexport int32_t macro_type_from_str(CSTR type) {
+  int32_t macro_type = EOF;
+  if (!strcmp("EXPR", type)) {
+    macro_type = EXPR_MACRO;
+  }
+  else if (!strcmp("STMT_LIST", type)) {
+    macro_type = STMT_LIST_MACRO;
+  }
+  else if (!strcmp("QUERY_PARTS", type)) {
+    macro_type = QUERY_PARTS_MACRO;
+  }
+  else if (!strcmp("CTE_TABLES", type)) {
+    macro_type = CTE_TABLES_MACRO;
+  }
+  else if (!strcmp("SELECT_CORE", type)) {
+    macro_type = SELECT_CORE_MACRO;
+  }
+  else if (!strcmp("SELECT_EXPR", type)) {
+    macro_type = SELECT_EXPR_MACRO;
+  }
+  Contract(macro_type != EOF);
+  return macro_type;
 }

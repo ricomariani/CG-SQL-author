@@ -1531,11 +1531,14 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
 // We walk up the chain of macro expansions and report all those too
 // because macro debugging is hard without this info.
 static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
-   cql_error("%s:%d:1: error: in %s : %s%s%s%s\n",
+   cql_error("%s:%d:1: error: in %s : %s%s%s%s%s%s%s\n",
      ast->filename,
      ast->lineno,
      ast->type,
      msg,
+     subj ? " (" : "",
+     subj ? macro_type_from_name(subj) : "",
+     subj ? ")" : "",
      subj ? " '" : "",
      subj,
      subj ? "'" : "");
@@ -1661,6 +1664,11 @@ static void expand_special_ids(ast_node *ast) {
   }
 }
 
+static void report_macro_inappropriate(ast_node *ast, CSTR name) {
+  report_macro_error(ast, "macro or argument used where it is not allowed", name);
+  return;
+}
+
 // Here we handle a discovered macro reference
 // We have to do several things:
 //  * clone the body of the macro or arg
@@ -1678,37 +1686,49 @@ static void expand_macro_refs(ast_node *ast) {
   // invoke the macros, so those are good universally, otherwise we check for context
   // for the macro types that can only appear in certain places
   if (!is_ast_text_args(parent) && !is_macro_arg_type(parent)) {
-    if (is_ast_select_core_macro_ref(ast) || is_ast_select_core_macro_arg_ref(ast)) {
-      if (!is_ast_select_core_list(parent)) {
-        report_macro_error(ast, "select_core macro or argument used where it is not allowed", name);
-        return;
-      }
-    }
-    else if (is_ast_stmt_list_macro_ref(ast) || is_ast_stmt_list_macro_arg_ref(ast)) {
-      if (!is_ast_stmt_list(parent)) {
-        report_macro_error(ast, "stmt_list macro or argument used where it is not allowed", name);
-        return;
-      }
-    }
-    else if (is_ast_cte_tables_macro_ref(ast) || is_ast_cte_tables_macro_arg_ref(ast)) {
-      if (!is_ast_cte_tables(parent)) {
-        report_macro_error(ast, "cte_tables macro or argument used where it is not allowed", name);
-        return;
-      }
-    }
-    else if (is_ast_select_expr_macro_ref(ast) || is_ast_select_expr_macro_arg_ref(ast)) {
-      if (!is_ast_select_expr_list(parent)) {
-        report_macro_error(ast, "select_expr macro or argument used where it is not allowed", name);
-        return;
-      }
-    }
-    else if (is_ast_query_parts_macro_ref(ast) || is_ast_query_parts_macro_arg_ref(ast)) {
-      // new_ast_update_from [could work here but not supported in grammar yet]
-      // new_ast_table_or_subquery
-      if (!is_ast_table_or_subquery(parent)) {
-        report_macro_error(ast, "query_parts macro or argument used where it is not allowed", name);
-        return;
-      }
+
+    bool wrong = false;
+
+    // this tells us that the current macro is select_core
+    bool_t select_core_macro = is_ast_select_core_macro_ref(ast) || is_ast_select_core_macro_arg_ref(ast);
+
+    // this tell us that a select core macro can go there and only select core macros
+    bool_t select_core_valid = is_ast_select_core_list(parent);
+
+    // the location is ONLY valid for this macro type and this macro type is ONLY valid for this location
+    // so if only one is true it's wrong.  If any are wrong it's an error
+    wrong |= select_core_macro ^ select_core_valid;
+
+    // these are all the other types
+
+    bool_t stmt_list_macro = is_ast_stmt_list_macro_ref(ast) || is_ast_stmt_list_macro_arg_ref(ast);
+    bool_t stmt_list_valid = is_ast_stmt_list(parent);
+    wrong |= stmt_list_macro ^ stmt_list_valid;
+
+    bool_t cte_tables_macro = is_ast_cte_tables_macro_ref(ast) || is_ast_cte_tables_macro_arg_ref(ast);
+    bool_t cte_tables_valid = is_ast_cte_tables(parent);
+    wrong |= cte_tables_macro ^ cte_tables_valid;
+
+    bool_t select_expr_macro = is_ast_select_expr_macro_ref(ast) || is_ast_select_expr_macro_arg_ref(ast);
+    bool_t select_expr_valid = is_ast_select_expr_list(parent);
+    wrong |= select_expr_macro ^ select_expr_valid;
+
+    // is_ast_update_from could work here but not supported in grammar yet
+    // just || that in to the valid locations when it is supported
+    bool_t query_parts_macro = is_ast_query_parts_macro_ref(ast) || is_ast_query_parts_macro_arg_ref(ast);
+    bool_t query_parts_valid = is_ast_table_or_subquery(parent);
+    wrong |= query_parts_macro ^ query_parts_valid;
+
+    // having done all of those tests the only thing we didn't do was verify that the expr macro
+    // appears where it belongs however we have now ruled out all macro insertion locations other
+    // than the expr macro ones, which are legion. Anything other than an expr macro cannot appear
+    // in other than its locked down locations and the locked down locations will not hold expr
+    // macros so we have covered all locations.  This is why we check all the types and all
+    // the locations every time.
+
+    if (wrong) {
+      report_macro_inappropriate(ast, name);
+      return;
     }
   }
 

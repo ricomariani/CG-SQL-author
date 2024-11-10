@@ -1679,8 +1679,16 @@ static void expand_macro_refs(ast_node *ast) {
   // for the macro types that can only appear in certain places
   if (!is_ast_text_args(parent) && !is_macro_arg_type(parent)) {
     if (is_ast_select_core_macro_ref(ast) || is_ast_select_core_macro_arg_ref(ast)) {
-      if (!is_ast_select_core_list(ast->parent)) {
+      if (!is_ast_select_core_list(parent)) {
         report_macro_error(ast, "select_core macro or argument used where it is not allowed", name);
+        return;
+      }
+    }
+
+    if (is_ast_stmt_list_macro_ref(ast) || is_ast_stmt_list_macro_arg_ref(ast)) {
+      if (!is_ast_stmt_list(parent)) {
+        report_macro_error(ast, "stmt_list macro or argument used where it is not allowed", name);
+        return;
       }
     }
   }

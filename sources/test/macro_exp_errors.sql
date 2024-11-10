@@ -97,3 +97,22 @@ all_slots3!(
   with(f(*) as (select 99 from yy)),
   begin let qq := 201; end
   );
+
+-- invalid cte_tables
+@macro(stmt_list) all_slots4!(a! expr, b! query_parts, c! select_core, d! select_expr, e! cte_tables, f! stmt_list)
+begin
+  if a! then
+    f!;
+  else
+    with e! select d! from e! union all rows(c!);
+  end if;
+end;
+
+all_slots4!(
+  1+2,
+  from(x join y),
+  rows(select 1 from foo union select 2 from bar),
+  select(20 xx),
+  with(f(*) as (select 99 from yy)),
+  begin let qq := 201; end
+  );

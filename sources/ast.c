@@ -1691,6 +1691,13 @@ static void expand_macro_refs(ast_node *ast) {
         return;
       }
     }
+
+    if (is_ast_cte_tables_macro_ref(ast) || is_ast_cte_tables_macro_arg_ref(ast)) {
+      if (!is_ast_cte_tables(parent)) {
+        report_macro_error(ast, "cte_tables macro or argument used where it is not allowed", name);
+        return;
+      }
+    }
   }
 
   macro_info *minfo = NULL;

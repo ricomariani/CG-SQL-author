@@ -197,8 +197,15 @@ basic_test() {
 		failed
 	fi
 
+  echo "creating basic ast for test.sql"
+	if ! ${CQL} --ast_no_echo --dev --include_paths "$T" <"$T/test.sql" >"$O/test_ast.out"; then
+		echo basic ast test failed
+		failed
+	fi
+
 	echo "  computing diffs (empty if none)"
 	on_diff_exit test.out
+	on_diff_exit test_ast.out
 
 	echo "  computing diffs second parsing (empty if none)"
 	mv "$O/test.out2" "$O/test.out"

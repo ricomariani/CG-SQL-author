@@ -24,3 +24,5 @@ test/macro_exp_errors.sql:XXXX:1: error: in select_core_macro_arg_ref : select_c
  -> 'all_slots2!' in test/macro_exp_errors.sql:80
 test/macro_exp_errors.sql:XXXX:1: error: in stmt_list_macro_arg_ref : stmt_list macro or argument used where it is not allowed 'f'
  -> 'all_slots3!' in test/macro_exp_errors.sql:99
+test/macro_exp_errors.sql:XXXX:1: error: in cte_tables_macro_arg_ref : cte_tables macro or argument used where it is not allowed 'e'
+ -> 'all_slots4!' in test/macro_exp_errors.sql:118

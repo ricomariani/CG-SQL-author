@@ -2928,6 +2928,9 @@ static void parse_cmd(int argc, char **argv) {
       options.echo_input = 1;
     } else if (strcmp(arg, "--ast") == 0) {
       options.print_ast = 1;
+    } else if (strcmp(arg, "--ast_no_echo") == 0) {
+      options.print_ast = 1;
+      options.ast_no_echo = 1;
     } else if (strcmp(arg, "--nolines") == 0) {
       options.nolines = 1;
     } else if (strcmp(arg, "--hide_builtins") == 0) {
@@ -3492,6 +3495,8 @@ static void cql_usage() {
     "  performs semantic analysis on the input file ONLY\n"
     "--ast\n"
     "  prints the internal AST to stdout\n"
+    "--ast_no_echo\n"
+    "  prints the internal AST to stdout with no source inline (useful to debug)\n"
     "--echo\n"
     "  echoes the input in normalized form from the AST\n"
     "--dot\n"

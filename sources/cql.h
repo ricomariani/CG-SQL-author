@@ -79,6 +79,7 @@ typedef struct cmd_options {
   bool_t echo_input;
   bool_t hide_builtins;
   bool_t print_ast;
+  bool_t ast_no_echo;
   bool_t print_dot;
   bool_t expand;
   bool_t semantic;

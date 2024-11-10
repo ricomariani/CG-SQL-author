@@ -940,10 +940,10 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
           gen_misc_attrs_to_stdout(misc_attrs);
         }
 
-#ifndef SUPPRESS_STATEMENT_ECHO
-        gen_one_stmt_to_stdout(stmt);
-#endif
-        cql_output("\n");
+        if (!options.ast_no_echo) {
+          gen_one_stmt_to_stdout(stmt);
+          cql_output("\n");
+        }
 
 #if defined(CQL_AMALGAM_LEAN) && !defined(CQL_AMALGAM_SEM)
         // sem off, nothing to print here
@@ -1672,21 +1672,40 @@ static void expand_macro_refs(ast_node *ast) {
   Contract(is_any_macro_ref(ast));
   EXTRACT_STRING(name, ast->left);
 
-  macro_info *minfo = NULL;
+  ast_node *parent = ast->parent;
 
-  if (is_macro_ref(ast)) {
+  // @TEXT and @ID take any macro, and the macro arg node is already checked when we
+  // invoke the macros, so those are good universally, otherwise we check for context
+  // for the macro types that can only appear in certain places
+  if (!is_ast_text_args(parent) && !is_macro_arg_type(parent)) {
+    if (is_ast_select_core_macro_ref(ast) || is_ast_select_core_macro_arg_ref(ast)) {
+      if (!is_ast_select_core_list(ast->parent)) {
+        report_macro_error(ast, "select_core macro or argument used where it is not allowed", name);
+      }
+    }
+  }
+
+  macro_info *minfo = NULL;
+  bool_t is_ref = is_macro_ref(ast);
+
+  // we have either a macro ref or a macro arg ref, nothing else can be here
+  if (is_ref) {
     EXTRACT(macro_args, ast->right);
+
+    // expand the arguments to the macro before using them, if there are any
     if (macro_args) {
-      // expand the arguments to the macro before using them
       expand_macros(macro_args);
     }
 
+    // get the info, we need the definition of this macro
     minfo = get_macro_info(name);
   }
-  else {    
+  else {
+    // get the info, we need the definition of this macro argument
     minfo = get_macro_arg_info(name);
   }
 
+  // the macro was never defined, it's unknown...
   if (!minfo) {
     report_macro_error(ast, "macro reference is not a valid macro", name);
     return;
@@ -1694,18 +1713,16 @@ static void expand_macro_refs(ast_node *ast) {
 
   Invariant(minfo);
   ast_node *copy = ast_clone_tree(minfo->def);
-  ast_node *body = NULL;
 
-  if (is_macro_ref(ast)) {
-    body = copy->right;
-  }
-  else {
-    body = copy->left;
-  }
+  // the body is handing off the right if we copied a macro def
+  // it's on the left if we copied a macro arg
+  ast_node *body = is_ref ? copy->right : copy->left;
 
+  // save the current args and stuff for our new context and for error
+  // reporting...
   macro_state_t macro_state_saved = macro_state;
 
-  if (is_macro_ref(ast)) {
+  if (is_ref) {
     // It's a macro reference, we need to set up the argument values
     // We'll save the current macro args and replace them with the
     // new after validation.  The type and number must be correct.
@@ -1714,6 +1731,9 @@ static void expand_macro_refs(ast_node *ast) {
     EXTRACT_STRING(macro_name, macro_name_formals->left);
     EXTRACT(macro_args, ast->right);
 
+    // we're going to recurse, link up the states so we have a stack of them
+    // these are like our frame pointers.  We also remember the local names
+    // and so forth.  This gives us much better diagnostics
     macro_state.parent = &macro_state_saved;
     macro_state.line = ast->lineno;
     macro_state.file = ast->filename;
@@ -1758,14 +1778,9 @@ static void expand_macro_refs(ast_node *ast) {
   // and then slot it in. Otherwise the recursion is n^2 depth!!!
   expand_macros(body);
 
-  // its normal for body to be a different node type, we refetch
-  // it here because the expansion might have changed it.
-  if (is_macro_ref(ast)) {
-    body = copy->right;
-  }
-  else {
-    body = copy->left;
-  }
+  // its normal for body to have been replaced in the tree, we re-compute it
+  // so that we get the expanded version.  Same rules as before
+  body = is_ref ? copy->right : copy->left;
 
   // the query parts are already under a table_or_subquery node
   // because of the macro position, if there is a redundant one
@@ -1778,28 +1793,41 @@ static void expand_macro_refs(ast_node *ast) {
     }
   }
 
-  ast_node *parent = ast->parent;
+  // now we splice the expanded tree into the place where the macro was
 
   if (is_ast_text_args(parent)) {
+    // easy case, we just plunk in the node
     replace_node(ast, body);
-    ast = body;
   }
   else if (spliced_macro_into_list(parent, body)) {
-    // done
+    // spliced_macro_into_list, it's done above
+    // this is where we have something like a statement
+    // list but it's in the place where a statement should
+    // go. We have to hoist the statement list node out
+    // and link it into the statements. All the list
+    // types have this issue and they all work the same.
   }
   else  {
+    // everything else is a direct subtree replace
     replace_node(ast, body);
-    ast = body;
   }
 
 cleanup:
   if (macro_state.args != macro_state_saved.args && macro_state.args) {
+    // delete the args if we made new ones
     symtab_delete(macro_state.args);
   }
+
+  // node that we cloned the current state so this is a no-op if
+  // we didn't recurse.  But it makes the flow cleaner.
   macro_state = macro_state_saved;
   macro_arg_table = macro_state.args;
 }
 
+// make a macro arg node of the correct type for the
+// kind of macro_ref we have.  This lets us do
+// foo!(a!, b!, c!) without having to specify the arg
+// type like we usually do.  So arg forwarding is easier.
 cql_noexport ast_node *new_macro_arg_node(ast_node *arg) {
    CSTR type = arg->type;
    CSTR node_type = k_ast_expr_macro_arg;

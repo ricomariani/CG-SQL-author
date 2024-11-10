@@ -280,7 +280,7 @@ macro_test() {
 	on_diff_exit macro_test.out
 
 	echo running macro expansion error cases
-	if ${CQL} --exp --in "$T/macro_exp_errors.sql" >"$O/macro_exp_errors.out" 2>"$O/macro_test.err.out"; then
+	if ${CQL} --exp --echo --in "$T/macro_exp_errors.sql" >"$O/macro_exp_errors.out" 2>"$O/macro_test.err.out"; then
 		echo "CQL macro error test returned unexpected error code"
 		cat "$O/macro_test.err.out"
 		failed

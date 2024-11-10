@@ -5,6 +5,8 @@ Usage:
   performs semantic analysis on the input file ONLY
 --ast
   prints the internal AST to stdout
+--ast_no_echo
+  prints the internal AST to stdout with no source inline (useful to debug)
 --echo
   echoes the input in normalized form from the AST
 --dot

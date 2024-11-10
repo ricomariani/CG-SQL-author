@@ -14,10 +14,16 @@ import re
 # productions into the rules directly.
 words = [
     "create_table_prefix_opt_temp",
-    "ifdef",
-    "ifndef",
+    "cte_tables_macro_def",
     "elsedef",
     "endif",
+    "expr_macro_def",
+    "ifdef",
+    "ifndef",
+    "query_parts_macro_def",
+    "select_core_macro_def",
+    "select_expr_macro_def",
+    "stmt_list_macro_def",
 ]
 
 # Create a regex pattern to match whole words with case sensitivity

@@ -148,7 +148,7 @@ FIXED_RULES = """
     QID: $ => /`(``|[^`\\n])*`/,
 
     /* no newline between ELSE and IF */
-    ELSE_IF: $ => /[Ee][Ll][sS][eE][ \\t]*[Ii][Ff][ \\t\\n]/,
+    ELSE_IF: $ => /ELSE[ \\t]*IF[ \\t\\n]/i,
 
     include_stmt: $ => seq(CI('@include'), $.C_STR_LIT),
 
@@ -471,9 +471,5 @@ print("""/* This has to go last so that it is less favorable than keywords */
 // The all important "make case-insensitive token" function
 // This is used on virtually every terminal symbol in the grammar.
 function CI (keyword) {
-  return new RegExp(keyword
-     .split('')
-     .map(letter => `[${letter}${letter.toUpperCase()}]`)
-     .join('')
-  )
+  return new RegExp(keyword, "i");
 }""")

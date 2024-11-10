@@ -26,3 +26,5 @@ test/macro_exp_errors.sql:XXXX:1: error: in stmt_list_macro_arg_ref : stmt_list 
  -> 'all_slots3!' in test/macro_exp_errors.sql:99
 test/macro_exp_errors.sql:XXXX:1: error: in cte_tables_macro_arg_ref : cte_tables macro or argument used where it is not allowed 'e'
  -> 'all_slots4!' in test/macro_exp_errors.sql:118
+test/macro_exp_errors.sql:XXXX:1: error: in select_expr_macro_arg_ref : select_expr macro or argument used where it is not allowed 'd'
+ -> 'all_slots5!' in test/macro_exp_errors.sql:137

@@ -24,12 +24,9 @@
 // uncomment to check parent values as the ast is walked
 // #define EMIT_BROKEN_AST_WARNING 1
 
-// uncomment to print the AST only
-//    this is helpful if the ast is temporarily broken and
-//    you want to look at it without getting asserts in
-//    the gen_one_statement code path
-//
-// #define SUPPRESS_STATEMENT_ECHO
+// to print the AST with no echo of the source use
+// the --ast_no_echo flag.  This is useful for debugging
+// the AST itself.
 
 cql_data_defn( minipool *ast_pool );
 cql_data_defn( minipool *str_pool );
@@ -53,7 +50,8 @@ typedef struct macro_state_t {
 
 static macro_state_t macro_state;
 
-// Helper object to just hold info in find_attribute_str(...) and find_attribute_num(...)
+// Helper object to just hold info in find_attribute_str(...) and
+// find_attribute_num(...)
 typedef struct misc_attrs_type {
   CSTR attribute_name;
   void * context;
@@ -108,16 +106,16 @@ cql_noexport void ast_cleanup() {
   run_lazy_frees();
 }
 
-// When a rewrite begins outside the context of normal parsing we do not
-// know what file and line number should be attributed to the new nodes.
-// This tells us.
+// When a rewrite begins outside the context of normal parsing we do not know
+// what file and line number should be attributed to the new nodes. This tells
+// us what that line info should be.
 cql_noexport void ast_set_rewrite_info(int32_t lineno, CSTR filename) {
   yylineno = lineno;
   current_file = (char *)filename;
 }
 
-// When we're done with a rewrite we do not want the old info to linger
-// so it is immediately cleaned up.  The macros assert that the state is clean.
+// When we're done with a rewrite we do not want the old info to linger so it is
+// immediately cleaned up. The macros assert that the state is clean.
 cql_noexport void ast_reset_rewrite_info() {
   yylineno = -1;
   current_file = NULL;
@@ -128,18 +126,15 @@ cql_noexport bool_t is_ast_num(ast_node *node) {
   return node && (node->type == k_ast_num);
 }
 
-// The integer node is not for numeric integers in the grammar
-// This is used where there is an enumeration of values like
-// a join type that can be represented as an int.  We don't
-// store numbers like this because it would require us to
-// faithfully parse all the hard cases and since we're just
-// going to re-emit them anyway it seems silly to avoid
-// lossless encode and decode when we can just store the string.
-// Hence this is not for numerics.
+// The integer node is not for numeric integers in the grammar This is used
+// where there is an enumeration of values like a join type that can be
+// represented as an int.  We don't store numbers like this because it would
+// require us to faithfully parse all the hard cases and since we're just going
+// to re-emit them anyway it seems silly to avoid lossless encode and decode
+// when we can just store the string. Hence this is not for numerics.
 cql_noexport bool_t is_ast_int(ast_node *node) {
   return node && (node->type == k_ast_int);
 }
-
 
 // Any of the various string payloads
 // * identifiers
@@ -150,11 +145,9 @@ cql_noexport bool_t is_ast_str(ast_node *node) {
   return node && (node->type == k_ast_str);
 }
 
-// A blob literal, only valid in SQL contexts.
-// We don't allow blob literals in other contexts
-// because there is no way to emit such a literal
-// without a runtime initializer which we aren't
-// willing to do.
+// A blob literal, only valid in SQL contexts. We don't allow blob literals in
+// other contexts because there is no way to emit such a literal without a
+// runtime initializer which we aren't willing to do.
 cql_noexport bool_t is_ast_blob(ast_node *node) {
   return node && (node->type == k_ast_blob);
 }
@@ -201,7 +194,8 @@ cql_noexport bool_t is_proc(ast_node *node) {
 
 // Any of the region types
 cql_noexport bool_t is_region(ast_node *ast) {
-  return is_ast_declare_schema_region_stmt(ast) || is_ast_declare_deployable_region_stmt(ast);
+  return is_ast_declare_schema_region_stmt(ast) ||
+         is_ast_declare_deployable_region_stmt(ast);
 }
 
 // Any of the select forms
@@ -252,10 +246,9 @@ cql_noexport bool_t ast_has_right(ast_node *node) {
   return (node->right != NULL);
 }
 
-// Sets the right node but also sets the parent node of the node
-// on the right to the new parent.  Always use this helper because
-// code invariably forgets to set the parent causing a broken tree
-// otherwise.
+// Sets the right node but also sets the parent node of the node on the right to
+// the new parent.  Always use this helper because code invariably forgets to
+// set the parent causing a broken tree otherwise.
 cql_noexport void ast_set_right(ast_node *parent, ast_node *right)  {
   parent->right = right;
   if (right) {
@@ -271,10 +264,14 @@ cql_noexport void ast_set_left(ast_node *parent, ast_node *left) {
   }
 }
 
-// Create a new ast node witht he given left and right.
-// Sets the file and line number from the global state
-// Sets the parent node of the provided children to the new node.
-cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right) {
+// Create a new ast node witht he given left and right. Sets the file and line
+// number from the global state. Sets the parent node of the provided children
+// to the new node.
+cql_noexport ast_node *new_ast(
+  CSTR type,
+  ast_node *left,
+  ast_node *right)
+{
   Contract(current_file && yylineno > 0);
   ast_node *ast = _ast_pool_new(ast_node);
   ast->type = type;
@@ -290,9 +287,8 @@ cql_noexport ast_node *new_ast(const char *type, ast_node *left, ast_node *right
   return ast;
 }
 
-// Reflecting the fact that this is information about a
-// fact in the AST and not a number it's called new_ast_option
-// for option.
+// Reflecting the fact that this is information about a fact in the AST and not
+// a number it's called new_ast_option for option.
 cql_noexport ast_node *new_ast_option(int32_t value) {
   Contract(current_file && yylineno > 0);
   int_ast_node *iast = _ast_pool_new(int_ast_node);
@@ -304,9 +300,13 @@ cql_noexport ast_node *new_ast_option(int32_t value) {
   return (ast_node *)iast;
 }
 
-// Create a new string node for a string literal
-// These are sql literals by default so we use
-// that string type.
+// Create a new string node for a string literal or identifier. These are sql
+// literals by default so we use that string type.  The string is stored as is,
+// no normalization is done.  This is important because we want to be able to
+// round trip the string literals through the AST without losing any
+// information.  The str_type might be changed after the node is created.
+// Identifiers are stored as is, but quoted identifiers are escaped.
+// Identifiers are not quoted. 
 cql_noexport ast_node *new_ast_str(CSTR value) {
   Contract(current_file && yylineno > 0);
   Contract(value);
@@ -320,14 +320,12 @@ cql_noexport ast_node *new_ast_str(CSTR value) {
   return (ast_node *)sast;
 }
 
-// Create a new numberic node.  As discussed above
-// the numeric is encoded in string form.  We do not
-// even try to normalize it.  This is especially important
-// for floating point literals.  We do not want to lose
-// anything between the CQL code and the target compiler.
-// We assume that floating point processing might be slightly
-// different in C vs. SQLite or Lua.  Hence we keep the constant
-// fixed.
+// Create a new numeric node.  As discussed above the numeric is encoded in
+// string form.  We do not even try to normalize it.  This is especially
+// important for floating point literals.  We do not want to lose anything
+// between the CQL code and the target compiler. We assume that floating point
+// processing might be slightly different in C vs. SQLite or Lua.  Hence we keep
+// the constant fixed.
 cql_noexport ast_node *new_ast_num(int32_t num_type, CSTR value) {
   Contract(current_file && yylineno > 0);
   Contract(value);
@@ -355,11 +353,12 @@ cql_noexport ast_node *new_ast_blob(CSTR value) {
   return (ast_node *)sast;
 }
 
-// Get the compound operator name.
-// As with almost all other aspects of the AST the AST is known
-// to be good by contract and this is enforced.  Any badly
+// Get the compound operator name. As with almost all other aspects of the AST
+// the AST is known to be good by contract and this is enforced.  Any badly
 // formed AST is not tolerated anywhere which keeps it clean.
-cql_noexport CSTR get_compound_operator_name(int32_t compound_operator) {
+cql_noexport CSTR get_compound_operator_name(
+  int32_t compound_operator)
+{
   CSTR result = NULL;
 
   switch (compound_operator) {
@@ -381,11 +380,11 @@ cql_noexport CSTR get_compound_operator_name(int32_t compound_operator) {
   return result;
 }
 
-// This converts C string literal syntax into SQL string literal syntax
-// the test of the program expects the SQL style literals.  We support
-// C style literals largely because they pass through the C pre-processor better.
-// Even stuff like the empty string '' causes annoying warnings.  However
-// the escaping is lightly different.  Also C string literals have useful escape sequences
+// This converts C string literal syntax into SQL string literal syntax the test
+// of the program expects the SQL style literals.  We support C style literals
+// largely because they pass through the C pre-processor better. Even stuff like
+// the empty string '' causes annoying warnings.  However the escaping is
+// lightly different.  Also C string literals have useful escape sequences
 cql_noexport CSTR convert_cstrlit(CSTR cstr) {
   CHARBUF_OPEN(decoded);
   CHARBUF_OPEN(encoded);
@@ -398,11 +397,9 @@ cql_noexport CSTR convert_cstrlit(CSTR cstr) {
   return result;
 }
 
-// Just like SQL string literal but we record
-// that the origin of the string was the C format.
-// When we decode this node we will format it
-// in the C way.  But in the AST it's stored in
-// the SQL way.
+// Just like SQL string literal but we record that the origin of the string was
+// the C format. When we decode this node we will format it in the C way.  But
+// in the AST it's stored in the SQL way.
 cql_noexport ast_node *new_ast_cstr(CSTR value) {
   value = convert_cstrlit(value);
   str_ast_node *sast = (str_ast_node *)new_ast_str(value);
@@ -410,10 +407,9 @@ cql_noexport ast_node *new_ast_cstr(CSTR value) {
   return (ast_node *)sast;
 }
 
-// This makes a new QID node starting from already escaped
-// ID text.  So for instance `a b` is X_aX20b.  We do
-// not escaped the text again or wrap it in quotes.
-// We verify that it looks like escaped text.
+// This makes a new QID node starting from already escaped ID text.  So for
+// instance `a b` is X_aX20b.  We do not escaped the text again or wrap it in
+// quotes. We verify that it looks like escaped text.
 cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
   Contract(value);
   Contract(value[0] != '`');
@@ -423,15 +419,13 @@ cql_noexport ast_node *new_ast_qstr_escaped(CSTR value) {
   return (ast_node *)sast;
 }
 
-// This makes a new QID node starting form the quoted
-// identifier like `a b`.  We have to escape it first
-// and then we store that name.  Lots of the code is
-// oblivious to the fact that the id was escaped.  e.g.
-// All the C  and Lua codegen correctly uses the escaped
-// name and never deals with unescaping.  This means
-// the bulk of the compiler doesn't have to know about
-// the escaping.  The exceptions are the forgatting code
-// in gen_sql and the ast building code in rewrite.c
+// This makes a new QID node starting form the quoted identifier like `a b`.  We
+// have to escape it first and then we store that name.  Lots of the code is
+// oblivious to the fact that the id was escaped.  e.g. All the C  and Lua
+// codegen correctly uses the escaped name and never deals with unescaping.
+// This means the bulk of the compiler doesn't have to know about the escaping.
+// The exceptions are the forgatting code in gen_sql and the ast building code
+// in rewrite.c
 cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
   Contract(value);
   Contract(value[0] == '`');
@@ -448,9 +442,8 @@ cql_noexport ast_node *new_ast_qstr_quoted(CSTR value) {
 // for indenting, it just holds spaces.
 static char padbuffer[4096];
 
-
-// Emits the value of the node if it is a leaf node.
-// Returns true such a value was emitted.
+// Emits the value of the node if it is a leaf node. Returns true such a value
+// was emitted.
 cql_noexport bool_t print_ast_value(struct ast_node *node) {
   bool_t ret = false;
 
@@ -570,7 +563,8 @@ cql_noexport ast_node *get_proc_params(ast_node *ast) {
   return params;
 }
 
-// Helper function to get the proc name from a declare_proc_stmt or create_proc_stmt
+// Helper function to get the proc name from a declare_proc_stmt or
+// create_proc_stmt
 cql_noexport ast_node *get_proc_name(ast_node *ast) {
   if (is_ast_create_proc_stmt(ast)) {
     return ast->left;
@@ -643,12 +637,12 @@ cql_noexport void find_misc_attrs(
   }
 }
 
-// This callback helper dispatches matching string or list of string values
-// for the indicated cql:attribute_name.  Non-string values are ignored in
-// this path.  Note that the attribute might be badly formed hence there are
-// few Contract enforcement here.  We can't crash if the value is unexpected
-// we just don't recognize it as properly attributed for whatever (e.g. it just
-// isn't a base fragment decl if it has an integer value for the fragment name)
+// This callback helper dispatches matching string or list of string values for
+// the indicated cql:attribute_name.  Non-string values are ignored in this
+// path.  Note that the attribute might be badly formed hence there are few
+// Contract enforcement here.  We can't crash if the value is unexpected we just
+// don't recognize it as properly attributed for whatever (e.g. it just isn't a
+// base fragment decl if it has an integer value for the fragment name)
 static void ast_find_ast_misc_attr_callback(
   CSTR misc_attr_prefix,
   CSTR misc_attr_name,
@@ -699,8 +693,8 @@ static void ast_find_ast_misc_attr_callback(
   }
 }
 
-// Helper function to extract the specified string type attribute (if any) from the misc attributes
-// provided, and invoke the callback function
+// Helper function to extract the specified string type attribute (if any) from
+// the misc attributes provided, and invoke the callback function
 cql_noexport uint32_t find_attribute_str(
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nullable callback,
@@ -721,7 +715,10 @@ cql_noexport uint32_t find_attribute_str(
 }
 
 // check for the presence of the given attribute (duplicates are ok)
-cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name) {
+cql_noexport bool_t find_named_attr(
+  ast_node *_Nonnull misc_attr_list,
+  CSTR _Nonnull name)
+{
   Contract(is_ast_misc_attrs(misc_attr_list));
 
   misc_attrs_type misc = {
@@ -734,8 +731,8 @@ cql_noexport bool_t find_named_attr(ast_node *_Nonnull misc_attr_list, CSTR _Non
   return !!misc.count;
 }
 
-// Helper function to extract the specified number type attribute (if any) from the misc attributes
-// provided, and invoke the callback function
+// Helper function to extract the specified number type attribute (if any) from
+// the misc attributes provided, and invoke the callback function
 cql_noexport uint32_t find_attribute_num(
   ast_node *_Nonnull misc_attr_list,
   find_ast_num_node_callback _Nullable callback,
@@ -774,9 +771,11 @@ static void ast_exists_ast_misc_attr_callback(
   }
 }
 
-// Helper function to return count of given string type attribute
-// in the misc attributes provided
-cql_noexport uint32_t exists_attribute_str(ast_node *_Nullable misc_attr_list, const char *attribute_name)
+// Helper function to return count of given string type attribute in the misc
+// attributes provided
+cql_noexport uint32_t exists_attribute_str(
+  ast_node *_Nullable misc_attr_list,
+  CSTR attribute_name)
 {
   if (!misc_attr_list) {
     return 0;
@@ -808,13 +807,13 @@ cql_noexport uint32_t find_ok_table_scan(
 cql_noexport uint32_t find_query_plan_branch(
   ast_node *_Nonnull list,
   find_ast_num_node_callback _Nonnull callback,
-  void *_Nullable context
-) {
+  void *_Nullable context)
+{
   return find_attribute_num(list, callback, context, "query_plan_branch");
 }
 
-// Helper function to extract the auto-drop nodes (if any) from the misc attributes
-// provided, and invoke the callback function.
+// Helper function to extract the auto-drop nodes (if any) from the misc
+// attributes provided, and invoke the callback function.
 cql_noexport uint32_t find_autodrops(
   ast_node *_Nonnull list,
   find_ast_str_node_callback _Nonnull callback,
@@ -823,8 +822,8 @@ cql_noexport uint32_t find_autodrops(
   return find_attribute_str(list, callback, context, "autodrop");
 }
 
-// Helper function to extract the identity columns (if any) from the misc attributes
-// provided, and invoke the callback function
+// Helper function to extract the identity columns (if any) from the misc
+// attributes provided, and invoke the callback function
 cql_noexport uint32_t find_identity_columns(
   ast_node *_Nullable misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
@@ -833,11 +832,11 @@ cql_noexport uint32_t find_identity_columns(
   return find_attribute_str(misc_attr_list, callback, context, "identity");
 }
 
-// Helper function to select out the cql:alias_of attribute
-// This is really only interesting to C codegen.  It forces the compiler
-// to emit an extra #define as well as the function prototype so that
-// some common native function can implement several equivalent but
-// perhaps different by CQL type external functions.
+// Helper function to select out the cql:alias_of attribute This is really only
+// interesting to C codegen.  It forces the compiler to emit an extra #define as
+// well as the function prototype so that some common native function can
+// implement several equivalent but perhaps different by CQL type external
+// functions.
 cql_noexport uint32_t find_cql_alias_of(
   ast_node *_Nonnull misc_attr_list,
   find_ast_str_node_callback _Nonnull callback,
@@ -977,13 +976,16 @@ cql_noexport void print_ast(ast_node *node, ast_node *parent, int32_t pad, bool_
   }
 }
 
-// Recursively finds table nodes, executing the callback for each that is found.  The
-// callback will not be executed more than once for the same table name.
-cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node *node) {
-  // Check the type of node so that we can find the direct references to tables. We
-  // can't know the difference between a table or view in the ast, so we will need to
-  // later find the definition to see if it points to a create_table_stmt to distinguish
-  // from views.
+// Recursively finds table nodes, executing the callback for each that is found.
+// The callback will not be executed more than once for the same table name.
+cql_noexport void continue_find_table_node(
+  table_callbacks *callbacks,
+  ast_node *node)
+{
+  // Check the type of node so that we can find the direct references to tables.
+  // We can't know the difference between a table or view in the ast, so we will
+  // need to later find the definition to see if it points to a
+  // create_table_stmt to distinguish from views.
 
   find_ast_str_node_callback alt_callback = NULL;
   symtab *alt_visited = NULL;
@@ -992,20 +994,20 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
   if (is_ast_cte_table(node)) {
     EXTRACT_ANY_NOTNULL(cte_body, node->right);
 
-    // this is a proxy node, it doesn't contribute anything
+    // This is a proxy node, it doesn't contribute anything
     // any nested select does not run.
     if (is_ast_like(cte_body)) {
       return;
     }
   }
   else if (is_ast_shared_cte(node)) {
-    // if we're on a shared CTE usage, then we recurse into the CALL and
-    // we recurse into the binding list.  The CALL should not be handled
-    // like a normal procedure call, the body is inlined.  Note that the
-    // existence of the fragment is meant to be transparent to anyone
-    // downstream -- this isn't a normal call that might be invisible to us
-    // we *must* have the fragment because we're talking about a semantically
-    // valid shared cte binding.
+    // If we're on a shared CTE usage, then we recurse into the CALL and we
+    // recurse into the binding list.  The CALL should not be handled like a
+    // normal procedure call, the body is inlined.  Note that the existence of
+    // the fragment is meant to be transparent to anyone downstream -- this
+    // isn't a normal call that might be invisible to us we *must* have the
+    // fragment because we're talking about a semantically valid shared cte
+    // binding.
 
     EXTRACT_NOTNULL(call_stmt, node->left);
     EXTRACT(cte_binding_list, node->right);
@@ -1048,9 +1050,9 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     }
   }
   else if (is_ast_fk_target(node)) {
-    // if we're walking a table then we'll also walk its FK's
-    // normally we don't start by walking tables anyway so this doesn't
-    // run if you do a standard walk of a procedure
+    // If we're walking a table then we'll also walk its FKs normally we don't
+    // start by walking tables anyway so this doesn't run if you do a standard
+    // walk of a procedure.
     if (callbacks->notify_fk) {
       EXTRACT_NAME_AST(name_ast, node->left);
       table_or_view_name_ast = name_ast;
@@ -1091,10 +1093,10 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     }
   }
   else if (is_ast_call_stmt(node) | is_ast_call(node)) {
-    // Both cases have the name in the node left so we can consolidate
-    // the check to see if it's a proc is redundant in the call_stmt case
-    // but it lets us share code so we just go with it.  The other case
-    // is a possible proc_as_func call so we must check if the target is a proc.
+    // Both cases have the name in the node left so we can consolidate the check
+    // to see if it's a proc is redundant in the call_stmt case but it lets us
+    // share code so we just go with it.  The other case is a possible
+    // proc_as_func call so we must check if the target is a proc.
 
     EXTRACT_NAME_AST(name_ast, node->left);
     EXTRACT_STRING(name, name_ast);
@@ -1103,7 +1105,8 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
     if (proc) {
       // this only happens for ast_call but this check is safe for both
       if (name_ast->sem && (name_ast->sem->sem_type & SEM_TYPE_INLINE_CALL)) {
-        // Look through the proc definition for tables because the target will be inlined
+        // Look through the proc definition for tables because the target will
+        // be inlined
         continue_find_table_node(callbacks, proc);
       }
 
@@ -1123,11 +1126,11 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
 
     // It's not actually possible to use a deleted table or view in a procedure.
     // If the name lookup here says that we found something deleted it means
-    // that we have actually found a CTE that is an alias for a deleted table
-    // or view. In that case, we don't want to add the thing we found to the dependency
-    // set we are creating.  We don't want to make this CTE an error because
-    // its reasonable to replace a deleted table/view with CTE of the same name.
-    // Hence we simply filter out deleted tables/views here.
+    // that we have actually found a CTE that is an alias for a deleted table or
+    // view. In that case, we don't want to add the thing we found to the
+    // dependency set we are creating.  We don't want to make this CTE an error
+    // because its reasonable to replace a deleted table/view with CTE of the
+    // same name. Hence we simply filter out deleted tables/views here.
     if (table_or_view && table_or_view->sem->delete_version > 0) {
       table_or_view = NULL;
     }
@@ -1179,14 +1182,16 @@ cql_noexport void continue_find_table_node(table_callbacks *callbacks, ast_node 
   }
 }
 
-
 // Find references in a proc and invoke the corresponding callback on them
 // this is useful for dependency analysis.
-cql_noexport void find_table_refs(table_callbacks *callbacks, ast_node *node) {
-  // Each kind of callback needs its own symbol table because, for instance,
-  // you might see a table as an insert and also as an update. If we use
-  // a single visited table like we used to then the second kind of usage would
-  // not get recorded.
+cql_noexport void find_table_refs(
+  table_callbacks *callbacks,
+  ast_node *node)
+{
+  // Each kind of callback needs its own symbol table because, for instance, you
+  // might see a table as an insert and also as an update. If we use a single
+  // visited table like we used to then the second kind of usage would not get
+  // recorded.
 
   // Note: we don't need a seperate table for visiting views and visiting tables
   // any given name can only be a view or a table, never both.
@@ -1222,16 +1227,23 @@ cql_noexport size_t ends_in_set(CSTR str) {
 }
 
 // store the discovered attribute in the given storage
-static void record_string_value(CSTR _Nonnull name, ast_node *_Nonnull _misc_attr, void *_Nullable _context) {
+static void record_string_value(
+  CSTR _Nonnull name,
+  ast_node *_Nonnull _misc_attr,
+  void *_Nullable _context)
+{
   if (_context) {
     CSTR *target = (CSTR *)_context;
     *target = name;
   }
 }
 
-// Helper function extracts the named string fragment and gets its value as a string
-// if there is no such attribute or the attribute is not a string you get NULL.
-cql_noexport CSTR get_named_string_attribute_value(ast_node *_Nonnull misc_attr_list, CSTR _Nonnull name)
+// Helper function extracts the named string fragment and gets its value as a
+// string. If there is no such attribute or the attribute is not a string, you
+// get NULL.
+cql_noexport CSTR get_named_string_attribute_value(
+  ast_node *_Nonnull misc_attr_list,
+  CSTR _Nonnull name)
 {
   CSTR result = NULL;
   find_attribute_str(misc_attr_list, record_string_value, &result, name);
@@ -1265,10 +1277,9 @@ cql_noexport ast_node *ast_clone_tree(ast_node *_Nullable ast) {
   return _ast;
 }
 
-// a new macro body context has happened, clear
-// the existing context and make a new symbol table
-// for macro arguments.  This will be the x! and y!
-// in @macro(expr) foo!(x! expr, y! expr)
+// a new macro body context has happened, clear the existing context and make a
+// new symbol table for macro arguments.  This will be the x! and y! in
+// @macro(expr) foo!(x! expr, y! expr)
 cql_noexport void new_macro_formals() {
   delete_macro_formals();
   macro_arg_table = symtab_new();
@@ -1301,10 +1312,13 @@ cql_noexport macro_info *get_macro_info(CSTR name) {
   return entry ? (macro_info *)(entry->val) : NULL;
 }
 
-// As above, but for macro arguments.  These are the formal arguments
-// of any macro. The processing is the same except that it goes in a different table.
+// As above, but for macro arguments.  These are the formal arguments of any
+// macro. The processing is the same except that it goes in a different table.
 // Duplicates lead to errors.
-cql_noexport bool_t set_macro_arg_info(CSTR name, int32_t macro_type, ast_node *ast) {
+cql_noexport bool_t set_macro_arg_info(
+  CSTR name, int32_t macro_type,
+  ast_node *ast)
+{
   macro_info *minfo = _ast_pool_new(macro_info);
   minfo->def = ast;
   minfo->type = macro_type;
@@ -1338,7 +1352,6 @@ cql_noexport bool_t is_macro_arg_type(ast_node *ast) {
 }
 
 // Look for the name first as an argument and then as a macro body.
-// Note that at this point name will have the ! at the end already.
 cql_noexport int32_t resolve_macro_name(CSTR name) {
   macro_info *minfo;
   if (macro_arg_table) {
@@ -1351,8 +1364,8 @@ cql_noexport int32_t resolve_macro_name(CSTR name) {
   return minfo ? minfo->type : EOF;
 }
 
-// A new macro is being defined.  We need to add the types of
-// all of the parameter formals into the parameter table
+// A new macro is being defined. We need to add the types of all of the
+// parameter formals into the parameter table
 cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   new_macro_formals();
   for ( ; macro_formals; macro_formals = macro_formals->right) {
@@ -1373,17 +1386,14 @@ cql_noexport CSTR install_macro_args(ast_node *macro_formals) {
   return NULL;
 }
 
-// Replaces the new node for the old node in the tree by
-// swapping it in as the child of the old node's parent.
-// This isn't the preferred way to do node swapping,
-// we normally wish to avoid changing the identify of
-// the current node so in rewrite.c we almost always do
-// old->type = new->type and then change the left and right
-// but in this case it's normal, even common, for the node
-// type to change to one of the leaf types and they are
-// different sizes so we have to use the more general mechanism.
-// This means we might have to refetch parent->left or right
-// to get the new value of the node.
+// Replaces the new node for the old node in the tree by swapping it in as the
+// child of the old node's parent. This isn't the preferred way to do node
+// swapping, we normally wish to avoid changing the identify of the current node
+// so in rewrite.c we almost always do old->type = new->type and then change the
+// left and right but in this case it's normal, even common, for the node type
+// to change to one of the leaf types and they are different sizes so we have to
+// use the more general mechanism. This means we might have to refetch
+// parent->left or right to get the new value of the node.
 static void replace_node(ast_node *old, ast_node *new) {
   if (old->parent->left == old) {
    ast_set_left(old->parent, new);
@@ -1392,7 +1402,6 @@ static void replace_node(ast_node *old, ast_node *new) {
    ast_set_right(old->parent, new);
   }
 }
-
 
 // This is the trickier macro expansion case.  It happens for all
 // the list types. Let's make it concrete by discussing it for
@@ -1463,7 +1472,10 @@ static void replace_node(ast_node *old, ast_node *new) {
 // The same logic works for all the list types because they all
 // have exactly the same shape.  In CQL, lists are a chain of right
 // pointers with the payload on the left.
-static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
+static bool_t spliced_macro_into_list(
+  ast_node *parent,
+  ast_node *new)
+{
   // if it isn't one of the list types, don't use this method
   if (!(
     is_ast_stmt_list(new) ||
@@ -1496,12 +1508,14 @@ static bool_t spliced_macro_into_list(ast_node *parent, ast_node *new) {
   return true;
 }
 
-// The arguments to @TEXT are either string literals, which we expand
-// using the decode function or else they are macro pieces which we
-// expand using gen_any_macro_expansion.  Either way they land
-// unencoded into the output buffer.   The @TEXT handler will
-// then quote them.
-static void expand_text_args(charbuf *output, ast_node *text_args) {
+// The arguments to @TEXT are either string literals, which we expand using the
+// decode function or else they are macro pieces which we expand using
+// gen_any_macro_expansion.  Either way they land unencoded into the output
+// buffer.   The @TEXT handler will then quote them.
+static void expand_text_args(
+  charbuf *output,
+  ast_node *text_args)
+{
   for (; text_args; text_args = text_args->right) {
     Contract(is_ast_text_args(text_args));
     EXTRACT_ANY_NOTNULL(txt, text_args->left);
@@ -1527,10 +1541,14 @@ static void expand_text_args(charbuf *output, ast_node *text_args) {
   }
 }
 
-// Report a macro-related error at the given spot with the given message
-// We walk up the chain of macro expansions and report all those too
-// because macro debugging is hard without this info.
-static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
+// Report a macro-related error at the given spot with the given message We walk
+// up the chain of macro expansions and report all those too because macro
+// debugging is hard without this info.
+static void report_macro_error(
+  ast_node *ast,
+  CSTR msg,
+  CSTR subj)
+{
    cql_error("%s:%d:1: error: in %s : %s%s%s%s%s%s%s\n",
      ast->filename,
      ast->lineno,
@@ -1551,10 +1569,9 @@ static void report_macro_error(ast_node *ast, CSTR msg, CSTR subj) {
   macro_expansion_errors = 1;
 }
 
-// for @MACRO_FILE -- this gives us the file in which macro
-// expansion began. Very useful for assert macros and such.
-// Note that @MACRO_FILE doesn't yet support path trimming
-// like @FILE but it will.
+// for @MACRO_FILE -- this gives us the file in which macro expansion began.
+// Very useful for assert macros and such. Note that @MACRO_FILE doesn't yet
+// support path trimming like @FILE but it will.
 static CSTR get_macro_file() {
   macro_state_t *p = &macro_state;
   macro_state_t *prev = p;
@@ -1565,8 +1582,8 @@ static CSTR get_macro_file() {
   return prev->file;
 }
 
-// for @MACRO_LINE -- this gives us the line in which macro
-// expansion began. Very useful for assert macros and such.
+// for @MACRO_LINE -- this gives us the line in which macro expansion began.
+// Very useful for assert macros and such.
 static int32_t get_macro_line() {
   macro_state_t *p = &macro_state;
   macro_state_t *prev = p;
@@ -1577,18 +1594,16 @@ static int32_t get_macro_line() {
   return prev->line;
 }
 
-// @ID(x) will take a given string and covert it into an identifier.
-// Which is to say it will decode the string and verify that it is
-// a legal identifier.  This operation is only interesting
-// if the body of the @ID is @TEXT.  Any other body wouldn't have
-// needed wrapping in the first place.  On interesting trick you
-// can do with @ID is this.   The "bar" in "foo.bar" is NOT an
-// expression, it's only a name.  Therefore an EXPR macro cannot
-// be used there.  i.e.  foo.bar! doesn't work.  BUT foo.@ID(bar!)
-// can work. Currently it has to be @ID(@TEXT(bar!)) but this
-// will soon change.  @ID could assume the @TEXT if there is not
-// one there.  @ID *is* a valid name so it can go in places
-// expr! could not go.
+// @ID(x) will take a given string and covert it into an identifier. Which is to
+// say it will decode the string and verify that it is a legal identifier.  This
+// operation is only interesting if the body of the @ID is @TEXT.  Any other
+// body wouldn't have needed wrapping in the first place.  On interesting trick
+// you can do with @ID is this.   The "bar" in "foo.bar" is NOT an expression,
+// it's only a name.  Therefore an EXPR macro cannot be used there.  i.e.
+// foo.bar! doesn't work.  BUT foo.@ID(bar!) can work. Currently it has to be
+// @ID(@TEXT(bar!)) but this will soon change.  @ID could assume the @TEXT if
+// there is not one there.  @ID *is* a valid name so it can go in places expr!
+// could not go.
 static void expand_at_id(ast_node *ast) {
   Contract(is_ast_at_id(ast));
 
@@ -1625,9 +1640,9 @@ static void expand_at_id(ast_node *ast) {
   CHARBUF_CLOSE(str);
 }
 
-// Use the helper to concatenate the arguments then encode them as a string.
-// We use C style literals because newlines etc. are likely in the output
-// and so the resulting literal will be much more readable if it is escaped.
+// Use the helper to concatenate the arguments then encode them as a string. We
+// use C style literals because newlines etc. are likely in the output and so
+// the resulting literal will be much more readable if it is escaped.
 static void expand_at_text(ast_node *ast) {
   Contract(is_ast_macro_text(ast));
 
@@ -1643,10 +1658,9 @@ static void expand_at_text(ast_node *ast) {
   CHARBUF_CLOSE(tmp);
 }
 
-// Handles the special identifiers @MACRO_LINE and @MACRO_FILE
-// which need treatment in the macro pass.  @FILE and @LINE to not
-// require the macro stack so they can be handled later like all
-// the other constants.
+// Handles the special identifiers @MACRO_LINE and @MACRO_FILE which need
+// treatment in the macro pass.  @FILE and @LINE to not require the macro stack
+// so they can be handled later like all the other constants.
 static void expand_special_ids(ast_node *ast) {
   Contract(is_ast_str(ast));
   EXTRACT_STRING(name, ast);
@@ -1662,11 +1676,6 @@ static void expand_special_ids(ast_node *ast) {
     replace_node(ast, new);
     CHARBUF_CLOSE(tmp);
   }
-}
-
-static void report_macro_inappropriate(ast_node *ast, CSTR name) {
-  report_macro_error(ast, "macro or argument used where it is not allowed", name);
-  return;
 }
 
 // Here we handle a discovered macro reference
@@ -1727,7 +1736,7 @@ static void expand_macro_refs(ast_node *ast) {
     // the locations every time.
 
     if (wrong) {
-      report_macro_inappropriate(ast, name);
+      report_macro_error(ast, "macro or argument used where it is not allowed", name);
       return;
     }
   }
@@ -1871,10 +1880,9 @@ cleanup:
   macro_arg_table = macro_state.args;
 }
 
-// make a macro arg node of the correct type for the
-// kind of macro_ref we have.  This lets us do
-// foo!(a!, b!, c!) without having to specify the arg
-// type like we usually do.  So arg forwarding is easier.
+// Make a macro arg node of the correct type for the kind of macro_ref we have.
+// This lets us do foo!(a!, b!, c!) without having to specify the arg type like
+// we usually do.  So arg forwarding is easier.
 cql_noexport ast_node *new_macro_arg_node(ast_node *arg) {
    CSTR type = arg->type;
    CSTR node_type = k_ast_expr_macro_arg;
@@ -1888,12 +1896,12 @@ cql_noexport ast_node *new_macro_arg_node(ast_node *arg) {
    return new_ast(node_type, arg, NULL);
 }
 
-// This is the main recursive workhorse.  It expands macros
-// and macro related constructs in place.  Later passes do not
-// see macros except for the macro definition nodes.  Which could
-// actually have been removed also but we don't.  Maybe we will
-// some day.  Later passes ignore those.
+// This is the main recursive workhorse. It expands macros and macro related
+// constructs in place. Later passes do not see macros except for the macro
+// definition nodes. Which could actually have been removed also but we don't.
+// Maybe we will some day. Later passes ignore those.
 cql_export void expand_macros(ast_node *_Nonnull node) {
+
 tail_recurse:
   if (!options.semantic && options.test && macro_state.line != -1) {
     // in test mode charge the whole macro to the expansion
@@ -1911,6 +1919,7 @@ tail_recurse:
     else {
        node = pre->right;
     }
+
     if (node)
       goto tail_recurse;
     return;

@@ -259,7 +259,8 @@ CQL_EXPORT void cql_bytebuf_open(cql_bytebuf *_Nonnull b);
 CQL_EXPORT void cql_bytebuf_close(cql_bytebuf *_Nonnull b);
 CQL_EXPORT void *_Nonnull cql_bytebuf_alloc(cql_bytebuf *_Nonnull b, int needed);
 CQL_EXPORT void cql_bytebuf_append(cql_bytebuf *_Nonnull buffer, const void *_Nonnull data, int32_t bytes);
-CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...);
+CQL_EXPORT void cql_bprintf(cql_bytebuf *_Nonnull buffer, const char *_Nonnull format, ...)
+                   __attribute__ (( format( printf, 2, 3 ) ));
 CQL_EXPORT void cql_bytebuf_append_null(cql_bytebuf *_Nonnull buffer);
 CQL_EXPORT cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull dyn_cursor);
 
@@ -415,12 +416,26 @@ CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
+// object dictionary has the same contract as string dictionary
+// except the stored type. It uses the same code internally
+
+CQL_EXPORT cql_object_ref _Nonnull cql_object_dictionary_create(void);
+
+CQL_EXPORT cql_bool cql_object_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_object_ref _Nonnull val);
+
+CQL_EXPORT cql_object_ref _Nullable cql_object_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key);
+
 // String list helpers
-CQL_EXPORT cql_object_ref _Nonnull create_cql_string_list(void);
-CQL_EXPORT cql_object_ref _Nonnull add_object_cql_string_list(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
-CQL_EXPORT int32_t get_object_cql_string_list_count(cql_object_ref _Nonnull list);
-CQL_EXPORT cql_string_ref _Nonnull get_from_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index);
-CQL_EXPORT cql_object_ref _Nonnull set_in_object_cql_string_list(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value);
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_create(void);
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+CQL_EXPORT int32_t cql_string_list_count(cql_object_ref _Nonnull list);
+CQL_EXPORT cql_string_ref _Nonnull cql_string_list_get_at(cql_object_ref _Nonnull list, int32_t index);
+CQL_EXPORT cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value);
 
 // For internal use by the schema upgrader only, subject to change and generally uninteresting because
 // of its unusual matching rules.
@@ -429,6 +444,24 @@ CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_,
 // Boxing interface (uses generic objects to hold a statement)
 CQL_EXPORT cql_object_ref _Nonnull cql_box_stmt(sqlite3_stmt *_Nullable stmt);
 CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
+
+
+// boxing helpers for primitive types
+cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data);
+cql_nullable_int32 cql_unbox_int(cql_object_ref _Nonnull box);
+cql_object_ref _Nonnull cql_box_real(cql_nullable_double data);
+cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box);
+cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data);
+cql_nullable_bool cql_unbox_bool(cql_object_ref _Nonnull box);
+cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data);
+cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box);
+cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data);
+cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box);
+cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data);
+cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box);
+cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data);
+cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box);
+int32_t cql_box_get_type(cql_object_ref _Nonnull box);
 
 // String literals can be stored in a compressed format using the --compress option
 // and the cql_compressed primitive.  This helper function gives us a normal string

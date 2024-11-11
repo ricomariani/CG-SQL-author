@@ -57,7 +57,7 @@ cql_noexport int32_t StrNCaseCmp(
 }
 
 // Portable case-insensitive string comparison at end
-cql_noexport int32_t StrEndsWith(
+cql_noexport bool_t StrEndsWith(
   CSTR _Nonnull haystack,
   CSTR _Nonnull needle)
 {

@@ -35,10 +35,7 @@ cql_data_defn( bool_t macro_expansion_errors );
 
 static symtab *macro_table;
 static symtab *macro_arg_table;
-static symtab *macro_refs;
-static symtab *macro_defs;
-static symtab *macro_arg_refs;
-static symtab *macro_arg_types;
+static symtab *macro_arg_type_from_ast_type;
 
 typedef struct macro_state_t {
   CSTR name;
@@ -63,23 +60,20 @@ typedef struct misc_attrs_type {
 
 #undef MACRO_INIT
 #define MACRO_INIT(x) \
-  symtab_add(macro_refs, k_ast_ ## x ## _macro_ref, (void*)k_ast_ ## x ## _macro_arg); \
-  symtab_add(macro_arg_refs, k_ast_ ## x ## _macro_arg_ref, (void*)k_ast_ ## x ## _macro_arg); \
-  symtab_add(macro_defs, k_ast_ ## x ## _macro_def, (void*)k_ast_ ## x ## _macro_ref ); \
-  symtab_add(macro_arg_types, k_ast_ ## x ## _macro_arg, (void*)k_ast_ ## x ## _macro_arg_ref )
+  symtab_add(macro_arg_type_from_ast_type, k_ast_ ## x ## _macro_ref, (void*)k_ast_ ## x ## _macro_arg); \
+  symtab_add(macro_arg_type_from_ast_type, k_ast_ ## x ## _macro_arg_ref, (void*)k_ast_ ## x ## _macro_arg);
 
 // initialization for the ast and macro expansion pass
 cql_noexport void ast_init() {
   minipool_open(&ast_pool);
   minipool_open(&str_pool);
   macro_table = symtab_new();
-  macro_defs = symtab_new();
-  macro_refs = symtab_new();
-  macro_arg_refs = symtab_new();
-  macro_arg_types = symtab_new();
+  macro_arg_type_from_ast_type = symtab_new();
   delete_macro_formals();
   macro_expansion_errors = false;
 
+  // this makes the table that tells us what kind of macro arg we should create
+  // from the given kind of macro reference or node
   MACRO_INIT(expr);
   MACRO_INIT(stmt_list);
   MACRO_INIT(query_parts);
@@ -97,10 +91,7 @@ cql_noexport void ast_init() {
 cql_noexport void ast_cleanup() {
   delete_macro_formals();
   SYMTAB_CLEANUP(macro_table);
-  SYMTAB_CLEANUP(macro_defs);
-  SYMTAB_CLEANUP(macro_refs);
-  SYMTAB_CLEANUP(macro_arg_refs);
-  SYMTAB_CLEANUP(macro_arg_types);
+  SYMTAB_CLEANUP(macro_arg_type_from_ast_type);
   minipool_close(&ast_pool);
   minipool_close(&str_pool);
   run_lazy_frees();
@@ -1336,19 +1327,19 @@ cql_noexport bool_t is_any_macro_ref(ast_node *ast) {
 }
 
 cql_noexport bool_t is_macro_ref(ast_node *ast) {
-  return ast && !!symtab_find(macro_refs, ast->type);
+  return ast && StrEndsWith(ast->type, "_macro_ref");
 }
 
 cql_noexport bool_t is_macro_arg_ref(ast_node *ast) {
-  return ast && !!symtab_find(macro_arg_refs, ast->type);
+  return ast && StrEndsWith(ast->type, "_macro_arg_ref");
 }
 
 cql_noexport bool_t is_macro_def(ast_node *ast) {
-  return ast && !!symtab_find(macro_defs, ast->type);
+  return ast && StrEndsWith(ast->type, "_macro_def");
 }
 
 cql_noexport bool_t is_macro_arg_type(ast_node *ast) {
-  return ast && !!symtab_find(macro_arg_types, ast->type);
+  return ast && StrEndsWith(ast->type, "_macro_arg");
 }
 
 // Look for the name first as an argument and then as a macro body.
@@ -1882,18 +1873,25 @@ cleanup:
 
 // Make a macro arg node of the correct type for the kind of macro_ref we have.
 // This lets us do foo!(a!, b!, c!) without having to specify the arg type like
-// we usually do.  So arg forwarding is easier.
+// we usually do.  So arg forwarding is easier.  Node that we do not use this
+// helper to wrap an arg node.  We use it we need an arg type from an expression
+// or a macro ref and we don't know which kind it is. That's sort of the whole
+// point of this helper.  If the macro arg wrapping is explicit like
+// ROWS(a_select_core) we wouldn't be here.
 cql_noexport ast_node *new_macro_arg_node(ast_node *arg) {
-   CSTR type = arg->type;
-   CSTR node_type = k_ast_expr_macro_arg;
-   symtab_entry *entry = symtab_find(macro_refs, type);
-   if (!entry) {
-     entry = symtab_find(macro_arg_refs, type);
-   }
-   if (entry) {
-     node_type = (CSTR)entry->val;
-   }
-   return new_ast(node_type, arg, NULL);
+  Contract(!is_macro_arg_type(arg));
+
+  CSTR type = arg->type;   
+  CSTR node_type = k_ast_expr_macro_arg;
+  symtab_entry *entry = symtab_find(macro_arg_type_from_ast_type, type);
+  
+  if (entry) {
+    // expr_macro arguments are not wrapped so anything that
+    // is unwrapped is an expr_macro_arg
+    node_type = (CSTR)entry->val;
+  }
+  
+  return new_ast(node_type, arg, NULL);
 }
 
 // This is the main recursive workhorse. It expands macros and macro related

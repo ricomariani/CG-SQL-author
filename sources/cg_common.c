@@ -73,7 +73,7 @@ cql_noexport void cg_sym_name(cg_symbol_case symbol_case, charbuf *_Nonnull outp
           if (name_component[i] == '_') {
             should_upper = true;
           } else if (should_upper) {
-            bputc(output, Toupper(name_component[i]));
+            bputc(output, ToUpper(name_component[i]));
             should_upper = false;
           } else {
             bputc(output, name_component[i]);

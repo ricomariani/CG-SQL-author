@@ -31,7 +31,7 @@ static uint32_t hash_case_insens(const char *sym) {
 }
 
 static int32_t cmp_case_insens(const char *s1, const char *s2) {
-  return (int32_t)Strcasecmp(s1, s2);
+  return (int32_t)StrCaseCmp(s1, s2);
 }
 
 static int32_t cmp_case_sens(const char *s1, const char *s2) {

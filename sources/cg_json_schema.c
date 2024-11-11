@@ -2524,7 +2524,7 @@ static void cg_json_database_var(charbuf *output, ast_node *ast, ast_node *misc_
   // which indicates that we will match any variable ending with "database".
   if (misc_attrs && !name_list->right && is_object(data_type->sem->sem_type)) {
     EXTRACT_STRING(name, name_list->left);
-    if (Strendswith(name, "database")) {
+    if (StrEndsWith(name, "database")) {
 
       if (first_attr) {
         bprintf(output, "\n");

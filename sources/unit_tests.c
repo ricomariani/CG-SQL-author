@@ -43,106 +43,106 @@ static bool test_frag_tricky_case() {
   return count == 2;
 }
 
-static bool test_Strdup__empty_string() {
+static bool test_strdup__empty_string() {
   char* str_copy = Strdup("");
   bool result = STR_EQ(str_copy, "");
   return result;
 }
 
-static bool test_Strdup__one_character_string() {
+static bool test_strdup__one_character_string() {
   char* str_copy = Strdup("a");
   bool result = STR_EQ(str_copy, "a");
   return result;
 }
 
-static bool test_Strdup__long_string() {
+static bool test_strdup__long_string() {
   char* str_copy = Strdup("abcd");
   bool result = STR_EQ(str_copy, "abcd");
   return result;
 }
 
-static bool test_Strcasecmp__empty_strings() {
-  return Strcasecmp("", "") == 0;
+static bool test_strcasecmp_empty_strings() {
+  return StrCaseCmp("", "") == 0;
 }
 
-static bool test_Strcasecmp__one_char_strings__result_is_less_than() {
-  return Strcasecmp("a", "B") < 0;
+static bool test_strcasecmp_one_char_strings__result_is_less_than() {
+  return StrCaseCmp("a", "B") < 0;
 }
 
-static bool test_Strcasecmp__one_char_strings__result_is_greater_than() {
-  return Strcasecmp("B", "a") > 0;
+static bool test_strcasecmp_one_char_strings__result_is_greater_than() {
+  return StrCaseCmp("B", "a") > 0;
 }
 
-static bool test_Strcasecmp__one_char_strings__result_is_equals() {
-  return Strcasecmp("Aab", "aaB") == 0;
+static bool test_strcasecmp_one_char_strings__result_is_equals() {
+  return StrCaseCmp("Aab", "aaB") == 0;
 }
 
-static bool test_Strcasecmp__long_strings__result_is_less_than() {
-  return Strcasecmp("aca", "acD") < 0;
+static bool test_strcasecmp_long_strings__result_is_less_than() {
+  return StrCaseCmp("aca", "acD") < 0;
 }
 
-static bool test_Strcasecmp__long_strings__result_is_greater_than() {
-  return Strcasecmp("bab", "baA") > 0;
+static bool test_strcasecmp_long_strings__result_is_greater_than() {
+  return StrCaseCmp("bab", "baA") > 0;
 }
 
-static bool test_Strcasecmp__long_strings__result_is_equals() {
-  return Strcasecmp("Aab", "aaB") == 0;
+static bool test_strcasecmp_long_strings__result_is_equals() {
+  return StrCaseCmp("Aab", "aaB") == 0;
 }
 
-static bool test_Strcasecmp__different_length_strings__result_is_less_than() {
-  return Strcasecmp("aab", "AABc") < 0;
+static bool test_strcasecmp_different_length_strings__result_is_less_than() {
+  return StrCaseCmp("aab", "AABc") < 0;
 }
 
-static bool test_Strcasecmp__different_length_strings__result_is_greater_than() {
-  return Strcasecmp("AABc", "aab") > 0;
+static bool test_strcasecmp_different_length_strings__result_is_greater_than() {
+  return StrCaseCmp("AABc", "aab") > 0;
 }
 
-static bool test_Strncasecmp__empty_strings__zero_cmp_size__result_is_equals() {
-  return Strncasecmp("", "", 0) == 0;
+static bool test_strncasecmp__empty_strings__zero_cmp_size__result_is_equals() {
+  return StrNCaseCmp("", "", 0) == 0;
 }
 
-static bool test_Strncasecmp__empty_strings__past_length_cmp_size__result_is_equals() {
-  return Strncasecmp("", "", 1) == 0;
+static bool test_strncasecmp__empty_strings__past_length_cmp_size__result_is_equals() {
+  return StrNCaseCmp("", "", 1) == 0;
 }
 
-static bool test_Strncasecmp__one_char_strings__zero_cmp_size__result_is_equals() {
-  return Strncasecmp("a", "b", 0) == 0;
+static bool test_strncasecmp__one_char_strings__zero_cmp_size__result_is_equals() {
+  return StrNCaseCmp("a", "b", 0) == 0;
 }
 
-static bool test_Strncasecmp__one_char_strings__past_length_cmp_size__result_is_less_than() {
-  return Strncasecmp("a", "B", 2) < 0;
+static bool test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_less_than() {
+  return StrNCaseCmp("a", "B", 2) < 0;
 }
 
-static bool test_Strncasecmp__one_char_strings__past_length_cmp_size__result_is_greater_than() {
-  return Strncasecmp("B", "a", 2) > 0;
+static bool test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_greater_than() {
+  return StrNCaseCmp("B", "a", 2) > 0;
 }
 
-static bool test_Strncasecmp__one_char_strings__past_length_cmp_size__result_is_equals() {
-  return Strncasecmp("B", "b", 2) == 0;
+static bool test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_equals() {
+  return StrNCaseCmp("B", "b", 2) == 0;
 }
 
-static bool test_Strncasecmp__long_strings__past_length_cmp_size__result_is_less_than() {
-  return Strncasecmp("aca", "acD", 4) < 0;
+static bool test_strncasecmp__long_strings__past_length_cmp_size__result_is_less_than() {
+  return StrNCaseCmp("aca", "acD", 4) < 0;
 }
 
-static bool test_Strncasecmp__long_strings__past_length_cmp_size__result_is_greater_than() {
-  return Strncasecmp("bab", "baA", 4) > 0;
+static bool test_strncasecmp__long_strings__past_length_cmp_size__result_is_greater_than() {
+  return StrNCaseCmp("bab", "baA", 4) > 0;
 }
 
-static bool test_Strncasecmp__long_strings__past_length_cmp_size__result_is_equals() {
-  return Strncasecmp("Aab", "aaB", 4) == 0;
+static bool test_strncasecmp__long_strings__past_length_cmp_size__result_is_equals() {
+  return StrNCaseCmp("Aab", "aaB", 4) == 0;
 }
 
-static bool test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than() {
-  return Strncasecmp("abd", "Aca", 2) < 0;
+static bool test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than() {
+  return StrNCaseCmp("abd", "Aca", 2) < 0;
 }
 
-static bool test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than() {
-  return Strncasecmp("Bbd", "baa", 2) > 0;
+static bool test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than() {
+  return StrNCaseCmp("Bbd", "baa", 2) > 0;
 }
 
-static bool test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals() {
-  return Strncasecmp("Aac", "aaB", 2) == 0;
+static bool test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals() {
+  return StrNCaseCmp("Aac", "aaB", 2) == 0;
 }
 
 static bool test_sha256_example1() {
@@ -203,30 +203,30 @@ static bool test_unknown_macro() {
 }
 
 cql_noexport void run_unit_tests() {
-  TEST_ASSERT(test_Strdup__empty_string());
-  TEST_ASSERT(test_Strdup__one_character_string());
-  TEST_ASSERT(test_Strdup__long_string());
-  TEST_ASSERT(test_Strcasecmp__empty_strings());
-  TEST_ASSERT(test_Strcasecmp__one_char_strings__result_is_less_than());
-  TEST_ASSERT(test_Strcasecmp__one_char_strings__result_is_greater_than());
-  TEST_ASSERT(test_Strcasecmp__one_char_strings__result_is_equals());
-  TEST_ASSERT(test_Strcasecmp__long_strings__result_is_less_than());
-  TEST_ASSERT(test_Strcasecmp__long_strings__result_is_greater_than());
-  TEST_ASSERT(test_Strcasecmp__long_strings__result_is_equals());
-  TEST_ASSERT(test_Strcasecmp__different_length_strings__result_is_less_than());
-  TEST_ASSERT(test_Strcasecmp__different_length_strings__result_is_greater_than());
-  TEST_ASSERT(test_Strncasecmp__empty_strings__zero_cmp_size__result_is_equals());
-  TEST_ASSERT(test_Strncasecmp__empty_strings__past_length_cmp_size__result_is_equals());
-  TEST_ASSERT(test_Strncasecmp__one_char_strings__zero_cmp_size__result_is_equals());
-  TEST_ASSERT(test_Strncasecmp__one_char_strings__past_length_cmp_size__result_is_less_than());
-  TEST_ASSERT(test_Strncasecmp__one_char_strings__past_length_cmp_size__result_is_greater_than());
-  TEST_ASSERT(test_Strncasecmp__one_char_strings__past_length_cmp_size__result_is_equals());
-  TEST_ASSERT(test_Strncasecmp__long_strings__past_length_cmp_size__result_is_less_than());
-  TEST_ASSERT(test_Strncasecmp__long_strings__past_length_cmp_size__result_is_greater_than());
-  TEST_ASSERT(test_Strncasecmp__long_strings__past_length_cmp_size__result_is_equals());
-  TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than());
-  TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
-  TEST_ASSERT(test_Strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
+  TEST_ASSERT(test_strdup__empty_string());
+  TEST_ASSERT(test_strdup__one_character_string());
+  TEST_ASSERT(test_strdup__long_string());
+  TEST_ASSERT(test_strcasecmp_empty_strings());
+  TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_less_than());
+  TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_greater_than());
+  TEST_ASSERT(test_strcasecmp_one_char_strings__result_is_equals());
+  TEST_ASSERT(test_strcasecmp_long_strings__result_is_less_than());
+  TEST_ASSERT(test_strcasecmp_long_strings__result_is_greater_than());
+  TEST_ASSERT(test_strcasecmp_long_strings__result_is_equals());
+  TEST_ASSERT(test_strcasecmp_different_length_strings__result_is_less_than());
+  TEST_ASSERT(test_strcasecmp_different_length_strings__result_is_greater_than());
+  TEST_ASSERT(test_strncasecmp__empty_strings__zero_cmp_size__result_is_equals());
+  TEST_ASSERT(test_strncasecmp__empty_strings__past_length_cmp_size__result_is_equals());
+  TEST_ASSERT(test_strncasecmp__one_char_strings__zero_cmp_size__result_is_equals());
+  TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_less_than());
+  TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_greater_than());
+  TEST_ASSERT(test_strncasecmp__one_char_strings__past_length_cmp_size__result_is_equals());
+  TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_less_than());
+  TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_greater_than());
+  TEST_ASSERT(test_strncasecmp__long_strings__past_length_cmp_size__result_is_equals());
+  TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_less_than());
+  TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_greater_than());
+  TEST_ASSERT(test_strncasecmp__long_strings__shorter_than_length_cmp_size__result_is_equals());
   TEST_ASSERT(test_frag_tricky_case());
   TEST_ASSERT(test_sha256_example1());
   TEST_ASSERT(test_sha256_example2());

@@ -2301,7 +2301,7 @@ static bool_t cg_make_nice_literal_name(CSTR str, charbuf *output) {
 
   for (int32_t i = 0; str[i] && i < CQL_NICE_LITERAL_NAME_LIMIT; i++) {
     char ch = str[i];
-    if (Isalpha(ch)) {
+    if (IsAlpha(ch)) {
       bputc(output, ch);
       underscore = false;
     }
@@ -5540,7 +5540,7 @@ static void cg_emit_group_stmt(ast_node *ast) {
     EXTRACT_STRING(group_name, group_name_ast);
     EXTRACT_NOTNULL(stmt_list, group->right);
 
-    Invariant(!Strcasecmp(name, group_name));
+    Invariant(!StrCaseCmp(name, group_name));
     in_var_group_emit = true;
     cg_stmt_list(stmt_list);
     in_var_group_emit = false;
@@ -6525,7 +6525,7 @@ static void cg_echo_stmt(ast_node *ast) {
 
   // @ECHO [rt], [str]
 
-  if (!Strcasecmp(rt_name, options.rt)) {
+  if (!StrCaseCmp(rt_name, options.rt)) {
     if (current_proc) {
       cg_decode_string_literal(str, cg_main_output);
     } else {

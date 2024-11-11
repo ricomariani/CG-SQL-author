@@ -544,7 +544,7 @@ static ast_node *rewrite_one_param(ast_node *param, symtab *param_names, bytebuf
 // The name @proc refers to the current procedure name, this can appear in various
 // contexts either as a literal string or a valid id.  If it matches replace it here
 cql_noexport CSTR process_proclit(ast_node *ast, CSTR name) {
-  if (!Strcasecmp(name, "@proc")) {
+  if (!StrCaseCmp(name, "@proc")) {
     if (!current_proc) {
        report_error(ast, "CQL0252: @PROC literal can only appear inside of procedures", NULL);
        record_error(ast);
@@ -765,8 +765,8 @@ cql_noexport void rewrite_cql_cursor_diff(ast_node *ast, bool_t report_column_na
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
   Contract(
-      !Strcasecmp("cql_cursor_diff_col", name) ||
-      !Strcasecmp("cql_cursor_diff_val", name));
+      !StrCaseCmp("cql_cursor_diff_col", name) ||
+      !StrCaseCmp("cql_cursor_diff_val", name));
 
   ast_node *arg1 = first_arg(arg_list);
   ast_node *arg2 = second_arg(arg_list);

@@ -159,12 +159,12 @@ cql_noexport bool_t is_qid(ast_node *node) {
 
 // The special @RC node
 cql_noexport bool_t is_at_rc(ast_node *node) {
-  return is_ast_str(node) && !Strcasecmp("@RC", ((str_ast_node *)node)->value);
+  return is_ast_str(node) && !StrCaseCmp("@RC", ((str_ast_node *)node)->value);
 }
 
 // The special @PROC node
 cql_noexport bool_t is_proclit(ast_node *node) {
-  return is_ast_str(node) && !Strcasecmp("@PROC", ((str_ast_node *)node)->value);
+  return is_ast_str(node) && !StrCaseCmp("@PROC", ((str_ast_node *)node)->value);
 }
 
 // Any string literal (they are alway normalized to SQL format, 'xyz')
@@ -654,8 +654,8 @@ static void ast_find_ast_misc_attr_callback(
   // First make sure that there is a prefix and name and that they match
   if (misc_attr_prefix &&
       misc_attr_name &&
-      !Strcasecmp(misc_attr_prefix, "cql") &&
-      !Strcasecmp(misc_attr_name, misc->attribute_name)) {
+      !StrCaseCmp(misc_attr_prefix, "cql") &&
+      !StrCaseCmp(misc_attr_name, misc->attribute_name)) {
 
     // callback regardless of value, could be any payload
     if (misc->presence_only) {
@@ -765,8 +765,8 @@ static void ast_exists_ast_misc_attr_callback(
   // First make sure that there is a prefix and name and that they match
   if (misc_attr_prefix &&
       misc_attr_name &&
-      !Strcasecmp(misc_attr_prefix, "cql") &&
-      !Strcasecmp(misc_attr_name, misc->attribute_name)) {
+      !StrCaseCmp(misc_attr_prefix, "cql") &&
+      !StrCaseCmp(misc_attr_name, misc->attribute_name)) {
           misc->count++;
   }
 }
@@ -1218,12 +1218,12 @@ cql_noexport void find_table_refs(
 
 cql_noexport size_t ends_in_cursor(CSTR str) {
   const char tail[] = " CURSOR";
-  return Strendswith(str, tail) ? sizeof(tail) - 1 : 0;
+  return StrEndsWith(str, tail) ? sizeof(tail) - 1 : 0;
 }
 
 cql_noexport size_t ends_in_set(CSTR str) {
   const char tail[] = " SET";
-  return Strendswith(str, tail) ? sizeof(tail) - 1 : 0;
+  return StrEndsWith(str, tail) ? sizeof(tail) - 1 : 0;
 }
 
 // store the discovered attribute in the given storage

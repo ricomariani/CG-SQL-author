@@ -1452,23 +1452,23 @@ cql_noexport bool_t is_numeric_expr(ast_node *expr) {
 }
 
 cql_noexport bool_t is_autotest_dummy_table(CSTR name) {
-  return !Strcasecmp(name, "dummy_table");
+  return !StrCaseCmp(name, "dummy_table");
 }
 
 cql_noexport bool_t is_autotest_dummy_insert(CSTR name) {
-  return !Strcasecmp(name, "dummy_insert");
+  return !StrCaseCmp(name, "dummy_insert");
 }
 
 cql_noexport bool_t is_autotest_dummy_select(CSTR name) {
-  return !Strcasecmp(name, "dummy_select");
+  return !StrCaseCmp(name, "dummy_select");
 }
 
 cql_noexport bool_t is_autotest_dummy_result_set(CSTR name) {
-  return !Strcasecmp(name, "dummy_result_set");
+  return !StrCaseCmp(name, "dummy_result_set");
 }
 
 cql_noexport bool_t is_autotest_dummy_test(CSTR name) {
-  return !Strcasecmp(name, "dummy_test");
+  return !StrCaseCmp(name, "dummy_test");
 }
 
 // helper to search for the indicated misc attribute on a procedure
@@ -1682,8 +1682,8 @@ static void sem_find_ast_misc_attr_vault_sensitive_callback(
   // expected then it's not our attribute.
   if (!misc_attr_prefix ||
       !misc_attr_name ||
-      Strcasecmp(misc_attr_prefix, "cql") ||
-      Strcasecmp(misc_attr_name, "vault_sensitive")) {
+      StrCaseCmp(misc_attr_prefix, "cql") ||
+      StrCaseCmp(misc_attr_name, "vault_sensitive")) {
     return;
   }
 
@@ -2111,7 +2111,7 @@ cql_noexport bool_t add_arg_bundle(ast_node *ast, CSTR name) {
 }
 
 cql_noexport ast_node *find_arg_bundle(CSTR name) {
-  if (!Strcasecmp(name,  "LOCALS")) {
+  if (!StrCaseCmp(name,  "LOCALS")) {
     return sem_synthesize_current_locals();
   }
   symtab_entry *entry = symtab_find(arg_bundles, name);
@@ -2247,7 +2247,7 @@ CSTR create_group_id(CSTR group_name, CSTR table_name) {
 // a starting group name to an ending group name.
 // We perform a simple depth first search.
 static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
-  if (!Strcasecmp(start, end)) {
+  if (!StrCaseCmp(start, end)) {
     return true;
   }
   bytebuf *buf = symtab_ensure_bytebuf(recreate_group_deps, start);
@@ -2264,7 +2264,7 @@ static bool_t walk_recreate_group_deps (CSTR start, CSTR end) {
 
 static bool_t add_group_dependency_to_recreate_group(CSTR group_name, CSTR new_dependent_group_name) {
   // We don't want to create self-cycles in our symbol table
-  if (!Strcasecmp(group_name, new_dependent_group_name)) return true;
+  if (!StrCaseCmp(group_name, new_dependent_group_name)) return true;
 
   // We want to make sure adding a new dependency does not introduce a cycle in recreate_group_deps.
   // We know that recreate_group_deps before this function is a DAG without a cycle, so we just need to check whether
@@ -3172,7 +3172,7 @@ static void join_tables(ast_node *t1, ast_node *t2, ast_node *result, int32_t jo
       CSTR n1 = j1->names[i];
       CSTR n2 = j2->names[j];
 
-      if (!Strcasecmp(n1, n2)) {
+      if (!StrCaseCmp(n1, n2)) {
         report_error(t2, "CQL0016: duplicate table name in join", n1);
         record_error(result);
         return;
@@ -3456,7 +3456,7 @@ static void sem_validate_previous_index(ast_node *prev_index) {
 cql_noexport int32_t find_col_in_sptr(sem_struct *sptr, CSTR name) {
   Contract(name);
   for (uint32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(sptr->names[i], name)) {
+    if (!StrCaseCmp(sptr->names[i], name)) {
       return (int32_t)i;
     }
   }
@@ -3755,7 +3755,7 @@ static ast_node *find_and_validate_referenced_table(CSTR table_name, ast_node *e
   // The table is referring to itself, the other checks are moot and the name is not yet registered as the table
   // is currently under construction.  It can't be the case that it is referring to a different recreate group
   // or a future version, because it is referring to itself.
-  if (!Strcasecmp(table_name, current_table_name)) {
+  if (!StrCaseCmp(table_name, current_table_name)) {
     Invariant(current_table_ast);
     return current_table_ast;
   }
@@ -3853,7 +3853,7 @@ static bool_t validate_referenceable_column_callback(ast_node *indexed_columns, 
     // auto test will have no way of meeting this constraint automatically
     if (is_ast_str(name_ast)) {
       EXTRACT_STRING(name, name_ast);
-      if (!Strcasecmp(column_name, name)) {
+      if (!StrCaseCmp(column_name, name)) {
         return true;
       }
     }
@@ -3865,7 +3865,7 @@ static bool_t validate_referenceable_column_callback(ast_node *indexed_columns, 
 static bool_t is_column_unique_key(ast_node *ref_table_ast, CSTR column_name) {
   sem_struct *sptr = ref_table_ast->sem->sptr;
   for (uint32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(column_name, sptr->names[i]) &&
+    if (!StrCaseCmp(column_name, sptr->names[i]) &&
         (is_primary_key(sptr->semtypes[i]) || is_unique_key(sptr->semtypes[i]))) {
       return true;
     }
@@ -3936,7 +3936,7 @@ static bool_t find_referenceable_columns(
         continue;
       }
 
-      if (Strcasecmp(ref_table_name, table_name)) {
+      if (StrCaseCmp(ref_table_name, table_name)) {
         continue;
       }
 
@@ -4243,8 +4243,8 @@ static void sem_pk_def(ast_node *table_ast, ast_node *def) {
 // If this is ever generalized something fancier might be needed here
 // like a name table or something.  For now, keeping it simple.
 static void sem_validate_builtin_migration_proc(ast_node *ast, uint32_t code, CSTR name) {
-  bool_t is_from_recreate = !Strcasecmp(CQL_FROM_RECREATE, name);
-  bool_t is_module_warn = !Strcasecmp(CQL_MODULE_WARN, name);
+  bool_t is_from_recreate = !StrCaseCmp(CQL_FROM_RECREATE, name);
+  bool_t is_module_warn = !StrCaseCmp(CQL_MODULE_WARN, name);
 
   if (!is_from_recreate && !is_module_warn) {
     report_error(ast, "CQL0379: unknown built-in migration procedure", name);
@@ -4308,7 +4308,7 @@ static bool_t sem_validate_version(uint32_t code, ast_node *ast, int32_t *versio
       size_t len = strlen(name);
       if (len >= 4) {
         size_t offset = len - 4;
-        if (!Strcasecmp(name + offset, "_crc")) {
+        if (!StrCaseCmp(name + offset, "_crc")) {
           report_error(ast, "CQL0338: the name of a migration procedure may not end in '_crc'", name);
           record_error(ast);
           return false;
@@ -5603,7 +5603,7 @@ static uint32_t sem_select_table_star_count(ast_node *ast) {
   sem_join *jptr = current_joinscope->jptr;
 
   for (uint32_t i = 0; i < jptr->count; i++) {
-    if (!Strcasecmp(jptr->names[i], name)) {
+    if (!StrCaseCmp(jptr->names[i], name)) {
       ast->sem = new_sem(SEM_TYPE_STRUCT);
       ast->sem->name = jptr->names[i];
       ast->sem->sptr = jptr->tables[i];
@@ -5643,7 +5643,7 @@ static int32_t sem_select_table_star_add(ast_node *ast, sem_struct *sptr, int32_
   sem_join *jptr = current_joinscope->jptr;
 
   uint32_t i = 0;
-  while (Strcasecmp(jptr->names[i], name)) {
+  while (StrCaseCmp(jptr->names[i], name)) {
     i++;
   }
 
@@ -6023,7 +6023,7 @@ static ast_node *get_named_param(ast_node *params, CSTR name) {
     // args already evaluated and no errors
     Invariant(param->sem);
 
-    if (!Strcasecmp(name, param->sem->name)) {
+    if (!StrCaseCmp(name, param->sem->name)) {
       return param;
     }
   }
@@ -6060,7 +6060,7 @@ static sem_resolve sem_try_resolve_locals_bundle(ast_node *ast, CSTR name, CSTR 
   Contract(name);
   Contract(type_ptr);
 
-  if (!scope || Strcasecmp(scope, "LOCALS")) {
+  if (!scope || StrCaseCmp(scope, "LOCALS")) {
     return SEM_RESOLVE_CONTINUE;
   }
 
@@ -6097,7 +6097,7 @@ static sem_resolve sem_try_resolve_arguments_bundle(ast_node *ast, CSTR name, CS
   Contract(name);
   Contract(type_ptr);
 
-  if (!scope || Strcasecmp(scope, "ARGUMENTS")) {
+  if (!scope || StrCaseCmp(scope, "ARGUMENTS")) {
     return SEM_RESOLVE_CONTINUE;
   }
 
@@ -6300,10 +6300,10 @@ static sem_resolve sem_try_resolve_column(ast_node *ast, CSTR name, CSTR scope, 
 
     bool_t found_in_this_joinscope = false;
     for (uint32_t i = 0; i < jptr->count; i++) {
-      if (scope == NULL || !Strcasecmp(scope, jptr->names[i])) {
+      if (scope == NULL || !StrCaseCmp(scope, jptr->names[i])) {
         sem_struct *table = jptr->tables[i];
         for (uint32_t j = 0; j < table->count; j++) {
-          if (!Strcasecmp(name, table->names[j])) {
+          if (!StrCaseCmp(name, table->names[j])) {
             if (found_in_this_joinscope) {
               // Since we found two candidates in the same joinscope, we have an
               // ambiguity. It doesn't matter if we check for this before or
@@ -6396,7 +6396,7 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
   }
 
   // there are 3 valid names for the rowid, any will do.
-  if (Strcasecmp(name, "_rowid_") && Strcasecmp(name, "rowid") && Strcasecmp(name, "oid")) {
+  if (StrCaseCmp(name, "_rowid_") && StrCaseCmp(name, "rowid") && StrCaseCmp(name, "oid")) {
     return SEM_RESOLVE_CONTINUE;
   }
 
@@ -6424,7 +6424,7 @@ static sem_resolve sem_try_resolve_rowid(ast_node *ast, CSTR name, CSTR scope, s
 
       // more than one table but the name is scoped, still have a chance
       for (uint32_t i = 0; i < jptr->count; i++) {
-        if (!Strcasecmp(scope, jptr->names[i])) {
+        if (!StrCaseCmp(scope, jptr->names[i])) {
           col = name;
           kind = NULL;
           sem_type = SEM_TYPE_LONG_INTEGER | SEM_TYPE_NOTNULL;
@@ -6519,7 +6519,7 @@ static void sem_resolve_cursor_field(ast_node *ast, ast_node *cursor, CSTR field
   Invariant(sptr->count > 0);
 
   for (uint32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(sptr->names[i], field)) {
+    if (!StrCaseCmp(sptr->names[i], field)) {
       if (ast) {
         ast->sem = new_sem(sptr->semtypes[i] | SEM_TYPE_VARIABLE);
         ast->sem->name = dup_printf("%s.%s", scope, sptr->names[i]);
@@ -6574,7 +6574,7 @@ static sem_resolve sem_try_resolve_enum(ast_node *ast, CSTR name, CSTR scope, se
     EXTRACT_NOTNULL(enum_value, enum_values->left);
     EXTRACT_STRING(enum_member, enum_value->left);
 
-    if (!Strcasecmp(enum_member, name)) {
+    if (!StrCaseCmp(enum_member, name)) {
       if (ast) {
         ast_node *ast_new = eval_set(ast, enum_value->left->sem->value);
         sem_root_expr(ast_new, SEM_EXPR_CONTEXT_NONE);
@@ -6640,7 +6640,7 @@ static sem_resolve sem_try_resolve_arg_bundle(ast_node *ast, CSTR name, CSTR sco
   Invariant(sptr->count > 0);
 
   for (uint32_t i = 0; i < sptr->count; i++) {
-    if (!Strcasecmp(sptr->names[i], name)) {
+    if (!StrCaseCmp(sptr->names[i], name)) {
       // We found the dot form of the name (e.g., 'bundle.foo') in the argument
       // bundle. The underscore version of the name (e.g., 'bundle_foo')
       // therefore must exist in `locals`: We always create both versions of the
@@ -7047,7 +7047,7 @@ static sem_t *find_mutable_type_and_global_status(CSTR name, CSTR scope, bool_t 
 static CSTR sem_combine_kinds_general(ast_node *ast, CSTR kind_left, CSTR kind_right) {
   if (kind_right) {
     if (kind_left) {
-      if (Strcasecmp(kind_left, kind_right)) {
+      if (StrCaseCmp(kind_left, kind_right)) {
         CSTR errmsg = dup_printf("CQL0070: expressions of different kinds can't be mixed: '%s' vs. '%s'", kind_right, kind_left);
         report_error(ast, errmsg, NULL);
         record_error(ast);
@@ -7473,7 +7473,7 @@ static void sem_expr_cast(ast_node *ast, CSTR cstr) {
       CSTR k2 = expr->sem->kind;
 
       // either both are null, or both are not null and they match
-      bool_t same = (!k1 && !k2) || (k1 && k2 && !Strcasecmp(k1, k2));
+      bool_t same = (!k1 && !k2) || (k1 && k2 && !StrCaseCmp(k1, k2));
 
       if (same) {
         CSTR err_msg = dup_expr_text(ast);
@@ -7527,7 +7527,7 @@ static void sem_expr_type_check(ast_node *ast, CSTR cstr) {
 
   if (!kind_left && !kind_right) {
   }
-  else if (kind_left && kind_right && !Strcasecmp(kind_left, kind_right)) {
+  else if (kind_left && kind_right && !StrCaseCmp(kind_left, kind_right)) {
   }
   else {
     kind_left = kind_left ? kind_left : "[none]";
@@ -10961,7 +10961,7 @@ static void sem_window_reference(ast_node *ast) {
       EXTRACT_ANY_NOTNULL(window_name_or_defn, any_expr->right);
       if (is_ast_str(window_name_or_defn)) {
         EXTRACT_STRING(name, window_name_or_defn);
-        if (!Strcasecmp(window_name, name)) {
+        if (!StrCaseCmp(window_name, name)) {
           record_ok(ast);
           return;
         }
@@ -11049,7 +11049,7 @@ static void sem_window_name(ast_node *ast) {
     for (ast_node *item = window_name_defn_list; item; item = item->right) {
       EXTRACT_NOTNULL(window_name_defn, item->left);
       EXTRACT_STRING(name, window_name_defn->left);
-      if (!Strcasecmp(window_name, name)) {
+      if (!StrCaseCmp(window_name, name)) {
         valid = true;
         break;
       }
@@ -12933,7 +12933,7 @@ static void make_distinct_table_params_list_callback(void *context, CSTR cte_nam
   while (item) {
     EXTRACT_NAMED_NOTNULL(decl, cte_decl, item->ast);
     EXTRACT_STRING(existing_name, decl->left);
-    if (!Strcasecmp(existing_name, cte_name)) {
+    if (!StrCaseCmp(existing_name, cte_name)) {
       break;
     }
     item = item->next;
@@ -12991,7 +12991,7 @@ cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info
 
     EXTRACT_STRING(cte_name, cte_decl->left);
 
-    if (!Strcasecmp(cte_name, info->actual)) {
+    if (!StrCaseCmp(cte_name, info->actual)) {
       bprintf(info->err, "Procedure '%s' has a different CTE that is also named '%s'\n", info->proc, info->actual);
       bprintf(info->err, "The above originated from CALL %s USING %s AS %s\n", info->proc, info->actual, info->formal);
       return;
@@ -13004,7 +13004,7 @@ cql_noexport void sem_check_bound_cte_name_conflict(ast_node *node, binding_info
 
     // if we are forwarding the table parameter then we have to analyze what's under us.
     // for this analysis we don't use the formal name since that name is itself replaced
-    if (!Strcasecmp(info->formal, actual)) {
+    if (!StrCaseCmp(info->formal, actual)) {
       binding_info new;
       new.err = info->err;
       new.proc = info->proc_calling;
@@ -14139,7 +14139,7 @@ static bool_t sem_validate_attrs_prev_cur(version_attrs_info *prev, version_attr
     // Note: if recreate is dropped and delete is added we give a better error later so that case
     // is excluded here.
     if (!cur->recreate && cur->delete_version < 0 && cur->create_code == SCHEMA_ANNOTATION_CREATE_TABLE) {
-       if (!cur->create_proc || Strcasecmp(CQL_FROM_RECREATE, cur->create_proc)) {
+       if (!cur->create_proc || StrCaseCmp(CQL_FROM_RECREATE, cur->create_proc)) {
          report_error(name_ast, "CQL0377: table transitioning from @recreate to @create must use @create(nn,cql:from_recreate)", name);
          return false;
        }
@@ -14719,7 +14719,7 @@ static void sem_found_dep_in_trigger(CSTR _Nonnull target_name, ast_node *_Nonnu
 
   trigger_dep_context *info  = context;
 
-  if (Strcasecmp(info->trigger_on_table_name, target_name)) {
+  if (StrCaseCmp(info->trigger_on_table_name, target_name)) {
     // we don't have to record that the trigger depends on the table that it is on
     // if that table goes away the trigger is implicitly deleted anyway, it would
     // just give us a bunch of false positives.  It's the other tables that need searching
@@ -14990,7 +14990,7 @@ static bool_t sem_validate_virtual_table_vers(version_attrs_info *table_vers_inf
 
   // if deleting virtual table... you must add the reminder
   if (table_vers_info->is_virtual_table && table_vers_info->delete_version_ast) {
-     if (!table_vers_info->delete_proc || Strcasecmp(CQL_MODULE_WARN, table_vers_info->delete_proc )) {
+     if (!table_vers_info->delete_proc || StrCaseCmp(CQL_MODULE_WARN, table_vers_info->delete_proc )) {
         report_error(table_vers_info->delete_version_ast, "CQL0392: when deleting a virtual table you must specify @delete(nn, "
             CQL_MODULE_WARN ") as a reminder not to delete the module for this virtual table", table_vers_info->name);
         record_error(create_table_stmt);
@@ -15542,7 +15542,7 @@ static void sem_validate_table_for_backed(ast_node *ast) {
   CSTR backing_group = backing_sem->recreate_group_name ? backing_sem->recreate_group_name : "";
   CSTR backed_group = backed_sem->recreate_group_name ? backed_sem->recreate_group_name : "";
 
-  if (Strcasecmp(backing_group, backed_group)) {
+  if (StrCaseCmp(backing_group, backed_group)) {
     // if a group was specified they should match
     report_invalid_backed(ast, "@recreate group doesn't match the backing table", name);
     return;
@@ -15975,7 +15975,7 @@ void sem_create_virtual_table_stmt(ast_node *ast) {
 
   bool_t is_eponymous = !!(flags & VTAB_IS_EPONYMOUS);
 
-  if (is_eponymous && Strcasecmp(name, module_name)) {
+  if (is_eponymous && StrCaseCmp(name, module_name)) {
     CSTR err_msg = dup_printf(
          "CQL0447: virtual table '%s' claims to be eponymous but its module name '%s' differs from its table name",
          name, module_name);
@@ -19255,7 +19255,7 @@ cql_noexport sem_t find_column_type(CSTR table_name, CSTR column_name) {
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (table_ast) {
     for (uint32_t i = 0; i < table_ast->sem->sptr->count; i++) {
-      if (!Strcasecmp(column_name, table_ast->sem->sptr->names[i])) {
+      if (!StrCaseCmp(column_name, table_ast->sem->sptr->names[i])) {
         return table_ast->sem->sptr->semtypes[i];
       }
     }
@@ -19269,7 +19269,7 @@ static CSTR find_column_kind(CSTR table_name, CSTR column_name) {
   ast_node *table_ast = find_table_or_view_even_deleted(table_name);
   if (table_ast) {
     for (uint32_t i = 0; i < table_ast->sem->sptr->count; i++) {
-      if (!Strcasecmp(column_name, table_ast->sem->sptr->names[i])) {
+      if (!StrCaseCmp(column_name, table_ast->sem->sptr->names[i])) {
         result = table_ast->sem->sptr->kinds[i];
         break;
       }
@@ -19505,8 +19505,8 @@ static void sem_find_ast_misc_attr_callback(
 {
   if (misc_attr_prefix &&
       misc_attr_name &&
-      !(Strcasecmp(misc_attr_prefix, "cql")) &&
-      !(Strcasecmp(misc_attr_name, "autotest"))) {
+      !(StrCaseCmp(misc_attr_prefix, "cql")) &&
+      !(StrCaseCmp(misc_attr_name, "autotest"))) {
     int32_t *error = (int32_t *)context;
 
     if (!is_ast_misc_attr_value_list(ast_misc_attr_value_list)) {
@@ -20052,8 +20052,8 @@ static void sem_misc_attrs_ok_table_scan(
   Contract(any_stmt);
   Contract(misc_attrs);
 
-  if (!Strcasecmp(misc_attr_prefix, "cql") &&
-      !Strcasecmp(misc_attr_name, "ok_table_scan")) {
+  if (!StrCaseCmp(misc_attr_prefix, "cql") &&
+      !StrCaseCmp(misc_attr_name, "ok_table_scan")) {
     if (!is_ast_create_proc_stmt(any_stmt)) {
         report_error(misc_attrs, "CQL0329: ok_table_scan attribute can only be used in a create procedure statement", NULL);
         record_error(misc_attrs);
@@ -22382,7 +22382,7 @@ static bool_t sem_verify_no_duplicate_names_func(ast_node *list, name_func func)
       CSTR n2 = func(a2);
       Contract(n2);
 
-      if (!Strcasecmp(n1, n2)) {
+      if (!StrCaseCmp(n1, n2)) {
         report_error(a2->left, "CQL0206: duplicate name in list", n2);
         return false;
       }
@@ -23317,7 +23317,7 @@ void sem_find_ast_misc_attr_trycatch_is_proc_body_callback(
   Contract(misc_attr_name);
   Contract(is_ast_trycatch_stmt(context));
 
-  if (!misc_attr_prefix || Strcasecmp(misc_attr_prefix, "cql") || Strcasecmp(misc_attr_name, "try_is_proc_body")) {
+  if (!misc_attr_prefix || StrCaseCmp(misc_attr_prefix, "cql") || StrCaseCmp(misc_attr_name, "try_is_proc_body")) {
     return;
   }
 
@@ -23565,10 +23565,10 @@ static void sem_op_stmt(ast_node *ast) {
   if (is_ast_str(data_type)) {
     EXTRACT_STRING(special, data_type);
 
-    if (!Strcasecmp("cursor", special)) {
+    if (!StrCaseCmp("cursor", special)) {
       key = dup_printf("cursor:%s:%s", op, func);
     }
-    else if (!Strcasecmp("null", special)) {
+    else if (!StrCaseCmp("null", special)) {
       key = dup_printf("null:%s:%s", op, func);
     }
   }
@@ -24527,11 +24527,11 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
   // built-in aggregate functions clause might always return at least one row
   EXTRACT_STRING(name, expr->left);
   if (
-    !Strcasecmp("avg", name) ||
-    !Strcasecmp("count", name) ||
-    !Strcasecmp("group_concat", name) ||
-    !Strcasecmp("sum", name) ||
-    !Strcasecmp("total", name)
+    !StrCaseCmp("avg", name) ||
+    !StrCaseCmp("count", name) ||
+    !StrCaseCmp("group_concat", name) ||
+    !StrCaseCmp("sum", name) ||
+    !StrCaseCmp("total", name)
   ) {
     return sem_check_aggregate_select_expr_must_return_a_row(ast, select_where);;
   }
@@ -24539,8 +24539,8 @@ static bool_t sem_select_expr_must_return_a_row(ast_node *ast) {
   // min and max are aggregate functions if they have exactly one argument, they are scalar functions if they have two
   // or more arguments
   if (
-    !Strcasecmp("max", name) ||
-    !Strcasecmp("min", name)
+    !StrCaseCmp("max", name) ||
+    !StrCaseCmp("min", name)
   ) {
       EXTRACT_ANY_NOTNULL(call_arg_list, expr->right);
       EXTRACT_ANY_NOTNULL(arg_list, call_arg_list->right);
@@ -25488,7 +25488,7 @@ static void sem_schema_unsub_stmt(ast_node *ast) {
       CSTR src_name = sem_get_name(src_ast);
 
       // carve out an exception for tables that refer to themselves, that FK won't break anything
-      if (Strcasecmp(name, src_name)) {
+      if (StrCaseCmp(name, src_name)) {
         report_error(ast, "CQL0473: @unsub is invalid because the table/view is still used by", src_name);
         record_error(ast);
       }

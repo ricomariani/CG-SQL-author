@@ -1558,7 +1558,7 @@ static int32_t get_table_col_offset(ast_node *create_table_stmt, CSTR name, bool
     Invariant(icol >= 0);
     Invariant((uint32_t)icol < sptr->count);
 
-    if (!Strcasecmp(name, sptr->names[icol])) {
+    if (!StrCaseCmp(name, sptr->names[icol])) {
       return i;
     }
   }
@@ -1789,25 +1789,25 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
 
     // We never want this to appear. Calls to `cql_inferred_notnull` exist only as
     // the product of a rewrite rule and should not be visible to users.
-    if (!Strcasecmp("cql_inferred_notnull", name)) {
+    if (!StrCaseCmp("cql_inferred_notnull", name)) {
       gen_arg_list(arg_list);
       return;
     }
 
     if (for_sqlite() && cg_blob_mappings) {
-      if (!Strcasecmp("cql_blob_get", name)) {
+      if (!StrCaseCmp("cql_blob_get", name)) {
         gen_cql_blob_get(ast);
         return;
       }
-      else if (!Strcasecmp("cql_blob_get_type", name)) {
+      else if (!StrCaseCmp("cql_blob_get_type", name)) {
         gen_cql_blob_get_type(ast);
         return;
       }
-      else if (!Strcasecmp("cql_blob_create", name)) {
+      else if (!StrCaseCmp("cql_blob_create", name)) {
         gen_cql_blob_create(ast);
         return;
       }
-      else if (!Strcasecmp("cql_blob_update", name)) {
+      else if (!StrCaseCmp("cql_blob_update", name)) {
         gen_cql_blob_update(ast);
         return;
       }
@@ -1818,17 +1818,17 @@ static void gen_expr_call(ast_node *ast, CSTR op, int32_t pri, int32_t pri_new) 
       // doing codegen: They're only present within queries in source programs for
       // the purpose of manipulating types.
 
-      if (!Strcasecmp("nullable", name)) {
+      if (!StrCaseCmp("nullable", name)) {
         gen_arg_list(arg_list);
         return;
       }
 
-      if (!Strcasecmp("ptr", name)) {
+      if (!StrCaseCmp("ptr", name)) {
         gen_arg_list(arg_list);
         return;
       }
 
-    if (!Strcasecmp("sensitive", name)) {
+    if (!StrCaseCmp("sensitive", name)) {
         gen_arg_list(arg_list);
         return;
       }

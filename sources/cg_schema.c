@@ -818,7 +818,7 @@ static void emit_full_drop(ast_node *target_ast, charbuf *decls) {
       CSTR src_name = sem_get_name(src_ast);
 
       // if self linking fk, do not emit
-      if (Strcasecmp(target_name, src_name)) {
+      if (StrCaseCmp(target_name, src_name)) {
         // recurse to get the new delete function, output does not interleave
         // as we are writing into a temp buffer "out"
         emit_full_drop(src_ast, decls);
@@ -1446,7 +1446,7 @@ static void cg_schema_manage_recreate_tables(
 
     // if there is a group and and this node can be merged with the next
     // then hold the update and accumulate the CRC
-    if (i + 1 < count && gname[0] && !Strcasecmp(gname, (note+1)->group_name)) {
+    if (i + 1 < count && gname[0] && !StrCaseCmp(gname, (note+1)->group_name)) {
       continue;
     }
 
@@ -1991,7 +1991,7 @@ cql_noexport void cg_schema_upgrade_main(ast_node *head) {
           EXTRACT_STRING(lhs, dot->left);
           EXTRACT_STRING(rhs, dot->right);
 
-          if (!Strcasecmp(lhs, "cql") && !Strcasecmp(rhs, "from_recreate")) {
+          if (!StrCaseCmp(lhs, "cql") && !StrCaseCmp(rhs, "from_recreate")) {
             emit_full_drop(note->target_ast, &decls);
 
             bprintf(&upgrade, "    -- one time drop moving to create from recreate %s\n\n", table_name_sql.ptr);

@@ -349,7 +349,7 @@ static void find_parent_column(
       EXTRACT_NOTNULL(col_def_name_type, col_def_type_attrs->left);
       EXTRACT_STRING(name, col_def_name_type->left);
 
-      if (!Strcasecmp(name, column_name)) {
+      if (!StrCaseCmp(name, column_name)) {
         for (ast_node *attr = attrs; attr; attr = attr->right) {
           if (is_ast_col_attrs_fk(attr)) {
             EXTRACT_NOTNULL(fk_target_options, attr->left);
@@ -379,7 +379,7 @@ static void find_parent_column(
       bool_t found = 0;
       for (ast_node *list = name_list; list; list = list->right) {
         EXTRACT_STRING(name, list->left);
-        if (!Strcasecmp(name, column_name)) {
+        if (!StrCaseCmp(name, column_name)) {
           found = 1;
           break;
         }
@@ -946,12 +946,12 @@ static bool_t is_column_value_present(bytebuf *column_values, sem_t column_type,
 
       EXTRACT_NUM_VALUE(lv, l);
       EXTRACT_NUM_VALUE(rv, r);
-      exist = minus_l == minus_r && !Strcasecmp(lv, rv);
+      exist = minus_l == minus_r && !StrCaseCmp(lv, rv);
     }
     else if (col_type == SEM_TYPE_TEXT) {
       EXTRACT_STRING(lv, l);
       EXTRACT_STRING(rv, r);
-      exist = !Strcasecmp(lv, rv);
+      exist = !StrCaseCmp(lv, rv);
     }
 
     if (exist) {
@@ -1112,8 +1112,8 @@ static void test_helpers_find_ast_misc_attr_callback(
 
   if (misc_attr_prefix &&
       misc_attr_name &&
-      !Strcasecmp(misc_attr_prefix, "cql") &&
-      !Strcasecmp(misc_attr_name, "autotest")) {
+      !StrCaseCmp(misc_attr_prefix, "cql") &&
+      !StrCaseCmp(misc_attr_name, "autotest")) {
 
     // We're actually using intermediate buffers here only so that
     // we can test if they were used (non-empty) at the end so that

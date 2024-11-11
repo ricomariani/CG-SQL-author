@@ -4224,7 +4224,7 @@ static void cg_lua_echo_stmt(ast_node *ast) {
 
   // @ECHO [rt], [str]
 
-  if (!Strcasecmp(rt_name, options.rt)) {
+  if (!StrCaseCmp(rt_name, options.rt)) {
     if (current_proc) {
       cg_decode_string_literal(str, cg_main_output);
     } else {
@@ -4892,7 +4892,7 @@ static void cg_lua_emit_group_stmt(ast_node *ast) {
     EXTRACT_NOTNULL(stmt_list, group->right);
 
     // In lua the normal output is all you need
-    Invariant(!Strcasecmp(name, group_name));
+    Invariant(!StrCaseCmp(name, group_name));
     cg_lua_stmt_list(stmt_list);
 
     name_list = name_list->right;

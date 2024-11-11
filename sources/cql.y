@@ -3569,16 +3569,22 @@ static void cql_usage() {
     );
 }
 
-static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
+// the reduction for a statement is pretty complicated compared to others:
+//
+// * procedures, views, and tables can get a doc comment add to their misc attributes
+//   * if the node is one of those, we look for a recent saved comment and make an
+//     attribute node eqivalent to @attribute(cql:doc_comment="your comment")
+// * once this is done, if there are attributes, we wrap the statement with the attributes
+//   using new_ast_stmt_and_attr
+// * otherwise we just return the statement as no wrapper is needed
+static ast_node *make_statement_node(
+  ast_node *misc_attrs,
+  ast_node *any_stmt)
 {
-  // This is the equivalent of:
-  //
-  // misc_attrs any_stmt  { $stmt = $misc_attrs ? new_ast_stmt_and_attr($misc_attrs, $any_stmt) : $any_stmt; }
-
-  // Add the most recent doc comment (if any) to any table/view/proc
   if (is_ast_create_proc_stmt(any_stmt) ||
       is_ast_create_view_stmt(any_stmt) ||
       is_ast_create_table_stmt(any_stmt)) {
+    // Add the most recent doc comment (if any) to any table/view/proc
     CSTR comment = table_comment_saved ? table_comment_saved : get_last_doc_comment();
     if (comment) {
        ast_node *misc_attr_key = new_ast_dot(new_ast_str("cql"), new_ast_str("doc_comment"));
@@ -3599,7 +3605,9 @@ static ast_node *make_statement_node(ast_node *misc_attrs, ast_node *any_stmt)
 }
 
 // creates a column definition node with a doc comment if needed
-static ast_node *make_coldef_node(ast_node *col_def_type_attrs, ast_node *misc_attrs)
+static ast_node *make_coldef_node(
+  ast_node *col_def_type_attrs,
+  ast_node *misc_attrs)
 {
   // This is the equivalent of:
   //
@@ -3652,8 +3660,12 @@ static ast_node *reduce_str_chain(ast_node *str_chain) {
   return lit;
 }
 
+// This will hold the defined symbols -- the ones that came in
+// via the --defines command line.  Currently there is no @define
+// so you only get what came in on the command line
 static symtab *defines;
 
+// Add the defined symbol from the command line to the symbol table
 static void cql_setup_defines() {
   Contract(!defines);
   defines = symtab_new();
@@ -3665,34 +3677,44 @@ static void cql_setup_defines() {
   }
 }
 
+// free the defines table if it exists
 static void cql_cleanup_defines() {
-  if (defines) {
-    symtab_delete(defines);
-    defines = NULL;
-  }
+  SYMTAB_CLEANUP(defines);
 }
 
+// adds the given symbol to the set of defined symbols
 static void cql_add_define(CSTR name) {
   Contract(defines);
   symtab_add(defines, name, (void*)1);
 }
 
+// tests if the conditional named is defined
 cql_noexport bool_t cql_is_defined(CSTR name) {
   Contract(defines);
   symtab_entry *entry = symtab_find(defines, name);
   return entry && entry->val;
 }
 
+// this creates a simple call with no arguments
 static ast_node *new_simple_call_from_name(ast_node *name) {
   ast_node *call_filter_clause = new_ast_call_filter_clause(NULL, NULL);
   ast_node *call_arg_list = new_ast_call_arg_list(call_filter_clause, NULL);
   return new_ast_call(name, call_arg_list);
 }
 
+// if there is no ifdef block or if the ifdef proc indicates
+// we are current processing then we are processing.
 static bool_t is_processing() {
   return !cql_ifdef_state || cql_ifdef_state->processing;
 }
 
+// In case of ifndef we test the symbol we process now if
+// 1. we are already processing, and
+// 2. the symbol is defined.
+//
+// Condition 1 might be false if we are for instance already
+// in an @ifdef body and the body was not selected. In that
+// case neither the main body or the else body will be processed.
 static ast_node *do_ifdef(ast_node *ast) {
   EXTRACT_STRING(name, ast);
   cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
@@ -3705,6 +3727,13 @@ static ast_node *do_ifdef(ast_node *ast) {
   return ast;
 }
 
+// In case of ifndef we test the symbol we process now if
+// 1. we are already processing, and
+// 2. the symbol is not defined.
+//
+// Condition 1 might be false if we are for instance already
+// in an @ifdef body and the body was not selected. In that
+// case neither the main body or the else body will be processed.
 static ast_node *do_ifndef(ast_node *ast) {
   EXTRACT_STRING(name, ast);
   cql_ifdef_state_t *new_state = _ast_pool_new(cql_ifdef_state_t);
@@ -3717,18 +3746,26 @@ static ast_node *do_ifndef(ast_node *ast) {
   return ast;
 }
 
+// having encountered an else 
 static void do_else() {
-  cql_ifdef_state->processing = cql_ifdef_state && cql_ifdef_state->process_else;
+  // an else block cannot happen unless we are in an ifdef/ifndef
+  // hence there must be state.
+  Contract(cql_ifdef_state);
+
+  // follow the instruction that was computed when we hit the ifdef
+  cql_ifdef_state->processing = cql_ifdef_state->process_else;
 }
 
+// pops the pending ifdef state off the stack
 static void do_endif() {
-  if (cql_ifdef_state) {
-    cql_ifdef_state_t *prev = cql_ifdef_state->prev;
-    cql_ifdef_state = prev;
-    // it is not possible to go from processing to not processing
-    // so there is never a transition here
-  }
+  Contract(cql_ifdef_state);
+
+  cql_ifdef_state_t *prev = cql_ifdef_state->prev;
+  cql_ifdef_state = prev;
 }
+
+// creates a macro argument reference node for the indicated macro type
+// this is the use of a macro in any context (could be a macro body or not)
 cql_noexport ast_node *new_macro_ref_node(CSTR name, ast_node *args) {
   int32_t macro_type = resolve_macro_name(name);
   ast_node *id = new_ast_str(name);
@@ -3743,6 +3780,9 @@ cql_noexport ast_node *new_macro_ref_node(CSTR name, ast_node *args) {
   return new_ast_unknown_macro_ref(id, args);
 }
 
+// creates a macro argument reference node for the indicated macro type
+// this is the use of an argument inside the body of a macro.  Macro arguments
+// obviously can only appear inside of macros bodies.
 cql_noexport ast_node *new_macro_arg_ref_node(CSTR name) {
   int32_t macro_type = resolve_macro_name(name);
   ast_node *id = new_ast_str(name);
@@ -3757,6 +3797,7 @@ cql_noexport ast_node *new_macro_arg_ref_node(CSTR name) {
   return new_ast_unknown_macro_arg_ref(id);
 }
 
+// converts from the token to the friendly name of the macro
 cql_noexport CSTR macro_type_from_name(CSTR name) {
   int32_t macro_type = resolve_macro_name(name);
   switch (macro_type) {
@@ -3770,6 +3811,8 @@ cql_noexport CSTR macro_type_from_name(CSTR name) {
   return "unknown";
 }
 
+// Converts from the ast node type to the token identifier
+// So ast_expr_macro_arg becomes EXPR MACRO.
 cql_noexport int32_t macro_arg_type(ast_node *macro_arg) {
   if (is_ast_expr_macro_arg(macro_arg)) return EXPR_MACRO;
   if (is_ast_stmt_list_macro_arg(macro_arg)) return STMT_LIST_MACRO;
@@ -3779,6 +3822,10 @@ cql_noexport int32_t macro_arg_type(ast_node *macro_arg) {
   if (is_ast_select_expr_macro_arg(macro_arg)) return SELECT_EXPR_MACRO;
   return EOF;
 }
+
+// Converts from the macro string like "STMT_LIST" to the constant
+// like STMT_LIST_MACRO.  These tokens are only visible in this file
+// so this code has to be here.
 
 cql_noexport int32_t macro_type_from_str(CSTR type) {
   int32_t macro_type = EOF;

@@ -3053,6 +3053,10 @@ cql_noexport CSTR cql_builtin_text() {
     "@op object<cql_string_dictionary> : call add as cql_string_dictionary_add;"
     "[[builtin]]"
     "@op object<cql_string_dictionary> : call find as cql_string_dictionary_find;"
+    "[[builtin]]"
+    "@op object<cql_string_dictionary> : array set as cql_string_dictionary_add;"
+    "[[builtin]]"
+    "@op object<cql_string_dictionary> : array get as cql_string_dictionary_find;"
 
     "[[builtin]]"
     "declare func cql_object_dictionary_create() CREATE OBJECT<cql_object_dictionary>!;"
@@ -3065,6 +3069,10 @@ cql_noexport CSTR cql_builtin_text() {
     "@op object<cql_object_dictionary> : call add as cql_object_dictionary_add;"
     "[[builtin]]"
     "@op object<cql_object_dictionary> : call find as cql_object_dictionary_find;"
+    "[[builtin]]"
+    "@op object<cql_object_dictionary> : array set as cql_object_dictionary_add;"
+    "[[builtin]]"
+    "@op object<cql_object_dictionary> : array get as cql_object_dictionary_find;"
 
     "[[builtin]]"
     "declare func cql_cursor_format(C cursor) create text!;"

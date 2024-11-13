@@ -209,6 +209,46 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_string_dictionary> : array set AS cql_string_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_dictionary>
+    | | {name cql_string_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_string_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_string_dictionary> : array get AS cql_string_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_string_dictionary>
+    | | {name cql_string_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_string_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!;
 
   {stmt_and_attr}: ok
@@ -327,6 +367,46 @@ The statement ending at line XXXX
       | {name call}
       | {op_vals}
         | {name find}
+        | {name cql_object_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_object_dictionary> : array set AS cql_object_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_object_dictionary>
+    | | {name cql_object_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_object_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_object_dictionary> : array get AS cql_object_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_object_dictionary>
+    | | {name cql_object_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
         | {name cql_object_dictionary_find}
 
 The statement ending at line XXXX

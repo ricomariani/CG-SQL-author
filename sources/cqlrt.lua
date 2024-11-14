@@ -1119,6 +1119,9 @@ function cql_box_object(x)
 end
 
 function cql_box_get_type(x)
+  if x == nil then
+    return CQL_DATA_TYPE_NULL
+  end
   for k,v in pairs(x) do
     return k
   end
@@ -1127,29 +1130,50 @@ function cql_box_get_type(x)
 end
 
 function cql_unbox_int(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_INT32]
 end
 
 function cql_unbox_long(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_INT64]
 end
 
 function cql_unbox_real(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_DOUBLE]
 end
 
 function cql_unbox_bool(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_BOOL]
 end
 
 function cql_unbox_text(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_STRING]
 end
 
 function cql_unbox_blob(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_BLOB]
 end
 
 function cql_unbox_object(x)
+  if x == nil then
+    return nil
+  end
   return x[CQL_DATA_TYPE_OBJECT]
 end

@@ -5681,7 +5681,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>!) INT
+    DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT
 
     {
       "name" : "cql_unbox_int",
@@ -5690,7 +5690,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -5737,7 +5737,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>!) REAL
+    DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL
 
     {
       "name" : "cql_unbox_real",
@@ -5746,7 +5746,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -5793,7 +5793,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>!) BOOL
+    DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL
 
     {
       "name" : "cql_unbox_bool",
@@ -5802,7 +5802,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -5849,7 +5849,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>!) LONG
+    DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG
 
     {
       "name" : "cql_unbox_long",
@@ -5858,7 +5858,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -5905,7 +5905,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>!) TEXT
+    DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT
 
     {
       "name" : "cql_unbox_text",
@@ -5914,7 +5914,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -5961,7 +5961,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>!) BLOB
+    DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB
 
     {
       "name" : "cql_unbox_blob",
@@ -5970,7 +5970,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -6017,7 +6017,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>!) OBJECT
+    DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT
 
     {
       "name" : "cql_unbox_object",
@@ -6026,7 +6026,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [
@@ -6045,7 +6045,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>!) INT!
+    DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!
 
     {
       "name" : "cql_box_get_type",
@@ -6054,7 +6054,7 @@
           "name" : "box",
           "type" : "object",
           "kind" : "cql_box",
-          "isNotNull" : 1
+          "isNotNull" : 0
         }
       ],
       "attributes" : [

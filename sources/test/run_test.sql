@@ -6554,6 +6554,18 @@ BEGIN
   EXPECT!(box_text:cql_unbox_text IS NULL);
   EXPECT!(box_blob:cql_unbox_blob IS NULL);
   EXPECT!(box_object:cql_unbox_object IS NULL);
+
+  var _nil object<cql_box>;
+
+  EXPECT!(_nil:to_bool IS NULL);
+  EXPECT!(_nil:to_int IS NULL);
+  EXPECT!(_nil:to_long IS NULL);
+  EXPECT!(_nil:to_real IS NULL);
+  EXPECT!(_nil:to_text IS NULL);
+  EXPECT!(_nil:to_blob IS NULL);
+  EXPECT!(_nil:to_object IS NULL);
+  EXPECT!(_nil:type IS CQL_DATA_TYPE_NULL);
+  
 END);
 
 TEST!(object_dictionary,

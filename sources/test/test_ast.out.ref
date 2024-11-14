@@ -434,9 +434,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_int}
 
 The statement ending at line XXXX
@@ -477,9 +476,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_real}
 
 The statement ending at line XXXX
@@ -520,9 +518,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_bool}
 
 The statement ending at line XXXX
@@ -563,9 +560,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_long}
 
 The statement ending at line XXXX
@@ -606,9 +602,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_text}
 
 The statement ending at line XXXX
@@ -649,9 +644,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_blob}
 
 The statement ending at line XXXX
@@ -692,9 +686,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {type_object}
 
 The statement ending at line XXXX
@@ -713,9 +706,8 @@ The statement ending at line XXXX
       | | {param}
       |   | {param_detail}
       |     | {name box}
-      |     | {notnull}
-      |       | {type_object}
-      |         | {name cql_box}
+      |     | {type_object}
+      |       | {name cql_box}
       | {notnull}
         | {type_int}
 

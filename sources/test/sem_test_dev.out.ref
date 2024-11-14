@@ -459,7 +459,7 @@ DECLARE FUNC cql_box_int (x INT) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>!) INT;
+DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>) INT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -471,12 +471,11 @@ DECLARE FUNC cql_unbox_int (box OBJECT<cql_box>!) INT;
     | {name cql_unbox_int}: integer
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_int}: integer
 
 The statement ending at line XXXX
@@ -506,7 +505,7 @@ DECLARE FUNC cql_box_real (x REAL) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>!) REAL;
+DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>) REAL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -518,12 +517,11 @@ DECLARE FUNC cql_unbox_real (box OBJECT<cql_box>!) REAL;
     | {name cql_unbox_real}: real
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_real}: real
 
 The statement ending at line XXXX
@@ -553,7 +551,7 @@ DECLARE FUNC cql_box_bool (x BOOL) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>!) BOOL;
+DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>) BOOL;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -565,12 +563,11 @@ DECLARE FUNC cql_unbox_bool (box OBJECT<cql_box>!) BOOL;
     | {name cql_unbox_bool}: bool
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_bool}: bool
 
 The statement ending at line XXXX
@@ -600,7 +597,7 @@ DECLARE FUNC cql_box_long (x LONG) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>!) LONG;
+DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>) LONG;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -612,12 +609,11 @@ DECLARE FUNC cql_unbox_long (box OBJECT<cql_box>!) LONG;
     | {name cql_unbox_long}: longint
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_long}: longint
 
 The statement ending at line XXXX
@@ -647,7 +643,7 @@ DECLARE FUNC cql_box_text (x TEXT) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>!) TEXT;
+DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>) TEXT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -659,12 +655,11 @@ DECLARE FUNC cql_unbox_text (box OBJECT<cql_box>!) TEXT;
     | {name cql_unbox_text}: text
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_text}: text
 
 The statement ending at line XXXX
@@ -694,7 +689,7 @@ DECLARE FUNC cql_box_blob (x BLOB) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>!) BLOB;
+DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>) BLOB;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -706,12 +701,11 @@ DECLARE FUNC cql_unbox_blob (box OBJECT<cql_box>!) BLOB;
     | {name cql_unbox_blob}: blob
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_blob}: blob
 
 The statement ending at line XXXX
@@ -741,7 +735,7 @@ DECLARE FUNC cql_box_object (x OBJECT) CREATE OBJECT<cql_box>!;
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>!) OBJECT;
+DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>) OBJECT;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -753,18 +747,17 @@ DECLARE FUNC cql_unbox_object (box OBJECT<cql_box>!) OBJECT;
     | {name cql_unbox_object}: object
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {type_object}: object
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>!) INT!;
+DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>) INT!;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -776,12 +769,11 @@ DECLARE FUNC cql_box_get_type (box OBJECT<cql_box>!) INT!;
     | {name cql_box_get_type}: integer notnull
     | {func_params_return}
       | {params}: ok
-      | | {param}: box: object<cql_box> notnull variable in
-      |   | {param_detail}: box: object<cql_box> notnull variable in
-      |     | {name box}: box: object<cql_box> notnull variable in
-      |     | {notnull}: object<cql_box> notnull
-      |       | {type_object}: object<cql_box>
-      |         | {name cql_box}
+      | | {param}: box: object<cql_box> variable in
+      |   | {param_detail}: box: object<cql_box> variable in
+      |     | {name box}: box: object<cql_box> variable in
+      |     | {type_object}: object<cql_box>
+      |       | {name cql_box}
       | {notnull}: integer notnull
         | {type_int}: integer
 

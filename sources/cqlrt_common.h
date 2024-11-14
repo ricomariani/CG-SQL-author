@@ -85,6 +85,7 @@ typedef struct cql_nullable_bool {
 typedef long long llint_t;
 
 // These macros are used for the typed getters
+#define CQL_DATA_TYPE_NULL      0       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_INT32     1       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_INT64     2       // note these are array offsets, do not reorder them!
 #define CQL_DATA_TYPE_DOUBLE    3       // note these are array offsets, do not reorder them!
@@ -448,20 +449,20 @@ CQL_EXPORT sqlite3_stmt *_Nullable cql_unbox_stmt(cql_object_ref _Nonnull ref);
 
 // boxing helpers for primitive types
 cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 data);
-cql_nullable_int32 cql_unbox_int(cql_object_ref _Nonnull box);
+cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);
 cql_object_ref _Nonnull cql_box_real(cql_nullable_double data);
-cql_nullable_double cql_unbox_real(cql_object_ref _Nonnull box);
+cql_nullable_double cql_unbox_real(cql_object_ref _Nullable box);
 cql_object_ref _Nonnull cql_box_bool(cql_nullable_bool data);
-cql_nullable_bool cql_unbox_bool(cql_object_ref _Nonnull box);
+cql_nullable_bool cql_unbox_bool(cql_object_ref _Nullable box);
 cql_object_ref _Nonnull cql_box_long(cql_nullable_int64 data);
-cql_nullable_int64 cql_unbox_long(cql_object_ref _Nonnull box);
+cql_nullable_int64 cql_unbox_long(cql_object_ref _Nullable box);
 cql_object_ref _Nonnull cql_box_text(cql_string_ref _Nullable data);
-cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nonnull box);
+cql_string_ref _Nullable cql_unbox_text(cql_object_ref _Nullable box);
 cql_object_ref _Nonnull cql_box_blob(cql_blob_ref _Nullable data);
-cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nonnull box);
+cql_blob_ref _Nullable cql_unbox_blob(cql_object_ref _Nullable box);
 cql_object_ref _Nonnull cql_box_object(cql_object_ref _Nullable data);
-cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nonnull box);
-int32_t cql_box_get_type(cql_object_ref _Nonnull box);
+cql_object_ref _Nullable cql_unbox_object(cql_object_ref _Nullable box);
+int32_t cql_box_get_type(cql_object_ref _Nullable box);
 
 // String literals can be stored in a compressed format using the --compress option
 // and the cql_compressed primitive.  This helper function gives us a normal string

@@ -24,6 +24,8 @@
 #define CQL_EXTERN_C_END
 #endif // __cplusplus
 
+#define CQL_C_ASSERT(e) typedef char __CQL_C_ASSERT__[(e)?1:-1]
+
 #if LONG_MAX > 0x7fffffff
 #define _64(x) x##L
 #else

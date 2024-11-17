@@ -2875,9 +2875,9 @@ cql_object_ref _Nonnull cql_facets_create(void) {
     cql_key_str_hash,
     cql_key_str_eq,
     cql_key_retain,
-    cql_no_op_retain_release,
+    cql_no_op_retain_release,  // value retain is a no-op
     cql_key_release,
-    cql_no_op_retain_release,
+    cql_no_op_retain_release,  // value release is a no-op
     NULL
   );
 
@@ -4027,6 +4027,8 @@ cql_bool cql_string_dictionary_add(
   cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
   if (entry) {
+    // mutate the value in place, retain the new value first
+    // in case it is the same as the old value
     cql_string_retain(val);
     cql_string_release((cql_string_ref)entry->val);
     entry->val = (cql_int64)val;
@@ -4055,7 +4057,10 @@ cql_string_ref _Nullable cql_string_dictionary_find(
   return entry ? (cql_string_ref)entry->val : NULL;
 }
 
-// This makes a simple long dictionary with string keys
+// This makes a simple long dictionary with string keys.  The storage
+// is the usual cql_hashtab but the keys are strings and the values are
+// longs.  The keys are retained and released as strings.  The long values
+// of course fit directly in the hash table which holds cql_int64 natively.
 cql_object_ref _Nonnull cql_long_dictionary_create() {
 
   // we can re-use the hash, equality, retain, and release from the
@@ -4065,9 +4070,9 @@ cql_object_ref _Nonnull cql_long_dictionary_create() {
       cql_key_str_hash,
       cql_key_str_eq,
       cql_key_retain,
-      cql_no_op_retain_release,
+      cql_no_op_retain_release, // value retain is a no-op
       cql_key_release,
-      cql_no_op_retain_release,
+      cql_no_op_retain_release, // value release is a no-op
       NULL
     );
 
@@ -4089,16 +4094,16 @@ cql_bool cql_long_dictionary_add(
   cql_contract(key);
 
   cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
-
   cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
   if (entry) {
-    entry->val = (cql_int64)val;
+    // mutate the value in place
+    entry->val = val;
     return false;
   }
 
   // retain/release defined above, the key will be retained
-  return cql_hashtab_add(self, (cql_int64)key, (cql_int64)val);
+  return cql_hashtab_add(self, (cql_int64)key, val);
 }
 
 // Lookup the given string in the hash table, note that we do not retain the string
@@ -4117,7 +4122,8 @@ cql_nullable_int64 cql_long_dictionary_find(
     cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
     if (entry) {
-       result.value = (cql_int64)entry->val;
+      // we have a result
+       result.value = entry->val;
        result.is_null = 0;
     }
   }
@@ -4125,7 +4131,16 @@ cql_nullable_int64 cql_long_dictionary_find(
   return result;
 }
 
-// This makes a simple real dictionary with string keys
+// This makes a simple real dictionary with string keys, the values are doubles.
+// We have to assume that a double is the same size as an int64 so we can store
+// it directly in the hash table.  The keys are retained and released as
+// strings. The double values are not objects so they need no cleanup. The
+// storage is the usual cql_hashtab. There are asserts to verify that the size
+// of a double is the same as an int64. If you need this to work somewhere this
+// isn't true then cqlrt.h will need to provide a wrapper to do the platform
+// specific conversion for you.  cql_hashtab could be generalized so that it
+// holds a union for its values but at this point int64 does the job so we just
+// go with that.
 cql_object_ref _Nonnull cql_real_dictionary_create() {
 
   // we can re-use the hash, equality, retain, and release from the
@@ -4135,9 +4150,9 @@ cql_object_ref _Nonnull cql_real_dictionary_create() {
       cql_key_str_hash,
       cql_key_str_eq,
       cql_key_retain,
-      cql_no_op_retain_release,
+      cql_no_op_retain_release, // value retain is a no-op
       cql_key_release,
-      cql_no_op_retain_release,
+      cql_no_op_retain_release, // value release is a no-op
       NULL
     );
 
@@ -4159,12 +4174,19 @@ cql_bool cql_real_dictionary_add(
   cql_contract(key);
 
   cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
-
   cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
+  // We need to cast the double to an int64 to store it in the hash table but we
+  // do it in such as way as to preserve the bit pattern of the double so that
+  // we can recover the double later. This assumes that a double is exactly the
+  // same size as an int64 which is true on all platforms we care about.  If
+  // this stops being true we can add a wrapper in cqlrt.h to do the platform
+  // specific conversion for us or otherwise generalize the payload.
+  CQL_C_ASSERT(sizeof(cql_double) == sizeof(cql_int64));
   cql_int64 v = *(cql_int64 *)&val;
 
   if (entry) {
+    // mutate the value in place
     entry->val = v;
     return false;
   }
@@ -4179,6 +4201,7 @@ cql_nullable_double cql_real_dictionary_find(
   cql_string_ref _Nullable key)
 {
   cql_contract(dict);
+ 
   cql_nullable_double result = {
      .is_null = true,
      .value = 0,
@@ -4189,8 +4212,10 @@ cql_nullable_double cql_real_dictionary_find(
     cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
 
     if (entry) {
-       result.value = *(cql_double*)&entry->val;
-       result.is_null = 0;
+      // This is the reverse mapping, think of the bits as a double again
+      CQL_C_ASSERT(sizeof(cql_double) == sizeof(cql_int64));
+      result.value = *(cql_double*)&entry->val;
+      result.is_null = 0;
     }
   }
 

@@ -417,6 +417,32 @@ CQL_EXPORT cql_string_ref _Nullable cql_string_dictionary_find(
   cql_object_ref _Nonnull dict,
   cql_string_ref _Nullable key);
 
+// Long dictionary helpers, a simple hash table wrapper with
+// very basic dictionary functions.
+CQL_EXPORT cql_object_ref _Nonnull cql_long_dictionary_create(void);
+
+CQL_EXPORT cql_bool cql_long_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_int64 val);
+
+CQL_EXPORT cql_nullable_int64 cql_long_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key);
+
+// Real dictionary helpers, a simple hash table wrapper with
+// very basic dictionary functions.
+CQL_EXPORT cql_object_ref _Nonnull cql_real_dictionary_create(void);
+
+CQL_EXPORT cql_bool cql_real_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_double val);
+
+CQL_EXPORT cql_nullable_double cql_real_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key);
+
 // object dictionary has the same contract as string dictionary
 // except the stored type. It uses the same code internally
 

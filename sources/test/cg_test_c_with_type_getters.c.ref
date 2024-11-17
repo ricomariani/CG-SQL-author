@@ -18,6 +18,12 @@ extern cql_object_ref _Nonnull cql_extract_partition(cql_object_ref _Nonnull p, 
 extern cql_object_ref _Nonnull cql_string_dictionary_create(void);
 extern cql_bool cql_string_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_string_ref _Nonnull value);
 extern cql_string_ref _Nullable cql_string_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_long_dictionary_create(void);
+extern cql_bool cql_long_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_int64 value);
+extern cql_nullable_int64 cql_long_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_real_dictionary_create(void);
+extern cql_bool cql_real_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_double value);
+extern cql_nullable_double cql_real_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_object_ref _Nonnull cql_object_dictionary_create(void);
 extern cql_bool cql_object_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_object_ref _Nonnull value);
 extern cql_object_ref _Nullable cql_object_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);

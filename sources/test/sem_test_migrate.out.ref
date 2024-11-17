@@ -249,6 +249,332 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_long_dictionary> notnull create_func
+    | {name cql_long_dictionary_create}: object<cql_long_dictionary> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_long_dictionary> notnull create_func
+        | {notnull}: object<cql_long_dictionary> notnull
+          | {type_object}: object<cql_long_dictionary>
+            | {name cql_long_dictionary}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: bool notnull
+    | {name cql_long_dictionary_add}: bool notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<cql_long_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_long_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_long_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_long_dictionary> notnull
+      | |     | {type_object}: object<cql_long_dictionary>
+      | |       | {name cql_long_dictionary}
+      | | {params}
+      |   | {param}: key: text notnull variable in
+      |   | | {param_detail}: key: text notnull variable in
+      |   |   | {name key}: key: text notnull variable in
+      |   |   | {notnull}: text notnull
+      |   |     | {type_text}: text
+      |   | {params}
+      |     | {param}: value: longint notnull variable in
+      |       | {param_detail}: value: longint notnull variable in
+      |         | {name value}: value: longint notnull variable in
+      |         | {notnull}: longint notnull
+      |           | {type_long}: longint
+      | {notnull}: bool notnull
+        | {type_bool}: bool
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: longint
+    | {name cql_long_dictionary_find}: longint
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<cql_long_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_long_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_long_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_long_dictionary> notnull
+      | |     | {type_object}: object<cql_long_dictionary>
+      | |       | {name cql_long_dictionary}
+      | | {params}
+      |   | {param}: key: text variable in
+      |     | {param_detail}: key: text variable in
+      |       | {name key}: key: text variable in
+      |       | {type_text}: text
+      | {type_long}: longint
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_dictionary> : call add AS cql_long_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_dictionary>
+    | | {name cql_long_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_long_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_dictionary> : call find AS cql_long_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_dictionary>
+    | | {name cql_long_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name find}
+        | {name cql_long_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_dictionary> : array set AS cql_long_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_dictionary>
+    | | {name cql_long_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_long_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_dictionary> : array get AS cql_long_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_dictionary>
+    | | {name cql_long_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_long_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_real_dictionary> notnull create_func
+    | {name cql_real_dictionary_create}: object<cql_real_dictionary> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_real_dictionary> notnull create_func
+        | {notnull}: object<cql_real_dictionary> notnull
+          | {type_object}: object<cql_real_dictionary>
+            | {name cql_real_dictionary}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: bool notnull
+    | {name cql_real_dictionary_add}: bool notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<cql_real_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_real_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_real_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_real_dictionary> notnull
+      | |     | {type_object}: object<cql_real_dictionary>
+      | |       | {name cql_real_dictionary}
+      | | {params}
+      |   | {param}: key: text notnull variable in
+      |   | | {param_detail}: key: text notnull variable in
+      |   |   | {name key}: key: text notnull variable in
+      |   |   | {notnull}: text notnull
+      |   |     | {type_text}: text
+      |   | {params}
+      |     | {param}: value: real notnull variable in
+      |       | {param_detail}: value: real notnull variable in
+      |         | {name value}: value: real notnull variable in
+      |         | {notnull}: real notnull
+      |           | {type_real}: real
+      | {notnull}: bool notnull
+        | {type_bool}: bool
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: real
+    | {name cql_real_dictionary_find}: real
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<cql_real_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_real_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_real_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_real_dictionary> notnull
+      | |     | {type_object}: object<cql_real_dictionary>
+      | |       | {name cql_real_dictionary}
+      | | {params}
+      |   | {param}: key: text variable in
+      |     | {param_detail}: key: text variable in
+      |       | {name key}: key: text variable in
+      |       | {type_text}: text
+      | {type_real}: real
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_dictionary> : call add AS cql_real_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_dictionary>
+    | | {name cql_real_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_real_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_dictionary> : call find AS cql_real_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_dictionary>
+    | | {name cql_real_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name find}
+        | {name cql_real_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_dictionary> : array set AS cql_real_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_dictionary>
+    | | {name cql_real_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_real_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_dictionary> : array get AS cql_real_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_dictionary>
+    | | {name cql_real_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_real_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!;
 
   {stmt_and_attr}: ok

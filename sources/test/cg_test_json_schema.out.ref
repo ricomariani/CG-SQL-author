@@ -5532,6 +5532,194 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_dictionary_create () CREATE OBJECT<cql_long_dictionary>!
+
+    {
+      "name" : "cql_long_dictionary_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_long_dictionary",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_dictionary_add (dict OBJECT<cql_long_dictionary>!, key TEXT!, value LONG!) BOOL!
+
+    {
+      "name" : "cql_long_dictionary_add",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "cql_long_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value",
+          "type" : "long",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_dictionary_find (dict OBJECT<cql_long_dictionary>!, key TEXT) LONG
+
+    {
+      "name" : "cql_long_dictionary_find",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "cql_long_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "long",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_dictionary_create () CREATE OBJECT<cql_real_dictionary>!
+
+    {
+      "name" : "cql_real_dictionary_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_real_dictionary",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_dictionary_add (dict OBJECT<cql_real_dictionary>!, key TEXT!, value REAL!) BOOL!
+
+    {
+      "name" : "cql_real_dictionary_add",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "cql_real_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value",
+          "type" : "real",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "bool",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_dictionary_find (dict OBJECT<cql_real_dictionary>!, key TEXT) REAL
+
+    {
+      "name" : "cql_real_dictionary_find",
+      "args" : [
+        {
+          "name" : "dict",
+          "type" : "object",
+          "kind" : "cql_real_dictionary",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "key",
+          "type" : "text",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "real",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
     DECLARE FUNC cql_object_dictionary_create () CREATE OBJECT<cql_object_dictionary>!
 
     {

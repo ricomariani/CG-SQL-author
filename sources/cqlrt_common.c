@@ -4055,6 +4055,148 @@ cql_string_ref _Nullable cql_string_dictionary_find(
   return entry ? (cql_string_ref)entry->val : NULL;
 }
 
+// This makes a simple long dictionary with string keys
+cql_object_ref _Nonnull cql_long_dictionary_create() {
+
+  // we can re-use the hash, equality, retain, and release from the
+  // cql_string_dictionary keys.  Values are not objects so they
+  // need no cleanup.
+  cql_hashtab *self = cql_hashtab_new(
+      cql_key_str_hash,
+      cql_key_str_eq,
+      cql_key_retain,
+      cql_no_op_retain_release,
+      cql_key_release,
+      cql_no_op_retain_release,
+      NULL
+    );
+
+  // the dictionary finalizer is the same for all dictionaries
+  cql_object_ref obj = _cql_generic_object_create(
+    self,
+    cql_string_dictionary_finalize);
+
+  return obj;
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_long_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_int64 val)
+{
+  cql_contract(dict);
+  cql_contract(key);
+
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+
+  cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+  if (entry) {
+    entry->val = (cql_int64)val;
+    return false;
+  }
+
+  // retain/release defined above, the key will be retained
+  return cql_hashtab_add(self, (cql_int64)key, (cql_int64)val);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the string
+cql_nullable_int64 cql_long_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  cql_contract(dict);
+  cql_nullable_int64 result = {
+     .is_null = true,
+     .value = 0,
+  };
+
+  if (key) {
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+    cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+    if (entry) {
+       result.value = (cql_int64)entry->val;
+       result.is_null = 0;
+    }
+  }
+
+  return result;
+}
+
+// This makes a simple real dictionary with string keys
+cql_object_ref _Nonnull cql_real_dictionary_create() {
+
+  // we can re-use the hash, equality, retain, and release from the
+  // cql_string_dictionary keys.  Values are not objects so they
+  // need no cleanup.
+  cql_hashtab *self = cql_hashtab_new(
+      cql_key_str_hash,
+      cql_key_str_eq,
+      cql_key_retain,
+      cql_no_op_retain_release,
+      cql_key_release,
+      cql_no_op_retain_release,
+      NULL
+    );
+
+  // the dictionary finalizer is the same for all dictionaries
+  cql_object_ref obj = _cql_generic_object_create(
+    self,
+    cql_string_dictionary_finalize);
+
+  return obj;
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_real_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_double val)
+{
+  cql_contract(dict);
+  cql_contract(key);
+
+  cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+
+  cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+  cql_int64 v = *(cql_int64 *)&val;
+
+  if (entry) {
+    entry->val = v;
+    return false;
+  }
+
+  // retain/release defined above, the key will be retained
+  return cql_hashtab_add(self, (cql_int64)key, v);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the string
+cql_nullable_double cql_real_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  cql_contract(dict);
+  cql_nullable_double result = {
+     .is_null = true,
+     .value = 0,
+  };
+
+  if (key) {
+    cql_hashtab *_Nonnull self = _cql_generic_object_get_data(dict);
+    cql_hashtab_entry *entry = cql_hashtab_find(self, (cql_int64)key);
+
+    if (entry) {
+       result.value = *(cql_double*)&entry->val;
+       result.is_null = 0;
+    }
+  }
+
+  return result;
+}
+
 // This makes a simple object dictionary with retained strings
 cql_object_ref _Nonnull cql_object_dictionary_create() {
   // it's the same as a string dictionary internally as it's just object refs

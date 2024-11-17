@@ -5681,6 +5681,82 @@ BEGIN
   EXPECT!(dict:find(NULL) IS NULL);
 END);
 
+TEST!(long_dictionary,
+BEGIN
+  let i := 1;
+  while i <= 512
+  begin
+    let dict := cql_long_dictionary_create();
+
+    let j := 0;
+    while j < i
+    begin
+      -- set to bogus original value
+      let added := dict:add(printf("%d", j), 0);
+      EXPECT!(added);
+
+      let bogus_val := dict:find(printf("%d", j));
+      EXPECT!(bogus_val == 0);
+
+      -- replace
+      added := dict:add(printf("%d", j), j*100);
+      EXPECT!(NOT added);
+      j := j + 2;
+    end;
+
+    j := 0;
+    while j < i
+    begin
+      let result := dict[printf("%d", j)];
+      EXPECT!(case when j % 2 then result IS NULL else result == j*100 end);
+      j += 1;
+    end;
+
+    i := i * 2;
+  end;
+
+  -- test null lookup, always fails
+  EXPECT!(dict:find(NULL) IS NULL);
+END);
+
+TEST!(real_dictionary,
+BEGIN
+  let i := 1;
+  while i <= 512
+  begin
+    let dict := cql_real_dictionary_create();
+
+    let j := 0;
+    while j < i
+    begin
+      -- set to bogus original value
+      let added := dict:add(printf("%d", j), 0);
+      EXPECT!(added);
+
+      let bogus_val := dict:find(printf("%d", j));
+      EXPECT!(bogus_val == 0);
+
+      -- replace
+      added := dict:add(printf("%d", j), j*100.5);
+      EXPECT!(NOT added);
+      j := j + 2;
+    end;
+
+    j := 0;
+    while j < i
+    begin
+      let result := dict[printf("%d", j)];
+      EXPECT!(case when j % 2 then result IS NULL else result == j*100.5 end);
+      j += 1;
+    end;
+
+    i := i * 2;
+  end;
+
+  -- test null lookup, always fails
+  EXPECT!(dict:find(NULL) IS NULL);
+END);
+
 DECLARE FUNCTION _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL NOT NULL;
 
 -- _cql_contains_column_def is used by the upgrader to find string matches the indicate a column is present

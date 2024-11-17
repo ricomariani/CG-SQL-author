@@ -578,7 +578,13 @@ function cql_multibind_var(db, stmt, bind_count, bind_preds, types, ...)
   return rc
 end
 
+cql_disable_tracing = false
+
 function cql_error_trace(rc, db)
+  if cql_disable_tracing then
+    return
+  end
+
   if db:errcode() ~= 0 then
     print("err: ", rc, "db info:", db:errcode(), db:errmsg())
   else

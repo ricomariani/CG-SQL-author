@@ -63,6 +63,7 @@ begin
   end if;
 end;
 
+-- this isn't used anymore but it still makes a good compile-time test
 @ifdef __rt__lua
   -- This test case is suppressed in Lua, this is done
   -- because the Lua runtime is missing some blob features
@@ -4751,6 +4752,8 @@ END);
 
 TEST!(corrupt_blob_deserialization,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
   declare cursor_both cursor like storage_both;
@@ -4789,6 +4792,8 @@ BEGIN
     EXPECT!(caught);
     i += 1;
   end;
+
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
 TEST!(bogus_varint,
@@ -4969,14 +4974,16 @@ BEGIN
 END);
 
 declare proc rand_reset();
-declare proc corrupt_blob_with_invalid_shenanigans(b blob!);
+declare function corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
 
-TEST_C!(clobber_blobs,
+TEST!(clobber_blobs,
 BEGIN
   -- the point of the test is to ensure that we don't segv or get ASAN failures
   -- or leak memory when dealing with broken blobs.  Some of the blobs
   -- may still be valid since we corrupt them randomly.  But this will
   -- help us to be sure that nothing horrible happens if you corrupt blobs
+
+  @echo lua, "cql_disable_tracing = true\n";
 
   -- we're going to make a good blob with various data in it and then clobber it
   let a_blob := blob_from_string("a blob");
@@ -5019,7 +5026,7 @@ BEGIN
       j += 1;
 
       -- invoke da smasher
-      call corrupt_blob_with_invalid_shenanigans(my_blob);
+      my_blob := corrupt_blob_with_invalid_shenanigans(my_blob);
 
       try
         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
@@ -5036,6 +5043,7 @@ BEGIN
   -- use the no call syntax
   printf("blob corruption results: good: %d, bad: %d\n", good, bad);
   printf("1000 bad results is normal\n");
+  @echo lua,  "cql_disable_tracing = false\n";
 END);
 
 proc change_arg(x text)

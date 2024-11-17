@@ -14,73 +14,10 @@ err: 	nil	thrown exception
 err: 	-1	thrown exception
 err: 	nil	thrown exception
 err: 	nil	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-104	thrown exception
-err: 	-1	thrown exception
-err: 	-1	thrown exception
-err: 	-4	thrown exception
 err: 	-4	thrown exception
 err: 	-7	thrown exception
-err: 	-7	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-10	thrown exception
-err: 	-16	thrown exception
-err: 	-17	thrown exception
-err: 	-17	thrown exception
-err: 	-17	thrown exception
-err: 	-17	thrown exception
-err: 	-17	thrown exception
-err: 	-17	thrown exception
-err: 	-13	thrown exception
-err: 	-13	thrown exception
-err: 	-13	thrown exception
-err: 	-13	thrown exception
-err: 	-13	thrown exception
-err: 	-13	thrown exception
-err: 	-6	thrown exception
-err: 	-9	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-12	thrown exception
-err: 	-19	thrown exception
-err: 	-20	thrown exception
-err: 	-20	thrown exception
-err: 	-20	thrown exception
-err: 	-20	thrown exception
-err: 	-20	thrown exception
-err: 	-20	thrown exception
-err: 	-15	thrown exception
-err: 	-15	thrown exception
-err: 	-15	thrown exception
-err: 	-15	thrown exception
-err: 	-15	thrown exception
-err: 	-4	thrown exception
-err: 	-7	thrown exception
-Skipping test clobber_blobs in Lua
+blob corruption results: good: 0, bad: 1000
+1000 bad results is normal
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key

@@ -1769,7 +1769,7 @@ static int32_t seriously_lousy_rand() {
 
 // We are about to break all the rules to corrupt this blob
 // mutating the blob in place because we know how.
-void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
+cql_blob_ref corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
 
   cql_int32 size = cql_get_blob_size(b);
   uint8_t *bytes = (uint8_t *)cql_get_blob_bytes(b);
@@ -1781,6 +1781,8 @@ void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
      // smash
      bytes[index] = byte;
   }
+  cql_blob_retain(b);
+  return b;
 }
 
 // This test first creates a sample recreate group with twp dependent tables

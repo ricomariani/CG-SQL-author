@@ -190,116 +190,107 @@ select function ...` and then used.
 
 CQL's hard-coded builtin list includes:
 
-*Aggregate Functions*
+##### Aggregate Functions
 
- * count
- * max
- * min
- * sum
- * total
- * avg
- * group_concat
+ * `count`
+ * `max`
+ * `min`
+ * `sum`
+ * `total`
+ * `avg`
+ * `group_concat`
 
-*Scalar Functions*
+##### Scalar Functions
 
-* abs
-* changes
-* char
-* coalesce
-* concat
-* concat_ws
-* format
-* glob
-* hex
-* ifnull
-* iif
-* instr
-* last_insert_rowid
-* length
-* like
-* like
-* likelihood
-* likely
-* load_extension
-* load_extension
-* lower
-* ltrim
-* ltrim
-* max
-* min
-* nullif
-* octet_length
-* printf
-* quote
-* random
-* randomblob
-* replace
-* round
-* round
-* rtrim
-* rtrim
-* sign
-* soundex
-* sqlite_compileoption_get
-* sqlite_compileoption_used
-* sqlite_offset
-* sqlite_source_id
-* sqlite_version
-* substr
-* substr
-* substring
-* substring
-* total_changes
-* trim
-* trim
-* typeof
-* unhex
-* unhex
-* unicode
-* unlikely
-* upper
-* zeroblob
+* `abs`
+* `changes`
+* `char`
+* `coalesce`
+* `concat`
+* `concat_ws`
+* `format`
+* `glob`
+* `hex`
+* `ifnull`
+* `iif`
+* `instr`
+* `last_insert_rowid`
+* `length`
+* `like`
+* `likelihood`
+* `likely`
+* `load_extension`
+* `lower`
+* `ltrim`
+* `max`
+* `min`
+* `nullif`
+* `octet_length`
+* `printf`
+* `quote`
+* `random`
+* `randomblob`
+* `replace`
+* `round`
+* `rtrim`
+* `sign`
+* `soundex`
+* `sqlite_compileoption_get`
+* `sqlite_compileoption_used`
+* `sqlite_offset`
+* `sqlite_source_id`
+* `sqlite_version`
+* `substr`
+* `substring`
+* `total_changes`
+* `trim`
+* `typeof`
+* `unhex`
+* `unicode`
+* `unlikely`
+* `upper`
+* `zeroblob`
 
-*Window Functions*
+##### Window Functions
 
- * row_number
- * rank
- * dense_rank
- * percent_rank
- * cume_dist
- * ntile
- * lag
- * lead
- * first_value
- * last_value
- * nth_value
+ * `row_number`
+ * `rank`
+ * `dense_rank`
+ * `percent_rank`
+ * `cume_dist`
+ * `ntile`
+ * `lag`
+ * `lead`
+ * `first_value`
+ * `last_value`
+ * `nth_value`
 
-*JSON Functions*
+##### JSON Functions
 
- * json
- * jsonb
- * json_array
- * jsonb_array
- * json_array_length
- * json_error_position
- * json_extract
- * jsonb_extract
- * json_insert
- * json_replace
- * json_set
- * jsonb_insert
- * jsonb_replace
- * jsonb_set
- * json_remove
- * jsonb_remove
- * json_object
- * jsonb_object
- * json_patch
- * jsonb_patch
- * json_pretty
- * json_type
- * json_valid
- * json_quote
+ * `json`
+ * `jsonb`
+ * `json_array`
+ * `jsonb_array`
+ * `json_array_length`
+ * `json_error_position`
+ * `json_extract`
+ * `jsonb_extract`
+ * `json_insert`
+ * `json_replace`
+ * `json_set`
+ * `jsonb_insert`
+ * `jsonb_replace`
+ * `jsonb_set`
+ * `json_remove`
+ * `jsonb_remove`
+ * `json_object`
+ * `jsonb_object`
+ * `json_patch`
+ * `jsonb_patch`
+ * `json_pretty`
+ * `json_type`
+ * `json_valid`
+ * `json_quote`
 
 `json_extract` and `jsonb_extract` are peculiar because they do not always return the same type.
 Since CQL has to assume something it assumes that `json_extract` will return `TEXT` and `jsonb_extract`
@@ -318,14 +309,14 @@ This is exactly the same as
   select CAST(json_extract('{ "x" : 0 }', '$.x') as int) as X;
 ```
 
-*JSON Aggregations*
+##### JSON Aggregations
 
- * json_group_array
- * jsonb_group_array
- * json_group_object
- * jsonb_group_object
+ * `json_group_array`
+ * `jsonb_group_array`
+ * `json_group_object`
+ * `jsonb_group_object`
 
-*JSON Table Functions*
+##### JSON Table Functions
 
 The two table functions are readily declared if they are needed like so:
 
@@ -340,46 +331,51 @@ DECLARE SELECT FUNC json_tree NO CHECK
 > NOTE: key, value, and atom can be any type and will require a cast operation similar to
 > `json_extract`, see the notes above.
 
-*Boxing and Unboxing*
+##### Boxing and Unboxing
 
 These can be used to create an `object<cql_box>` from the various primitives.  This can
 then be stored generically in something that holds objects. The unbox methods can be used
 to extract the original value.
 
-* cql_box_blob
-* cql_box_bool
-* cql_box_get_type
-* cql_box_int
-* cql_box_long
-* cql_box_object
-* cql_box_real
-* cql_box_text
-* cql_unbox_blob
-* cql_unbox_bool
-* cql_unbox_int
-* cql_unbox_long
-* cql_unbox_object
-* cql_unbox_real
-* cql_unbox_text
+* `cql_box_blob`
+* `cql_box_bool`
+* `cql_box_get_type`
+* `cql_box_int`
+* `cql_box_long`
+* `cql_box_object`
+* `cql_box_real`
+* `cql_box_text`
+* `cql_unbox_blob`
+* `cql_unbox_bool`
+* `cql_unbox_int`
+* `cql_unbox_long`
+* `cql_unbox_object`
+* `cql_unbox_real`
+* `cql_unbox_text`
 
 These functions have pipeline aliases  `:box`, `:type` and `:to_int`,
 `:to_bool`,  etc.
 
 *Dyanmic Cursor Functions*
 
-These functions all work with an unspecified cursor format.  These accept a so-called
-*dynamic* cursor.
+These functions all work with an unspecified cursor format.  These accept a
+so-called *dynamic* cursor.
 
-* `cql_cursor_format` returns a string with the names and values of every field in the cursor, useful for debugging
+* `cql_cursor_format` returns a string with the names and values of every field
+  in the cursor, useful for debugging
 * `cql_cursor_column_count` return the number of columns in the cursor
-* `cql_cursor_column_type` returns the type of the column using `CQL_DATA_TYPE_*` constants
-* `cql_cursor_get_*` returns a column of the indicated type at the indicated index, the type can be bool, int, long, real, text, blob, or object
+* `cql_cursor_column_type` returns the type of the column using
+  `CQL_DATA_TYPE_*` constants
+* `cql_cursor_get_*` returns a column of the indicated type at the indicated
+  index, the type can be bool, int, long, real, text, blob, or object
 
-Pipeline syntax is availabe for these, you can use `C:format`, `C:count`, `C:type(i)`, `C:to_bool(i)`, `C:to_int(i)` etc.
+Pipeline syntax is availabe for these, you can use `C:format`, `C:count`,
+`C:type(i)`, `C:to_bool(i)`, `C:to_int(i)` etc.
 
-*Dictionaries*
+##### Dictionaries
 
-Each of the following returns an object of the indicated type.
+Each of the following returns an `object<cql_TYPE_dictionary` where `TYPE` is
+the indicated type.
 
 * `cql_string_dictionary_create`  -- values are strings (`text`)
 * `cql_object_dictionary_create`  -- values are any `object` esp. boxed values
@@ -393,14 +389,14 @@ The `add` functions return `true` if an object was added, `false` if it was repl
 * `cql_long_dictionary_add` -- add a `long`
 * `cql_real_dictionary_add` -- add a `real`
 
-The `find` functions return null if there is no such value or else the stored value.
+The `find` functions return `null` if there is no such value or else the stored value.
 Each function requires the dictionary and the key to find.  The key is always a string
 (i.e. `text`).
 
 * `cql_string_dictionary_find`
 * `cql_object_dictionary_find`
-* `cql_long_dictionary_find`
-* `cql_real_dictionary_find`
+* `cql_long_dictionary_find` -- returns nullable long
+* `cql_real_dictionary_find` -- returns nullable real
 
 The pipeline syntax `dict:add(key, value)` works for all of the above.  Similarly,
 `dict:find(key)` works.  Array forms `dict[key] := value` and `x := dict[value]`
@@ -409,12 +405,13 @@ to create a dictionary.
 
 >Note: Blob value verisons are coming soon but not yet supported.
 
-*Lists*
+##### Lists
 
 As with dictionaries there are some simple built in lists.  These have limited
 functionality but they are very handy for short term storage.
 
-Each of the following returns an object of the indicated type.
+Each of the following returns an `object<cql_TYPE_list` where `TYPE` is the
+indicated type.
 
 * `cql_string_list_create`  -- values are strings (`text`)
 * `cql_long_list_create` -- values are `long`
@@ -422,9 +419,11 @@ Each of the following returns an object of the indicated type.
 
 The list functions are limited to `add` `get_at` `set_at` and `count`
 
-* `cql_string_list_add` -- add a string (`text`) at the end
-* `cql_long_list_add` -- add a `long` at the end
-* `cql_real_list_add` -- add a `real` at the end
+These functions append the indicated value to the end of the list.
+
+* `cql_string_list_add` -- append a string (`text`) 
+* `cql_long_list_add` -- append a `long` 
+* `cql_real_list_add` -- append a `real`
 
 Getters accept the list and an index, the index must be within bounds.
 
@@ -432,17 +431,18 @@ Getters accept the list and an index, the index must be within bounds.
 * `cql_long_list_get_at` -- gets the `long` at the indicated index
 * `cql_real_list_get_at` -- gets the `real` at the indicated index
 
-Setters accept the list and an index, the index must be within bounds.
+Setters accept the list, the index and a value, the index must be within bounds.
 
 * `cql_string_list_set_at` -- sets the string (`text`) at the indicated index
 * `cql_long_list_set_at` -- sets the `long` at the indicated index
 * `cql_real_list_set_at` -- sets the `real` at the indicated index
 
-And, finally, item count
+And, finally, the item count functions, in each case this just gives the count
+of items in the list.
 
-* `cql_string_list_count` -- sets the string (`text`) at the indicated index
-* `cql_long_list_count` -- sets the `long` at the indicated index
-* `cql_real_list_count` -- sets the `real` at the indicated index
+* `cql_string_list_count`
+* `cql_long_list_count`
+* `cql_real_list_count`
 
 Lists can use pipeline notation such as:
 
@@ -464,10 +464,13 @@ Lists can use pipeline notation such as:
 
 >Note: Blob value verisons are coming soon but not yet supported.
 
-*Special Functions*
- * nullable
- * sensitive
- * ptr
+##### Special Functions
+
+These are not real functions but rather notations to the compiler.
+
+ * `nullable`
+ * `sensitive`
+ * `ptr`
 
 `Nullable` casts an operand to the nullable version of its type and
 otherwise does nothing.  This cast might be useful if you need an exact
@@ -625,8 +628,8 @@ rules 11, 12, and 13 with only the "arrow" keyword varying.  You could imagine
 
 #### Example Transforms
 
-These are discussed in greater detail in the [Pipeline Notation](./03_expressions_fundamentals/#pipeline-function-notation) section.  However, by way of motivational examples here are some possible transforms in table form.
-
+These are discussed in greater detail in the [Pipeline Notation](./03_expressions_fundamentals/#pipeline-function-notation) section.
+However, by way of motivational examples here are some possible transforms in table form.
 
 |Original|Replacement|
 |-|-|

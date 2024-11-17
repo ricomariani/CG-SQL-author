@@ -1293,19 +1293,26 @@ function cql_serialize_blob(C, C_types, C_fields)
     local value = C[field]
 
     if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
       if cql_is_true(value) then
         cql_setbit(bits, nullable_count + bool_index)
       end
       bool_index = bool_index + 1
     elseif code == CQL_ENCODED_TYPE_BOOL then
       if value ~= nil then
-        cql_setbit(bits, nullable_count + bool_index)
+        cql_setbit(bits, nullable_index)
         if cql_is_true(value) then
-          cql_setbit(bits, i - 1)
+          cql_setbit(bits, nullable_count + bool_index)
         end
       end
+      nullable_index = nullable_index + 1
       bool_index = bool_index + 1
     elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
       table.insert(pieces, cql_int_encode_32(value))
     elseif code == CQL_ENCODED_TYPE_INT then
       if value ~= nil then
@@ -1314,6 +1321,9 @@ function cql_serialize_blob(C, C_types, C_fields)
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
       table.insert(pieces, cql_int_encode_64(value))
     elseif code == CQL_ENCODED_TYPE_LONG then
       if value ~= nil then
@@ -1322,6 +1332,9 @@ function cql_serialize_blob(C, C_types, C_fields)
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
       table.insert(pieces, string.pack("z", value))
     elseif code == CQL_ENCODED_TYPE_STRING then
       if value ~= nil then
@@ -1330,6 +1343,9 @@ function cql_serialize_blob(C, C_types, C_fields)
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
+      if value == nil then
+         return -1, ""
+      end
       table.insert(pieces, cql_int_encode_32(#value))
       table.insert(pieces, value)
     elseif code == CQL_ENCODED_TYPE_BLOB then
@@ -1340,6 +1356,9 @@ function cql_serialize_blob(C, C_types, C_fields)
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
+      if value == nil then
+         return - 1, ""
+      end
       table.insert(pieces, string.pack("d", value))
     elseif code == CQL_ENCODED_TYPE_DOUBLE then
       if value ~= nil then
@@ -1409,14 +1428,28 @@ function cql_varint_decode(x, pos)
 end
 
 function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
+  if C == nil then
+    return -1
+  end
+
+  C._has_row_ = false
+
+  if buffer == nil then
+    return -2
+  end
+
+  if C_types == nil then
+    return -3
+  end
+
+  if C_fields == nil then
+    return -4
+  end
+
   -- this will help us with missing fields, we have to assume that the buffer
   -- might be from the past or future and have different fields, we can
   -- handle a lot of these cases.
   cql_empty_cursor(C, C_types, C_fields)
-
-  if buffer == nil then
-    return -1
-  end
 
   local pos = 1
   local types, pos = string.unpack("z", buffer, pos)
@@ -1483,15 +1516,15 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
   nullable_index = 0
   bool_index = 0
 
-  for i = 1, actual_count do
+  for i = 1, math.min(needed_count, actual_count) do
     field = C_fields[i]
     code = string.byte(types, i)
     if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
-      C[field] = cql_getbit(bits, bool_index)
+      C[field] = cql_getbit(bits, nullable_count + bool_index)
       bool_index = bool_index + 1
     elseif code == CQL_ENCODED_TYPE_BOOL then
       if cql_getbit(bits, nullable_index) then
-        C[field] = cql_getbit(bits, bool_index)
+        C[field] = cql_getbit(bits, nullable_count + bool_index)
       end
       bool_index = bool_index + 1
       nullable_index = nullable_index + 1

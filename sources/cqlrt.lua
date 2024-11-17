@@ -1413,15 +1413,14 @@ function format_as_hex(str)
   end
 end
 
-function cql_varint_decode(x, pos)
+function cql_varint_decode(x, pos, lim)
   local result = 0
   local shift = 0
   local b = 0
   local count = 0
   repeat
     b = string.byte(x, pos)
-    if b == nil or count >= 20 then
-      print("err decode:", b, "pos", pos, "/", #x)
+    if b == nil or count >= lim then
       return nil, pos
     end
     pos = pos + 1
@@ -1431,6 +1430,16 @@ function cql_varint_decode(x, pos)
   until b < 0x80
   result = cql_zigzag_decode(result)
   return result, pos
+end
+
+function cql_varint_decode_32(x, pos)
+  -- at most 5 bytes
+  return cql_varint_decode(x, pos, 5)
+end
+
+function cql_varint_decode_64(x, pos)
+  -- at most 10 bytes
+  return cql_varint_decode(x, pos, 10)
 end
 
 function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
@@ -1535,14 +1544,14 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       bool_index = bool_index + 1
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
-      C[field], pos = cql_varint_decode(buffer, pos)
+      C[field], pos = cql_varint_decode_32(buffer, pos)
       if C[field] == nil then
         rc = -1
         goto cql_error
       end
     elseif code == CQL_ENCODED_TYPE_INT then
       if cql_getbit(bits, nullable_index) then
-        C[field], pos = cql_varint_decode(buffer, pos)
+        C[field], pos = cql_varint_decode_32(buffer, pos)
         if C[field] == nil then
           rc = -2
           goto cql_error
@@ -1550,14 +1559,14 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
-      C[field], pos = cql_varint_decode(buffer, pos)
+      C[field], pos = cql_varint_decode_64(buffer, pos)
       if C[field] == nil then
         rc = -3
         goto cql_error
       end
     elseif code == CQL_ENCODED_TYPE_LONG then
       if cql_getbit(bits, nullable_index) then
-        C[field], pos = cql_varint_decode(buffer, pos)
+        C[field], pos = cql_varint_decode_64(buffer, pos)
         if C[field] == nil then
           rc = -4
           goto cql_error
@@ -1579,7 +1588,7 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
-      chunk_size, pos = cql_varint_decode(buffer, pos)
+      chunk_size, pos = cql_varint_decode_32(buffer, pos)
       if chunk_size == nil then
         rc = -5
         goto cql_error
@@ -1587,7 +1596,7 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
     elseif code == CQL_ENCODED_TYPE_BLOB then
       if cql_getbit(bits, nullable_index) then
-        chunk_size, pos = cql_varint_decode(buffer, pos)
+        chunk_size, pos = cql_varint_decode_32(buffer, pos)
         if chunk_size == nil then
           rc = -6
           goto cql_error

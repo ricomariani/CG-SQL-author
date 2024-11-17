@@ -4792,7 +4792,7 @@ BEGIN
   end;
 END);
 
-TEST_C!(bogus_varint,
+TEST!(bogus_varint,
 BEGIN
   let control_blob := (select X'490001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_int>;
@@ -4820,7 +4820,7 @@ BEGIN
   EXPECT!(caught);
 END);
 
-TEST_C!(bogus_varlong,
+TEST!(bogus_varlong,
 BEGIN
   let control_blob := (select X'4C0001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_long>;

@@ -15,8 +15,8 @@ err: 	-1	thrown exception
 err: 	nil	thrown exception
 err: 	nil	thrown exception
 Skipping test corrupt_blob_deserialization in Lua
-Skipping test bogus_varint in Lua
-Skipping test bogus_varlong in Lua
+err: 	-1	thrown exception
+err: 	-3	thrown exception
 Skipping test clobber_blobs in Lua
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key

@@ -1635,6 +1635,480 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+TYPE cql_long_list OBJECT<cql_long_list>;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: object<cql_long_list>
+    | {name cql_long_list}: object<cql_long_list>
+    | {type_object}: object<cql_long_list>
+      | {name cql_long_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_long_list> notnull create_func
+    | {name cql_long_list_create}: object<cql_long_list> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_long_list> notnull create_func
+        | {notnull}: object<cql_long_list> notnull
+          | {type_object}: object<cql_long_list>
+            | {name cql_long_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_long_list> notnull
+    | {name cql_long_list_set_at}: object<cql_long_list> notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_long_list> notnull variable in
+      | | | {param_detail}: list: object<cql_long_list> notnull variable in
+      | |   | {name list}: list: object<cql_long_list> notnull variable in
+      | |   | {notnull}: object<cql_long_list> notnull
+      | |     | {type_object}: object<cql_long_list>
+      | |       | {name cql_long_list}
+      | | {params}
+      |   | {param}: index_: integer notnull variable in
+      |   | | {param_detail}: index_: integer notnull variable in
+      |   |   | {name index_}: index_: integer notnull variable in
+      |   |   | {notnull}: integer notnull
+      |   |     | {type_int}: integer
+      |   | {params}
+      |     | {param}: value_: longint notnull variable in
+      |       | {param_detail}: value_: longint notnull variable in
+      |         | {name value_}: value_: longint notnull variable in
+      |         | {notnull}: longint notnull
+      |           | {type_long}: longint
+      | {notnull}: object<cql_long_list> notnull
+        | {type_object}: object<cql_long_list>
+          | {name cql_long_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: longint notnull
+    | {name cql_long_list_get_at}: longint notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_long_list> notnull variable in
+      | | | {param_detail}: list: object<cql_long_list> notnull variable in
+      | |   | {name list}: list: object<cql_long_list> notnull variable in
+      | |   | {notnull}: object<cql_long_list> notnull
+      | |     | {type_object}: object<cql_long_list>
+      | |       | {name cql_long_list}
+      | | {params}
+      |   | {param}: index_: integer notnull variable in
+      |     | {param_detail}: index_: integer notnull variable in
+      |       | {name index_}: index_: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {notnull}: longint notnull
+        | {type_long}: longint
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_long_list_count}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_long_list> notnull variable in
+      |   | {param_detail}: list: object<cql_long_list> notnull variable in
+      |     | {name list}: list: object<cql_long_list> notnull variable in
+      |     | {notnull}: object<cql_long_list> notnull
+      |       | {type_object}: object<cql_long_list>
+      |         | {name cql_long_list}
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_long_list> notnull
+    | {name cql_long_list_add}: object<cql_long_list> notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_long_list> notnull variable in
+      | | | {param_detail}: list: object<cql_long_list> notnull variable in
+      | |   | {name list}: list: object<cql_long_list> notnull variable in
+      | |   | {notnull}: object<cql_long_list> notnull
+      | |     | {type_object}: object<cql_long_list>
+      | |       | {name cql_long_list}
+      | | {params}
+      |   | {param}: value_: longint notnull variable in
+      |     | {param_detail}: value_: longint notnull variable in
+      |       | {name value_}: value_: longint notnull variable in
+      |       | {notnull}: longint notnull
+      |         | {type_long}: longint
+      | {notnull}: object<cql_long_list> notnull
+        | {type_object}: object<cql_long_list>
+          | {name cql_long_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_list> : array set AS cql_long_list_set_at;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_list>
+    | | {name cql_long_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_long_list_set_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_list> : array get AS cql_long_list_get_at;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_list>
+    | | {name cql_long_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_long_list_get_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_list> : call add AS cql_long_list_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_list>
+    | | {name cql_long_list}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_long_list_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_long_list> : get count AS cql_long_list_count;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_long_list>
+    | | {name cql_long_list}
+    | {op_vals}
+      | {name get}
+      | {op_vals}
+        | {name count}
+        | {name cql_long_list_count}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+TYPE cql_real_list OBJECT<cql_real_list>;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}: object<cql_real_list>
+    | {name cql_real_list}: object<cql_real_list>
+    | {type_object}: object<cql_real_list>
+      | {name cql_real_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_real_list> notnull create_func
+    | {name cql_real_list_create}: object<cql_real_list> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_real_list> notnull create_func
+        | {notnull}: object<cql_real_list> notnull
+          | {type_object}: object<cql_real_list>
+            | {name cql_real_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_real_list> notnull
+    | {name cql_real_list_set_at}: object<cql_real_list> notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_real_list> notnull variable in
+      | | | {param_detail}: list: object<cql_real_list> notnull variable in
+      | |   | {name list}: list: object<cql_real_list> notnull variable in
+      | |   | {notnull}: object<cql_real_list> notnull
+      | |     | {type_object}: object<cql_real_list>
+      | |       | {name cql_real_list}
+      | | {params}
+      |   | {param}: index_: integer notnull variable in
+      |   | | {param_detail}: index_: integer notnull variable in
+      |   |   | {name index_}: index_: integer notnull variable in
+      |   |   | {notnull}: integer notnull
+      |   |     | {type_int}: integer
+      |   | {params}
+      |     | {param}: value_: real notnull variable in
+      |       | {param_detail}: value_: real notnull variable in
+      |         | {name value_}: value_: real notnull variable in
+      |         | {notnull}: real notnull
+      |           | {type_real}: real
+      | {notnull}: object<cql_real_list> notnull
+        | {type_object}: object<cql_real_list>
+          | {name cql_real_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: real notnull
+    | {name cql_real_list_get_at}: real notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_real_list> notnull variable in
+      | | | {param_detail}: list: object<cql_real_list> notnull variable in
+      | |   | {name list}: list: object<cql_real_list> notnull variable in
+      | |   | {notnull}: object<cql_real_list> notnull
+      | |     | {type_object}: object<cql_real_list>
+      | |       | {name cql_real_list}
+      | | {params}
+      |   | {param}: index_: integer notnull variable in
+      |     | {param_detail}: index_: integer notnull variable in
+      |       | {name index_}: index_: integer notnull variable in
+      |       | {notnull}: integer notnull
+      |         | {type_int}: integer
+      | {notnull}: real notnull
+        | {type_real}: real
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: integer notnull
+    | {name cql_real_list_count}: integer notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_real_list> notnull variable in
+      |   | {param_detail}: list: object<cql_real_list> notnull variable in
+      |     | {name list}: list: object<cql_real_list> notnull variable in
+      |     | {notnull}: object<cql_real_list> notnull
+      |       | {type_object}: object<cql_real_list>
+      |         | {name cql_real_list}
+      | {notnull}: integer notnull
+        | {type_int}: integer
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_real_list> notnull
+    | {name cql_real_list_add}: object<cql_real_list> notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: list: object<cql_real_list> notnull variable in
+      | | | {param_detail}: list: object<cql_real_list> notnull variable in
+      | |   | {name list}: list: object<cql_real_list> notnull variable in
+      | |   | {notnull}: object<cql_real_list> notnull
+      | |     | {type_object}: object<cql_real_list>
+      | |       | {name cql_real_list}
+      | | {params}
+      |   | {param}: value_: real notnull variable in
+      |     | {param_detail}: value_: real notnull variable in
+      |       | {name value_}: value_: real notnull variable in
+      |       | {notnull}: real notnull
+      |         | {type_real}: real
+      | {notnull}: object<cql_real_list> notnull
+        | {type_object}: object<cql_real_list>
+          | {name cql_real_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_list> : array set AS cql_real_list_set_at;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_list>
+    | | {name cql_real_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_real_list_set_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_list> : array get AS cql_real_list_get_at;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_list>
+    | | {name cql_real_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_real_list_get_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_list> : call add AS cql_real_list_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_list>
+    | | {name cql_real_list}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_real_list_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_real_list> : get count AS cql_real_list_count;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_real_list>
+    | | {name cql_real_list}
+    | {op_vals}
+      | {name get}
+      | {op_vals}
+        | {name count}
+        | {name cql_real_list_count}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!;
 
   {stmt_and_attr}: ok

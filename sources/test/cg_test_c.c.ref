@@ -48,6 +48,16 @@ extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull li
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_object_ref _Nonnull cql_long_list_create(void);
+extern cql_object_ref _Nonnull cql_long_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_int64 value_);
+extern cql_int64 cql_long_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_long_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value_);
+extern cql_object_ref _Nonnull cql_real_list_create(void);
+extern cql_object_ref _Nonnull cql_real_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_double value_);
+extern cql_double cql_real_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_real_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value_);
 extern cql_int32 cql_cursor_column_count(cql_dynamic_cursor *_Nonnull C);
 extern cql_int32 cql_cursor_column_type(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern cql_nullable_bool cql_cursor_get_bool(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);

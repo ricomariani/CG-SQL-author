@@ -4325,6 +4325,128 @@ cql_object_ref _Nonnull cql_string_list_set_at(
   return list;
 }
 
+// We just release the buffer memory
+static void cql_long_list_finalize(void *_Nonnull data) {
+  cql_bytebuf *_Nonnull self = data;
+  cql_bytebuf_close(self);
+  free(self);
+}
+
+// Creates the list storage using a byte buffer
+cql_object_ref _Nonnull cql_long_list_create(void) {
+  cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
+  cql_bytebuf_open(self);
+  return _cql_generic_object_create(self, cql_long_list_finalize);
+}
+
+// Adds a long to the given list 
+cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value) {
+  cql_contract(list);
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_bytebuf_append(self, &value, sizeof(value));
+  return list;
+}
+
+// Returns the number of elements in the given list
+int32_t cql_long_list_count(cql_object_ref _Nonnull list) {
+  cql_contract(list);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  return self->used / sizeof(cql_int64);
+}
+
+// Returns the nth long from the list
+cql_int64 cql_long_list_get_at(
+  cql_object_ref _Nonnull list,
+  int32_t index)
+{
+  cql_contract(list); 
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  int32_t count = self->used / sizeof(cql_int64);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_int64);
+  return *(cql_int64 *)(self->ptr + offset);
+}
+
+// Edits the item in place
+cql_object_ref _Nonnull cql_long_list_set_at(
+  cql_object_ref _Nonnull list,
+  int32_t index,
+  cql_int64 value)
+{
+  cql_contract(list);
+  cql_contract(value);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  int32_t count = self->used / sizeof(cql_int64);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_int64);
+  *(cql_int64 *)(self->ptr + offset) = value;
+
+  return list;
+}
+
+// Creates the list storage using a byte buffer
+cql_object_ref _Nonnull cql_real_list_create(void) {
+  cql_bytebuf *self = calloc(1, sizeof(cql_bytebuf));
+  cql_bytebuf_open(self);
+  // the long list finalizer works, it just releases the buffer
+  return _cql_generic_object_create(self, cql_long_list_finalize);
+}
+
+// Adds a real to the given list 
+cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value) {
+  cql_contract(list);
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  cql_bytebuf_append(self, &value, sizeof(value));
+  return list;
+}
+
+// Returns the number of elements in the given list
+int32_t cql_real_list_count(cql_object_ref _Nonnull list) {
+  cql_contract(list);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  return self->used / sizeof(cql_double);
+}
+
+// Returns the nth long from the list
+cql_double cql_real_list_get_at(
+  cql_object_ref _Nonnull list,
+  int32_t index)
+{
+  cql_contract(list); 
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  int32_t count = self->used / sizeof(cql_double);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_double);
+  return *(cql_double *)(self->ptr + offset);
+}
+
+// Edits the item in place
+cql_object_ref _Nonnull cql_real_list_set_at(
+  cql_object_ref _Nonnull list,
+  int32_t index,
+  cql_double value)
+{
+  cql_contract(list);
+  cql_contract(value);
+
+  cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
+  int32_t count = self->used / sizeof(cql_double);
+  cql_contract(index >= 0 && index < count);
+  cql_invariant(self->ptr);
+  size_t offset = index * sizeof(cql_double);
+  *(cql_double *)(self->ptr + offset) = value;
+
+  return list;
+}
+
 // This is called when the reference count of the boxed statement becomes zero
 // It will finalize the actual SQLite statement.  i.e. this is a
 // destructor/finalizer

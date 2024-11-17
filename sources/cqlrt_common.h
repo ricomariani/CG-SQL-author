@@ -466,6 +466,20 @@ CQL_EXPORT int32_t cql_string_list_count(cql_object_ref _Nonnull list);
 CQL_EXPORT cql_string_ref _Nonnull cql_string_list_get_at(cql_object_ref _Nonnull list, int32_t index);
 CQL_EXPORT cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_string_ref _Nonnull value);
 
+// Long list helpers
+CQL_EXPORT cql_object_ref _Nonnull cql_long_list_create(void);
+CQL_EXPORT cql_object_ref _Nonnull cql_long_list_add(cql_object_ref _Nonnull list, cql_int64 value);
+CQL_EXPORT int32_t cql_long_list_count(cql_object_ref _Nonnull list);
+CQL_EXPORT cql_int64 cql_long_list_get_at(cql_object_ref _Nonnull list, int32_t index);
+CQL_EXPORT cql_object_ref _Nonnull cql_long_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_int64 value);
+
+// Real list helpers
+CQL_EXPORT cql_object_ref _Nonnull cql_real_list_create(void);
+CQL_EXPORT cql_object_ref _Nonnull cql_real_list_add(cql_object_ref _Nonnull list, cql_double value);
+CQL_EXPORT int32_t cql_real_list_count(cql_object_ref _Nonnull list);
+CQL_EXPORT cql_double cql_real_list_get_at(cql_object_ref _Nonnull list, int32_t index);
+CQL_EXPORT cql_object_ref _Nonnull cql_real_list_set_at(cql_object_ref _Nonnull list, int32_t index, cql_double value);
+
 // For internal use by the schema upgrader only, subject to change and generally uninteresting because
 // of its unusual matching rules.
 CQL_EXPORT cql_bool _cql_contains_column_def(cql_string_ref _Nullable haystack_, cql_string_ref _Nullable needle_);

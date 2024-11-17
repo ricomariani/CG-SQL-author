@@ -525,7 +525,7 @@ stmt:
   | ifndef_stmt { $stmt = make_statement_node(NULL, $ifndef_stmt); }
   ;
 
-expr_stmt: expr { 
+expr_stmt: expr {
      if (is_ast_stmt_list_macro_ref($expr) || is_ast_stmt_list_macro_arg_ref($expr)) {
         $$ = $expr;
      }
@@ -3045,9 +3045,9 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "declare func cql_string_dictionary_create() CREATE OBJECT<cql_string_dictionary>!;"
     "[[builtin]]"
-    "declare func cql_string_dictionary_add(dict OBJECT<cql_string_dictionary>!, key TEXT!, value TEXT!) BOOL!;"
+    "declare func cql_string_dictionary_add(dict OBJECT<cql_string_dictionary>!, key text!, value text!) BOOL!;"
     "[[builtin]]"
-    "declare func cql_string_dictionary_find(dict OBJECT<cql_string_dictionary>!, key TEXT) TEXT;"
+    "declare func cql_string_dictionary_find(dict OBJECT<cql_string_dictionary>!, key text) text;"
 
     "[[builtin]]"
     "@op object<cql_string_dictionary> : call add as cql_string_dictionary_add;"
@@ -3061,9 +3061,9 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "declare func cql_long_dictionary_create() CREATE OBJECT<cql_long_dictionary>!;"
     "[[builtin]]"
-    "declare func cql_long_dictionary_add(dict OBJECT<cql_long_dictionary>!, key TEXT!, value long!) BOOL!;"
+    "declare func cql_long_dictionary_add(dict OBJECT<cql_long_dictionary>!, key text!, value long!) BOOL!;"
     "[[builtin]]"
-    "declare func cql_long_dictionary_find(dict OBJECT<cql_long_dictionary>!, key TEXT) long;"
+    "declare func cql_long_dictionary_find(dict OBJECT<cql_long_dictionary>!, key text) long;"
 
     "[[builtin]]"
     "@op object<cql_long_dictionary> : call add as cql_long_dictionary_add;"
@@ -3078,9 +3078,9 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "declare func cql_real_dictionary_create() CREATE OBJECT<cql_real_dictionary>!;"
     "[[builtin]]"
-    "declare func cql_real_dictionary_add(dict OBJECT<cql_real_dictionary>!, key TEXT!, value real!) BOOL!;"
+    "declare func cql_real_dictionary_add(dict OBJECT<cql_real_dictionary>!, key text!, value real!) BOOL!;"
     "[[builtin]]"
-    "declare func cql_real_dictionary_find(dict OBJECT<cql_real_dictionary>!, key TEXT) real;"
+    "declare func cql_real_dictionary_find(dict OBJECT<cql_real_dictionary>!, key text) real;"
 
     "[[builtin]]"
     "@op object<cql_real_dictionary> : call add as cql_real_dictionary_add;"
@@ -3094,9 +3094,9 @@ cql_noexport CSTR cql_builtin_text() {
     "[[builtin]]"
     "declare func cql_object_dictionary_create() CREATE OBJECT<cql_object_dictionary>!;"
     "[[builtin]]"
-    "declare func cql_object_dictionary_add(dict OBJECT<cql_object_dictionary>!, key TEXT!, value OBJECT!) BOOL!;"
+    "declare func cql_object_dictionary_add(dict OBJECT<cql_object_dictionary>!, key text!, value OBJECT!) BOOL!;"
     "[[builtin]]"
-    "declare func cql_object_dictionary_find(dict OBJECT<cql_object_dictionary>!, key TEXT) OBJECT;"
+    "declare func cql_object_dictionary_find(dict OBJECT<cql_object_dictionary>!, key text) OBJECT;"
 
     "[[builtin]]"
     "@op object<cql_object_dictionary> : call add as cql_object_dictionary_add;"
@@ -3193,6 +3193,51 @@ cql_noexport CSTR cql_builtin_text() {
     "@op cql_string_list : call add as cql_string_list_add;"
     "[[builtin]]"
     "@op cql_string_list : get count as cql_string_list_count;"
+
+    "[[builtin]]"
+    "TYPE cql_long_list object<cql_long_list>;"
+    "[[builtin]]"
+    "declare func cql_long_list_create() create cql_long_list!;"
+    "[[builtin]]"
+    "declare func cql_long_list_set_at(list cql_long_list!, index_ int!, value_ long!) cql_long_list!;"
+    "[[builtin]]"
+    "declare func cql_long_list_get_at(list cql_long_list!, index_ int!) long!;"
+    "[[builtin]]"
+    "declare func cql_long_list_count(list cql_long_list!) int!;"
+    "[[builtin]]"
+    "declare func cql_long_list_add(list cql_long_list!, value_ long!) cql_long_list!;"
+
+    "[[builtin]]"
+    "@op cql_long_list : array set as cql_long_list_set_at;"
+    "[[builtin]]"
+    "@op cql_long_list : array get as cql_long_list_get_at;"
+    "[[builtin]]"
+    "@op cql_long_list : call add as cql_long_list_add;"
+    "[[builtin]]"
+    "@op cql_long_list : get count as cql_long_list_count;"
+
+
+     "[[builtin]]"
+    "TYPE cql_real_list object<cql_real_list>;"
+    "[[builtin]]"
+    "declare func cql_real_list_create() create cql_real_list!;"
+    "[[builtin]]"
+    "declare func cql_real_list_set_at(list cql_real_list!, index_ int!, value_ real!) cql_real_list!;"
+    "[[builtin]]"
+    "declare func cql_real_list_get_at(list cql_real_list!, index_ int!) real!;"
+    "[[builtin]]"
+    "declare func cql_real_list_count(list cql_real_list!) int!;"
+    "[[builtin]]"
+    "declare func cql_real_list_add(list cql_real_list!, value_ real!) cql_real_list!;"
+
+    "[[builtin]]"
+    "@op cql_real_list : array set as cql_real_list_set_at;"
+    "[[builtin]]"
+    "@op cql_real_list : array get as cql_real_list_get_at;"
+    "[[builtin]]"
+    "@op cql_real_list : call add as cql_real_list_add;"
+    "[[builtin]]"
+    "@op cql_real_list : get count as cql_real_list_count;"
 
     "[[builtin]]"
     "declare func cql_cursor_column_count(C cursor) int!;"
@@ -3787,7 +3832,7 @@ static ast_node *do_ifndef(ast_node *ast) {
   return ast;
 }
 
-// having encountered an else 
+// having encountered an else
 static void do_else() {
   // an else block cannot happen unless we are in an ifdef/ifndef
   // hence there must be state.

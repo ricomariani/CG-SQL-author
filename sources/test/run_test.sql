@@ -5817,6 +5817,70 @@ BEGIN
   EXPECT!("goodbye" == list[1]);
 END);
 
+TEST!(cql_long_list,
+BEGIN
+  let list := cql_long_list_create();
+  EXPECT!(0 == list.count);
+  list:add(10):add(20);
+  EXPECT!(2 == list.count);
+  EXPECT!(10 == list[0]);
+  EXPECT!(20 == list[1]);
+
+  -- use the setter, too
+  list[0] := 100;
+  EXPECT!(2 == list.count);
+  EXPECT!(100 == list[0]);
+  EXPECT!(20 == list[1]);
+
+  -- test some growth
+  list := cql_long_list_create();
+  let i := 0;
+  while i < 1024
+  begin
+    list:add(i*3);
+    i += 1;
+  end;
+
+  i := 0;
+  while i < 1024
+  begin
+    EXPECT!(list[i] == i*3);
+    i += 1;
+  end;
+END);
+
+TEST!(cql_real_list,
+BEGIN
+  let list := cql_real_list_create();
+  EXPECT!(0 == list.count);
+  list:add(10.5):add(20.5);
+  EXPECT!(2 == list.count);
+  EXPECT!(10.5 == list[0]);
+  EXPECT!(20.5 == list[1]);
+
+  -- use the setter, too
+  list[0] := 100.25;
+  EXPECT!(2 == list.count);
+  EXPECT!(100.25 == list[0]);
+  EXPECT!(20.5 == list[1]);
+
+  -- test some growth
+  list := cql_real_list_create();
+  let i := 0;
+  while i < 1024
+  begin
+    list:add(i*3.5);
+    i += 1;
+  end;
+
+  i := 0;
+  while i < 1024
+  begin
+    EXPECT!(list[i] == i*3.5);
+    i += 1;
+  end;
+END);
+
 TEST!(cursor_formatting,
 BEGIN
   cursor C like (a_bool bool, an_int int, a_long long, a_real real, a_string text, a_blob blob);

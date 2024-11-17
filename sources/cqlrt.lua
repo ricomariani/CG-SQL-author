@@ -834,6 +834,19 @@ function cql_string_list_set_at(list, i, val)
   return list
 end
 
+-- the long and real methods are the same in Lua
+cql_long_list_create = cql_string_list_create;
+cql_long_list_count = cql_string_list_count;
+cql_long_list_add = cql_string_list_add;
+cql_long_list_get_at = cql_string_list_get_at;
+cql_long_list_set_at = cql_string_list_set_at;
+
+cql_real_list_create = cql_string_list_create;
+cql_real_list_count = cql_string_list_count;
+cql_real_list_add = cql_string_list_add;
+cql_real_list_get_at = cql_string_list_get_at;
+cql_real_list_set_at = cql_string_list_set_at;
+
 function cql_exec_internal(db, str)
   return db:exec(str)
 end

@@ -6418,6 +6418,320 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!
+
+    {
+      "name" : "cql_long_list_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_long_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_list_set_at (list OBJECT<cql_long_list>!, index_ INT!, value_ LONG!) OBJECT<cql_long_list>!
+
+    {
+      "name" : "cql_long_list_set_at",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_long_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value_",
+          "type" : "long",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_long_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_list_get_at (list OBJECT<cql_long_list>!, index_ INT!) LONG!
+
+    {
+      "name" : "cql_long_list_get_at",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_long_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "long",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_list_count (list OBJECT<cql_long_list>!) INT!
+
+    {
+      "name" : "cql_long_list_count",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_long_list",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_long_list_add (list OBJECT<cql_long_list>!, value_ LONG!) OBJECT<cql_long_list>!
+
+    {
+      "name" : "cql_long_list_add",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_long_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value_",
+          "type" : "long",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_long_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_list_create () CREATE OBJECT<cql_real_list>!
+
+    {
+      "name" : "cql_real_list_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_real_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_list_set_at (list OBJECT<cql_real_list>!, index_ INT!, value_ REAL!) OBJECT<cql_real_list>!
+
+    {
+      "name" : "cql_real_list_set_at",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_real_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value_",
+          "type" : "real",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_real_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_list_get_at (list OBJECT<cql_real_list>!, index_ INT!) REAL!
+
+    {
+      "name" : "cql_real_list_get_at",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_real_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "real",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_list_count (list OBJECT<cql_real_list>!) INT!
+
+    {
+      "name" : "cql_real_list_count",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_real_list",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_real_list_add (list OBJECT<cql_real_list>!, value_ REAL!) OBJECT<cql_real_list>!
+
+    {
+      "name" : "cql_real_list_add",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_real_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value_",
+          "type" : "real",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_real_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
     DECLARE FUNC cql_cursor_column_count (C CURSOR) INT!
 
     {

@@ -3753,7 +3753,11 @@ static void cg_lua_fetch_cursor_from_blob_stmt(ast_node *ast) {
   CG_LUA_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
 
   bprintf(cg_main_output,
-    "_rc_, %s = cql_deserialize_from_blob(%s)\n", cursor_name, blob_value.ptr);
+    "_rc_ = cql_deserialize_from_blob(%s, %s, %s_types_, %s_fields_)\n",
+    blob_value.ptr,
+    cursor_name,
+    cursor_name,
+    cursor_name);
   cg_lua_error_on_not_sqlite_ok();
 
   CG_LUA_POP_EVAL(blob);
@@ -3766,8 +3770,13 @@ static void cg_lua_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR blob_name  = ast->left->sem->name;
   CSTR cursor_name = ast->right->sem->name;
 
-  bprintf(cg_main_output,
-    "_rc_, %s = cql_serialize_to_blob(%s);\n", blob_name, cursor_name);
+  // cursor formal expands to three actual arguments
+  bprintf(cg_main_output, "_rc_, %s = cql_serialize_blob(%s, %s_types_, %s_fields_);\n",
+    blob_name,
+    cursor_name,
+    cursor_name,
+    cursor_name);
+
   cg_lua_error_on_not_sqlite_ok();
 }
 

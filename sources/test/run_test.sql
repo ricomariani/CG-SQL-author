@@ -63,6 +63,7 @@ begin
   end if;
 end;
 
+-- this isn't used anymore but it still makes a good compile-time test
 @ifdef __rt__lua
   -- This test case is suppressed in Lua, this is done
   -- because the Lua runtime is missing some blob features
@@ -152,7 +153,6 @@ declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
 declare function get_blob_byte(b blob!, i int!) int!;
-declare function get_blob_size(b blob!) int!;
 declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
 
 declare function blob_from_string(str text @sensitive) create blob!;
@@ -4536,8 +4536,10 @@ create table storage_one_long(
   x long!
 );
 
-TEST_C!(blob_serialization,
+TEST!(blob_serialization,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
   declare cursor_both cursor like storage_both;
@@ -4727,10 +4729,13 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
-TEST_C!(blob_serialization_null_cases,
+TEST!(blob_serialization_null_cases,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   declare cursor_nulls cursor like storage_nullable;
   fetch cursor_nulls using
     null f, null t, null i, null l, null r, null bl, null str;
@@ -4748,10 +4753,14 @@ BEGIN
   EXPECT!(test_cursor.r is null);
   EXPECT!(test_cursor.bl is null);
   EXPECT!(test_cursor.str is null);
+
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
-TEST_C!(corrupt_blob_deserialization,
+TEST!(corrupt_blob_deserialization,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
   declare cursor_both cursor like storage_both;
@@ -4768,7 +4777,7 @@ BEGIN
   fetch test_cursor_both from blob_both;
 
   -- sanity check the blob size of the full encoding
-  let full_size := get_blob_size(blob_both);
+  let full_size := cql_get_blob_size(blob_both);
   EXPECT!(full_size > 50);
   EXPECT!(full_size < 100);
 
@@ -4790,10 +4799,14 @@ BEGIN
     EXPECT!(caught);
     i += 1;
   end;
+
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
-TEST_C!(bogus_varint,
+TEST!(bogus_varint,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let control_blob := (select X'490001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_int>;
   test_blob := control_blob;
@@ -4818,10 +4831,14 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
+
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
-TEST_C!(bogus_varlong,
+TEST!(bogus_varlong,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let control_blob := (select X'4C0001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_long>;
   test_blob := control_blob;
@@ -4846,6 +4863,7 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
 proc round_trip_int(value int!)
@@ -4935,7 +4953,7 @@ BEGIN
   EXPECT!(z == C.v);
 END);
 
-TEST_C!(serialization_tricky_values,
+TEST!(serialization_tricky_values,
 BEGIN
   call round_trip_int(0);
   call round_trip_int(1);
@@ -4970,14 +4988,16 @@ BEGIN
 END);
 
 declare proc rand_reset();
-declare proc corrupt_blob_with_invalid_shenanigans(b blob!);
+declare function corrupt_blob_with_invalid_shenanigans(b blob!) create blob!;
 
-TEST_C!(clobber_blobs,
+TEST!(clobber_blobs,
 BEGIN
   -- the point of the test is to ensure that we don't segv or get ASAN failures
   -- or leak memory when dealing with broken blobs.  Some of the blobs
   -- may still be valid since we corrupt them randomly.  But this will
   -- help us to be sure that nothing horrible happens if you corrupt blobs
+
+  @echo lua, "cql_disable_tracing = true\n";
 
   -- we're going to make a good blob with various data in it and then clobber it
   let a_blob := blob_from_string("a blob");
@@ -5020,7 +5040,7 @@ BEGIN
       j += 1;
 
       -- invoke da smasher
-      call corrupt_blob_with_invalid_shenanigans(my_blob);
+      my_blob := corrupt_blob_with_invalid_shenanigans(my_blob);
 
       try
         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
@@ -5037,6 +5057,7 @@ BEGIN
   -- use the no call syntax
   printf("blob corruption results: good: %d, bad: %d\n", good, bad);
   printf("1000 bad results is normal\n");
+  @echo lua,  "cql_disable_tracing = false\n";
 END);
 
 proc change_arg(x text)
@@ -6705,7 +6726,7 @@ BEGIN
   EXPECT!(_nil:to_blob IS NULL);
   EXPECT!(_nil:to_object IS NULL);
   EXPECT!(_nil:type IS CQL_DATA_TYPE_NULL);
-  
+
 END);
 
 TEST!(object_dictionary,

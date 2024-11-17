@@ -46,7 +46,6 @@ cql_string_ref _Nullable string_create(void);
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str);
 
 extern cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i);
-extern cql_int32 get_blob_size(cql_blob_ref b);
 
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
@@ -1743,13 +1742,6 @@ cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i) {
   return (cql_int32)(((uint8_t *)cql_get_blob_bytes(b))[i]);
 }
 
-// This is lossy but that's ok, this is only a test helper
-// we can't test blobs > 2G with this but that's not what
-// we use this for anyway.
-cql_int32 get_blob_size(cql_blob_ref b) {
-  return (cql_int32)cql_get_blob_size(b);
-}
-
 // for making buffers that are broken
 cql_blob_ref create_truncated_blob(cql_blob_ref b, cql_int32 new_size) {
   cql_int32 existing_size = cql_get_blob_size(b);
@@ -1777,7 +1769,7 @@ static int32_t seriously_lousy_rand() {
 
 // We are about to break all the rules to corrupt this blob
 // mutating the blob in place because we know how.
-void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
+cql_blob_ref corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
 
   cql_int32 size = cql_get_blob_size(b);
   uint8_t *bytes = (uint8_t *)cql_get_blob_bytes(b);
@@ -1789,6 +1781,8 @@ void corrupt_blob_with_invalid_shenanigans(cql_blob_ref b) {
      // smash
      bytes[index] = byte;
   }
+  cql_blob_retain(b);
+  return b;
 }
 
 // This test first creates a sample recreate group with twp dependent tables

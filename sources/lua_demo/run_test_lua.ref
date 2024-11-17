@@ -9,13 +9,8 @@ err: 	101	db info:	101	no more rows available
 err: 	101	thrown exception
 err: 	1	db info:	1	table foo already exists
 err: 	19	db info:	19	UNIQUE constraint failed: foo.id
-Skipping test blob_serialization in Lua
-Skipping test blob_serialization_null_cases in Lua
-Skipping test corrupt_blob_deserialization in Lua
-Skipping test bogus_varint in Lua
-Skipping test bogus_varlong in Lua
-Skipping test serialization_tricky_values in Lua
-Skipping test clobber_blobs in Lua
+blob corruption results: good: 0, bad: 1000
+1000 bad results is normal
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key
 err: 	19	db info:	19	UNIQUE constraint failed: backing.the key

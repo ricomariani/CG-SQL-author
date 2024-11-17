@@ -7954,9 +7954,9 @@ function blob_serialization_test(_db_)
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, B = cql_serialize_to_blob(C);
+  _rc_, B = cql_serialize_blob(C, C_types_, C_fields_);
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, D = cql_deserialize_from_blob(B)
+  _rc_ = cql_deserialize_from_blob(B, D, D_types_, D_fields_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -7984,7 +7984,7 @@ function deserialize_func(_db_)
   local _tmp_n_blob_0
 
   _tmp_n_blob_0 = make_blob()
-  _rc_, C = cql_deserialize_from_blob(_tmp_n_blob_0)
+  _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, C, C_types_, C_fields_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -8046,7 +8046,7 @@ function use_gr_cursor_for_serialization(_db_)
   local _rc_ = CQL_OK
   local b
 
-  _rc_, b = cql_serialize_to_blob(gr_blob_cursor);
+  _rc_, b = cql_serialize_blob(gr_blob_cursor, gr_blob_cursor_types_, gr_blob_cursor_fields_);
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 

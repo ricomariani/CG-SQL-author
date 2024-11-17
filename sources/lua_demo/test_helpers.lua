@@ -529,3 +529,48 @@ function take_bool_not_null(x,y)
     force_error_exit()
   end
 end
+
+function create_truncated_blob(b, new_size)
+  if new_size >= #b then
+    print("new size is not smaller than old size")
+    force_error_exit()
+  end
+  return string.sub(b, 1, new_size)
+end
+
+rand_state = 0
+
+-- to ensure we can get the same series again (this is public)
+function rand_reset() 
+  rand_state = 0
+end
+
+-- This random number generator doesn't have to be very good
+-- but I can't use anything that looks standard because of who
+-- knows what copyright issues I might face for daring to use the same
+-- integers in linear congruence math. So for this lame thing I picked my
+-- own constants out of thin air and I have no idea if they are any good
+-- but they are my own and really we just don't care that much.
+function seriously_lousy_rand() 
+  rand_state = (rand_state * 1302475243 + 21493) & 0x7fffffff
+  return rand_state;
+end
+
+-- corrupt the blob
+function corrupt_blob_with_invalid_shenanigans(b)
+  local size = cql_get_blob_size(b);
+
+  bytes = {}
+  for i = 1, #b do
+    bytes[i] = string.byte(b, i)
+  end
+
+  for i = 1, 20 do
+     index = seriously_lousy_rand() % size
+     byte = seriously_lousy_rand() & 0xff
+
+     -- smash
+     bytes[index] = byte;
+  end
+  return string.char(table.unpack(bytes))
+end

@@ -1646,7 +1646,7 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       C[field], pos = cql_unpack_z(buffer, pos)
       if pos == nil then
         return -13
-      end 
+      end
     elseif code == CQL_ENCODED_TYPE_STRING then
       bit = cql_getbit(bits, nullable_index)
       if bit == nil then
@@ -1656,7 +1656,7 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
         C[field], pos = cql_unpack_z(buffer, pos)
         if pos == nil then
           return -15
-        end 
+        end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then

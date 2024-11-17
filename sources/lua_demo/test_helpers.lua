@@ -529,3 +529,11 @@ function take_bool_not_null(x,y)
     force_error_exit()
   end
 end
+
+function create_truncated_blob(b, new_size)
+  if new_size >= #b then
+    print("new size is not smaller than old size")
+    force_error_exit()
+  end
+  return string.sub(b, 1, new_size)
+end

@@ -1210,6 +1210,9 @@ end
 function cql_getbit(x, i)
   local offset = 1 + i // 8
   local bit = i % 8
+  if offset > #x then
+    return nil
+  end
   return cql_is_true(x[offset] & (1<<bit))
 end
 
@@ -1421,7 +1424,7 @@ function cql_varint_decode(x, pos, lim)
   repeat
     b = string.byte(x, pos)
     if b == nil or count >= lim then
-      return nil, pos
+      return nil, nil
     end
     pos = pos + 1
     result = result | ((b & 0x7F) << shift)
@@ -1434,31 +1437,60 @@ end
 
 function cql_varint_decode_32(x, pos)
   -- at most 5 bytes
-  return cql_varint_decode(x, pos, 5)
+  x, pos = cql_varint_decode(x, pos, 5)
+  return x, pos
 end
 
 function cql_varint_decode_64(x, pos)
   -- at most 10 bytes
-  return cql_varint_decode(x, pos, 10)
+  x, pos = cql_varint_decode(x, pos, 10)
+  return x, pos
+end
+
+function cql_unpack_z(str, pos)
+  local success, result, next_pos = pcall(string.unpack, "z", str, pos)
+  if success then
+    return result, next_pos
+  else
+    return nil, nil
+  end
+end
+
+function cql_unpack_d(str, pos)
+  local success, result, next_pos = pcall(string.unpack, "d", str, pos)
+  if success then
+    return result, next_pos
+  else
+    return nil, nil
+  end
+end
+
+function cql_unpack_c(str, pos, size)
+  local success, result, next_pos = pcall(string.unpack, "c" .. size, str, pos)
+  if success then
+    return result, next_pos
+  else
+    return nil, nil
+  end
 end
 
 function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
   if C == nil then
-    return -1
+    return -100
   end
 
   C._has_row_ = false
 
   if buffer == nil then
-    return -2
+    return -101
   end
 
   if C_types == nil then
-    return -3
+    return -102
   end
 
   if C_fields == nil then
-    return -4
+    return -103
   end
 
   -- this will help us with missing fields, we have to assume that the buffer
@@ -1467,16 +1499,20 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
   cql_empty_cursor(C, C_types, C_fields)
 
   local pos = 1
-  local types, pos = string.unpack("z", buffer, pos)
+  local types, pos = cql_unpack_z(buffer, pos)
+  if types == nil then
+    return -104
+  end
 
-  local nullable_count = 0;
-  local bool_count = 0;
-  local actual_count = #types;
-  local needed_count = #C_fields;
-  local code;
-  local type;
-  local chunk_size;
-  local i = 0;
+  local nullable_count = 0
+  local bool_count = 0
+  local actual_count = #types
+  local needed_count = #C_fields
+  local code
+  local type
+  local chunk_size
+  local i = 0
+  local bit = false
 
   for i = 1, actual_count do
     code = string.byte(types, i)
@@ -1535,73 +1571,117 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
     field = C_fields[i]
     code = string.byte(types, i)
     if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
-      C[field] = cql_getbit(bits, nullable_count + bool_index)
+      bit = cql_getbit(bits, nullable_count + bool_index)
+      if bit == nil then
+        return -1
+      end
+      C[field] = bit
       bool_index = bool_index + 1
     elseif code == CQL_ENCODED_TYPE_BOOL then
-      if cql_getbit(bits, nullable_index) then
-        C[field] = cql_getbit(bits, nullable_count + bool_index)
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -2
+      end
+      if bit then
+        bit = cql_getbit(bits, nullable_count + bool_index)
+        if bit == nil then
+          return -3
+        end
+        C[field] = bit
       end
       bool_index = bool_index + 1
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
       C[field], pos = cql_varint_decode_32(buffer, pos)
-      if C[field] == nil then
-        rc = -1
-        goto cql_error
+      if pos == nil then
+        return -4
       end
     elseif code == CQL_ENCODED_TYPE_INT then
-      if cql_getbit(bits, nullable_index) then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -5
+      end
+      if bit then
         C[field], pos = cql_varint_decode_32(buffer, pos)
-        if C[field] == nil then
-          rc = -2
-          goto cql_error
+        if pos == nil then
+          return -6
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
       C[field], pos = cql_varint_decode_64(buffer, pos)
-      if C[field] == nil then
-        rc = -3
-        goto cql_error
+      if pos == nil then
+        return -7
       end
     elseif code == CQL_ENCODED_TYPE_LONG then
-      if cql_getbit(bits, nullable_index) then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -8
+      end
+      if bit then
         C[field], pos = cql_varint_decode_64(buffer, pos)
-        if C[field] == nil then
-          rc = -4
-          goto cql_error
+        if pos == nil then
+          return -9
         end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
-      C[field], pos = string.unpack("d", buffer, pos)
+      C[field], pos = cql_unpack_d(buffer, pos)
+      if pos == nil then
+        return -10
+      end
     elseif code == CQL_ENCODED_TYPE_DOUBLE then
-      if cql_getbit(bits, nullable_index) then
-        C[field], pos = string.unpack("d", buffer, pos)
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -11
+      end
+      if bit then
+        C[field], pos = cql_unpack_d(buffer, pos)
+        if pos == nil then
+          return -12
+        end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
-      C[field], pos = string.unpack("z", buffer, pos)
+      C[field], pos = cql_unpack_z(buffer, pos)
+      if pos == nil then
+        return -13
+      end 
     elseif code == CQL_ENCODED_TYPE_STRING then
-      if cql_getbit(bits, nullable_index) then
-        C[field], pos = string.unpack("z", buffer, pos)
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -14
+      end
+      if bit then
+        C[field], pos = cql_unpack_z(buffer, pos)
+        if pos == nil then
+          return -15
+        end 
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
       chunk_size, pos = cql_varint_decode_32(buffer, pos)
-      if chunk_size == nil then
-        rc = -5
-        goto cql_error
+      if pos == nil then
+        return -16
       end
-      C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
+      C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
+      if pos == nil then
+        return -17
+      end
     elseif code == CQL_ENCODED_TYPE_BLOB then
-      if cql_getbit(bits, nullable_index) then
+      bit = cql_getbit(bits, nullable_index)
+      if bit == nil then
+        return -18
+      end
+      if bit then
         chunk_size, pos = cql_varint_decode_32(buffer, pos)
-        if chunk_size == nil then
-          rc = -6
-          goto cql_error
+        if pos == nil then
+          return -19
         end
-        C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
+        C[field], pos = cql_unpack_c(buffer, pos, chunk_size)
+        if pos == nil then
+          return -20
+        end
       end
       nullable_index = nullable_index + 1
     end

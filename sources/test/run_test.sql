@@ -152,7 +152,6 @@ declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
 declare function get_blob_byte(b blob!, i int!) int!;
-declare function get_blob_size(b blob!) int!;
 declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
 
 declare function blob_from_string(str text @sensitive) create blob!;
@@ -4750,7 +4749,7 @@ BEGIN
   EXPECT!(test_cursor.str is null);
 END);
 
-TEST_C!(corrupt_blob_deserialization,
+TEST!(corrupt_blob_deserialization,
 BEGIN
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4768,7 +4767,7 @@ BEGIN
   fetch test_cursor_both from blob_both;
 
   -- sanity check the blob size of the full encoding
-  let full_size := get_blob_size(blob_both);
+  let full_size := cql_get_blob_size(blob_both);
   EXPECT!(full_size > 50);
   EXPECT!(full_size < 100);
 

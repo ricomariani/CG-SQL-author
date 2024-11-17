@@ -4837,8 +4837,8 @@ create table structured_storage(
 );
 
 -- TEST: basic blob serialization case
--- + _rc_, B = cql_serialize_to_blob(C);
--- + _rc_, D = cql_deserialize_from_blob(B)
+-- + _rc_, B = cql_serialize_blob(C, C_types_, C_fields_);
+-- + _rc_ = cql_deserialize_from_blob(B, D, D_types_, D_fields_)
 proc blob_serialization_test()
 begin
   declare C cursor for select 1 id, 'foo' name;
@@ -4858,7 +4858,7 @@ declare function make_blob() create blob<structured_storage>;
 -- checks general expression evaluation in the fetch path
 -- func call is a good standing for general eval
 -- + _tmp_n_blob_0 = make_blob()
--- + _rc_, C = cql_deserialize_from_blob(_tmp_n_blob_0)
+-- + _rc_ = cql_deserialize_from_blob(_tmp_n_blob_0, C, C_types_, C_fields_)
 proc deserialize_func()
 begin
   declare C cursor like structured_storage;

@@ -46,7 +46,6 @@ cql_string_ref _Nullable string_create(void);
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str);
 
 extern cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i);
-extern cql_int32 get_blob_size(cql_blob_ref b);
 
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
@@ -1741,13 +1740,6 @@ cql_code some_integers_fetch(
 // get the indexed character and return it as an integer for CQL consumpsion
 cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i) {
   return (cql_int32)(((uint8_t *)cql_get_blob_bytes(b))[i]);
-}
-
-// This is lossy but that's ok, this is only a test helper
-// we can't test blobs > 2G with this but that's not what
-// we use this for anyway.
-cql_int32 get_blob_size(cql_blob_ref b) {
-  return (cql_int32)cql_get_blob_size(b);
 }
 
 // for making buffers that are broken

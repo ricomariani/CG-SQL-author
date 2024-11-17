@@ -4538,6 +4538,8 @@ create table storage_one_long(
 
 TEST!(blob_serialization,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
   declare cursor_both cursor like storage_both;
@@ -4727,10 +4729,13 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
 TEST!(blob_serialization_null_cases,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   declare cursor_nulls cursor like storage_nullable;
   fetch cursor_nulls using
     null f, null t, null i, null l, null r, null bl, null str;
@@ -4748,6 +4753,8 @@ BEGIN
   EXPECT!(test_cursor.r is null);
   EXPECT!(test_cursor.bl is null);
   EXPECT!(test_cursor.str is null);
+
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
 TEST!(corrupt_blob_deserialization,
@@ -4798,6 +4805,8 @@ END);
 
 TEST!(bogus_varint,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let control_blob := (select X'490001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_int>;
   test_blob := control_blob;
@@ -4822,10 +4831,14 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
+
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
 TEST!(bogus_varlong,
 BEGIN
+  @echo lua, "cql_disable_tracing = true\n";
+
   let control_blob := (select X'4C0001');  -- one byte zigzag encoding of -1
   declare test_blob blob<storage_one_long>;
   test_blob := control_blob;
@@ -4850,6 +4863,7 @@ BEGIN
     caught := true;
   end;
   EXPECT!(caught);
+  @echo lua, "cql_disable_tracing = false\n";
 END);
 
 proc round_trip_int(value int!)

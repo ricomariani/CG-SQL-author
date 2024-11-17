@@ -4888,6 +4888,110 @@ begin
   EXPECT!(C.x == D.x);
 end;
 
+[[blob_storage]]
+create table base_blob(
+  f1 bool,
+  f2 int,
+  f3 long,
+  f4 real,
+  f5 text,
+  f6 blob,
+  g1 bool,
+  g2 int,
+  g3 long,
+  g4 real,
+  g5 text,
+  g6 blob,
+  h1 bool!,
+  h2 int!,
+  h3 long!,
+  h4 real!,
+  h5 text!,
+  h6 blob!
+);
+
+[[blob_storage]]
+create table extended_blob (
+ like base_blob,
+  i1 bool,
+  i2 int,
+  i3 long,
+  i4 real,
+  i5 text,
+  i6 blob
+);
+
+
+TEST!(blob_storage_binary_compat,
+BEGIN
+  cursor base_cursor like base_blob;
+  cursor ext_cursor like extended_blob;
+
+  let a_blob := (select "first blob" ~blob~);
+  let b_blob := (select "second blob" ~blob~);
+
+  fetch ext_cursor using
+    null f1,
+    null f2,
+    null f3,
+    null f4,
+    null f5,
+    null f6,
+    true g1,
+    1 g2,
+    2000000000L g3,
+    3.25 g4,
+    "a string" g5,
+    a_blob g6,
+    false h1,
+    500 h2,
+    4000000000000L h3,
+    9.75 h4,
+    "a second string" h5,
+    b_blob h6,
+    null i1,
+    null i2,
+    null i3,
+    null i4,
+    "an unused string" i5,
+    null i6;
+
+  var b blob<extended_blob>;
+  set b from cursor ext_cursor;
+
+  let actual_hex := hex(b);
+  let expected_hex :=
+     "66696C64736266696C64736246494C44534266696C64736200C00F090280D0AC"
+     "F30E0000000000000A406120737472696E670014666972737420626C6F62E807"
+     "8080A2A9EAE801000000000080234061207365636F6E6420737472696E670016"
+     "7365636F6E6420626C6F62616E20756E7573656420737472696E6700";
+
+  -- this is true on all platforms!
+  EXPECT!(actual_hex == expected_hex);
+
+  -- type alias so we can try fetching from the future
+  let b2 := b ~blob<base_blob>~;
+
+  -- the fetched values are the same as the originals
+  -- up to the fields that are present
+  fetch base_cursor from b2;
+  let base_text := cql_cursor_format(base_cursor);
+  let ext_text := cql_cursor_format(ext_cursor);
+  EXPECT!(substr(ext_text, 1, length(base_text)) == base_text);
+
+  let expected_cursor_value :=
+    "f1:null|f2:null|f3:null|f4:null|f5:null|f6:null|"
+    "g1:true|g2:1|g3:2000000000|g4:3.25|g5:a string|g6:length 10 blob|"
+    "h1:false|h2:500|h3:4000000000000|h4:9.75|h5:a second string|h6:length 11 blob|"
+    "i1:null|i2:null|i3:null|i4:null|i5:an unused string|i6:null";
+
+  EXPECT!(ext_text == expected_cursor_value);
+
+  -- for debugging
+  -- printf("%s\n", ext_text);
+  -- printf("%s\n", base_text);
+end);
+
 declare const group long_constants (
   long_const_1 = -9223372036854775807L,
   long_const_2 = -9223372036854775808L,

@@ -3210,8 +3210,8 @@ cql_code cql_serialize_to_blob(
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref blob_ref = *(cql_blob_ref *)(cursor + offset);
           const void *bytes = cql_get_blob_bytes(blob_ref);
-          cql_uint32 size = cql_get_blob_size(blob_ref);
-          cql_append_value(b, size);
+          cql_int32 size = cql_get_blob_size(blob_ref);
+          cql_write_varint_32(&b, size);
           cql_bytebuf_append(&b, bytes, size);
           break;
         }
@@ -3269,8 +3269,8 @@ cql_code cql_serialize_to_blob(
           if (blob_ref) {
             cql_setbit(bits, nullable_index);
             const void *bytes = cql_get_blob_bytes(blob_ref);
-            uint32_t size = cql_get_blob_size(blob_ref);
-            cql_append_value(b, size);
+            cql_int32 size = cql_get_blob_size(blob_ref);
+            cql_write_varint_32(&b, size);
             cql_bytebuf_append(&b, bytes, size);
           }
           break;
@@ -3468,7 +3468,6 @@ cql_code cql_deserialize_from_blob(
     bool fetch_data = false;
     bool needed_notnull = !!(type & CQL_DATA_TYPE_NOT_NULL);
 
-
     if (i >= actual_count) {
       // we don't have this field
       fetch_data = false;
@@ -3560,8 +3559,10 @@ cql_code cql_deserialize_from_blob(
         }
         case CQL_DATA_TYPE_BLOB: {
           cql_blob_ref *blob_ref = (cql_blob_ref *)(cursor + offset);
-          uint32_t byte_count;
-          cql_read_var(&input, byte_count);
+          int32_t byte_count;
+          if (!cql_read_varint_32(&input, &byte_count)) {
+            goto error;
+          }
           const uint8_t *result;
           if (!cql_input_inline_bytes(&input, &result, byte_count)) {
             goto error;
@@ -3595,6 +3596,7 @@ cql_code cql_deserialize_from_blob(
           cql_nullable_bool *bool_data = (cql_nullable_bool *)(cursor + offset);
           bool_data->value = 0;
           bool_data->is_null = true;
+          bool_index++;
           break;
         }
         case CQL_DATA_TYPE_STRING: {

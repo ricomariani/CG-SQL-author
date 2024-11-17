@@ -4935,7 +4935,7 @@ BEGIN
   EXPECT!(z == C.v);
 END);
 
-TEST_C!(serialization_tricky_values,
+TEST!(serialization_tricky_values,
 BEGIN
   call round_trip_int(0);
   call round_trip_int(1);

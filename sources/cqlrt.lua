@@ -1230,7 +1230,7 @@ end
 
 function cql_varint_encode(x)
   local result = {}
-  while x > 0 do
+  while x > 0 or #result == 0 do
     local b = x & 0x7F
     x = x >> 7
     if x > 0 then
@@ -1417,11 +1417,17 @@ function cql_varint_decode(x, pos)
   local result = 0
   local shift = 0
   local b = 0
+  local count = 0
   repeat
     b = string.byte(x, pos)
+    if b == nil or count >= 20 then
+      print("err decode:", b, "pos", pos, "/", #x)
+      return nil, pos
+    end
     pos = pos + 1
     result = result | ((b & 0x7F) << shift)
     shift = shift + 7
+    count = count + 1
   until b < 0x80
   result = cql_zigzag_decode(result)
   return result, pos
@@ -1530,16 +1536,32 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
       C[field], pos = cql_varint_decode(buffer, pos)
+      if C[field] == nil then
+        rc = -1
+        goto cql_error
+      end
     elseif code == CQL_ENCODED_TYPE_INT then
       if cql_getbit(bits, nullable_index) then
         C[field], pos = cql_varint_decode(buffer, pos)
+        if C[field] == nil then
+          rc = -2
+          goto cql_error
+        end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
       C[field], pos = cql_varint_decode(buffer, pos)
+      if C[field] == nil then
+        rc = -3
+        goto cql_error
+      end
     elseif code == CQL_ENCODED_TYPE_LONG then
       if cql_getbit(bits, nullable_index) then
         C[field], pos = cql_varint_decode(buffer, pos)
+        if C[field] == nil then
+          rc = -4
+          goto cql_error
+        end
       end
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
@@ -1558,10 +1580,18 @@ function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
       nullable_index = nullable_index + 1
     elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
       chunk_size, pos = cql_varint_decode(buffer, pos)
+      if chunk_size == nil then
+        rc = -5
+        goto cql_error
+      end
       C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
     elseif code == CQL_ENCODED_TYPE_BLOB then
       if cql_getbit(bits, nullable_index) then
         chunk_size, pos = cql_varint_decode(buffer, pos)
+        if chunk_size == nil then
+          rc = -6
+          goto cql_error
+        end
         C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
       end
       nullable_index = nullable_index + 1

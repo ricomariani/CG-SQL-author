@@ -377,6 +377,93 @@ These functions all work with an unspecified cursor format.  These accept a so-c
 
 Pipeline syntax is availabe for these, you can use `C:format`, `C:count`, `C:type(i)`, `C:to_bool(i)`, `C:to_int(i)` etc.
 
+*Dictionaries*
+
+Each of the following returns an object of the indicated type.
+
+* `cql_string_dictionary_create`  -- values are strings (`text`)
+* `cql_object_dictionary_create`  -- values are any `object` esp. boxed values
+* `cql_long_dictionary_create` -- values are `long`
+* `cql_real_dictionary_create` -- values are `real`
+
+The `add` functions return `true` if an object was added, `false` if it was replaced.
+
+* `cql_string_dictionary_add` -- add a string (`text`)
+* `cql_object_dictionary_add` -- add an `object`
+* `cql_long_dictionary_add` -- add a `long`
+* `cql_real_dictionary_add` -- add a `real`
+
+The `find` functions return null if there is no such value or else the stored value.
+Each function requires the dictionary and the key to find.  The key is always a string
+(i.e. `text`).
+
+* `cql_string_dictionary_find`
+* `cql_object_dictionary_find`
+* `cql_long_dictionary_find`
+* `cql_real_dictionary_find`
+
+The pipeline syntax `dict:add(key, value)` works for all of the above.  Similarly,
+`dict:find(key)` works.  Array forms `dict[key] := value` and `x := dict[value]`
+also work and result in the same calls.  The long form name is really only needed
+to create a dictionary.
+
+>Note: Blob value verisons are coming soon but not yet supported.
+
+*Lists*
+
+As with dictionaries there are some simple built in lists.  These have limited
+functionality but they are very handy for short term storage.
+
+Each of the following returns an object of the indicated type.
+
+* `cql_string_list_create`  -- values are strings (`text`)
+* `cql_long_list_create` -- values are `long`
+* `cql_real_list_create` -- values are `real`
+
+The list functions are limited to `add` `get_at` `set_at` and `count`
+
+* `cql_string_list_add` -- add a string (`text`) at the end
+* `cql_long_list_add` -- add a `long` at the end
+* `cql_real_list_add` -- add a `real` at the end
+
+Getters accept the list and an index, the index must be within bounds.
+
+* `cql_string_list_get_at` -- gets the string (`text`) at the indicated index
+* `cql_long_list_get_at` -- gets the `long` at the indicated index
+* `cql_real_list_get_at` -- gets the `real` at the indicated index
+
+Setters accept the list and an index, the index must be within bounds.
+
+* `cql_string_list_set_at` -- sets the string (`text`) at the indicated index
+* `cql_long_list_set_at` -- sets the `long` at the indicated index
+* `cql_real_list_set_at` -- sets the `real` at the indicated index
+
+And, finally, item count
+
+* `cql_string_list_count` -- sets the string (`text`) at the indicated index
+* `cql_long_list_count` -- sets the `long` at the indicated index
+* `cql_real_list_count` -- sets the `real` at the indicated index
+
+Lists can use pipeline notation such as:
+
+```sql
+  let list := cql_string_list_create():add("hello"):add("goodbye");
+  EXPECT!(2 == list.count);
+  EXPECT!("hello" == list[0]);
+  EXPECT!("goodbye" == list[1]);
+  list[0] := "salut";
+  EXPECT!("salut" == list[0]);
+```
+
+>Note: Lists use property notation for their `count`. This could have been a
+>`:count` function also generating the same count but by convention we only use
+>`:foo` when the operation is more complicated than a simple property fetch.
+> `@op cql_long_list : call count as cql_long_list_count;` would add `:count`.
+> The default is `@op cql_long_list : get count as cql_long_list_count;` which
+> allows `.count`.  The `@op` directive is discussed below.
+
+>Note: Blob value verisons are coming soon but not yet supported.
+
 *Special Functions*
  * nullable
  * sensitive
@@ -429,41 +516,112 @@ visible together:
 |14|`@op cursor : call foo as foo_bar;` | `C:foo(...)` | `foo_bar(C, ...)`|
 |15|`@op null : call foo as foo_null;' | `null:foo(...)` | `foo_null(null, ...)`|
 
-Now let's briefly go over each of these forms.  In all cases the transform is only applied if `expr` is of type `T`.  No type conversion is applied at this point, however only the base type must match so the transformation will be applied regardless of the nullability or sensitivity of `expr`.  If `expr` is of a suitable type the transform is applied and the call is then checked for errors as usual.  Based on the type of replacement function an implicit conversion might then be required.  Note that the types of any additional arguments are not considered when deciding to do the transform but they can cause errors after the transform has been applied. After the transform replacement expression, including all arguments, are type checked as usual and errors could result from arguments not being compatible with the transform.  This is no different than if you had written `func(expr1, expr2, etc..)` with some of the arguments being not appropriate for `func`.
+Now let's briefly go over each of these forms.  In all cases the transform is
+only applied if `expr` is of type `T`.  No type conversion is applied at this
+point, however only the base type must match so the transformation will be
+applied regardless of the nullability or sensitivity of `expr`.  If `expr` is of
+a suitable type the transform is applied and the call is then checked for errors
+as usual.  Based on the type of replacement function an implicit conversion
+might then be required.  Note that the types of any additional arguments are not
+considered when deciding to do the transform but they can cause errors after the
+transform has been applied. After the transform replacement expression,
+including all arguments, are type checked as usual and errors could result from
+arguments not being compatible with the transform.  This is no different than if
+you had written `func(expr1, expr2, etc..)` with some of the arguments being not
+appropriate for `func`.
 
-1. With no declaration `expr:func()` is always replaced with `func(expr)`.  If there are no arguments `expr:func` may be used for brevity it is no different than `expr:func()`.
+1. With no declaration `expr:func()` is always replaced with `func(expr)`.  If
+   there are no arguments `expr:func` may be used for brevity it is no different
+   than `expr:func()`.
 
-2. Here a call pipelined call to `func` with `expr` matching `T` becomes a normal call to `your_func`.
+2. Here a call pipelined call to `func` with `expr` matching `T` becomes a
+   normal call to `your_func`.
 
-3. This form is a special case of (2).  CQL first looks for a match with the "kind", if there is one that is used preferrably. There are examples in [Pipeline Notation](./03_expressions_fundamentals/#pipeline-function-notation).  This lets you have a generic conversion and more specific conversions if needed.  e.g. you might have formatting for any `int` but you have special formatting for `int<task_id>`.
+3. This form is a special case of (2).  CQL first looks for a match with the
+   "kind", if there is one that is used preferrably. There are examples in
+   [Pipeline
+   Notation](./03_expressions_fundamentals/#pipeline-function-notation).  This
+   lets you have a generic conversion and more specific conversions if needed.
+   e.g. you might have formatting for any `int` but you have special formatting
+   for `int<task_id>`.
 
-4. This form defines a specific property getter.  Only types with a kind can have such getters so declaring a transform with a `T` that has no kind is useless and likely will produce errors at some point. The getter is type checked as usual after the replacement.
+4. This form defines a specific property getter.  Only types with a kind can
+   have such getters so declaring a transform with a `T` that has no kind is
+   useless and likely will produce errors at some point. The getter is type
+   checked as usual after the replacement.
 
-5. This form defines a specific property setter.  Only types with a kind can have such setters so declaring a transform with a `T` that has no kind is useless and likely will produce errors at some point. The setter is type checked as usual after the replacement.
+5. This form defines a specific property setter.  Only types with a kind can
+   have such setters so declaring a transform with a `T` that has no kind is
+   useless and likely will produce errors at some point. The setter is type
+   checked as usual after the replacement.
 
-6. This form declares a generic "getter", the property being fetched becomes a string argument.  This is useful if you have a bag of propreties of the same type and a generic "get" function.  Note that specific properties are consulted first (i.e. rule 4).
+6. This form declares a generic "getter", the property being fetched becomes a
+   string argument.  This is useful if you have a bag of propreties of the same
+   type and a generic "get" function.  Note that specific properties are
+   consulted first (i.e. rule 4).
 
-7. This form declares a generic "setter", the property being set becomes a string argument.  This is useful if you have a bag of propreties of the same type and a generic "set" function. Note that specific properties are consulted first (i.e. rule 5).
+7. This form declares a generic "setter", the property being set becomes a
+   string argument.  This is useful if you have a bag of propreties of the same
+   type and a generic "set" function. Note that specific properties are
+   consulted first (i.e. rule 5).
 
-8. This form defines a transform for array-like read semantics.  A matching array operation is turned into a function call and all the array indices become function arguments.  Only the type of the expression being indexed is considered when deciding to do the transform. As usual, the replacement is checked and errors could result if the function is not suitable.
+8. This form defines a transform for array-like read semantics.  A matching
+   array operation is turned into a function call and all the array indices
+   become function arguments.  Only the type of the expression being indexed is
+   considered when deciding to do the transform. As usual, the replacement is
+   checked and errors could result if the function is not suitable.
 
-9. This form defines a transform for array-like write semantics.  A matching array operation is turned into a function call and all the array indices become function arguments, including the value to set. Only the type of the expression being indexed is considered when deciding to do the transform. As usual, the replacement is checked and errors could result if the function is not suitable.
+9. This form defines a transform for array-like write semantics.  A matching
+   array operation is turned into a function call and all the array indices
+   become function arguments, including the value to set. Only the type of the
+   expression being indexed is considered when deciding to do the transform. As
+   usual, the replacement is checked and errors could result if the function is
+   not suitable.
 
-10. This form allows for a "functor-like" syntax where there is no function name provided.  The name in the `@op` directive becomes the base name of the replacement function.  The base type names of all the arguments (but not `expr`) are included in the replacement.  As always the type of `expr` must match the directive.  The replacement could generate errors if a function is missing (e.g. you have no `f_int_real` variant) or if the arguments are not type compatible (e.g. if the signature or the `f_int_real` variant isn't actually `int` and `real`).
+10. This form allows for a "functor-like" syntax where there is no function name
+    provided.  The name in the `@op` directive becomes the base name of the
+    replacement function.  The base type names of all the arguments (but not
+    `expr`) are included in the replacement.  As always the type of `expr` must
+    match the directive.  The replacement could generate errors if a function is
+    missing (e.g. you have no `f_int_real` variant) or if the arguments are not
+    type compatible (e.g. if the signature or the `f_int_real` variant isn't
+    actually `int` and `real`).
 
-11. The replacement system is flexible enough to allow arbitary operators to be replaced.  At this point only `->` is supported and it is specified by "arrow".  The replacement happens if the left argument is exactly `T`.  In this form the right argumentcan be any thing.  The result of the replacement is type checked as usual.
+11. The replacement system is flexible enough to allow arbitary operators to be
+    replaced.  At this point only `->` is supported and it is specified by
+    "arrow".  The replacement happens if the left argument is exactly `T`.  In
+    this form the right argumentcan be any thing.  The result of the replacement
+    is type checked as usual.
 
-12. This is just like (11) except that the type of the right argument has been partially specified, it must have the indicated base type T2, such as `int`, `real`, etc.  If this form matches the replacement takes precedence over (11). The result of the replacement is type checked as usual.
+12. This is just like (11) except that the type of the right argument has been
+    partially specified, it must have the indicated base type T2, such as `int`,
+    `real`, etc.  If this form matches the replacement takes precedence over
+    (11). The result of the replacement is type checked as usual.
 
-13. This is just like (12) except that the type and kind of the right argument has been specified, it must have the indicated base type T2 and the indicated kind.  If this form matches the replacement takes precedence over (12).  The result of the replacement is type checked as usual.
+13. This is just like (12) except that the type and kind of the right argument
+    has been specified, it must have the indicated base type T2 and the
+    indicated kind.  If this form matches the replacement takes precedence over
+    (12).  The result of the replacement is type checked as usual.
 
-14. This form allows you to create pipeline functions on cursor types.  The replacement function will be declared with a dynamic cursor as the first argument. The result of the replacement is type checked as usual.
+14. This form allows you to create pipeline functions on cursor types.  The
+    replacement function will be declared with a dynamic cursor as the first
+    argument. The result of the replacement is type checked as usual.
 
-15. This form allows you to create pipeline functions on the null literal.  The replacement function will get null as its first argument and this can be accepted by any nullable type. This form is of limited use as it only is triggered by null literals and these are only likely to appear in a pipeline in the context of a macro. The result of the replacement is type checked as usual.
+15. This form allows you to create pipeline functions on the null literal.  The
+    replacement function will get null as its first argument and this can be
+    accepted by any nullable type. This form is of limited use as it only is
+    triggered by null literals and these are only likely to appear in a pipeline
+    in the context of a macro. The result of the replacement is type checked as
+    usual.
 
-In addition to "arrow" the identifiers "lshift", "rshift" and "concat" maybe used to similarly remap `<<`, `>>`, and `||` respectively.  The same rules otherwise apply.  Note that the fact that these operators have different binding strengths can be very useful in building fluent-style pipelines.
+In addition to "arrow" the identifiers "lshift", "rshift" and "concat" maybe
+used to similarly remap `<<`, `>>`, and `||` respectively.  The same rules
+otherwise apply.  Note that the fact that these operators have different binding
+strengths can be very useful in building fluent-style pipelines.
 
-Other operators may be added in the future, they would follow the patterns for rules 11, 12, and 13 with only the "arrow" keyword varying.  You could imagine "add", "sub", "mult" etc. for other operators.
+Other operators may be added in the future, they would follow the patterns for
+rules 11, 12, and 13 with only the "arrow" keyword varying.  You could imagine
+"add", "sub", "mult" etc. for other operators.
 
 #### Example Transforms
 

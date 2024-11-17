@@ -45,8 +45,6 @@ void take_bool_not_null(cql_bool x, cql_bool y);
 cql_string_ref _Nullable string_create(void);
 cql_blob_ref _Nonnull blob_from_string(cql_string_ref str);
 
-extern cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i);
-
 static int32_t steps_until_fail = 0;
 static int32_t trace_received = 0;
 
@@ -1735,11 +1733,6 @@ cql_code some_integers_fetch(
     cql_int32 start,
     cql_int32 stop) {
   return some_integers_fetch_results(_db_, (some_integers_result_set_ref _Nullable *_Nonnull)rs, start, stop);
-}
-
-// get the indexed character and return it as an integer for CQL consumpsion
-cql_int32 get_blob_byte(cql_blob_ref b, cql_int32 i) {
-  return (cql_int32)(((uint8_t *)cql_get_blob_bytes(b))[i]);
 }
 
 // for making buffers that are broken

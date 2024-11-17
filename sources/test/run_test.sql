@@ -152,9 +152,7 @@ declare select function bcreatekey no check blob;
 declare select function bupdateval no check blob;
 declare select function bupdatekey no check blob;
 
-declare function get_blob_byte(b blob!, i int!) int!;
 declare function create_truncated_blob(b blob!, truncated_size int!) create blob!;
-
 declare function blob_from_string(str text @sensitive) create blob!;
 declare function string_from_blob(b blob @sensitive) create text!;
 declare procedure _cql_init_extensions() using transaction;

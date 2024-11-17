@@ -6704,7 +6704,7 @@ BEGIN
   EXPECT!(_nil:to_blob IS NULL);
   EXPECT!(_nil:to_object IS NULL);
   EXPECT!(_nil:type IS CQL_DATA_TYPE_NULL);
-  
+
 END);
 
 TEST!(object_dictionary,

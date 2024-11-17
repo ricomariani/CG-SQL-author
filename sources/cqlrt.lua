@@ -895,7 +895,7 @@ function cql_cursor_get_any(C, types, fields, i, reqd)
   if i >= 0 and i < #fields then
     i = i + 1
     local code = string.byte(types, i, i)
-    local type = cql_data_type_decode[code] & CQL_DATA_TYPE_CORE 
+    local type = cql_data_type_decode[code] & CQL_DATA_TYPE_CORE
     if type == reqd then
       return C[fields[i]]
     end
@@ -1199,4 +1199,345 @@ function cql_unbox_object(x)
     return nil
   end
   return x[CQL_DATA_TYPE_OBJECT]
+end
+
+function cql_setbit(x, i)
+  local offset = 1 + i // 8
+  local bit = i % 8
+  x[offset] = x[offset] | (1<<bit)
+end
+
+function cql_getbit(x, i)
+  local offset = 1 + i // 8
+  local bit = i % 8
+  return cql_is_true(x[offset] & (1<<bit))
+end
+
+function cql_zigzag_encode_32(x)
+  return cql_zigzag_encode_64(x) & 0xFFFFFFFF
+end
+
+function cql_zigzag_encode_64(x)
+  if x < 0 then
+    return (x << 1) ~ -1
+  end
+  return x << 1
+end
+
+function cql_zigzag_decode(x)
+  return (x >> 1) ~ -(x & 1)
+end
+
+function cql_varint_encode(x)
+  local result = {}
+  while x > 0 do
+    local b = x & 0x7F
+    x = x >> 7
+    if x > 0 then
+      b = b | 0x80
+    end
+    table.insert(result, b)
+  end
+  result = string.char(table.unpack(result))
+  return result;
+end
+
+function cql_int_encode_32(x)
+  return cql_varint_encode(cql_zigzag_encode_32(x))
+end
+
+function cql_int_encode_64(x)
+  return cql_varint_encode(cql_zigzag_encode_64(x))
+end
+
+function cql_serialize_blob(C, C_types, C_fields)
+  local bool_count = 0
+  local var_encoding_count = 0
+  local nullable_count = 0
+  local header = {}
+  local pieces = {}
+  local bits = {}
+
+  -- output starts with null terminated types
+  table.insert(header, C_types)
+  table.insert(header, "\0")
+
+  -- We need to count bools and nullable types to figure out how many bytes we
+  -- need for the bit vector. We want to pre-allocate the bytes we will need.
+  -- Bools get stored in the bit vector. The is null state is stored in the bit
+  -- vector for nullable types.  We do not have an actual payload if the value
+  -- is a bool or null.  Note that a nullable bool uses both bits.
+  for i = 1, #C_types do
+    local code = string.byte(C_types, i)
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL or code == CQL_ENCODED_TYPE_BOOL then
+      bool_count = bool_count + 1;
+    end
+    if code >= string.byte("a") then
+      nullable_count = nullable_count + 1;
+    end
+  end
+
+  -- this is our bit vector, it will be emitted as bytes
+  bytes = (nullable_count + bool_count + 7) // 8
+  for i = 1, bytes do
+    table.insert(bits, 0)
+  end
+
+  local nullable_index = 0
+  local bool_index = 0
+
+  -- now we emit the actual data
+  for i = 1, #C_types do
+    local code = string.byte(C_types, i)
+    local field = C_fields[i]
+    local value = C[field]
+
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
+      if cql_is_true(value) then
+        cql_setbit(bits, nullable_count + bool_index)
+      end
+      bool_index = bool_index + 1
+    elseif code == CQL_ENCODED_TYPE_BOOL then
+      if value ~= nil then
+        cql_setbit(bits, nullable_count + bool_index)
+        if cql_is_true(value) then
+          cql_setbit(bits, i - 1)
+        end
+      end
+      bool_index = bool_index + 1
+    elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
+      table.insert(pieces, cql_int_encode_32(value))
+    elseif code == CQL_ENCODED_TYPE_INT then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, cql_int_encode_32(value))
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
+      table.insert(pieces, cql_int_encode_64(value))
+    elseif code == CQL_ENCODED_TYPE_LONG then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, cql_int_encode_64(value))
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
+      table.insert(pieces, string.pack("z", value))
+    elseif code == CQL_ENCODED_TYPE_STRING then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, string.pack("z", value))
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
+      table.insert(pieces, cql_int_encode_32(#value))
+      table.insert(pieces, value)
+    elseif code == CQL_ENCODED_TYPE_BLOB then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, cql_int_encode_32(#value))
+        table.insert(pieces, value)
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
+      table.insert(pieces, string.pack("d", value))
+    elseif code == CQL_ENCODED_TYPE_DOUBLE then
+      if value ~= nil then
+        cql_setbit(bits, nullable_index)
+        table.insert(pieces, string.pack("d", value))
+      end
+      nullable_index = nullable_index + 1
+    end
+  end
+
+  table.insert(header, string.char(table.unpack(bits)))
+
+  result = table.concat(header)..table.concat(pieces)
+  return 0, result
+end
+
+function format_as_hex(str)
+  local hex_output = {}
+  local printable_output = {}
+
+  for i = 1, #str do
+      local byte = string.byte(str, i)
+      -- Convert byte to hex
+      table.insert(hex_output, string.format("%02X", byte))
+
+      -- Check if the byte is printable (ASCII range 32-126)
+      if byte >= 32 and byte <= 126 then
+          -- If printable, store the character
+          table.insert(hex_output, string.char(byte)..",")
+      else
+          -- If not printable, store a placeholder (like -)
+          table.insert(hex_output, "-,")
+      end
+  end
+
+  -- Print hex and printable characters, 32 per line
+  local hex_index = 1
+  local line_length = 32
+
+  while hex_index <= #hex_output do
+    -- Collect hex characters for the current line
+    local line = {}
+    for i = 1, line_length do
+      if hex_index <= #hex_output then
+        table.insert(line, hex_output[hex_index])
+        hex_index = hex_index + 1
+      end
+    end
+
+    -- Print the current line with hex values and printable characters
+    print(table.concat(line, " "))
+  end
+end
+
+function cql_varint_decode(x, pos)
+  local result = 0
+  local shift = 0
+  local b = 0
+  repeat
+    b = string.byte(x, pos)
+    pos = pos + 1
+    result = result | ((b & 0x7F) << shift)
+    shift = shift + 7
+  until b < 0x80
+  result = cql_zigzag_decode(result)
+  return result, pos
+end
+
+function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
+  -- this will help us with missing fields, we have to assume that the buffer
+  -- might be from the past or future and have different fields, we can
+  -- handle a lot of these cases.
+  cql_empty_cursor(C, C_types, C_fields)
+
+  if buffer == nil then
+    return -1
+  end
+
+  local pos = 1
+  local types, pos = string.unpack("z", buffer, pos)
+
+  local nullable_count = 0;
+  local bool_count = 0;
+  local actual_count = #types;
+  local needed_count = #C_fields;
+  local code;
+  local type;
+  local chunk_size;
+  local i = 0;
+
+  for i = 1, actual_count do
+    code = string.byte(types, i)
+
+    if code >= string.byte("a") then
+      nullable_count = nullable_count + 1;
+    end
+
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL or code == CQL_ENCODED_TYPE_BOOL then
+      bool_count = bool_count + 1;
+    end
+
+    -- Extra fields do not have to match, the assumption is that this is a
+    -- future version of the type talking to a past version.  The past version
+    -- sees only what it expects to see.  However, we did have to compute the
+    -- nullable_count and bool_count to get the bit vector size correct.
+    if i <= needed_count then
+      type = string.byte(C_types, i)
+
+      if type ~= code then
+        -- if the type doesn't match exactly we're still ok if the actual type
+        -- is not nullable and the required type is nullable.
+        if code + 32 ~= type then
+          rc = sqlite3.TYPE_MISMATCH
+          goto cql_error
+        end
+      end
+    end
+  end
+
+  -- if we have too few fields we can use null fillers, this is the versioning
+  -- policy, we will check that any missing fields are nullable.
+  for i = actual_count +1, needed_count do
+    local type = string.byte(C_types, i)
+    if type < string.byte("a") then
+      rc = sqlite3.TYPE_MISMATCH
+      goto cql_error
+    end
+    i = i + 1
+  end
+
+  bytes = (nullable_count + bool_count + 7) // 8
+
+  bits = {}
+  for i = 1, bytes do
+    bits[i] = string.byte(buffer, pos)
+    pos = pos + 1
+  end
+
+  -- all the fields are already zeroed out, we only need to set the ones that
+  -- are not null and not zero.
+  nullable_index = 0
+  bool_index = 0
+
+  for i = 1, actual_count do
+    field = C_fields[i]
+    code = string.byte(types, i)
+    if code == CQL_ENCODED_TYPE_BOOL_NOTNULL then
+      C[field] = cql_getbit(bits, bool_index)
+      bool_index = bool_index + 1
+    elseif code == CQL_ENCODED_TYPE_BOOL then
+      if cql_getbit(bits, nullable_index) then
+        C[field] = cql_getbit(bits, bool_index)
+      end
+      bool_index = bool_index + 1
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_INT_NOTNULL then
+      C[field], pos = cql_varint_decode(buffer, pos)
+    elseif code == CQL_ENCODED_TYPE_INT then
+      if cql_getbit(bits, nullable_index) then
+        C[field], pos = cql_varint_decode(buffer, pos)
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_LONG_NOTNULL then
+      C[field], pos = cql_varint_decode(buffer, pos)
+    elseif code == CQL_ENCODED_TYPE_LONG then
+      if cql_getbit(bits, nullable_index) then
+        C[field], pos = cql_varint_decode(buffer, pos)
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_DOUBLE_NOTNULL then
+      C[field], pos = string.unpack("d", buffer, pos)
+    elseif code == CQL_ENCODED_TYPE_DOUBLE then
+      if cql_getbit(bits, nullable_index) then
+        C[field], pos = string.unpack("d", buffer, pos)
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_STRING_NOTNULL then
+      C[field], pos = string.unpack("z", buffer, pos)
+    elseif code == CQL_ENCODED_TYPE_STRING then
+      if cql_getbit(bits, nullable_index) then
+        C[field], pos = string.unpack("z", buffer, pos)
+      end
+      nullable_index = nullable_index + 1
+    elseif code == CQL_ENCODED_TYPE_BLOB_NOTNULL then
+      chunk_size, pos = cql_varint_decode(buffer, pos)
+      C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
+    elseif code == CQL_ENCODED_TYPE_BLOB then
+      if cql_getbit(bits, nullable_index) then
+        chunk_size, pos = cql_varint_decode(buffer, pos)
+        C[field], pos = string.unpack("c" .. chunk_size, buffer, pos)
+      end
+      nullable_index = nullable_index + 1
+    end
+  end
+
+  C._has_row_ = true
+  rc = sqlite3.OK
+
+::cql_error::
+  return rc
 end

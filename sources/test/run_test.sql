@@ -4536,7 +4536,7 @@ create table storage_one_long(
   x long!
 );
 
-TEST_C!(blob_serialization,
+TEST!(blob_serialization,
 BEGIN
   let a_blob := blob_from_string("a blob");
   let b_blob := blob_from_string("b blob");
@@ -4729,7 +4729,7 @@ BEGIN
   EXPECT!(caught);
 END);
 
-TEST_C!(blob_serialization_null_cases,
+TEST!(blob_serialization_null_cases,
 BEGIN
   declare cursor_nulls cursor like storage_nullable;
   fetch cursor_nulls using

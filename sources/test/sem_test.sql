@@ -21433,6 +21433,48 @@ begin
   let a_blob := C:to_blob;
 end;
 
+-- TEST: ok to store the blob if blob and type specified and they match
+-- + {call_stmt}: ok dml_proc
+-- + {name cql_cursor_to_blob}: ok dml_proc
+-- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
+-- - error:
+proc use_direct_blob_forms()
+begin
+  cursor C for select 1 id, 'foo' name;
+  fetch C;
+
+  declare a_blob blob<structured_storage>!;
+  C:to_blob(a_blob);
+end;
+
+-- TEST: blob type not specified, this cannot do this store
+-- + CALL cql_cursor_to_blob(C, a_blob);
+-- + {call_stmt}: err
+-- * error: % blob variable must have a type-kind for type safety 'a_blob'
+-- +1 error:
+proc use_direct_to_blob_badly()
+begin
+  cursor C for select 1 id, 'foo' name;
+  fetch C;
+
+  declare a_blob blob!;
+  C:to_blob(a_blob);
+end;
+
+-- TEST: blob type not specified, this cannot do this store
+-- + CALL cql_cursor_from_blob(C, a_blob);
+-- + {call_stmt}: err
+-- * error: % blob variable must have a type-kind for type safety 'a_blob'
+-- +1 error:
+proc use_direct_from_blob_badly()
+begin
+  cursor C like select 1 id, 'foo' name;
+
+  let a_blob := (select 'x' ~blob~);
+  C:from_blob(a_blob);
+end;
+
 @attribute(cql:backed_by=simple_backing_table)
 create table basic_table(
   id integer primary key,

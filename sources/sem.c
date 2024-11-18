@@ -292,6 +292,7 @@ static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_n
 static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Nonnull ast_call, uint32_t arg_count);
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
+static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -22943,16 +22944,39 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     }
   }
 
-  // additional validation for cql_cursor_from_blob -- ensure blob is compatible
+  sem_proc_call_post_check(name, ast, arg_list);
+  if (is_error(ast)) {
+    return;
+  }
+
+  ast->sem = name_ast->sem;
+}
+
+// some procedures require additional checks, so far only two
+// if this list grows we'll use a name table like the other cases
+static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list) {
+  Contract(is_ast_call_stmt(ast));
+  Contract(!is_error(ast));
+  Contract(name);
+
   if (!StrCaseCmp("cql_cursor_from_blob", name)) {
+    // additional validation for cql_cursor_from_blob -- ensure blob is compatible
+    Contract(is_ast_arg_list(arg_list));
     EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
     EXTRACT_ANY_NOTNULL(blob, arg_list->right->left);
 
     // the final error is set by the helper, 'ast' will have the code regardless
     sem_validate_cursor_blob_compat(ast, cursor, blob, blob, cursor);
   }
+  else if (!StrCaseCmp("cql_cursor_to_blob", name)) {
+    // additional validation for cql_cursor_to_blob -- ensure blob is compatible
+    Contract(is_ast_arg_list(arg_list));
+    EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
+    EXTRACT_ANY_NOTNULL(blob, arg_list->right->left);
 
-  ast->sem = name_ast->sem;
+    // the final error is set by the helper, 'ast' will have the code regardless
+    sem_validate_cursor_blob_compat(ast, cursor, blob, cursor, blob);
+  }
 }
 
 // The fetch statement has two forms:

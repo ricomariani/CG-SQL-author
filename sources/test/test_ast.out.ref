@@ -1636,6 +1636,211 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_named_type}
+    | {name cql_blob_list}
+    | {type_object}
+      | {name cql_blob_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_list_create}
+    | {func_params_return}
+      | {create_data_type}
+        | {notnull}
+          | {name cql_blob_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_list_set_at}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name list}
+      | |   | {notnull}
+      | |     | {name cql_blob_list}
+      | | {params}
+      |   | {param}
+      |   | | {param_detail}
+      |   |   | {name index_}
+      |   |   | {notnull}
+      |   |     | {type_int}
+      |   | {params}
+      |     | {param}
+      |       | {param_detail}
+      |         | {name value_}
+      |         | {notnull}
+      |           | {type_blob}
+      | {notnull}
+        | {name cql_blob_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_list_get_at}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name list}
+      | |   | {notnull}
+      | |     | {name cql_blob_list}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name index_}
+      |       | {notnull}
+      |         | {type_int}
+      | {type_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_list_count}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      |   | {param_detail}
+      |     | {name list}
+      |     | {notnull}
+      |       | {name cql_blob_list}
+      | {notnull}
+        | {type_int}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_list_add}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name list}
+      | |   | {notnull}
+      | |     | {name cql_blob_list}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name value}
+      |       | {notnull}
+      |         | {type_blob}
+      | {notnull}
+        | {name cql_blob_list}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name cql_blob_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_blob_list_set_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name cql_blob_list}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_blob_list_get_at}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name cql_blob_list}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_blob_list_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name cql_blob_list}
+    | {op_vals}
+      | {name get}
+      | {op_vals}
+        | {name count}
+        | {name cql_blob_list_count}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_named_type}
     | {name cql_long_list}
     | {type_object}
       | {name cql_long_list}

@@ -6512,6 +6512,163 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_blob_list_create () CREATE OBJECT<cql_blob_list>!
+
+    {
+      "name" : "cql_blob_list_create",
+      "args" : [
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_blob_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 1
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_blob_list_set_at (list OBJECT<cql_blob_list>!, index_ INT!, value_ BLOB!) OBJECT<cql_blob_list>!
+
+    {
+      "name" : "cql_blob_list_set_at",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_blob_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value_",
+          "type" : "blob",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_blob_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_blob_list_get_at (list OBJECT<cql_blob_list>!, index_ INT!) BLOB
+
+    {
+      "name" : "cql_blob_list_get_at",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_blob_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "index_",
+          "type" : "integer",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "blob",
+        "isNotNull" : 0
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_blob_list_count (list OBJECT<cql_blob_list>!) INT!
+
+    {
+      "name" : "cql_blob_list_count",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_blob_list",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "integer",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE FUNC cql_blob_list_add (list OBJECT<cql_blob_list>!, value BLOB!) OBJECT<cql_blob_list>!
+
+    {
+      "name" : "cql_blob_list_add",
+      "args" : [
+        {
+          "name" : "list",
+          "type" : "object",
+          "kind" : "cql_blob_list",
+          "isNotNull" : 1
+        },
+        {
+          "name" : "value",
+          "type" : "blob",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "returnType" : {
+        "type" : "object",
+        "kind" : "cql_blob_list",
+        "isNotNull" : 1
+      },
+      "createsObject" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
     DECLARE FUNC cql_long_list_create () CREATE OBJECT<cql_long_list>!
 
     {

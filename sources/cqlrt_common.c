@@ -4337,14 +4337,14 @@ cql_string_ref _Nonnull cql_string_list_get_at(
 // Edits the string item in place
 cql_object_ref _Nonnull cql_string_list_set_at(
   cql_object_ref _Nonnull list,
-  int32_t index,
+  cql_int32 index,
   cql_string_ref _Nonnull value)
 {
   cql_contract(list);
   cql_contract(value);
 
   cql_bytebuf *_Nonnull self = _cql_generic_object_get_data(list);
-  int32_t count = self->used / sizeof(cql_string_ref);
+  cql_int32 count = self->used / sizeof(cql_string_ref);
   cql_contract(index >= 0 && index < count);
   cql_invariant(self->ptr);
   size_t offset = index * sizeof(cql_string_ref);
@@ -4352,6 +4352,41 @@ cql_object_ref _Nonnull cql_string_list_set_at(
   cql_set_string_ref(data, value);
 
   return list;
+}
+
+cql_object_ref _Nonnull cql_blob_list_create(void) {
+  // the details are the same for strings as blobs
+  return cql_string_list_create();
+}
+
+cql_object_ref _Nonnull cql_blob_list_add(
+  cql_object_ref _Nonnull list,
+  cql_blob_ref _Nonnull value)
+{
+  // the details are the same for strings as blobs
+  return cql_string_list_add(list, (cql_string_ref)value);
+}
+
+cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list) {
+  // the details are the same for strings as blobs
+  return cql_string_list_count(list);
+}
+
+cql_blob_ref _Nonnull cql_blob_list_get_at(
+  cql_object_ref _Nonnull list,
+  cql_int32 index)
+{
+  // the details are the same for strings as blobs
+  return (cql_blob_ref)cql_string_list_get_at(list, index);
+}
+
+cql_object_ref _Nonnull cql_blob_list_set_at(
+  cql_object_ref _Nonnull list,
+  int32_t index,
+  cql_blob_ref _Nonnull value)
+{
+  // the details are the same for strings as blobs
+  return cql_string_list_set_at(list, index, (cql_string_ref)value);
 }
 
 // We just release the buffer memory

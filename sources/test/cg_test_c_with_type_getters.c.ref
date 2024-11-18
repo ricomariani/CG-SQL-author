@@ -51,6 +51,11 @@ extern cql_object_ref _Nonnull cql_string_list_set_at(cql_object_ref _Nonnull li
 extern cql_string_ref _Nullable cql_string_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
 extern cql_int32 cql_string_list_count(cql_object_ref _Nonnull list);
 extern cql_object_ref _Nonnull cql_string_list_add(cql_object_ref _Nonnull list, cql_string_ref _Nonnull string);
+extern cql_object_ref _Nonnull cql_blob_list_create(void);
+extern cql_object_ref _Nonnull cql_blob_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_blob_ref _Nonnull value_);
+extern cql_blob_ref _Nullable cql_blob_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);
+extern cql_int32 cql_blob_list_count(cql_object_ref _Nonnull list);
+extern cql_object_ref _Nonnull cql_blob_list_add(cql_object_ref _Nonnull list, cql_blob_ref _Nonnull value);
 extern cql_object_ref _Nonnull cql_long_list_create(void);
 extern cql_object_ref _Nonnull cql_long_list_set_at(cql_object_ref _Nonnull list, cql_int32 index_, cql_int64 value_);
 extern cql_int64 cql_long_list_get_at(cql_object_ref _Nonnull list, cql_int32 index_);

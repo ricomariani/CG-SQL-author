@@ -6944,12 +6944,12 @@ BEGIN
 
   EXPECT!(-1 == C:type(-1));
   EXPECT!(-1 == C:type(C:count));
-  EXPECT!(true == C:to_bool(0));
-  EXPECT!(1 == C:to_int(1));
-  EXPECT!(2L == C:to_long(2));
-  EXPECT!(3.0 == C:to_real(3));
-  EXPECT!("foo" == C:to_text(4));
-  EXPECT!(C:to_blob(5) IS NOT NULL);
+  EXPECT!(true == C:get_bool(0));
+  EXPECT!(1 == C:get_int(1));
+  EXPECT!(2L == C:get_long(2));
+  EXPECT!(3.0 == C:get_real(3));
+  EXPECT!("foo" == C:get_text(4));
+  EXPECT!(C:get_blob(5) IS NOT NULL);
 END);
 
 TEST!(cursor_accessors_nullable,
@@ -6966,12 +6966,12 @@ BEGIN
   EXPECT!(CQL_DATA_TYPE_STRING == C:type(4));
   EXPECT!(CQL_DATA_TYPE_BLOB == C:type(5));
 
-  EXPECT!(true == C:to_bool(0));
-  EXPECT!(1 == C:to_int(1));
-  EXPECT!(2L == C:to_long(2));
-  EXPECT!(3.0 == C:to_real(3));
-  EXPECT!("foo" == C:to_text(4));
-  EXPECT!(C:to_blob(5) IS NOT NULL);
+  EXPECT!(true == C:get_bool(0));
+  EXPECT!(1 == C:get_int(1));
+  EXPECT!(2L == C:get_long(2));
+  EXPECT!(3.0 == C:get_real(3));
+  EXPECT!("foo" == C:get_text(4));
+  EXPECT!(C:get_blob(5) IS NOT NULL);
 END);
 
 TEST!(cursor_accessors_object,
@@ -6979,9 +6979,9 @@ BEGIN
   let v := 1:box;
   cursor C like (obj object<cql_box>);
   fetch C from values(v);
-  EXPECT!(C:to_object(0) IS NOT NULL);
-  EXPECT!(C:to_object(-1) IS NULL);
-  EXPECT!(C:to_object(1) IS NULL);
+  EXPECT!(C:get_object(0) IS NOT NULL);
+  EXPECT!(C:get_object(-1) IS NULL);
+  EXPECT!(C:get_object(1) IS NULL);
 END);
 
 TEST!(null_casting,

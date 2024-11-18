@@ -5071,6 +5071,63 @@
 
     The statement ending at line XXXX
 
+    @ATTRIBUTE(cql:builtin)
+    DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!)
+
+    {
+      "name" : "cql_cursor_to_blob",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "binding" : "out",
+          "name" : "result",
+          "type" : "blob",
+          "isNotNull" : 1
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
+    @ATTRIBUTE(cql:builtin)
+    DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB)
+
+    {
+      "name" : "cql_cursor_from_blob",
+      "args" : [
+        {
+          "name" : "C",
+          "type" : "",
+          "isNotNull" : 0
+        },
+        {
+          "name" : "b",
+          "type" : "blob",
+          "isNotNull" : 0
+        }
+      ],
+      "attributes" : [
+        {
+          "name" : "cql:builtin",
+          "value" : 1
+        }
+      ],
+      "usesDatabase" : 0
+    },
+
+    The statement ending at line XXXX
+
     DECLARE PROC result_proc (id INT, t TEXT) (x INT, y INT)
 
     {

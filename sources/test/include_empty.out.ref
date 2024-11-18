@@ -1,9 +1,1 @@
-DECLARE FUNC cql_cursor_to_blob (C CURSOR) BLOB!;
-
-@OP CURSOR : call to_blob AS cql_cursor_to_blob;
-
-DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
-
-@OP CURSOR : call from_blob AS cql_cursor_from_blob;
-
 DECLARE x INT;

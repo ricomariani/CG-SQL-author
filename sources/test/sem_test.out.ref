@@ -2,65 +2,6 @@
 
 The statement ending at line XXXX
 
-DECLARE FUNC cql_cursor_to_blob (C CURSOR) BLOB!;
-
-  {declare_func_stmt}: blob notnull
-  | {name cql_cursor_to_blob}: blob notnull
-  | {func_params_return}
-    | {params}: ok
-    | | {param}: C: cursor variable in
-    |   | {param_detail}: C: cursor variable in
-    |     | {name C}: C: cursor variable in
-    |     | {type_cursor}: cursor
-    | {notnull}: blob notnull
-      | {type_blob}: blob
-
-The statement ending at line XXXX
-
-@OP CURSOR : call to_blob AS cql_cursor_to_blob;
-
-  {op_stmt}: ok
-  | {name CURSOR}
-  | {op_vals}
-    | {name call}
-    | {op_vals}
-      | {name to_blob}
-      | {name cql_cursor_to_blob}
-
-The statement ending at line XXXX
-
-DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
-
-  {declare_proc_stmt}: ok
-  | {proc_name_type}
-  | | {name cql_cursor_from_blob}: ok
-  | | {int 0}
-  | {proc_params_stmts}
-    | {params}: ok
-      | {param}: C: cursor variable in
-      | | {param_detail}: C: cursor variable in
-      |   | {name C}: C: cursor variable in
-      |   | {type_cursor}: cursor
-      | {params}
-        | {param}: b: blob variable in
-          | {param_detail}: b: blob variable in
-            | {name b}: b: blob variable in
-            | {type_blob}: blob
-
-The statement ending at line XXXX
-
-@OP CURSOR : call from_blob AS cql_cursor_from_blob;
-
-  {op_stmt}: ok
-  | {name CURSOR}
-  | {op_vals}
-    | {name call}
-    | {op_vals}
-      | {name from_blob}
-      | {name cql_cursor_from_blob}
-
-The statement ending at line XXXX
-
 DECLARE PROC printf NO CHECK;
 
   {declare_proc_no_check_stmt}: ok

@@ -93,6 +93,20 @@ DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 
 // The statement ending at line XXXX
 
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!);
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
+*/
+
+// The statement ending at line XXXX
+
 // The statement ending at line XXXX
 
 /*

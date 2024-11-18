@@ -691,6 +691,20 @@ cql_string_literal(_literal_26_abc_my_proc_check_type, "abc");
 @ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 */
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!);
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
+*/
 cql_int32 c_runtime_generation = 0;
 cql_int32 c_runtime_generation_on_else = 0;
 

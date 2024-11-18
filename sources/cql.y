@@ -3353,10 +3353,14 @@ cql_noexport CSTR cql_builtin_text() {
     "  CQL_DATA_TYPE_NOT_NULL  = 0x80"
     ");"
 
-    "declare function cql_cursor_to_blob(C cursor) blob!;"
+    "[[builtin]]"
+    "declare proc cql_cursor_to_blob(C cursor, out result blob!);"
+    "[[builtin]]"
     "@op cursor: call to_blob as cql_cursor_to_blob;"
 
+    "[[builtin]]"
     "declare proc cql_cursor_from_blob(C cursor, b blob);"
+    "[[builtin]]"
     "@op cursor: call from_blob as cql_cursor_from_blob;"
 
     "@@end_include@@"

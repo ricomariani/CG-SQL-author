@@ -4837,7 +4837,7 @@ create table structured_storage(
 );
 
 -- TEST: basic blob serialization case
--- + _rc_, B = cql_serialize_blob(C, C_types_, C_fields_);
+-- + _rc_, B = cql_cursor_to_blob(C, C_types_, C_fields_);
 -- + _rc_ = cql_cursor_from_blob(D, D_types_, D_fields_, B)
 proc blob_serialization_test()
 begin

@@ -4198,6 +4198,9 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
+  if (!strcmp("cql_cursor_to_blob", name) || !strcmp("cql_cursor_from_blob", name))
+    return;
+
   Contract(!current_proc);
 
   current_proc = ast;

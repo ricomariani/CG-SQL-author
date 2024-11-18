@@ -2,65 +2,6 @@
 
 The statement ending at line XXXX
 
-DECLARE FUNC cql_cursor_to_blob (C CURSOR) BLOB!;
-
-  {declare_func_stmt}
-  | {name cql_cursor_to_blob}
-  | {func_params_return}
-    | {params}
-    | | {param}
-    |   | {param_detail}
-    |     | {name C}
-    |     | {type_cursor}
-    | {notnull}
-      | {type_blob}
-
-The statement ending at line XXXX
-
-@OP CURSOR : call to_blob AS cql_cursor_to_blob;
-
-  {op_stmt}
-  | {name CURSOR}
-  | {op_vals}
-    | {name call}
-    | {op_vals}
-      | {name to_blob}
-      | {name cql_cursor_to_blob}
-
-The statement ending at line XXXX
-
-DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
-
-  {declare_proc_stmt}
-  | {proc_name_type}
-  | | {name cql_cursor_from_blob}
-  | | {int 0}
-  | {proc_params_stmts}
-    | {params}
-      | {param}
-      | | {param_detail}
-      |   | {name C}
-      |   | {type_cursor}
-      | {params}
-        | {param}
-          | {param_detail}
-            | {name b}
-            | {type_blob}
-
-The statement ending at line XXXX
-
-@OP CURSOR : call from_blob AS cql_cursor_from_blob;
-
-  {op_stmt}
-  | {name CURSOR}
-  | {op_vals}
-    | {name call}
-    | {op_vals}
-      | {name from_blob}
-      | {name cql_cursor_from_blob}
-
-The statement ending at line XXXX
-
 @MACRO(STMT_LIST) file_line!()
 BEGIN
   LET line := @MACRO_LINE;

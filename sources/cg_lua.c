@@ -3772,7 +3772,7 @@ static void cg_lua_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR cursor_name = ast->right->sem->name;
 
   // cursor formal expands to three actual arguments
-  bprintf(cg_main_output, "_rc_, %s = cql_cursor_from_blob(%s, %s_types_, %s_fields_);\n",
+  bprintf(cg_main_output, "_rc_, %s = cql_cursor_to_blob(%s, %s_types_, %s_fields_);\n",
     blob_name,
     cursor_name,
     cursor_name,

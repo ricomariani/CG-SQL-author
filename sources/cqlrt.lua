@@ -1491,7 +1491,7 @@ function cql_unpack_c(str, pos, size)
   end
 end
 
-function cql_deserialize_from_blob(buffer, C, C_types, C_fields)
+function cql_cursor_from_blob(C, C_types, C_fields, buffer)
   if C == nil then
     return -100
   end

@@ -6011,7 +6011,7 @@ static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
   CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "*" : "";
 
   bprintf(cg_main_output,
-    "_rc_ = cql_deserialize_from_blob(%s%s, &%s_dyn);\n", prefix, blob_value.ptr, cursor_name);
+    "_rc_ = cql_cursor_from_blob(&%s_dyn, %s%s);\n", cursor_name, prefix, blob_value.ptr);
   cg_error_on_rc_notequal("SQLITE_OK");
 
   CG_POP_EVAL(blob);
@@ -6027,7 +6027,7 @@ static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "" : "&";
 
   bprintf(cg_main_output,
-    "_rc_ = cql_serialize_to_blob(%s%s, &%s_dyn);\n", prefix, blob_name, cursor_name);
+    "_rc_ = cql_cursor_to_blob(&%s_dyn, %s%s);\n", cursor_name, prefix, blob_name);
   cg_error_on_rc_notequal("SQLITE_OK");
 }
 

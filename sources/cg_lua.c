@@ -3753,11 +3753,12 @@ static void cg_lua_fetch_cursor_from_blob_stmt(ast_node *ast) {
   CG_LUA_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
 
   bprintf(cg_main_output,
-    "_rc_ = cql_deserialize_from_blob(%s, %s, %s_types_, %s_fields_)\n",
-    blob_value.ptr,
+    "_rc_ = cql_cursor_from_blob(%s, %s_types_, %s_fields_, %s)\n",
     cursor_name,
     cursor_name,
-    cursor_name);
+    cursor_name,
+    blob_value.ptr
+  );
   cg_lua_error_on_not_sqlite_ok();
 
   CG_LUA_POP_EVAL(blob);

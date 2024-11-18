@@ -3109,9 +3109,9 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the cursor.  By the time this is called many checks have been made
 // about the suitability of this cursor for serialization (e.g. no OBJECT
 // fields). As a consequence we get a nice simple strategy that is flexible.
-cql_code cql_serialize_to_blob(
-  cql_blob_ref _Nullable *_Nonnull blob,
-  cql_dynamic_cursor *_Nonnull dyn_cursor)
+cql_code cql_cursor_to_blob(
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable *_Nonnull blob)
 {
   if (!*dyn_cursor->cursor_has_row) {
     return SQLITE_ERROR;
@@ -3354,9 +3354,9 @@ static void cql_clear_references_before_deserialization(
      goto error; \
    }
 
-cql_code cql_deserialize_from_blob(
-  cql_blob_ref _Nullable b,
-  cql_dynamic_cursor *_Nonnull dyn_cursor)
+cql_code cql_cursor_from_blob(  
+  cql_dynamic_cursor *_Nonnull dyn_cursor,
+  cql_blob_ref _Nullable b)
 {
   cql_bool *has_row = dyn_cursor->cursor_has_row;
   uint16_t *offsets = dyn_cursor->cursor_col_offsets;

@@ -5998,39 +5998,6 @@ static void cg_fetch_values_stmt(ast_node *ast) {
   }
 }
 
-// native blob storage support, these are just dyn cursor calls
-static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
-  CSTR cursor_name = ast->left->sem->name;
-
-  EXTRACT_ANY_NOTNULL(blob, ast->right);
-  Invariant(is_blob(blob->sem->sem_type));
-
-  CG_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
-
-  CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "*" : "";
-
-  bprintf(cg_main_output,
-    "_rc_ = cql_cursor_from_blob(_db_, &%s_dyn, %s%s);\n", cursor_name, prefix, blob_value.ptr);
-  cg_error_on_rc_notequal("SQLITE_OK");
-
-  CG_POP_EVAL(blob);
-}
-
-// native blob storage support, these are just dyn cursor calls
-static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_set_blob_from_cursor_stmt(ast));
-
-  CSTR blob_name  = ast->left->sem->name;
-  CSTR cursor_name = ast->right->sem->name;
-
-  CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "" : "&";
-
-  bprintf(cg_main_output,
-    "_rc_ = cql_cursor_to_blob(_db_, &%s_dyn, %s%s);\n", cursor_name, prefix, blob_name);
-  cg_error_on_rc_notequal("SQLITE_OK");
-}
-
 // Fetch has already been rigorously checked so we don't have to worry about
 // argument counts or type mismatches in the codegen.  We have two cases:
 //  * Fetch into variables
@@ -8761,8 +8728,6 @@ cql_noexport void cg_c_init(void) {
   STMT_INIT(loop_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_values_stmt);
-  STMT_INIT(set_blob_from_cursor_stmt);
-  STMT_INIT(fetch_cursor_from_blob_stmt);
   STMT_INIT(update_cursor_stmt);
   STMT_INIT(fetch_call_stmt);
 

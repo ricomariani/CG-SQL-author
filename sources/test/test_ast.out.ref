@@ -16647,12 +16647,6 @@ The statement ending at line XXXX
 
 The statement ending at line XXXX
 
-  {fetch_cursor_from_blob_stmt}
-  | {name C}
-  | {name b}
-
-The statement ending at line XXXX
-
   {declare_group_stmt}
   | {name foo}
   | {stmt_list}

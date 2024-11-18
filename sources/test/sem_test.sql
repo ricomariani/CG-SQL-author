@@ -21401,24 +21401,21 @@ create table structured_storage(
 );
 
 -- TEST: verify basic analysis of structure storage, correct case
--- + {set_blob_from_cursor_stmt}: ok
--- + {name a_blob}: a_blob: blob<structured_storage> variable
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 -- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
--- + {fetch_cursor_from_blob_stmt}: ok
 -- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
--- + {name a_blob}: a_blob: blob<structured_storage> variable
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 -- - error:
 proc blob_serialization_test()
 begin
   cursor C for select 1 id, 'foo' name;
   fetch C;
 
-  declare a_blob blob<structured_storage>;
-
-  set a_blob from cursor C;
+  declare a_blob blob<structured_storage>!;
+  C:to_blob(a_blob);
 
   cursor D like C;
-  fetch D from a_blob;
+  D:from_blob(a_blob);
 end;
 
 -- TEST: verify basic analysis of structure storage, correct case
@@ -22008,18 +22005,15 @@ end;
 -- - error:
 @BLOB_UPDATE_VAL BUPDATEVAL;
 
-
 -- TEST: verify type check on columns
--- * error: % in the cursor and the blob type, all columns must be an exact type match (expected text notnull; found integer notnull) 'name'
+-- * error: % in the cursor and the blob type, all columns must be an exact type match (expected integer notnull; found text notnull) 'name'
 -- +1 error:
 proc blob_serialization_test_type_mismatch()
 begin
   cursor C for select 1 id, 5 name;
   fetch C;
-
-  declare B blob<structured_storage>;
-
-  set B from cursor C;
+  declare B blob<structured_storage>!;
+  C:to_blob(B);
 end;
 
 -- TEST: verify blob type is a table
@@ -22029,10 +22023,8 @@ proc blob_serialization_test_type_not_a_table()
 begin
   cursor C for select 1 id, 'name' name;
   fetch C;
-
-  declare B blob<not_a_table>;
-
-  set  B from cursor C;
+  declare B blob<not_a_table>!;
+  C:to_blob(B);
 end;
 
 -- TEST: verify blob type is not a view (better error for this case)
@@ -22043,9 +22035,9 @@ begin
   cursor C for select 1 id, 'name' name;
   fetch C;
 
-  declare B blob<MyView>;
+  declare B blob<MyView>!;
 
-  set B from cursor C;
+  C:to_blob(B);
 end;
 
 -- TEST: verify blob type has a type kind
@@ -22056,21 +22048,19 @@ begin
   cursor C for select 1 id, 'name' name;
   fetch C;
 
-  declare B blob;
-
-  set B from cursor C;
+  declare B blob!;
+  C:to_blob(B);
 end;
 
 -- TEST: verify blob fetch from cursor; cursor has storage
--- * error: % cursor was not declared for storage 'C'
+-- * error: % cursor was not used with 'fetch [cursor]' 'C'
 -- +1 error:
 proc blob_serialization_test_no_storage()
 begin
   cursor C for select 1 id, 5 name;
 
   declare B blob<structured_storage>;
-
-  set B from cursor C;
+  C:to_blob(B);
 end;
 
 
@@ -22087,34 +22077,14 @@ begin
 end;
 
 -- TEST: blob storage types must use cql:blob_storage
--- + {fetch_values_stmt}: err
+-- + {call_stmt}: err
 -- * error: % the indicated table is not marked with @attribute(cql:blob_storage) 'foo'
 -- +1 error:
 proc blob_serialization_not_storage_table()
 begin
   declare b blob<foo>;
   cursor C like foo;
-  fetch C from b;
-end;
-
--- TEST: verify that errant blob reports correctly
--- + {fetch_cursor_from_blob_stmt}: err
--- * error: % string operand not allowed in 'NOT'
--- +1 error:
-proc blob_deseralized_from_err()
-begin
-  cursor C like foo;
-  fetch C from blob not 'x';
-end;
-
--- TEST: verify that errant blob reports correctly
--- + {fetch_cursor_from_blob_stmt}: err
--- * error: % fetch from blob operand is not a blob
--- +1 error:
-proc blob_deseralized_from_not_a_blob()
-begin
-  cursor C like foo;
-  fetch C from blob 1;
+  C:from_blob(b);
 end;
 
 -- TEST: can't put triggers on structured storage
@@ -22366,8 +22336,8 @@ begin
 
   declare b blob<has_row_check_blob>;
   cursor c2 like has_row_check_blob;
-  fetch c2 from b;
-  -- Legal due to the fetch values form.
+  c2:from_blob(b);
+  -- Legal due to the from blob we just did
   let x2 := c2.a;
 
   cursor c3 for select * from has_row_check_table;

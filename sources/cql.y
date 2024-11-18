@@ -272,7 +272,7 @@ static void cql_reset_globals(void);
 %token OBJECT TEXT BLOB LONG_ INT_ INTEGER LONG_INT LONG_INTEGER REAL ON UPDATE CASCADE ON_CONFLICT DO NOTHING
 %token DELETE INDEX FOREIGN REFERENCES CONSTRAINT UPSERT STATEMENT CONST
 %token INSERT INTO VALUES VIEW SELECT QUERY_PLAN EXPLAIN OVER WINDOW FILTER PARTITION RANGE ROWS GROUPS
-%token AS CASE WHEN FROM FROM_BLOB THEN ELSE END LEFT SWITCH
+%token AS CASE WHEN FROM THEN ELSE END LEFT SWITCH
 %token OUTER JOIN WHERE GROUP BY ORDER ASC NULLS FIRST LAST
 %token DESC INNER AUTOINCREMENT DISTINCT
 %token LIMIT OFFSET TEMP TRIGGER IF ALL CROSS USING RIGHT AT_EPONYMOUS
@@ -364,7 +364,7 @@ static void cql_reset_globals(void);
 %type <aval> declare_enum_stmt enum_values enum_value emit_enums_stmt emit_group_stmt
 %type <aval> declare_const_stmt const_values const_value emit_constants_stmt declare_group_stmt simple_variable_decls
 %type <aval> echo_stmt
-%type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape fetch_cursor_from_blob_stmt
+%type <aval> fetch_stmt fetch_values_stmt fetch_call_stmt from_shape
 %type <aval> guard_stmt
 %type <aval> ifdef_stmt ifndef_stmt ifdef ifndef
 %type <sval> elsedef endif
@@ -595,7 +595,6 @@ any_stmt:
   | fetch_call_stmt
   | fetch_stmt
   | fetch_values_stmt
-  | fetch_cursor_from_blob_stmt
   | guard_stmt
   | if_stmt
   | insert_stmt
@@ -2265,10 +2264,6 @@ continue_stmt:
 fetch_stmt:
   FETCH name INTO name_list  { $fetch_stmt = new_ast_fetch_stmt($name, $name_list); }
   | FETCH name  { $fetch_stmt = new_ast_fetch_stmt($name, NULL); }
-  ;
-
-fetch_cursor_from_blob_stmt:
-  FETCH name FROM_BLOB expr { $fetch_cursor_from_blob_stmt = new_ast_fetch_cursor_from_blob_stmt($name, $expr); }
   ;
 
 fetch_values_stmt:

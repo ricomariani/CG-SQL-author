@@ -2081,25 +2081,25 @@ declare_proc_no_check_stmt:
   ;
 
 declare_proc_stmt:
-  DECLARE procedure loose_name[name] '(' params ')'  {
+  DECLARE procedure loose_name[name] '(' func_params[params] ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_BASIC));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
-  | DECLARE procedure loose_name[name] '(' params ')' '(' typed_names ')'  {
+  | DECLARE procedure loose_name[name] '(' func_params[params] ')' '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure loose_name[name] '(' params ')' USING TRANSACTION  {
+  | DECLARE procedure loose_name[name] '(' func_params[params] ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, NULL)); }
-  | DECLARE procedure loose_name[name] '(' params ')' OUT '(' typed_names ')'  {
+  | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure loose_name[name] '(' params ')' OUT '(' typed_names ')' USING TRANSACTION  {
+  | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT '(' typed_names ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure loose_name[name] '(' params ')' OUT UNION '(' typed_names ')'  {
+  | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT UNION '(' typed_names ')'  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
-  | DECLARE procedure loose_name[name] '(' params ')' OUT UNION '(' typed_names ')' USING TRANSACTION  {
+  | DECLARE procedure loose_name[name] '(' func_params[params] ')' OUT UNION '(' typed_names ')' USING TRANSACTION  {
       ast_node *proc_name_flags = new_ast_proc_name_type($name, new_ast_option(PROC_FLAG_STRUCT_TYPE | PROC_FLAG_USES_OUT_UNION | PROC_FLAG_USES_DML));
       $declare_proc_stmt = new_ast_declare_proc_stmt(proc_name_flags, new_ast_proc_params_stmts($params, $typed_names)); }
   ;

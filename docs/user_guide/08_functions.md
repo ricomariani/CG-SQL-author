@@ -378,6 +378,7 @@ Each of the following returns an `object<cql_TYPE_dictionary` where `TYPE` is
 the indicated type.
 
 * `cql_string_dictionary_create`  -- values are strings (`text`)
+* `cql_blob_dictionary_create`  -- values are blobs
 * `cql_object_dictionary_create`  -- values are any `object` esp. boxed values
 * `cql_long_dictionary_create` -- values are `long`
 * `cql_real_dictionary_create` -- values are `real`
@@ -385,6 +386,7 @@ the indicated type.
 The `add` functions return `true` if an object was added, `false` if it was replaced.
 
 * `cql_string_dictionary_add` -- add a string (`text`)
+* `cql_blob_dictionary_add` -- add a `blob`
 * `cql_object_dictionary_add` -- add an `object`
 * `cql_long_dictionary_add` -- add a `long`
 * `cql_real_dictionary_add` -- add a `real`
@@ -394,6 +396,7 @@ Each function requires the dictionary and the key to find.  The key is always a 
 (i.e. `text`).
 
 * `cql_string_dictionary_find`
+* `cql_blob_dictionary_find`
 * `cql_object_dictionary_find`
 * `cql_long_dictionary_find` -- returns nullable long
 * `cql_real_dictionary_find` -- returns nullable real
@@ -402,8 +405,6 @@ The pipeline syntax `dict:add(key, value)` works for all of the above.  Similarl
 `dict:find(key)` works.  Array forms `dict[key] := value` and `x := dict[value]`
 also work and result in the same calls.  The long form name is really only needed
 to create a dictionary.
-
->Note: Blob value verisons are coming soon but not yet supported.
 
 ##### Lists
 
@@ -414,6 +415,7 @@ Each of the following returns an `object<cql_TYPE_list` where `TYPE` is the
 indicated type.
 
 * `cql_string_list_create`  -- values are strings (`text`)
+* `cql_blob_list_create`  -- values are `blob`
 * `cql_long_list_create` -- values are `long`
 * `cql_real_list_create` -- values are `real`
 
@@ -422,18 +424,21 @@ The list functions are limited to `add` `get_at` `set_at` and `count`
 These functions append the indicated value to the end of the list.
 
 * `cql_string_list_add` -- append a string (`text`) 
+* `cql_blob_list_add` -- append a `blob` 
 * `cql_long_list_add` -- append a `long` 
 * `cql_real_list_add` -- append a `real`
 
 Getters accept the list and an index, the index must be within bounds.
 
 * `cql_string_list_get_at` -- gets the string (`text`) at the indicated index
+* `cql_blob_list_get_at` -- gets the `blob` at the indicated index
 * `cql_long_list_get_at` -- gets the `long` at the indicated index
 * `cql_real_list_get_at` -- gets the `real` at the indicated index
 
 Setters accept the list, the index and a value, the index must be within bounds.
 
 * `cql_string_list_set_at` -- sets the string (`text`) at the indicated index
+* `cql_blob_list_set_at` -- sets the `blob` at the indicated index
 * `cql_long_list_set_at` -- sets the `long` at the indicated index
 * `cql_real_list_set_at` -- sets the `real` at the indicated index
 
@@ -441,6 +446,7 @@ And, finally, the item count functions, in each case this just gives the count
 of items in the list.
 
 * `cql_string_list_count`
+* `cql_blob_list_count`
 * `cql_long_list_count`
 * `cql_real_list_count`
 
@@ -461,8 +467,6 @@ Lists can use pipeline notation such as:
 > `@op cql_long_list : call count as cql_long_list_count;` would add `:count`.
 > The default is `@op cql_long_list : get count as cql_long_list_count;` which
 > allows `.count`.  The `@op` directive is discussed below.
-
->Note: Blob value verisons are coming soon but not yet supported.
 
 ##### Special Functions
 

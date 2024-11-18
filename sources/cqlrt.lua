@@ -690,13 +690,13 @@ function cql_partition_create()
   return {};
 end;
 
-function cql_make_str_key(key_table)
+function cql_make_str_key(key_table, fields)
   local key = ""
-  for k,v in pairs(key_table)
+  for i = 1, #fields
   do
-     if k ~= "_has_row_" then
-       key = key .. ":" .. tostring(v)
-     end
+    k = fields[i]
+    v = key_table[k]
+    key = key .. ":" .. tostring(v)
   end
   return key
 end
@@ -717,7 +717,7 @@ function cql_cursor_hash(key, key_types, key_fields)
      return 0
   end
 
-  return cql_hash_string(cql_make_str_key(key))
+  return cql_hash_string(cql_make_str_key(key, key_fields))
 end
 
 function cql_cursors_equal(k1, k1_types, k1_fields, k2, k2_types, k2_fields)
@@ -738,7 +738,7 @@ end
 
 function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cursor_types, cursor_fields)
   if not cursor._has_row_ then return false end
-  key = cql_make_str_key(key)
+  key = cql_make_str_key(key, key_fields)
   cursor = cql_clone_row(cursor)
   if partition[key] ~= nil then
      table.insert(partition[key], cursor)
@@ -749,7 +749,7 @@ function cql_partition_cursor(partition, key, key_types, key_fields, cursor, cur
 end;
 
 function cql_extract_partition(partition, key, key_types, key_fields)
-  key = cql_make_str_key(key)
+  key = cql_make_str_key(key, key_fields)
   if partition[key] ~= nil then
      return partition[key]
   else
@@ -816,6 +816,11 @@ cql_real_dictionary_create = cql_string_dictionary_create
 cql_real_dictionary_add = cql_string_dictionary_add
 cql_real_dictionary_find = cql_string_dictionary_find
 
+-- in Lua, the string dictionary is the same, we can steal the implementation
+cql_blob_dictionary_create = cql_string_dictionary_create
+cql_blob_dictionary_add = cql_string_dictionary_add
+cql_blob_dictionary_find = cql_string_dictionary_find
+
 function cql_string_list_create()
   return {}
 end
@@ -840,7 +845,7 @@ function cql_string_list_set_at(list, i, val)
   return list
 end
 
--- the long and real methods are the same in Lua
+-- the long/real/blob versions are the same in Lua
 cql_long_list_create = cql_string_list_create;
 cql_long_list_count = cql_string_list_count;
 cql_long_list_add = cql_string_list_add;
@@ -852,6 +857,12 @@ cql_real_list_count = cql_string_list_count;
 cql_real_list_add = cql_string_list_add;
 cql_real_list_get_at = cql_string_list_get_at;
 cql_real_list_set_at = cql_string_list_set_at;
+
+cql_blob_list_create = cql_string_list_create;
+cql_blob_list_count = cql_string_list_count;
+cql_blob_list_add = cql_string_list_add;
+cql_blob_list_get_at = cql_string_list_get_at;
+cql_blob_list_set_at = cql_string_list_set_at;
 
 function cql_exec_internal(db, str)
   return db:exec(str)

@@ -3354,12 +3354,12 @@ cql_noexport CSTR cql_builtin_text() {
     ");"
 
     "[[builtin]]"
-    "declare proc cql_cursor_to_blob(C cursor, out result blob!);"
+    "declare proc cql_cursor_to_blob(C cursor, out result blob!) using transaction;"
     "[[builtin]]"
     "@op cursor: call to_blob as cql_cursor_to_blob;"
 
     "[[builtin]]"
-    "declare proc cql_cursor_from_blob(C cursor, b blob);"
+    "declare proc cql_cursor_from_blob(C cursor, b blob) using transaction;"
     "[[builtin]]"
     "@op cursor: call from_blob as cql_cursor_from_blob;"
 

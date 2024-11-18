@@ -4198,9 +4198,6 @@ static void cg_declare_proc_stmt(ast_node *ast) {
   EXTRACT(params, proc_params_stmts->left);
   EXTRACT_MISC_ATTRS(ast, misc_attrs);
 
-  if (!strcmp("cql_cursor_to_blob", name) || !strcmp("cql_cursor_from_blob", name))
-    return;
-
   Contract(!current_proc);
 
   current_proc = ast;
@@ -6014,7 +6011,7 @@ static void cg_fetch_cursor_from_blob_stmt(ast_node *ast) {
   CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "*" : "";
 
   bprintf(cg_main_output,
-    "_rc_ = cql_cursor_from_blob(&%s_dyn, %s%s);\n", cursor_name, prefix, blob_value.ptr);
+    "_rc_ = cql_cursor_from_blob(_db_, &%s_dyn, %s%s);\n", cursor_name, prefix, blob_value.ptr);
   cg_error_on_rc_notequal("SQLITE_OK");
 
   CG_POP_EVAL(blob);
@@ -6030,7 +6027,7 @@ static void cg_set_blob_from_cursor_stmt(ast_node *ast) {
   CSTR prefix = is_out_parameter(ast->left->sem->sem_type) ? "" : "&";
 
   bprintf(cg_main_output,
-    "_rc_ = cql_cursor_to_blob(&%s_dyn, %s%s);\n", cursor_name, prefix, blob_name);
+    "_rc_ = cql_cursor_to_blob(_db_, &%s_dyn, %s%s);\n", cursor_name, prefix, blob_name);
   cg_error_on_rc_notequal("SQLITE_OK");
 }
 

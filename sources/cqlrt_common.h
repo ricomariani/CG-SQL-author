@@ -329,10 +329,7 @@ CQL_EXPORT void cql_result_set_set_string_col(cql_result_set_ref _Nonnull result
 CQL_EXPORT void cql_result_set_set_object_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_object_ref _Nullable new_value);
 CQL_EXPORT void cql_result_set_set_blob_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col, cql_blob_ref _Nullable new_value);
 
-// blob serialization and deserialization
-CQL_EXPORT cql_code cql_cursor_from_blob(cql_dynamic_cursor *_Nonnull dyn_cursor, cql_blob_ref _Nullable b);
-CQL_EXPORT cql_code cql_cursor_to_blob(cql_dynamic_cursor *_Nonnull dyn_cursor, cql_blob_ref _Nullable *_Nonnull b);
-
+// null column and encoded column tests
 CQL_EXPORT cql_bool cql_result_set_get_is_null_col(cql_result_set_ref _Nonnull result_set, cql_int32 row, cql_int32 col);
 CQL_EXPORT cql_bool cql_result_set_get_is_encoded_col(cql_result_set_ref _Nonnull result_set, cql_int32 col);
 

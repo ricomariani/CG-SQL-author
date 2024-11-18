@@ -3165,7 +3165,7 @@ DECLARE CONST GROUP cql_data_types (
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!);
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3173,10 +3173,10 @@ DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!);
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_proc_stmt}: ok
+  | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
-    | | {name cql_cursor_to_blob}: ok
-    | | {int 0}
+    | | {name cql_cursor_to_blob}: ok dml_proc
+    | | {int 2}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in
@@ -3213,7 +3213,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -3221,10 +3221,10 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
   |   | {dot}
   |     | {name cql}
   |     | {name builtin}
-  | {declare_proc_stmt}: ok
+  | {declare_proc_stmt}: ok dml_proc
     | {proc_name_type}
-    | | {name cql_cursor_from_blob}: ok
-    | | {int 0}
+    | | {name cql_cursor_from_blob}: ok dml_proc
+    | | {int 2}
     | {proc_params_stmts}
       | {params}: ok
         | {param}: C: cursor variable in

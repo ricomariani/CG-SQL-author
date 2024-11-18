@@ -5072,7 +5072,7 @@
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!)
+    DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION
 
     {
       "name" : "cql_cursor_to_blob",
@@ -5095,13 +5095,13 @@
           "value" : 1
         }
       ],
-      "usesDatabase" : 0
+      "usesDatabase" : 1
     },
 
     The statement ending at line XXXX
 
     @ATTRIBUTE(cql:builtin)
-    DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB)
+    DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION
 
     {
       "name" : "cql_cursor_from_blob",
@@ -5123,7 +5123,7 @@
           "value" : 1
         }
       ],
-      "usesDatabase" : 0
+      "usesDatabase" : 1
     },
 
     The statement ending at line XXXX

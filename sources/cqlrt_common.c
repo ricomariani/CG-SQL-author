@@ -3110,6 +3110,7 @@ static void cql_write_varint_64(cql_bytebuf *_Nonnull buf, int64_t si) {
 // about the suitability of this cursor for serialization (e.g. no OBJECT
 // fields). As a consequence we get a nice simple strategy that is flexible.
 cql_code cql_cursor_to_blob(
+  sqlite3 *_Nonnull db,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_blob_ref _Nullable *_Nonnull blob)
 {
@@ -3355,6 +3356,7 @@ static void cql_clear_references_before_deserialization(
    }
 
 cql_code cql_cursor_from_blob(  
+  sqlite3 *_Nonnull db,
   cql_dynamic_cursor *_Nonnull dyn_cursor,
   cql_blob_ref _Nullable b)
 {

@@ -1270,7 +1270,7 @@ function cql_int_encode_64(x)
   return cql_varint_encode(cql_zigzag_encode_64(x))
 end
 
-function cql_cursor_to_blob(C, C_types, C_fields)
+function cql_cursor_to_blob(db, C, C_types, C_fields)
   local bool_count = 0
   local var_encoding_count = 0
   local nullable_count = 0
@@ -1491,7 +1491,7 @@ function cql_unpack_c(str, pos, size)
   end
 end
 
-function cql_cursor_from_blob(C, C_types, C_fields, buffer)
+function cql_cursor_from_blob(db, C, C_types, C_fields, buffer)
   if C == nil then
     return -100
   end

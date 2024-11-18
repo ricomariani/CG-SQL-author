@@ -77,6 +77,10 @@ extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C
 extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
+extern CQL_WARN_UNUSED cql_code cql_cursor_to_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable *_Nonnull result);
+
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b);
+
 extern cql_nullable_int32 side_effect1(void);
 extern cql_nullable_int32 side_effect2(void);
 extern CQL_WARN_UNUSED cql_code with_result_set(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
@@ -696,14 +700,14 @@ DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 
 /*
 @ATTRIBUTE(cql:builtin)
-DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!);
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
 
 /*
 @ATTRIBUTE(cql:builtin)
-DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB);
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 cql_int32 c_runtime_generation = 0;
 cql_int32 c_runtime_generation_on_else = 0;
@@ -14740,9 +14744,9 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.name);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = cql_cursor_to_blob(&C_dyn, &B);
+  _rc_ = cql_cursor_to_blob(_db_, &C_dyn, &B);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  _rc_ = cql_cursor_from_blob(&D_dyn, B);
+  _rc_ = cql_cursor_from_blob(_db_, &D_dyn, B);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -14813,7 +14817,7 @@ CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_) {
 
   cql_blob_release(_tmp_n_blob_0);
   _tmp_n_blob_0 = make_blob();
-  _rc_ = cql_cursor_from_blob(&C_dyn, _tmp_n_blob_0);
+  _rc_ = cql_cursor_from_blob(_db_, &C_dyn, _tmp_n_blob_0);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 
@@ -14914,7 +14918,7 @@ CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_,
   cql_error_prepare();
 
   *(void **)b = NULL; // set out arg to non-garbage
-  _rc_ = cql_cursor_to_blob(&gr_blob_cursor_dyn, b);
+  _rc_ = cql_cursor_to_blob(_db_, &gr_blob_cursor_dyn, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

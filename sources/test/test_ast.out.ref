@@ -2858,7 +2858,7 @@ The statement ending at line XXXX
   | {declare_proc_stmt}
     | {proc_name_type}
     | | {name cql_cursor_to_blob}
-    | | {int 0}
+    | | {int 2}
     | {proc_params_stmts}
       | {params}
         | {param}
@@ -2902,7 +2902,7 @@ The statement ending at line XXXX
   | {declare_proc_stmt}
     | {proc_name_type}
     | | {name cql_cursor_from_blob}
-    | | {int 0}
+    | | {int 2}
     | {proc_params_stmts}
       | {params}
         | {param}

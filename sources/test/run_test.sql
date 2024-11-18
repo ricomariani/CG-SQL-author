@@ -4992,6 +4992,34 @@ BEGIN
   -- printf("%s\n", base_text);
 end);
 
+
+[[blob_storage]]
+create table small_blob_table(x int, y int);
+
+TEST!(blob_function_pattern,
+BEGIN
+  cursor C like small_blob_table;
+
+  fetch C from values(12, 25);
+  let s1 := printf("%s\n", C:format);
+  let b1 := cql_cursor_to_blob(C);
+  cql_cursor_from_blob(C, b1);
+  let s2 := printf("%s\n", C:format);
+
+  -- use short forms also
+
+  let b2 := C:to_blob;
+  C:from_blob(b2);
+  let s3 := printf("%s\n", C:format);
+
+  let h1 := hex(b1);
+  let h2 := hex(b2);
+
+  EXPECT!(s1 == s2);
+  EXPECT!(s2 == s3);
+  EXPECT!(h1 == h2);
+end);
+
 declare const group long_constants (
   long_const_1 = -9223372036854775807L,
   long_const_2 = -9223372036854775808L,

@@ -156,7 +156,14 @@ This usually means a column is missing in the REFERENCES part of the declaration
 
 -----
 
-### CQL0024 available for re-use
+### CQL0024: cursor not declared with 'LIKE table_name', blob type can't be inferred
+
+When using the `cql_cursor_to_blob` function or its equivalent shorthand `C:to_blob` the cursor
+must be declared like so `cursor C like table_name` where `table_name` is the name of
+a table marked for blob storage  (`[[blob storage]]`, or `@attribute(cql:blob_storage`).  If this is
+not the case then the type of the resulting blob cannot be inferred.  If you do not want/need
+the type to be inferred you can use the form `cql_cursor_to_blob(a_cursor, a_blob)` or equivalently
+`a_cursor:to_blob(a_blob)` in which case no inferred type is required.
 
 -----
 

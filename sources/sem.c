@@ -10787,6 +10787,10 @@ additional_checks:
   }
 }
 
+// cql_cursor_to_blob was used in the proc_as_func form, meaning no second argument
+// We have to infer the correct return type.  This code verifies that we can do that.
+// We can look for the origin of the cursor and if it was a blob storage table
+// then we're in good shape.
 static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
   EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
 
@@ -10795,7 +10799,7 @@ static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
   if (!sname || !find_table_or_view_even_deleted(sname)) {
      record_error(ast);
      report_error(cursor,
-       "cursor not declared with 'LIKE table_name', blob type can't be inferred",
+       "CQL0024: cursor not declared with 'LIKE table_name', blob type can't be inferred",
        cursor->sem->name);
      return;
   }

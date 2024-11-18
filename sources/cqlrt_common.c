@@ -4251,6 +4251,33 @@ cql_object_ref _Nullable cql_object_dictionary_find(
   return (cql_object_ref)cql_string_dictionary_find(dict, key);
 }
 
+// This makes a simple blob dictionary with retained strings
+cql_object_ref _Nonnull cql_blob_dictionary_create() {
+  // it's the same as a string dictionary internally as it's just object refs
+  return cql_string_dictionary_create();
+}
+
+// Delegate the add operation to the internal hashtable
+cql_bool cql_blob_dictionary_add(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nonnull key,
+  cql_blob_ref _Nonnull val)
+{
+  // again we can cheat... the guts are the same and the value is only retained
+  // this could change some day but for now we live for free
+  return cql_string_dictionary_add(dict, key, (cql_string_ref)val);
+}
+
+// Lookup the given string in the hash table, note that we do not retain the result
+cql_blob_ref _Nullable cql_blob_dictionary_find(
+  cql_object_ref _Nonnull dict,
+  cql_string_ref _Nullable key)
+{
+  // and again, the lookup only borrows the value so we can re-use string
+  // dictionary for free.
+  return (cql_blob_ref)cql_string_dictionary_find(dict, key);
+}
+
 // We have to release all the strings in the buffer then release the buffer memory
 static void cql_string_list_finalize(void *_Nonnull data) {
   cql_bytebuf *_Nonnull self = data;

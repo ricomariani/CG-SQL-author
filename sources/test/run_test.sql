@@ -5780,8 +5780,8 @@ BEGIN
       let added := dict:add(printf("%d", j), "0");
       EXPECT!(added);
 
-      let bogus_val := dict:find(printf("%d", j));
-      EXPECT!(bogus_val == "0");
+      let zero_val := dict:find(printf("%d", j));
+      EXPECT!(zero_val == "0");
 
       -- replace
       added := dict:add(printf("%d", j), printf("%d", j*100));
@@ -5797,7 +5797,7 @@ BEGIN
       j += 1;
     end;
 
-    i := i * 2;
+    i *= 2;
   end;
 
   -- test null lookup, always fails
@@ -5818,8 +5818,8 @@ BEGIN
       let added := dict:add(printf("%d", j), 0);
       EXPECT!(added);
 
-      let bogus_val := dict:find(printf("%d", j));
-      EXPECT!(bogus_val == 0);
+      let zero_val := dict:find(printf("%d", j));
+      EXPECT!(zero_val == 0);
 
       -- replace
       added := dict:add(printf("%d", j), j*100);
@@ -5835,7 +5835,7 @@ BEGIN
       j += 1;
     end;
 
-    i := i * 2;
+    i *= 2;
   end;
 
   -- test null lookup, always fails
@@ -5856,8 +5856,8 @@ BEGIN
       let added := dict:add(printf("%d", j), 0);
       EXPECT!(added);
 
-      let bogus_val := dict:find(printf("%d", j));
-      EXPECT!(bogus_val == 0);
+      let zero_val := dict:find(printf("%d", j));
+      EXPECT!(zero_val == 0);
 
       -- replace
       added := dict:add(printf("%d", j), j*100.5);
@@ -5873,12 +5873,77 @@ BEGIN
       j += 1;
     end;
 
-    i := i * 2;
+    i *= 2;
   end;
 
   -- test null lookup, always fails
   EXPECT!(dict:find(NULL) IS NULL);
 END);
+
+[[blob_storage]]
+create table some_blob(
+  data real!
+);
+
+create proc blob_for_real(x real!, out result blob<some_blob>!)
+begin
+  declare C cursor like some_blob;
+  fetch C from values(x);
+  var b blob<some_blob>;
+  set b from cursor C;
+  result := b:ifnull_throw;
+end;
+
+TEST!(blob_dictionary,
+BEGIN
+  let zero := blob_for_real(0);
+  cursor C like some_blob;
+  
+  let i := 1;
+  while i <= 512
+  begin
+    let dict := cql_blob_dictionary_create();
+
+    let j := 0;
+    while j < i
+    begin
+      -- set to bogus original value
+      let added := dict:add(printf("%d", j), zero);
+      EXPECT!(added);
+
+      let zero_val := dict:find(printf("%d", j)) ~blob<some_blob>~ :ifnull_throw;
+      fetch C from values (1);  -- not zero, just to be sure the value changes
+      fetch C from zero_val;
+      EXPECT!(C.data == 0);
+
+      -- replace
+      let b := blob_for_real(j*100.5);
+      added := dict:add(printf("%d", j), b);
+      EXPECT!(NOT added);
+      j := j + 2;
+    end;
+
+    j := 0;
+    while j < i
+    begin
+      let result := dict[printf("%d", j)] ~blob<some_blob>~;
+
+      if j % 2 then
+        EXPECT!(result IS NULL);
+      else
+        fetch C from result;
+        EXPECT!(C.data == j*100.5);
+      end if;
+      j += 1;
+    end;
+
+    i *= 2;
+  end;
+
+  -- test null lookup, always fails
+  EXPECT!(dict:find(NULL) IS NULL);
+END);
+
 
 DECLARE FUNCTION _cql_contains_column_def(haystack TEXT, needle TEXT) BOOL NOT NULL;
 

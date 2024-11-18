@@ -738,6 +738,169 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_blob_dictionary_create () CREATE OBJECT<cql_blob_dictionary>!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: object<cql_blob_dictionary> notnull create_func
+    | {name cql_blob_dictionary_create}: object<cql_blob_dictionary> notnull create_func
+    | {func_params_return}
+      | {create_data_type}: object<cql_blob_dictionary> notnull create_func
+        | {notnull}: object<cql_blob_dictionary> notnull
+          | {type_object}: object<cql_blob_dictionary>
+            | {name cql_blob_dictionary}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_blob_dictionary_add (dict OBJECT<cql_blob_dictionary>!, key TEXT!, value BLOB!) BOOL!;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: bool notnull
+    | {name cql_blob_dictionary_add}: bool notnull
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<cql_blob_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_blob_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_blob_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_blob_dictionary> notnull
+      | |     | {type_object}: object<cql_blob_dictionary>
+      | |       | {name cql_blob_dictionary}
+      | | {params}
+      |   | {param}: key: text notnull variable in
+      |   | | {param_detail}: key: text notnull variable in
+      |   |   | {name key}: key: text notnull variable in
+      |   |   | {notnull}: text notnull
+      |   |     | {type_text}: text
+      |   | {params}
+      |     | {param}: value: blob notnull variable in
+      |       | {param_detail}: value: blob notnull variable in
+      |         | {name value}: value: blob notnull variable in
+      |         | {notnull}: blob notnull
+      |           | {type_blob}: blob
+      | {notnull}: bool notnull
+        | {type_bool}: bool
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE FUNC cql_blob_dictionary_find (dict OBJECT<cql_blob_dictionary>!, key TEXT) BLOB;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}: blob
+    | {name cql_blob_dictionary_find}: blob
+    | {func_params_return}
+      | {params}: ok
+      | | {param}: dict: object<cql_blob_dictionary> notnull variable in
+      | | | {param_detail}: dict: object<cql_blob_dictionary> notnull variable in
+      | |   | {name dict}: dict: object<cql_blob_dictionary> notnull variable in
+      | |   | {notnull}: object<cql_blob_dictionary> notnull
+      | |     | {type_object}: object<cql_blob_dictionary>
+      | |       | {name cql_blob_dictionary}
+      | | {params}
+      |   | {param}: key: text variable in
+      |     | {param_detail}: key: text variable in
+      |       | {name key}: key: text variable in
+      |       | {type_text}: text
+      | {type_blob}: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_blob_dictionary> : call add AS cql_blob_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_blob_dictionary>
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_blob_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_blob_dictionary> : call find AS cql_blob_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_blob_dictionary>
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name find}
+        | {name cql_blob_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_blob_dictionary> : array set AS cql_blob_dictionary_add;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_blob_dictionary>
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_blob_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP OBJECT<cql_blob_dictionary> : array get AS cql_blob_dictionary_find;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {type_object}: object<cql_blob_dictionary>
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_blob_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
 DECLARE FUNC cql_cursor_format (C CURSOR) CREATE TEXT!;
 
   {stmt_and_attr}: ok

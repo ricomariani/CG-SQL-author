@@ -683,6 +683,155 @@ The statement ending at line XXXX
   |     | {name cql}
   |     | {name builtin}
   | {declare_func_stmt}
+    | {name cql_blob_dictionary_create}
+    | {func_params_return}
+      | {create_data_type}
+        | {notnull}
+          | {type_object}
+            | {name cql_blob_dictionary}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_dictionary_add}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name dict}
+      | |   | {notnull}
+      | |     | {type_object}
+      | |       | {name cql_blob_dictionary}
+      | | {params}
+      |   | {param}
+      |   | | {param_detail}
+      |   |   | {name key}
+      |   |   | {notnull}
+      |   |     | {type_text}
+      |   | {params}
+      |     | {param}
+      |       | {param_detail}
+      |         | {name value}
+      |         | {notnull}
+      |           | {type_blob}
+      | {notnull}
+        | {type_bool}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
+    | {name cql_blob_dictionary_find}
+    | {func_params_return}
+      | {params}
+      | | {param}
+      | | | {param_detail}
+      | |   | {name dict}
+      | |   | {notnull}
+      | |     | {type_object}
+      | |       | {name cql_blob_dictionary}
+      | | {params}
+      |   | {param}
+      |     | {param_detail}
+      |       | {name key}
+      |       | {type_text}
+      | {type_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {type_object}
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name add}
+        | {name cql_blob_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {type_object}
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name find}
+        | {name cql_blob_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {type_object}
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name set}
+        | {name cql_blob_dictionary_add}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {type_object}
+    | | {name cql_blob_dictionary}
+    | {op_vals}
+      | {name array}
+      | {op_vals}
+        | {name get}
+        | {name cql_blob_dictionary_find}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_func_stmt}
     | {name cql_cursor_format}
     | {func_params_return}
       | {params}

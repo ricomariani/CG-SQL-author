@@ -27,6 +27,9 @@ extern cql_nullable_double cql_real_dictionary_find(cql_object_ref _Nonnull dict
 extern cql_object_ref _Nonnull cql_object_dictionary_create(void);
 extern cql_bool cql_object_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_object_ref _Nonnull value);
 extern cql_object_ref _Nullable cql_object_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
+extern cql_object_ref _Nonnull cql_blob_dictionary_create(void);
+extern cql_bool cql_blob_dictionary_add(cql_object_ref _Nonnull dict, cql_string_ref _Nonnull key, cql_blob_ref _Nonnull value);
+extern cql_blob_ref _Nullable cql_blob_dictionary_find(cql_object_ref _Nonnull dict, cql_string_ref _Nullable key);
 extern cql_string_ref _Nonnull cql_cursor_format(cql_dynamic_cursor *_Nonnull C);
 extern cql_object_ref _Nonnull cql_box_int(cql_nullable_int32 x);
 extern cql_nullable_int32 cql_unbox_int(cql_object_ref _Nullable box);

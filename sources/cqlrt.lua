@@ -816,6 +816,11 @@ cql_real_dictionary_create = cql_string_dictionary_create
 cql_real_dictionary_add = cql_string_dictionary_add
 cql_real_dictionary_find = cql_string_dictionary_find
 
+-- in Lua, the string dictionary is the same, we can steal the implementation
+cql_blob_dictionary_create = cql_string_dictionary_create
+cql_blob_dictionary_add = cql_string_dictionary_add
+cql_blob_dictionary_find = cql_string_dictionary_find
+
 function cql_string_list_create()
   return {}
 end

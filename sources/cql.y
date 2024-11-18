@@ -3108,6 +3108,22 @@ cql_noexport CSTR cql_builtin_text() {
     "@op object<cql_object_dictionary> : array get as cql_object_dictionary_find;"
 
     "[[builtin]]"
+    "declare func cql_blob_dictionary_create() CREATE OBJECT<cql_blob_dictionary>!;"
+    "[[builtin]]"
+    "declare func cql_blob_dictionary_add(dict OBJECT<cql_blob_dictionary>!, key text!, value blob!) BOOL!;"
+    "[[builtin]]"
+    "declare func cql_blob_dictionary_find(dict OBJECT<cql_blob_dictionary>!, key text) blob;"
+
+    "[[builtin]]"
+    "@op object<cql_blob_dictionary> : call add as cql_blob_dictionary_add;"
+    "[[builtin]]"
+    "@op object<cql_blob_dictionary> : call find as cql_blob_dictionary_find;"
+    "[[builtin]]"
+    "@op object<cql_blob_dictionary> : array set as cql_blob_dictionary_add;"
+    "[[builtin]]"
+    "@op object<cql_blob_dictionary> : array get as cql_blob_dictionary_find;"
+
+    "[[builtin]]"
     "declare func cql_cursor_format(C cursor) create text!;"
 
     "[[builtin]]"

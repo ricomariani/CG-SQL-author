@@ -4534,6 +4534,11 @@ create table storage_one_long(
   x long!
 );
 
+[[blob_storage]]
+create table storage_one_real(
+  data real!
+);
+
 TEST!(blob_serialization,
 BEGIN
   @echo lua, "cql_disable_tracing = true\n";
@@ -4866,25 +4871,25 @@ END);
 
 proc round_trip_int(value int!)
 begin
-  cursor C LIKE storage_one_int;
-  FETCH C using value x;
+  cursor C like storage_one_int;
+  cursor D like C;
+
+  fetch C using value x;
   EXPECT!(C.x == value);
-  declare int_blob blob<storage_one_int>;
-  set int_blob from cursor C;
-  DECLARE D cursor like C;
-  fetch D from int_blob;
+  let int_blob := C:to_blob;
+  D:from_blob(int_blob);
   EXPECT!(C.x == D.x);
 end;
 
 proc round_trip_long(value long!)
 begin
-  cursor C LIKE storage_one_long;
-  FETCH C using value x;
+  cursor C like storage_one_long;
+  cursor D like C;
+
+  fetch C using value x;
   EXPECT!(C.x == value);
-  declare int_blob blob<storage_one_long>;
-  set int_blob from cursor C;
-  DECLARE D cursor like C;
-  fetch D from int_blob;
+  let int_blob := C:to_blob;
+  D:from_blob(int_blob);
   EXPECT!(C.x == D.x);
 end;
 
@@ -5916,24 +5921,17 @@ BEGIN
   EXPECT!(dict:find(NULL) IS NULL);
 END);
 
-[[blob_storage]]
-create table some_blob(
-  data real!
-);
-
-create proc blob_for_real(x real!, out result blob<some_blob>!)
+create proc blob_for_real(x real!, out result blob<storage_one_real>!)
 begin
-  declare C cursor like some_blob;
+  declare C cursor like storage_one_real;
   fetch C from values(x);
-  var b blob<some_blob>;
-  set b from cursor C;
-  result := b:ifnull_throw;
+  result := C:to_blob:ifnull_throw;
 end;
 
 TEST!(blob_dictionary,
 BEGIN
   let zero := blob_for_real(0);
-  cursor C like some_blob;
+  cursor C like storage_one_real;
   
   let i := 1;
   while i <= 512
@@ -5947,7 +5945,7 @@ BEGIN
       let added := dict:add(printf("%d", j), zero);
       EXPECT!(added);
 
-      let zero_val := dict:find(printf("%d", j)) ~blob<some_blob>~ :ifnull_throw;
+      let zero_val := dict:find(printf("%d", j)) ~blob<storage_one_real>~ :ifnull_throw;
       fetch C from values (1);  -- not zero, just to be sure the value changes
       fetch C from zero_val;
       EXPECT!(C.data == 0);
@@ -5962,7 +5960,7 @@ BEGIN
     j := 0;
     while j < i
     begin
-      let result := dict[printf("%d", j)] ~blob<some_blob>~;
+      let result := dict[printf("%d", j)] ~blob<storage_one_real>~;
 
       if j % 2 then
         EXPECT!(result IS NULL);

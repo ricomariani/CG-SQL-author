@@ -291,6 +291,8 @@ static bool_t sem_binary_prep_helper(ast_node *ast, ast_node *left, ast_node *ri
 static void rewrite_column_values_for_update_stmts(ast_node *_Nonnull ast, ast_node *_Nonnull columns_values, sem_struct *sptr);
 static bool_t sem_validate_arg_pattern(CSTR _Nonnull type_string, ast_node *_Nonnull ast_call, uint32_t arg_count);
 static sem_node *_Nonnull new_sem_std(sem_t sem_type, ast_node *_Nonnull ast_call);
+static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list);
+static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list);
 
 // create a new id node either qid or normal based on the bool
 cql_noexport ast_node *new_str_or_qstr(CSTR name, sem_t sem_type) {
@@ -5724,10 +5726,10 @@ static void sem_emit_one_sptr_type(charbuf *output, sem_struct *sptr, uint32_t i
 // given that we found sptr differences in one of the places that the types must match
 // we use this helper to tell the user what's different in detail
 static void sem_emit_column_diff_diagnostics(ast_node *left, ast_node *right) {
-  Invariant(is_struct(left->sem->sem_type));
   sem_struct *sptr_left = left->sem->sptr;
-  Invariant(is_struct(right->sem->sem_type));
+  Contract(sptr_left);
   sem_struct *sptr_right = right->sem->sptr;
+  Contract(sptr_right);
 
   CHARBUF_OPEN(report);
   CHARBUF_OPEN(tmp);
@@ -10764,6 +10766,10 @@ static void sem_expr_call(ast_node *ast, CSTR cstr) {
   return;
 
 additional_checks:
+  if (!StrCaseCmp(name, "cql_cursor_to_blob")) {
+     Contract(arg_count == 1); // already failed if wrong
+     sem_infer_result_blob_type(ast, arg_list);
+  }
   if (!call_aggr_or_user_def_func) {
     if (distinct) {
       // Only aggregated functions and user defined functions that take one parameter
@@ -10779,6 +10785,40 @@ additional_checks:
       record_error(ast);
       return;
     }
+  }
+}
+
+// cql_cursor_to_blob was used in the proc_as_func form, meaning no second argument
+// We have to infer the correct return type.  This code verifies that we can do that.
+// We can look for the origin of the cursor and if it was a blob storage table
+// then we're in good shape.
+static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
+  EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
+
+  CSTR sname = cursor->sem->sptr->struct_name;
+
+  if (!sname || !find_table_or_view_even_deleted(sname)) {
+     record_error(ast);
+     report_error(cursor,
+       "CQL0024: cursor not declared with 'LIKE table_name', blob type can't be inferred",
+       cursor->sem->name);
+     return;
+  }
+
+  AST_REWRITE_INFO_SET(cursor->lineno, cursor->filename);
+
+  ast_node *blob = new_ast_str("$");
+  blob->sem = new_sem(SEM_TYPE_BLOB);
+  blob->sem->name = "$";
+  blob->sem->kind = cursor->sem->sptr->struct_name;
+
+  AST_REWRITE_INFO_RESET();
+
+  // the final error is set by the helper, 'ast' will have the code regardless
+  sem_validate_cursor_blob_compat(ast, cursor, blob, cursor, blob);
+
+  if (!is_error(ast)) {
+    ast->sem = blob->sem;
   }
 }
 
@@ -17973,10 +18013,12 @@ cql_noexport void sem_validate_cursor_blob_compat(
   Contract(src == blob || src == cursor);
   Contract(dest == blob || dest == cursor);
 
-  sem_expr(blob);
-  if (is_error(blob)) {
-    record_error(ast_error);
-    return;
+  if (!blob->sem || !blob->sem->name || strcmp("$", blob->sem->name)) {
+    sem_expr(blob);
+    if (is_error(blob)) {
+      record_error(ast_error);
+      return;
+    }
   }
 
   // the blob must be a blob
@@ -22902,7 +22944,39 @@ static void sem_call_stmt_opt_cursor(ast_node *ast, CSTR cursor_name) {
     }
   }
 
+  sem_proc_call_post_check(name, ast, arg_list);
+  if (is_error(ast)) {
+    return;
+  }
+
   ast->sem = name_ast->sem;
+}
+
+// some procedures require additional checks, so far only two
+// if this list grows we'll use a name table like the other cases
+static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_list) {
+  Contract(is_ast_call_stmt(ast));
+  Contract(!is_error(ast));
+  Contract(name);
+
+  if (!StrCaseCmp("cql_cursor_from_blob", name)) {
+    // additional validation for cql_cursor_from_blob -- ensure blob is compatible
+    Contract(is_ast_arg_list(arg_list));
+    EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
+    EXTRACT_ANY_NOTNULL(blob, arg_list->right->left);
+
+    // the final error is set by the helper, 'ast' will have the code regardless
+    sem_validate_cursor_blob_compat(ast, cursor, blob, blob, cursor);
+  }
+  else if (!StrCaseCmp("cql_cursor_to_blob", name)) {
+    // additional validation for cql_cursor_to_blob -- ensure blob is compatible
+    Contract(is_ast_arg_list(arg_list));
+    EXTRACT_ANY_NOTNULL(cursor, arg_list->left);
+    EXTRACT_ANY_NOTNULL(blob, arg_list->right->left);
+
+    // the final error is set by the helper, 'ast' will have the code regardless
+    sem_validate_cursor_blob_compat(ast, cursor, blob, cursor, blob);
+  }
 }
 
 // The fetch statement has two forms:

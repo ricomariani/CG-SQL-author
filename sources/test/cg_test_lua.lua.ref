@@ -8,6 +8,20 @@ require("cqlrt")
 @ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
 --]]
+
+-- The statement ending at line XXXX
+
+--[[
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
+--]]
+
+-- The statement ending at line XXXX
+
+--[[
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
+--]]
 local lua_runtime_generation = 0
 local lua_runtime_generation_on_else = 0
 
@@ -7954,9 +7968,9 @@ function blob_serialization_test(_db_)
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, B = cql_serialize_blob(C, C_types_, C_fields_);
+  _rc_, B = cql_cursor_to_blob(_db_, C, C_types_, C_fields_);
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_ = cql_cursor_from_blob(D, D_types_, D_fields_, B)
+  _rc_ = cql_cursor_from_blob(_db_, D, D_types_, D_fields_, B)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -7984,7 +7998,7 @@ function deserialize_func(_db_)
   local _tmp_n_blob_0
 
   _tmp_n_blob_0 = make_blob()
-  _rc_ = cql_cursor_from_blob(C, C_types_, C_fields_, _tmp_n_blob_0)
+  _rc_ = cql_cursor_from_blob(_db_, C, C_types_, C_fields_, _tmp_n_blob_0)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 
@@ -8046,7 +8060,7 @@ function use_gr_cursor_for_serialization(_db_)
   local _rc_ = CQL_OK
   local b
 
-  _rc_, b = cql_serialize_blob(gr_blob_cursor, gr_blob_cursor_types_, gr_blob_cursor_fields_);
+  _rc_, b = cql_cursor_to_blob(_db_, gr_blob_cursor, gr_blob_cursor_types_, gr_blob_cursor_fields_);
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 

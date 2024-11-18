@@ -4534,6 +4534,11 @@ create table storage_one_long(
   x long!
 );
 
+[[blob_storage]]
+create table storage_one_real(
+  data real!
+);
+
 TEST!(blob_serialization,
 BEGIN
   @echo lua, "cql_disable_tracing = true\n";
@@ -4866,25 +4871,25 @@ END);
 
 proc round_trip_int(value int!)
 begin
-  cursor C LIKE storage_one_int;
-  FETCH C using value x;
+  cursor C like storage_one_int;
+  cursor D like C;
+
+  fetch C using value x;
   EXPECT!(C.x == value);
-  declare int_blob blob<storage_one_int>;
-  set int_blob from cursor C;
-  DECLARE D cursor like C;
-  fetch D from int_blob;
+  let int_blob := C:to_blob;
+  D:from_blob(int_blob);
   EXPECT!(C.x == D.x);
 end;
 
 proc round_trip_long(value long!)
 begin
-  cursor C LIKE storage_one_long;
-  FETCH C using value x;
+  cursor C like storage_one_long;
+  cursor D like C;
+
+  fetch C using value x;
   EXPECT!(C.x == value);
-  declare int_blob blob<storage_one_long>;
-  set int_blob from cursor C;
-  DECLARE D cursor like C;
-  fetch D from int_blob;
+  let int_blob := C:to_blob;
+  D:from_blob(int_blob);
   EXPECT!(C.x == D.x);
 end;
 
@@ -4990,6 +4995,34 @@ BEGIN
   -- for debugging
   -- printf("%s\n", ext_text);
   -- printf("%s\n", base_text);
+end);
+
+
+[[blob_storage]]
+create table small_blob_table(x int, y int);
+
+TEST!(blob_function_pattern,
+BEGIN
+  cursor C like small_blob_table;
+
+  fetch C from values(12, 25);
+  let s1 := printf("%s\n", C:format);
+  let b1 := cql_cursor_to_blob(C);
+  cql_cursor_from_blob(C, b1);
+  let s2 := printf("%s\n", C:format);
+
+  -- use short forms also
+
+  let b2 := C:to_blob;
+  C:from_blob(b2);
+  let s3 := printf("%s\n", C:format);
+
+  let h1 := hex(b1);
+  let h2 := hex(b2);
+
+  EXPECT!(s1 == s2);
+  EXPECT!(s2 == s3);
+  EXPECT!(h1 == h2);
 end);
 
 declare const group long_constants (
@@ -5888,24 +5921,17 @@ BEGIN
   EXPECT!(dict:find(NULL) IS NULL);
 END);
 
-[[blob_storage]]
-create table some_blob(
-  data real!
-);
-
-create proc blob_for_real(x real!, out result blob<some_blob>!)
+create proc blob_for_real(x real!, out result blob<storage_one_real>!)
 begin
-  declare C cursor like some_blob;
+  declare C cursor like storage_one_real;
   fetch C from values(x);
-  var b blob<some_blob>;
-  set b from cursor C;
-  result := b:ifnull_throw;
+  result := C:to_blob:ifnull_throw;
 end;
 
 TEST!(blob_dictionary,
 BEGIN
   let zero := blob_for_real(0);
-  cursor C like some_blob;
+  cursor C like storage_one_real;
   
   let i := 1;
   while i <= 512
@@ -5919,7 +5945,7 @@ BEGIN
       let added := dict:add(printf("%d", j), zero);
       EXPECT!(added);
 
-      let zero_val := dict:find(printf("%d", j)) ~blob<some_blob>~ :ifnull_throw;
+      let zero_val := dict:find(printf("%d", j)) ~blob<storage_one_real>~ :ifnull_throw;
       fetch C from values (1);  -- not zero, just to be sure the value changes
       fetch C from zero_val;
       EXPECT!(C.data == 0);
@@ -5934,7 +5960,7 @@ BEGIN
     j := 0;
     while j < i
     begin
-      let result := dict[printf("%d", j)] ~blob<some_blob>~;
+      let result := dict[printf("%d", j)] ~blob<storage_one_real>~;
 
       if j % 2 then
         EXPECT!(result IS NULL);
@@ -6944,12 +6970,12 @@ BEGIN
 
   EXPECT!(-1 == C:type(-1));
   EXPECT!(-1 == C:type(C:count));
-  EXPECT!(true == C:to_bool(0));
-  EXPECT!(1 == C:to_int(1));
-  EXPECT!(2L == C:to_long(2));
-  EXPECT!(3.0 == C:to_real(3));
-  EXPECT!("foo" == C:to_text(4));
-  EXPECT!(C:to_blob(5) IS NOT NULL);
+  EXPECT!(true == C:get_bool(0));
+  EXPECT!(1 == C:get_int(1));
+  EXPECT!(2L == C:get_long(2));
+  EXPECT!(3.0 == C:get_real(3));
+  EXPECT!("foo" == C:get_text(4));
+  EXPECT!(C:get_blob(5) IS NOT NULL);
 END);
 
 TEST!(cursor_accessors_nullable,
@@ -6966,12 +6992,12 @@ BEGIN
   EXPECT!(CQL_DATA_TYPE_STRING == C:type(4));
   EXPECT!(CQL_DATA_TYPE_BLOB == C:type(5));
 
-  EXPECT!(true == C:to_bool(0));
-  EXPECT!(1 == C:to_int(1));
-  EXPECT!(2L == C:to_long(2));
-  EXPECT!(3.0 == C:to_real(3));
-  EXPECT!("foo" == C:to_text(4));
-  EXPECT!(C:to_blob(5) IS NOT NULL);
+  EXPECT!(true == C:get_bool(0));
+  EXPECT!(1 == C:get_int(1));
+  EXPECT!(2L == C:get_long(2));
+  EXPECT!(3.0 == C:get_real(3));
+  EXPECT!("foo" == C:get_text(4));
+  EXPECT!(C:get_blob(5) IS NOT NULL);
 END);
 
 TEST!(cursor_accessors_object,
@@ -6979,9 +7005,9 @@ BEGIN
   let v := 1:box;
   cursor C like (obj object<cql_box>);
   fetch C from values(v);
-  EXPECT!(C:to_object(0) IS NOT NULL);
-  EXPECT!(C:to_object(-1) IS NULL);
-  EXPECT!(C:to_object(1) IS NULL);
+  EXPECT!(C:get_object(0) IS NOT NULL);
+  EXPECT!(C:get_object(-1) IS NULL);
+  EXPECT!(C:get_object(1) IS NULL);
 END);
 
 TEST!(null_casting,

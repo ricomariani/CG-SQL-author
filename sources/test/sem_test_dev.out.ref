@@ -2804,7 +2804,7 @@ The statement ending at line XXXX
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_bool AS cql_cursor_get_bool;
+@OP CURSOR : call get_bool AS cql_cursor_get_bool;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2817,13 +2817,13 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_bool}
+        | {name get_bool}
         | {name cql_cursor_get_bool}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_int AS cql_cursor_get_int;
+@OP CURSOR : call get_int AS cql_cursor_get_int;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2836,13 +2836,13 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_int}
+        | {name get_int}
         | {name cql_cursor_get_int}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_long AS cql_cursor_get_long;
+@OP CURSOR : call get_long AS cql_cursor_get_long;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2855,13 +2855,13 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_long}
+        | {name get_long}
         | {name cql_cursor_get_long}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_real AS cql_cursor_get_real;
+@OP CURSOR : call get_real AS cql_cursor_get_real;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2874,13 +2874,13 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_real}
+        | {name get_real}
         | {name cql_cursor_get_real}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_text AS cql_cursor_get_text;
+@OP CURSOR : call get_text AS cql_cursor_get_text;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2893,13 +2893,13 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_text}
+        | {name get_text}
         | {name cql_cursor_get_text}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_blob AS cql_cursor_get_blob;
+@OP CURSOR : call get_blob AS cql_cursor_get_blob;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2912,13 +2912,13 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_blob}
+        | {name get_blob}
         | {name cql_cursor_get_blob}
 
 The statement ending at line XXXX
 
 @ATTRIBUTE(cql:builtin)
-@OP CURSOR : call to_object AS cql_cursor_get_object;
+@OP CURSOR : call get_object AS cql_cursor_get_object;
 
   {stmt_and_attr}: ok
   | {misc_attrs}: ok
@@ -2931,7 +2931,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_object}
+        | {name get_object}
         | {name cql_cursor_get_object}
 
 The statement ending at line XXXX
@@ -3161,6 +3161,100 @@ DECLARE CONST GROUP cql_data_types (
                           | {const_value}: integer = 128 notnull
                             | {name CQL_DATA_TYPE_NOT_NULL}: integer = 128 notnull
                             | {int 0x80}: integer = 128 notnull
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}: ok dml_proc
+    | {proc_name_type}
+    | | {name cql_cursor_to_blob}: ok dml_proc
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}: ok
+        | {param}: C: cursor variable in
+        | | {param_detail}: C: cursor variable in
+        |   | {name C}: C: cursor variable in
+        |   | {type_cursor}: cursor
+        | {params}
+          | {param}: result: blob notnull variable init_required out
+            | {out}
+            | {param_detail}: result: blob notnull variable init_required out
+              | {name result}: result: blob notnull variable init_required out
+              | {notnull}: blob notnull
+                | {type_blob}: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP CURSOR : call to_blob AS cql_cursor_to_blob;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_blob}
+        | {name cql_cursor_to_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}: ok dml_proc
+    | {proc_name_type}
+    | | {name cql_cursor_from_blob}: ok dml_proc
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}: ok
+        | {param}: C: cursor variable in
+        | | {param_detail}: C: cursor variable in
+        |   | {name C}: C: cursor variable in
+        |   | {type_cursor}: cursor
+        | {params}
+          | {param}: b: blob variable in
+            | {param_detail}: b: blob variable in
+              | {name b}: b: blob variable in
+              | {type_blob}: blob
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+@OP CURSOR : call from_blob AS cql_cursor_from_blob;
+
+  {stmt_and_attr}: ok
+  | {misc_attrs}: ok
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}: ok
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name from_blob}
+        | {name cql_cursor_from_blob}
 
 The statement ending at line XXXX
 

@@ -2529,7 +2529,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_bool}
+        | {name get_bool}
         | {name cql_cursor_get_bool}
 
 The statement ending at line XXXX
@@ -2546,7 +2546,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_int}
+        | {name get_int}
         | {name cql_cursor_get_int}
 
 The statement ending at line XXXX
@@ -2563,7 +2563,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_long}
+        | {name get_long}
         | {name cql_cursor_get_long}
 
 The statement ending at line XXXX
@@ -2580,7 +2580,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_real}
+        | {name get_real}
         | {name cql_cursor_get_real}
 
 The statement ending at line XXXX
@@ -2597,7 +2597,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_text}
+        | {name get_text}
         | {name cql_cursor_get_text}
 
 The statement ending at line XXXX
@@ -2614,7 +2614,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_blob}
+        | {name get_blob}
         | {name cql_cursor_get_blob}
 
 The statement ending at line XXXX
@@ -2631,7 +2631,7 @@ The statement ending at line XXXX
     | {op_vals}
       | {name call}
       | {op_vals}
-        | {name to_object}
+        | {name get_object}
         | {name cql_cursor_get_object}
 
 The statement ending at line XXXX
@@ -2845,6 +2845,92 @@ The statement ending at line XXXX
                           | {const_value}
                             | {name CQL_DATA_TYPE_NOT_NULL}
                             | {int 0x80}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}
+    | {proc_name_type}
+    | | {name cql_cursor_to_blob}
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}
+        | {param}
+        | | {param_detail}
+        |   | {name C}
+        |   | {type_cursor}
+        | {params}
+          | {param}
+            | {out}
+            | {param_detail}
+              | {name result}
+              | {notnull}
+                | {type_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name to_blob}
+        | {name cql_cursor_to_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {declare_proc_stmt}
+    | {proc_name_type}
+    | | {name cql_cursor_from_blob}
+    | | {int 2}
+    | {proc_params_stmts}
+      | {params}
+        | {param}
+        | | {param_detail}
+        |   | {name C}
+        |   | {type_cursor}
+        | {params}
+          | {param}
+            | {param_detail}
+              | {name b}
+              | {type_blob}
+
+The statement ending at line XXXX
+
+@ATTRIBUTE(cql:builtin)
+  {stmt_and_attr}
+  | {misc_attrs}
+  | | {misc_attr}
+  |   | {dot}
+  |     | {name cql}
+  |     | {name builtin}
+  | {op_stmt}
+    | {name CURSOR}
+    | {op_vals}
+      | {name call}
+      | {op_vals}
+        | {name from_blob}
+        | {name cql_cursor_from_blob}
 
 The statement ending at line XXXX
 

@@ -80300,10 +80300,10 @@ BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
   FETCH C;
-  DECLARE B BLOB<structured_storage>;
-  SET B FROM CURSOR C;
+  DECLARE a_blob BLOB<structured_storage>;
+  SET a_blob FROM CURSOR C;
   CURSOR D LIKE C;
-  FETCH D FROM BLOB B;
+  FETCH D FROM BLOB a_blob;
 END;
 
   {create_proc_stmt}: ok dml_proc
@@ -80336,12 +80336,12 @@ END;
       | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
       | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
       | {declare_vars_type}: blob<structured_storage>
-      | | {name_list}: B: blob<structured_storage> variable
-      | | | {name B}: B: blob<structured_storage> variable
+      | | {name_list}: a_blob: blob<structured_storage> variable
+      | | | {name a_blob}: a_blob: blob<structured_storage> variable
       | | {type_blob}: blob<structured_storage>
       |   | {name structured_storage}
       | {set_blob_from_cursor_stmt}: ok
-      | | {name B}: B: blob<structured_storage> variable
+      | | {name a_blob}: a_blob: blob<structured_storage> variable
       | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
       | {declare_cursor_like_name}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
       | | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
@@ -80350,7 +80350,227 @@ END;
       |     | {name C}
       | {fetch_cursor_from_blob_stmt}: ok
         | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
-        | {name B}: B: blob<structured_storage> variable
+        | {name a_blob}: a_blob: blob<structured_storage> variable
+
+The statement ending at line XXXX
+
+PROC cannot_infer_blob_type ()
+BEGIN
+  CURSOR C FOR
+    SELECT 1 AS id, 'foo' AS name;
+  FETCH C;
+  LET a_blob := cql_cursor_to_blob(C);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0024: cursor not declared with 'LIKE table_name', blob type can't be inferred 'C'
+
+  {create_proc_stmt}: err
+  | {name cannot_infer_blob_type}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'foo'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {let_stmt}: err
+        | {name a_blob}
+        | {call}: err
+          | {name cql_cursor_to_blob}
+          | {call_arg_list}
+            | {call_filter_clause}
+            | {arg_list}: ok
+              | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+
+The statement ending at line XXXX
+
+PROC use_direct_blob_forms ()
+BEGIN
+  CURSOR C FOR
+    SELECT 1 AS id, 'foo' AS name;
+  FETCH C;
+  DECLARE a_blob BLOB<structured_storage>!;
+  CALL cql_cursor_to_blob(C, a_blob);
+END;
+
+  {create_proc_stmt}: ok dml_proc
+  | {name use_direct_blob_forms}: ok dml_proc
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'foo'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob<structured_storage> notnull
+      | | {name_list}: a_blob: blob<structured_storage> notnull variable init_required was_set
+      | | | {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
+      | | {notnull}: blob<structured_storage> notnull
+      |   | {type_blob}: blob<structured_storage>
+      |     | {name structured_storage}
+      | {call_stmt}: ok dml_proc
+        | {name cql_cursor_to_blob}: ok dml_proc
+        | {arg_list}: ok
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {arg_list}
+            | {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
+
+The statement ending at line XXXX
+
+PROC use_direct_to_blob_badly ()
+BEGIN
+  CURSOR C FOR
+    SELECT 1 AS id, 'foo' AS name;
+  FETCH C;
+  DECLARE a_blob BLOB!;
+  CALL cql_cursor_to_blob(C, a_blob);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a type-kind for type safety 'a_blob'
+
+  {create_proc_stmt}: err
+  | {name use_direct_to_blob_badly}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor}: C: select: { id: integer notnull, name: text notnull } variable dml_proc
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'foo'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {fetch_stmt}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
+      | {declare_vars_type}: blob notnull
+      | | {name_list}: a_blob: blob notnull variable init_required was_set
+      | | | {name a_blob}: a_blob: blob notnull variable init_required was_set
+      | | {notnull}: blob notnull
+      |   | {type_blob}: blob
+      | {call_stmt}: err
+        | {name cql_cursor_to_blob}: ok dml_proc
+        | {arg_list}: ok
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {arg_list}
+            | {name a_blob}: a_blob: blob notnull variable was_set
+
+The statement ending at line XXXX
+
+PROC use_direct_from_blob_badly ()
+BEGIN
+  CURSOR C LIKE SELECT 1 AS id, 'foo' AS name;
+  LET a_blob := ( SELECT CAST('x' AS BLOB) );
+  CALL cql_cursor_from_blob(C, a_blob);
+END;
+
+test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a type-kind for type safety 'a_blob'
+
+  {create_proc_stmt}: err
+  | {name use_direct_from_blob_badly}: err
+  | {proc_params_stmts}
+    | {stmt_list}: err
+      | {declare_cursor_like_select}: C: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+      | | {name C}: C: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+      | | {select_stmt}: select: { id: integer notnull, name: text notnull }
+      |   | {select_core_list}: select: { id: integer notnull, name: text notnull }
+      |   | | {select_core}: select: { id: integer notnull, name: text notnull }
+      |   |   | {select_expr_list_con}: select: { id: integer notnull, name: text notnull }
+      |   |     | {select_expr_list}: select: { id: integer notnull, name: text notnull }
+      |   |     | | {select_expr}: id: integer notnull
+      |   |     | | | {int 1}: integer notnull
+      |   |     | | | {opt_as_alias}
+      |   |     | |   | {name id}
+      |   |     | | {select_expr_list}
+      |   |     |   | {select_expr}: name: text notnull
+      |   |     |     | {strlit 'foo'}: text notnull
+      |   |     |     | {opt_as_alias}
+      |   |     |       | {name name}
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {let_stmt}: a_blob: blob notnull variable
+      | | {name a_blob}: a_blob: blob notnull variable
+      | | {select_stmt}: _anon: blob notnull
+      |   | {select_core_list}: select: { _anon: blob notnull }
+      |   | | {select_core}: select: { _anon: blob notnull }
+      |   |   | {select_expr_list_con}: select: { _anon: blob notnull }
+      |   |     | {select_expr_list}: select: { _anon: blob notnull }
+      |   |     | | {select_expr}: blob notnull
+      |   |     |   | {cast_expr}: blob notnull
+      |   |     |     | {strlit 'x'}: text notnull
+      |   |     |     | {type_blob}: blob
+      |   |     | {select_from_etc}: ok
+      |   |       | {select_where}
+      |   |         | {select_groupby}
+      |   |           | {select_having}
+      |   | {select_orderby}
+      |     | {select_limit}
+      |       | {select_offset}
+      | {call_stmt}: err
+        | {name cql_cursor_from_blob}: ok dml_proc
+        | {arg_list}: ok
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+          | {arg_list}
+            | {name a_blob}: a_blob: blob notnull variable
 
 The statement ending at line XXXX
 

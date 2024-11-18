@@ -5025,8 +5025,8 @@ create table structured_storage(
 );
 
 -- TEST: basic blob serialization case
--- + _rc_ = cql_cursor_to_blob(&C_dyn, &B);
--- + _rc_ = cql_cursor_from_blob(&D_dyn, B);
+-- + _rc_ = cql_cursor_to_blob(_db_, &C_dyn, &B);
+-- + _rc_ = cql_cursor_from_blob(_db_, &D_dyn, B);
 proc blob_serialization_test()
 begin
   declare C cursor for select 1 id, 'foo' name;
@@ -5047,7 +5047,7 @@ declare function make_blob() create blob<structured_storage>;
 -- func call is a good standing for general eval
 -- +  cql_blob_release(_tmp_n_blob_0);
 -- + _tmp_n_blob_0 = make_blob();
--- + _rc_ = cql_cursor_from_blob(&C_dyn, _tmp_n_blob_0);
+-- + _rc_ = cql_cursor_from_blob(_db_, &C_dyn, _tmp_n_blob_0);
 proc deserialize_func()
 begin
   declare C cursor like structured_storage;
@@ -5118,7 +5118,7 @@ end;
 -- This sets the SERIALIZATION bit on the cursor causing it to emit more stuff
 -- even though it's out of order the codegen will be affected
 -- the test cases above verify this
--- + _rc_ = cql_cursor_to_blob(&gr_blob_cursor_dyn, b);
+-- + _rc_ = cql_cursor_to_blob(_db_, &gr_blob_cursor_dyn, b);
 proc use_gr_cursor_for_serialization(out b blob<structured_storage>)
 begin
   set b from cursor gr_blob_cursor;

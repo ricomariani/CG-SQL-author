@@ -21402,23 +21402,77 @@ create table structured_storage(
 
 -- TEST: verify basic analysis of structure storage, correct case
 -- + {set_blob_from_cursor_stmt}: ok
--- + {name B}: B: blob<structured_storage> variable
+-- + {name a_blob}: a_blob: blob<structured_storage> variable
 -- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
 -- + {fetch_cursor_from_blob_stmt}: ok
 -- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
--- + {name B}: B: blob<structured_storage> variable
+-- + {name a_blob}: a_blob: blob<structured_storage> variable
 -- - error:
 proc blob_serialization_test()
 begin
   cursor C for select 1 id, 'foo' name;
   fetch C;
 
-  declare B blob<structured_storage>;
+  declare a_blob blob<structured_storage>;
 
-  set B from cursor C;
+  set a_blob from cursor C;
 
   cursor D like C;
-  fetch D from B;
+  fetch D from a_blob;
+end;
+
+-- TEST: verify basic analysis of structure storage, correct case
+-- + {let_stmt}: err
+-- + {call}: err
+-- * error: % cursor not declared with 'LIKE table_name', blob type can't be inferred 'C'
+-- +1 error:
+proc cannot_infer_blob_type()
+begin
+  cursor C for select 1 id, 'foo' name;
+  fetch C;
+  let a_blob := C:to_blob;
+end;
+
+-- TEST: ok to store the blob if blob and type specified and they match
+-- + {call_stmt}: ok dml_proc
+-- + {name cql_cursor_to_blob}: ok dml_proc
+-- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
+-- - error:
+proc use_direct_blob_forms()
+begin
+  cursor C for select 1 id, 'foo' name;
+  fetch C;
+
+  declare a_blob blob<structured_storage>!;
+  C:to_blob(a_blob);
+end;
+
+-- TEST: blob type not specified, this cannot do this store
+-- + CALL cql_cursor_to_blob(C, a_blob);
+-- + {call_stmt}: err
+-- * error: % blob variable must have a type-kind for type safety 'a_blob'
+-- +1 error:
+proc use_direct_to_blob_badly()
+begin
+  cursor C for select 1 id, 'foo' name;
+  fetch C;
+
+  declare a_blob blob!;
+  C:to_blob(a_blob);
+end;
+
+-- TEST: blob type not specified, this cannot do this store
+-- + CALL cql_cursor_from_blob(C, a_blob);
+-- + {call_stmt}: err
+-- * error: % blob variable must have a type-kind for type safety 'a_blob'
+-- +1 error:
+proc use_direct_from_blob_badly()
+begin
+  cursor C like select 1 id, 'foo' name;
+
+  let a_blob := (select 'x' ~blob~);
+  C:from_blob(a_blob);
 end;
 
 @attribute(cql:backed_by=simple_backing_table)
@@ -23365,7 +23419,7 @@ proc test_update_from_insert_list(like update_stmt_table(id, name))
 begin
   cursor cur like update_stmt_table(a, b, c);
   fetch cur from values("a", "b", "c");
-  
+
   update update_stmt_table
     set (like update_stmt_table(-id)) = (locals.name, from cur, 1, 2, 3)
     where id = locals.id
@@ -24012,7 +24066,7 @@ declare function create_event() create object<event> not null;
 declare proc get_object_event_invitees(event_ object<event>, out value object<event_invitees> not null);
 declare proc event_invitees_get(invitees object<event_invitees>, field text not null, out value text not null);
 
-@op object<event> : get invitees as get_object_event_invitees; 
+@op object<event> : get invitees as get_object_event_invitees;
 @op object<event_invitees> : get all as event_invitees_get;
 
 -- TEST: when calling proc as func the kind of the out parameter should be preserved

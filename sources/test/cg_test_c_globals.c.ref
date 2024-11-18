@@ -77,6 +77,10 @@ extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C
 extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
+extern CQL_WARN_UNUSED cql_code cql_cursor_to_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable *_Nonnull result);
+
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b);
+
 
 // The statement ending at line XXXX
 
@@ -89,6 +93,20 @@ extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code
 /*
 @ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX
@@ -111,7 +129,7 @@ CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x) {
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 
-  _rc_ = cql_cursor_from_blob(&serialized_cursor_dyn, x);
+  _rc_ = cql_cursor_from_blob(_db_, &serialized_cursor_dyn, x);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
 

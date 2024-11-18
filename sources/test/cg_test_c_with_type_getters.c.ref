@@ -77,6 +77,10 @@ extern cql_blob_ref _Nullable cql_cursor_get_blob(cql_dynamic_cursor *_Nonnull C
 extern cql_object_ref _Nullable cql_cursor_get_object(cql_dynamic_cursor *_Nonnull C, cql_int32 icol);
 extern CQL_WARN_UNUSED cql_code cql_throw(sqlite3 *_Nonnull _db_, cql_int32 code);
 
+extern CQL_WARN_UNUSED cql_code cql_cursor_to_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable *_Nonnull result);
+
+extern CQL_WARN_UNUSED cql_code cql_cursor_from_blob(sqlite3 *_Nonnull _db_, cql_dynamic_cursor *_Nonnull C, cql_blob_ref _Nullable b);
+
 extern CQL_WARN_UNUSED cql_code selector(sqlite3 *_Nonnull _db_, sqlite3_stmt *_Nullable *_Nonnull _result_stmt);
 
 #ifndef row_type_decl_emit_object_result_set_row
@@ -119,6 +123,20 @@ typedef struct simple_container_proc_row {
 /*
 @ATTRIBUTE(cql:builtin)
 DECLARE PROC cql_throw (code INT!) USING TRANSACTION;
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_to_blob (C CURSOR, OUT result BLOB!) USING TRANSACTION;
+*/
+
+// The statement ending at line XXXX
+
+/*
+@ATTRIBUTE(cql:builtin)
+DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 */
 
 // The statement ending at line XXXX

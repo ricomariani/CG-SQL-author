@@ -10815,7 +10815,7 @@ static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
   AST_REWRITE_INFO_SET(cursor->lineno, cursor->filename);
 
   ast_node *blob = new_ast_str("$");
-  blob->sem = new_sem(SEM_TYPE_BLOB);
+  blob->sem = new_sem(SEM_TYPE_BLOB|SEM_TYPE_NOTNULL);
   blob->sem->name = "$";
   blob->sem->kind = cursor->sem->sptr->struct_name;
 

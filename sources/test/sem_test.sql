@@ -14107,6 +14107,15 @@ begin
   set B from cursor C;
 end;
 
+-- TEST: bad box arg as a param
+-- * error: % expression must be of type object<T cursor> where T is a valid shape name 'OUT b BLOB<foo>'
+-- +1 error:
+proc bogus_param_for_box(out b blob<foo>)
+begin
+  cursor C for select * From bar;
+  set b from cursor C;
+end;
+
 -- TEST: unbox a cursor (success path)
 -- + {declare_cursor}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
 -- + {name C}: C: bar: { id: integer notnull, name: text, rate: longint } variable boxed
@@ -21401,9 +21410,9 @@ create table structured_storage(
 );
 
 -- TEST: verify basic analysis of structure storage, correct case
--- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
--- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
--- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
+-- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
 -- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 -- - error:
 proc blob_serialization_test()

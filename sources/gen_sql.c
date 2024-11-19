@@ -3946,7 +3946,7 @@ static void gen_like_param(ast_node *ast) {
   gen_shape_def(shape_def);
 }
 
-static void gen_param(ast_node *ast) {
+cql_noexport void gen_param(ast_node *ast) {
   Contract(is_ast_param(ast));
 
   EXTRACT_NOTNULL(param_detail, ast->right);

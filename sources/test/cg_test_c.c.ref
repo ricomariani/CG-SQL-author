@@ -14647,10 +14647,10 @@ BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
   FETCH C;
-  DECLARE B BLOB<structured_storage>;
-  SET B FROM CURSOR C;
+  DECLARE B BLOB<structured_storage>!;
+  CALL cql_cursor_to_blob(C, B);
   CURSOR D LIKE C;
-  FETCH D FROM BLOB B;
+  CALL cql_cursor_from_blob(D, B);
 END;
 */
 
@@ -14744,6 +14744,7 @@ CQL_WARN_UNUSED cql_code blob_serialization_test(sqlite3 *_Nonnull _db_) {
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_INT32, &C.id,
                  CQL_DATA_TYPE_NOT_NULL | CQL_DATA_TYPE_STRING, &C.name);
   if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
+  cql_set_blob_ref(&B, NULL);
   _rc_ = cql_cursor_to_blob(_db_, &C_dyn, &B);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = cql_cursor_from_blob(_db_, &D_dyn, B);
@@ -14766,7 +14767,7 @@ cql_cleanup:
 PROC deserialize_func ()
 BEGIN
   CURSOR C LIKE structured_storage;
-  FETCH C FROM BLOB make_blob();
+  CALL cql_cursor_from_blob(C, make_blob());
 END;
 */
 
@@ -14900,16 +14901,16 @@ cql_dynamic_cursor gr_blob_cursor_dyn = {
 // The statement ending at line XXXX
 
 /*
-PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>)
+PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>!)
 BEGIN
-  SET b FROM CURSOR gr_blob_cursor;
+  CALL cql_cursor_to_blob(gr_blob_cursor, b);
 END;
 */
 
 #define _PROC_ "use_gr_cursor_for_serialization"
 /*
 export:
-DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
+DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>!) USING TRANSACTION;
 */
 CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable *_Nonnull b) {
   cql_contract_argument_notnull((void *)b, 1);
@@ -14918,6 +14919,7 @@ CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_,
   cql_error_prepare();
 
   *(void **)b = NULL; // set out arg to non-garbage
+  cql_set_blob_ref(&*b, NULL);
   _rc_ = cql_cursor_to_blob(_db_, &gr_blob_cursor_dyn, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;

@@ -314,6 +314,6 @@ extern cql_dynamic_cursor serialized_cursor_dyn;
 #endif
 
 // The statement ending at line XXXX
-extern CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x);
+extern CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nonnull x);
 
 // The statement ending at line XXXX

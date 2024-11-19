@@ -229,7 +229,7 @@ DECLARE PROC slash_star_and_star_slash ();
 DECLARE PROC blob_serialization_test () USING TRANSACTION;
 DECLARE PROC deserialize_func () USING TRANSACTION;
 DECLARE PROC bigstuff ();
-DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>) USING TRANSACTION;
+DECLARE PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>!) USING TRANSACTION;
 DECLARE PROC mutated_in_param_ref (x TEXT);
 DECLARE PROC some_redeclared_out_proc () OUT (x INT) USING TRANSACTION;
 DECLARE PROC some_redeclared_out_union_proc () OUT UNION (x INT) USING TRANSACTION;

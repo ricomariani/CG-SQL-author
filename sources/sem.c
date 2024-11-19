@@ -890,11 +890,18 @@ static void destroy_name_check(name_check *check) {
 static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
   CSTR result = NULL;
 
+ //rico
+
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
   gen_set_output_buffer(tmp);
-  gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  if (is_ast_param(expr)) {
+    gen_with_callbacks(expr, gen_param, &callbacks);
+  }
+  else {
+    gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  }
   result = Strdup(tmp->ptr);
 
   return result;

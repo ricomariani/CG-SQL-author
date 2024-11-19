@@ -41,9 +41,9 @@ begin
   declare serialized_cursor cursor like blobshape;
 end;
 
-create proc p(x blob<blobshape>)
+create proc p(x blob<blobshape>!)
 begin
-  fetch serialized_cursor from blob x;
+  serialized_cursor:from_blob(x);
 end;
 
 -- TEST: When we emit the group, nothing goes in the header

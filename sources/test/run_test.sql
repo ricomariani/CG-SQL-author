@@ -5246,14 +5246,6 @@ BEGIN
     hash1 := cql_cursor_hash(C);
     hash2 := cql_cursor_hash(D);
 
-/*
-    if (hash1 == hash2) then
-    else
-       printf("C: %s\n", cql_cursor_format(C));
-       printf("D: %s\n", cql_cursor_format(D));
-    end if;
-*/
-
     EXPECT!(hash0 = hash1);  -- control for sanity
     EXPECT!(hash1 = hash2);  -- equivalent data -> same hash (note different string same text)
 

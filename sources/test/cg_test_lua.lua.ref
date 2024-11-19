@@ -7944,10 +7944,10 @@ BEGIN
   CURSOR C FOR
     SELECT 1 AS id, 'foo' AS name;
   FETCH C;
-  DECLARE B BLOB<structured_storage>;
-  SET B FROM CURSOR C;
+  DECLARE B BLOB<structured_storage>!;
+  CALL cql_cursor_to_blob(C, B);
   CURSOR D LIKE C;
-  FETCH D FROM BLOB B;
+  CALL cql_cursor_from_blob(D, B);
 END;
 --]]
 
@@ -7968,7 +7968,7 @@ function blob_serialization_test(_db_)
   -- step and fetch
   _rc_ = cql_multifetch(C_stmt, C, C_types_, C_fields_)
   if _rc_ ~= CQL_ROW and _rc_ ~= CQL_DONE then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
-  _rc_, B = cql_cursor_to_blob(_db_, C, C_types_, C_fields_);
+  _rc_, B = cql_cursor_to_blob(_db_, C, C_types_, C_fields_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = cql_cursor_from_blob(_db_, D, D_types_, D_fields_, B)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
@@ -7986,7 +7986,7 @@ end
 PROC deserialize_func ()
 BEGIN
   CURSOR C LIKE structured_storage;
-  FETCH C FROM BLOB make_blob();
+  CALL cql_cursor_from_blob(C, make_blob());
 END;
 --]]
 
@@ -8050,9 +8050,9 @@ gr_blob_cursor_types_ = "IS"
 -- The statement ending at line XXXX
 
 --[[
-PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>)
+PROC use_gr_cursor_for_serialization (OUT b BLOB<structured_storage>!)
 BEGIN
-  SET b FROM CURSOR gr_blob_cursor;
+  CALL cql_cursor_to_blob(gr_blob_cursor, b);
 END;
 --]]
 
@@ -8060,7 +8060,7 @@ function use_gr_cursor_for_serialization(_db_)
   local _rc_ = CQL_OK
   local b
 
-  _rc_, b = cql_cursor_to_blob(_db_, gr_blob_cursor, gr_blob_cursor_types_, gr_blob_cursor_fields_);
+  _rc_, b = cql_cursor_to_blob(_db_, gr_blob_cursor, gr_blob_cursor_types_, gr_blob_cursor_fields_)
   if _rc_ ~= CQL_OK then cql_error_trace(_rc_, _db_); goto cql_cleanup; end
   _rc_ = CQL_OK
 

@@ -80389,9 +80389,9 @@ END;
       | {call_stmt}: ok dml_proc
       | | {name cql_cursor_to_blob}: ok dml_proc
       | | {arg_list}: ok
-      |   | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+      |   | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
       |   | {arg_list}
-      |     | {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
+      |     | {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required
       | {declare_cursor_like_name}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
       | | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
       | | {shape_def}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
@@ -80400,7 +80400,7 @@ END;
       | {call_stmt}: ok dml_proc
         | {name cql_cursor_from_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+          | {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
           | {arg_list}
             | {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 
@@ -80503,9 +80503,9 @@ END;
       | {call_stmt}: ok dml_proc
         | {name cql_cursor_to_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
           | {arg_list}
-            | {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
+            | {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required
 
 The statement ending at line XXXX
 
@@ -80557,9 +80557,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a typ
       | {call_stmt}: err
         | {name cql_cursor_to_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
           | {arg_list}
-            | {name a_blob}: a_blob: blob notnull variable was_set
+            | {name a_blob}: a_blob: blob notnull variable init_required
 
 The statement ending at line XXXX
 
@@ -80620,7 +80620,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a typ
       | {call_stmt}: err
         | {name cql_cursor_from_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor
           | {arg_list}
             | {name a_blob}: a_blob: blob notnull variable
 
@@ -83165,7 +83165,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0061: in the cursor and the blob ty
       | {call_stmt}: err
         | {name cql_cursor_to_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc shape_storage serialize
+          | {name C}: C: select: { id: integer notnull, name: integer notnull } variable dml_proc shape_storage
           | {arg_list}
             | {name B}: err
 
@@ -83220,9 +83220,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0453: blob type is not a valid tabl
       | {call_stmt}: err
         | {name cql_cursor_to_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
           | {arg_list}
-            | {name B}: B: blob<not_a_table> notnull variable was_set
+            | {name B}: B: blob<not_a_table> notnull variable init_required
 
 The statement ending at line XXXX
 
@@ -83275,9 +83275,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0456: blob type is a view, not a ta
       | {call_stmt}: err
         | {name cql_cursor_to_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
           | {arg_list}
-            | {name B}: B: blob<MyView> notnull variable was_set
+            | {name B}: B: blob<MyView> notnull variable init_required
 
 The statement ending at line XXXX
 
@@ -83329,9 +83329,9 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0455: blob variable must have a typ
       | {call_stmt}: err
         | {name cql_cursor_to_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+          | {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage
           | {arg_list}
-            | {name B}: B: blob notnull variable was_set
+            | {name B}: B: blob notnull variable init_required
 
 The statement ending at line XXXX
 
@@ -83460,7 +83460,7 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0457: the indicated table is not ma
       | {call_stmt}: err
         | {name cql_cursor_from_blob}: ok dml_proc
         | {arg_list}: ok
-          | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor serialize
+          | {name C}: C: foo: { id: integer notnull primary_key autoinc } variable shape_storage value_cursor
           | {arg_list}
             | {name b}: b: blob<foo> variable
 
@@ -84337,7 +84337,7 @@ test/sem_test.sql:XXXX:1: error: in dot : CQL0460: field of a nonnull reference 
       | {call_stmt}: ok dml_proc
       | | {name cql_cursor_from_blob}: ok dml_proc
       | | {arg_list}: ok
-      |   | {name c2}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor serialize
+      |   | {name c2}: c2: has_row_check_blob: { a: text notnull, b: text } variable shape_storage value_cursor
       |   | {arg_list}
       |     | {name b}: b: blob<has_row_check_blob> variable
       | {let_stmt}: x2: text notnull variable

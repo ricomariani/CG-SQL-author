@@ -890,8 +890,6 @@ static void destroy_name_check(name_check *check) {
 static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
   CSTR result = NULL;
 
- //rico
-
   gen_sql_callbacks callbacks;
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
@@ -18020,33 +18018,12 @@ cql_noexport void sem_validate_cursor_blob_compat(
   Contract(src == blob || src == cursor);
   Contract(dest == blob || dest == cursor);
 
-  if (!blob->sem || !blob->sem->name || strcmp("$", blob->sem->name)) {
-    sem_expr(blob);
-    if (is_error(blob)) {
-      record_error(ast_error);
-      return;
-    }
-  }
-
-  // the blob must be a blob
-  if (!is_blob(blob->sem->sem_type)) {
-    report_error(blob, "CQL0461: fetch from blob operand is not a blob", NULL);
-    record_error(ast_error);
-    return;
-  }
-
-  // and the cursor must be a cursor
-  sem_cursor(cursor);
-  if (is_error(cursor)) {
-    record_error(ast_error);
-    return;
-  }
-
-  if (!is_auto_cursor(cursor->sem->sem_type)) {
-    report_error(cursor, "CQL0454: cursor was not declared for storage", cursor->sem->name);
-    record_error(ast_error);
-    return;
-  }
+  // function validation already checked this
+  Contract(!is_error(blob));
+  Contract(is_blob(blob->sem->sem_type));
+  Contract(!is_error(cursor));
+  Contract(is_cursor(cursor->sem->sem_type));
+  Contract(is_auto_cursor(cursor->sem->sem_type));
 
   // Note that the blob might have been rewritten due to notnull improvement
   // but that's ok, we only need the name and it's in the sem node for us now.

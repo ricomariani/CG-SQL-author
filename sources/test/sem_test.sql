@@ -21410,8 +21410,8 @@ create table structured_storage(
 );
 
 -- TEST: verify basic analysis of structure storage, correct case
--- + {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
 -- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
 -- + {name D}: D: select: { id: integer notnull, name: text notnull } variable shape_storage value_cursor serialize
 -- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 -- - error:
@@ -21440,10 +21440,10 @@ begin
 end;
 
 -- TEST: ok to store the blob if blob and type specified and they match
+-- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
+-- + {name a_blob}: a_blob: blob<structured_storage> notnull variable init_required was_set
 -- + {call_stmt}: ok dml_proc
 -- + {name cql_cursor_to_blob}: ok dml_proc
--- + {name C}: C: select: { id: integer notnull, name: text notnull } variable dml_proc shape_storage serialize
--- + {name a_blob}: a_blob: blob<structured_storage> notnull variable was_set
 -- - error:
 proc use_direct_blob_forms()
 begin

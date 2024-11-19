@@ -910,6 +910,16 @@ static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   }
 }
 
+
+/* TODO -- this pattern is broken... b is released too soon
+declare function foo(b blob) create blob;
+
+proc x(b blob)
+begin
+  b := foo(b);
+end;
+*/
+
 // Functions are a little special in that they can return reference types that
 // come with a +1 reference.  To handle those you do not want to upcount the
 // target. We release whatever we're holding and then hammer it with the new

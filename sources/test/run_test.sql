@@ -5168,10 +5168,14 @@ BEGIN
       j += 1;
 
       -- invoke da smasher
-      my_blob := corrupt_blob_with_invalid_shenanigans(my_blob);
+      let b_temp := my_blob; -- avoid bug in cg_copy_for_create
+      my_blob := corrupt_blob_with_invalid_shenanigans(b_temp);
 
       try
         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
+        -- each attempt will be more smashed, there are 100 trails with 10 smashes each
+        -- each smash clobbers 20 bytes of the blob
+
         test_cursor_both:from_blob(my_blob);
         good := good + 1;
       catch

@@ -32,11 +32,11 @@ In SQL/CQL, the main way you define structures, especially those that you
 want to maintain, is with tables.  Hence we introduce notation like this:
 
 ```sql
-@attribute(cql:blob_storage)
+[[blob_storage]]
 create table news_info(
   who text,
   what text,
-  when_ long -- timestamp of some kind
+  `when` long -- timestamp of some kind
 );
 ```
 
@@ -56,7 +56,7 @@ can be added only at the end, and only if they are nullable. Here we add
 create table news_info(
   who text,
   what text,
-  when_ long -- timestamp of some kind
+  `when` long -- timestamp of some kind
   source text @create(6)
 );
 ```
@@ -92,22 +92,22 @@ and not so much in database operations.
 
 #### Creating Blobs with Blob Storage
 
-You can use the `SET` statement on a variable of type `blob<news_info>`
-starting from any cursor that has shape `news_info` like so:
+You can use the `to_blob` pipeline function on a cursor to get a blob.
+In the below `C:to_blob` becomes simply `cql_cursor_to_blob(C)`.
 
 ```sql
 create proc make_blob(like news_info, out result blob<news_info>)
 begin
   -- declare the cursor
-  declare c cursor like news_info;
+  cursor C like news_info;
   -- load it from loose arguments
   fetch c from arguments;
   -- set the blob variable
-  set result from cursor c;
+  set result := C:to_blob;
 END;
 ```
 
-This declares a cursor, loads it from argument values, and converts it
+The above declares a cursor, loads it from argument values, and converts it
 to a blob.  Of course any of the usual cursor building forms can be used
 to power your blob creation, you just do one serialization at the end.
 The above is assembling a blob from arguments but you could equally make
@@ -118,10 +118,10 @@ create proc get_news_info(id_ long not null, out result blob<news_info>)
 begin
    -- use our @columns sugar syntax for getting just news_info columns from
    -- a table with potentially lots of stuff (or an error if it's missing columns)
-   declare c cursor for
+   cursor C for
      select @columns(like news_info) from some_source_of_info where info.id = id_;
    fetch c;
-   set result from cursor c;
+   set result := C:to_blob;
 END;
 ```
 
@@ -129,7 +129,7 @@ There are *many* cursor fetch forms, including dummy data forms and other
 interesting bits of sugar.  You can fetch a cursor from arguments, from
 other cursors, and even combinations.  Because cursors are the source of
 new blobs,  any of these data acquistion forms are viable and convenient
-sources of data.
+sources of data with which to make blobs.
 
 #### Unpacking Blob Storage
 
@@ -143,28 +143,30 @@ from a blob so we can read the data values. To do this use this form:
 let b := (select news_info from info where id = id_ if nothing null);
 
 -- create a suitable cursor with the same shape
-declare c cursor like b;
+cursor C like b;
 
 -- load the cursor (note that this can throw an exception if the blob is corrupt)
-fetch c from b;
--- now use c.who, c.what, etc.
+C:from_blob(b);
+
+-- now use C.who, C.what, etc.
 ```
 
 Once the data is loaded in a cursor it is very economical to access on a
 field-by-field basis, and, since the deserialization of the blob happened
 all at once, that can also be economical.
 
->NOTE: The runtime cannot assume that the blob is well formed, it could
->be coming from anywhere.  For secure-code reasons it must assume the is
->"hostile".  Hence the decoding validates the shape, internal lengths,
->and so forth.  Therefore there are many ways it might fail.
+>NOTE: The runtime cannot assume that the blob is well formed, it could be
+>coming from anywhere.  If only for security reasons it must assume the blob is
+>"hostile".  Hence the decoding validates the shape, internal lengths, and so
+>forth.  Therefore there are many ways conversion might fail.
 
-Once you have the cursor you can do any of the usual data operations;
-you could even make new blobs with different combinations by slicing the
-cursor fields using the `LIKE` operator.  You can return the cursor with
-`OUT`, or `OUT UNION`, or pass the blob fields as arguments to functions
-using the `FROM` forms. The cracked blob is fully usable for all the
-usual CQL things you might need to do.
+Once you have the cursor you can do any of the usual data operations; you could
+even make new blobs with different combinations by slicing the cursor fields
+using the `LIKE` operator.  You can return the cursor with `OUT`, or `OUT UNION`,
+or pass the blob fields as arguments to functions using the `FROM`
+forms. The cracked blob is fully usable for all the usual CQL things you might
+need to do.  Importantly, blob storage can contain other blobs so you can nest
+shapes as needed.
 
 #### Blob Storage Representation
 
@@ -173,20 +175,34 @@ be self-describing.  We must also be able to throw an exception if an
 incorrect or invalid blob is used when loading a cursor, so the blob
 has to contain the following:
 
-* the number of columns in the blob data type when it was created
+* the number of columns in the blob data type when it was created, the count is
+  inferred from the field types which are null terminated
 * the type of each field (this is encoded as a single plain-text character)
   * the types are bool, int, long, (double) real, (string) text, blob;
   * we use 'f' (flag) for bools, hence the codes are "fildsb"
-  * these are encoded with one letter each, upper case meaning 'not null' so the storage might be "LFss"
-  * the blob begins with a null terminated string that serves for both the count and the types
-* Each nullable field may be present or null; 1 bit is used to store this fact.  The bits are in an array of bytes that comes immediately after the type info (the type info implicitly tells us the size of this array)
-* Boolean values are likewise encoded as bits within the same array, so the total number of bits stored is nullables plus booleans (nullable booleans use 2 bits)
-* When reading a newer version of a record from an older piece of data that is missing a column then the column is assumed to be NULL
-* Any columns added after the initial version (using @create) must be nullable; this is normal for adding columns to existing schema
-* Integers and longs are stored in a [`varint`/`VLQ`](https://en.wikipedia.org/wiki/Variable-length_quantity) format after `zigzag` encoding (same article)
-* Text is stored inline in null terminated strings (embedded nulls are not allowed in CQL text)
-* Nested blobs are stored inline, with a length prefix encoded like any other int
+  * these are encoded with one letter each, upper case meaning 'not null' so the
+    storage might be "LFss"
+  * the blob begins with a null terminated string that serves for both the count
+    and the types
+* Each nullable field may be present or null; 1 bit is used to store this fact.
+  The bits are in an array of bytes that comes immediately after the type info
+  (the type info implicitly tells us the size of this array)
+* Boolean values are likewise encoded as bits within the same array, so the
+  total number of bits stored is nullables plus booleans (nullable booleans use
+  2 bits, even if null both bits are stored)
+* When reading a newer version of a record from an older piece of data that is
+  missing a column then the column is assumed to be NULL
+* Any columns added after the initial version (using @create) must be nullable;
+  this is normal for adding columns to existing schema
+* Integers and longs are stored in a
+  [`varint`/`VLQ`](https://en.wikipedia.org/wiki/Variable-length_quantity)
+  format after `zigzag` encoding (same article)
+* Text is stored inline in null terminated strings (embedded nulls are not
+  allowed in CQL text)
+* Nested blobs are stored inline, with a length prefix encoded like any other
+  int (varint zigzag)
 * Floating point is stored in IEEE 754 format which is already highly portable
+* None of these encodings have endian issues, they are fully specified byte orders
 
 
 #### Blob Storage Customization
@@ -214,7 +230,7 @@ that are likely to come up.
 create table news_info(
   who text,
   what text,
-  when_ long -- timestamp of some kind
+  `when` long -- timestamp of some kind
 );
 
 -- a place where the blob appears in storage
@@ -227,17 +243,17 @@ create table some_table(
 -- a procedure that creates a news_info blob from loose args
 create proc make_blob(like news_info, out result blob<news_info>)
 begin
-  declare c cursor like news_info;
-  fetch c from arguments;
-  set result from cursor c;
+  cursor C like news_info;
+  fetch C from arguments;
+  result := C:to_blob;
 end;
 
 -- a procedure that cracks the blob, creating a cursor
 create proc crack_blob(data blob<news_info>)
 begin
-  declare c cursor like news_info;
-  fetch c from data;
-  out c;
+  cursor C like news_info;
+  C:from_blob(data);
+  out C;
 end;
 
 -- A procedure that cracks the blob into loose args if needed
@@ -249,13 +265,13 @@ create proc crack_blob_to_vars(
   data blob<news_info>,
   out who text,
   out what text,
-  out when_ long)
+  out `when` long) -- when is a keyword, `when` is not.
 begin
-  declare c cursor like news_info;
-  fetch c from data;
-  set who := c.who;
-  set what := c.what;
-  set when_ := c.when_;
+  cursor C like news_info;
+  C:from_blob(data);
+  who := C.who;
+  what := C.what;
+  `when` := C.`when`;
 end;
 
 -- we're going to have a result with x/y columns in it
@@ -274,7 +290,7 @@ interface my_result_shape (
 
 create proc select_and_crack(whatever bool not null)
 begin
-  declare c cursor for select * from some_table where whatever;
+  cursor C for select * from some_table where whatever;
   loop fetch c
   begin
     -- crack the blob in c into a new cursor 'news'
@@ -290,6 +306,29 @@ begin
     out union result;
   end;
 end;
+```
+
+#### Deprecated Syntax
+
+These forms are no longer supported:
+
+```
+-- loading a blob from a cursor
+set a_blob from cursor C;
+
+  -- new supported forms, these are all the same thing
+  let b := C:to_blob;
+  C:to_blob(b);
+  let b := cql_cursor_to_blob(C);
+  cql_cursor_to_blob(C, b);
+
+
+-- loading a cursor from a blob
+fetch C from blob b;
+
+  -- new supported forms, these are all the same thing
+  C:from_blob(b);
+  cql_cursor_from_blob(C, b);
 ```
 
 ### Backed Tables
@@ -500,13 +539,13 @@ Armed with these basic transforms we can already do a simple transform
 to make select statement work.  Suppose CQL sees:
 
 ```sql
-declare C cursor for select * from backed;
+cursor C for select * from backed;
 ```
 
 The compiler can make this select statement work with a simple transform:
 
 ```sql
- DECLARE C CURSOR FOR WITH
+ cursor C FOR WITH
   backed (*) AS (CALL _backed())
   SELECT *
     FROM backed;

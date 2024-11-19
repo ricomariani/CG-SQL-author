@@ -4655,7 +4655,7 @@ BEGIN
   declare cursor_with_extras cursor like storage_with_extras;
   caught := false;
   any_blob := stash_notnulls;
-  declare blob_with_extras blob<storage_with_extras>!;
+  declare blob_with_extras blob<storage_with_extras>;
   blob_with_extras := any_blob;
   try
     cursor_with_extras:from_blob(blob_with_extras);
@@ -4712,7 +4712,7 @@ BEGIN
   -- set up a totally different stored blob
   declare cursor_other cursor like storage_one_int;
   fetch cursor_other using 5 x;
-  declare blob_other blob<storage_one_int>!;
+  declare blob_other blob<storage_one_int>;
   cursor_other:to_blob(blob_other);
   declare test_cursor_other cursor like cursor_other;
   test_cursor_other:from_blob(blob_other);

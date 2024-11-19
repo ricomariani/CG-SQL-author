@@ -22543,9 +22543,24 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
     }
 
     if (is_nullable(sem_type_param) != is_nullable(sem_type_arg)) {
-      CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
-      report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
-      return false;
+
+      // not null _out_ parameters can be satisfied by nullable arguments for reference types
+      bool_t different_ok =
+         !is_in_parameter(sem_type_param) &&
+         is_out_parameter(sem_type_param) &&
+         is_ref_type(sem_type_param) &&
+         !is_nullable(sem_type_param) &&
+         is_nullable(sem_type_arg);
+
+      if (different_ok) {
+         // this is ok, a nullable ref arg can stand in for a not nullable out param
+         // the nullable arg will just end up being not null
+      }
+      else {
+        CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
+        report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
+        return false;
+      }
     }
   }
 

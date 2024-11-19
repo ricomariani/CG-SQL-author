@@ -35796,6 +35796,44 @@ test/sem_test.sql:XXXX:1: error: in str : CQL0210: proc out parameter: arg must 
 
 The statement ending at line XXXX
 
+DECLARE PROC ref_out_proc (OUT x TEXT!);
+
+  {declare_proc_stmt}: ok
+  | {proc_name_type}
+  | | {name ref_out_proc}: ok
+  | | {int 0}
+  | {proc_params_stmts}
+    | {params}: ok
+      | {param}: x: text notnull variable init_required out
+        | {out}
+        | {param_detail}: x: text notnull variable init_required out
+          | {name x}: x: text notnull variable init_required out
+          | {notnull}: text notnull
+            | {type_text}: text
+
+The statement ending at line XXXX
+
+PROC ref_out_notnull ()
+BEGIN
+  DECLARE nullable_ok TEXT;
+  CALL ref_out_proc(nullable_ok);
+END;
+
+  {create_proc_stmt}: ok
+  | {name ref_out_notnull}: ok
+  | {proc_params_stmts}
+    | {stmt_list}: ok
+      | {declare_vars_type}: text
+      | | {name_list}: nullable_ok: text variable was_set
+      | | | {name nullable_ok}: nullable_ok: text variable was_set
+      | | {type_text}: text
+      | {call_stmt}: ok
+        | {name ref_out_proc}: ok
+        | {arg_list}: ok
+          | {name nullable_ok}: nullable_ok: text variable
+
+The statement ending at line XXXX
+
 INSERT INTO foo(id)
   VALUES(coalesce(_sens, 0));
 

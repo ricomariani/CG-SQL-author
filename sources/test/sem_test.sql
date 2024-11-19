@@ -9468,6 +9468,21 @@ call non_sens_proc(int_nn);
 -- +1 error:
 call non_sens_proc_nonnull(X);
 
+
+declare proc ref_out_proc(out x text!);
+
+-- TEST: it's ok to invoke a procedure that has a not null ref out parameter with a nullable ref arg
+-- + {name_list}: nullable_ok: text variable was_set
+-- + {name nullable_ok}: nullable_ok: text variable was_set
+-- + {call_stmt}: ok
+-- + {arg_list}: ok
+-- + {name nullable_ok}: nullable_ok: text variable
+create proc ref_out_notnull()
+begin
+  var nullable_ok text;
+  ref_out_proc(nullable_ok);
+end;
+
 -- TEST: try to insert sensitive data to a non-sensitive column
 -- * error: % cannot assign/copy sensitive expression to non-sensitive target 'id'
 -- +1 error:

@@ -7575,7 +7575,7 @@ static void sem_func_concat_helper(ast_node *call_ast, uint32_t arg_count, bool_
 
 static void sem_func_concat(ast_node *ast, uint32_t arg_count) {
   // concat ( X, [arg_list] )
-  if (!sem_validate_arg_pattern("filrtb,[filrtb,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb,[fildsb,*]", ast, arg_count)) {
     return;
   }
 
@@ -7584,7 +7584,7 @@ static void sem_func_concat(ast_node *ast, uint32_t arg_count) {
 
 static void sem_func_concat_ws(ast_node *ast, uint32_t arg_count) {
   // concat_ws ( SEP, X, [arg_list] )
-  if (!sem_validate_arg_pattern("t,filrtb,[filrtb,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,fildsb,[fildsb,*]", ast, arg_count)) {
     return;
   }
 
@@ -8268,7 +8268,7 @@ static void sem_aggr_func_min_or_max(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("filrt,[filrt,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("filds,[filds,*]", ast, arg_count)) {
     return;
   }
 
@@ -8331,7 +8331,7 @@ static void sem_func_round(ast_node *ast, uint32_t arg_count) {
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // round ( value, [digits] )
-  if (!sem_validate_arg_pattern("r,[fil]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("d,[fil]", ast, arg_count)) {
     return;
   }
 
@@ -8367,7 +8367,7 @@ static void sem_aggr_func_avg(ast_node *ast, uint32_t arg_count) {
 
   // Note: avg does not have a multi-arg form like min/max, only
   // the single arg form is legal in Sqlite
-  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fild", ast, arg_count)) {
     return;
   }
 
@@ -8451,7 +8451,7 @@ static void sem_func_unicode(ast_node *ast, uint32_t arg_count) {
   // unicode rewritten to only appear inside of SQL
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s", ast, arg_count)) {
     return;
   }
 
@@ -8471,7 +8471,7 @@ static void sem_func_typeof(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb", ast, arg_count)) {
     return;
   }
 
@@ -8489,7 +8489,7 @@ static void sem_func_length(ast_node *ast, uint32_t arg_count) {
   // length rewritten to only appear inside of SQL
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb", ast, arg_count)) {
     return;
   }
 
@@ -8507,7 +8507,7 @@ static void sem_func_sqlite_compileoption_used(ast_node *ast, uint32_t arg_count
   // rewritten to be always in SQL
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s", ast, arg_count)) {
     return;
   }
 
@@ -8547,7 +8547,7 @@ static void sem_func_trim(ast_node *ast, uint32_t arg_count) {
   // trim rewritten to only appear inside of SQL
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,[s]", ast, arg_count)) {
     return;
   }
 
@@ -8582,7 +8582,7 @@ static void sem_func_matcher(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_like(ast_node *ast, uint32_t arg_count) {
-  if (!sem_validate_arg_pattern("t,t,[t]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,s,[s]", ast, arg_count)) {
     return;
   }
 
@@ -8590,7 +8590,7 @@ static void sem_func_like(ast_node *ast, uint32_t arg_count) {
 }
 
 static void sem_func_glob(ast_node *ast, uint32_t arg_count) {
-  if (!sem_validate_arg_pattern("t,t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,s", ast, arg_count)) {
     return;
   }
 
@@ -8604,7 +8604,7 @@ static void sem_func_quote(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb", ast, arg_count)) {
     return;
   }
 
@@ -8621,7 +8621,7 @@ static void sem_func_soundex(ast_node *ast, uint32_t arg_count) {
 
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s", ast, arg_count)) {
     return;
   }
 
@@ -8638,7 +8638,7 @@ static void sem_func_hex(ast_node *ast, uint32_t arg_count) {
 
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb", ast, arg_count)) {
     return;
   }
 
@@ -8655,7 +8655,7 @@ static void sem_func_unhex(ast_node *ast, uint32_t arg_count) {
 
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,[s]", ast, arg_count)) {
     return;
   }
 
@@ -8681,7 +8681,7 @@ static void sem_func_json_helper(ast_node *ast, uint32_t arg_count, sem_t result
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb", ast, arg_count)) {
     return;
   }
 
@@ -8717,7 +8717,7 @@ static void sem_func_json_array_helper(ast_node *ast, uint32_t arg_count, sem_t 
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("[filrt,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("[filds,*]", ast, arg_count)) {
     return;
   }
 
@@ -8743,7 +8743,7 @@ static void sem_func_json_item_path_helper(ast_node *ast, uint32_t arg_count, se
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("tb,[t]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb,[s]", ast, arg_count)) {
     return;
   }
 
@@ -8773,7 +8773,7 @@ static void sem_func_json_error_position(ast_node *ast, uint32_t arg_count) {
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("tb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb", ast, arg_count)) {
     return;
   }
 
@@ -8792,7 +8792,7 @@ static void sem_func_json_extract_helper(ast_node *ast, uint32_t arg_count, sem_
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("tb,t,[t,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb,s,[s,*]", ast, arg_count)) {
     return;
   }
 
@@ -8822,7 +8822,7 @@ static void sem_func_json_mod_helper(ast_node *ast, uint32_t arg_count, sem_t se
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // any even number of args is wrong including zero
-  if (!sem_validate_arg_pattern("tb,[t,nfilrt,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb,[s,nfilds,*]", ast, arg_count)) {
     return;
   }
 
@@ -8885,7 +8885,7 @@ static void sem_func_json_object_helper(ast_node *ast, uint32_t arg_count, sem_t
   // json functions can only appear inside of SQL, they are rewritten if elsewhere
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("[t,nfilrt,*]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("[s,nfilds,*]", ast, arg_count)) {
     return;
   }
 
@@ -8914,7 +8914,7 @@ static void sem_func_json_patch_helper(ast_node *ast, uint32_t arg_count, sem_t 
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // exactly two arguments both json
-  if (!sem_validate_arg_pattern("tb,tb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb,sb", ast, arg_count)) {
     return;
   }
 
@@ -8941,7 +8941,7 @@ static void sem_func_json_valid(ast_node *ast, uint32_t arg_count) {
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // exactly two arguments first json, second numeric
-  if (!sem_validate_arg_pattern("tb,[filr]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("sb,[fild]", ast, arg_count)) {
     return;
   }
 
@@ -8961,7 +8961,7 @@ static void sem_func_json_quote(ast_node *ast, uint32_t arg_count) {
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // exactly two arguments first json, second numeric
-  if (!sem_validate_arg_pattern("nfilrt", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("nfilds", ast, arg_count)) {
     return;
   }
 
@@ -8980,7 +8980,7 @@ static void sem_aggr_func_json_group_array_helper(ast_node *ast, uint32_t arg_co
     return;
   }
 
-  if (!sem_validate_arg_pattern("nfilrtb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("nfildsb", ast, arg_count)) {
     return;
   }
 
@@ -9007,7 +9007,7 @@ static void sem_aggr_func_json_group_object_helper(ast_node *ast, uint32_t arg_c
     return;
   }
 
-  if (!sem_validate_arg_pattern("nfilrtb,nfilrtb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("nfildsb,nfildsb", ast, arg_count)) {
     return;
   }
 
@@ -9076,7 +9076,7 @@ static void sem_func_instr(ast_node *ast, uint32_t arg_count) {
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // two text arguments
-  if (!sem_validate_arg_pattern("t,t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,s", ast, arg_count)) {
     return;
   }
 
@@ -9096,7 +9096,7 @@ static void sem_func_randomblob(ast_node *ast, uint32_t arg_count) {
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
   // one numeric arg
-  if (!sem_validate_arg_pattern("bilr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("bild", ast, arg_count)) {
     return;
   }
 
@@ -9115,7 +9115,7 @@ static void sem_func_sign(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   // one numeric arg
-  if (!sem_validate_arg_pattern("ilr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("ild", ast, arg_count)) {
     return;
   }
 
@@ -9141,7 +9141,7 @@ static void sem_func_abs(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("ilr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("ild", ast, arg_count)) {
     return;
   }
 
@@ -9208,7 +9208,7 @@ static void sem_func_attest_notnull(ast_node *ast, uint32_t arg_count, uint32_t 
     return;
   }
 
-  if (!sem_validate_arg_pattern("filrtbo", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsbo", ast, arg_count)) {
     return;
   }
 
@@ -9371,7 +9371,7 @@ static void sem_func_upper(ast_node *ast, uint32_t arg_count) {
   // upper is rewritten to only appear in sql
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s", ast, arg_count)) {
     return;
   }
 
@@ -9402,7 +9402,7 @@ static void sem_validate_sum_or_total(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!sem_validate_arg_pattern("filr", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fild", ast, arg_count)) {
     return;
   }
 
@@ -9477,7 +9477,7 @@ static void sem_func_substr(ast_node *ast, uint32_t arg_count) {
   // substr is rewritten to only appear inside of SQL
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  if (!sem_validate_arg_pattern("t,filr,[filr]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,fild,[fild]", ast, arg_count)) {
     return;
   }
 
@@ -9520,7 +9520,7 @@ static void sem_func_replace(ast_node *ast, uint32_t arg_count) {
   EXTRACT(arg_list, call_arg_list->right);
 
   // All three arguments must be provided.
-  if (!sem_validate_arg_pattern("t,t,t", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,s,s", ast, arg_count)) {
     return;
   }
 
@@ -9773,7 +9773,7 @@ static void sem_aggr_func_group_concat(ast_node *ast, uint32_t arg_count) {
     return;
   }
 
-  if (!sem_validate_arg_pattern("filrtb,[t]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb,[s]", ast, arg_count)) {
     return;
   }
 
@@ -9811,7 +9811,7 @@ static void sem_strftime(ast_node *ast, uint32_t arg_count, bool_t has_format, s
   // these are all rewritten to sql context
   Contract(sem_validate_appear_inside_sql_stmt(ast));
 
-  CSTR arg_pattern = has_format ? "t,t,[t,*]" : "t,[t,*]";
+  CSTR arg_pattern = has_format ? "s,s,[s,*]" : "s,[s,*]";
 
   if (!sem_validate_arg_pattern(arg_pattern, ast, arg_count)) {
     return;
@@ -9944,7 +9944,7 @@ static void sem_func_nullable(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("filrtbo", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsbo", ast, arg_count)) {
     return;
   }
 
@@ -10006,7 +10006,7 @@ static void sem_func_likelihood(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("filrtb,r", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb,d", ast, arg_count)) {
     return;
   }
 
@@ -10029,7 +10029,7 @@ static void sem_func_sqlite_offset(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NAME_AST(name_ast, ast->left)
 
   // no object, no null literal
-  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb", ast, arg_count)) {
     return;
   }
 
@@ -10048,7 +10048,7 @@ static void sem_func_load_extension(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NAME_AST(name_ast, ast->left)
 
   // no object, no null literal
-  if (!sem_validate_arg_pattern("t,[t]", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("s,[s]", ast, arg_count)) {
     return;
   }
 
@@ -10072,7 +10072,7 @@ static void sem_func_likely(ast_node *ast, uint32_t arg_count) {
   EXTRACT_NOTNULL(call_arg_list, ast->right);
   EXTRACT(arg_list, call_arg_list->right);
 
-  if (!sem_validate_arg_pattern("filrtb", ast, arg_count)) {
+  if (!sem_validate_arg_pattern("fildsb", ast, arg_count)) {
     return;
   }
 
@@ -26494,8 +26494,8 @@ static void sem_parse_arg_pattern(CSTR input, arg_pattern *out) {
       case 'f': data[item] |= SEM_TYPE_MASK_BOOL; handled = true; break;
       case 'i': data[item] |= SEM_TYPE_MASK_INT;  handled = true; break;
       case 'l': data[item] |= SEM_TYPE_MASK_LONG; handled = true; break;
-      case 'r': data[item] |= SEM_TYPE_MASK_REAL; handled = true; break;
-      case 't': data[item] |= SEM_TYPE_MASK_TEXT; handled = true; break;
+      case 'd': data[item] |= SEM_TYPE_MASK_REAL; handled = true; break;
+      case 's': data[item] |= SEM_TYPE_MASK_TEXT; handled = true; break;
       case 'b': data[item] |= SEM_TYPE_MASK_BLOB; handled = true; break;
       case 'o': data[item] |= SEM_TYPE_MASK_OBJ;  handled = true; break;
       case '[': 

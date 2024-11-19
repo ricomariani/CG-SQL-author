@@ -3742,45 +3742,6 @@ static void cg_lua_fetch_values_stmt(ast_node *ast) {
   }
 }
 
-// native blob storage support, these are just cursor calls
-static void cg_lua_fetch_cursor_from_blob_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
-  CSTR cursor_name = ast->left->sem->name;
-
-  EXTRACT_ANY_NOTNULL(blob, ast->right);
-  Invariant(is_blob(blob->sem->sem_type));
-
-  CG_LUA_PUSH_EVAL(blob, C_EXPR_PRI_ROOT);
-
-  bprintf(cg_main_output,
-    "_rc_ = cql_cursor_from_blob(_db_, %s, %s_types_, %s_fields_, %s)\n",
-    cursor_name,
-    cursor_name,
-    cursor_name,
-    blob_value.ptr
-  );
-  cg_lua_error_on_not_sqlite_ok();
-
-  CG_LUA_POP_EVAL(blob);
-}
-
-// native blob storage support, these are just cursor calls
-static void cg_lua_set_blob_from_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_set_blob_from_cursor_stmt(ast));
-
-  CSTR blob_name  = ast->left->sem->name;
-  CSTR cursor_name = ast->right->sem->name;
-
-  // cursor formal expands to three actual arguments
-  bprintf(cg_main_output, "_rc_, %s = cql_cursor_to_blob(_db_, %s, %s_types_, %s_fields_);\n",
-    blob_name,
-    cursor_name,
-    cursor_name,
-    cursor_name);
-
-  cg_lua_error_on_not_sqlite_ok();
-}
-
 // Fetch has already been rigorously checked so we don't have to worry about
 // argument counts or type mismatches in the codegen.  We have two cases:
 //  * Fetch into variables
@@ -5553,8 +5514,6 @@ cql_noexport void cg_lua_init(void) {
   LUA_STMT_INIT(loop_stmt);
   LUA_STMT_INIT(fetch_stmt);
   LUA_STMT_INIT(fetch_values_stmt);
-  LUA_STMT_INIT(set_blob_from_cursor_stmt);
-  LUA_STMT_INIT(fetch_cursor_from_blob_stmt);
   LUA_STMT_INIT(update_cursor_stmt);
   LUA_STMT_INIT(fetch_call_stmt);
 

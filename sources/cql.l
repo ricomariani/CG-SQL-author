@@ -348,7 +348,6 @@ FOR                              { return FOR; }
 FOREIGN                          { return FOREIGN; }
 FOR{sp}EACH{sp}ROW/{stop}        { return FOR_EACH_ROW; }
 FROM                             { return FROM; }
-FROM{sp}BLOB/{stop}              { return FROM_BLOB; }
 FUNC                             { return FUNC; }
 FUNCTION                         { return FUNCTION; }
 GLOB                             { return GLOB; }

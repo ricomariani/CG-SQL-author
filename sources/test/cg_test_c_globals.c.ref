@@ -114,18 +114,20 @@ DECLARE PROC cql_cursor_from_blob (C CURSOR, b BLOB) USING TRANSACTION;
 // The statement ending at line XXXX
 
 /*
-PROC p (x BLOB<blobshape>)
+PROC p (x BLOB<blobshape>!)
 BEGIN
-  FETCH serialized_cursor FROM BLOB x;
+  CALL cql_cursor_from_blob(serialized_cursor, x);
 END;
 */
 
 #define _PROC_ "p"
 /*
 export:
-DECLARE PROC p (x BLOB<blobshape>) USING TRANSACTION;
+DECLARE PROC p (x BLOB<blobshape>!) USING TRANSACTION;
 */
-CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nullable x) {
+CQL_WARN_UNUSED cql_code p(sqlite3 *_Nonnull _db_, cql_blob_ref _Nonnull x) {
+  cql_contract_argument_notnull((void *)x, 1);
+
   cql_code _rc_ = SQLITE_OK;
   cql_error_prepare();
 

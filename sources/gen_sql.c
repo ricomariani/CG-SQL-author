@@ -3838,28 +3838,6 @@ static void gen_expr_names(ast_node *ast) {
   }
 }
 
-static void gen_fetch_cursor_from_blob_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
-  EXTRACT_ANY_NOTNULL(cursor, ast->left);
-  EXTRACT_ANY_NOTNULL(blob, ast->right);
-
-  gen_printf("FETCH ");
-  gen_expr(cursor, EXPR_PRI_ROOT);
-  gen_printf(" FROM BLOB ");
-  gen_expr(blob, EXPR_PRI_ROOT);
-}
-
-static void gen_set_blob_from_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_set_blob_from_cursor_stmt(ast));
-  EXTRACT_ANY_NOTNULL(blob, ast->left);
-  EXTRACT_ANY_NOTNULL(cursor, ast->right);
-
-  gen_printf("SET ");
-  gen_expr(blob, EXPR_PRI_ROOT);
-  gen_printf(" FROM CURSOR ");
-  gen_expr(cursor, EXPR_PRI_ROOT);
-}
-
 static void gen_fetch_values_stmt(ast_node *ast) {
   Contract(is_ast_fetch_values_stmt(ast));
 
@@ -3968,7 +3946,7 @@ static void gen_like_param(ast_node *ast) {
   gen_shape_def(shape_def);
 }
 
-static void gen_param(ast_node *ast) {
+cql_noexport void gen_param(ast_node *ast) {
   Contract(is_ast_param(ast));
 
   EXTRACT_NOTNULL(param_detail, ast->right);
@@ -5479,7 +5457,6 @@ cql_noexport void gen_init() {
   STMT_INIT(explain_stmt);
   STMT_INIT(expr_stmt);
   STMT_INIT(fetch_call_stmt);
-  STMT_INIT(fetch_cursor_from_blob_stmt);
   STMT_INIT(fetch_stmt);
   STMT_INIT(fetch_values_stmt);
   STMT_INIT(guard_stmt);
@@ -5512,7 +5489,6 @@ cql_noexport void gen_init() {
   STMT_INIT(select_expr_macro_def);
   STMT_INIT(select_nothing_stmt);
   STMT_INIT(select_stmt);
-  STMT_INIT(set_blob_from_cursor_stmt);
   STMT_INIT(set_from_cursor);
   STMT_INIT(switch_stmt);
   STMT_INIT(throw_stmt);

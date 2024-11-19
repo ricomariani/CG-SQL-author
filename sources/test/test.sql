@@ -1656,8 +1656,6 @@ begin
   fetch S;
 end;
 
-fetch C from blob b;
-
 declare group foo
 begin
  declare x integer;

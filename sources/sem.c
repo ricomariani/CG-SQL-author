@@ -894,7 +894,12 @@ static CSTR dup_expr_text_buffer(charbuf *tmp, ast_node *expr) {
   init_gen_sql_callbacks(&callbacks);
   callbacks.mode = gen_mode_echo; // we want all the text, unexpanded, so NOT for sqlite output (this is raw echo)
   gen_set_output_buffer(tmp);
-  gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  if (is_ast_param(expr)) {
+    gen_with_callbacks(expr, gen_param, &callbacks);
+  }
+  else {
+    gen_with_callbacks(expr, gen_root_expr, &callbacks);
+  }
   result = Strdup(tmp->ptr);
 
   return result;
@@ -10808,7 +10813,7 @@ static void sem_infer_result_blob_type(ast_node *ast, ast_node *arg_list) {
   AST_REWRITE_INFO_SET(cursor->lineno, cursor->filename);
 
   ast_node *blob = new_ast_str("$");
-  blob->sem = new_sem(SEM_TYPE_BLOB);
+  blob->sem = new_sem(SEM_TYPE_BLOB|SEM_TYPE_NOTNULL);
   blob->sem->name = "$";
   blob->sem->kind = cursor->sem->sptr->struct_name;
 
@@ -18013,33 +18018,12 @@ cql_noexport void sem_validate_cursor_blob_compat(
   Contract(src == blob || src == cursor);
   Contract(dest == blob || dest == cursor);
 
-  if (!blob->sem || !blob->sem->name || strcmp("$", blob->sem->name)) {
-    sem_expr(blob);
-    if (is_error(blob)) {
-      record_error(ast_error);
-      return;
-    }
-  }
-
-  // the blob must be a blob
-  if (!is_blob(blob->sem->sem_type)) {
-    report_error(blob, "CQL0461: fetch from blob operand is not a blob", NULL);
-    record_error(ast_error);
-    return;
-  }
-
-  // and the cursor must be a cursor
-  sem_cursor(cursor);
-  if (is_error(cursor)) {
-    record_error(ast_error);
-    return;
-  }
-
-  if (!is_auto_cursor(cursor->sem->sem_type)) {
-    report_error(cursor, "CQL0454: cursor was not declared for storage", cursor->sem->name);
-    record_error(ast_error);
-    return;
-  }
+  // function validation already checked this
+  Contract(!is_error(blob));
+  Contract(is_blob(blob->sem->sem_type));
+  Contract(!is_error(cursor));
+  Contract(is_cursor(cursor->sem->sem_type));
+  Contract(is_auto_cursor(cursor->sem->sem_type));
 
   // Note that the blob might have been rewritten due to notnull improvement
   // but that's ok, we only need the name and it's in the sem node for us now.
@@ -18098,30 +18082,6 @@ cql_noexport void sem_validate_cursor_blob_compat(
   return;
 }
 
-// Check for matching cursor and blob
-static void sem_fetch_cursor_from_blob_stmt(ast_node *ast) {
-  Contract(is_ast_fetch_cursor_from_blob_stmt(ast));
-  Contract(!current_joinscope);  // I don't belong inside a select(!)
-
-  EXTRACT_ANY_NOTNULL(cursor, ast->left);
-  EXTRACT_ANY_NOTNULL(blob, ast->right);
-
-  // the final error is set by the helper, 'ast' will have the code regardless
-  sem_validate_cursor_blob_compat(ast, cursor, blob, cursor, blob);
-}
-
-// Check for matching cursor and blob
-static void sem_set_blob_from_cursor_stmt(ast_node *ast) {
-  Contract(is_ast_set_blob_from_cursor_stmt(ast));
-  Contract(!current_joinscope);  // I don't belong inside a select(!)
-
-  EXTRACT_ANY_NOTNULL(blob, ast->left);
-  EXTRACT_ANY_NOTNULL(cursor, ast->right);
-
-  // the final error is set by the helper, 'ast' will have the code regardless
-  sem_validate_cursor_blob_compat(ast, cursor, blob, blob, cursor);
-}
-
 // This is the statement used for loading a value cursor from ... values
 // There are a number of forms, but importantly all of these apply to value
 // cursors, not statement cursors.  So we're never dealing with a sqlite statement
@@ -18131,10 +18091,6 @@ static void sem_set_blob_from_cursor_stmt(ast_node *ast) {
 //   fetch C from shape
 // The "from shape" case is sugar; it is immediately rewritten into
 // the normal fetch from values form where the values are the proc arguments.
-// In addition if the shape is the name of a single blob variable
-// with no other qualifiers then this is the form to convert blobs to cursors
-// or likewise if the target is a blob then this converts cursors to blobs.
-// The statement type is rewritten in sem_try_rewrite_blob_fetch_forms
 // So this leaves us with the first form.
 //   * if the name list is empty that's the same as listing every columnm,
 //     so that is rewritten as well (more sugar)
@@ -18160,21 +18116,6 @@ static void sem_fetch_values_stmt(ast_node *ast) {
   // FETCH name FROM ARGUMENTS;  (rewritten into the first form)
   // FETCH name [(name_list )] FROM ARGUMENTS; (rewritten into the first form)
   // FETCH name USING expr_names;
-
-  if (try_rewrite_blob_fetch_forms(ast)) {
-    // true means affirmative success or failure and errors logged already
-    has_dml = 1;  // this implies return code and all that comes with it
-    if (!is_error(ast)) {
-      // This type of fetch can fail with an exception. If it does not, we
-      // definitely have a row. If it does, we'll be bumped out of the nearest
-      // enclosing jump context and this improvement will be unset
-      // appropriately.
-      sem_set_has_row_improved(cursor->sem->name);
-    }
-    return;
-  }
-
-  // not the blob form, we proceed as usual
 
   sem_cursor(cursor);
   if (is_error(cursor)) {
@@ -21616,12 +21557,6 @@ static void sem_set_from_cursor(ast_node *ast) {
   EXTRACT_STRING(cursor_name, cursor);
   EXTRACT_STRING(var_name, ast->left);
 
-  if (try_rewrite_blob_fetch_forms(ast)) {
-    // true means affirmative success or failure and errors logged already
-    has_dml = 1;  // this implies return code and all that comes with it
-    return;
-  }
-
   // must be a valid cursor
   sem_cursor(cursor);
   if (is_error(cursor)) {
@@ -21642,10 +21577,10 @@ static void sem_set_from_cursor(ast_node *ast) {
 
   // the indicated type must be a valid shape name (one we could use in LIKE T)
   ast_node *like_target = sem_find_likeable_from_expr_type(var);
-
-  // we have already checked the name when the object was declared, or else we made the name ourselves
-  // in all these cases it MUST be valid already or else something is seriously wrong.
-  Invariant(like_target);
+  if (!like_target) {
+    record_error(ast);
+    return;
+  }
 
   // the cursor has to be a statement cursor
   if (cursor->sem->sem_type & SEM_TYPE_VALUE_CURSOR) {
@@ -22608,9 +22543,24 @@ static bool_t sem_validate_arg_vs_formal(ast_node *arg, ast_node *param) {
     }
 
     if (is_nullable(sem_type_param) != is_nullable(sem_type_arg)) {
-      CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
-      report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
-      return false;
+
+      // not null _out_ parameters can be satisfied by nullable arguments for reference types
+      bool_t different_ok =
+         !is_in_parameter(sem_type_param) &&
+         is_out_parameter(sem_type_param) &&
+         is_ref_type(sem_type_param) &&
+         !is_nullable(sem_type_param) &&
+         is_nullable(sem_type_arg);
+
+      if (different_ok) {
+         // this is ok, a nullable ref arg can stand in for a not nullable out param
+         // the nullable arg will just end up being not null
+      }
+      else {
+        CSTR error_message = "CQL0210: proc out parameter: arg must be an exact type match (even nullability)";
+        report_sem_type_mismatch(sem_type_param, sem_type_arg, arg, error_message, arg->sem->name);
+        return false;
+      }
     }
   }
 
@@ -22967,6 +22917,14 @@ static void sem_proc_call_post_check(CSTR name, ast_node *ast, ast_node *arg_lis
 
     // the final error is set by the helper, 'ast' will have the code regardless
     sem_validate_cursor_blob_compat(ast, cursor, blob, blob, cursor);
+
+    if (!is_error(ast)) {
+      // This type of fetch can fail with an exception. If it does not, we
+      // definitely have a row. If it does, we'll be bumped out of the nearest
+      // enclosing jump context and this improvement will be unset
+      // appropriately.
+      sem_set_has_row_improved(cursor->sem->name);
+    }
   }
   else if (!StrCaseCmp("cql_cursor_to_blob", name)) {
     // additional validation for cql_cursor_to_blob -- ensure blob is compatible
@@ -26092,8 +26050,6 @@ cql_noexport void sem_main(ast_node *ast) {
   STMT_INIT(drop_view_stmt);
   STMT_INIT(drop_index_stmt);
   STMT_INIT(drop_trigger_stmt);
-  STMT_INIT(fetch_cursor_from_blob_stmt);
-  STMT_INIT(set_blob_from_cursor_stmt);
   STMT_INIT(alter_table_add_column_stmt);
   STMT_INIT(create_index_stmt);
   STMT_INIT(create_view_stmt);

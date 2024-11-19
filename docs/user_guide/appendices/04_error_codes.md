@@ -4006,16 +4006,7 @@ But the named table `table_name` is not a table.
 
 -----
 
-### CQL0454: cursor was not declared for storage 'cursor_name'
-
-The CQL forms `SET [blob] FROM CURSOR [cursor]` and `FETCH [cursor] FROM [blob]` require
-that the cursor variable have storage associated with it.  This means it must
-be a value cursor or else a cursor that was fetched using the `fetch C` form
-and not the `fetch C into [variables]` form.
-
-The indicated cursor was either not fetched at all, or else is using only
-the `fetch into` form so it does not have storage that could be used to
-create a blob.
+### CQL0454 available for re-use
 
 -----
 
@@ -4177,10 +4168,7 @@ call requires_text_notnull(c.x);
 
 -----
 
-### CQL0461: fetch from blob operand is not a blob
-
-The blob operand in the form `FETCH [cursor] FROM BLOB [blob]`
-must be a blob.  The given expression is of some other type.
+### CQL0461 available for re-use
 
 -----
 

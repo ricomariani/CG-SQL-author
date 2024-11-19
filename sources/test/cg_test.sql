@@ -5032,12 +5032,11 @@ begin
   declare C cursor for select 1 id, 'foo' name;
   fetch C;
 
-  declare B blob<structured_storage>;
-
-  set B from cursor C;
+  declare B blob<structured_storage>!;
+  C:to_blob(B);
 
   declare D cursor like C;
-  fetch D from B;
+  D:from_blob(B);
 end;
 
 declare function make_blob() create blob<structured_storage>;
@@ -5051,7 +5050,7 @@ declare function make_blob() create blob<structured_storage>;
 proc deserialize_func()
 begin
   declare C cursor like structured_storage;
-  fetch C from blob make_blob();
+  C:from_blob(make_blob());
 end;
 
 -- TEST: ensure that the max constants are getting handled correctly
@@ -5119,9 +5118,9 @@ end;
 -- even though it's out of order the codegen will be affected
 -- the test cases above verify this
 -- + _rc_ = cql_cursor_to_blob(_db_, &gr_blob_cursor_dyn, b);
-proc use_gr_cursor_for_serialization(out b blob<structured_storage>)
+proc use_gr_cursor_for_serialization(out b blob<structured_storage>!)
 begin
-  set b from cursor gr_blob_cursor;
+  gr_blob_cursor:to_blob(b);
 end;
 
 -- TEST: if we mutate a reference arg then we have to track its lifetime

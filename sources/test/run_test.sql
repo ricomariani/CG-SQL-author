@@ -4550,11 +4550,11 @@ BEGIN
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
       false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
-  -- note: using cursor_both and cursor_both ensures codegen is canonicalizing the name
+  -- note: using Cursor_both and cursor_both ensures codegen is canonicalizing the name
   declare blob_both blob<storage_both>;
-  set blob_both from cursor cursor_both;
+  blob_both := Cursor_both:to_blob;
   declare test_cursor_both cursor like cursor_both;
-  fetch test_cursor_both from blob_both;
+  test_cursor_both:from_blob(blob_both);
 
   EXPECT!(test_cursor_both);
   EXPECT!(test_cursor_both.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
@@ -4574,10 +4574,9 @@ BEGIN
 
   declare cursor_notnulls cursor like storage_notnull;
   fetch cursor_notnulls from cursor_both(like cursor_notnulls);
-  declare blob_notnulls blob<storage_notnull>;
-  set blob_notnulls from cursor cursor_notnulls;
+  let blob_notnulls := cursor_notnulls:to_blob;
   declare test_cursor_notnulls cursor like cursor_notnulls;
-  fetch test_cursor_notnulls from blob_notnulls;
+  test_cursor_notnulls:from_blob(blob_notnulls);
 
   EXPECT!(test_cursor_notnulls);
   EXPECT!(test_cursor_notnulls.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
@@ -4589,9 +4588,9 @@ BEGIN
   EXPECT!(test_cursor_notnulls.str_nn == cursor_both.str_nn);
 
   -- deserializing should not screw up the reference counts
-  set blob_notnulls from cursor cursor_notnulls;
-  set blob_notnulls from cursor cursor_notnulls;
-  set blob_notnulls from cursor cursor_notnulls;
+  blob_notnulls := cursor_notnulls:to_blob;
+  blob_notnulls := cursor_notnulls:to_blob;
+  blob_notnulls := cursor_notnulls:to_blob;
 
   -- The next tests verify various things with blobs that are
   -- not directly the right type so we're cheesing the type system.
@@ -4606,7 +4605,7 @@ BEGIN
   let stash_notnulls := blob_notnulls;
   any_blob := blob_notnulls;
   blob_both := any_blob;
-  fetch test_cursor_both from blob_both;
+  test_cursor_both:from_blob(blob_both);
 
   EXPECT!(test_cursor_both);
   EXPECT!(test_cursor_both.`bool 1 notnull` == cursor_both.`bool 1 notnull`);
@@ -4629,7 +4628,7 @@ BEGIN
   -- null blob, throws exception
   let caught := false;
   try
-    fetch test_cursor_both from blob_both;
+    test_cursor_both:from_blob(blob_both);
   catch
     EXPECT!(not test_cursor_both);
     caught := true;
@@ -4640,7 +4639,7 @@ BEGIN
   caught := false;
   any_blob := stash_both;
   blob_notnulls := any_blob;
-  fetch test_cursor_notnulls from blob_notnulls;
+  test_cursor_notnulls:from_blob(blob_notnulls);
 
   -- we still expect to be able to read the fields we know without error
   EXPECT!(test_cursor_notnulls);
@@ -4659,7 +4658,7 @@ BEGIN
   declare blob_with_extras blob<storage_with_extras>;
   blob_with_extras := any_blob;
   try
-    fetch cursor_with_extras from blob_with_extras;
+    cursor_with_extras:from_blob(blob_with_extras);
   catch
     EXPECT!(not cursor_with_extras);
     caught := true;
@@ -4670,7 +4669,7 @@ BEGIN
   EXPECT!(not cursor_with_extras);
   caught := false;
   try
-    set blob_with_extras from cursor cursor_with_extras;
+    blob_with_extras := cursor_with_extras:to_blob;
   catch
     EXPECT!(not cursor_with_extras);
     caught := true;
@@ -4683,7 +4682,7 @@ BEGIN
   any_blob := stash_notnulls;
   blob_nullables := any_blob;
   declare cursor_nullables cursor like storage_nullable;
-  fetch cursor_nullables from blob_nullables;
+  cursor_nullables:from_blob(blob_nullables);
 
   -- note that we read the not null versions of the fields
   EXPECT!(cursor_nullables);
@@ -4696,14 +4695,14 @@ BEGIN
   EXPECT!(cursor_nullables.str == cursor_both.str_nn);
 
   -- now blob_nullables really does have nullable types
-  set blob_nullables from cursor cursor_nullables;
+  blob_nullables := cursor_nullables:to_blob;
   any_blob := blob_nullables;
   blob_notnulls := any_blob;
 
   -- we can't read possibly null types into not null types
   caught := false;
   try
-    fetch test_cursor_notnulls from blob_notnulls;
+    test_cursor_notnulls:from_blob(blob_notnulls);
   catch
     EXPECT!(not test_cursor_notnulls);
     caught := true;
@@ -4714,9 +4713,9 @@ BEGIN
   declare cursor_other cursor like storage_one_int;
   fetch cursor_other using 5 x;
   declare blob_other blob<storage_one_int>;
-  set blob_other from cursor cursor_other;
+  cursor_other:to_blob(blob_other);
   declare test_cursor_other cursor like cursor_other;
-  fetch test_cursor_other from blob_other;
+  test_cursor_other:from_blob(blob_other);
   EXPECT!(test_cursor_other);
   EXPECT!(test_cursor_other.x = cursor_other.x);
 
@@ -4726,7 +4725,7 @@ BEGIN
   -- the types in this blob do not match the cursor we're going to use it with
   caught := false;
   try
-    fetch cursor_nullables from blob_nullables;
+    cursor_nullables:from_blob(blob_nullables);
   catch
     EXPECT!(not cursor_nullables);
     caught := true;
@@ -4743,10 +4742,9 @@ BEGIN
   fetch cursor_nulls using
     null f, null t, null i, null l, null r, null bl, null str;
 
-  declare blob_nulls blob<storage_nullable>;
-  set blob_nulls from cursor cursor_nulls;
+  let blob_nulls := cursor_nulls:to_blob;
   declare test_cursor cursor like cursor_nulls;
-  fetch test_cursor from blob_nulls;
+  test_cursor:from_blob(blob_nulls);
 
   EXPECT!(test_cursor);
   EXPECT!(test_cursor.t is null);
@@ -4771,13 +4769,11 @@ BEGIN
       false f, true t, 22 i, 33L l, 3.14 r, a_blob bl, "text" str,
       false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
-  declare blob_both blob<storage_both>;
-  set blob_both from cursor cursor_both;
-  if blob_both is null throw;
+  let blob_both := cursor_both:to_blob;
 
   -- sanity check the decode of the full blob
   declare test_cursor_both cursor like cursor_both;
-  fetch test_cursor_both from blob_both;
+  test_cursor_both:from_blob(blob_both);
 
   -- sanity check the blob size of the full encoding
   let full_size := cql_get_blob_size(blob_both);
@@ -4794,7 +4790,7 @@ BEGIN
     let caught := false;
     try
       -- this is gonna fail
-      fetch cursor_both from blob_broken;
+      cursor_both:from_blob(blob_broken);
     catch
       EXPECT!(not cursor_both);
       caught := true;
@@ -4816,7 +4812,7 @@ BEGIN
   cursor C like storage_one_int;
 
   -- correctly encoded control case
-  fetch C from test_blob;
+  C:from_blob(test_blob);
   EXPECT!(C);
   EXPECT!(C.x == -1);
 
@@ -4828,7 +4824,7 @@ BEGIN
   let caught := false;
   try
     -- this is gonna fail
-    fetch C from test_blob;
+    C:from_blob(test_blob);
   catch
     EXPECT!(not C);
     caught := true;
@@ -4848,7 +4844,7 @@ BEGIN
   cursor C like storage_one_long;
 
   -- correctly encoded control case
-  fetch C from test_blob;
+  C:from_blob(test_blob);
   EXPECT!(C);
   EXPECT!(C.x == -1);
 
@@ -4860,7 +4856,7 @@ BEGIN
   let caught := false;
   try
     -- this is gonna fail
-    fetch C from test_blob;
+    C:from_blob(test_blob);
   catch
     EXPECT!(not C);
     caught := true;
@@ -4961,8 +4957,7 @@ BEGIN
     "an unused string" i5,
     null i6;
 
-  var b blob<extended_blob>;
-  set b from cursor ext_cursor;
+  let b := ext_cursor:to_blob;
 
   let actual_hex := hex(b);
   let expected_hex :=
@@ -4979,7 +4974,7 @@ BEGIN
 
   -- the fetched values are the same as the originals
   -- up to the fields that are present
-  fetch base_cursor from b2;
+  base_cursor:from_blob(b2);
   let base_text := cql_cursor_format(base_cursor);
   let ext_text := cql_cursor_format(ext_cursor);
   EXPECT!(substr(ext_text, 1, length(base_text)) == base_text);
@@ -5143,12 +5138,11 @@ BEGIN
       false `bool 2 notnull`, true `bool 1 notnull`, 88 i_nn, 66L l_nn, 6.28 r_nn, b_blob bl_nn, "text2" str_nn;
 
   -- storage both means nullable types and not null types
-  declare my_blob blob<storage_both>;
-  set my_blob from cursor cursor_both;
+  let my_blob := cursor_both:to_blob;
 
   -- sanity check the decode of the full blob
   declare test_cursor_both cursor like storage_both;
-  fetch test_cursor_both from my_blob;
+  test_cursor_both:from_blob(my_blob);
 
   call rand_reset();
 
@@ -5165,8 +5159,7 @@ BEGIN
     i += 1;
 
     -- refresh the blob from the cursor, it's good now (again)
-    set my_blob from cursor cursor_both;
-    if my_blob is null throw;
+    my_blob := cursor_both:to_blob;
 
     -- same buffer will be smashed 10 times
     let j := 0;
@@ -5175,11 +5168,15 @@ BEGIN
       j += 1;
 
       -- invoke da smasher
-      my_blob := corrupt_blob_with_invalid_shenanigans(my_blob);
+      let b_temp := my_blob; -- avoid bug in cg_copy_for_create
+      my_blob := corrupt_blob_with_invalid_shenanigans(b_temp);
 
       try
         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.
-        fetch test_cursor_both from my_blob;
+        -- each attempt will be more smashed, there are 100 trails with 10 smashes each
+        -- each smash clobbers 20 bytes of the blob
+
+        test_cursor_both:from_blob(my_blob);
         good := good + 1;
       catch
         bad := bad + 1;
@@ -5248,14 +5245,6 @@ BEGIN
     hash0 := cql_cursor_hash(C);
     hash1 := cql_cursor_hash(C);
     hash2 := cql_cursor_hash(D);
-
-/*
-    if (hash1 == hash2) then
-    else
-       printf("C: %s\n", cql_cursor_format(C));
-       printf("D: %s\n", cql_cursor_format(D));
-    end if;
-*/
 
     EXPECT!(hash0 = hash1);  -- control for sanity
     EXPECT!(hash1 = hash2);  -- equivalent data -> same hash (note different string same text)
@@ -5925,7 +5914,7 @@ create proc blob_for_real(x real!, out result blob<storage_one_real>!)
 begin
   declare C cursor like storage_one_real;
   fetch C from values(x);
-  result := C:to_blob:ifnull_throw;
+  result := C:to_blob;
 end;
 
 TEST!(blob_dictionary,
@@ -5947,7 +5936,7 @@ BEGIN
 
       let zero_val := dict:find(printf("%d", j)) ~blob<storage_one_real>~ :ifnull_throw;
       fetch C from values (1);  -- not zero, just to be sure the value changes
-      fetch C from zero_val;
+      C:from_blob(zero_val);
       EXPECT!(C.data == 0);
 
       -- replace
@@ -5965,7 +5954,7 @@ BEGIN
       if j % 2 then
         EXPECT!(result IS NULL);
       else
-        fetch C from result;
+        C:from_blob(result);
         EXPECT!(C.data == j*100.5);
       end if;
       j += 1;

@@ -5168,8 +5168,7 @@ BEGIN
       j += 1;
 
       -- invoke da smasher
-      let b_temp := my_blob; -- avoid bug in cg_copy_for_create
-      my_blob := corrupt_blob_with_invalid_shenanigans(b_temp);
+      my_blob := corrupt_blob_with_invalid_shenanigans(my_blob);
 
       try
         -- almost certainly going to get an error, that's fine, but no segv, no leaks, etc.

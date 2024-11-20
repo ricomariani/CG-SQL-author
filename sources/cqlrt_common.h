@@ -168,6 +168,9 @@ CQL_EXPORT cql_code cql_one_row_result(cql_fetch_info *_Nonnull info,
 CQL_EXPORT void cql_set_blob_ref(cql_blob_ref _Nullable *_Nonnull target, cql_blob_ref _Nullable source);
 CQL_EXPORT void cql_set_string_ref(cql_string_ref _Nullable *_Nonnull target, cql_string_ref _Nullable source);
 CQL_EXPORT void cql_set_object_ref(cql_object_ref _Nullable *_Nonnull target, cql_object_ref _Nullable source);
+CQL_EXPORT void cql_set_created_blob_ref(cql_blob_ref _Nullable *_Nonnull target, cql_blob_ref _Nullable source);
+CQL_EXPORT void cql_set_created_string_ref(cql_string_ref _Nullable *_Nonnull target, cql_string_ref _Nullable source);
+CQL_EXPORT void cql_set_created_object_ref(cql_object_ref _Nullable *_Nonnull target, cql_object_ref _Nullable source);
 
 CQL_EXPORT cql_code cql_prepare(sqlite3 *_Nonnull db, sqlite3_stmt *_Nullable *_Nonnull pstmt, const char *_Nonnull sql);
 

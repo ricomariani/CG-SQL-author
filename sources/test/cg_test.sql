@@ -1157,8 +1157,7 @@ set obj_var := obj_func();
 declare function obj_func_create() create object;
 
 -- TEST: function invocation with creater object function
--- +  cql_object_release(obj_var);
--- +  obj_var = obj_func_create();
+-- + cql_set_created_object_ref(&obj_var, obj_func_create());
 set obj_var := obj_func_create();
 
 declare function text_func_create() create text;
@@ -1191,8 +1190,7 @@ set obj_var2 := ifnull_crash(obj_func());
 set obj_var2 := ifnull_throw(obj_func());
 
 -- TEST: assign nullable to object with helper or crash
--- + cql_object_release(_tmp_n_object_0);
--- + _tmp_n_object_0 = obj_func_create();
+-- + cql_set_created_object_ref(&_tmp_n_object_0, obj_func_create());
 -- + cql_invariant(!!_tmp_n_object_0);
 -- + cql_set_object_ref(&obj_var2, _tmp_n_object_0);
 set obj_var2 := ifnull_crash(obj_func_create());
@@ -1364,9 +1362,9 @@ end;
 -- foo is the out arg, we clobber it to a safe value
 -- + *(void **)foo = NULL;
 -- foo is set to something useful
--- + cql_set_string_ref(&*foo, _literal_%x_%);
+-- + cql_set_string_ref(foo, _literal_%x_%);
 -- we have to release the something useful before we make the call
--- + cql_set_string_ref(&*foo, NULL);
+-- + cql_set_string_ref(foo, NULL);
 -- + proc_with_out_arg(foo);
 -- we have to release bar before we make the call
 -- + cql_set_string_ref(&bar, NULL);
@@ -1480,8 +1478,7 @@ set blob_var := blob_func();
 declare function blob_func_create() create blob;
 
 -- TEST: function invocation with creater blob function
--- +  cql_blob_release(blob_var);
--- +  blob_var = blob_func_create();
+-- + cql_set_created_blob_ref(&blob_var, blob_func_create());
 set blob_var := blob_func_create();
 
 -- make a table with blobs in it
@@ -2005,10 +2002,7 @@ begin
 end;
 
 -- TEST: call in loop with boxing
--- one release in cleanup, one before the fetch
--- +2 cql_object_release(C_object_);
--- one release in cleanup
--- + C_object_ = cql_box_stmt(C_stmt);
+-- + cql_set_created_object_ref(&C_object_, cql_box_stmt(C_stmt));
 -- + cql_set_object_ref(&box, C_object_);
 -- + D_stmt = cql_unbox_stmt(D_object_);
 -- + cql_object_release(C_object_);
@@ -3112,10 +3106,10 @@ end;
 -- TEST: simple box operation
 -- + sqlite3_stmt *C_stmt = NULL;
 -- + cql_object_ref C_object_ = NULL;
--- 1 for the boxing and 1 for the cleanup
--- +2 cql_object_release(C_object_);
--- + C_object_ = cql_box_stmt(C_stmt);
+-- boxed object uses create pattern
+-- + cql_set_created_object_ref(&C_object_, cql_box_stmt(C_stmt));
 -- + cql_set_object_ref(result, C_object_);
+-- + cql_object_release(C_object_);
 -- - cql_finalize_stmt(&C);
 proc try_boxing(out result object<bar cursor>)
 begin
@@ -4464,8 +4458,8 @@ CREATE TABLE big_data(
 -- we do not want to see the "get" pattern
 -- - cql_set_string_ref(&s, cql_cursor_format(&C_dyn));
 -- we want to see the "create" pattern (i.e. we start with a +1 ref)
--- + cql_string_release(s);
--- + s = cql_cursor_format(&C_dyn);
+-- + cql_set_created_string_ref(&s, cql_cursor_format(&C_dyn));
+-- no scratch variable needed
 -- - cql_string_release(_tmp_text
 PROC BigFormat ()
 BEGIN
@@ -5044,9 +5038,9 @@ declare function make_blob() create blob<structured_storage>;
 -- TEST: get a blob from somewhere other than a local
 -- checks general expression evaluation in the fetch path
 -- func call is a good standing for general eval
--- +  cql_blob_release(_tmp_n_blob_0);
--- + _tmp_n_blob_0 = make_blob();
+-- + cql_set_created_blob_ref(&_tmp_n_blob_0, make_blob());
 -- + _rc_ = cql_cursor_from_blob(_db_, &C_dyn, _tmp_n_blob_0);
+-- + cql_blob_release(_tmp_n_blob_0);
 proc deserialize_func()
 begin
   declare C cursor like structured_storage;
@@ -5824,22 +5818,24 @@ declare function stew3 no check text!;
 -- + cql_int32 x = 0;
 -- + cql_string_ref y = NULL;
 -- + cql_string_ref z = NULL;
+-- + cql_string_ref q = NULL;
 -- + x = stew1(0, "x");
--- + cql_string_release(y);
--- + y = stew2(1, 2, 3);
+-- + cql_set_created_string_ref(&y, stew2(1, 2, 3));
 -- + cql_set_string_ref(&z, stew3(2, "x", 1));
--- + cql_alloc_cstr(_cstr_%, y);
--- + q = stew2(1, _cstr_%);
--- + cql_free_cstr(_cstr_%, y);
+-- + cql_alloc_cstr(_cstr_4, y);
+-- + cql_set_created_string_ref(&q, stew2(1, _cstr_4));
+-- + cql_free_cstr(_cstr_4, y);
+-- + cql_set_created_string_ref(result, stew2(1, 2, 3));
 -- + cql_string_release(y);
 -- + cql_string_release(z);
 -- + cql_string_release(q);
-proc no_check_func_calls()
+proc no_check_func_calls(out result text!)
 begin
   let x := stew1(0, 'x');
   let y := stew2(1,2,3);
   let z := stew3(2,'x', 1);
   let q := stew2(1, y);
+  result := stew2(1,2,3);
 end;
 
 -- TEST: cql:alias_of attribution

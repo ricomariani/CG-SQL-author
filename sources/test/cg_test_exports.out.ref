@@ -273,7 +273,7 @@ DECLARE PROC select_in_loop () USING TRANSACTION;
 DECLARE PROC select_if_nothing_in_loop () USING TRANSACTION;
 DECLARE PROC select_if_nothing_or_null_in_loop () USING TRANSACTION;
 DECLARE PROC my_proc_check_type () USING TRANSACTION;
-DECLARE PROC no_check_func_calls ();
+DECLARE PROC no_check_func_calls (OUT result TEXT!);
 DECLARE PROC qid_t0 () USING TRANSACTION;
 DECLARE PROC qid_t1 () USING TRANSACTION;
 DECLARE PROC qid_t2 () USING TRANSACTION;

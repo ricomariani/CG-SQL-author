@@ -486,6 +486,17 @@ void cql_set_object_ref(
   *target = source;
 }
 
+// This variant is for when you call a Create function and get a ref with a +1 on it
+// and have to store that reference.
+void cql_set_created_object_ref(
+  cql_object_ref _Nullable *_Nonnull target,
+  cql_object_ref _Nullable source)
+{
+  // no upcount, we were given an upcounted ref. We just release what we had and store
+  cql_object_release(*target);
+  *target = source;
+}
+
 // This helper is used by CQL to set a string reference.  It does the primitive
 // retain/release operations. For now all the reference types are the same in
 // this regard but there are different helpers for additional type safety in the
@@ -500,6 +511,17 @@ void cql_set_string_ref(
   *target = source;
 }
 
+// This variant is for when you call a Create function and get a ref with a +1 on it
+// and have to store that reference.
+void cql_set_created_string_ref(
+  cql_string_ref _Nullable *_Nonnull target,
+  cql_string_ref _Nullable source)
+{
+  // no upcount, we were given an upcounted ref. We just release what we had and store
+  cql_string_release(*target);
+  *target = source;
+}
+
 // This helper is used by CQL to set a blob reference.  It does the primitive
 // retain/release operations. For now all the reference types are the same in
 // this regard but there are different helpers for additional type safety in the
@@ -510,6 +532,17 @@ void cql_set_blob_ref(
 {
   // upcount first in case source is an alias for target
   cql_blob_retain(source);
+  cql_blob_release(*target);
+  *target = source;
+}
+
+// This variant is for when you call a Create function and get a ref with a +1 on it
+// and have to store that reference.
+void cql_set_created_blob_ref(
+  cql_blob_ref _Nullable *_Nonnull target,
+  cql_blob_ref _Nullable source)
+{
+  // no upcount, we were given an upcounted ref. We just release what we had and store
   cql_blob_release(*target);
   *target = source;
 }

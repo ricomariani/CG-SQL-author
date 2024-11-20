@@ -8129,7 +8129,7 @@ extern CQL_WARN_UNUSED cql_code my_proc_check_type(sqlite3 *_Nonnull _db_);
 // The statement ending at line XXXX
 
 // The statement ending at line XXXX
-extern void no_check_func_calls(void);
+extern void no_check_func_calls(cql_string_ref _Nullable *_Nonnull result);
 
 // The statement ending at line XXXX
 

@@ -3040,7 +3040,7 @@ void proc_with_out_arg(cql_string_ref _Nullable *_Nonnull foo) {
   cql_contract_argument_notnull((void *)foo, 1);
 
   *(void **)foo = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*foo, _literal_6_x_);
+  cql_set_string_ref(foo, _literal_6_x_);
 
 }
 #undef _PROC_
@@ -3068,8 +3068,8 @@ void calls_out_proc(cql_string_ref _Nullable *_Nonnull foo) {
   cql_string_ref bar = NULL;
 
   *(void **)foo = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*foo, _literal_6_x_);
-  cql_set_string_ref(&*foo, NULL);
+  cql_set_string_ref(foo, _literal_6_x_);
+  cql_set_string_ref(foo, NULL);
   proc_with_out_arg(foo);
   cql_set_string_ref(&bar, NULL);
   proc_with_out_arg(&bar);
@@ -3110,7 +3110,7 @@ void blob_proc(cql_blob_ref _Nullable *_Nonnull a_blob) {
   cql_contract_argument_notnull((void *)a_blob, 1);
 
   *(void **)a_blob = NULL; // set out arg to non-garbage
-  cql_set_blob_ref(&*a_blob, NULL);
+  cql_set_blob_ref(a_blob, NULL);
 
 }
 #undef _PROC_
@@ -3705,7 +3705,7 @@ void c_literal(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
   *(void **)x = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*x, _literal_9_Testing_c_literal);
+  cql_set_string_ref(x, _literal_9_Testing_c_literal);
 
 }
 #undef _PROC_
@@ -4861,8 +4861,7 @@ CQL_WARN_UNUSED cql_code call_in_loop_boxed(sqlite3 *_Nonnull _db_) {
     C_stmt = NULL;
     _rc_ = simple_select(_db_, &C_stmt);
     if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-    cql_object_release(C_object_);
-    C_object_ = cql_box_stmt(C_stmt);
+    cql_set_created_object_ref(&C_object_, cql_box_stmt(C_stmt));
     cql_set_object_ref(&box, C_object_);
     cql_set_object_ref(&D_object_, box);
     D_stmt = cql_unbox_stmt(D_object_);
@@ -9206,8 +9205,7 @@ CQL_WARN_UNUSED cql_code try_boxing(sqlite3 *_Nonnull _db_, cql_object_ref _Null
     "SELECT id, name, rate, type, size "
       "FROM bar");
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
-  cql_object_release(C_object_);
-  C_object_ = cql_box_stmt(C_stmt);
+  cql_set_created_object_ref(&C_object_, cql_box_stmt(C_stmt));
   cql_set_object_ref(result, C_object_);
   _rc_ = SQLITE_OK;
 
@@ -12558,7 +12556,7 @@ void exercise_contracts(cql_nullable_int32 a, cql_int32 b, cql_string_ref _Nulla
   *j = 0; // set out arg to non-garbage
   *(void **)k = NULL; // set out arg to non-garbage
   *(void **)l = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*l, _literal_1_text_);
+  cql_set_string_ref(l, _literal_1_text_);
 
 }
 #undef _PROC_
@@ -13325,8 +13323,7 @@ CQL_WARN_UNUSED cql_code BigFormat(sqlite3 *_Nonnull _db_) {
                    CQL_DATA_TYPE_INT32, &C.f75);
     if (_rc_ != SQLITE_ROW && _rc_ != SQLITE_DONE) { cql_error_trace(); goto cql_cleanup; }
     if (!C._has_row_) break;
-    cql_string_release(s);
-    s = cql_cursor_format(&C_dyn);
+    cql_set_created_string_ref(&s, cql_cursor_format(&C_dyn));
   }
   _rc_ = SQLITE_OK;
 
@@ -13407,7 +13404,7 @@ void ltor_proc_text_not_null(cql_string_ref _Nonnull a, cql_string_ref _Nonnull 
   cql_contract_argument_notnull((void *)c, 3);
 
   *(void **)c = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*c, _literal_1_text_);
+  cql_set_string_ref(c, _literal_1_text_);
 
 }
 #undef _PROC_
@@ -14816,8 +14813,7 @@ CQL_WARN_UNUSED cql_code deserialize_func(sqlite3 *_Nonnull _db_) {
   };
   cql_blob_ref _tmp_n_blob_0 = NULL;
 
-  cql_blob_release(_tmp_n_blob_0);
-  _tmp_n_blob_0 = make_blob();
+  cql_set_created_blob_ref(&_tmp_n_blob_0, make_blob());
   _rc_ = cql_cursor_from_blob(_db_, &C_dyn, _tmp_n_blob_0);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -14919,7 +14915,7 @@ CQL_WARN_UNUSED cql_code use_gr_cursor_for_serialization(sqlite3 *_Nonnull _db_,
   cql_error_prepare();
 
   *(void **)b = NULL; // set out arg to non-garbage
-  cql_set_blob_ref(&*b, NULL);
+  cql_set_blob_ref(b, NULL);
   _rc_ = cql_cursor_to_blob(_db_, &gr_blob_cursor_dyn, b);
   if (_rc_ != SQLITE_OK) { cql_error_trace(); goto cql_cleanup; }
   _rc_ = SQLITE_OK;
@@ -15209,7 +15205,7 @@ DECLARE PROC clobber1 (INOUT x TEXT);
 void clobber1(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
-  cql_set_string_ref(&*x, _literal_25_xyzzy_clobber1);
+  cql_set_string_ref(x, _literal_25_xyzzy_clobber1);
 
 }
 #undef _PROC_
@@ -15232,7 +15228,7 @@ void clobber2(cql_string_ref _Nullable *_Nonnull x) {
   cql_contract_argument_notnull((void *)x, 1);
 
   *(void **)x = NULL; // set out arg to non-garbage
-  cql_set_string_ref(&*x, _literal_25_xyzzy_clobber1);
+  cql_set_string_ref(x, _literal_25_xyzzy_clobber1);
 
 }
 #undef _PROC_
@@ -17403,34 +17399,37 @@ cql_string_ref stew3(int x, ...);
 // The statement ending at line XXXX
 
 /*
-PROC no_check_func_calls ()
+PROC no_check_func_calls (OUT result TEXT!)
 BEGIN
   LET x := stew1(0, 'x');
   LET y := stew2(1, 2, 3);
   LET z := stew3(2, 'x', 1);
   LET q := stew2(1, y);
+  SET result := stew2(1, 2, 3);
 END;
 */
 
 #define _PROC_ "no_check_func_calls"
 /*
 export:
-DECLARE PROC no_check_func_calls ();
+DECLARE PROC no_check_func_calls (OUT result TEXT!);
 */
-void no_check_func_calls(void) {
+void no_check_func_calls(cql_string_ref _Nullable *_Nonnull result) {
+  cql_contract_argument_notnull((void *)result, 1);
+
   cql_int32 x = 0;
   cql_string_ref y = NULL;
   cql_string_ref z = NULL;
   cql_string_ref q = NULL;
 
+  *(void **)result = NULL; // set out arg to non-garbage
   x = stew1(0, "x");
-  cql_string_release(y);
-  y = stew2(1, 2, 3);
+  cql_set_created_string_ref(&y, stew2(1, 2, 3));
   cql_set_string_ref(&z, stew3(2, "x", 1));
   cql_alloc_cstr(_cstr_4, y);
-  cql_string_release(q);
-  q = stew2(1, _cstr_4);
+  cql_set_created_string_ref(&q, stew2(1, _cstr_4));
   cql_free_cstr(_cstr_4, y);
+  cql_set_created_string_ref(result, stew2(1, 2, 3));
 
   cql_string_release(y);
   cql_string_release(z);
@@ -19076,16 +19075,14 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET obj_var := obj_func_create();
   */
-  cql_object_release(obj_var);
-  obj_var = obj_func_create();
+  cql_set_created_object_ref(&obj_var, obj_func_create());
 
   // The statement ending at line XXXX
 
   /*
   SET text_result := text_func_create();
   */
-  cql_string_release(text_result);
-  text_result = text_func_create();
+  cql_set_created_string_ref(&text_result, text_func_create());
 
   // The statement ending at line XXXX
 
@@ -19123,8 +19120,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET obj_var2 := ifnull_crash(obj_func_create());
   */
-  cql_object_release(_tmp_n_object_0);
-  _tmp_n_object_0 = obj_func_create();
+  cql_set_created_object_ref(&_tmp_n_object_0, obj_func_create());
   cql_invariant(!!_tmp_n_object_0);
   cql_set_object_ref(&obj_var2, _tmp_n_object_0);
 
@@ -19403,8 +19399,7 @@ cql_code cql_startup(sqlite3 *_Nonnull _db_) {
   /*
   SET blob_var := blob_func_create();
   */
-  cql_blob_release(blob_var);
-  blob_var = blob_func_create();
+  cql_set_created_blob_ref(&blob_var, blob_func_create());
 
   // The statement ending at line XXXX
 

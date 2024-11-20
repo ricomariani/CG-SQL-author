@@ -889,20 +889,25 @@ static void cg_set_null(charbuf *output, CSTR name, sem_t sem_type) {
 // helper macros unless it's an exact-type copy operation.  This function is
 // used by cg_store near the finish line.
 static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
-  if (is_text(sem_type_var)) {
-    bprintf(output, "cql_set_string_ref(&%s, %s);\n", var, value);
-  }
-  else if (is_blob(sem_type_var)) {
-    bprintf(output, "cql_set_blob_ref(&%s, %s);\n", var, value);
-  }
-  else if (is_object(sem_type_var)) {
+  if (is_ref_type(sem_type_var)) {
+    // we will use one of the ref setters
+
+    CSTR prefix = "&";
     if (var[0] == '*') {
       // this is just to avoid weird looking &*foo in the output which happens
       // when the target is an output variable
-      bprintf(output, "cql_set_object_ref(%s, %s);\n", var+1, value);
+      var++;
+      prefix = "";
     }
-    else {
-      bprintf(output, "cql_set_object_ref(&%s, %s);\n", var, value);
+
+    if (is_text(sem_type_var)) {
+      bprintf(output, "cql_set_string_ref(%s%s, %s);\n", prefix, var, value);
+    }
+    else if (is_blob(sem_type_var)) {
+      bprintf(output, "cql_set_blob_ref(%s%s, %s);\n", prefix, var, value);
+    }
+    else if (is_object(sem_type_var)) {
+      bprintf(output, "cql_set_object_ref(%s%s, %s);\n", prefix, var, value);
     }
   }
   else {
@@ -910,31 +915,31 @@ static void cg_copy(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
   }
 }
 
-
-/* TODO -- this pattern is broken... b is released too soon
-declare function foo(b blob) create blob;
-
-proc x(b blob)
-begin
-  b := foo(b);
-end;
-*/
-
 // Functions are a little special in that they can return reference types that
 // come with a +1 reference.  To handle those you do not want to upcount the
 // target. We release whatever we're holding and then hammer it with the new
-// value with no upcount using the +1 we were given.
+// value with no upcount using the +1 we were given. These special set_created_*
+// helper functions do exactly that.  Previously we tried it with ad hoc code
+// which was all wrong.  It's important to not release the target of the copy
+// early as the target may be needed in the call that did the create.
 static void cg_copy_for_create(charbuf *output, CSTR var, sem_t sem_type_var, CSTR value) {
+  CSTR prefix = "&";
+  if (var[0] == '*') {
+    // this is just to avoid weird looking &*foo in the output which happens
+    // when the target is an output variable
+    var++;
+    prefix = "";
+  }
+
   if (is_text(sem_type_var)) {
-    bprintf(cg_main_output, "%s(%s);\n", rt->cql_string_release, var);
+    bprintf(output, "cql_set_created_string_ref(%s%s, %s);\n", prefix, var, value);
   }
   else if (is_blob(sem_type_var)) {
-    bprintf(output, "%s(%s);\n", rt->cql_blob_release, var);
+    bprintf(output, "cql_set_created_blob_ref(%s%s, %s);\n", prefix, var, value);
   }
   else if (is_object(sem_type_var)) {
-    bprintf(output, "%s(%s);\n", rt->cql_object_release, var);
+    bprintf(output, "cql_set_created_object_ref(%s%s, %s);\n", prefix, var, value);
   }
-  bprintf(output, "%s = %s;\n", var, value);
 }
 
 // This is most general store function.  Given the type of the destination and
